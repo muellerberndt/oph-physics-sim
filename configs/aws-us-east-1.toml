@@ -1,0 +1,19 @@
+[cloud]
+provider = "aws"
+profile = "default"
+region = "us-east-1"
+
+[worker_options]
+smoke_gpu = "g6e.xlarge"
+single_h100 = "p5.4xlarge"
+eight_h100 = "p5.48xlarge"
+eight_b200 = "p6-b200.48xlarge"
+eight_b300 = "p6-b300.48xlarge"
+
+[quota_snapshot_us_east_1]
+running_on_demand_p_vcpus = 128
+spot_p_vcpus = 128
+running_on_demand_g_and_vt_vcpus = 128
+spot_g_and_vt_vcpus = 128
+standard_on_demand_vcpus = 384
+checked_at = "2026-06-01"

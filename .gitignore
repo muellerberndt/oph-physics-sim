@@ -1,0 +1,23 @@
+.DS_Store
+__pycache__/
+.pytest_cache/
+
+# Local secrets and machine-specific cloud settings.
+.env
+.env.*
+!.env.example
+*.tfvars
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+credentials/
+secrets/
+
+# Generated artifacts.
+artifacts/
+receipts/
+runs/
+temp/
+*.log
+*.jsonl

@@ -1,0 +1,60 @@
+name: e1_s3_bulk_emergence
+seed: 20260601
+claim_boundary: "E1 smoke: S3 repair, records, holonomy worldlines, and intrinsic-dimension estimators. This does not claim physical emergence."
+
+graph:
+  family: subdivided_icosahedral_screen
+  patch_count: 256
+  edge_weight: 1.0
+
+group:
+  name: S3
+
+screen:
+  chart: support_visible_s2_cellulation
+  carrier: federated_echosahedral_patch
+  ports_per_patch: 12
+  cap_family: round_caps_on_s2
+  edge_sector_law: fixed_cutoff_heat_kernel_casimir_surrogate
+
+oph_constants:
+  P: 1.6309682094039593
+  P_source: endpoint_public
+  use_P_for:
+    - cell_area
+    - cell_entropy
+    - cap_capacity
+    - residual_weighting
+
+screen_units:
+  mode: numerical_regulator
+
+initial_condition: maxent_hot
+
+defects:
+  count: 8
+
+dynamics:
+  cycles: 80
+  repairs_per_cycle: 128
+  repair: local_best_plus_metropolis_hot_phase
+  hot_metropolis: true
+  record_commit_cycles: 8
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.1
+    beta_end: 10.0
+
+observables:
+  defect_scan_interval: 5
+  dimension:
+    - spectral
+    - volume_growth
+    - correlation
+  bulk_embedding: laplacian_eigenmap
+
+controls:
+  - shuffled_interfaces
+  - random_graph
+  - no_repair
+  - wrong_orientation

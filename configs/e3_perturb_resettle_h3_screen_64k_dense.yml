@@ -1,0 +1,225 @@
+name: e3_perturb_resettle_h3_screen_64k_dense
+run_mode: h3_bulk_candidate
+seed: 20260696
+claim_boundary: Compact OPH perturb-resettle modular-response-to-H3 candidate run.
+  This tests whether observer-visible cap/collar perturb-resettle response kernels
+  fit the canonical H3 chart under controls. It is not a final 3D bulk emergence
+  claim and not a physical CMB prediction.
+graph:
+  family: fibonacci_sphere
+  patch_count: 65536
+  neighbors: 12
+group:
+  name: S3
+boundary_program:
+  mode: support_visible_cap_net_hot
+  cap_count: 32
+  sharpness: 8.0
+  tangent_weight: 0.35
+  endpoint_noise_probability: 0.35
+screen:
+  chart: support_visible_s2_cellulation
+  carrier: federated_echosahedral_patch
+  ports_per_patch: 12
+  cap_family: round_caps_on_s2
+oph_constants:
+  pixel_mode: source_candidate
+  use_P_for:
+  - cell_area
+  - cell_entropy
+  - cap_capacity
+  - residual_weighting
+screen_units:
+  mode: numerical_regulator
+dynamics:
+  cycles: 64
+  repairs_per_cycle: 65536
+  record_commit_cycles: 8
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.05
+    beta_end: 15.0
+modular_flow:
+  enabled: true
+  dt: 0.03
+  damping: 0.012
+  repair_load_coupling: 0.35
+  cap_coupling: 0.08
+  diffusion: 0.06
+  cap_axes: 20
+bw:
+  mode: state_derived_modular_probe
+  state_mode: transition_response_unitary
+  target_operator_mode: permutation
+  transition_response_time: 0.1
+  transition_response_scale: 6.283185307179586
+  cap_count: 4
+  theta0:
+  - 0.35
+  - 0.55
+  - 0.75
+  - 1.0
+  collar_width_mode: cell_scaled
+  collar_k: 1.0
+  times:
+  - 0.1
+  normalization: 2pi
+  observables:
+  - record_signature_projectors
+  - repair_load_projectors
+  - s3_sector_projectors
+  - cumulative_repair_load_projectors
+  regularizer_a:
+  - 1.0e-12
+  max_basis: 48
+  k_interp: 8
+  sim_k_interp: 1
+  n_jobs: auto
+  support_visible_smoothing_steps: 4
+  support_visible_smoothing_alpha: 0.35
+  selection:
+    enabled: true
+    sources:
+    - kms_collar_transport_response
+    - perturb_remeasure_response
+    - repair_affinity_response
+    include_declared_sanity: true
+    candidate_scales:
+    - 1.0
+    - 3.141592653589793
+    - 6.283185307179586
+    - 12.566370614359172
+    times:
+    - 0.1
+    observables:
+    - record_signature_projectors
+    - repair_load_projectors
+    - s3_sector_projectors
+    - cumulative_repair_load_projectors
+    max_basis: 48
+    probe_steps: 4
+    probe_repairs_per_source: 48
+    probe_max_incident_edges: 12
+    kms_response_scale: 6.283185307179586
+    kms_transport_steps: 8
+collar_markov:
+  enabled: true
+  max_triplets: 2048
+  packet_bins:
+    record_signature: 64
+    stable_count: 8
+    repair_load: 8
+    s3_class_density: 6
+  sector_conditioned: true
+  write_recovery_bound: true
+observers:
+  sample_count: 160
+  neighborhood_size: 80
+observer_objects:
+  enabled: false
+neutral_reconstruction:
+  enabled: false
+h3_population:
+  enabled: false
+h3_support_profiles:
+  enabled: false
+  dedicated_cap_net: true
+  cap_count: 24
+  theta0:
+  - 0.35
+  - 0.55
+  - 0.75
+  - 1.0
+  - 1.25
+  collar_width_mode: cell_scaled
+  collar_k: 1.0
+theorem_core:
+  projection_sample: 512
+  include_default_sm_candidate: true
+cosmology:
+  output_profile: compact
+  freezeout:
+    enabled: true
+    require_kms_bw_pass: true
+    require_state_bw_controls: false
+    require_neutral_reconstruction: false
+    allow_screen_proxy_without_bulk: true
+    commit_fraction: 0.95
+    fields:
+    - record_signature
+    - stable_count
+    - cumulative_repair_load
+    - repair_load
+    - local_mismatch_density
+    - s3_class_density
+  angular_power:
+    estimator: spherical_harmonic
+    harmonic_batch_size: 4096
+    ell_max: 32
+    pair_samples: 50000
+    controls:
+    - shuffled_field
+    - random_gaussian
+defects:
+  max_triangles: 12000
+  sector_repair:
+    enabled: true
+    mode: repair_coupled_group_compose
+    probability: 0.08
+  timeline:
+    enabled: false
+controls:
+- wrong_1x_normalization
+- wrong_pi_normalization
+- wrong_4pi_normalization
+- shuffled_observables
+- no_modular_flow
+- no_repair
+- shuffled_interfaces
+- random_same_degree_graph
+- wrong_s3_orientation
+- fake_record_rewrite
+outputs:
+  profile: compact
+  write_jsonl: false
+  write_bw_report: true
+  write_cap_geometry_report: true
+  write_collar_markov_report: true
+  write_state_derived_bw_report: true
+  write_freezeout_cl_proxy: true
+  write_dimension_report: false
+h3_modular_response:
+  enabled: true
+  observable_mode: perturb_resettle_transition
+  times:
+  - 0.125
+  - 0.25
+  - 0.5
+  transition_observables:
+  - checkpoint_class
+  - stable_flag
+  - record_family
+  - s3_sector_class
+  - repair_load_bucket
+  transition_bins: 8
+  record_family_modulus: 16
+  transform: signed_zscore
+  perturb_strength: 1.0
+  repair_steps: 4
+  repairs_per_step: 192
+  wrong_scales:
+  - 1.0
+  - 3.141592653589793
+  - 12.566370614359172
+  transport_scale: 6.283185307179586
+  k_transport: 1
+  fit_mode: joint_global
+  candidate_count: 4096
+  candidate_radius: 2.0
+  softness: 0.25
+  heldout_fraction: 0.25
+  anchor_weight: 0.05
+  max_iterations: 4
+  pass_ratio: 1.0
+  min_observers: 32
+  min_features: 16

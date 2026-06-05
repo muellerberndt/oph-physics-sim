@@ -1,0 +1,96 @@
+from __future__ import annotations
+
+import numpy as np
+
+from oph_fpe.observers.objects import (
+    RecordFamily,
+    assign_counterfactual_stability_from_records,
+    counterfactual_stability,
+    extract_record_families,
+    object_consensus_score,
+    observer_object_report,
+)
+
+
+def test_observer_object_persistence():
+    records = {
+        "record_signature": np.array([7, 7, 7, 2, 2]),
+        "stable_count": np.array([8, 8, 8, 8, 1]),
+        "repair_load": np.zeros(5),
+    }
+    left = np.array([0, 1, 2, 3])
+    right = np.array([1, 2, 3, 4])
+    families = extract_record_families(records, (left, right), persistence_horizon=8)
+    assert families[0].record_signature == 7
+    assert families[0].support_nodes == [0, 1, 2]
+    assert families[0].persistence == 8
+
+
+def test_observer_object_coarse_visible_packet_groups_records():
+    records = {
+        "record_signature": np.array([10, 11, 12, 90, 91, 92]),
+        "stable_count": np.array([8, 8, 8, 8, 8, 8]),
+        "repair_load": np.zeros(6),
+        "s3_sector_class": np.zeros(6, dtype=int),
+    }
+    left = np.array([0, 1, 2, 3, 4])
+    right = np.array([1, 2, 3, 4, 5])
+    families = extract_record_families(
+        records,
+        (left, right),
+        projections={
+            "packet_mode": "coarse_visible_packet",
+            "signature_bins": 2,
+            "include_s3_sector": True,
+            "min_support_size": 2,
+        },
+        persistence_horizon=8,
+    )
+
+    assert len(families) == 2
+    assert families[0].support_nodes == [0, 1, 2]
+    assert families[1].support_nodes == [3, 4, 5]
+
+
+def test_counterfactual_stability_and_report():
+    family = RecordFamily("obj", [0, 1], 4, 8, 1.0, "hash", 0.0)
+    score = counterfactual_stability(family, [0, 1, 2], lambda _family, perturb: 4 if perturb < 2 else 9)
+    family.counterfactual_stability = score
+    report = observer_object_report([family], [{"support_nodes": [0, 1, 2]}])
+    assert score == 2 / 3
+    assert report["object_count"] == 1
+    assert report["persistent_object_count"] == 1
+
+
+def test_histogram_object_consensus_does_not_penalize_large_observer_view():
+    family = RecordFamily("obj", [0, 1], 4, 8, 1.0, "hash", 0.0)
+    views = [
+        {
+            "view_type": "patch_observer",
+            "support_nodes": list(range(100)),
+            "record_signature_histogram": {"4": 0.2, "9": 0.8},
+        }
+    ]
+
+    assert object_consensus_score(family, views) > 0.5
+
+
+def test_assign_counterfactual_stability_from_records_visible_subsupport():
+    records = {
+        "record_signature": np.array([4, 4, 4, 9]),
+        "stable_count": np.array([8, 8, 8, 8]),
+        "repair_load": np.zeros(4),
+    }
+    family = RecordFamily("obj", [0, 1, 2], 4, 8, 1.0, "hash", 0.0)
+
+    assign_counterfactual_stability_from_records([family], records, perturbations=8, seed=4)
+
+    assert family.counterfactual_stability == 1.0
+
+
+def test_fake_record_rewrite_detected():
+    families = [
+        RecordFamily("a", [0], 1, 8, 1.0, "same", 1.0),
+        RecordFamily("b", [1], 2, 8, 1.0, "same", 1.0),
+    ]
+    assert observer_object_report(families, [])["bad_record_rewrite_detected"] is True

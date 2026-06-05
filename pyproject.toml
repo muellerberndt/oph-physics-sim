@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oph-fpe"
+version = "0.1.0"
+description = "Observer-Patch Fundamental Physics Emergence simulator"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "networkx>=3.0",
+  "numpy>=1.26",
+  "pyyaml>=6.0",
+  "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+viz = ["plotly>=5.0"]
+
+[project.scripts]
+oph-fpe = "oph_fpe.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["oph_fpe*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

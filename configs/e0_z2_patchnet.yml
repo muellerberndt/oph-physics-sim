@@ -1,0 +1,53 @@
+name: e0_z2_patchnet
+seed: 20260601
+claim_boundary: "E0 calibration only: finite patch-net repair, records, and Z2 holonomy defects."
+
+graph:
+  family: cycle
+  patch_count: 24
+  edge_weight: 1.0
+
+group:
+  name: Z2
+
+screen:
+  chart: finite_patch_cycle_calibration
+  carrier: federated_patch_calibration
+  ports_per_patch: 2
+  cap_family: not_used_e0
+  edge_sector_law: z2_finite_calibration
+
+oph_constants:
+  P: 1.6309682094039593
+  P_source: endpoint_public
+  use_P_for:
+    - cell_area
+    - cell_entropy
+    - cap_capacity
+    - residual_weighting
+
+screen_units:
+  mode: numerical_regulator
+
+initial_condition: maxent_hot
+
+defects:
+  count: 1
+
+dynamics:
+  cycles: 32
+  repairs_per_cycle: 24
+  repair: local_best_plus_metropolis_hot_phase
+  hot_metropolis: true
+  record_commit_cycles: 4
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.2
+    beta_end: 8.0
+
+observables:
+  defect_scan_interval: 2
+
+controls:
+  - no_repair
+  - wrong_orientation

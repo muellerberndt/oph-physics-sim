@@ -1,0 +1,15 @@
+name: planted_3d_dimension
+seed: 7
+graph:
+  family: lattice_3d
+  patch_count: 343
+group:
+  name: Z2
+initial_condition: synchronized
+dynamics:
+  cycles: 4
+  repairs_per_cycle: 1
+  record_commit_cycles: 2
+  beta_schedule:
+    kind: constant
+    beta_start: 1.0

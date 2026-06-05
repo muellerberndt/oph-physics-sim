@@ -1,0 +1,77 @@
+name: e1_s3_modular_screen_64k
+seed: 20260601
+claim_boundary: "Large-scale target config for cloud CPU workers: S3 screen regulator plus sampled modular-flow record-history lift."
+
+graph:
+  family: fibonacci_sphere
+  patch_count: 65536
+  neighbors: 12
+  edge_weight: 1.0
+
+group:
+  name: S3
+
+screen:
+  chart: support_visible_s2_cellulation
+  carrier: federated_echosahedral_patch
+  ports_per_patch: 12
+  cap_family: round_caps_on_s2
+  edge_sector_law: fixed_cutoff_heat_kernel_casimir_surrogate
+
+oph_constants:
+  P: 1.6309682094039593
+  P_source: endpoint_public
+  use_P_for:
+    - cell_area
+    - cell_entropy
+    - cap_capacity
+    - residual_weighting
+
+screen_units:
+  mode: numerical_regulator
+
+initial_condition: maxent_hot
+
+defects:
+  count: 512
+
+modular_flow:
+  enabled: true
+  dt: 0.03
+  damping: 0.012
+  repair_load_coupling: 0.35
+  cap_coupling: 0.08
+  diffusion: 0.06
+  cap_axes: 20
+  trace_interval: 4
+
+dynamics:
+  cycles: 64
+  repairs_per_cycle: 65536
+  repair: local_best_plus_metropolis_hot_phase
+  hot_metropolis: true
+  record_commit_cycles: 8
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.05
+    beta_end: 15.0
+
+observables:
+  distance_source: modular_lift
+  defect_scan_interval: 8
+  modular_lift:
+    max_points: 200000
+    center_samples: 4096
+  dimension:
+    - modular_lift_correlation
+    - modular_lift_volume_growth
+  bulk_embedding: modular_radial_screen_lift
+
+output:
+  write_full_state: false
+  write_modular_depth_trace: false
+
+controls:
+  - random_graph
+  - no_repair
+  - wrong_orientation
