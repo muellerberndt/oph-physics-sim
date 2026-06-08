@@ -1,0 +1,4 @@
+scenario: record_reversal
+initial_payload_bits: 64
+target_payload_bits: 8
+

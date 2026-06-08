@@ -179,6 +179,28 @@ def main(argv: list[str] | None = None) -> int:
     inflation_camb_parser.add_argument("--lmax", default=2600, type=int)
     inflation_camb_parser.add_argument("--label", default="Planck2018_TT_binned")
 
+    exact_cmb_camb_parser = subparsers.add_parser(
+        "oph-exact-cmb-camb",
+        help="run CAMB TT transfer for the exact OPH CMB scalar target branch",
+    )
+    exact_cmb_camb_parser.add_argument("--benchmark", required=True, type=Path)
+    exact_cmb_camb_parser.add_argument("--out", required=True, type=Path)
+    exact_cmb_camb_parser.add_argument("--source-dir", default=None, type=Path)
+    exact_cmb_camb_parser.add_argument("--lmax", default=2600, type=int)
+    exact_cmb_camb_parser.add_argument("--label", default="Planck2018_TT_binned")
+
+    selector_elimination_parser = subparsers.add_parser(
+        "oph-cmb-selector-elimination",
+        help="write the OPH CMB v1.5 selector-elimination target/certificate audit",
+    )
+    selector_elimination_parser.add_argument(
+        "--source-dir",
+        default=Path("/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/cmb/7"),
+        type=Path,
+    )
+    selector_elimination_parser.add_argument("--out", required=True, type=Path)
+    selector_elimination_parser.add_argument("--p-value", default=None, type=float)
+
     boltzmann_input_parser = subparsers.add_parser(
         "oph-boltzmann-inputs",
         help="export CDM-limit and OPH diagnostic anomaly-stress inputs for future CAMB/CLASS modules",
@@ -249,11 +271,42 @@ def main(argv: list[str] | None = None) -> int:
     h0s8_parser.add_argument("--out", required=True, type=Path)
     h0s8_parser.add_argument("--q-a", default=5.363470441, type=float)
 
+    h0s8_cert_parser = subparsers.add_parser(
+        "h0s8-lane8-certificate",
+        help="write the Lane-8 record/provenance certificate stack for H0/S8 diagnostics",
+    )
+    h0s8_cert_parser.add_argument("--out", required=True, type=Path)
+
+    cnb_parser = subparsers.add_parser(
+        "oph-cnb-neutrinos",
+        help="write the OPH-CnuB relic-neutrino background and weak-lensing projection target report",
+    )
+    cnb_parser.add_argument(
+        "--source-dir",
+        default=Path("/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/neutrinos"),
+        type=Path,
+    )
+    cnb_parser.add_argument("--out", required=True, type=Path)
+    cnb_parser.add_argument("--delta-neff-coh", default=0.0, type=float)
+
     compressed_parser = subparsers.add_parser(
         "oph-compressed-likelihood",
         help="write the OPH compressed CMB/BAO/growth/S8 reference diagnostic",
     )
     compressed_parser.add_argument("--out", required=True, type=Path)
+
+    screen_capacity_parser = subparsers.add_parser(
+        "screen-capacity-report",
+        help="write OPH cosmic record/screen-capacity closure readout and regulator-scale comparison",
+    )
+    screen_capacity_parser.add_argument("--out", required=True, type=Path)
+    screen_capacity_parser.add_argument("--r-ds-m", default=1.66e26, type=float)
+    screen_capacity_parser.add_argument("--planck-length-m", default=1.616e-35, type=float)
+    screen_capacity_parser.add_argument(
+        "--regulator-patch-counts",
+        default="4096,65536,262144,1048576",
+        help="comma-separated finite regulator patch counts to compare against N_scr",
+    )
 
     inflation_cmb_parser = subparsers.add_parser(
         "oph-inflation-cmb-bridge",
@@ -261,6 +314,55 @@ def main(argv: list[str] | None = None) -> int:
     )
     inflation_cmb_parser.add_argument("--source-dir", default=None, type=Path)
     inflation_cmb_parser.add_argument("--out", required=True, type=Path)
+
+    inflation_cert_parser = subparsers.add_parser(
+        "inflation-certificates",
+        help="validate OPH inflation/CMB finite certificate artifacts and write schemas/templates",
+    )
+    inflation_cert_parser.add_argument("--cert-dir", default=None, type=Path)
+    inflation_cert_parser.add_argument(
+        "--source-path",
+        default=Path("/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/inflation/3/comms.md"),
+        type=Path,
+    )
+    inflation_cert_parser.add_argument("--out", required=True, type=Path)
+
+    finite_cert_parser = subparsers.add_parser(
+        "finite-certificates",
+        help="compute OPH finite cosmology certificates from release/collar/repair finite input JSON",
+    )
+    finite_cert_parser.add_argument("--input", default=None, type=Path)
+    finite_cert_parser.add_argument("--out", required=True, type=Path)
+    finite_cert_parser.add_argument(
+        "--toy",
+        action="store_true",
+        help="write the built-in toy certificate bundle; validates format only and is not a physical output",
+    )
+
+    scalar_cert_parser = subparsers.add_parser(
+        "emit-scalar-release-certificate",
+        help="emit a proxy scalar-release certificate from a cached collar Markov run",
+    )
+    scalar_cert_parser.add_argument("--run-dir", required=True, type=Path)
+    scalar_cert_parser.add_argument("--out", required=True, type=Path)
+    scalar_cert_parser.add_argument("--kappa-rel", default=1.0, type=float)
+    scalar_cert_parser.add_argument(
+        "--source-path",
+        default=Path("/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/inflation/3/comms.md"),
+        type=Path,
+    )
+
+    edge_cert_parser = subparsers.add_parser(
+        "emit-edge-center-certificate",
+        help="emit the P/48 edge-center finite certificate into a certificate directory",
+    )
+    edge_cert_parser.add_argument("--out", required=True, type=Path)
+    edge_cert_parser.add_argument("--p-value", default=None, type=float)
+    edge_cert_parser.add_argument(
+        "--source-path",
+        default=Path("/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/inflation/3/comms.md"),
+        type=Path,
+    )
 
     unique_cmb_parser = subparsers.add_parser(
         "oph-unique-predictions",
@@ -297,6 +399,13 @@ def main(argv: list[str] | None = None) -> int:
     comparable_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
     comparable_parser.add_argument("--include", nargs="*", default=[], type=Path)
     comparable_parser.add_argument("--out", required=True, type=Path)
+
+    bulk_proof_parser = subparsers.add_parser(
+        "bulk-proof-certificate",
+        help="write a tiered OPH 3D-bulk/chart/CMB/particle proof certificate from run receipts",
+    )
+    bulk_proof_parser.add_argument("--run-dir", required=True, type=Path)
+    bulk_proof_parser.add_argument("--out", default=None, type=Path)
 
     recompute_object_parser = subparsers.add_parser(
         "recompute-object-chart",
@@ -574,6 +683,29 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "oph-exact-cmb-camb":
+        from oph_fpe.cosmology.camb_adapter import write_oph_exact_cmb_camb_report
+
+        result = write_oph_exact_cmb_camb_report(
+            args.benchmark,
+            args.out,
+            source_dir=args.source_dir,
+            lmax=args.lmax,
+            benchmark_label=args.label,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "oph-cmb-selector-elimination":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.selector_elimination import write_selector_elimination_report
+
+        result = write_selector_elimination_report(
+            args.source_dir,
+            args.out,
+            P=P_STAR if args.p_value is None else args.p_value,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "oph-boltzmann-inputs":
         from oph_fpe.cosmology.boltzmann_inputs import write_oph_boltzmann_input_report
 
@@ -643,16 +775,80 @@ def main(argv: list[str] | None = None) -> int:
         result = write_h0s8_branch_report(args.out, q_a=args.q_a)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "h0s8-lane8-certificate":
+        from oph_fpe.cosmology.h0s8_certificates import write_h0s8_lane8_certificate_report
+
+        result = write_h0s8_lane8_certificate_report(args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "oph-cnb-neutrinos":
+        from oph_fpe.cosmology.neutrino_background import write_oph_cnb_background_report
+
+        result = write_oph_cnb_background_report(
+            args.source_dir,
+            args.out,
+            delta_neff_coh=args.delta_neff_coh,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "oph-compressed-likelihood":
         from oph_fpe.cosmology.compressed_likelihood import write_compressed_likelihood_reference_report
 
         result = write_compressed_likelihood_reference_report(args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "screen-capacity-report":
+        from oph_fpe.cosmology.screen_capacity import write_screen_capacity_closure_report
+
+        patch_counts = tuple(
+            int(value.strip()) for value in args.regulator_patch_counts.split(",") if value.strip()
+        )
+        result = write_screen_capacity_closure_report(
+            args.out,
+            radius_m=args.r_ds_m,
+            planck_length_m=args.planck_length_m,
+            regulator_patch_counts=patch_counts,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "oph-inflation-cmb-bridge":
         from oph_fpe.cosmology.inflation_cmb_ladder import write_inflation_cmb_bridge_report
 
         result = write_inflation_cmb_bridge_report(args.source_dir, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "inflation-certificates":
+        from oph_fpe.cosmology.inflation_certificates import write_inflation_certificate_bundle_report
+
+        result = write_inflation_certificate_bundle_report(args.cert_dir, args.out, source_path=args.source_path)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "finite-certificates":
+        from oph_fpe.cosmology.finite_certificates import write_finite_certificate_bundle
+
+        result = write_finite_certificate_bundle(args.input, args.out, toy=args.toy)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "emit-scalar-release-certificate":
+        from oph_fpe.cosmology.inflation_certificates import emit_scalar_release_certificate_from_collar_run
+
+        result = emit_scalar_release_certificate_from_collar_run(
+            args.run_dir,
+            args.out,
+            kappa_rel=args.kappa_rel,
+            source_path=args.source_path,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "emit-edge-center-certificate":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.inflation_certificates import emit_edge_center_certificate
+
+        result = emit_edge_center_certificate(
+            args.out,
+            p_value=P_STAR if args.p_value is None else args.p_value,
+            source_path=args.source_path,
+        )
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "oph-unique-predictions":
@@ -686,6 +882,12 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.cosmology.comparable_data import write_comparable_data_package
 
         result = write_comparable_data_package([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "bulk-proof-certificate":
+        from oph_fpe.bulk.proof_certificate import write_bulk_proof_certificate
+
+        result = write_bulk_proof_certificate(args.run_dir, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "recompute-object-chart":

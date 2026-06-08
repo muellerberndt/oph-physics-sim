@@ -1,0 +1,5 @@
+scenario: hidden_export_sweep
+source_bits: 64
+s_max_bits: 256
+hidden_export_budgets: [0, 8, 16, 32, 64]
+

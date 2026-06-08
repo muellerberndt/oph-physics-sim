@@ -1,0 +1,5 @@
+scenario: fake_past_sweep
+source_bits: 20
+trials: 100000
+fake_has_provenance: false
+

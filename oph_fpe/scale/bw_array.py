@@ -1949,7 +1949,7 @@ def _harmonic_time_trace_sample(
         ell_max=ell_max,
         pair_samples=0,
         seed=int(seed),
-        controls=[],
+        controls=[str(item) for item in config.get("controls", ["shuffled_field", "random_gaussian"])],
         estimator="spherical_harmonic",
         measure_weights=cell_entropy,
         harmonic_batch_size=int(config.get("harmonic_batch_size", 4096)),
@@ -1961,6 +1961,17 @@ def _harmonic_time_trace_sample(
         "fields": {
             name: np.asarray([float(row.get("D_ell", 0.0)) for row in field["spectrum"]], dtype=float)
             for name, field in report.get("fields", {}).items()
+        },
+        "controls": {
+            name: {
+                control_name: np.asarray(
+                    [float(row.get("D_ell", 0.0)) for row in control_report["spectrum"]],
+                    dtype=float,
+                )
+                for control_name, control_report in field_controls.items()
+                if "spectrum" in control_report
+            }
+            for name, field_controls in report.get("controls", {}).items()
         },
     }
 
@@ -1985,6 +1996,31 @@ def _write_harmonic_time_trace(
                 values = np.resize(values, ell.shape[0]).astype(np.float32)
             rows.append(values)
         arrays[name] = np.vstack(rows).astype(np.float32)
+    control_keys: list[str] = []
+    control_names = sorted(
+        {
+            (field_name, control_name)
+            for sample in usable
+            for field_name, field_controls in (sample.get("controls", {}) or {}).items()
+            for control_name in field_controls
+        }
+    )
+    for field_name, control_name in control_names:
+        rows = []
+        for sample in usable:
+            values = np.asarray(
+                ((sample.get("controls", {}) or {}).get(field_name, {}) or {}).get(
+                    control_name,
+                    np.zeros_like(ell),
+                ),
+                dtype=np.float32,
+            )
+            if values.shape[0] != ell.shape[0]:
+                values = np.resize(values, ell.shape[0]).astype(np.float32)
+            rows.append(values)
+        key = f"control__{field_name}__{control_name}"
+        arrays[key] = np.vstack(rows).astype(np.float32)
+        control_keys.append(key)
     np.savez_compressed(run_path / "harmonic_time_trace.npz", cycles=cycles, ell=ell, **arrays)
     return {
         "mode": "screen_harmonic_time_trace_v0",
@@ -1992,6 +2028,7 @@ def _write_harmonic_time_trace(
         "sample_count": int(cycles.size),
         "cycles": [int(value) for value in cycles],
         "field_names": field_names,
+        "control_keys": control_keys,
         "ell_max": int(ell[-1]) if ell.size else None,
         "n_jobs": config.get("n_jobs", 1),
         "harmonic_batch_size": int(config.get("harmonic_batch_size", 4096)),

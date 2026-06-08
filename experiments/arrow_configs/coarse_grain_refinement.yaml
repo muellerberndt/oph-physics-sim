@@ -1,0 +1,3 @@
+scenario: coarse_grain_refinement
+delta_refinement: 0.05
+

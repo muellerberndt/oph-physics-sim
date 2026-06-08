@@ -689,6 +689,106 @@ def test_comparable_data_collects_oph_inflation_cmb_camb_transfer(tmp_path: Path
     assert lane["mean_lowell_oph_ir_chi2"] == 16.65364090607876
 
 
+def test_comparable_data_collects_oph_exact_cmb_camb_transfer(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "oph_exact_cmb_camb_report.json",
+        {
+            "mode": "oph_exact_cmb_camb_transfer_v1",
+            "oph_exact_input": {
+                "n_s": 0.964841143031,
+                "eta_R": 0.035158856969,
+                "q_IR": 0.25,
+                "ell_IR": 32.0,
+                "N_frz_proxy": 1089,
+            },
+            "comparison": {
+                "camb_lcdm_powerlaw": {
+                    "shape_correlation": 0.995,
+                    "amplitude_fit_chi2_per_bin": 1.4,
+                },
+                "oph_exact_scalar_tilt": {
+                    "shape_correlation": 0.996,
+                    "amplitude_fit_chi2_per_bin": 1.35,
+                },
+                "oph_exact_ir_v10": {
+                    "shape_correlation": 0.997,
+                    "amplitude_fit_chi2_per_bin": 1.31,
+                },
+            },
+            "acoustic_preservation": {
+                "mean_abs_fractional_delta_ell_ge_50": 0.001,
+            },
+            "official_planck_likelihood_readiness": {
+                "official_clik_api_available": False,
+                "official_likelihood_execution_ready": False,
+            },
+            "measurement_comparable_cmb_curve": True,
+            "physical_cmb_prediction": False,
+            "screen_camb_transfer_receipt": True,
+        },
+    )
+
+    report = comparable_data_report([tmp_path])
+    lane = report["measurement_lanes"]["oph_exact_cmb_camb_transfer"]
+
+    assert lane["run_count"] == 1
+    assert lane["measurement_comparable_curve_count"] == 1
+    assert lane["transfer_receipt_count"] == 1
+    assert lane["official_likelihood_ready_count"] == 0
+    assert lane["mean_n_s"] == 0.964841143031
+    assert lane["mean_q_IR"] == 0.25
+    assert lane["mean_ell_IR"] == 32.0
+    assert lane["mean_ir_chi2_per_bin"] == 1.31
+
+
+def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "oph_cmb_selector_elimination_report.json",
+        {
+            "mode": "oph_cmb_selector_elimination_v1_5",
+            "selector_elimination": {
+                "q_IR_selector_removed": True,
+                "ell_IR_selector_removed": True,
+                "eta_R_reduced_to_repair_clock_certificate": True,
+            },
+            "scalar_tilt": {
+                "n_s": 0.964841143031,
+                "eta_R": 0.035158856969,
+                "canonical_kappa_rep_status": "certificate_pending",
+            },
+            "cmb_ir_kernel": {
+                "q_IR": 0.25,
+                "ell_IR": 32.0,
+            },
+            "exact_ir_kernel_csv_audit": {
+                "passed": True,
+                "max_abs_error": 1.0e-15,
+            },
+            "THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT": True,
+            "SOURCE_PACKET_AUDIT_RECEIPT": True,
+            "finite_lattice_derived": False,
+            "physical_cmb_prediction": False,
+        },
+    )
+
+    report = comparable_data_report([tmp_path])
+    lane = report["measurement_lanes"]["oph_cmb_selector_elimination_v1_5"]
+
+    assert lane["run_count"] == 1
+    assert lane["theorem_side_receipt_count"] == 1
+    assert lane["source_packet_audit_receipt_count"] == 1
+    assert lane["q_IR_selector_removed_count"] == 1
+    assert lane["ell_IR_selector_removed_count"] == 1
+    assert lane["eta_R_repair_clock_reduction_count"] == 1
+    assert lane["finite_lattice_derived_count"] == 0
+    assert lane["mean_q_IR"] == 0.25
+    assert lane["mean_ell_IR"] == 32.0
+
+
 def test_comparable_data_collects_inflation_cmb_v05_hard_gates(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
@@ -851,6 +951,109 @@ def test_comparable_data_collects_gap_release_adiabaticity_and_h0s8(tmp_path: Pa
     assert h0s8["mean_direct_jacobi_S8"] == 0.79
     assert h0s8["lambda_P_gate_count"] == 1
     assert h0s8["Q_A_gate_count"] == 0
+
+
+def test_comparable_data_collects_oph_cnb_neutrino_background(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "oph_cnb_neutrino_report.json",
+        {
+            "mode": "oph_cnb_neutrino_background_v0",
+            "oph_neutrino_branch": {
+                "sum_mnu_eV": 0.09001192964464505,
+                "m_lightest_eV": 0.017454720257976796,
+            },
+            "relic_background": {
+                "N_eff": 3.044,
+                "Omega_nu_h2": 0.0009661936177406568,
+                "Omega_nu": 0.002127375,
+                "f_nu": 0.006743,
+                "small_scale_power_suppression_fraction": -0.053944,
+            },
+            "measurement_comparisons": {
+                "Planck2018_N_eff": {"pull_sigma": 0.3176470588235297},
+                "Planck2018_BAO_sum_mnu_bound": {"passes_bound": True},
+                "ACT_DR6_extended_sum_mnu_bound": {"passes_bound": False},
+                "DESI_DR2_LCDM_sum_mnu_bound": {"passes_bound": False},
+            },
+            "late_repair_projection_target": {
+                "eta_A": 0.0656993605106136,
+                "Pi_WL_compressed_required": 0.7147300876,
+            },
+            "readiness_gates": {
+                "measurement_comparable_relic_background": True,
+                "finite_lattice_mass_derivation": False,
+                "B_A_k_a_from_finite_collar_parent": False,
+                "full_boltzmann_likelihood_run": False,
+            },
+            "measurement_comparable_now": True,
+            "finite_lattice_derived": False,
+            "physical_cmb_prediction": False,
+            "physical_matter_power_prediction": False,
+        },
+    )
+
+    report = comparable_data_report([run])
+    cnb = report["measurement_lanes"]["oph_cnb_neutrino_background"]
+
+    assert cnb["run_count"] == 1
+    assert cnb["measurement_comparable_count"] == 1
+    assert cnb["finite_lattice_derived_count"] == 0
+    assert cnb["background_gate_count"] == 1
+    assert cnb["B_A_kernel_gate_count"] == 0
+    assert cnb["planck_bao_bound_pass_count"] == 1
+    assert cnb["act_bound_pass_count"] == 0
+    assert cnb["desi_lcdm_bound_pass_count"] == 0
+    assert cnb["mean_sum_mnu_eV"] == 0.09001192964464505
+    assert cnb["mean_Pi_WL_compressed_required"] == 0.7147300876
+
+
+def test_comparable_data_collects_inflation_certificate_stack(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "inflation_certificate_report.json",
+        {
+            "mode": "oph_inflation_certificate_bundle_v0",
+            "certificate_summary": {
+                "found_count": 2,
+                "passed_count": 1,
+                "expected_count": 6,
+                "missing_types": ["homogeneous_anomaly", "parent_collar", "repair_matrix", "boltzmann_handoff"],
+            },
+            "readiness_gates": {
+                "scalar_release_certificate": True,
+                "edge_center_certificate": False,
+                "homogeneous_anomaly_certificate": False,
+                "parent_collar_kernel_certificate": False,
+                "repair_matrix_certificate": False,
+                "boltzmann_handoff_certificate": False,
+                "no_data_use_firewall": True,
+            },
+            "derived_outputs": {
+                "scalar_release": {"A_zeta": 2.1e-9},
+                "edge_center": {"n_s": 0.966},
+            },
+            "no_data_use_manifest": {"no_data_use_receipt": True},
+            "inflation_certificate_stack_ready": False,
+            "physical_cmb_prediction": False,
+            "physical_matter_power_prediction": False,
+        },
+    )
+
+    report = comparable_data_report([run])
+    certs = report["measurement_lanes"]["oph_inflation_certificate_stack"]
+
+    assert certs["run_count"] == 1
+    assert certs["stack_ready_count"] == 0
+    assert certs["scalar_release_gate_count"] == 1
+    assert certs["edge_center_gate_count"] == 0
+    assert certs["no_data_use_count"] == 1
+    assert certs["mean_found_count"] == 2.0
+    assert certs["mean_passed_count"] == 1.0
+    assert certs["mean_A_zeta"] == 2.1e-9
+    assert certs["mean_n_s"] == 0.966
 
 
 def _write_json(path: Path, data: dict) -> None:

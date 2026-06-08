@@ -1,0 +1,3 @@
+scenario: janus_neck
+branch_payload_bits: [1, 4, 8]
+

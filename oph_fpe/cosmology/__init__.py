@@ -17,6 +17,11 @@ _EXPORTS = {
     "angular_power_report": ("oph_fpe.cosmology.angular_power", "angular_power_report"),
     "background_adapter_status": ("oph_fpe.cosmology.background_adapter", "background_adapter_status"),
     "estimate_b_a_grid": ("oph_fpe.cosmology.ba_parent", "estimate_b_a_grid"),
+    "finite_certificate_bundle": ("oph_fpe.cosmology.finite_certificates", "finite_certificate_bundle"),
+    "write_finite_certificate_bundle": (
+        "oph_fpe.cosmology.finite_certificates",
+        "write_finite_certificate_bundle",
+    ),
     "oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "oph_boltzmann_input_report"),
     "write_oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "write_oph_boltzmann_input_report"),
     "LambdaCDMParameters": ("oph_fpe.cosmology.camb_adapter", "LambdaCDMParameters"),
@@ -33,6 +38,38 @@ _EXPORTS = {
         "oph_fpe.cosmology.camb_adapter",
         "write_oph_inflation_cmb_camb_report",
     ),
+    "oph_exact_cmb_camb_report": (
+        "oph_fpe.cosmology.camb_adapter",
+        "oph_exact_cmb_camb_report",
+    ),
+    "write_oph_exact_cmb_camb_report": (
+        "oph_fpe.cosmology.camb_adapter",
+        "write_oph_exact_cmb_camb_report",
+    ),
+    "official_planck_readiness_report": (
+        "oph_fpe.cosmology.camb_adapter",
+        "official_planck_readiness_report",
+    ),
+    "OPHConstants": ("oph_fpe.cosmology.oph_constants", "OPHConstants"),
+    "B_A_z6_poisson_five_of_seven": (
+        "oph_fpe.cosmology.oph_kernels",
+        "B_A_z6_poisson_five_of_seven",
+    ),
+    "B_A_minimal_one_pole": ("oph_fpe.cosmology.oph_kernels", "B_A_minimal_one_pole"),
+    "apply_projected_wl_selector": ("oph_fpe.cosmology.oph_kernels", "apply_projected_wl_selector"),
+    "compressed_projection_fraction": (
+        "oph_fpe.cosmology.oph_kernels",
+        "compressed_projection_fraction",
+    ),
+    "normalized_projection_average": (
+        "oph_fpe.cosmology.oph_kernels",
+        "normalized_projection_average",
+    ),
+    "projected_amplitude": ("oph_fpe.cosmology.oph_kernels", "projected_amplitude"),
+    "projected_amplitude_ratio": (
+        "oph_fpe.cosmology.oph_kernels",
+        "projected_amplitude_ratio",
+    ),
     "collect_cl_runs": ("oph_fpe.cosmology.cl_ensemble", "collect_cl_runs"),
     "cl_ensemble_report": ("oph_fpe.cosmology.cl_ensemble", "cl_ensemble_report"),
     "write_cl_ensemble_report": ("oph_fpe.cosmology.cl_ensemble", "write_cl_ensemble_report"),
@@ -48,6 +85,22 @@ _EXPORTS = {
     "write_cmb_parameter_derivation_report": (
         "oph_fpe.cosmology.cmb_derivation",
         "write_cmb_parameter_derivation_report",
+    ),
+    "selector_elimination_report": (
+        "oph_fpe.cosmology.selector_elimination",
+        "selector_elimination_report",
+    ),
+    "write_selector_elimination_report": (
+        "oph_fpe.cosmology.selector_elimination",
+        "write_selector_elimination_report",
+    ),
+    "screen_capacity_closure_report": (
+        "oph_fpe.cosmology.screen_capacity",
+        "screen_capacity_closure_report",
+    ),
+    "write_screen_capacity_closure_report": (
+        "oph_fpe.cosmology.screen_capacity",
+        "write_screen_capacity_closure_report",
     ),
     "compressed_likelihood_reference_report": (
         "oph_fpe.cosmology.compressed_likelihood",
@@ -77,6 +130,14 @@ _EXPORTS = {
         "oph_fpe.cosmology.inflation_cmb_ladder",
         "write_inflation_cmb_bridge_report",
     ),
+    "inflation_certificate_bundle_report": (
+        "oph_fpe.cosmology.inflation_certificates",
+        "inflation_certificate_bundle_report",
+    ),
+    "write_inflation_certificate_bundle_report": (
+        "oph_fpe.cosmology.inflation_certificates",
+        "write_inflation_certificate_bundle_report",
+    ),
     "collect_comparable_runs": ("oph_fpe.cosmology.comparable_data", "collect_comparable_runs"),
     "comparable_data_report": ("oph_fpe.cosmology.comparable_data", "comparable_data_report"),
     "write_comparable_data_package": ("oph_fpe.cosmology.comparable_data", "write_comparable_data_package"),
@@ -101,6 +162,20 @@ _EXPORTS = {
     ),
     "h0s8_branch_report": ("oph_fpe.cosmology.h0s8", "h0s8_branch_report"),
     "write_h0s8_branch_report": ("oph_fpe.cosmology.h0s8", "write_h0s8_branch_report"),
+    "H0S8CertificateInputs": ("oph_fpe.cosmology.h0s8_certificates", "H0S8CertificateInputs"),
+    "h0s8_lane8_certificate_report": (
+        "oph_fpe.cosmology.h0s8_certificates",
+        "h0s8_lane8_certificate_report",
+    ),
+    "write_h0s8_lane8_certificate_report": (
+        "oph_fpe.cosmology.h0s8_certificates",
+        "write_h0s8_lane8_certificate_report",
+    ),
+    "oph_cnb_background_report": ("oph_fpe.cosmology.neutrino_background", "oph_cnb_background_report"),
+    "write_oph_cnb_background_report": (
+        "oph_fpe.cosmology.neutrino_background",
+        "write_oph_cnb_background_report",
+    ),
     "hot_release_report": ("oph_fpe.cosmology.hot_release", "hot_release_report"),
     "write_hot_release_report": ("oph_fpe.cosmology.hot_release", "write_hot_release_report"),
     "oph_cmb_stress_adapter_report": ("oph_fpe.cosmology.oph_cmb_adapter", "oph_cmb_stress_adapter_report"),

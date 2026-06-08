@@ -182,7 +182,18 @@ def _time_resolved_gap(path: Path, ell_max_cmb: int) -> dict[str, Any]:
         return {"available": False, "reason": "missing_cycles_or_ell"}
     cycles = np.asarray(payload["cycles"], dtype=float)
     ell = np.asarray(payload["ell"], dtype=float)
-    field_names = [name for name in payload.files if name not in {"cycles", "ell"}]
+    all_field_names = [name for name in payload.files if name not in {"cycles", "ell"}]
+    field_names = [name for name in all_field_names if not str(name).startswith("control__")]
+    control_map: dict[str, list[tuple[str, str]]] = {}
+    for name in all_field_names:
+        text = str(name)
+        if not text.startswith("control__"):
+            continue
+        parts = text.split("__", 2)
+        if len(parts) != 3:
+            continue
+        _prefix, field_name, control_name = parts
+        control_map.setdefault(field_name, []).append((control_name, text))
     rows = []
     for name in field_names:
         values = np.asarray(payload[name], dtype=float)
@@ -191,20 +202,56 @@ def _time_resolved_gap(path: Path, ell_max_cmb: int) -> dict[str, Any]:
         mask = (ell >= 2.0) & (ell <= float(ell_max_cmb))
         for index in np.where(mask)[0]:
             fit = _fit_series_decay(cycles, np.abs(values[:, index]))
+            control_fits = []
+            for control_name, control_key in control_map.get(str(name), []):
+                control_values = np.asarray(payload[control_key], dtype=float)
+                if control_values.ndim != 2 or control_values.shape[0] != cycles.size or control_values.shape[1] != ell.size:
+                    continue
+                control_fit = _fit_series_decay(cycles, np.abs(control_values[:, index]))
+                control_fits.append({"control": control_name, **control_fit})
+            control_gammas = [
+                float(row["gamma_per_cycle"])
+                for row in control_fits
+                if row.get("available") and row.get("gamma_per_cycle") is not None
+            ]
+            fit = {
+                **fit,
+                "control_count": len(control_fits),
+                "max_control_gamma_per_cycle": max(control_gammas) if control_gammas else None,
+                "control_fits": control_fits,
+            }
             rows.append({"field": name, "ell": float(ell[index]), **fit})
     gamma_values = [float(row["gamma_per_cycle"]) for row in rows if row.get("available")]
     positive = [value for value in gamma_values if value > 0.0]
+    rows_with_controls = [
+        row
+        for row in rows
+        if row.get("available")
+        and row.get("gamma_per_cycle") is not None
+        and row.get("max_control_gamma_per_cycle") is not None
+    ]
+    control_separations = [
+        float(row["gamma_per_cycle"]) - float(row["max_control_gamma_per_cycle"])
+        for row in rows_with_controls
+    ]
+    controls_fail = bool(control_separations and min(control_separations) > 0.0)
     return {
         "available": bool(rows),
         "mode_count": len(rows),
+        "mode_count_with_controls": len(rows_with_controls),
         "median_gamma_per_cycle": median(gamma_values) if gamma_values else None,
         "min_gamma_per_cycle": min(gamma_values) if gamma_values else None,
         "positive_gamma_fraction": len(positive) / len(gamma_values) if gamma_values else None,
         "mode_wise_gamma_positive": bool(gamma_values and min(gamma_values) > 0.0),
-        "controls_fail": False,
-        "low_k_gap_established": False,
+        "median_target_minus_max_control_gamma": median(control_separations) if control_separations else None,
+        "min_target_minus_max_control_gamma": min(control_separations) if control_separations else None,
+        "controls_fail": controls_fail,
+        "low_k_gap_established": bool(gamma_values and min(gamma_values) > 0.0 and controls_fail),
         "rows": rows[:512],
-        "claim_boundary": "Time-resolved harmonic trace loaded, but controls are required before this can prove a low-k gap.",
+        "claim_boundary": (
+            "Time-resolved harmonic trace loaded. A low-k gap requires positive target decay across the "
+            "band and target decay stronger than time-resolved controls."
+        ),
     }
 
 

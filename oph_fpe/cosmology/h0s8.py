@@ -8,6 +8,7 @@ from typing import Any
 
 from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_claim_metadata
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.h0s8_certificates import h0s8_lane8_certificate_report
 
 
 H_DS_KM_S_MPC = 55.759940256
@@ -61,6 +62,7 @@ def h0s8_branch_report(
     jacobi_s8 = float(s8_cdm) * required_growth_factor
     matrix_gap_suppression = 1.0 - (1.0 - mu_eff) * float(GAMMA_REC_MATRIX_GAP)
     matrix_gap_s8 = float(s8_cdm) * matrix_gap_suppression
+    lane8_certificate = h0s8_lane8_certificate_report()
     report = {
         "mode": "oph_h0_s8_branch_diagnostic_v0",
         "inputs": {
@@ -131,7 +133,11 @@ def h0s8_branch_report(
             "Gamma_rec_equals_Jacobi_clock": False,
             "full_CAMB_CLASS_anomaly_module": False,
             "full_likelihood_contract": False,
+            "lane8_low_entropy_certificate_ready": bool(
+                lane8_certificate["theorem_gates"]["low_entropy_ancestry_certificate_ready"]
+            ),
         },
+        "lane8_certificate_stack": lane8_certificate,
         "physical_prediction_ready": False,
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
@@ -219,4 +225,3 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "",
         ]
     )
-

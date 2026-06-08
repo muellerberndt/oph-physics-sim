@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -7,10 +8,13 @@ import pytest
 
 from oph_fpe.cosmology.camb_adapter import (
     compare_camb_tt_to_benchmark,
+    official_planck_readiness_report,
     write_camb_lcdm_baseline_report,
+    write_oph_exact_cmb_camb_report,
     write_oph_inflation_cmb_camb_report,
     write_oph_screen_camb_report,
 )
+from oph_fpe.cosmology.selector_elimination import ir_kernel
 
 
 def test_compare_camb_tt_to_benchmark_reports_real_multipole_metrics():
@@ -153,3 +157,96 @@ def test_write_oph_inflation_cmb_camb_report_smoke(tmp_path: Path):
     assert report["oph_input"]["q_IR"] == 0.2445545067865991
     assert report["comparison"]["oph_p48_ir_v04"]["usable"] is True
     assert report["low_ell_v04_diagnostic"]["CAMB_OPH_IR_chi2_ell2_29"] == 16.65364090607876
+
+
+def test_write_oph_exact_cmb_camb_report_smoke(tmp_path: Path):
+    pytest.importorskip("camb")
+    benchmark = tmp_path / "planck_tt.txt"
+    benchmark.write_text(
+        "# l Dl -dDl +dDl BestFit\n"
+        "50 1479.0 50 50 1461.0\n"
+        "100 2955.0 65 65 2904.0\n"
+        "200 5464.0 90 90 5535.0\n"
+        "500 2460.0 35 35 2465.0\n"
+        "1000 1050.0 20 20 1055.0\n",
+        encoding="utf-8",
+    )
+    source = tmp_path / "cmb5"
+    source.mkdir()
+    (source / "OPH-CMB-Official-Likelihood-and-Finite-Patch-v1.0.md").write_text("v1", encoding="utf-8")
+    (source / "finite_patch_cmb_derivations_v1_0.md").write_text("math", encoding="utf-8")
+    (source / "OPH-Unique-Prediction-Gate-v0.9.md").write_text("v09", encoding="utf-8")
+    (source / "OPH-CMB-Selector-Elimination-v1.5.md").write_text("v15", encoding="utf-8")
+    _write_selector_status_csv(source / "selector_elimination_status_v1_5.csv")
+    _write_exact_ir_csv(source / "exact_ir_kernel_values_v1_5.csv")
+
+    report = write_oph_exact_cmb_camb_report(
+        benchmark,
+        tmp_path / "out",
+        source_dir=source,
+        lmax=1200,
+    )
+
+    assert (tmp_path / "out" / "oph_exact_cmb_camb_report.json").exists()
+    assert (tmp_path / "out" / "oph_exact_cmb_camb_report.md").exists()
+    assert (tmp_path / "out" / "oph_exact_cmb_tt_bins.csv").exists()
+    assert (tmp_path / "out" / "oph_exact_cmb_tt_curves.csv").exists()
+    assert report["mode"] == "oph_exact_cmb_camb_transfer_v1"
+    assert report["measurement_comparable_cmb_curve"] is True
+    assert report["physical_cmb_prediction"] is False
+    assert abs(report["oph_exact_input"]["n_s"] - 0.964841143031) < 2.0e-12
+    assert report["oph_exact_input"]["q_IR"] == 0.25
+    assert report["oph_exact_input"]["ell_IR"] == 32.0
+    assert report["oph_exact_input"]["selector_elimination_theorem_receipt"] is True
+    assert report["oph_exact_input"]["selector_elimination_source_audit_receipt"] is True
+    assert report["selector_elimination_v1_5"]["SOURCE_PACKET_AUDIT_RECEIPT"] is True
+    assert report["comparison"]["oph_exact_ir_v10"]["usable"] is True
+    assert report["source_files"]["all_core_files_present"] is True
+    assert report["source_files"]["selector_v1_5_core_files_present"] is True
+    assert report["official_planck_likelihood_readiness"]["official_likelihood_execution_ready"] is False
+
+
+def test_official_planck_readiness_report_is_gated():
+    report = official_planck_readiness_report()
+
+    assert "modules" in report
+    assert report["official_planck_likelihood_data_paths_configured"] is False
+    assert report["official_likelihood_execution_ready"] is False
+
+
+def _write_selector_status_csv(path: Path) -> None:
+    rows = [
+        {
+            "old_selector": "S1: eta_R = e alpha sqrt(pi)",
+            "v1_5_status": "not free, but still requires the repair-clock normalization theorem/certificate",
+            "replacement": "repair clock",
+            "what_is_closed": "alpha dependence",
+            "what_remains": "kappa_rep=e",
+        },
+        {
+            "old_selector": "S2: q_IR = 1/4 from four equipotent sectors",
+            "v1_5_status": "removed as selector",
+            "replacement": "affine zero-mode",
+            "what_is_closed": "quarter reserve",
+            "what_remains": "branch validation",
+        },
+        {
+            "old_selector": "S3: ell_IR = 32",
+            "v1_5_status": "removed as selector",
+            "replacement": "visible covariance rank",
+            "what_is_closed": "F+V+1",
+            "what_remains": "noncollapse",
+        },
+    ]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _write_exact_ir_csv(path: Path) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["ell", "F_IR_exact_q1over4_L32"])
+        writer.writeheader()
+        for ell in (2, 3, 32, 220):
+            writer.writerow({"ell": ell, "F_IR_exact_q1over4_L32": float(ir_kernel(float(ell)))})

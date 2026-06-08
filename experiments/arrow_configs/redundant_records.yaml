@@ -1,0 +1,4 @@
+scenario: redundant_records
+source_bits: 16
+copies: [1, 2, 4, 8, 16]
+

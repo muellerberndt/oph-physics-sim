@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import importlib
 import math
 import platform
 from dataclasses import asdict, dataclass
@@ -11,6 +12,8 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.cosmology.cmb_compare import load_planck_tt_binned
+from oph_fpe.cosmology.selector_elimination import selector_elimination_report
+from oph_fpe.cosmology.unique_predictions import unique_prediction_gate_report
 
 
 DEFAULT_K0_MPC = 0.05
@@ -559,6 +562,241 @@ def write_oph_inflation_cmb_camb_report(
     return report
 
 
+def oph_exact_cmb_camb_report(
+    benchmark_rows: list[dict[str, float]],
+    *,
+    source_dir: Path | None = None,
+    baseline_params: LambdaCDMParameters | None = None,
+    lmax: int = 2600,
+    benchmark_label: str = "Planck2018_TT_binned",
+    benchmark_sha256: str | None = None,
+    k0_mpc: float = DEFAULT_K0_MPC,
+    d_star_mpc: float = DEFAULT_D_STAR_MPC,
+) -> dict[str, Any]:
+    """Run CAMB for the exact OPH-CMB scalar target branch.
+
+    This is the native version of the v1.0 CMB handoff scripts. It keeps the
+    exact alpha-linked scalar tilt and exact low-ell IR kernel inside the
+    OPH-FPE reporting pipeline, while still marking official Planck likelihood
+    execution as a separate external-data gate.
+    """
+
+    baseline = baseline_params or LambdaCDMParameters()
+    target = unique_prediction_gate_report(source_dir)
+    selector_report = selector_elimination_report(source_dir)
+    scalar = dict(target.get("scalar_tilt", {}) or {})
+    ir = dict(target.get("cmb_ir_kernel", {}) or {})
+    ns_exact = _float_or(scalar.get("n_s"), baseline.ns)
+    eta_r = _float_or_none(scalar.get("eta_R"))
+    q_ir = _float_or(ir.get("q_IR"), 0.25)
+    ell_ir = _float_or(ir.get("ell_IR"), 32.0)
+    exact_params = LambdaCDMParameters(
+        H0=baseline.H0,
+        ombh2=baseline.ombh2,
+        omch2=baseline.omch2,
+        mnu=baseline.mnu,
+        omk=baseline.omk,
+        tau=baseline.tau,
+        As=baseline.As,
+        ns=ns_exact,
+    )
+
+    ell_lcdm, tt_lcdm = _run_camb_tt(baseline, lmax=int(lmax))
+    ell_exact, tt_exact = _run_camb_tt(exact_params, lmax=int(lmax))
+    ell_ir_curve, tt_ir = _run_camb_tt_custom_power(
+        exact_params,
+        lmax=int(lmax),
+        power_fn=lambda k: _oph_p48_ir_power(
+            k,
+            A_s=exact_params.As,
+            ns=ns_exact,
+            q_ir=q_ir,
+            ell_ir=ell_ir,
+            k0_mpc=float(k0_mpc),
+            d_star_mpc=float(d_star_mpc),
+        ),
+        effective_ns=ns_exact,
+    )
+    comparisons = {
+        "camb_lcdm_powerlaw": compare_camb_tt_to_benchmark(ell_lcdm, tt_lcdm, benchmark_rows),
+        "oph_exact_scalar_tilt": compare_camb_tt_to_benchmark(ell_exact, tt_exact, benchmark_rows),
+        "oph_exact_ir_v10": compare_camb_tt_to_benchmark(ell_ir_curve, tt_ir, benchmark_rows),
+    }
+    model_curves = {
+        "camb_lcdm_powerlaw": (ell_lcdm, tt_lcdm),
+        "oph_exact_scalar_tilt": (ell_exact, tt_exact),
+        "oph_exact_ir_v10": (ell_ir_curve, tt_ir),
+    }
+    binned_rows = _multi_model_binned_rows(benchmark_rows, model_curves)
+    curve_rows = _curve_rows(ell_lcdm, {name: values for name, (_ell, values) in model_curves.items()})
+    acoustic = _acoustic_ratio_summary(ell_lcdm, tt_lcdm, tt_ir)
+    source_files = _exact_cmb_source_status(Path(source_dir) if source_dir is not None else None)
+    official_readiness = official_planck_readiness_report()
+    return {
+        "mode": "oph_exact_cmb_camb_transfer_v1",
+        "benchmark": {
+            "label": benchmark_label,
+            "row_count": len(benchmark_rows),
+            "ell_min": float(min(row["ell"] for row in benchmark_rows)) if benchmark_rows else None,
+            "ell_max": float(max(row["ell"] for row in benchmark_rows)) if benchmark_rows else None,
+        },
+        "oph_exact_input": {
+            "n_s": ns_exact,
+            "eta_R": eta_r,
+            "q_IR": q_ir,
+            "ell_IR": ell_ir,
+            "theta_IR_deg": _float_or_none(ir.get("theta_IR_deg")),
+            "k_IR_Mpc_inverse": _float_or_none(ir.get("k_IR_Mpc_inverse")),
+            "N_frz_proxy": _float_or_none(ir.get("N_frz_proxy")),
+            "A_s": exact_params.As,
+            "k0_mpc": float(k0_mpc),
+            "D_star_mpc": float(d_star_mpc),
+            "finite_lattice_derived": bool(target.get("finite_lattice_derived", False)),
+            "screen_spectrum_source": "unique_prediction_gate_alpha_linked_tilt",
+            "ir_kernel_source": "selector_elimination_v1_5_affine_zero_mode_and_visible_covariance_rank",
+            "selector_elimination_theorem_receipt": bool(
+                selector_report.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False)
+            ),
+            "selector_elimination_source_audit_receipt": bool(
+                selector_report.get("SOURCE_PACKET_AUDIT_RECEIPT", False)
+            ),
+            "kappa_rep_status": selector_report.get("scalar_tilt", {}).get("canonical_kappa_rep_status"),
+        },
+        "camb": {
+            "lmax": int(lmax),
+            "cmb_unit": "muK",
+            "spectrum": "lensed_total_TT_D_ell",
+            "baseline_lambda_cdm_parameters": baseline.as_jsonable(),
+            "oph_exact_lambda_cdm_parameters": exact_params.as_jsonable(),
+            "custom_primordial_power": "A_s*(k/k0)^(n_s-1)*(1-q_IR*exp[-ell(k)(ell(k)+1)/(ell_IR(ell_IR+1))])",
+        },
+        "software": _software_versions(),
+        "source_files": source_files,
+        "selector_elimination_v1_5": {
+            "selector_elimination": selector_report.get("selector_elimination", {}),
+            "scalar_tilt": selector_report.get("scalar_tilt", {}),
+            "cmb_ir_kernel": {
+                key: value
+                for key, value in selector_report.get("cmb_ir_kernel", {}).items()
+                if key != "exact_values"
+            },
+            "source_status_audit": selector_report.get("source_status_audit", {}),
+            "exact_ir_kernel_csv_audit": {
+                key: value
+                for key, value in selector_report.get("exact_ir_kernel_csv_audit", {}).items()
+                if key != "rows"
+            },
+            "THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT": selector_report.get(
+                "THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False
+            ),
+            "SOURCE_PACKET_AUDIT_RECEIPT": selector_report.get("SOURCE_PACKET_AUDIT_RECEIPT", False),
+            "finite_lattice_derived": selector_report.get("finite_lattice_derived", False),
+        },
+        "official_planck_likelihood_readiness": official_readiness,
+        "input_hashes": {
+            "benchmark_sha256": benchmark_sha256,
+            "unique_prediction_target_sha256": _sha256_json(target),
+            "selector_elimination_target_sha256": _sha256_json(selector_report),
+            "oph_exact_input_sha256": _sha256_json(
+                {
+                    "n_s": ns_exact,
+                    "eta_R": eta_r,
+                    "q_IR": q_ir,
+                    "ell_IR": ell_ir,
+                    "A_s": exact_params.As,
+                    "k0_mpc": float(k0_mpc),
+                    "D_star_mpc": float(d_star_mpc),
+                }
+            ),
+        },
+        "comparison": comparisons,
+        "acoustic_preservation": acoustic,
+        "binned_tt_comparison": binned_rows,
+        "tt_curve_rows": curve_rows,
+        "measurement_comparable_cmb_curve": True,
+        "official_planck_likelihood_run": False,
+        "physical_cmb_prediction": False,
+        "screen_camb_transfer_receipt": all(bool(item.get("usable", False)) for item in comparisons.values()),
+        "claim_boundary": (
+            "CAMB TT transfer for the exact OPH-CMB scalar target branch updated to the v1.5 selector-elimination "
+            "surface: q_IR=1/4 follows the affine zero-mode reserve and ell_IR=32 follows the dodecahedral "
+            "visible-covariance rank. The red tilt uses the canonical repair-clock branch "
+            "n_s=1-e*alpha(0)*sqrt(pi), but kappa_rep=e is still a finite-patch repair-clock certificate. "
+            "This is an organic Boltzmann-transfer diagnostic inside OPH-FPE, but it is not yet a finite-lattice "
+            "derivation, not a masked map-space parity/BipoSH likelihood, and not an official Planck clik "
+            "likelihood run."
+        ),
+    }
+
+
+def write_oph_exact_cmb_camb_report(
+    benchmark_path: Path,
+    out_dir: Path,
+    *,
+    source_dir: Path | None = None,
+    lmax: int = 2600,
+    benchmark_label: str = "Planck2018_TT_binned",
+    baseline_params: LambdaCDMParameters | None = None,
+) -> dict[str, Any]:
+    benchmark_rows = load_planck_tt_binned(Path(benchmark_path))
+    report = oph_exact_cmb_camb_report(
+        benchmark_rows,
+        source_dir=source_dir,
+        baseline_params=baseline_params,
+        lmax=int(lmax),
+        benchmark_label=benchmark_label,
+        benchmark_sha256=_sha256_file(Path(benchmark_path)),
+    )
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "oph_exact_cmb_camb_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (out_dir / "oph_exact_cmb_camb_report.md").write_text(
+        _oph_exact_cmb_markdown_report(report),
+        encoding="utf-8",
+    )
+    _write_multi_model_csv(out_dir / "oph_exact_cmb_tt_bins.csv", report["binned_tt_comparison"])
+    _write_multi_model_csv(out_dir / "oph_exact_cmb_tt_curves.csv", report["tt_curve_rows"])
+    return report
+
+
+def official_planck_readiness_report() -> dict[str, Any]:
+    modules: dict[str, Any] = {}
+    for name in ("camb", "cobaya", "clik", "clipy", "healpy"):
+        spec = importlib.util.find_spec(name)
+        module_info: dict[str, Any] = {"importable": spec is not None}
+        if spec is not None:
+            module_info["origin"] = spec.origin
+            try:
+                module = importlib.import_module(name)
+                module_info["version"] = str(getattr(module, "__version__", "unknown"))
+                if name == "clik":
+                    module_info["has_clik_api"] = bool(hasattr(module, "clik"))
+                    module_info["has_lensing_api"] = bool(hasattr(module, "try_lensing"))
+            except Exception as exc:  # pragma: no cover - import failures are environment-specific.
+                module_info["import_error"] = repr(exc)
+        modules[name] = module_info
+    official_clik_ready = bool(
+        modules.get("clik", {}).get("importable")
+        and modules.get("clik", {}).get("has_clik_api")
+    )
+    return {
+        "camb_available": bool(modules.get("camb", {}).get("importable")),
+        "cobaya_available": bool(modules.get("cobaya", {}).get("importable")),
+        "healpy_available": bool(modules.get("healpy", {}).get("importable")),
+        "official_clik_api_available": official_clik_ready,
+        "official_planck_likelihood_data_paths_configured": False,
+        "official_likelihood_execution_ready": False,
+        "modules": modules,
+        "claim_boundary": (
+            "Runtime readiness check only. Official Planck likelihood execution also needs the ESA PR3 "
+            "likelihood data files and validated nuisance/path configuration."
+        ),
+    }
+
+
 def _run_camb_tt(params: LambdaCDMParameters, lmax: int) -> tuple[np.ndarray, np.ndarray]:
     try:
         import camb
@@ -953,6 +1191,96 @@ def _oph_inflation_cmb_markdown_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _oph_exact_cmb_markdown_report(report: dict[str, Any]) -> str:
+    comparisons = report["comparison"]
+    oph = report["oph_exact_input"]
+    selector = report.get("selector_elimination_v1_5", {})
+    selector_core = selector.get("selector_elimination", {})
+    readiness = report.get("official_planck_likelihood_readiness", {})
+    acoustic = report.get("acoustic_preservation", {})
+    software = report.get("software", {})
+    lines = [
+        "# OPH Exact CMB CAMB Transfer",
+        "",
+        report["claim_boundary"],
+        "",
+        "## Exact OPH Input",
+        "",
+        f"- n_s = 1 - e alpha sqrt(pi): {_fmt(oph.get('n_s'))}",
+        f"- eta_R: {_fmt(oph.get('eta_R'))}",
+        f"- q_IR: {_fmt(oph.get('q_IR'))}",
+        f"- ell_IR: {_fmt(oph.get('ell_IR'))}",
+        f"- N_frz proxy: {_fmt(oph.get('N_frz_proxy'))}",
+        f"- selector-elimination theorem receipt: {oph.get('selector_elimination_theorem_receipt')}",
+        f"- selector-elimination source audit: {oph.get('selector_elimination_source_audit_receipt')}",
+        f"- kappa_rep status: {oph.get('kappa_rep_status')}",
+        f"- finite-lattice derived: {oph.get('finite_lattice_derived')}",
+        "",
+        "## Selector Elimination v1.5",
+        "",
+        f"- q_IR selector removed: {selector_core.get('q_IR_selector_removed')}",
+        f"- ell_IR selector removed: {selector_core.get('ell_IR_selector_removed')}",
+        f"- eta_R reduced to repair-clock certificate: {selector_core.get('eta_R_reduced_to_repair_clock_certificate')}",
+        f"- remaining eta_R certificate: {selector_core.get('remaining_eta_R_certificate')}",
+        "",
+        "## CAMB TT Comparison",
+        "",
+    ]
+    for name, comparison in comparisons.items():
+        lines.extend(
+            [
+                f"### {name}",
+                "",
+                f"- usable: {comparison.get('usable')}",
+                f"- bins: {comparison.get('bin_count')}",
+                f"- shape correlation: {_fmt(comparison.get('shape_correlation'))}",
+                f"- normalized RMSE: {_fmt(comparison.get('normalized_rmse'))}",
+                f"- amplitude-fit chi2/bin: {_fmt(comparison.get('amplitude_fit_chi2_per_bin'))}",
+                f"- first peak ell: {_fmt(comparison.get('first_peak_ell'))}",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## Acoustic Preservation",
+            "",
+            f"- amplitude fit to LCDM over ell>=50: {_fmt(acoustic.get('amplitude_to_lcdm_over_ell_ge_50'))}",
+            f"- mean |delta| for ell>=50: {_fmt(acoustic.get('mean_abs_fractional_delta_ell_ge_50'))}",
+            f"- max |delta| for ell>=50: {_fmt(acoustic.get('max_abs_fractional_delta_ell_ge_50'))}",
+        ]
+    )
+    for row in acoustic.get("ratios", []) or []:
+        lines.append(
+            f"- ell {row['ell']}: amplitude-matched OPH_exact_IR/LCDM TT = "
+            f"{_fmt(row.get('amplitude_matched_OPH_IR_over_LCDM_TT'))}"
+        )
+    lines.extend(
+        [
+            "",
+            "## Official Planck Likelihood Readiness",
+            "",
+            f"- CAMB available: {readiness.get('camb_available')}",
+            f"- Cobaya available: {readiness.get('cobaya_available')}",
+            f"- official clik API available: {readiness.get('official_clik_api_available')}",
+            f"- official execution ready: {readiness.get('official_likelihood_execution_ready')}",
+            "",
+            "## Reproducibility",
+            "",
+            f"- Python: {software.get('python_version', 'n/a')}",
+            f"- NumPy: {software.get('numpy_version', 'n/a')}",
+            f"- CAMB: {software.get('camb_version', 'n/a')}",
+            "",
+            "## Output Files",
+            "",
+            "- `oph_exact_cmb_camb_report.json`",
+            "- `oph_exact_cmb_tt_bins.csv`",
+            "- `oph_exact_cmb_tt_curves.csv`",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _oph_screen_markdown_report(report: dict[str, Any]) -> str:
     comparison = report["comparison"]
     screen = report.get("screen_input", {})
@@ -1024,3 +1352,69 @@ def _float_or_none(value: Any) -> float | None:
 def _float_or(value: Any, default: float) -> float:
     parsed = _float_or_none(value)
     return float(default if parsed is None else parsed)
+
+
+def _exact_cmb_source_status(source_dir: Path | None) -> dict[str, Any]:
+    if source_dir is None:
+        return {"source_dir": None, "files": {}, "claim_boundary": "no source directory was provided"}
+    candidates = [
+        "OPH-CMB-Official-Likelihood-and-Finite-Patch-v1.0.md",
+        "finite_patch_cmb_derivations_v1_0.md",
+        "official_likelihood_and_math_status_v1_0.csv",
+        "missing_math_and_likelihood_gates_v1_0.csv",
+        "OPH-Unique-Prediction-Gate-v0.9.md",
+        "01_unique_prediction_ranking_v0_9.csv",
+        "02_public_assessment_table_v0_9.csv",
+        "oph_camb_generate_cls.py",
+        "oph_official_planck_clik_eval.py",
+        "oph_cobaya_likelihood_selfcontained.py",
+        "OPH-CMB-Selector-Elimination-v1.5.md",
+        "comms3-remove-all-selectors.md",
+        "selector_elimination_status_v1_5.csv",
+        "exact_ir_kernel_values_v1_5.csv",
+        "OPH-CMB-selector-elimination-v1.5.zip",
+        "math/OPH-CMB-Selector-Elimination-v1.5.md",
+        "math/no_remaining_selectors_theorems_v1_5.md",
+        "data/selector_elimination_status_v1_5.csv",
+        "data/exact_ir_kernel_values_v1_5.csv",
+        "data/selector_elimination_summary_v1_5.json",
+        "data/numerical_targets_v1_5.json",
+    ]
+    files = {}
+    for relative in candidates:
+        path = source_dir / relative
+        files[relative] = {
+            "present": path.exists(),
+            "sha256": _sha256_file(path) if path.exists() else None,
+        }
+    legacy_core_present = all(
+        files[name]["present"]
+        for name in (
+            "OPH-CMB-Official-Likelihood-and-Finite-Patch-v1.0.md",
+            "finite_patch_cmb_derivations_v1_0.md",
+            "OPH-Unique-Prediction-Gate-v0.9.md",
+        )
+    )
+    selector_v15_top_level_present = all(
+        files[name]["present"]
+        for name in (
+            "OPH-CMB-Selector-Elimination-v1.5.md",
+            "selector_elimination_status_v1_5.csv",
+            "exact_ir_kernel_values_v1_5.csv",
+        )
+    )
+    selector_v15_extracted_present = all(
+        files[name]["present"]
+        for name in (
+            "math/OPH-CMB-Selector-Elimination-v1.5.md",
+            "data/selector_elimination_status_v1_5.csv",
+            "data/exact_ir_kernel_values_v1_5.csv",
+        )
+    )
+    return {
+        "source_dir": str(source_dir),
+        "files": files,
+        "legacy_v1_core_files_present": legacy_core_present,
+        "selector_v1_5_core_files_present": bool(selector_v15_top_level_present or selector_v15_extracted_present),
+        "all_core_files_present": bool(legacy_core_present or selector_v15_top_level_present or selector_v15_extracted_present),
+    }

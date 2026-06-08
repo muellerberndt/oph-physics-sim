@@ -1,5 +1,77 @@
 # Bulk Emergence Status
 
+Updated: 2026-06-08
+
+## Current 2026-06-08 Receipt Split
+
+The current best 256k reference run now supports a tiered, paper-aligned result:
+
+```text
+reference run:
+  runs/stage97_particles_defect_threshold_256k_seed20261047_20260607/e4_shared_observer_bulk_256k_particles_seed20261047_6a562ca8
+
+chart-level 3+1D Lorentz/H3: true
+theorem-assisted populated H3 chart: true
+strict neutral third-person 3D bulk: false
+screen C_l proxy available: true
+physical CMB prediction: false
+production particle matter receipt: false
+```
+
+The clean certificate is:
+
+```text
+runs/stage97_particles_defect_threshold_256k_seed20261047_20260607/e4_shared_observer_bulk_256k_particles_seed20261047_6a562ca8/bulk_proof_certificate_report.json
+```
+
+Interpretation:
+
+```text
+T2-T3 pass: finite support-visible BW/KMS 2*pi transport plus Conf+(S2) -> SO+(3,1) -> H3 chart.
+T5 passes: observer-facing record objects populate the theorem-side H3 chart under current controls.
+T6 fails: neutral observer-record reconstruction does not yet independently recover a strict 3D bulk.
+T7 fails: production defects are not yet matter particles.
+T9 fails: CMB outputs remain measurement-facing diagnostics/targets, not physical CMB predictions.
+```
+
+This resolves the old ambiguity: the simulator can now show a paper-route, theorem-assisted
+populated H3 chart. It still has not closed the stricter neutral third-person bulk, particle, or
+physical CMB gates.
+
+Current consolidated comparable-data snapshot:
+
+```text
+runs/current_measurement_and_3d_snapshot_20260608/comparable_data_snapshot.json
+runs/current_measurement_and_3d_snapshot_20260608/comparable_data_snapshot.md
+```
+
+The main comparable values in that snapshot are:
+
+```text
+paper-theorem H3 spatial dimension mean: 3.0
+record-family H3 median residual: 0.047467988266974376
+defect-cluster H3 median residual: 0.0021301833513037672
+Planck-lite best field: record_signature_smooth_k32
+Planck-lite best shape correlation: 0.45478318175733456
+Planck-lite best normalized RMSE: 0.8906021881798153
+exact CMB target n_s: 0.9648411430307772
+exact CMB target q_IR: 0.25
+exact CMB target ell_IR: 32.0
+neutrino sum m_nu: 0.09001192964464505 eV
+H0/S8 branch H0: 67.40002854274209 km/s/Mpc
+H0/S8 direct-Jacobi S8 target: 0.79
+```
+
+These are comparable diagnostics and target-lane numbers. They are not yet a finite-lattice physical
+CMB prediction because the CMB derivation audit remains false:
+
+```text
+runs/current_cmb_derivation_audit_20260608/cmb_parameter_derivation_report.json
+```
+
+Missing CMB gates include simulator-derived \(\eta_R\), \(q_{\rm IR}\), \(\ell_{\rm IR}\),
+large-angle/parity/low-power control separation, small collar CMI, and anomaly kernels.
+
 Updated: 2026-06-05
 
 ## Current Answer

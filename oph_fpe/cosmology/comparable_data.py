@@ -31,12 +31,19 @@ RELEVANT_REPORTS = (
     "bulk_reconstruction_report.json",
     "cmb_lite_comparison_report.json",
     "cmb_transfer_report.json",
+    "oph_cmb_selector_elimination_report.json",
     "camb_lcdm_baseline_report.json",
     "oph_screen_power_report.json",
     "oph_screen_camb_report.json",
     "oph_inflation_cmb_bridge_report.json",
+    "inflation_certificate_report.json",
     "oph_inflation_cmb_camb_report.json",
+    "oph_exact_cmb_camb_report.json",
     "oph_unique_prediction_gate_report.json",
+    "oph_cnb_neutrino_report.json",
+    "finite_certificate_report.json",
+    "finite_certificate_manifest.json",
+    "screen_capacity_closure_report.json",
     "cmb_parameter_derivation_report.json",
     "oph_boltzmann_input_report.json",
     "oph_cmb_stress_report.json",
@@ -45,6 +52,7 @@ RELEVANT_REPORTS = (
     "hot_release_report.json",
     "adiabaticity_report.json",
     "h0s8_branch_report.json",
+    "h0s8_lane8_certificate_report.json",
     "galaxy_proxy_report.json",
     "static_galaxy_measurement_report.json",
     "cl_comparison_report.json",
@@ -55,6 +63,7 @@ RELEVANT_REPORTS = (
     "controlled_defect_particle_assay_report.json",
     "defect_h3_worldlines_report.json",
     "emergence_status_report.json",
+    "bulk_proof_certificate_report.json",
 )
 
 H3_ENSEMBLE_FILENAMES = (
@@ -99,8 +108,14 @@ def comparable_data_report(run_dirs: list[Path]) -> dict[str, Any]:
             "oph_screen_power_effective_theory": _oph_screen_power_summary(rows),
             "oph_screen_camb_transfer": _oph_screen_camb_summary(rows),
             "oph_inflation_cmb_bridge": _oph_inflation_cmb_bridge_summary(rows),
+            "oph_inflation_certificate_stack": _inflation_certificate_summary(rows),
             "oph_inflation_cmb_camb_transfer": _oph_inflation_cmb_camb_summary(rows),
+            "oph_cmb_selector_elimination_v1_5": _selector_elimination_summary(rows),
+            "oph_exact_cmb_camb_transfer": _oph_exact_cmb_camb_summary(rows),
             "oph_unique_prediction_gate": _oph_unique_prediction_summary(rows),
+            "oph_cnb_neutrino_background": _oph_cnb_neutrino_summary(rows),
+            "oph_finite_certificate_authority": _finite_certificate_authority_summary(rows),
+            "oph_screen_capacity_closure": _screen_capacity_closure_summary(rows),
             "finite_lattice_cmb_derivation": _cmb_derivation_summary(rows),
             "oph_boltzmann_input_readouts": _oph_boltzmann_summary(rows),
             "oph_cmb_anomaly_stress_adapter": _oph_cmb_summary(rows),
@@ -204,8 +219,15 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
     screen_power = _read_json(standalone_parent / "oph_screen_power_report.json")
     screen_camb = _read_json(standalone_parent / "oph_screen_camb_report.json")
     inflation_cmb_bridge = _read_json(standalone_parent / "oph_inflation_cmb_bridge_report.json")
+    inflation_certificates = _read_json(standalone_parent / "inflation_certificate_report.json")
     inflation_cmb_camb = _read_json(standalone_parent / "oph_inflation_cmb_camb_report.json")
+    selector_elimination = _read_json(standalone_parent / "oph_cmb_selector_elimination_report.json")
+    exact_cmb_camb = _read_json(standalone_parent / "oph_exact_cmb_camb_report.json")
     unique_prediction = _read_json(standalone_parent / "oph_unique_prediction_gate_report.json")
+    cnb_neutrino = _read_json(standalone_parent / "oph_cnb_neutrino_report.json")
+    finite_certificates = _read_json(standalone_parent / "finite_certificate_report.json")
+    finite_certificate_manifest = _read_json(standalone_parent / "finite_certificate_manifest.json")
+    screen_capacity = _read_json(standalone_parent / "screen_capacity_closure_report.json")
     cmb_derivation = _read_json(standalone_parent / "cmb_parameter_derivation_report.json")
     if standalone_report.get("mode") == "oph_screen_power_effective_theory_v0":
         screen_power = standalone_report
@@ -213,14 +235,32 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         screen_camb = standalone_report
     if standalone_report.get("mode") == "oph_inflation_cmb_bridge_v0":
         inflation_cmb_bridge = standalone_report
+    if standalone_report.get("mode") == "oph_inflation_certificate_bundle_v0":
+        inflation_certificates = standalone_report
     if standalone_report.get("mode") == "oph_inflation_cmb_camb_transfer_v0":
         inflation_cmb_camb = standalone_report
+    if standalone_report.get("mode") == "oph_cmb_selector_elimination_v1_5":
+        selector_elimination = standalone_report
+    if standalone_report.get("mode") == "oph_exact_cmb_camb_transfer_v1":
+        exact_cmb_camb = standalone_report
     if standalone_report.get("mode") == "oph_unique_prediction_gate_v0_9":
         unique_prediction = standalone_report
+    if standalone_report.get("mode") == "oph_cnb_neutrino_background_v0":
+        cnb_neutrino = standalone_report
+    if standalone_report.get("mode") == "oph_finite_cosmology_certificate_bundle_v0":
+        finite_certificates = standalone_report
+    if standalone_report.get("manifest_type") == "oph_finite_certificate_manifest":
+        finite_certificate_manifest = standalone_report
+    if standalone_report.get("mode") == "oph_screen_capacity_closure_v0":
+        screen_capacity = standalone_report
     if standalone_report.get("mode") == "finite_lattice_cmb_parameter_derivation_audit_v0":
         cmb_derivation = standalone_report
     if not unique_prediction and inflation_cmb_bridge:
         unique_prediction = inflation_cmb_bridge.get("unique_prediction_gate_v0_9", {}) or {}
+    if not selector_elimination and exact_cmb_camb:
+        selector_elimination = exact_cmb_camb.get("selector_elimination_v1_5", {}) or {}
+    if not selector_elimination and unique_prediction:
+        selector_elimination = unique_prediction.get("selector_elimination_v1_5", {}) or {}
     boltzmann_inputs = _read_json(standalone_parent / "oph_boltzmann_input_report.json")
     oph_cmb = _read_json(standalone_parent / "oph_cmb_stress_report.json")
     cmb_anomaly = _read_json(standalone_parent / "cmb_anomaly_report.json")
@@ -228,6 +268,7 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
     hot_release = _read_json(standalone_parent / "hot_release_report.json")
     adiabaticity = _read_json(standalone_parent / "adiabaticity_report.json")
     h0s8 = _read_json(standalone_parent / "h0s8_branch_report.json")
+    h0s8_lane8 = _read_json(standalone_parent / "h0s8_lane8_certificate_report.json")
     if standalone_report.get("mode") == "finite_screen_cmb_anomaly_diagnostics_v0":
         cmb_anomaly = standalone_report
     if standalone_report.get("mode") == "oph_low_k_synchronization_gap_audit_v0":
@@ -238,6 +279,10 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         adiabaticity = standalone_report
     if standalone_report.get("mode") == "oph_h0_s8_branch_diagnostic_v0":
         h0s8 = standalone_report
+    if standalone_report.get("mode") == "oph_h0_s8_lane8_certificate_stack_v0":
+        h0s8_lane8 = standalone_report
+    if not h0s8_lane8 and h0s8:
+        h0s8_lane8 = h0s8.get("lane8_certificate_stack", {}) or {}
     galaxy = _read_json(standalone_parent / "galaxy_proxy_report.json")
     static_galaxy = _read_json(standalone_parent / "static_galaxy_measurement_report.json")
     cl = _read_json(standalone_parent / "cl_comparison_report.json")
@@ -248,6 +293,9 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
     controlled_particle = _read_json(standalone_parent / "controlled_defect_particle_assay_report.json")
     defect_h3_worldlines = _read_json(standalone_parent / "defect_h3_worldlines_report.json")
     emergence = _read_json(standalone_parent / "emergence_status_report.json")
+    bulk_proof = _read_json(standalone_parent / "bulk_proof_certificate_report.json")
+    if standalone_report.get("mode") == "oph_3d_bulk_and_measurement_proof_certificate_v0":
+        bulk_proof = standalone_report
     object_chart = _best_object_chart_report(standalone_parent)
     if standalone_report.get("mode") == "observer_chart_object_h3_population":
         object_chart = standalone_report
@@ -396,8 +444,15 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
                 screen_power,
                 screen_camb,
                 inflation_cmb_bridge,
+                inflation_certificates,
                 inflation_cmb_camb,
+                selector_elimination,
+                exact_cmb_camb,
                 unique_prediction,
+                cnb_neutrino,
+                finite_certificates,
+                finite_certificate_manifest,
+                screen_capacity,
                 cmb_derivation,
                 boltzmann_inputs,
                 oph_cmb,
@@ -415,9 +470,25 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
                 particle,
                 controlled_particle,
                 defect_h3_worldlines,
+                bulk_proof,
             )
         ),
         "bulk_3d_established": bool(emergence.get("bulk_3d_established", False)),
+        "bulk_proof_certificate_written": bool(bulk_proof),
+        "bulk_proof_chart_level_3p1": bool(
+            bulk_proof.get("chart_level_3p1_lorentz_kinematics_established", False)
+        ),
+        "bulk_proof_theorem_assisted_h3_populated_chart": bool(
+            bulk_proof.get("theorem_assisted_h3_populated_chart_established", False)
+        ),
+        "bulk_proof_strict_neutral_3d_bulk": bool(
+            bulk_proof.get("strict_neutral_third_person_bulk_established", False)
+        ),
+        "bulk_proof_screen_cmb_proxy": bool(bulk_proof.get("screen_cmb_proxy_available", False)),
+        "bulk_proof_physical_cmb_prediction": bool(bulk_proof.get("physical_cmb_prediction", False)),
+        "bulk_proof_production_particle_matter": bool(
+            bulk_proof.get("production_particle_matter_receipt", False)
+        ),
         "support_visible_lorentz_3p1_kinematics_receipt": support_visible_lorentz,
         "chart_level_conformal_lorentz_receipt": chart_level_lorentz,
         "bw_automorphism_sanity_receipt": bw_automorphism_sanity,
@@ -792,6 +863,87 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         )
         if inflation_cmb_bridge
         else None,
+        "inflation_certificates_written": bool(inflation_certificates),
+        "inflation_certificates_stack_ready": bool(
+            inflation_certificates.get("inflation_certificate_stack_ready", False)
+        ),
+        "inflation_certificates_physical_cmb_prediction": bool(
+            inflation_certificates.get("physical_cmb_prediction", False)
+        ),
+        "inflation_certificates_physical_matter_power_prediction": bool(
+            inflation_certificates.get("physical_matter_power_prediction", False)
+        ),
+        "inflation_certificates_found_count": _nested(
+            inflation_certificates,
+            "certificate_summary",
+            "found_count",
+        ),
+        "inflation_certificates_passed_count": _nested(
+            inflation_certificates,
+            "certificate_summary",
+            "passed_count",
+        ),
+        "inflation_certificates_expected_count": _nested(
+            inflation_certificates,
+            "certificate_summary",
+            "expected_count",
+        ),
+        "inflation_certificates_missing_count": len(
+            _nested(inflation_certificates, "certificate_summary", "missing_types") or []
+        )
+        if inflation_certificates
+        else None,
+        "inflation_certificates_no_data_use": bool(
+            _nested(inflation_certificates, "no_data_use_manifest", "no_data_use_receipt")
+        ),
+        "inflation_certificates_scalar_release_gate": bool(
+            _nested(inflation_certificates, "readiness_gates", "scalar_release_certificate")
+        ),
+        "inflation_certificates_edge_center_gate": bool(
+            _nested(inflation_certificates, "readiness_gates", "edge_center_certificate")
+        ),
+        "inflation_certificates_homogeneous_anomaly_gate": bool(
+            _nested(inflation_certificates, "readiness_gates", "homogeneous_anomaly_certificate")
+        ),
+        "inflation_certificates_parent_collar_gate": bool(
+            _nested(inflation_certificates, "readiness_gates", "parent_collar_kernel_certificate")
+        ),
+        "inflation_certificates_repair_matrix_gate": bool(
+            _nested(inflation_certificates, "readiness_gates", "repair_matrix_certificate")
+        ),
+        "inflation_certificates_boltzmann_handoff_gate": bool(
+            _nested(inflation_certificates, "readiness_gates", "boltzmann_handoff_certificate")
+        ),
+        "inflation_certificates_A_zeta": _nested(
+            inflation_certificates,
+            "derived_outputs",
+            "scalar_release",
+            "A_zeta",
+        ),
+        "inflation_certificates_n_s": _nested(
+            inflation_certificates,
+            "derived_outputs",
+            "edge_center",
+            "n_s",
+        ),
+        "inflation_certificates_Q_A": _nested(
+            inflation_certificates,
+            "derived_outputs",
+            "homogeneous_anomaly",
+            "Q_A_last",
+        ),
+        "inflation_certificates_mean_B_A": _nested(
+            inflation_certificates,
+            "derived_outputs",
+            "parent_collar",
+            "mean_B_A",
+        ),
+        "inflation_certificates_mean_Gamma_rec": _nested(
+            inflation_certificates,
+            "derived_outputs",
+            "repair_matrix",
+            "mean_Gamma_rec",
+        ),
         "oph_unique_prediction_written": bool(unique_prediction),
         "oph_unique_prediction_measurement_comparable": bool(
             unique_prediction.get("measurement_comparable_now", False)
@@ -820,6 +972,149 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "neutrino_cosmology",
             "small_scale_power_suppression_fraction",
         ),
+        "oph_cnb_neutrino_written": bool(cnb_neutrino),
+        "oph_cnb_neutrino_measurement_comparable": bool(cnb_neutrino.get("measurement_comparable_now", False)),
+        "oph_cnb_neutrino_finite_lattice_derived": bool(cnb_neutrino.get("finite_lattice_derived", False)),
+        "oph_cnb_neutrino_physical_cmb_prediction": bool(cnb_neutrino.get("physical_cmb_prediction", False)),
+        "oph_cnb_neutrino_physical_matter_power_prediction": bool(
+            cnb_neutrino.get("physical_matter_power_prediction", False)
+        ),
+        "oph_cnb_N_eff": _nested(cnb_neutrino, "relic_background", "N_eff"),
+        "oph_cnb_sum_mnu_eV": _nested(cnb_neutrino, "oph_neutrino_branch", "sum_mnu_eV"),
+        "oph_cnb_m_lightest_eV": _nested(cnb_neutrino, "oph_neutrino_branch", "m_lightest_eV"),
+        "oph_cnb_Omega_nu_h2": _nested(cnb_neutrino, "relic_background", "Omega_nu_h2"),
+        "oph_cnb_Omega_nu": _nested(cnb_neutrino, "relic_background", "Omega_nu"),
+        "oph_cnb_f_nu": _nested(cnb_neutrino, "relic_background", "f_nu"),
+        "oph_cnb_small_scale_suppression": _nested(
+            cnb_neutrino,
+            "relic_background",
+            "small_scale_power_suppression_fraction",
+        ),
+        "oph_cnb_planck_neff_pull_sigma": _nested(
+            cnb_neutrino,
+            "measurement_comparisons",
+            "Planck2018_N_eff",
+            "pull_sigma",
+        ),
+        "oph_cnb_planck_bao_sum_mnu_pass": bool(
+            _nested(cnb_neutrino, "measurement_comparisons", "Planck2018_BAO_sum_mnu_bound", "passes_bound")
+        ),
+        "oph_cnb_act_sum_mnu_pass": bool(
+            _nested(cnb_neutrino, "measurement_comparisons", "ACT_DR6_extended_sum_mnu_bound", "passes_bound")
+        ),
+        "oph_cnb_desi_lcdm_sum_mnu_pass": bool(
+            _nested(cnb_neutrino, "measurement_comparisons", "DESI_DR2_LCDM_sum_mnu_bound", "passes_bound")
+        ),
+        "oph_cnb_eta_A": _nested(cnb_neutrino, "late_repair_projection_target", "eta_A"),
+        "oph_cnb_Pi_WL_compressed_required": _nested(
+            cnb_neutrino,
+            "late_repair_projection_target",
+            "Pi_WL_compressed_required",
+        ),
+        "oph_cnb_five_of_seven_kernel_callable": bool(
+            _nested(cnb_neutrino, "readiness_gates", "z6_poisson_five_of_seven_kernel_callable")
+        ),
+        "oph_cnb_five_of_seven_projection_gate": bool(
+            _nested(cnb_neutrino, "readiness_gates", "z6_poisson_five_of_seven_compressed_projection")
+        ),
+        "oph_cnb_five_of_seven_pi_wl": _nested(
+            cnb_neutrino,
+            "late_repair_projection_target",
+            "z6_poisson_five_of_seven",
+            "pi_wl",
+        ),
+        "oph_cnb_five_of_seven_epsilon_A": _nested(
+            cnb_neutrino,
+            "late_repair_projection_target",
+            "z6_poisson_five_of_seven",
+            "epsilon_A_wl",
+        ),
+        "oph_cnb_five_of_seven_S8_projected": _nested(
+            cnb_neutrino,
+            "late_repair_projection_target",
+            "z6_poisson_five_of_seven",
+            "S8_projected_from_cdm_branch",
+        ),
+        "oph_cnb_five_of_seven_pull_sigma": _nested(
+            cnb_neutrino,
+            "late_repair_projection_target",
+            "z6_poisson_five_of_seven",
+            "pull_sigma_reference",
+        ),
+        "oph_cnb_background_gate": bool(
+            _nested(cnb_neutrino, "readiness_gates", "measurement_comparable_relic_background")
+        ),
+        "oph_cnb_mass_derivation_gate": bool(
+            _nested(cnb_neutrino, "readiness_gates", "finite_lattice_mass_derivation")
+        ),
+        "oph_cnb_B_A_kernel_gate": bool(
+            _nested(cnb_neutrino, "readiness_gates", "B_A_k_a_from_finite_collar_parent")
+        ),
+        "oph_cnb_likelihood_gate": bool(
+            _nested(cnb_neutrino, "readiness_gates", "full_boltzmann_likelihood_run")
+        ),
+        "finite_certificates_written": bool(finite_certificates or finite_certificate_manifest),
+        "finite_certificates_stack_ready": bool(
+            finite_certificates.get("finite_certificate_stack_ready", False)
+            or finite_certificate_manifest.get("finite_certificate_stack_ready", False)
+        ),
+        "finite_certificates_no_data_use": bool(
+            _nested(finite_certificates, "no_data_use_receipt", "no_data_use_receipt")
+            or finite_certificate_manifest.get("no_data_use_receipt", False)
+        ),
+        "finite_certificates_release_code_gate": bool(
+            _nested(finite_certificates, "readiness_gates", "release_code_certificate")
+            or _nested(finite_certificate_manifest, "readiness_gates", "release_code_certificate")
+        ),
+        "finite_certificates_parent_collar_gate": bool(
+            _nested(finite_certificates, "readiness_gates", "parent_collar_certificate")
+            or _nested(finite_certificate_manifest, "readiness_gates", "parent_collar_certificate")
+        ),
+        "finite_certificates_repair_matrix_gate": bool(
+            _nested(finite_certificates, "readiness_gates", "repair_matrix_certificate")
+            or _nested(finite_certificate_manifest, "readiness_gates", "repair_matrix_certificate")
+        ),
+        "finite_certificates_boltzmann_export_gate": bool(
+            _nested(finite_certificates, "readiness_gates", "boltzmann_export_certificate")
+            or _nested(finite_certificate_manifest, "readiness_gates", "boltzmann_export_certificate")
+        ),
+        "finite_certificates_physical_cmb_prediction": bool(
+            finite_certificates.get("physical_cmb_prediction", False)
+        ),
+        "finite_certificates_physical_matter_power_prediction": bool(
+            finite_certificates.get("physical_matter_power_prediction", False)
+        ),
+        "finite_certificates_real_physics_certificate": bool(
+            finite_certificates.get("real_physics_certificate", False)
+        ),
+        "finite_certificates_A_zeta": _nested(finite_certificates, "derived_outputs", "A_zeta"),
+        "finite_certificates_n_s": _nested(finite_certificates, "derived_outputs", "n_s"),
+        "finite_certificates_Q_A": _nested(finite_certificates, "derived_outputs", "Q_A"),
+        "finite_certificates_Gamma_rec": _nested(finite_certificates, "derived_outputs", "Gamma_rec"),
+        "finite_certificates_B_A": _first_numeric(_nested(finite_certificates, "derived_outputs", "B_A")),
+        "screen_capacity_written": bool(screen_capacity),
+        "screen_capacity_N_patch_bare_ratio": _nested(
+            screen_capacity,
+            "observed_branch_normalization",
+            "N_patch_bare_radius_squared_ratio",
+        ),
+        "screen_capacity_N_scr": _nested(screen_capacity, "observed_branch_normalization", "N_scr_entropy_capacity"),
+        "screen_capacity_Lambda_lP2": _nested(screen_capacity, "observed_branch_normalization", "Lambda_lP2"),
+        "screen_capacity_P_cell_count": _nested(
+            screen_capacity,
+            "observed_branch_normalization",
+            "N_cells_if_tiled_by_local_P_cells",
+        ),
+        "screen_capacity_observed_readout_gate": bool(
+            _nested(screen_capacity, "readiness_gates", "observed_branch_N_scr_readout_available")
+        ),
+        "screen_capacity_F_N_implemented": bool(
+            _nested(screen_capacity, "readiness_gates", "F_N_readback_map_implemented")
+        ),
+        "screen_capacity_fixed_point_solved": bool(
+            _nested(screen_capacity, "readiness_gates", "N_CRC_fixed_point_solved_from_finite_simulator")
+        ),
+        "screen_capacity_physical_cmb_prediction": bool(screen_capacity.get("physical_cmb_prediction", False)),
         "cmb_derivation_written": bool(cmb_derivation),
         "cmb_derivation_ready": bool(cmb_derivation.get("finite_lattice_cmb_parameters_ready", False)),
         "cmb_derivation_run_count": cmb_derivation.get("run_count") if cmb_derivation else None,
@@ -916,6 +1211,122 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             inflation_cmb_camb,
             "low_ell_v04_diagnostic",
             "CAMB_OPH_IR_chi2_ell2_29",
+        ),
+        "oph_selector_elimination_written": bool(selector_elimination),
+        "oph_selector_elimination_theorem_receipt": bool(
+            selector_elimination.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT")
+            or selector_elimination.get("theorem_side_receipt")
+        ),
+        "oph_selector_elimination_source_audit_receipt": bool(
+            selector_elimination.get("SOURCE_PACKET_AUDIT_RECEIPT")
+            or selector_elimination.get("source_packet_audit_receipt")
+        ),
+        "oph_selector_q_IR_removed": bool(
+            _nested(selector_elimination, "selector_elimination", "q_IR_selector_removed")
+            or selector_elimination.get("q_IR_selector_removed")
+        ),
+        "oph_selector_ell_IR_removed": bool(
+            _nested(selector_elimination, "selector_elimination", "ell_IR_selector_removed")
+            or selector_elimination.get("ell_IR_selector_removed")
+        ),
+        "oph_selector_eta_R_reduced_to_repair_clock": bool(
+            _nested(selector_elimination, "selector_elimination", "eta_R_reduced_to_repair_clock_certificate")
+            or selector_elimination.get("eta_R_reduced_to_repair_clock_certificate")
+        ),
+        "oph_selector_finite_lattice_derived": bool(selector_elimination.get("finite_lattice_derived", False)),
+        "oph_selector_physical_cmb_prediction": bool(selector_elimination.get("physical_cmb_prediction", False)),
+        "oph_selector_n_s": (
+            _nested(selector_elimination, "scalar_tilt", "n_s")
+            or _nested(exact_cmb_camb, "oph_exact_input", "n_s")
+        ),
+        "oph_selector_eta_R": (
+            _nested(selector_elimination, "scalar_tilt", "eta_R")
+            or _nested(exact_cmb_camb, "oph_exact_input", "eta_R")
+        ),
+        "oph_selector_q_IR": (
+            _nested(selector_elimination, "cmb_ir_kernel", "q_IR")
+            or _nested(selector_elimination, "selector_elimination", "q_IR")
+            or _nested(exact_cmb_camb, "oph_exact_input", "q_IR")
+        ),
+        "oph_selector_ell_IR": (
+            _nested(selector_elimination, "cmb_ir_kernel", "ell_IR")
+            or _nested(selector_elimination, "selector_elimination", "ell_IR")
+            or _nested(exact_cmb_camb, "oph_exact_input", "ell_IR")
+        ),
+        "oph_selector_kernel_csv_passed": bool(
+            _nested(selector_elimination, "exact_ir_kernel_csv_audit", "passed")
+        ),
+        "oph_selector_kernel_csv_max_abs_error": _nested(
+            selector_elimination,
+            "exact_ir_kernel_csv_audit",
+            "max_abs_error",
+        ),
+        "oph_selector_kappa_rep_status": _nested(selector_elimination, "scalar_tilt", "canonical_kappa_rep_status"),
+        "oph_exact_cmb_camb_written": bool(exact_cmb_camb),
+        "oph_exact_cmb_camb_curve_comparable": bool(
+            exact_cmb_camb.get("measurement_comparable_cmb_curve", False)
+        ),
+        "oph_exact_cmb_camb_physical_cmb_prediction": bool(
+            exact_cmb_camb.get("physical_cmb_prediction", False)
+        ),
+        "oph_exact_cmb_camb_transfer_receipt": bool(
+            exact_cmb_camb.get("screen_camb_transfer_receipt", False)
+        ),
+        "oph_exact_cmb_camb_n_s": _nested(exact_cmb_camb, "oph_exact_input", "n_s"),
+        "oph_exact_cmb_camb_eta_R": _nested(exact_cmb_camb, "oph_exact_input", "eta_R"),
+        "oph_exact_cmb_camb_q_IR": _nested(exact_cmb_camb, "oph_exact_input", "q_IR"),
+        "oph_exact_cmb_camb_ell_IR": _nested(exact_cmb_camb, "oph_exact_input", "ell_IR"),
+        "oph_exact_cmb_camb_N_frz_proxy": _nested(exact_cmb_camb, "oph_exact_input", "N_frz_proxy"),
+        "oph_exact_cmb_camb_lcdm_shape_correlation": _nested(
+            exact_cmb_camb,
+            "comparison",
+            "camb_lcdm_powerlaw",
+            "shape_correlation",
+        ),
+        "oph_exact_cmb_camb_scalar_shape_correlation": _nested(
+            exact_cmb_camb,
+            "comparison",
+            "oph_exact_scalar_tilt",
+            "shape_correlation",
+        ),
+        "oph_exact_cmb_camb_ir_shape_correlation": _nested(
+            exact_cmb_camb,
+            "comparison",
+            "oph_exact_ir_v10",
+            "shape_correlation",
+        ),
+        "oph_exact_cmb_camb_lcdm_chi2_per_bin": _nested(
+            exact_cmb_camb,
+            "comparison",
+            "camb_lcdm_powerlaw",
+            "amplitude_fit_chi2_per_bin",
+        ),
+        "oph_exact_cmb_camb_scalar_chi2_per_bin": _nested(
+            exact_cmb_camb,
+            "comparison",
+            "oph_exact_scalar_tilt",
+            "amplitude_fit_chi2_per_bin",
+        ),
+        "oph_exact_cmb_camb_ir_chi2_per_bin": _nested(
+            exact_cmb_camb,
+            "comparison",
+            "oph_exact_ir_v10",
+            "amplitude_fit_chi2_per_bin",
+        ),
+        "oph_exact_cmb_camb_acoustic_mean_abs_delta": _nested(
+            exact_cmb_camb,
+            "acoustic_preservation",
+            "mean_abs_fractional_delta_ell_ge_50",
+        ),
+        "oph_exact_cmb_camb_official_clik_ready": _nested(
+            exact_cmb_camb,
+            "official_planck_likelihood_readiness",
+            "official_clik_api_available",
+        ),
+        "oph_exact_cmb_camb_official_likelihood_ready": _nested(
+            exact_cmb_camb,
+            "official_planck_likelihood_readiness",
+            "official_likelihood_execution_ready",
         ),
         "oph_boltzmann_input_written": bool(boltzmann_inputs),
         "oph_boltzmann_source_report_count": boltzmann_inputs.get("source_report_count") if boltzmann_inputs else None,
@@ -1072,6 +1483,42 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "h0s8_Gamma_J_gate": bool(_nested(h0s8, "theorem_gates", "Gamma_rec_equals_Jacobi_clock")),
         "h0s8_camb_class_gate": bool(_nested(h0s8, "theorem_gates", "full_CAMB_CLASS_anomaly_module")),
         "h0s8_likelihood_gate": bool(_nested(h0s8, "theorem_gates", "full_likelihood_contract")),
+        "h0s8_lane8_written": bool(h0s8_lane8),
+        "h0s8_lane8_values_are_run_derived": bool(h0s8_lane8.get("values_are_run_derived", False)),
+        "h0s8_lane8_i0_bits": _nested(h0s8_lane8, "low_entropy_certificate", "i0_bits"),
+        "h0s8_lane8_b0_bits": _nested(h0s8_lane8, "low_entropy_certificate", "b0_bits"),
+        "h0s8_lane8_p0_bits": _nested(h0s8_lane8, "low_entropy_certificate", "p0_bits"),
+        "h0s8_lane8_a0_bits": _nested(h0s8_lane8, "low_entropy_certificate", "a0_bits"),
+        "h0s8_lane8_low_entropy_gap_bits": _nested(
+            h0s8_lane8,
+            "low_entropy_certificate",
+            "low_entropy_gap_bits",
+        ),
+        "h0s8_lane8_fake_gamma_margin_bits": _nested(
+            h0s8_lane8,
+            "fake_history_certificate",
+            "gamma_margin_bits",
+        ),
+        "h0s8_lane8_fake_probability_bound": _nested(
+            h0s8_lane8,
+            "fake_history_certificate",
+            "probability_bound",
+        ),
+        "h0s8_lane8_payload_gate": bool(
+            _nested(h0s8_lane8, "theorem_gates", "audited_record_payload_lower_bound")
+        ),
+        "h0s8_lane8_fake_suppression_gate": bool(
+            _nested(h0s8_lane8, "theorem_gates", "fake_trial_suppression")
+        ),
+        "h0s8_lane8_selector_gate": bool(
+            _nested(h0s8_lane8, "theorem_gates", "selector_dominance_margin_positive")
+        ),
+        "h0s8_lane8_refinement_gate": bool(
+            _nested(h0s8_lane8, "theorem_gates", "refinement_stability")
+        ),
+        "h0s8_lane8_certificate_ready": bool(
+            _nested(h0s8_lane8, "theorem_gates", "low_entropy_ancestry_certificate_ready")
+        ),
         "h0s8_physical_prediction_ready": bool(h0s8.get("physical_prediction_ready", False)),
         "h0s8_physical_cmb_prediction": bool(h0s8.get("physical_cmb_prediction", False)),
         "h0s8_physical_matter_power_prediction": bool(
@@ -1457,6 +1904,7 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "paper_theorem_assisted_h3_chart_precursor_receipt",
                 "paper_theorem_assisted_h3_populated_chart_receipt",
                 "object_bulk_population_receipt",
+                "bulk_proof_certificate_written",
             )
         )
     ]
@@ -1506,6 +1954,21 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
             1 for row in usable if row.get("paper_theorem_assisted_h3_populated_chart_receipt")
         ),
         "object_bulk_population_count": sum(1 for row in usable if row.get("object_bulk_population_receipt")),
+        "bulk_proof_certificate_count": sum(1 for row in usable if row.get("bulk_proof_certificate_written")),
+        "bulk_proof_chart_level_3p1_count": sum(1 for row in usable if row.get("bulk_proof_chart_level_3p1")),
+        "bulk_proof_theorem_assisted_h3_populated_chart_count": sum(
+            1 for row in usable if row.get("bulk_proof_theorem_assisted_h3_populated_chart")
+        ),
+        "bulk_proof_strict_neutral_3d_bulk_count": sum(
+            1 for row in usable if row.get("bulk_proof_strict_neutral_3d_bulk")
+        ),
+        "bulk_proof_screen_cmb_proxy_count": sum(1 for row in usable if row.get("bulk_proof_screen_cmb_proxy")),
+        "bulk_proof_physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("bulk_proof_physical_cmb_prediction")
+        ),
+        "bulk_proof_production_particle_matter_count": sum(
+            1 for row in usable if row.get("bulk_proof_production_particle_matter")
+        ),
         "screen_proxy_cmb_count": sum(1 for row in usable if row.get("screen_proxy_cmb_receipt")),
         "bulk_3d_established_count": sum(1 for row in usable if row.get("bulk_3d_established")),
         "interpretation": (
@@ -1519,7 +1982,10 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "a theorem-assisted chart-precursor count means the Lorentz chart, BW automorphism sanity, "
             "intermediate H3 response control separation, and localized observer-object precursor are all present. "
             "A populated-chart count is stricter and requires nonboundary bulk population. Both remain separate "
-            "from the strict finite endogenous-generator bulk proof and from particles/physical cosmology."
+            "from the strict finite endogenous-generator bulk proof and from particles/physical cosmology. "
+            "The bulk-proof certificate counts make this split explicit: chart-level 3+1D, theorem-assisted "
+            "populated H3, strict neutral bulk, screen-CMB proxy, physical CMB, and production particles are "
+            "separate gates."
         ),
     }
 
@@ -1947,6 +2413,47 @@ def _oph_inflation_cmb_bridge_summary(rows: list[dict[str, Any]]) -> dict[str, A
     }
 
 
+def _inflation_certificate_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row for row in rows if row.get("inflation_certificates_written")]
+    return {
+        "run_count": len(usable),
+        "stack_ready_count": sum(1 for row in usable if row.get("inflation_certificates_stack_ready")),
+        "physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("inflation_certificates_physical_cmb_prediction")
+        ),
+        "physical_matter_power_prediction_count": sum(
+            1 for row in usable if row.get("inflation_certificates_physical_matter_power_prediction")
+        ),
+        "no_data_use_count": sum(1 for row in usable if row.get("inflation_certificates_no_data_use")),
+        "scalar_release_gate_count": sum(1 for row in usable if row.get("inflation_certificates_scalar_release_gate")),
+        "edge_center_gate_count": sum(1 for row in usable if row.get("inflation_certificates_edge_center_gate")),
+        "homogeneous_anomaly_gate_count": sum(
+            1 for row in usable if row.get("inflation_certificates_homogeneous_anomaly_gate")
+        ),
+        "parent_collar_gate_count": sum(1 for row in usable if row.get("inflation_certificates_parent_collar_gate")),
+        "repair_matrix_gate_count": sum(1 for row in usable if row.get("inflation_certificates_repair_matrix_gate")),
+        "boltzmann_handoff_gate_count": sum(
+            1 for row in usable if row.get("inflation_certificates_boltzmann_handoff_gate")
+        ),
+        "mean_found_count": _mean(row.get("inflation_certificates_found_count") for row in usable),
+        "mean_passed_count": _mean(row.get("inflation_certificates_passed_count") for row in usable),
+        "mean_expected_count": _mean(row.get("inflation_certificates_expected_count") for row in usable),
+        "mean_missing_count": _mean(row.get("inflation_certificates_missing_count") for row in usable),
+        "mean_A_zeta": _mean(row.get("inflation_certificates_A_zeta") for row in usable),
+        "mean_n_s": _mean(row.get("inflation_certificates_n_s") for row in usable),
+        "mean_Q_A": _mean(row.get("inflation_certificates_Q_A") for row in usable),
+        "mean_B_A": _mean(row.get("inflation_certificates_mean_B_A") for row in usable),
+        "mean_Gamma_rec": _mean(row.get("inflation_certificates_mean_Gamma_rec") for row in usable),
+        "physical_cmb_prediction": False,
+        "interpretation": (
+            "Finite certificate stack for the inflation-free OPH cosmology branch. This lane is the "
+            "artifact contract for A_zeta, n_s, Q_A, B_A(k,a), Gamma_rec(k,a), and Boltzmann handoff. "
+            "The current report is a physical prediction only when all finite certificates and the "
+            "no-data-use firewall pass before likelihood comparison."
+        ),
+    }
+
+
 def _oph_inflation_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     usable = [row for row in rows if row.get("oph_inflation_cmb_camb_written")]
     return {
@@ -2011,6 +2518,90 @@ def _oph_inflation_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any
     }
 
 
+def _selector_elimination_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row for row in rows if row.get("oph_selector_elimination_written")]
+    return {
+        "run_count": len(usable),
+        "theorem_side_receipt_count": sum(
+            1 for row in usable if row.get("oph_selector_elimination_theorem_receipt")
+        ),
+        "source_packet_audit_receipt_count": sum(
+            1 for row in usable if row.get("oph_selector_elimination_source_audit_receipt")
+        ),
+        "q_IR_selector_removed_count": sum(1 for row in usable if row.get("oph_selector_q_IR_removed")),
+        "ell_IR_selector_removed_count": sum(1 for row in usable if row.get("oph_selector_ell_IR_removed")),
+        "eta_R_repair_clock_reduction_count": sum(
+            1 for row in usable if row.get("oph_selector_eta_R_reduced_to_repair_clock")
+        ),
+        "finite_lattice_derived_count": sum(1 for row in usable if row.get("oph_selector_finite_lattice_derived")),
+        "physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("oph_selector_physical_cmb_prediction")
+        ),
+        "kernel_csv_passed_count": sum(1 for row in usable if row.get("oph_selector_kernel_csv_passed")),
+        "mean_kernel_csv_max_abs_error": _mean(row.get("oph_selector_kernel_csv_max_abs_error") for row in usable),
+        "mean_n_s": _mean(row.get("oph_selector_n_s") for row in usable),
+        "mean_eta_R": _mean(row.get("oph_selector_eta_R") for row in usable),
+        "mean_q_IR": _mean(row.get("oph_selector_q_IR") for row in usable),
+        "mean_ell_IR": _mean(row.get("oph_selector_ell_IR") for row in usable),
+        "kappa_rep_status_counts": _counts(
+            row.get("oph_selector_kappa_rep_status") for row in usable if row.get("oph_selector_kappa_rep_status")
+        ),
+        "physical_cmb_prediction": False,
+        "interpretation": (
+            "v1.5 OPH-CMB selector-elimination lane. q_IR and ell_IR are counted as theorem-side target "
+            "derivations when their receipts pass; eta_R is only reduced to a repair-clock certificate "
+            "until the finite lattice derives kappa_rep=e. This lane strengthens the exact target branch "
+            "but does not by itself make the CAMB curve a physical finite-lattice CMB prediction."
+        ),
+    }
+
+
+def _oph_exact_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row for row in rows if row.get("oph_exact_cmb_camb_written")]
+    return {
+        "run_count": len(usable),
+        "measurement_comparable_curve_count": sum(
+            1 for row in usable if row.get("oph_exact_cmb_camb_curve_comparable")
+        ),
+        "transfer_receipt_count": sum(1 for row in usable if row.get("oph_exact_cmb_camb_transfer_receipt")),
+        "physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("oph_exact_cmb_camb_physical_cmb_prediction")
+        ),
+        "official_clik_ready_count": sum(1 for row in usable if row.get("oph_exact_cmb_camb_official_clik_ready")),
+        "official_likelihood_ready_count": sum(
+            1 for row in usable if row.get("oph_exact_cmb_camb_official_likelihood_ready")
+        ),
+        "selector_theorem_receipt_count": sum(
+            1 for row in usable if row.get("oph_selector_elimination_theorem_receipt")
+        ),
+        "selector_source_audit_receipt_count": sum(
+            1 for row in usable if row.get("oph_selector_elimination_source_audit_receipt")
+        ),
+        "mean_n_s": _mean(row.get("oph_exact_cmb_camb_n_s") for row in usable),
+        "mean_eta_R": _mean(row.get("oph_exact_cmb_camb_eta_R") for row in usable),
+        "mean_q_IR": _mean(row.get("oph_exact_cmb_camb_q_IR") for row in usable),
+        "mean_ell_IR": _mean(row.get("oph_exact_cmb_camb_ell_IR") for row in usable),
+        "mean_N_frz_proxy": _mean(row.get("oph_exact_cmb_camb_N_frz_proxy") for row in usable),
+        "mean_lcdm_shape_correlation": _mean(row.get("oph_exact_cmb_camb_lcdm_shape_correlation") for row in usable),
+        "mean_scalar_shape_correlation": _mean(
+            row.get("oph_exact_cmb_camb_scalar_shape_correlation") for row in usable
+        ),
+        "mean_ir_shape_correlation": _mean(row.get("oph_exact_cmb_camb_ir_shape_correlation") for row in usable),
+        "mean_lcdm_chi2_per_bin": _mean(row.get("oph_exact_cmb_camb_lcdm_chi2_per_bin") for row in usable),
+        "mean_scalar_chi2_per_bin": _mean(row.get("oph_exact_cmb_camb_scalar_chi2_per_bin") for row in usable),
+        "mean_ir_chi2_per_bin": _mean(row.get("oph_exact_cmb_camb_ir_chi2_per_bin") for row in usable),
+        "mean_acoustic_abs_delta": _mean(row.get("oph_exact_cmb_camb_acoustic_mean_abs_delta") for row in usable),
+        "physical_cmb_prediction": False,
+        "interpretation": (
+            "Native CAMB TT transfer for the exact OPH CMB target branch updated with the v1.5 "
+            "selector-elimination receipts: q_IR and ell_IR are theorem-side target counts, while "
+            "n_s still depends on the pending kappa_rep=e repair-clock certificate. This is "
+            "measurement-comparable Boltzmann output, but remains a target/continuation diagnostic until "
+            "finite lattice derivation and official Planck likelihood/map-space gates pass."
+        ),
+    }
+
+
 def _oph_unique_prediction_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     usable = [row for row in rows if row.get("oph_unique_prediction_written")]
     return {
@@ -2041,6 +2632,118 @@ def _oph_unique_prediction_summary(rows: list[dict[str, Any]]) -> dict[str, Any]
             "Current v0.9 OPH-only public-comparison target lane: alpha-linked scalar tilt, exact IR "
             "kernel, parity envelope, neutrino mass sum, and compressed dark-sector rows. These are "
             "measurement-comparable targets, not finite-lattice derivations unless the derivation audit passes."
+        ),
+    }
+
+
+def _oph_cnb_neutrino_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row for row in rows if row.get("oph_cnb_neutrino_written")]
+    return {
+        "run_count": len(usable),
+        "measurement_comparable_count": sum(
+            1 for row in usable if row.get("oph_cnb_neutrino_measurement_comparable")
+        ),
+        "finite_lattice_derived_count": sum(
+            1 for row in usable if row.get("oph_cnb_neutrino_finite_lattice_derived")
+        ),
+        "physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("oph_cnb_neutrino_physical_cmb_prediction")
+        ),
+        "physical_matter_power_prediction_count": sum(
+            1 for row in usable if row.get("oph_cnb_neutrino_physical_matter_power_prediction")
+        ),
+        "background_gate_count": sum(1 for row in usable if row.get("oph_cnb_background_gate")),
+        "mass_derivation_gate_count": sum(1 for row in usable if row.get("oph_cnb_mass_derivation_gate")),
+        "B_A_kernel_gate_count": sum(1 for row in usable if row.get("oph_cnb_B_A_kernel_gate")),
+        "five_of_seven_kernel_callable_count": sum(
+            1 for row in usable if row.get("oph_cnb_five_of_seven_kernel_callable")
+        ),
+        "five_of_seven_projection_count": sum(
+            1 for row in usable if row.get("oph_cnb_five_of_seven_projection_gate")
+        ),
+        "likelihood_gate_count": sum(1 for row in usable if row.get("oph_cnb_likelihood_gate")),
+        "planck_bao_bound_pass_count": sum(1 for row in usable if row.get("oph_cnb_planck_bao_sum_mnu_pass")),
+        "act_bound_pass_count": sum(1 for row in usable if row.get("oph_cnb_act_sum_mnu_pass")),
+        "desi_lcdm_bound_pass_count": sum(1 for row in usable if row.get("oph_cnb_desi_lcdm_sum_mnu_pass")),
+        "mean_N_eff": _mean(row.get("oph_cnb_N_eff") for row in usable),
+        "mean_sum_mnu_eV": _mean(row.get("oph_cnb_sum_mnu_eV") for row in usable),
+        "mean_m_lightest_eV": _mean(row.get("oph_cnb_m_lightest_eV") for row in usable),
+        "mean_Omega_nu_h2": _mean(row.get("oph_cnb_Omega_nu_h2") for row in usable),
+        "mean_f_nu": _mean(row.get("oph_cnb_f_nu") for row in usable),
+        "mean_small_scale_suppression": _mean(row.get("oph_cnb_small_scale_suppression") for row in usable),
+        "mean_planck_neff_pull_sigma": _mean(row.get("oph_cnb_planck_neff_pull_sigma") for row in usable),
+        "mean_eta_A": _mean(row.get("oph_cnb_eta_A") for row in usable),
+        "mean_Pi_WL_compressed_required": _mean(row.get("oph_cnb_Pi_WL_compressed_required") for row in usable),
+        "mean_five_of_seven_pi_wl": _mean(row.get("oph_cnb_five_of_seven_pi_wl") for row in usable),
+        "mean_five_of_seven_epsilon_A": _mean(row.get("oph_cnb_five_of_seven_epsilon_A") for row in usable),
+        "mean_five_of_seven_S8_projected": _mean(
+            row.get("oph_cnb_five_of_seven_S8_projected") for row in usable
+        ),
+        "mean_five_of_seven_pull_sigma": _mean(
+            row.get("oph_cnb_five_of_seven_pull_sigma") for row in usable
+        ),
+        "physical_cmb_prediction": False,
+        "interpretation": (
+            "Standalone OPH-CnuB relic-neutrino background lane. The weighted-cycle neutrino masses are "
+            "measurement-comparable through standard relic-neutrino cosmology, while finite-lattice mass "
+            "derivation, B_A(k,a), and full Boltzmann/likelihood gates remain closed."
+        ),
+    }
+
+
+def _finite_certificate_authority_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row for row in rows if row.get("finite_certificates_written")]
+    return {
+        "run_count": len(usable),
+        "stack_ready_count": sum(1 for row in usable if row.get("finite_certificates_stack_ready")),
+        "no_data_use_count": sum(1 for row in usable if row.get("finite_certificates_no_data_use")),
+        "release_code_gate_count": sum(1 for row in usable if row.get("finite_certificates_release_code_gate")),
+        "parent_collar_gate_count": sum(1 for row in usable if row.get("finite_certificates_parent_collar_gate")),
+        "repair_matrix_gate_count": sum(1 for row in usable if row.get("finite_certificates_repair_matrix_gate")),
+        "boltzmann_export_gate_count": sum(1 for row in usable if row.get("finite_certificates_boltzmann_export_gate")),
+        "real_physics_certificate_count": sum(
+            1 for row in usable if row.get("finite_certificates_real_physics_certificate")
+        ),
+        "physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("finite_certificates_physical_cmb_prediction")
+        ),
+        "physical_matter_power_prediction_count": sum(
+            1 for row in usable if row.get("finite_certificates_physical_matter_power_prediction")
+        ),
+        "mean_A_zeta": _mean(row.get("finite_certificates_A_zeta") for row in usable),
+        "mean_n_s": _mean(row.get("finite_certificates_n_s") for row in usable),
+        "mean_Q_A": _mean(row.get("finite_certificates_Q_A") for row in usable),
+        "mean_B_A": _mean(row.get("finite_certificates_B_A") for row in usable),
+        "mean_Gamma_rec": _mean(row.get("finite_certificates_Gamma_rec") for row in usable),
+        "physical_cmb_prediction": False,
+        "interpretation": (
+            "Finite OPH cosmology certificate authority. This lane computes A_zeta, Q_A, B_A(k,a), "
+            "Gamma_rec, and a Boltzmann handoff contract from finite release/collar/repair inputs. "
+            "Toy/proxy inputs validate the compiler only; physical CMB and matter-power gates remain "
+            "closed until real simulator regulator data and cold-limit solver receipts pass the firewall."
+        ),
+    }
+
+
+def _screen_capacity_closure_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row for row in rows if row.get("screen_capacity_written")]
+    return {
+        "run_count": len(usable),
+        "observed_readout_count": sum(1 for row in usable if row.get("screen_capacity_observed_readout_gate")),
+        "F_N_implemented_count": sum(1 for row in usable if row.get("screen_capacity_F_N_implemented")),
+        "fixed_point_solved_count": sum(1 for row in usable if row.get("screen_capacity_fixed_point_solved")),
+        "physical_cmb_prediction_count": sum(
+            1 for row in usable if row.get("screen_capacity_physical_cmb_prediction")
+        ),
+        "mean_N_patch_bare_ratio": _mean(row.get("screen_capacity_N_patch_bare_ratio") for row in usable),
+        "mean_N_scr": _mean(row.get("screen_capacity_N_scr") for row in usable),
+        "mean_Lambda_lP2": _mean(row.get("screen_capacity_Lambda_lP2") for row in usable),
+        "mean_P_cell_count": _mean(row.get("screen_capacity_P_cell_count") for row in usable),
+        "physical_cmb_prediction": False,
+        "interpretation": (
+            "Global cosmic record/screen-capacity closure lane. It gives the observed-branch "
+            "de Sitter entropy-capacity normalization and Lambda*l_P^2 readout, while keeping ordinary "
+            "finite patch counts as numerical regulators until the OPH readback map F(N) is implemented."
         ),
     }
 
@@ -2252,6 +2955,15 @@ def _h0s8_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "Gamma_J_gate_count": sum(1 for row in usable if row.get("h0s8_Gamma_J_gate")),
         "CAMB_CLASS_gate_count": sum(1 for row in usable if row.get("h0s8_camb_class_gate")),
         "likelihood_gate_count": sum(1 for row in usable if row.get("h0s8_likelihood_gate")),
+        "lane8_certificate_count": sum(1 for row in usable if row.get("h0s8_lane8_written")),
+        "lane8_run_derived_count": sum(1 for row in usable if row.get("h0s8_lane8_values_are_run_derived")),
+        "lane8_certificate_ready_count": sum(1 for row in usable if row.get("h0s8_lane8_certificate_ready")),
+        "lane8_payload_gate_count": sum(1 for row in usable if row.get("h0s8_lane8_payload_gate")),
+        "lane8_fake_suppression_gate_count": sum(
+            1 for row in usable if row.get("h0s8_lane8_fake_suppression_gate")
+        ),
+        "lane8_selector_gate_count": sum(1 for row in usable if row.get("h0s8_lane8_selector_gate")),
+        "lane8_refinement_gate_count": sum(1 for row in usable if row.get("h0s8_lane8_refinement_gate")),
         "mean_H0_km_s_Mpc": _mean(row.get("h0s8_H0_km_s_Mpc") for row in usable),
         "mean_Omega_m": _mean(row.get("h0s8_Omega_m") for row in usable),
         "mean_Omega_A": _mean(row.get("h0s8_Omega_A") for row in usable),
@@ -2280,10 +2992,21 @@ def _h0s8_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_direct_jacobi_weak_lensing_pull_sigma": _mean(
             row.get("h0s8_direct_jacobi_weak_lensing_pull_sigma") for row in usable
         ),
+        "mean_lane8_i0_bits": _mean(row.get("h0s8_lane8_i0_bits") for row in usable),
+        "mean_lane8_low_entropy_gap_bits": _mean(
+            row.get("h0s8_lane8_low_entropy_gap_bits") for row in usable
+        ),
+        "mean_lane8_fake_gamma_margin_bits": _mean(
+            row.get("h0s8_lane8_fake_gamma_margin_bits") for row in usable
+        ),
+        "mean_lane8_fake_probability_bound": _mean(
+            row.get("h0s8_lane8_fake_probability_bound") for row in usable
+        ),
         "interpretation": (
             "H0/S8 branch diagnostic from the OPH cosmology notes. The numbers are measurement-facing "
-            "branch consequences. They become finite-lattice predictions only when Q_A, B_A(k,a), the "
-            "repair clock, CAMB/CLASS anomaly module, and likelihood gates are closed."
+            "branch consequences. Lane-8 certificate fields expose record/provenance closure gates, but "
+            "they become finite-lattice predictions only when Q_A, B_A(k,a), the repair clock, "
+            "CAMB/CLASS anomaly module, likelihood gates, and run-derived Lane-8 certificate values are closed."
         ),
     }
 
@@ -2833,8 +3556,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
     screen_power = lanes["oph_screen_power_effective_theory"]
     screen_camb = lanes["oph_screen_camb_transfer"]
     inflation_cmb = lanes["oph_inflation_cmb_bridge"]
+    inflation_certificates = lanes["oph_inflation_certificate_stack"]
+    finite_certificates = lanes["oph_finite_certificate_authority"]
+    screen_capacity = lanes["oph_screen_capacity_closure"]
     inflation_cmb_camb = lanes["oph_inflation_cmb_camb_transfer"]
+    selector_elimination = lanes["oph_cmb_selector_elimination_v1_5"]
+    exact_cmb_camb = lanes["oph_exact_cmb_camb_transfer"]
     unique_prediction = lanes["oph_unique_prediction_gate"]
+    cnb_neutrino = lanes["oph_cnb_neutrino_background"]
     cmb_derivation = lanes["finite_lattice_cmb_derivation"]
     boltzmann = lanes["oph_boltzmann_input_readouts"]
     oph_cmb = lanes["oph_cmb_anomaly_stress_adapter"]
@@ -2850,11 +3579,13 @@ def _markdown_report(report: dict[str, Any]) -> str:
     hol = lanes["screen_holonomy_defect_proxy"]
     defect_worldlines = lanes["defect_worldline_particle_precursors"]
     controlled_defect = lanes["controlled_defect_particle_assay"]
-    if lorentz.get("support_visible_h3_populated_bulk_count", 0):
+    if lorentz.get("bulk_proof_theorem_assisted_h3_populated_chart_count", 0) or lorentz.get(
+        "support_visible_h3_populated_bulk_count", 0
+    ):
         current_answer = (
             "Yes: the current simulator emits diagnostic, measurement-facing values and a "
-            "support-visible populated-H3 bulk receipt on the paper chart route. No: it does not "
-            "yet emit a physical CMB prediction, physical P(k), neutral third-person populated "
+            "theorem-assisted populated-H3 chart receipt on the paper route. No: it does not "
+            "yet emit a physical CMB prediction, physical P(k), strict neutral third-person "
             "bulk reconstruction, or particle spectrum."
         )
     else:
@@ -2891,6 +3622,13 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- paper-theorem-assisted H3 chart precursor receipts: {lorentz['paper_theorem_assisted_h3_chart_precursor_count']}",
         f"- paper-theorem-assisted populated H3 chart receipts: {lorentz['paper_theorem_assisted_h3_populated_chart_count']}",
         f"- object bulk-population receipts: {lorentz['object_bulk_population_count']}",
+        f"- bulk-proof certificates: {lorentz['bulk_proof_certificate_count']}",
+        f"- bulk-proof chart-level 3+1D counts: {lorentz['bulk_proof_chart_level_3p1_count']}",
+        f"- bulk-proof theorem-assisted populated H3 counts: {lorentz['bulk_proof_theorem_assisted_h3_populated_chart_count']}",
+        f"- bulk-proof strict neutral 3D counts: {lorentz['bulk_proof_strict_neutral_3d_bulk_count']}",
+        f"- bulk-proof screen-CMB proxy counts: {lorentz['bulk_proof_screen_cmb_proxy_count']}",
+        f"- bulk-proof physical CMB counts: {lorentz['bulk_proof_physical_cmb_prediction_count']}",
+        f"- bulk-proof production particle counts: {lorentz['bulk_proof_production_particle_matter_count']}",
         f"- screen-proxy CMB receipts: {lorentz['screen_proxy_cmb_count']}",
         f"- bulk-established count: {lorentz['bulk_3d_established_count']}",
         f"- interpretation: {lorentz['interpretation']}",
@@ -3228,6 +3966,54 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- v0.5 pressure/not-yet-run gate count: {_fmt(inflation_cmb['mean_v05_pressure_point_count'])}",
         f"- interpretation: {inflation_cmb['interpretation']}",
         "",
+        "## OPH Inflation Certificate Stack",
+        "",
+        f"- certificate reports: {inflation_certificates['run_count']}",
+        f"- stack-ready reports: {inflation_certificates['stack_ready_count']}",
+        f"- physical-CMB prediction reports: {inflation_certificates['physical_cmb_prediction_count']}",
+        f"- physical matter-power prediction reports: {inflation_certificates['physical_matter_power_prediction_count']}",
+        f"- no-data-use firewall count: {inflation_certificates['no_data_use_count']}",
+        f"- scalar/edge/anomaly/parent/repair/boltzmann gates: {inflation_certificates['scalar_release_gate_count']} / {inflation_certificates['edge_center_gate_count']} / {inflation_certificates['homogeneous_anomaly_gate_count']} / {inflation_certificates['parent_collar_gate_count']} / {inflation_certificates['repair_matrix_gate_count']} / {inflation_certificates['boltzmann_handoff_gate_count']}",
+        f"- mean found/passed/expected certificates: {_fmt(inflation_certificates['mean_found_count'])} / {_fmt(inflation_certificates['mean_passed_count'])} / {_fmt(inflation_certificates['mean_expected_count'])}",
+        f"- mean missing certificate count: {_fmt(inflation_certificates['mean_missing_count'])}",
+        f"- mean A_zeta: {_fmt(inflation_certificates['mean_A_zeta'])}",
+        f"- mean n_s: {_fmt(inflation_certificates['mean_n_s'])}",
+        f"- mean Q_A: {_fmt(inflation_certificates['mean_Q_A'])}",
+        f"- mean B_A: {_fmt(inflation_certificates['mean_B_A'])}",
+        f"- mean Gamma_rec: {_fmt(inflation_certificates['mean_Gamma_rec'])}",
+        f"- interpretation: {inflation_certificates['interpretation']}",
+        "",
+        "## OPH Finite Certificate Authority",
+        "",
+        f"- finite certificate bundles: {finite_certificates['run_count']}",
+        f"- stack-ready bundles: {finite_certificates['stack_ready_count']}",
+        f"- no-data-use receipts: {finite_certificates['no_data_use_count']}",
+        f"- release-code gates: {finite_certificates['release_code_gate_count']}",
+        f"- parent-collar gates: {finite_certificates['parent_collar_gate_count']}",
+        f"- repair-matrix gates: {finite_certificates['repair_matrix_gate_count']}",
+        f"- Boltzmann-export gates: {finite_certificates['boltzmann_export_gate_count']}",
+        f"- real-physics certificate bundles: {finite_certificates['real_physics_certificate_count']}",
+        f"- physical-CMB prediction reports: {finite_certificates['physical_cmb_prediction_count']}",
+        f"- mean A_zeta: {_fmt(finite_certificates['mean_A_zeta'])}",
+        f"- mean n_s: {_fmt(finite_certificates['mean_n_s'])}",
+        f"- mean Q_A: {_fmt(finite_certificates['mean_Q_A'])}",
+        f"- mean B_A: {_fmt(finite_certificates['mean_B_A'])}",
+        f"- mean Gamma_rec: {_fmt(finite_certificates['mean_Gamma_rec'])}",
+        f"- interpretation: {finite_certificates['interpretation']}",
+        "",
+        "## OPH Screen-Capacity Closure",
+        "",
+        f"- screen-capacity reports: {screen_capacity['run_count']}",
+        f"- observed-branch readout reports: {screen_capacity['observed_readout_count']}",
+        f"- F(N) implemented reports: {screen_capacity['F_N_implemented_count']}",
+        f"- finite-simulator fixed-point solved reports: {screen_capacity['fixed_point_solved_count']}",
+        f"- physical-CMB prediction reports: {screen_capacity['physical_cmb_prediction_count']}",
+        f"- mean N_patch bare ratio: {_fmt(screen_capacity['mean_N_patch_bare_ratio'])}",
+        f"- mean N_scr entropy capacity: {_fmt(screen_capacity['mean_N_scr'])}",
+        f"- mean Lambda l_P^2: {_fmt(screen_capacity['mean_Lambda_lP2'])}",
+        f"- mean local P-cell count for N_scr: {_fmt(screen_capacity['mean_P_cell_count'])}",
+        f"- interpretation: {screen_capacity['interpretation']}",
+        "",
         "## OPH Inflation/CMB CAMB Transfer",
         "",
         f"- CAMB transfer reports: {inflation_cmb_camb['run_count']}",
@@ -3255,6 +4041,49 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean unique v0.9 acoustic |delta|: {_fmt(inflation_cmb_camb['mean_unique_acoustic_abs_delta'])}",
         f"- interpretation: {inflation_cmb_camb['interpretation']}",
         "",
+        "## OPH CMB Selector Elimination v1.5",
+        "",
+        f"- selector-elimination reports: {selector_elimination['run_count']}",
+        f"- theorem-side receipts: {selector_elimination['theorem_side_receipt_count']}",
+        f"- source-packet audit receipts: {selector_elimination['source_packet_audit_receipt_count']}",
+        f"- q_IR selector-removed count: {selector_elimination['q_IR_selector_removed_count']}",
+        f"- ell_IR selector-removed count: {selector_elimination['ell_IR_selector_removed_count']}",
+        f"- eta_R repair-clock reduction count: {selector_elimination['eta_R_repair_clock_reduction_count']}",
+        f"- finite-lattice-derived reports: {selector_elimination['finite_lattice_derived_count']}",
+        f"- physical-CMB prediction reports: {selector_elimination['physical_cmb_prediction_count']}",
+        f"- exact-kernel CSV pass count: {selector_elimination['kernel_csv_passed_count']}",
+        f"- mean exact-kernel CSV max error: {_fmt(selector_elimination['mean_kernel_csv_max_abs_error'])}",
+        f"- mean n_s: {_fmt(selector_elimination['mean_n_s'])}",
+        f"- mean eta_R: {_fmt(selector_elimination['mean_eta_R'])}",
+        f"- mean q_IR: {_fmt(selector_elimination['mean_q_IR'])}",
+        f"- mean ell_IR: {_fmt(selector_elimination['mean_ell_IR'])}",
+        f"- kappa_rep status counts: {selector_elimination['kappa_rep_status_counts']}",
+        f"- interpretation: {selector_elimination['interpretation']}",
+        "",
+        "## OPH Exact CMB CAMB Transfer",
+        "",
+        f"- CAMB transfer reports: {exact_cmb_camb['run_count']}",
+        f"- measurement-comparable curve reports: {exact_cmb_camb['measurement_comparable_curve_count']}",
+        f"- transfer receipts: {exact_cmb_camb['transfer_receipt_count']}",
+        f"- physical-CMB prediction reports: {exact_cmb_camb['physical_cmb_prediction_count']}",
+        f"- official clik-ready reports: {exact_cmb_camb['official_clik_ready_count']}",
+        f"- official likelihood-ready reports: {exact_cmb_camb['official_likelihood_ready_count']}",
+        f"- embedded selector theorem receipts: {exact_cmb_camb['selector_theorem_receipt_count']}",
+        f"- embedded selector source-audit receipts: {exact_cmb_camb['selector_source_audit_receipt_count']}",
+        f"- mean exact n_s: {_fmt(exact_cmb_camb['mean_n_s'])}",
+        f"- mean exact eta_R: {_fmt(exact_cmb_camb['mean_eta_R'])}",
+        f"- mean exact q_IR: {_fmt(exact_cmb_camb['mean_q_IR'])}",
+        f"- mean exact ell_IR: {_fmt(exact_cmb_camb['mean_ell_IR'])}",
+        f"- mean exact N_frz proxy: {_fmt(exact_cmb_camb['mean_N_frz_proxy'])}",
+        f"- mean LCDM shape correlation: {_fmt(exact_cmb_camb['mean_lcdm_shape_correlation'])}",
+        f"- mean exact scalar shape correlation: {_fmt(exact_cmb_camb['mean_scalar_shape_correlation'])}",
+        f"- mean exact IR shape correlation: {_fmt(exact_cmb_camb['mean_ir_shape_correlation'])}",
+        f"- mean LCDM chi2/bin: {_fmt(exact_cmb_camb['mean_lcdm_chi2_per_bin'])}",
+        f"- mean exact scalar chi2/bin: {_fmt(exact_cmb_camb['mean_scalar_chi2_per_bin'])}",
+        f"- mean exact IR chi2/bin: {_fmt(exact_cmb_camb['mean_ir_chi2_per_bin'])}",
+        f"- mean acoustic |delta|: {_fmt(exact_cmb_camb['mean_acoustic_abs_delta'])}",
+        f"- interpretation: {exact_cmb_camb['interpretation']}",
+        "",
         "## OPH Unique Prediction Gate v0.9",
         "",
         f"- target reports: {unique_prediction['run_count']}",
@@ -3272,6 +4101,31 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean neutrino f_nu: {_fmt(unique_prediction['mean_neutrino_f_nu'])}",
         f"- mean small-scale neutrino suppression: {_fmt(unique_prediction['mean_small_scale_neutrino_suppression'])}",
         f"- interpretation: {unique_prediction['interpretation']}",
+        "",
+        "## OPH-CnuB Neutrino Background",
+        "",
+        f"- neutrino reports: {cnb_neutrino['run_count']}",
+        f"- measurement-comparable reports: {cnb_neutrino['measurement_comparable_count']}",
+        f"- finite-lattice-derived reports: {cnb_neutrino['finite_lattice_derived_count']}",
+        f"- physical-CMB prediction reports: {cnb_neutrino['physical_cmb_prediction_count']}",
+        f"- physical matter-power prediction reports: {cnb_neutrino['physical_matter_power_prediction_count']}",
+        f"- background/mass/B_A/likelihood gate counts: {cnb_neutrino['background_gate_count']} / {cnb_neutrino['mass_derivation_gate_count']} / {cnb_neutrino['B_A_kernel_gate_count']} / {cnb_neutrino['likelihood_gate_count']}",
+        f"- five-of-seven kernel/projection counts: {cnb_neutrino['five_of_seven_kernel_callable_count']} / {cnb_neutrino['five_of_seven_projection_count']}",
+        f"- Planck+BAO / ACT / DESI strict sum-mnu pass counts: {cnb_neutrino['planck_bao_bound_pass_count']} / {cnb_neutrino['act_bound_pass_count']} / {cnb_neutrino['desi_lcdm_bound_pass_count']}",
+        f"- mean N_eff: {_fmt(cnb_neutrino['mean_N_eff'])}",
+        f"- mean sum m_nu eV: {_fmt(cnb_neutrino['mean_sum_mnu_eV'])}",
+        f"- mean lightest mass eV: {_fmt(cnb_neutrino['mean_m_lightest_eV'])}",
+        f"- mean Omega_nu h2: {_fmt(cnb_neutrino['mean_Omega_nu_h2'])}",
+        f"- mean f_nu: {_fmt(cnb_neutrino['mean_f_nu'])}",
+        f"- mean small-scale suppression: {_fmt(cnb_neutrino['mean_small_scale_suppression'])}",
+        f"- mean Planck N_eff pull sigma: {_fmt(cnb_neutrino['mean_planck_neff_pull_sigma'])}",
+        f"- mean eta_A: {_fmt(cnb_neutrino['mean_eta_A'])}",
+        f"- mean compressed Pi_WL target: {_fmt(cnb_neutrino['mean_Pi_WL_compressed_required'])}",
+        f"- mean five-of-seven Pi_WL: {_fmt(cnb_neutrino['mean_five_of_seven_pi_wl'])}",
+        f"- mean five-of-seven epsilon_A: {_fmt(cnb_neutrino['mean_five_of_seven_epsilon_A'])}",
+        f"- mean five-of-seven projected S8: {_fmt(cnb_neutrino['mean_five_of_seven_S8_projected'])}",
+        f"- mean five-of-seven S8 pull sigma: {_fmt(cnb_neutrino['mean_five_of_seven_pull_sigma'])}",
+        f"- interpretation: {cnb_neutrino['interpretation']}",
         "",
         "## Finite Lattice CMB Derivation Audit",
         "",
@@ -3341,6 +4195,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- Q_A/B_A/Gamma_J gate counts: {h0s8['Q_A_gate_count']} / {h0s8['B_A_gate_count']} / {h0s8['Gamma_J_gate_count']}",
         f"- lambda(P) gate count: {h0s8['lambda_P_gate_count']}",
         f"- CAMB/CLASS and likelihood gate counts: {h0s8['CAMB_CLASS_gate_count']} / {h0s8['likelihood_gate_count']}",
+        f"- Lane-8 certificate / run-derived / ready counts: {h0s8['lane8_certificate_count']} / {h0s8['lane8_run_derived_count']} / {h0s8['lane8_certificate_ready_count']}",
+        f"- Lane-8 payload/fake/selector/refinement gate counts: {h0s8['lane8_payload_gate_count']} / {h0s8['lane8_fake_suppression_gate_count']} / {h0s8['lane8_selector_gate_count']} / {h0s8['lane8_refinement_gate_count']}",
         f"- mean H0 km/s/Mpc: {_fmt(h0s8['mean_H0_km_s_Mpc'])}",
         f"- mean Omega_m: {_fmt(h0s8['mean_Omega_m'])}",
         f"- mean Omega_A: {_fmt(h0s8['mean_Omega_A'])}",
@@ -3349,6 +4205,9 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean CDM-like S8: {_fmt(h0s8['mean_cdm_like_S8'])}",
         f"- mean direct-Jacobi S8: {_fmt(h0s8['mean_direct_jacobi_S8'])}",
         f"- mean matrix-gap S8: {_fmt(h0s8['mean_matrix_gap_S8'])}",
+        f"- mean Lane-8 I0 bits: {_fmt(h0s8['mean_lane8_i0_bits'])}",
+        f"- mean Lane-8 low-entropy gap bits: {_fmt(h0s8['mean_lane8_low_entropy_gap_bits'])}",
+        f"- mean Lane-8 fake gamma margin bits: {_fmt(h0s8['mean_lane8_fake_gamma_margin_bits'])}",
         f"- mean Planck H0 pull sigma: {_fmt(h0s8['mean_planck_H0_pull_sigma'])}",
         f"- mean SH0ES H0 pull sigma: {_fmt(h0s8['mean_shoes_H0_pull_sigma'])}",
         f"- mean weak-lensing CDM S8 pull sigma: {_fmt(h0s8['mean_weak_lensing_cdm_pull_sigma'])}",
@@ -3565,6 +4424,16 @@ def _nested(data: dict[str, Any], *keys: str) -> Any:
             return None
         value = value.get(key)
     return value
+
+
+def _first_numeric(value: Any) -> float | None:
+    if isinstance(value, list):
+        for item in value:
+            parsed = _float_or_none(item)
+            if parsed is not None:
+                return parsed
+        return None
+    return _float_or_none(value)
 
 
 def _best_overlap_ell_field(fields: dict[str, Any]) -> tuple[str | None, dict[str, Any]]:

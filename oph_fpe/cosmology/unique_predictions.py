@@ -11,6 +11,7 @@ import numpy as np
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
 from oph_fpe.cosmology.oph_screen_power import DEFAULT_D_STAR_MPC, DEFAULT_K0_MPC
+from oph_fpe.cosmology.selector_elimination import selector_elimination_report
 
 
 PLANCK_NS_TARGET = 0.965
@@ -37,11 +38,12 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
     derived the targets from cap/collar state statistics.
     """
 
+    selector_report = selector_elimination_report(source_dir, P=float(P))
     pixel = OPHPixelConstants(P=float(P))
-    eta_r = math.e * pixel.alpha_from_P * pixel.sqrt_pi
-    n_s = 1.0 - eta_r
-    q_ir = 0.25
-    ell_ir = 32.0
+    eta_r = float(selector_report["scalar_tilt"]["eta_R"])
+    n_s = float(selector_report["scalar_tilt"]["n_s"])
+    q_ir = float(selector_report["cmb_ir_kernel"]["q_IR"])
+    ell_ir = float(selector_report["cmb_ir_kernel"]["ell_IR"])
     theta_ir_deg = 180.0 / ell_ir
     k_ir_mpc = ell_ir / DEFAULT_D_STAR_MPC
     n_frz_proxy = int((ell_ir + 1.0) ** 2)
@@ -82,7 +84,9 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
         "oph_constants": pixel.as_jsonable(),
         "source_files": files,
         "scalar_tilt": {
-            "formula": "n_s = 1 - e * alpha(0) * sqrt(pi)",
+            "formula": "n_s = 1 - kappa_rep * alpha(0) * sqrt(pi)",
+            "canonical_kappa_rep": float(selector_report["scalar_tilt"]["canonical_kappa_rep"]),
+            "canonical_kappa_rep_status": selector_report["scalar_tilt"]["canonical_kappa_rep_status"],
             "eta_R": float(eta_r),
             "n_s": float(n_s),
             "planck_public_target": PLANCK_NS_TARGET,
@@ -102,6 +106,22 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
             "diagnostic_delta_AIC_v0_8": -7.242,
             "diagnostic_delta_BIC_v0_8": -4.811,
             "official_planck_likelihood_run": False,
+        },
+        "selector_elimination_v1_5": {
+            "q_IR_selector_removed": selector_report["selector_elimination"]["q_IR_selector_removed"],
+            "ell_IR_selector_removed": selector_report["selector_elimination"]["ell_IR_selector_removed"],
+            "eta_R_reduced_to_repair_clock_certificate": selector_report["selector_elimination"][
+                "eta_R_reduced_to_repair_clock_certificate"
+            ],
+            "remaining_eta_R_certificate": selector_report["selector_elimination"]["remaining_eta_R_certificate"],
+            "theorem_side_receipt": selector_report["THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT"],
+            "source_packet_audit_receipt": selector_report["SOURCE_PACKET_AUDIT_RECEIPT"],
+            "source_status_audit": selector_report["source_status_audit"],
+            "exact_ir_kernel_csv_audit": {
+                key: value
+                for key, value in selector_report["exact_ir_kernel_csv_audit"].items()
+                if key != "rows"
+            },
         },
         "parity_envelope": {
             "formula": "F_P(ell)=1-(-1)^ell*exp(-ell/4)",
@@ -138,10 +158,13 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "Current OPH-only prediction gate imported from local cosmology notes and recomputed from OPH "
-            "constants. The scalar tilt, IR/parity anomaly templates, neutrino mass sum, and compressed "
+            "constants. In the v1.5 selector-elimination surface, q_IR=1/4 and ell_IR=32 are theorem-side "
+            "target counts rather than fit selectors; eta_R is reduced to the single repair-clock certificate "
+            "kappa_rep=e. The scalar tilt, IR/parity anomaly templates, neutrino mass sum, and compressed "
             "dark-sector rows are comparable to public measurements. They remain target/readout lanes until "
-            "the finite OPH lattice derives eta_R, q_IR, ell_IR, parity covariance, and anomaly kernels from "
-            "state-derived cap/collar microphysics and passes official likelihood/map-space tests."
+            "the finite OPH lattice derives kappa_rep, validates the finite-register IR/covariance certificates, "
+            "derives parity covariance and anomaly kernels from state-derived cap/collar microphysics, and "
+            "passes official likelihood/map-space tests."
         ),
     }
     return report

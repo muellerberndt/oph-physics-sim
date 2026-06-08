@@ -1,0 +1,9 @@
+scenario: faithful_record_chain
+source_bits: 64
+initial_blank_negentropy_bits: 64
+hidden_export_budget_bits: 0
+record_error_epsilon: 0.0
+steps: 64
+s_max_bits: 256
+s_of_bits: 180
+
