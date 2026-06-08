@@ -5,6 +5,7 @@ from oph_fpe.observers.objects import (
     extract_record_families,
     object_consensus_score,
     observer_object_report,
+    transition_affinity_packet_fields,
     visible_object_packets,
 )
 from oph_fpe.observers.subjective import observer_consensus_report, observer_view_rows
@@ -18,5 +19,6 @@ __all__ = [
     "observer_consensus_report",
     "observer_object_report",
     "observer_view_rows",
+    "transition_affinity_packet_fields",
     "visible_object_packets",
 ]

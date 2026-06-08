@@ -1,10 +1,10 @@
 [cloud]
 provider = "gcp"
-project = "observer-patch-holography"
-project_number = "640205981110"
-region = "us-central1"
-zone = "us-central1-b"
-artifact_bucket = "oph-physics-sim-artifacts-640205981110-us-central1"
+project = "${GCP_PROJECT_ID}"
+project_number = "${GCP_PROJECT_NUMBER}"
+region = "${GCP_REGION}"
+zone = "${GCP_ZONE}"
+artifact_bucket = "${GCP_ARTIFACT_BUCKET}"
 
 [worker]
 purpose = "serious-simulation"

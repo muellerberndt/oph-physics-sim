@@ -8,8 +8,9 @@ from typing import Any
 import numpy as np
 from scipy.spatial import cKDTree
 
-from oph_fpe.claims import PROXY, with_claim_metadata
+from oph_fpe.claims import PROXY, SCREEN_PROXY_CMB_RECEIPT, with_claim_metadata
 from oph_fpe.cosmology.angular_power import angular_power_report
+from oph_fpe.cosmology.cmb_compare import write_cmb_lite_comparison
 from oph_fpe.cosmology.proxy_pipeline import cosmo_proxy_receipt
 
 
@@ -73,7 +74,14 @@ def write_freezeout_products(
         harmonic_batch_size=int(angular_cfg.get("harmonic_batch_size", 4096)),
         n_jobs=angular_cfg.get("n_jobs", 1),
     )
-    report = with_claim_metadata(report, claim_level=PROXY, receipt="SCREEN_FREEZEOUT_CL_PROXY", physical_claim=False)
+    report = with_claim_metadata(
+        report,
+        claim_level=PROXY,
+        receipt=SCREEN_PROXY_CMB_RECEIPT,
+        physical_claim=False,
+        observable_id="freezeout_screen_cl_proxy",
+        fit_objective="screen_angular_spectrum_control_separation",
+    )
     report["freezeout_cycle"] = int(freezeout_cycle)
     report["committed_fraction"] = float(committed_fraction)
     report["gate_report"] = gate_report or {}
@@ -95,6 +103,7 @@ def write_freezeout_products(
     if write_csv:
         _write_spectrum_csv(run_path / "cl_proxy.csv", report["fields"])
         _write_control_csv(run_path / "cl_controls.csv", report["controls"])
+    cmb_lite_summary = _write_optional_cmb_lite(run_path, config)
     return with_claim_metadata({
         "freezeout_cycle": int(freezeout_cycle),
         "committed_fraction": float(committed_fraction),
@@ -114,11 +123,12 @@ def write_freezeout_products(
         },
         "gate_report": gate_report or {},
         "cosmo_proxy_receipt": proxy_report,
+        "cmb_lite_comparison": cmb_lite_summary,
         "claim_boundary": (
             "first measurement-facing screen proxy gated by finite BW/KMS receipts; "
             "not a physical CMB prediction, not CAMB/CLASS input, and not a 3D-bulk claim"
         ),
-    }, claim_level=PROXY, receipt="SCREEN_FREEZEOUT_CL_PROXY", physical_claim=False)
+    }, claim_level=PROXY, receipt=SCREEN_PROXY_CMB_RECEIPT, physical_claim=False)
 
 
 def _field_stats(values: np.ndarray) -> dict[str, float]:
@@ -127,6 +137,41 @@ def _field_stats(values: np.ndarray) -> dict[str, float]:
         "mean": float(np.mean(values)),
         "max": float(np.max(values)),
         "std": float(np.std(values)),
+    }
+
+
+def _write_optional_cmb_lite(run_path: Path, config: dict[str, Any]) -> dict[str, Any]:
+    cmb_cfg = config.get("cmb_lite", {})
+    if not isinstance(cmb_cfg, dict) or not bool(cmb_cfg.get("enabled", False)):
+        return {"enabled": False}
+    benchmark = Path(str(cmb_cfg.get("benchmark_path", ""))).expanduser()
+    if not benchmark.exists():
+        report = {
+            "enabled": True,
+            "written": False,
+            "reason": "benchmark_path_missing",
+            "benchmark_path": str(benchmark),
+            "physical_cmb_prediction": False,
+            "claim_boundary": "CMB-lite comparison skipped because the configured benchmark table is missing",
+        }
+        (run_path / "cmb_lite_comparison_error.json").write_text(
+            json.dumps(report, indent=2, default=str), encoding="utf-8"
+        )
+        return report
+    report = write_cmb_lite_comparison(
+        run_path,
+        benchmark,
+        benchmark_label=str(cmb_cfg.get("benchmark_label", "Planck2018_TT_binned")),
+        source_url=cmb_cfg.get("source_url"),
+        field_names=[str(name) for name in cmb_cfg.get("fields", [])] or None,
+    )
+    return {
+        "enabled": True,
+        "written": True,
+        "benchmark": report.get("benchmark", {}),
+        "best_shape_field": report.get("best_shape_field"),
+        "physical_cmb_prediction": False,
+        "claim_boundary": report.get("claim_boundary"),
     }
 
 

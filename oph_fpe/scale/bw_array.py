@@ -7,11 +7,40 @@ from typing import Any
 
 import numpy as np
 
-from oph_fpe.claims import DEMO, RECOVERED_CORE, with_claim_metadata
+from oph_fpe.claims import (
+    BRANCH_INSTANTIATION_SANITY,
+    BW_KMS_DIRECT_2PI_RECEIPT,
+    BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+    CHART_LORENTZ_H3_RECEIPT,
+    CONFORMAL_H3_CHART_RECEIPT,
+    COSMOLOGY_PERTURBATION_RECEIPT,
+    DEMO,
+    DYNAMIC_DARK_TRANSPORT_RECEIPT,
+    ENDOGENOUS_MODULAR_GENERATOR_RECEIPT,
+    H3_RESPONSE_CANDIDATE_RECEIPT,
+    H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
+    OBJECT_BULK_POPULATION_RECEIPT,
+    OBJECT_CHART_RECEIPT,
+    PAPER_THEOREM_3D_BULK_CHART_RECEIPT,
+    PROXY,
+    RECEIPT_SCHEMA_VERSION,
+    RECORD_COMMIT_RECEIPT,
+    RECOVERED_CORE,
+    REPAIR_CORE_RECEIPT,
+    SCREEN_PROXY_CMB_RECEIPT,
+    STATIC_GALAXY_LAW_RECEIPT,
+    STATIC_GALAXY_RAR_BTFR_RECEIPT,
+    SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT,
+    with_claim_metadata,
+)
 from oph_fpe.bulk.bw_verifier import bw_residual_report
 from oph_fpe.bulk.cap_geometry import cap_geometry_report, sample_caps
-from oph_fpe.bulk.conformal_spatial_chart import conformal_h3_spatial_chart_report
+from oph_fpe.bulk.conformal_spatial_chart import (
+    conformal_h3_spatial_chart_report,
+    paper_theorem_3d_bulk_chart_report,
+)
 from oph_fpe.bulk.h3_response_fit import modular_response_h3_report
+from oph_fpe.bulk.h3_refit import write_modular_response_kernel_cache
 from oph_fpe.bulk.markov_collar import collar_markov_report
 from oph_fpe.bulk.modular_probe import state_derived_bw_report
 from oph_fpe.bulk.modular_response_kernel import kernel_json_summary, modular_response_kernel
@@ -27,9 +56,12 @@ from oph_fpe.bulk.record_to_h3 import (
     support_profiles_to_h3_report,
 )
 from oph_fpe.bulk.transition_selection import transition_scale_selection_report
+from oph_fpe.cache.geometry_cache import GeometryCache
 from oph_fpe.constants.oph_pixel import equal_cell_area_planck, equal_cell_entropy
 from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
-from oph_fpe.cosmology import write_freezeout_products
+from oph_fpe.cosmology.angular_power import angular_power_report
+from oph_fpe.cosmology.galaxy_proxy import galaxy_proxy_receipt
+from oph_fpe.cosmology import oph_cmb_stress_adapter_report, write_freezeout_products
 from oph_fpe.core.graph import fibonacci_sphere_points
 from oph_fpe.core.pixel_scale import pixel_scale_from_config
 from oph_fpe.core.screen_receipts import (
@@ -60,6 +92,7 @@ from oph_fpe.observers import (
     observer_consensus_report,
     observer_object_report,
     observer_view_rows,
+    transition_affinity_packet_fields,
     visible_object_packets,
 )
 from oph_fpe.scale.array_screen import _beta_at, _entropy, _group_order, _knn_edges, _modular_update, _node_signature, _write_csv
@@ -140,6 +173,29 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     defect_timeline_enabled = bool(group_name == "S3" and timeline_cfg.get("enabled", False))
     defect_timeline_cycles = _timeline_cycles(cycles, int(timeline_cfg.get("sample_count", 8)))
     defect_gauge_snapshots: list[tuple[int, np.ndarray]] = []
+    object_history_cfg = config.get("observer_objects", {}) or {}
+    chart_history_cfg = config.get("observer_chart_population", {}) or {}
+    history_window = max(
+        int(object_history_cfg.get("history_window", 1)),
+        int(chart_history_cfg.get("history_window", 1)),
+    )
+    history_enabled = bool(
+        history_window > 1
+        or str(chart_history_cfg.get("incidence_mode", "transition_history")) == "transition_history"
+        or str(object_history_cfg.get("family_mode", "")) == "transition_history"
+    )
+    recent_history_states: list[dict[str, Any]] = []
+    freezeout_history_states: list[dict[str, Any]] = []
+    harmonic_trace_cfg = (
+        config.get("cosmology", {}).get("harmonic_time_trace", config.get("harmonic_time_trace", {})) or {}
+    )
+    harmonic_trace_enabled = bool(harmonic_trace_cfg.get("enabled", False))
+    harmonic_trace_cycles = (
+        _timeline_cycles(cycles, int(harmonic_trace_cfg.get("sample_count", min(cycles, 8))))
+        if harmonic_trace_enabled
+        else set()
+    )
+    harmonic_trace_samples: list[dict[str, Any]] = []
 
     for cycle in range(cycles):
         beta = _beta_at(beta_schedule, cycle, cycles)
@@ -220,6 +276,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 modular_depth=modular_depth,
                 cumulative_repair_load=cumulative_repair_load,
             )
+            if history_enabled:
+                freezeout_history_states = [*recent_history_states, repair_peak_candidate][-max(1, int(history_window)) :]
+        if history_enabled:
+            recent_history_states.append(repair_peak_candidate)
+            recent_history_states = recent_history_states[-max(1, int(history_window)) :]
         trace.append(
             {
                 "cycle": cycle,
@@ -234,11 +295,33 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 "modular_depth_std": float(np.std(modular_depth)),
             }
         )
+        if harmonic_trace_enabled and cycle in harmonic_trace_cycles:
+            harmonic_trace_samples.append(
+                _harmonic_time_trace_sample(
+                    points=points,
+                    left=left,
+                    right=right,
+                    gauge=gauge,
+                    patch_count=patch_count,
+                    signature=signature,
+                    stable_count=stable_count,
+                    committed=committed,
+                    repair_load=final_repair_load,
+                    mismatch_density=final_mismatch_density,
+                    modular_depth=modular_depth,
+                    cumulative_repair_load=cumulative_repair_load,
+                    cell_entropy=cell_entropy,
+                    cycle=cycle,
+                    config=harmonic_trace_cfg,
+                    seed=seed + 17_001 + cycle,
+                )
+            )
         if defect_timeline_enabled and cycle in defect_timeline_cycles:
             defect_gauge_snapshots.append((cycle, gauge.copy()))
 
     if defect_timeline_enabled and (not defect_gauge_snapshots or defect_gauge_snapshots[-1][0] != cycles - 1):
         defect_gauge_snapshots.append((cycles - 1, gauge.copy()))
+    harmonic_time_trace_report = _write_harmonic_time_trace(bundle.path, harmonic_trace_samples, harmonic_trace_cfg)
 
     fields_all = _observable_fields(
         port_left=port_left,
@@ -258,13 +341,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bw_cfg = config.get("bw", {})
     observables = [str(name) for name in bw_cfg.get("observables", ["record_signature", "repair_load", "s3_class_density", "stable_count"])]
     fields = {}
+    skipped_scalar_observables: list[dict[str, str]] = []
     for name in observables:
         field_name = _projector_field_name(name)
         if field_name in fields_all:
             fields[field_name] = fields_all[field_name]
         elif name in fields_all:
             fields[name] = fields_all[name]
+        else:
+            skipped_scalar_observables.append({"observable": name, "reason": "not_a_scalar_screen_field"})
     fields = _regularize_support_visible_fields(fields, left, right, patch_count, bw_cfg)
+    usable_fields = {}
+    for name, values in fields.items():
+        values = np.asarray(values, dtype=float)
+        if values.size and np.all(np.isfinite(values)) and float(np.std(values)) > 1.0e-12:
+            usable_fields[name] = values
+        else:
+            skipped_scalar_observables.append({"observable": name, "reason": "zero_or_nonfinite_scalar_variance"})
+    fields = usable_fields
     theta_values = [float(value) for value in bw_cfg.get("theta0", [0.35, 0.55, 0.75, 1.0, 1.25])]
     caps = sample_caps(
         points,
@@ -285,30 +379,50 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     times = [float(value) for value in bw_cfg.get("times", [0.025, 0.05, 0.1, 0.2])]
     controls = _implemented_controls(config.get("controls", []))
     started = time.time()
-    bw_report = bw_residual_report(
-        points,
-        fields,
-        caps,
-        times,
-        k_interp=int(bw_cfg.get("k_interp", 8)),
-        sim_k_interp=int(bw_cfg.get("sim_k_interp", 1)),
-        n_jobs=jobs_from_config(bw_cfg.get("n_jobs", 1), default=1),
-        controls=controls,
-        seed=seed + 911,
-        cell_entropy=cell_entropy,
-        cell_area_planck=cell_area_planck,
-    ).as_jsonable()
+    if fields:
+        bw_report = bw_residual_report(
+            points,
+            fields,
+            caps,
+            times,
+            k_interp=int(bw_cfg.get("k_interp", 8)),
+            sim_k_interp=int(bw_cfg.get("sim_k_interp", 1)),
+            n_jobs=jobs_from_config(bw_cfg.get("n_jobs", 1), default=1),
+            controls=controls,
+            seed=seed + 911,
+            cell_entropy=cell_entropy,
+            cell_area_planck=cell_area_planck,
+        ).as_jsonable()
+        bw_report["usable_scalar_observables"] = True
+    else:
+        bw_report = {
+            "median": None,
+            "mean": None,
+            "p90": None,
+            "by_observable": {},
+            "by_cap_size": {},
+            "rows": [],
+            "controls": {},
+            "usable_scalar_observables": False,
+        }
     bw_report["mode"] = "kinematic_geometric_bw_sanity"
-    bw_report["claim_level"] = DEMO
-    bw_report["receipt_name"] = "KINEMATIC_GEOMETRIC_BW_SANITY"
-    bw_report["physical_claim"] = False
     bw_report["claim_boundary"] = (
         "kinematic geometry/interpolation sanity check for lambda_C(2*pi*t); "
         "not a state-derived modular-transport receipt"
     )
+    bw_report = with_claim_metadata(
+        bw_report,
+        claim_level=DEMO,
+        receipt="KINEMATIC_GEOMETRIC_BW_SANITY",
+        physical_claim=False,
+        observable_id="lambda_cap_support_visible_fields",
+        fit_objective="weighted_geometric_pullback_residual",
+    )
     bw_report["elapsed_seconds"] = time.time() - started
     bw_report["implemented_controls"] = controls
     bw_report["unimplemented_controls"] = [control for control in config.get("controls", []) if control not in controls]
+    bw_report["scalar_observable_count"] = int(len(fields))
+    bw_report["skipped_scalar_observables"] = skipped_scalar_observables
     bw_report["regulator_collar"] = _collar_report(bw_cfg, patch_count, caps[0].collar_width if caps else 0.0)
     bw_report["support_visible_regularization"] = _regularization_report(bw_cfg)
     cap_report = cap_geometry_report(
@@ -317,14 +431,27 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         cell_area_planck=cell_area_planck,
         cell_entropy=cell_entropy,
     )
-    cap_report["claim_level"] = DEMO
     cap_report["times"] = times
     cap_report["regulator_collar"] = bw_report["regulator_collar"]
+    cap_report = with_claim_metadata(
+        cap_report,
+        claim_level=DEMO,
+        receipt="CAP_GEOMETRY_DIAGNOSTIC",
+        physical_claim=False,
+        observable_id="round_caps_on_support_visible_s2",
+        fit_objective="cap_geometry_consistency",
+    )
     conformal_chart_report = conformal_h3_spatial_chart_report(h3_caps)
-    conformal_chart_report["claim_level"] = DEMO
-    conformal_chart_report["receipt_name"] = "CONFORMAL_H3_CHART_RECEIPT"
     conformal_chart_report["h3_reconstruction_cap_net"] = h3_cap_net_report
     conformal_chart_report["bw_verifier_cap_count"] = len(caps)
+    conformal_chart_report = with_claim_metadata(
+        conformal_chart_report,
+        claim_level=BRANCH_INSTANTIATION_SANITY,
+        receipt=CONFORMAL_H3_CHART_RECEIPT,
+        physical_claim=False,
+        observable_id="cap_normals_conformal_h3_chart",
+        fit_objective="conformal_chart_instantiation",
+    )
     raw_observer_fields = _observer_raw_fields(
         left=left,
         right=right,
@@ -377,19 +504,43 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     state_bw_report: dict[str, Any] = {}
     transition_selection_report: dict[str, Any] = {}
     if str(bw_cfg.get("mode", "kinematic_geometric_bw_sanity")) == "state_derived_modular_probe":
+        state_source_name = str(bw_cfg.get("source_state", bw_cfg.get("state_source", "final")))
+        state_raw_observer_fields, state_source_meta = _select_h3_source_fields(
+            state_source_name,
+            final_raw_fields=raw_observer_fields,
+            freezeout_raw_fields=freezeout_raw_observer_fields,
+            repair_peak_raw_fields=repair_peak_raw_observer_fields,
+            freezeout_state=freezeout_state,
+            repair_peak_state=repair_peak_state,
+            cycles=cycles,
+        )
         collar_cfg = config.get("collar_markov", {})
         collar_report = collar_markov_report(
             points,
             caps,
-            raw_observer_fields,
+            state_raw_observer_fields,
             packet_bins=collar_cfg.get("packet_bins", {}),
             max_triplets=int(collar_cfg.get("max_triplets", 4096)),
             seed=seed + 1301,
         )
+        state_history_states = freezeout_history_states or recent_history_states
+        state_history_raw_fields = [
+            _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
+            for snapshot in state_history_states[-max(1, int(bw_cfg.get("history_window", history_window))) :]
+        ]
+        graph_response = {
+            "left": left,
+            "right": right,
+            "port_left": port_left,
+            "port_right": port_right,
+            "group_order": group_order,
+            "patch_count": patch_count,
+        }
+        selection_cfg = bw_cfg.get("selection", {})
         state_bw_report = state_derived_bw_report(
             points,
             caps,
-            raw_observer_fields,
+            state_raw_observer_fields,
             collar_report,
             times=times,
             observables=[_projector_field_name(name) for name in bw_cfg.get("observables", ["record_signature"])],
@@ -399,10 +550,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             target_operator_mode=str(bw_cfg.get("target_operator_mode", "nearest")),
             transition_response_time=float(bw_cfg.get("transition_response_time", min(times) if times else 0.025)),
             transition_response_scale=float(bw_cfg.get("transition_response_scale", 2.0 * math.pi)),
+            density_inverse_temperature=float(bw_cfg.get("density_inverse_temperature", 1.0)),
+            generator_scale=float(bw_cfg.get("generator_scale", 1.0)),
+            generator_scale_candidates=[
+                float(value) for value in bw_cfg.get("generator_scale_candidates", [])
+            ],
+            history_fields=state_history_raw_fields,
+            graph_response=graph_response,
+            probe_steps=int(bw_cfg.get("probe_steps", selection_cfg.get("probe_steps", 4))),
+            probe_repairs_per_source=int(
+                bw_cfg.get("probe_repairs_per_source", selection_cfg.get("probe_repairs_per_source", max(16, neighbors * 4)))
+            ),
+            probe_max_incident_edges=int(
+                bw_cfg.get("probe_max_incident_edges", selection_cfg.get("probe_max_incident_edges", max(4, neighbors)))
+            ),
             max_basis=int(bw_cfg.get("max_basis", 96)),
             seed=seed + 1401,
         )
-        selection_cfg = bw_cfg.get("selection", {})
+        state_bw_report["source_state"] = state_source_meta
         if selection_cfg.get("enabled", False):
             selection_sources = [str(source) for source in selection_cfg.get("sources", ["repair_affinity_response"])]
             if selection_cfg.get("include_declared_sanity", False) and "declared_geometric_sanity" not in selection_sources:
@@ -410,7 +575,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             transition_selection_report = transition_scale_selection_report(
                 points,
                 caps,
-                raw_observer_fields,
+                state_raw_observer_fields,
                 times=[float(value) for value in selection_cfg.get("times", times)],
                 observables=[_projector_field_name(name) for name in selection_cfg.get("observables", bw_cfg.get("observables", ["record_signature"]))],
                 candidate_scales=[float(value) for value in selection_cfg.get("candidate_scales", [1.0, math.pi, 2.0 * math.pi, 4.0 * math.pi])],
@@ -418,14 +583,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 declared_response_scale=float(selection_cfg.get("declared_response_scale", bw_cfg.get("transition_response_scale", 2.0 * math.pi))),
                 max_basis=int(selection_cfg.get("max_basis", bw_cfg.get("max_basis", 64))),
                 seed=seed + 1451,
-                graph_response={
-                    "left": left,
-                    "right": right,
-                    "port_left": port_left,
-                    "port_right": port_right,
-                    "group_order": group_order,
-                    "patch_count": patch_count,
-                },
+                graph_response=graph_response,
                 probe_steps=int(selection_cfg.get("probe_steps", 4)),
                 probe_repairs_per_source=int(selection_cfg.get("probe_repairs_per_source", max(16, neighbors * 4))),
                 probe_max_incident_edges=int(selection_cfg.get("probe_max_incident_edges", max(4, neighbors))),
@@ -550,8 +708,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         h3_population_report.get("record_populated_h3_receipt", False)
     )
     h3_modular_response_cfg = config.get("h3_modular_response", {}) or {}
+    h3_modular_kernel: dict[str, Any] = {}
     h3_modular_kernel_report: dict[str, Any] = {}
     h3_modular_fit_report: dict[str, Any] = {}
+    h3_modular_kernel_cache_report: dict[str, Any] = {}
+    persistent_geometry_cache = _geometry_cache_from_config(points, config, outputs_cfg)
     if h3_modular_response_cfg.get("enabled", False):
         h3_modular_kernel = modular_response_kernel(
             points,
@@ -587,6 +748,15 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                     ],
                 )
             ),
+            transition_feature_types=tuple(
+                h3_modular_response_cfg.get(
+                    "feature_types",
+                    h3_modular_response_cfg.get(
+                        "transition_feature_types",
+                        ["class_distribution_delta", "change_probability_delta"],
+                    ),
+                )
+            ),
             transition_bins=int(h3_modular_response_cfg.get("transition_bins", 8)),
             record_family_modulus=int(h3_modular_response_cfg.get("record_family_modulus", 16)),
             transform=str(h3_modular_response_cfg.get("transform", "sigmoid")),
@@ -600,9 +770,18 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 "patch_count": patch_count,
             },
             perturb_strength=float(h3_modular_response_cfg.get("perturb_strength", 1.0)),
+            perturb_budget_mode=str(h3_modular_response_cfg.get("perturb_budget_mode", "modular_amount")),
+            fixed_perturb_fraction=(
+                float(h3_modular_response_cfg["fixed_perturb_fraction"])
+                if h3_modular_response_cfg.get("fixed_perturb_fraction") is not None
+                else None
+            ),
+            perturb_selection_mode=str(h3_modular_response_cfg.get("perturb_selection_mode", "phase")),
+            transition_readout_mode=str(h3_modular_response_cfg.get("transition_readout_mode", "same_support")),
             repair_steps=int(h3_modular_response_cfg.get("repair_steps", 4)),
             repairs_per_step=int(h3_modular_response_cfg.get("repairs_per_step", max(16, neighbors * 8))),
             perturb_seed=seed + 1889,
+            geometry_cache=persistent_geometry_cache,
         )
         h3_modular_kernel_report = kernel_json_summary(h3_modular_kernel)
         h3_modular_fit_report = modular_response_h3_report(
@@ -619,10 +798,50 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             heldout_fraction=float(h3_modular_response_cfg.get("heldout_fraction", 0.25)),
             anchor_weight=float(h3_modular_response_cfg.get("anchor_weight", 0.05)),
             max_iterations=int(h3_modular_response_cfg.get("max_iterations", 4)),
+            feature_selection=str(h3_modular_response_cfg.get("feature_selection", "none")),
+            max_fit_features=(
+                int(h3_modular_response_cfg["max_fit_features"])
+                if h3_modular_response_cfg.get("max_fit_features") is not None
+                else None
+            ),
+            min_feature_std=float(h3_modular_response_cfg.get("min_feature_std", 0.0)),
+            min_wrong_scale_feature_delta=float(
+                h3_modular_response_cfg.get("min_wrong_scale_feature_delta", 0.0)
+            ),
+            exclude_observables=tuple(
+                str(value) for value in h3_modular_response_cfg.get("exclude_observables", [])
+            ),
+            exclude_feature_types=tuple(
+                str(value) for value in h3_modular_response_cfg.get("exclude_feature_types", [])
+            ),
+            max_features_per_cap_time_observable=(
+                int(h3_modular_response_cfg["max_features_per_cap_time_observable"])
+                if h3_modular_response_cfg.get("max_features_per_cap_time_observable") is not None
+                else None
+            ),
+            refine_steps=int(h3_modular_response_cfg.get("refine_steps", 0)),
+            refine_max_rows=(
+                int(h3_modular_response_cfg["refine_max_rows"])
+                if h3_modular_response_cfg.get("refine_max_rows") is not None
+                else None
+            ),
+            refine_max_nfev=int(h3_modular_response_cfg.get("refine_max_nfev", 48)),
+            candidate_mode=str(h3_modular_response_cfg.get("candidate_mode", "random")),
+            channel_mode=str(h3_modular_response_cfg.get("channel_mode", "time_observable_class")),
+            profile_mode=str(h3_modular_response_cfg.get("profile_mode", "static_halfspace")),
+            profile_time_scale=float(h3_modular_response_cfg.get("profile_time_scale", 2.0 * math.pi)),
+            control_fit_mode=str(
+                h3_modular_response_cfg.get("control_fit_mode", "same_h3_model_not_affine_target_fit")
+            ),
         )
+    observer_chart_cfg = config.get("observer_chart_population", {}) or {}
+    if h3_modular_kernel:
+        _attach_modular_response_histograms(observer_rows, h3_modular_kernel, observer_chart_cfg)
     object_rows: list[dict[str, Any]] = []
     object_report: dict[str, Any] = {}
-    object_cfg = config.get("observer_objects", {})
+    object_cfg = dict(config.get("observer_objects", {}) or {})
+    if object_cfg.get("enabled", False) and "family_mode" not in object_cfg:
+        object_cfg["family_mode"] = "transition_affinity"
     if object_cfg.get("enabled", False):
         record_families = extract_record_families(
             raw_observer_fields,
@@ -633,6 +852,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
         object_packets = visible_object_packets(raw_observer_fields, object_cfg)
         _attach_object_packet_histograms(observer_rows, object_packets)
+        _attach_transition_affinity_histograms(observer_rows, raw_observer_fields, object_cfg)
+        if history_enabled:
+            history_source_states = freezeout_history_states or recent_history_states
+            history_raw_fields = [
+                _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
+                for snapshot in history_source_states[-max(1, int(history_window)) :]
+            ]
+            _attach_transition_history_histograms(observer_rows, history_raw_fields, object_cfg)
         assign_counterfactual_stability_from_records(
             record_families,
             raw_observer_fields,
@@ -642,7 +869,6 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
         object_rows = [family.as_jsonable() for family in record_families]
         object_report = observer_object_report(record_families, observer_rows)
-    observer_chart_cfg = config.get("observer_chart_population", {}) or {}
     observer_chart_object_report: dict[str, Any] = {}
     if observer_chart_cfg.get("enabled", bool(object_rows and h3_modular_fit_report)):
         observer_chart_object_report = observer_chart_object_population_report(
@@ -654,6 +880,37 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             min_observers_per_object=int(observer_chart_cfg.get("min_observers_per_object", 2)),
             pass_ratio=float(observer_chart_cfg.get("pass_ratio", 0.85)),
             max_objects=int(observer_chart_cfg.get("max_objects", 2048)),
+            incidence_mode=str(observer_chart_cfg.get("incidence_mode", "transition_history")),
+            min_packet_mass=float(observer_chart_cfg.get("min_packet_mass", 0.05)),
+            min_transition_affinity=float(observer_chart_cfg.get("min_transition_affinity", 0.25)),
+            transition_affinity_score=str(observer_chart_cfg.get("transition_affinity_score", "geometric_mean")),
+            observer_cluster_fields=tuple(
+                str(field)
+                for field in observer_chart_cfg.get(
+                    "observer_cluster_fields",
+                    ["record_family", "s3_sector_class", "repair_load_bucket"],
+                )
+            ),
+            observer_cluster_top_k=int(observer_chart_cfg.get("observer_cluster_top_k", 2)),
+            min_observer_cluster_weight=float(observer_chart_cfg.get("min_observer_cluster_weight", 0.05)),
+            history_window=int(observer_chart_cfg.get("history_window", history_window)),
+            min_persistence=int(observer_chart_cfg.get("min_persistence", 3)),
+            max_observer_fraction_per_object=float(observer_chart_cfg.get("max_observer_fraction_per_object", 0.65)),
+            max_h3_compactness=float(observer_chart_cfg.get("max_h3_compactness", 0.35)),
+            min_localized_objects=int(observer_chart_cfg.get("min_localized_objects", 2)),
+            shuffle_control_count=int(observer_chart_cfg.get("shuffle_control_count", 1)),
+            split_h3_components=bool(observer_chart_cfg.get("split_h3_components", False)),
+            component_link_fraction=float(observer_chart_cfg.get("component_link_fraction", 0.35)),
+            component_min_observers=(
+                int(observer_chart_cfg["component_min_observers"])
+                if "component_min_observers" in observer_chart_cfg
+                else None
+            ),
+            require_support_visibility=bool(observer_chart_cfg.get("require_support_visibility", False)),
+            min_support_visibility=float(observer_chart_cfg.get("min_support_visibility", 0.0)),
+            visibility_mode=str(observer_chart_cfg.get("visibility_mode", "support_overlap")),
+            packet_visibility_weight=float(observer_chart_cfg.get("packet_visibility_weight", 0.5)),
+            boundary_gate_mode=str(observer_chart_cfg.get("boundary_gate_mode", "nonboundary")),
         )
     s3_holonomy_report = (
         array_holonomy_report(
@@ -716,7 +973,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             candidate_radius=float(h3_support_cfg.get("candidate_radius", h3_population_cfg.get("candidate_radius", 2.0))),
             softness=float(h3_support_cfg.get("softness", h3_population_cfg.get("softness", 0.25))),
             pass_ratio=float(h3_support_cfg.get("pass_ratio", h3_population_cfg.get("pass_ratio", 0.85))),
-            min_support_count=int(h3_support_cfg.get("min_support_count", 8)),
+            min_support_count=int(h3_support_cfg.get("defect_min_support_count", h3_support_cfg.get("min_support_count", 8))),
             min_cap_count=int(h3_support_cfg.get("min_cap_count", 6)),
         )
     else:
@@ -796,6 +1053,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     if neutral_cfg.get("enabled", False):
         object_dicts = object_rows
         neutral_report = bulk_reconstruction_report(observer_rows, object_dicts, state_bw_report, seed=seed + 1701)
+    paper_3d_chart_report = paper_theorem_3d_bulk_chart_report(
+        conformal_chart_report,
+        transition_selection_report,
+        observer_chart_object_report,
+        neutral_report,
+    )
     emergence_status = _emergence_status_report(bw_report, consensus_report)
     theorem_core_report = _theorem_core_receipts(trace, committed, config)
     emergence_status["state_derived_modular_transport"] = bool(state_bw_report)
@@ -808,8 +1071,25 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     emergence_status["observer_checkpoint_restoration_receipt"] = bool(checkpoint_report.get("receipt", False))
     if state_bw_report:
         emergence_status["state_derived_bw_median"] = state_bw_report.get("median")
+        emergence_status["state_derived_state_mode"] = state_bw_report.get("state_mode")
+        emergence_status["state_derived_endogenous_modular_generator"] = bool(
+            state_bw_report.get("endogenous_modular_generator", False)
+        )
+        emergence_status["state_derived_selected_scale_label"] = state_bw_report.get("state_selected_scale_label")
+        emergence_status["state_derived_selected_2pi"] = bool(state_bw_report.get("state_selected_2pi", False))
         emergence_status["state_derived_correct_beats_controls"] = bool(
             state_bw_report.get("correct_beats_controls", False)
+        )
+        emergence_status["state_derived_bw_bulk_gate"] = bool(
+            state_bw_report.get("BW_KMS_BRANCH_INSTANTIATION_RECEIPT", False)
+            or (
+                state_bw_report.get("state_selected_2pi", False)
+                and state_bw_report.get("correct_beats_controls", False)
+                and (
+                    state_bw_report.get("direct_transition_automorphism", False)
+                    or state_bw_report.get("endogenous_modular_generator", False)
+                )
+            )
         )
         emergence_status["state_derived_best_control"] = state_bw_report.get("best_control")
         emergence_status["collar_markov_median_epsilon_cmi"] = collar_report.get("median_epsilon_cmi")
@@ -829,30 +1109,129 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             emergence_status["status"] = "diagnostic_only_transition_response_degenerate"
         elif not transition_selection_report.get("two_pi_selected", False):
             emergence_status["status"] = "diagnostic_only_transition_scale_not_selected"
-    emergence_status["support_visible_lorentz_3p1_kinematics_receipt"] = bool(
-        state_bw_report.get("correct_beats_controls", False)
-        and transition_selection_report.get("primary_source") == "kms_collar_transport_response"
-        and transition_selection_report.get("two_pi_selected", False)
-        and not transition_selection_report.get("response_degenerate", False)
+    emergence_status.update(
+        _lorentz_branch_receipts(conformal_chart_report, state_bw_report, transition_selection_report)
+    )
+    emergence_status["lorentz_branch_single_run_receipt"] = bool(
+        emergence_status["support_visible_lorentz_3p1_kinematics_receipt"]
     )
     emergence_status["conformal_h3_spatial_chart_receipt"] = bool(
-        conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False)
+        emergence_status["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"]
     )
+    emergence_status[PAPER_THEOREM_3D_BULK_CHART_RECEIPT] = bool(
+        paper_3d_chart_report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
+    )
+    emergence_status["paper_theorem_3d_bulk_chart_receipt"] = bool(
+        paper_3d_chart_report.get("paper_theorem_3d_bulk_chart_receipt", False)
+    )
+    emergence_status["paper_theorem_object_populated_chart_precursor_receipt"] = bool(
+        paper_3d_chart_report.get("paper_theorem_object_populated_chart_precursor_receipt", False)
+    )
+    emergence_status["paper_theorem_neutral_populated_bulk_receipt"] = bool(
+        paper_3d_chart_report.get("paper_theorem_neutral_populated_bulk_receipt", False)
+    )
+    emergence_status["paper_theorem_3d_chart_dimension"] = paper_3d_chart_report.get(
+        "h3_spatial_dimension_from_boost_orbit"
+    )
+    emergence_status["paper_theorem_3d_bulk_chart_claim_boundary"] = paper_3d_chart_report.get("claim_boundary")
     emergence_status["record_populated_h3_spatial_receipt"] = bool(
         conformal_chart_report.get("record_populated_h3_receipt", False)
     )
     emergence_status["modular_response_h3_candidate_receipt"] = bool(
         h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
     )
+    emergence_status["modular_response_h3_control_separation_receipt"] = bool(
+        h3_modular_fit_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
+        or h3_modular_fit_report.get("h3_control_separation_receipt", False)
+        or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
+            H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False
+        )
+        or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
+            "intermediate_control_separation_receipt", False
+        )
+    )
+    emergence_status[H3_RESPONSE_CONTROL_SEPARATION_RECEIPT] = bool(
+        emergence_status["modular_response_h3_control_separation_receipt"]
+    )
+    emergence_status[H3_RESPONSE_CANDIDATE_RECEIPT] = bool(
+        h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
+        or h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
+    )
     emergence_status["modular_response_h3_written"] = bool(h3_modular_fit_report)
     emergence_status["record_family_h3_support_receipt"] = bool(
         object_h3_report.get("record_populated_h3_receipt", False)
     )
+    emergence_status["record_family_h3_bulk_population_candidate"] = bool(
+        object_h3_report.get("record_family_h3_bulk_population_candidate", False)
+        and object_report.get("persistent_object_count", 0)
+        and emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)
+    )
     emergence_status["observer_chart_object_h3_receipt"] = bool(
         observer_chart_object_report.get("observer_chart_object_h3_receipt", False)
     )
+    emergence_status["observer_chart_localized_object_precursor_receipt"] = bool(
+        observer_chart_object_report.get("localized_object_precursor_receipt", False)
+    )
+    emergence_status["observer_chart_modular_response_h3_control_separation_receipt"] = bool(
+        observer_chart_object_report.get("modular_response_h3_control_separation_receipt", False)
+    )
+    theorem_assisted_h3_precursor = bool(
+        emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)
+        and emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
+        and emergence_status.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
+        and emergence_status["observer_chart_localized_object_precursor_receipt"]
+    )
+    emergence_status["PAPER_THEOREM_ASSISTED_H3_CHART_PRECURSOR_RECEIPT"] = theorem_assisted_h3_precursor
+    emergence_status["paper_theorem_assisted_h3_chart_precursor_receipt"] = theorem_assisted_h3_precursor
+    emergence_status["observer_chart_localized_nonboundary_bulk_population_receipt"] = bool(
+        observer_chart_object_report.get("localized_nonboundary_bulk_population_receipt", False)
+    )
+    emergence_status["observer_chart_localized_h3_bulk_population_receipt"] = bool(
+        observer_chart_object_report.get("localized_h3_bulk_population_receipt", False)
+    )
     emergence_status["observer_chart_bulk_population_receipt"] = bool(
         observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
+    )
+    blind_bulk = neutral_report.get("blind_observer_bulk_report", {}) if neutral_report else {}
+    blind_leakage_audit_pass = bool(
+        not neutral_report
+        or (
+            blind_bulk.get("usable", False)
+            and blind_bulk.get("s2_leakage_audit_pass", False)
+            and not blind_bulk.get("forbidden_feature_keys_used", [])
+        )
+    )
+    emergence_status["blind_observer_leakage_audit_pass"] = blind_leakage_audit_pass
+    emergence_status["OBJECT_BULK_POPULATION_RECEIPT"] = bool(
+        emergence_status[H3_RESPONSE_CANDIDATE_RECEIPT]
+        and emergence_status["observer_chart_bulk_population_receipt"]
+        and emergence_status.get("state_derived_bw_bulk_gate", False)
+        and blind_leakage_audit_pass
+    )
+    emergence_status["object_bulk_population_receipt"] = bool(
+        emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
+    )
+    theorem_assisted_h3_population = bool(
+        emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)
+        and emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
+        and emergence_status.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
+        and emergence_status["observer_chart_bulk_population_receipt"]
+        and blind_leakage_audit_pass
+    )
+    emergence_status["PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT"] = theorem_assisted_h3_population
+    emergence_status["paper_theorem_assisted_h3_populated_chart_receipt"] = theorem_assisted_h3_population
+    emergence_status["paper_theorem_assisted_h3_populated_chart_claim_boundary"] = (
+        "Uses the paper-side conformal Lorentz/H3 chart receipt plus controlled observer-object "
+        "population of that chart. This is a populated-chart diagnostic under the OPH BW/Lorentz "
+        "branch assumptions; it is not the stricter finite endogenous modular-generator proof and "
+        "therefore does not set bulk_3d_established."
+    )
+    emergence_status["paper_theorem_assisted_h3_chart_precursor_claim_boundary"] = (
+        "Uses the paper-side conformal Lorentz/H3 chart receipt plus the intermediate support-visible "
+        "H3 response control-separation receipt and localized observer-object precursor. This only says "
+        "the chart-response lane is populated enough to keep testing; it is blocked from any 3D bulk "
+        "claim until the material wrong-scale audit, nonboundary object-population gate, neutral "
+        "dimension controls, and refinement gates pass."
     )
     emergence_status["defect_cluster_h3_support_receipt"] = bool(
         defect_h3_report.get("record_populated_h3_receipt", False)
@@ -874,19 +1253,78 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         particle_report.get("particle_matter_receipt", False)
     )
     emergence_status["particle_likeness_diagnostic_written"] = bool(particle_report)
-    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = bool(
+    emergence_status["h3_support_population_precursor_receipt"] = bool(
         conformal_chart_report.get("record_populated_h3_receipt", False)
-        or observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
         or object_h3_report.get("record_populated_h3_receipt", False)
-        or neutral_report.get("bulk_3d_established", False)
+        or defect_h3_report.get("record_populated_h3_receipt", False)
+        or defect_h3_worldlines_report.get("bulk_worldline_precursor_receipt", False)
+    )
+    support_visible_record_h3_population = bool(
+        emergence_status.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
+        and emergence_status.get("record_family_h3_bulk_population_candidate", False)
+        and emergence_status.get("observer_records_settled", False)
+    )
+    support_visible_defect_h3_population = bool(
+        emergence_status.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
+        and emergence_status.get("defect_cluster_h3_support_receipt", False)
+        and emergence_status.get("defect_worldline_precursor_receipt", False)
+    )
+    emergence_status["support_visible_record_h3_population_receipt"] = support_visible_record_h3_population
+    emergence_status["support_visible_defect_h3_population_receipt"] = support_visible_defect_h3_population
+    emergence_status["support_visible_h3_defect_population_receipt"] = support_visible_defect_h3_population
+    emergence_status[SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT] = bool(support_visible_record_h3_population)
+    emergence_status["support_visible_h3_populated_bulk_receipt"] = bool(
+        emergence_status[SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT]
+    )
+    emergence_status["support_visible_h3_populated_bulk_claim_boundary"] = (
+        "Paper-facing populated-H3 receipt: the conformal/BW S2 cap chart gives the H3 spatial chart, "
+        "and observer-visible record-family support profiles populate that chart under S2-boundary and "
+        "shuffled-cap controls. This is the support-visible OPH bulk-chart lane. Defect support in the "
+        "same H3 chart is reported separately as a matter/particle precursor. This is not the stricter "
+        "neutral third-person summary-distance reconstruction, not an endogenous full finite-type-I "
+        "modular-generator proof, not a particle spectrum, and not a physical CMB prediction."
+    )
+    emergence_status["bulk_population_source"] = (
+        "observer_chart_transition_history"
+        if emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
+        else "support_visible_record_and_defect_h3_profiles"
+        if emergence_status["support_visible_h3_populated_bulk_receipt"]
+        else "record_family_support_profile_h3_candidate_only"
+        if emergence_status["record_family_h3_bulk_population_candidate"]
+        else None
+    )
+    strict_neutral_bulk_receipt = bool(
+        neutral_report.get("bulk_3d_established", False)
+        and blind_bulk.get("usable", False)
+        and blind_bulk.get("s2_leakage_audit_pass", False)
+        and not blind_bulk.get("forbidden_feature_keys_used", [])
+    )
+    emergence_status["strict_blind_observer_bulk_receipt"] = strict_neutral_bulk_receipt
+    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = bool(
+        emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
     )
     emergence_status["bulk_3d_established"] = bool(emergence_status["spatial_bulk_3d_reconstruction_receipt"])
+    emergence_status["lorentz_claim_boundary"] = (
+        "chart-level Lorentz receipt is conformal H3 chart plus direct BW/KMS automorphism sanity. "
+        "Endogenous observer-record modular generators, object population, neutral bulk reconstruction, "
+        "particles, and CMB outputs are later strengthening receipts and must not suppress the core "
+        "support-visible Lorentz chart diagnostic."
+    )
     emergence_status["lorentz_vs_bulk_claim_boundary"] = (
-        "support-visible BW/KMS cap flow plus cap-normal/H3 construction is the finite "
-        "Lorentz/conformal chart diagnostic; spatial 3D bulk emergence additionally requires "
-        "observer records or object families to populate that H3 chart under controls. "
-        "Defect-cluster H3 support is a matter/particle precursor receipt, not by itself "
-        "a full bulk reconstruction receipt."
+        "support-visible BW/KMS cap automorphism sanity plus cap-normal/H3 construction is the finite "
+        "Lorentz/conformal chart diagnostic. Spatial 3D bulk emergence additionally requires observer "
+        "records or object families to populate that H3 chart under controls. Defect-cluster H3 support "
+        "is a matter/particle precursor receipt, not by itself a full bulk reconstruction receipt."
+    )
+    emergence_status["bulk_population_claim_boundary"] = (
+        "OBJECT_BULK_POPULATION_RECEIPT is sourced by the observer-chart transition-history/object-mixture "
+        "gate only after H3 response controls and the state-derived BW bulk gate pass. The active object "
+        "gate is declared in observer_chart_object_population_report.bulk_population_gate_mode; boundary "
+        "compactness is retained as a leakage audit when the paper-aligned H3-localized gate is selected. Persistent "
+        "record-family support profiles are retained as candidate diagnostics, not as a bulk gate. "
+        "Neutral reconstruction contributes a leakage audit and dimension debug report, but neutral "
+        "summary-distance dimension is not the primary bulk gate. This is still not a physical cosmology "
+        "or particle receipt."
     )
     freezeout_report: dict[str, Any] = {}
     cosmology_gate_report = _cosmology_gate_report(
@@ -895,6 +1333,59 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         state_bw_report,
         transition_selection_report,
         neutral_report,
+    )
+    screen_proxy_cmb_receipt = bool(cosmology_gate_report.get("enabled", False) and cosmology_gate_report.get("allowed", False))
+    emergence_status["SCREEN_PROXY_CMB_RECEIPT"] = screen_proxy_cmb_receipt
+    emergence_status["screen_proxy_cmb_receipt"] = screen_proxy_cmb_receipt
+    oph_cmb_report: dict[str, Any] = {}
+    galaxy_cfg = dict(config.get("cosmology", {}).get("galaxy_proxy", config.get("galaxy_proxy", {})) or {})
+    if galaxy_cfg.get("enabled", True):
+        galaxy_proxy_report = galaxy_proxy_receipt(
+            a0_oph=float(galaxy_cfg.get("a0_oph", 1.2e-10)),
+            lambda_collar=float(galaxy_cfg.get("lambda_collar", 1.0)),
+        )
+    else:
+        galaxy_proxy_report = {
+            "mode": "oph_galaxy_rar_btfr_proxy",
+            "enabled": False,
+            "GALAXY_PROXY_RECEIPT": False,
+            "receipt": False,
+            "physical_claim": False,
+            "claim_boundary": "disabled by config; no galaxy proxy was emitted",
+        }
+        galaxy_proxy_report = with_claim_metadata(
+            galaxy_proxy_report,
+            claim_level=PROXY,
+            receipt=STATIC_GALAXY_LAW_RECEIPT,
+            physical_claim=False,
+            observable_id="oph_static_galaxy_proxy",
+            fit_objective="disabled",
+        )
+    emergence_status[STATIC_GALAXY_LAW_RECEIPT] = bool(galaxy_proxy_report.get("GALAXY_PROXY_RECEIPT", False))
+    emergence_status["static_galaxy_law_receipt"] = bool(galaxy_proxy_report.get("GALAXY_PROXY_RECEIPT", False))
+    emergence_status[DYNAMIC_DARK_TRANSPORT_RECEIPT] = False
+    emergence_status[COSMOLOGY_PERTURBATION_RECEIPT] = False
+    emergence_status["dynamic_dark_transport_receipt"] = False
+    emergence_status["cosmology_perturbation_receipt"] = False
+    receipt_ladder_report = _canonical_receipt_ladder_report(
+        trace=trace,
+        committed=committed,
+        emergence_status=emergence_status,
+        state_bw_report=state_bw_report,
+        transition_selection_report=transition_selection_report,
+        h3_modular_fit_report=h3_modular_fit_report,
+        observer_chart_object_report=observer_chart_object_report,
+        cosmology_gate_report=cosmology_gate_report,
+        galaxy_proxy_report=galaxy_proxy_report,
+    )
+    emergence_status["canonical_receipt_ladder"] = receipt_ladder_report["receipts"]
+    emergence_status = with_claim_metadata(
+        emergence_status,
+        claim_level=BRANCH_INSTANTIATION_SANITY,
+        receipt="SUPPORT_VISIBLE_LORENTZ_AND_BULK_STATUS_BUNDLE",
+        physical_claim=False,
+        observable_id="finite_screen_receipt_ladder",
+        fit_objective="receipt_gate_conjunction",
     )
     if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False) and cosmology_gate_report["allowed"]:
         cosmology_runtime_config = dict(config.get("cosmology", {}))
@@ -913,6 +1404,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
     elif config.get("cosmology", {}).get("freezeout", {}).get("enabled", False):
         cosmology_gate_report["freezeout_skipped"] = True
+    oph_cmb_cfg = dict(config.get("cosmology", {}).get("oph_cmb", {}) or {})
+    if oph_cmb_cfg.get("enabled", bool(config.get("cosmology", {}).get("freezeout", {}).get("enabled", False))):
+        oph_cmb_report = oph_cmb_stress_adapter_report(
+            collar_report=collar_report,
+            cosmology_gate_report=cosmology_gate_report,
+            freezeout_report=freezeout_report,
+            config=oph_cmb_cfg,
+        )
 
     _write_csv(bundle.path / "mismatch_trace.csv", trace)
     bundle.write_json("bw_report.json", bw_report)
@@ -925,9 +1424,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("transition_scale_selection_report.json", transition_selection_report)
     bundle.write_json("cap_geometry_report.json", cap_report)
     bundle.write_json("conformal_h3_spatial_chart_report.json", conformal_chart_report)
+    bundle.write_json("paper_3d_bulk_chart_report.json", paper_3d_chart_report)
     bundle.write_json("record_populated_h3_report.json", h3_population_report)
     if h3_modular_kernel_report:
         bundle.write_json("modular_response_kernel_report.json", h3_modular_kernel_report)
+    if h3_modular_kernel and bool(outputs_cfg.get("write_modular_response_kernel_cache", True)):
+        h3_modular_kernel_cache_report = write_modular_response_kernel_cache(bundle.path, h3_modular_kernel, h3_caps)
+        bundle.write_json("modular_response_kernel_cache_report.json", h3_modular_kernel_cache_report)
     if h3_modular_fit_report:
         bundle.write_json("modular_response_h3_report.json", h3_modular_fit_report)
     if observer_chart_object_report:
@@ -971,8 +1474,15 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("observable_summary.json", _field_summary(fields_all))
     if freezeout_report:
         bundle.write_json("cosmology_observables.json", {"freezeout_cl_proxy": freezeout_report})
+    if oph_cmb_report:
+        bundle.write_json("oph_cmb_stress_report.json", oph_cmb_report)
     if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False):
         bundle.write_json("cosmology_gate_report.json", cosmology_gate_report)
+    if galaxy_proxy_report:
+        bundle.write_json("galaxy_proxy_report.json", galaxy_proxy_report)
+    if harmonic_time_trace_report:
+        bundle.write_json("harmonic_time_trace_report.json", harmonic_time_trace_report)
+    bundle.write_json("receipt_ladder_report.json", receipt_ladder_report)
     bundle.write_json("s3_class_counts.json", s3_class_counts(gauge) if group_name == "S3" else {})
     if s3_holonomy_report:
         bundle.write_json("array_holonomy_report.json", s3_holonomy_report)
@@ -1007,6 +1517,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "bw_p90": bw_report["p90"],
             "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
             "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
+            "geometric_bw_controls": bw_report["controls"],
+            "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
+            "state_bw_control_medians": state_bw_report.get("control_medians", {}) if state_bw_report else {},
+            "state_bw_correct_beats_controls": state_bw_report.get("correct_beats_controls", False)
+            if state_bw_report
+            else None,
             "collar_markov": {
                 "median_epsilon_cmi": collar_report.get("median_epsilon_cmi"),
                 "p90_epsilon_cmi": collar_report.get("p90_epsilon_cmi"),
@@ -1028,6 +1544,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "mandatory_controls": mandatory_controls,
             "transition_scale_selection": transition_selection_report,
             "conformal_h3_spatial_chart": conformal_chart_report,
+            "paper_3d_bulk_chart": paper_3d_chart_report,
             "record_populated_h3": h3_population_report,
             "modular_response_kernel": h3_modular_kernel_report,
             "modular_response_h3": h3_modular_fit_report,
@@ -1038,6 +1555,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "neutral_reconstruction": neutral_report,
             "emergence_status": emergence_status,
             "cosmology_observables": {"freezeout_cl_proxy": freezeout_report} if freezeout_report else {},
+            "harmonic_time_trace": harmonic_time_trace_report,
             "cosmology_gate": cosmology_gate_report if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False) else {},
             "screen_holonomy": {
                 "mode": s3_holonomy_report.get("mode"),
@@ -1082,6 +1600,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
         "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
         "controls": bw_report["controls"],
+        "geometric_controls": bw_report["controls"],
+        "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
+        "state_bw_control_medians": state_bw_report.get("control_medians", {}) if state_bw_report else {},
+        "state_bw_correct_beats_controls": state_bw_report.get("correct_beats_controls", False)
+        if state_bw_report
+        else None,
         "theorem_core_receipts": {
             "lyapunov": theorem_core_report.get("lyapunov", {}).get("receipt"),
             "exact_repair_projection": theorem_core_report.get("exact_repair_projection", {}).get("receipt"),
@@ -1374,6 +1898,110 @@ def _timeline_cycles(cycles: int, sample_count: int) -> set[int]:
     return {int(value) for value in np.linspace(0, int(cycles) - 1, count, dtype=int)}
 
 
+def _harmonic_time_trace_sample(
+    *,
+    points: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+    gauge: np.ndarray,
+    patch_count: int,
+    signature: np.ndarray,
+    stable_count: np.ndarray,
+    committed: np.ndarray,
+    repair_load: np.ndarray,
+    mismatch_density: np.ndarray,
+    modular_depth: np.ndarray,
+    cumulative_repair_load: np.ndarray,
+    cell_entropy: np.ndarray,
+    cycle: int,
+    config: dict[str, Any],
+    seed: int,
+) -> dict[str, Any]:
+    fields_all = _observable_fields(
+        port_left=np.zeros(0, dtype=np.int16),
+        port_right=np.zeros(0, dtype=np.int16),
+        left=left,
+        right=right,
+        gauge=gauge,
+        patch_count=patch_count,
+        signature=signature,
+        stable_count=stable_count,
+        committed=committed,
+        repair_load=repair_load,
+        mismatch_density=mismatch_density,
+        modular_depth=modular_depth,
+        cumulative_repair_load=cumulative_repair_load,
+    )
+    field_names = [
+        str(name)
+        for name in config.get(
+            "fields",
+            ["record_signature", "stable_count", "cumulative_repair_load"],
+        )
+    ]
+    selected = {name: fields_all[name] for name in field_names if name in fields_all}
+    ell_max = int(config.get("ell_max", 32))
+    if not selected:
+        return {"cycle": int(cycle), "ell": np.arange(ell_max + 1, dtype=float), "fields": {}}
+    report = angular_power_report(
+        points,
+        selected,
+        ell_max=ell_max,
+        pair_samples=0,
+        seed=int(seed),
+        controls=[],
+        estimator="spherical_harmonic",
+        measure_weights=cell_entropy,
+        harmonic_batch_size=int(config.get("harmonic_batch_size", 4096)),
+        n_jobs=config.get("n_jobs", 1),
+    )
+    return {
+        "cycle": int(cycle),
+        "ell": np.arange(int(report["ell_max"]) + 1, dtype=float),
+        "fields": {
+            name: np.asarray([float(row.get("D_ell", 0.0)) for row in field["spectrum"]], dtype=float)
+            for name, field in report.get("fields", {}).items()
+        },
+    }
+
+
+def _write_harmonic_time_trace(
+    run_path: Path,
+    samples: list[dict[str, Any]],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    usable = [sample for sample in samples if sample.get("fields")]
+    if not usable:
+        return {}
+    ell = np.asarray(usable[0]["ell"], dtype=np.float32)
+    cycles = np.asarray([int(sample["cycle"]) for sample in usable], dtype=np.int32)
+    field_names = sorted(set().union(*(set(sample["fields"]) for sample in usable)))
+    arrays: dict[str, np.ndarray] = {}
+    for name in field_names:
+        rows = []
+        for sample in usable:
+            values = np.asarray(sample["fields"].get(name, np.zeros_like(ell)), dtype=np.float32)
+            if values.shape[0] != ell.shape[0]:
+                values = np.resize(values, ell.shape[0]).astype(np.float32)
+            rows.append(values)
+        arrays[name] = np.vstack(rows).astype(np.float32)
+    np.savez_compressed(run_path / "harmonic_time_trace.npz", cycles=cycles, ell=ell, **arrays)
+    return {
+        "mode": "screen_harmonic_time_trace_v0",
+        "enabled": True,
+        "sample_count": int(cycles.size),
+        "cycles": [int(value) for value in cycles],
+        "field_names": field_names,
+        "ell_max": int(ell[-1]) if ell.size else None,
+        "n_jobs": config.get("n_jobs", 1),
+        "harmonic_batch_size": int(config.get("harmonic_batch_size", 4096)),
+        "claim_boundary": (
+            "time-resolved observer-screen harmonic trace for synchronization-gap audits; "
+            "not a CMB prediction or bulk reconstruction by itself"
+        ),
+    }
+
+
 def _repair_sector_labels(
     gauge: np.ndarray,
     chosen_edges: np.ndarray,
@@ -1457,10 +2085,15 @@ def _emergence_status_report(bw_report: dict[str, Any], consensus_report: dict[s
     control_medians = {
         name: float(report["median"])
         for name, report in bw_report.get("controls", {}).items()
-        if isinstance(report, dict) and "median" in report
+        if isinstance(report, dict)
+        and "median" in report
+        and _optional_finite_float(report.get("median")) is not None
     }
-    bw_median = float(bw_report.get("median", float("nan")))
-    correct_beats_controls = bool(control_medians) and all(bw_median < value for value in control_medians.values())
+    bw_median = _optional_finite_float(bw_report.get("median"))
+    kinematic_bw_usable = bool(bw_report.get("usable_scalar_observables", True)) and bw_median is not None
+    correct_beats_controls = bool(kinematic_bw_usable and control_medians) and all(
+        float(bw_median) < value for value in control_medians.values()
+    )
     observer_records_settled = float(consensus_report.get("global_committed_fraction", 0.0)) >= 0.99
     observer_views_overlap = int(consensus_report.get("pair_count", 0)) > 0
     return {
@@ -1471,16 +2104,227 @@ def _emergence_status_report(bw_report: dict[str, Any], consensus_report: dict[s
         "requires_refinement_scaling": True,
         "requires_neutral_bulk_reconstruction": True,
         "bw_median": bw_median,
+        "kinematic_bw_usable": kinematic_bw_usable,
+        "scalar_observable_count": int(bw_report.get("scalar_observable_count", 0)),
+        "skipped_scalar_observables": bw_report.get("skipped_scalar_observables", []),
         "control_medians": control_medians,
         "correct_2pi_beats_all_controls": correct_beats_controls,
         "observer_records_settled": observer_records_settled,
         "observer_views_overlap": observer_views_overlap,
         "claim_boundary": (
-            "This run can support a finite BW/cap-flow and observer-consensus receipt. "
-            "It does not by itself establish 3D bulk emergence; that requires refinement scaling "
-            "and a neutral observer-record reconstruction path."
+            "This run can support finite repair, records, and BW/cap-flow diagnostics. "
+            "It does not by itself establish 3D bulk emergence. Bulk emergence is gated by "
+            "observer/object population of the conformal H3 chart, not by neutral summary-distance "
+            "dimension estimates."
         ),
     }
+
+
+def _optional_finite_float(value: Any) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(number):
+        return None
+    return number
+
+
+def _lorentz_branch_receipts(
+    conformal_chart_report: dict[str, Any],
+    state_bw_report: dict[str, Any],
+    transition_selection_report: dict[str, Any],
+) -> dict[str, Any]:
+    chart_lorentz_receipt = bool(conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False))
+    direct_kms_selection_receipt = bool(
+        transition_selection_report.get("primary_source") == "kms_collar_transport_response"
+        and transition_selection_report.get("two_pi_selected", False)
+        and not transition_selection_report.get("response_degenerate", False)
+    )
+    bw_automorphism_sanity_receipt = bool(
+        direct_kms_selection_receipt
+        or (
+            state_bw_report.get("direct_transition_automorphism", False)
+            and state_bw_report.get("state_selected_2pi", False)
+            and state_bw_report.get("correct_beats_controls", False)
+        )
+    )
+    endogenous_modular_generator_receipt = bool(
+        state_bw_report.get("endogenous_modular_generator", False)
+        and state_bw_report.get("state_selected_2pi", False)
+        and state_bw_report.get("correct_beats_controls", False)
+    )
+    declared_cap_flow_generator_diagnostic = bool(state_bw_report.get("declared_cap_flow_generator", False))
+    support_visible_lorentz_receipt = bool(chart_lorentz_receipt and bw_automorphism_sanity_receipt)
+    return {
+        "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT": chart_lorentz_receipt,
+        "BW_AUTOMORPHISM_SANITY_RECEIPT": bw_automorphism_sanity_receipt,
+        "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": endogenous_modular_generator_receipt,
+        CHART_LORENTZ_H3_RECEIPT: bool(chart_lorentz_receipt and bw_automorphism_sanity_receipt),
+        BW_KMS_DIRECT_2PI_RECEIPT: direct_kms_selection_receipt,
+        ENDOGENOUS_MODULAR_GENERATOR_RECEIPT: endogenous_modular_generator_receipt,
+        "DECLARED_CAP_FLOW_GENERATOR_DIAGNOSTIC": declared_cap_flow_generator_diagnostic,
+        "direct_kms_collar_2pi_receipt": direct_kms_selection_receipt,
+        "chart_level_conformal_lorentz_receipt": chart_lorentz_receipt,
+        "bw_automorphism_sanity_receipt": bw_automorphism_sanity_receipt,
+        "endogenous_modular_generator_receipt": endogenous_modular_generator_receipt,
+        "declared_cap_flow_generator_diagnostic": declared_cap_flow_generator_diagnostic,
+        "support_visible_lorentz_3p1_kinematics_receipt": support_visible_lorentz_receipt,
+    }
+
+
+def _canonical_receipt_ladder_report(
+    *,
+    trace: list[dict[str, Any]],
+    committed: np.ndarray,
+    emergence_status: dict[str, Any],
+    state_bw_report: dict[str, Any],
+    transition_selection_report: dict[str, Any],
+    h3_modular_fit_report: dict[str, Any],
+    observer_chart_object_report: dict[str, Any],
+    cosmology_gate_report: dict[str, Any],
+    galaxy_proxy_report: dict[str, Any],
+) -> dict[str, Any]:
+    final_phi = int(trace[-1].get("phi", -1)) if trace else -1
+    committed_fraction = float(np.mean(committed)) if np.asarray(committed).size else 0.0
+    bw_kms_pass = bool(
+        emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
+        or state_bw_report.get(BW_KMS_BRANCH_INSTANTIATION_RECEIPT, False)
+        or (
+            transition_selection_report.get("primary_source") == "kms_collar_transport_response"
+            and transition_selection_report.get("two_pi_selected", False)
+            and not transition_selection_report.get("response_degenerate", False)
+        )
+    )
+    receipts = {
+        "R0": {
+            "receipt_name": REPAIR_CORE_RECEIPT,
+            "passed": bool(final_phi == 0),
+            "claim_level": RECOVERED_CORE,
+            "observable_id": "overlap_mismatch_phi",
+            "fit_objective": "final_phi_zero",
+            "final_phi": final_phi,
+        },
+        "R1": {
+            "receipt_name": RECORD_COMMIT_RECEIPT,
+            "passed": bool(committed_fraction >= 0.95),
+            "claim_level": RECOVERED_CORE,
+            "observable_id": "observer_record_commit_mask",
+            "fit_objective": "committed_fraction_at_least_0p95",
+            "committed_fraction": committed_fraction,
+        },
+        "R2": {
+            "receipt_name": BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+            "passed": bw_kms_pass,
+            "claim_level": BRANCH_INSTANTIATION_SANITY,
+            "observable_id": "kms_collar_transport_response",
+            "fit_objective": "two_pi_selected_and_non_degenerate",
+            "state_selected_2pi": bool(state_bw_report.get("state_selected_2pi", False)),
+            "transition_two_pi_selected": bool(transition_selection_report.get("two_pi_selected", False)),
+        },
+        "R3": {
+            "receipt_name": CHART_LORENTZ_H3_RECEIPT,
+            "passed": bool(emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)),
+            "claim_level": BRANCH_INSTANTIATION_SANITY,
+            "observable_id": "cap_normals_conformal_h3_chart",
+            "fit_objective": "chart_instantiated",
+            "legacy_receipt_name": CONFORMAL_H3_CHART_RECEIPT,
+        },
+        "R4": {
+            "receipt_name": H3_RESPONSE_CANDIDATE_RECEIPT,
+            "passed": bool(
+                h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
+                or h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
+            ),
+            "claim_level": DEMO,
+            "observable_id": "support_visible_modular_response_kernel",
+            "fit_objective": "heldout_h3_response_beats_controls",
+            "intermediate_receipt_name": H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
+            "intermediate_passed": bool(
+                h3_modular_fit_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
+                or h3_modular_fit_report.get("h3_control_separation_receipt", False)
+                or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
+                    H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False
+                )
+                or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
+                    "intermediate_control_separation_receipt", False
+                )
+            ),
+            "claim_boundary": (
+                "R4 is strict. The intermediate receipt is a support-visible H3 control-separation "
+                "precursor only and cannot establish a 3D bulk."
+            ),
+        },
+        "R5": {
+            "receipt_name": OBJECT_CHART_RECEIPT,
+            "passed": bool(observer_chart_object_report.get("observer_chart_object_h3_receipt", False)),
+            "claim_level": DEMO,
+            "observable_id": "observer_transition_history_object_families",
+            "fit_objective": "object_chart_construction",
+        },
+        "R6": {
+            "receipt_name": OBJECT_BULK_POPULATION_RECEIPT,
+            "passed": bool(emergence_status.get(OBJECT_BULK_POPULATION_RECEIPT, False)),
+            "claim_level": DEMO,
+            "observable_id": "h3_populated_object_families",
+            "fit_objective": "active_observer_chart_bulk_population_gate",
+            "population_source": emergence_status.get("bulk_population_source"),
+        },
+        "R7": {
+            "receipt_name": SCREEN_PROXY_CMB_RECEIPT,
+            "passed": bool(cosmology_gate_report.get("enabled", False) and cosmology_gate_report.get("allowed", False)),
+            "claim_level": PROXY,
+            "observable_id": "freezeout_screen_cl_proxy",
+            "fit_objective": "screen_proxy_gate_allowed",
+        },
+        "R8": {
+            "receipt_name": STATIC_GALAXY_RAR_BTFR_RECEIPT,
+            "passed": bool(galaxy_proxy_report.get("GALAXY_PROXY_RECEIPT", False)),
+            "claim_level": PROXY,
+            "observable_id": "oph_static_galaxy_proxy",
+            "fit_objective": "rar_btfr_formula_bookkeeping",
+            "legacy_receipt_name": STATIC_GALAXY_LAW_RECEIPT,
+        },
+        "R9": {
+            "receipt_name": DYNAMIC_DARK_TRANSPORT_RECEIPT,
+            "passed": False,
+            "claim_level": PROXY,
+            "observable_id": "dynamic_dark_transport",
+            "fit_objective": "not_implemented",
+        },
+        "R10": {
+            "receipt_name": COSMOLOGY_PERTURBATION_RECEIPT,
+            "passed": False,
+            "claim_level": PROXY,
+            "observable_id": "cosmology_perturbation_adapter",
+            "fit_objective": "not_implemented",
+        },
+    }
+    for row in receipts.values():
+        row["receipt_schema_version"] = RECEIPT_SCHEMA_VERSION
+        row["physical_claim"] = False
+    report = {
+        "mode": "canonical_receipt_ladder",
+        "receipts": receipts,
+        "passed_receipt_names": [row["receipt_name"] for row in receipts.values() if row["passed"]],
+        "bulk_3d_established": bool(emergence_status.get("bulk_3d_established", False)),
+        "physical_cmb_prediction": False,
+        "physical_matter_power_prediction": False,
+        "claim_boundary": (
+            "canonical lane ladder. R2/R3 instantiate support-visible BW/KMS and conformal H3 chart "
+            "diagnostics; R6 is an object-population gate but does not establish a 3D bulk without "
+            "neutral reconstruction and strict blind-feature leakage checks. R7 is a screen proxy only "
+            "and R8 is a static-galaxy proxy, not a full cosmology prediction."
+        ),
+    }
+    return with_claim_metadata(
+        report,
+        claim_level=BRANCH_INSTANTIATION_SANITY,
+        receipt="CANONICAL_RECEIPT_LADDER",
+        physical_claim=False,
+        observable_id="finite_screen_receipt_ladder",
+        fit_objective="receipt_gate_summary",
+    )
 
 
 def _attach_object_packet_histograms(observer_rows: list[dict[str, Any]], object_packets: np.ndarray) -> None:
@@ -1503,6 +2347,405 @@ def _attach_object_packet_histograms(observer_rows: list[dict[str, Any]], object
         histogram = {str(int(key)): float(count / total) for key, count in zip(unique, counts, strict=True)}
         row["object_packet_histogram"] = histogram
         row["dominant_object_packet"] = int(unique[int(np.argmax(counts))])
+
+
+def _attach_transition_affinity_histograms(
+    observer_rows: list[dict[str, Any]],
+    raw_fields: dict[str, np.ndarray],
+    object_cfg: dict[str, Any],
+) -> None:
+    fields = transition_affinity_packet_fields(raw_fields, object_cfg)
+    if not fields:
+        return
+    for row in observer_rows:
+        if row.get("view_type") != "patch_observer":
+            continue
+        support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
+        histograms: dict[str, dict[str, float]] = {}
+        dominants: dict[str, int | None] = {}
+        for name, packets in fields.items():
+            packets = np.asarray(packets, dtype=np.int64)
+            valid = support[(support >= 0) & (support < packets.size)]
+            if valid.size == 0:
+                histograms[str(name)] = {}
+                dominants[str(name)] = None
+                continue
+            unique, counts = np.unique(packets[valid], return_counts=True)
+            total = float(counts.sum())
+            histograms[str(name)] = {str(int(key)): float(count / total) for key, count in zip(unique, counts, strict=True)}
+            dominants[str(name)] = int(unique[int(np.argmax(counts))])
+        row["transition_affinity_histograms"] = histograms
+        row["transition_affinity_dominants"] = dominants
+
+
+def _attach_modular_response_histograms(
+    observer_rows: list[dict[str, Any]],
+    response_kernel: dict[str, Any],
+    chart_cfg: dict[str, Any],
+) -> None:
+    matrix = np.asarray(response_kernel.get("matrix", np.zeros((0, 0))), dtype=float)
+    observer_ids = [int(value) for value in response_kernel.get("observer_ids", [])]
+    if matrix.ndim != 2 or matrix.shape[0] == 0 or matrix.shape[1] == 0 or len(observer_ids) != matrix.shape[0]:
+        return
+    components = max(1, int(chart_cfg.get("modular_response_cluster_components", 2)))
+    bins = max(2, int(chart_cfg.get("modular_response_cluster_bins", 4)))
+    component_bins, cluster_tokens = _modular_response_cluster_tokens(
+        matrix,
+        components=components,
+        bins=bins,
+    )
+    row_by_id = {
+        int(row.get("observer_id", -1)): row
+        for row in observer_rows
+        if row.get("view_type") == "patch_observer"
+    }
+    for row_index, observer_id in enumerate(observer_ids):
+        row = row_by_id.get(int(observer_id))
+        if row is None:
+            continue
+        histograms = dict(row.get("modular_response_histograms", {}) or {})
+        token = int(cluster_tokens[row_index])
+        histograms["modular_response_cluster"] = {str(token): 1.0}
+        for component_index in range(component_bins.shape[1]):
+            histograms[f"modular_response_component_{component_index}"] = {
+                str(int(component_bins[row_index, component_index])): 1.0
+            }
+        row["modular_response_histograms"] = histograms
+        row["modular_response_cluster"] = int(token)
+        response_row = np.asarray(matrix[row_index], dtype=float)
+        if response_row.size:
+            response_row = np.where(np.isfinite(response_row), response_row, 0.0)
+            centered = response_row - float(np.mean(response_row))
+            scale = float(np.std(centered))
+            if scale > 1e-12:
+                centered = centered / scale
+            row["repair_response_spectrum"] = [float(value) for value in centered[:32]]
+        row["perturb_resettle_signature"] = [
+            float(value)
+            for value in component_bins[row_index, : min(component_bins.shape[1], 8)]
+        ]
+
+
+def _modular_response_cluster_tokens(
+    matrix: np.ndarray,
+    *,
+    components: int,
+    bins: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    matrix = np.asarray(matrix, dtype=float)
+    centered = matrix - np.mean(matrix, axis=0, keepdims=True)
+    scale = np.std(centered, axis=0, keepdims=True)
+    scale[scale < 1e-9] = 1.0
+    standardized = centered / scale
+    try:
+        u, singular_values, _vh = np.linalg.svd(standardized, full_matrices=False)
+        embedding = u[:, :components] * singular_values[:components][None, :]
+    except np.linalg.LinAlgError:
+        embedding = standardized[:, :components]
+    if embedding.shape[1] < int(components):
+        padding = np.zeros((embedding.shape[0], int(components) - embedding.shape[1]), dtype=float)
+        embedding = np.hstack([embedding, padding])
+    component_bins = np.zeros((embedding.shape[0], int(components)), dtype=np.int64)
+    for component_index in range(int(components)):
+        values = embedding[:, component_index]
+        edges = np.quantile(values, np.linspace(0.0, 1.0, int(bins) + 1)[1:-1])
+        if edges.size and np.allclose(edges, edges[0]):
+            component_bins[:, component_index] = 0
+        else:
+            component_bins[:, component_index] = np.digitize(values, edges, right=False)
+    cluster_tokens = np.asarray(
+        [
+            _stable_hash_to_int(stable_json_hash([int(value) for value in row]))
+            for row in component_bins
+        ],
+        dtype=np.int64,
+    )
+    return component_bins, cluster_tokens
+
+
+def _attach_transition_history_histograms(
+    observer_rows: list[dict[str, Any]],
+    history_raw_fields: list[dict[str, np.ndarray]],
+    object_cfg: dict[str, Any],
+) -> None:
+    field_names = [
+        str(field)
+        for field in object_cfg.get(
+            "transition_history_fields",
+            object_cfg.get(
+                "transition_affinity_fields",
+                [
+                    "record_family",
+                    "checkpoint_class",
+                    "stable_flag",
+                    "s3_sector_class",
+                    "repair_load_bucket",
+                ],
+            ),
+        )
+    ]
+    key_field_names = [
+        str(field)
+        for field in object_cfg.get(
+            "transition_history_key_fields",
+            field_names,
+        )
+    ]
+    persistence_field_names = [
+        str(field)
+        for field in object_cfg.get(
+            "transition_persistence_fields",
+            ["record_family", "s3_sector_class"],
+        )
+    ]
+    include_readout_hash = bool(object_cfg.get("transition_history_include_readout_hash", False))
+    readout_hash_prefix_chars = max(1, int(object_cfg.get("transition_history_readout_hash_prefix_chars", 8)))
+    if not field_names or not history_raw_fields:
+        return
+    history_fields = [transition_affinity_packet_fields(raw_fields, object_cfg) for raw_fields in history_raw_fields]
+    history_fields = [fields for fields in history_fields if fields]
+    if not history_fields:
+        return
+    for row in observer_rows:
+        if row.get("view_type") != "patch_observer":
+            continue
+        support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
+        steps: list[dict[str, int]] = []
+        step_masses: list[float] = []
+        field_paths: dict[str, list[int]] = {name: [] for name in field_names}
+        for fields in history_fields:
+            descriptor: dict[str, int] = {}
+            mass_terms: list[float] = []
+            for name in field_names:
+                packets = fields.get(name)
+                if packets is None:
+                    continue
+                packets = np.asarray(packets, dtype=np.int64)
+                valid = support[(support >= 0) & (support < packets.size)]
+                if valid.size == 0:
+                    continue
+                values, counts = np.unique(packets[valid], return_counts=True)
+                dominant = int(values[int(np.argmax(counts))])
+                descriptor[str(name)] = dominant
+                field_paths[str(name)].append(dominant)
+                mass_terms.append(float(np.max(counts) / max(1, counts.sum())))
+            if descriptor:
+                steps.append(descriptor)
+                step_masses.append(float(np.mean(mass_terms)) if mass_terms else 0.0)
+        if not steps:
+            row["transition_history_key"] = None
+            row["transition_history_persistence"] = 0
+            row["transition_history_histogram"] = {}
+            continue
+        persistence = _transition_history_persistence(steps, fields=persistence_field_names)
+        descriptor_payload = {
+            "fields": field_names,
+            "steps": steps,
+            "persistence": int(persistence),
+            "persistence_fields": persistence_field_names,
+            "sector_change_count": _path_change_count(field_paths.get("s3_sector_class", [])),
+            "record_family_change_count": _path_change_count(field_paths.get("record_family", [])),
+        }
+        key_payload = {
+            "key_fields": key_field_names,
+            "field_counts": {
+                name: _path_value_counts(field_paths.get(name, []))
+                for name in key_field_names
+                if field_paths.get(name)
+            },
+            "final": {name: steps[-1][name] for name in key_field_names if name in steps[-1]},
+            "persistence": int(persistence),
+            "sector_change_count": _path_change_count(field_paths.get("s3_sector_class", [])),
+            "record_family_change_count": _path_change_count(field_paths.get("record_family", [])),
+        }
+        if include_readout_hash:
+            readout_hash = str(row.get("visible_readout_hash", ""))
+            if ":" in readout_hash:
+                readout_hash = readout_hash.split(":", 1)[1]
+            key_payload["observer_visible_readout_hash_prefix"] = readout_hash[:readout_hash_prefix_chars]
+        signature_hash = stable_json_hash(key_payload)
+        signature = _stable_hash_to_int(signature_hash)
+        row["transition_history_key"] = signature
+        row["transition_history_hash"] = signature_hash
+        row["transition_history_descriptor"] = descriptor_payload
+        row["transition_history_key_descriptor"] = key_payload
+        row["transition_history_persistence"] = int(persistence)
+        row["transition_history_mean_modal_mass"] = float(np.mean(step_masses)) if step_masses else 0.0
+        row["transition_history_histogram"] = {str(signature): 1.0}
+        local_token_histogram, local_token_persistent_histogram = _local_transition_token_histograms(
+            support,
+            history_fields,
+            key_field_names=key_field_names,
+            persistence_field_names=persistence_field_names,
+            min_persistence=int(object_cfg.get("transition_history_local_min_persistence", 1)),
+        )
+        row["transition_history_histograms"] = {
+            "transition_history_key": {str(signature): 1.0},
+            "local_transition_token": local_token_histogram,
+            "local_transition_token_persistent": local_token_persistent_histogram,
+            **{
+                f"{name}_path": {str(_stable_hash_to_int(stable_json_hash(values))): 1.0}
+                for name, values in field_paths.items()
+                if values
+            },
+        }
+        row["record_transition_histogram"] = _histogram_summary_vector(
+            local_token_persistent_histogram or local_token_histogram or row["transition_history_histogram"],
+            max_items=16,
+        )
+        row["checkpoint_class_transition"] = _histogram_summary_vector(
+            row["transition_history_histograms"].get("checkpoint_class_path", {}),
+            max_items=8,
+        )
+        row["sector_change_signature"] = [
+            float(descriptor_payload["sector_change_count"]),
+            float(descriptor_payload["record_family_change_count"]),
+            float(persistence),
+            float(row["transition_history_mean_modal_mass"]),
+        ]
+        row["counterfactual_stability"] = float(row["transition_history_mean_modal_mass"])
+
+
+def _transition_history_persistence(steps: list[dict[str, int]], *, fields: list[str]) -> int:
+    if not steps:
+        return 0
+    selected_fields = [str(field) for field in fields if str(field) in steps[-1]]
+    final = {field: steps[-1][field] for field in selected_fields} if selected_fields else steps[-1]
+    count = 0
+    for step in reversed(steps):
+        current = {field: step[field] for field in selected_fields if field in step} if selected_fields else step
+        if current != final:
+            break
+        count += 1
+    return int(count)
+
+
+def _local_transition_token_histograms(
+    support: np.ndarray,
+    history_fields: list[dict[str, np.ndarray]],
+    *,
+    key_field_names: list[str],
+    persistence_field_names: list[str],
+    min_persistence: int,
+) -> tuple[dict[str, float], dict[str, float]]:
+    """Observer-visible per-node transition history tokens for local objects.
+
+    The support-modal transition history intentionally summarizes what an
+    observer sees as one packet. This helper keeps the bounded local packet
+    mixture inside the same observer support, so localized sub-histories are not
+    erased by a dominant background packet. It uses only transition packet
+    fields already exposed to observer rows.
+    """
+
+    support = np.asarray(support, dtype=np.int64)
+    if support.size == 0 or not history_fields:
+        return {}, {}
+    names = [str(name) for name in key_field_names if str(name)]
+    if not names:
+        names = sorted({str(name) for fields in history_fields for name in fields.keys()})
+    counts: dict[int, int] = {}
+    persistent_counts: dict[int, int] = {}
+    for node in support:
+        node_index = int(node)
+        steps: list[dict[str, int]] = []
+        paths: dict[str, list[int]] = {name: [] for name in names}
+        for fields in history_fields:
+            descriptor: dict[str, int] = {}
+            for name in names:
+                values = fields.get(name)
+                if values is None:
+                    continue
+                values = np.asarray(values, dtype=np.int64)
+                if node_index < 0 or node_index >= values.size:
+                    continue
+                value = int(values[node_index])
+                descriptor[str(name)] = value
+                paths[str(name)].append(value)
+            if descriptor:
+                steps.append(descriptor)
+        if not steps:
+            continue
+        persistence = _transition_history_persistence(steps, fields=persistence_field_names)
+        token_payload = {
+            "key_fields": names,
+            "steps": steps,
+            "persistence": int(persistence),
+            "sector_change_count": _path_change_count(paths.get("s3_sector_class", [])),
+            "record_family_change_count": _path_change_count(paths.get("record_family", [])),
+        }
+        token = _stable_hash_to_int(stable_json_hash(token_payload))
+        counts[token] = counts.get(token, 0) + 1
+        if persistence >= int(min_persistence):
+            persistent_counts[token] = persistent_counts.get(token, 0) + 1
+    return _normalize_int_counts(counts), _normalize_int_counts(persistent_counts)
+
+
+def _path_change_count(values: list[int]) -> int:
+    if len(values) < 2:
+        return 0
+    return int(sum(1 for before, after in zip(values, values[1:], strict=False) if int(before) != int(after)))
+
+
+def _path_value_counts(values: list[int]) -> dict[str, int]:
+    if not values:
+        return {}
+    unique, counts = np.unique(np.asarray(values, dtype=np.int64), return_counts=True)
+    return {str(int(value)): int(count) for value, count in zip(unique, counts, strict=True)}
+
+
+def _normalize_int_counts(counts: dict[int, int]) -> dict[str, float]:
+    total = float(sum(int(value) for value in counts.values()))
+    if total <= 0.0:
+        return {}
+    return {str(int(key)): float(value / total) for key, value in sorted(counts.items())}
+
+
+def _histogram_summary_vector(histogram: dict[str, float], *, max_items: int) -> list[float]:
+    """Distributional observer-visible packet summary for blind reconstruction.
+
+    The blind bulk audit cannot consume support nodes, axes, or cap-membership
+    data. Exact transition-token identities are intentionally not included
+    here: categorical packet hashes can manufacture high-rank distances. Object
+    extraction still receives the full token histograms separately, while the
+    blind dimension audit gets only distributional continuation statistics.
+    """
+
+    if not histogram:
+        return []
+    values: list[float] = []
+    for value in histogram.values():
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(numeric_value) and numeric_value > 0.0:
+            values.append(float(numeric_value))
+    if not values:
+        return []
+    array = np.asarray(sorted(values, reverse=True), dtype=float)
+    total = float(np.sum(array))
+    if total <= 0.0:
+        return []
+    probs = array / total
+    entropy = float(-np.sum(probs * np.log(np.maximum(probs, 1e-15))))
+    effective_count = float(1.0 / np.sum(probs * probs))
+    tail_mass = float(np.sum(probs[max(1, int(max_items)) :])) if probs.size > int(max_items) else 0.0
+    top = probs[: min(3, probs.size)]
+    padded = np.zeros(3, dtype=float)
+    padded[: top.size] = top
+    return [
+        entropy,
+        effective_count,
+        float(probs[0]),
+        tail_mass,
+        float(probs.size),
+        *[float(value) for value in padded],
+    ]
+
+
+def _stable_hash_to_int(hash_value: str, *, hex_digits: int = 12) -> int:
+    digest = str(hash_value).split(":", 1)[-1]
+    return int(digest[: int(hex_digits)], 16)
 
 
 def _cosmology_gate_report(
@@ -1593,9 +2836,6 @@ def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, c
     report = {
         "mode": "theorem_core_receipt_bundle",
         "receipt": bool(lyapunov.get("receipt", False) and exact_repair.get("receipt", False)),
-        "claim_level": RECOVERED_CORE,
-        "receipt_name": "THEOREM_CORE_RECEIPT_BUNDLE",
-        "physical_claim": False,
         "lyapunov": lyapunov,
         "exact_repair_projection": exact_repair,
         "sm_quotient_gate": sm_gate,
@@ -1605,7 +2845,14 @@ def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, c
             "candidate sieve when supplied"
         ),
     }
-    return report
+    return with_claim_metadata(
+        report,
+        claim_level=RECOVERED_CORE,
+        receipt="THEOREM_CORE_RECEIPT_BUNDLE",
+        physical_claim=False,
+        observable_id="finite_theorem_core_receipts",
+        fit_objective="lyapunov_and_projection_receipts",
+    )
 
 
 def _regularize_support_visible_fields(
@@ -1722,6 +2969,27 @@ def _collar_report(config: dict[str, Any], patch_count: int, collar_width: float
         "cell_angular_scale": cell_angular_scale,
         "claim_boundary": "finite regulator collar; cell_scaled mode shrinks with refinement",
     }
+
+
+def _geometry_cache_from_config(
+    points: np.ndarray,
+    config: dict[str, Any],
+    outputs_cfg: dict[str, Any],
+) -> GeometryCache | None:
+    cache_cfg = dict(config.get("cache", {}).get("geometry", {}) or {})
+    output_cache_cfg = outputs_cfg.get("geometry_cache")
+    if isinstance(output_cache_cfg, dict):
+        cache_cfg = {**cache_cfg, **output_cache_cfg}
+    elif isinstance(output_cache_cfg, str):
+        cache_cfg["cache_dir"] = output_cache_cfg
+        cache_cfg["enabled"] = True
+    enabled = bool(cache_cfg.get("enabled", False))
+    cache_dir = cache_cfg.get("cache_dir", cache_cfg.get("dir"))
+    if not enabled and cache_dir is None:
+        return None
+    if cache_dir is None:
+        cache_dir = ".oph_fpe_cache/geometry"
+    return GeometryCache(points, cache_dir=Path(cache_dir))
 
 
 def _run_id(name: str) -> str:

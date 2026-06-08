@@ -1,39 +1,44 @@
 # Cloud Wiring
 
-The default Google Cloud project for this repo is:
+This repo should not contain production cloud identifiers. Configure real provider details locally
+with `.env.local`, shell exports, named CLI profiles, or cloud-native identity.
+
+Example Google Cloud project placeholder:
 
 ```text
-observer-patch-holography
+your-gcp-project-id
 ```
 
-Local `gcloud` is configured with a separate named configuration:
+Recommended local `gcloud` pattern:
 
 ```bash
-gcloud config configurations activate oph-physics-sim
+gcloud config configurations activate <your-config-name>
 gcloud config list
 ```
 
-Baseline APIs are enabled for Compute Engine, Cloud Storage, Cloud Build, IAM, Service Usage, and
-Artifact Registry. Billing is attached.
+Baseline APIs needed for a GCP worker are Compute Engine and Cloud Storage. Cloud Build, IAM,
+Service Usage, and Artifact Registry are useful for more automated workflows.
 
-The default artifact bucket exists:
-
-```text
-gs://oph-physics-sim-artifacts-640205981110-us-central1
-```
-
-## GCP Starting Quota
-
-Checked on 2026-06-01:
+Artifact bucket placeholder:
 
 ```text
-us-central1: 200 CPUs, 1 NVIDIA_L4_GPU, 0 A100/H100/H200/B200 GPUs
-us-east1:    200 CPUs, 1 NVIDIA_L4_GPU, 0 A100/H100/H200/B200 GPUs
-us-west1:    100 CPUs, 1 NVIDIA_L4_GPU, 0 A100/H100/H200/B200 GPUs
+gs://your-gcs-artifact-bucket
 ```
 
-The practical immediate GCP GPU smoke target is one `g2-standard-8` L4 VM. B200/H200/A100 work
-needs a quota increase first.
+## GCP Quota
+
+Check quotas in the project/region you intend to use:
+
+```bash
+gcloud compute project-info describe --format=json \
+  | jq '.quotas[] | select(.metric|test("CPU|CPUS|GPU|NVIDIA"))'
+
+gcloud compute regions describe "${GCP_REGION}" --format=json \
+  | jq '.quotas[] | select(.metric|test("CPU|CPUS|GPU|NVIDIA|C2D|N2|C3|C4"))'
+```
+
+The practical immediate GPU smoke target, when quota exists, is one `g2-standard-8` L4 VM.
+B200/H200/A100 work usually needs quota approval first.
 
 ## Processing Recommendation
 
@@ -48,13 +53,13 @@ AWS CPU: c7i/c7a/c8g high-core instances for parallel seed batches
 RunPod/Lambda/Modal GPU: defer until dense eigensolvers, persistent homology, learned repair, or CAMB sweeps dominate
 ```
 
-Use the existing `observer-patch-holography` GCP project for artifacts and coordination. Renting
-GPU pods now would mostly accelerate the wrong layer unless we first add GPU-native kernels.
+Use a dedicated simulation project for artifacts and coordination. Renting GPU pods now would
+mostly accelerate the wrong layer unless we first add GPU-native kernels.
 
 ## Local Secrets
 
 Use `.env.local`, shell exports, local Terraform var files, or cloud-native identity. Do not commit
 service-account keys, AWS keys, OAuth tokens, SSH keys, or provider credentials.
 
-The `ophminer` repo remains a reference for cloud topology, but this repo should keep neutral names
-and simulation-specific buckets, service accounts, tags, and Terraform state.
+Keep this repo neutral: use simulation-specific buckets, service accounts, tags, and Terraform
+state, and do not mirror production details from other projects.

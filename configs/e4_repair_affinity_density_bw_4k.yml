@@ -1,0 +1,232 @@
+name: e4_repair_affinity_density_bw_4k
+run_mode: observer_shared_bulk_candidate_compact
+seed: 20261023
+claim_boundary: >
+  Focused finite OPH screen diagnostic for the state-derived BW blocker.
+  This run builds rho=exp(-beta K) from an observer-visible repair/collar
+  affinity transition, then checks whether -log(rho) transports support-visible
+  observables toward lambda_C(2*pi*t). It is not a physical CMB prediction,
+  not a 3D bulk emergence claim, and not a completed continuum BW proof.
+
+graph:
+  family: fibonacci_sphere
+  patch_count: 4096
+  neighbors: 12
+
+group:
+  name: S3
+
+boundary_program:
+  mode: support_visible_cap_net_hot
+  cap_count: 24
+  sharpness: 8.0
+  tangent_weight: 0.35
+  endpoint_noise_probability: 0.35
+
+screen:
+  chart: support_visible_s2_cellulation
+  carrier: federated_echosahedral_patch
+  ports_per_patch: 12
+  cap_family: round_caps_on_s2
+
+oph_constants:
+  pixel_mode: source_candidate
+  use_P_for:
+  - cell_area
+  - cell_entropy
+  - cap_capacity
+  - residual_weighting
+
+screen_units:
+  mode: numerical_regulator
+
+dynamics:
+  cycles: 64
+  repairs_per_cycle: 4096
+  record_commit_cycles: 8
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.05
+    beta_end: 15.0
+
+modular_flow:
+  enabled: true
+  dt: 0.03
+  damping: 0.012
+  repair_load_coupling: 0.35
+  cap_coupling: 0.08
+  diffusion: 0.06
+  cap_axes: 20
+
+bw:
+  mode: state_derived_modular_probe
+  state_mode: repair_affinity_response_density_log
+  target_operator_mode: permutation
+  transition_response_time: 0.25
+  density_inverse_temperature: 0.1
+  generator_scale: 10.0
+  generator_scale_candidates:
+  - 0.0
+  - 1.0
+  - 3.141592653589793
+  - 6.283185307179586
+  - 10.0
+  - 12.566370614359172
+  cap_count: 4
+  theta0: [0.35, 0.55, 0.75, 1.0]
+  collar_width_mode: cell_scaled
+  collar_k: 1.0
+  history_window: 4
+  times: [0.25]
+  normalization: 2pi
+  observables:
+  - record_signature_projectors
+  - repair_load_projectors
+  - s3_sector_projectors
+  - cumulative_repair_load_projectors
+  regularizer_a: [0.000000000001]
+  max_basis: 48
+  k_interp: 8
+  sim_k_interp: 1
+  n_jobs: auto
+  support_visible_smoothing_steps: 4
+  support_visible_smoothing_alpha: 0.35
+  selection:
+    enabled: true
+    sources:
+    - repair_affinity_response
+    - perturb_remeasure_response
+    include_declared_sanity: true
+    candidate_scales: [1.0, 3.141592653589793, 6.283185307179586, 12.566370614359172]
+    times: [0.25]
+    observables:
+    - record_signature_projectors
+    - repair_load_projectors
+    - s3_sector_projectors
+    - cumulative_repair_load_projectors
+    max_basis: 48
+    probe_steps: 4
+    probe_repairs_per_source: 48
+    probe_max_incident_edges: 12
+
+collar_markov:
+  enabled: true
+  max_triplets: 2048
+  packet_bins:
+    record_signature: 64
+    stable_count: 8
+    repair_load: 8
+    s3_class_density: 6
+  sector_conditioned: true
+  write_recovery_bound: true
+
+observers:
+  sample_count: 64
+  neighborhood_size: 64
+
+observer_objects:
+  enabled: true
+  packet_mode: coarse_visible_packet
+  family_mode: transition_affinity
+  history_window: 4
+  signature_bins: 16
+  transition_bins: 8
+  record_family_modulus: 16
+  transition_history_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_history_key_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_persistence_fields:
+  - record_family
+  - s3_sector_class
+  transition_affinity_fields:
+  - checkpoint_class
+  - record_family
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  include_s3_sector: true
+  include_repair_load_bin: false
+  min_support_size: 3
+  persistence_horizon: 8
+  counterfactual_perturbations: 8
+  max_families: 512
+
+observer_chart_population:
+  enabled: true
+  incidence_mode: transition_history
+  history_window: 4
+  min_persistence: 3
+  min_objects: 4
+  min_observers_per_object: 2
+  max_objects: 512
+  pass_ratio: 1.0
+  max_observer_fraction_per_object: 0.65
+  max_h3_compactness: 0.5
+  min_localized_objects: 2
+
+neutral_reconstruction:
+  enabled: false
+  require_bw_refinement_pass: false
+  forbid_radial_depth_evidence: true
+
+h3_population:
+  enabled: false
+
+h3_support_profiles:
+  enabled: false
+
+h3_modular_response:
+  enabled: false
+
+theorem_core:
+  projection_sample: 256
+  include_default_sm_candidate: true
+
+cosmology:
+  freezeout:
+    enabled: false
+    allow_screen_proxy_without_bulk: true
+
+defects:
+  max_triangles: 6000
+  sector_repair:
+    enabled: true
+    mode: repair_coupled_group_compose
+    probability: 0.08
+  timeline:
+    enabled: true
+    sample_count: 6
+    max_triangles: 2000
+    persistence_cycles: 3
+
+controls:
+- wrong_1x_normalization
+- wrong_pi_normalization
+- wrong_4pi_normalization
+- shuffled_observables
+- no_modular_flow
+- no_repair
+- shuffled_interfaces
+- random_same_degree_graph
+- wrong_s3_orientation
+- fake_record_rewrite
+
+outputs:
+  profile: compact
+  write_jsonl: false
+  write_bw_report: true
+  write_cap_geometry_report: true
+  write_collar_markov_report: true
+  write_state_derived_bw_report: true
+  write_neutral_reconstruction: false
+  write_freezeout_cl_proxy: false
+  write_dimension_report: false

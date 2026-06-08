@@ -19,5 +19,6 @@ artifacts/
 receipts/
 runs/
 temp/
+.oph_fpe_cache/
 *.log
 *.jsonl

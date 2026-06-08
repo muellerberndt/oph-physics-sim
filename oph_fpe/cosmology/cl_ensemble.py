@@ -21,6 +21,12 @@ def collect_cl_runs(run_dirs: list[Path]) -> list[dict[str, Any]]:
             cl_report = json.loads(cl_path.read_text(encoding="utf-8"))
             manifest = _read_json(run_path / "manifest.json")
             gate = _read_json(run_path / "cosmology_gate_report.json")
+            cmb = _read_json(run_path / "cmb_lite_comparison_report.json")
+            cmb_fields = cmb.get("field_comparisons", {}) if cmb else {}
+            best_field = cmb.get("best_shape_field") if cmb else None
+            best_positive_field = cmb.get("best_positive_shape_field") if cmb else None
+            best = cmb_fields.get(best_field, {}) if best_field else {}
+            best_positive = cmb_fields.get(best_positive_field, {}) if best_positive_field else {}
             rows.append(
                 {
                     "run_id": manifest.get("run_id", run_path.name),
@@ -33,6 +39,17 @@ def collect_cl_runs(run_dirs: list[Path]) -> list[dict[str, Any]]:
                     "gate_checks": gate.get("checks", {}),
                     "bulk_3d_established": bool(gate.get("checks", {}).get("bulk_3d_established", False)),
                     "fields": cl_report.get("fields", {}),
+                    "cmb_lite": {
+                        "benchmark": (cmb.get("benchmark", {}) if cmb else {}).get("label"),
+                        "best_field": best_field,
+                        "best_shape_correlation": best.get("shape_correlation"),
+                        "best_normalized_rmse": best.get("normalized_rmse"),
+                        "best_positive_field": best_positive_field,
+                        "best_positive_shape_correlation": best_positive.get("shape_correlation"),
+                        "best_positive_normalized_rmse": best_positive.get("normalized_rmse"),
+                    }
+                    if cmb
+                    else {},
                 }
             )
     return rows
@@ -52,6 +69,7 @@ def cl_ensemble_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "gate_allowed_count": len(allowed),
                 "gate_allowed_fraction": float(len(allowed) / max(len(group), 1)),
                 "fields": _field_ensembles(allowed),
+                "cmb_lite": _cmb_lite_ensemble(allowed),
             }
         )
     return {
@@ -80,6 +98,25 @@ def write_cl_ensemble_report(run_dirs: list[Path], out_dir: Path) -> dict[str, A
 def _field_ensembles(rows: list[dict[str, Any]]) -> dict[str, Any]:
     field_names = sorted({name for row in rows for name in row.get("fields", {})})
     return {name: _one_field_ensemble([row["fields"][name] for row in rows if name in row.get("fields", {})]) for name in field_names}
+
+
+def _cmb_lite_ensemble(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    usable = [row.get("cmb_lite", {}) for row in rows if row.get("cmb_lite")]
+    return {
+        "run_count": len(usable),
+        "best_field_counts": _counts(row.get("best_field") for row in usable),
+        "best_positive_field_counts": _counts(row.get("best_positive_field") for row in usable),
+        "mean_best_shape_correlation": _mean(row.get("best_shape_correlation") for row in usable),
+        "mean_best_normalized_rmse": _mean(row.get("best_normalized_rmse") for row in usable),
+        "mean_best_positive_shape_correlation": _mean(
+            row.get("best_positive_shape_correlation") for row in usable
+        ),
+        "mean_best_positive_normalized_rmse": _mean(row.get("best_positive_normalized_rmse") for row in usable),
+        "claim_boundary": (
+            "CMB-lite shape aggregation over gated screen C_l proxies; not a Planck likelihood and "
+            "not a physical CMB prediction"
+        ),
+    }
 
 
 def _one_field_ensemble(field_reports: list[dict[str, Any]]) -> dict[str, Any]:
@@ -155,6 +192,21 @@ def _mode(values: list[int]) -> int | None:
 
 def _median(values: list[float]) -> float | None:
     return float(np.median(values)) if values else None
+
+
+def _mean(values: Any) -> float | None:
+    numeric = [float(value) for value in values if isinstance(value, (int, float))]
+    return float(np.mean(numeric)) if numeric else None
+
+
+def _counts(values: Any) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for value in values:
+        if value is None:
+            continue
+        key = str(value)
+        counts[key] = counts.get(key, 0) + 1
+    return counts
 
 
 def _read_json(path: Path) -> dict[str, Any]:

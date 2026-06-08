@@ -2,9 +2,15 @@ from pathlib import Path
 from math import isclose, pi
 
 import json
+import numpy as np
 
 from oph_fpe.experiments import load_config
-from oph_fpe.scale.bw_array import run_bw_array_config
+from oph_fpe.scale.bw_array import (
+    _attach_modular_response_histograms,
+    _attach_transition_history_histograms,
+    _lorentz_branch_receipts,
+    run_bw_array_config,
+)
 
 
 def test_bw_array_writes_bw_report(tmp_path: Path):
@@ -23,6 +29,13 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
             "require_state_bw_controls": False,
         },
         "angular_power": {"ell_max": 12, "pair_samples": 4096, "controls": ["shuffled_field"]},
+        "harmonic_time_trace": {
+            "enabled": True,
+            "sample_count": 3,
+            "ell_max": 4,
+            "fields": ["record_signature", "stable_count"],
+            "harmonic_batch_size": 128,
+        },
     }
 
     result = run_bw_array_config(config, tmp_path)
@@ -52,6 +65,8 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "cl_proxy.csv").exists()
     assert (run_path / "cl_controls.csv").exists()
     assert (run_path / "cl_comparison_report.json").exists()
+    assert (run_path / "harmonic_time_trace.npz").exists()
+    assert (run_path / "harmonic_time_trace_report.json").exists()
 
     bw_report = json.loads((run_path / "bw_report.json").read_text(encoding="utf-8"))
     cap_report = json.loads((run_path / "cap_geometry_report.json").read_text(encoding="utf-8"))
@@ -62,6 +77,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     consensus_report = json.loads((run_path / "observer_consensus_report.json").read_text(encoding="utf-8"))
     emergence_status = json.loads((run_path / "emergence_status_report.json").read_text(encoding="utf-8"))
     cl_report = json.loads((run_path / "cl_comparison_report.json").read_text(encoding="utf-8"))
+    harmonic_trace = np.load(run_path / "harmonic_time_trace.npz")
     observer_rows = [
         json.loads(line)
         for line in (run_path / "observer_views.jsonl").read_text(encoding="utf-8").splitlines()
@@ -78,6 +94,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert bw_report["rows"][0]["weight_measure"] == "cell_entropy_capacity"
     assert isclose(bw_report["rows"][0]["target_scale"], 2.0 * pi)
     assert isclose(bw_report["rows"][0]["sim_scale"], 2.0 * pi)
+
     assert bw_report["rows"][0]["cap_area_planck"] > 0.0
     assert bw_report["rows"][0]["cap_entropy_capacity"] > 0.0
     assert cap_report["weight_measure"] == "cell_entropy_capacity"
@@ -103,6 +120,11 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert "mandatory_controls" in manifest
     assert "emergence_status" in manifest
     assert "cosmology_observables" in manifest
+    assert "harmonic_time_trace" in manifest
+    assert harmonic_trace["cycles"].shape[0] == 3
+    assert harmonic_trace["ell"].shape[0] == 5
+    assert harmonic_trace["record_signature"].shape == (3, 5)
+    assert harmonic_trace["stable_count"].shape == (3, 5)
     assert manifest["screen_units"]["mode"] == "numerical_regulator"
     assert bw_report["support_visible_regularization"]["steps"] == 4
     assert ports_report["port_names"][0] == "P0"
@@ -118,6 +140,122 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert cl_report["claim_boundary"].startswith("screen-only")
     assert cl_report["ell_max"] == 12
     assert "record_signature" in cl_report["fields"]
+
+
+def test_transition_history_key_can_include_observer_visible_readout_hash():
+    rows = [
+        {
+            "view_type": "patch_observer",
+            "support_nodes": [0, 1],
+            "visible_readout_hash": "sha256:aaaa1111",
+        },
+        {
+            "view_type": "patch_observer",
+            "support_nodes": [0, 1],
+            "visible_readout_hash": "sha256:bbbb2222",
+        },
+    ]
+    history = [
+        {
+            "record_signature": np.asarray([3, 3, 9, 9]),
+            "stable_count": np.asarray([8, 8, 8, 8]),
+            "committed_mask": np.asarray([1, 1, 1, 1]),
+            "s3_sector_class": np.asarray([0, 0, 1, 1]),
+            "repair_load": np.zeros(4),
+            "cumulative_repair_load": np.zeros(4),
+        }
+    ] * 4
+
+    base_cfg = {
+        "transition_history_fields": ["record_family", "checkpoint_class", "stable_flag", "s3_sector_class"],
+        "transition_history_key_fields": ["record_family", "checkpoint_class", "stable_flag", "s3_sector_class"],
+        "transition_persistence_fields": ["record_family", "s3_sector_class"],
+        "record_family_modulus": 16,
+        "transition_bins": 8,
+    }
+    same_rows = [dict(row) for row in rows]
+    _attach_transition_history_histograms(same_rows, history, base_cfg)
+    assert same_rows[0]["transition_history_key"] == same_rows[1]["transition_history_key"]
+    assert same_rows[0]["record_transition_histogram"]
+    assert same_rows[0]["checkpoint_class_transition"]
+    assert same_rows[0]["sector_change_signature"]
+    assert "counterfactual_stability" in same_rows[0]
+
+    split_rows = [dict(row) for row in rows]
+    split_cfg = dict(
+        base_cfg,
+        transition_history_include_readout_hash=True,
+        transition_history_readout_hash_prefix_chars=8,
+    )
+    _attach_transition_history_histograms(split_rows, history, split_cfg)
+    assert split_rows[0]["transition_history_key"] != split_rows[1]["transition_history_key"]
+
+
+def test_modular_response_histograms_attach_by_observer_id():
+    rows = [
+        {"view_type": "patch_observer", "observer_id": 10},
+        {"view_type": "patch_observer", "observer_id": 20},
+        {"view_type": "cap_observer", "observer_id": 10},
+    ]
+    kernel = {
+        "matrix": np.asarray(
+            [
+                [1.0, 0.1, -0.2],
+                [0.2, 1.1, 0.4],
+            ],
+            dtype=float,
+        ),
+        "observer_ids": [20, 10],
+    }
+
+    _attach_modular_response_histograms(
+        rows,
+        kernel,
+        {"modular_response_cluster_components": 2, "modular_response_cluster_bins": 2},
+    )
+
+    for row in rows[:2]:
+        histograms = row["modular_response_histograms"]
+        assert "modular_response_cluster" in histograms
+        assert "modular_response_component_0" in histograms
+        assert sum(histograms["modular_response_cluster"].values()) == 1.0
+        assert row["repair_response_spectrum"]
+        assert row["perturb_resettle_signature"]
+    assert "modular_response_histograms" not in rows[2]
+
+
+def test_lorentz_branch_receipts_split_chart_automorphism_and_endogenous():
+    chart = {"conformal_h3_spatial_chart_receipt": True}
+    direct_state = {
+        "direct_transition_automorphism": True,
+        "state_selected_2pi": True,
+        "correct_beats_controls": True,
+        "endogenous_modular_generator": False,
+    }
+    transition = {
+        "primary_source": "kms_collar_transport_response",
+        "two_pi_selected": True,
+        "response_degenerate": False,
+    }
+
+    direct_receipts = _lorentz_branch_receipts(chart, direct_state, transition)
+
+    assert direct_receipts["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
+    assert direct_receipts["BW_AUTOMORPHISM_SANITY_RECEIPT"] is True
+    assert direct_receipts["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
+    assert direct_receipts["support_visible_lorentz_3p1_kinematics_receipt"] is True
+
+    cap_flow_state = {
+        "declared_cap_flow_generator": True,
+        "state_selected_2pi": False,
+        "correct_beats_controls": False,
+    }
+    cap_flow_receipts = _lorentz_branch_receipts(chart, cap_flow_state, {})
+
+    assert cap_flow_receipts["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
+    assert cap_flow_receipts["DECLARED_CAP_FLOW_GENERATOR_DIAGNOSTIC"] is True
+    assert cap_flow_receipts["BW_AUTOMORPHISM_SANITY_RECEIPT"] is False
+    assert cap_flow_receipts["support_visible_lorentz_3p1_kinematics_receipt"] is False
 
 
 def test_state_modular_array_writes_gated_receipts(tmp_path: Path):
@@ -140,6 +278,11 @@ def test_state_modular_array_writes_gated_receipts(tmp_path: Path):
     ports = json.loads((run_path / "screen_ports.json").read_text(encoding="utf-8"))
 
     assert result["bw_primary_mode"] == "state_derived_modular_probe"
+    assert "geometric_controls" in result
+    assert "state_bw_controls" in result
+    assert result["state_bw_controls"] == state_report["controls"]
+    assert result["state_bw_control_medians"] == state_report["control_medians"]
+    assert result["state_bw_correct_beats_controls"] == state_report["correct_beats_controls"]
     assert (run_path / "collar_markov_report.json").exists()
     assert (run_path / "object_consensus_report.json").exists()
     assert (run_path / "bulk_reconstruction_report.json").exists()
@@ -173,9 +316,12 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     run_path = Path(result["path"])
 
     selection = json.loads((run_path / "transition_scale_selection_report.json").read_text(encoding="utf-8"))
+    state = json.loads((run_path / "bw_state_derived_report.json").read_text(encoding="utf-8"))
     status = json.loads((run_path / "emergence_status_report.json").read_text(encoding="utf-8"))
     manifest = json.loads((run_path / "manifest.json").read_text(encoding="utf-8"))
 
+    assert state["direct_transition_automorphism"] is True
+    assert state["endogenous_modular_generator"] is False
     assert selection["mode"] == "transition_scale_selection"
     assert selection["primary_source"] == "kms_collar_transport_response"
     assert "perturb_remeasure_response" in selection["source_reports"]
@@ -184,8 +330,40 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     assert selection["source_reports"]["kms_collar_transport_response"]["two_pi_selected"] is True
     assert status["transition_scale_selection"] is True
     assert "transition_two_pi_selected_by_primary" in status
+    assert "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT" in status
+    assert "BW_AUTOMORPHISM_SANITY_RECEIPT" in status
+    assert "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT" in status
+    assert "support_visible_lorentz_3p1_kinematics_receipt" in status
+    assert status["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
+    assert status["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
+    assert status["bulk_3d_established"] is False
+    assert "Endogenous observer-record modular generators" in status["lorentz_claim_boundary"]
     assert manifest["transition_scale_selection"]["primary_source"] == "kms_collar_transport_response"
+    assert "support_visible_lorentz_3p1_kinematics_receipt" in manifest["emergence_status"]
+    assert manifest["emergence_status"]["bulk_3d_established"] is False
     assert result["transition_scale_selection"]["primary_source"] == "kms_collar_transport_response"
+
+
+def test_lorentz_receipt_uses_direct_kms_selection_when_endogenous_state_fails():
+    chart = {"conformal_h3_spatial_chart_receipt": True}
+    failed_endogenous_state = {
+        "endogenous_modular_generator": True,
+        "state_selected_2pi": False,
+        "correct_beats_controls": False,
+    }
+    transition = {
+        "primary_source": "kms_collar_transport_response",
+        "two_pi_selected": True,
+        "response_degenerate": False,
+    }
+
+    receipts = _lorentz_branch_receipts(chart, failed_endogenous_state, transition)
+
+    assert receipts["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
+    assert receipts["BW_KMS_DIRECT_2PI_RECEIPT"] is True
+    assert receipts["CHART_LORENTZ_H3_RECEIPT"] is True
+    assert receipts["support_visible_lorentz_3p1_kinematics_receipt"] is True
+    assert receipts["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
 
 
 def test_kms_freezeout_cl_proxy_is_gate_checked(tmp_path: Path):

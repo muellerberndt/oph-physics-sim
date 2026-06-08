@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 
-from oph_fpe.claims import PROXY, with_claim_metadata
+from oph_fpe.claims import PROXY, STATIC_GALAXY_LAW_RECEIPT, with_claim_metadata
 
 
 DEFAULT_A0_OPH = 1.2e-10
@@ -149,4 +149,11 @@ def galaxy_proxy_receipt(
             "a replacement for a baryonic mass-model likelihood"
         ),
     }
-    return with_claim_metadata(report, claim_level=PROXY, receipt="GALAXY_PROXY_RECEIPT", physical_claim=False)
+    return with_claim_metadata(
+        report,
+        claim_level=PROXY,
+        receipt=STATIC_GALAXY_LAW_RECEIPT,
+        physical_claim=False,
+        observable_id="oph_static_galaxy_proxy",
+        fit_objective="rar_btfr_formula_bookkeeping",
+    )

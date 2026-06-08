@@ -1,6 +1,12 @@
 import numpy as np
 
-from oph_fpe.claims import BRANCH_INSTANTIATION_SANITY, checked_claim_level
+from oph_fpe.claims import (
+    BRANCH_INSTANTIATION_SANITY,
+    CANONICAL_RECEIPTS,
+    RECEIPT_SCHEMA_VERSION,
+    checked_claim_level,
+    with_claim_metadata,
+)
 from oph_fpe.consensus.boundary_fiber import boundary_conditioned_uniqueness_receipt
 from oph_fpe.consensus.fair_block import fair_block_consensus_certificate
 from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
@@ -10,6 +16,22 @@ from oph_fpe.gauge.repair_projection import exact_repair_projection_receipt
 
 def test_claim_level_registry_includes_bw_branch_sanity():
     assert checked_claim_level(BRANCH_INSTANTIATION_SANITY) == BRANCH_INSTANTIATION_SANITY
+
+
+def test_claim_metadata_writes_canonical_schema_fields():
+    report = with_claim_metadata(
+        {"mode": "unit_test_report"},
+        claim_level=BRANCH_INSTANTIATION_SANITY,
+        receipt=CANONICAL_RECEIPTS["R2"],
+        observable_id="unit_test_observable",
+        fit_objective="unit_test_gate",
+    )
+
+    assert report["receipt_schema_version"] == RECEIPT_SCHEMA_VERSION
+    assert report["receipt_name"] == "BW_KMS_BRANCH_INSTANTIATION_RECEIPT"
+    assert report["observable_id"] == "unit_test_observable"
+    assert report["fit_objective"] == "unit_test_gate"
+    assert report["physical_claim"] is False
 
 
 def test_lyapunov_descent_receipt_uses_trace_phi_pairs():

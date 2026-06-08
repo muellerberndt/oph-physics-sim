@@ -1,0 +1,3911 @@
+diff --git a/.gitignore b/.gitignore
+index 877da08..55dda87 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -19,5 +19,6 @@ artifacts/
+ receipts/
+ runs/
+ temp/
++.oph_fpe_cache/
+ *.log
+ *.jsonl
+diff --git a/oph_fpe/bulk/modular_response_kernel.py b/oph_fpe/bulk/modular_response_kernel.py
+index 6b1e5e4..5a76639 100644
+--- a/oph_fpe/bulk/modular_response_kernel.py
++++ b/oph_fpe/bulk/modular_response_kernel.py
+@@ -3,8 +3,9 @@ from __future__ import annotations
+ from typing import Any
+ 
+ import numpy as np
++from scipy.spatial import cKDTree
+ 
+-from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights
++from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap
+ from oph_fpe.bulk.record_to_h3 import DEFAULT_RECORD_FIELDS
+ from oph_fpe.cache.geometry_cache import GeometryCache
+ 
+@@ -29,12 +30,20 @@ def modular_response_kernel(
+         "s3_sector_class",
+         "repair_load_bucket",
+     ),
++    transition_feature_types: list[str] | tuple[str, ...] = (
++        "class_distribution_delta",
++        "change_probability_delta",
++    ),
+     transition_bins: int = 8,
+     record_family_modulus: int = 16,
+     transform: str = "sigmoid",
+     wrong_scales: list[float] | tuple[float, ...] = (1.0,),
+     graph_state: dict[str, Any] | None = None,
+     perturb_strength: float = 1.0,
++    perturb_budget_mode: str = "modular_amount",
++    fixed_perturb_fraction: float | None = None,
++    perturb_selection_mode: str = "lambda_displacement",
++    transition_readout_mode: str = "same_support",
+     repair_steps: int = 4,
+     repairs_per_step: int = 128,
+     perturb_seed: int = 1,
+@@ -50,7 +59,26 @@ def modular_response_kernel(
+     points = np.asarray(points, dtype=float)
+     patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+     weights = np.asarray(cell_entropy, dtype=float) if cell_entropy is not None else np.ones(points.shape[0], dtype=float)
+-    if str(observable_mode) == "perturb_resettle_transition":
++    normalized_mode = str(observable_mode)
++    if normalized_mode in {"collar_operator_transition", "cap_collar_operator", "collar_flow_transition"}:
++        return _collar_operator_transition_kernel(
++            points,
++            caps,
++            raw_fields,
++            patch_views,
++            times=times,
++            weights=weights,
++            transport_scale=float(transport_scale),
++            transition_observables=transition_observables,
++            transition_feature_types=transition_feature_types,
++            transition_bins=int(transition_bins),
++            record_family_modulus=int(record_family_modulus),
++            transform=str(transform),
++            wrong_scales=wrong_scales,
++            k_transport=int(k_transport),
++            geometry_cache=geometry_cache,
++        )
++    if normalized_mode in {"perturb_resettle_transition", "transition_response"}:
+         return _perturb_resettle_transition_kernel(
+             points,
+             caps,
+@@ -61,16 +89,21 @@ def modular_response_kernel(
+             graph_state=graph_state or {},
+             transport_scale=float(transport_scale),
+             transition_observables=transition_observables,
++            transition_feature_types=transition_feature_types,
+             transition_bins=int(transition_bins),
+             record_family_modulus=int(record_family_modulus),
+             transform=str(transform),
+             wrong_scales=wrong_scales,
+             perturb_strength=float(perturb_strength),
++            perturb_budget_mode=str(perturb_budget_mode),
++            fixed_perturb_fraction=fixed_perturb_fraction,
++            perturb_selection_mode=str(perturb_selection_mode),
++            transition_readout_mode=str(transition_readout_mode),
+             repair_steps=int(repair_steps),
+             repairs_per_step=int(repairs_per_step),
+             seed=int(perturb_seed),
+         )
+-    if str(observable_mode) == "object_transition":
++    if normalized_mode == "object_transition":
+         return _object_transition_kernel(
+             points,
+             caps,
+@@ -82,6 +115,7 @@ def modular_response_kernel(
+             k_transport=int(k_transport),
+             geometry_cache=geometry_cache,
+             transition_observables=transition_observables,
++            transition_feature_types=transition_feature_types,
+             transition_bins=int(transition_bins),
+             record_family_modulus=int(record_family_modulus),
+             transform=str(transform),
+@@ -208,6 +242,7 @@ def _object_transition_kernel(
+     k_transport: int,
+     geometry_cache: GeometryCache | None,
+     transition_observables: list[str] | tuple[str, ...],
++    transition_feature_types: list[str] | tuple[str, ...],
+     transition_bins: int,
+     record_family_modulus: int,
+     transform: str,
+@@ -223,7 +258,8 @@ def _object_transition_kernel(
+         return _empty_kernel(points, patch_views, caps, packet_fields, times)
+     cache = geometry_cache or GeometryCache(points)
+     supports = [_valid_support(view.get("support_nodes", []), points.shape[0]) for view in patch_views]
+-    feature_rows = _object_transition_feature_rows(caps, times, packet_fields)
++    feature_types = _normalized_transition_feature_types(transition_feature_types)
++    feature_rows = _object_transition_feature_rows(caps, times, packet_fields, feature_types)
+     raw_matrix = _object_transition_matrix(
+         cache,
+         supports,
+@@ -231,6 +267,7 @@ def _object_transition_kernel(
+         times,
+         packet_fields,
+         weights,
++        feature_types,
+         scale=float(transport_scale),
+         k_transport=int(k_transport),
+     )
+@@ -246,6 +283,7 @@ def _object_transition_kernel(
+             times,
+             packet_fields,
+             weights,
++            feature_types,
+             scale=float(wrong_scale),
+             k_transport=int(k_transport),
+         )
+@@ -257,6 +295,7 @@ def _object_transition_kernel(
+             **{f"wrong_scale_{label}": value for label, value in wrong_scale_controls.items()},
+         },
+         transform=str(transform),
++        feature_rows=feature_rows,
+     )
+     rng = np.random.default_rng(9449)
+     shuffled_response = matrix.copy()
+@@ -312,6 +351,139 @@ def _object_transition_kernel(
+     }
+ 
+ 
++def _collar_operator_transition_kernel(
++    points: np.ndarray,
++    caps: list[RoundCap],
++    raw_fields: dict[str, np.ndarray],
++    patch_views: list[dict[str, Any]],
++    *,
++    times: list[float] | tuple[float, ...],
++    weights: np.ndarray,
++    transport_scale: float,
++    transition_observables: list[str] | tuple[str, ...],
++    transition_feature_types: list[str] | tuple[str, ...],
++    transition_bins: int,
++    record_family_modulus: int,
++    transform: str,
++    wrong_scales: list[float] | tuple[float, ...],
++    k_transport: int,
++    geometry_cache: GeometryCache | None,
++) -> dict[str, Any]:
++    """Support-visible collar operator transition tensor.
++
++    This mode keeps the modular-flow direction in the readout instead of
++    perturbing the collar and then letting local repair erase most of the
++    transient signal. It is still finite-regulator data: rows are observers,
++    columns are cap/time/packet transition features, and the target basis is
++    the visible packet algebra transported by lambda_C(s).
++    """
++
++    packet_fields = _object_packet_fields(
++        raw_fields,
++        transition_observables,
++        bins=max(2, int(transition_bins)),
++        record_family_modulus=max(2, int(record_family_modulus)),
++    )
++    if not patch_views or not caps or not packet_fields or not times:
++        return _empty_kernel(points, patch_views, caps, packet_fields, times)
++    cache = geometry_cache or GeometryCache(points)
++    supports = [_valid_support(view.get("support_nodes", []), points.shape[0]) for view in patch_views]
++    feature_types = _normalized_transition_feature_types(transition_feature_types)
++    feature_rows = _object_transition_feature_rows(caps, times, packet_fields, feature_types)
++    raw_matrix = _collar_operator_transition_matrix(
++        cache,
++        supports,
++        caps,
++        times,
++        packet_fields,
++        weights,
++        feature_types,
++        scale=float(transport_scale),
++        k_transport=int(k_transport),
++    )
++    no_flow = np.zeros_like(raw_matrix)
++    s2_boundary = _object_s2_boundary_matrix(points, caps, supports, weights, feature_rows)
++    wrong_scale_controls: dict[str, np.ndarray] = {}
++    for wrong_scale in wrong_scales:
++        label = _scale_label(float(wrong_scale))
++        wrong_scale_controls[label] = _collar_operator_transition_matrix(
++            cache,
++            supports,
++            caps,
++            times,
++            packet_fields,
++            weights,
++            feature_types,
++            scale=float(wrong_scale),
++            k_transport=int(k_transport),
++        )
++    matrix, transformed_controls, transform_report = _transform_with_controls(
++        raw_matrix,
++        {
++            "no_modular_flow_control": no_flow,
++            "s2_boundary_control": s2_boundary,
++            **{f"wrong_scale_{label}": value for label, value in wrong_scale_controls.items()},
++        },
++        transform=str(transform),
++        feature_rows=feature_rows,
++    )
++    rng = np.random.default_rng(9449)
++    shuffled_response = matrix.copy()
++    if shuffled_response.size:
++        for row in shuffled_response:
++            rng.shuffle(row)
++    shuffled_observers = matrix.copy()
++    if shuffled_observers.shape[0] > 1:
++        shuffled_observers = shuffled_observers[rng.permutation(shuffled_observers.shape[0])]
++    wrong_controls = {
++        label: transformed_controls.get(f"wrong_scale_{label}", np.zeros_like(matrix))
++        for label in wrong_scale_controls
++    }
++    return {
++        "mode": "observer_modular_response_kernel",
++        "observable_mode": "collar_operator_transition",
++        "matrix": matrix,
++        "s2_boundary_control": transformed_controls.get("s2_boundary_control", np.zeros_like(matrix)),
++        "shuffled_control": shuffled_response,
++        "shuffled_response_control": shuffled_response,
++        "shuffled_observer_labels_control": shuffled_observers,
++        "no_modular_flow_control": transformed_controls.get("no_modular_flow_control", np.zeros_like(matrix)),
++        "wrong_scale_controls": wrong_controls,
++        "feature_rows": feature_rows,
++        "observer_ids": [int(view.get("observer_id", index)) for index, view in enumerate(patch_views)],
++        "observer_axes": [[float(value) for value in np.asarray(view.get("axis"), dtype=float)] for view in patch_views],
++        "cap_count": len(caps),
++        "time_count": len(times),
++        "field_names": list(packet_fields.keys()),
++        "response_summary": _response_summary(matrix),
++        "raw_response_summary": _response_summary(raw_matrix),
++        "transform_report": transform_report,
++        "controls": {
++            "s2_boundary": _response_summary(transformed_controls.get("s2_boundary_control", np.zeros_like(matrix))),
++            "no_modular_flow": _response_summary(transformed_controls.get("no_modular_flow_control", np.zeros_like(matrix))),
++            "shuffled_response": _response_summary(shuffled_response),
++            "shuffled_observer_labels": _response_summary(shuffled_observers),
++            "wrong_scale_labels": list(wrong_controls.keys()),
++        },
++        "collar_operator_report": {
++            "mode": "lambda_cap_visible_packet_operator",
++            "transport_scale": float(transport_scale),
++            "readout": "source_support_to_lambda_transported_support_with_collar_flow_weights",
++            "claim_boundary": (
++                "support-visible finite collar operator readout. It preserves the cap-flow direction "
++                "in visible packet transition matrix elements, but it is still a surrogate for the "
++                "paper's modular operator until state-derived rho_C/K_a receipts and refinement pass."
++            ),
++        },
++        "geometry_cache": cache.report(),
++        "claim_boundary": (
++            "support-visible collar-operator transition tensor from lambda_C(s) acting on finite visible "
++            "packet algebras. This is a theorem-aligned diagnostic lane, not a physical 3D bulk claim "
++            "until H3, wrong-scale, object, and refinement controls pass."
++        ),
++    }
++
++
+ def _perturb_resettle_transition_kernel(
+     points: np.ndarray,
+     caps: list[RoundCap],
+@@ -323,11 +495,16 @@ def _perturb_resettle_transition_kernel(
+     graph_state: dict[str, Any],
+     transport_scale: float,
+     transition_observables: list[str] | tuple[str, ...],
++    transition_feature_types: list[str] | tuple[str, ...],
+     transition_bins: int,
+     record_family_modulus: int,
+     transform: str,
+     wrong_scales: list[float] | tuple[float, ...],
+     perturb_strength: float,
++    perturb_budget_mode: str,
++    fixed_perturb_fraction: float | None,
++    perturb_selection_mode: str,
++    transition_readout_mode: str,
+     repair_steps: int,
+     repairs_per_step: int,
+     seed: int,
+@@ -342,7 +519,8 @@ def _perturb_resettle_transition_kernel(
+     if not patch_views or not caps or not packet_fields or not times or graph is None:
+         return _empty_kernel(points, patch_views, caps, packet_fields, times)
+     supports = [_valid_support(view.get("support_nodes", []), points.shape[0]) for view in patch_views]
+-    feature_rows = _object_transition_feature_rows(caps, times, packet_fields)
++    feature_types = _normalized_transition_feature_types(transition_feature_types)
++    feature_rows = _object_transition_feature_rows(caps, times, packet_fields, feature_types)
+     raw_matrix = _perturb_resettle_matrix(
+         points,
+         caps,
+@@ -351,12 +529,17 @@ def _perturb_resettle_transition_kernel(
+         supports,
+         weights,
+         graph,
++        feature_types,
+         times=times,
+         scale=float(transport_scale),
+         transition_observables=transition_observables,
+         transition_bins=int(transition_bins),
+         record_family_modulus=int(record_family_modulus),
+         perturb_strength=float(perturb_strength),
++        perturb_budget_mode=str(perturb_budget_mode),
++        fixed_perturb_fraction=fixed_perturb_fraction,
++        perturb_selection_mode=str(perturb_selection_mode),
++        transition_readout_mode=str(transition_readout_mode),
+         repair_steps=int(repair_steps),
+         repairs_per_step=int(repairs_per_step),
+         seed=int(seed),
+@@ -374,15 +557,20 @@ def _perturb_resettle_transition_kernel(
+             supports,
+             weights,
+             graph,
++            feature_types,
+             times=times,
+             scale=float(wrong_scale),
+             transition_observables=transition_observables,
+             transition_bins=int(transition_bins),
+             record_family_modulus=int(record_family_modulus),
+             perturb_strength=float(perturb_strength),
++            perturb_budget_mode=str(perturb_budget_mode),
++            fixed_perturb_fraction=fixed_perturb_fraction,
++            perturb_selection_mode=str(perturb_selection_mode),
++            transition_readout_mode=str(transition_readout_mode),
+             repair_steps=int(repair_steps),
+             repairs_per_step=int(repairs_per_step),
+-            seed=int(seed) + 311,
++            seed=int(seed),
+         )
+     matrix, transformed_controls, transform_report = _transform_with_controls(
+         raw_matrix,
+@@ -392,6 +580,7 @@ def _perturb_resettle_transition_kernel(
+             **{f"wrong_scale_{label}": value for label, value in wrong_scale_controls.items()},
+         },
+         transform=str(transform),
++        feature_rows=feature_rows,
+     )
+     rng = np.random.default_rng(seed + 9449)
+     shuffled_response = matrix.copy()
+@@ -436,6 +625,10 @@ def _perturb_resettle_transition_kernel(
+             "repair_steps": int(repair_steps),
+             "repairs_per_step": int(repairs_per_step),
+             "perturb_strength": float(perturb_strength),
++            "perturb_budget_mode": str(perturb_budget_mode),
++            "fixed_perturb_fraction": float(fixed_perturb_fraction) if fixed_perturb_fraction is not None else None,
++            "perturb_selection_mode": str(perturb_selection_mode),
++            "transition_readout_mode": str(transition_readout_mode),
+             "graph_edge_count": int(graph["left"].size),
+             "claim_boundary": (
+                 "finite cap/collar perturb-resettle surrogate: perturb boundary/collar edge packets, "
+@@ -459,6 +652,7 @@ def _perturb_resettle_matrix(
+     supports: list[np.ndarray],
+     weights: np.ndarray,
+     graph: dict[str, np.ndarray | int],
++    feature_types: tuple[str, ...],
+     *,
+     times: list[float] | tuple[float, ...],
+     scale: float,
+@@ -466,13 +660,30 @@ def _perturb_resettle_matrix(
+     transition_bins: int,
+     record_family_modulus: int,
+     perturb_strength: float,
++    perturb_budget_mode: str,
++    fixed_perturb_fraction: float | None,
++    perturb_selection_mode: str,
++    transition_readout_mode: str,
+     repair_steps: int,
+     repairs_per_step: int,
+     seed: int,
+ ) -> np.ndarray:
++    points = np.asarray(points, dtype=float)
++    readout_mode = str(transition_readout_mode)
++    tree: cKDTree | None = None
++    if readout_mode in {"transported_support", "transported_support_delta", "cap_transported_support"}:
++        tree = cKDTree(points)
+     columns: list[np.ndarray] = []
+     for cap_index, cap in enumerate(caps):
+         for time_index, time_value in enumerate(times):
++            transported_supports = (
++                [
++                    _transport_support_direct(points, tree, support, cap, float(scale) * float(time_value))
++                    for support in supports
++                ]
++                if tree is not None
++                else supports
++            )
+             post_raw = _simulate_cap_collar_perturb_resettle(
+                 points,
+                 cap,
+@@ -481,6 +692,9 @@ def _perturb_resettle_matrix(
+                 scale=float(scale),
+                 time_value=float(time_value),
+                 perturb_strength=float(perturb_strength),
++                perturb_budget_mode=str(perturb_budget_mode),
++                fixed_perturb_fraction=fixed_perturb_fraction,
++                perturb_selection_mode=str(perturb_selection_mode),
+                 repair_steps=int(repair_steps),
+                 repairs_per_step=int(repairs_per_step),
+                 seed=int(seed) + 1009 * int(cap_index) + 9173 * int(time_index),
+@@ -495,20 +709,33 @@ def _perturb_resettle_matrix(
+                 target_packets = np.asarray(post_packets.get(observable, source_packets), dtype=np.int64)
+                 class_count = int(np.max(source_packets)) + 1 if source_packets.size else 1
+                 target_deltas = np.zeros((len(supports), class_count), dtype=float)
+-                changes = np.zeros(len(supports), dtype=float)
+-                for row_index, support in enumerate(supports):
+-                    delta, change = _transition_delta_same_support(
+-                        support,
+-                        np.asarray(source_packets, dtype=np.int64),
+-                        target_packets,
+-                        weights,
+-                        class_count,
+-                    )
+-                    target_deltas[row_index] = delta
+-                    changes[row_index] = change
+-                for class_index in range(class_count):
+-                    columns.append(target_deltas[:, class_index])
+-                columns.append(changes)
++                feature_values: dict[str, np.ndarray] = {
++                    feature_type: _empty_transition_feature_array(len(supports), class_count, feature_type)
++                    for feature_type in feature_types
++                }
++                for row_index, (support, transported) in enumerate(
++                    zip(supports, transported_supports, strict=False)
++                ):
++                    if tree is not None:
++                        values = _transition_features_between_supports(
++                            support,
++                            transported,
++                            np.asarray(source_packets, dtype=np.int64),
++                            target_packets,
++                            weights,
++                            class_count,
++                        )
++                    else:
++                        values = _transition_features_same_support(
++                            support,
++                            np.asarray(source_packets, dtype=np.int64),
++                            target_packets,
++                            weights,
++                            class_count,
++                        )
++                    for feature_type in feature_types:
++                        feature_values[feature_type][row_index] = values[feature_type]
++                columns.extend(_transition_feature_columns(feature_values, feature_types, class_count))
+     return np.vstack(columns).T if columns else np.zeros((len(supports), 0), dtype=float)
+ 
+ 
+@@ -521,6 +748,9 @@ def _simulate_cap_collar_perturb_resettle(
+     scale: float,
+     time_value: float,
+     perturb_strength: float,
++    perturb_budget_mode: str,
++    fixed_perturb_fraction: float | None,
++    perturb_selection_mode: str,
+     repair_steps: int,
+     repairs_per_step: int,
+     seed: int,
+@@ -535,11 +765,39 @@ def _simulate_cap_collar_perturb_resettle(
+     rng = np.random.default_rng(seed)
+     selected_edges, affected_nodes = _cap_collar_edges(points, cap, left, right)
+     if selected_edges.size:
+-        fraction = min(1.0, max(0.0, float(perturb_strength) * abs(float(time_value))))
++        if str(perturb_budget_mode) in {"fixed", "fixed_collar_fraction", "fixed_fraction"}:
++            fraction = (
++                float(fixed_perturb_fraction)
++                if fixed_perturb_fraction is not None
++                else float(perturb_strength)
++            )
++            fraction = min(1.0, max(0.0, fraction))
++        else:
++            modular_amount = abs(float(scale) * float(time_value))
++            fraction = min(1.0, max(0.0, float(perturb_strength) * modular_amount / (2.0 * np.pi)))
+         perturb_count = max(1, int(round(fraction * selected_edges.size)))
+         perturb_count = min(perturb_count, selected_edges.size)
+-        chosen = _phase_selected_edges(points, cap, left, right, selected_edges, perturb_count, scale=float(scale), time_value=float(time_value), rng=rng)
+-        side = _perturb_side(points, cap, left[chosen], right[chosen])
++        chosen = _modular_selected_edges(
++            points,
++            cap,
++            left,
++            right,
++            selected_edges,
++            perturb_count,
++            scale=float(scale),
++            time_value=float(time_value),
++            rng=rng,
++            mode=str(perturb_selection_mode),
++        )
++        side = _perturb_side(
++            points,
++            cap,
++            left[chosen],
++            right[chosen],
++            scale=float(scale),
++            time_value=float(time_value),
++            mode=str(perturb_selection_mode),
++        )
+         delta = np.int16(1 + (abs(seed) % max(1, group_order - 1)))
+         port_left[chosen[side]] = ((port_left[chosen[side]].astype(np.int64) + delta) % group_order).astype(np.int16)
+         port_right[chosen[~side]] = ((port_right[chosen[~side]].astype(np.int64) + delta) % group_order).astype(np.int16)
+@@ -604,13 +862,42 @@ def _cap_collar_edges(points: np.ndarray, cap: RoundCap, left: np.ndarray, right
+     return selected, affected
+ 
+ 
+-def _perturb_side(points: np.ndarray, cap: RoundCap, edge_left: np.ndarray, edge_right: np.ndarray) -> np.ndarray:
++def _perturb_side(
++    points: np.ndarray,
++    cap: RoundCap,
++    edge_left: np.ndarray,
++    edge_right: np.ndarray,
++    *,
++    scale: float = 2.0 * np.pi,
++    time_value: float = 0.0,
++    mode: str = "lambda_displacement",
++) -> np.ndarray:
++    normalized_mode = str(mode).lower().replace("-", "_")
++    if normalized_mode in {
++        "lambda_collar_generator",
++        "modular_collar_generator",
++        "collar_generator",
++        "lambda_signed_collar_generator",
++        "modular_signed_collar_generator",
++    }:
++        cap = cap.normalized()
++        midpoint = points[edge_left] + points[edge_right]
++        midpoint = midpoint / np.maximum(np.linalg.norm(midpoint, axis=1, keepdims=True), 1e-12)
++        vector = _cap_flow_vector(midpoint, cap, float(scale) * float(time_value))
++        edge_vector = points[edge_left] - points[edge_right]
++        signed = np.sum(edge_vector * vector, axis=1)
++        fallback = np.abs(signed) <= 1e-12
++        if np.any(fallback):
++            dot_left = points[edge_left[fallback]] @ cap.axis
++            dot_right = points[edge_right[fallback]] @ cap.axis
++            signed[fallback] = dot_left - dot_right
++        return signed >= 0.0
+     dot_left = points[edge_left] @ cap.axis
+     dot_right = points[edge_right] @ cap.axis
+     return dot_left >= dot_right
+ 
+ 
+-def _phase_selected_edges(
++def _modular_selected_edges(
+     points: np.ndarray,
+     cap: RoundCap,
+     left: np.ndarray,
+@@ -621,21 +908,125 @@ def _phase_selected_edges(
+     scale: float,
+     time_value: float,
+     rng: np.random.Generator,
++    mode: str,
+ ) -> np.ndarray:
+     if selected_edges.size <= int(count):
+         return selected_edges
+     cap = cap.normalized()
++    mids = points[left[selected_edges]] + points[right[selected_edges]]
++    mids = mids / np.maximum(np.linalg.norm(mids, axis=1, keepdims=True), 1e-12)
++    normalized_mode = str(mode).lower().replace("-", "_")
++    if normalized_mode in {
++        "lambda_collar_generator",
++        "modular_collar_generator",
++        "collar_generator",
++        "lambda_signed_collar_generator",
++        "modular_signed_collar_generator",
++    }:
++        score = _cap_collar_generator_edge_score(
++            points,
++            cap,
++            left,
++            right,
++            selected_edges,
++            scale=float(scale),
++            time_value=float(time_value),
++            rng=rng,
++            signed=normalized_mode in {"lambda_signed_collar_generator", "modular_signed_collar_generator"},
++        )
++        order = np.argsort(score)[-int(count) :]
++        return selected_edges[order]
++    if normalized_mode in {"lambda", "lambda_displacement", "conformal_displacement", "transport_displacement"}:
++        mapped = lambda_cap(mids, cap, float(scale) * float(time_value))
++        cosine = np.clip(np.sum(mids * mapped, axis=1), -1.0, 1.0)
++        displacement = np.arccos(cosine)
++        # Break exact ties by the ordered boundary pair, but keep the actual
++        # lambda_C displacement as the dominant selection criterion.
++        tangent = cap.tangent / max(float(np.linalg.norm(cap.tangent)), 1e-12)
++        bitangent = np.cross(cap.axis, tangent)
++        bitangent = bitangent / max(float(np.linalg.norm(bitangent)), 1e-12)
++        angle = np.arctan2(mids @ bitangent, mids @ tangent)
++        score = displacement + 1e-6 * np.sin(angle) + 1e-9 * rng.normal(size=selected_edges.size)
++        order = np.argsort(score)[-int(count) :]
++        return selected_edges[order]
+     tangent = cap.tangent / max(float(np.linalg.norm(cap.tangent)), 1e-12)
+     bitangent = np.cross(cap.axis, tangent)
+     bitangent = bitangent / max(float(np.linalg.norm(bitangent)), 1e-12)
+-    mids = points[left[selected_edges]] + points[right[selected_edges]]
+-    mids = mids / np.maximum(np.linalg.norm(mids, axis=1, keepdims=True), 1e-12)
+     angle = np.arctan2(mids @ bitangent, mids @ tangent)
+     score = np.sin(angle + float(scale) * float(time_value)) + 1e-9 * rng.normal(size=selected_edges.size)
+     order = np.argsort(score)[-int(count) :]
+     return selected_edges[order]
+ 
+ 
++def _cap_collar_generator_edge_score(
++    points: np.ndarray,
++    cap: RoundCap,
++    left: np.ndarray,
++    right: np.ndarray,
++    selected_edges: np.ndarray,
++    *,
++    scale: float,
++    time_value: float,
++    rng: np.random.Generator,
++    signed: bool,
++) -> np.ndarray:
++    """Score perturbation edges by collar support and cap modular generator.
++
++    The BW target is a cap-local modular automorphism, not a ranking by the
++    largest finite point displacement. This score therefore concentrates on the
++    boundary collar and the infinitesimal cap-flow generator while retaining the
++    ordered cut-pair phase as a deterministic tie-breaker.
++    """
++
++    cap = cap.normalized()
++    edge_left = left[selected_edges]
++    edge_right = right[selected_edges]
++    mids = points[edge_left] + points[edge_right]
++    mids = mids / np.maximum(np.linalg.norm(mids, axis=1, keepdims=True), 1e-12)
++    dot = mids @ cap.axis
++    threshold = float(np.cos(cap.theta0))
++    width = max(float(cap.collar_width), 2.5 / max(float(np.sqrt(points.shape[0])), 1.0))
++    collar_distance = np.abs(dot - threshold)
++    collar_score = np.exp(-np.square(collar_distance / max(width, 1e-12)))
++    generator = _cap_flow_vector(mids, cap, 0.0)
++    generator_norm = np.linalg.norm(generator, axis=1)
++    generator_scale = float(np.percentile(generator_norm[generator_norm > 1e-12], 75)) if np.any(generator_norm > 1e-12) else 1.0
++    generator_score = np.clip(generator_norm / max(generator_scale, 1e-12), 0.0, 3.0) / 3.0
++    finite_flow = _cap_flow_vector(mids, cap, float(scale) * float(time_value))
++    finite_norm = np.linalg.norm(finite_flow, axis=1)
++    finite_scale = float(np.percentile(finite_norm[finite_norm > 1e-12], 75)) if np.any(finite_norm > 1e-12) else 1.0
++    finite_score = np.clip(finite_norm / max(finite_scale, 1e-12), 0.0, 3.0) / 3.0
++    tangent = cap.tangent / max(float(np.linalg.norm(cap.tangent)), 1e-12)
++    bitangent = np.cross(cap.axis, tangent)
++    bitangent = bitangent / max(float(np.linalg.norm(bitangent)), 1e-12)
++    phase = np.arctan2(mids @ bitangent, mids @ tangent)
++    orientation = np.cos(phase - float(scale) * float(time_value))
++    ordered_pair_score = 0.5 + 0.5 * orientation
++    if signed:
++        directional = np.sign(orientation)
++        directional[directional == 0.0] = 1.0
++        ordered_pair_score = ordered_pair_score * directional
++    score = (
++        0.72 * collar_score
++        + 0.18 * collar_score * generator_score
++        + 0.08 * collar_score * finite_score
++        + 0.02 * ordered_pair_score
++    )
++    return score + 1e-9 * rng.normal(size=selected_edges.size)
++
++
++def _cap_flow_vector(points: np.ndarray, cap: RoundCap, s: float) -> np.ndarray:
++    points = np.asarray(points, dtype=float)
++    if abs(float(s)) > 1e-12:
++        mapped = lambda_cap(points, cap, float(s))
++        vector = mapped - points
++    else:
++        eps = 1e-4
++        vector = (lambda_cap(points, cap, eps) - lambda_cap(points, cap, -eps)) / (2.0 * eps)
++    vector = vector - points * np.sum(vector * points, axis=1, keepdims=True)
++    return vector
++
++
+ def _transition_delta_same_support(
+     support: np.ndarray,
+     source_packets: np.ndarray,
+@@ -658,6 +1049,231 @@ def _transition_delta_same_support(
+     return pert - base, change
+ 
+ 
++def _transition_features_same_support(
++    support: np.ndarray,
++    source_packets: np.ndarray,
++    target_packets: np.ndarray,
++    weights: np.ndarray,
++    class_count: int,
++) -> dict[str, np.ndarray | float]:
++    support = np.asarray(support, dtype=np.int64)
++    valid = (support >= 0) & (support < source_packets.size) & (support < target_packets.size) & (support < weights.size)
++    if not np.any(valid):
++        return _empty_transition_features(class_count)
++    support = support[valid]
++    return _transition_features_from_indices(
++        support,
++        support,
++        source_packets,
++        target_packets,
++        weights,
++        class_count,
++    )
++
++
++def _transition_delta_between_supports(
++    support: np.ndarray,
++    transported: np.ndarray,
++    source_packets: np.ndarray,
++    target_packets: np.ndarray,
++    weights: np.ndarray,
++    class_count: int,
++) -> tuple[np.ndarray, float]:
++    support = np.asarray(support, dtype=np.int64)
++    transported = np.asarray(transported, dtype=np.int64)
++    if support.size == 0 or transported.size == 0:
++        return np.zeros(int(class_count), dtype=float), 0.0
++    count = min(support.size, transported.size)
++    source = support[:count]
++    target = transported[:count]
++    valid = (
++        (source >= 0)
++        & (target >= 0)
++        & (source < source_packets.size)
++        & (target < target_packets.size)
++        & (source < weights.size)
++    )
++    if not np.any(valid):
++        return np.zeros(int(class_count), dtype=float), 0.0
++    source = source[valid]
++    target = target[valid]
++    source_values = np.asarray(source_packets[source], dtype=np.int64)
++    target_values = np.asarray(target_packets[target], dtype=np.int64)
++    local_weights = np.asarray(weights[source], dtype=float)
++    total = max(float(np.sum(local_weights)), 1e-12)
++    base = np.bincount(np.clip(source_values, 0, class_count - 1), weights=local_weights, minlength=class_count) / total
++    pert = np.bincount(np.clip(target_values, 0, class_count - 1), weights=local_weights, minlength=class_count) / total
++    change = float(np.sum(local_weights[source_values != target_values]) / total)
++    return pert - base, change
++
++
++def _transition_features_between_supports(
++    support: np.ndarray,
++    transported: np.ndarray,
++    source_packets: np.ndarray,
++    target_packets: np.ndarray,
++    weights: np.ndarray,
++    class_count: int,
++) -> dict[str, np.ndarray | float]:
++    support = np.asarray(support, dtype=np.int64)
++    transported = np.asarray(transported, dtype=np.int64)
++    if support.size == 0 or transported.size == 0:
++        return _empty_transition_features(class_count)
++    count = min(support.size, transported.size)
++    source = support[:count]
++    target = transported[:count]
++    valid = (
++        (source >= 0)
++        & (target >= 0)
++        & (source < source_packets.size)
++        & (target < target_packets.size)
++        & (source < weights.size)
++    )
++    if not np.any(valid):
++        return _empty_transition_features(class_count)
++    return _transition_features_from_indices(
++        source[valid],
++        target[valid],
++        source_packets,
++        target_packets,
++        weights,
++        class_count,
++    )
++
++
++def _transition_features_from_indices(
++    source: np.ndarray,
++    target: np.ndarray,
++    source_packets: np.ndarray,
++    target_packets: np.ndarray,
++    weights: np.ndarray,
++    class_count: int,
++) -> dict[str, np.ndarray | float]:
++    source_values = np.clip(np.asarray(source_packets[source], dtype=np.int64), 0, int(class_count) - 1)
++    target_values = np.clip(np.asarray(target_packets[target], dtype=np.int64), 0, int(class_count) - 1)
++    local_weights = np.asarray(weights[source], dtype=float)
++    total = max(float(np.sum(local_weights)), 1e-12)
++    base = np.bincount(source_values, weights=local_weights, minlength=int(class_count)) / total
++    pert = np.bincount(target_values, weights=local_weights, minlength=int(class_count)) / total
++    class_delta = pert - base
++    eps = 1e-6
++    log_odds_delta = (
++        np.log((pert + eps) / (1.0 - pert + eps))
++        - np.log((base + eps) / (1.0 - base + eps))
++    )
++    joint_index = source_values * int(class_count) + target_values
++    joint = np.bincount(joint_index, weights=local_weights, minlength=int(class_count) * int(class_count))
++    joint = joint.reshape((int(class_count), int(class_count))) / total
++    baseline_joint = np.diag(base)
++    transition_delta = joint - baseline_joint
++    same_probability = float(np.sum(local_weights[source_values == target_values]) / total)
++    change_probability = 1.0 - same_probability
++    entropy_delta = _entropy_from_probabilities(pert) - _entropy_from_probabilities(base)
++    return {
++        "class_distribution_delta": class_delta,
++        "target_distribution_delta": class_delta,
++        "class_log_odds_delta": log_odds_delta,
++        "transition_matrix_delta": transition_delta.reshape(-1),
++        "entropy_delta": float(entropy_delta),
++        "sector_preservation_delta": float(same_probability - 1.0),
++        "change_probability_delta": float(change_probability),
++    }
++
++
++def _empty_transition_features(class_count: int) -> dict[str, np.ndarray | float]:
++    return {
++        "class_distribution_delta": np.zeros(int(class_count), dtype=float),
++        "target_distribution_delta": np.zeros(int(class_count), dtype=float),
++        "class_log_odds_delta": np.zeros(int(class_count), dtype=float),
++        "transition_matrix_delta": np.zeros(int(class_count) * int(class_count), dtype=float),
++        "entropy_delta": 0.0,
++        "sector_preservation_delta": 0.0,
++        "change_probability_delta": 0.0,
++    }
++
++
++def _entropy_from_probabilities(values: np.ndarray) -> float:
++    values = np.asarray(values, dtype=float)
++    values = values[values > 0.0]
++    if values.size == 0:
++        return 0.0
++    return float(-np.sum(values * np.log(values)))
++
++
++def _normalized_transition_feature_types(feature_types: list[str] | tuple[str, ...] | None) -> tuple[str, ...]:
++    aliases = {
++        "target_distribution_delta": "class_distribution_delta",
++        "class_delta": "class_distribution_delta",
++        "log_odds_delta": "class_log_odds_delta",
++        "transition_delta": "transition_matrix_delta",
++        "preservation_delta": "sector_preservation_delta",
++        "change": "change_probability_delta",
++    }
++    supported = {
++        "class_distribution_delta",
++        "class_log_odds_delta",
++        "transition_matrix_delta",
++        "entropy_delta",
++        "sector_preservation_delta",
++        "change_probability_delta",
++    }
++    requested = feature_types or ("class_distribution_delta", "change_probability_delta")
++    normalized: list[str] = []
++    for value in requested:
++        key = aliases.get(str(value).lower().replace("-", "_"), str(value).lower().replace("-", "_"))
++        if key in supported and key not in normalized:
++            normalized.append(key)
++    if not normalized:
++        normalized = ["class_distribution_delta", "change_probability_delta"]
++    return tuple(normalized)
++
++
++def _empty_transition_feature_array(observer_count: int, class_count: int, feature_type: str) -> np.ndarray:
++    if feature_type in {"class_distribution_delta", "target_distribution_delta", "class_log_odds_delta"}:
++        return np.zeros((int(observer_count), int(class_count)), dtype=float)
++    if feature_type == "transition_matrix_delta":
++        return np.zeros((int(observer_count), int(class_count) * int(class_count)), dtype=float)
++    return np.zeros(int(observer_count), dtype=float)
++
++
++def _transition_feature_columns(
++    feature_values: dict[str, np.ndarray],
++    feature_types: tuple[str, ...],
++    class_count: int,
++) -> list[np.ndarray]:
++    columns: list[np.ndarray] = []
++    for feature_type in feature_types:
++        values = np.asarray(feature_values[feature_type], dtype=float)
++        if feature_type in {"class_distribution_delta", "target_distribution_delta", "class_log_odds_delta"}:
++            for class_index in range(int(class_count)):
++                columns.append(values[:, class_index])
++        elif feature_type == "transition_matrix_delta":
++            for transition_index in range(int(class_count) * int(class_count)):
++                columns.append(values[:, transition_index])
++        else:
++            columns.append(values)
++    return columns
++
++
++def _transport_support_direct(
++    points: np.ndarray,
++    tree: cKDTree | None,
++    support: np.ndarray,
++    cap: RoundCap,
++    s: float,
++) -> np.ndarray:
++    support = np.asarray(support, dtype=np.int64)
++    if support.size == 0:
++        return np.zeros(0, dtype=np.int64)
++    valid = support[(support >= 0) & (support < points.shape[0])]
++    if valid.size == 0:
++        return np.zeros(0, dtype=np.int64)
++    local_tree = tree or cKDTree(points)
++    mapped = lambda_cap(points[valid], cap, float(s))
++    _distances, indices = local_tree.query(mapped, k=1)
++    return np.asarray(indices, dtype=np.int64)
++
++
+ def _validated_graph_state(graph_state: dict[str, Any], patch_count: int) -> dict[str, np.ndarray | int] | None:
+     required = ["left", "right", "port_left", "port_right", "group_order", "patch_count"]
+     if any(key not in graph_state for key in required):
+@@ -745,37 +1361,81 @@ def _object_transition_feature_rows(
+     caps: list[RoundCap],
+     times: list[float] | tuple[float, ...],
+     packet_fields: dict[str, np.ndarray],
++    feature_types: tuple[str, ...] | None = None,
+ ) -> list[dict[str, Any]]:
++    feature_types = _normalized_transition_feature_types(feature_types)
+     rows: list[dict[str, Any]] = []
+     for cap_index, _cap in enumerate(caps):
+         for time_index, time_value in enumerate(times):
+             for observable, packets in packet_fields.items():
+                 class_count = int(np.max(packets)) + 1 if packets.size else 1
+-                for target_class in range(class_count):
+-                    rows.append(
+-                        {
+-                            "feature_index": len(rows),
+-                            "cap_index": int(cap_index),
+-                            "time_index": int(time_index),
+-                            "time": float(time_value),
+-                            "field": f"{observable}:to_{target_class}",
+-                            "observable": str(observable),
+-                            "target_class": int(target_class),
+-                            "feature_type": "target_distribution_delta",
+-                        }
+-                    )
+-                rows.append(
+-                    {
+-                        "feature_index": len(rows),
+-                        "cap_index": int(cap_index),
+-                        "time_index": int(time_index),
+-                        "time": float(time_value),
+-                        "field": f"{observable}:change",
+-                        "observable": str(observable),
+-                        "target_class": None,
+-                        "feature_type": "change_probability_delta",
+-                    }
+-                )
++                for feature_type in feature_types:
++                    if feature_type in {"class_distribution_delta", "target_distribution_delta"}:
++                        for target_class in range(class_count):
++                            rows.append(
++                                {
++                                    "feature_index": len(rows),
++                                    "cap_index": int(cap_index),
++                                    "time_index": int(time_index),
++                                    "time": float(time_value),
++                                    "field": f"{observable}:class_delta_{target_class}",
++                                    "observable": str(observable),
++                                    "target_class": int(target_class),
++                                    "feature_type": "class_distribution_delta",
++                                }
++                            )
++                    elif feature_type == "class_log_odds_delta":
++                        for target_class in range(class_count):
++                            rows.append(
++                                {
++                                    "feature_index": len(rows),
++                                    "cap_index": int(cap_index),
++                                    "time_index": int(time_index),
++                                    "time": float(time_value),
++                                    "field": f"{observable}:log_odds_delta_{target_class}",
++                                    "observable": str(observable),
++                                    "target_class": int(target_class),
++                                    "feature_type": "class_log_odds_delta",
++                                }
++                            )
++                    elif feature_type == "transition_matrix_delta":
++                        for source_class in range(class_count):
++                            for target_class in range(class_count):
++                                rows.append(
++                                    {
++                                        "feature_index": len(rows),
++                                        "cap_index": int(cap_index),
++                                        "time_index": int(time_index),
++                                        "time": float(time_value),
++                                        "field": f"{observable}:transition_{source_class}_to_{target_class}",
++                                        "observable": str(observable),
++                                        "source_class": int(source_class),
++                                        "target_class": int(target_class),
++                                        "feature_type": "transition_matrix_delta",
++                                    }
++                                )
++                    elif feature_type in {
++                        "entropy_delta",
++                        "sector_preservation_delta",
++                        "change_probability_delta",
++                    }:
++                        field_suffix = {
++                            "entropy_delta": "entropy_delta",
++                            "sector_preservation_delta": "sector_preservation",
++                            "change_probability_delta": "change",
++                        }[feature_type]
++                        rows.append(
++                            {
++                                "feature_index": len(rows),
++                                "cap_index": int(cap_index),
++                                "time_index": int(time_index),
++                                "time": float(time_value),
++                                "field": f"{observable}:{field_suffix}",
++                                "observable": str(observable),
++                                "target_class": None,
++                                "feature_type": feature_type,
++                            }
++                        )
+     return rows
+ 
+ 
+@@ -786,10 +1446,12 @@ def _object_transition_matrix(
+     times: list[float] | tuple[float, ...],
+     packet_fields: dict[str, np.ndarray],
+     weights: np.ndarray,
++    feature_types: tuple[str, ...] | None = None,
+     *,
+     scale: float,
+     k_transport: int,
+ ) -> np.ndarray:
++    feature_types = _normalized_transition_feature_types(feature_types)
+     columns: list[np.ndarray] = []
+     for cap_index, cap in enumerate(caps):
+         for time_value in times:
+@@ -799,18 +1461,94 @@ def _object_transition_matrix(
+             ]
+             for _observable, packets in packet_fields.items():
+                 class_count = int(np.max(packets)) + 1 if packets.size else 1
+-                target_deltas = np.zeros((len(supports), class_count), dtype=float)
+-                changes = np.zeros(len(supports), dtype=float)
++                feature_values: dict[str, np.ndarray] = {
++                    feature_type: _empty_transition_feature_array(len(supports), class_count, feature_type)
++                    for feature_type in feature_types
++                }
+                 for row_index, (support, transported) in enumerate(zip(supports, transported_supports, strict=False)):
+-                    delta, change = _transition_delta_for_support(support, transported, packets, weights, class_count)
+-                    target_deltas[row_index] = delta
+-                    changes[row_index] = change
+-                for class_index in range(class_count):
+-                    columns.append(target_deltas[:, class_index])
+-                columns.append(changes)
++                    values = _transition_features_for_support(support, transported, packets, weights, class_count)
++                    for feature_type in feature_types:
++                        feature_values[feature_type][row_index] = values[feature_type]
++                columns.extend(_transition_feature_columns(feature_values, feature_types, class_count))
++    return np.vstack(columns).T if columns else np.zeros((len(supports), 0), dtype=float)
++
++
++def _collar_operator_transition_matrix(
++    cache: GeometryCache,
++    supports: list[np.ndarray],
++    caps: list[RoundCap],
++    times: list[float] | tuple[float, ...],
++    packet_fields: dict[str, np.ndarray],
++    weights: np.ndarray,
++    feature_types: tuple[str, ...] | None = None,
++    *,
++    scale: float,
++    k_transport: int,
++) -> np.ndarray:
++    feature_types = _normalized_transition_feature_types(feature_types)
++    points = np.asarray(cache.points, dtype=float)
++    columns: list[np.ndarray] = []
++    for cap_index, cap in enumerate(caps):
++        for time_value in times:
++            s = float(scale) * float(time_value)
++            transported_supports = [
++                _transported_support(cache, support, cap, s, k=int(k_transport), cap_id=cap_index)
++                for support in supports
++            ]
++            operator_weights = _collar_operator_node_weights(points, cap, s, weights)
++            for _observable, packets in packet_fields.items():
++                class_count = int(np.max(packets)) + 1 if packets.size else 1
++                feature_values: dict[str, np.ndarray] = {
++                    feature_type: _empty_transition_feature_array(len(supports), class_count, feature_type)
++                    for feature_type in feature_types
++                }
++                for row_index, (support, transported) in enumerate(
++                    zip(supports, transported_supports, strict=False)
++                ):
++                    values = _transition_features_between_supports(
++                        support,
++                        transported,
++                        np.asarray(packets, dtype=np.int64),
++                        np.asarray(packets, dtype=np.int64),
++                        operator_weights,
++                        class_count,
++                    )
++                    for feature_type in feature_types:
++                        feature_values[feature_type][row_index] = values[feature_type]
++                columns.extend(_transition_feature_columns(feature_values, feature_types, class_count))
+     return np.vstack(columns).T if columns else np.zeros((len(supports), 0), dtype=float)
+ 
+ 
++def _collar_operator_node_weights(
++    points: np.ndarray,
++    cap: RoundCap,
++    s: float,
++    base_weights: np.ndarray,
++) -> np.ndarray:
++    cap = cap.normalized()
++    points = np.asarray(points, dtype=float)
++    base = np.asarray(base_weights, dtype=float)
++    dot = points @ cap.axis
++    threshold = float(np.cos(cap.theta0))
++    width = max(float(cap.collar_width), 2.5 / max(float(np.sqrt(points.shape[0])), 1.0))
++    soft_inside = 1.0 / (1.0 + np.exp(-np.clip((dot - threshold) / width, -60.0, 60.0)))
++    collar = 4.0 * soft_inside * (1.0 - soft_inside)
++    mapped = lambda_cap(points, cap, float(s))
++    cosine = np.clip(np.sum(points * mapped, axis=1), -1.0, 1.0)
++    displacement = np.arccos(cosine)
++    nonzero = displacement[displacement > 1e-12]
++    displacement_scale = float(np.percentile(nonzero, 75)) if nonzero.size else 1.0
++    displacement_score = np.clip(displacement / max(displacement_scale, 1e-12), 0.0, 3.0) / 3.0
++    tangent = cap.tangent / max(float(np.linalg.norm(cap.tangent)), 1e-12)
++    bitangent = np.cross(cap.axis, tangent)
++    bitangent = bitangent / max(float(np.linalg.norm(bitangent)), 1e-12)
++    phase = np.arctan2(points @ bitangent, points @ tangent)
++    ordered_pair_score = 0.5 + 0.5 * np.cos(phase)
++    operator = 0.10 + 0.55 * collar + 0.25 * displacement_score + 0.10 * ordered_pair_score
++    operator = np.maximum(operator, 1e-6)
++    return base * operator
++
++
+ def _transition_delta_for_support(
+     support: np.ndarray,
+     transported: np.ndarray,
+@@ -846,6 +1584,40 @@ def _transition_delta_for_support(
+     return pert - base, change
+ 
+ 
++def _transition_features_for_support(
++    support: np.ndarray,
++    transported: np.ndarray,
++    packets: np.ndarray,
++    weights: np.ndarray,
++    class_count: int,
++) -> dict[str, np.ndarray | float]:
++    support = np.asarray(support, dtype=np.int64)
++    transported = np.asarray(transported, dtype=np.int64)
++    if support.size == 0 or transported.size == 0:
++        return _empty_transition_features(class_count)
++    count = min(support.size, transported.size)
++    source = support[:count]
++    target = transported[:count]
++    valid = (
++        (source >= 0)
++        & (source < packets.size)
++        & (target >= 0)
++        & (target < packets.size)
++        & (source < weights.size)
++    )
++    if not np.any(valid):
++        return _empty_transition_features(class_count)
++    packets = np.asarray(packets, dtype=np.int64)
++    return _transition_features_from_indices(
++        source[valid],
++        target[valid],
++        packets,
++        packets,
++        weights,
++        class_count,
++    )
++
++
+ def _object_s2_boundary_matrix(
+     points: np.ndarray,
+     caps: list[RoundCap],
+@@ -867,6 +1639,7 @@ def _transform_with_controls(
+     controls: dict[str, np.ndarray],
+     *,
+     transform: str,
++    feature_rows: list[dict[str, Any]] | None = None,
+ ) -> tuple[np.ndarray, dict[str, np.ndarray], dict[str, Any]]:
+     matrix = np.asarray(matrix, dtype=float)
+     if matrix.size == 0:
+@@ -880,6 +1653,84 @@ def _transform_with_controls(
+             name: 1.0 / (1.0 + np.exp(-np.clip(np.asarray(value, dtype=float), -60.0, 60.0)))
+             for name, value in controls.items()
+         }, {"mode": "sigmoid"}
++    if mode in {"signed_robust_zscore", "robust_signed_zscore", "signed_zscore_clip"}:
++        center = np.median(matrix, axis=0)
++        q25 = np.quantile(matrix, 0.25, axis=0)
++        q75 = np.quantile(matrix, 0.75, axis=0)
++        robust_scale = (q75 - q25) / 1.349
++        std_scale = np.std(matrix, axis=0)
++        scale = np.where(robust_scale > 1e-6, robust_scale, std_scale)
++        scale = np.where(scale > 0.05, scale, 0.05)
++        clip = 6.0
++        transformed = np.clip((matrix - center) / scale, -clip, clip)
++        transformed_controls = {
++            name: np.clip((np.asarray(value, dtype=float) - center) / scale, -clip, clip)
++            for name, value in controls.items()
++        }
++        return transformed, transformed_controls, {
++            "mode": "signed_robust_zscore",
++            "mean_abs_center": float(np.mean(np.abs(center))),
++            "median_scale": float(np.median(scale)),
++            "min_scale_floor": 0.05,
++            "clip": clip,
++            "zero_robust_scale_columns": int(np.sum(robust_scale <= 1e-6)),
++            "zero_std_columns": int(np.sum(std_scale <= 1e-9)),
++        }
++    if mode in {
++        "signed_group_robust_zscore",
++        "grouped_signed_robust_zscore",
++        "time_grouped_robust_zscore",
++        "bw_time_grouped_robust_zscore",
++    }:
++        rows = list(feature_rows or [])
++        if len(rows) != matrix.shape[1]:
++            transformed, transformed_controls, report = _transform_with_controls(
++                matrix,
++                controls,
++                transform="signed_robust_zscore",
++                feature_rows=None,
++            )
++            report = {
++                **report,
++                "mode": "signed_group_robust_zscore_fallback_columnwise",
++                "fallback_reason": "feature_rows_missing_or_wrong_length",
++            }
++            return transformed, transformed_controls, report
++        group_keys = [_time_group_key(row) for row in rows]
++        center = np.zeros(matrix.shape[1], dtype=float)
++        scale = np.ones(matrix.shape[1], dtype=float)
++        for key in sorted(set(group_keys)):
++            indices = np.asarray([index for index, value in enumerate(group_keys) if value == key], dtype=np.int64)
++            values = matrix[:, indices].reshape(-1)
++            group_center = float(np.median(values)) if values.size else 0.0
++            q25 = float(np.quantile(values, 0.25)) if values.size else 0.0
++            q75 = float(np.quantile(values, 0.75)) if values.size else 0.0
++            robust_scale = (q75 - q25) / 1.349
++            std_scale = float(np.std(values)) if values.size else 0.0
++            group_scale = robust_scale if robust_scale > 1e-6 else std_scale
++            group_scale = group_scale if group_scale > 0.05 else 0.05
++            center[indices] = group_center
++            scale[indices] = group_scale
++        clip = 6.0
++        transformed = np.clip((matrix - center[None, :]) / scale[None, :], -clip, clip)
++        transformed_controls = {
++            name: np.clip((np.asarray(value, dtype=float) - center[None, :]) / scale[None, :], -clip, clip)
++            for name, value in controls.items()
++        }
++        return transformed, transformed_controls, {
++            "mode": "signed_group_robust_zscore",
++            "group_mode": "cap_observable_feature_class_tied_over_time",
++            "group_count": int(len(set(group_keys))),
++            "mean_abs_center": float(np.mean(np.abs(center))),
++            "median_scale": float(np.median(scale)),
++            "min_scale_floor": 0.05,
++            "clip": clip,
++            "claim_boundary": (
++                "grouped support-visible feature normalization. Time-indexed columns sharing the same "
++                "cap/observable/feature/class use one robust center and scale, so modular-time amplitude "
++                "is not normalized away before BW/H3 fitting."
++            ),
++        }
+     center = np.mean(matrix, axis=0)
+     scale = np.std(matrix, axis=0)
+     scale = np.where(scale > 1e-9, scale, 1.0)
+@@ -896,6 +1747,18 @@ def _transform_with_controls(
+     }
+ 
+ 
++def _time_group_key(row: dict[str, Any]) -> str:
++    return ":".join(
++        [
++            str(int(row.get("cap_index", 0))),
++            str(row.get("observable", row.get("field", "field"))),
++            str(row.get("feature_type", "")),
++            str(row.get("source_class", "")),
++            str(row.get("target_class", "")),
++        ]
++    )
++
++
+ def _infer_patch_count(raw_fields: dict[str, np.ndarray]) -> int:
+     for value in raw_fields.values():
+         array = np.asarray(value)
+diff --git a/oph_fpe/cache/geometry_cache.py b/oph_fpe/cache/geometry_cache.py
+index 7ea3dbb..b8b36ae 100644
+--- a/oph_fpe/cache/geometry_cache.py
++++ b/oph_fpe/cache/geometry_cache.py
+@@ -1,6 +1,10 @@
+ from __future__ import annotations
+ 
+ from dataclasses import dataclass, field
++import hashlib
++import json
++import os
++from pathlib import Path
+ from typing import Any
+ 
+ import numpy as np
+@@ -20,14 +24,24 @@ class GeometryCache:
+     """
+ 
+     points: np.ndarray
++    cache_dir: str | Path | None = None
+     _tree: cKDTree | None = field(default=None, init=False, repr=False)
+     _transport_maps: dict[tuple[Any, ...], tuple[np.ndarray, np.ndarray]] = field(default_factory=dict, init=False, repr=False)
++    _points_digest: str | None = field(default=None, init=False, repr=False)
++    _disk_hits: int = field(default=0, init=False, repr=False)
++    _disk_misses: int = field(default=0, init=False, repr=False)
++    _disk_writes: int = field(default=0, init=False, repr=False)
++    _memory_hits: int = field(default=0, init=False, repr=False)
+ 
+     def __post_init__(self) -> None:
+         points = np.asarray(self.points, dtype=float)
+         if points.ndim != 2 or points.shape[1] != 3:
+             raise ValueError("GeometryCache points must have shape (N, 3)")
+         self.points = points
++        if self.cache_dir is None:
++            self.cache_dir = os.environ.get("OPH_FPE_GEOMETRY_CACHE_DIR") or None
++        if self.cache_dir is not None:
++            self.cache_dir = Path(self.cache_dir)
+ 
+     @property
+     def tree(self) -> cKDTree:
+@@ -39,10 +53,19 @@ class GeometryCache:
+         key = self._transport_key(cap, s, k=k, cap_id=cap_id)
+         cached = self._transport_maps.get(key)
+         if cached is not None:
++            self._memory_hits += 1
+             return cached
++        disk_cached = self._load_transport_map_from_disk(key)
++        if disk_cached is not None:
++            self._transport_maps[key] = disk_cached
++            self._disk_hits += 1
++            return disk_cached
++        if self.cache_dir is not None:
++            self._disk_misses += 1
+         mapped = lambda_cap(self.points, cap, float(s))
+         indices, weights = interpolation_map(self.points, mapped, k=int(k), tree=self.tree)
+         self._transport_maps[key] = (indices, weights)
++        self._write_transport_map_to_disk(key, indices, weights)
+         return indices, weights
+ 
+     def transport_support(
+@@ -67,23 +90,94 @@ class GeometryCache:
+             "point_count": int(self.points.shape[0]),
+             "tree_built": self._tree is not None,
+             "transport_map_count": int(len(self._transport_maps)),
++            "memory_hits": int(self._memory_hits),
++            "persistent_cache_enabled": self.cache_dir is not None,
++            "persistent_cache_dir": str(self.cache_dir) if self.cache_dir is not None else None,
++            "persistent_cache_point_digest": self.points_digest if self.cache_dir is not None else None,
++            "persistent_cache_disk_hits": int(self._disk_hits),
++            "persistent_cache_disk_misses": int(self._disk_misses),
++            "persistent_cache_disk_writes": int(self._disk_writes),
+             "claim_boundary": "geometry cache only; no physics claim",
+         }
+ 
++    @property
++    def points_digest(self) -> str:
++        if self._points_digest is None:
++            points = np.ascontiguousarray(self.points, dtype=np.float64)
++            digest = hashlib.sha256()
++            digest.update(b"oph_fpe_geometry_points_v1")
++            digest.update(np.asarray(points.shape, dtype=np.int64).tobytes())
++            digest.update(points.tobytes())
++            self._points_digest = digest.hexdigest()
++        return self._points_digest
++
+     def _transport_key(self, cap: RoundCap, s: float, *, k: int, cap_id: int | None) -> tuple[Any, ...]:
+         normalized = cap.normalized()
++        cap_params: tuple[Any, ...] = (
++            "cap",
++            _rounded_tuple(normalized.axis),
++            round(float(normalized.theta0), 12),
++            _rounded_tuple(normalized.tangent),
++            round(float(normalized.collar_width), 12),
++        )
+         if cap_id is not None:
+-            cap_key: tuple[Any, ...] = ("cap_id", int(cap_id))
++            cap_key: tuple[Any, ...] = ("cap_id", int(cap_id), *cap_params)
+         else:
+-            cap_key = (
+-                "cap",
+-                _rounded_tuple(normalized.axis),
+-                round(float(normalized.theta0), 12),
+-                _rounded_tuple(normalized.tangent),
+-                round(float(normalized.collar_width), 12),
+-            )
++            cap_key = cap_params
+         return (*cap_key, round(float(s), 12), int(k))
+ 
++    def _transport_cache_path(self, key: tuple[Any, ...]) -> Path | None:
++        if self.cache_dir is None:
++            return None
++        key_payload = {
++            "version": "oph_fpe_transport_map_v1",
++            "points_digest": self.points_digest,
++            "point_count": int(self.points.shape[0]),
++            "key": key,
++        }
++        key_bytes = json.dumps(key_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
++        digest = hashlib.sha256(key_bytes).hexdigest()
++        return Path(self.cache_dir) / self.points_digest[:16] / f"transport_{digest}.npz"
++
++    def _load_transport_map_from_disk(self, key: tuple[Any, ...]) -> tuple[np.ndarray, np.ndarray] | None:
++        path = self._transport_cache_path(key)
++        if path is None or not path.exists():
++            return None
++        try:
++            with np.load(path, allow_pickle=False) as payload:
++                indices = np.asarray(payload["indices"], dtype=np.int64)
++                weights = np.asarray(payload["weights"], dtype=np.float64)
++                point_count = int(payload["point_count"])
++        except Exception:
++            return None
++        if point_count != int(self.points.shape[0]) or indices.shape != weights.shape:
++            return None
++        if indices.ndim != 2 or indices.shape[0] != int(self.points.shape[0]):
++            return None
++        return indices, weights
++
++    def _write_transport_map_to_disk(self, key: tuple[Any, ...], indices: np.ndarray, weights: np.ndarray) -> None:
++        path = self._transport_cache_path(key)
++        if path is None:
++            return
++        try:
++            path.parent.mkdir(parents=True, exist_ok=True)
++            tmp_path = path.with_suffix(f".{os.getpid()}.tmp.npz")
++            np.savez(
++                tmp_path,
++                indices=np.asarray(indices, dtype=np.int64),
++                weights=np.asarray(weights, dtype=np.float64),
++                point_count=np.asarray(int(self.points.shape[0]), dtype=np.int64),
++            )
++            tmp_path.replace(path)
++            self._disk_writes += 1
++        except Exception:
++            # A cache write failure must never alter a simulation result.
++            try:
++                tmp_path.unlink(missing_ok=True)  # type: ignore[name-defined]
++            except Exception:
++                pass
++
+ 
+ def _rounded_tuple(values: np.ndarray) -> tuple[float, ...]:
+     return tuple(round(float(value), 12) for value in np.asarray(values, dtype=float))
+diff --git a/oph_fpe/scale/bw_array.py b/oph_fpe/scale/bw_array.py
+index 2894dd7..f59729d 100644
+--- a/oph_fpe/scale/bw_array.py
++++ b/oph_fpe/scale/bw_array.py
+@@ -7,11 +7,40 @@ from typing import Any
+ 
+ import numpy as np
+ 
+-from oph_fpe.claims import DEMO, RECOVERED_CORE, with_claim_metadata
++from oph_fpe.claims import (
++    BRANCH_INSTANTIATION_SANITY,
++    BW_KMS_DIRECT_2PI_RECEIPT,
++    BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
++    CHART_LORENTZ_H3_RECEIPT,
++    CONFORMAL_H3_CHART_RECEIPT,
++    COSMOLOGY_PERTURBATION_RECEIPT,
++    DEMO,
++    DYNAMIC_DARK_TRANSPORT_RECEIPT,
++    ENDOGENOUS_MODULAR_GENERATOR_RECEIPT,
++    H3_RESPONSE_CANDIDATE_RECEIPT,
++    H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
++    OBJECT_BULK_POPULATION_RECEIPT,
++    OBJECT_CHART_RECEIPT,
++    PAPER_THEOREM_3D_BULK_CHART_RECEIPT,
++    PROXY,
++    RECEIPT_SCHEMA_VERSION,
++    RECORD_COMMIT_RECEIPT,
++    RECOVERED_CORE,
++    REPAIR_CORE_RECEIPT,
++    SCREEN_PROXY_CMB_RECEIPT,
++    STATIC_GALAXY_LAW_RECEIPT,
++    STATIC_GALAXY_RAR_BTFR_RECEIPT,
++    SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT,
++    with_claim_metadata,
++)
+ from oph_fpe.bulk.bw_verifier import bw_residual_report
+ from oph_fpe.bulk.cap_geometry import cap_geometry_report, sample_caps
+-from oph_fpe.bulk.conformal_spatial_chart import conformal_h3_spatial_chart_report
++from oph_fpe.bulk.conformal_spatial_chart import (
++    conformal_h3_spatial_chart_report,
++    paper_theorem_3d_bulk_chart_report,
++)
+ from oph_fpe.bulk.h3_response_fit import modular_response_h3_report
++from oph_fpe.bulk.h3_refit import write_modular_response_kernel_cache
+ from oph_fpe.bulk.markov_collar import collar_markov_report
+ from oph_fpe.bulk.modular_probe import state_derived_bw_report
+ from oph_fpe.bulk.modular_response_kernel import kernel_json_summary, modular_response_kernel
+@@ -27,9 +56,11 @@ from oph_fpe.bulk.record_to_h3 import (
+     support_profiles_to_h3_report,
+ )
+ from oph_fpe.bulk.transition_selection import transition_scale_selection_report
++from oph_fpe.cache.geometry_cache import GeometryCache
+ from oph_fpe.constants.oph_pixel import equal_cell_area_planck, equal_cell_entropy
+ from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
+-from oph_fpe.cosmology import write_freezeout_products
++from oph_fpe.cosmology.galaxy_proxy import galaxy_proxy_receipt
++from oph_fpe.cosmology import oph_cmb_stress_adapter_report, write_freezeout_products
+ from oph_fpe.core.graph import fibonacci_sphere_points
+ from oph_fpe.core.pixel_scale import pixel_scale_from_config
+ from oph_fpe.core.screen_receipts import (
+@@ -60,6 +91,7 @@ from oph_fpe.observers import (
+     observer_consensus_report,
+     observer_object_report,
+     observer_view_rows,
++    transition_affinity_packet_fields,
+     visible_object_packets,
+ )
+ from oph_fpe.scale.array_screen import _beta_at, _entropy, _group_order, _knn_edges, _modular_update, _node_signature, _write_csv
+@@ -140,6 +172,19 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     defect_timeline_enabled = bool(group_name == "S3" and timeline_cfg.get("enabled", False))
+     defect_timeline_cycles = _timeline_cycles(cycles, int(timeline_cfg.get("sample_count", 8)))
+     defect_gauge_snapshots: list[tuple[int, np.ndarray]] = []
++    object_history_cfg = config.get("observer_objects", {}) or {}
++    chart_history_cfg = config.get("observer_chart_population", {}) or {}
++    history_window = max(
++        int(object_history_cfg.get("history_window", 1)),
++        int(chart_history_cfg.get("history_window", 1)),
++    )
++    history_enabled = bool(
++        history_window > 1
++        or str(chart_history_cfg.get("incidence_mode", "transition_history")) == "transition_history"
++        or str(object_history_cfg.get("family_mode", "")) == "transition_history"
++    )
++    recent_history_states: list[dict[str, Any]] = []
++    freezeout_history_states: list[dict[str, Any]] = []
+ 
+     for cycle in range(cycles):
+         beta = _beta_at(beta_schedule, cycle, cycles)
+@@ -220,6 +265,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+                 modular_depth=modular_depth,
+                 cumulative_repair_load=cumulative_repair_load,
+             )
++            if history_enabled:
++                freezeout_history_states = [*recent_history_states, repair_peak_candidate][-max(1, int(history_window)) :]
++        if history_enabled:
++            recent_history_states.append(repair_peak_candidate)
++            recent_history_states = recent_history_states[-max(1, int(history_window)) :]
+         trace.append(
+             {
+                 "cycle": cycle,
+@@ -258,13 +308,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     bw_cfg = config.get("bw", {})
+     observables = [str(name) for name in bw_cfg.get("observables", ["record_signature", "repair_load", "s3_class_density", "stable_count"])]
+     fields = {}
++    skipped_scalar_observables: list[dict[str, str]] = []
+     for name in observables:
+         field_name = _projector_field_name(name)
+         if field_name in fields_all:
+             fields[field_name] = fields_all[field_name]
+         elif name in fields_all:
+             fields[name] = fields_all[name]
++        else:
++            skipped_scalar_observables.append({"observable": name, "reason": "not_a_scalar_screen_field"})
+     fields = _regularize_support_visible_fields(fields, left, right, patch_count, bw_cfg)
++    usable_fields = {}
++    for name, values in fields.items():
++        values = np.asarray(values, dtype=float)
++        if values.size and np.all(np.isfinite(values)) and float(np.std(values)) > 1.0e-12:
++            usable_fields[name] = values
++        else:
++            skipped_scalar_observables.append({"observable": name, "reason": "zero_or_nonfinite_scalar_variance"})
++    fields = usable_fields
+     theta_values = [float(value) for value in bw_cfg.get("theta0", [0.35, 0.55, 0.75, 1.0, 1.25])]
+     caps = sample_caps(
+         points,
+@@ -285,30 +346,50 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     times = [float(value) for value in bw_cfg.get("times", [0.025, 0.05, 0.1, 0.2])]
+     controls = _implemented_controls(config.get("controls", []))
+     started = time.time()
+-    bw_report = bw_residual_report(
+-        points,
+-        fields,
+-        caps,
+-        times,
+-        k_interp=int(bw_cfg.get("k_interp", 8)),
+-        sim_k_interp=int(bw_cfg.get("sim_k_interp", 1)),
+-        n_jobs=jobs_from_config(bw_cfg.get("n_jobs", 1), default=1),
+-        controls=controls,
+-        seed=seed + 911,
+-        cell_entropy=cell_entropy,
+-        cell_area_planck=cell_area_planck,
+-    ).as_jsonable()
++    if fields:
++        bw_report = bw_residual_report(
++            points,
++            fields,
++            caps,
++            times,
++            k_interp=int(bw_cfg.get("k_interp", 8)),
++            sim_k_interp=int(bw_cfg.get("sim_k_interp", 1)),
++            n_jobs=jobs_from_config(bw_cfg.get("n_jobs", 1), default=1),
++            controls=controls,
++            seed=seed + 911,
++            cell_entropy=cell_entropy,
++            cell_area_planck=cell_area_planck,
++        ).as_jsonable()
++        bw_report["usable_scalar_observables"] = True
++    else:
++        bw_report = {
++            "median": None,
++            "mean": None,
++            "p90": None,
++            "by_observable": {},
++            "by_cap_size": {},
++            "rows": [],
++            "controls": {},
++            "usable_scalar_observables": False,
++        }
+     bw_report["mode"] = "kinematic_geometric_bw_sanity"
+-    bw_report["claim_level"] = DEMO
+-    bw_report["receipt_name"] = "KINEMATIC_GEOMETRIC_BW_SANITY"
+-    bw_report["physical_claim"] = False
+     bw_report["claim_boundary"] = (
+         "kinematic geometry/interpolation sanity check for lambda_C(2*pi*t); "
+         "not a state-derived modular-transport receipt"
+     )
++    bw_report = with_claim_metadata(
++        bw_report,
++        claim_level=DEMO,
++        receipt="KINEMATIC_GEOMETRIC_BW_SANITY",
++        physical_claim=False,
++        observable_id="lambda_cap_support_visible_fields",
++        fit_objective="weighted_geometric_pullback_residual",
++    )
+     bw_report["elapsed_seconds"] = time.time() - started
+     bw_report["implemented_controls"] = controls
+     bw_report["unimplemented_controls"] = [control for control in config.get("controls", []) if control not in controls]
++    bw_report["scalar_observable_count"] = int(len(fields))
++    bw_report["skipped_scalar_observables"] = skipped_scalar_observables
+     bw_report["regulator_collar"] = _collar_report(bw_cfg, patch_count, caps[0].collar_width if caps else 0.0)
+     bw_report["support_visible_regularization"] = _regularization_report(bw_cfg)
+     cap_report = cap_geometry_report(
+@@ -317,14 +398,27 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         cell_area_planck=cell_area_planck,
+         cell_entropy=cell_entropy,
+     )
+-    cap_report["claim_level"] = DEMO
+     cap_report["times"] = times
+     cap_report["regulator_collar"] = bw_report["regulator_collar"]
++    cap_report = with_claim_metadata(
++        cap_report,
++        claim_level=DEMO,
++        receipt="CAP_GEOMETRY_DIAGNOSTIC",
++        physical_claim=False,
++        observable_id="round_caps_on_support_visible_s2",
++        fit_objective="cap_geometry_consistency",
++    )
+     conformal_chart_report = conformal_h3_spatial_chart_report(h3_caps)
+-    conformal_chart_report["claim_level"] = DEMO
+-    conformal_chart_report["receipt_name"] = "CONFORMAL_H3_CHART_RECEIPT"
+     conformal_chart_report["h3_reconstruction_cap_net"] = h3_cap_net_report
+     conformal_chart_report["bw_verifier_cap_count"] = len(caps)
++    conformal_chart_report = with_claim_metadata(
++        conformal_chart_report,
++        claim_level=BRANCH_INSTANTIATION_SANITY,
++        receipt=CONFORMAL_H3_CHART_RECEIPT,
++        physical_claim=False,
++        observable_id="cap_normals_conformal_h3_chart",
++        fit_objective="conformal_chart_instantiation",
++    )
+     raw_observer_fields = _observer_raw_fields(
+         left=left,
+         right=right,
+@@ -377,19 +471,43 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     state_bw_report: dict[str, Any] = {}
+     transition_selection_report: dict[str, Any] = {}
+     if str(bw_cfg.get("mode", "kinematic_geometric_bw_sanity")) == "state_derived_modular_probe":
++        state_source_name = str(bw_cfg.get("source_state", bw_cfg.get("state_source", "final")))
++        state_raw_observer_fields, state_source_meta = _select_h3_source_fields(
++            state_source_name,
++            final_raw_fields=raw_observer_fields,
++            freezeout_raw_fields=freezeout_raw_observer_fields,
++            repair_peak_raw_fields=repair_peak_raw_observer_fields,
++            freezeout_state=freezeout_state,
++            repair_peak_state=repair_peak_state,
++            cycles=cycles,
++        )
+         collar_cfg = config.get("collar_markov", {})
+         collar_report = collar_markov_report(
+             points,
+             caps,
+-            raw_observer_fields,
++            state_raw_observer_fields,
+             packet_bins=collar_cfg.get("packet_bins", {}),
+             max_triplets=int(collar_cfg.get("max_triplets", 4096)),
+             seed=seed + 1301,
+         )
++        state_history_states = freezeout_history_states or recent_history_states
++        state_history_raw_fields = [
++            _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
++            for snapshot in state_history_states[-max(1, int(bw_cfg.get("history_window", history_window))) :]
++        ]
++        graph_response = {
++            "left": left,
++            "right": right,
++            "port_left": port_left,
++            "port_right": port_right,
++            "group_order": group_order,
++            "patch_count": patch_count,
++        }
++        selection_cfg = bw_cfg.get("selection", {})
+         state_bw_report = state_derived_bw_report(
+             points,
+             caps,
+-            raw_observer_fields,
++            state_raw_observer_fields,
+             collar_report,
+             times=times,
+             observables=[_projector_field_name(name) for name in bw_cfg.get("observables", ["record_signature"])],
+@@ -399,10 +517,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             target_operator_mode=str(bw_cfg.get("target_operator_mode", "nearest")),
+             transition_response_time=float(bw_cfg.get("transition_response_time", min(times) if times else 0.025)),
+             transition_response_scale=float(bw_cfg.get("transition_response_scale", 2.0 * math.pi)),
++            density_inverse_temperature=float(bw_cfg.get("density_inverse_temperature", 1.0)),
++            generator_scale=float(bw_cfg.get("generator_scale", 1.0)),
++            generator_scale_candidates=[
++                float(value) for value in bw_cfg.get("generator_scale_candidates", [])
++            ],
++            history_fields=state_history_raw_fields,
++            graph_response=graph_response,
++            probe_steps=int(bw_cfg.get("probe_steps", selection_cfg.get("probe_steps", 4))),
++            probe_repairs_per_source=int(
++                bw_cfg.get("probe_repairs_per_source", selection_cfg.get("probe_repairs_per_source", max(16, neighbors * 4)))
++            ),
++            probe_max_incident_edges=int(
++                bw_cfg.get("probe_max_incident_edges", selection_cfg.get("probe_max_incident_edges", max(4, neighbors)))
++            ),
+             max_basis=int(bw_cfg.get("max_basis", 96)),
+             seed=seed + 1401,
+         )
+-        selection_cfg = bw_cfg.get("selection", {})
++        state_bw_report["source_state"] = state_source_meta
+         if selection_cfg.get("enabled", False):
+             selection_sources = [str(source) for source in selection_cfg.get("sources", ["repair_affinity_response"])]
+             if selection_cfg.get("include_declared_sanity", False) and "declared_geometric_sanity" not in selection_sources:
+@@ -410,7 +542,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             transition_selection_report = transition_scale_selection_report(
+                 points,
+                 caps,
+-                raw_observer_fields,
++                state_raw_observer_fields,
+                 times=[float(value) for value in selection_cfg.get("times", times)],
+                 observables=[_projector_field_name(name) for name in selection_cfg.get("observables", bw_cfg.get("observables", ["record_signature"]))],
+                 candidate_scales=[float(value) for value in selection_cfg.get("candidate_scales", [1.0, math.pi, 2.0 * math.pi, 4.0 * math.pi])],
+@@ -418,14 +550,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+                 declared_response_scale=float(selection_cfg.get("declared_response_scale", bw_cfg.get("transition_response_scale", 2.0 * math.pi))),
+                 max_basis=int(selection_cfg.get("max_basis", bw_cfg.get("max_basis", 64))),
+                 seed=seed + 1451,
+-                graph_response={
+-                    "left": left,
+-                    "right": right,
+-                    "port_left": port_left,
+-                    "port_right": port_right,
+-                    "group_order": group_order,
+-                    "patch_count": patch_count,
+-                },
++                graph_response=graph_response,
+                 probe_steps=int(selection_cfg.get("probe_steps", 4)),
+                 probe_repairs_per_source=int(selection_cfg.get("probe_repairs_per_source", max(16, neighbors * 4))),
+                 probe_max_incident_edges=int(selection_cfg.get("probe_max_incident_edges", max(4, neighbors))),
+@@ -550,8 +675,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         h3_population_report.get("record_populated_h3_receipt", False)
+     )
+     h3_modular_response_cfg = config.get("h3_modular_response", {}) or {}
++    h3_modular_kernel: dict[str, Any] = {}
+     h3_modular_kernel_report: dict[str, Any] = {}
+     h3_modular_fit_report: dict[str, Any] = {}
++    h3_modular_kernel_cache_report: dict[str, Any] = {}
++    persistent_geometry_cache = _geometry_cache_from_config(points, config, outputs_cfg)
+     if h3_modular_response_cfg.get("enabled", False):
+         h3_modular_kernel = modular_response_kernel(
+             points,
+@@ -587,6 +715,15 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+                     ],
+                 )
+             ),
++            transition_feature_types=tuple(
++                h3_modular_response_cfg.get(
++                    "feature_types",
++                    h3_modular_response_cfg.get(
++                        "transition_feature_types",
++                        ["class_distribution_delta", "change_probability_delta"],
++                    ),
++                )
++            ),
+             transition_bins=int(h3_modular_response_cfg.get("transition_bins", 8)),
+             record_family_modulus=int(h3_modular_response_cfg.get("record_family_modulus", 16)),
+             transform=str(h3_modular_response_cfg.get("transform", "sigmoid")),
+@@ -600,9 +737,18 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+                 "patch_count": patch_count,
+             },
+             perturb_strength=float(h3_modular_response_cfg.get("perturb_strength", 1.0)),
++            perturb_budget_mode=str(h3_modular_response_cfg.get("perturb_budget_mode", "modular_amount")),
++            fixed_perturb_fraction=(
++                float(h3_modular_response_cfg["fixed_perturb_fraction"])
++                if h3_modular_response_cfg.get("fixed_perturb_fraction") is not None
++                else None
++            ),
++            perturb_selection_mode=str(h3_modular_response_cfg.get("perturb_selection_mode", "phase")),
++            transition_readout_mode=str(h3_modular_response_cfg.get("transition_readout_mode", "same_support")),
+             repair_steps=int(h3_modular_response_cfg.get("repair_steps", 4)),
+             repairs_per_step=int(h3_modular_response_cfg.get("repairs_per_step", max(16, neighbors * 8))),
+             perturb_seed=seed + 1889,
++            geometry_cache=persistent_geometry_cache,
+         )
+         h3_modular_kernel_report = kernel_json_summary(h3_modular_kernel)
+         h3_modular_fit_report = modular_response_h3_report(
+@@ -619,10 +765,50 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             heldout_fraction=float(h3_modular_response_cfg.get("heldout_fraction", 0.25)),
+             anchor_weight=float(h3_modular_response_cfg.get("anchor_weight", 0.05)),
+             max_iterations=int(h3_modular_response_cfg.get("max_iterations", 4)),
++            feature_selection=str(h3_modular_response_cfg.get("feature_selection", "none")),
++            max_fit_features=(
++                int(h3_modular_response_cfg["max_fit_features"])
++                if h3_modular_response_cfg.get("max_fit_features") is not None
++                else None
++            ),
++            min_feature_std=float(h3_modular_response_cfg.get("min_feature_std", 0.0)),
++            min_wrong_scale_feature_delta=float(
++                h3_modular_response_cfg.get("min_wrong_scale_feature_delta", 0.0)
++            ),
++            exclude_observables=tuple(
++                str(value) for value in h3_modular_response_cfg.get("exclude_observables", [])
++            ),
++            exclude_feature_types=tuple(
++                str(value) for value in h3_modular_response_cfg.get("exclude_feature_types", [])
++            ),
++            max_features_per_cap_time_observable=(
++                int(h3_modular_response_cfg["max_features_per_cap_time_observable"])
++                if h3_modular_response_cfg.get("max_features_per_cap_time_observable") is not None
++                else None
++            ),
++            refine_steps=int(h3_modular_response_cfg.get("refine_steps", 0)),
++            refine_max_rows=(
++                int(h3_modular_response_cfg["refine_max_rows"])
++                if h3_modular_response_cfg.get("refine_max_rows") is not None
++                else None
++            ),
++            refine_max_nfev=int(h3_modular_response_cfg.get("refine_max_nfev", 48)),
++            candidate_mode=str(h3_modular_response_cfg.get("candidate_mode", "random")),
++            channel_mode=str(h3_modular_response_cfg.get("channel_mode", "time_observable_class")),
++            profile_mode=str(h3_modular_response_cfg.get("profile_mode", "static_halfspace")),
++            profile_time_scale=float(h3_modular_response_cfg.get("profile_time_scale", 2.0 * math.pi)),
++            control_fit_mode=str(
++                h3_modular_response_cfg.get("control_fit_mode", "same_h3_model_not_affine_target_fit")
++            ),
+         )
++    observer_chart_cfg = config.get("observer_chart_population", {}) or {}
++    if h3_modular_kernel:
++        _attach_modular_response_histograms(observer_rows, h3_modular_kernel, observer_chart_cfg)
+     object_rows: list[dict[str, Any]] = []
+     object_report: dict[str, Any] = {}
+-    object_cfg = config.get("observer_objects", {})
++    object_cfg = dict(config.get("observer_objects", {}) or {})
++    if object_cfg.get("enabled", False) and "family_mode" not in object_cfg:
++        object_cfg["family_mode"] = "transition_affinity"
+     if object_cfg.get("enabled", False):
+         record_families = extract_record_families(
+             raw_observer_fields,
+@@ -633,6 +819,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         )
+         object_packets = visible_object_packets(raw_observer_fields, object_cfg)
+         _attach_object_packet_histograms(observer_rows, object_packets)
++        _attach_transition_affinity_histograms(observer_rows, raw_observer_fields, object_cfg)
++        if history_enabled:
++            history_source_states = freezeout_history_states or recent_history_states
++            history_raw_fields = [
++                _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
++                for snapshot in history_source_states[-max(1, int(history_window)) :]
++            ]
++            _attach_transition_history_histograms(observer_rows, history_raw_fields, object_cfg)
+         assign_counterfactual_stability_from_records(
+             record_families,
+             raw_observer_fields,
+@@ -642,7 +836,6 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         )
+         object_rows = [family.as_jsonable() for family in record_families]
+         object_report = observer_object_report(record_families, observer_rows)
+-    observer_chart_cfg = config.get("observer_chart_population", {}) or {}
+     observer_chart_object_report: dict[str, Any] = {}
+     if observer_chart_cfg.get("enabled", bool(object_rows and h3_modular_fit_report)):
+         observer_chart_object_report = observer_chart_object_population_report(
+@@ -654,6 +847,37 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             min_observers_per_object=int(observer_chart_cfg.get("min_observers_per_object", 2)),
+             pass_ratio=float(observer_chart_cfg.get("pass_ratio", 0.85)),
+             max_objects=int(observer_chart_cfg.get("max_objects", 2048)),
++            incidence_mode=str(observer_chart_cfg.get("incidence_mode", "transition_history")),
++            min_packet_mass=float(observer_chart_cfg.get("min_packet_mass", 0.05)),
++            min_transition_affinity=float(observer_chart_cfg.get("min_transition_affinity", 0.25)),
++            transition_affinity_score=str(observer_chart_cfg.get("transition_affinity_score", "geometric_mean")),
++            observer_cluster_fields=tuple(
++                str(field)
++                for field in observer_chart_cfg.get(
++                    "observer_cluster_fields",
++                    ["record_family", "s3_sector_class", "repair_load_bucket"],
++                )
++            ),
++            observer_cluster_top_k=int(observer_chart_cfg.get("observer_cluster_top_k", 2)),
++            min_observer_cluster_weight=float(observer_chart_cfg.get("min_observer_cluster_weight", 0.05)),
++            history_window=int(observer_chart_cfg.get("history_window", history_window)),
++            min_persistence=int(observer_chart_cfg.get("min_persistence", 3)),
++            max_observer_fraction_per_object=float(observer_chart_cfg.get("max_observer_fraction_per_object", 0.65)),
++            max_h3_compactness=float(observer_chart_cfg.get("max_h3_compactness", 0.35)),
++            min_localized_objects=int(observer_chart_cfg.get("min_localized_objects", 2)),
++            shuffle_control_count=int(observer_chart_cfg.get("shuffle_control_count", 1)),
++            split_h3_components=bool(observer_chart_cfg.get("split_h3_components", False)),
++            component_link_fraction=float(observer_chart_cfg.get("component_link_fraction", 0.35)),
++            component_min_observers=(
++                int(observer_chart_cfg["component_min_observers"])
++                if "component_min_observers" in observer_chart_cfg
++                else None
++            ),
++            require_support_visibility=bool(observer_chart_cfg.get("require_support_visibility", False)),
++            min_support_visibility=float(observer_chart_cfg.get("min_support_visibility", 0.0)),
++            visibility_mode=str(observer_chart_cfg.get("visibility_mode", "support_overlap")),
++            packet_visibility_weight=float(observer_chart_cfg.get("packet_visibility_weight", 0.5)),
++            boundary_gate_mode=str(observer_chart_cfg.get("boundary_gate_mode", "nonboundary")),
+         )
+     s3_holonomy_report = (
+         array_holonomy_report(
+@@ -716,7 +940,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             candidate_radius=float(h3_support_cfg.get("candidate_radius", h3_population_cfg.get("candidate_radius", 2.0))),
+             softness=float(h3_support_cfg.get("softness", h3_population_cfg.get("softness", 0.25))),
+             pass_ratio=float(h3_support_cfg.get("pass_ratio", h3_population_cfg.get("pass_ratio", 0.85))),
+-            min_support_count=int(h3_support_cfg.get("min_support_count", 8)),
++            min_support_count=int(h3_support_cfg.get("defect_min_support_count", h3_support_cfg.get("min_support_count", 8))),
+             min_cap_count=int(h3_support_cfg.get("min_cap_count", 6)),
+         )
+     else:
+@@ -796,6 +1020,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     if neutral_cfg.get("enabled", False):
+         object_dicts = object_rows
+         neutral_report = bulk_reconstruction_report(observer_rows, object_dicts, state_bw_report, seed=seed + 1701)
++    paper_3d_chart_report = paper_theorem_3d_bulk_chart_report(
++        conformal_chart_report,
++        transition_selection_report,
++        observer_chart_object_report,
++        neutral_report,
++    )
+     emergence_status = _emergence_status_report(bw_report, consensus_report)
+     theorem_core_report = _theorem_core_receipts(trace, committed, config)
+     emergence_status["state_derived_modular_transport"] = bool(state_bw_report)
+@@ -808,9 +1038,26 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     emergence_status["observer_checkpoint_restoration_receipt"] = bool(checkpoint_report.get("receipt", False))
+     if state_bw_report:
+         emergence_status["state_derived_bw_median"] = state_bw_report.get("median")
++        emergence_status["state_derived_state_mode"] = state_bw_report.get("state_mode")
++        emergence_status["state_derived_endogenous_modular_generator"] = bool(
++            state_bw_report.get("endogenous_modular_generator", False)
++        )
++        emergence_status["state_derived_selected_scale_label"] = state_bw_report.get("state_selected_scale_label")
++        emergence_status["state_derived_selected_2pi"] = bool(state_bw_report.get("state_selected_2pi", False))
+         emergence_status["state_derived_correct_beats_controls"] = bool(
+             state_bw_report.get("correct_beats_controls", False)
+         )
++        emergence_status["state_derived_bw_bulk_gate"] = bool(
++            state_bw_report.get("BW_KMS_BRANCH_INSTANTIATION_RECEIPT", False)
++            or (
++                state_bw_report.get("state_selected_2pi", False)
++                and state_bw_report.get("correct_beats_controls", False)
++                and (
++                    state_bw_report.get("direct_transition_automorphism", False)
++                    or state_bw_report.get("endogenous_modular_generator", False)
++                )
++            )
++        )
+         emergence_status["state_derived_best_control"] = state_bw_report.get("best_control")
+         emergence_status["collar_markov_median_epsilon_cmi"] = collar_report.get("median_epsilon_cmi")
+         if not state_bw_report.get("correct_beats_controls", False):
+@@ -829,31 +1076,130 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             emergence_status["status"] = "diagnostic_only_transition_response_degenerate"
+         elif not transition_selection_report.get("two_pi_selected", False):
+             emergence_status["status"] = "diagnostic_only_transition_scale_not_selected"
+-    emergence_status["support_visible_lorentz_3p1_kinematics_receipt"] = bool(
+-        state_bw_report.get("correct_beats_controls", False)
+-        and transition_selection_report.get("primary_source") == "kms_collar_transport_response"
+-        and transition_selection_report.get("two_pi_selected", False)
+-        and not transition_selection_report.get("response_degenerate", False)
++    emergence_status.update(
++        _lorentz_branch_receipts(conformal_chart_report, state_bw_report, transition_selection_report)
++    )
++    emergence_status["lorentz_branch_single_run_receipt"] = bool(
++        emergence_status["support_visible_lorentz_3p1_kinematics_receipt"]
+     )
+     emergence_status["conformal_h3_spatial_chart_receipt"] = bool(
+-        conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False)
++        emergence_status["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"]
++    )
++    emergence_status[PAPER_THEOREM_3D_BULK_CHART_RECEIPT] = bool(
++        paper_3d_chart_report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
++    )
++    emergence_status["paper_theorem_3d_bulk_chart_receipt"] = bool(
++        paper_3d_chart_report.get("paper_theorem_3d_bulk_chart_receipt", False)
++    )
++    emergence_status["paper_theorem_object_populated_chart_precursor_receipt"] = bool(
++        paper_3d_chart_report.get("paper_theorem_object_populated_chart_precursor_receipt", False)
++    )
++    emergence_status["paper_theorem_neutral_populated_bulk_receipt"] = bool(
++        paper_3d_chart_report.get("paper_theorem_neutral_populated_bulk_receipt", False)
++    )
++    emergence_status["paper_theorem_3d_chart_dimension"] = paper_3d_chart_report.get(
++        "h3_spatial_dimension_from_boost_orbit"
+     )
++    emergence_status["paper_theorem_3d_bulk_chart_claim_boundary"] = paper_3d_chart_report.get("claim_boundary")
+     emergence_status["record_populated_h3_spatial_receipt"] = bool(
+         conformal_chart_report.get("record_populated_h3_receipt", False)
+     )
+     emergence_status["modular_response_h3_candidate_receipt"] = bool(
+         h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
+     )
++    emergence_status["modular_response_h3_control_separation_receipt"] = bool(
++        h3_modular_fit_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
++        or h3_modular_fit_report.get("h3_control_separation_receipt", False)
++        or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
++            H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False
++        )
++        or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
++            "intermediate_control_separation_receipt", False
++        )
++    )
++    emergence_status[H3_RESPONSE_CONTROL_SEPARATION_RECEIPT] = bool(
++        emergence_status["modular_response_h3_control_separation_receipt"]
++    )
++    emergence_status[H3_RESPONSE_CANDIDATE_RECEIPT] = bool(
++        h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
++        or h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
++    )
+     emergence_status["modular_response_h3_written"] = bool(h3_modular_fit_report)
+     emergence_status["record_family_h3_support_receipt"] = bool(
+         object_h3_report.get("record_populated_h3_receipt", False)
+     )
++    emergence_status["record_family_h3_bulk_population_candidate"] = bool(
++        object_h3_report.get("record_family_h3_bulk_population_candidate", False)
++        and object_report.get("persistent_object_count", 0)
++        and emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)
++    )
+     emergence_status["observer_chart_object_h3_receipt"] = bool(
+         observer_chart_object_report.get("observer_chart_object_h3_receipt", False)
+     )
++    emergence_status["observer_chart_localized_object_precursor_receipt"] = bool(
++        observer_chart_object_report.get("localized_object_precursor_receipt", False)
++    )
++    emergence_status["observer_chart_modular_response_h3_control_separation_receipt"] = bool(
++        observer_chart_object_report.get("modular_response_h3_control_separation_receipt", False)
++    )
++    theorem_assisted_h3_precursor = bool(
++        emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)
++        and emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
++        and emergence_status.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
++        and emergence_status["observer_chart_localized_object_precursor_receipt"]
++    )
++    emergence_status["PAPER_THEOREM_ASSISTED_H3_CHART_PRECURSOR_RECEIPT"] = theorem_assisted_h3_precursor
++    emergence_status["paper_theorem_assisted_h3_chart_precursor_receipt"] = theorem_assisted_h3_precursor
++    emergence_status["observer_chart_localized_nonboundary_bulk_population_receipt"] = bool(
++        observer_chart_object_report.get("localized_nonboundary_bulk_population_receipt", False)
++    )
++    emergence_status["observer_chart_localized_h3_bulk_population_receipt"] = bool(
++        observer_chart_object_report.get("localized_h3_bulk_population_receipt", False)
++    )
+     emergence_status["observer_chart_bulk_population_receipt"] = bool(
+         observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
+     )
++    blind_bulk = neutral_report.get("blind_observer_bulk_report", {}) if neutral_report else {}
++    blind_leakage_audit_pass = bool(
++        not neutral_report
++        or (
++            blind_bulk.get("usable", False)
++            and blind_bulk.get("s2_leakage_audit_pass", False)
++            and not blind_bulk.get("forbidden_feature_keys_used", [])
++        )
++    )
++    emergence_status["blind_observer_leakage_audit_pass"] = blind_leakage_audit_pass
++    emergence_status["OBJECT_BULK_POPULATION_RECEIPT"] = bool(
++        emergence_status[H3_RESPONSE_CANDIDATE_RECEIPT]
++        and emergence_status["observer_chart_bulk_population_receipt"]
++        and emergence_status.get("state_derived_bw_bulk_gate", False)
++        and blind_leakage_audit_pass
++    )
++    emergence_status["object_bulk_population_receipt"] = bool(
++        emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
++    )
++    theorem_assisted_h3_population = bool(
++        emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)
++        and emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
++        and emergence_status.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
++        and emergence_status["observer_chart_bulk_population_receipt"]
++        and blind_leakage_audit_pass
++    )
++    emergence_status["PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT"] = theorem_assisted_h3_population
++    emergence_status["paper_theorem_assisted_h3_populated_chart_receipt"] = theorem_assisted_h3_population
++    emergence_status["paper_theorem_assisted_h3_populated_chart_claim_boundary"] = (
++        "Uses the paper-side conformal Lorentz/H3 chart receipt plus controlled observer-object "
++        "population of that chart. This is a populated-chart diagnostic under the OPH BW/Lorentz "
++        "branch assumptions; it is not the stricter finite endogenous modular-generator proof and "
++        "therefore does not set bulk_3d_established."
++    )
++    emergence_status["paper_theorem_assisted_h3_chart_precursor_claim_boundary"] = (
++        "Uses the paper-side conformal Lorentz/H3 chart receipt plus the intermediate support-visible "
++        "H3 response control-separation receipt and localized observer-object precursor. This only says "
++        "the chart-response lane is populated enough to keep testing; it is blocked from any 3D bulk "
++        "claim until the material wrong-scale audit, nonboundary object-population gate, neutral "
++        "dimension controls, and refinement gates pass."
++    )
+     emergence_status["defect_cluster_h3_support_receipt"] = bool(
+         defect_h3_report.get("record_populated_h3_receipt", False)
+     )
+@@ -874,19 +1220,78 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         particle_report.get("particle_matter_receipt", False)
+     )
+     emergence_status["particle_likeness_diagnostic_written"] = bool(particle_report)
+-    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = bool(
++    emergence_status["h3_support_population_precursor_receipt"] = bool(
+         conformal_chart_report.get("record_populated_h3_receipt", False)
+-        or observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
+         or object_h3_report.get("record_populated_h3_receipt", False)
+-        or neutral_report.get("bulk_3d_established", False)
++        or defect_h3_report.get("record_populated_h3_receipt", False)
++        or defect_h3_worldlines_report.get("bulk_worldline_precursor_receipt", False)
++    )
++    support_visible_record_h3_population = bool(
++        emergence_status.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
++        and emergence_status.get("record_family_h3_bulk_population_candidate", False)
++        and emergence_status.get("observer_records_settled", False)
++    )
++    support_visible_defect_h3_population = bool(
++        emergence_status.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
++        and emergence_status.get("defect_cluster_h3_support_receipt", False)
++        and emergence_status.get("defect_worldline_precursor_receipt", False)
++    )
++    emergence_status["support_visible_record_h3_population_receipt"] = support_visible_record_h3_population
++    emergence_status["support_visible_defect_h3_population_receipt"] = support_visible_defect_h3_population
++    emergence_status["support_visible_h3_defect_population_receipt"] = support_visible_defect_h3_population
++    emergence_status[SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT] = bool(support_visible_record_h3_population)
++    emergence_status["support_visible_h3_populated_bulk_receipt"] = bool(
++        emergence_status[SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT]
++    )
++    emergence_status["support_visible_h3_populated_bulk_claim_boundary"] = (
++        "Paper-facing populated-H3 receipt: the conformal/BW S2 cap chart gives the H3 spatial chart, "
++        "and observer-visible record-family support profiles populate that chart under S2-boundary and "
++        "shuffled-cap controls. This is the support-visible OPH bulk-chart lane. Defect support in the "
++        "same H3 chart is reported separately as a matter/particle precursor. This is not the stricter "
++        "neutral third-person summary-distance reconstruction, not an endogenous full finite-type-I "
++        "modular-generator proof, not a particle spectrum, and not a physical CMB prediction."
++    )
++    emergence_status["bulk_population_source"] = (
++        "observer_chart_transition_history"
++        if emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
++        else "support_visible_record_and_defect_h3_profiles"
++        if emergence_status["support_visible_h3_populated_bulk_receipt"]
++        else "record_family_support_profile_h3_candidate_only"
++        if emergence_status["record_family_h3_bulk_population_candidate"]
++        else None
++    )
++    strict_neutral_bulk_receipt = bool(
++        neutral_report.get("bulk_3d_established", False)
++        and blind_bulk.get("usable", False)
++        and blind_bulk.get("s2_leakage_audit_pass", False)
++        and not blind_bulk.get("forbidden_feature_keys_used", [])
++    )
++    emergence_status["strict_blind_observer_bulk_receipt"] = strict_neutral_bulk_receipt
++    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = bool(
++        emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
+     )
+     emergence_status["bulk_3d_established"] = bool(emergence_status["spatial_bulk_3d_reconstruction_receipt"])
++    emergence_status["lorentz_claim_boundary"] = (
++        "chart-level Lorentz receipt is conformal H3 chart plus direct BW/KMS automorphism sanity. "
++        "Endogenous observer-record modular generators, object population, neutral bulk reconstruction, "
++        "particles, and CMB outputs are later strengthening receipts and must not suppress the core "
++        "support-visible Lorentz chart diagnostic."
++    )
+     emergence_status["lorentz_vs_bulk_claim_boundary"] = (
+-        "support-visible BW/KMS cap flow plus cap-normal/H3 construction is the finite "
+-        "Lorentz/conformal chart diagnostic; spatial 3D bulk emergence additionally requires "
+-        "observer records or object families to populate that H3 chart under controls. "
+-        "Defect-cluster H3 support is a matter/particle precursor receipt, not by itself "
+-        "a full bulk reconstruction receipt."
++        "support-visible BW/KMS cap automorphism sanity plus cap-normal/H3 construction is the finite "
++        "Lorentz/conformal chart diagnostic. Spatial 3D bulk emergence additionally requires observer "
++        "records or object families to populate that H3 chart under controls. Defect-cluster H3 support "
++        "is a matter/particle precursor receipt, not by itself a full bulk reconstruction receipt."
++    )
++    emergence_status["bulk_population_claim_boundary"] = (
++        "OBJECT_BULK_POPULATION_RECEIPT is sourced by the observer-chart transition-history/object-mixture "
++        "gate only after H3 response controls and the state-derived BW bulk gate pass. The active object "
++        "gate is declared in observer_chart_object_population_report.bulk_population_gate_mode; boundary "
++        "compactness is retained as a leakage audit when the paper-aligned H3-localized gate is selected. Persistent "
++        "record-family support profiles are retained as candidate diagnostics, not as a bulk gate. "
++        "Neutral reconstruction contributes a leakage audit and dimension debug report, but neutral "
++        "summary-distance dimension is not the primary bulk gate. This is still not a physical cosmology "
++        "or particle receipt."
+     )
+     freezeout_report: dict[str, Any] = {}
+     cosmology_gate_report = _cosmology_gate_report(
+@@ -896,6 +1301,59 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         transition_selection_report,
+         neutral_report,
+     )
++    screen_proxy_cmb_receipt = bool(cosmology_gate_report.get("enabled", False) and cosmology_gate_report.get("allowed", False))
++    emergence_status["SCREEN_PROXY_CMB_RECEIPT"] = screen_proxy_cmb_receipt
++    emergence_status["screen_proxy_cmb_receipt"] = screen_proxy_cmb_receipt
++    oph_cmb_report: dict[str, Any] = {}
++    galaxy_cfg = dict(config.get("cosmology", {}).get("galaxy_proxy", config.get("galaxy_proxy", {})) or {})
++    if galaxy_cfg.get("enabled", True):
++        galaxy_proxy_report = galaxy_proxy_receipt(
++            a0_oph=float(galaxy_cfg.get("a0_oph", 1.2e-10)),
++            lambda_collar=float(galaxy_cfg.get("lambda_collar", 1.0)),
++        )
++    else:
++        galaxy_proxy_report = {
++            "mode": "oph_galaxy_rar_btfr_proxy",
++            "enabled": False,
++            "GALAXY_PROXY_RECEIPT": False,
++            "receipt": False,
++            "physical_claim": False,
++            "claim_boundary": "disabled by config; no galaxy proxy was emitted",
++        }
++        galaxy_proxy_report = with_claim_metadata(
++            galaxy_proxy_report,
++            claim_level=PROXY,
++            receipt=STATIC_GALAXY_LAW_RECEIPT,
++            physical_claim=False,
++            observable_id="oph_static_galaxy_proxy",
++            fit_objective="disabled",
++        )
++    emergence_status[STATIC_GALAXY_LAW_RECEIPT] = bool(galaxy_proxy_report.get("GALAXY_PROXY_RECEIPT", False))
++    emergence_status["static_galaxy_law_receipt"] = bool(galaxy_proxy_report.get("GALAXY_PROXY_RECEIPT", False))
++    emergence_status[DYNAMIC_DARK_TRANSPORT_RECEIPT] = False
++    emergence_status[COSMOLOGY_PERTURBATION_RECEIPT] = False
++    emergence_status["dynamic_dark_transport_receipt"] = False
++    emergence_status["cosmology_perturbation_receipt"] = False
++    receipt_ladder_report = _canonical_receipt_ladder_report(
++        trace=trace,
++        committed=committed,
++        emergence_status=emergence_status,
++        state_bw_report=state_bw_report,
++        transition_selection_report=transition_selection_report,
++        h3_modular_fit_report=h3_modular_fit_report,
++        observer_chart_object_report=observer_chart_object_report,
++        cosmology_gate_report=cosmology_gate_report,
++        galaxy_proxy_report=galaxy_proxy_report,
++    )
++    emergence_status["canonical_receipt_ladder"] = receipt_ladder_report["receipts"]
++    emergence_status = with_claim_metadata(
++        emergence_status,
++        claim_level=BRANCH_INSTANTIATION_SANITY,
++        receipt="SUPPORT_VISIBLE_LORENTZ_AND_BULK_STATUS_BUNDLE",
++        physical_claim=False,
++        observable_id="finite_screen_receipt_ladder",
++        fit_objective="receipt_gate_conjunction",
++    )
+     if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False) and cosmology_gate_report["allowed"]:
+         cosmology_runtime_config = dict(config.get("cosmology", {}))
+         cosmology_runtime_config.setdefault("output_profile", output_profile)
+@@ -913,6 +1371,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         )
+     elif config.get("cosmology", {}).get("freezeout", {}).get("enabled", False):
+         cosmology_gate_report["freezeout_skipped"] = True
++    oph_cmb_cfg = dict(config.get("cosmology", {}).get("oph_cmb", {}) or {})
++    if oph_cmb_cfg.get("enabled", bool(config.get("cosmology", {}).get("freezeout", {}).get("enabled", False))):
++        oph_cmb_report = oph_cmb_stress_adapter_report(
++            collar_report=collar_report,
++            cosmology_gate_report=cosmology_gate_report,
++            freezeout_report=freezeout_report,
++            config=oph_cmb_cfg,
++        )
+ 
+     _write_csv(bundle.path / "mismatch_trace.csv", trace)
+     bundle.write_json("bw_report.json", bw_report)
+@@ -925,9 +1391,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         bundle.write_json("transition_scale_selection_report.json", transition_selection_report)
+     bundle.write_json("cap_geometry_report.json", cap_report)
+     bundle.write_json("conformal_h3_spatial_chart_report.json", conformal_chart_report)
++    bundle.write_json("paper_3d_bulk_chart_report.json", paper_3d_chart_report)
+     bundle.write_json("record_populated_h3_report.json", h3_population_report)
+     if h3_modular_kernel_report:
+         bundle.write_json("modular_response_kernel_report.json", h3_modular_kernel_report)
++    if h3_modular_kernel and bool(outputs_cfg.get("write_modular_response_kernel_cache", True)):
++        h3_modular_kernel_cache_report = write_modular_response_kernel_cache(bundle.path, h3_modular_kernel, h3_caps)
++        bundle.write_json("modular_response_kernel_cache_report.json", h3_modular_kernel_cache_report)
+     if h3_modular_fit_report:
+         bundle.write_json("modular_response_h3_report.json", h3_modular_fit_report)
+     if observer_chart_object_report:
+@@ -971,8 +1441,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+     bundle.write_json("observable_summary.json", _field_summary(fields_all))
+     if freezeout_report:
+         bundle.write_json("cosmology_observables.json", {"freezeout_cl_proxy": freezeout_report})
++    if oph_cmb_report:
++        bundle.write_json("oph_cmb_stress_report.json", oph_cmb_report)
+     if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False):
+         bundle.write_json("cosmology_gate_report.json", cosmology_gate_report)
++    if galaxy_proxy_report:
++        bundle.write_json("galaxy_proxy_report.json", galaxy_proxy_report)
++    bundle.write_json("receipt_ladder_report.json", receipt_ladder_report)
+     bundle.write_json("s3_class_counts.json", s3_class_counts(gauge) if group_name == "S3" else {})
+     if s3_holonomy_report:
+         bundle.write_json("array_holonomy_report.json", s3_holonomy_report)
+@@ -1007,6 +1482,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             "bw_p90": bw_report["p90"],
+             "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
+             "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
++            "geometric_bw_controls": bw_report["controls"],
++            "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
++            "state_bw_control_medians": state_bw_report.get("control_medians", {}) if state_bw_report else {},
++            "state_bw_correct_beats_controls": state_bw_report.get("correct_beats_controls", False)
++            if state_bw_report
++            else None,
+             "collar_markov": {
+                 "median_epsilon_cmi": collar_report.get("median_epsilon_cmi"),
+                 "p90_epsilon_cmi": collar_report.get("p90_epsilon_cmi"),
+@@ -1028,6 +1509,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+             "mandatory_controls": mandatory_controls,
+             "transition_scale_selection": transition_selection_report,
+             "conformal_h3_spatial_chart": conformal_chart_report,
++            "paper_3d_bulk_chart": paper_3d_chart_report,
+             "record_populated_h3": h3_population_report,
+             "modular_response_kernel": h3_modular_kernel_report,
+             "modular_response_h3": h3_modular_fit_report,
+@@ -1082,6 +1564,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
+         "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
+         "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
+         "controls": bw_report["controls"],
++        "geometric_controls": bw_report["controls"],
++        "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
++        "state_bw_control_medians": state_bw_report.get("control_medians", {}) if state_bw_report else {},
++        "state_bw_correct_beats_controls": state_bw_report.get("correct_beats_controls", False)
++        if state_bw_report
++        else None,
+         "theorem_core_receipts": {
+             "lyapunov": theorem_core_report.get("lyapunov", {}).get("receipt"),
+             "exact_repair_projection": theorem_core_report.get("exact_repair_projection", {}).get("receipt"),
+@@ -1457,10 +1945,15 @@ def _emergence_status_report(bw_report: dict[str, Any], consensus_report: dict[s
+     control_medians = {
+         name: float(report["median"])
+         for name, report in bw_report.get("controls", {}).items()
+-        if isinstance(report, dict) and "median" in report
++        if isinstance(report, dict)
++        and "median" in report
++        and _optional_finite_float(report.get("median")) is not None
+     }
+-    bw_median = float(bw_report.get("median", float("nan")))
+-    correct_beats_controls = bool(control_medians) and all(bw_median < value for value in control_medians.values())
++    bw_median = _optional_finite_float(bw_report.get("median"))
++    kinematic_bw_usable = bool(bw_report.get("usable_scalar_observables", True)) and bw_median is not None
++    correct_beats_controls = bool(kinematic_bw_usable and control_medians) and all(
++        float(bw_median) < value for value in control_medians.values()
++    )
+     observer_records_settled = float(consensus_report.get("global_committed_fraction", 0.0)) >= 0.99
+     observer_views_overlap = int(consensus_report.get("pair_count", 0)) > 0
+     return {
+@@ -1471,18 +1964,229 @@ def _emergence_status_report(bw_report: dict[str, Any], consensus_report: dict[s
+         "requires_refinement_scaling": True,
+         "requires_neutral_bulk_reconstruction": True,
+         "bw_median": bw_median,
++        "kinematic_bw_usable": kinematic_bw_usable,
++        "scalar_observable_count": int(bw_report.get("scalar_observable_count", 0)),
++        "skipped_scalar_observables": bw_report.get("skipped_scalar_observables", []),
+         "control_medians": control_medians,
+         "correct_2pi_beats_all_controls": correct_beats_controls,
+         "observer_records_settled": observer_records_settled,
+         "observer_views_overlap": observer_views_overlap,
+         "claim_boundary": (
+-            "This run can support a finite BW/cap-flow and observer-consensus receipt. "
+-            "It does not by itself establish 3D bulk emergence; that requires refinement scaling "
+-            "and a neutral observer-record reconstruction path."
++            "This run can support finite repair, records, and BW/cap-flow diagnostics. "
++            "It does not by itself establish 3D bulk emergence. Bulk emergence is gated by "
++            "observer/object population of the conformal H3 chart, not by neutral summary-distance "
++            "dimension estimates."
+         ),
+     }
+ 
+ 
++def _optional_finite_float(value: Any) -> float | None:
++    try:
++        number = float(value)
++    except (TypeError, ValueError):
++        return None
++    if not np.isfinite(number):
++        return None
++    return number
++
++
++def _lorentz_branch_receipts(
++    conformal_chart_report: dict[str, Any],
++    state_bw_report: dict[str, Any],
++    transition_selection_report: dict[str, Any],
++) -> dict[str, Any]:
++    chart_lorentz_receipt = bool(conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False))
++    direct_kms_selection_receipt = bool(
++        transition_selection_report.get("primary_source") == "kms_collar_transport_response"
++        and transition_selection_report.get("two_pi_selected", False)
++        and not transition_selection_report.get("response_degenerate", False)
++    )
++    bw_automorphism_sanity_receipt = bool(
++        direct_kms_selection_receipt
++        or (
++            state_bw_report.get("direct_transition_automorphism", False)
++            and state_bw_report.get("state_selected_2pi", False)
++            and state_bw_report.get("correct_beats_controls", False)
++        )
++    )
++    endogenous_modular_generator_receipt = bool(
++        state_bw_report.get("endogenous_modular_generator", False)
++        and state_bw_report.get("state_selected_2pi", False)
++        and state_bw_report.get("correct_beats_controls", False)
++    )
++    declared_cap_flow_generator_diagnostic = bool(state_bw_report.get("declared_cap_flow_generator", False))
++    support_visible_lorentz_receipt = bool(chart_lorentz_receipt and bw_automorphism_sanity_receipt)
++    return {
++        "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT": chart_lorentz_receipt,
++        "BW_AUTOMORPHISM_SANITY_RECEIPT": bw_automorphism_sanity_receipt,
++        "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": endogenous_modular_generator_receipt,
++        CHART_LORENTZ_H3_RECEIPT: bool(chart_lorentz_receipt and bw_automorphism_sanity_receipt),
++        BW_KMS_DIRECT_2PI_RECEIPT: direct_kms_selection_receipt,
++        ENDOGENOUS_MODULAR_GENERATOR_RECEIPT: endogenous_modular_generator_receipt,
++        "DECLARED_CAP_FLOW_GENERATOR_DIAGNOSTIC": declared_cap_flow_generator_diagnostic,
++        "direct_kms_collar_2pi_receipt": direct_kms_selection_receipt,
++        "chart_level_conformal_lorentz_receipt": chart_lorentz_receipt,
++        "bw_automorphism_sanity_receipt": bw_automorphism_sanity_receipt,
++        "endogenous_modular_generator_receipt": endogenous_modular_generator_receipt,
++        "declared_cap_flow_generator_diagnostic": declared_cap_flow_generator_diagnostic,
++        "support_visible_lorentz_3p1_kinematics_receipt": support_visible_lorentz_receipt,
++    }
++
++
++def _canonical_receipt_ladder_report(
++    *,
++    trace: list[dict[str, Any]],
++    committed: np.ndarray,
++    emergence_status: dict[str, Any],
++    state_bw_report: dict[str, Any],
++    transition_selection_report: dict[str, Any],
++    h3_modular_fit_report: dict[str, Any],
++    observer_chart_object_report: dict[str, Any],
++    cosmology_gate_report: dict[str, Any],
++    galaxy_proxy_report: dict[str, Any],
++) -> dict[str, Any]:
++    final_phi = int(trace[-1].get("phi", -1)) if trace else -1
++    committed_fraction = float(np.mean(committed)) if np.asarray(committed).size else 0.0
++    bw_kms_pass = bool(
++        emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
++        or state_bw_report.get(BW_KMS_BRANCH_INSTANTIATION_RECEIPT, False)
++        or (
++            transition_selection_report.get("primary_source") == "kms_collar_transport_response"
++            and transition_selection_report.get("two_pi_selected", False)
++            and not transition_selection_report.get("response_degenerate", False)
++        )
++    )
++    receipts = {
++        "R0": {
++            "receipt_name": REPAIR_CORE_RECEIPT,
++            "passed": bool(final_phi == 0),
++            "claim_level": RECOVERED_CORE,
++            "observable_id": "overlap_mismatch_phi",
++            "fit_objective": "final_phi_zero",
++            "final_phi": final_phi,
++        },
++        "R1": {
++            "receipt_name": RECORD_COMMIT_RECEIPT,
++            "passed": bool(committed_fraction >= 0.95),
++            "claim_level": RECOVERED_CORE,
++            "observable_id": "observer_record_commit_mask",
++            "fit_objective": "committed_fraction_at_least_0p95",
++            "committed_fraction": committed_fraction,
++        },
++        "R2": {
++            "receipt_name": BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
++            "passed": bw_kms_pass,
++            "claim_level": BRANCH_INSTANTIATION_SANITY,
++            "observable_id": "kms_collar_transport_response",
++            "fit_objective": "two_pi_selected_and_non_degenerate",
++            "state_selected_2pi": bool(state_bw_report.get("state_selected_2pi", False)),
++            "transition_two_pi_selected": bool(transition_selection_report.get("two_pi_selected", False)),
++        },
++        "R3": {
++            "receipt_name": CHART_LORENTZ_H3_RECEIPT,
++            "passed": bool(emergence_status.get("CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT", False)),
++            "claim_level": BRANCH_INSTANTIATION_SANITY,
++            "observable_id": "cap_normals_conformal_h3_chart",
++            "fit_objective": "chart_instantiated",
++            "legacy_receipt_name": CONFORMAL_H3_CHART_RECEIPT,
++        },
++        "R4": {
++            "receipt_name": H3_RESPONSE_CANDIDATE_RECEIPT,
++            "passed": bool(
++                h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
++                or h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
++            ),
++            "claim_level": DEMO,
++            "observable_id": "support_visible_modular_response_kernel",
++            "fit_objective": "heldout_h3_response_beats_controls",
++            "intermediate_receipt_name": H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
++            "intermediate_passed": bool(
++                h3_modular_fit_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
++                or h3_modular_fit_report.get("h3_control_separation_receipt", False)
++                or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
++                    H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False
++                )
++                or h3_modular_fit_report.get("h3_response_stage_gates", {}).get(
++                    "intermediate_control_separation_receipt", False
++                )
++            ),
++            "claim_boundary": (
++                "R4 is strict. The intermediate receipt is a support-visible H3 control-separation "
++                "precursor only and cannot establish a 3D bulk."
++            ),
++        },
++        "R5": {
++            "receipt_name": OBJECT_CHART_RECEIPT,
++            "passed": bool(observer_chart_object_report.get("observer_chart_object_h3_receipt", False)),
++            "claim_level": DEMO,
++            "observable_id": "observer_transition_history_object_families",
++            "fit_objective": "object_chart_construction",
++        },
++        "R6": {
++            "receipt_name": OBJECT_BULK_POPULATION_RECEIPT,
++            "passed": bool(emergence_status.get(OBJECT_BULK_POPULATION_RECEIPT, False)),
++            "claim_level": DEMO,
++            "observable_id": "h3_populated_object_families",
++            "fit_objective": "active_observer_chart_bulk_population_gate",
++            "population_source": emergence_status.get("bulk_population_source"),
++        },
++        "R7": {
++            "receipt_name": SCREEN_PROXY_CMB_RECEIPT,
++            "passed": bool(cosmology_gate_report.get("enabled", False) and cosmology_gate_report.get("allowed", False)),
++            "claim_level": PROXY,
++            "observable_id": "freezeout_screen_cl_proxy",
++            "fit_objective": "screen_proxy_gate_allowed",
++        },
++        "R8": {
++            "receipt_name": STATIC_GALAXY_RAR_BTFR_RECEIPT,
++            "passed": bool(galaxy_proxy_report.get("GALAXY_PROXY_RECEIPT", False)),
++            "claim_level": PROXY,
++            "observable_id": "oph_static_galaxy_proxy",
++            "fit_objective": "rar_btfr_formula_bookkeeping",
++            "legacy_receipt_name": STATIC_GALAXY_LAW_RECEIPT,
++        },
++        "R9": {
++            "receipt_name": DYNAMIC_DARK_TRANSPORT_RECEIPT,
++            "passed": False,
++            "claim_level": PROXY,
++            "observable_id": "dynamic_dark_transport",
++            "fit_objective": "not_implemented",
++        },
++        "R10": {
++            "receipt_name": COSMOLOGY_PERTURBATION_RECEIPT,
++            "passed": False,
++            "claim_level": PROXY,
++            "observable_id": "cosmology_perturbation_adapter",
++            "fit_objective": "not_implemented",
++        },
++    }
++    for row in receipts.values():
++        row["receipt_schema_version"] = RECEIPT_SCHEMA_VERSION
++        row["physical_claim"] = False
++    report = {
++        "mode": "canonical_receipt_ladder",
++        "receipts": receipts,
++        "passed_receipt_names": [row["receipt_name"] for row in receipts.values() if row["passed"]],
++        "bulk_3d_established": bool(emergence_status.get("bulk_3d_established", False)),
++        "physical_cmb_prediction": False,
++        "physical_matter_power_prediction": False,
++        "claim_boundary": (
++            "canonical lane ladder. R2/R3 instantiate support-visible BW/KMS and conformal H3 chart "
++            "diagnostics; R6 is an object-population gate but does not establish a 3D bulk without "
++            "neutral reconstruction and strict blind-feature leakage checks. R7 is a screen proxy only "
++            "and R8 is a static-galaxy proxy, not a full cosmology prediction."
++        ),
++    }
++    return with_claim_metadata(
++        report,
++        claim_level=BRANCH_INSTANTIATION_SANITY,
++        receipt="CANONICAL_RECEIPT_LADDER",
++        physical_claim=False,
++        observable_id="finite_screen_receipt_ladder",
++        fit_objective="receipt_gate_summary",
++    )
++
++
+ def _attach_object_packet_histograms(observer_rows: list[dict[str, Any]], object_packets: np.ndarray) -> None:
+     packets = np.asarray(object_packets, dtype=np.int64)
+     for row in observer_rows:
+@@ -1505,6 +2209,405 @@ def _attach_object_packet_histograms(observer_rows: list[dict[str, Any]], object
+         row["dominant_object_packet"] = int(unique[int(np.argmax(counts))])
+ 
+ 
++def _attach_transition_affinity_histograms(
++    observer_rows: list[dict[str, Any]],
++    raw_fields: dict[str, np.ndarray],
++    object_cfg: dict[str, Any],
++) -> None:
++    fields = transition_affinity_packet_fields(raw_fields, object_cfg)
++    if not fields:
++        return
++    for row in observer_rows:
++        if row.get("view_type") != "patch_observer":
++            continue
++        support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
++        histograms: dict[str, dict[str, float]] = {}
++        dominants: dict[str, int | None] = {}
++        for name, packets in fields.items():
++            packets = np.asarray(packets, dtype=np.int64)
++            valid = support[(support >= 0) & (support < packets.size)]
++            if valid.size == 0:
++                histograms[str(name)] = {}
++                dominants[str(name)] = None
++                continue
++            unique, counts = np.unique(packets[valid], return_counts=True)
++            total = float(counts.sum())
++            histograms[str(name)] = {str(int(key)): float(count / total) for key, count in zip(unique, counts, strict=True)}
++            dominants[str(name)] = int(unique[int(np.argmax(counts))])
++        row["transition_affinity_histograms"] = histograms
++        row["transition_affinity_dominants"] = dominants
++
++
++def _attach_modular_response_histograms(
++    observer_rows: list[dict[str, Any]],
++    response_kernel: dict[str, Any],
++    chart_cfg: dict[str, Any],
++) -> None:
++    matrix = np.asarray(response_kernel.get("matrix", np.zeros((0, 0))), dtype=float)
++    observer_ids = [int(value) for value in response_kernel.get("observer_ids", [])]
++    if matrix.ndim != 2 or matrix.shape[0] == 0 or matrix.shape[1] == 0 or len(observer_ids) != matrix.shape[0]:
++        return
++    components = max(1, int(chart_cfg.get("modular_response_cluster_components", 2)))
++    bins = max(2, int(chart_cfg.get("modular_response_cluster_bins", 4)))
++    component_bins, cluster_tokens = _modular_response_cluster_tokens(
++        matrix,
++        components=components,
++        bins=bins,
++    )
++    row_by_id = {
++        int(row.get("observer_id", -1)): row
++        for row in observer_rows
++        if row.get("view_type") == "patch_observer"
++    }
++    for row_index, observer_id in enumerate(observer_ids):
++        row = row_by_id.get(int(observer_id))
++        if row is None:
++            continue
++        histograms = dict(row.get("modular_response_histograms", {}) or {})
++        token = int(cluster_tokens[row_index])
++        histograms["modular_response_cluster"] = {str(token): 1.0}
++        for component_index in range(component_bins.shape[1]):
++            histograms[f"modular_response_component_{component_index}"] = {
++                str(int(component_bins[row_index, component_index])): 1.0
++            }
++        row["modular_response_histograms"] = histograms
++        row["modular_response_cluster"] = int(token)
++        response_row = np.asarray(matrix[row_index], dtype=float)
++        if response_row.size:
++            response_row = np.where(np.isfinite(response_row), response_row, 0.0)
++            centered = response_row - float(np.mean(response_row))
++            scale = float(np.std(centered))
++            if scale > 1e-12:
++                centered = centered / scale
++            row["repair_response_spectrum"] = [float(value) for value in centered[:32]]
++        row["perturb_resettle_signature"] = [
++            float(value)
++            for value in component_bins[row_index, : min(component_bins.shape[1], 8)]
++        ]
++
++
++def _modular_response_cluster_tokens(
++    matrix: np.ndarray,
++    *,
++    components: int,
++    bins: int,
++) -> tuple[np.ndarray, np.ndarray]:
++    matrix = np.asarray(matrix, dtype=float)
++    centered = matrix - np.mean(matrix, axis=0, keepdims=True)
++    scale = np.std(centered, axis=0, keepdims=True)
++    scale[scale < 1e-9] = 1.0
++    standardized = centered / scale
++    try:
++        u, singular_values, _vh = np.linalg.svd(standardized, full_matrices=False)
++        embedding = u[:, :components] * singular_values[:components][None, :]
++    except np.linalg.LinAlgError:
++        embedding = standardized[:, :components]
++    if embedding.shape[1] < int(components):
++        padding = np.zeros((embedding.shape[0], int(components) - embedding.shape[1]), dtype=float)
++        embedding = np.hstack([embedding, padding])
++    component_bins = np.zeros((embedding.shape[0], int(components)), dtype=np.int64)
++    for component_index in range(int(components)):
++        values = embedding[:, component_index]
++        edges = np.quantile(values, np.linspace(0.0, 1.0, int(bins) + 1)[1:-1])
++        if edges.size and np.allclose(edges, edges[0]):
++            component_bins[:, component_index] = 0
++        else:
++            component_bins[:, component_index] = np.digitize(values, edges, right=False)
++    cluster_tokens = np.asarray(
++        [
++            _stable_hash_to_int(stable_json_hash([int(value) for value in row]))
++            for row in component_bins
++        ],
++        dtype=np.int64,
++    )
++    return component_bins, cluster_tokens
++
++
++def _attach_transition_history_histograms(
++    observer_rows: list[dict[str, Any]],
++    history_raw_fields: list[dict[str, np.ndarray]],
++    object_cfg: dict[str, Any],
++) -> None:
++    field_names = [
++        str(field)
++        for field in object_cfg.get(
++            "transition_history_fields",
++            object_cfg.get(
++                "transition_affinity_fields",
++                [
++                    "record_family",
++                    "checkpoint_class",
++                    "stable_flag",
++                    "s3_sector_class",
++                    "repair_load_bucket",
++                ],
++            ),
++        )
++    ]
++    key_field_names = [
++        str(field)
++        for field in object_cfg.get(
++            "transition_history_key_fields",
++            field_names,
++        )
++    ]
++    persistence_field_names = [
++        str(field)
++        for field in object_cfg.get(
++            "transition_persistence_fields",
++            ["record_family", "s3_sector_class"],
++        )
++    ]
++    include_readout_hash = bool(object_cfg.get("transition_history_include_readout_hash", False))
++    readout_hash_prefix_chars = max(1, int(object_cfg.get("transition_history_readout_hash_prefix_chars", 8)))
++    if not field_names or not history_raw_fields:
++        return
++    history_fields = [transition_affinity_packet_fields(raw_fields, object_cfg) for raw_fields in history_raw_fields]
++    history_fields = [fields for fields in history_fields if fields]
++    if not history_fields:
++        return
++    for row in observer_rows:
++        if row.get("view_type") != "patch_observer":
++            continue
++        support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
++        steps: list[dict[str, int]] = []
++        step_masses: list[float] = []
++        field_paths: dict[str, list[int]] = {name: [] for name in field_names}
++        for fields in history_fields:
++            descriptor: dict[str, int] = {}
++            mass_terms: list[float] = []
++            for name in field_names:
++                packets = fields.get(name)
++                if packets is None:
++                    continue
++                packets = np.asarray(packets, dtype=np.int64)
++                valid = support[(support >= 0) & (support < packets.size)]
++                if valid.size == 0:
++                    continue
++                values, counts = np.unique(packets[valid], return_counts=True)
++                dominant = int(values[int(np.argmax(counts))])
++                descriptor[str(name)] = dominant
++                field_paths[str(name)].append(dominant)
++                mass_terms.append(float(np.max(counts) / max(1, counts.sum())))
++            if descriptor:
++                steps.append(descriptor)
++                step_masses.append(float(np.mean(mass_terms)) if mass_terms else 0.0)
++        if not steps:
++            row["transition_history_key"] = None
++            row["transition_history_persistence"] = 0
++            row["transition_history_histogram"] = {}
++            continue
++        persistence = _transition_history_persistence(steps, fields=persistence_field_names)
++        descriptor_payload = {
++            "fields": field_names,
++            "steps": steps,
++            "persistence": int(persistence),
++            "persistence_fields": persistence_field_names,
++            "sector_change_count": _path_change_count(field_paths.get("s3_sector_class", [])),
++            "record_family_change_count": _path_change_count(field_paths.get("record_family", [])),
++        }
++        key_payload = {
++            "key_fields": key_field_names,
++            "field_counts": {
++                name: _path_value_counts(field_paths.get(name, []))
++                for name in key_field_names
++                if field_paths.get(name)
++            },
++            "final": {name: steps[-1][name] for name in key_field_names if name in steps[-1]},
++            "persistence": int(persistence),
++            "sector_change_count": _path_change_count(field_paths.get("s3_sector_class", [])),
++            "record_family_change_count": _path_change_count(field_paths.get("record_family", [])),
++        }
++        if include_readout_hash:
++            readout_hash = str(row.get("visible_readout_hash", ""))
++            if ":" in readout_hash:
++                readout_hash = readout_hash.split(":", 1)[1]
++            key_payload["observer_visible_readout_hash_prefix"] = readout_hash[:readout_hash_prefix_chars]
++        signature_hash = stable_json_hash(key_payload)
++        signature = _stable_hash_to_int(signature_hash)
++        row["transition_history_key"] = signature
++        row["transition_history_hash"] = signature_hash
++        row["transition_history_descriptor"] = descriptor_payload
++        row["transition_history_key_descriptor"] = key_payload
++        row["transition_history_persistence"] = int(persistence)
++        row["transition_history_mean_modal_mass"] = float(np.mean(step_masses)) if step_masses else 0.0
++        row["transition_history_histogram"] = {str(signature): 1.0}
++        local_token_histogram, local_token_persistent_histogram = _local_transition_token_histograms(
++            support,
++            history_fields,
++            key_field_names=key_field_names,
++            persistence_field_names=persistence_field_names,
++            min_persistence=int(object_cfg.get("transition_history_local_min_persistence", 1)),
++        )
++        row["transition_history_histograms"] = {
++            "transition_history_key": {str(signature): 1.0},
++            "local_transition_token": local_token_histogram,
++            "local_transition_token_persistent": local_token_persistent_histogram,
++            **{
++                f"{name}_path": {str(_stable_hash_to_int(stable_json_hash(values))): 1.0}
++                for name, values in field_paths.items()
++                if values
++            },
++        }
++        row["record_transition_histogram"] = _histogram_summary_vector(
++            local_token_persistent_histogram or local_token_histogram or row["transition_history_histogram"],
++            max_items=16,
++        )
++        row["checkpoint_class_transition"] = _histogram_summary_vector(
++            row["transition_history_histograms"].get("checkpoint_class_path", {}),
++            max_items=8,
++        )
++        row["sector_change_signature"] = [
++            float(descriptor_payload["sector_change_count"]),
++            float(descriptor_payload["record_family_change_count"]),
++            float(persistence),
++            float(row["transition_history_mean_modal_mass"]),
++        ]
++        row["counterfactual_stability"] = float(row["transition_history_mean_modal_mass"])
++
++
++def _transition_history_persistence(steps: list[dict[str, int]], *, fields: list[str]) -> int:
++    if not steps:
++        return 0
++    selected_fields = [str(field) for field in fields if str(field) in steps[-1]]
++    final = {field: steps[-1][field] for field in selected_fields} if selected_fields else steps[-1]
++    count = 0
++    for step in reversed(steps):
++        current = {field: step[field] for field in selected_fields if field in step} if selected_fields else step
++        if current != final:
++            break
++        count += 1
++    return int(count)
++
++
++def _local_transition_token_histograms(
++    support: np.ndarray,
++    history_fields: list[dict[str, np.ndarray]],
++    *,
++    key_field_names: list[str],
++    persistence_field_names: list[str],
++    min_persistence: int,
++) -> tuple[dict[str, float], dict[str, float]]:
++    """Observer-visible per-node transition history tokens for local objects.
++
++    The support-modal transition history intentionally summarizes what an
++    observer sees as one packet. This helper keeps the bounded local packet
++    mixture inside the same observer support, so localized sub-histories are not
++    erased by a dominant background packet. It uses only transition packet
++    fields already exposed to observer rows.
++    """
++
++    support = np.asarray(support, dtype=np.int64)
++    if support.size == 0 or not history_fields:
++        return {}, {}
++    names = [str(name) for name in key_field_names if str(name)]
++    if not names:
++        names = sorted({str(name) for fields in history_fields for name in fields.keys()})
++    counts: dict[int, int] = {}
++    persistent_counts: dict[int, int] = {}
++    for node in support:
++        node_index = int(node)
++        steps: list[dict[str, int]] = []
++        paths: dict[str, list[int]] = {name: [] for name in names}
++        for fields in history_fields:
++            descriptor: dict[str, int] = {}
++            for name in names:
++                values = fields.get(name)
++                if values is None:
++                    continue
++                values = np.asarray(values, dtype=np.int64)
++                if node_index < 0 or node_index >= values.size:
++                    continue
++                value = int(values[node_index])
++                descriptor[str(name)] = value
++                paths[str(name)].append(value)
++            if descriptor:
++                steps.append(descriptor)
++        if not steps:
++            continue
++        persistence = _transition_history_persistence(steps, fields=persistence_field_names)
++        token_payload = {
++            "key_fields": names,
++            "steps": steps,
++            "persistence": int(persistence),
++            "sector_change_count": _path_change_count(paths.get("s3_sector_class", [])),
++            "record_family_change_count": _path_change_count(paths.get("record_family", [])),
++        }
++        token = _stable_hash_to_int(stable_json_hash(token_payload))
++        counts[token] = counts.get(token, 0) + 1
++        if persistence >= int(min_persistence):
++            persistent_counts[token] = persistent_counts.get(token, 0) + 1
++    return _normalize_int_counts(counts), _normalize_int_counts(persistent_counts)
++
++
++def _path_change_count(values: list[int]) -> int:
++    if len(values) < 2:
++        return 0
++    return int(sum(1 for before, after in zip(values, values[1:], strict=False) if int(before) != int(after)))
++
++
++def _path_value_counts(values: list[int]) -> dict[str, int]:
++    if not values:
++        return {}
++    unique, counts = np.unique(np.asarray(values, dtype=np.int64), return_counts=True)
++    return {str(int(value)): int(count) for value, count in zip(unique, counts, strict=True)}
++
++
++def _normalize_int_counts(counts: dict[int, int]) -> dict[str, float]:
++    total = float(sum(int(value) for value in counts.values()))
++    if total <= 0.0:
++        return {}
++    return {str(int(key)): float(value / total) for key, value in sorted(counts.items())}
++
++
++def _histogram_summary_vector(histogram: dict[str, float], *, max_items: int) -> list[float]:
++    """Distributional observer-visible packet summary for blind reconstruction.
++
++    The blind bulk audit cannot consume support nodes, axes, or cap-membership
++    data. Exact transition-token identities are intentionally not included
++    here: categorical packet hashes can manufacture high-rank distances. Object
++    extraction still receives the full token histograms separately, while the
++    blind dimension audit gets only distributional continuation statistics.
++    """
++
++    if not histogram:
++        return []
++    values: list[float] = []
++    for value in histogram.values():
++        try:
++            numeric_value = float(value)
++        except (TypeError, ValueError):
++            continue
++        if np.isfinite(numeric_value) and numeric_value > 0.0:
++            values.append(float(numeric_value))
++    if not values:
++        return []
++    array = np.asarray(sorted(values, reverse=True), dtype=float)
++    total = float(np.sum(array))
++    if total <= 0.0:
++        return []
++    probs = array / total
++    entropy = float(-np.sum(probs * np.log(np.maximum(probs, 1e-15))))
++    effective_count = float(1.0 / np.sum(probs * probs))
++    tail_mass = float(np.sum(probs[max(1, int(max_items)) :])) if probs.size > int(max_items) else 0.0
++    top = probs[: min(3, probs.size)]
++    padded = np.zeros(3, dtype=float)
++    padded[: top.size] = top
++    return [
++        entropy,
++        effective_count,
++        float(probs[0]),
++        tail_mass,
++        float(probs.size),
++        *[float(value) for value in padded],
++    ]
++
++
++def _stable_hash_to_int(hash_value: str, *, hex_digits: int = 12) -> int:
++    digest = str(hash_value).split(":", 1)[-1]
++    return int(digest[: int(hex_digits)], 16)
++
++
+ def _cosmology_gate_report(
+     cosmology_cfg: dict[str, Any],
+     emergence_status: dict[str, Any],
+@@ -1593,9 +2696,6 @@ def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, c
+     report = {
+         "mode": "theorem_core_receipt_bundle",
+         "receipt": bool(lyapunov.get("receipt", False) and exact_repair.get("receipt", False)),
+-        "claim_level": RECOVERED_CORE,
+-        "receipt_name": "THEOREM_CORE_RECEIPT_BUNDLE",
+-        "physical_claim": False,
+         "lyapunov": lyapunov,
+         "exact_repair_projection": exact_repair,
+         "sm_quotient_gate": sm_gate,
+@@ -1605,7 +2705,14 @@ def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, c
+             "candidate sieve when supplied"
+         ),
+     }
+-    return report
++    return with_claim_metadata(
++        report,
++        claim_level=RECOVERED_CORE,
++        receipt="THEOREM_CORE_RECEIPT_BUNDLE",
++        physical_claim=False,
++        observable_id="finite_theorem_core_receipts",
++        fit_objective="lyapunov_and_projection_receipts",
++    )
+ 
+ 
+ def _regularize_support_visible_fields(
+@@ -1724,6 +2831,27 @@ def _collar_report(config: dict[str, Any], patch_count: int, collar_width: float
+     }
+ 
+ 
++def _geometry_cache_from_config(
++    points: np.ndarray,
++    config: dict[str, Any],
++    outputs_cfg: dict[str, Any],
++) -> GeometryCache | None:
++    cache_cfg = dict(config.get("cache", {}).get("geometry", {}) or {})
++    output_cache_cfg = outputs_cfg.get("geometry_cache")
++    if isinstance(output_cache_cfg, dict):
++        cache_cfg = {**cache_cfg, **output_cache_cfg}
++    elif isinstance(output_cache_cfg, str):
++        cache_cfg["cache_dir"] = output_cache_cfg
++        cache_cfg["enabled"] = True
++    enabled = bool(cache_cfg.get("enabled", False))
++    cache_dir = cache_cfg.get("cache_dir", cache_cfg.get("dir"))
++    if not enabled and cache_dir is None:
++        return None
++    if cache_dir is None:
++        cache_dir = ".oph_fpe_cache/geometry"
++    return GeometryCache(points, cache_dir=Path(cache_dir))
++
++
+ def _run_id(name: str) -> str:
+     slug = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in str(name).lower()).strip("_")
+     return f"{slug}_{int(time.time())}"
+diff --git a/tests/test_modular_response_h3.py b/tests/test_modular_response_h3.py
+index db781c4..c895312 100644
+--- a/tests/test_modular_response_h3.py
++++ b/tests/test_modular_response_h3.py
+@@ -1,8 +1,24 @@
+ import numpy as np
+ 
+ from oph_fpe.bulk.cap_geometry import sample_caps
+-from oph_fpe.bulk.h3_response_fit import modular_response_h3_report, synthetic_h3_modular_kernel
+-from oph_fpe.bulk.modular_response_kernel import kernel_json_summary, modular_response_kernel
++from oph_fpe.bulk.h3_refit import (
++    load_modular_response_kernel_cache,
++    write_h3_refit_ensemble_report,
++    write_h3_refit_report,
++    write_modular_response_kernel_cache,
++)
++from oph_fpe.bulk.h3_response_fit import (
++    _channel_keys,
++    _h3_profile_matrix,
++    modular_response_h3_report,
++    synthetic_h3_modular_kernel,
++)
++from oph_fpe.bulk.modular_response_kernel import (
++    _modular_selected_edges,
++    _perturb_side,
++    kernel_json_summary,
++    modular_response_kernel,
++)
+ from oph_fpe.cache.geometry_cache import GeometryCache
+ from oph_fpe.core.graph import fibonacci_sphere_points
+ 
+@@ -21,6 +37,27 @@ def test_geometry_cache_reuses_cap_transport_map():
+     assert cache.report()["transport_map_count"] == 1
+ 
+ 
++def test_geometry_cache_persists_cap_transport_map(tmp_path):
++    points = fibonacci_sphere_points(256)
++    caps = sample_caps(points, count=2, theta_values=[0.55], seed=11)
++    cache_dir = tmp_path / "geometry"
++    cold_cache = GeometryCache(points, cache_dir=cache_dir)
++
++    first_indices, first_weights = cold_cache.cap_transport_map(caps[0], 0.25, k=1, cap_id=0)
++    cold_report = cold_cache.report()
++
++    warm_cache = GeometryCache(points, cache_dir=cache_dir)
++    second_indices, second_weights = warm_cache.cap_transport_map(caps[0], 0.25, k=1, cap_id=0)
++    warm_report = warm_cache.report()
++
++    assert np.array_equal(first_indices, second_indices)
++    assert np.array_equal(first_weights, second_weights)
++    assert cold_report["persistent_cache_disk_writes"] == 1
++    assert warm_report["persistent_cache_disk_hits"] == 1
++    assert warm_report["persistent_cache_disk_writes"] == 0
++    assert list(cache_dir.rglob("transport_*.npz"))
++
++
+ def test_modular_response_kernel_shape_and_summary():
+     points = fibonacci_sphere_points(512)
+     caps = sample_caps(points, count=3, theta_values=[0.55, 0.75], seed=2)
+@@ -86,6 +123,69 @@ def test_synthetic_modular_response_h3_receipt_can_pass_controls():
+     assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
+     assert report["claim_level"] == "demo"
+     assert report["physical_claim"] is False
++    assert report["h3_chart_dimension_debug"]["mode"] == "h3_chart_dimension_debug"
++
++
++def test_h3_channel_keys_can_tie_modular_time_by_cap():
++    rows = [
++        {
++            "cap_index": 1,
++            "time_index": 0,
++            "observable": "record_signature",
++            "feature_type": "class_distribution_delta",
++            "target_class": 2,
++        },
++        {
++            "cap_index": 1,
++            "time_index": 1,
++            "observable": "record_signature",
++            "feature_type": "class_distribution_delta",
++            "target_class": 2,
++        },
++        {
++            "cap_index": 2,
++            "time_index": 0,
++            "observable": "record_signature",
++            "feature_type": "class_distribution_delta",
++            "target_class": 2,
++        },
++    ]
++
++    default_keys = _channel_keys(rows)
++    tied_by_cap = _channel_keys(rows, mode="cap_observable_class")
++    tied_global = _channel_keys(rows, mode="observable_class")
++
++    assert default_keys[0] != default_keys[1]
++    assert tied_by_cap[0] == tied_by_cap[1]
++    assert tied_by_cap[0] != tied_by_cap[2]
++    assert tied_global[0] == tied_global[1] == tied_global[2]
++
++
++def test_h3_modular_time_profile_is_time_dependent():
++    points = fibonacci_sphere_points(256)
++    caps = sample_caps(points, count=2, theta_values=[0.75], seed=31)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=12,
++        times=[0.0, 0.2],
++        field_names=["record_signature"],
++        seed=32,
++    )
++    h3_points = np.asarray(kernel["h3_source_points"], dtype=float)
++    rows = list(kernel["feature_rows"])
++
++    profile = _h3_profile_matrix(
++        h3_points,
++        [caps[int(row["cap_index"])] for row in rows],
++        [{**row, "cap_index": index} for index, row in enumerate(rows)],
++        softness=0.25,
++        profile_mode="modular_time_delta",
++        profile_time_scale=2.0 * np.pi,
++    )
++
++    assert profile.shape == kernel["matrix"].shape
++    assert np.allclose(profile[:, 0], 0.0, atol=1e-12)
++    assert float(np.std(profile[:, 1])) > 1e-4
+ 
+ 
+ def test_object_transition_kernel_is_signed_and_writes_controls():
+@@ -174,20 +274,266 @@ def test_perturb_resettle_transition_kernel_uses_graph_state():
+             "patch_count": points.shape[0],
+         },
+         perturb_strength=1.0,
++        perturb_budget_mode="fixed_collar_fraction",
++        fixed_perturb_fraction=0.25,
++        perturb_selection_mode="lambda_displacement",
+         repair_steps=2,
+         repairs_per_step=32,
+         perturb_seed=9,
+-        wrong_scales=[1.0, np.pi],
++        wrong_scales=[1.0, np.pi, 2.0 * np.pi],
+     )
+ 
+     assert kernel["observable_mode"] == "perturb_resettle_transition"
+     assert kernel["matrix"].shape[0] == len(observer_views)
+     assert kernel["matrix"].shape == kernel["no_modular_flow_control"].shape
+     assert "perturb_resettle_report" in kernel
++    assert kernel["perturb_resettle_report"]["perturb_selection_mode"] == "lambda_displacement"
++    assert kernel["perturb_resettle_report"]["perturb_budget_mode"] == "fixed_collar_fraction"
++    assert kernel["perturb_resettle_report"]["transition_readout_mode"] == "same_support"
++    assert np.allclose(kernel["wrong_scale_controls"]["2pi"], kernel["matrix"])
+     assert kernel["raw_response_summary"]["std"] > 0.0
+     assert kernel["response_summary"]["std"] > 0.0
+ 
+ 
++def test_collar_generator_selection_targets_cap_collar_and_oriented_side():
++    points = fibonacci_sphere_points(1024)
++    caps = sample_caps(points, count=1, theta_values=[0.75], seed=81)
++    cap = caps[0]
++    left = np.arange(0, 768, dtype=np.int64)
++    right = (left + 17) % points.shape[0]
++    all_edges = np.arange(left.size, dtype=np.int64)
++    rng = np.random.default_rng(82)
++
++    chosen = _modular_selected_edges(
++        points,
++        cap,
++        left,
++        right,
++        all_edges,
++        96,
++        scale=2.0 * np.pi,
++        time_value=0.125,
++        rng=rng,
++        mode="lambda_collar_generator",
++    )
++
++    mids = points[left] + points[right]
++    mids = mids / np.maximum(np.linalg.norm(mids, axis=1, keepdims=True), 1e-12)
++    threshold = np.cos(cap.theta0)
++    all_boundary_distance = np.abs(mids @ cap.axis - threshold)
++    selected_boundary_distance = all_boundary_distance[chosen]
++    assert float(np.median(selected_boundary_distance)) < float(np.median(all_boundary_distance))
++
++    side = _perturb_side(
++        points,
++        cap,
++        left[chosen],
++        right[chosen],
++        scale=2.0 * np.pi,
++        time_value=0.125,
++        mode="lambda_collar_generator",
++    )
++    assert side.shape == chosen.shape
++    assert side.dtype == np.bool_
++    assert 0 < int(np.sum(side)) < side.size
++
++
++def test_collar_operator_transition_preserves_lambda_flow_readout():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=3, theta_values=[0.55, 0.75], seed=18)
++    raw_fields = {
++        "record_signature": np.arange(points.shape[0]) % 23,
++        "stable_count": (np.arange(points.shape[0]) % 11) + 1,
++        "committed_mask": (np.arange(points.shape[0]) % 2 == 0).astype(float),
++        "repair_load": np.abs(points[:, 0]),
++        "cumulative_repair_load": np.abs(points[:, 1]),
++        "s3_sector_class": np.arange(points.shape[0]) % 6,
++    }
++    observer_views = [
++        {
++            "view_type": "patch_observer",
++            "observer_id": index,
++            "axis": [float(value) for value in points[index]],
++            "support_nodes": list(range(index, min(index + 32, points.shape[0]))),
++        }
++        for index in range(0, 256, 32)
++    ]
++
++    kernel = modular_response_kernel(
++        points,
++        caps,
++        raw_fields,
++        observer_views,
++        times=[0.125, 0.25],
++        observable_mode="collar_operator_transition",
++        transition_observables=["checkpoint_class", "record_family", "s3_sector_class"],
++        transition_feature_types=[
++            "class_distribution_delta",
++            "transition_matrix_delta",
++            "change_probability_delta",
++        ],
++        transform="signed_robust_zscore",
++        wrong_scales=[1.0, 2.0 * np.pi],
++    )
++
++    assert kernel["observable_mode"] == "collar_operator_transition"
++    assert kernel["matrix"].shape[0] == len(observer_views)
++    assert kernel["matrix"].shape == kernel["no_modular_flow_control"].shape
++    assert kernel["matrix"].shape == kernel["wrong_scale_controls"]["2pi"].shape
++    assert np.allclose(kernel["wrong_scale_controls"]["2pi"], kernel["matrix"])
++    assert not np.allclose(kernel["wrong_scale_controls"]["1x"], kernel["matrix"])
++    assert kernel["raw_response_summary"]["std"] > 0.0
++    assert kernel["response_summary"]["std"] > 0.0
++    assert kernel["collar_operator_report"]["readout"] == "source_support_to_lambda_transported_support_with_collar_flow_weights"
++
++
++def test_grouped_robust_zscore_preserves_time_groups():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=2, theta_values=[0.75], seed=93)
++    raw_fields = {
++        "record_signature": np.arange(points.shape[0]) % 23,
++        "stable_count": (np.arange(points.shape[0]) % 13) + 1,
++        "committed_mask": (np.arange(points.shape[0]) % 2 == 0).astype(float),
++        "repair_load": np.abs(points[:, 0]),
++        "s3_sector_class": np.arange(points.shape[0]) % 6,
++    }
++    observer_views = [
++        {
++            "view_type": "patch_observer",
++            "observer_id": index,
++            "axis": [float(value) for value in points[index]],
++            "support_nodes": list(range(index, min(index + 32, points.shape[0]))),
++        }
++        for index in range(0, 256, 32)
++    ]
++
++    kernel = modular_response_kernel(
++        points,
++        caps,
++        raw_fields,
++        observer_views,
++        times=[0.125, 0.25, 0.5],
++        observable_mode="collar_operator_transition",
++        transition_observables=["record_family", "s3_sector_class"],
++        transition_feature_types=["class_distribution_delta", "change_probability_delta"],
++        transform="signed_group_robust_zscore",
++        wrong_scales=[1.0, 2.0 * np.pi],
++    )
++
++    assert kernel["transform_report"]["mode"] == "signed_group_robust_zscore"
++    assert kernel["transform_report"]["group_count"] < kernel["matrix"].shape[1]
++    assert kernel["matrix"].shape == kernel["wrong_scale_controls"]["2pi"].shape
++    assert np.allclose(kernel["wrong_scale_controls"]["2pi"], kernel["matrix"])
++
++
++def test_perturb_resettle_can_read_transported_observer_supports():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=2, theta_values=[0.75], seed=88)
++    left = np.arange(0, 384, dtype=np.int64)
++    right = (left + 11) % points.shape[0]
++    port_left = (np.arange(left.size) % 6).astype(np.int16)
++    port_right = ((np.arange(left.size) + 2) % 6).astype(np.int16)
++    raw_fields = {
++        "record_signature": np.arange(points.shape[0]) % 23,
++        "stable_count": (np.arange(points.shape[0]) % 13) + 1,
++        "committed_mask": (np.arange(points.shape[0]) % 2 == 0).astype(float),
++        "repair_load": np.abs(points[:, 0]),
++        "cumulative_repair_load": np.abs(points[:, 1]),
++        "s3_sector_class": np.arange(points.shape[0]) % 6,
++    }
++    observer_views = [
++        {
++            "view_type": "patch_observer",
++            "observer_id": index,
++            "axis": [float(value) for value in points[index]],
++            "support_nodes": list(range(index, min(index + 32, points.shape[0]))),
++        }
++        for index in range(0, 256, 32)
++    ]
++
++    kernel = modular_response_kernel(
++        points,
++        caps,
++        raw_fields,
++        observer_views,
++        times=[0.2],
++        observable_mode="perturb_resettle_transition",
++        transition_observables=["checkpoint_class", "record_family", "repair_load_bucket"],
++        transform="signed_zscore",
++        graph_state={
++            "left": left,
++            "right": right,
++            "port_left": port_left,
++            "port_right": port_right,
++            "group_order": 6,
++            "patch_count": points.shape[0],
++        },
++        perturb_strength=1.0,
++        perturb_budget_mode="fixed_collar_fraction",
++        fixed_perturb_fraction=0.25,
++        perturb_selection_mode="lambda_displacement",
++        transition_readout_mode="transported_support",
++        repair_steps=2,
++        repairs_per_step=32,
++        perturb_seed=89,
++        wrong_scales=[1.0, 2.0 * np.pi],
++    )
++
++    assert kernel["observable_mode"] == "perturb_resettle_transition"
++    assert kernel["perturb_resettle_report"]["transition_readout_mode"] == "transported_support"
++    assert np.allclose(kernel["wrong_scale_controls"]["2pi"], kernel["matrix"])
++    assert not np.allclose(kernel["wrong_scale_controls"]["1x"], kernel["matrix"])
++    assert kernel["raw_response_summary"]["std"] > 0.0
++
++
++def test_transition_response_alias_uses_perturb_resettle_kernel():
++    points = fibonacci_sphere_points(192)
++    caps = sample_caps(points, count=1, theta_values=[0.55], seed=10)
++    left = np.arange(0, 96, dtype=np.int64)
++    right = (left + 5) % points.shape[0]
++    raw_fields = {
++        "record_signature": np.arange(points.shape[0]) % 11,
++        "stable_count": (np.arange(points.shape[0]) % 7) + 1,
++        "committed_mask": (np.arange(points.shape[0]) % 2 == 0).astype(float),
++        "repair_load": np.abs(points[:, 0]),
++        "s3_sector_class": np.arange(points.shape[0]) % 6,
++    }
++    observer_views = [
++        {
++            "view_type": "patch_observer",
++            "observer_id": index,
++            "axis": [float(value) for value in points[index]],
++            "support_nodes": list(range(index, min(index + 12, points.shape[0]))),
++        }
++        for index in range(0, 96, 12)
++    ]
++
++    kernel = modular_response_kernel(
++        points,
++        caps,
++        raw_fields,
++        observer_views,
++        times=[0.125],
++        observable_mode="transition_response",
++        transition_observables=["checkpoint_class", "record_family"],
++        transform="signed_zscore",
++        graph_state={
++            "left": left,
++            "right": right,
++            "port_left": (np.arange(left.size) % 6).astype(np.int16),
++            "port_right": ((np.arange(left.size) + 1) % 6).astype(np.int16),
++            "group_order": 6,
++            "patch_count": points.shape[0],
++        },
++        repair_steps=1,
++        repairs_per_step=16,
++    )
++
++    assert kernel["observable_mode"] == "perturb_resettle_transition"
++    assert kernel["matrix"].shape[0] == len(observer_views)
++    assert kernel["transform_report"]["mode"] == "signed_zscore"
++
++
+ def test_synthetic_modular_response_joint_h3_receipt_can_pass_controls():
+     points = fibonacci_sphere_points(512)
+     caps = sample_caps(points, count=12, theta_values=[0.55, 0.75, 1.0], seed=6)
+@@ -199,6 +545,11 @@ def test_synthetic_modular_response_joint_h3_receipt_can_pass_controls():
+         seed=7,
+         softness=0.2,
+     )
++    matrix = np.asarray(kernel["matrix"], dtype=float)
++    kernel["wrong_scale_controls"] = {
++        "1x": 0.5 * np.ones_like(matrix),
++        "pi": np.flip(matrix, axis=1),
++    }
+ 
+     report = modular_response_h3_report(
+         kernel,
+@@ -213,8 +564,431 @@ def test_synthetic_modular_response_joint_h3_receipt_can_pass_controls():
+         fit_mode="joint_global",
+         anchor_weight=0.0,
+         max_iterations=3,
++        control_fit_mode="affine_target_fit",
+     )
+ 
+     assert report["fit_mode"] == "joint_global"
+     assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
++    assert report["H3_RESPONSE_CONTROL_SEPARATION_RECEIPT"] is True
+     assert report["h3_fit"]["heldout_normalized_rmse"] < report["s2_boundary_control"]["heldout_normalized_rmse"]
++    assert report["h3_chart_dimension_debug"]["point_count"] == 24
++    assert report["wrong_scale_feature_audit"]["eligible"] is True
++    assert report["wrong_scale_feature_audit"]["audited_feature_count"] > 0
++    assert "2pi_h3_fit" in report["wrong_scale_feature_audit"]["winner_counts"]
++    assert "2pi_h3_fit" in report["wrong_scale_feature_audit"]["material_winner_counts"]
++    assert report["wrong_scale_feature_audit"]["material_margin"] == 0.02
++    assert report["wrong_scale_feature_audit"]["worst_groups"]
++
++
++def test_modular_response_h3_feature_selection_filters_dead_columns():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=10, theta_values=[0.55, 0.75, 1.0], seed=16)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=17,
++        softness=0.2,
++    )
++    matrix = kernel["matrix"]
++    dead = np.zeros((matrix.shape[0], 20), dtype=float)
++    kernel["matrix"] = np.hstack([matrix, dead])
++    kernel["s2_boundary_control"] = np.hstack([kernel["s2_boundary_control"], dead])
++    kernel["shuffled_control"] = np.hstack([kernel["shuffled_control"], dead])
++    kernel["no_modular_flow_control"] = np.hstack([kernel["no_modular_flow_control"], dead])
++    for index in range(dead.shape[1]):
++        kernel["feature_rows"].append(
++            {
++                "feature_index": len(kernel["feature_rows"]),
++                "cap_index": 0,
++                "time_index": 0,
++                "time": 0.0,
++                "field": f"dead_{index}",
++            }
++        )
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=4096,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=17,
++        pass_ratio=0.95,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=3,
++        feature_selection="variance",
++        max_fit_features=24,
++        min_feature_std=1.0e-4,
++    )
++
++    assert report["feature_selection"]["mode"] == "variance"
++    assert report["feature_selection"]["original_feature_count"] == matrix.shape[1] + 20
++    assert report["feature_selection"]["selected_feature_count"] == 24
++    assert report["feature_count"] == 24
++    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
++
++
++def test_modular_response_h3_feature_selection_can_filter_wrong_scale_indistinct_columns():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=10, theta_values=[0.55, 0.75, 1.0], seed=166)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=167,
++        softness=0.2,
++    )
++    matrix = kernel["matrix"]
++    ambiguous = matrix[:, :12].copy()
++    kernel["matrix"] = np.hstack([matrix, ambiguous])
++    kernel["s2_boundary_control"] = np.hstack([kernel["s2_boundary_control"], ambiguous])
++    kernel["shuffled_control"] = np.hstack([kernel["shuffled_control"], ambiguous])
++    kernel["no_modular_flow_control"] = np.hstack([kernel["no_modular_flow_control"], ambiguous])
++    wrong_original = matrix + 0.05
++    kernel["wrong_scale_controls"] = {
++        "1x": np.hstack([wrong_original, ambiguous]),
++        "pi": np.hstack([wrong_original + 0.02, ambiguous]),
++    }
++    for index in range(ambiguous.shape[1]):
++        kernel["feature_rows"].append(
++            {
++                "feature_index": len(kernel["feature_rows"]),
++                "cap_index": 0,
++                "time_index": 0,
++                "time": 0.0,
++                "field": f"ambiguous_{index}",
++                "feature_type": "class_distribution_delta",
++            }
++        )
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=4096,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=167,
++        pass_ratio=0.95,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=3,
++        feature_selection="class_distribution_and_change",
++        max_fit_features=48,
++        min_feature_std=1.0e-4,
++        min_wrong_scale_feature_delta=1.0e-4,
++    )
++
++    selection = report["feature_selection"]
++    assert selection["wrong_scale_delta_filter_applied"] is True
++    assert selection["min_wrong_scale_feature_delta"] == 1.0e-4
++    assert selection["selected_feature_count"] < matrix.shape[1] + ambiguous.shape[1]
++    assert selection["scale_delta_min"] >= 1.0e-4
++
++
++def test_modular_response_h3_feature_selection_can_rank_by_wrong_scale_delta():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=10, theta_values=[0.55, 0.75, 1.0], seed=176)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=177,
++        softness=0.2,
++    )
++    matrix = kernel["matrix"]
++    for row in kernel["feature_rows"]:
++        row["observable"] = str(row.get("field", "record_signature"))
++        row["feature_type"] = "class_distribution_delta"
++    ambiguous = 10.0 * matrix[:, :8].copy()
++    kernel["matrix"] = np.hstack([matrix, ambiguous])
++    kernel["s2_boundary_control"] = np.hstack([kernel["s2_boundary_control"], ambiguous])
++    kernel["shuffled_control"] = np.hstack([kernel["shuffled_control"], ambiguous])
++    kernel["no_modular_flow_control"] = np.hstack([kernel["no_modular_flow_control"], ambiguous])
++    kernel["wrong_scale_controls"] = {
++        "1x": np.hstack([matrix + 0.2, ambiguous]),
++        "pi": np.hstack([matrix + 0.3, ambiguous]),
++    }
++    for index in range(ambiguous.shape[1]):
++        kernel["feature_rows"].append(
++            {
++                "feature_index": len(kernel["feature_rows"]),
++                "cap_index": 0,
++                "time_index": 0,
++                "time": 0.0,
++                "field": f"high_variance_wrong_scale_ambiguous_{index}",
++                "observable": "record_signature",
++                "feature_type": "class_distribution_delta",
++            }
++        )
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=1024,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=177,
++        pass_ratio=1.0,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=2,
++        feature_selection="class_distribution_and_change_scale_rank",
++        max_fit_features=matrix.shape[1],
++        min_feature_std=1.0e-4,
++        min_wrong_scale_feature_delta=1.0e-4,
++    )
++
++    selection = report["feature_selection"]
++    assert selection["rank_strategy"] == "wrong_scale_delta"
++    assert selection["selected_feature_count"] == matrix.shape[1]
++    assert selection["scale_delta_min"] >= 0.19
++    assert all(
++        "high_variance_wrong_scale_ambiguous" not in row["field"]
++        for row in report["feature_rows_sample"]
++    )
++
++
++def test_modular_response_h3_feature_selection_can_keep_change_probability_only():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=26)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=27,
++        softness=0.2,
++    )
++    for index, row in enumerate(kernel["feature_rows"]):
++        row["observable"] = str(row.get("field", "record_signature"))
++        row["feature_type"] = "change_probability_delta" if index % 2 == 0 else "target_distribution_delta"
++        row["target_class"] = None if index % 2 == 0 else 0
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=1024,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=27,
++        pass_ratio=1.0,
++        min_observers=8,
++        min_features=4,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=2,
++        feature_selection="change_probability_only",
++    )
++
++    assert report["feature_selection"]["mode"] == "change_probability_only"
++    assert report["feature_selection"]["metadata_filter"] == "feature_type=change_probability_delta"
++    assert report["feature_selection"]["selected_feature_count"] == len(kernel["feature_rows"]) // 2
++    assert all(
++        row["feature_type"] == "change_probability_delta"
++        for row in report["feature_rows_sample"]
++    )
++
++
++def test_modular_response_h3_feature_selection_accepts_pro_low_order_alias():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=28)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=29,
++        softness=0.2,
++    )
++    feature_types = [
++        "class_distribution_delta",
++        "class_log_odds_delta",
++        "transition_matrix_delta",
++        "entropy_delta",
++        "sector_preservation_delta",
++        "change_probability_delta",
++    ]
++    for index, row in enumerate(kernel["feature_rows"]):
++        row["observable"] = str(row.get("field", "record_signature"))
++        row["feature_type"] = feature_types[index % len(feature_types)]
++        row["target_class"] = index % 6
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=1024,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=29,
++        pass_ratio=1.0,
++        min_observers=8,
++        min_features=4,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=2,
++        feature_selection="signed_class_resolved_transition_features_without_transition_matrix",
++    )
++
++    assert report["feature_selection"]["mode"] == "signed_class_resolved_transition_features_without_transition_matrix"
++    assert report["feature_selection"]["metadata_filter"] == "signed_class_resolved_transition_features_without_transition_matrix"
++    assert report["feature_selection"]["selected_feature_count"] > 0
++    assert all(
++        row["feature_type"] != "transition_matrix_delta"
++        for row in report["feature_rows_sample"]
++    )
++
++
++def test_modular_response_kernel_cache_roundtrips_and_refits(tmp_path):
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=31)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=32,
++        softness=0.2,
++    )
++    cache_report = write_modular_response_kernel_cache(tmp_path, kernel, caps)
++    loaded_kernel, loaded_caps, metadata = load_modular_response_kernel_cache(tmp_path)
++
++    assert cache_report["observer_count"] == 24
++    assert loaded_kernel["matrix"].shape == kernel["matrix"].shape
++    assert loaded_kernel["wrong_scale_controls"] == {}
++    assert len(loaded_caps) == len(caps)
++    assert metadata["feature_rows"][0]["cap_index"] == 0
++
++    out = tmp_path / "refit.json"
++    report = write_h3_refit_report(
++        tmp_path,
++        out,
++        candidate_count=2048,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=32,
++        pass_ratio=0.95,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=3,
++    )
++
++    assert out.exists()
++    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
++    assert report["kernel_cache"]["observer_count"] == 24
++
++
++def test_h3_refit_seed_ensemble_reports_robustness(tmp_path):
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=41)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=42,
++        softness=0.2,
++    )
++    write_modular_response_kernel_cache(tmp_path, kernel, caps)
++
++    report = write_h3_refit_ensemble_report(
++        tmp_path,
++        tmp_path / "ensemble.json",
++        seeds=[42, 43, 44],
++        required_receipt_fraction=0.5,
++        candidate_count=2048,
++        candidate_radius=1.2,
++        softness=0.2,
++        pass_ratio=0.95,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=3,
++    )
++
++    assert report["mode"] == "h3_refit_seed_ensemble"
++    assert report["seed_count"] == 3
++    assert report["receipt_count"] >= 1
++    assert report["h3_response_seed_robust_receipt"] is True
++    assert report["physical_claim"] is False
++
++
++def test_joint_h3_fit_local_refinement_is_fair_to_controls():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=51)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=52,
++        softness=0.2,
++    )
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=512,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=52,
++        pass_ratio=0.95,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=2,
++        refine_steps=1,
++        refine_max_rows=8,
++        refine_max_nfev=8,
++    )
++
++    assert report["h3_fit"]["refinement"]["enabled"] is True
++    assert "shuffled_response" in report["control_fits"]
++    assert report["control_fits"]["shuffled_response"]["refinement"]["enabled"] is True
++
++
++def test_joint_h3_fit_can_use_deterministic_candidate_ball():
++    points = fibonacci_sphere_points(512)
++    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=61)
++    kernel = synthetic_h3_modular_kernel(
++        caps,
++        observer_count=24,
++        times=[0.05, 0.1],
++        field_names=["record_signature", "stable_count"],
++        seed=62,
++        softness=0.2,
++    )
++
++    report = modular_response_h3_report(
++        kernel,
++        caps,
++        candidate_count=1024,
++        candidate_radius=1.2,
++        softness=0.2,
++        seed=62,
++        pass_ratio=0.95,
++        min_observers=8,
++        min_features=12,
++        fit_mode="joint_global",
++        anchor_weight=0.0,
++        max_iterations=3,
++        candidate_mode="fibonacci_ball",
++    )
++
++    assert report["h3_fit"]["candidate_mode"] == "fibonacci_ball"
++    assert report["h3_fit"]["assignment_unique_count"] > 0
++    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True

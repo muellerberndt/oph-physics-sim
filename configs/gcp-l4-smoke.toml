@@ -1,10 +1,10 @@
 [cloud]
 provider = "gcp"
-project = "observer-patch-holography"
-project_number = "640205981110"
-region = "us-central1"
-zone = "us-central1-a"
-artifact_bucket = "oph-physics-sim-artifacts-640205981110-us-central1"
+project = "${GCP_PROJECT_ID}"
+project_number = "${GCP_PROJECT_NUMBER}"
+region = "${GCP_REGION}"
+zone = "${GCP_ZONE}"
+artifact_bucket = "${GCP_ARTIFACT_BUCKET}"
 
 [worker]
 purpose = "smoke"
@@ -17,6 +17,6 @@ image_project = "deeplearning-platform-release"
 image_family = "common-cu129-ubuntu-2204-nvidia-580"
 
 [quota]
-current_regional_gpu_limit = 1
+current_regional_gpu_limit = 0
 quota_metric = "NVIDIA_L4_GPUS"
-checked_regions = ["us-central1", "us-east1", "us-west1"]
+checked_regions = []

@@ -299,13 +299,16 @@ collar / carried-error framing better than a fixed angular collar.
 
 ## Cloud
 
-The default Google Cloud project is `observer-patch-holography`. Use the local named configuration:
+Use a local Google Cloud project configured outside the repository. A convenient pattern is a named
+`gcloud` configuration:
 
 ```bash
-gcloud config configurations activate oph-physics-sim
+gcloud config configurations activate <your-config-name>
 ```
 
-Cloud defaults live in `configs/` and secret-free local defaults are documented in `.env.example`.
+Cloud template defaults live in `configs/` and secret-free local placeholders are documented in
+`.env.example`. Put real project IDs, bucket names, account IDs, tokens, and keys in `.env.local`,
+shell exports, or cloud-native identity, not in committed files.
 See `docs/cloud.md` for quota notes and provider boundaries.
 
 For parallel execution and hardware sizing, see `docs/parallel_cloud_plan.md`.

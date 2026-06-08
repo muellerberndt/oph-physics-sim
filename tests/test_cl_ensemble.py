@@ -17,6 +17,8 @@ def test_cl_ensemble_aggregates_gate_allowed_runs():
     assert report["physical_cmb_prediction"] is False
     size = report["sizes"][0]
     assert size["gate_allowed_fraction"] == 2 / 3
+    assert size["cmb_lite"]["best_positive_field_counts"] == {"record_signature_smooth_k64": 2}
+    assert size["cmb_lite"]["mean_best_positive_shape_correlation"] == 0.35
     field = size["fields"]["record_signature"]
     assert field["run_count"] == 2
     assert field["peak_ell_mode"] == 4
@@ -49,5 +51,13 @@ def _row(patch_count: int, allowed: bool, values: list[float], *, peak: int, del
                     "max_shape_correlation": corr,
                 },
             }
+        },
+        "cmb_lite": {
+            "best_field": "stable_count",
+            "best_shape_correlation": -0.7,
+            "best_normalized_rmse": 0.65,
+            "best_positive_field": "record_signature_smooth_k64",
+            "best_positive_shape_correlation": 0.35,
+            "best_positive_normalized_rmse": 0.91,
         },
     }

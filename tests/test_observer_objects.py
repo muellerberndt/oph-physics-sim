@@ -52,6 +52,58 @@ def test_observer_object_coarse_visible_packet_groups_records():
     assert families[1].support_nodes == [3, 4, 5]
 
 
+def test_connected_record_families_skip_background_components():
+    records = {
+        "record_signature": np.ones(12, dtype=int),
+        "stable_count": np.ones(12, dtype=int) * 8,
+        "repair_load": np.zeros(12),
+    }
+    left = np.arange(11)
+    right = np.arange(1, 12)
+
+    families = extract_record_families(
+        records,
+        (left, right),
+        projections={"min_support_size": 2, "max_support_size": 5},
+        persistence_horizon=8,
+    )
+
+    assert families == []
+
+
+def test_transition_affinity_families_do_not_require_connected_support():
+    records = {
+        "record_signature": np.array([10, 90, 10, 90, 10, 90]),
+        "stable_count": np.array([8, 8, 8, 8, 8, 8]),
+        "committed_mask": np.ones(6),
+        "repair_load": np.array([0.1, 0.8, 0.2, 0.9, 0.15, 0.85]),
+        "cumulative_repair_load": np.array([0.2, 0.9, 0.1, 0.8, 0.15, 0.85]),
+        "s3_sector_class": np.array([1, 2, 1, 2, 1, 2]),
+    }
+    left = np.array([0, 1, 2, 3, 4])
+    right = np.array([1, 2, 3, 4, 5])
+
+    families = extract_record_families(
+        records,
+        (left, right),
+        projections={
+            "family_mode": "transition_affinity",
+            "packet_mode": "coarse_visible_packet",
+            "signature_bins": 2,
+            "include_s3_sector": True,
+            "transition_affinity_fields": ["record_family", "s3_sector_class"],
+            "record_family_modulus": 8,
+            "min_support_size": 2,
+        },
+        persistence_horizon=8,
+    )
+
+    supports = [set(family.support_nodes) for family in families]
+    assert {0, 2, 4} in supports
+    assert {1, 3, 5} in supports
+    assert all(family.transition_affinity for family in families)
+
+
 def test_counterfactual_stability_and_report():
     family = RecordFamily("obj", [0, 1], 4, 8, 1.0, "hash", 0.0)
     score = counterfactual_stability(family, [0, 1, 2], lambda _family, perturb: 4 if perturb < 2 else 9)

@@ -30,7 +30,8 @@ def angular_power_report(
     """
 
     rng = np.random.default_rng(seed)
-    controls = controls or ["shuffled_field", "random_gaussian"]
+    if controls is None:
+        controls = ["shuffled_field", "random_gaussian"]
     estimator = str(estimator)
     spectrum_fn = _spectrum_estimator(estimator)
     resolved_jobs = _resolve_n_jobs(n_jobs)
@@ -149,6 +150,7 @@ def _run_spectrum_tasks(
             ell_max=ell_max,
             measure_weights=measure_weights,
             harmonic_batch_size=harmonic_batch_size,
+            n_jobs=n_jobs,
         )
 
     def compute(task: dict[str, Any]) -> tuple[int, list[dict[str, float]]]:
@@ -183,6 +185,7 @@ def _run_harmonic_tasks_cached(
     ell_max: int,
     measure_weights: np.ndarray | None,
     harmonic_batch_size: int,
+    n_jobs: int = 1,
 ) -> dict[int, list[dict[str, float]]]:
     weights = _quadrature_weights(points.shape[0], measure_weights)
     standardized = []
@@ -197,16 +200,37 @@ def _run_harmonic_tasks_cached(
     theta = np.arccos(np.clip(points[:, 2].astype(float), -1.0, 1.0))
     phi = np.mod(np.arctan2(points[:, 1], points[:, 0]), 2.0 * math.pi)
     values_by_task = np.vstack(standardized) if standardized else np.zeros((0, points.shape[0]), dtype=float)
+    requested_jobs = max(1, int(n_jobs))
     batch_size = max(128, int(harmonic_batch_size))
-    for start in range(0, points.shape[0], batch_size):
-        stop = min(points.shape[0], start + batch_size)
+    worker_count = min(requested_jobs, max(1, math.ceil(points.shape[0] / batch_size)))
+    # Keep the total in-flight spherical-harmonic tensor size close to the
+    # single-worker batch size. This lets exact C_l runs use CPU parallelism
+    # without multiplying peak memory by n_jobs.
+    effective_batch_size = max(128, batch_size // worker_count) if worker_count > 1 else batch_size
+    ranges = [
+        (start, min(points.shape[0], start + effective_batch_size))
+        for start in range(0, points.shape[0], effective_batch_size)
+    ]
+
+    def compute_range(bounds: tuple[int, int]) -> np.ndarray:
+        start, stop = bounds
         y_all = sph_harm_y_all(m_max, m_max, theta[start:stop], phi[start:stop])
-        coeffs += np.einsum(
+        return np.einsum(
             "lmp,tp->tlm",
             np.conj(y_all),
             values_by_task[:, start:stop],
             optimize=True,
         )
+
+    if worker_count <= 1 or len(ranges) <= 1:
+        for bounds in ranges:
+            coeffs += compute_range(bounds)
+    else:
+        with ThreadPoolExecutor(max_workers=worker_count) as pool:
+            futures = [pool.submit(compute_range, bounds) for bounds in ranges]
+            for future in as_completed(futures):
+                coeffs += future.result()
+
     return {
         int(task["task_id"]): _coeffs_to_spectrum(coeffs[index], ell_max=m_max) if active[index] else _zero_spectrum(m_max)
         for index, task in enumerate(tasks)

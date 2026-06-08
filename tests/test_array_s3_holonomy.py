@@ -16,6 +16,7 @@ from oph_fpe.defects.array_s3_holonomy import (
     triangle_holonomies,
     track_defect_worldlines,
 )
+from oph_fpe.defects.controlled_assay import controlled_s3_particle_assay_report
 
 
 def test_s3_holonomy_identity_triangle():
@@ -158,3 +159,16 @@ def test_defect_interaction_reports_screen_transport_and_fusion_proxies():
     assert report["particle_matter_receipt"] is False
     assert particle["transportable_count"] == 1
     assert particle["particle_matter_receipt"] is False
+
+
+def test_controlled_s3_particle_assay_validates_particle_gate_without_physical_claim():
+    report = controlled_s3_particle_assay_report(patch_count=4096, observation_count=5, support_node_count=6)
+
+    assert report["controlled_planted_assay"] is True
+    assert report["s3_inverse_identity_pass"] is True
+    assert report["interaction_proxy_receipt"] is True
+    assert report["fusion_conservation_proxy_pass"] is True
+    assert report["particle_detector_positive_receipt"] is True
+    assert report["particle_like_count"] >= 1
+    assert report["physical_particle_emergence"] is False
+    assert "not evidence" in report["claim_boundary"]

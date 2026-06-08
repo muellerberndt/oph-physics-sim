@@ -1,7 +1,7 @@
 [cloud]
 provider = "aws"
-profile = "default"
-region = "us-east-1"
+profile = "${AWS_PROFILE}"
+region = "${AWS_REGION}"
 
 [worker_options]
 smoke_gpu = "g6e.xlarge"
@@ -11,9 +11,9 @@ eight_b200 = "p6-b200.48xlarge"
 eight_b300 = "p6-b300.48xlarge"
 
 [quota_snapshot_us_east_1]
-running_on_demand_p_vcpus = 128
-spot_p_vcpus = 128
-running_on_demand_g_and_vt_vcpus = 128
-spot_g_and_vt_vcpus = 128
-standard_on_demand_vcpus = 384
-checked_at = "2026-06-01"
+running_on_demand_p_vcpus = 0
+spot_p_vcpus = 0
+running_on_demand_g_and_vt_vcpus = 0
+spot_g_and_vt_vcpus = 0
+standard_on_demand_vcpus = 0
+checked_at = "not_checked"

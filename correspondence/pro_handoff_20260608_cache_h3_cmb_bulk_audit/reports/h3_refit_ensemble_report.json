@@ -1,0 +1,264 @@
+{
+  "mode": "h3_refit_seed_ensemble",
+  "run_dir": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043",
+  "seed_count": 8,
+  "seeds": [
+    20261045,
+    20261046,
+    20261047,
+    20261048,
+    20261049,
+    20261050,
+    20261051,
+    20261052
+  ],
+  "receipt_count": 4,
+  "receipt_fraction": 0.5,
+  "control_separation_receipt_count": 8,
+  "control_separation_receipt_fraction": 1.0,
+  "candidate_receipt_count": 4,
+  "candidate_receipt_fraction": 0.5,
+  "candidate_3d_window_count": 0,
+  "candidate_3d_window_fraction": 0.0,
+  "mean_heldout_normalized_rmse": 0.9329711566069887,
+  "mean_heldout_explained_variance": 0.12954553798217847,
+  "median_heldout_explained_variance": 0.1306580507977888,
+  "p75_material_wrong_scale_win_fraction": 0.05859375,
+  "mean_assignment_unique_count": 156.625,
+  "required_receipt_fraction": 0.75,
+  "required_dim3_fraction": 0.5,
+  "required_median_ev": 0.08,
+  "required_p75_material_wrong_fraction": 0.075,
+  "H3_RESPONSE_ENSEMBLE_RECEIPT": false,
+  "h3_response_ensemble_receipt": false,
+  "h3_response_seed_robust_receipt": false,
+  "h3_chart_3d_seed_robust_receipt": false,
+  "rows": [
+    {
+      "seed": 20261045,
+      "receipt": true,
+      "control_separation_receipt": true,
+      "candidate_receipt": true,
+      "heldout_normalized_rmse": 0.9381777861690648,
+      "heldout_explained_variance": 0.11982244153891242,
+      "material_wrong_scale_win_fraction": 0.04296875,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "assignment_unique_count": 159,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.5664592648262994,
+      "local_mle_dimension_estimate": 1.857008075044671,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261045.json"
+    },
+    {
+      "seed": 20261046,
+      "receipt": false,
+      "control_separation_receipt": true,
+      "candidate_receipt": false,
+      "heldout_normalized_rmse": 0.9288492946634572,
+      "heldout_explained_variance": 0.137238987803198,
+      "material_wrong_scale_win_fraction": 0.05859375,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": false,
+      "assignment_unique_count": 153,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.5108665700577615,
+      "local_mle_dimension_estimate": 1.8687674029104997,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261046.json"
+    },
+    {
+      "seed": 20261047,
+      "receipt": true,
+      "control_separation_receipt": true,
+      "candidate_receipt": true,
+      "heldout_normalized_rmse": 0.9336782022159865,
+      "heldout_explained_variance": 0.12824501470672345,
+      "material_wrong_scale_win_fraction": 0.0390625,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "assignment_unique_count": 152,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.5449042203917032,
+      "local_mle_dimension_estimate": 1.7535008396210214,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261047.json"
+    },
+    {
+      "seed": 20261048,
+      "receipt": false,
+      "control_separation_receipt": true,
+      "candidate_receipt": false,
+      "heldout_normalized_rmse": 0.9409705470165429,
+      "heldout_explained_variance": 0.11457442964738807,
+      "material_wrong_scale_win_fraction": 0.05859375,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": false,
+      "assignment_unique_count": 158,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.5628742718114486,
+      "local_mle_dimension_estimate": 2.044779141164369,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261048.json"
+    },
+    {
+      "seed": 20261049,
+      "receipt": false,
+      "control_separation_receipt": true,
+      "candidate_receipt": false,
+      "heldout_normalized_rmse": 0.9305242698512632,
+      "heldout_explained_variance": 0.13412458321777354,
+      "material_wrong_scale_win_fraction": 0.05859375,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": false,
+      "assignment_unique_count": 156,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.6623536546898725,
+      "local_mle_dimension_estimate": 1.8267142202869402,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261049.json"
+    },
+    {
+      "seed": 20261050,
+      "receipt": true,
+      "control_separation_receipt": true,
+      "candidate_receipt": true,
+      "heldout_normalized_rmse": 0.9317102159781033,
+      "heldout_explained_variance": 0.13191607344203615,
+      "material_wrong_scale_win_fraction": 0.01953125,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "assignment_unique_count": 159,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.556996734024814,
+      "local_mle_dimension_estimate": 1.8352173384243018,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261050.json"
+    },
+    {
+      "seed": 20261051,
+      "receipt": true,
+      "control_separation_receipt": true,
+      "candidate_receipt": true,
+      "heldout_normalized_rmse": 0.9267994684138233,
+      "heldout_explained_variance": 0.14104274534785466,
+      "material_wrong_scale_win_fraction": 0.04296875,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "assignment_unique_count": 160,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.6264162094569394,
+      "local_mle_dimension_estimate": 1.935305584465221,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261051.json"
+    },
+    {
+      "seed": 20261052,
+      "receipt": false,
+      "control_separation_receipt": true,
+      "candidate_receipt": false,
+      "heldout_normalized_rmse": 0.933059468547669,
+      "heldout_explained_variance": 0.12940002815354146,
+      "material_wrong_scale_win_fraction": 0.0703125,
+      "signal_gate": true,
+      "geometry_gate": true,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": false,
+      "assignment_unique_count": 156,
+      "candidate_3d_dimension_window": false,
+      "dimension_estimators_agree": true,
+      "correlation_dimension_estimate": 1.3902113156186502,
+      "local_mle_dimension_estimate": 1.8225549346848484,
+      "h3_beats_controls": {
+        "shuffled_response": true,
+        "no_perturbation": true
+      },
+      "h3_beats_wrong_scale_controls": {
+        "1x": true,
+        "4pi": true,
+        "pi": true
+      },
+      "report_path": "runs/stage129_strict_h3_object_bulk_64k_seed20261045_20260607/e4_shared_observer_bulk_64k_local_tokens_feature_select_seed20261045_c6b8a043/h3_refit_seed_ensemble/seed_20261052.json"
+    }
+  ],
+  "physical_claim": false,
+  "claim_boundary": "Cached H3 candidate-seed ensemble. This checks robustness of the H3 response fit against random candidate sampling and applies the material wrong-scale audit across seeds. It is still an internal diagnostic, not a neutral 3D bulk claim."
+}

@@ -60,22 +60,30 @@ modular_flow:
 
 bw:
   mode: state_derived_modular_probe
-  state_mode: transition_response_unitary
+  state_mode: collar_operator_system
   target_operator_mode: permutation
   transition_response_time: 0.1
   transition_response_scale: 6.283185307179586
+  generator_scale: 6.283185307179586
   cap_count: 4
   theta0: [0.35, 0.55, 0.75, 1.0]
   collar_width_mode: cell_scaled
   collar_k: 1.0
-  times: [0.1]
+  generator_scale_candidates:
+  - -6.283185307179586
+  - 0.0
+  - 1.0
+  - 3.141592653589793
+  - 6.283185307179586
+  - 12.566370614359172
+  times: [0.09, 0.17, 0.29]
   normalization: 2pi
   observables:
   - record_signature_projectors
   - repair_load_projectors
   - s3_sector_projectors
   - cumulative_repair_load_projectors
-  regularizer_a: [1.0e-12]
+  regularizer_a: [0.001]
   max_basis: 48
   k_interp: 8
   sim_k_interp: 1
@@ -120,21 +128,65 @@ observers:
 
 observer_objects:
   enabled: true
+  family_mode: transition_affinity
   packet_mode: coarse_visible_packet
   signature_bins: 12
   include_s3_sector: true
   include_repair_load_bin: false
+  transition_history_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_history_key_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_persistence_fields:
+  - record_family
+  - s3_sector_class
+  transition_affinity_fields:
+  - checkpoint_class
+  - record_family
+  - s3_sector_class
+  - repair_load_bucket
+  - cumulative_repair_load_bucket
+  transition_bins: 8
+  record_family_modulus: 16
   min_support_size: 3
+  max_support_nodes_per_family: 1024
   persistence_horizon: 8
   counterfactual_perturbations: 16
   max_families: 2048
+  transition_history_local_min_persistence: 2
 
 observer_chart_population:
   enabled: true
+  incidence_mode: transition_history_mixture_cluster
+  history_window: 4
+  min_persistence: 3
   min_objects: 8
-  min_observers_per_object: 2
+  min_observers_per_object: 3
   max_objects: 2048
-  pass_ratio: 0.85
+  observer_cluster_fields:
+  - local_transition_token
+  - local_transition_token_persistent
+  max_observer_fraction_per_object: 0.35
+  min_packet_mass: 0.05
+  min_transition_affinity: 0.18
+  transition_affinity_score: geometric_mean
+  max_h3_compactness: 0.45
+  min_localized_objects: 2
+  pass_ratio: 1.0
+  observer_cluster_top_k: 3
+  min_observer_cluster_weight: 0.05
+  shuffle_control_count: 16
+  split_h3_components: true
+  component_link_fraction: 0.22
+  component_min_observers: 3
 
 neutral_reconstruction:
   enabled: true
@@ -182,7 +234,7 @@ h3_support_profiles:
 h3_modular_response:
   enabled: true
   observable_mode: perturb_resettle_transition
-  times: [0.125, 0.25, 0.5]
+  times: [0.09, 0.17, 0.29]
   transition_observables:
   - checkpoint_class
   - stable_flag
@@ -191,20 +243,31 @@ h3_modular_response:
   - repair_load_bucket
   transition_bins: 8
   record_family_modulus: 16
+  feature_types:
+  - class_distribution_delta
+  - entropy_delta
+  - sector_preservation_delta
+  - change_probability_delta
   transform: signed_zscore
   perturb_strength: 1.0
+  perturb_selection_mode: lambda_collar_generator
   repair_steps: 4
   repairs_per_step: 96
   wrong_scales: [1.0, 3.141592653589793, 12.566370614359172]
   transport_scale: 6.283185307179586
   k_transport: 1
   fit_mode: joint_global
+  control_fit_mode: same_h3_model_not_affine_target_fit
   candidate_count: 2048
   candidate_radius: 2.0
   softness: 0.25
   heldout_fraction: 0.25
   anchor_weight: 0.05
   max_iterations: 4
+  feature_selection: class_distribution_and_change
+  min_feature_std: 0.0001
+  max_fit_features: 512
+  max_features_per_cap_time_observable: 8
   pass_ratio: 1.0
   min_observers: 16
   min_features: 16
@@ -236,6 +299,11 @@ cosmology:
     controls:
     - shuffled_field
     - random_gaussian
+  cmb_lite:
+    enabled: true
+    benchmark_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    benchmark_label: Planck2018_TT_binned
+    source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt
 
 defects:
   max_triangles: 10000

@@ -17,6 +17,7 @@ class RecordFamily:
     overlap_agreement: float
     repair_history_hash: str
     counterfactual_stability: float
+    transition_affinity: dict[str, int] | None = None
 
     def as_jsonable(self) -> dict[str, Any]:
         return asdict(self)
@@ -48,6 +49,17 @@ def extract_record_families(
         stable_count = np.ones_like(signatures, dtype=np.int64) * int(persistence_horizon)
         repair_load = np.zeros_like(signatures, dtype=float)
         object_packets = signatures
+    mode = str(projection_cfg.get("family_mode", "connected_packets"))
+    if mode in {"transition_affinity", "visible_transition_affinity", "packet_transition_affinity"}:
+        return _extract_transition_affinity_families(
+            records if isinstance(records, dict) else {"record_signature": signatures, "stable_count": stable_count},
+            object_packets,
+            stable_count,
+            repair_load,
+            projection_cfg,
+            persistence_horizon=int(persistence_horizon),
+            max_families=max_families,
+        )
     left, right = (np.asarray(edges[0], dtype=np.int64), np.asarray(edges[1], dtype=np.int64))
     valid = stable_count >= int(persistence_horizon)
     parent = np.arange(signatures.size, dtype=np.int64)
@@ -73,9 +85,12 @@ def extract_record_families(
     order = np.lexsort((unique_roots, -counts))
     families: list[RecordFamily] = []
     min_support_size = int(projection_cfg.get("min_support_size", 1))
+    max_support_size = int(projection_cfg.get("max_support_size", projection_cfg.get("max_support_nodes_per_family", 0)))
     for root in unique_roots[order]:
         nodes = [int(node) for node in valid_nodes[roots == root]]
         if len(nodes) < min_support_size:
+            continue
+        if max_support_size > 0 and len(nodes) > max_support_size:
             continue
         node_array = np.asarray(nodes, dtype=np.int64)
         signature_values, signature_counts = np.unique(object_packets[node_array], return_counts=True)
@@ -98,6 +113,7 @@ def extract_record_families(
                 overlap_agreement=overlap,
                 repair_history_hash=history_hash,
                 counterfactual_stability=0.0,
+                transition_affinity=_node_transition_affinity_descriptor(node_array, records if isinstance(records, dict) else {}, projection_cfg),
             )
         )
         if max_families is not None and len(families) >= int(max_families):
@@ -193,6 +209,10 @@ def visible_object_packets(records: dict[str, np.ndarray], projection_cfg: dict[
     return _visible_object_packets(records, projection_cfg or {})
 
 
+def transition_affinity_packet_fields(records: dict[str, np.ndarray], projection_cfg: dict[str, Any] | None = None) -> dict[str, np.ndarray]:
+    return _transition_affinity_packet_fields(records, projection_cfg or {})
+
+
 def _detect_bad_rewrite(record_families: list[RecordFamily]) -> bool:
     seen: dict[str, int] = {}
     for family in record_families:
@@ -239,6 +259,157 @@ def _visible_object_packets(records: dict[str, np.ndarray], config: dict[str, An
         if bool(config.get("include_mismatch_bin", False)) and "local_mismatch_density" in records:
             packets = packets * 16 + _quantile_bins(np.asarray(records["local_mismatch_density"], dtype=float), 16)
     return packets.astype(np.int64)
+
+
+def _extract_transition_affinity_families(
+    records: dict[str, np.ndarray],
+    object_packets: np.ndarray,
+    stable_count: np.ndarray,
+    repair_load: np.ndarray,
+    config: dict[str, Any],
+    *,
+    persistence_horizon: int,
+    max_families: int | None,
+) -> list[RecordFamily]:
+    packets = np.asarray(object_packets, dtype=np.int64)
+    stable = np.asarray(stable_count, dtype=np.int64)
+    if packets.size == 0:
+        return []
+    valid = stable >= int(persistence_horizon)
+    if not np.any(valid):
+        return []
+    affinity_fields = _transition_affinity_packet_fields(records, config)
+    affinity_names = [name for name in _configured_affinity_fields(config) if name in affinity_fields]
+    if not affinity_names:
+        affinity_names = ["object_packet"]
+        affinity_fields = {"object_packet": packets}
+    else:
+        affinity_fields = {"object_packet": packets, **affinity_fields}
+        if "object_packet" not in affinity_names:
+            affinity_names = ["object_packet", *affinity_names]
+    valid_nodes = np.flatnonzero(valid).astype(np.int64)
+    keys: dict[tuple[int, ...], list[int]] = {}
+    for node in valid_nodes:
+        key = tuple(int(np.asarray(affinity_fields[name], dtype=np.int64)[int(node)]) for name in affinity_names)
+        keys.setdefault(key, []).append(int(node))
+    min_support_size = int(config.get("min_support_size", 1))
+    max_support_nodes = int(config.get("max_support_nodes_per_family", 4096))
+    ordered_items = sorted(keys.items(), key=lambda item: (-len(item[1]), item[0]))
+    families: list[RecordFamily] = []
+    for key, nodes in ordered_items:
+        if len(nodes) < min_support_size:
+            continue
+        full_nodes = np.asarray(nodes, dtype=np.int64)
+        kept_nodes = _downsample_nodes_evenly(full_nodes, max_support_nodes)
+        descriptor = {name: int(value) for name, value in zip(affinity_names, key, strict=True)}
+        signature = int(descriptor.get("object_packet", _modal_int(packets[kept_nodes])))
+        history_hash = stable_json_hash(
+            {
+                "mode": "transition_affinity",
+                "descriptor": descriptor,
+                "support_size": int(full_nodes.size),
+                "kept_support_size": int(kept_nodes.size),
+                "repair_load_mean": float(np.mean(repair_load[full_nodes])) if full_nodes.size else 0.0,
+            }
+        )
+        families.append(
+            RecordFamily(
+                object_id=f"obj_{len(families):06d}",
+                support_nodes=[int(node) for node in kept_nodes],
+                record_signature=signature,
+                persistence=int(np.min(stable[full_nodes])),
+                overlap_agreement=1.0,
+                repair_history_hash=history_hash,
+                counterfactual_stability=0.0,
+                transition_affinity=descriptor,
+            )
+        )
+        if max_families is not None and len(families) >= int(max_families):
+            break
+    return families
+
+
+def _configured_affinity_fields(config: dict[str, Any]) -> list[str]:
+    fields = config.get(
+        "transition_affinity_fields",
+        [
+            "checkpoint_class",
+            "record_family",
+            "s3_sector_class",
+            "repair_load_bucket",
+            "cumulative_repair_load_bucket",
+        ],
+    )
+    return [str(field) for field in fields]
+
+
+def _transition_affinity_packet_fields(records: dict[str, np.ndarray], config: dict[str, Any]) -> dict[str, np.ndarray]:
+    patch_count = _infer_patch_count(records)
+    if patch_count <= 0:
+        return {}
+    bins = int(config.get("transition_bins", config.get("signature_bins", 8)))
+    record_family_modulus = int(config.get("record_family_modulus", max(2, int(config.get("signature_bins", 16)))))
+    stable = np.asarray(records.get("stable_count", np.zeros(patch_count)), dtype=float)
+    committed = np.asarray(records.get("committed_mask", np.zeros(patch_count)), dtype=float)
+    threshold = max(1.0, float(np.median(stable)) if stable.size else 1.0)
+    stable_flag = (stable >= threshold).astype(np.int64)
+    signature = np.asarray(records.get("record_signature", np.zeros(patch_count)), dtype=np.int64)
+    sector = np.asarray(records.get("s3_sector_class", np.zeros(patch_count)), dtype=np.int64)
+    fields = {
+        "checkpoint_class": (2 * (committed > 0.5).astype(np.int64) + stable_flag).astype(np.int64),
+        "record_family": np.mod(np.abs(signature), max(1, record_family_modulus)).astype(np.int64),
+        "s3_sector_class": np.mod(np.abs(sector), 6).astype(np.int64),
+        "repair_load_bucket": _quantile_bins(np.asarray(records.get("repair_load", np.zeros(patch_count)), dtype=float), bins),
+        "cumulative_repair_load_bucket": _quantile_bins(
+            np.asarray(records.get("cumulative_repair_load", np.zeros(patch_count)), dtype=float),
+            bins,
+        ),
+        "stable_flag": stable_flag,
+    }
+    fields["committed_object_normal_form"] = np.mod(
+        np.abs(signature) + 7 * np.abs(sector) + 13 * stable_flag,
+        max(1, record_family_modulus),
+    ).astype(np.int64)
+    return fields
+
+
+def _node_transition_affinity_descriptor(
+    nodes: np.ndarray,
+    records: dict[str, np.ndarray],
+    config: dict[str, Any],
+) -> dict[str, int] | None:
+    if not isinstance(records, dict) or not records:
+        return None
+    fields = _transition_affinity_packet_fields(records, config)
+    if not fields:
+        return None
+    nodes = np.asarray(nodes, dtype=np.int64)
+    descriptor: dict[str, int] = {}
+    for name in _configured_affinity_fields(config):
+        values = fields.get(name)
+        if values is None:
+            continue
+        valid = nodes[(nodes >= 0) & (nodes < values.size)]
+        if valid.size:
+            descriptor[str(name)] = _modal_int(np.asarray(values, dtype=np.int64)[valid])
+    return descriptor or None
+
+
+def _infer_patch_count(records: dict[str, np.ndarray]) -> int:
+    for values in records.values():
+        array = np.asarray(values)
+        if array.ndim >= 1:
+            return int(array.shape[0])
+    return 0
+
+
+def _downsample_nodes_evenly(nodes: np.ndarray, max_count: int) -> np.ndarray:
+    nodes = np.asarray(nodes, dtype=np.int64)
+    limit = int(max_count)
+    if limit <= 0 or nodes.size <= limit:
+        return nodes
+    take = np.linspace(0, nodes.size - 1, limit).round().astype(np.int64)
+    return nodes[np.unique(take)]
 
 
 def _quantile_bins(values: np.ndarray, bin_count: int) -> np.ndarray:

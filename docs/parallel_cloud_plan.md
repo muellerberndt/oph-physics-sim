@@ -178,85 +178,87 @@ For this simulator, prefer CPU families such as `c3d-standard`, `c3d-highmem`, `
 `n2-standard`. Use multiple VMs for seed/config sweeps instead of one huge VM unless running a single
 large 1M+ screen job.
 
-Quota preferences submitted for `observer-patch-holography` on 2026-06-01:
+Quota request template:
 
 ```text
-CPUS-ALL-REGIONS-per-project: current 32, requested 1200
-CPUS-per-project-region us-central1: current 200, requested 512
-N2-CPUS-per-project-region us-central1: current 200, requested 512
-C2D-CPUS-per-project-region us-central1: current 100, requested 512
+CPUS-ALL-REGIONS-per-project: request enough for your planned worker count
+CPUS-per-project-region <region>: request enough for your planned worker count
+N2-CPUS-per-project-region <region>: optional if using N2
+C2D-CPUS-per-project-region <region>: optional if using C2D
 ```
 
-Active 32-vCPU fallback worker started on 2026-06-01:
+Example 32-vCPU fallback worker shape:
 
 ```text
-instance: oph-fpe-n2-32-20260601
-zone: us-central1-a
+instance: oph-fpe-n2-32-<date>
+zone: ${GCP_ZONE}
 machine: n2-standard-32
-external_ip: 34.42.212.46
 remote_path: ~/oph-fpe/oph-physics-sim
-tmux_session: oph-fpe-gcp-20260601
-run_dir: runs/gcp_20260601
+tmux_session: oph-fpe-gcp-<date>
+run_dir: runs/gcp_<date>
 ```
 
-Queued follow-up run:
+Example queued follow-up run:
 
 ```text
 tmux_session: oph-fpe-gcp-256k-next
-behavior: waits for oph-fpe-gcp-20260601 to finish, then starts
+behavior: waits for active session to finish, then starts
 config: configs/e1_s3_bw_screen_256k.yml
 seeds: 20260620,20260621,20260622,20260623
 workers: 4
 inner_jobs: 1
-run_dir: runs/gcp_256k_20260601
+run_dir: runs/gcp_256k_<date>
 ```
 
 Monitor:
 
 ```bash
-gcloud compute ssh oph-fpe-n2-32-20260601 --zone=us-central1-a \
-  --project=observer-patch-holography \
-  --command='tmux ls; pgrep -af "oph_fpe.cli run-bw-sweep"; find ~/oph-fpe/oph-physics-sim/runs/gcp_20260601 -maxdepth 2 -name bw_report.json | wc -l; tail -40 ~/oph-fpe/oph-physics-sim/runs/gcp_20260601.log'
+gcloud compute ssh "${GCP_WORKER_NAME}" --zone="${GCP_ZONE}" \
+  --project="${GCP_PROJECT_ID}" \
+  --command='tmux ls; pgrep -af "oph_fpe.cli run-bw-sweep"; find ~/oph-fpe/oph-physics-sim/runs/"${GCP_RUN_DIR}" -maxdepth 2 -name bw_report.json | wc -l'
 ```
 
 Collect:
 
 ```bash
-mkdir -p runs/gcp_20260601
+mkdir -p runs/"${GCP_RUN_DIR}"
 gcloud compute scp --recurse \
-  oph-fpe-n2-32-20260601:~/oph-fpe/oph-physics-sim/runs/gcp_20260601 \
+  "${GCP_WORKER_NAME}:~/oph-fpe/oph-physics-sim/runs/${GCP_RUN_DIR}" \
   runs/ \
-  --zone=us-central1-a \
-  --project=observer-patch-holography
+  --zone="${GCP_ZONE}" \
+  --project="${GCP_PROJECT_ID}"
 ```
 
 Stop spending:
 
 ```bash
-gcloud compute instances stop oph-fpe-n2-32-20260601 \
-  --zone=us-central1-a \
-  --project=observer-patch-holography
+gcloud compute instances stop "${GCP_WORKER_NAME}" \
+  --zone="${GCP_ZONE}" \
+  --project="${GCP_PROJECT_ID}"
 ```
 
 ## AWS CPU Quota Notes
 
-AWS CLI is configured for account `484819296236` as IAM user `ophminer` in `us-east-1`.
+Configure AWS locally with a profile and region. Do not commit account IDs, IAM user names, access
+keys, or quota snapshots.
 
-Current EC2 quota checked on 2026-06-01:
+Quota checks:
 
-```text
-Running On-Demand Standard vCPUs: 384
-All Standard Spot Instance Requests vCPUs: 384
+```bash
+aws service-quotas list-service-quotas \
+  --service-code ec2 \
+  --profile "${AWS_PROFILE}" \
+  --region "${AWS_REGION}"
 ```
 
-Quota increases submitted on 2026-06-01:
+Quota request template:
 
 ```text
 Running On-Demand Standard vCPUs: requested 512, status PENDING
 All Standard Spot Instance Requests vCPUs: requested 512, status PENDING
 ```
 
-The existing 384 vCPU quota is already enough for a 256k BW campaign if we use AWS.
+Use the smallest approved vCPU quota across the relevant EC2 quota classes as the actual cap.
 
 For future GPU work:
 

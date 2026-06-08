@@ -75,6 +75,10 @@ def test_run_viewer_writes_html_with_gate_boundary(tmp_path: Path):
         json.dumps({"h3_fit": {"sample_fitted_h3_points": [[1.1, 0.2, 0.3, 0.4]]}}),
         encoding="utf-8",
     )
+    (run_dir / "modular_response_h3_report.json").write_text(
+        json.dumps({"h3_fit": {"sample_fitted_h3_points": [[0.1, 0.2, 0.3]]}}),
+        encoding="utf-8",
+    )
     (run_dir / "defect_h3_worldlines_report.json").write_text(
         json.dumps(
             {
@@ -103,4 +107,5 @@ def test_run_viewer_writes_html_with_gate_boundary(tmp_path: Path):
     assert summary["bulk_3d_established"] is False
     assert summary["defect_timeline_snapshots"] == 1
     assert summary["persistent_defect_worldlines"] == 1
+    assert summary["h3_point_count"] == 2
     assert summary["h3_worldline_count"] == 1

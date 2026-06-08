@@ -1,6 +1,6 @@
 name: e4_shared_observer_bulk_64k_object_chart
 run_mode: observer_shared_bulk_candidate_compact
-seed: 20260731
+seed: 20260751
 claim_boundary: >
   Compact 64k observer-chart object-population diagnostic. This tests whether
   persistent observer-facing record objects populate the modular-response H3
@@ -119,21 +119,64 @@ observers:
 
 observer_objects:
   enabled: true
+  family_mode: transition_affinity
   packet_mode: coarse_visible_packet
+  history_window: 4
   signature_bins: 12
   include_s3_sector: true
   include_repair_load_bin: false
+  transition_history_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_history_key_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_persistence_fields:
+  - record_family
+  - s3_sector_class
+  transition_affinity_fields:
+  - checkpoint_class
+  - record_family
+  - s3_sector_class
+  - repair_load_bucket
+  - cumulative_repair_load_bucket
+  transition_bins: 8
+  record_family_modulus: 16
   min_support_size: 3
+  max_support_nodes_per_family: 2048
   persistence_horizon: 8
   counterfactual_perturbations: 16
   max_families: 2048
 
 observer_chart_population:
   enabled: true
+  incidence_mode: transition_history
+  history_window: 4
+  min_persistence: 3
   min_objects: 8
-  min_observers_per_object: 2
+  min_observers_per_object: 3
   max_objects: 2048
-  pass_ratio: 0.85
+  observer_cluster_fields:
+  - record_family
+  - s3_sector_class
+  - repair_load_bucket
+  - cumulative_repair_load_bucket
+  max_observer_fraction_per_object: 0.65
+  min_packet_mass: 0.05
+  min_transition_affinity: 0.18
+  transition_affinity_score: geometric_mean
+  max_h3_compactness: 0.5
+  min_localized_objects: 2
+  pass_ratio: 1.0
+  split_h3_components: true
+  component_link_fraction: 0.35
+  component_min_observers: 4
 
 neutral_reconstruction:
   enabled: false
@@ -238,6 +281,20 @@ cosmology:
     controls:
     - shuffled_field
     - random_gaussian
+  cmb_lite:
+    enabled: true
+    benchmark_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    benchmark_label: Planck2018_TT_binned
+    source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    fields:
+    - record_signature
+    - stable_count
+    - cumulative_repair_load
+    - s3_class_density
+    - record_signature_smooth_k16
+    - record_signature_smooth_k32
+    - record_repair_mix
+    - record_sector_mix
 
 defects:
   max_triangles: 12000
