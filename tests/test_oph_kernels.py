@@ -22,6 +22,10 @@ from oph_fpe.cosmology.oph_kernels import (
 def test_oph_constants_five_of_seven_values():
     constants = OPHConstants()
 
+    assert constants.N_CRC > 1.0e122
+    assert constants.N_patch_bare_ratio == constants.N_CRC / math.pi
+    assert constants.Lambda_lP2 == 3.0 * math.pi / constants.N_CRC
+    assert constants.P_cell_count_for_N_CRC == 4.0 * constants.N_CRC / constants.P
     assert constants.lambda_collar == math.exp(-P_STAR / 24.0)
     assert constants.pi_wl == 5.0 / 7.0
     assert constants.epsilon_A_wl == constants.pi_wl * (1.0 - constants.lambda_collar)

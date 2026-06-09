@@ -96,6 +96,8 @@ def _run_derivation_row(run_path: Path, targets: dict[str, Any]) -> dict[str, An
     collar = _read_json(run_path / "collar_markov_report.json")
     cmb_stress = _read_json(run_path / "oph_cmb_stress_report.json")
     bulk = _read_json(run_path / "bulk_reconstruction_report.json")
+    bulk_proof = _read_json(run_path / "bulk_proof_certificate_report.json")
+    emergence = _read_json(run_path / "emergence_status_report.json")
     cl = _read_json(run_path / "cl_comparison_report.json")
     aggregate = anomaly.get("aggregate", {}) if isinstance(anomaly, dict) else {}
     screen_capacity = anomaly.get("screen_capacity", {}) if isinstance(anomaly, dict) else {}
@@ -112,13 +114,22 @@ def _run_derivation_row(run_path: Path, targets: dict[str, Any]) -> dict[str, An
     target_ell = float(targets["cmb_ir_kernel"]["ell_IR"])
     best_eta = _float_or_none(aggregate.get("best_eta_R_estimate"))
     best_ns = _float_or_none(aggregate.get("best_n_s_proxy"))
+    strict_neutral_bulk = bool(bulk.get("bulk_3d_established", False)) if isinstance(bulk, dict) else False
+    theorem_assisted_h3_bulk = bool(
+        (bulk_proof.get("theorem_assisted_h3_populated_chart_established", False) if isinstance(bulk_proof, dict) else False)
+        or (bulk_proof.get("bulk_3d_established_theorem_assisted", False) if isinstance(bulk_proof, dict) else False)
+        or (emergence.get("PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT", False) if isinstance(emergence, dict) else False)
+        or (emergence.get("bulk_3d_established", False) if isinstance(emergence, dict) else False)
+    )
     run_gates = {
         "tilt_eta_R_simulator_compatible": bool(tilt_count > 0),
         "low_power_control_separation": bool(low_count >= max(1, field_count // 2)),
         "large_angle_control_separation": bool(large_count >= max(1, field_count // 2)),
         "parity_control_separation": bool(parity_count >= max(1, field_count // 2)),
         "collar_markov_error_small": bool(collar_median is not None and collar_median <= 0.05),
-        "bulk_3d_established": bool(bulk.get("bulk_3d_established", False)) if isinstance(bulk, dict) else False,
+        "theorem_assisted_h3_bulk_established": theorem_assisted_h3_bulk,
+        "strict_neutral_bulk_3d_established": strict_neutral_bulk,
+        "bulk_3d_established": strict_neutral_bulk,
         "anomaly_kernel_emitted": bool(
             ((cmb_stress.get("diagnostic_kernel_proxy", {}) or {}).get("B_A_k_a_emitted", False))
             if isinstance(cmb_stress, dict)
@@ -134,7 +145,7 @@ def _run_derivation_row(run_path: Path, targets: dict[str, Any]) -> dict[str, An
             "large_angle_control_separation",
             "parity_control_separation",
             "collar_markov_error_small",
-            "bulk_3d_established",
+            "strict_neutral_bulk_3d_established",
             "anomaly_kernel_emitted",
         )
     )
@@ -168,6 +179,8 @@ def _run_derivation_row(run_path: Path, targets: dict[str, Any]) -> dict[str, An
         "planck_tilt_compatible_proxy_count": tilt_count,
         "median_epsilon_cmi": collar_median,
         "p90_epsilon_cmi": collar_p90,
+        "theorem_assisted_h3_bulk_established": theorem_assisted_h3_bulk,
+        "strict_neutral_bulk_3d_established": strict_neutral_bulk,
         "bulk_3d_established": run_gates["bulk_3d_established"],
         "gates": run_gates,
         "all_required_gates_pass": bool(all_required),

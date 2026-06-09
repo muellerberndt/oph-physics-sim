@@ -5,6 +5,8 @@ from pathlib import Path
 
 from oph_fpe.constants.oph_pixel import P_STAR
 from oph_fpe.cosmology.screen_capacity import (
+    DEFAULT_L_PLANCK_M,
+    OPHScreenCapacityConstants,
     bare_horizon_area_ratio,
     entropy_capacity_from_radius,
     lambda_planck2_from_capacity,
@@ -34,8 +36,29 @@ def test_screen_capacity_report_keeps_regulator_separate():
     assert rows[0]["patch_count"] == 256
     assert rows[0]["fraction_of_observed_N_scr"] < 1.0e-118
     assert report["readiness_gates"]["observed_branch_N_scr_readout_available"] is True
+    assert report["readiness_gates"]["active_edge_center_predictive_quotient_implemented"] is False
+    assert report["readiness_gates"]["capacity_readback_map_from_terminal_records_implemented"] is False
     assert report["readiness_gates"]["N_CRC_fixed_point_solved_from_finite_simulator"] is False
     assert report["physical_cmb_prediction"] is False
+    assert report["active_capacity_requirements"]["capacity_variable"] == "entropy_capacity_N_not_raw_Hilbert_dimension"
+
+
+def test_direct_n_crc_input_is_declared_capacity_not_patch_count():
+    n_crc = 3.25e122
+    report = screen_capacity_closure_report(n_crc=n_crc, regulator_patch_counts=(1024,))
+    observed = report["observed_branch_normalization"]
+    constants = OPHScreenCapacityConstants(n_crc=n_crc)
+
+    assert observed["input_mode"] == "direct_N_CRC_closure_input"
+    assert observed["N_CRC"] == n_crc
+    assert observed["N_scr_entropy_capacity"] == n_crc
+    assert observed["N_patch_bare_radius_squared_ratio"] == n_crc / math.pi
+    assert observed["R_dS_m"] == math.sqrt(n_crc / math.pi) * DEFAULT_L_PLANCK_M
+    assert observed["constants"]["N_CRC"] == constants.n_crc
+    assert observed["constants"]["N_cells_if_tiled_by_local_P_cells"] == constants.physical_cell_count
+    assert report["regulator_scale_comparison"][0]["patch_count"] == 1024
+    assert report["regulator_scale_comparison"][0]["fraction_of_observed_N_scr"] < 1.0e-118
+    assert report["readiness_gates"]["banach_contraction_certificate_implemented"] is False
 
 
 def test_write_screen_capacity_report(tmp_path: Path):

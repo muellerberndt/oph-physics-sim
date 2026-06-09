@@ -22,6 +22,14 @@ _EXPORTS = {
         "oph_fpe.cosmology.finite_certificates",
         "write_finite_certificate_bundle",
     ),
+    "run_proxy_certificate_input": (
+        "oph_fpe.cosmology.finite_certificates",
+        "run_proxy_certificate_input",
+    ),
+    "write_run_proxy_finite_certificate_bundle": (
+        "oph_fpe.cosmology.finite_certificates",
+        "write_run_proxy_finite_certificate_bundle",
+    ),
     "oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "oph_boltzmann_input_report"),
     "write_oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "write_oph_boltzmann_input_report"),
     "LambdaCDMParameters": ("oph_fpe.cosmology.camb_adapter", "LambdaCDMParameters"),
@@ -93,6 +101,14 @@ _EXPORTS = {
     "write_selector_elimination_report": (
         "oph_fpe.cosmology.selector_elimination",
         "write_selector_elimination_report",
+    ),
+    "DEFAULT_N_CRC": (
+        "oph_fpe.cosmology.screen_capacity",
+        "DEFAULT_N_CRC",
+    ),
+    "OPHScreenCapacityConstants": (
+        "oph_fpe.cosmology.screen_capacity",
+        "OPHScreenCapacityConstants",
     ),
     "screen_capacity_closure_report": (
         "oph_fpe.cosmology.screen_capacity",

@@ -242,7 +242,10 @@ def test_observer_chart_object_population_can_audit_boundary_compactness_without
     assert report["boundary_leakage_audit_pass"] is False
     assert report["localized_nonboundary_bulk_population_receipt"] is False
     assert report["localized_h3_bulk_population_receipt"] is True
-    assert report["observer_chart_bulk_population_receipt"] is True
+    assert report["THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT"] is True
+    assert report["OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT"] is False
+    assert report["observer_chart_object_h3_receipt"] is True
+    assert report["observer_chart_bulk_population_receipt"] is False
     assert report["bulk_population_gate_mode"] == "localized_h3_subpopulation_vs_shuffled_with_boundary_leakage_audit"
 
 

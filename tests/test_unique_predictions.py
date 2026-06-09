@@ -99,6 +99,15 @@ def test_cmb_derivation_audit_separates_targets_from_finite_readiness(tmp_path: 
         json.dumps({"bulk_3d_established": False}),
         encoding="utf-8",
     )
+    (run / "bulk_proof_certificate_report.json").write_text(
+        json.dumps(
+            {
+                "theorem_assisted_h3_populated_chart_established": True,
+                "strict_neutral_third_person_bulk_established": False,
+            }
+        ),
+        encoding="utf-8",
+    )
     (run / "oph_cmb_stress_report.json").write_text(
         json.dumps({"diagnostic_kernel_proxy": {"B_A_k_a_emitted": False}}),
         encoding="utf-8",
@@ -111,6 +120,9 @@ def test_cmb_derivation_audit_separates_targets_from_finite_readiness(tmp_path: 
     assert report["finite_lattice_cmb_parameters_ready"] is False
     assert report["physical_cmb_prediction"] is False
     assert report["rows"][0]["gates"]["tilt_eta_R_simulator_compatible"] is False
+    assert report["rows"][0]["gates"]["theorem_assisted_h3_bulk_established"] is True
+    assert report["rows"][0]["gates"]["strict_neutral_bulk_3d_established"] is False
+    assert report["rows"][0]["bulk_3d_established"] is False
     assert report["rows"][0]["target_q_IR"] == 0.25
 
 

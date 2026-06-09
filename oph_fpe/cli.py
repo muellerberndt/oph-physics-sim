@@ -300,6 +300,12 @@ def main(argv: list[str] | None = None) -> int:
         help="write OPH cosmic record/screen-capacity closure readout and regulator-scale comparison",
     )
     screen_capacity_parser.add_argument("--out", required=True, type=Path)
+    screen_capacity_parser.add_argument(
+        "--n-crc",
+        default=None,
+        type=float,
+        help="direct OPH global screen-capacity closure value; if omitted, use R_dS/l_P readout",
+    )
     screen_capacity_parser.add_argument("--r-ds-m", default=1.66e26, type=float)
     screen_capacity_parser.add_argument("--planck-length-m", default=1.616e-35, type=float)
     screen_capacity_parser.add_argument(
@@ -338,6 +344,13 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="write the built-in toy certificate bundle; validates format only and is not a physical output",
     )
+
+    finite_cert_from_run_parser = subparsers.add_parser(
+        "finite-certificates-from-run",
+        help="build proxy finite cosmology certificates from cached OPH-FPE run receipts",
+    )
+    finite_cert_from_run_parser.add_argument("--run-dir", required=True, type=Path)
+    finite_cert_from_run_parser.add_argument("--out", required=True, type=Path)
 
     scalar_cert_parser = subparsers.add_parser(
         "emit-scalar-release-certificate",
@@ -805,6 +818,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         result = write_screen_capacity_closure_report(
             args.out,
+            n_crc=args.n_crc,
             radius_m=args.r_ds_m,
             planck_length_m=args.planck_length_m,
             regulator_patch_counts=patch_counts,
@@ -827,6 +841,12 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.cosmology.finite_certificates import write_finite_certificate_bundle
 
         result = write_finite_certificate_bundle(args.input, args.out, toy=args.toy)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "finite-certificates-from-run":
+        from oph_fpe.cosmology.finite_certificates import write_run_proxy_finite_certificate_bundle
+
+        result = write_run_proxy_finite_certificate_bundle(args.run_dir, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "emit-scalar-release-certificate":

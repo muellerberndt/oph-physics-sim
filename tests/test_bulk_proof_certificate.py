@@ -37,12 +37,36 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     report = bulk_proof_certificate(run)
 
     assert report["chart_level_3p1_lorentz_kinematics_established"] is True
+    assert report["theorem_assisted_h3_object_preview_established"] is True
+    assert report["theorem_assisted_h3_nonboundary_population_established"] is True
     assert report["theorem_assisted_h3_populated_chart_established"] is True
     assert report["strict_neutral_third_person_bulk_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is True
     assert report["bulk_3d_established_strict"] is False
     assert report["screen_cmb_proxy_available"] is True
     assert report["physical_cmb_prediction"] is False
+
+
+def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "emergence_status_report.json",
+        {
+            "BW_KMS_DIRECT_2PI_RECEIPT": True,
+            "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": True,
+            "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+            "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT": True,
+            "PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT": True,
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["theorem_assisted_h3_object_preview_established"] is True
+    assert report["theorem_assisted_h3_nonboundary_population_established"] is False
+    assert report["theorem_assisted_h3_populated_chart_established"] is False
+    assert report["bulk_3d_established_theorem_assisted"] is False
 
 
 def test_bulk_proof_certificate_writes_and_comparable_data_collects_tiers(tmp_path: Path):
@@ -65,6 +89,8 @@ def test_bulk_proof_certificate_writes_and_comparable_data_collects_tiers(tmp_pa
 
     assert lane["bulk_proof_certificate_count"] == 1
     assert lane["bulk_proof_chart_level_3p1_count"] == 1
+    assert lane["bulk_proof_theorem_assisted_h3_object_preview_count"] == 1
+    assert lane["bulk_proof_theorem_assisted_h3_nonboundary_population_count"] == 1
     assert lane["bulk_proof_theorem_assisted_h3_populated_chart_count"] == 1
     assert lane["bulk_proof_strict_neutral_3d_bulk_count"] == 0
     assert lane["bulk_proof_screen_cmb_proxy_count"] == 1

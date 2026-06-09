@@ -12,22 +12,26 @@ if str(REPO_ROOT) not in sys.path:
 
 REQUIRED_IMPORTS = [
     "oph_fpe.claims",
-    "oph_fpe.experiments",
     "oph_fpe.constants.oph_pixel",
-    "oph_fpe.core.graph",
     "oph_fpe.bulk.cap_normals",
     "oph_fpe.bulk.cap_geometry",
     "oph_fpe.bulk.cap_profile_geometry",
     "oph_fpe.bulk.h3_chart",
-    "oph_fpe.bulk.h3_refit",
-    "oph_fpe.bulk.observer_reconstruction",
-    "oph_fpe.bulk.modular_response_kernel",
     "oph_fpe.bulk.h3_response_fit",
+    "oph_fpe.bulk.modular_probe",
+    "oph_fpe.bulk.modular_response_kernel",
+    "oph_fpe.bulk.observer_reconstruction",
     "oph_fpe.bulk.record_to_h3",
+    "oph_fpe.bulk.proof_certificate",
+    "oph_fpe.cosmology.selector_elimination",
+    "oph_fpe.cosmology.finite_certificates",
     "oph_fpe.cosmology.camb_adapter",
     "oph_fpe.cosmology.oph_cmb_adapter",
-    "oph_fpe.cosmology.anomaly_fluid",
+    "oph_fpe.cosmology.boltzmann_inputs",
+    "oph_fpe.cosmology.comparable_data",
+    "oph_fpe.defects.array_s3_holonomy",
     "oph_fpe.defects.controlled_assay",
+    "oph_fpe.observers.objects",
 ]
 
 
@@ -44,7 +48,7 @@ def main() -> int:
             print(f"IMPORT_FAIL {name}: {exc}")
         return 1
 
-    print("HANDOFF_IMPORTS_OK")
+    print("BUNDLE_IMPORTS_OK")
     return 0
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,43 @@ from oph_fpe.constants.oph_pixel import P_STAR, total_entropy_capacity
 DEFAULT_R_DS_M = 1.66e26
 DEFAULT_L_PLANCK_M = 1.616e-35
 DEFAULT_REGULATOR_PATCH_COUNTS = (4_096, 65_536, 262_144, 1_048_576)
+DEFAULT_N_CRC = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M) ** 2
+
+
+@dataclass(frozen=True)
+class OPHScreenCapacityConstants:
+    """Global capacity closure value, separate from finite regulator patch count."""
+
+    n_crc: float = DEFAULT_N_CRC
+    p_value: float = P_STAR
+    source: str = "observed_branch_public"
+
+    @property
+    def n_patch_bare_ratio(self) -> float:
+        return float(self.n_crc) / math.pi
+
+    @property
+    def lambda_l_planck2(self) -> float:
+        return lambda_planck2_from_capacity(self.n_crc)
+
+    @property
+    def radius_planck(self) -> float:
+        return math.sqrt(self.n_patch_bare_ratio)
+
+    @property
+    def physical_cell_count(self) -> float:
+        return physical_cells_for_entropy_capacity(self.n_crc, self.p_value)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "N_CRC": float(self.n_crc),
+            "P": float(self.p_value),
+            "source": self.source,
+            "N_patch_bare_radius_squared_ratio": self.n_patch_bare_ratio,
+            "Lambda_lP2": self.lambda_l_planck2,
+            "radius_planck": self.radius_planck,
+            "N_cells_if_tiled_by_local_P_cells": self.physical_cell_count,
+        }
 
 
 def bare_horizon_area_ratio(radius_m: float = DEFAULT_R_DS_M, planck_length_m: float = DEFAULT_L_PLANCK_M) -> float:
@@ -33,12 +71,27 @@ def physical_cells_for_entropy_capacity(n_scr: float, p_value: float = P_STAR) -
 def screen_capacity_closure_report(
     *,
     p_value: float = P_STAR,
+    n_crc: float | None = None,
     radius_m: float = DEFAULT_R_DS_M,
     planck_length_m: float = DEFAULT_L_PLANCK_M,
     regulator_patch_counts: tuple[int, ...] = DEFAULT_REGULATOR_PATCH_COUNTS,
 ) -> dict[str, Any]:
-    n_patch = bare_horizon_area_ratio(radius_m, planck_length_m)
-    n_scr = entropy_capacity_from_radius(radius_m, planck_length_m)
+    if n_crc is None:
+        input_mode = "observed_de_sitter_radius_readout"
+        n_patch = bare_horizon_area_ratio(radius_m, planck_length_m)
+        n_scr = entropy_capacity_from_radius(radius_m, planck_length_m)
+        r_ds_m = float(radius_m)
+    else:
+        input_mode = "direct_N_CRC_closure_input"
+        n_scr = float(n_crc)
+        n_patch = n_scr / math.pi
+        r_ds_m = math.sqrt(n_patch) * float(planck_length_m)
+
+    capacity = OPHScreenCapacityConstants(
+        n_crc=n_scr,
+        p_value=p_value,
+        source=input_mode,
+    )
     lambda_l_planck2 = lambda_planck2_from_capacity(n_scr)
     physical_cells = physical_cells_for_entropy_capacity(n_scr, p_value)
     return {
@@ -47,18 +100,34 @@ def screen_capacity_closure_report(
         "closure_equations": {
             "cosmic_record_closure": "N_CRC = F(N_CRC)",
             "readback_map": "F(N)=Cap_read(Obs(nf(U_N)))",
+            "active_capacity": "N_CRC = log dim Z_boundary^act after predictive quotient",
             "lambda_readout": "Lambda_CRC * l_P^2 = 3*pi / N_CRC",
             "count_density_selector": "N_star = MAR argmax_N [log|Omega_N^sc| - N]",
+            "pressure_certificate": "ell'(N_star)=0 with ell''<0, or Banach contraction for F",
         },
         "observed_branch_normalization": {
-            "R_dS_m": float(radius_m),
+            "input_mode": input_mode,
+            "R_dS_m": r_ds_m,
             "planck_length_m": float(planck_length_m),
+            "N_CRC": n_scr,
             "N_patch_bare_radius_squared_ratio": n_patch,
             "N_scr_entropy_capacity": n_scr,
             "Lambda_lP2": lambda_l_planck2,
             "N_cells_if_tiled_by_local_P_cells": physical_cells,
             "cell_entropy_capacity": float(p_value) / 4.0,
             "P": float(p_value),
+            "constants": capacity.as_dict(),
+        },
+        "active_capacity_requirements": {
+            "capacity_variable": "entropy_capacity_N_not_raw_Hilbert_dimension",
+            "active_edge_center_algebra": "Z_boundary^act = Z_boundary^raw / predictive-equivalence",
+            "predictive_equivalence": (
+                "central record labels are identified when they induce the same future observer-accessible "
+                "probability law under same-interface continuations"
+            ),
+            "observer_sector": "Obs(nf(U_N)) must select stable self-reading observer-supporting terminal normal forms",
+            "readback_value": "Cap_read returns the active horizon record capacity reconstructed by observers",
+            "finite_regulator_status": "not implemented here; finite patch counts remain numerical regulators",
         },
         "regulator_scale_comparison": [
             {
@@ -71,9 +140,15 @@ def screen_capacity_closure_report(
         ],
         "readiness_gates": {
             "local_P_cell_capacity_available": True,
+            "N_CRC_closure_value_declared": True,
             "observed_branch_N_scr_readout_available": True,
+            "active_edge_center_predictive_quotient_implemented": False,
+            "observer_supporting_terminal_sector_implemented": False,
+            "capacity_readback_map_from_terminal_records_implemented": False,
             "F_N_readback_map_implemented": False,
             "count_density_normal_form_enumerator_implemented": False,
+            "banach_contraction_certificate_implemented": False,
+            "pressure_certificate_implemented": False,
             "N_CRC_fixed_point_solved_from_finite_simulator": False,
             "Lambda_from_finite_simulator_record_closure": False,
         },
@@ -116,6 +191,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "",
             "## Observed Branch",
             "",
+            f"- input mode: `{observed['input_mode']}`",
+            f"- N_CRC: `{observed['N_CRC']:.6e}`",
             f"- N_patch bare ratio: `{observed['N_patch_bare_radius_squared_ratio']:.6e}`",
             f"- N_scr entropy capacity: `{observed['N_scr_entropy_capacity']:.6e}`",
             f"- Lambda l_P^2: `{observed['Lambda_lP2']:.6e}`",

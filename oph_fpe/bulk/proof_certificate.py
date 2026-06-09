@@ -58,13 +58,24 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "H3_RESPONSE_CONTROL_SEPARATION_RECEIPT",
         "modular_response_h3_candidate_receipt",
     ) or _ladder_passed(ladder, "R4")
-    object_population = _truthy_any(
+    h3_object_preview = _truthy_any(
         emergence,
+        "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT",
+        "PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT",
+        "observer_chart_object_h3_receipt",
+    ) or _ladder_passed(ladder, "R5")
+    object_nonboundary_population = _truthy_any(
+        emergence,
+        "OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT",
         "OBJECT_BULK_POPULATION_RECEIPT",
         "observer_chart_bulk_population_receipt",
-        "PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT",
-    ) or _ladder_passed(ladder, "R6")
-    theorem_assisted_chart_population = bool(chart and bw_kms and h3_response and object_population)
+    )
+    theorem_assisted_chart_preview = bool(
+        chart and bw_kms and h3_response and (h3_object_preview or object_nonboundary_population)
+    )
+    theorem_assisted_nonboundary_population = bool(
+        chart and bw_kms and h3_response and object_nonboundary_population
+    )
     strict_neutral_bulk = bool(
         neutral.get("bulk_3d_established", False)
         or emergence.get("strict_blind_observer_bulk_receipt", False)
@@ -113,10 +124,15 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             h3_response,
             "Observer/cap response signal populates the H3 chart better than implemented controls.",
         ),
-        "T5_theorem_assisted_object_population": _tier(
+        "T5a_theorem_assisted_h3_object_preview": _tier(
+            "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT",
+            theorem_assisted_chart_preview,
+            "Persistent observer-facing objects can be displayed in the theorem-side H3 chart under controls.",
+        ),
+        "T5b_nonboundary_h3_object_population": _tier(
             OBJECT_BULK_POPULATION_RECEIPT,
-            theorem_assisted_chart_population,
-            "Persistent observer-facing objects populate the theorem-side H3 chart under current controls.",
+            theorem_assisted_nonboundary_population,
+            "Persistent observer-facing objects populate the theorem-side H3 chart and are not boundary-dominated.",
         ),
         "T6_strict_neutral_third_person_bulk": _tier(
             "STRICT_NEUTRAL_3D_BULK_RECEIPT",
@@ -145,9 +161,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "run_path": str(root),
         "proof_tiers": tiers,
         "chart_level_3p1_lorentz_kinematics_established": bool(chart and bw_kms),
-        "theorem_assisted_h3_populated_chart_established": theorem_assisted_chart_population,
+        "theorem_assisted_h3_object_preview_established": theorem_assisted_chart_preview,
+        "theorem_assisted_h3_nonboundary_population_established": theorem_assisted_nonboundary_population,
+        "theorem_assisted_h3_populated_chart_established": theorem_assisted_nonboundary_population,
         "strict_neutral_third_person_bulk_established": strict_neutral_bulk,
-        "bulk_3d_established_theorem_assisted": theorem_assisted_chart_population,
+        "bulk_3d_established_theorem_assisted": theorem_assisted_nonboundary_population,
         "bulk_3d_established_strict": strict_neutral_bulk,
         "screen_cmb_proxy_available": screen_cmb,
         "physical_cmb_prediction": physical_cmb,
@@ -160,7 +178,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         },
         "claim_boundary": (
             "Tiered OPH proof/readout certificate. T2-T3 establish the chart-level 3+1D Lorentz/H3 "
-            "branch for this run. T5 is theorem-assisted populated-H3 evidence from observer objects. "
+            "branch for this run. T5a is theorem-assisted H3 preview evidence from observer objects. "
+            "T5b is stricter non-boundary H3 object population evidence. "
             "T6 is stricter neutral third-person bulk reconstruction and may remain false even when T5 passes. "
             "T8 is measurement-facing screen C_l data only. T9 is a physical CMB prediction and remains false "
             "until finite OPH kernels feed a Boltzmann/likelihood-ready pipeline."
@@ -218,7 +237,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "",
         f"- run: `{report['run_path']}`",
         f"- chart-level 3+1D Lorentz/H3: `{str(report['chart_level_3p1_lorentz_kinematics_established']).lower()}`",
-        f"- theorem-assisted populated H3 chart: `{str(report['theorem_assisted_h3_populated_chart_established']).lower()}`",
+        f"- theorem-assisted H3 object preview: `{str(report['theorem_assisted_h3_object_preview_established']).lower()}`",
+        f"- theorem-assisted non-boundary H3 population: `{str(report['theorem_assisted_h3_nonboundary_population_established']).lower()}`",
         f"- strict neutral third-person bulk: `{str(report['strict_neutral_third_person_bulk_established']).lower()}`",
         f"- screen CMB proxy available: `{str(report['screen_cmb_proxy_available']).lower()}`",
         f"- physical CMB prediction: `{str(report['physical_cmb_prediction']).lower()}`",

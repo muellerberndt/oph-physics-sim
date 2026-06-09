@@ -605,6 +605,21 @@ def observer_chart_object_population_report(
         and chart_receipt
         and h3_strict_receipt
     )
+    boundary_leakage_audit_pass = bool(h3_not_boundary_dominated)
+    h3_object_preview_receipt = bool(
+        eligible
+        and localized_h3_subpopulation_receipt
+        and chart_receipt
+        and h3_strict_receipt
+    )
+    nonboundary_object_population_receipt = bool(
+        eligible
+        and localized_nonboundary_subpopulation_receipt
+        and chart_receipt
+        and h3_strict_receipt
+        and boundary_leakage_audit_pass
+    )
+    strict_bulk_population_receipt = bool(nonboundary_object_population_receipt)
     normalized_boundary_gate_mode = str(boundary_gate_mode).strip().lower().replace("-", "_")
     if normalized_boundary_gate_mode in {
         "leakage_audit",
@@ -614,21 +629,20 @@ def observer_chart_object_population_report(
     }:
         selected_localized_median_receipt = localized_h3_subpopulation_median_receipt
         selected_localized_receipt = localized_h3_subpopulation_receipt
-        bulk_receipt = bool(localized_h3_bulk_population_receipt)
+        bulk_receipt = strict_bulk_population_receipt
         selected_gate_mode = "localized_h3_subpopulation_vs_shuffled_with_boundary_leakage_audit"
     else:
         selected_localized_median_receipt = localized_nonboundary_subpopulation_median_receipt
         selected_localized_receipt = localized_nonboundary_subpopulation_receipt
-        bulk_receipt = bool(localized_nonboundary_bulk_population_receipt)
+        bulk_receipt = strict_bulk_population_receipt
         selected_gate_mode = "localized_nonboundary_subpopulation_vs_same_filter_shuffled_controls"
-    boundary_leakage_audit_pass = bool(h3_not_boundary_dominated)
     selected_claim_boundary = (
         "places persistent observer-facing record objects into the observer-derived modular-response "
-        "H3 chart using only sampled observers that see the object. The active populated-chart gate "
-        "requires localized H3 object incidence to beat shuffled incidence and the strict modular-response "
-        "H3 chart gate. Screen-boundary compactness is reported as a leakage audit, not as an automatic "
-        "veto, because the OPH papers treat S2 as the observer-facing angular chart for the H3/Lorentz "
-        "branch. This is not a neutral third-person reconstruction, CMB, or particle claim."
+        "H3 chart using only sampled observers that see the object. The preview receipt requires localized "
+        "H3 object incidence to beat shuffled incidence and the strict modular-response H3 chart gate. The "
+        "bulk-population receipt additionally requires the non-boundary leakage audit to pass. If "
+        "boundary_leakage_audit_pass is false, this is an H3 preview, not a bulk-population proof. This is "
+        "not a neutral third-person reconstruction, CMB, or particle claim."
         if selected_gate_mode.startswith("localized_h3")
         else (
             "places persistent observer-facing record objects into the observer-derived modular-response "
@@ -694,6 +708,9 @@ def observer_chart_object_population_report(
         "localized_object_precursor_receipt": selected_localized_receipt,
         "localized_nonboundary_bulk_population_receipt": localized_nonboundary_bulk_population_receipt,
         "localized_h3_bulk_population_receipt": localized_h3_bulk_population_receipt,
+        "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT": h3_object_preview_receipt,
+        "OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT": nonboundary_object_population_receipt,
+        "OBJECT_BULK_POPULATION_RECEIPT": strict_bulk_population_receipt,
         "h3_beats_shuffled_incidence": h3_beats_shuffle,
         "h3_beats_shuffled_incidence_robust": h3_beats_shuffle_robust,
         "h3_not_boundary_dominated": h3_not_boundary_dominated,
@@ -703,7 +720,7 @@ def observer_chart_object_population_report(
         "modular_response_h3_strict_receipt": h3_strict_receipt,
         "modular_response_h3_control_separation_receipt": h3_control_separation_receipt,
         "observer_chart_object_h3_median_receipt": chart_median_receipt,
-        "observer_chart_object_h3_receipt": chart_receipt,
+        "observer_chart_object_h3_receipt": h3_object_preview_receipt,
         "observer_chart_bulk_population_receipt": bulk_receipt,
         "sample_objects": object_rows[:256],
         "claim_boundary": selected_claim_boundary,

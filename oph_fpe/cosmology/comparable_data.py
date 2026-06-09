@@ -148,8 +148,9 @@ def comparable_data_report(run_dirs: list[Path]) -> dict[str, Any]:
             "and inflation/CMB bridge reports are continuation diagnostics, not finite-lattice derivations. "
             "adapter values are finite-collar parent diagnostics, not CAMB/CLASS anomaly-module outputs. "
             "H3 values are internal modular-response-vs-control receipts. Defect values are screen/collar holonomy proxies. "
-            "The top-level bulk flag requires every comparable seed in the selected run set to pass the "
-            "chart/object bulk gate; partial progress is reported by counts. This is not a physical CMB "
+            "The top-level bulk flag requires every comparable seed in the selected run set to pass a "
+            "non-boundary H3 object-population gate or strict neutral third-person bulk gate. H3 preview "
+            "alone is reported separately. This is not a physical CMB "
             "prediction, not a P(k), not a Boltzmann likelihood, and not a completed particle-emergence result."
         ),
     }
@@ -473,13 +474,37 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
                 bulk_proof,
             )
         ),
-        "bulk_3d_established": bool(emergence.get("bulk_3d_established", False)),
+        "bulk_3d_established": bool(
+            (
+                bulk_proof
+                and (
+                    bulk_proof.get("bulk_3d_established_theorem_assisted", False)
+                    or bulk_proof.get("strict_neutral_third_person_bulk_established", False)
+                )
+            )
+            or (
+                not bulk_proof
+                and emergence.get("bulk_3d_established", False)
+                and (
+                    emergence.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT", False)
+                    or emergence.get("observer_chart_bulk_population_receipt", False)
+                    or emergence.get("strict_blind_observer_bulk_receipt", False)
+                    or emergence.get("neutral_bulk_3d_established", False)
+                )
+            )
+        ),
         "bulk_proof_certificate_written": bool(bulk_proof),
         "bulk_proof_chart_level_3p1": bool(
             bulk_proof.get("chart_level_3p1_lorentz_kinematics_established", False)
         ),
         "bulk_proof_theorem_assisted_h3_populated_chart": bool(
             bulk_proof.get("theorem_assisted_h3_populated_chart_established", False)
+        ),
+        "bulk_proof_theorem_assisted_h3_object_preview": bool(
+            bulk_proof.get("theorem_assisted_h3_object_preview_established", False)
+        ),
+        "bulk_proof_theorem_assisted_h3_nonboundary_population": bool(
+            bulk_proof.get("theorem_assisted_h3_nonboundary_population_established", False)
         ),
         "bulk_proof_strict_neutral_3d_bulk": bool(
             bulk_proof.get("strict_neutral_third_person_bulk_established", False)
@@ -496,6 +521,16 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "object_bulk_population_receipt": bool(
             emergence.get("OBJECT_BULK_POPULATION_RECEIPT")
             or emergence.get("object_bulk_population_receipt")
+        ),
+        "theorem_assisted_h3_object_preview_receipt": bool(
+            emergence.get("THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT")
+            or emergence.get("theorem_assisted_h3_object_preview_receipt")
+            or emergence.get("observer_chart_object_h3_receipt")
+        ),
+        "object_h3_nonboundary_population_receipt": bool(
+            emergence.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT")
+            or emergence.get("object_h3_nonboundary_population_receipt")
+            or emergence.get("observer_chart_bulk_population_receipt")
         ),
         "paper_theorem_assisted_h3_populated_chart_receipt": bool(
             emergence.get("PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT")
@@ -1058,6 +1093,20 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             finite_certificates.get("finite_certificate_stack_ready", False)
             or finite_certificate_manifest.get("finite_certificate_stack_ready", False)
         ),
+        "finite_certificates_compiler_ready": bool(
+            finite_certificates.get("finite_certificate_compiler_ready", False)
+            or finite_certificate_manifest.get("finite_certificate_compiler_ready", False)
+            or finite_certificates.get("finite_certificate_stack_ready", False)
+            or finite_certificate_manifest.get("finite_certificate_stack_ready", False)
+        ),
+        "finite_certificates_theorem_grade_inputs": bool(
+            finite_certificates.get("theorem_grade_finite_inputs", False)
+            or finite_certificate_manifest.get("theorem_grade_finite_inputs", False)
+        ),
+        "finite_certificates_proxy_certificate": bool(
+            finite_certificates.get("proxy_certificate", False)
+            or finite_certificate_manifest.get("proxy_certificate", False)
+        ),
         "finite_certificates_no_data_use": bool(
             _nested(finite_certificates, "no_data_use_receipt", "no_data_use_receipt")
             or finite_certificate_manifest.get("no_data_use_receipt", False)
@@ -1093,6 +1142,11 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "finite_certificates_Gamma_rec": _nested(finite_certificates, "derived_outputs", "Gamma_rec"),
         "finite_certificates_B_A": _first_numeric(_nested(finite_certificates, "derived_outputs", "B_A")),
         "screen_capacity_written": bool(screen_capacity),
+        "screen_capacity_input_mode": _nested(
+            screen_capacity,
+            "observed_branch_normalization",
+            "input_mode",
+        ),
         "screen_capacity_N_patch_bare_ratio": _nested(
             screen_capacity,
             "observed_branch_normalization",
@@ -1901,6 +1955,8 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "endogenous_modular_generator_receipt",
                 "paper_theorem_3d_bulk_chart_receipt",
                 "support_visible_h3_populated_bulk_receipt",
+                "theorem_assisted_h3_object_preview_receipt",
+                "object_h3_nonboundary_population_receipt",
                 "paper_theorem_assisted_h3_chart_precursor_receipt",
                 "paper_theorem_assisted_h3_populated_chart_receipt",
                 "object_bulk_population_receipt",
@@ -1953,9 +2009,21 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "paper_theorem_assisted_h3_populated_chart_count": sum(
             1 for row in usable if row.get("paper_theorem_assisted_h3_populated_chart_receipt")
         ),
+        "theorem_assisted_h3_object_preview_count": sum(
+            1 for row in usable if row.get("theorem_assisted_h3_object_preview_receipt")
+        ),
+        "object_h3_nonboundary_population_count": sum(
+            1 for row in usable if row.get("object_h3_nonboundary_population_receipt")
+        ),
         "object_bulk_population_count": sum(1 for row in usable if row.get("object_bulk_population_receipt")),
         "bulk_proof_certificate_count": sum(1 for row in usable if row.get("bulk_proof_certificate_written")),
         "bulk_proof_chart_level_3p1_count": sum(1 for row in usable if row.get("bulk_proof_chart_level_3p1")),
+        "bulk_proof_theorem_assisted_h3_object_preview_count": sum(
+            1 for row in usable if row.get("bulk_proof_theorem_assisted_h3_object_preview")
+        ),
+        "bulk_proof_theorem_assisted_h3_nonboundary_population_count": sum(
+            1 for row in usable if row.get("bulk_proof_theorem_assisted_h3_nonboundary_population")
+        ),
         "bulk_proof_theorem_assisted_h3_populated_chart_count": sum(
             1 for row in usable if row.get("bulk_proof_theorem_assisted_h3_populated_chart")
         ),
@@ -1979,12 +2047,12 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "point cloud dimension. A support-visible populated-H3 count means persistent record-family "
             "support profiles populate that H3 chart under S2-boundary and shuffled-cap controls. "
             "Defect-cluster support in H3 is reported separately as a matter/particle precursor. "
-            "a theorem-assisted chart-precursor count means the Lorentz chart, BW automorphism sanity, "
-            "intermediate H3 response control separation, and localized observer-object precursor are all present. "
-            "A populated-chart count is stricter and requires nonboundary bulk population. Both remain separate "
+            "a theorem-assisted object-preview count means the Lorentz chart, BW automorphism sanity, "
+            "intermediate H3 response control separation, and localized observer-object H3 preview are all present. "
+            "A nonboundary population count is stricter and requires the boundary leakage audit to pass. Both remain separate "
             "from the strict finite endogenous-generator bulk proof and from particles/physical cosmology. "
             "The bulk-proof certificate counts make this split explicit: chart-level 3+1D, theorem-assisted "
-            "populated H3, strict neutral bulk, screen-CMB proxy, physical CMB, and production particles are "
+            "H3 preview, nonboundary H3 population, strict neutral bulk, screen-CMB proxy, physical CMB, and production particles are "
             "separate gates."
         ),
     }
@@ -2695,7 +2763,12 @@ def _finite_certificate_authority_summary(rows: list[dict[str, Any]]) -> dict[st
     usable = [row for row in rows if row.get("finite_certificates_written")]
     return {
         "run_count": len(usable),
+        "compiler_ready_count": sum(1 for row in usable if row.get("finite_certificates_compiler_ready")),
         "stack_ready_count": sum(1 for row in usable if row.get("finite_certificates_stack_ready")),
+        "theorem_grade_finite_inputs_count": sum(
+            1 for row in usable if row.get("finite_certificates_theorem_grade_inputs")
+        ),
+        "proxy_certificate_count": sum(1 for row in usable if row.get("finite_certificates_proxy_certificate")),
         "no_data_use_count": sum(1 for row in usable if row.get("finite_certificates_no_data_use")),
         "release_code_gate_count": sum(1 for row in usable if row.get("finite_certificates_release_code_gate")),
         "parent_collar_gate_count": sum(1 for row in usable if row.get("finite_certificates_parent_collar_gate")),
@@ -2719,6 +2792,7 @@ def _finite_certificate_authority_summary(rows: list[dict[str, Any]]) -> dict[st
         "interpretation": (
             "Finite OPH cosmology certificate authority. This lane computes A_zeta, Q_A, B_A(k,a), "
             "Gamma_rec, and a Boltzmann handoff contract from finite release/collar/repair inputs. "
+            "Compiler-ready means certificate artifacts are internally consistent, not theorem-grade. "
             "Toy/proxy inputs validate the compiler only; physical CMB and matter-power gates remain "
             "closed until real simulator regulator data and cold-limit solver receipts pass the firewall."
         ),
@@ -2735,6 +2809,7 @@ def _screen_capacity_closure_summary(rows: list[dict[str, Any]]) -> dict[str, An
         "physical_cmb_prediction_count": sum(
             1 for row in usable if row.get("screen_capacity_physical_cmb_prediction")
         ),
+        "input_mode_counts": _counts(row.get("screen_capacity_input_mode") for row in usable),
         "mean_N_patch_bare_ratio": _mean(row.get("screen_capacity_N_patch_bare_ratio") for row in usable),
         "mean_N_scr": _mean(row.get("screen_capacity_N_scr") for row in usable),
         "mean_Lambda_lP2": _mean(row.get("screen_capacity_Lambda_lP2") for row in usable),
@@ -3621,10 +3696,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean defect-cluster H3 residual: {_fmt(lorentz['mean_defect_cluster_h3_median_residual'])}",
         f"- paper-theorem-assisted H3 chart precursor receipts: {lorentz['paper_theorem_assisted_h3_chart_precursor_count']}",
         f"- paper-theorem-assisted populated H3 chart receipts: {lorentz['paper_theorem_assisted_h3_populated_chart_count']}",
+        f"- theorem-assisted H3 object-preview receipts: {lorentz['theorem_assisted_h3_object_preview_count']}",
+        f"- object H3 nonboundary population receipts: {lorentz['object_h3_nonboundary_population_count']}",
         f"- object bulk-population receipts: {lorentz['object_bulk_population_count']}",
         f"- bulk-proof certificates: {lorentz['bulk_proof_certificate_count']}",
         f"- bulk-proof chart-level 3+1D counts: {lorentz['bulk_proof_chart_level_3p1_count']}",
-        f"- bulk-proof theorem-assisted populated H3 counts: {lorentz['bulk_proof_theorem_assisted_h3_populated_chart_count']}",
+        f"- bulk-proof theorem-assisted H3 preview counts: {lorentz['bulk_proof_theorem_assisted_h3_object_preview_count']}",
+        f"- bulk-proof theorem-assisted nonboundary H3 counts: {lorentz['bulk_proof_theorem_assisted_h3_nonboundary_population_count']}",
+        f"- bulk-proof legacy theorem-assisted populated H3 counts: {lorentz['bulk_proof_theorem_assisted_h3_populated_chart_count']}",
         f"- bulk-proof strict neutral 3D counts: {lorentz['bulk_proof_strict_neutral_3d_bulk_count']}",
         f"- bulk-proof screen-CMB proxy counts: {lorentz['bulk_proof_screen_cmb_proxy_count']}",
         f"- bulk-proof physical CMB counts: {lorentz['bulk_proof_physical_cmb_prediction_count']}",
@@ -3986,7 +4065,10 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "## OPH Finite Certificate Authority",
         "",
         f"- finite certificate bundles: {finite_certificates['run_count']}",
-        f"- stack-ready bundles: {finite_certificates['stack_ready_count']}",
+        f"- compiler-ready bundles: {finite_certificates['compiler_ready_count']}",
+        f"- legacy stack-ready bundles: {finite_certificates['stack_ready_count']}",
+        f"- theorem-grade finite-input bundles: {finite_certificates['theorem_grade_finite_inputs_count']}",
+        f"- proxy-certificate bundles: {finite_certificates['proxy_certificate_count']}",
         f"- no-data-use receipts: {finite_certificates['no_data_use_count']}",
         f"- release-code gates: {finite_certificates['release_code_gate_count']}",
         f"- parent-collar gates: {finite_certificates['parent_collar_gate_count']}",
@@ -4008,6 +4090,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- F(N) implemented reports: {screen_capacity['F_N_implemented_count']}",
         f"- finite-simulator fixed-point solved reports: {screen_capacity['fixed_point_solved_count']}",
         f"- physical-CMB prediction reports: {screen_capacity['physical_cmb_prediction_count']}",
+        f"- input-mode counts: {screen_capacity['input_mode_counts']}",
         f"- mean N_patch bare ratio: {_fmt(screen_capacity['mean_N_patch_bare_ratio'])}",
         f"- mean N_scr entropy capacity: {_fmt(screen_capacity['mean_N_scr'])}",
         f"- mean Lambda l_P^2: {_fmt(screen_capacity['mean_Lambda_lP2'])}",

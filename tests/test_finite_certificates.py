@@ -11,8 +11,10 @@ from oph_fpe.cosmology.finite_certificates import (
     cmi_bits,
     finite_certificate_bundle,
     no_data_use_receipt,
+    run_proxy_certificate_input,
     toy_certificate_input,
     write_finite_certificate_bundle,
+    write_run_proxy_finite_certificate_bundle,
 )
 
 
@@ -48,7 +50,10 @@ def test_finite_certificate_bundle_recomputes_toy_values():
     assert repair["detailed_balance_max_error"] < 1.0e-12
     assert repair["Gamma_rec"] > 0.0
     assert math.isclose(boltzmann["n_s"], 1.0 - toy_certificate_input()["metadata"]["P"] / 48.0)
+    assert report["report"]["finite_certificate_compiler_ready"] is True
     assert report["report"]["finite_certificate_stack_ready"] is True
+    assert report["report"]["theorem_grade_finite_inputs"] is False
+    assert report["report"]["proxy_certificate"] is True
     assert report["report"]["physical_cmb_prediction"] is False
     assert report["report"]["real_physics_certificate"] is False
 
@@ -67,7 +72,10 @@ def test_finite_certificate_writer_outputs_manifest_and_report(tmp_path: Path):
     assert (out_dir / "finite_certificate_report.md").exists()
     manifest = json.loads((out_dir / "finite_certificate_manifest.json").read_text())
     assert manifest["manifest_type"] == "oph_finite_certificate_manifest"
+    assert manifest["finite_certificate_compiler_ready"] is True
     assert manifest["finite_certificate_stack_ready"] is True
+    assert manifest["theorem_grade_finite_inputs"] is False
+    assert manifest["proxy_certificate"] is True
     assert report["physical_cmb_prediction"] is False
 
 
@@ -90,8 +98,79 @@ def test_comparable_data_includes_finite_certificate_lane(tmp_path: Path):
 
     assert report["run_count"] == 1
     assert lane["run_count"] == 1
+    assert lane["compiler_ready_count"] == 1
     assert lane["stack_ready_count"] == 1
+    assert lane["theorem_grade_finite_inputs_count"] == 0
+    assert lane["proxy_certificate_count"] == 1
     assert lane["no_data_use_count"] == 1
     assert lane["real_physics_certificate_count"] == 0
     assert lane["physical_cmb_prediction_count"] == 0
     assert lane["mean_A_zeta"] is not None
+
+
+def test_run_proxy_certificate_bundle_uses_cached_run_receipts(tmp_path: Path):
+    run = tmp_path / "cached_run"
+    run.mkdir()
+    (run / "collar_markov_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "diagonal_empirical_collar_state",
+                "rows": [
+                    {
+                        "cap_id": 0,
+                        "theta0": 0.5,
+                        "collar_count": 10,
+                        "sample_count": 100,
+                        "epsilon_cmi": 0.2,
+                    },
+                    {
+                        "cap_id": 1,
+                        "theta0": 0.8,
+                        "collar_count": 20,
+                        "sample_count": 100,
+                        "epsilon_cmi": 0.3,
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "manifest.json").write_text(
+        json.dumps({"run_id": "r1", "oph_constants": {"P": 1.6309682094039593}}),
+        encoding="utf-8",
+    )
+    (run / "s3_class_counts.json").write_text(
+        json.dumps({"identity": 4, "transposition": 3, "threecycle": 2}),
+        encoding="utf-8",
+    )
+    (run / "h0s8_branch_report.json").write_text(
+        json.dumps({"background_values": {"Omega_A": 0.26, "Omega_b": 0.05}}),
+        encoding="utf-8",
+    )
+    (run / "oph_boltzmann_input_report.json").write_text(
+        json.dumps({"grids": {"a_grid": [0.1, 1.0]}, "readiness": {"cdm_limit_solver_ready": True}}),
+        encoding="utf-8",
+    )
+
+    data = run_proxy_certificate_input(run)
+    assert data["metadata"]["real_physics_certificate"] is False
+    assert data["metadata"]["proxy_certificate"] is True
+    assert data["metadata"]["theorem_grade_release_code"] is False
+    assert data["parent_collar"]["theorem_grade_parent_collar_ladder"] is False
+    assert data["parent_collar"]["small_field_support"]["passes"] is False
+    assert data["parent_collar"]["refinement_convergence"]["passes"] is False
+    assert data["repair_matrix"]["theorem_grade_repair_matrix"] is False
+    assert data["repair_matrix"]["actual_repair_event_trace"] is False
+    assert len(data["release_code"]["packets"]) == 2
+    assert data["parent_collar"]["a_values"] == [0.1, 1.0]
+    assert data["repair_matrix"]["states"] == ["identity", "transposition", "threecycle"]
+
+    out = tmp_path / "bundle"
+    report = write_run_proxy_finite_certificate_bundle(run, out)
+    assert report["finite_certificate_compiler_ready"] is True
+    assert report["finite_certificate_stack_ready"] is True
+    assert report["theorem_grade_finite_inputs"] is False
+    assert report["real_physics_certificate"] is False
+    assert report["physical_cmb_prediction"] is False
+    assert report["proxy_certificate"] is True
+    assert (out / "finite_certificate_input_from_run.json").exists()

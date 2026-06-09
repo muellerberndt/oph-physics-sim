@@ -53,6 +53,14 @@ OUTPUT_FILENAMES = {
 }
 
 
+def read_json_file(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def sha256_json(obj: Any) -> str:
     blob = json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()
@@ -343,12 +351,22 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         "boltzmann_export_certificate": bool(boltzmann.get("no_data_use")),
         "no_data_use_firewall": bool(no_data.get("no_data_use_receipt")),
     }
+    compiler_ready = bool(all(readiness.values()))
+    theorem_grade_inputs = bool(_theorem_grade_finite_inputs(data))
+    real_physics_certificate = bool(
+        compiler_ready
+        and theorem_grade_inputs
+        and not data.get("metadata", {}).get("proxy_certificate", True)
+    )
     report = {
         "mode": "oph_finite_cosmology_certificate_bundle_v0",
         "input_hash": input_hash,
         "output_hashes": output_hashes,
         "readiness_gates": readiness,
-        "finite_certificate_stack_ready": bool(all(readiness.values())),
+        "finite_certificate_compiler_ready": compiler_ready,
+        "finite_certificate_stack_ready": compiler_ready,
+        "theorem_grade_finite_inputs": theorem_grade_inputs,
+        "proxy_certificate": not theorem_grade_inputs,
         "no_data_use_receipt": no_data,
         "derived_outputs": {
             "epsilon_star_bits": release["epsilon_star_bits"],
@@ -363,11 +381,13 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         },
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
-        "real_physics_certificate": bool(data.get("metadata", {}).get("real_physics_certificate", False)),
+        "real_physics_certificate": real_physics_certificate,
         "claim_boundary": (
-            "Computed finite OPH cosmology certificate bundle. Toy or proxy inputs validate the compiler only. "
-            "Physical prediction gates stay closed until the simulator emits real OPH regulator release packets, "
-            "collar response ladders, repair packet spaces, and Boltzmann cold-limit receipts without measurement data."
+            "Computed finite OPH cosmology certificate bundle. `finite_certificate_compiler_ready` means "
+            "the compiler emitted internally consistent artifacts. It does not mean the inputs are "
+            "theorem-grade. Physical prediction gates stay closed until the simulator emits real OPH "
+            "regulator release packets, collar response ladders, repair packet spaces, and Boltzmann "
+            "cold-limit receipts without measurement data."
         ),
     }
     manifest = {
@@ -376,7 +396,10 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         "input_hash": input_hash,
         "outputs": output_hashes,
         "readiness_gates": readiness,
+        "finite_certificate_compiler_ready": report["finite_certificate_compiler_ready"],
         "finite_certificate_stack_ready": report["finite_certificate_stack_ready"],
+        "theorem_grade_finite_inputs": report["theorem_grade_finite_inputs"],
+        "proxy_certificate": report["proxy_certificate"],
         "no_data_use_receipt": no_data["no_data_use_receipt"],
         "physical_cmb_prediction": False,
         "claim_boundary": report["claim_boundary"],
@@ -390,6 +413,32 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         "manifest": manifest,
         "report": report,
     }
+
+
+def _theorem_grade_finite_inputs(data: dict[str, Any]) -> bool:
+    meta = data.get("metadata", {}) if isinstance(data.get("metadata"), dict) else {}
+    release = data.get("release_code", {}) if isinstance(data.get("release_code"), dict) else {}
+    parent = data.get("parent_collar", {}) if isinstance(data.get("parent_collar"), dict) else {}
+    repair = data.get("repair_matrix", {}) if isinstance(data.get("repair_matrix"), dict) else {}
+    boltzmann = data.get("boltzmann_export", {}) if isinstance(data.get("boltzmann_export"), dict) else {}
+    small_field = parent.get("small_field_support", {}) if isinstance(parent.get("small_field_support"), dict) else {}
+    refinement = (
+        parent.get("refinement_convergence", {})
+        if isinstance(parent.get("refinement_convergence"), dict)
+        else {}
+    )
+
+    return bool(
+        meta.get("real_physics_certificate", False)
+        and not meta.get("proxy_certificate", True)
+        and release.get("theorem_grade_release_code", False)
+        and parent.get("theorem_grade_parent_collar_ladder", False)
+        and small_field.get("passes", False)
+        and refinement.get("passes", False)
+        and repair.get("theorem_grade_repair_matrix", False)
+        and repair.get("actual_repair_event_trace", False)
+        and boltzmann.get("cold_limit_test_passed", False)
+    )
 
 
 def write_finite_certificate_bundle(
@@ -423,6 +472,171 @@ def write_finite_certificate_bundle(
     )
     (out / "finite_certificate_report.md").write_text(_markdown_report(bundle["report"], input_label), encoding="utf-8")
     return {**bundle["report"], "input": input_label, "out_dir": str(out)}
+
+
+def run_proxy_certificate_input(run_dir: Path) -> dict[str, Any]:
+    """Build a finite-certificate input object from cached OPH-FPE run receipts.
+
+    This intentionally emits a proxy bundle. It uses only simulator receipts and
+    declared OPH constants, but current cached runs do not yet contain the full
+    noncommutative release code, theorem-grade parent-collar ladder, or physical
+    repair packet matrix required for a physical CMB prediction.
+    """
+
+    root = Path(run_dir)
+    collar_path = root / "collar_markov_report.json"
+    collar = read_json_file(collar_path)
+    rows = collar.get("rows") if isinstance(collar.get("rows"), list) else []
+    if not rows:
+        raise ValueError(f"{collar_path} has no collar rows")
+
+    packets: list[dict[str, Any]] = []
+    parent_samples: list[dict[str, Any]] = []
+    for index, row in enumerate(rows):
+        cmi = _float_from_any(row.get("epsilon_cmi"), 0.0)
+        if cmi <= 0.0:
+            continue
+        sample_count = max(1.0, _float_from_any(row.get("sample_count"), 1.0))
+        collar_count = max(1.0, _float_from_any(row.get("collar_count"), 1.0))
+        collar_fraction = min(1.0, collar_count / sample_count)
+        cap_id = row.get("cap_id", index)
+        packets.append(
+            {
+                "id": f"cap_{cap_id}",
+                "scalar_visible": True,
+                "cmi": float(cmi),
+                "W_rel": float(collar_fraction),
+                "source": "collar_markov_report",
+                "theta0": row.get("theta0"),
+                "collar_width": row.get("collar_width"),
+                "collar_count": row.get("collar_count"),
+                "sample_count": row.get("sample_count"),
+                "claim_boundary": "diagonal collar CMI proxy, not a noncommutative scalar-release proof",
+            }
+        )
+        derivative = _finite_collar_derivative_proxy(row, rows, index)
+        parent_samples.append(
+            {
+                "id": f"cap_{cap_id}",
+                "weight": float(collar_count),
+                "I_bits": float(cmi),
+                "dI_d_delta_b": float(derivative),
+                "theta0": row.get("theta0"),
+                "k": _theta_to_k_proxy(row.get("theta0")),
+                "a": 1.0,
+                "source": "finite_collar_derivative_proxy_from_collar_markov_report",
+            }
+        )
+    if not packets:
+        raise ValueError(f"{collar_path} has no positive epsilon_cmi rows")
+
+    manifest = read_json_file(root / "manifest.json")
+    h0s8 = read_json_file(root / "h0s8_branch_report.json")
+    boltzmann = read_json_file(root / "oph_boltzmann_input_report.json")
+    s3_counts = read_json_file(root / "s3_class_counts.json")
+
+    omega_a = _nested_float(h0s8, ("background_values", "Omega_A"), default=0.26447041034523616)
+    omega_b = _nested_float(h0s8, ("background_values", "Omega_b"), default=0.049301692328524445)
+    a_values = _a_values_from_boltzmann_report(boltzmann)
+    repair_states, repair_pi = _repair_state_distribution(s3_counts)
+
+    source_hashes = {}
+    for name in (
+        "collar_markov_report.json",
+        "manifest.json",
+        "s3_class_counts.json",
+        "h0s8_branch_report.json",
+        "oph_boltzmann_input_report.json",
+    ):
+        path = root / name
+        if path.exists():
+            source_hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+
+    return {
+        "metadata": {
+            "name": f"finite_certificate_proxy_from_{manifest.get('run_id') or root.name}",
+            "version": "0.3.0",
+            "source_run_dir": str(root),
+            "source_hashes": source_hashes,
+            "P": _nested_float(manifest, ("oph_constants", "P"), default=P_STAR),
+            "no_data_use": True,
+            "proxy_certificate": True,
+            "real_physics_certificate": False,
+            "theorem_grade_release_code": False,
+            "theorem_grade_parent_collar_ladder": False,
+            "theorem_grade_repair_matrix": False,
+            "claim_boundary": (
+                "Proxy finite-certificate input assembled from cached OPH-FPE receipts. "
+                "It uses no measurement likelihoods, but it is not a physical CMB certificate "
+                "because parent-collar and repair-matrix entries are finite diagnostic proxies."
+            ),
+        },
+        "release_code": {
+            "kappa_rel": 1.0,
+            "positive_cmi_threshold": 0.0,
+            "theorem_grade_release_code": False,
+            "packets": packets,
+        },
+        "parent_collar": {
+            "theorem_grade_parent_collar_ladder": False,
+            "ell": 1.0,
+            "a_values": a_values,
+            "V_com": 1.0,
+            "c": 1.0,
+            "rho_b": omega_b,
+            "rho_A_background": omega_a,
+            "samples": parent_samples,
+            "small_field_support": {
+                "passes": False,
+                "reason": "not emitted by current finite run; derivative rows are collar proxies",
+            },
+            "refinement_convergence": {
+                "passes": False,
+                "provided": False,
+                "reason": "single cached run, not a regulator ladder",
+            },
+        },
+        "repair_matrix": {
+            "theorem_grade_repair_matrix": False,
+            "actual_repair_event_trace": False,
+            "states": repair_states,
+            "pi_eq": repair_pi,
+            "proposal_edges": [[i, j] for i in range(len(repair_states)) for j in range(i + 1, len(repair_states))],
+            "dt_eta": 1.0,
+            "source": "s3_class_counts_proxy_distribution",
+        },
+        "boltzmann_export": {
+            "cold_limit_test_passed": bool(_nested_get(boltzmann, "readiness", "cdm_limit_solver_ready", default=False)),
+            "source": "oph_boltzmann_input_report",
+        },
+        "no_data_use": True,
+    }
+
+
+def write_run_proxy_finite_certificate_bundle(run_dir: Path, out_dir: Path) -> dict[str, Any]:
+    data = run_proxy_certificate_input(run_dir)
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    input_path = out / "finite_certificate_input_from_run.json"
+    input_path.write_text(json.dumps(data, indent=2, sort_keys=True, default=str), encoding="utf-8")
+    result = write_finite_certificate_bundle(input_path, out)
+    report_path = out / OUTPUT_FILENAMES["report"]
+    report = read_json_file(report_path)
+    report["source_run_dir"] = str(run_dir)
+    report["input_builder"] = "run_proxy_certificate_input"
+    report["proxy_certificate"] = True
+    report["theorem_grade_finite_inputs"] = False
+    report["real_physics_certificate"] = False
+    report["physical_cmb_prediction"] = False
+    report["physical_matter_power_prediction"] = False
+    report["claim_boundary"] = (
+        "Run-derived finite-certificate proxy bundle. All finite-certificate algorithms validated on "
+        "cached OPH-FPE receipts, but physical prediction gates remain closed because the parent-collar "
+        "response and repair matrix are diagnostic proxies, not theorem-grade finite Universe Simulation certificates."
+    )
+    report_path.write_text(json.dumps(report, indent=2, sort_keys=True, default=str), encoding="utf-8")
+    (out / "finite_certificate_report.md").write_text(_markdown_report(report, str(input_path)), encoding="utf-8")
+    return {**report, "out_dir": str(out)}
 
 
 def toy_certificate_input() -> dict[str, Any]:
@@ -481,6 +695,67 @@ def toy_certificate_input() -> dict[str, Any]:
     }
 
 
+def _finite_collar_derivative_proxy(row: dict[str, Any], rows: list[dict[str, Any]], index: int) -> float:
+    theta = _float_from_any(row.get("theta0"), float(index + 1))
+    cmi = _float_from_any(row.get("epsilon_cmi"), 0.0)
+    neighbors = []
+    for other_index, other in enumerate(rows):
+        if other_index == index:
+            continue
+        other_theta = _float_from_any(other.get("theta0"), math.nan)
+        other_cmi = _float_from_any(other.get("epsilon_cmi"), math.nan)
+        if math.isfinite(other_theta) and math.isfinite(other_cmi) and other_theta != theta:
+            neighbors.append((abs(other_theta - theta), other_theta, other_cmi))
+    if neighbors:
+        _, other_theta, other_cmi = min(neighbors, key=lambda item: item[0])
+        return (cmi - other_cmi) / (theta - other_theta)
+    return cmi
+
+
+def _theta_to_k_proxy(theta: Any) -> float:
+    value = _float_from_any(theta, 1.0)
+    return 1.0 / max(value, 1.0e-12)
+
+
+def _a_values_from_boltzmann_report(report: dict[str, Any]) -> list[float]:
+    values = _nested_get(report, "grids", "a_grid", default=None)
+    if isinstance(values, list) and values:
+        return [float(value) for value in values]
+    return [0.000909090909, 0.01, 0.1, 1.0]
+
+
+def _repair_state_distribution(counts: dict[str, Any]) -> tuple[list[str], list[float]]:
+    preferred = ["identity", "transposition", "threecycle"]
+    values = [max(0.0, _float_from_any(counts.get(name), 0.0)) for name in preferred]
+    if sum(values) <= 0.0:
+        return ["identity", "transposition", "threecycle"], [1.0, 1.0, 1.0]
+    positive = [(name, value) for name, value in zip(preferred, values) if value > 0.0]
+    return [name for name, _ in positive], [float(value) for _, value in positive]
+
+
+def _nested_get(data: dict[str, Any], *keys: str, default: Any = None) -> Any:
+    current: Any = data
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            return default
+        current = current[key]
+    return current
+
+
+def _nested_float(data: dict[str, Any], keys: tuple[str, ...], *, default: float) -> float:
+    return _float_from_any(_nested_get(data, *keys, default=default), default)
+
+
+def _float_from_any(value: Any, default: float) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return float(default)
+    if not math.isfinite(parsed):
+        return float(default)
+    return parsed
+
+
 def _packet_cmi_bits(packet: dict[str, Any]) -> float:
     if "joint_p_abd" in packet:
         return cmi_bits(np.asarray(packet["joint_p_abd"], dtype=np.float64))
@@ -536,7 +811,10 @@ def _markdown_report(report: dict[str, Any], input_label: str) -> str:
             report["claim_boundary"],
             "",
             f"- input: `{input_label}`",
-            f"- stack ready: {report['finite_certificate_stack_ready']}",
+            f"- compiler ready: {report['finite_certificate_compiler_ready']}",
+            f"- legacy stack ready: {report['finite_certificate_stack_ready']}",
+            f"- theorem-grade finite inputs: {report['theorem_grade_finite_inputs']}",
+            f"- proxy certificate: {report['proxy_certificate']}",
             f"- no-data-use firewall: {gates['no_data_use_firewall']}",
             f"- physical CMB prediction: {report['physical_cmb_prediction']}",
             f"- real physics certificate: {report['real_physics_certificate']}",

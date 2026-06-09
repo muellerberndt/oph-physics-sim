@@ -5,6 +5,10 @@ import math
 
 from oph_fpe.constants.oph_pixel import P_STAR
 
+DEFAULT_R_DS_M = 1.66e26
+DEFAULT_L_PLANCK_M = 1.616e-35
+DEFAULT_N_CRC = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M) ** 2
+
 
 @dataclass(frozen=True)
 class OPHConstants:
@@ -16,6 +20,7 @@ class OPHConstants:
     """
 
     P: float = P_STAR
+    N_CRC: float = DEFAULT_N_CRC
     pi_wl: float = 5.0 / 7.0
     mnu_eV: tuple[float, float, float] = (
         0.017454720257976796,
@@ -47,9 +52,25 @@ class OPHConstants:
     def S8_projected_wl(self) -> float:
         return self.S8_oph_compressed * self.R_wl
 
+    @property
+    def N_patch_bare_ratio(self) -> float:
+        return float(self.N_CRC) / math.pi
+
+    @property
+    def Lambda_lP2(self) -> float:
+        return 3.0 * math.pi / float(self.N_CRC)
+
+    @property
+    def P_cell_count_for_N_CRC(self) -> float:
+        return 4.0 * float(self.N_CRC) / float(self.P)
+
     def as_jsonable(self) -> dict[str, float | list[float]]:
         return {
             "P": float(self.P),
+            "N_CRC": float(self.N_CRC),
+            "N_patch_bare_ratio": self.N_patch_bare_ratio,
+            "Lambda_lP2": self.Lambda_lP2,
+            "P_cell_count_for_N_CRC": self.P_cell_count_for_N_CRC,
             "lambda_collar": self.lambda_collar,
             "reserve": self.reserve,
             "pi_wl": float(self.pi_wl),
