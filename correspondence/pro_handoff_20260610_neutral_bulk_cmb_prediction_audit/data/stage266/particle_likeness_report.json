@@ -1,0 +1,38 @@
+{
+  "mode": "screen_holonomy_particle_likeness_diagnostic",
+  "worldline_count": 1,
+  "localized_count": 1,
+  "persistent_count": 1,
+  "sector_stable_count": 1,
+  "transportable_count": 1,
+  "fusion_conserving_count": 0,
+  "scattering_reproducible_count": 1,
+  "bulk_localization_pass": false,
+  "max_support_fraction_threshold": 0.05,
+  "min_observations": 3,
+  "min_class_stability": 0.8,
+  "interaction_report_mode": "screen_s3_defect_interaction_diagnostic",
+  "particle_like_count": 0,
+  "particle_matter_receipt": false,
+  "worldlines": [
+    {
+      "worldline_id": "worldline_000000",
+      "observation_count": 8,
+      "lifetime_cycles": 63,
+      "class_mode": "transposition",
+      "class_stability_fraction": 1.0,
+      "max_support_node_count": 675,
+      "max_support_fraction": 0.002574920654296875,
+      "mean_transport_distance": 2.169471619721262e-05,
+      "localization_pass": true,
+      "persistence_pass": true,
+      "sector_stability_pass": true,
+      "transportability_pass": true,
+      "fusion_conservation_pass": false,
+      "scattering_reproducibility_pass": true,
+      "bulk_localization_pass": false,
+      "particle_like": false
+    }
+  ],
+  "claim_boundary": "screen holonomy defect particle-likeness score. Persistence/localization/sector stability may be present, but matter-particle claims require neutral 3D bulk mapping, transport around contractible paths, fusion conservation, scattering reproducibility, and repeated-seed controls."
+}

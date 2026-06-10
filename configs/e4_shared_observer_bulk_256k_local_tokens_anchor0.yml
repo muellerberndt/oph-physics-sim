@@ -255,6 +255,12 @@ h3_modular_response:
   max_iterations: 4
   feature_selection: class_distribution_and_change
   min_feature_std: 0.05
+  exclude_observables:
+  - record_family
+  exclusion_claim_boundary: >
+    record_family is retained for observer-object extraction but excluded
+    from this support-visible H3 modular-response fit because it is a
+    pointer/bookkeeping channel, not a strict geometric response feature.
   max_fit_features: 1024
   max_features_per_cap_time_observable: 8
   pass_ratio: 1.0

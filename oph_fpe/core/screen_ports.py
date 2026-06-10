@@ -57,18 +57,27 @@ def assign_echosahedral_ports(
     right = np.asarray(right, dtype=np.int64)
     ports = max(1, int(ports_per_patch))
     node_degree = np.bincount(np.concatenate([left, right]), minlength=int(patch_count))
-    counters = np.zeros(int(patch_count), dtype=np.int64)
-    left_port = np.zeros(left.size, dtype=np.int16)
-    right_port = np.zeros(right.size, dtype=np.int16)
-    overflow = 0
-    for edge_index, (a, b) in enumerate(zip(left, right, strict=False)):
-        left_count = counters[int(a)]
-        right_count = counters[int(b)]
-        overflow += int(left_count >= ports) + int(right_count >= ports)
-        left_port[edge_index] = int(left_count % ports)
-        right_port[edge_index] = int(right_count % ports)
-        counters[int(a)] += 1
-        counters[int(b)] += 1
+    endpoint_nodes = np.empty(left.size * 2, dtype=np.int64)
+    endpoint_nodes[0::2] = left
+    endpoint_nodes[1::2] = right
+    if endpoint_nodes.size:
+        order = np.argsort(endpoint_nodes, kind="stable")
+        sorted_nodes = endpoint_nodes[order]
+        group_start = np.empty(sorted_nodes.size, dtype=bool)
+        group_start[0] = True
+        group_start[1:] = sorted_nodes[1:] != sorted_nodes[:-1]
+        starts = np.flatnonzero(group_start)
+        counts = np.diff(np.append(starts, sorted_nodes.size))
+        local_rank_sorted = np.arange(sorted_nodes.size, dtype=np.int64) - np.repeat(starts, counts)
+        local_rank = np.empty_like(local_rank_sorted)
+        local_rank[order] = local_rank_sorted
+        overflow = int(np.sum(local_rank >= ports))
+        left_port = (local_rank[0::2] % ports).astype(np.int16)
+        right_port = (local_rank[1::2] % ports).astype(np.int16)
+    else:
+        left_port = np.zeros(0, dtype=np.int16)
+        right_port = np.zeros(0, dtype=np.int16)
+        overflow = 0
     return ScreenPortMap(
         left_port=left_port,
         right_port=right_port,

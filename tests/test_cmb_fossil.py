@@ -9,6 +9,7 @@ from oph_fpe.cmb_fossil import (
     cmb_fossil_bridge_report,
     primordial_power,
     screen_cl_to_primordial_modulation,
+    write_cmb_fossil_bridge_report,
 )
 
 
@@ -60,3 +61,23 @@ def test_cmb_fossil_bridge_report_is_claim_bounded():
     assert report["physical_cmb_prediction"] is False
     assert report["bulk_required"] is False
     assert report["parameters"]["eta"] == 0.035
+
+
+def test_write_cmb_fossil_bridge_report_outputs_tables(tmp_path):
+    planck = tmp_path / "planck_tt.txt"
+    planck.write_text(
+        "# l Dl\n"
+        "10 1000\n"
+        "20 1100\n"
+        "30 1050\n",
+        encoding="utf-8",
+    )
+
+    report = write_cmb_fossil_bridge_report(tmp_path / "out", planck_tt=planck, ell_max=64)
+
+    assert report["mode"] == "oph_cmb_fossil_bridge_diagnostic"
+    assert report["physical_cmb_prediction"] is False
+    assert report["benchmark_score"]["benchmark_count"] == 3
+    assert (tmp_path / "out" / "cmb_fossil_bridge_report.json").exists()
+    assert (tmp_path / "out" / "cmb_fossil_bridge_tt.csv").exists()
+    assert (tmp_path / "out" / "cmb_fossil_bridge_params.json").exists()

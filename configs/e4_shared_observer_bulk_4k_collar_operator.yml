@@ -13,6 +13,11 @@ graph:
   patch_count: 4096
   neighbors: 12
 
+cache:
+  geometry:
+    enabled: true
+    cache_dir: .oph_fpe_cache/geometry
+
 group:
   name: S3
 
@@ -41,8 +46,8 @@ screen_units:
   mode: numerical_regulator
 
 dynamics:
-  cycles: 64
-  repairs_per_cycle: 4096
+  cycles: 96
+  repairs_per_cycle: 1024
   record_commit_cycles: 8
   beta_schedule:
     kind: geometric
@@ -191,7 +196,7 @@ observer_chart_population:
   component_min_observers: 3
   require_support_visibility: true
   min_support_visibility: 0.01
-  visibility_mode: support_overlap
+  visibility_mode: packet_or_support
   packet_visibility_weight: 0.5
   boundary_gate_mode: boundary_leakage_audit
 
@@ -294,6 +299,24 @@ theorem_core:
   include_default_sm_candidate: true
 
 cosmology:
+  harmonic_time_trace:
+    enabled: true
+    fixed_time_controls: true
+    control_seed: 20260609
+    sample_count: 32
+    ell_max: 32
+    fields:
+    - record_signature
+    - stable_count
+    - repair_load
+    - local_mismatch_density
+    - cumulative_repair_load
+    - s3_class_density
+    controls:
+    - shuffled_field
+    - random_gaussian
+    harmonic_batch_size: 1024
+    n_jobs: 1
   freezeout:
     enabled: true
     require_kms_bw_pass: true

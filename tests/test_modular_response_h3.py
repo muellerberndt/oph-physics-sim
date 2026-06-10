@@ -635,6 +635,50 @@ def test_modular_response_h3_feature_selection_filters_dead_columns():
     assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
 
 
+def test_h3_feature_exclusion_applies_to_none_mode():
+    matrix = np.asarray(
+        [
+            [1.0, 0.2, 0.4],
+            [0.9, 0.3, 0.5],
+            [1.1, 0.1, 0.6],
+        ],
+        dtype=float,
+    )
+    feature_rows = [
+        {"observable": "record_family", "feature_type": "class_distribution_delta", "cap_index": 0},
+        {"observable": "s3_sector_class", "feature_type": "class_distribution_delta", "cap_index": 0},
+        {"observable": "checkpoint_class", "feature_type": "change_probability_delta", "cap_index": 0},
+    ]
+    kernel = {
+        "matrix": matrix,
+        "feature_rows": feature_rows,
+        "s2_boundary_control": np.zeros_like(matrix),
+        "shuffled_control": np.zeros_like(matrix),
+        "no_modular_flow_control": np.zeros_like(matrix),
+        "wrong_scale_controls": {"1x": np.zeros_like(matrix)},
+    }
+
+    selected_kernel, selected_matrix, selected_rows, selection = _select_fit_features(
+        kernel,
+        matrix,
+        feature_rows,
+        mode="none",
+        max_features=None,
+        min_std=0.0,
+        min_wrong_scale_delta=0.0,
+        exclude_observables=("record_family",),
+        exclude_feature_types=(),
+        min_features=1,
+        max_features_per_cap_time_observable=None,
+    )
+
+    assert selected_matrix.shape[1] == 2
+    assert selected_kernel["s2_boundary_control"].shape == selected_matrix.shape
+    assert selection["excluded_feature_count"] == 1
+    assert selection["pre_exclusion_feature_count"] == 3
+    assert all(row["observable"] != "record_family" for row in selected_rows)
+
+
 def test_modular_response_h3_feature_selection_can_filter_wrong_scale_indistinct_columns():
     points = fibonacci_sphere_points(512)
     caps = sample_caps(points, count=10, theta_values=[0.55, 0.75, 1.0], seed=166)

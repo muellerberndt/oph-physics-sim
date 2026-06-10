@@ -126,6 +126,45 @@ def test_cmb_derivation_audit_separates_targets_from_finite_readiness(tmp_path: 
     assert report["rows"][0]["target_q_IR"] == 0.25
 
 
+def test_cmb_derivation_prefers_bulk_proof_over_legacy_emergence_flag(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "cmb_anomaly_report.json").write_text(
+        json.dumps(
+            {
+                "aggregate": {"field_count": 1, "parity_more_asymmetric_than_controls_count": 1},
+                "fields": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "emergence_status_report.json").write_text(
+        json.dumps(
+            {
+                "bulk_3d_established": True,
+                "PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "bulk_proof_certificate_report.json").write_text(
+        json.dumps(
+            {
+                "theorem_assisted_h3_populated_chart_established": False,
+                "theorem_assisted_h3_nonboundary_population_established": False,
+                "bulk_3d_established_theorem_assisted": False,
+                "strict_neutral_third_person_bulk_established": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = write_cmb_parameter_derivation_report([run], tmp_path / "out")
+
+    assert report["rows"][0]["gates"]["theorem_assisted_h3_bulk_established"] is False
+    assert report["rows"][0]["gates"]["strict_neutral_bulk_3d_established"] is False
+
+
 def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     keys = sorted({key for row in rows for key in row})
     with path.open("w", encoding="utf-8", newline="") as handle:

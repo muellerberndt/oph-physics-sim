@@ -1,0 +1,61 @@
+{
+  "claims": {
+    "chart_level_3p1": true,
+    "theorem_assisted_h3_bulk": true,
+    "strict_blind_record_transition_3d_candidate": true,
+    "strict_neutral_bulk": false,
+    "physical_cmb_prediction": false,
+    "scale_compressed_cmb_curve_comparable": true,
+    "scale_compressed_cmb_physical_prediction": false,
+    "boltzmann_finite_repair_clock_rows_emitted": true
+  },
+  "stage266_chart": {
+    "incidence_mode": "transition_affinity_modular_response_mixture",
+    "observer_chart_object_h3_receipt": true,
+    "observer_chart_bulk_population_receipt": true,
+    "compactness_distribution_population_receipt": true,
+    "h3_beats_shuffled_incidence_robust": true,
+    "h3_not_boundary_dominated": true,
+    "median_h3_compactness_normalized": 0.12123398066476862,
+    "median_s2_boundary_compactness_normalized": 0.4964235350533584,
+    "median_shuffled_h3_compactness_normalized": 0.14905445034468198,
+    "object_count": 4096,
+    "localized_not_boundary_object_count": 3989
+  },
+  "stage266_neutral_blind_rank3": {
+    "receipt": true,
+    "corr_dim": 2.701366590578913,
+    "local_mle_dim": 2.945863254948163,
+    "s2_distance_correlation": 0.0025379516378554352,
+    "strict_neutral_bulk": false
+  },
+  "scale_compressed_cmb": {
+    "measurement_comparable_cmb_curve": true,
+    "screen_camb_transfer_receipt": true,
+    "physical_cmb_prediction": false,
+    "camb_lcdm_powerlaw": {
+      "shape_correlation": 0.9998604571617498,
+      "normalized_rmse": 0.01670585755059449,
+      "amplitude_fit_chi2_per_bin": 0.9444957497070865,
+      "first_peak_ell": 225.164945,
+      "benchmark_first_peak_ell": 225.164945,
+      "mean_absolute_fractional_error": 0.019321452615710596
+    },
+    "scale_compressed_scalar_tilt": {
+      "shape_correlation": 0.9998574616665208,
+      "normalized_rmse": 0.0168842135427968,
+      "amplitude_fit_chi2_per_bin": 0.9544981569825821,
+      "first_peak_ell": 225.164945,
+      "benchmark_first_peak_ell": 225.164945,
+      "mean_absolute_fractional_error": 0.01943526118368078
+    },
+    "scale_compressed_ir_kernel": {
+      "shape_correlation": 0.9998534542805271,
+      "normalized_rmse": 0.01711991352040137,
+      "amplitude_fit_chi2_per_bin": 0.9615050793060024,
+      "first_peak_ell": 225.164945,
+      "benchmark_first_peak_ell": 225.164945,
+      "mean_absolute_fractional_error": 0.019487176662533225
+    }
+  }
+}

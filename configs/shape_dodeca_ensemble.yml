@@ -1,0 +1,18 @@
+name: shape_dodeca_ensemble
+seed: 20260609
+
+claim_boundary: >
+  Declared Alex/Shape dodecahedral substrate witness ensemble. Not a neutral
+  OPH bulk proof and not a physical CMB prediction.
+
+cycles: 256
+repair_rate: 0.035
+particle_energy_threshold: 0.0005
+particle_min_lifetime: 8
+ell_max: 8
+n_jobs: 1
+certificate_detuning_multipliers: [0.5, 1.0, 1.5, 2.0]
+
+benchmark_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+benchmark_label: Planck2018_TT_binned
+source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt

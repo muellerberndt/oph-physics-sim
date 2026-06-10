@@ -30,6 +30,14 @@ _EXPORTS = {
         "oph_fpe.cosmology.finite_certificates",
         "write_run_proxy_finite_certificate_bundle",
     ),
+    "parent_collar_ladder_report": (
+        "oph_fpe.cosmology.parent_collar_ladder",
+        "parent_collar_ladder_report",
+    ),
+    "write_parent_collar_ladder_report": (
+        "oph_fpe.cosmology.parent_collar_ladder",
+        "write_parent_collar_ladder_report",
+    ),
     "oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "oph_boltzmann_input_report"),
     "write_oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "write_oph_boltzmann_input_report"),
     "LambdaCDMParameters": ("oph_fpe.cosmology.camb_adapter", "LambdaCDMParameters"),
@@ -38,6 +46,14 @@ _EXPORTS = {
     "write_camb_lcdm_baseline_report": ("oph_fpe.cosmology.camb_adapter", "write_camb_lcdm_baseline_report"),
     "oph_screen_camb_report": ("oph_fpe.cosmology.camb_adapter", "oph_screen_camb_report"),
     "write_oph_screen_camb_report": ("oph_fpe.cosmology.camb_adapter", "write_oph_screen_camb_report"),
+    "scale_compressed_cmb_camb_report": (
+        "oph_fpe.cosmology.camb_adapter",
+        "scale_compressed_cmb_camb_report",
+    ),
+    "write_scale_compressed_cmb_camb_report": (
+        "oph_fpe.cosmology.camb_adapter",
+        "write_scale_compressed_cmb_camb_report",
+    ),
     "oph_inflation_cmb_camb_report": (
         "oph_fpe.cosmology.camb_adapter",
         "oph_inflation_cmb_camb_report",
@@ -201,6 +217,50 @@ _EXPORTS = {
     "OPHScreenPowerParams": ("oph_fpe.cosmology.oph_screen_power", "OPHScreenPowerParams"),
     "primordial_power_oph": ("oph_fpe.cosmology.oph_screen_power", "primordial_power_oph"),
     "write_oph_screen_power_report": ("oph_fpe.cosmology.oph_screen_power", "write_oph_screen_power_report"),
+    "maxent_green_spectrum_report": (
+        "oph_fpe.cosmology.maxent_green_spectrum",
+        "maxent_green_spectrum_report",
+    ),
+    "write_maxent_green_spectrum_report": (
+        "oph_fpe.cosmology.maxent_green_spectrum",
+        "write_maxent_green_spectrum_report",
+    ),
+    "repair_clock_report": (
+        "oph_fpe.cosmology.repair_clock",
+        "repair_clock_report",
+    ),
+    "write_repair_clock_report": (
+        "oph_fpe.cosmology.repair_clock",
+        "write_repair_clock_report",
+    ),
+    "repair_scale_closure_report": (
+        "oph_fpe.cosmology.repair_scale_closure",
+        "repair_scale_closure_report",
+    ),
+    "write_repair_scale_closure_report": (
+        "oph_fpe.cosmology.repair_scale_closure",
+        "write_repair_scale_closure_report",
+    ),
+    "ScalarRepairSemigroupSpec": (
+        "oph_fpe.cosmology.scalar_repair_semigroup",
+        "ScalarRepairSemigroupSpec",
+    ),
+    "scalar_repair_semigroup_report": (
+        "oph_fpe.cosmology.scalar_repair_semigroup",
+        "scalar_repair_semigroup_report",
+    ),
+    "write_scalar_repair_semigroup_report": (
+        "oph_fpe.cosmology.scalar_repair_semigroup",
+        "write_scalar_repair_semigroup_report",
+    ),
+    "finite_repair_transition_clock_report": (
+        "oph_fpe.cosmology.finite_repair_transition_clock",
+        "finite_repair_transition_clock_report",
+    ),
+    "write_finite_repair_transition_clock_report": (
+        "oph_fpe.cosmology.finite_repair_transition_clock",
+        "write_finite_repair_transition_clock_report",
+    ),
     "cosmo_proxy_receipt": ("oph_fpe.cosmology.proxy_pipeline", "cosmo_proxy_receipt"),
     "synchronization_inflation_report": (
         "oph_fpe.cosmology.sync_inflation",

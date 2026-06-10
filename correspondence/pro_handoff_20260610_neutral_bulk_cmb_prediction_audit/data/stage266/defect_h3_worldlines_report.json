@@ -1,0 +1,291 @@
+{
+  "mode": "defect_timeline_h3_worldline_fit",
+  "event_count": 8,
+  "worldline_count": 1,
+  "persistent_h3_worldline_count": 1,
+  "cap_count": 24,
+  "candidate_count": 1024,
+  "candidate_radius": 2.0,
+  "softness": 0.25,
+  "local_refinement": {
+    "enabled": true,
+    "refined_rows": 8,
+    "attempted_rows": 8,
+    "max_nfev": 48,
+    "median_improvement": 0.004340827532849811
+  },
+  "response_report": {
+    "response_mode": "support_transport_similarity",
+    "cap_count": 24,
+    "field_names": [
+      "record_signature",
+      "stable_count",
+      "repair_load",
+      "cumulative_repair_load",
+      "local_mismatch_density",
+      "modular_depth",
+      "s3_class_density",
+      "s3_sector_class"
+    ],
+    "transport_time": 0.1,
+    "transport_scale": 6.283185307179586,
+    "response_source": "observer_visible_defect_support_field_similarity_under_lambda_C_transport",
+    "claim_boundary": "defect event response uses only observer-visible fields on the defect support before/after finite cap modular transport; this is a BW/KMS-aligned precursor, not a particle or physical bulk claim",
+    "response_summary": {
+      "min": 0.6555599489004111,
+      "mean": 0.8416114797229376,
+      "max": 0.9383992672318705,
+      "std": 0.0785984950235829,
+      "mean_row_std": 0.07859849502358289,
+      "mean_col_std": 5.551115123125783e-17
+    }
+  },
+  "median_h3_residual": 0.7140058225708512,
+  "median_s2_boundary_residual": 0.7433659364606124,
+  "median_shuffled_residual": 0.7098713700356931,
+  "h3_beats_s2_boundary": false,
+  "h3_beats_shuffled": false,
+  "response_degenerate": false,
+  "bulk_worldline_precursor_receipt": false,
+  "particle_matter_receipt": false,
+  "sample_events": [
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 0,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 9,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 18,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 27,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 36,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 45,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 54,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    },
+    {
+      "worldline_id": "worldline_000000",
+      "cycle": 63,
+      "class": "transposition",
+      "support_node_count": 675,
+      "h3_point": [
+        4.277419197446905,
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "h3_spatial_point": [
+        -3.329195550553555,
+        -2.441446597416974,
+        -0.5021060533620544
+      ],
+      "fit_residual": 0.7140058225708512
+    }
+  ],
+  "worldlines": [
+    {
+      "worldline_id": "worldline_000000",
+      "observation_count": 8,
+      "birth_cycle": 0,
+      "death_cycle": 63,
+      "h3_path_length": 0.0,
+      "mean_h3_step": 0.0,
+      "class_mode": "transposition",
+      "events": [
+        {
+          "cycle": 0,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 9,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 18,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 27,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 36,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 45,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 54,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        },
+        {
+          "cycle": 63,
+          "h3_spatial_point": [
+            -3.329195550553555,
+            -2.441446597416974,
+            -0.5021060533620544
+          ],
+          "fit_residual": 0.7140058225708512,
+          "support_node_count": 675
+        }
+      ]
+    }
+  ],
+  "claim_boundary": "support-visible defect timeline fitted into the canonical H3 chart for visualization and particle-precondition diagnostics. This is not a matter-particle claim; particles require neutral-bulk gates plus localization, transport, fusion/scattering, and repeated-seed controls."
+}

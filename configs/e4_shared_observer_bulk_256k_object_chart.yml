@@ -13,6 +13,11 @@ graph:
   patch_count: 262144
   neighbors: 12
 
+cache:
+  geometry:
+    enabled: true
+    cache_dir: .oph_fpe_cache/geometry
+
 group:
   name: S3
 
@@ -200,6 +205,14 @@ h3_modular_response:
   heldout_fraction: 0.25
   anchor_weight: 0.05
   max_iterations: 4
+  feature_selection: class_distribution_and_change
+  min_feature_std: 0.01
+  exclude_observables:
+  - record_family
+  exclusion_claim_boundary: >
+    record_family is retained for observer-object extraction but excluded
+    from this support-visible H3 modular-response fit because it is a
+    pointer/bookkeeping channel, not a strict geometric response feature.
   pass_ratio: 1.0
   min_observers: 64
   min_features: 16
@@ -301,7 +314,7 @@ controls:
 
 outputs:
   profile: compact
-  write_jsonl: false
+  write_jsonl: true
   write_bw_report: true
   write_cap_geometry_report: true
   write_collar_markov_report: true

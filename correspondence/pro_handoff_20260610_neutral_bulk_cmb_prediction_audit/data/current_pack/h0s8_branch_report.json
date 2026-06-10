@@ -1,0 +1,162 @@
+{
+  "mode": "oph_h0_s8_branch_diagnostic_v0",
+  "inputs": {
+    "P": 1.6309682094039593,
+    "H_dS_km_s_Mpc": 55.759940256,
+    "q_A": 5.363470441,
+    "omega_b_h2": 0.02237,
+    "omega_nu_h2": 0.0009666229558058961,
+    "omega_r_h2": 4.18343e-05,
+    "sum_mnu_OPH_eV": 0.09001192964464505,
+    "sigma8_cdm_branch": 0.807787208,
+    "S8_cdm_branch": 0.828924043
+  },
+  "flat_q_a_closure": {
+    "H0_km_s_Mpc": 67.40002854274209,
+    "h": 0.674000285427421,
+    "Omega_Lambda_OPH": 0.684422752686342,
+    "Omega_b": 0.04924314965657585,
+    "Omega_nu": 0.0021278300793129835,
+    "Omega_r": 9.208997298516275e-05,
+    "Omega_A": 0.26411417760478384,
+    "Omega_m": 0.3154851573406727,
+    "flat_sum": 0.9999999999999998
+  },
+  "collar_tracking": {
+    "lambda_collar": 0.9343006394893864,
+    "B_A_track": 0.9343006394893864,
+    "f_A": 0.8371683150836268,
+    "mu_eff_source_suppression": 0.9449985770592578,
+    "source_suppression_fraction": 0.05500142294074217
+  },
+  "branches": {
+    "A_conserved_cdm_like": {
+      "H0_km_s_Mpc": 67.4,
+      "S8": 0.828924043,
+      "sigma8": 0.807787208,
+      "status": "current_executable_planck_like_branch"
+    },
+    "B_direct_jacobi_repair": {
+      "H0_km_s_Mpc": 67.40002854274209,
+      "S8": 0.79,
+      "growth_suppression_factor": 0.953042690305944,
+      "status": "conditional_if_Gamma_rec_equals_Gamma_J_and_Q_A_B_A_are_collar_outputs"
+    },
+    "C_matrix_gapped_jacobi": {
+      "H0_km_s_Mpc": 67.40002854274209,
+      "S8": 0.8266117319670833,
+      "growth_suppression_factor": 0.9972104669270442,
+      "gamma_rec_matrix_gap": 0.050717471,
+      "status": "diagnostic_slow_repair_clock_alternative"
+    }
+  },
+  "measurement_comparisons": {
+    "Planck2018_H0": {
+      "value": 67.36,
+      "sigma": 0.54,
+      "branch_pull_sigma": 0.0741269310038751
+    },
+    "SH0ES_H0": {
+      "value": 73.04,
+      "sigma": 1.04,
+      "branch_pull_sigma": -5.42304947813261
+    },
+    "Planck2018_S8": {
+      "value": 0.832,
+      "sigma": 0.013,
+      "cdm_pull_sigma": -0.23661207692307404
+    },
+    "weak_lensing_S8_target": {
+      "value": 0.79,
+      "sigma_proxy": 0.016,
+      "direct_jacobi_pull_sigma": 0.0,
+      "cdm_pull_sigma": 2.4327526874999976
+    }
+  },
+  "theorem_gates": {
+    "Q_A_from_finite_collar_selector": false,
+    "B_A_from_parent_collar_kernel": false,
+    "lambda_collar_from_P_survival": true,
+    "Gamma_rec_equals_Jacobi_clock": false,
+    "full_CAMB_CLASS_anomaly_module": false,
+    "full_likelihood_contract": false,
+    "lane8_low_entropy_certificate_ready": false
+  },
+  "lane8_certificate_stack": {
+    "mode": "oph_h0_s8_lane8_certificate_stack_v0",
+    "values_source": "diagnostic_defaults_not_finite_collar_measurements",
+    "values_are_run_derived": false,
+    "payload_certificate": {
+      "h_x_bits": 64.0,
+      "alphabet_size": 65536,
+      "empirical_error": 0.0,
+      "calibration_samples": 10000,
+      "delta": 1e-06,
+      "epsilon_delta": 0.02628260884878466,
+      "i_rec_cert_bits": 63.40408669507076
+    },
+    "hidden_export_capacity": {
+      "hidden_log_dim_bits": 8.0,
+      "hidden_initial_entropy_bits": 0.0,
+      "continuation_slack_bits": 0.0,
+      "bound_bits": 8.0,
+      "charged_b0_bits": 8.0
+    },
+    "low_entropy_certificate": {
+      "s_max_bits": 256.0,
+      "selected_s_of_bits": 180.0,
+      "s_of_bound_bits": 200.59591330492924,
+      "i0_bits": 63.40408669507076,
+      "b0_bits": 8.0,
+      "p0_bits": 0.0,
+      "a0_bits": 0.0,
+      "gamma_target_bits": 0.0,
+      "low_entropy_gap_bits": 55.40408669507076,
+      "bound_satisfied_by_selected": true,
+      "gate_pass": true
+    },
+    "fake_history_certificate": {
+      "fake_deficit_bits": 0.0,
+      "trial_count_log2": 30.0,
+      "redundant_copy_count": 1,
+      "redundant_p_star": 0.5,
+      "redundant_suppression_bits": 0.0,
+      "gamma_margin_bits": -30.0,
+      "probability_bound_log2": 30.0,
+      "probability_bound": 1.0,
+      "gate_pass": false
+    },
+    "selector_dominance": {
+      "faithful_cost": 0.0,
+      "best_nonfaithful_cost": 10.0,
+      "margin_bits": 10.0,
+      "gate_pass": true
+    },
+    "refinement_stability": {
+      "coarse_refinement_delta_bits": 0.0,
+      "coarse_minimizer_gap_bits": 1.0,
+      "gate_pass": true
+    },
+    "theorem_gates": {
+      "audited_record_payload_lower_bound": true,
+      "finite_hidden_export_capacity": true,
+      "fake_trial_suppression": false,
+      "selector_dominance_margin_positive": true,
+      "refinement_stability": true,
+      "cosmological_certificate_values_filled": false,
+      "low_entropy_ancestry_certificate_ready": false
+    },
+    "physical_prediction_ready": false,
+    "claim_boundary": "Executable Lane-8 certificate stack for H0/S8 cosmology notes. Defaults are diagnostic placeholders unless values_source='finite_collar_run'. The certificate is not a physical H0/S8 prediction until finite OPH runs supply I0, B0, P0, A0, fake-trial, selector-margin, and refinement-stability values."
+  },
+  "physical_prediction_ready": false,
+  "physical_cmb_prediction": false,
+  "physical_matter_power_prediction": false,
+  "claim_boundary": "H0/S8 branch diagnostic from OPH cosmology notes. It computes consequences of declared branch assumptions but does not prove that finite lattice runs derive Q_A, B_A(k,a), or Gamma_rec=Gamma_J. Treat as measurement-facing continuation data until those gates close.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "continuation",
+  "receipt_name": "COSMOLOGY_PERTURBATION_RECEIPT",
+  "observable_id": "oph_h0_s8_branch_diagnostic",
+  "fit_objective": "h0_s8_branch_consequence_audit",
+  "physical_claim": false
+}

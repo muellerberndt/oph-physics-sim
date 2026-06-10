@@ -9,6 +9,7 @@ import numpy as np
 from oph_fpe.claims import PROXY, SCREEN_PROXY_CMB_RECEIPT, with_claim_metadata
 from oph_fpe.cosmology.angular_power import angular_power_report
 from oph_fpe.cosmology.cmb_compare import write_cmb_lite_comparison
+from oph_fpe.cosmology.freezeout import _write_control_csv, _write_spectrum_csv
 
 
 RESERVED_NPZ_KEYS = frozenset({"points", "cell_area_planck", "cell_entropy"})
@@ -54,6 +55,7 @@ def write_cl_from_freezeout_npz(
 
     source_cl = _read_json(run_dir / "cl_comparison_report.json")
     source_freezeout = _read_json(run_dir / "freezeout_map_summary.json")
+    source_gate = _read_json(run_dir / "cosmology_gate_report.json")
     freezeout_cycle = _first_present(source_cl.get("freezeout_cycle"), source_freezeout.get("freezeout_cycle"))
     committed_fraction = _first_present(
         source_cl.get("committed_fraction"),
@@ -83,6 +85,7 @@ def write_cl_from_freezeout_npz(
     report["source_freezeout_npz"] = str(npz_path)
     report["freezeout_cycle"] = int(freezeout_cycle) if freezeout_cycle is not None else None
     report["committed_fraction"] = float(committed_fraction) if committed_fraction is not None else None
+    report["gate_report"] = source_cl.get("gate_report") or source_freezeout.get("gate_report") or source_gate
     report["postprocess_only"] = True
     report["physical_cmb_prediction"] = False
     report["claim_boundary"] = (
@@ -94,6 +97,8 @@ def write_cl_from_freezeout_npz(
         json.dumps(report, indent=2, default=str),
         encoding="utf-8",
     )
+    _write_spectrum_csv(destination / "cl_proxy.csv", report["fields"])
+    _write_control_csv(destination / "cl_controls.csv", report["controls"])
 
     cmb_report: dict[str, Any] | None = None
     if benchmark is not None:
@@ -112,6 +117,8 @@ def write_cl_from_freezeout_npz(
         "field_count": len(selected),
         "fields": selected_names,
         "cmb_lite_written": bool(cmb_report),
+        "cl_csv_written": True,
+        "source_gate_allowed": bool(report["gate_report"].get("allowed", False)),
         "physical_cmb_prediction": False,
         "claim_boundary": report["claim_boundary"],
     }

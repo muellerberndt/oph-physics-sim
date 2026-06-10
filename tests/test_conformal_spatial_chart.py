@@ -5,6 +5,7 @@ from oph_fpe.bulk.cap_normals import boundary_null_directions, cap_boundary_resi
 from oph_fpe.bulk.conformal_spatial_chart import (
     conformal_h3_spatial_chart_report,
     paper_theorem_3d_bulk_chart_report,
+    write_paper_chart_receipts,
 )
 from oph_fpe.bulk.h3_chart import h3_distance_matrix, h3_origin, h3_point_from_tangent, h3_tangent_from_point, random_h3_points
 from oph_fpe.bulk.lorentz_algebra import lorentz_algebra_report
@@ -90,3 +91,13 @@ def test_lorentz_algebra_report_verifies_so_3_1_relations():
     assert report["h3_spatial_dimension_from_boost_orbit"] == 3
     assert report["max_commutator_error"] < 1e-12
     assert report["max_null_cone_preservation_error"] < 1e-12
+
+
+def test_write_paper_chart_receipts_writes_run_folder_reports(tmp_path):
+    report = write_paper_chart_receipts(tmp_path, point_count=128, cap_count=8, seed=4)
+
+    assert report["paper_theorem_3d_bulk_chart_receipt"] is True
+    assert (tmp_path / "conformal_h3_spatial_chart_report.json").exists()
+    assert (tmp_path / "transition_selection_report.json").exists()
+    assert (tmp_path / "paper_3d_bulk_chart_report.json").exists()
+    assert (tmp_path / "emergence_status_report.json").exists()

@@ -1,6 +1,130 @@
 # Bulk Emergence Status
 
-Updated: 2026-06-08
+Updated: 2026-06-10
+
+## Current 2026-06-10 Receipt Split
+
+The current best local reference run is:
+
+```text
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/e4_shared_observer_bulk_256k_local_tokens_observers1024_seed20261047_378bfed5
+```
+
+It supports this paper-aligned result:
+
+```text
+chart-level 3+1D Lorentz/H3: true
+theorem-assisted populated H3 chart: true
+strict neutral third-person 3D bulk: false
+screen C_l proxy available: true
+physical CMB prediction: false
+production particle matter receipt: false
+```
+
+The refreshed proof certificate is:
+
+```text
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/e4_shared_observer_bulk_256k_local_tokens_observers1024_seed20261047_378bfed5/bulk_proof_certificate_report.json
+```
+
+Key receipt values:
+
+```text
+T0 finite repair core: true
+T1 record commit: true
+T2 BW/KMS 2pi branch: true
+T3 chart Lorentz/H3: true
+T4 H3 response controls: true
+T5a theorem-assisted H3 object preview: true
+T5b non-boundary H3 object population: true
+T6 strict neutral third-person bulk: false
+T7 production particles: false
+T8 screen C_l proxy: true
+T9 physical CMB prediction: false
+```
+
+The object-population gate is intentionally theorem-assisted rather than strict neutral:
+
+```text
+object_count: 19
+localized_object_count: 13
+localized_not_boundary_object_count: 3
+median_h3_compactness_normalized: 0.3594961778169778
+median_s2_boundary_compactness_normalized: 0.02662550500385802
+median_shuffled_h3_compactness_normalized: 0.6177956558972759
+h3_beats_shuffled_incidence_robust: true
+observer_chart_bulk_population_receipt: true
+```
+
+The neutral summary-distance diagnostic remains non-3D and must not be promoted:
+
+```text
+primary_dimension_estimate: null
+correlation_dimension_estimate: 5.399467827605801
+local_mle_dimension_estimate: 5.9300064436959214
+dimension_estimators_agree: false
+strict_neutral_third_person_bulk: false
+```
+
+Current exported artifacts:
+
+```text
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/comparable_data_snapshot/comparable_data_snapshot.json
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/comparable_data_snapshot/comparable_data_snapshot.md
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/measurement_pack/
+```
+
+The stage-94 measurement pack includes the refreshed proof certificate, comparable-data snapshot,
+491-row `cmb_screen_cl.csv`, `h3_objects.csv`, and `oph_receipt_viewer.html`.
+
+Measurement-facing values in the comparable-data snapshot:
+
+```text
+paper-theorem H3 spatial dimension mean: 3.0
+screen Planck-lite best field: record_signature_smooth_k32
+screen Planck-lite best shape correlation: 0.45478318175733456
+screen Planck-lite best normalized RMSE: 0.8906021881798153
+record_signature shape correlation: 0.43609102297073177
+record_signature normalized RMSE: 0.8999025612166801
+freezeout_cycle: 9
+committed_fraction: 0.9787445068359375
+holonomy_defect_fraction: 0.832
+holonomy_cluster_count: 7
+physical_cmb_prediction: false
+```
+
+Separate high-ell postprocess retained from the 64k freezeout sweep:
+
+```text
+runs/local_kms_freezeout_cl_4k_64k_20260610/high_ell_256_planck_overlap_aggregate.json
+
+run_count: 4
+ell_max: 256
+Planck TT overlap bins: 8
+mean_overlap_shape_correlation: 0.8194543391393132
+min/max_overlap_shape_correlation: 0.7792772462247747 / 0.8601960909590689
+mean_overlap_positive_rmse: 0.5692573049006072
+physical_cmb_prediction_count: 0
+```
+
+An exact `ell_max=512` nonuniform harmonic postprocess was attempted locally on 2026-06-10 and
+stopped after about 15 minutes with no partial files. The direct SciPy spherical-harmonic path is
+too slow for that tier on this machine without a faster pixelized transform or an approximate
+estimator. The 256 result is the current retained high-ell screen diagnostic.
+
+Interpretation:
+
+```text
+T2-T3 pass: finite support-visible BW/KMS 2pi transport plus Conf+(S2) -> SO+(3,1) -> H3 chart.
+T5b passes: observer-facing record objects populate the theorem-side H3 chart under current controls.
+T6 fails: neutral observer-record reconstruction does not independently recover a strict 3D bulk.
+T7 fails: production defects are not matter particles yet.
+T9 fails: CMB outputs remain screen-level diagnostics/targets, not physical CMB predictions.
+```
+
+This is the strongest current honest result: a paper-route, theorem-assisted populated H3 chart plus
+screen-level CMB comparison artifacts. It is not a completed strict neutral bulk, particle ecology,
+or physical CMB prediction.
 
 ## Current 2026-06-08 Receipt Split
 
@@ -990,4 +1114,156 @@ The observer-object layer is now meaningful, but the support-visible objects and
 still look more like boundary support profiles than populated H3 bulk objects. This is the right
 failure mode for the OPH route: stable observer objects exist, but they do not yet populate a
 controlled shared 3D bulk.
+```
+
+## 2026-06-10 Measurement Pack And Cosmology Source Reports
+
+Current reviewer bundle:
+
+```text
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/measurement_pack
+```
+
+Source inputs:
+
+```text
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/e4_shared_observer_bulk_256k_local_tokens_observers1024_seed20261047_378bfed5
+runs/current_finite_collar_cosmology_sources_20260610
+runs/stage94_moderate_support_visibility_256k_seed20261047_20260607/comparable_data_snapshot
+```
+
+Measurement-pack claim flags:
+
+```text
+chart_level_3p1: true
+theorem_assisted_h3_bulk: true
+strict_neutral_bulk: false
+physical_cmb_prediction: false
+production_particles: false
+
+screen_capacity_observed_branch_available: true
+screen_capacity_finite_fixed_point_solved: false
+parent_collar_local_density_receipt: true
+parent_collar_theorem_grade: false
+repair_clock_certificate: false
+repair_clock_eta_R_finite_lattice_derived: false
+
+maxent_green_source_receipt: true
+selector_elimination_theorem_side_receipt: true
+screen_power_simulator_primordial_ready: false
+cmb_anomaly_parity_asymmetry_proxy: true
+cmb_anomaly_low_power_proxy: false
+cmb_anomaly_planck_tilt_proxy: false
+
+neutrino_measurement_comparable: true
+neutrino_finite_lattice_derived: false
+h0s8_measurement_comparable: true
+h0s8_physical_prediction_ready: false
+repair_scale_closure_numeric_match: true
+repair_scale_24_rounds_derived: false
+compressed_likelihood_reference: true
+
+finite_transition_matrix_ready: true
+finite_transition_clock_certified: false
+finite_transition_eta_R_finite_lattice_derived: false
+```
+
+The strongest current bulk result remains the stage94 paper-route/theorem-assisted H3 chart:
+
+```text
+chart-level 3+1D Lorentz kinematics: established
+theorem-assisted H3 non-boundary population: established
+strict neutral third-person bulk: not established
+
+object_count: 19
+localized_object_count: 13
+localized_not_boundary_object_count: 3
+median H3 compactness: 0.3594961778
+median shuffled H3 compactness: 0.6177956559
+median S2 boundary compactness: 0.0266255050
+```
+
+Interpretation:
+
+```text
+This supports a controlled observer-facing H3 chart population on the paper route, but not a
+strict neutral third-person 3D-bulk proof. The neutral dimension estimators still disagree and
+remain outside the 3D gate.
+```
+
+The new finite-collar/cosmology source bundle adds measurement-facing and theorem-side inputs:
+
+```text
+screen_capacity_closure_report:
+  N_CRC observed-branch readout available
+  finite simulator fixed point not solved
+
+repair_scale_closure_report:
+  P/N 24-round scale closure matches within 1 percent
+  24 repair rounds not derived from the finite lattice
+  eta_R not finite-lattice-derived
+
+finite_repair_transition_matrix_report:
+  source: cached 256k observer transition-history run
+  primary matrix: reversible empirical transition matrix
+  declared repair-step time: 2pi times record-commit horizon
+  matrix ready: true
+  irreducible / aperiodic: true / true
+  lambda_2: 0.2
+  kappa_rep estimate: 2.4755067025
+  eta_R estimate: 0.0320187499
+  n_s estimate: 0.9679812501
+  relative error to kappa_rep=e: 0.0893119777
+  certificate: false
+
+repair_clock_certificate_report:
+  finite transition-matrix rows are visible to the repair-clock audit
+  no row is theorem-grade eligible yet
+  exact eta_R certificate remains false
+
+parent_collar_ladder_report:
+  local CMI-density recovery improves
+  raw CMI ladder and theorem-grade parent-collar gate fail
+
+cmb_anomaly_report:
+  parity asymmetry proxy appears in controls comparison
+  low-l suppression and Planck-tilt compatibility do not pass
+  acoustic peaks are not answered by this screen-only report
+
+oph_cnb_neutrino_report:
+  measurement-comparable neutrino branch values emitted
+  finite-lattice neutrino mass derivation not implemented
+
+h0s8_branch_report:
+  H0/S8 continuation numbers emitted
+  finite Q_A, B_A(k,a), Gamma_rec/Gamma_J and likelihood gates not closed
+```
+
+High-ell screen CMB proxy retained from the 4k/64k local sweep:
+
+```text
+runs/local_kms_freezeout_cl_4k_64k_20260610/high_ell_256_planck_overlap_aggregate.json
+
+ell_max: 256
+run_count: 4
+Planck TT overlap bins: 8
+mean overlap shape correlation: 0.8194543391
+mean overlap positive RMSE: 0.5692573049
+physical_cmb_prediction_count: 0
+```
+
+Interpretation:
+
+```text
+The high-ell overlap is an interesting finite-screen C_l diagnostic. It is not a physical CMB
+prediction, because the repair-clock eta_R, finite parent-collar response kernel, freezeout
+surface, and Boltzmann transfer gates are not closed.
+```
+
+Next implementation target:
+
+```text
+derive a time-resolved parent-collar response kernel B_A(k,a) and repair-clock eta_R from finite
+run data, then feed the derived primordial/covariance table through a photon-baryon transfer
+adapter with explicit no-data-use and control receipts.
 ```

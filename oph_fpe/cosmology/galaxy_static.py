@@ -330,13 +330,136 @@ def write_static_galaxy_measurement_report(
         min_galaxies=int(min_galaxies),
         physical_claim=bool(physical_claim),
     )
+    write_static_galaxy_measurement_outputs(dataset, report, out)
+    return report
+
+
+def write_static_galaxy_measurement_outputs(
+    dataset: StaticGalaxyDataset,
+    report: dict[str, Any],
+    out: Path,
+) -> None:
     out_path = Path(out)
     out_path.mkdir(parents=True, exist_ok=True)
     (out_path / "static_galaxy_measurement_report.json").write_text(
         json.dumps(report, indent=2, default=str),
         encoding="utf-8",
     )
-    return report
+    _write_rar_fit_csv(dataset, report, out_path / "galaxy_rar_fit.csv")
+    _write_btfr_fit_csv(dataset, report, out_path / "galaxy_btfr_fit.csv")
+    _write_rotation_residuals_csv(dataset, report, out_path / "galaxy_rotation_residuals.csv")
+
+
+def _write_rar_fit_csv(dataset: StaticGalaxyDataset, report: dict[str, Any], path: Path) -> None:
+    rar = _rar_arrays(dataset)
+    fieldnames = ["row", "galaxy", "g_baryon", "g_observed", "g_predicted", "log10_residual_pred_minus_obs"]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        if rar is None or report.get("shared_a0") is None or report.get("shared_lambda_collar") is None:
+            return
+        predicted = rar_curve(
+            rar["g_baryon"],
+            a0_oph=float(report["shared_a0"]),
+            lambda_collar=float(report["shared_lambda_collar"]),
+        )
+        galaxy_names = _rar_galaxy_names(dataset, int(rar["point_count"]), str(rar.get("source") or ""))
+        for idx, (gb, go, gp) in enumerate(zip(rar["g_baryon"], rar["g_observed"], predicted, strict=False)):
+            writer.writerow(
+                {
+                    "row": idx,
+                    "galaxy": galaxy_names[idx] if idx < len(galaxy_names) else "",
+                    "g_baryon": f"{float(gb):.16e}",
+                    "g_observed": f"{float(go):.16e}",
+                    "g_predicted": f"{float(gp):.16e}",
+                    "log10_residual_pred_minus_obs": f"{float(np.log10(max(float(gp), 1e-300)) - np.log10(max(float(go), 1e-300))):.16e}",
+                }
+            )
+
+
+def _write_btfr_fit_csv(dataset: StaticGalaxyDataset, report: dict[str, Any], path: Path) -> None:
+    fieldnames = [
+        "galaxy",
+        "baryonic_mass",
+        "flat_velocity",
+        "log10_mass",
+        "log10_velocity",
+        "predicted_log10_mass_from_asymptotic_btfr",
+        "residual_log10_mass",
+    ]
+    btfr = _btfr_rows(dataset)
+    prediction = report.get("btfr_prediction_from_rar_fit", {})
+    intercept = _float_value(prediction, "predicted_intercept_logM_vs_logV")
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        if not btfr:
+            return
+        for row in btfr:
+            mass = _float_value(row, "baryonic_mass")
+            velocity = _float_value(row, "flat_velocity")
+            if mass is None or velocity is None or mass <= 0.0 or velocity <= 0.0:
+                continue
+            log_v = float(np.log10(velocity))
+            log_m = float(np.log10(mass))
+            pred = 4.0 * log_v + float(intercept) if intercept is not None else None
+            writer.writerow(
+                {
+                    "galaxy": str(row.get("galaxy", "")),
+                    "baryonic_mass": f"{float(mass):.16e}",
+                    "flat_velocity": f"{float(velocity):.16e}",
+                    "log10_mass": f"{log_m:.16e}",
+                    "log10_velocity": f"{log_v:.16e}",
+                    "predicted_log10_mass_from_asymptotic_btfr": "" if pred is None else f"{pred:.16e}",
+                    "residual_log10_mass": "" if pred is None else f"{(log_m - pred):.16e}",
+                }
+            )
+
+
+def _write_rotation_residuals_csv(dataset: StaticGalaxyDataset, report: dict[str, Any], path: Path) -> None:
+    fieldnames = [
+        "galaxy",
+        "radius_kpc",
+        "v_observed_km_s",
+        "v_baryon_km_s",
+        "v_predicted_km_s",
+        "residual_km_s",
+        "g_baryon",
+        "g_observed",
+        "g_predicted",
+    ]
+    rows = _mass_model_acceleration_rows(dataset, upsilon_disk=0.5, upsilon_bulge=0.7)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        if (
+            rows is None
+            or report.get("shared_a0") is None
+            or report.get("shared_lambda_collar") is None
+        ):
+            return
+        pred_g = rar_curve(
+            rows["g_baryon"],
+            a0_oph=float(report["shared_a0"]),
+            lambda_collar=float(report["shared_lambda_collar"]),
+        )
+        radius_m = rows["radius_kpc"] * KPC_IN_M
+        baryon_v = np.sqrt(np.maximum(rows["g_baryon"] * radius_m, 0.0)) / 1000.0
+        pred_v = np.sqrt(np.maximum(pred_g * radius_m, 0.0)) / 1000.0
+        for idx in range(rows["galaxy"].size):
+            writer.writerow(
+                {
+                    "galaxy": str(rows["galaxy"][idx]),
+                    "radius_kpc": f"{float(rows['radius_kpc'][idx]):.16e}",
+                    "v_observed_km_s": f"{float(rows['v_observed'][idx]):.16e}",
+                    "v_baryon_km_s": f"{float(baryon_v[idx]):.16e}",
+                    "v_predicted_km_s": f"{float(pred_v[idx]):.16e}",
+                    "residual_km_s": f"{float(pred_v[idx] - rows['v_observed'][idx]):.16e}",
+                    "g_baryon": f"{float(rows['g_baryon'][idx]):.16e}",
+                    "g_observed": f"{float(rows['g_observed'][idx]):.16e}",
+                    "g_predicted": f"{float(pred_g[idx]):.16e}",
+                }
+            )
 
 
 def _mass_model_acceleration_rows(
@@ -567,6 +690,40 @@ def _btfr_arrays(dataset: StaticGalaxyDataset) -> dict[str, np.ndarray] | None:
     if not masses:
         return None
     return {"baryonic_mass": np.asarray(masses, dtype=float), "flat_velocity": np.asarray(velocities, dtype=float)}
+
+
+def _btfr_rows(dataset: StaticGalaxyDataset) -> list[dict[str, float | str]]:
+    rows: list[dict[str, float | str]] = []
+    seen: set[str] = set()
+    for row in dataset.rows:
+        galaxy = str(row.get("galaxy", len(seen)))
+        if galaxy in seen:
+            continue
+        mass = _float_value(row, "baryonic_mass")
+        velocity = _float_value(row, "flat_velocity")
+        if mass is not None and velocity is not None and mass > 0.0 and velocity > 0.0:
+            rows.append(row)
+            seen.add(galaxy)
+    return rows
+
+
+def _rar_galaxy_names(dataset: StaticGalaxyDataset, point_count: int, source: str) -> list[str]:
+    names: list[str] = []
+    if source == "direct_acceleration_columns":
+        for row in dataset.rows:
+            if _float_value(row, "g_baryon") is not None and _float_value(row, "g_observed") is not None:
+                names.append(str(row.get("galaxy", "")))
+                if len(names) >= point_count:
+                    break
+    elif source == "sparc_velocity_columns":
+        for row in dataset.rows:
+            if _sparc_velocity_accelerations(row) is not None:
+                names.append(str(row.get("galaxy", "")))
+                if len(names) >= point_count:
+                    break
+    if len(names) < point_count:
+        names.extend([""] * (point_count - len(names)))
+    return names
 
 
 def _load_sparc_mrt_rows(path: Path) -> list[dict[str, float | str]]:

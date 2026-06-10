@@ -13,6 +13,7 @@ from oph_fpe.cosmology.camb_adapter import (
     write_oph_exact_cmb_camb_report,
     write_oph_inflation_cmb_camb_report,
     write_oph_screen_camb_report,
+    write_scale_compressed_cmb_camb_report,
 )
 from oph_fpe.cosmology.selector_elimination import ir_kernel
 
@@ -105,6 +106,57 @@ def test_write_oph_screen_camb_report_smoke(tmp_path: Path):
     assert report["screen_input"]["simulator_eta_R_ready"] is False
     assert report["camb"]["lambda_cdm_parameters_with_screen_ns"]["ns"] == 0.965
     assert report["comparison"]["usable"] is True
+
+
+def test_write_scale_compressed_cmb_camb_report_smoke(tmp_path: Path):
+    pytest.importorskip("camb")
+    benchmark = tmp_path / "planck_tt.txt"
+    benchmark.write_text(
+        "# l Dl -dDl +dDl BestFit\n"
+        "50 1479.0 50 50 1461.0\n"
+        "100 2955.0 65 65 2904.0\n"
+        "200 5464.0 90 90 5535.0\n"
+        "500 2460.0 35 35 2465.0\n"
+        "1000 1050.0 20 20 1055.0\n",
+        encoding="utf-8",
+    )
+    scale_report = tmp_path / "scale_compressed_repair_report.json"
+    scale_report.write_text(
+        """
+        {
+          "mode": "oph_scale_compressed_repair_round_branch_v0",
+          "logical_repair_rounds": 24,
+          "scale_compressed_operator_receipt": true,
+          "repair_round_trace_receipt": true,
+          "h3_preview": {
+            "populated_h3_preview_receipt": true
+          },
+          "cmb_parameter_readouts": {
+            "eta_R": 0.033978504362582485,
+            "n_s": 0.9660214956374176,
+            "q_IR": 0.25,
+            "ell_IR": 32.0,
+            "N_CRC_predicted_from_P": 4.274424586583862e122,
+            "N_CRC_declared": 3.3149984974788145e122,
+            "relative_error_gprime_vs_N_CRC": 0.005281676043309455
+          }
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    report = write_scale_compressed_cmb_camb_report(scale_report, benchmark, tmp_path / "out", lmax=1200)
+
+    assert (tmp_path / "out" / "scale_compressed_cmb_camb_report.json").exists()
+    assert (tmp_path / "out" / "scale_compressed_cmb_camb_report.md").exists()
+    assert (tmp_path / "out" / "scale_compressed_cmb_tt_bins.csv").exists()
+    assert (tmp_path / "out" / "scale_compressed_cmb_tt_curves.csv").exists()
+    assert report["mode"] == "oph_scale_compressed_cmb_camb_transfer_v0"
+    assert report["measurement_comparable_cmb_curve"] is True
+    assert report["physical_cmb_prediction"] is False
+    assert report["scale_compressed_input"]["logical_repair_rounds"] == 24
+    assert report["scale_compressed_input"]["scale_compressed_operator_receipt"] is True
+    assert report["comparison"]["scale_compressed_ir_kernel"]["usable"] is True
 
 
 def test_write_oph_inflation_cmb_camb_report_smoke(tmp_path: Path):

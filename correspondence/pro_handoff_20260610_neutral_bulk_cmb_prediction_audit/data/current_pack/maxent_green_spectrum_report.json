@@ -1,0 +1,129 @@
+{
+  "mode": "oph_maxent_green_screen_source_v0",
+  "source_dir": "/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/cmb/7",
+  "oph_constants": {
+    "P": 1.6309682094039593,
+    "P_source": "endpoint_public",
+    "pixel_mode": "endpoint_calibrated",
+    "phi": 1.618033988749895,
+    "sqrt_pi": 1.7724538509055159,
+    "alpha_from_P": 0.007297352564331357,
+    "alpha_inverse_from_P": 137.0359991770013,
+    "source_candidate": {
+      "alpha_inverse": 136.9948351646,
+      "P": 1.6309720958601075
+    },
+    "endpoint_calibrated": {
+      "alpha_inverse": 137.035999177,
+      "P": 1.6309682094039593
+    },
+    "role": "local screen-cell area and entropy/capacity normalization; not a BW normalization factor and not a dimension-forcing input. endpoint_calibrated values must stay out of recovered-core receipts"
+  },
+  "finite_regulator": {
+    "mode": "numerical_regulator",
+    "patch_count": 262144,
+    "requested_ell_max": 256,
+    "requested_harmonic_slots": 66049,
+    "sqrt_patch_bandlimit_proxy": 511,
+    "bandlimit_for_requested_ell_receipt": true,
+    "target_N_frz_proxy": 1089,
+    "bandlimit_for_ir_receipt": true,
+    "claim_boundary": "Patch count is treated as a numerical screen regulator. The slot test checks harmonic capacity only; it is not a claim that the regulator has cosmological horizon capacity."
+  },
+  "maxent_inverse_laplacian": {
+    "operator": "centered graph/sphere Laplacian Green function",
+    "eta0_covariance": "C_ell = A_chi/[ell(ell+1)]",
+    "eta0_D_ell": "ell(ell+1) C_ell/(2*pi) = A_chi/(2*pi)",
+    "eta0_flat_D_ell_receipt": true,
+    "eta0_D_ell_relative_std": 6.27360233446488e-17,
+    "eta0_fit_eta_R": 1.4403300828202527e-16
+  },
+  "fractional_repair_tilt": {
+    "formula": "eta_R = kappa_rep * alpha(0) * sqrt(pi) = kappa_rep * (P - phi)",
+    "kappa_rep": 2.718281828459045,
+    "kappa_rep_source": "canonical_e_target",
+    "repair_clock_certificate": false,
+    "delta_P": 0.012934220654064355,
+    "eta_R": 0.0351588569692228,
+    "n_s": 0.9648411430307772,
+    "fit_eta_R_from_generated_spectrum": 0.03515885696922291,
+    "fit_n_s_from_generated_spectrum": 0.9648411430307771,
+    "fit_eta_R_abs_error": 1.1102230246251565e-16
+  },
+  "selector_elimination_v1_5": {
+    "q_IR": 0.25,
+    "ell_IR": 32.0,
+    "N_frz_proxy": 1089,
+    "theorem_side_receipt": true,
+    "source_packet_audit_receipt": true,
+    "q_IR_selector_removed": true,
+    "ell_IR_selector_removed": true,
+    "eta_R_reduced_to_repair_clock_certificate": true,
+    "remaining_eta_R_certificate": "derive_or_measure kappa_rep=e from finite-patch scalar repair semigroup",
+    "exact_ir_kernel_csv_audit": {
+      "present": true,
+      "path": "/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/cmb/7/exact_ir_kernel_values_v1_5.csv",
+      "sha256": "0a79a01206813486a00b46dd87d4df3df10bb053aa228717362e4602a9606333",
+      "row_count": 13,
+      "audited_row_count": 13,
+      "max_abs_error": 0.0,
+      "tolerance": 5e-13,
+      "passed": true
+    }
+  },
+  "screen_spectrum": {
+    "ell_min": 2,
+    "ell_max": 256,
+    "row_count": 255,
+    "A_chi": 1.0,
+    "mu": 0.0,
+    "mean_F_IR_ell2_29": 0.8099395215582537,
+    "F_IR_ell2": 0.7514164267951486,
+    "F_IR_ell32": 0.9080301397071394,
+    "tilted_D_ell_slope_proxy": -0.03515885696922291
+  },
+  "primordial_bridge": {
+    "status": "maxent_green_screen_to_primordial_table_emitted",
+    "A_s": 2.1e-09,
+    "k0_mpc": 0.05,
+    "D_star_mpc": 13800.0,
+    "row_count": 64,
+    "reference_source": "paper_maxent_green_spectrum_plus_selector_elimination",
+    "simulator_eta_R_ready": false,
+    "excludes": [
+      "parity_envelope",
+      "BipoSH_off_diagonal_covariance",
+      "late-time_B_A_kernel"
+    ]
+  },
+  "reference_screen_parameters": {
+    "A_chi": 1.0,
+    "eta_R": 0.0351588569692228,
+    "mu": 0.0,
+    "ell_cap": null,
+    "N_cap_eff": 262144.0,
+    "q_IR": 0.25,
+    "ell_IR": 32.0,
+    "epsilon_parity": 0.0,
+    "ell_parity": 8.0,
+    "n_s_proxy": 0.9648411430307772
+  },
+  "MAXENT_GREEN_SOURCE_RECEIPT": true,
+  "finite_lattice_derived": false,
+  "physical_cmb_prediction": false,
+  "remaining_certificates": [
+    "finite scalar repair-clock certificate kappa_rep=e",
+    "finite normal-form scalar X_r emitted without CMB-target tuning",
+    "finite freezeout branch emits q_IR=1/4 and ell_IR=32 from observer records",
+    "parity/BipoSH angular covariance derived in a_lm space with masks",
+    "OPH anomaly kernel B_A(k,a) and Gamma_rec(k,a) emitted for CAMB/CLASS",
+    "official Planck likelihood/map-space tests"
+  ],
+  "claim_boundary": "Paper-side finite-screen CMB source certificate. It verifies the MaxEnt Green-spectrum covariance and selector-eliminated q_IR/ell_IR target as a reproducible finite operator readout. The exact eta_R value uses the canonical kappa_rep=e target but the finite repair-clock certificate is still pending, so this is not a physical CMB prediction and not a final finite-lattice derivation.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "quantitative_branch",
+  "receipt_name": "SCREEN_PROXY_CMB_RECEIPT",
+  "observable_id": "oph_maxent_green_screen_source",
+  "fit_objective": "paper_maxent_inverse_laplacian_cmb_source_certificate",
+  "physical_claim": false
+}

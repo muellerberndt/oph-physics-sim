@@ -1,0 +1,1169 @@
+{
+  "observer_count": 1024,
+  "neighborhood_size": 256,
+  "pair_count": 1980,
+  "global_committed_fraction": 1.0,
+  "global_repair_load_mean": 0.0,
+  "median_overlap_jaccard": 0.10583153347732181,
+  "median_signature_histogram_similarity": 0.76171875,
+  "p10_signature_histogram_similarity": 0.4609375,
+  "sample_pairs": [
+    {
+      "observer_a": 200,
+      "observer_b": 440,
+      "overlap_patch_count": 5,
+      "jaccard": 0.009861932938856016,
+      "signature_histogram_similarity": 0.625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 200,
+      "observer_b": 572,
+      "overlap_patch_count": 114,
+      "jaccard": 0.2864321608040201,
+      "signature_histogram_similarity": 0.875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 200,
+      "observer_b": 915,
+      "overlap_patch_count": 58,
+      "jaccard": 0.1277533039647577,
+      "signature_histogram_similarity": 0.8203125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 200,
+      "observer_b": 1302,
+      "overlap_patch_count": 36,
+      "jaccard": 0.07563025210084033,
+      "signature_histogram_similarity": 0.84375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 200,
+      "observer_b": 1438,
+      "overlap_patch_count": 6,
+      "jaccard": 0.011857707509881422,
+      "signature_histogram_similarity": 0.83203125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 440,
+      "observer_b": 767,
+      "overlap_patch_count": 98,
+      "jaccard": 0.23671497584541062,
+      "signature_histogram_similarity": 0.76953125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 440,
+      "observer_b": 1097,
+      "overlap_patch_count": 112,
+      "jaccard": 0.28,
+      "signature_histogram_similarity": 0.7265625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 440,
+      "observer_b": 1304,
+      "overlap_patch_count": 102,
+      "jaccard": 0.24878048780487805,
+      "signature_histogram_similarity": 0.703125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 572,
+      "observer_b": 915,
+      "overlap_patch_count": 188,
+      "jaccard": 0.5802469135802469,
+      "signature_histogram_similarity": 0.91015625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 572,
+      "observer_b": 1041,
+      "overlap_patch_count": 29,
+      "jaccard": 0.060041407867494824,
+      "signature_histogram_similarity": 0.828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 572,
+      "observer_b": 1431,
+      "overlap_patch_count": 32,
+      "jaccard": 0.06666666666666667,
+      "signature_histogram_similarity": 0.83984375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 572,
+      "observer_b": 2300,
+      "overlap_patch_count": 27,
+      "jaccard": 0.05567010309278351,
+      "signature_histogram_similarity": 0.75390625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 572,
+      "observer_b": 2462,
+      "overlap_patch_count": 1,
+      "jaccard": 0.0019569471624266144,
+      "signature_histogram_similarity": 0.796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 767,
+      "observer_b": 1097,
+      "overlap_patch_count": 150,
+      "jaccard": 0.4143646408839779,
+      "signature_histogram_similarity": 0.890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 767,
+      "observer_b": 1304,
+      "overlap_patch_count": 36,
+      "jaccard": 0.07563025210084033,
+      "signature_histogram_similarity": 0.86328125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 767,
+      "observer_b": 1319,
+      "overlap_patch_count": 2,
+      "jaccard": 0.00392156862745098,
+      "signature_histogram_similarity": 0.61328125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 767,
+      "observer_b": 2851,
+      "overlap_patch_count": 24,
+      "jaccard": 0.04918032786885246,
+      "signature_histogram_similarity": 0.85546875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 915,
+      "observer_b": 1041,
+      "overlap_patch_count": 34,
+      "jaccard": 0.07112970711297072,
+      "signature_histogram_similarity": 0.86328125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 915,
+      "observer_b": 1431,
+      "overlap_patch_count": 55,
+      "jaccard": 0.12035010940919037,
+      "signature_histogram_similarity": 0.87109375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 915,
+      "observer_b": 2300,
+      "overlap_patch_count": 78,
+      "jaccard": 0.17972350230414746,
+      "signature_histogram_similarity": 0.82421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 915,
+      "observer_b": 2462,
+      "overlap_patch_count": 4,
+      "jaccard": 0.007874015748031496,
+      "signature_histogram_similarity": 0.83203125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1041,
+      "observer_b": 1431,
+      "overlap_patch_count": 166,
+      "jaccard": 0.4797687861271676,
+      "signature_histogram_similarity": 0.91796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1041,
+      "observer_b": 1761,
+      "overlap_patch_count": 153,
+      "jaccard": 0.42618384401114207,
+      "signature_histogram_similarity": 0.9296875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1041,
+      "observer_b": 2300,
+      "overlap_patch_count": 7,
+      "jaccard": 0.013861386138613862,
+      "signature_histogram_similarity": 0.80859375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1041,
+      "observer_b": 2782,
+      "overlap_patch_count": 61,
+      "jaccard": 0.1352549889135255,
+      "signature_histogram_similarity": 0.86328125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1097,
+      "observer_b": 1304,
+      "overlap_patch_count": 112,
+      "jaccard": 0.28,
+      "signature_histogram_similarity": 0.8984375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1097,
+      "observer_b": 2851,
+      "overlap_patch_count": 50,
+      "jaccard": 0.10822510822510822,
+      "signature_histogram_similarity": 0.890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1097,
+      "observer_b": 2956,
+      "overlap_patch_count": 9,
+      "jaccard": 0.017892644135188866,
+      "signature_histogram_similarity": 0.875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1097,
+      "observer_b": 4037,
+      "overlap_patch_count": 2,
+      "jaccard": 0.00392156862745098,
+      "signature_histogram_similarity": 0.87109375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1302,
+      "observer_b": 1438,
+      "overlap_patch_count": 136,
+      "jaccard": 0.3617021276595745,
+      "signature_histogram_similarity": 0.90234375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1302,
+      "observer_b": 2462,
+      "overlap_patch_count": 28,
+      "jaccard": 0.05785123966942149,
+      "signature_histogram_similarity": 0.89453125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1304,
+      "observer_b": 2851,
+      "overlap_patch_count": 1,
+      "jaccard": 0.0019569471624266144,
+      "signature_histogram_similarity": 0.890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1304,
+      "observer_b": 2956,
+      "overlap_patch_count": 78,
+      "jaccard": 0.17972350230414746,
+      "signature_histogram_similarity": 0.890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1319,
+      "observer_b": 3209,
+      "overlap_patch_count": 1,
+      "jaccard": 0.0019569471624266144,
+      "signature_histogram_similarity": 0.72265625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1319,
+      "observer_b": 3450,
+      "overlap_patch_count": 35,
+      "jaccard": 0.07337526205450734,
+      "signature_histogram_similarity": 0.734375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1431,
+      "observer_b": 1761,
+      "overlap_patch_count": 131,
+      "jaccard": 0.3438320209973753,
+      "signature_histogram_similarity": 0.91015625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1431,
+      "observer_b": 2300,
+      "overlap_patch_count": 54,
+      "jaccard": 0.11790393013100436,
+      "signature_histogram_similarity": 0.82421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1431,
+      "observer_b": 2782,
+      "overlap_patch_count": 83,
+      "jaccard": 0.19347319347319347,
+      "signature_histogram_similarity": 0.89453125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1438,
+      "observer_b": 4687,
+      "overlap_patch_count": 3,
+      "jaccard": 0.005893909626719057,
+      "signature_histogram_similarity": 0.796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1761,
+      "observer_b": 2782,
+      "overlap_patch_count": 141,
+      "jaccard": 0.38005390835579517,
+      "signature_histogram_similarity": 0.8828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1761,
+      "observer_b": 3209,
+      "overlap_patch_count": 5,
+      "jaccard": 0.009861932938856016,
+      "signature_histogram_similarity": 0.82421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 1761,
+      "observer_b": 3366,
+      "overlap_patch_count": 40,
+      "jaccard": 0.0847457627118644,
+      "signature_histogram_similarity": 0.81640625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 2782,
+      "observer_b": 3366,
+      "overlap_patch_count": 38,
+      "jaccard": 0.08016877637130802,
+      "signature_histogram_similarity": 0.82421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 2782,
+      "observer_b": 6929,
+      "overlap_patch_count": 2,
+      "jaccard": 0.00392156862745098,
+      "signature_histogram_similarity": 0.80078125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 2851,
+      "observer_b": 4037,
+      "overlap_patch_count": 147,
+      "jaccard": 0.40273972602739727,
+      "signature_histogram_similarity": 0.921875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 2956,
+      "observer_b": 3629,
+      "overlap_patch_count": 43,
+      "jaccard": 0.09168443496801706,
+      "signature_histogram_similarity": 0.85546875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3209,
+      "observer_b": 3366,
+      "overlap_patch_count": 146,
+      "jaccard": 0.3989071038251366,
+      "signature_histogram_similarity": 0.91796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3209,
+      "observer_b": 3450,
+      "overlap_patch_count": 71,
+      "jaccard": 0.16099773242630386,
+      "signature_histogram_similarity": 0.875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3209,
+      "observer_b": 4141,
+      "overlap_patch_count": 174,
+      "jaccard": 0.514792899408284,
+      "signature_histogram_similarity": 0.91015625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3366,
+      "observer_b": 3450,
+      "overlap_patch_count": 3,
+      "jaccard": 0.005893909626719057,
+      "signature_histogram_similarity": 0.88671875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3366,
+      "observer_b": 4141,
+      "overlap_patch_count": 146,
+      "jaccard": 0.3989071038251366,
+      "signature_histogram_similarity": 0.89453125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3450,
+      "observer_b": 4141,
+      "overlap_patch_count": 36,
+      "jaccard": 0.07563025210084033,
+      "signature_histogram_similarity": 0.88671875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3450,
+      "observer_b": 4534,
+      "overlap_patch_count": 53,
+      "jaccard": 0.11546840958605664,
+      "signature_histogram_similarity": 0.78515625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3629,
+      "observer_b": 4048,
+      "overlap_patch_count": 91,
+      "jaccard": 0.2161520190023753,
+      "signature_histogram_similarity": 0.5625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3629,
+      "observer_b": 6556,
+      "overlap_patch_count": 53,
+      "jaccard": 0.11546840958605664,
+      "signature_histogram_similarity": 0.8671875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 3629,
+      "observer_b": 7467,
+      "overlap_patch_count": 18,
+      "jaccard": 0.03643724696356275,
+      "signature_histogram_similarity": 0.8984375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 4048,
+      "observer_b": 6030,
+      "overlap_patch_count": 11,
+      "jaccard": 0.021956087824351298,
+      "signature_histogram_similarity": 0.734375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 4048,
+      "observer_b": 6556,
+      "overlap_patch_count": 52,
+      "jaccard": 0.11304347826086956,
+      "signature_histogram_similarity": 0.60546875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 4534,
+      "observer_b": 7584,
+      "overlap_patch_count": 65,
+      "jaccard": 0.14541387024608501,
+      "signature_histogram_similarity": 0.79296875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 4687,
+      "observer_b": 6030,
+      "overlap_patch_count": 128,
+      "jaccard": 0.3333333333333333,
+      "signature_histogram_similarity": 0.90234375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6287,
+      "observer_b": 6884,
+      "overlap_patch_count": 87,
+      "jaccard": 0.20470588235294118,
+      "signature_histogram_similarity": 0.6484375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6287,
+      "observer_b": 7062,
+      "overlap_patch_count": 128,
+      "jaccard": 0.3333333333333333,
+      "signature_histogram_similarity": 0.69921875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6287,
+      "observer_b": 9235,
+      "overlap_patch_count": 25,
+      "jaccard": 0.0513347022587269,
+      "signature_histogram_similarity": 0.41796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6287,
+      "observer_b": 9934,
+      "overlap_patch_count": 22,
+      "jaccard": 0.044897959183673466,
+      "signature_histogram_similarity": 0.41015625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6287,
+      "observer_b": 10345,
+      "overlap_patch_count": 32,
+      "jaccard": 0.06666666666666667,
+      "signature_histogram_similarity": 0.421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6556,
+      "observer_b": 7467,
+      "overlap_patch_count": 102,
+      "jaccard": 0.24878048780487805,
+      "signature_histogram_similarity": 0.87109375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6884,
+      "observer_b": 7062,
+      "overlap_patch_count": 203,
+      "jaccard": 0.656957928802589,
+      "signature_histogram_similarity": 0.92578125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6884,
+      "observer_b": 7303,
+      "overlap_patch_count": 44,
+      "jaccard": 0.09401709401709402,
+      "signature_histogram_similarity": 0.54296875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6884,
+      "observer_b": 9235,
+      "overlap_patch_count": 123,
+      "jaccard": 0.3161953727506427,
+      "signature_histogram_similarity": 0.68359375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6884,
+      "observer_b": 9510,
+      "overlap_patch_count": 13,
+      "jaccard": 0.026052104208416832,
+      "signature_histogram_similarity": 0.3203125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6884,
+      "observer_b": 9934,
+      "overlap_patch_count": 90,
+      "jaccard": 0.2132701421800948,
+      "signature_histogram_similarity": 0.65234375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6884,
+      "observer_b": 10345,
+      "overlap_patch_count": 58,
+      "jaccard": 0.1277533039647577,
+      "signature_histogram_similarity": 0.6796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6929,
+      "observer_b": 7785,
+      "overlap_patch_count": 65,
+      "jaccard": 0.14541387024608501,
+      "signature_histogram_similarity": 0.56640625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6929,
+      "observer_b": 10623,
+      "overlap_patch_count": 47,
+      "jaccard": 0.1010752688172043,
+      "signature_histogram_similarity": 0.51171875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 6929,
+      "observer_b": 11178,
+      "overlap_patch_count": 15,
+      "jaccard": 0.030181086519114688,
+      "signature_histogram_similarity": 0.34765625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7062,
+      "observer_b": 7303,
+      "overlap_patch_count": 12,
+      "jaccard": 0.024,
+      "signature_histogram_similarity": 0.49609375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7062,
+      "observer_b": 9235,
+      "overlap_patch_count": 117,
+      "jaccard": 0.29620253164556964,
+      "signature_histogram_similarity": 0.63671875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7062,
+      "observer_b": 9934,
+      "overlap_patch_count": 96,
+      "jaccard": 0.23076923076923078,
+      "signature_histogram_similarity": 0.60546875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7062,
+      "observer_b": 10345,
+      "overlap_patch_count": 80,
+      "jaccard": 0.18518518518518517,
+      "signature_histogram_similarity": 0.6328125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7133,
+      "observer_b": 7468,
+      "overlap_patch_count": 51,
+      "jaccard": 0.11062906724511931,
+      "signature_histogram_similarity": 0.72265625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7133,
+      "observer_b": 7785,
+      "overlap_patch_count": 47,
+      "jaccard": 0.1010752688172043,
+      "signature_histogram_similarity": 0.5625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7303,
+      "observer_b": 7468,
+      "overlap_patch_count": 129,
+      "jaccard": 0.3368146214099217,
+      "signature_histogram_similarity": 0.828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7303,
+      "observer_b": 9235,
+      "overlap_patch_count": 26,
+      "jaccard": 0.053497942386831275,
+      "signature_histogram_similarity": 0.7734375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7303,
+      "observer_b": 9510,
+      "overlap_patch_count": 132,
+      "jaccard": 0.3473684210526316,
+      "signature_histogram_similarity": 0.6640625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7303,
+      "observer_b": 9934,
+      "overlap_patch_count": 3,
+      "jaccard": 0.005893909626719057,
+      "signature_histogram_similarity": 0.78125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7303,
+      "observer_b": 11340,
+      "overlap_patch_count": 55,
+      "jaccard": 0.12035010940919037,
+      "signature_histogram_similarity": 0.50390625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7303,
+      "observer_b": 12272,
+      "overlap_patch_count": 19,
+      "jaccard": 0.038539553752535496,
+      "signature_histogram_similarity": 0.5,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7467,
+      "observer_b": 13334,
+      "overlap_patch_count": 5,
+      "jaccard": 0.009861932938856016,
+      "signature_histogram_similarity": 0.7890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7468,
+      "observer_b": 9510,
+      "overlap_patch_count": 79,
+      "jaccard": 0.18244803695150116,
+      "signature_histogram_similarity": 0.76953125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7468,
+      "observer_b": 11340,
+      "overlap_patch_count": 24,
+      "jaccard": 0.04918032786885246,
+      "signature_histogram_similarity": 0.62109375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7584,
+      "observer_b": 9448,
+      "overlap_patch_count": 123,
+      "jaccard": 0.3161953727506427,
+      "signature_histogram_similarity": 0.890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7785,
+      "observer_b": 10623,
+      "overlap_patch_count": 75,
+      "jaccard": 0.17162471395881007,
+      "signature_histogram_similarity": 0.86328125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7785,
+      "observer_b": 11178,
+      "overlap_patch_count": 76,
+      "jaccard": 0.1743119266055046,
+      "signature_histogram_similarity": 0.73828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 7785,
+      "observer_b": 13063,
+      "overlap_patch_count": 11,
+      "jaccard": 0.021956087824351298,
+      "signature_histogram_similarity": 0.53515625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 8566,
+      "observer_b": 9210,
+      "overlap_patch_count": 167,
+      "jaccard": 0.48405797101449277,
+      "signature_histogram_similarity": 0.91796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 8566,
+      "observer_b": 10341,
+      "overlap_patch_count": 144,
+      "jaccard": 0.391304347826087,
+      "signature_histogram_similarity": 0.8515625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9210,
+      "observer_b": 10341,
+      "overlap_patch_count": 192,
+      "jaccard": 0.6,
+      "signature_histogram_similarity": 0.875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9235,
+      "observer_b": 9510,
+      "overlap_patch_count": 36,
+      "jaccard": 0.07563025210084033,
+      "signature_histogram_similarity": 0.55078125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9235,
+      "observer_b": 9934,
+      "overlap_patch_count": 203,
+      "jaccard": 0.656957928802589,
+      "signature_histogram_similarity": 0.91796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9235,
+      "observer_b": 10345,
+      "overlap_patch_count": 134,
+      "jaccard": 0.3544973544973545,
+      "signature_histogram_similarity": 0.8828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9235,
+      "observer_b": 11340,
+      "overlap_patch_count": 24,
+      "jaccard": 0.04918032786885246,
+      "signature_histogram_similarity": 0.43359375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9235,
+      "observer_b": 12272,
+      "overlap_patch_count": 33,
+      "jaccard": 0.06889352818371608,
+      "signature_histogram_similarity": 0.44140625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9336,
+      "observer_b": 12653,
+      "overlap_patch_count": 64,
+      "jaccard": 0.14285714285714285,
+      "signature_histogram_similarity": 0.84765625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9510,
+      "observer_b": 9934,
+      "overlap_patch_count": 12,
+      "jaccard": 0.024,
+      "signature_histogram_similarity": 0.578125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9510,
+      "observer_b": 11340,
+      "overlap_patch_count": 165,
+      "jaccard": 0.4755043227665706,
+      "signature_histogram_similarity": 0.80078125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9510,
+      "observer_b": 12272,
+      "overlap_patch_count": 110,
+      "jaccard": 0.2736318407960199,
+      "signature_histogram_similarity": 0.80859375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9934,
+      "observer_b": 10345,
+      "overlap_patch_count": 179,
+      "jaccard": 0.5375375375375375,
+      "signature_histogram_similarity": 0.9140625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9934,
+      "observer_b": 11340,
+      "overlap_patch_count": 9,
+      "jaccard": 0.017892644135188866,
+      "signature_histogram_similarity": 0.4609375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 9934,
+      "observer_b": 12272,
+      "overlap_patch_count": 23,
+      "jaccard": 0.04703476482617587,
+      "signature_histogram_similarity": 0.46875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 10623,
+      "observer_b": 11178,
+      "overlap_patch_count": 190,
+      "jaccard": 0.5900621118012422,
+      "signature_histogram_similarity": 0.81640625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 10623,
+      "observer_b": 13063,
+      "overlap_patch_count": 139,
+      "jaccard": 0.3726541554959786,
+      "signature_histogram_similarity": 0.60546875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 10623,
+      "observer_b": 15181,
+      "overlap_patch_count": 62,
+      "jaccard": 0.13777777777777778,
+      "signature_histogram_similarity": 0.41796875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 10623,
+      "observer_b": 16168,
+      "overlap_patch_count": 30,
+      "jaccard": 0.06224066390041494,
+      "signature_histogram_similarity": 0.3203125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11178,
+      "observer_b": 13063,
+      "overlap_patch_count": 159,
+      "jaccard": 0.45042492917847027,
+      "signature_histogram_similarity": 0.7734375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11178,
+      "observer_b": 15181,
+      "overlap_patch_count": 72,
+      "jaccard": 0.16363636363636364,
+      "signature_histogram_similarity": 0.5546875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11178,
+      "observer_b": 16168,
+      "overlap_patch_count": 40,
+      "jaccard": 0.0847457627118644,
+      "signature_histogram_similarity": 0.4609375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11340,
+      "observer_b": 12272,
+      "overlap_patch_count": 188,
+      "jaccard": 0.5802469135802469,
+      "signature_histogram_similarity": 0.90234375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11340,
+      "observer_b": 17495,
+      "overlap_patch_count": 21,
+      "jaccard": 0.04276985743380855,
+      "signature_histogram_similarity": 0.81640625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11340,
+      "observer_b": 17529,
+      "overlap_patch_count": 14,
+      "jaccard": 0.028112449799196786,
+      "signature_histogram_similarity": 0.7890625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11460,
+      "observer_b": 12926,
+      "overlap_patch_count": 22,
+      "jaccard": 0.044897959183673466,
+      "signature_histogram_similarity": 0.3828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 11460,
+      "observer_b": 17060,
+      "overlap_patch_count": 29,
+      "jaccard": 0.060041407867494824,
+      "signature_histogram_similarity": 0.8203125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 12272,
+      "observer_b": 17495,
+      "overlap_patch_count": 43,
+      "jaccard": 0.09168443496801706,
+      "signature_histogram_similarity": 0.828125,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 12272,
+      "observer_b": 17529,
+      "overlap_patch_count": 47,
+      "jaccard": 0.1010752688172043,
+      "signature_histogram_similarity": 0.82421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 12653,
+      "observer_b": 17088,
+      "overlap_patch_count": 39,
+      "jaccard": 0.0824524312896406,
+      "signature_histogram_similarity": 0.8515625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 12926,
+      "observer_b": 14879,
+      "overlap_patch_count": 95,
+      "jaccard": 0.2278177458033573,
+      "signature_histogram_similarity": 0.87109375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 12926,
+      "observer_b": 17429,
+      "overlap_patch_count": 72,
+      "jaccard": 0.16363636363636364,
+      "signature_histogram_similarity": 0.8515625,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 12926,
+      "observer_b": 20246,
+      "overlap_patch_count": 4,
+      "jaccard": 0.007874015748031496,
+      "signature_histogram_similarity": 0.7421875,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    },
+    {
+      "observer_a": 13063,
+      "observer_b": 15181,
+      "overlap_patch_count": 161,
+      "jaccard": 0.4586894586894587,
+      "signature_histogram_similarity": 0.7734375,
+      "overlap_committed_fraction": 1.0,
+      "overlap_repair_load_mean": 0.0
+    }
+  ],
+  "claim_boundary": "observer-facing consensus readout; tracks what finite patch/cap observers can see before any third-person bulk embedding is inferred",
+  "observer_relative_time_grid": [
+    0.1
+  ],
+  "cap_count": 4
+}

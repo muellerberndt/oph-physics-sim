@@ -235,6 +235,7 @@ def _time_resolved_gap(path: Path, ell_max_cmb: int) -> dict[str, Any]:
         for row in rows_with_controls
     ]
     controls_fail = bool(control_separations and min(control_separations) > 0.0)
+    by_field = _time_resolved_by_field_summary(rows)
     return {
         "available": bool(rows),
         "mode_count": len(rows),
@@ -245,12 +246,98 @@ def _time_resolved_gap(path: Path, ell_max_cmb: int) -> dict[str, Any]:
         "mode_wise_gamma_positive": bool(gamma_values and min(gamma_values) > 0.0),
         "median_target_minus_max_control_gamma": median(control_separations) if control_separations else None,
         "min_target_minus_max_control_gamma": min(control_separations) if control_separations else None,
+        "by_field": by_field,
+        "best_field_by_control_separation": _best_time_resolved_field(by_field, "median_target_minus_max_control_gamma"),
+        "best_field_by_positive_gamma_fraction": _best_time_resolved_field(by_field, "positive_gamma_fraction"),
+        "residual_field_gap_candidate": _residual_field_gap_candidate(by_field),
         "controls_fail": controls_fail,
         "low_k_gap_established": bool(gamma_values and min(gamma_values) > 0.0 and controls_fail),
         "rows": rows[:512],
         "claim_boundary": (
             "Time-resolved harmonic trace loaded. A low-k gap requires positive target decay across the "
             "band and target decay stronger than time-resolved controls."
+        ),
+    }
+
+
+def _time_resolved_by_field_summary(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        if not row.get("available"):
+            continue
+        grouped.setdefault(str(row.get("field")), []).append(row)
+    summary: dict[str, dict[str, Any]] = {}
+    for field, field_rows in sorted(grouped.items()):
+        gammas = [
+            float(row["gamma_per_cycle"])
+            for row in field_rows
+            if row.get("gamma_per_cycle") is not None
+        ]
+        separations = [
+            float(row["gamma_per_cycle"]) - float(row["max_control_gamma_per_cycle"])
+            for row in field_rows
+            if row.get("gamma_per_cycle") is not None
+            and row.get("max_control_gamma_per_cycle") is not None
+        ]
+        summary[field] = {
+            "mode_count": len(field_rows),
+            "median_gamma_per_cycle": median(gammas) if gammas else None,
+            "min_gamma_per_cycle": min(gammas) if gammas else None,
+            "positive_gamma_fraction": len([value for value in gammas if value > 0.0]) / len(gammas)
+            if gammas
+            else None,
+            "median_target_minus_max_control_gamma": median(separations) if separations else None,
+            "min_target_minus_max_control_gamma": min(separations) if separations else None,
+            "control_separation_positive_fraction": len([value for value in separations if value > 0.0])
+            / len(separations)
+            if separations
+            else None,
+            "all_modes_positive": bool(gammas and min(gammas) > 0.0),
+            "all_modes_beat_controls": bool(separations and min(separations) > 0.0),
+        }
+    return summary
+
+
+def _best_time_resolved_field(summary: dict[str, dict[str, Any]], key: str) -> str | None:
+    usable = [
+        (field, values)
+        for field, values in summary.items()
+        if isinstance(values.get(key), (int, float))
+    ]
+    if not usable:
+        return None
+    return max(usable, key=lambda item: float(item[1][key]))[0]
+
+
+def _residual_field_gap_candidate(summary: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    residual_names = ("repair_load", "local_mismatch_density")
+    rows = {name: summary[name] for name in residual_names if name in summary}
+    if not rows:
+        return {"available": False}
+    best_name = max(
+        rows,
+        key=lambda name: (
+            float(rows[name].get("control_separation_positive_fraction") or 0.0),
+            float(rows[name].get("positive_gamma_fraction") or 0.0),
+            float(rows[name].get("median_target_minus_max_control_gamma") or -1.0e9),
+        ),
+    )
+    best = rows[best_name]
+    return {
+        "available": True,
+        "field": best_name,
+        "positive_gamma_fraction": best.get("positive_gamma_fraction"),
+        "control_separation_positive_fraction": best.get("control_separation_positive_fraction"),
+        "median_gamma_per_cycle": best.get("median_gamma_per_cycle"),
+        "median_target_minus_max_control_gamma": best.get("median_target_minus_max_control_gamma"),
+        "candidate_receipt": bool(
+            (best.get("positive_gamma_fraction") or 0.0) >= 0.5
+            and (best.get("control_separation_positive_fraction") or 0.0) >= 0.5
+            and (best.get("median_target_minus_max_control_gamma") or 0.0) > 0.0
+        ),
+        "claim_boundary": (
+            "Residual-field candidate only. It reports whether repair/mismatch low-k modes show a majority "
+            "positive decay and majority control separation. It is weaker than the all-mode low-k gap gate."
         ),
     }
 

@@ -1,0 +1,166 @@
+{
+  "mode": "support_profile_h3_fit",
+  "label": "s3_holonomy_defect_cluster",
+  "support_count": 7,
+  "cap_count": 24,
+  "support_key": "support_nodes",
+  "id_key": "cluster_id",
+  "sample_ids": [
+    "defect_cluster_000000",
+    "defect_cluster_000001",
+    "defect_cluster_000002",
+    "defect_cluster_000003",
+    "defect_cluster_000004",
+    "defect_cluster_000005",
+    "defect_cluster_000006"
+  ],
+  "support_size_summary": {
+    "min": 397.0,
+    "median": 589.0,
+    "mean": 584.0,
+    "max": 741.0
+  },
+  "h3_fit": {
+    "mode": "record_response_to_h3_fit",
+    "candidate_count": 1024,
+    "candidate_radius": 2.0,
+    "softness": 0.25,
+    "local_refinement": {
+      "enabled": true,
+      "refined_rows": 7,
+      "attempted_rows": 7,
+      "max_nfev": 48,
+      "median_improvement": 0.12408643132630126
+    },
+    "median_residual": 0.0020517981793591322,
+    "mean_residual": 0.0071706532121777605,
+    "p90_residual": 0.01744389417782085,
+    "best_candidate_indices": [
+      204,
+      469,
+      204,
+      856,
+      204,
+      204,
+      469
+    ],
+    "sample_fitted_h3_points": [
+      [
+        8.893633730761708,
+        -0.010313916767510306,
+        8.836947791692603,
+        -0.07048607637358083
+      ],
+      [
+        9.816777472908377,
+        -0.20648075092359794,
+        9.733575631095123,
+        0.7641930946106499
+      ],
+      [
+        9.88383802713134,
+        0.7117431154524569,
+        9.791153590331884,
+        0.5630162117600105
+      ],
+      [
+        8.584741939850732,
+        -0.5454755836266973,
+        8.508783634164114,
+        -0.02918267431427206
+      ],
+      [
+        13.084941423292605,
+        0.5536841550193188,
+        13.02258893524006,
+        -0.5668362472905378
+      ],
+      [
+        21.655240200900202,
+        -0.686244200473428,
+        21.524712909576877,
+        -2.0408898099347317
+      ],
+      [
+        8.375163257238642,
+        -0.6830789496790064,
+        8.2769684928201,
+        0.4105548718124737
+      ]
+    ],
+    "fitted_h3_points": [
+      [
+        8.893633730761708,
+        -0.010313916767510306,
+        8.836947791692603,
+        -0.07048607637358083
+      ],
+      [
+        9.816777472908377,
+        -0.20648075092359794,
+        9.733575631095123,
+        0.7641930946106499
+      ],
+      [
+        9.88383802713134,
+        0.7117431154524569,
+        9.791153590331884,
+        0.5630162117600105
+      ],
+      [
+        8.584741939850732,
+        -0.5454755836266973,
+        8.508783634164114,
+        -0.02918267431427206
+      ],
+      [
+        13.084941423292605,
+        0.5536841550193188,
+        13.02258893524006,
+        -0.5668362472905378
+      ],
+      [
+        21.655240200900202,
+        -0.686244200473428,
+        21.524712909576877,
+        -2.0408898099347317
+      ],
+      [
+        8.375163257238642,
+        -0.6830789496790064,
+        8.2769684928201,
+        0.4105548718124737
+      ]
+    ]
+  },
+  "h3_population_dimension_debug": {
+    "mode": "h3_population_dimension_debug",
+    "point_count": 7,
+    "candidate_3d_dimension_window": false,
+    "reason": "not_enough_h3_points",
+    "claim_boundary": "debug-only dimension estimate on fitted H3 population points; no gate by itself"
+  },
+  "s2_boundary_control": {
+    "median_residual": 0.05717615570469672,
+    "mean_residual": 0.05297421290473685,
+    "p90_residual": 0.06391972788195915,
+    "h3_beats_s2_boundary": true
+  },
+  "shuffled_cap_response_control": {
+    "median_residual": 0.2892660870976298,
+    "h3_beats_shuffled": true
+  },
+  "pass_ratio": 0.85,
+  "min_support_count": 4,
+  "min_cap_count": 6,
+  "eligibility_gate_passed": true,
+  "record_populated_h3_receipt": true,
+  "record_family_h3_bulk_population_candidate": true,
+  "claim_boundary": "support-visible cap-profile fit into H3 for record families or screen holonomy defects. A pass is a populated-chart diagnostic only; particle claims still require persistence, transport, fusion/scattering, and worldline controls.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "demo",
+  "receipt_name": "SUPPORT_PROFILE_H3_DEMO_RECEIPT",
+  "observable_id": "SUPPORT_PROFILE_H3_DEMO_RECEIPT",
+  "fit_objective": "not_applicable",
+  "physical_claim": false
+}

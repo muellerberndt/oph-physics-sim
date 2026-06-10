@@ -20,7 +20,7 @@ def collect_cl_runs(run_dirs: list[Path]) -> list[dict[str, Any]]:
             seen.add(run_path)
             cl_report = json.loads(cl_path.read_text(encoding="utf-8"))
             manifest = _read_json(run_path / "manifest.json")
-            gate = _read_json(run_path / "cosmology_gate_report.json")
+            gate = _read_json(run_path / "cosmology_gate_report.json") or cl_report.get("gate_report", {})
             cmb = _read_json(run_path / "cmb_lite_comparison_report.json")
             cmb_fields = cmb.get("field_comparisons", {}) if cmb else {}
             best_field = cmb.get("best_shape_field") if cmb else None
@@ -31,7 +31,7 @@ def collect_cl_runs(run_dirs: list[Path]) -> list[dict[str, Any]]:
                 {
                     "run_id": manifest.get("run_id", run_path.name),
                     "path": str(run_path),
-                    "patch_count": int(manifest.get("patch_count", 0)),
+                    "patch_count": int(manifest.get("patch_count") or cl_report.get("point_count", 0)),
                     "seed": _seed_from_config(run_path / "config.yml"),
                     "estimator": cl_report.get("estimator"),
                     "ell_max": int(cl_report.get("ell_max", 0)),
