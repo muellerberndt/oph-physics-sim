@@ -327,12 +327,26 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             or comparable_lorentz.get("paper_theorem_assisted_h3_populated_chart_count", 0)
             or bulk.get("bulk_3d_established_theorem_assisted", False)
         ),
+        "theorem_assisted_observer_facing_h3_population": bool(
+            comparable.get("theorem_assisted_h3_bulk_any", False)
+            or comparable.get("theorem_assisted_h3_bulk_count", 0)
+            or comparable_lorentz.get("paper_theorem_assisted_h3_populated_chart_count", 0)
+            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+            or bulk.get("bulk_3d_established_theorem_assisted", False)
+        ),
+        "observer_facing_3p1d_h3_experience": bool(
+            bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
+            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+        ),
         "strict_neutral_bulk": bool(
             comparable.get("strict_neutral_3d_bulk_any", False)
             or comparable.get("strict_neutral_3d_bulk_count", 0)
             or bulk.get("strict_neutral_third_person_bulk_established", False)
         ),
         "strict_blind_record_transition_3d_candidate": bool(
+            comparable_neutral.get("blind_record_transition_rank3_receipt_count", 0)
+        ),
+        "strict_blind_record_transition_rank3_candidate": bool(
             comparable_neutral.get("blind_record_transition_rank3_receipt_count", 0)
         ),
         "production_particles": bool(

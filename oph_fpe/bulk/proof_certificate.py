@@ -231,6 +231,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "theorem_assisted_h3_object_preview_established": theorem_assisted_chart_preview,
         "theorem_assisted_h3_nonboundary_population_established": theorem_assisted_nonboundary_population,
         "theorem_assisted_h3_populated_chart_established": theorem_assisted_nonboundary_population,
+        "theorem_assisted_observer_facing_h3_population": theorem_assisted_nonboundary_population,
+        "observer_facing_h3_object_population_receipt": theorem_assisted_nonboundary_population,
+        "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": bool(
+            chart and bw_kms and h3_response and object_nonboundary_population
+        ),
         "scale_compressed_operator_receipt": scale_operator,
         "scale_compressed_repair_round_trace_receipt": scale_round_trace,
         "scale_compressed_h3_preview_established": scale_h3_preview,
@@ -258,6 +263,10 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             ),
             "h3_beats_shuffled_incidence_robust": object_chart.get("h3_beats_shuffled_incidence_robust"),
             "observer_chart_bulk_population_receipt": object_chart.get("observer_chart_bulk_population_receipt"),
+            "observer_facing_h3_object_population_receipt": object_chart.get(
+                "observer_facing_h3_object_population_receipt",
+                object_chart.get("observer_chart_bulk_population_receipt"),
+            ),
         },
         "scale_compressed_summary": {
             "logical_repair_rounds": scale_compressed.get("logical_repair_rounds"),

@@ -540,6 +540,25 @@ def main(argv: list[str] | None = None) -> int:
     parent_collar_parser.add_argument("--include", nargs="*", default=[], type=Path)
     parent_collar_parser.add_argument("--out", required=True, type=Path)
 
+    ba_kernel_parser = subparsers.add_parser(
+        "b-a-kernel-paired",
+        help="estimate a paired finite-difference B_A(k,a) kernel from base/perturbed CSV rows",
+    )
+    ba_kernel_parser.add_argument("--base", required=True, type=Path)
+    ba_kernel_parser.add_argument("--perturbed", required=True, type=Path)
+    ba_kernel_parser.add_argument("--control", default=None, type=Path)
+    ba_kernel_parser.add_argument("--out", required=True, type=Path)
+    ba_kernel_parser.add_argument("--min-good-rows", default=3, type=int)
+    ba_kernel_parser.add_argument("--min-sample-count", default=16, type=int)
+
+    physical_cmb_inputs_parser = subparsers.add_parser(
+        "derive-physical-cmb-inputs",
+        help="assemble the hard physical CMB input contract from finite OPH-FPE run receipts",
+    )
+    physical_cmb_inputs_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    physical_cmb_inputs_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    physical_cmb_inputs_parser.add_argument("--out", required=True, type=Path)
+
     scalar_cert_parser = subparsers.add_parser(
         "emit-scalar-release-certificate",
         help="emit a proxy scalar-release certificate from a cached collar Markov run",
@@ -629,6 +648,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     bulk_proof_parser.add_argument("--run-dir", required=True, type=Path)
     bulk_proof_parser.add_argument("--out", default=None, type=Path)
+
+    strict_neutral_parser = subparsers.add_parser(
+        "strict-neutral-bulk-report",
+        help="write strict neutral observer-record bulk diagnostics from observer_views.jsonl",
+    )
+    strict_neutral_parser.add_argument("--run-dir", required=True, type=Path)
+    strict_neutral_parser.add_argument("--out", default=None, type=Path)
+    strict_neutral_parser.add_argument("--seed", default=1, type=int)
+    strict_neutral_parser.add_argument("--max-model-points", default=512, type=int)
+    strict_neutral_parser.add_argument("--planted-control-points", default=160, type=int)
 
     paper_chart_parser = subparsers.add_parser(
         "paper-chart-receipts",
@@ -1260,6 +1289,25 @@ def main(argv: list[str] | None = None) -> int:
         result = write_parent_collar_ladder_report([*args.run_dir, *args.include], args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "b-a-kernel-paired":
+        from oph_fpe.cosmology.ba_kernel import ba_kernel_report_from_paired_csv
+
+        result = ba_kernel_report_from_paired_csv(
+            args.base,
+            args.perturbed,
+            args.out,
+            control_csv=args.control,
+            min_good_rows=args.min_good_rows,
+            min_sample_count=args.min_sample_count,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "derive-physical-cmb-inputs":
+        from oph_fpe.cosmology.physical_cmb_prediction import write_physical_cmb_input_report
+
+        result = write_physical_cmb_input_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "emit-scalar-release-certificate":
         from oph_fpe.cosmology.inflation_certificates import emit_scalar_release_certificate_from_collar_run
 
@@ -1341,6 +1389,18 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.bulk.proof_certificate import write_bulk_proof_certificate
 
         result = write_bulk_proof_certificate(args.run_dir, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "strict-neutral-bulk-report":
+        from oph_fpe.bulk.neutral_bulk import write_strict_neutral_bulk_report
+
+        result = write_strict_neutral_bulk_report(
+            args.run_dir,
+            args.out,
+            seed=args.seed,
+            max_model_points=args.max_model_points,
+            planted_control_points=args.planted_control_points,
+        )
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "paper-chart-receipts":

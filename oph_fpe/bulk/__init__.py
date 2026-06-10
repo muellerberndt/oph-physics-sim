@@ -11,6 +11,16 @@ from oph_fpe.bulk.conformal_spatial_chart import conformal_h3_spatial_chart_repo
 from oph_fpe.bulk.record_to_h3 import record_populated_h3_report, support_profiles_to_h3_report
 from oph_fpe.bulk.transition_selection import transition_scale_selection_report
 from oph_fpe.bulk.h3_ensemble import collect_h3_runs, h3_ensemble_report, write_h3_ensemble_report
+from oph_fpe.bulk.neutral_bulk import (
+    NeutralObserverView,
+    build_neutral_observer_views,
+    neutral_distance_matrix,
+    neutral_model_selection,
+    planted_neutral_control_report,
+    strict_neutral_bulk_receipt,
+    strict_neutral_bulk_report,
+    write_strict_neutral_bulk_report,
+)
 from oph_fpe.bulk.observer_reconstruction import (
     bulk_reconstruction_report,
     neutral_dimension_report_from_distance,
@@ -38,17 +48,25 @@ __all__ = [
     "lambda_cap",
     "laplacian_embedding",
     "modular_lift_dimension_report",
+    "NeutralObserverView",
+    "build_neutral_observer_views",
     "bulk_reconstruction_report",
+    "neutral_distance_matrix",
+    "neutral_model_selection",
     "neutral_dimension_report_from_distance",
     "observer_distance_matrix",
     "observer_similarity_matrix",
     "observer_similarity_components",
     "planted_dimension_report",
+    "planted_neutral_control_report",
     "pullback_field",
     "record_feature_matrix",
     "record_populated_h3_report",
     "sample_caps",
     "state_derived_bw_report",
+    "strict_neutral_bulk_receipt",
+    "strict_neutral_bulk_report",
+    "write_strict_neutral_bulk_report",
     "support_profiles_to_h3_report",
     "transition_scale_selection_report",
     "write_h3_ensemble_report",

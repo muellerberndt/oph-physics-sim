@@ -31,6 +31,11 @@ def test_finite_repair_transition_clock_writes_matrix_and_scalar_report(tmp_path
     assert report["state_count"] == 2
     assert report["transition_count"] == 9
     assert report["primary"]["lambda_2"] is not None
+    assert report["clock_modes"]["empirical"]["clock_mode"] == "empirical"
+    assert report["clock_modes"]["e_hypothesis"]["clock_mode"] == "e_hypothesis"
+    assert report["clock_modes"]["crc48_hypothesis"]["clock_mode"] == "crc48_hypothesis"
+    assert report["repair_clock_empirical_certificate"] is True
+    assert report["eta_R_empirical_finite_lattice_derived"] is True
     assert (out / "finite_repair_transition_matrix.npz").exists()
     assert (out / "finite_repair_transition_matrix_report.json").exists()
     assert (out / "scalar_repair_semigroup_report.json").exists()

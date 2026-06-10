@@ -17,6 +17,16 @@ _EXPORTS = {
     "angular_power_report": ("oph_fpe.cosmology.angular_power", "angular_power_report"),
     "background_adapter_status": ("oph_fpe.cosmology.background_adapter", "background_adapter_status"),
     "estimate_b_a_grid": ("oph_fpe.cosmology.ba_parent", "estimate_b_a_grid"),
+    "BAKernelRow": ("oph_fpe.cosmology.ba_kernel", "BAKernelRow"),
+    "B_A_kernel_receipt": ("oph_fpe.cosmology.ba_kernel", "B_A_kernel_receipt"),
+    "ba_kernel_report_from_paired_csv": (
+        "oph_fpe.cosmology.ba_kernel",
+        "ba_kernel_report_from_paired_csv",
+    ),
+    "estimate_B_A_from_paired_runs": (
+        "oph_fpe.cosmology.ba_kernel",
+        "estimate_B_A_from_paired_runs",
+    ),
     "finite_certificate_bundle": ("oph_fpe.cosmology.finite_certificates", "finite_certificate_bundle"),
     "write_finite_certificate_bundle": (
         "oph_fpe.cosmology.finite_certificates",
@@ -40,6 +50,26 @@ _EXPORTS = {
     ),
     "oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "oph_boltzmann_input_report"),
     "write_oph_boltzmann_input_report": ("oph_fpe.cosmology.boltzmann_inputs", "write_oph_boltzmann_input_report"),
+    "PhysicalCMBInputContract": (
+        "oph_fpe.cosmology.physical_cmb_contract",
+        "PhysicalCMBInputContract",
+    ),
+    "contract_from_reports": (
+        "oph_fpe.cosmology.physical_cmb_contract",
+        "contract_from_reports",
+    ),
+    "validate_physical_cmb_contract": (
+        "oph_fpe.cosmology.physical_cmb_contract",
+        "validate_physical_cmb_contract",
+    ),
+    "build_physical_cmb_input_contract": (
+        "oph_fpe.cosmology.physical_cmb_prediction",
+        "build_physical_cmb_input_contract",
+    ),
+    "write_physical_cmb_input_report": (
+        "oph_fpe.cosmology.physical_cmb_prediction",
+        "write_physical_cmb_input_report",
+    ),
     "LambdaCDMParameters": ("oph_fpe.cosmology.camb_adapter", "LambdaCDMParameters"),
     "camb_lcdm_baseline_report": ("oph_fpe.cosmology.camb_adapter", "camb_lcdm_baseline_report"),
     "compare_camb_tt_to_benchmark": ("oph_fpe.cosmology.camb_adapter", "compare_camb_tt_to_benchmark"),

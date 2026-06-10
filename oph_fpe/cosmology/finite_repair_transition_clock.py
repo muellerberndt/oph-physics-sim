@@ -143,6 +143,7 @@ def finite_repair_transition_clock_report(
     )
     rel_error = abs(float(primary["kappa_rep_estimate"]) - target_kappa) / target_kappa if finite_ready else None
     clock_certified = bool(finite_ready and rel_error is not None and rel_error <= 0.05)
+    clock_modes = _clock_mode_reports(primary, finite_ready=finite_ready, delta_p=delta_p)
     report = {
         "mode": "oph_finite_repair_transition_clock_v0",
         "source_run_dir": str(Path(run_dir)),
@@ -176,6 +177,18 @@ def finite_repair_transition_clock_report(
         "clock_normalization_certified": clock_certified,
         "repair_clock_certificate": clock_certified,
         "eta_R_finite_lattice_derived": clock_certified,
+        "clock_modes": clock_modes,
+        "repair_clock_empirical_certificate": bool(clock_modes["empirical"]["clock_normalization_certified"]),
+        "repair_clock_e_hypothesis_certificate": bool(
+            clock_modes["e_hypothesis"]["clock_normalization_certified"]
+        ),
+        "repair_clock_crc48_hypothesis_certificate": bool(
+            clock_modes["crc48_hypothesis"]["clock_normalization_certified"]
+        ),
+        "eta_R_empirical_finite_lattice_derived": bool(clock_modes["empirical"]["eta_R_finite_lattice_derived"]),
+        "physical_cmb_eligible_eta_R_empirical": bool(
+            clock_modes["empirical"]["eta_R_finite_lattice_derived"]
+        ),
         "physical_cmb_prediction": False,
         "blockers": _blockers(finite_ready, clock_certified, primary, config.primary_matrix),
         "claim_boundary": (
@@ -186,6 +199,43 @@ def finite_repair_transition_clock_report(
         ),
     }
     return report, {"counts": counts, "raw_empirical": raw, "reversible_empirical": reversible}
+
+
+def _clock_mode_reports(primary: dict[str, Any], *, finite_ready: bool, delta_p: float) -> dict[str, dict[str, Any]]:
+    kappa = _float_or_none(primary.get("kappa_rep_estimate"))
+    eta = _float_or_none(primary.get("eta_R_estimate"))
+    empirical_certified = bool(finite_ready and kappa is not None and eta is not None)
+    e_certified = bool(empirical_certified and abs(float(kappa) - math.e) / math.e <= 0.05)
+    crc_eta = float(P_STAR / 48.0)
+    return {
+        "empirical": {
+            "clock_mode": "empirical",
+            "clock_normalization_certified": empirical_certified,
+            "eta_R_finite_lattice_derived": empirical_certified,
+            "eta_R_hypothesis": False,
+            "kappa_rep_value": kappa,
+            "eta_R_value": eta,
+            "claim_boundary": "Finite-derived empirical transition-clock value; not constrained to kappa_rep=e.",
+        },
+        "e_hypothesis": {
+            "clock_mode": "e_hypothesis",
+            "clock_normalization_certified": e_certified,
+            "eta_R_finite_lattice_derived": False,
+            "eta_R_hypothesis": True,
+            "kappa_rep_value": math.e if e_certified else kappa,
+            "eta_R_value": float(math.e * delta_p),
+            "claim_boundary": "Euler repair-clock hypothesis; retains old exact OPH kappa_rep=e certificate semantics.",
+        },
+        "crc48_hypothesis": {
+            "clock_mode": "crc48_hypothesis",
+            "clock_normalization_certified": bool(finite_ready),
+            "eta_R_finite_lattice_derived": False,
+            "eta_R_hypothesis": True,
+            "kappa_rep_value": float(crc_eta / max(delta_p, 1.0e-30)),
+            "eta_R_value": crc_eta,
+            "claim_boundary": "CRC-48/P/48 hypothesis branch; prediction outputs must be labeled hypothesis-side.",
+        },
+    }
 
 
 def _transition_counts_from_observer_views(
