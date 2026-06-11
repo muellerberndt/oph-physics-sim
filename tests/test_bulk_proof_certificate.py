@@ -43,6 +43,8 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     assert report["theorem_assisted_observer_facing_h3_population"] is True
     assert report["observer_facing_h3_object_population_receipt"] is True
     assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is True
+    assert report["THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT"] is True
+    assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
     assert report["strict_neutral_third_person_bulk_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is True
     assert report["bulk_3d_established_strict"] is False
@@ -70,6 +72,7 @@ def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path:
     assert report["theorem_assisted_h3_nonboundary_population_established"] is False
     assert report["theorem_assisted_h3_populated_chart_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is False
+    assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
 
 
 def test_bulk_proof_certificate_writes_and_comparable_data_collects_tiers(tmp_path: Path):

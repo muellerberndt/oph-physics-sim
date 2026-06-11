@@ -106,9 +106,16 @@ def repair_scale_closure_report(
             "local_repair_contraction_abs_gprime": float(g_p),
             "scale_factor_per_round_q": float(q_round),
             "length_ratio_after_m_rounds": float(length_ratio),
+            "capacity_implied_by_declared_repair_depth_ansatz": float(n_pred),
+            "Lambda_lP2_implied_by_declared_repair_depth_ansatz": float(lambda_planck2_from_capacity(n_pred)),
+            "relative_error_ansatz_capacity_vs_declared_N_CRC": float(rel_error),
             "capacity_predicted_from_local_P": float(n_pred),
             "Lambda_lP2_predicted_from_local_P": float(lambda_planck2_from_capacity(n_pred)),
             "relative_error_gprime_vs_N_CRC_closure": float(rel_error),
+            "compatibility_note": (
+                "capacity_predicted_from_local_P and Lambda_lP2_predicted_from_local_P are legacy aliases. "
+                "The canonical interpretation is capacity implied by the declared repair-depth ansatz."
+            ),
             "eta_R_p_over_2m": eta_p48,
             "n_s_p_over_2m": n_s_p48,
         },
@@ -130,8 +137,9 @@ def repair_scale_closure_report(
             "Scale-closure / repair-depth hypothesis report. It connects the local OPH pixel constant P "
             "to a global capacity scale through a declared 24-round repair-depth ansatz. It explains why "
             "ordinary 64k/256k/1M patch regulators are only about one effective scale round deep, and it "
-            "exports the paper-side n_s = 1 - P/48 candidate. It is not a finite proof of 24 repair rounds, "
-            "not a strict 3D bulk receipt, and not a physical CMB prediction."
+            "exports the paper-side n_s = 1 - P/48 candidate. It is not a derivation of N from P alone, "
+            "not a dimensionful SI scale bridge, not a finite proof of 24 repair rounds, not a strict 3D "
+            "bulk receipt, and not a physical CMB prediction."
         ),
     }
     return report
@@ -200,8 +208,10 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "",
             f"- |g'(P)|: `{outputs['local_repair_contraction_abs_gprime']:.12g}`",
             f"- q per repair round: `{outputs['scale_factor_per_round_q']:.12g}`",
-            f"- N_CRC predicted from P: `{outputs['capacity_predicted_from_local_P']:.12e}`",
-            f"- relative |g'| error vs declared N_CRC: `{outputs['relative_error_gprime_vs_N_CRC_closure']:.6g}`",
+            "- N_CRC implied by declared repair-depth ansatz: "
+            f"`{outputs['capacity_implied_by_declared_repair_depth_ansatz']:.12e}`",
+            "- relative ansatz capacity error vs declared N_CRC: "
+            f"`{outputs['relative_error_ansatz_capacity_vs_declared_N_CRC']:.6g}`",
             f"- eta_R = P/48: `{outputs['eta_R_p_over_2m']:.12g}`",
             f"- n_s = 1 - P/48: `{outputs['n_s_p_over_2m']:.12g}`",
             "",

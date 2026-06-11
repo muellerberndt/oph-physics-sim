@@ -180,6 +180,11 @@ def test_observer_chart_object_population_uses_modular_response_chart():
     assert report["object_count"] == 3
     assert report["observer_chart_object_h3_receipt"] is True
     assert report["median_h3_compactness_normalized"] < report["median_shuffled_h3_compactness_normalized"]
+    assert report["h3_compactness_margin_vs_median_shuffle"] > 0.0
+    assert "h3_compactness_margin_vs_s2_boundary" in report
+    assert "compactness_distribution_control_receipt" in report
+    assert "compactness_distribution_population_receipt" in report
+    assert "observer_facing_h3_object_population_receipt" in report
     assert report["sample_objects"][0]["h3_spatial_point"]
 
 
@@ -240,6 +245,7 @@ def test_observer_chart_object_population_can_audit_boundary_compactness_without
 
     assert report["h3_not_boundary_dominated"] is False
     assert report["boundary_leakage_audit_pass"] is False
+    assert "h3_compactness_margin_vs_s2_boundary" in report
     assert report["localized_nonboundary_bulk_population_receipt"] is False
     assert report["localized_h3_bulk_population_receipt"] is True
     assert report["THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT"] is True
@@ -304,6 +310,8 @@ def test_observer_chart_object_population_splits_precursor_from_strict_bulk_gate
 
     assert report["modular_response_h3_control_separation_receipt"] is True
     assert report["modular_response_h3_strict_receipt"] is False
+    assert report["compactness_distribution_population_receipt"] is False
+    assert report["observer_facing_h3_object_population_receipt"] is False
     assert report["localized_object_precursor_receipt"] is True
     assert report["localized_nonboundary_bulk_population_receipt"] is False
 

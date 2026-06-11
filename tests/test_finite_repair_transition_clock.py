@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from oph_fpe.cosmology.finite_repair_transition_clock import write_finite_repair_transition_clock_report
+from oph_fpe.cosmology.finite_repair_transition_clock import write_finite_repair_transition_clock_sweep_report
 from oph_fpe.cosmology.repair_clock import repair_clock_report
 
 
@@ -67,6 +68,38 @@ def test_finite_transition_clock_is_visible_to_repair_clock_but_not_auto_certifi
     assert aggregate["rows"][0]["source"] == "finite_state_transition_matrix"
     assert aggregate["rows"][0]["finite_lattice_derived"] is True
     assert aggregate["finite_repair_clock_certificate"] is False
+
+
+def test_finite_transition_clock_sweep_reports_best_quotient(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [
+            [0, 0, 1, 1],
+            [0, 1, 1, 1],
+            [1, 1, 0, 0],
+        ],
+    )
+
+    report = write_finite_repair_transition_clock_sweep_report(
+        run,
+        out,
+        packet_fieldsets=(
+            ("checkpoint", ("checkpoint_class",)),
+            ("checkpoint_sector", ("checkpoint_class", "s3_sector_class")),
+        ),
+        primary_matrices=("raw_empirical", "reversible_empirical"),
+        repair_step_times=(1.0, 2.0),
+    )
+
+    assert report["summary"]["row_count"] == 8
+    assert report["summary"]["finite_ready_count"] >= 1
+    assert report["summary"]["best_finite_row"]["field_set_name"] in {"checkpoint", "checkpoint_sector"}
+    assert report["physical_cmb_prediction"] is False
+    assert (out / "finite_repair_transition_clock_sweep_report.json").exists()
+    assert (out / "finite_repair_transition_clock_sweep_rows.csv").exists()
 
 
 def _write_observer_views(path: Path, paths: list[list[int]]) -> None:

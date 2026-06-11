@@ -70,6 +70,31 @@ _EXPORTS = {
         "oph_fpe.cosmology.physical_cmb_prediction",
         "write_physical_cmb_input_report",
     ),
+    "write_physical_cmb_input_no_data_use_receipt": (
+        "oph_fpe.cosmology.physical_cmb_prediction",
+        "write_physical_cmb_input_no_data_use_receipt",
+    ),
+    "finite_collar_boltzmann_bundle_report": (
+        "oph_fpe.cosmology.finite_collar_boltzmann_bundle",
+        "finite_collar_boltzmann_bundle_report",
+    ),
+    "write_finite_collar_boltzmann_bundle_report": (
+        "oph_fpe.cosmology.finite_collar_boltzmann_bundle",
+        "write_finite_collar_boltzmann_bundle_report",
+    ),
+    "finite_collar_cmb_projection_report": (
+        "oph_fpe.cosmology.finite_collar_projection",
+        "finite_collar_cmb_projection_report",
+    ),
+    "write_finite_collar_cmb_projection_report": (
+        "oph_fpe.cosmology.finite_collar_projection",
+        "write_finite_collar_cmb_projection_report",
+    ),
+    "scalar_quotient_report": ("oph_fpe.cosmology.scalar_quotient", "scalar_quotient_report"),
+    "write_scalar_quotient_report": (
+        "oph_fpe.cosmology.scalar_quotient",
+        "write_scalar_quotient_report",
+    ),
     "LambdaCDMParameters": ("oph_fpe.cosmology.camb_adapter", "LambdaCDMParameters"),
     "camb_lcdm_baseline_report": ("oph_fpe.cosmology.camb_adapter", "camb_lcdm_baseline_report"),
     "compare_camb_tt_to_benchmark": ("oph_fpe.cosmology.camb_adapter", "compare_camb_tt_to_benchmark"),
@@ -163,6 +188,22 @@ _EXPORTS = {
     "write_screen_capacity_closure_report": (
         "oph_fpe.cosmology.screen_capacity",
         "write_screen_capacity_closure_report",
+    ),
+    "ScaleBridgeInputs": (
+        "oph_fpe.cosmology.scale_bridge",
+        "ScaleBridgeInputs",
+    ),
+    "dimensionless_pn_invariants": (
+        "oph_fpe.cosmology.scale_bridge",
+        "dimensionless_pn_invariants",
+    ),
+    "scale_bridge_report": (
+        "oph_fpe.cosmology.scale_bridge",
+        "scale_bridge_report",
+    ),
+    "write_scale_bridge_report": (
+        "oph_fpe.cosmology.scale_bridge",
+        "write_scale_bridge_report",
     ),
     "compressed_likelihood_reference_report": (
         "oph_fpe.cosmology.compressed_likelihood",

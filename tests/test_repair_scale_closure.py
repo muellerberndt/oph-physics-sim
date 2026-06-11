@@ -21,7 +21,13 @@ def test_repair_scale_closure_matches_maarten_numeric_bridge():
 
     assert math.isclose(local_repair_contraction_from_p(P_STAR), 0.0027873406516833745)
     assert math.isclose(outputs["n_s_p_over_2m"], 1.0 - P_STAR / 48.0)
+    assert math.isclose(outputs["capacity_implied_by_declared_repair_depth_ansatz"], 4.274424586583862e122)
     assert math.isclose(outputs["capacity_predicted_from_local_P"], 4.274424586583862e122)
+    assert math.isclose(
+        outputs["relative_error_ansatz_capacity_vs_declared_N_CRC"],
+        outputs["relative_error_gprime_vs_N_CRC_closure"],
+    )
+    assert "legacy aliases" in outputs["compatibility_note"]
     assert outputs["relative_error_gprime_vs_N_CRC_closure"] < 0.01
     assert report["readiness_gates"]["scale_closure_numeric_match_within_1_percent"] is True
     assert report["readiness_gates"]["twenty_four_round_hypothesis_derived_from_finite_selector"] is False
@@ -60,5 +66,6 @@ def test_repair_scale_closure_writes_outputs_and_aggregates(tmp_path: Path):
     assert lane["twenty_four_rounds_declared_count"] == 1
     assert lane["twenty_four_rounds_derived_count"] == 0
     assert lane["finite_lattice_derived_eta_R_count"] == 0
+    assert math.isclose(lane["mean_N_implied_by_ansatz"], 4.274424586583862e122)
     assert math.isclose(lane["mean_n_s"], 1.0 - P_STAR / 48.0)
     assert math.isclose(lane["mean_1m_effective_round_depth"], 1.178287236271833)

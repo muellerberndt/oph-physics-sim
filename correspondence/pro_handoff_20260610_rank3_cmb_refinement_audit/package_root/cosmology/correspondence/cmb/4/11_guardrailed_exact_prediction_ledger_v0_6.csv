@@ -1,0 +1,15 @@
+quantity,value,unit,method,status
+guardrail_IR_q_IR,0.11744834701098997,dimensionless,fit low exact TT ell=2..29 plus high-l Gaussian guardrail ell=30..1200,CMB-compatible OPH parameter
+guardrail_IR_ell_IR,29.287394882009078,multipole,fit low exact TT ell=2..29 plus high-l Gaussian guardrail ell=30..1200,CMB-compatible OPH parameter
+guardrail_IR_theta_IR,6.145988768382128,deg,180/ell_IR,derived angular scale
+guardrail_IR_k_IR,0.0021222749914499334,Mpc^-1,ell_IR / D_star with D_star=13800 Mpc,derived k scale
+guardrail_IR_N_frz_eff_angular_proxy,917.3262887387497,modes,"(ell_IR+1)^2, not relativistic N_eff",derived freezeout proxy
+guardrail_joint_q_IR,0.11307895409663167,dimensionless,fit low exact TT ell=2..29 plus high-l Gaussian guardrail ell=30..1200,CMB-compatible OPH parameter
+guardrail_joint_ell_IR,29.738681512540918,multipole,fit low exact TT ell=2..29 plus high-l Gaussian guardrail ell=30..1200,CMB-compatible OPH parameter
+guardrail_joint_theta_IR,6.052722946849318,deg,180/ell_IR,derived angular scale
+guardrail_joint_k_IR,0.0021549769211986172,Mpc^-1,ell_IR / D_star with D_star=13800 Mpc,derived k scale
+guardrail_joint_N_frz_eff_angular_proxy,944.8665411294248,modes,"(ell_IR+1)^2, not relativistic N_eff",derived freezeout proxy
+guardrail_IR_delta_objective,3.0118003481038613,objective units,low exact + high Gaussian,model comparison
+guardrail_joint_delta_objective,9.095615430820544,objective units,low exact + high Gaussian,model comparison
+guardrail_joint_epsilon_P,-0.98,dimensionless,fit low exact TT plus high-l guardrail,parity/cap-pair envelope
+guardrail_joint_ell_P,4.620775680215323,multipole,fit low exact TT plus high-l guardrail,parity/cap-pair envelope

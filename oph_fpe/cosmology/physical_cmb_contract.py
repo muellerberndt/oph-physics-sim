@@ -17,6 +17,8 @@ FINITE_CMB_SOURCES = {
 THEOREM_SIDE_SOURCES = {
     "OPH_pixel_branch_predeclared",
     "OPH_screen_capacity_branch_predeclared",
+    "OPH_screen_capacity_observed_branch_readout",
+    "OPH_independent_scale_bridge_supplied",
 }
 
 

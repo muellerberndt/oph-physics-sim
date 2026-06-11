@@ -216,6 +216,17 @@ def main(argv: list[str] | None = None) -> int:
     exact_cmb_camb_parser.add_argument("--lmax", default=2600, type=int)
     exact_cmb_camb_parser.add_argument("--label", default="Planck2018_TT_binned")
 
+    finite_clock_camb_parser = subparsers.add_parser(
+        "finite-repair-clock-cmb-camb",
+        help="run CAMB TT transfer from a simulator-derived finite repair-clock report",
+    )
+    finite_clock_camb_parser.add_argument("--finite-clock-report", required=True, type=Path)
+    finite_clock_camb_parser.add_argument("--benchmark", required=True, type=Path)
+    finite_clock_camb_parser.add_argument("--out", required=True, type=Path)
+    finite_clock_camb_parser.add_argument("--source-dir", default=None, type=Path)
+    finite_clock_camb_parser.add_argument("--lmax", default=2600, type=int)
+    finite_clock_camb_parser.add_argument("--label", default="Planck2018_TT_binned")
+
     selector_elimination_parser = subparsers.add_parser(
         "oph-cmb-selector-elimination",
         help="write the OPH CMB v1.5 selector-elimination target/certificate audit",
@@ -350,7 +361,38 @@ def main(argv: list[str] | None = None) -> int:
         choices=["raw_empirical", "reversible_empirical"],
     )
     finite_transition_clock_parser.add_argument("--repair-step-time", default=1.0, type=float)
+    finite_transition_clock_parser.add_argument(
+        "--clock-normalization-source",
+        default="declared_cli_value",
+        help=(
+            "label for the repair-step time source; theorem-grade sources are "
+            "paper_theorem_predeclared or finite_theorem_predeclared"
+        ),
+    )
     finite_transition_clock_parser.add_argument("--weight-field", default="transition_history_mean_modal_mass")
+
+    finite_transition_sweep_parser = subparsers.add_parser(
+        "finite-repair-transition-sweep",
+        help="sweep observer-visible transition-history quotients for the scalar repair-clock matrix",
+    )
+    finite_transition_sweep_parser.add_argument("--run-dir", required=True, type=Path)
+    finite_transition_sweep_parser.add_argument("--out", required=True, type=Path)
+    finite_transition_sweep_parser.add_argument(
+        "--repair-step-times",
+        default="1.0",
+        help="comma-separated declared repair-step times to audit",
+    )
+    finite_transition_sweep_parser.add_argument(
+        "--primary-matrices",
+        default="raw_empirical,reversible_empirical",
+        help="comma-separated primary matrices to audit",
+    )
+    finite_transition_sweep_parser.add_argument(
+        "--clock-normalization-source",
+        default="sweep_declared_values",
+        help="label for the repair-step time source used by this sweep",
+    )
+    finite_transition_sweep_parser.add_argument("--weight-field", default="transition_history_mean_modal_mass")
 
     sync_inflation_parser = subparsers.add_parser(
         "sync-inflation-report",
@@ -453,6 +495,32 @@ def main(argv: list[str] | None = None) -> int:
         help="comma-separated finite regulator patch counts to compare against N_scr",
     )
 
+    scale_bridge_parser = subparsers.add_parser(
+        "scale-bridge-report",
+        help="write OPH P/N dimensionless-invariant and independent-scale-bridge gate report",
+    )
+    scale_bridge_parser.add_argument("--out", required=True, type=Path)
+    scale_bridge_parser.add_argument("--p-star", default=None, type=float)
+    scale_bridge_parser.add_argument(
+        "--n-star",
+        default=None,
+        type=float,
+        help="OPH capacity N for dimensionless P/N invariants; defaults to screen_capacity.DEFAULT_N_CRC",
+    )
+    scale_bridge_parser.add_argument(
+        "--lambda-star-m2",
+        default=None,
+        type=float,
+        help="independent Lambda_star in m^-2; requires --n-star or the default N_CRC",
+    )
+    scale_bridge_parser.add_argument(
+        "--b-ell-m2",
+        default=None,
+        type=float,
+        help="independent B_ell in m^-2; if supplied, gives ell_star^2 and G_SI",
+    )
+    scale_bridge_parser.add_argument("--source", default="cli_scale_bridge_report")
+
     repair_scale_parser = subparsers.add_parser(
         "repair-scale-closure",
         help="write Maarten/OPH 24-round repair-depth scale-closure diagnostic",
@@ -551,6 +619,20 @@ def main(argv: list[str] | None = None) -> int:
     ba_kernel_parser.add_argument("--min-good-rows", default=3, type=int)
     ba_kernel_parser.add_argument("--min-sample-count", default=16, type=int)
 
+    ba_kernel_from_parent_parser = subparsers.add_parser(
+        "b-a-kernel-from-parent",
+        help="promote a paired parent-collar B_A report into a kernel candidate audit",
+    )
+    ba_kernel_from_parent_parser.add_argument("--parent-report", required=True, type=Path)
+    ba_kernel_from_parent_parser.add_argument("--out", required=True, type=Path)
+
+    ba_kernel_refinement_parser = subparsers.add_parser(
+        "b-a-kernel-refinement",
+        help="audit B_A kernel stability across finite regulator patch counts",
+    )
+    ba_kernel_refinement_parser.add_argument("--report", nargs="+", required=True, type=Path)
+    ba_kernel_refinement_parser.add_argument("--out", required=True, type=Path)
+
     physical_cmb_inputs_parser = subparsers.add_parser(
         "derive-physical-cmb-inputs",
         help="assemble the hard physical CMB input contract from finite OPH-FPE run receipts",
@@ -558,6 +640,54 @@ def main(argv: list[str] | None = None) -> int:
     physical_cmb_inputs_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
     physical_cmb_inputs_parser.add_argument("--include", nargs="*", default=[], type=Path)
     physical_cmb_inputs_parser.add_argument("--out", required=True, type=Path)
+
+    physical_cmb_no_data_parser = subparsers.add_parser(
+        "physical-cmb-no-data-use-receipt",
+        help="write the no-measurement-data firewall receipt for physical CMB input assembly",
+    )
+    physical_cmb_no_data_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    physical_cmb_no_data_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    physical_cmb_no_data_parser.add_argument("--out", required=True, type=Path)
+
+    physical_cmb_promotion_parser = subparsers.add_parser(
+        "physical-cmb-promotion-audit",
+        help="write a compact audit of blockers to physical CMB prediction promotion",
+    )
+    physical_cmb_promotion_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    physical_cmb_promotion_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    physical_cmb_promotion_parser.add_argument("--out", required=True, type=Path)
+
+    finite_collar_boltzmann_parser = subparsers.add_parser(
+        "finite-collar-boltzmann-bundle",
+        help="assemble finite-collar rho_A/B_A/Gamma_rec diagnostics for the Boltzmann/CMB bridge",
+    )
+    finite_collar_boltzmann_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    finite_collar_boltzmann_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    finite_collar_boltzmann_parser.add_argument("--out", required=True, type=Path)
+
+    finite_collar_projection_parser = subparsers.add_parser(
+        "finite-collar-cmb-projection",
+        help="project finite-collar B_A/rho/Gamma diagnostics onto external-fiducial CMB ell/k axes",
+    )
+    finite_collar_projection_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    finite_collar_projection_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    finite_collar_projection_parser.add_argument("--out", required=True, type=Path)
+    finite_collar_projection_parser.add_argument("--chi-star-mpc", default=13850.0, type=float)
+    finite_collar_projection_parser.add_argument("--h", default=0.6736, type=float)
+    finite_collar_projection_parser.add_argument(
+        "--ell-mapping",
+        default="pi_over_theta",
+        choices=("pi_over_theta", "one_over_theta"),
+    )
+
+    scalar_quotient_parser = subparsers.add_parser(
+        "scalar-quotient-report",
+        help="write the finite observer-visible scalar/geometric quotient report for CMB input gating",
+    )
+    scalar_quotient_parser.add_argument("--run-dir", required=True, type=Path)
+    scalar_quotient_parser.add_argument("--out", default=None, type=Path)
+    scalar_quotient_parser.add_argument("--target-ell-ir", default=32, type=int)
+    scalar_quotient_parser.add_argument("--bins", default=8, type=int)
 
     scalar_cert_parser = subparsers.add_parser(
         "emit-scalar-release-certificate",
@@ -658,6 +788,76 @@ def main(argv: list[str] | None = None) -> int:
     strict_neutral_parser.add_argument("--seed", default=1, type=int)
     strict_neutral_parser.add_argument("--max-model-points", default=512, type=int)
     strict_neutral_parser.add_argument("--planted-control-points", default=160, type=int)
+
+    strict_neutral_object_parser = subparsers.add_parser(
+        "strict-neutral-object-bulk-report",
+        help="write strict neutral object-bulk diagnostics from observer_views.jsonl",
+    )
+    strict_neutral_object_parser.add_argument("--run-dir", required=True, type=Path)
+    strict_neutral_object_parser.add_argument("--out", default=None, type=Path)
+    strict_neutral_object_parser.add_argument("--seed", default=1, type=int)
+    strict_neutral_object_parser.add_argument("--min-objects", default=16, type=int)
+    strict_neutral_object_parser.add_argument("--min-observers-per-object", default=3, type=int)
+    strict_neutral_object_parser.add_argument("--max-observer-fraction-per-object", default=0.35, type=float)
+    strict_neutral_object_parser.add_argument("--max-model-points", default=192, type=int)
+    strict_neutral_object_parser.add_argument("--heldout-fraction", default=0.25, type=float)
+
+    neutral_profile_parser = subparsers.add_parser(
+        "neutral-profile-audit",
+        help="write bounded neutral-distance feature-profile diagnostics from observer_views.jsonl",
+    )
+    neutral_profile_parser.add_argument("--run-dir", required=True, type=Path)
+    neutral_profile_parser.add_argument("--out", default=None, type=Path)
+    neutral_profile_parser.add_argument("--seed", default=1, type=int)
+    neutral_profile_parser.add_argument("--sample-count", default=256, type=int)
+    neutral_profile_parser.add_argument("--max-model-points", default=128, type=int)
+    neutral_profile_parser.add_argument(
+        "--profiles",
+        default=None,
+        help="comma-separated neutral profile names to audit; defaults to all profiles",
+    )
+
+    prime_response_parser = subparsers.add_parser(
+        "attach-prime-geometric-response",
+        help="attach cached support-visible modular-response spectra to observer_views.jsonl",
+    )
+    prime_response_parser.add_argument("--run-dir", required=True, type=Path)
+    prime_response_parser.add_argument("--out", default=None, type=Path)
+    prime_response_parser.add_argument("--spectrum-width", default=64, type=int)
+    prime_response_parser.add_argument("--component-bins", default=8, type=int)
+    prime_response_parser.add_argument("--no-backup", action="store_true")
+
+    prime_rank_parser = subparsers.add_parser(
+        "neutral-prime-rank-sweep",
+        help="write a diagnostic rank sweep over the prime-geometric modular response spectrum",
+    )
+    prime_rank_parser.add_argument("--run-dir", required=True, type=Path)
+    prime_rank_parser.add_argument("--out", default=None, type=Path)
+    prime_rank_parser.add_argument("--ranks", default="2,3,4,5,6,7,8,9,10,11,12,13,14,15,16")
+    prime_rank_parser.add_argument("--seed", default=1, type=int)
+    prime_rank_parser.add_argument("--sample-count", default=256, type=int)
+    prime_rank_parser.add_argument("--max-model-points", default=128, type=int)
+
+    prime_rank_refinement_parser = subparsers.add_parser(
+        "neutral-prime-rank-refinement",
+        help="aggregate prime-geometric rank-sweep reports across regulator sizes",
+    )
+    prime_rank_refinement_parser.add_argument("--report", nargs="+", required=True, type=Path)
+    prime_rank_refinement_parser.add_argument("--out", required=True, type=Path)
+
+    neutral_bulk_audit_parser = subparsers.add_parser(
+        "neutral-3d-bulk-audit",
+        help="write a compact audit of blockers to strict neutral 3D bulk promotion",
+    )
+    neutral_bulk_audit_parser.add_argument("--report", nargs="+", required=True, type=Path)
+    neutral_bulk_audit_parser.add_argument("--out", required=True, type=Path)
+
+    neutral_rank_selector_parser = subparsers.add_parser(
+        "neutral-independent-rank-selector-audit",
+        help="audit independent rank-selector evidence for neutral 3D bulk promotion",
+    )
+    neutral_rank_selector_parser.add_argument("--report", nargs="+", required=True, type=Path)
+    neutral_rank_selector_parser.add_argument("--out", required=True, type=Path)
 
     paper_chart_parser = subparsers.add_parser(
         "paper-chart-receipts",
@@ -1004,6 +1204,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "finite-repair-clock-cmb-camb":
+        from oph_fpe.cosmology.camb_adapter import write_finite_repair_clock_cmb_camb_report
+
+        result = write_finite_repair_clock_cmb_camb_report(
+            args.finite_clock_report,
+            args.benchmark,
+            args.out,
+            source_dir=args.source_dir,
+            lmax=args.lmax,
+            benchmark_label=args.label,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "oph-cmb-selector-elimination":
         from oph_fpe.constants.oph_pixel import P_STAR
         from oph_fpe.cosmology.selector_elimination import write_selector_elimination_report
@@ -1115,6 +1328,24 @@ def main(argv: list[str] | None = None) -> int:
             packet_fields=tuple(_csv_values(args.packet_fields)),
             primary_matrix=args.primary_matrix,
             repair_step_time=args.repair_step_time,
+            clock_normalization_source=args.clock_normalization_source,
+            weight_field=args.weight_field,
+            p_value=P_STAR,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "finite-repair-transition-sweep":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.finite_repair_transition_clock import (
+            write_finite_repair_transition_clock_sweep_report,
+        )
+
+        result = write_finite_repair_transition_clock_sweep_report(
+            args.run_dir,
+            args.out,
+            primary_matrices=tuple(_csv_values(args.primary_matrices)),
+            repair_step_times=tuple(float(value) for value in _csv_values(args.repair_step_times)),
+            clock_normalization_source=args.clock_normalization_source,
             weight_field=args.weight_field,
             p_value=P_STAR,
         )
@@ -1217,6 +1448,23 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "scale-bridge-report":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.scale_bridge import ScaleBridgeInputs, write_scale_bridge_report
+        from oph_fpe.cosmology.screen_capacity import DEFAULT_N_CRC
+
+        result = write_scale_bridge_report(
+            args.out,
+            ScaleBridgeInputs(
+                P_star=P_STAR if args.p_star is None else args.p_star,
+                N_star=DEFAULT_N_CRC if args.n_star is None else args.n_star,
+                Lambda_star_m2_inverse=args.lambda_star_m2,
+                B_ell_m2_inverse=args.b_ell_m2,
+                source=args.source,
+            ),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "repair-scale-closure":
         from oph_fpe.cosmology.repair_scale_closure import write_repair_scale_closure_report
         from oph_fpe.cosmology.screen_capacity import DEFAULT_N_CRC
@@ -1302,10 +1550,65 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "b-a-kernel-from-parent":
+        from oph_fpe.cosmology.ba_kernel import ba_kernel_report_from_parent_report
+
+        result = ba_kernel_report_from_parent_report(args.parent_report, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "b-a-kernel-refinement":
+        from oph_fpe.cosmology.ba_kernel import write_ba_kernel_refinement_report
+
+        result = write_ba_kernel_refinement_report(args.report, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "derive-physical-cmb-inputs":
         from oph_fpe.cosmology.physical_cmb_prediction import write_physical_cmb_input_report
 
         result = write_physical_cmb_input_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "physical-cmb-no-data-use-receipt":
+        from oph_fpe.cosmology.physical_cmb_prediction import write_physical_cmb_input_no_data_use_receipt
+
+        result = write_physical_cmb_input_no_data_use_receipt([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "physical-cmb-promotion-audit":
+        from oph_fpe.cosmology.physical_cmb_prediction import write_physical_cmb_promotion_audit_report
+
+        result = write_physical_cmb_promotion_audit_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "finite-collar-boltzmann-bundle":
+        from oph_fpe.cosmology.finite_collar_boltzmann_bundle import (
+            write_finite_collar_boltzmann_bundle_report,
+        )
+
+        result = write_finite_collar_boltzmann_bundle_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "finite-collar-cmb-projection":
+        from oph_fpe.cosmology.finite_collar_projection import write_finite_collar_cmb_projection_report
+
+        result = write_finite_collar_cmb_projection_report(
+            [*args.run_dir, *args.include],
+            args.out,
+            chi_star_mpc=args.chi_star_mpc,
+            h=args.h,
+            ell_mapping=args.ell_mapping,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "scalar-quotient-report":
+        from oph_fpe.cosmology.scalar_quotient import write_scalar_quotient_report
+
+        result = write_scalar_quotient_report(
+            args.run_dir,
+            args.out,
+            target_ell_ir=args.target_ell_ir,
+            bins=args.bins,
+        )
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "emit-scalar-release-certificate":
@@ -1401,6 +1704,86 @@ def main(argv: list[str] | None = None) -> int:
             max_model_points=args.max_model_points,
             planted_control_points=args.planted_control_points,
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "strict-neutral-object-bulk-report":
+        from oph_fpe.bulk.neutral_object_bulk import write_strict_neutral_object_bulk_report
+
+        result = write_strict_neutral_object_bulk_report(
+            args.run_dir,
+            args.out,
+            seed=args.seed,
+            min_objects=args.min_objects,
+            min_observers_per_object=args.min_observers_per_object,
+            max_observer_fraction_per_object=args.max_observer_fraction_per_object,
+            max_model_points=args.max_model_points,
+            heldout_fraction=args.heldout_fraction,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-profile-audit":
+        from oph_fpe.bulk.neutral_bulk import NEUTRAL_PROFILE_WEIGHTS, write_neutral_profile_audit_report
+
+        profiles = None
+        if args.profiles:
+            names = [name.strip() for name in str(args.profiles).split(",") if name.strip()]
+            unknown = [name for name in names if name not in NEUTRAL_PROFILE_WEIGHTS]
+            if unknown:
+                raise SystemExit(f"unknown neutral profiles: {', '.join(unknown)}")
+            profiles = {name: NEUTRAL_PROFILE_WEIGHTS[name] for name in names}
+
+        result = write_neutral_profile_audit_report(
+            args.run_dir,
+            args.out,
+            seed=args.seed,
+            sample_count=args.sample_count,
+            max_model_points=args.max_model_points,
+            profiles=profiles,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "attach-prime-geometric-response":
+        from oph_fpe.bulk.prime_geometric_response import write_prime_geometric_response_attachment
+
+        result = write_prime_geometric_response_attachment(
+            args.run_dir,
+            args.out,
+            spectrum_width=args.spectrum_width,
+            component_bins=args.component_bins,
+            backup=not args.no_backup,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-prime-rank-sweep":
+        from oph_fpe.bulk.neutral_bulk import write_prime_geometric_rank_sweep_report
+
+        ranks = [int(value.strip()) for value in str(args.ranks).split(",") if value.strip()]
+        result = write_prime_geometric_rank_sweep_report(
+            args.run_dir,
+            args.out,
+            ranks=ranks,
+            seed=args.seed,
+            sample_count=args.sample_count,
+            max_model_points=args.max_model_points,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-prime-rank-refinement":
+        from oph_fpe.bulk.neutral_bulk import write_prime_geometric_rank_refinement_report
+
+        result = write_prime_geometric_rank_refinement_report(args.report, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-3d-bulk-audit":
+        from oph_fpe.bulk.neutral_bulk import write_neutral_3d_bulk_audit_report
+
+        result = write_neutral_3d_bulk_audit_report(args.report, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-independent-rank-selector-audit":
+        from oph_fpe.bulk.neutral_bulk import write_neutral_independent_rank_selector_audit_report
+
+        result = write_neutral_independent_rank_selector_audit_report(args.report, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "paper-chart-receipts":

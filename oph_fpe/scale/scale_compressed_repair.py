@@ -55,6 +55,14 @@ def scale_compressed_repair_run(
     q_round = float(outputs["scale_factor_per_round_q"])
     eta = float(outputs["eta_R_p_over_2m"])
     n_s = float(outputs["n_s_p_over_2m"])
+    ansatz_capacity = outputs.get(
+        "capacity_implied_by_declared_repair_depth_ansatz",
+        outputs.get("capacity_predicted_from_local_P"),
+    )
+    ansatz_rel_error = outputs.get(
+        "relative_error_ansatz_capacity_vs_declared_N_CRC",
+        outputs.get("relative_error_gprime_vs_N_CRC_closure"),
+    )
 
     round_rows = _round_trace(int(repair_rounds), g_abs=g_abs, q_round=q_round, eta=eta)
     _write_rows(out / "scale_compressed_repair_rounds.csv", round_rows)
@@ -104,9 +112,15 @@ def scale_compressed_repair_run(
             "n_s": n_s,
             "q_IR": 0.25,
             "ell_IR": 32.0,
-            "N_CRC_predicted_from_P": outputs["capacity_predicted_from_local_P"],
+            "N_CRC_implied_by_declared_repair_depth_ansatz": ansatz_capacity,
+            "N_CRC_predicted_from_P": ansatz_capacity,
             "N_CRC_declared": closure["global_capacity_inputs"]["N_CRC"],
-            "relative_error_gprime_vs_N_CRC": outputs["relative_error_gprime_vs_N_CRC_closure"],
+            "relative_error_ansatz_capacity_vs_declared_N_CRC": ansatz_rel_error,
+            "relative_error_gprime_vs_N_CRC": ansatz_rel_error,
+            "repair_depth_ansatz_compatibility_note": (
+                "N_CRC_predicted_from_P is a legacy alias. The canonical value is implied by the declared "
+                "repair-depth ansatz; P/N do not independently set a dimensionful scale."
+            ),
         },
         "h3_preview": {
             "object_count": int(object_count),
@@ -351,7 +365,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
             f"- n_s: `{params['n_s']:.12g}`",
             f"- q_IR: `{params['q_IR']}`",
             f"- ell_IR: `{params['ell_IR']}`",
-            f"- N_CRC(P): `{params['N_CRC_predicted_from_P']:.12e}`",
+            "- N_CRC implied by repair-depth ansatz: "
+            f"`{params['N_CRC_implied_by_declared_repair_depth_ansatz']:.12e}`",
             "",
             "## H3 Preview",
             "",

@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.cosmology.physical_cmb_contract import (
+    FINITE_CMB_SOURCES,
     PhysicalCMBInputContract,
     validate_physical_cmb_contract,
 )
@@ -21,17 +22,20 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     scalar = _first_json(roots, "scalar_repair_semigroup_report.json")
     finite_cert = _first_json(roots, "finite_certificate_report.json")
     ba_kernel = _first_json(roots, "B_A_kernel_report.json")
+    ba_kernel_refinement = _first_json(roots, "B_A_kernel_refinement_report.json")
     ba_parent = _first_json(roots, "b_a_parent_report.json")
     scale = _first_json(roots, "scale_compressed_repair_report.json")
     screen_capacity = _first_json(roots, "screen_capacity_closure_report.json")
     strict_neutral = _first_json(roots, "strict_neutral_bulk_report.json")
+    scalar_quotient = _first_json(roots, "scalar_quotient_report.json")
     compressed_likelihood = _first_json(roots, "oph_compressed_likelihood_report.json")
+    camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
 
-    eta_source, eta_value = _eta_R_from_reports(finite_transition, scalar, scale)
+    eta_source, eta_value = _eta_R_from_reports(finite_transition, scalar, scale, scalar_quotient)
     gamma_source, gamma_grid = _Gamma_rec_from_reports(finite_transition)
     a_source, a_value = _A_zeta_from_reports(finite_cert, scale)
-    q_source, q_value = _scalar_value_from_scale(scale, "q_IR")
-    ell_source, ell_value = _scalar_value_from_scale(scale, "ell_IR")
+    q_source, q_value = _scalar_value_from_reports(scale, scalar_quotient, "q_IR")
+    ell_source, ell_value = _scalar_value_from_reports(scale, scalar_quotient, "ell_IR")
     b_source, b_grid = _B_A_from_reports(ba_kernel, ba_parent)
     rho_source, rho_grid = _rho_A_from_reports(finite_cert, ba_parent)
     freezeout_source, freezeout_surface = _freezeout_from_reports(strict_neutral, scale)
@@ -39,14 +43,12 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     cdm_limit_regression_passed = bool(
         compressed_likelihood.get("cdm_limit_regression_passed", False)
         or _truthy_any(_first_json(roots, "oph_boltzmann_input_report.json"), "cdm_limit_regression_passed")
+        or camb_baseline.get("CDM_LIMIT_BOLTZMANN_RECEIPT", False)
     )
     contract = PhysicalCMBInputContract(
         no_data_use_receipt=bool(no_data.get("no_data_use_receipt", False) or no_data.get("NO_DATA_USE_RECEIPT", False)),
         P_source="OPH_pixel_branch_predeclared",
-        N_source="OPH_screen_capacity_branch_predeclared"
-        if screen_capacity.get("screen_capacity_closure_receipt", False)
-        or screen_capacity.get("SCREEN_CAPACITY_CLOSURE_RECEIPT", False)
-        else "unknown",
+        N_source=_N_source_from_screen_capacity(screen_capacity),
         eta_R_source=eta_source,
         eta_R_value=eta_value,
         A_zeta_source=a_source,
@@ -72,11 +74,14 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         "scalar_repair_semigroup_report": scalar,
         "finite_certificate_report": finite_cert,
         "B_A_kernel_report": ba_kernel,
+        "B_A_kernel_refinement_report": ba_kernel_refinement,
         "b_a_parent_report": ba_parent,
         "scale_compressed_repair_report": scale,
         "screen_capacity_closure_report": screen_capacity,
         "strict_neutral_bulk_report": strict_neutral,
+        "scalar_quotient_report": scalar_quotient,
         "oph_compressed_likelihood_report": compressed_likelihood,
+        "camb_lcdm_baseline_report": camb_baseline,
     }
     return contract, sources
 
@@ -101,6 +106,7 @@ def write_physical_cmb_input_report(run_dirs: list[Path], out_dir: Path) -> dict
         "physical_cmb_prediction": False,
         "physical_cmb_prediction_eligible": validation["physical_cmb_prediction_eligible"],
         "blockers": validation["blockers"],
+        "input_status": _input_status(contract),
         "source_summary": _source_summary(sources),
         "claim_boundary": (
             "Physical CMB input contract assembly. This report may gather measurement-comparable diagnostics, "
@@ -112,10 +118,175 @@ def write_physical_cmb_input_report(run_dirs: list[Path], out_dir: Path) -> dict
     return report
 
 
+def write_physical_cmb_input_no_data_use_receipt(run_dirs: list[Path], out_dir: Path) -> dict[str, Any]:
+    """Write the no-data-use receipt for physical-CMB input construction.
+
+    This receipt is deliberately narrow: it audits whether the OPH input
+    functions assembled for a future physical CMB prediction are sourced from
+    finite/theorem-side reports rather than fitted from measurement tables. It
+    does not certify that those inputs are theorem-grade or likelihood-ready.
+    """
+
+    roots = [Path(path) for path in run_dirs]
+    finite_transition = _first_json(roots, "finite_repair_transition_matrix_report.json")
+    finite_cert = _first_json(roots, "finite_certificate_report.json")
+    ba_kernel = _first_json(roots, "B_A_kernel_report.json")
+    ba_kernel_refinement = _first_json(roots, "B_A_kernel_refinement_report.json")
+    ba_parent = _first_json(roots, "b_a_parent_report.json")
+    scale = _first_json(roots, "scale_compressed_repair_report.json")
+    strict_neutral = _first_json(roots, "strict_neutral_bulk_report.json")
+    scalar_quotient = _first_json(roots, "scalar_quotient_report.json")
+    screen_capacity = _first_json(roots, "screen_capacity_closure_report.json")
+    compressed_likelihood = _first_json(roots, "oph_compressed_likelihood_report.json")
+    camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
+
+    source_status = {
+        "finite_repair_transition_matrix_report": {
+            "present": bool(finite_transition),
+            "used_for": ["eta_R", "Gamma_rec"],
+            "measurement_data_used": _measurement_data_used(finite_transition),
+        },
+        "finite_certificate_report": {
+            "present": bool(finite_cert),
+            "used_for": ["A_zeta", "rho_A"],
+            "measurement_data_used": _measurement_data_used(finite_cert),
+        },
+        "B_A_kernel_report": {
+            "present": bool(ba_kernel),
+            "used_for": ["B_A"],
+            "measurement_data_used": _measurement_data_used(ba_kernel),
+        },
+        "B_A_kernel_refinement_report": {
+            "present": bool(ba_kernel_refinement),
+            "used_for": ["B_A_refinement_gate"],
+            "measurement_data_used": _measurement_data_used(ba_kernel_refinement),
+        },
+        "b_a_parent_report": {
+            "present": bool(ba_parent),
+            "used_for": ["diagnostic_B_A", "diagnostic_rho_A"],
+            "measurement_data_used": _measurement_data_used(ba_parent)
+            or not bool(((ba_parent.get("readiness") or {}).get("checks") or {}).get("no_cmb_data_used", True)),
+        },
+        "scale_compressed_repair_report": {
+            "present": bool(scale),
+            "used_for": ["q_IR", "ell_IR", "freezeout_surface"],
+            "measurement_data_used": _measurement_data_used(scale),
+        },
+        "strict_neutral_bulk_report": {
+            "present": bool(strict_neutral),
+            "used_for": ["neutral_freezeout_if_strict"],
+            "measurement_data_used": _measurement_data_used(strict_neutral),
+        },
+        "scalar_quotient_report": {
+            "present": bool(scalar_quotient),
+            "used_for": ["diagnostic_eta_R", "diagnostic_q_IR", "diagnostic_ell_IR", "scalar_freezeout_gate"],
+            "measurement_data_used": _measurement_data_used(scalar_quotient),
+        },
+        "screen_capacity_closure_report": {
+            "present": bool(screen_capacity),
+            "used_for": ["N_source"],
+            "measurement_data_used": _measurement_data_used(screen_capacity),
+        },
+        "oph_compressed_likelihood_report": {
+            "present": bool(compressed_likelihood),
+            "used_for": ["validation_gate_only"],
+            "measurement_data_used": False,
+            "note": "Measurement reference reports may be present, but this receipt does not allow them to set OPH input functions.",
+        },
+        "camb_lcdm_baseline_report": {
+            "present": bool(camb_baseline),
+            "used_for": ["cdm_limit_regression_gate_only"],
+            "measurement_data_used": False,
+            "note": "External LambdaCDM baseline checks Boltzmann plumbing only; it does not set OPH input functions.",
+        },
+    }
+    measurement_used = any(bool(row.get("measurement_data_used", False)) for row in source_status.values())
+    report = {
+        "mode": "physical_cmb_input_no_data_use_receipt_v0",
+        "no_data_use_receipt": not measurement_used,
+        "NO_DATA_USE_RECEIPT": not measurement_used,
+        "measurement_data_used_for_input_functions": measurement_used,
+        "measurement_reference_reports_present": bool(compressed_likelihood),
+        "source_status": source_status,
+        "run_dirs": [str(path) for path in roots],
+        "claim_boundary": (
+            "Certifies only the data firewall for assembling OPH CMB input functions. "
+            "It does not certify finite-theorem grade B_A/rho_A/A_zeta inputs, CDM-limit regression, "
+            "official likelihood readiness, or a physical CMB prediction."
+        ),
+    }
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "no_data_use_receipt.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    return report
+
+
+def physical_cmb_promotion_audit_report(run_dirs: list[Path]) -> dict[str, Any]:
+    """Summarize what still blocks current CMB diagnostics from prediction status."""
+
+    roots = [Path(path) for path in run_dirs]
+    contract, sources = build_physical_cmb_input_contract(roots)
+    validation = validate_physical_cmb_contract(contract)
+    input_status = _input_status(contract)
+    finite_collar_boltzmann = _first_json(roots, "finite_collar_boltzmann_bundle_report.json")
+    finite_collar_projection = _first_json(roots, "finite_collar_cmb_projection_report.json")
+    blockers = _physical_cmb_promotion_blockers(
+        validation,
+        input_status,
+        sources,
+        finite_collar_boltzmann,
+        finite_collar_projection,
+    )
+    report = {
+        "mode": "physical_cmb_promotion_audit_v0",
+        "run_dirs": [str(path) for path in roots],
+        "physical_cmb_promotion_ready": bool(
+            validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] and not blockers
+        ),
+        "physical_cmb_prediction": False,
+        "physical_cmb_input_contract_receipt": bool(validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"]),
+        "no_data_use_receipt": bool(contract.no_data_use_receipt),
+        "cdm_limit_regression_passed": bool(contract.cdm_limit_regression_passed),
+        "official_likelihood_ready": bool(contract.official_likelihood_ready),
+        "contract_blockers": validation["blockers"],
+        "promotion_blockers": blockers,
+        "input_status": input_status,
+        "source_summary": _source_summary(sources),
+        "source_readiness": _physical_cmb_source_readiness(
+            sources,
+            finite_collar_boltzmann,
+            finite_collar_projection,
+        ),
+        "next_steps": _physical_cmb_next_steps(blockers),
+        "claim_boundary": (
+            "Promotion audit for the current OPH-FPE CMB pipeline. It identifies finite-source, "
+            "calibration, and likelihood blockers. It does not change the hard physical-CMB gate "
+            "and does not make a CMB prediction."
+        ),
+    }
+    return report
+
+
+def write_physical_cmb_promotion_audit_report(run_dirs: list[Path], out_dir: Path) -> dict[str, Any]:
+    report = physical_cmb_promotion_audit_report(run_dirs)
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "physical_cmb_promotion_audit_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (out / "physical_cmb_promotion_audit_report.md").write_text(
+        _markdown_promotion_audit(report),
+        encoding="utf-8",
+    )
+    return report
+
+
 def _eta_R_from_reports(
     finite_transition: dict[str, Any],
     scalar: dict[str, Any],
     scale: dict[str, Any],
+    scalar_quotient: dict[str, Any],
 ) -> tuple[str, float | None]:
     if finite_transition.get("eta_R_finite_lattice_derived", False):
         return "finite_repair_transition_clock", _float((finite_transition.get("primary") or {}).get("eta_R_estimate"))
@@ -129,6 +300,11 @@ def _eta_R_from_reports(
     params = scale.get("cmb_parameter_readouts") or {}
     if scale.get("scale_compressed_operator_receipt", False) and params.get("eta_R") is not None:
         return "scale_compressed_24_round_finite_ladder", _float(params.get("eta_R"))
+    edge = scalar_quotient.get("edge_center_readout") or {}
+    if scalar_quotient.get("finite_lattice_cmb_scalar_release_ready", False) and edge.get("theta_OPH_P_over_48") is not None:
+        return "finite_lattice", _float(edge.get("theta_OPH_P_over_48"))
+    if scalar_quotient and edge.get("theta_OPH_P_over_48") is not None:
+        return "diagnostic_proxy", _float(edge.get("theta_OPH_P_over_48"))
     return "diagnostic_proxy", _float((finite_transition.get("primary") or {}).get("eta_R_estimate"))
 
 
@@ -152,17 +328,34 @@ def _A_zeta_from_reports(finite_cert: dict[str, Any], scale: dict[str, Any]) -> 
     return "diagnostic_proxy", value
 
 
-def _scalar_value_from_scale(scale: dict[str, Any], key: str) -> tuple[str, float | None]:
+def _scalar_value_from_reports(
+    scale: dict[str, Any],
+    scalar_quotient: dict[str, Any],
+    key: str,
+) -> tuple[str, float | None]:
     params = scale.get("cmb_parameter_readouts") or {}
     value = _float(params.get(key))
     if scale.get("scale_compressed_operator_receipt", False) and value is not None:
         return "scale_compressed_24_round_finite_ladder", value
+    levels = scalar_quotient.get("active_angular_levels") or {}
+    if key == "ell_IR":
+        value = _float(levels.get("target_ell_IR"))
+    elif key == "q_IR":
+        value = 0.25 if scalar_quotient else None
+    else:
+        value = None
+    if scalar_quotient.get("finite_lattice_cmb_scalar_release_ready", False) and value is not None:
+        return "finite_lattice", value
     return "diagnostic_proxy", value
 
 
 def _B_A_from_reports(ba_kernel: dict[str, Any], ba_parent: dict[str, Any]) -> tuple[str, np.ndarray | None]:
     if ba_kernel.get("B_A_KERNEL_RECEIPT", False):
         return "parent_collar_finite_difference", _array(ba_kernel.get("B_A_k_a"))
+    if ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False):
+        candidate = _array(ba_kernel.get("B_A_k_a"))
+        if candidate is not None:
+            return "diagnostic_proxy", candidate[:, :3] if candidate.ndim == 2 and candidate.shape[1] >= 3 else candidate
     rows = ba_parent.get("rows") or ba_parent.get("observer_view_rows") or []
     values = []
     for row in rows:
@@ -183,7 +376,12 @@ def _rho_A_from_reports(finite_cert: dict[str, Any], ba_parent: dict[str, Any]) 
     values = []
     for row in rows:
         a = _float(row.get("a"))
-        base = _float(row.get("base_epsilon_cmi", row.get("B_A_mean")))
+        base = _float(
+            row.get(
+                "rho_A",
+                row.get("rho_A_base", row.get("base_epsilon_cmi", row.get("B_A_mean"))),
+            )
+        )
         if a is not None and base is not None:
             values.append([a, abs(base)])
     return ("diagnostic_proxy", np.asarray(values, dtype=float) if values else None)
@@ -206,9 +404,261 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
             "present": bool(report),
             "mode": report.get("mode"),
             "physical_cmb_prediction": report.get("physical_cmb_prediction"),
+            "finite_certificate_compiler_ready": report.get("finite_certificate_compiler_ready"),
+            "theorem_grade_finite_inputs": report.get("theorem_grade_finite_inputs"),
+            "proxy_certificate": report.get("proxy_certificate"),
         }
         for name, report in sources.items()
     }
+
+
+def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
+    return {
+        "eta_R": _scalar_status(contract.eta_R_source, contract.eta_R_value),
+        "A_zeta": _scalar_status(contract.A_zeta_source, contract.A_zeta_value, positive=True),
+        "q_IR": _scalar_status(contract.q_IR_source, contract.q_IR_value),
+        "ell_IR": _scalar_status(contract.ell_IR_source, contract.ell_IR_value, positive=True),
+        "B_A_k_a": _array_status(contract.B_A_source, contract.B_A_k_a),
+        "Gamma_rec_k_a": _array_status(contract.Gamma_rec_source, contract.Gamma_rec_k_a),
+        "rho_A_a": _array_status(contract.rho_A_source, contract.rho_A_a),
+        "freezeout_surface": {
+            "source": contract.freezeout_source,
+            "source_is_finite_cmb_source": contract.freezeout_source in FINITE_CMB_SOURCES,
+            "diagnostic_value_present": isinstance(contract.freezeout_surface, dict),
+            "physical_gate_passed": (
+                contract.freezeout_source in FINITE_CMB_SOURCES
+                and isinstance(contract.freezeout_surface, dict)
+            ),
+        },
+        "cdm_limit_regression": {
+            "passed": bool(contract.cdm_limit_regression_passed),
+        },
+        "official_likelihood": {
+            "ready": bool(contract.official_likelihood_ready),
+        },
+        "claim_boundary": (
+            "Presence means the simulator emitted a finite diagnostic value. Physical-gate passage also "
+            "requires the source label to be one of the hard finite CMB sources accepted by the contract."
+        ),
+    }
+
+
+def _scalar_status(source: str, value: float | None, *, positive: bool = False) -> dict[str, Any]:
+    finite = _float(value) is not None
+    positive_ok = finite and (not positive or float(value) > 0.0)
+    source_ok = str(source) in FINITE_CMB_SOURCES
+    return {
+        "source": source,
+        "source_is_finite_cmb_source": source_ok,
+        "diagnostic_value_present": finite,
+        "positive_required": bool(positive),
+        "positive_value": bool(positive_ok) if positive else None,
+        "physical_gate_passed": bool(source_ok and positive_ok),
+    }
+
+
+def _array_status(source: str, value: np.ndarray | None) -> dict[str, Any]:
+    array = None if value is None else np.asarray(value, dtype=float)
+    finite = bool(array is not None and array.size and np.all(np.isfinite(array)))
+    source_ok = str(source) in FINITE_CMB_SOURCES
+    return {
+        "source": source,
+        "source_is_finite_cmb_source": source_ok,
+        "diagnostic_value_present": finite,
+        "row_count": int(array.shape[0]) if finite and array.ndim >= 1 else 0,
+        "column_count": int(array.shape[1]) if finite and array.ndim >= 2 else (1 if finite else 0),
+        "physical_gate_passed": bool(source_ok and finite),
+    }
+
+
+def _physical_cmb_promotion_blockers(
+    validation: dict[str, Any],
+    input_status: dict[str, Any],
+    sources: dict[str, dict[str, Any]],
+    finite_collar_boltzmann: dict[str, Any],
+    finite_collar_projection: dict[str, Any],
+) -> list[str]:
+    blockers = list(validation.get("blockers") or [])
+    finite_cert = sources.get("finite_certificate_report") or {}
+    ba_kernel = sources.get("B_A_kernel_report") or {}
+    ba_kernel_refinement = sources.get("B_A_kernel_refinement_report") or {}
+    if finite_cert.get("proxy_certificate", False) and not finite_cert.get("theorem_grade_finite_inputs", False):
+        blockers.append("finite_certificate_proxy_not_theorem_grade")
+    elif finite_cert and not finite_cert.get("theorem_grade_finite_inputs", False):
+        blockers.append("finite_certificate_theorem_grade_inputs_missing")
+    if not bool(ba_kernel.get("B_A_KERNEL_RECEIPT", False)):
+        blockers.append("B_A_kernel_receipt_missing")
+    if ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False) and not ba_kernel.get("B_A_KERNEL_RECEIPT", False):
+        blockers.append("B_A_kernel_candidate_not_physical")
+        for blocker in ba_kernel.get("promotion_blockers") or []:
+            blockers.append(f"B_A_kernel_{blocker}")
+    if ba_kernel_refinement and not bool(
+        ba_kernel_refinement.get("B_A_KERNEL_REFINEMENT_CONVERGENCE_RECEIPT", False)
+    ):
+        blockers.append("B_A_kernel_refinement_convergence_not_passed")
+        for blocker in ba_kernel_refinement.get("blockers") or []:
+            blockers.append(f"B_A_kernel_refinement_{blocker}")
+    if _diagnostic_present_not_physical(input_status, "A_zeta"):
+        blockers.append("A_zeta_diagnostic_proxy_not_physical_source")
+    if _diagnostic_present_not_physical(input_status, "B_A_k_a"):
+        blockers.append("B_A_diagnostic_rows_not_physical_kernel")
+    if _diagnostic_present_not_physical(input_status, "rho_A_a"):
+        blockers.append("rho_A_diagnostic_rows_not_physical_source")
+    if finite_collar_boltzmann:
+        if not bool(finite_collar_boltzmann.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False)):
+            blockers.append("finite_collar_boltzmann_physical_certificate_false")
+        for gate in _false_readiness_checks(finite_collar_boltzmann.get("readiness") or {}, nested_key="checks"):
+            blockers.append(f"finite_collar_boltzmann_missing_{gate}")
+    if finite_collar_projection:
+        if not bool(finite_collar_projection.get("PHYSICAL_K_CALIBRATION_RECEIPT", False)):
+            blockers.append("finite_collar_projection_physical_k_calibration_missing")
+        for gate in _false_readiness_checks(finite_collar_projection.get("readiness") or {}):
+            blockers.append(f"finite_collar_projection_missing_{gate}")
+    return _unique_strings(blockers)
+
+
+def _physical_cmb_source_readiness(
+    sources: dict[str, dict[str, Any]],
+    finite_collar_boltzmann: dict[str, Any],
+    finite_collar_projection: dict[str, Any],
+) -> dict[str, Any]:
+    finite_cert = sources.get("finite_certificate_report") or {}
+    ba_kernel = sources.get("B_A_kernel_report") or {}
+    ba_kernel_refinement = sources.get("B_A_kernel_refinement_report") or {}
+    ba_parent = sources.get("b_a_parent_report") or {}
+    derived = finite_cert.get("derived_outputs") if isinstance(finite_cert.get("derived_outputs"), dict) else {}
+    ba_rows = ba_parent.get("rows") or ba_parent.get("observer_view_rows") or []
+    boltzmann_readiness = finite_collar_boltzmann.get("readiness") if isinstance(
+        finite_collar_boltzmann.get("readiness"), dict
+    ) else {}
+    projection_readiness = finite_collar_projection.get("readiness") if isinstance(
+        finite_collar_projection.get("readiness"), dict
+    ) else {}
+    return {
+        "finite_certificate": {
+            "present": bool(finite_cert),
+            "compiler_ready": bool(finite_cert.get("finite_certificate_compiler_ready", False)),
+            "stack_ready": bool(finite_cert.get("finite_certificate_stack_ready", False)),
+            "theorem_grade_finite_inputs": bool(finite_cert.get("theorem_grade_finite_inputs", False)),
+            "proxy_certificate": bool(finite_cert.get("proxy_certificate", False)),
+            "A_zeta_available": derived.get("A_zeta") is not None or finite_cert.get("A_zeta") is not None,
+            "rho_A_a_available": derived.get("rho_A_a") is not None or finite_cert.get("rho_A_a") is not None,
+        },
+        "B_A_kernel": {
+            "present": bool(ba_kernel),
+            "B_A_KERNEL_RECEIPT": bool(ba_kernel.get("B_A_KERNEL_RECEIPT", False)),
+            "B_A_KERNEL_CANDIDATE_RECEIPT": bool(ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False)),
+            "row_count": int(ba_kernel.get("row_count") or 0),
+            "promotion_blockers": ba_kernel.get("promotion_blockers") or [],
+        },
+        "B_A_kernel_refinement": {
+            "present": bool(ba_kernel_refinement),
+            "two_scale_diagnostic_receipt": bool(
+                ba_kernel_refinement.get("two_scale_diagnostic_receipt", False)
+            ),
+            "B_A_KERNEL_REFINEMENT_CONVERGENCE_RECEIPT": bool(
+                ba_kernel_refinement.get("B_A_KERNEL_REFINEMENT_CONVERGENCE_RECEIPT", False)
+            ),
+            "patch_counts": ba_kernel_refinement.get("patch_counts") or [],
+            "blockers": ba_kernel_refinement.get("blockers") or [],
+        },
+        "B_A_parent": {
+            "present": bool(ba_parent),
+            "diagnostic_row_count": len(ba_rows) if isinstance(ba_rows, list) else 0,
+            "B_A_PARENT_RECEIPT": bool(ba_parent.get("B_A_PARENT_RECEIPT", False)),
+        },
+        "finite_collar_boltzmann": {
+            "present": bool(finite_collar_boltzmann),
+            "source_bundle_receipt": bool(
+                finite_collar_boltzmann.get("FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT", False)
+            ),
+            "physical_certificate": bool(
+                finite_collar_boltzmann.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False)
+            ),
+            "missing_readiness_checks": _false_readiness_checks(boltzmann_readiness, nested_key="checks"),
+        },
+        "finite_collar_projection": {
+            "present": bool(finite_collar_projection),
+            "projection_diagnostic_receipt": bool(
+                finite_collar_projection.get("FINITE_COLLAR_CMB_PROJECTION_DIAGNOSTIC_RECEIPT", False)
+            ),
+            "physical_k_calibration": bool(
+                finite_collar_projection.get("PHYSICAL_K_CALIBRATION_RECEIPT", False)
+            ),
+            "missing_readiness_checks": _false_readiness_checks(projection_readiness),
+        },
+    }
+
+
+def _physical_cmb_next_steps(blockers: list[str]) -> list[dict[str, str]]:
+    suggestions = {
+        "finite_certificate_proxy_not_theorem_grade": (
+            "Replace proxy finite-certificate inputs with theorem-grade finite A_zeta/rho_A receipts."
+        ),
+        "B_A_kernel_receipt_missing": (
+            "Run or supply the paired finite-difference B_A(k,a) kernel receipt instead of parent-row diagnostics."
+        ),
+        "finite_collar_projection_physical_k_calibration_missing": (
+            "Close the finite screen-to-bulk scale calibration so projected ell/k axes are OPH-derived."
+        ),
+        "official_likelihood_not_ready": (
+            "Connect the OPH source tables to the official likelihood path after finite-source gates pass."
+        ),
+        "finite_collar_boltzmann_missing_refinement_convergence_passed": (
+            "Run regulator/refinement convergence for the finite-collar source tables."
+        ),
+        "finite_collar_boltzmann_missing_energy_momentum_exchange_closed": (
+            "Audit energy-momentum exchange closure for the finite-collar Boltzmann source bundle."
+        ),
+    }
+    rows = []
+    for blocker in blockers:
+        rows.append(
+            {
+                "blocker": blocker,
+                "next_step": suggestions.get(blocker, "Clear this hard-gate blocker with a finite-source receipt."),
+            }
+        )
+    return rows
+
+
+def _diagnostic_present_not_physical(input_status: dict[str, Any], key: str) -> bool:
+    status = input_status.get(key) if isinstance(input_status.get(key), dict) else {}
+    return bool(status.get("diagnostic_value_present", False) and not status.get("physical_gate_passed", False))
+
+
+def _false_readiness_checks(readiness: dict[str, Any], *, nested_key: str | None = None) -> list[str]:
+    checks: Any = readiness
+    if nested_key is not None:
+        checks = readiness.get(nested_key) if isinstance(readiness, dict) else {}
+    if not isinstance(checks, dict):
+        return []
+    return sorted(str(key) for key, value in checks.items() if value is False)
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value)
+        if text not in seen:
+            out.append(text)
+            seen.add(text)
+    return out
+
+
+def _N_source_from_screen_capacity(screen_capacity: dict[str, Any]) -> str:
+    if not screen_capacity:
+        return "unknown"
+    if screen_capacity.get("screen_capacity_closure_receipt", False) or screen_capacity.get(
+        "SCREEN_CAPACITY_CLOSURE_RECEIPT", False
+    ):
+        return "OPH_screen_capacity_branch_predeclared"
+    observed = screen_capacity.get("observed_branch_normalization") or {}
+    gates = screen_capacity.get("readiness_gates") or {}
+    if observed.get("N_CRC") is not None and gates.get("observed_branch_N_scr_readout_available", False):
+        return "OPH_screen_capacity_observed_branch_readout"
+    return "unknown"
 
 
 def _contract_to_jsonable(contract: PhysicalCMBInputContract) -> dict[str, Any]:
@@ -258,7 +708,27 @@ def _markdown_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _markdown_promotion_audit(report: dict[str, Any]) -> str:
+    blockers = report.get("promotion_blockers") or []
+    lines = [
+        "# Physical CMB Promotion Audit",
+        "",
+        f"- promotion ready: `{str(report.get('physical_cmb_promotion_ready', False)).lower()}`",
+        f"- input contract receipt: `{str(report.get('physical_cmb_input_contract_receipt', False)).lower()}`",
+        f"- no-data receipt: `{str(report.get('no_data_use_receipt', False)).lower()}`",
+        f"- CDM-limit regression: `{str(report.get('cdm_limit_regression_passed', False)).lower()}`",
+        f"- official likelihood ready: `{str(report.get('official_likelihood_ready', False)).lower()}`",
+        "",
+        "## Promotion Blockers",
+        "",
+    ]
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
+
+
 def _first_json(roots: list[Path], name: str) -> dict[str, Any]:
+    fallback_empty: dict[str, Any] | None = None
     for root in roots:
         root = Path(root)
         candidates = [root / name]
@@ -271,12 +741,35 @@ def _first_json(roots: list[Path], name: str) -> dict[str, Any]:
                 except json.JSONDecodeError:
                     continue
                 if isinstance(data, dict):
-                    return data
-    return {}
+                    if data:
+                        return data
+                    fallback_empty = data
+    return fallback_empty or {}
 
 
 def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
     return any(bool(data.get(key, False)) for key in keys)
+
+
+def _measurement_data_used(report: dict[str, Any]) -> bool:
+    if not report:
+        return False
+    explicit_false = (
+        report.get("no_cmb_data_used") is True
+        or (((report.get("readiness") or {}).get("checks") or {}).get("no_cmb_data_used") is True)
+    )
+    if explicit_false:
+        return False
+    data_use_keys = (
+        "measurement_data_used",
+        "cmb_data_used",
+        "cmb_data_used_for_input",
+        "planck_data_used_for_input",
+        "fit_to_measurement",
+        "fit_to_planck",
+        "uses_measurements_to_set_inputs",
+    )
+    return any(bool(report.get(key, False)) for key in data_use_keys)
 
 
 def _float(value: Any) -> float | None:

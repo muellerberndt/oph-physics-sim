@@ -409,8 +409,16 @@ def scale_compressed_cmb_camb_report(
             "A_s": branch_params.As,
             "q_IR": q_ir,
             "ell_IR": ell_ir,
+            "N_CRC_implied_by_declared_repair_depth_ansatz": readouts.get(
+                "N_CRC_implied_by_declared_repair_depth_ansatz",
+                readouts.get("N_CRC_predicted_from_P"),
+            ),
             "N_CRC_predicted_from_P": readouts.get("N_CRC_predicted_from_P"),
             "N_CRC_declared": readouts.get("N_CRC_declared"),
+            "relative_error_ansatz_capacity_vs_declared_N_CRC": readouts.get(
+                "relative_error_ansatz_capacity_vs_declared_N_CRC",
+                readouts.get("relative_error_gprime_vs_N_CRC"),
+            ),
             "relative_error_gprime_vs_N_CRC": readouts.get("relative_error_gprime_vs_N_CRC"),
             "k0_mpc": float(k0_mpc),
             "D_star_mpc": float(d_star_mpc),
@@ -930,6 +938,207 @@ def write_oph_exact_cmb_camb_report(
     )
     _write_multi_model_csv(out_dir / "oph_exact_cmb_tt_bins.csv", report["binned_tt_comparison"])
     _write_multi_model_csv(out_dir / "oph_exact_cmb_tt_curves.csv", report["tt_curve_rows"])
+    return report
+
+
+def finite_repair_clock_cmb_camb_report(
+    finite_clock_report: dict[str, Any],
+    benchmark_rows: list[dict[str, float]],
+    *,
+    source_dir: Path | None = None,
+    baseline_params: LambdaCDMParameters | None = None,
+    lmax: int = 2600,
+    benchmark_label: str = "Planck2018_TT_binned",
+    benchmark_sha256: str | None = None,
+    k0_mpc: float = DEFAULT_K0_MPC,
+    d_star_mpc: float = DEFAULT_D_STAR_MPC,
+) -> dict[str, Any]:
+    """Run CAMB from the simulator-derived finite repair-clock scalar tilt.
+
+    This is intentionally separate from the exact OPH target branch. It uses the
+    empirical finite transition matrix output as the scalar tilt source, then
+    optionally overlays the selector-elimination IR kernel as a theory-side
+    diagnostic. That gives a measurement-facing curve from actual simulator data
+    without silently promoting it to the certified kappa_rep=e branch.
+    """
+
+    baseline = baseline_params or LambdaCDMParameters()
+    selector_report = selector_elimination_report(source_dir=source_dir)
+    primary = finite_clock_report.get("primary", {}) if isinstance(finite_clock_report, dict) else {}
+    if not primary:
+        primary = finite_clock_report.get("semigroup", {}) if isinstance(finite_clock_report, dict) else {}
+    ns_finite = _float_or_none(primary.get("n_s_estimate"))
+    eta_finite = _float_or_none(primary.get("eta_R_estimate"))
+    kappa_finite = _float_or_none(primary.get("kappa_rep_estimate"))
+    if ns_finite is None and eta_finite is not None:
+        ns_finite = 1.0 - float(eta_finite)
+    if eta_finite is None and ns_finite is not None:
+        eta_finite = 1.0 - float(ns_finite)
+    if ns_finite is None:
+        raise ValueError("finite repair-clock report does not expose n_s_estimate or eta_R_estimate")
+    ir = selector_report.get("cmb_ir_kernel", {})
+    q_ir = _float_or(ir.get("q_IR"), 0.0)
+    ell_ir = _float_or(ir.get("ell_IR"), 32.0)
+    finite_params = LambdaCDMParameters(
+        H0=baseline.H0,
+        ombh2=baseline.ombh2,
+        omch2=baseline.omch2,
+        mnu=baseline.mnu,
+        omk=baseline.omk,
+        tau=baseline.tau,
+        As=baseline.As,
+        ns=float(ns_finite),
+    )
+    ell_lcdm, tt_lcdm = _run_camb_tt(baseline, lmax=int(lmax))
+    ell_finite, tt_finite = _run_camb_tt(finite_params, lmax=int(lmax))
+    ell_ir_curve, tt_ir = _run_camb_tt_custom_power(
+        finite_params,
+        lmax=int(lmax),
+        power_fn=lambda k: _oph_p48_ir_power(
+            k,
+            A_s=finite_params.As,
+            ns=float(ns_finite),
+            q_ir=q_ir,
+            ell_ir=ell_ir,
+            k0_mpc=float(k0_mpc),
+            d_star_mpc=float(d_star_mpc),
+        ),
+        effective_ns=float(ns_finite),
+    )
+    comparisons = {
+        "camb_lcdm_powerlaw": compare_camb_tt_to_benchmark(ell_lcdm, tt_lcdm, benchmark_rows),
+        "finite_repair_clock_scalar_tilt": compare_camb_tt_to_benchmark(
+            ell_finite, tt_finite, benchmark_rows
+        ),
+        "finite_repair_clock_plus_selector_ir": compare_camb_tt_to_benchmark(
+            ell_ir_curve, tt_ir, benchmark_rows
+        ),
+    }
+    model_curves = {
+        "camb_lcdm_powerlaw": (ell_lcdm, tt_lcdm),
+        "finite_repair_clock_scalar_tilt": (ell_finite, tt_finite),
+        "finite_repair_clock_plus_selector_ir": (ell_ir_curve, tt_ir),
+    }
+    binned_rows = _multi_model_binned_rows(benchmark_rows, model_curves)
+    curve_rows = _curve_rows(ell_lcdm, {name: values for name, (_ell, values) in model_curves.items()})
+    finite_matrix_ready = bool(finite_clock_report.get("finite_transition_matrix_ready", False))
+    finite_lattice_derived = bool(finite_clock_report.get("finite_lattice_derived", False))
+    repair_clock_certificate = bool(finite_clock_report.get("repair_clock_certificate", False))
+    selector_receipt = bool(selector_report.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False))
+    return {
+        "mode": "finite_repair_clock_cmb_camb_transfer_v0",
+        "benchmark": {
+            "label": benchmark_label,
+            "row_count": len(benchmark_rows),
+            "ell_min": float(min(row["ell"] for row in benchmark_rows)) if benchmark_rows else None,
+            "ell_max": float(max(row["ell"] for row in benchmark_rows)) if benchmark_rows else None,
+        },
+        "finite_repair_clock_input": {
+            "n_s": float(ns_finite),
+            "eta_R": eta_finite,
+            "kappa_rep": kappa_finite,
+            "matrix_ready": finite_matrix_ready,
+            "finite_lattice_derived": finite_lattice_derived,
+            "repair_clock_certificate": repair_clock_certificate,
+            "clock_normalization_certified": bool(
+                finite_clock_report.get("clock_normalization_certified", False)
+            ),
+            "clock_normalization_numeric_match": bool(
+                finite_clock_report.get("clock_normalization_numeric_match", False)
+            ),
+            "repair_scale_hypothesis_clock_match": bool(
+                finite_clock_report.get("repair_scale_hypothesis_clock_match", False)
+            ),
+            "clock_normalization_source": finite_clock_report.get("clock_normalization_source"),
+            "clock_normalization_source_status": finite_clock_report.get(
+                "clock_normalization_source_status"
+            ),
+            "source_mode": finite_clock_report.get("mode"),
+            "primary_matrix": finite_clock_report.get("primary_matrix"),
+            "repair_step_time": finite_clock_report.get("repair_step_time"),
+            "state_count": finite_clock_report.get("state_count"),
+            "transition_count": finite_clock_report.get("transition_count"),
+            "blockers": finite_clock_report.get("blockers", []),
+        },
+        "selector_ir_input": {
+            "q_IR": q_ir,
+            "ell_IR": ell_ir,
+            "selector_elimination_theorem_receipt": selector_receipt,
+            "selector_elimination_source_audit_receipt": bool(
+                selector_report.get("SOURCE_PACKET_AUDIT_RECEIPT", False)
+            ),
+            "finite_lattice_derived": bool(selector_report.get("finite_lattice_derived", False)),
+        },
+        "camb": {
+            "lmax": int(lmax),
+            "cmb_unit": "muK",
+            "spectrum": "lensed_total_TT_D_ell",
+            "baseline_lambda_cdm_parameters": baseline.as_jsonable(),
+            "finite_repair_clock_lambda_cdm_parameters": finite_params.as_jsonable(),
+            "custom_primordial_power": (
+                "A_s*(k/k0)^(n_s_finite-1)*(1-q_IR*exp[-ell(k)(ell(k)+1)/(ell_IR(ell_IR+1))])"
+            ),
+        },
+        "software": _software_versions(),
+        "input_hashes": {
+            "benchmark_sha256": benchmark_sha256,
+            "finite_repair_clock_report_sha256": _sha256_json(finite_clock_report),
+            "selector_elimination_target_sha256": _sha256_json(selector_report),
+        },
+        "comparison": comparisons,
+        "acoustic_preservation": _acoustic_ratio_summary(ell_lcdm, tt_lcdm, tt_ir),
+        "binned_tt_comparison": binned_rows,
+        "tt_curve_rows": curve_rows,
+        "measurement_comparable_cmb_curve": True,
+        "finite_lattice_clock_derived": finite_lattice_derived,
+        "repair_clock_certificate": repair_clock_certificate,
+        "selector_ir_theory_side": selector_receipt,
+        "official_planck_likelihood_run": False,
+        "screen_camb_transfer_receipt": all(bool(item.get("usable", False)) for item in comparisons.values()),
+        "physical_cmb_prediction": False,
+        "claim_boundary": (
+            "CAMB TT transfer using the simulator-derived finite transition-matrix repair clock for "
+            "the scalar tilt. The finite clock is actual simulator data when finite_lattice_derived is true. "
+            "The selector IR overlay remains theory-side unless its own finite-register certificate closes. "
+            "This is measurement-comparable simulator output, but not a physical CMB prediction until "
+            "kappa_rep=e/repair-clock, physical k/source, official likelihood, and no-data-use gates pass."
+        ),
+    }
+
+
+def write_finite_repair_clock_cmb_camb_report(
+    finite_clock_report_path: Path,
+    benchmark_path: Path,
+    out_dir: Path,
+    *,
+    source_dir: Path | None = None,
+    lmax: int = 2600,
+    benchmark_label: str = "Planck2018_TT_binned",
+    baseline_params: LambdaCDMParameters | None = None,
+) -> dict[str, Any]:
+    finite_clock_report = json.loads(Path(finite_clock_report_path).read_text(encoding="utf-8"))
+    benchmark_rows = load_planck_tt_binned(Path(benchmark_path))
+    report = finite_repair_clock_cmb_camb_report(
+        finite_clock_report,
+        benchmark_rows,
+        source_dir=source_dir,
+        baseline_params=baseline_params,
+        lmax=int(lmax),
+        benchmark_label=benchmark_label,
+        benchmark_sha256=_sha256_file(Path(benchmark_path)),
+    )
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "finite_repair_clock_cmb_camb_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (out_dir / "finite_repair_clock_cmb_camb_report.md").write_text(
+        _finite_repair_clock_cmb_markdown_report(report),
+        encoding="utf-8",
+    )
+    _write_multi_model_csv(out_dir / "finite_repair_clock_cmb_tt_bins.csv", report["binned_tt_comparison"])
+    _write_multi_model_csv(out_dir / "finite_repair_clock_cmb_tt_curves.csv", report["tt_curve_rows"])
     return report
 
 
@@ -1506,6 +1715,94 @@ def _oph_exact_cmb_markdown_report(report: dict[str, Any]) -> str:
             "- `oph_exact_cmb_camb_report.json`",
             "- `oph_exact_cmb_tt_bins.csv`",
             "- `oph_exact_cmb_tt_curves.csv`",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _finite_repair_clock_cmb_markdown_report(report: dict[str, Any]) -> str:
+    comparisons = report["comparison"]
+    finite = report["finite_repair_clock_input"]
+    selector = report["selector_ir_input"]
+    acoustic = report.get("acoustic_preservation", {})
+    software = report.get("software", {})
+    lines = [
+        "# Finite Repair-Clock CMB CAMB Transfer",
+        "",
+        report["claim_boundary"],
+        "",
+        "## Simulator-Derived Clock Input",
+        "",
+        f"- n_s: {_fmt(finite.get('n_s'))}",
+        f"- eta_R: {_fmt(finite.get('eta_R'))}",
+        f"- kappa_rep: {_fmt(finite.get('kappa_rep'))}",
+        f"- matrix ready: {finite.get('matrix_ready')}",
+        f"- finite-lattice derived: {finite.get('finite_lattice_derived')}",
+        f"- repair-clock certificate: {finite.get('repair_clock_certificate')}",
+        f"- clock normalization certified: {finite.get('clock_normalization_certified')}",
+        f"- clock normalization numeric match: {finite.get('clock_normalization_numeric_match')}",
+        f"- repair-scale hypothesis clock match: {finite.get('repair_scale_hypothesis_clock_match')}",
+        f"- clock normalization source: {finite.get('clock_normalization_source')}",
+        f"- source mode: {finite.get('source_mode')}",
+        f"- primary matrix: {finite.get('primary_matrix')}",
+        f"- repair step time: {_fmt(finite.get('repair_step_time'))}",
+        "",
+        "## Selector IR Overlay",
+        "",
+        f"- q_IR: {_fmt(selector.get('q_IR'))}",
+        f"- ell_IR: {_fmt(selector.get('ell_IR'))}",
+        f"- theorem receipt: {selector.get('selector_elimination_theorem_receipt')}",
+        f"- finite-lattice derived: {selector.get('finite_lattice_derived')}",
+        "",
+        "## CAMB TT Comparison",
+        "",
+    ]
+    for name, comparison in comparisons.items():
+        lines.extend(
+            [
+                f"### {name}",
+                "",
+                f"- usable: {comparison.get('usable')}",
+                f"- bins: {comparison.get('bin_count')}",
+                f"- shape correlation: {_fmt(comparison.get('shape_correlation'))}",
+                f"- normalized RMSE: {_fmt(comparison.get('normalized_rmse'))}",
+                f"- amplitude-fit chi2/bin: {_fmt(comparison.get('amplitude_fit_chi2_per_bin'))}",
+                f"- first peak ell: {_fmt(comparison.get('first_peak_ell'))}",
+                f"- benchmark first peak ell: {_fmt(comparison.get('benchmark_first_peak_ell'))}",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## Acoustic Preservation",
+            "",
+            f"- amplitude fit to LCDM over ell>=50: {_fmt(acoustic.get('amplitude_to_lcdm_over_ell_ge_50'))}",
+            f"- mean |delta| for ell>=50: {_fmt(acoustic.get('mean_abs_fractional_delta_ell_ge_50'))}",
+            f"- max |delta| for ell>=50: {_fmt(acoustic.get('max_abs_fractional_delta_ell_ge_50'))}",
+            "",
+            "## Blockers",
+            "",
+        ]
+    )
+    blockers = finite.get("blockers") or []
+    lines.extend(f"- {item}" for item in blockers)
+    if not blockers:
+        lines.append("- none reported by finite clock source")
+    lines.extend(
+        [
+            "",
+            "## Reproducibility",
+            "",
+            f"- Python: {software.get('python_version', 'n/a')}",
+            f"- NumPy: {software.get('numpy_version', 'n/a')}",
+            f"- CAMB: {software.get('camb_version', 'n/a')}",
+            "",
+            "## Output Files",
+            "",
+            "- `finite_repair_clock_cmb_camb_report.json`",
+            "- `finite_repair_clock_cmb_tt_bins.csv`",
+            "- `finite_repair_clock_cmb_tt_curves.csv`",
             "",
         ]
     )

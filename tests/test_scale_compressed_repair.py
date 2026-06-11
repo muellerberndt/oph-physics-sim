@@ -141,3 +141,44 @@ def test_scale_compressed_viewer_writes_html_without_opening_gates(tmp_path: Pat
     assert summary["populated_h3_preview_receipt"] is True
     assert summary["physical_cmb_prediction"] is False
     assert summary["strict_neutral_bulk"] is False
+
+
+def test_scale_compressed_viewer_reads_nested_camb_transfer(tmp_path: Path):
+    run_dir = tmp_path / "compressed"
+    scale_compressed_repair_run(
+        run_dir,
+        repair_rounds=24,
+        object_count=8,
+        particle_count=2,
+        cap_axis_count=6,
+        ell_max=32,
+        seed=790,
+    )
+    nested = run_dir / "camb_transfer"
+    nested.mkdir()
+    (nested / "scale_compressed_cmb_camb_report.json").write_text(
+        json.dumps(
+            {
+                "measurement_comparable_cmb_curve": True,
+                "comparison": {
+                    "scale_compressed_ir_kernel": {
+                        "shape_correlation": 0.97,
+                        "amplitude_fit_chi2_per_bin": 1.4,
+                    },
+                    "camb_lcdm_powerlaw": {"shape_correlation": 0.99},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (nested / "scale_compressed_cmb_tt_bins.csv").write_text(
+        "ell,observed_D_ell,scale_compressed_ir_kernel_D_ell,camb_lcdm_powerlaw_D_ell\n"
+        "2,100,80,100\n",
+        encoding="utf-8",
+    )
+
+    summary = write_scale_compressed_viewer(run_dir)
+
+    assert summary["measurement_comparable_cmb_curve"] is True
+    assert summary["camb_bin_count"] == 1
+    assert summary["camb_report_path"].endswith("camb_transfer/scale_compressed_cmb_camb_report.json")

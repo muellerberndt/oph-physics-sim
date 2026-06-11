@@ -8,13 +8,19 @@ from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
     BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
     CHART_LORENTZ_H3_RECEIPT,
+    CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
+    OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
     PHYSICAL_CMB_RECEIPT,
+    PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT,
     PROTO_PARTICLE_RECEIPT,
     RECORD_COMMIT_RECEIPT,
     REPAIR_CORE_RECEIPT,
     SCREEN_PROXY_CMB_RECEIPT,
+    STRICT_NEUTRAL_BULK_RECEIPT,
+    STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+    THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT,
     with_claim_metadata,
 )
 
@@ -43,6 +49,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     scale_compressed_particle = _read_json(root / "scale_compressed_particle_report.json")
     particle = _read_json(root / "particle_likeness_report.json")
     controlled_particle = _read_json(root / "controlled_defect_particle_assay_report.json")
+    prime_rank_sweep = _read_json(root / "prime_geometric_rank_sweep_report.json")
+    prime_rank_refinement = _read_json(root / "prime_geometric_rank_refinement_report.json")
+    strict_neutral_object = _read_json(root / "strict_neutral_object_bulk_report.json")
     object_chart_name, object_chart = _best_object_chart_report(root)
 
     repair_core = _ladder_passed(ladder, "R0") or _truthy(emergence, "final_phi_zero")
@@ -105,10 +114,28 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     theorem_assisted_nonboundary_population = bool(
         chart and bw_kms and h3_response and object_nonboundary_population
     )
+    strict_neutral_object_bulk = bool(
+        strict_neutral_object.get(STRICT_NEUTRAL_OBJECT_BULK_RECEIPT, False)
+        or strict_neutral_object.get("strict_neutral_object_bulk", False)
+    )
     strict_neutral_bulk = bool(
         neutral.get("bulk_3d_established", False)
         or emergence.get("strict_blind_observer_bulk_receipt", False)
         or emergence.get("neutral_bulk_3d_established", False)
+        or strict_neutral_object_bulk
+    )
+    prime_geometric_quotient_3d = bool(
+        prime_rank_sweep.get("PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT", False)
+        or prime_rank_sweep.get("prime_geometric_quotient_3d_diagnostic_receipt", False)
+    )
+    prime_geometric_spatial_3d = bool(
+        prime_rank_sweep.get("prime_geometric_spatial_3d_candidate_receipt", False)
+    )
+    prime_geometric_rank3_refinement = bool(
+        prime_rank_refinement.get("control_quotient_rank3_refinement_candidate_receipt", False)
+    )
+    prime_geometric_strict_refinement = bool(
+        prime_rank_refinement.get("strict_neutral_bulk_refinement_receipt", False)
     )
     screen_cmb = bool(
         emergence.get("SCREEN_PROXY_CMB_RECEIPT", False)
@@ -182,7 +209,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "Persistent observer-facing objects can be displayed in the theorem-side H3 chart under controls.",
         ),
         "T5b_nonboundary_h3_object_population": _tier(
-            OBJECT_BULK_POPULATION_RECEIPT,
+            THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT,
             theorem_assisted_nonboundary_population,
             "Persistent observer-facing objects populate the theorem-side H3 chart and are not boundary-dominated.",
         ),
@@ -192,9 +219,24 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "Scale-compressed logical repair-round branch populates the paper-side H3 chart as a preview artifact.",
         ),
         "T6_strict_neutral_third_person_bulk": _tier(
-            "STRICT_NEUTRAL_3D_BULK_RECEIPT",
+            STRICT_NEUTRAL_BULK_RECEIPT,
             strict_neutral_bulk,
             "Neutral observer-record reconstruction establishes a third-person 3D bulk without chart prior.",
+        ),
+        "T6_object_strict_neutral_bulk": _tier(
+            STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+            strict_neutral_object_bulk,
+            "Neutral object extraction and held-out latent geometry selection establish a strict third-person object bulk.",
+        ),
+        "T6a_prime_geometric_quotient_3d_diagnostic": _tier(
+            PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT,
+            prime_geometric_quotient_3d,
+            "Observer-visible prime-geometric response quotient has a 3D-compatible rank window, without satisfying strict neutral proof gates.",
+        ),
+        "T6b_prime_geometric_rank3_refinement_diagnostic": _tier(
+            CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
+            prime_geometric_rank3_refinement,
+            "Control-quotient coordinate rank-3/E3 candidate is stable across supplied finite-regulator sizes; this is still diagnostic, not strict neutral bulk proof.",
         ),
         "T7_production_particles": _tier(
             PROTO_PARTICLE_RECEIPT,
@@ -232,8 +274,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "theorem_assisted_h3_nonboundary_population_established": theorem_assisted_nonboundary_population,
         "theorem_assisted_h3_populated_chart_established": theorem_assisted_nonboundary_population,
         "theorem_assisted_observer_facing_h3_population": theorem_assisted_nonboundary_population,
+        THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT: theorem_assisted_nonboundary_population,
         "observer_facing_h3_object_population_receipt": theorem_assisted_nonboundary_population,
-        "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": bool(
+        OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: bool(
             chart and bw_kms and h3_response and object_nonboundary_population
         ),
         "scale_compressed_operator_receipt": scale_operator,
@@ -242,6 +285,13 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "scale_compressed_measurement_comparable_cmb_curve": scale_compressed_measurement_cmb,
         "scale_compressed_particle_preview_established": scale_particle_preview,
         "strict_neutral_third_person_bulk_established": strict_neutral_bulk,
+        STRICT_NEUTRAL_OBJECT_BULK_RECEIPT: strict_neutral_object_bulk,
+        STRICT_NEUTRAL_BULK_RECEIPT: strict_neutral_bulk,
+        "prime_geometric_quotient_3d_diagnostic": prime_geometric_quotient_3d,
+        "prime_geometric_spatial_3d_candidate": prime_geometric_spatial_3d,
+        "prime_geometric_rank3_refinement_candidate": prime_geometric_rank3_refinement,
+        CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT: prime_geometric_rank3_refinement,
+        "prime_geometric_rank3_refinement_strict_neutral": prime_geometric_strict_refinement,
         "bulk_3d_established_theorem_assisted": theorem_assisted_nonboundary_population,
         "bulk_3d_established_strict": strict_neutral_bulk,
         "screen_cmb_proxy_available": screen_cmb,
@@ -274,8 +324,16 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "n_s": scale_cmb_params.get("n_s"),
             "q_IR": scale_cmb_params.get("q_IR"),
             "ell_IR": scale_cmb_params.get("ell_IR"),
+            "N_CRC_implied_by_declared_repair_depth_ansatz": scale_cmb_params.get(
+                "N_CRC_implied_by_declared_repair_depth_ansatz",
+                scale_cmb_params.get("N_CRC_predicted_from_P"),
+            ),
             "N_CRC_predicted_from_P": scale_cmb_params.get("N_CRC_predicted_from_P"),
             "N_CRC_declared": scale_cmb_params.get("N_CRC_declared"),
+            "relative_error_ansatz_capacity_vs_declared_N_CRC": scale_cmb_params.get(
+                "relative_error_ansatz_capacity_vs_declared_N_CRC",
+                scale_cmb_params.get("relative_error_gprime_vs_N_CRC"),
+            ),
             "relative_error_gprime_vs_N_CRC": scale_cmb_params.get("relative_error_gprime_vs_N_CRC"),
             "h3_object_count": scale_h3.get("object_count"),
             "h3_cap_count": scale_h3.get("cap_count"),
@@ -321,11 +379,68 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "finite_point_cloud_dimension_estimator_used", False
             ),
         },
+        "prime_geometric_rank_sweep_summary": {
+            "written": bool(prime_rank_sweep),
+            "diagnostic_receipt": prime_geometric_quotient_3d,
+            "spatial_3d_candidate_receipt": prime_geometric_spatial_3d,
+            "strict_neutral_candidate_receipt": bool(
+                prime_rank_sweep.get("prime_geometric_strict_neutral_candidate_receipt", False)
+            ),
+            "dimension_3d_window_count": prime_rank_sweep.get("dimension_3d_window_count"),
+            "coordinate_dimension_3d_window_count": prime_rank_sweep.get(
+                "coordinate_dimension_3d_window_count"
+            ),
+            "best_3d_rank": ((prime_rank_sweep.get("best_3d_dimension_row") or {}).get("rank")),
+            "coordinate_best_3d_rank": (
+                (prime_rank_sweep.get("coordinate_best_3d_dimension_row") or {}).get("rank")
+            ),
+            "regulator_control_quotient_is_negative_control": (
+                (prime_rank_sweep.get("regulator_control_quotient_lane") or {}).get(
+                    "is_negative_control"
+                )
+            ),
+            "proof_blockers": prime_rank_sweep.get("proof_blockers", []),
+        },
+        "prime_geometric_rank_refinement_summary": {
+            "written": bool(prime_rank_refinement),
+            "candidate_receipt": prime_geometric_rank3_refinement,
+            "receipt_name": CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
+            "physical_claim": False,
+            "strict_neutral_bulk_participation": "diagnostic_only",
+            "diagnostic_reason": (
+                "control-quotient rank-3 is a residualized signal construction, not a null/negative control"
+            ),
+            "strict_neutral_receipt": prime_geometric_strict_refinement,
+            "source_run_count": prime_rank_refinement.get("run_count"),
+            "multi_scale": prime_rank_refinement.get("multi_scale"),
+            "candidate_dimension_drift": prime_rank_refinement.get("candidate_dimension_drift"),
+            "candidate_dimension_stable": prime_rank_refinement.get("candidate_dimension_stable"),
+            "independent_rank3_selector_all": prime_rank_refinement.get("independent_rank3_selector_all"),
+            "sizes": prime_rank_refinement.get("sizes", []),
+            "proof_blockers": prime_rank_refinement.get("proof_blockers", []),
+        },
+        "strict_neutral_object_bulk_summary": {
+            "written": bool(strict_neutral_object),
+            "receipt": strict_neutral_object_bulk,
+            "object_count": strict_neutral_object.get("object_count"),
+            "selected_model": ((strict_neutral_object.get("latent_geometry_selection") or {}).get("selected_model")),
+            "h3_selected": ((strict_neutral_object.get("latent_geometry_selection") or {}).get("h3_selected")),
+            "median_dimension_estimate": ((strict_neutral_object.get("dimension") or {}).get("median_dimension_estimate")),
+            "blockers": strict_neutral_object.get("blockers", []),
+            "claim_boundary": (
+                "Strict neutral object-bulk report uses observer-visible object histories only; it is separate "
+                "from theorem-assisted H3 chart population."
+            ),
+        },
         "paper_alignment": {
             "screen_role": "S2 is the observer-facing cap/symmetry chart, not a raw point-cloud proof of dimension.",
             "lorentz_route": "support-visible BW/KMS cap flow with s=2*pi*t gives Conf+(S2) ~= SO+(3,1).",
             "spatial_chart": "H3 is the spatial homogeneous chart SO+(3,1)/SO(3).",
             "finite_gate": "finite runs must separately show observer records/objects/defects populate that chart under controls.",
+            "strict_neutral_route": (
+                "strict third-person bulk must be reconstructed from neutral observer/object records without "
+                "H3/S2/support coordinates and must pass held-out latent-geometry controls."
+            ),
             "scale_compressed_branch": (
                 "Logical scale compression can expose OPH repair-round/CMB readouts and H3 previews, but it "
                 "does not replace strict neutral observer-record reconstruction."
@@ -337,6 +452,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "T5b is stricter non-boundary H3 object population evidence. T5c is a scale-compressed "
             "logical repair-round H3 preview and is intentionally not promoted to T5b/T6. "
             "T6 is stricter neutral third-person bulk reconstruction and may remain false even when T5 passes. "
+            "T6a/T6b are intermediate residualized prime-geometric quotient diagnostics and are not promoted to T6. "
             "T8/T8b are measurement-facing screen/CAMB-transfer data only. T9 is a physical CMB prediction and remains false "
             "until finite OPH kernels feed a Boltzmann/likelihood-ready pipeline."
         ),
@@ -414,7 +530,7 @@ def _best_object_chart_report(root: Path) -> tuple[str | None, dict[str, Any]]:
     if not candidates:
         return None, {}
 
-    def score(item: tuple[str, dict[str, Any]]) -> tuple[float, float, float, float, float, float, float]:
+    def score(item: tuple[str, dict[str, Any]]) -> tuple[float, float, float, float, float, float, float, float]:
         name, report = item
         median_h3 = _float_or(report.get("median_h3_compactness_normalized"), 1.0e9)
         median_shuffle = _float_or(report.get("median_shuffled_h3_compactness_normalized"), 1.0e-12)
@@ -431,12 +547,14 @@ def _best_object_chart_report(root: Path) -> tuple[str | None, dict[str, Any]]:
             "transition_history",
             "observer_transition_mixture_cluster",
         }
+        current_schema = report.get("h3_compactness_margin_vs_median_shuffle") is not None
         return (
             float(bool(report.get("observer_chart_bulk_population_receipt", False))),
             float(bool(report.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT", False))),
             float(bool(report.get("THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT", False))),
             float(bool(report.get("h3_beats_shuffled_incidence_robust", False))),
             float(bool(lineage_or_transition)),
+            float(bool(current_schema)),
             _float_or(report.get("localized_not_boundary_object_count"), 0.0),
             h3_margin,
         )
@@ -461,6 +579,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- theorem-assisted non-boundary H3 population: `{str(report['theorem_assisted_h3_nonboundary_population_established']).lower()}`",
         f"- scale-compressed H3 preview: `{str(report['scale_compressed_h3_preview_established']).lower()}`",
         f"- strict neutral third-person bulk: `{str(report['strict_neutral_third_person_bulk_established']).lower()}`",
+        f"- prime-geometric quotient 3D diagnostic: `{str(report['prime_geometric_quotient_3d_diagnostic']).lower()}`",
         f"- screen CMB proxy available: `{str(report['screen_cmb_proxy_available']).lower()}`",
         f"- scale-compressed CAMB TT curve: `{str(report['scale_compressed_measurement_comparable_cmb_curve']).lower()}`",
         f"- physical CMB prediction: `{str(report['physical_cmb_prediction']).lower()}`",
@@ -506,6 +625,42 @@ def _markdown_report(report: dict[str, Any]) -> str:
                 f"- H3 boost-orbit dimension: `{chart.get('h3_spatial_dimension_from_boost_orbit')}`",
                 f"- H3 chart dimension: `{chart.get('h3_chart_spatial_dimension')}`",
                 f"- finite point-cloud dimension estimator used: `{chart.get('finite_point_cloud_dimension_estimator_used')}`",
+            ]
+        )
+    prime = report.get("prime_geometric_rank_sweep_summary") or {}
+    if prime:
+        lines.extend(
+            [
+                "",
+                "## Prime-Geometric Quotient",
+                "",
+                f"- diagnostic receipt: `{prime.get('diagnostic_receipt')}`",
+                f"- spatial 3D candidate: `{prime.get('spatial_3d_candidate_receipt')}`",
+                f"- strict neutral candidate: `{prime.get('strict_neutral_candidate_receipt')}`",
+                f"- target 3D-window count: `{prime.get('dimension_3d_window_count')}`",
+                f"- coordinate 3D-window count: `{prime.get('coordinate_dimension_3d_window_count')}`",
+                f"- best target 3D rank: `{prime.get('best_3d_rank')}`",
+                f"- best coordinate 3D rank: `{prime.get('coordinate_best_3d_rank')}`",
+                f"- control quotient is negative control: `{prime.get('regulator_control_quotient_is_negative_control')}`",
+                f"- proof blockers: `{prime.get('proof_blockers')}`",
+            ]
+        )
+    prime_refinement = report.get("prime_geometric_rank_refinement_summary") or {}
+    if prime_refinement:
+        lines.extend(
+            [
+                "",
+                "## Prime-Geometric Rank Refinement",
+                "",
+                f"- candidate receipt: `{prime_refinement.get('candidate_receipt')}`",
+                f"- strict neutral receipt: `{prime_refinement.get('strict_neutral_receipt')}`",
+                f"- source run count: `{prime_refinement.get('source_run_count')}`",
+                f"- multi-scale: `{prime_refinement.get('multi_scale')}`",
+                f"- candidate dimension drift: `{prime_refinement.get('candidate_dimension_drift')}`",
+                f"- dimension stable: `{prime_refinement.get('candidate_dimension_stable')}`",
+                f"- independent rank-3 selector all: `{prime_refinement.get('independent_rank3_selector_all')}`",
+                f"- sizes: `{prime_refinement.get('sizes')}`",
+                f"- proof blockers: `{prime_refinement.get('proof_blockers')}`",
             ]
         )
     lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])

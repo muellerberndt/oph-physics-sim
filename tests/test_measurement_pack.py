@@ -67,6 +67,106 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     assert "transition_selection_report.json" in report["files"]
 
 
+def test_export_measurement_pack_regenerates_combined_bulk_certificate(tmp_path: Path) -> None:
+    h3_run = tmp_path / "h3_run"
+    h3_run.mkdir()
+    (h3_run / "emergence_status_report.json").write_text(
+        json.dumps(
+            {
+                "final_phi_zero": True,
+                "records_committed": True,
+                "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (h3_run / "paper_3d_bulk_chart_report.json").write_text(
+        json.dumps(
+            {
+                "paper_theorem_3d_bulk_chart_receipt": True,
+                "bw_2pi_cap_flow_receipt": True,
+                "lorentz_group": "SO+(3,1)",
+                "spatial_homogeneous_space": "H3 = SO+(3,1)/SO(3)",
+                "h3_spatial_dimension_from_boost_orbit": 3,
+                "h3_chart_spatial_dimension": 3,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (h3_run / "observer_chart_object_h3_lineage_report.json").write_text(
+        json.dumps(
+            {
+                "observer_chart_object_h3_receipt": True,
+                "observer_chart_bulk_population_receipt": True,
+                "object_count": 12,
+                "localized_object_count": 11,
+                "localized_not_boundary_object_count": 10,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    scale_run = tmp_path / "scale_run"
+    scale_run.mkdir()
+    (scale_run / "scale_compressed_repair_report.json").write_text(
+        json.dumps(
+            {
+                "logical_repair_rounds": 24,
+                "scale_compressed_operator_receipt": True,
+                "repair_round_trace_receipt": True,
+                "h3_preview": {
+                    "cap_profile_receipt": True,
+                    "populated_h3_preview_receipt": True,
+                    "object_count": 48,
+                    "cap_count": 96,
+                },
+                "particle_preview": {
+                    "particle_preview_receipt": True,
+                    "particle_worldline_count": 8,
+                },
+                "cmb_parameter_readouts": {
+                    "eta_R": 0.0339,
+                    "n_s": 0.9661,
+                    "q_IR": 0.25,
+                    "ell_IR": 32.0,
+                },
+                "physical_cmb_prediction": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (scale_run / "scale_compressed_cmb_camb_report.json").write_text(
+        json.dumps(
+            {
+                "measurement_comparable_cmb_curve": True,
+                "screen_camb_transfer_receipt": True,
+                "physical_cmb_prediction": False,
+                "comparison": {
+                    "scale_compressed_ir_kernel": {
+                        "shape_correlation": 0.999,
+                        "normalized_rmse": 0.02,
+                        "best_fit_column_chi2_per_bin": 0.95,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([h3_run, scale_run], out)
+    proof = json.loads((out / "bulk_proof_certificate_report.json").read_text(encoding="utf-8"))
+
+    assert report["claims"]["theorem_assisted_h3_bulk"] is True
+    assert report["claims"]["scale_compressed_cmb_curve_comparable"] is True
+    assert proof["theorem_assisted_h3_nonboundary_population_established"] is True
+    assert proof["scale_compressed_h3_preview_established"] is True
+    assert proof["scale_compressed_measurement_comparable_cmb_curve"] is True
+    assert proof["scale_compressed_particle_preview_established"] is True
+    assert proof["strict_neutral_third_person_bulk_established"] is False
+    assert proof["physical_cmb_prediction"] is False
+
+
 def test_export_measurement_pack_aggregates_sweep_cl_and_transition_report(tmp_path: Path) -> None:
     sweep = tmp_path / "sweep"
     sweep.mkdir()
@@ -224,6 +324,72 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         "a,Gamma_rec_over_H_diagnostic\n1,0.032\n",
         encoding="utf-8",
     )
+    (run / "finite_repair_clock_cmb_camb_report.json").write_text(
+        json.dumps(
+            {
+                "measurement_comparable_cmb_curve": True,
+                "finite_lattice_clock_derived": True,
+                "physical_cmb_prediction": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "finite_repair_clock_cmb_camb_report.md").write_text("# finite clock", encoding="utf-8")
+    (run / "finite_repair_clock_cmb_tt_bins.csv").write_text("ell,D_ell\n50,100\n", encoding="utf-8")
+    (run / "finite_repair_clock_cmb_tt_curves.csv").write_text("ell,D_ell\n2,10\n", encoding="utf-8")
+    (run / "camb_lcdm_baseline_report.json").write_text(
+        json.dumps({"CDM_LIMIT_BOLTZMANN_RECEIPT": True, "oph_anomaly_module_ready": False}),
+        encoding="utf-8",
+    )
+    (run / "camb_lcdm_baseline_report.md").write_text("# camb baseline", encoding="utf-8")
+    (run / "camb_lcdm_tt_bins.csv").write_text("ell,D_ell\n225,5700\n", encoding="utf-8")
+    (run / "physical_cmb_input_report.json").write_text(
+        json.dumps(
+            {
+                "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": False,
+                "physical_cmb_prediction_eligible": False,
+                "physical_cmb_prediction": False,
+                "blockers": ["B_A_k_a_missing_or_not_finite"],
+                "input_status": {
+                    "A_zeta": {"diagnostic_value_present": True, "physical_gate_passed": False},
+                    "B_A_k_a": {
+                        "diagnostic_value_present": True,
+                        "row_count": 4,
+                        "physical_gate_passed": False,
+                    },
+                    "rho_A_a": {
+                        "diagnostic_value_present": True,
+                        "row_count": 3,
+                        "physical_gate_passed": False,
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_input_report.md").write_text("# physical CMB input", encoding="utf-8")
+    (run / "physical_cmb_input_contract.json").write_text(json.dumps({"B_A_source": "diagnostic_proxy"}), encoding="utf-8")
+    (run / "physical_cmb_input_validation.json").write_text(
+        json.dumps({"PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": False}),
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_promotion_audit_report.json").write_text(
+        json.dumps(
+            {
+                "physical_cmb_promotion_ready": False,
+                "official_likelihood_ready": False,
+                "promotion_blockers": [
+                    "finite_certificate_proxy_not_theorem_grade",
+                    "B_A_kernel_receipt_missing",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_promotion_audit_report.md").write_text("# promotion", encoding="utf-8")
+    (run / "B_A_k_a.csv").write_text("k_or_row,a_or_col,B_A\n1,1,0.1\n", encoding="utf-8")
+    (run / "Gamma_rec_k_a.csv").write_text("k_or_row,a_or_col,Gamma_rec\n1,1,0.03\n", encoding="utf-8")
+    (run / "rho_A_a.csv").write_text("row,col,rho_A\n1,1,0.2\n", encoding="utf-8")
     (run / "b_a_parent_report.json").write_text(
         json.dumps(
             {
@@ -243,6 +409,45 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     (run / "b_a_parent_rows.csv").write_text("a,k_proxy_inverse_theta,B_A_mean\n1,1,0.1\n", encoding="utf-8")
     (run / "b_a_parent_observer_view_rows.csv").write_text(
         "a,k_proxy_inverse_theta,B_A_mean\n1,1,0.1\n", encoding="utf-8"
+    )
+    (run / "B_A_kernel_report.json").write_text(
+        json.dumps(
+            {
+                "B_A_KERNEL_CANDIDATE_RECEIPT": True,
+                "B_A_KERNEL_RECEIPT": False,
+                "row_count": 4,
+                "promotion_blockers": ["physical_check_failed_scale_calibrated_k_h_mpc"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "B_A_kernel_report.md").write_text("# B_A kernel", encoding="utf-8")
+    (run / "B_A_kernel_candidate.csv").write_text("k_bin,a_bin,B_A\n1,1,0.1\n", encoding="utf-8")
+    (run / "B_A_kernel_refinement_report.json").write_text(
+        json.dumps(
+            {
+                "two_scale_diagnostic_receipt": True,
+                "B_A_KERNEL_REFINEMENT_CONVERGENCE_RECEIPT": False,
+                "patch_count_count": 2,
+                "key_pair_row_count": 2,
+                "key_pair_stable_fraction": 0.5,
+                "blockers": [
+                    "requires_at_least_three_patch_counts_for_refinement_convergence",
+                    "B_A_kernel_pairwise_drift_or_sign_instability",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "B_A_kernel_refinement_report.md").write_text("# B_A refinement", encoding="utf-8")
+    (run / "B_A_kernel_refinement_pairs.csv").write_text(
+        "left_patch_count,right_patch_count,common_key_count\n4096,16384,16\n",
+        encoding="utf-8",
+    )
+    (run / "B_A_kernel_refinement_key_pairs.csv").write_text(
+        "left_patch_count,right_patch_count,k_bin,a_bin,left_B_A,right_B_A,key_refinement_pass\n"
+        "4096,16384,0.1,0.5,1.0,1.1,true\n",
+        encoding="utf-8",
     )
     (run / "screen_power" / "oph_screen_power_report.json").write_text(
         json.dumps({"simulator_primordial_reference_ready": False}),
@@ -281,6 +486,55 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         json.dumps({"physical_cmb_prediction": False}),
         encoding="utf-8",
     )
+    (run / "neutral_profile_audit_report.json").write_text(
+        json.dumps(
+            {
+                "profile_rows": [
+                    {"profile": "prime_geometric_rank3", "strict_3d_ready": False},
+                    {"profile": "control_probe", "strict_3d_ready": True},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "prime_geometric_rank_refinement_report.json").write_text(
+        json.dumps(
+            {
+                "control_quotient_rank3_refinement_candidate_receipt": True,
+                "independent_rank3_selector_all": False,
+                "candidate_dimension_drift": 0.015,
+                "strict_neutral_bulk_refinement_receipt": False,
+                "physical_claim": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "neutral_3d_bulk_audit_report.json").write_text(
+        json.dumps(
+            {
+                "strict_neutral_bulk_ready": False,
+                "directional_strict_ready_total": 0,
+                "control_quotient_candidate_count": 1,
+                "blockers": ["independent_svd_rank3_selector_not_stable_or_false"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "neutral_3d_bulk_audit_report.md").write_text("# neutral", encoding="utf-8")
+    (run / "neutral_independent_rank_selector_audit_report.json").write_text(
+        json.dumps(
+            {
+                "NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT": False,
+                "run_count": 2,
+                "control_quotient_rank3_selector_count": 0,
+                "control_quotient_rank3_candidate_count": 2,
+                "control_quotient_median_effective_rank": 126.0,
+                "control_quotient_median_rank3_cumulative_explained_variance": 0.05,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "neutral_independent_rank_selector_audit_report.md").write_text("# selector", encoding="utf-8")
 
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
@@ -295,10 +549,37 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["finite_transition_eta_R_finite_lattice_derived"] is False
     assert claims["boltzmann_input_table_written"] is True
     assert claims["boltzmann_finite_repair_clock_rows_emitted"] is True
+    assert claims["finite_repair_clock_cmb_curve_comparable"] is True
+    assert claims["finite_repair_clock_cmb_finite_lattice_clock"] is True
+    assert claims["finite_repair_clock_cmb_physical_prediction"] is False
+    assert claims["camb_lcdm_cdm_limit_boltzmann_receipt"] is True
+    assert claims["camb_lcdm_oph_anomaly_module_ready"] is False
+    assert claims["physical_cmb_input_contract_receipt"] is False
+    assert claims["physical_cmb_input_prediction_eligible"] is False
+    assert claims["physical_cmb_input_A_zeta_diagnostic_present"] is True
+    assert claims["physical_cmb_input_A_zeta_physical_gate_passed"] is False
+    assert claims["physical_cmb_input_B_A_diagnostic_rows"] == 4
+    assert claims["physical_cmb_input_B_A_physical_gate_passed"] is False
+    assert claims["physical_cmb_input_rho_A_diagnostic_rows"] == 3
+    assert claims["physical_cmb_input_rho_A_physical_gate_passed"] is False
+    assert claims["physical_cmb_promotion_audit_written"] is True
+    assert claims["physical_cmb_promotion_ready"] is False
+    assert claims["physical_cmb_promotion_official_likelihood_ready"] is False
+    assert claims["physical_cmb_promotion_blocker_count"] == 2
     assert claims["b_a_parent_rows_emitted"] is True
     assert claims["b_a_parent_observer_view_variation"] is True
     assert claims["b_a_parent_receipt"] is False
     assert claims["b_a_parent_physical_prediction"] is False
+    assert claims["B_A_kernel_candidate_receipt"] is True
+    assert claims["B_A_kernel_physical_receipt"] is False
+    assert claims["B_A_kernel_row_count"] == 4
+    assert claims["B_A_kernel_promotion_blocker_count"] == 1
+    assert claims["B_A_kernel_refinement_two_scale_diagnostic"] is True
+    assert claims["B_A_kernel_refinement_convergence_receipt"] is False
+    assert claims["B_A_kernel_refinement_patch_count_count"] == 2
+    assert claims["B_A_kernel_refinement_key_pair_row_count"] == 2
+    assert claims["B_A_kernel_refinement_key_pair_stable_fraction"] == 0.5
+    assert claims["B_A_kernel_refinement_blocker_count"] == 2
     assert claims["screen_power_simulator_primordial_ready"] is False
     assert claims["maxent_green_source_receipt"] is True
     assert claims["selector_elimination_theorem_side_receipt"] is True
@@ -307,13 +588,109 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["neutrino_finite_lattice_derived"] is False
     assert claims["h0s8_measurement_comparable"] is True
     assert claims["compressed_likelihood_reference"] is True
+    assert claims["neutral_profile_audit_written"] is True
+    assert claims["neutral_profile_strict_3d_ready_count"] == 1
+    assert claims["control_residualized_rank3_refinement_candidate"] is True
+    assert claims["control_residualized_rank3_independent_selector_all"] is False
+    assert claims["control_residualized_rank3_dimension_drift"] == 0.015
+    assert claims["strict_neutral_bulk_refinement_receipt"] is False
+    assert claims["control_residualized_rank3_physical_claim"] is False
+    assert claims["neutral_3d_bulk_audit_written"] is True
+    assert claims["neutral_3d_bulk_audit_ready"] is False
+    assert claims["neutral_3d_bulk_audit_directional_strict_ready_total"] == 0
+    assert claims["neutral_3d_bulk_audit_control_quotient_candidate_count"] == 1
+    assert claims["neutral_independent_rank_selector_audit_written"] is True
+    assert claims["neutral_independent_rank3_selector_receipt"] is False
+    assert claims["neutral_independent_rank_selector_run_count"] == 2
+    assert claims["neutral_independent_rank_selector_control_rank3_count"] == 0
+    assert claims["neutral_independent_rank_selector_control_candidate_count"] == 2
+    assert claims["neutral_independent_rank_selector_control_median_effective_rank"] == 126.0
+    assert claims["neutral_independent_rank_selector_control_median_rank3_ev"] == 0.05
     assert "oph_screen_power_primordial_table.csv" in report["files"]
     assert "finite_repair_transition_matrix_report.json" in report["files"]
     assert "finite_repair_transition_rows.csv" in report["files"]
     assert "scalar_repair_semigroup_report.json" in report["files"]
     assert "oph_boltzmann_finite_repair_clock_rows.csv" in report["files"]
+    assert "finite_repair_clock_cmb_camb_report.json" in report["files"]
+    assert "finite_repair_clock_cmb_tt_bins.csv" in report["files"]
+    assert "finite_repair_clock_cmb_tt_curves.csv" in report["files"]
+    assert "camb_lcdm_baseline_report.json" in report["files"]
+    assert "camb_lcdm_baseline_report.md" in report["files"]
+    assert "camb_lcdm_tt_bins.csv" in report["files"]
+    assert "physical_cmb_input_report.json" in report["files"]
+    assert "physical_cmb_input_report.md" in report["files"]
+    assert "physical_cmb_promotion_audit_report.json" in report["files"]
+    assert "physical_cmb_promotion_audit_report.md" in report["files"]
+    assert "physical_cmb_input_contract.json" in report["files"]
+    assert "physical_cmb_input_validation.json" in report["files"]
+    assert "physical_cmb_B_A_k_a.csv" in report["files"]
+    assert "physical_cmb_Gamma_rec_k_a.csv" in report["files"]
+    assert "physical_cmb_rho_A_a.csv" in report["files"]
     assert "b_a_parent_report.json" in report["files"]
     assert "b_a_parent_rows.csv" in report["files"]
     assert "b_a_parent_observer_view_rows.csv" in report["files"]
+    assert "B_A_kernel_report.json" in report["files"]
+    assert "B_A_kernel_report.md" in report["files"]
+    assert "B_A_kernel_candidate.csv" in report["files"]
+    assert "B_A_kernel_refinement_report.json" in report["files"]
+    assert "B_A_kernel_refinement_report.md" in report["files"]
+    assert "B_A_kernel_refinement_pairs.csv" in report["files"]
+    assert "B_A_kernel_refinement_key_pairs.csv" in report["files"]
     assert "maxent_green_spectrum_report.json" in report["files"]
     assert "cmb_anomaly_report.json" in report["files"]
+    assert "neutral_profile_audit_report.json" in report["files"]
+    assert "prime_geometric_rank_refinement_report.json" in report["files"]
+    assert "neutral_3d_bulk_audit_report.json" in report["files"]
+    assert "neutral_3d_bulk_audit_report.md" in report["files"]
+    assert "neutral_independent_rank_selector_audit_report.json" in report["files"]
+    assert "neutral_independent_rank_selector_audit_report.md" in report["files"]
+
+
+def test_export_measurement_pack_prefers_stronger_cmb_json_reports(tmp_path: Path) -> None:
+    stale = tmp_path / "stale"
+    fresh = tmp_path / "fresh"
+    stale.mkdir()
+    fresh.mkdir()
+    _write_json(
+        stale / "finite_collar_boltzmann_bundle_report.json",
+        {
+            "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT": True,
+            "readiness": {"checks": {"no_data_use_receipt": True}},
+            "contract_source_summary": {"no_data_use_receipt": {"present": True}},
+            "physical_cmb_input_validation": {
+                "blockers": [
+                    "eta_R_not_finite_derived",
+                    "q_IR_not_finite_derived",
+                    "B_A_k_a_missing_or_not_finite",
+                ]
+            },
+        },
+    )
+    _write_json(
+        fresh / "finite_collar_boltzmann_bundle_report.json",
+        {
+            "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT": True,
+            "readiness": {"checks": {"no_data_use_receipt": True}},
+            "contract_source_summary": {
+                "no_data_use_receipt": {"present": True},
+                "scale_compressed_repair_report": {"present": True},
+                "screen_capacity_closure_report": {"present": True},
+            },
+            "physical_cmb_input_validation": {"blockers": ["B_A_k_a_missing_or_not_finite"]},
+        },
+    )
+    _write_json(stale / "no_data_use_receipt.json", {})
+    _write_json(fresh / "no_data_use_receipt.json", {"NO_DATA_USE_RECEIPT": True})
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([stale, fresh], out)
+    copied_bundle = json.loads((out / "finite_collar_boltzmann_bundle_report.json").read_text(encoding="utf-8"))
+    copied_receipt = json.loads((out / "no_data_use_receipt.json").read_text(encoding="utf-8"))
+
+    assert report["claims"]["finite_collar_boltzmann_source_bundle"] is True
+    assert copied_bundle["physical_cmb_input_validation"]["blockers"] == ["B_A_k_a_missing_or_not_finite"]
+    assert copied_receipt["NO_DATA_USE_RECEIPT"] is True
+
+
+def _write_json(path: Path, data: dict) -> None:
+    path.write_text(json.dumps(data), encoding="utf-8")

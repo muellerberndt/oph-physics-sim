@@ -1,0 +1,10 @@
+gate,quantity,OPH_current_value,data_target,v0_5_status
+A: scalar tilt,eta_R=1-n_s,0.035,Planck n_s=0.965+/-0.004,passed by mapping; simulator must derive eta_R
+B: TT low-l,"q_IR, ell_IR","q_IR=0.2445545, ell_IR=33.615",Planck TT ell=2..29 public spectrum,passed diagonal proxy; improves TT chi2 by ~10.75 after CAMB transfer
+C: TE low-l direction,delta chi2 TE ell=2..29,best IR improves by 0.435,Planck TE full spectrum file,weakly passes directionally; effect small
+D: EE low-l direction,delta chi2 EE ell=2..29,best IR worsens by 1.826,Planck EE full spectrum file,pressure point; low-l TT fit does not automatically help EE
+E: acoustic preservation,high-ell TT penalty ell=30..1200,best IR worsens by 0.388 over 1171 points,Planck TT full spectrum file,passed: acoustic region essentially unchanged
+F: phase-sensitive anomalies,"S1/2, q/o alignment, hemispherical asymmetry, BipoSH",pipeline emitted; no map values in this runtime,Planck SMICA/NILC/Commander/SEVEM maps + masks,not yet passed; requires component maps and masks
+G: lensing/growth,"S8, sigma8, C_l phiphi",compressed S8=0.828924 from dark-sector scaffold; CAMB lensing ratio near unity for IR-only kernel,"ACT+Planck lensing, Planck lensing likelihood, weak lensing",compressed pass versus ACT+Planck lensing; weak-lensing tension remains
+H: BAO/background,"D_M/r_d, D_H/r_d, D_V/r_d",not run in v0.5,DESI DR2/SDSS BAO likelihoods,gateway emitted; not yet a full likelihood
+I: derived not fitted,"eta_R, q_IR, eps_P from patch freezeout",toy/phenomenological fit only,OPH finite patch simulator output,not yet passed; simulator derivation is the next theory gate

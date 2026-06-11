@@ -165,6 +165,52 @@ def test_cmb_derivation_prefers_bulk_proof_over_legacy_emergence_flag(tmp_path: 
     assert report["rows"][0]["gates"]["strict_neutral_bulk_3d_established"] is False
 
 
+def test_cmb_derivation_audit_includes_scalar_quotient_lane(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "scalar_quotient_report.json").write_text(
+        json.dumps(
+            {
+                "SCALAR_QUOTIENT_RECEIPT": True,
+                "observer_count": 1089,
+                "patch_count": 262144,
+                "scalar_packet_alphabet_size": 199,
+                "scalar_packet_entropy_bits": 7.0,
+                "edge_center_readout": {
+                    "theta_OPH_P_over_48": 0.033978504362582485,
+                    "n_s_P_over_48": 0.9660214956374176,
+                },
+                "active_angular_levels": {
+                    "target_ell_IR": 32,
+                    "observer_level_proxy_floor_sqrt_observers": 33,
+                    "patch_capacity_level_proxy_floor_sqrt_patches": 512,
+                },
+                "readiness_gates": {
+                    "active_33_level_freezeout_clause": True,
+                    "theorem_grade_scalar_release_code": False,
+                },
+                "finite_lattice_cmb_scalar_release_ready": False,
+                "blockers": ["theorem_grade_scalar_release_code_missing"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = write_cmb_parameter_derivation_report([run], tmp_path / "out")
+    row = report["rows"][0]
+
+    assert report["run_count"] == 1
+    assert row["scalar_quotient_receipt"] is True
+    assert row["scalar_quotient_observer_count"] == 1089
+    assert row["scalar_quotient_active_33_level_freezeout_clause"] is True
+    assert row["scalar_quotient_theorem_grade_release_code"] is False
+    assert row["gates"]["scalar_quotient_receipt"] is True
+    assert row["gates"]["scalar_quotient_active_33_level_freezeout_clause"] is True
+    assert row["gates"]["scalar_quotient_finite_ready"] is False
+    assert report["aggregate"]["mean_scalar_quotient_n_s"] == 0.9660214956374176
+    assert report["finite_lattice_cmb_parameters_ready"] is False
+
+
 def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     keys = sorted({key for row in rows for key in row})
     with path.open("w", encoding="utf-8", newline="") as handle:

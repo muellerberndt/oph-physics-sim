@@ -102,6 +102,7 @@ def screen_capacity_closure_report(
             "readback_map": "F(N)=Cap_read(Obs(nf(U_N)))",
             "active_capacity": "N_CRC = log dim Z_boundary^act after predictive quotient",
             "lambda_readout": "Lambda_CRC * l_P^2 = 3*pi / N_CRC",
+            "dimensionless_lambda_readout": "Lambda_CRC * ell_star^2 = 3*pi / N_CRC",
             "count_density_selector": "N_star = MAR argmax_N [log|Omega_N^sc| - N]",
             "pressure_certificate": "ell'(N_star)=0 with ell''<0, or Banach contraction for F",
         },
@@ -113,6 +114,10 @@ def screen_capacity_closure_report(
             "N_patch_bare_radius_squared_ratio": n_patch,
             "N_scr_entropy_capacity": n_scr,
             "Lambda_lP2": lambda_l_planck2,
+            "Lambda_lP2_is_dimensionless": True,
+            "dimensionful_Lambda_m2": None,
+            "dimensionful_ell_star_squared_m2": None,
+            "dimensionful_G_SI": None,
             "N_cells_if_tiled_by_local_P_cells": physical_cells,
             "cell_entropy_capacity": float(p_value) / 4.0,
             "P": float(p_value),
@@ -151,6 +156,9 @@ def screen_capacity_closure_report(
             "pressure_certificate_implemented": False,
             "N_CRC_fixed_point_solved_from_finite_simulator": False,
             "Lambda_from_finite_simulator_record_closure": False,
+            "independent_scale_bridge_supplied": False,
+            "dimensionful_G_SI_eligible": False,
+            "finite_simulator_derived_G_SI": False,
         },
         "simulation_relevance": (
             "This closure is globally relevant to cosmology and capacity normalization. It should not be "
@@ -162,8 +170,9 @@ def screen_capacity_closure_report(
         "physical_matter_power_prediction": False,
         "claim_boundary": (
             "Observed-branch screen-capacity closure report. Computes the de Sitter entropy-capacity "
-            "normalization and Lambda*l_P^2 readout from the paper equations, but does not solve the "
-            "OPH readback fixed point from simulator data."
+            "normalization and dimensionless Lambda*l_P^2 readout from the paper equations, but does not "
+            "solve the OPH readback fixed point from simulator data and does not supply an independent "
+            "dimensionful scale bridge for G_SI."
         ),
     }
 

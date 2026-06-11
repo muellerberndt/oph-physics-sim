@@ -733,6 +733,183 @@ def test_comparable_data_prefers_bulk_proof_over_legacy_emergence_flag(tmp_path:
     assert lane["object_bulk_population_count"] == 0
 
 
+def test_comparable_data_collects_standalone_strict_neutral_report(tmp_path: Path):
+    report_path = tmp_path / "strict_neutral_seed.json"
+    _write_json(
+        report_path,
+        {
+            "mode": "strict_neutral_bulk_record_transition_audit",
+            "observer_count": 128,
+            "dimension": {
+                "estimators_agree_3d": False,
+                "median_dimension_estimate": 7.5,
+                "correlation_dimension": {"estimate": 8.9},
+                "local_mle_dimension": {"median": 6.1},
+            },
+            "model_selection": {
+                "best_model": "H4",
+                "selected_model": "H3",
+                "h3_beats_s2": True,
+                "h3_beats_h2_h4": False,
+            },
+            "leakage": {
+                "s2_leakage_pass": False,
+                "s2_distance_correlation": 0.18,
+            },
+            "controls": {
+                "rows": [
+                    {"name": "planted_2d", "control_passed": True},
+                    {"name": "shuffled_records", "control_passed": True},
+                ]
+            },
+            "strict_neutral_bulk": False,
+            "blockers": [
+                "neutral_dimension_estimators_do_not_agree_3d",
+                "s2_leakage_audit_failed",
+            ],
+        },
+    )
+
+    report = comparable_data_report([report_path])
+    lane = report["measurement_lanes"]["neutral_observer_reconstruction"]
+    row = report["rows"][0]
+
+    assert report["run_count"] == 1
+    assert report["strict_neutral_3d_bulk_count"] == 0
+    assert lane["strict_neutral_report_count"] == 1
+    assert lane["strict_neutral_bulk_count"] == 0
+    assert lane["strict_neutral_h3_selected_count"] == 1
+    assert lane["strict_neutral_h3_best_count"] == 0
+    assert lane["mean_strict_neutral_median_dimension"] == 7.5
+    assert lane["mean_strict_neutral_s2_distance_correlation"] == 0.18
+    assert row["strict_neutral_blockers"] == [
+        "neutral_dimension_estimators_do_not_agree_3d",
+        "s2_leakage_audit_failed",
+    ]
+
+
+def test_comparable_data_collects_standalone_strict_neutral_object_report(tmp_path: Path):
+    report_path = tmp_path / "strict_neutral_object_seed.json"
+    _write_json(
+        report_path,
+        {
+            "mode": "strict_neutral_object_bulk_v0",
+            "object_count": 24,
+            "dimension": {
+                "estimators_agree_3d": True,
+                "median_dimension_estimate": 3.02,
+            },
+            "latent_geometry_selection": {
+                "selected_model": "H3",
+                "h3_selected": True,
+            },
+            "leakage": {
+                "s2_leakage_pass": True,
+                "s2_distance_correlation": 0.01,
+            },
+            "STRICT_NEUTRAL_OBJECT_BULK_RECEIPT": False,
+            "strict_neutral_object_bulk": False,
+            "blockers": ["shuffled_record_object_control_did_not_fail"],
+        },
+    )
+
+    report = comparable_data_report([report_path])
+    lane = report["measurement_lanes"]["neutral_observer_reconstruction"]
+    row = report["rows"][0]
+
+    assert report["run_count"] == 1
+    assert lane["strict_neutral_object_report_count"] == 1
+    assert lane["strict_neutral_object_bulk_count"] == 0
+    assert lane["strict_neutral_object_h3_selected_count"] == 1
+    assert lane["mean_strict_neutral_object_count"] == 24
+    assert lane["mean_strict_neutral_object_median_dimension"] == 3.02
+    assert row["strict_neutral_object_selected_model"] == "H3"
+    assert row["strict_neutral_object_blockers"] == ["shuffled_record_object_control_did_not_fail"]
+
+
+def test_comparable_data_collects_b_a_parent_diagnostic(tmp_path: Path):
+    run = tmp_path / "ba"
+    run.mkdir()
+    _write_json(
+        run / "b_a_parent_report.json",
+        {
+            "mode": "report_backed_finite_collar_B_A_parent_diagnostic_v0",
+            "source_report_count": 2,
+            "observer_view_source_count": 2,
+            "primary_parent_source": "observer_view_finite_collar_packet_variation",
+            "rows": [{"B_A_mean": 0.1}, {"B_A_mean": -0.2}],
+            "control_rows": [{"control": "phase_shuffled_baryon_mode"}],
+            "observer_view_rows": [{"B_A_mean": 0.1}],
+            "observer_view_control_rows": [{"control": "phase_shuffled_baryon_mode"}],
+            "B_A_PARENT_RECEIPT": False,
+            "physical_prediction_ready": False,
+            "physical_cmb_prediction": False,
+            "readiness": {
+                "checks": {
+                    "controls_fail": False,
+                    "real_baryon_perturbation_runs_present": False,
+                    "finite_observer_view_parent_variation": True,
+                    "refinement_convergence_passed": False,
+                },
+                "control_failures": {
+                    "phase_shuffled_baryon_mode": False,
+                    "baryon_delta_applied_after_record_freezeout": True,
+                },
+                "missing_gates": [
+                    "controls_fail",
+                    "real_baryon_perturbation_runs_present",
+                ],
+            },
+        },
+    )
+
+    report = comparable_data_report([run])
+    lane = report["measurement_lanes"]["oph_B_A_parent_finite_difference"]
+
+    assert lane["run_count"] == 1
+    assert lane["receipt_count"] == 0
+    assert lane["finite_observer_view_parent_variation_count"] == 1
+    assert lane["mean_source_report_count"] == 2.0
+    assert lane["mean_row_count"] == 2.0
+    assert lane["control_failure_counts"] == {"baryon_delta_applied_after_record_freezeout": 1}
+    assert lane["missing_gate_counts"] == {
+        "controls_fail": 1,
+        "real_baryon_perturbation_runs_present": 1,
+    }
+
+
+def test_comparable_data_collects_short_neutral_profile_filename(tmp_path: Path):
+    run = tmp_path / "profile"
+    run.mkdir()
+    _write_json(
+        run / "neutral_profile_audit.json",
+        {
+            "mode": "neutral_distance_profile_audit_v0",
+            "observer_count": 32,
+            "sampled_observer_count": 16,
+            "profile_rows": [
+                {
+                    "profile": "transition_core",
+                    "strict_3d_ready": False,
+                    "dimension": {
+                        "correlation_dimension": {"estimate": 2.9},
+                        "local_mle_dimension": {"median_estimate": 3.1},
+                    },
+                    "model_selection": {"best_model": "H3"},
+                    "leakage": {"s2_distance_correlation": 0.01, "s2_leakage_pass": True},
+                    "blockers": [],
+                }
+            ],
+        },
+    )
+
+    report = comparable_data_report([run])
+    lane = report["measurement_lanes"]["neutral_distance_profile_audit"]
+
+    assert lane["run_count"] == 1
+    assert lane["mean_profile_count"] == 1
+
+
 def test_write_comparable_data_package_writes_json_csv_and_markdown(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
@@ -945,6 +1122,54 @@ def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
     assert lane["finite_lattice_derived_count"] == 0
     assert lane["mean_q_IR"] == 0.25
     assert lane["mean_ell_IR"] == 32.0
+
+
+def test_comparable_data_collects_finite_repair_clock_cmb_camb(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "finite_repair_clock_cmb_camb_report.json",
+        {
+            "mode": "finite_repair_clock_cmb_camb_transfer_v0",
+            "measurement_comparable_cmb_curve": True,
+            "screen_camb_transfer_receipt": True,
+            "finite_lattice_clock_derived": True,
+            "repair_clock_certificate": False,
+            "selector_ir_theory_side": True,
+            "physical_cmb_prediction": False,
+            "finite_repair_clock_input": {
+                "n_s": 0.9679812500795765,
+                "eta_R": 0.03201874992042351,
+                "kappa_rep": 2.4755067024747386,
+            },
+            "selector_ir_input": {"q_IR": 0.25, "ell_IR": 32.0},
+            "comparison": {
+                "camb_lcdm_powerlaw": {"shape_correlation": 0.999, "amplitude_fit_chi2_per_bin": 1.0},
+                "finite_repair_clock_scalar_tilt": {
+                    "shape_correlation": 0.998,
+                    "amplitude_fit_chi2_per_bin": 1.1,
+                },
+                "finite_repair_clock_plus_selector_ir": {
+                    "shape_correlation": 0.997,
+                    "amplitude_fit_chi2_per_bin": 1.2,
+                },
+            },
+            "acoustic_preservation": {"mean_abs_fractional_delta_ell_ge_50": 0.01},
+        },
+    )
+
+    report = comparable_data_report([run])
+    lane = report["measurement_lanes"]["finite_repair_clock_cmb_camb_transfer"]
+
+    assert lane["run_count"] == 1
+    assert lane["measurement_comparable_curve_count"] == 1
+    assert lane["finite_lattice_clock_derived_count"] == 1
+    assert lane["repair_clock_certificate_count"] == 0
+    assert lane["physical_cmb_prediction_count"] == 0
+    assert lane["mean_n_s"] == 0.9679812500795765
+    assert lane["mean_kappa_rep"] == 2.4755067024747386
+    assert lane["mean_scalar_shape_correlation"] == 0.998
+    assert lane["mean_ir_chi2_per_bin"] == 1.2
 
 
 def test_comparable_data_collects_inflation_cmb_v05_hard_gates(tmp_path: Path):
@@ -1246,6 +1471,75 @@ def test_comparable_data_collects_fossil_spectrum_time_trace(tmp_path: Path):
     assert fossil["mean_best_cycle"] == 12.0
     assert fossil["mean_best_eta_R"] == 0.005
     assert fossil["physical_cmb_prediction"] is False
+
+
+def test_comparable_data_collects_control_quotient_spatial_3d_candidate(tmp_path: Path):
+    run = tmp_path / "rank_sweep"
+    run.mkdir()
+    _write_json(
+        run / "prime_geometric_rank_sweep_report.json",
+        {
+            "mode": "prime_geometric_rank_sweep_v0",
+            "prime_geometric_control_quotient_spatial_3d_candidate_receipt": True,
+            "prime_geometric_spatial_3d_candidate_receipt": False,
+            "prime_geometric_strict_neutral_candidate_receipt": False,
+            "selected_rank_controls": {
+                "all_expected_failures_observed": True,
+                "coordinate_rank3_tautology_warning": True,
+                "control_rows": [
+                    {
+                        "metric": "coordinate_euclidean",
+                        "rank": 3,
+                        "excluded_from_selected_rank_gate": True,
+                        "survives": True,
+                    },
+                    {
+                        "metric": "directional_cosine",
+                        "rank": 3,
+                        "excluded_from_selected_rank_gate": False,
+                        "survives": False,
+                    },
+                ],
+            },
+            "control_quotient_coordinate_spatial_3d_ready_count": 1,
+            "control_quotient_coordinate_best_3d_dimension_row": {
+                "rank": 3,
+                "dimension": {
+                    "correlation_dimension": {"estimate": 2.83},
+                    "local_mle_dimension": {"median_estimate": 3.02},
+                },
+                "model_selection": {"best_model": "E3"},
+                "leakage": {
+                    "s2_distance_correlation": 0.023,
+                    "s2_leakage_pass": True,
+                },
+            },
+            "proof_blockers": ["requires_refinement_stability_across_regulator_sizes"],
+        },
+    )
+
+    report = comparable_data_report([run])
+    lane = report["measurement_lanes"]["prime_geometric_rank_sweep"]
+    row = report["rows"][0]
+
+    assert row["prime_rank_sweep_control_quotient_spatial_3d_candidate_receipt"] is True
+    assert row["prime_rank_sweep_spatial_3d_candidate_receipt"] is False
+    assert row["prime_rank_sweep_strict_neutral_candidate_receipt"] is False
+    assert row["prime_rank_sweep_control_quotient_coordinate_best_3d_rank"] == 3
+    assert row["prime_rank_sweep_control_quotient_coordinate_best_3d_corr_dim"] == 2.83
+    assert row["prime_rank_sweep_control_quotient_coordinate_best_3d_mle_dim"] == 3.02
+    assert row["prime_rank_sweep_control_quotient_coordinate_best_3d_model"] == "E3"
+    assert row["prime_rank_sweep_control_quotient_coordinate_best_3d_s2_leakage_corr"] == 0.023
+    assert row["prime_rank_sweep_control_quotient_coordinate_best_3d_s2_leakage_pass"] is True
+    assert lane["control_quotient_spatial_3d_candidate_receipt_count"] == 1
+    assert lane["spatial_3d_candidate_receipt_count"] == 0
+    assert lane["strict_neutral_candidate_receipt_count"] == 0
+    assert lane["control_quotient_coordinate_best_3d_rank_counts"] == {"3": 1}
+    assert lane["control_quotient_coordinate_best_3d_model_counts"] == {"E3": 1}
+    assert lane["control_quotient_coordinate_mean_best_3d_corr_dim"] == 2.83
+    assert lane["control_quotient_coordinate_mean_best_3d_mle_dim"] == 3.02
+    assert lane["control_quotient_coordinate_mean_best_3d_s2_leakage_corr"] == 0.023
+    assert lane["control_quotient_coordinate_best_3d_s2_leakage_pass_count"] == 1
 
 
 def _write_json(path: Path, data: dict) -> None:

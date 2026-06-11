@@ -1,0 +1,39 @@
+git status --short
+ M configs/e3_modular_response_h3_screen_4k.yml
+ M configs/e4_shared_observer_bulk_256k_particles.yml
+ M oph_fpe/bulk/__init__.py
+ M oph_fpe/bulk/neutral_bulk.py
+ M oph_fpe/bulk/proof_certificate.py
+ M oph_fpe/bulk/record_to_h3.py
+ M oph_fpe/claims.py
+ M oph_fpe/cli.py
+ M oph_fpe/cosmology/__init__.py
+ M oph_fpe/cosmology/camb_adapter.py
+ M oph_fpe/cosmology/cmb_derivation.py
+ M oph_fpe/cosmology/comparable_data.py
+ M oph_fpe/cosmology/finite_repair_transition_clock.py
+ M oph_fpe/cosmology/physical_cmb_contract.py
+ M oph_fpe/cosmology/physical_cmb_prediction.py
+ M oph_fpe/measurement_pack.py
+ M oph_fpe/scale/bw_array.py
+ M oph_fpe/viz/scale_compressed_viewer.py
+ M tests/test_camb_adapter.py
+ M tests/test_comparable_data.py
+ M tests/test_finite_repair_transition_clock.py
+ M tests/test_measurement_pack.py
+ M tests/test_neutral_bulk.py
+ M tests/test_physical_cmb_prediction.py
+ M tests/test_record_to_h3.py
+ M tests/test_scale_compressed_repair.py
+ M tests/test_unique_predictions.py
+?? correspondence/pro_handoff_20260610_rank3_cmb_refinement_audit/
+?? oph_fpe/bulk/prime_geometric_response.py
+?? oph_fpe/cosmology/finite_collar_boltzmann_bundle.py
+?? oph_fpe/cosmology/finite_collar_projection.py
+?? oph_fpe/cosmology/paired_ba_perturbation.py
+?? oph_fpe/cosmology/scalar_quotient.py
+?? tests/test_finite_collar_boltzmann_bundle.py
+?? tests/test_finite_collar_projection.py
+?? tests/test_paired_ba_perturbation.py
+?? tests/test_prime_geometric_response.py
+?? tests/test_scalar_quotient.py

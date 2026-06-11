@@ -10,6 +10,7 @@ from oph_fpe.cosmology.camb_adapter import (
     compare_camb_tt_to_benchmark,
     official_planck_readiness_report,
     write_camb_lcdm_baseline_report,
+    write_finite_repair_clock_cmb_camb_report,
     write_oph_exact_cmb_camb_report,
     write_oph_inflation_cmb_camb_report,
     write_oph_screen_camb_report,
@@ -256,6 +257,72 @@ def test_write_oph_exact_cmb_camb_report_smoke(tmp_path: Path):
     assert report["source_files"]["all_core_files_present"] is True
     assert report["source_files"]["selector_v1_5_core_files_present"] is True
     assert report["official_planck_likelihood_readiness"]["official_likelihood_execution_ready"] is False
+
+
+def test_write_finite_repair_clock_cmb_camb_report_smoke(tmp_path: Path):
+    pytest.importorskip("camb")
+    benchmark = tmp_path / "planck_tt.txt"
+    benchmark.write_text(
+        "# l Dl -dDl +dDl BestFit\n"
+        "50 1479.0 50 50 1461.0\n"
+        "100 2955.0 65 65 2904.0\n"
+        "200 5464.0 90 90 5535.0\n"
+        "500 2460.0 35 35 2465.0\n"
+        "1000 1050.0 20 20 1055.0\n",
+        encoding="utf-8",
+    )
+    finite_clock = tmp_path / "finite_repair_transition_matrix_report.json"
+    finite_clock.write_text(
+        """
+        {
+          "mode": "oph_finite_repair_transition_clock_v0",
+          "finite_transition_matrix_ready": true,
+          "finite_lattice_derived": true,
+          "clock_normalization_certified": false,
+          "repair_clock_certificate": false,
+          "primary_matrix": "reversible_empirical",
+          "repair_step_time": 50.26548245743669,
+          "state_count": 2,
+          "transition_count": 3072,
+          "primary": {
+            "kappa_rep_estimate": 2.4755067024747386,
+            "eta_R_estimate": 0.03201874992042351,
+            "n_s_estimate": 0.9679812500795765
+          },
+          "blockers": [
+            "finite transition matrix does not yield kappa_rep=e under the declared repair-step time"
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+    source = tmp_path / "cmb7"
+    source.mkdir()
+    (source / "OPH-CMB-Selector-Elimination-v1.5.md").write_text("v15", encoding="utf-8")
+    _write_selector_status_csv(source / "selector_elimination_status_v1_5.csv")
+    _write_exact_ir_csv(source / "exact_ir_kernel_values_v1_5.csv")
+
+    report = write_finite_repair_clock_cmb_camb_report(
+        finite_clock,
+        benchmark,
+        tmp_path / "out",
+        source_dir=source,
+        lmax=1200,
+    )
+
+    assert (tmp_path / "out" / "finite_repair_clock_cmb_camb_report.json").exists()
+    assert (tmp_path / "out" / "finite_repair_clock_cmb_camb_report.md").exists()
+    assert (tmp_path / "out" / "finite_repair_clock_cmb_tt_bins.csv").exists()
+    assert (tmp_path / "out" / "finite_repair_clock_cmb_tt_curves.csv").exists()
+    assert report["mode"] == "finite_repair_clock_cmb_camb_transfer_v0"
+    assert report["measurement_comparable_cmb_curve"] is True
+    assert report["finite_lattice_clock_derived"] is True
+    assert report["repair_clock_certificate"] is False
+    assert report["physical_cmb_prediction"] is False
+    assert report["finite_repair_clock_input"]["n_s"] == 0.9679812500795765
+    assert report["selector_ir_input"]["q_IR"] == 0.25
+    assert report["comparison"]["finite_repair_clock_scalar_tilt"]["usable"] is True
+    assert report["comparison"]["finite_repair_clock_plus_selector_ir"]["usable"] is True
 
 
 def test_official_planck_readiness_report_is_gated():

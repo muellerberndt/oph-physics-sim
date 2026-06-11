@@ -12,12 +12,20 @@ def write_scale_compressed_viewer(run_dir: Path, out_path: Path | None = None) -
 
     run_dir = Path(run_dir)
     report = _read_json(run_dir / "scale_compressed_repair_report.json")
-    camb = _read_json(run_dir / "scale_compressed_cmb_camb_report.json")
+    camb_report_path = _first_existing(
+        run_dir / "scale_compressed_cmb_camb_report.json",
+        run_dir / "camb_transfer" / "scale_compressed_cmb_camb_report.json",
+    )
+    camb_bins_path = _first_existing(
+        run_dir / "scale_compressed_cmb_tt_bins.csv",
+        run_dir / "camb_transfer" / "scale_compressed_cmb_tt_bins.csv",
+    )
+    camb = _read_json(camb_report_path) if camb_report_path is not None else {}
     objects = _read_rows(run_dir / "scale_compressed_h3_objects.csv")
     particles = _read_rows(run_dir / "scale_compressed_particles.csv")
     rounds = _read_rows(run_dir / "scale_compressed_repair_rounds.csv")
     screen_cl = _read_rows(run_dir / "scale_compressed_screen_cl.csv")
-    camb_bins = _read_rows(run_dir / "scale_compressed_cmb_tt_bins.csv")
+    camb_bins = _read_rows(camb_bins_path) if camb_bins_path is not None else []
 
     if not report:
         raise FileNotFoundError(run_dir / "scale_compressed_repair_report.json")
@@ -46,6 +54,8 @@ def write_scale_compressed_viewer(run_dir: Path, out_path: Path | None = None) -
         "logical_round_count": len(rounds),
         "screen_cl_row_count": len(screen_cl),
         "camb_bin_count": len(camb_bins),
+        "camb_report_path": str(camb_report_path) if camb_report_path is not None else None,
+        "camb_bins_path": str(camb_bins_path) if camb_bins_path is not None else None,
         "scale_compressed_operator_receipt": bool(report.get("scale_compressed_operator_receipt", False)),
         "populated_h3_preview_receipt": bool(
             ((report.get("h3_preview") or {}).get("populated_h3_preview_receipt", False))
@@ -211,6 +221,13 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _first_existing(*paths: Path) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
 
 
 def _read_rows(path: Path) -> list[dict[str, str]]:

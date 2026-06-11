@@ -12,10 +12,8 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    claims = _collect_claims(roots)
-    (out / "claims.json").write_text(json.dumps(claims, indent=2, default=str), encoding="utf-8")
-
     exported: dict[str, str] = {}
+    _copy_first(roots, out / "static_galaxy_measurement_report.json", exported, "static_galaxy_measurement_report.json")
     _copy_first(roots, out / "galaxy_rar_fit.csv", exported, "galaxy_rar_fit.csv")
     _copy_first(roots, out / "galaxy_btfr_fit.csv", exported, "galaxy_btfr_fit.csv")
     _copy_first(roots, out / "galaxy_rotation_residuals.csv", exported, "galaxy_rotation_residuals.csv")
@@ -41,6 +39,78 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "shape_loop_particles.csv", exported, "shape_loop_particles.csv")
     _copy_first(roots, out / "shape_screen_cl.csv", exported, "shape_screen_cl.csv")
     _copy_first(roots, out / "shape_settling_trace.csv", exported, "shape_settling_trace.csv")
+    _copy_first(roots, out / "emergence_status_report.json", exported, "emergence_status_report.json")
+    _copy_first(roots, out / "receipt_ladder_report.json", exported, "receipt_ladder_report.json")
+    _copy_first(roots, out / "bulk_reconstruction_report.json", exported, "bulk_reconstruction_report.json")
+    _copy_first(roots, out / "cmb_lite_comparison_report.json", exported, "cmb_lite_comparison_report.json")
+    _copy_first(roots, out / "cl_comparison_report.json", exported, "cl_comparison_report.json")
+    _copy_first(roots, out / "particle_likeness_report.json", exported, "particle_likeness_report.json")
+    _copy_first(
+        roots,
+        out / "controlled_defect_particle_assay_report.json",
+        exported,
+        "controlled_defect_particle_assay_report.json",
+    )
+    _copy_first(roots, out / "neutral_profile_audit_report.json", exported, "neutral_profile_audit_report.json")
+    _copy_first(roots, out / "prime_geometric_rank_sweep_report.json", exported, "prime_geometric_rank_sweep_report.json")
+    _copy_first(
+        roots,
+        out / "prime_geometric_rank_refinement_report.json",
+        exported,
+        "prime_geometric_rank_refinement_report.json",
+    )
+    _copy_first(roots, out / "neutral_3d_bulk_audit_report.json", exported, "neutral_3d_bulk_audit_report.json")
+    _copy_first(roots, out / "neutral_3d_bulk_audit_report.md", exported, "neutral_3d_bulk_audit_report.md")
+    _copy_first(
+        roots,
+        out / "neutral_independent_rank_selector_audit_report.json",
+        exported,
+        "neutral_independent_rank_selector_audit_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "neutral_independent_rank_selector_audit_report.md",
+        exported,
+        "neutral_independent_rank_selector_audit_report.md",
+    )
+    _copy_first(roots, out / "strict_neutral_bulk_report.json", exported, "strict_neutral_bulk_report.json")
+    _copy_first(
+        roots,
+        out / "strict_neutral_object_bulk_report.json",
+        exported,
+        "strict_neutral_object_bulk_report.json",
+    )
+    _copy_first(roots, out / "neutral_objects.jsonl", exported, "neutral_objects.jsonl")
+    _copy_first(
+        roots,
+        out / "observer_chart_object_h3_lineage_report.json",
+        exported,
+        "observer_chart_object_h3_lineage_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "observer_chart_object_h3_report.json",
+        exported,
+        "observer_chart_object_h3_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "observer_chart_object_h3_transition_history_report.json",
+        exported,
+        "observer_chart_object_h3_transition_history_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "observer_chart_object_h3_observer_transition_mixture_report.json",
+        exported,
+        "observer_chart_object_h3_observer_transition_mixture_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "observer_chart_object_h3_scale_compressed_report.json",
+        exported,
+        "observer_chart_object_h3_scale_compressed_report.json",
+    )
     _copy_first(roots, out / "bulk_proof_certificate_report.json", exported, "bulk_proof_certificate_report.json")
     _copy_first(roots, out / "bulk_proof_certificate_report.md", exported, "bulk_proof_certificate_report.md")
     _copy_first(roots, out / "paper_3d_bulk_chart_report.json", exported, "paper_3d_bulk_chart_report.json")
@@ -75,6 +145,8 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "repair_scale_round_depth.csv", exported, "repair_scale_round_depth.csv")
     _copy_first(roots, out / "screen_capacity_closure_report.json", exported, "screen_capacity_closure_report.json")
     _copy_first(roots, out / "screen_capacity_closure_report.md", exported, "screen_capacity_closure_report.md")
+    _copy_first(roots, out / "oph_scale_bridge_report.json", exported, "oph_scale_bridge_report.json")
+    _copy_first(roots, out / "oph_scale_bridge_report.md", exported, "oph_scale_bridge_report.md")
     _copy_first(roots, out / "parent_collar_ladder_report.json", exported, "parent_collar_ladder_report.json")
     _copy_first(roots, out / "parent_collar_ladder_report.md", exported, "parent_collar_ladder_report.md")
     _copy_first(roots, out / "repair_clock_certificate_report.json", exported, "repair_clock_certificate_report.json")
@@ -101,10 +173,131 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
         exported,
         "oph_boltzmann_finite_repair_clock_rows.csv",
     )
+    _copy_first(
+        roots,
+        out / "finite_collar_boltzmann_bundle_report.json",
+        exported,
+        "finite_collar_boltzmann_bundle_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_boltzmann_bundle_report.md",
+        exported,
+        "finite_collar_boltzmann_bundle_report.md",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_B_A_k_a_diagnostic.csv",
+        exported,
+        "finite_collar_B_A_k_a_diagnostic.csv",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_rho_A_a_diagnostic.csv",
+        exported,
+        "finite_collar_rho_A_a_diagnostic.csv",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_Gamma_rec_k_a_diagnostic.csv",
+        exported,
+        "finite_collar_Gamma_rec_k_a_diagnostic.csv",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_cmb_projection_report.json",
+        exported,
+        "finite_collar_cmb_projection_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_cmb_projection_report.md",
+        exported,
+        "finite_collar_cmb_projection_report.md",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_projected_B_A_rows.csv",
+        exported,
+        "finite_collar_projected_B_A_rows.csv",
+    )
+    _copy_first(
+        roots,
+        out / "finite_collar_projected_background_rows.csv",
+        exported,
+        "finite_collar_projected_background_rows.csv",
+    )
+    _copy_first(roots, out / "physical_cmb_input_report.json", exported, "physical_cmb_input_report.json")
+    _copy_first(roots, out / "physical_cmb_input_report.md", exported, "physical_cmb_input_report.md")
+    _copy_first(
+        roots,
+        out / "physical_cmb_promotion_audit_report.json",
+        exported,
+        "physical_cmb_promotion_audit_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "physical_cmb_promotion_audit_report.md",
+        exported,
+        "physical_cmb_promotion_audit_report.md",
+    )
+    _copy_first(roots, out / "physical_cmb_input_contract.json", exported, "physical_cmb_input_contract.json")
+    _copy_first(roots, out / "physical_cmb_input_validation.json", exported, "physical_cmb_input_validation.json")
+    _copy_first(roots, out / "physical_cmb_B_A_k_a.csv", exported, "B_A_k_a.csv")
+    _copy_first(roots, out / "physical_cmb_Gamma_rec_k_a.csv", exported, "Gamma_rec_k_a.csv")
+    _copy_first(roots, out / "physical_cmb_rho_A_a.csv", exported, "rho_A_a.csv")
+    _copy_first(
+        roots,
+        out / "finite_repair_clock_cmb_camb_report.json",
+        exported,
+        "finite_repair_clock_cmb_camb_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "finite_repair_clock_cmb_camb_report.md",
+        exported,
+        "finite_repair_clock_cmb_camb_report.md",
+    )
+    _copy_first(
+        roots,
+        out / "finite_repair_clock_cmb_tt_bins.csv",
+        exported,
+        "finite_repair_clock_cmb_tt_bins.csv",
+    )
+    _copy_first(
+        roots,
+        out / "finite_repair_clock_cmb_tt_curves.csv",
+        exported,
+        "finite_repair_clock_cmb_tt_curves.csv",
+    )
+    _copy_first(roots, out / "camb_lcdm_baseline_report.json", exported, "camb_lcdm_baseline_report.json")
+    _copy_first(roots, out / "camb_lcdm_baseline_report.md", exported, "camb_lcdm_baseline_report.md")
+    _copy_first(roots, out / "camb_lcdm_tt_bins.csv", exported, "camb_lcdm_tt_bins.csv")
     _copy_first(roots, out / "b_a_parent_report.json", exported, "b_a_parent_report.json")
     _copy_first(roots, out / "b_a_parent_report.md", exported, "b_a_parent_report.md")
     _copy_first(roots, out / "b_a_parent_rows.csv", exported, "b_a_parent_rows.csv")
     _copy_first(roots, out / "b_a_parent_control_rows.csv", exported, "b_a_parent_control_rows.csv")
+    _copy_first(roots, out / "B_A_kernel_report.json", exported, "B_A_kernel_report.json")
+    _copy_first(roots, out / "B_A_kernel_report.md", exported, "B_A_kernel_report.md")
+    _copy_first(roots, out / "B_A_kernel_candidate.csv", exported, "B_A_kernel_candidate.csv")
+    _copy_first(roots, out / "B_A_kernel_refinement_report.json", exported, "B_A_kernel_refinement_report.json")
+    _copy_first(roots, out / "B_A_kernel_refinement_report.md", exported, "B_A_kernel_refinement_report.md")
+    _copy_first(roots, out / "B_A_kernel_refinement_pairs.csv", exported, "B_A_kernel_refinement_pairs.csv")
+    _copy_first(
+        roots,
+        out / "B_A_kernel_refinement_key_pairs.csv",
+        exported,
+        "B_A_kernel_refinement_key_pairs.csv",
+    )
+    _copy_first(roots, out / "paired_b_a_perturbation_report.json", exported, "paired_b_a_perturbation_report.json")
+    _copy_first(roots, out / "paired_b_a_perturbation_report.md", exported, "paired_b_a_perturbation_report.md")
+    _copy_first(roots, out / "paired_b_a_perturbation_rows.csv", exported, "paired_b_a_perturbation_rows.csv")
+    _copy_first(
+        roots,
+        out / "paired_b_a_perturbation_control_rows.csv",
+        exported,
+        "paired_b_a_perturbation_control_rows.csv",
+    )
     _copy_first(roots, out / "b_a_parent_observer_view_rows.csv", exported, "b_a_parent_observer_view_rows.csv")
     _copy_first(
         roots,
@@ -239,6 +432,10 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "boltzmann_export_certificate.json", exported, "boltzmann_export_certificate.json")
     _copy_first(roots, out / "no_data_use_receipt.json", exported, "no_data_use_receipt.json")
     _write_finite_certificate_outputs(roots, out / "finite_certificate_outputs.csv")
+    _refresh_bulk_proof_certificate(out, exported)
+
+    claims = _collect_claims([out] + roots)
+    (out / "claims.json").write_text(json.dumps(claims, indent=2, default=str), encoding="utf-8")
 
     report = {
         "mode": "oph_measurement_pack_v0",
@@ -260,21 +457,47 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     return report
 
 
+def _refresh_bulk_proof_certificate(out: Path, exported: dict[str, str]) -> None:
+    try:
+        from oph_fpe.bulk.proof_certificate import write_bulk_proof_certificate
+    except Exception:
+        return
+    try:
+        write_bulk_proof_certificate(out, out)
+    except Exception:
+        return
+    exported["bulk_proof_certificate_report.json"] = "generated from exported receipt bundle"
+    exported["bulk_proof_certificate_report.md"] = "generated from exported receipt bundle"
+
+
 def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     static_galaxy = _first_json(roots, "static_galaxy_measurement_report.json")
     comparable = _first_json(roots, "comparable_data_snapshot.json")
     bulk = _first_json(roots, "bulk_proof_certificate_report.json")
     exact_cmb = _first_json(roots, "oph_exact_cmb_camb_report.json")
+    finite_clock_cmb = _first_json(roots, "finite_repair_clock_cmb_camb_report.json")
+    camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
     shape = _first_json(roots, "shape_substrate_summary.json")
     finite = _first_json(roots, "finite_certificate_report.json")
     finite_transition = _first_json(roots, "finite_repair_transition_matrix_report.json")
     scalar_repair_semigroup = _first_json(roots, "scalar_repair_semigroup_report.json")
     screen_capacity = _first_json(roots, "screen_capacity_closure_report.json")
     repair_scale = _first_json(roots, "repair_scale_closure_report.json")
+    scale_bridge = _first_json(roots, "oph_scale_bridge_report.json")
     parent_collar = _first_json(roots, "parent_collar_ladder_report.json")
     repair_clock = _first_json(roots, "repair_clock_certificate_report.json")
     boltzmann_inputs = _first_json(roots, "oph_boltzmann_input_report.json")
+    finite_collar_boltzmann = _first_json(roots, "finite_collar_boltzmann_bundle_report.json")
+    finite_collar_projection = _first_json(roots, "finite_collar_cmb_projection_report.json")
+    physical_cmb_input = _first_json(roots, "physical_cmb_input_report.json")
+    physical_cmb_promotion = _first_json(roots, "physical_cmb_promotion_audit_report.json")
+    neutral_profile = _first_json(roots, "neutral_profile_audit_report.json")
+    prime_rank_refinement = _first_json(roots, "prime_geometric_rank_refinement_report.json")
+    neutral_3d_bulk_audit = _first_json(roots, "neutral_3d_bulk_audit_report.json")
+    neutral_rank_selector_audit = _first_json(roots, "neutral_independent_rank_selector_audit_report.json")
     ba_parent = _first_json(roots, "b_a_parent_report.json")
+    ba_kernel = _first_json(roots, "B_A_kernel_report.json")
+    ba_kernel_refinement = _first_json(roots, "B_A_kernel_refinement_report.json")
     screen_power = _first_json(roots, "oph_screen_power_report.json")
     maxent_green = _first_json(roots, "maxent_green_spectrum_report.json")
     selector_elimination = _first_json(roots, "oph_cmb_selector_elimination_report.json")
@@ -289,10 +512,19 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     comparable_neutral = comparable.get("measurement_lanes", {}).get("neutral_observer_reconstruction", {})
     screen_capacity_gates = screen_capacity.get("readiness_gates") or {}
     repair_scale_gates = repair_scale.get("readiness_gates") or {}
+    scale_bridge_gates = scale_bridge.get("readiness_gates") or {}
+    scale_bridge_values = scale_bridge.get("scale_bridge") or {}
     neutrino_gates = neutrinos.get("readiness_gates") or {}
     h0s8_gates = h0s8.get("readiness_gates") or {}
     h0s8_comparisons = h0s8.get("measurement_comparisons") or {}
     cmb_anomaly_aggregate = cmb_anomaly.get("aggregate") or {}
+    neutral_profile_rows = neutral_profile.get("profile_rows", [])
+    if not isinstance(neutral_profile_rows, list):
+        neutral_profile_rows = []
+    physical_cmb_input_status = physical_cmb_input.get("input_status") or {}
+    physical_cmb_a_zeta = physical_cmb_input_status.get("A_zeta") or {}
+    physical_cmb_b_a = physical_cmb_input_status.get("B_A_k_a") or {}
+    physical_cmb_rho_a = physical_cmb_input_status.get("rho_A_a") or {}
     return {
         "WORKING_MINI_UNIVERSE_V0": bool(
             static_galaxy.get("STATIC_GALAXY_RAR_BTFR_RECEIPT", False)
@@ -313,6 +545,21 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "exact_cmb_curve_comparable": bool(
             exact_cmb.get("measurement_comparable_curve", False)
             or exact_cmb.get("measurement_comparable_cmb_curve", False)
+        ),
+        "finite_repair_clock_cmb_curve_comparable": bool(
+            finite_clock_cmb.get("measurement_comparable_cmb_curve", False)
+        ),
+        "finite_repair_clock_cmb_finite_lattice_clock": bool(
+            finite_clock_cmb.get("finite_lattice_clock_derived", False)
+        ),
+        "finite_repair_clock_cmb_physical_prediction": bool(
+            finite_clock_cmb.get("physical_cmb_prediction", False)
+        ),
+        "camb_lcdm_cdm_limit_boltzmann_receipt": bool(
+            camb_baseline.get("CDM_LIMIT_BOLTZMANN_RECEIPT", False)
+        ),
+        "camb_lcdm_oph_anomaly_module_ready": bool(
+            camb_baseline.get("oph_anomaly_module_ready", False)
         ),
         "chart_level_3p1": bool(
             comparable.get("chart_level_3p1_any", False)
@@ -349,6 +596,52 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "strict_blind_record_transition_rank3_candidate": bool(
             comparable_neutral.get("blind_record_transition_rank3_receipt_count", 0)
         ),
+        "neutral_profile_audit_written": bool(neutral_profile),
+        "neutral_profile_strict_3d_ready_count": int(
+            sum(1 for row in neutral_profile_rows if isinstance(row, dict) and row.get("strict_3d_ready"))
+        ),
+        "control_residualized_rank3_refinement_candidate": bool(
+            prime_rank_refinement.get("control_quotient_rank3_refinement_candidate_receipt", False)
+        ),
+        "control_residualized_rank3_independent_selector_all": bool(
+            prime_rank_refinement.get("independent_rank3_selector_all", False)
+        ),
+        "control_residualized_rank3_dimension_drift": prime_rank_refinement.get(
+            "candidate_dimension_drift"
+        ),
+        "strict_neutral_bulk_refinement_receipt": bool(
+            prime_rank_refinement.get("strict_neutral_bulk_refinement_receipt", False)
+        ),
+        "control_residualized_rank3_physical_claim": bool(prime_rank_refinement.get("physical_claim", False)),
+        "neutral_3d_bulk_audit_written": bool(neutral_3d_bulk_audit),
+        "neutral_3d_bulk_audit_ready": bool(
+            neutral_3d_bulk_audit.get("strict_neutral_bulk_ready", False)
+        ),
+        "neutral_3d_bulk_audit_directional_strict_ready_total": int(
+            neutral_3d_bulk_audit.get("directional_strict_ready_total") or 0
+        ),
+        "neutral_3d_bulk_audit_control_quotient_candidate_count": int(
+            neutral_3d_bulk_audit.get("control_quotient_candidate_count") or 0
+        ),
+        "neutral_independent_rank_selector_audit_written": bool(neutral_rank_selector_audit),
+        "neutral_independent_rank3_selector_receipt": bool(
+            neutral_rank_selector_audit.get("NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT", False)
+        ),
+        "neutral_independent_rank_selector_run_count": int(
+            neutral_rank_selector_audit.get("run_count") or 0
+        ),
+        "neutral_independent_rank_selector_control_rank3_count": int(
+            neutral_rank_selector_audit.get("control_quotient_rank3_selector_count") or 0
+        ),
+        "neutral_independent_rank_selector_control_candidate_count": int(
+            neutral_rank_selector_audit.get("control_quotient_rank3_candidate_count") or 0
+        ),
+        "neutral_independent_rank_selector_control_median_effective_rank": (
+            neutral_rank_selector_audit.get("control_quotient_median_effective_rank")
+        ),
+        "neutral_independent_rank_selector_control_median_rank3_ev": (
+            neutral_rank_selector_audit.get("control_quotient_median_rank3_cumulative_explained_variance")
+        ),
         "production_particles": bool(
             bulk.get("production_particle_matter_receipt", False)
             or comparable.get("physical_matter_power_prediction", False)
@@ -359,6 +652,10 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "finite_certificate_real_physics": bool(finite.get("real_physics_certificate", False)),
         "finite_certificate_no_data_use": bool(
             (finite.get("no_data_use_receipt") or {}).get("no_data_use_receipt", False)
+        ),
+        "finite_certificate_proxy_A_zeta_available": bool(
+            finite.get("proxy_certificate", False)
+            and (finite.get("derived_outputs") or {}).get("A_zeta") is not None
         ),
         "finite_transition_matrix_ready": bool(
             finite_transition.get("finite_transition_matrix_ready", False)
@@ -377,6 +674,18 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "screen_capacity_finite_fixed_point_solved": bool(
             screen_capacity_gates.get("N_CRC_fixed_point_solved_from_finite_simulator", False)
         ),
+        "scale_bridge_written": bool(scale_bridge),
+        "scale_bridge_independent_supplied": bool(
+            scale_bridge_gates.get("independent_scale_bridge_supplied", False)
+        ),
+        "scale_bridge_dimensionful_G_eligible": bool(
+            scale_bridge_gates.get("dimensionful_G_SI_eligible", False)
+        ),
+        "scale_bridge_finite_simulator_derived_G_SI": bool(
+            scale_bridge_gates.get("finite_simulator_derived_G_SI", False)
+        ),
+        "scale_bridge_B_ell_m2_inverse": scale_bridge_values.get("B_ell_m2_inverse"),
+        "scale_bridge_G_SI": scale_bridge_values.get("G_SI"),
         "parent_collar_local_density_receipt": bool(
             parent_collar.get("local_recovery_density_receipt", False)
         ),
@@ -397,6 +706,52 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
                 "finite_repair_clock_diagnostic_rows_emitted", False
             )
         ),
+        "finite_collar_boltzmann_source_bundle": bool(
+            finite_collar_boltzmann.get("FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT", False)
+        ),
+        "finite_collar_boltzmann_physical_certificate": bool(
+            finite_collar_boltzmann.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False)
+        ),
+        "finite_collar_boltzmann_physical_prediction": bool(
+            finite_collar_boltzmann.get("physical_cmb_prediction", False)
+            or finite_collar_boltzmann.get("physical_matter_power_prediction", False)
+        ),
+        "finite_collar_cmb_projection": bool(
+            finite_collar_projection.get("FINITE_COLLAR_CMB_PROJECTION_DIAGNOSTIC_RECEIPT", False)
+        ),
+        "finite_collar_cmb_projection_physical_k": bool(
+            finite_collar_projection.get("PHYSICAL_K_CALIBRATION_RECEIPT", False)
+        ),
+        "physical_cmb_input_contract_receipt": bool(
+            physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+        ),
+        "physical_cmb_input_prediction_eligible": bool(
+            physical_cmb_input.get("physical_cmb_prediction_eligible", False)
+        ),
+        "physical_cmb_input_A_zeta_diagnostic_present": bool(
+            physical_cmb_a_zeta.get("diagnostic_value_present", False)
+        ),
+        "physical_cmb_input_A_zeta_physical_gate_passed": bool(
+            physical_cmb_a_zeta.get("physical_gate_passed", False)
+        ),
+        "physical_cmb_input_B_A_diagnostic_rows": int(physical_cmb_b_a.get("row_count") or 0),
+        "physical_cmb_input_B_A_physical_gate_passed": bool(
+            physical_cmb_b_a.get("physical_gate_passed", False)
+        ),
+        "physical_cmb_input_rho_A_diagnostic_rows": int(physical_cmb_rho_a.get("row_count") or 0),
+        "physical_cmb_input_rho_A_physical_gate_passed": bool(
+            physical_cmb_rho_a.get("physical_gate_passed", False)
+        ),
+        "physical_cmb_promotion_audit_written": bool(physical_cmb_promotion),
+        "physical_cmb_promotion_ready": bool(
+            physical_cmb_promotion.get("physical_cmb_promotion_ready", False)
+        ),
+        "physical_cmb_promotion_official_likelihood_ready": bool(
+            physical_cmb_promotion.get("official_likelihood_ready", False)
+        ),
+        "physical_cmb_promotion_blocker_count": int(
+            len(physical_cmb_promotion.get("promotion_blockers") or [])
+        ),
         "b_a_parent_rows_emitted": bool(
             ((ba_parent.get("readiness") or {}).get("checks") or {}).get("finite_difference_rows_emitted", False)
         ),
@@ -409,6 +764,26 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             or ba_parent.get("physical_cmb_prediction", False)
             or ba_parent.get("physical_matter_power_prediction", False)
         ),
+        "B_A_kernel_candidate_receipt": bool(ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False)),
+        "B_A_kernel_physical_receipt": bool(ba_kernel.get("B_A_KERNEL_RECEIPT", False)),
+        "B_A_kernel_row_count": int(ba_kernel.get("row_count") or 0),
+        "B_A_kernel_promotion_blocker_count": int(len(ba_kernel.get("promotion_blockers") or [])),
+        "B_A_kernel_refinement_two_scale_diagnostic": bool(
+            ba_kernel_refinement.get("two_scale_diagnostic_receipt", False)
+        ),
+        "B_A_kernel_refinement_convergence_receipt": bool(
+            ba_kernel_refinement.get("B_A_KERNEL_REFINEMENT_CONVERGENCE_RECEIPT", False)
+        ),
+        "B_A_kernel_refinement_patch_count_count": int(
+            ba_kernel_refinement.get("patch_count_count") or 0
+        ),
+        "B_A_kernel_refinement_key_pair_row_count": int(
+            ba_kernel_refinement.get("key_pair_row_count") or 0
+        ),
+        "B_A_kernel_refinement_key_pair_stable_fraction": (
+            ba_kernel_refinement.get("key_pair_stable_fraction")
+        ),
+        "B_A_kernel_refinement_blocker_count": int(len(ba_kernel_refinement.get("blockers") or [])),
         "screen_power_simulator_primordial_ready": bool(
             screen_power.get("simulator_primordial_reference_ready", False)
         ),
@@ -472,12 +847,19 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
 
 
 def _copy_first(roots: list[Path], target: Path, exported: dict[str, str], *names: str) -> None:
-    for name in names:
-        path = _find_first(roots, name)
+    if target.suffix.lower() == ".json":
+        path = _find_preferred_json(roots, names)
         if path is not None:
             shutil.copy2(path, target)
             exported[target.name] = str(path)
             return
+    else:
+        for name in names:
+            path = _find_first(roots, name)
+            if path is not None:
+                shutil.copy2(path, target)
+                exported[target.name] = str(path)
+                return
     _write_missing_placeholder(target)
 
 
@@ -640,7 +1022,7 @@ def _first_numeric(value: Any) -> Any:
 
 
 def _first_json(roots: list[Path], name: str) -> dict[str, Any]:
-    path = _find_first(roots, name)
+    path = _find_preferred_json(roots, (name,))
     if path is None:
         return {}
     return _read_json(path)
@@ -654,18 +1036,133 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _find_first(roots: list[Path], name: str) -> Path | None:
+    paths = _candidate_paths(roots, name)
+    return paths[0] if paths else None
+
+
+def _find_preferred_json(roots: list[Path], names: tuple[str, ...]) -> Path | None:
+    candidates: list[tuple[tuple[float, ...], int, Path]] = []
+    for name in names:
+        for index, path in enumerate(_candidate_paths(roots, name)):
+            data = _read_json(path)
+            candidates.append((_json_preference_score(name, data), -index, path))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    return candidates[0][2]
+
+
+def _candidate_paths(roots: list[Path], name: str) -> list[Path]:
+    candidates: list[Path] = []
+    seen: set[Path] = set()
     for root in roots:
         root = Path(root)
         if root.is_file() and root.name == name:
-            return root
+            resolved = root.resolve()
+            if resolved not in seen:
+                candidates.append(root)
+                seen.add(resolved)
+            continue
         direct = root / name
         if direct.exists():
-            return direct
+            resolved = direct.resolve()
+            if resolved not in seen:
+                candidates.append(direct)
+                seen.add(resolved)
         if root.exists() and root.is_dir():
-            matches = sorted(root.glob(f"**/{name}"))
-            if matches:
-                return matches[0]
-    return None
+            for match in sorted(root.glob(f"**/{name}")):
+                resolved = match.resolve()
+                if resolved not in seen:
+                    candidates.append(match)
+                    seen.add(resolved)
+    return candidates
+
+
+def _json_preference_score(name: str, data: dict[str, Any]) -> tuple[float, ...]:
+    if not data:
+        return (0.0,)
+    if name == "finite_collar_boltzmann_bundle_report.json":
+        validation = data.get("physical_cmb_input_validation") or {}
+        readiness = data.get("readiness") or {}
+        checks = readiness.get("checks") or {}
+        source_summary = data.get("contract_source_summary") or {}
+        present_sources = sum(1 for row in source_summary.values() if isinstance(row, dict) and row.get("present"))
+        blockers = validation.get("blockers") or []
+        return (
+            100.0,
+            float(bool(data.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False))),
+            float(bool(data.get("FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT", False))),
+            float(bool(checks.get("no_data_use_receipt", False))),
+            float(present_sources),
+            -float(len(blockers)),
+        )
+    if name == "finite_collar_cmb_projection_report.json":
+        rows = data.get("projected_B_A_rows") or []
+        background = data.get("background_rows") or []
+        readiness = data.get("readiness") or {}
+        return (
+            100.0,
+            float(bool(data.get("PHYSICAL_K_CALIBRATION_RECEIPT", False))),
+            float(bool(data.get("FINITE_COLLAR_CMB_PROJECTION_DIAGNOSTIC_RECEIPT", False))),
+            float(bool(readiness.get("finite_collar_source_bundle_receipt", False))),
+            float(len(rows)),
+            float(len(background)),
+        )
+    if name == "physical_cmb_input_report.json":
+        blockers = data.get("blockers") or []
+        source_summary = data.get("source_summary") or {}
+        present_sources = sum(1 for row in source_summary.values() if isinstance(row, dict) and row.get("present"))
+        return (
+            100.0,
+            float(bool(data.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False))),
+            float(bool(data.get("physical_cmb_prediction_eligible", False))),
+            float(present_sources),
+            -float(len(blockers)),
+        )
+    if name == "physical_cmb_promotion_audit_report.json":
+        blockers = data.get("promotion_blockers") or []
+        return (
+            100.0,
+            float(bool(data.get("physical_cmb_promotion_ready", False))),
+            float(bool(data.get("physical_cmb_input_contract_receipt", False))),
+            float(bool(data.get("cdm_limit_regression_passed", False))),
+            -float(len(blockers)),
+        )
+    if name == "neutral_3d_bulk_audit_report.json":
+        blockers = data.get("blockers") or []
+        return (
+            100.0,
+            float(bool(data.get("strict_neutral_bulk_ready", False))),
+            float(bool(data.get("control_residualized_rank3_refinement_candidate", False))),
+            float(int(data.get("sweep_report_count") or 0)),
+            -float(len(blockers)),
+        )
+    if name == "neutral_independent_rank_selector_audit_report.json":
+        blockers = data.get("blockers") or []
+        return (
+            100.0,
+            float(bool(data.get("NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT", False))),
+            float(int(data.get("run_count") or 0)),
+            float(int(data.get("control_quotient_rank3_candidate_count") or 0)),
+            -float(len(blockers)),
+        )
+    if name == "B_A_kernel_refinement_report.json":
+        blockers = data.get("blockers") or []
+        return (
+            100.0,
+            float(bool(data.get("B_A_KERNEL_REFINEMENT_CONVERGENCE_RECEIPT", False))),
+            float(bool(data.get("two_scale_diagnostic_receipt", False))),
+            float(int(data.get("patch_count_count") or 0)),
+            float(int(data.get("key_pair_row_count") or 0)),
+            -float(len(blockers)),
+        )
+    if name == "no_data_use_receipt.json":
+        return (
+            100.0,
+            float(bool(data.get("NO_DATA_USE_RECEIPT", False) or data.get("no_data_use_receipt", False))),
+            -float(bool(data.get("measurement_data_used_for_input_functions", False))),
+        )
+    return (100.0,)
 
 
 def _find_all(roots: list[Path], name: str) -> list[Path]:
@@ -698,9 +1195,26 @@ def _readme(report: dict[str, Any]) -> str:
         "## Claim Flags\n\n"
         f"- static galaxy measurement fit: {claims.get('static_galaxy_measurement_fit')}\n"
         f"- physical CMB prediction: {claims.get('physical_cmb_prediction')}\n"
+        f"- exact target CMB curve comparable: {claims.get('exact_cmb_curve_comparable')}\n"
+        f"- finite repair-clock CMB curve comparable: {claims.get('finite_repair_clock_cmb_curve_comparable')}\n"
+        f"- finite repair-clock CMB uses finite-lattice clock: {claims.get('finite_repair_clock_cmb_finite_lattice_clock')}\n"
+        f"- finite repair-clock CMB physical prediction: {claims.get('finite_repair_clock_cmb_physical_prediction')}\n"
+        f"- CAMB LambdaCDM CDM-limit Boltzmann receipt: {claims.get('camb_lcdm_cdm_limit_boltzmann_receipt')}\n"
+        f"- OPH CMB anomaly module ready: {claims.get('camb_lcdm_oph_anomaly_module_ready')}\n"
         f"- chart-level 3+1D: {claims.get('chart_level_3p1')}\n"
         f"- theorem-assisted H3 bulk: {claims.get('theorem_assisted_h3_bulk')}\n"
         f"- strict neutral bulk: {claims.get('strict_neutral_bulk')}\n"
+        f"- neutral profile audit written: {claims.get('neutral_profile_audit_written')}\n"
+        f"- neutral profile strict-3D ready count: {claims.get('neutral_profile_strict_3d_ready_count')}\n"
+        f"- control-residualized rank-3 refinement candidate: {claims.get('control_residualized_rank3_refinement_candidate')}\n"
+        f"- control-residualized rank-3 physical claim: {claims.get('control_residualized_rank3_physical_claim')}\n"
+        f"- neutral 3D bulk audit written: {claims.get('neutral_3d_bulk_audit_written')}\n"
+        f"- neutral 3D bulk audit ready: {claims.get('neutral_3d_bulk_audit_ready')}\n"
+        f"- neutral independent rank-selector audit written: {claims.get('neutral_independent_rank_selector_audit_written')}\n"
+        f"- neutral independent rank-3 selector receipt: {claims.get('neutral_independent_rank3_selector_receipt')}\n"
+        f"- neutral independent rank-selector run count: {claims.get('neutral_independent_rank_selector_run_count')}\n"
+        f"- neutral selector control-quotient rank-3 count: {claims.get('neutral_independent_rank_selector_control_rank3_count')}\n"
+        f"- neutral selector control-quotient median effective rank: {claims.get('neutral_independent_rank_selector_control_median_effective_rank')}\n"
         f"- strict blind record-transition 3D candidate: {claims.get('strict_blind_record_transition_3d_candidate')}\n"
         f"- production particles: {claims.get('production_particles')}\n\n"
         f"- finite certificate stack ready: {claims.get('finite_certificate_stack_ready')}\n"
@@ -711,11 +1225,26 @@ def _readme(report: dict[str, Any]) -> str:
         f"- finite transition eta_R finite-derived: {claims.get('finite_transition_eta_R_finite_lattice_derived')}\n\n"
         f"- screen-capacity observed branch: {claims.get('screen_capacity_observed_branch_available')}\n"
         f"- screen-capacity finite fixed point solved: {claims.get('screen_capacity_finite_fixed_point_solved')}\n\n"
+        f"- scale bridge report written: {claims.get('scale_bridge_written')}\n"
+        f"- scale bridge independent supplied: {claims.get('scale_bridge_independent_supplied')}\n"
+        f"- scale bridge dimensionful G eligible: {claims.get('scale_bridge_dimensionful_G_eligible')}\n"
+        f"- scale bridge finite-simulator G_SI: {claims.get('scale_bridge_finite_simulator_derived_G_SI')}\n\n"
         f"- parent-collar local density receipt: {claims.get('parent_collar_local_density_receipt')}\n"
         f"- parent-collar theorem-grade: {claims.get('parent_collar_theorem_grade')}\n"
         f"- repair-clock certificate: {claims.get('repair_clock_certificate')}\n"
         f"- repair-clock eta_R finite-derived: {claims.get('repair_clock_eta_R_finite_lattice_derived')}\n\n"
+        f"- B_A kernel candidate receipt: {claims.get('B_A_kernel_candidate_receipt')}\n"
+        f"- B_A kernel physical receipt: {claims.get('B_A_kernel_physical_receipt')}\n"
+        f"- B_A kernel row count: {claims.get('B_A_kernel_row_count')}\n\n"
+        f"- B_A kernel refinement two-scale diagnostic: {claims.get('B_A_kernel_refinement_two_scale_diagnostic')}\n"
+        f"- B_A kernel refinement convergence: {claims.get('B_A_kernel_refinement_convergence_receipt')}\n"
+        f"- B_A kernel refinement patch-count count: {claims.get('B_A_kernel_refinement_patch_count_count')}\n\n"
+        f"- B_A kernel refinement key-pair row count: {claims.get('B_A_kernel_refinement_key_pair_row_count')}\n"
+        f"- B_A kernel refinement key-pair stable fraction: {claims.get('B_A_kernel_refinement_key_pair_stable_fraction')}\n\n"
         f"- Boltzmann input table written: {claims.get('boltzmann_input_table_written')}\n"
+        f"- physical CMB promotion audit written: {claims.get('physical_cmb_promotion_audit_written')}\n"
+        f"- physical CMB promotion ready: {claims.get('physical_cmb_promotion_ready')}\n"
+        f"- physical CMB promotion blocker count: {claims.get('physical_cmb_promotion_blocker_count')}\n"
         f"- screen-power primordial reference ready: {claims.get('screen_power_simulator_primordial_ready')}\n"
         f"- MaxEnt Green source receipt: {claims.get('maxent_green_source_receipt')}\n"
         f"- selector-elimination theorem-side receipt: {claims.get('selector_elimination_theorem_side_receipt')}\n"
