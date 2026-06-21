@@ -18,6 +18,7 @@ secrets/
 artifacts/
 receipts/
 runs/
+distributed/
 temp/
 .oph_fpe_cache/
 *.log

@@ -122,6 +122,37 @@ CPU planning:
 - For a single `run-bw-array`, set `bw.n_jobs: auto` and `cosmology.angular_power.n_jobs: auto` in the config.
 - The hot path is CPU/RAM bound: NumPy, SciPy, KD-tree geometry, harmonic estimators, CAMB where installed, and receipt aggregation.
 
+## Distributed Universe Runs
+
+The distributed runner prepares one unified OPH atlas and splits it into shard-local observer-patch jobs. Each shard remains an observer-like self-reading system: bounded local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts. Shards are not independent toy universes; their configs carry global patch ranges, global observer ranges, atlas centers, and core/halo seam metadata so cross-shard overlaps can be reduced back into one federated universe witness.
+
+Generated distributed packs belong under `distributed/` and are ignored by Git. Commit the kernel code, base configs, docs, and reducer logic, not generated shard YAMLs.
+
+Prepare a distributed pack:
+
+```bash
+python3 -m oph_fpe.cli prepare-distributed-oph-universe \
+  --config configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml \
+  --out-dir distributed/<run_id> \
+  --run-id <run_id> \
+  --shard-count 64 \
+  --patch-count-per-shard 65536 \
+  --observers-per-shard 256 \
+  --worker-count 8 \
+  --seam-halo-width 2048
+```
+
+Run the generated worker scripts locally or on cloud workers, then reduce the shard receipts:
+
+```bash
+python3 -m oph_fpe.cli reduce-distributed-oph-universe \
+  --manifest distributed/<run_id>/distributed_universe_manifest.json \
+  --shard-root runs/<run_id>/shards \
+  --out-dir runs/<run_id>/reduced
+```
+
+The reducer emits a distributed summary, cross-shard seam readout, and visualization payload. The intended large-run claim is conservative: a single global atlas/federated large-universe witness with explicit overlap seams. A strict single neutral third-person 3D bulk still requires the normal neutral-bulk gates plus stronger per-cycle halo exchange and global neutral reduction receipts.
+
 ## Claim-Gate Commands
 
 ```bash
