@@ -1,0 +1,1028 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph_universe_timeline_visualization_payload_v1.schema.json",
+  "title": "OPH Universe Timeline Visualization Payload",
+  "description": "Schema for OPH-FPE visualization payloads that show observer-like self-reading systems: bounded patches with local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts. Diagnostic views must not be promoted to strict neutral bulk, matter particles, or physical CMB prediction unless the corresponding receipts are true.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "title",
+    "claimBoundary",
+    "ophDifferentiator",
+    "sourcePaths",
+    "smallUniverse",
+    "screen",
+    "observerModularTime",
+    "consensusBulk",
+    "pnSilenceToObservation",
+    "cmbComparison",
+    "geometriesAndSymmetries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "oph_universe_timeline_visualization_payload_v1"
+    },
+    "title": {
+      "type": "string"
+    },
+    "claimBoundary": {
+      "type": "string"
+    },
+    "ophDifferentiator": {
+      "type": "string"
+    },
+    "sourcePaths": {
+      "$ref": "#/$defs/sourcePaths"
+    },
+    "smallUniverse": {
+      "$ref": "#/$defs/smallUniverse"
+    },
+    "screen": {
+      "$ref": "#/$defs/screen"
+    },
+    "observerModularTime": {
+      "$ref": "#/$defs/observerModularTime"
+    },
+    "consensusBulk": {
+      "$ref": "#/$defs/consensusBulk"
+    },
+    "pnSilenceToObservation": {
+      "$ref": "#/$defs/pnSilenceToObservation"
+    },
+    "cmbComparison": {
+      "$ref": "#/$defs/cmbComparison"
+    },
+    "geometriesAndSymmetries": {
+      "type": "object",
+      "description": "Human-readable explanations and receipt summaries for visible geometries and symmetries.",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "type": ["boolean", "integer", "number", "string", "null"]
+    },
+    "receiptMap": {
+      "type": "object",
+      "description": "Receipt entries are strict gates. Missing keys must be rendered as absent, never as passing.",
+      "additionalProperties": {
+        "$ref": "#/$defs/scalar"
+      }
+    },
+    "openObject": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "vec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "sourcePaths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "smallUniverseDir",
+        "observerRunDir",
+        "consensusPackDir",
+        "consensusReadoutDir"
+      ],
+      "properties": {
+        "smallUniverseDir": {
+          "type": "string"
+        },
+        "observerRunDir": {
+          "type": "string"
+        },
+        "consensusPackDir": {
+          "type": ["string", "null"]
+        },
+        "consensusReadoutDir": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "smallUniverse": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "description",
+        "source",
+        "nodeCount",
+        "nodes",
+        "edges",
+        "repairFrames",
+        "cycles",
+        "receipts",
+        "claimBoundary"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "nodeCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/smallUniverseNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/edge"
+          }
+        },
+        "repairFrames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repairFrame"
+          }
+        },
+        "cycles": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["exactConsensus", "frustratedControl"],
+          "properties": {
+            "exactConsensus": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/openObject"
+              }
+            },
+            "frustratedControl": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/openObject"
+              }
+            }
+          }
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "smallUniverseNode": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "position"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "position": {
+          "$ref": "#/$defs/vec3"
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["source", "target"],
+      "properties": {
+        "source": {
+          "type": "integer"
+        },
+        "target": {
+          "type": "integer"
+        }
+      }
+    },
+    "repairFrame": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["step", "stateId", "state", "phi", "action", "parent", "node", "deltaPhi"],
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stateId": {
+          "type": "string"
+        },
+        "state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scalar"
+          }
+        },
+        "phi": {
+          "type": ["number", "null"]
+        },
+        "phiBefore": {
+          "type": ["number", "null"]
+        },
+        "action": {
+          "type": "string"
+        },
+        "parent": {
+          "type": ["integer", "null"]
+        },
+        "node": {
+          "type": ["integer", "null"]
+        },
+        "deltaPhi": {
+          "type": ["number", "null"]
+        },
+        "strictDescent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "screen": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "description",
+        "source",
+        "fieldName",
+        "points",
+        "values",
+        "clusters",
+        "repairTrace",
+        "claimBoundary"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "fieldName": {
+          "type": "string"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/vec3"
+          }
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "clusters": {
+          "$ref": "#/$defs/screenClusters"
+        },
+        "repairTrace": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repairTraceFrame"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "screenClusters": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["clusters", "snapshots", "rawSnapshotCount", "snapshotSource", "persistentWorldlineCount"],
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/screenCluster"
+          }
+        },
+        "snapshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/screenClusterSnapshot"
+          }
+        },
+        "rawSnapshotCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "snapshotSource": {
+          "type": "string"
+        },
+        "persistentWorldlineCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "screenCluster": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["clusterId", "point"],
+      "properties": {
+        "clusterId": {
+          "type": ["integer", "string", "null"]
+        },
+        "worldlineId": {
+          "type": ["integer", "string", "null"]
+        },
+        "point": {
+          "$ref": "#/$defs/vec3"
+        },
+        "class": {
+          "type": ["string", "null"]
+        },
+        "supportNodeCount": {
+          "type": ["integer", "number", "null"]
+        }
+      }
+    },
+    "screenClusterSnapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cycle", "clusterCount", "clusters", "snapshotSource"],
+      "properties": {
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "clusterCount": {
+          "type": ["integer", "number", "null"]
+        },
+        "clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/screenCluster"
+          }
+        },
+        "snapshotSource": {
+          "type": "string"
+        },
+        "interpolated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "repairTraceFrame": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "phase": {
+          "type": ["string", "null"]
+        },
+        "phi": {
+          "type": ["integer", "number", "null"]
+        },
+        "committed_fraction": {
+          "type": ["integer", "number", "null"]
+        },
+        "modular_depth_mean": {
+          "type": ["integer", "number", "null"]
+        },
+        "mismatch_edges": {
+          "type": ["integer", "number", "null"]
+        }
+      }
+    },
+    "observerModularTime": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "description",
+        "source",
+        "observers",
+        "objectiveObserverViews",
+        "overlapLinks",
+        "overlapSummary",
+        "timeFrames",
+        "receipts",
+        "blockers",
+        "claimBoundary"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "observers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observerRow"
+          }
+        },
+        "objectiveObserverViews": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/objectiveObserverView"
+          }
+        },
+        "overlapLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observerOverlapLink"
+          }
+        },
+        "overlapSummary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "timeFrames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modularTimeFrame"
+          }
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "observerRow": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["observerId", "axis"],
+      "properties": {
+        "observerId": {
+          "type": ["integer", "number", "string", "null"]
+        },
+        "axis": {
+          "$ref": "#/$defs/vec3"
+        },
+        "supportPatchCount": {
+          "type": ["integer", "number", "null"]
+        },
+        "visibleSignatureEntropy": {
+          "type": ["number", "null"]
+        },
+        "modularDepthMean": {
+          "type": ["number", "null"]
+        },
+        "dominantRecordSignature": {
+          "$ref": "#/$defs/scalar"
+        },
+        "dominantObjectPacket": {
+          "$ref": "#/$defs/scalar"
+        },
+        "visibleReadoutHash": {
+          "type": ["string", "null"]
+        },
+        "claimBoundary": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "objectiveObserverView": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["observerId", "axis", "timeFrames", "claimBoundary"],
+      "properties": {
+        "observerId": {
+          "type": "integer"
+        },
+        "axis": {
+          "$ref": "#/$defs/vec3"
+        },
+        "supportPatchCount": {
+          "type": ["integer", "number", "null"]
+        },
+        "supportNodeSample": {
+          "type": "array",
+          "items": {
+            "type": ["integer", "number"]
+          }
+        },
+        "supportEntropyCapacity": {
+          "type": ["number", "null"]
+        },
+        "visibleObjectPackets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packetWeight"
+          }
+        },
+        "visibleRecordPackets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packetWeight"
+          }
+        },
+        "transitionHistory": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "timeFrames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/objectiveObserverFrame"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "packetWeight": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["packet", "weight"],
+      "properties": {
+        "packet": {
+          "type": ["string", "integer", "number"]
+        },
+        "weight": {
+          "type": "number"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "objectiveObserverFrame": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "relativeTime",
+        "cycle",
+        "visibleObjectPackets",
+        "visibleRecordPackets",
+        "polarFieldReadout",
+        "framePacketSource"
+      ],
+      "properties": {
+        "relativeTime": {
+          "type": ["number", "null"]
+        },
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "phase": {
+          "type": ["string", "null"]
+        },
+        "globalPhi": {
+          "type": ["number", "null"]
+        },
+        "globalCommittedFraction": {
+          "type": ["number", "null"]
+        },
+        "localTransitionStep": {
+          "type": ["object", "null"],
+          "additionalProperties": true
+        },
+        "dominantRecordSignature": {
+          "$ref": "#/$defs/scalar"
+        },
+        "dominantObjectPacket": {
+          "$ref": "#/$defs/scalar"
+        },
+        "modularDepthMean": {
+          "type": ["number", "null"]
+        },
+        "visibleSignatureEntropy": {
+          "type": ["number", "null"]
+        },
+        "visibleReadoutHash": {
+          "type": "string"
+        },
+        "visibleObjectPackets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packetWeight"
+          }
+        },
+        "visibleRecordPackets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packetWeight"
+          }
+        },
+        "polarFieldReadout": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/polarFieldSample"
+          }
+        },
+        "framePacketSource": {
+          "type": "string"
+        }
+      }
+    },
+    "polarFieldSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["theta", "value"],
+      "properties": {
+        "theta": {
+          "type": "number"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "observerOverlapLink": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["repairTrajectory"],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/scalar"
+        },
+        "target": {
+          "$ref": "#/$defs/scalar"
+        },
+        "sourceObserverId": {
+          "$ref": "#/$defs/scalar"
+        },
+        "targetObserverId": {
+          "$ref": "#/$defs/scalar"
+        },
+        "overlapPatchCount": {
+          "type": ["integer", "number", "null"]
+        },
+        "jaccard": {
+          "type": ["number", "null"]
+        },
+        "signatureSimilarity": {
+          "type": ["number", "null"]
+        },
+        "overlapCommittedFraction": {
+          "type": ["number", "null"]
+        },
+        "overlapRepairLoadMean": {
+          "type": ["number", "null"]
+        },
+        "repairTrajectory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/overlapTrajectoryFrame"
+          }
+        },
+        "trajectorySource": {
+          "type": "string"
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "overlapTrajectoryFrame": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "relativeTime": {
+          "type": ["number", "null"]
+        },
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "committedFraction": {
+          "type": ["number", "null"]
+        },
+        "repairLoadMean": {
+          "type": ["number", "null"]
+        }
+      }
+    },
+    "modularTimeFrame": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "relativeTime": {
+          "type": ["number", "null"]
+        },
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "phase": {
+          "type": ["string", "null"]
+        },
+        "phi": {
+          "type": ["number", "null"]
+        },
+        "committedFraction": {
+          "type": ["number", "null"]
+        },
+        "modularDepthMean": {
+          "type": ["number", "null"]
+        },
+        "mismatchEdges": {
+          "type": ["number", "null"]
+        }
+      }
+    },
+    "consensusBulk": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "description",
+        "objects",
+        "protoParticleCandidates",
+        "objectViewerSummary",
+        "receipts",
+        "strictNeutralBlockers",
+        "claimBoundary"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/h3ObjectPacket"
+          }
+        },
+        "protoParticleCandidates": {
+          "$ref": "#/$defs/protoParticleCandidates"
+        },
+        "objectViewerSummary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "strictNeutralBlockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "h3ObjectPacket": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["objectId", "x", "y", "z"],
+      "properties": {
+        "objectId": {
+          "type": "string"
+        },
+        "recordFamilyId": {
+          "$ref": "#/$defs/scalar"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "observerCount": {
+          "type": ["number", "null"]
+        },
+        "supportSize": {
+          "type": ["number", "null"]
+        },
+        "h3Compactness": {
+          "type": ["number", "null"]
+        },
+        "h3CompactnessNormalized": {
+          "type": ["number", "null"]
+        }
+      }
+    },
+    "protoParticleCandidates": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["description", "worldlines", "receipts", "claimBoundary"],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "worldlines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/h3ProtoParticleWorldline"
+          }
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "h3ProtoParticleWorldline": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "worldlineId",
+        "observationCount",
+        "birthCycle",
+        "deathCycle",
+        "h3PathLength",
+        "meanH3Step",
+        "events",
+        "particleLike",
+        "localizationPass",
+        "persistencePass",
+        "sectorStabilityPass",
+        "transportabilityPass",
+        "bulkLocalizationPass",
+        "claimBoundary"
+      ],
+      "properties": {
+        "worldlineId": {
+          "type": "string"
+        },
+        "observationCount": {
+          "type": ["integer", "number", "null"]
+        },
+        "birthCycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "deathCycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "h3PathLength": {
+          "type": ["number", "null"]
+        },
+        "meanH3Step": {
+          "type": ["number", "null"]
+        },
+        "classMode": {
+          "type": ["string", "null"]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/h3ProtoParticleEvent"
+          }
+        },
+        "particleLike": {
+          "type": "boolean"
+        },
+        "localizationPass": {
+          "type": "boolean"
+        },
+        "persistencePass": {
+          "type": "boolean"
+        },
+        "sectorStabilityPass": {
+          "type": "boolean"
+        },
+        "transportabilityPass": {
+          "type": "boolean"
+        },
+        "bulkLocalizationPass": {
+          "type": "boolean"
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "h3ProtoParticleEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["cycle", "h3SpatialPoint"],
+      "properties": {
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "h3SpatialPoint": {
+          "$ref": "#/$defs/vec3"
+        },
+        "fitResidual": {
+          "type": ["number", "null"]
+        },
+        "supportNodeCount": {
+          "type": ["integer", "number", "null"]
+        }
+      }
+    },
+    "pnSilenceToObservation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "description",
+        "source",
+        "closureCoordinates",
+        "finiteRegulatorDepth",
+        "silenceInitialState",
+        "observationEmergence",
+        "detuningControls",
+        "receipts",
+        "readinessGates",
+        "claimBoundary"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "closureCoordinates": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "finiteRegulatorDepth": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "silenceInitialState": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "observationEmergence": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "detuningControls": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "readinessGates": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "cmbComparison": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["description", "residualRows", "receipts"],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "residualRows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cmbResidualRow"
+          }
+        },
+        "bestOphDiagnosticModel": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "bestOphResidualSummary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "cmbResidualRow": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ell"],
+      "properties": {
+        "ell": {
+          "type": ["integer", "number"]
+        },
+        "observed": {
+          "type": ["number", "null"]
+        },
+        "model": {
+          "type": ["number", "null"]
+        },
+        "residualSigma": {
+          "type": ["number", "null"]
+        }
+      }
+    }
+  }
+}
