@@ -63,7 +63,7 @@ CPU planning:
 
 ## Distributed Universe Runs
 
-The distributed runner prepares one unified OPH atlas and splits it into shard-local observer-patch jobs. Each shard remains an observer-like self-reading system: bounded local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts. Shards are not independent toy universes; their configs carry global patch ranges, global observer ranges, atlas centers, and core/halo seam metadata so cross-shard overlaps can be reduced back into one federated universe witness.
+The distributed runner prepares one OPH atlas and splits it into shard-local observer-patch jobs. Each shard remains an observer-like self-reading system: bounded local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts. Current shard configs carry global patch ranges, global observer ranges, atlas centers, and core/halo seam metadata, but that metadata is not yet a theorem-faithful online seam-repair kernel.
 
 Generated distributed packs belong under `distributed/` and are ignored by Git. Commit the kernel code, base configs, docs, and reducer logic, not generated shard YAMLs.
 
@@ -90,7 +90,13 @@ python3 -m oph_fpe.cli reduce-distributed-oph-universe \
   --out-dir runs/<run_id>/reduced
 ```
 
-The reducer emits a distributed summary, cross-shard seam readout, and visualization payload. The intended large-run claim is conservative: a single global atlas/federated large-universe witness with explicit overlap seams. A strict single neutral third-person 3D bulk still requires the normal neutral-bulk gates plus stronger per-cycle halo exchange and global neutral reduction receipts.
+The reducer emits a distributed summary, seam metadata replay, visualization payload, `DISTRIBUTED_RUN_PACK_CONTRACT.json`, and sidecar report directories for `halo_exchange_global/`, `strict_neutral_global/`, `observer_modular_time_global/`, `proto_particles_global/`, `pn_resonance_global/`, and `physical_cmb_global/`. The seam replay is endpoint-interpolated metadata for audit and visualization; it is not live cross-shard repair and is marked `physics_receipt_eligible: false`.
+
+Use the run-pack contract as the small-scale-first gate before launching cloud jobs. `distributed_artifact_packaging_smoke_receipt` checks only packaging/export health. `distributed_kernel_scaling_readiness_receipt` and the legacy `large_scale_cloud_run_ready_receipt` remain false until the online distributed kernel emits seam packet reciprocity, visible restriction, repair descent, atomic commit, local diamond, repair completeness, holonomy, fair-block contraction, schedule independence, and partition naturality receipts.
+
+The CMB reducer preserves shard-local source statistics as diagnostics, but it does not average nonlinear shard estimates into physical inputs. Physical CMB promotion requires a pooled sufficient-statistic reducer, screen-to-radial lift receipt, Boltzmann transfer, CDM-limit regression, and frozen likelihood comparison. The P/N reducer similarly distinguishes `all_shards_local_scale_compressed_pn_witness_receipt` from `global_pn_resonance_receipt`; the latter requires a finite global readback map and fixed-point solve.
+
+The intended large-run claim is conservative: a single global atlas/federated large-universe witness with explicit overlap seams. A strict single neutral third-person 3D bulk still requires the normal neutral-bulk gates plus genuine online seam repair, common quotient transport, and global neutral reduction receipts.
 
 ## Claim-Gate Commands
 

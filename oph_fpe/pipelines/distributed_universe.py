@@ -178,6 +178,9 @@ def reduce_distributed_oph_universe(
                 "completed": bool(summary),
                 "patch_count": _int_or_none(run_manifest.get("patch_count")) or shard.get("patch_count"),
                 "edge_count": _int_or_none(run_manifest.get("edge_count")),
+                "global_patch_range": shard.get("global_patch_range"),
+                "global_observer_range": shard.get("global_observer_range"),
+                "atlas_center": shard.get("atlas_center"),
                 "observer_count": _int_or_none(observer_report.get("observer_count"))
                 or _int_or_none((run_manifest.get("observer_modular_experience") or {}).get("observer_count"))
                 or shard.get("observer_count"),
@@ -203,6 +206,11 @@ def reduce_distributed_oph_universe(
     total_objects = sum(int(row.get("object_count") or 0) for row in completed)
     total_worldlines = sum(int(row.get("worldline_count") or 0) for row in completed)
     seam_readout = _seam_readout(manifest, completed)
+    seam_metadata_replay_receipt = bool(
+        seam_readout.get("seam_link_count", 0)
+        and seam_readout.get("completed_seam_fraction", 0.0) >= 0.95
+        and seam_readout.get("mean_final_committed_fraction") is not None
+    )
 
     required_federated_keys = (
         "observer_like_self_reading_system_receipt",
@@ -215,16 +223,68 @@ def reduce_distributed_oph_universe(
         receipt_summary.get(key, {}).get("passed_count") == len(completed) for key in required_federated_keys
     )
     all_expected_completed = len(completed) == int(manifest.get("shard_count", 0))
+    halo_exchange = _global_halo_exchange_reduction(
+        manifest=manifest,
+        completed=completed,
+        seam_readout=seam_readout,
+        out_dir=out_dir / "halo_exchange_global",
+    )
     cross_shard_overlap_repair_receipt = bool(
-        seam_readout.get("seam_link_count", 0)
-        and seam_readout.get("completed_seam_fraction", 0.0) >= 0.95
-        and seam_readout.get("mean_final_committed_fraction") is not None
+        halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
+    )
+    neutral_global = _global_neutral_bulk_reduction(
+        manifest=manifest,
+        completed=completed,
+        cross_shard_overlap_repair_receipt=cross_shard_overlap_repair_receipt,
+        halo_exchange=halo_exchange,
+        out_dir=out_dir / "strict_neutral_global",
+    )
+    observer_time_global = _global_observer_modular_time_export(
+        manifest=manifest,
+        shard_rows=shard_rows,
+        out_dir=out_dir / "observer_modular_time_global",
+    )
+    proto_particle_global = _global_proto_particle_worldline_stitch(
+        manifest=manifest,
+        completed=completed,
+        out_dir=out_dir / "proto_particles_global",
+    )
+    pn_global = _global_pn_resonance_reduction(
+        manifest=manifest,
+        completed=completed,
+        receipt_summary=receipt_summary,
+        out_dir=out_dir / "pn_resonance_global",
+    )
+    physical_cmb_global = _global_physical_cmb_reduction(
+        manifest=manifest,
+        completed=completed,
+        out_dir=out_dir / "physical_cmb_global",
     )
     federated_receipt = bool(all_expected_completed and all_required)
     visualization_payload = _distributed_visualization_payload(
         manifest=manifest,
         shard_rows=shard_rows,
         seam_readout=seam_readout,
+        physical_cmb_global=physical_cmb_global,
+        halo_exchange=halo_exchange,
+        neutral_global=neutral_global,
+        observer_time_global=observer_time_global,
+        proto_particle_global=proto_particle_global,
+        pn_global=pn_global,
+    )
+    run_pack_contract = _distributed_run_pack_contract(
+        manifest=manifest,
+        all_expected_completed=all_expected_completed,
+        federated_receipt=federated_receipt,
+        seam_metadata_replay_receipt=seam_metadata_replay_receipt,
+        halo_exchange=halo_exchange,
+        neutral_global=neutral_global,
+        observer_time_global=observer_time_global,
+        proto_particle_global=proto_particle_global,
+        pn_global=pn_global,
+        physical_cmb_global=physical_cmb_global,
+        visualization_payload_path=out_dir / "distributed_visualization_payload.json",
+        out_dir=out_dir,
     )
 
     summary = {
@@ -242,16 +302,49 @@ def reduce_distributed_oph_universe(
         "total_h3_worldlines_completed": total_worldlines,
         "receipt_summary": receipt_summary,
         "federated_large_universe_witness_receipt": federated_receipt,
+        "seam_metadata_replay_receipt": seam_metadata_replay_receipt,
         "cross_shard_overlap_repair_receipt": cross_shard_overlap_repair_receipt,
-        "strict_single_global_neutral_bulk_receipt": False,
-        "strict_single_global_bulk_blockers": [
-            *([] if cross_shard_overlap_repair_receipt else ["cross_shard_overlap_repair_receipt_missing"]),
-            "global_shared_screen_halo_repair_is_reducer_level_not_per_edge_distributed_state",
-            "single_neutral_third_person_bulk_reducer_not_yet_certified",
-        ],
+        "online_cross_shard_overlap_repair_receipt": bool(
+            halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
+        ),
+        "per_cycle_cross_shard_halo_exchange_receipt": bool(
+            halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt", False)
+        ),
+        "reducer_halo_exchange_replay_receipt": bool(halo_exchange.get("reducer_halo_exchange_replay_receipt", False)),
+        "global_observer_modular_time_export_receipt": bool(
+            observer_time_global.get("global_observer_modular_time_export_receipt", False)
+        ),
+        "global_proto_particle_worldline_export_receipt": bool(
+            proto_particle_global.get("global_proto_particle_worldline_export_receipt", False)
+        ),
+        "global_pn_resonance_receipt": bool(pn_global.get("global_pn_resonance_receipt", False)),
+        "all_shards_local_scale_compressed_pn_witness_receipt": bool(
+            pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt", False)
+        ),
+        "global_physical_cmb_input_contract_receipt": bool(
+            physical_cmb_global.get("physical_cmb_input_contract_receipt", False)
+        ),
+        "global_physical_cmb_output_comparison_receipt": bool(
+            physical_cmb_global.get("physical_cmb_output_comparison_receipt", False)
+        ),
+        "global_physical_cmb_prediction_receipt": bool(
+            physical_cmb_global.get("physical_cmb_prediction_receipt", False)
+        ),
+        "physical_cmb_global_reduction": physical_cmb_global,
+        "strict_single_global_neutral_bulk_receipt": bool(
+            neutral_global.get("strict_single_global_neutral_bulk_receipt", False)
+        ),
+        "strict_single_global_bulk_blockers": neutral_global.get("blockers") or [],
+        "global_halo_exchange_reduction": halo_exchange,
+        "global_neutral_bulk_reduction": neutral_global,
+        "global_observer_modular_time_export": _compact_observer_time_report(observer_time_global),
+        "global_proto_particle_worldlines": _compact_proto_particle_report(proto_particle_global),
+        "global_pn_resonance_reduction": pn_global,
+        "distributed_run_pack_contract": run_pack_contract,
         "unified_universe_atlas": manifest.get("unified_universe_atlas", {}),
         "cross_shard_seam_readout": seam_readout,
         "visualization_payload": str(out_dir / "distributed_visualization_payload.json"),
+        "run_pack_contract_path": str(out_dir / "DISTRIBUTED_RUN_PACK_CONTRACT.json"),
         "observer_like_self_reading_system_note": (
             "The distributed unit is still an OPH observer-like self-reading system: each shard has local "
             "state, ports/boundaries, readback, records, feedback/repair moves, and public evidence files."
@@ -262,6 +355,1054 @@ def reduce_distributed_oph_universe(
     _write_json(out_dir / "distributed_universe_summary.json", summary)
     _write_markdown(out_dir / "DISTRIBUTED_UNIVERSE_SUMMARY.md", summary)
     return summary
+
+
+def _global_halo_exchange_reduction(
+    *,
+    manifest: dict[str, Any],
+    completed: list[dict[str, Any]],
+    seam_readout: dict[str, Any],
+    out_dir: Path,
+) -> dict[str, Any]:
+    shard_roots = [Path(row["run_dir"]) for row in completed if row.get("completed")]
+    reports = _collect_named_reports(shard_roots, "distributed_halo_exchange_report.json")
+    expected = len(shard_roots)
+    per_cycle = bool(
+        expected
+        and len(reports) == expected
+        and all(
+            bool(report.get("PER_CYCLE_HALO_EXCHANGE_RECEIPT", False))
+            or bool(report.get("per_cycle_halo_exchange_receipt", False))
+            for report in reports
+        )
+    )
+    seam_links = list(seam_readout.get("links") or [])
+    frame_rows = _global_halo_replay_frames(seam_links)
+    replay_receipt = bool(seam_links and frame_rows)
+    seam_metadata_replay_receipt = bool(seam_readout.get("seam_metadata_replay_receipt", replay_receipt))
+    online_receipt_keys = (
+        "SEAM_PACKET_RECIPROCITY_RECEIPT",
+        "SEAM_VISIBLE_RESTRICTION_RECEIPT",
+        "SEAM_REPAIR_DESCENT_RECEIPT",
+        "SEAM_ATOMIC_COMMIT_RECEIPT",
+        "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT",
+        "DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT",
+        "CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT",
+        "FAIR_BLOCK_CONTRACTION_RECEIPT",
+        "SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT",
+        "PARTITION_NATURALITY_RECEIPT",
+    )
+    online_receipts = {
+        key: _all_reports_truthy(reports, key, expected)
+        for key in online_receipt_keys
+    }
+    online_cross_shard_repair = bool(
+        per_cycle
+        and online_receipts["SEAM_PACKET_RECIPROCITY_RECEIPT"]
+        and online_receipts["SEAM_VISIBLE_RESTRICTION_RECEIPT"]
+        and online_receipts["SEAM_REPAIR_DESCENT_RECEIPT"]
+        and online_receipts["SEAM_ATOMIC_COMMIT_RECEIPT"]
+    )
+    kernel_scaling_ready = bool(per_cycle and all(online_receipts.values()))
+    blockers = []
+    if not per_cycle:
+        blockers.append("per_cycle_cross_shard_halo_exchange_receipt_missing")
+    if not replay_receipt:
+        blockers.append("reducer_halo_exchange_replay_empty")
+    for key, passed in online_receipts.items():
+        if not passed:
+            blockers.append(f"{key.lower()}_missing")
+    report = {
+        "mode": "distributed_global_halo_exchange_reduction_v0",
+        "run_id": manifest.get("run_id"),
+        "expected_shard_count": int(manifest.get("shard_count", 0)),
+        "completed_shard_count": expected,
+        "source_report_count": len(reports),
+        "per_cycle_cross_shard_halo_exchange_receipt": per_cycle,
+        "online_cross_shard_overlap_repair_receipt": online_cross_shard_repair,
+        "DISTRIBUTED_KERNEL_SCALING_READY_RECEIPT": kernel_scaling_ready,
+        "required_online_seam_receipts": online_receipts,
+        "seam_metadata_replay_receipt": seam_metadata_replay_receipt,
+        "reducer_halo_exchange_replay_receipt": replay_receipt,
+        "seam_link_count": len(seam_links),
+        "replay_frame_count": len(frame_rows),
+        "replay_frames": frame_rows[:256],
+        "source_report_paths": [str(path / "distributed_halo_exchange_report.json") for path in shard_roots],
+        "blockers": blockers,
+        "claim_boundary": (
+            "Reducer halo replay is synthetic audit/visualization metadata over completed shard traces. It is "
+            "not live per-cycle halo exchange and cannot certify cross-shard OPH repair. Online seam receipts "
+            "pass only when every shard emits reciprocal seam packets, visible restrictions, descent, atomic "
+            "commit, diamond/completeness, holonomy, fair-block, schedule, and partition evidence."
+        ),
+    }
+    _write_json(Path(out_dir) / "global_halo_exchange_report.json", report)
+    return report
+
+
+def _global_halo_replay_frames(seam_links: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_cycle: dict[int, list[dict[str, Any]]] = {}
+    for link in seam_links:
+        for row in link.get("overlapRepairTrajectory") or []:
+            cycle = _int_or_none(row.get("cycle"))
+            if cycle is None:
+                continue
+            by_cycle.setdefault(cycle, []).append(
+                {
+                    "linkId": link.get("link_id"),
+                    "sourceShardIndex": link.get("source_shard_index"),
+                    "targetShardIndex": link.get("target_shard_index"),
+                    "repairLoad": _float_or_none(row.get("repairLoad")),
+                    "committedFractionGap": _float_or_none(row.get("committedFractionGap")),
+                    "sourceCommittedFraction": _float_or_none(row.get("sourceCommittedFraction")),
+                    "targetCommittedFraction": _float_or_none(row.get("targetCommittedFraction")),
+                    "synthetic": True,
+                    "source": "endpoint_interpolation",
+                    "physics_receipt_eligible": False,
+                }
+            )
+    frames = []
+    for cycle in sorted(by_cycle):
+        rows = by_cycle[cycle]
+        loads = [float(row["repairLoad"]) for row in rows if row.get("repairLoad") is not None]
+        gaps = [float(row["committedFractionGap"]) for row in rows if row.get("committedFractionGap") is not None]
+        frames.append(
+            {
+                "cycle": cycle,
+                "seamEdgeCount": len(rows),
+                "meanRepairLoad": _mean_or_none(loads),
+                "maxCommittedFractionGap": float(max(gaps)) if gaps else None,
+                "links": rows[:512],
+            }
+        )
+    return frames
+
+
+def _all_reports_truthy(reports: list[dict[str, Any]], receipt_key: str, expected: int) -> bool:
+    if not expected or len(reports) != expected:
+        return False
+    return all(_report_truthy(report, receipt_key) for report in reports)
+
+
+def _report_truthy(report: dict[str, Any], receipt_key: str) -> bool:
+    candidates = {
+        receipt_key,
+        receipt_key.lower(),
+        receipt_key.lower().replace("_receipt", ""),
+        receipt_key.replace("_RECEIPT", "_receipt"),
+        receipt_key.replace("_RECEIPT", "_receipt").lower(),
+    }
+    return any(bool(report.get(key, False)) for key in candidates)
+
+
+def _global_neutral_bulk_reduction(
+    *,
+    manifest: dict[str, Any],
+    completed: list[dict[str, Any]],
+    cross_shard_overlap_repair_receipt: bool,
+    halo_exchange: dict[str, Any],
+    out_dir: Path,
+) -> dict[str, Any]:
+    shard_roots = [Path(row["run_dir"]) for row in completed if row.get("completed")]
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    observer_views = _combined_observer_views(completed, max_total=4096, per_shard=512)
+    combined_path = out_dir / "observer_views.jsonl"
+    if observer_views:
+        combined_path.write_text(
+            "\n".join(json.dumps(row, default=str) for row in observer_views) + "\n",
+            encoding="utf-8",
+        )
+    neutral_report: dict[str, Any] = {}
+    frontier: dict[str, Any] = {}
+    try:
+        if observer_views:
+            from oph_fpe.bulk.neutral_bulk import (
+                write_strict_neutral_bulk_frontier_report,
+                write_strict_neutral_bulk_report,
+            )
+
+            neutral_report = write_strict_neutral_bulk_report(
+                out_dir,
+                out=out_dir / "strict_neutral_bulk_report.json",
+                seed=int(manifest.get("seed", 1) or 1),
+                max_model_points=512,
+                planted_control_points=160,
+            )
+            frontier = write_strict_neutral_bulk_frontier_report([out_dir, *shard_roots], out_dir)
+        elif shard_roots:
+            from oph_fpe.bulk.neutral_bulk import write_strict_neutral_bulk_frontier_report
+
+            frontier = write_strict_neutral_bulk_frontier_report(shard_roots, out_dir)
+    except Exception as exc:  # pragma: no cover - defensive fail-closed report path.
+        neutral_report = {
+            "mode": "distributed_global_neutral_bulk_reduction_error",
+            "strict_neutral_bulk": False,
+            "blockers": [f"global_neutral_bulk_reduction_failed:{type(exc).__name__}:{exc}"],
+        }
+    online_halo = bool(halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt", False))
+    neutral_ready = bool(
+        neutral_report.get("strict_neutral_bulk", False) or frontier.get("strict_neutral_bulk_ready", False)
+    )
+    strict_receipt = bool(neutral_ready and cross_shard_overlap_repair_receipt and online_halo)
+    blockers = _unique_texts(
+        list(neutral_report.get("blockers") or [])
+        + list(frontier.get("blockers") or [])
+        + ([] if observer_views else ["global_observer_views_missing"])
+        + ([] if cross_shard_overlap_repair_receipt else ["online_cross_shard_overlap_repair_receipt_missing"])
+        + ([] if online_halo else ["per_cycle_cross_shard_halo_exchange_receipt_missing"])
+        + ([] if neutral_ready else ["global_strict_neutral_bulk_ready_false"])
+    )
+    report = {
+        "mode": "distributed_global_neutral_bulk_reduction_v0",
+        "run_id": manifest.get("run_id"),
+        "expected_shard_count": int(manifest.get("shard_count", 0)),
+        "completed_shard_count": len(shard_roots),
+        "combined_observer_view_count": len(observer_views),
+        "combined_observer_views_path": str(combined_path) if observer_views else None,
+        "cross_shard_overlap_repair_receipt": bool(cross_shard_overlap_repair_receipt),
+        "online_cross_shard_overlap_repair_receipt": bool(cross_shard_overlap_repair_receipt),
+        "seam_metadata_replay_receipt": bool(halo_exchange.get("seam_metadata_replay_receipt", False)),
+        "per_cycle_cross_shard_halo_exchange_receipt": online_halo,
+        "global_strict_neutral_bulk_ready": neutral_ready,
+        "strict_single_global_neutral_bulk_receipt": strict_receipt,
+        "strict_neutral_bulk_report_path": str(out_dir / "strict_neutral_bulk_report.json"),
+        "strict_neutral_bulk_frontier_path": str(out_dir / "strict_neutral_bulk_frontier_report.json"),
+        "frontier": {
+            "strict_neutral_bulk": bool(frontier.get("strict_neutral_bulk", False)),
+            "strict_neutral_bulk_ready": bool(frontier.get("strict_neutral_bulk_ready", False)),
+            "gate_rows": frontier.get("gate_rows") or [],
+        },
+        "blockers": blockers,
+        "claim_boundary": (
+            "Global neutral-bulk reduction over the distributed atlas. The strict single-bulk receipt requires "
+            "a global neutral audit plus cross-shard overlap repair and live per-cycle halo exchange. "
+            "A reducer-only replay cannot certify strict neutral third-person bulk."
+        ),
+    }
+    _write_json(out_dir / "global_neutral_bulk_reduction_report.json", report)
+    return report
+
+
+def _global_observer_modular_time_export(
+    *,
+    manifest: dict[str, Any],
+    shard_rows: list[dict[str, Any]],
+    out_dir: Path,
+) -> dict[str, Any]:
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    payloads = _sample_shard_timeline_payloads(shard_rows, max_payloads=max(1, len(shard_rows)))
+    observers: list[dict[str, Any]] = []
+    overlap_links: list[dict[str, Any]] = []
+    time_frame_counts: list[int] = []
+    visible_object_packet_count = 0
+    visible_record_packet_count = 0
+    for item in payloads:
+        shard = item["shard"]
+        payload = item["payload"]
+        for view in _globalized_observers(shard, payload, limit=2048):
+            frames = view.get("timeFrames") if isinstance(view.get("timeFrames"), list) else []
+            time_frame_counts.append(len(frames))
+            for frame in frames:
+                if isinstance(frame, dict):
+                    visible_object_packet_count += len(frame.get("visibleObjectPackets") or [])
+                    visible_record_packet_count += len(frame.get("visibleRecordPackets") or [])
+            observers.append(view)
+        overlap_links.extend(_globalized_overlap_links(shard, payload, limit=20000))
+    large_contract = bool(
+        len(observers) >= 64
+        and (min(time_frame_counts) if time_frame_counts else 0) >= 32
+        and visible_object_packet_count > 0
+        and visible_record_packet_count > 0
+    )
+    report = {
+        "mode": "distributed_global_observer_modular_time_export_v0",
+        "run_id": manifest.get("run_id"),
+        "reportPath": str(out_dir / "observer_modular_time_global_payload.json"),
+        "global_observer_modular_time_export_receipt": bool(observers and time_frame_counts),
+        "large_visualization_observer_contract_receipt": large_contract,
+        "objectiveObserverViewCount": len(observers),
+        "overlapLinkCount": len(overlap_links),
+        "minTimeFrameCount": min(time_frame_counts) if time_frame_counts else 0,
+        "maxTimeFrameCount": max(time_frame_counts) if time_frame_counts else 0,
+        "visibleObjectPacketCount": visible_object_packet_count,
+        "visibleRecordPacketCount": visible_record_packet_count,
+        "objectiveObserverViews": observers[:4096],
+        "overlapLinks": overlap_links[:100000],
+        "blockers": _unique_texts(
+            ([] if observers else ["objective_observer_views_missing"])
+            + ([] if (min(time_frame_counts) if time_frame_counts else 0) >= 32 else ["observer_time_frames_below_32"])
+            + ([] if visible_object_packet_count > 0 else ["visible_object_packets_missing"])
+            + ([] if visible_record_packet_count > 0 else ["visible_record_packets_missing"])
+        ),
+        "claim_boundary": (
+            "Global observer modular-time export for visualization. It shows observer-local readout frames "
+            "over modular time; it does not by itself certify strict neutral bulk."
+        ),
+    }
+    _write_json(out_dir / "observer_modular_time_global_payload.json", report)
+    return report
+
+
+def _global_proto_particle_worldline_stitch(
+    *,
+    manifest: dict[str, Any],
+    completed: list[dict[str, Any]],
+    out_dir: Path,
+) -> dict[str, Any]:
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    worldlines: list[dict[str, Any]] = []
+    stitched_groups: dict[str, list[str]] = {}
+    for shard in completed:
+        report = _read_json(Path(str(shard.get("run_dir"))) / "defect_h3_worldlines_report.json")
+        for index, row in enumerate(report.get("worldlines") or []):
+            if not isinstance(row, dict):
+                continue
+            converted = _globalized_worldline_row(shard, row, fallback_index=index)
+            worldlines.append(converted)
+            global_key = row.get("global_worldline_id") or row.get("stitch_key")
+            if global_key is not None:
+                stitched_groups.setdefault(str(global_key), []).append(converted["worldlineId"])
+    moving = [row for row in worldlines if float(row.get("h3PathLength") or 0.0) > 0.0 or float(row.get("meanH3Step") or 0.0) > 0.0]
+    localized = [row for row in worldlines if bool(row.get("bulkLocalizationPass", False))]
+    stitched = {key: ids for key, ids in stitched_groups.items() if len(set(ids)) > 1}
+    physical_stitched: dict[str, list[str]] = {}
+    report = {
+        "mode": "distributed_global_proto_particle_worldline_stitch_v0",
+        "run_id": manifest.get("run_id"),
+        "reportPath": str(out_dir / "global_proto_particle_worldlines_report.json"),
+        "global_proto_particle_worldline_export_receipt": bool(worldlines),
+        "moving_proto_particle_candidate_receipt": bool(moving),
+        "cross_shard_worldline_id_collision_receipt": bool(stitched),
+        "cross_shard_worldline_stitching_receipt": bool(physical_stitched),
+        "particle_matter_receipt": False,
+        "worldlineCount": len(worldlines),
+        "movingWorldlineCount": len(moving),
+        "bulkLocalizationPassCount": len(localized),
+        "stitchedCrossShardWorldlineCount": len(physical_stitched),
+        "idCollisionGroupCount": len(stitched),
+        "stitchedGroups": physical_stitched,
+        "idCollisionGroups": stitched,
+        "worldlines": worldlines[:4096],
+        "blockers": _unique_texts(
+            ([] if worldlines else ["proto_particle_worldlines_missing"])
+            + ([] if moving else ["moving_h3_worldlines_missing"])
+            + ([] if localized else ["bulk_localization_pass_missing"])
+            + ["cross_shard_worldline_stitching_transport_evidence_missing"]
+            + ["particle_matter_gate_not_promoted"]
+        ),
+        "claim_boundary": (
+            "Global proto-particle worldline export. These are H3-fitted holonomy/defect candidates. "
+            "A repeated global ID or stitch key is only an ID-collision hint. Candidates become particles only "
+            "after localization, support-visible chart transport, temporal/sector/holonomy continuity, "
+            "fusion/scattering classification, repeated-seed, neutral-bulk, and repartition receipts pass."
+        ),
+    }
+    _write_json(out_dir / "global_proto_particle_worldlines_report.json", report)
+    return report
+
+
+def _global_pn_resonance_reduction(
+    *,
+    manifest: dict[str, Any],
+    completed: list[dict[str, Any]],
+    receipt_summary: dict[str, Any],
+    out_dir: Path,
+) -> dict[str, Any]:
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    shard_roots = [Path(row["run_dir"]) for row in completed if row.get("completed")]
+    silence_reports = _collect_named_reports(shard_roots, "silence_to_observation_report.json")
+    pn_reports = _collect_named_reports(shard_roots, "pn_resonance_report.json")
+    receipt_row = receipt_summary.get("scale_compressed_pn_silence_to_observation_receipt") or {}
+    local_pass_all = bool(completed and receipt_row.get("passed_count") == len(completed))
+    report_receipts = [
+        bool(report.get("scale_compressed_pn_silence_to_observation_receipt", False))
+        or bool(report.get("PN_RESONANCE_RECEIPT", False))
+        for report in silence_reports + pn_reports
+    ]
+    report_pass = bool(report_receipts and all(report_receipts))
+    local_witness_receipt = bool(local_pass_all and report_pass)
+    global_capacity_readback_map_receipt = False
+    finite_capacity_fixed_point_receipt = False
+    global_receipt = bool(global_capacity_readback_map_receipt and finite_capacity_fixed_point_receipt)
+    blockers = _unique_texts(
+        ([] if local_pass_all else ["shard_scale_compressed_pn_receipts_not_all_true"])
+        + ([] if report_receipts else ["pn_or_silence_reports_missing"])
+        + ([] if report_pass else ["pn_or_silence_report_receipts_not_all_true"])
+        + ([] if global_capacity_readback_map_receipt else ["global_capacity_readback_map_missing"])
+        + ([] if finite_capacity_fixed_point_receipt else ["finite_capacity_fixed_point_solve_missing"])
+    )
+    report = {
+        "mode": "distributed_global_pn_resonance_reduction_v0",
+        "run_id": manifest.get("run_id"),
+        "global_pn_resonance_receipt": global_receipt,
+        "all_shards_local_scale_compressed_pn_witness_receipt": local_witness_receipt,
+        "global_capacity_readback_map_receipt": global_capacity_readback_map_receipt,
+        "finite_capacity_fixed_point_receipt": finite_capacity_fixed_point_receipt,
+        "local_scale_compressed_pn_receipt_all": local_pass_all,
+        "silenceReportCount": len(silence_reports),
+        "pnResonanceReportCount": len(pn_reports),
+        "passedShardCount": int(receipt_row.get("passed_count") or 0),
+        "completedShardCount": len(completed),
+        "blockers": blockers,
+        "claim_boundary": (
+            "P/N reduction over distributed shards. Local scale-compressed silence-to-observation witnesses "
+            "are not a global P/N resonance proof. The global receipt requires a finite normal-form/readback "
+            "map F_r(N), a capacity fixed-point solve, uncertainty, wrong-P controls, and partition naturality."
+        ),
+    }
+    _write_json(out_dir / "global_pn_resonance_report.json", report)
+    return report
+
+
+def _distributed_run_pack_contract(
+    *,
+    manifest: dict[str, Any],
+    all_expected_completed: bool,
+    federated_receipt: bool,
+    seam_metadata_replay_receipt: bool,
+    halo_exchange: dict[str, Any],
+    neutral_global: dict[str, Any],
+    observer_time_global: dict[str, Any],
+    proto_particle_global: dict[str, Any],
+    pn_global: dict[str, Any],
+    physical_cmb_global: dict[str, Any],
+    visualization_payload_path: Path,
+    out_dir: Path,
+) -> dict[str, Any]:
+    online_receipts = halo_exchange.get("required_online_seam_receipts") or {}
+    gates = {
+        "all_expected_shards_completed": bool(all_expected_completed),
+        "federated_large_universe_witness_receipt": bool(federated_receipt),
+        "seam_metadata_replay_receipt": bool(seam_metadata_replay_receipt),
+        "online_cross_shard_overlap_repair_receipt": bool(
+            halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
+        ),
+        "per_cycle_cross_shard_halo_exchange_receipt": bool(
+            halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt", False)
+        ),
+        "distributed_local_diamond_receipt": bool(online_receipts.get("DISTRIBUTED_LOCAL_DIAMOND_RECEIPT", False)),
+        "distributed_repair_completeness_receipt": bool(
+            online_receipts.get("DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT", False)
+        ),
+        "cycle_holonomy_zero_or_classified_receipt": bool(
+            online_receipts.get("CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT", False)
+        ),
+        "fair_block_contraction_receipt": bool(online_receipts.get("FAIR_BLOCK_CONTRACTION_RECEIPT", False)),
+        "schedule_independent_normal_form_receipt": bool(
+            online_receipts.get("SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT", False)
+        ),
+        "partition_naturality_receipt": bool(online_receipts.get("PARTITION_NATURALITY_RECEIPT", False)),
+        "global_observer_modular_time_export_receipt": bool(
+            observer_time_global.get("global_observer_modular_time_export_receipt", False)
+        ),
+        "large_visualization_observer_contract_receipt": bool(
+            observer_time_global.get("large_visualization_observer_contract_receipt", False)
+        ),
+        "global_proto_particle_worldline_export_receipt": bool(
+            proto_particle_global.get("global_proto_particle_worldline_export_receipt", False)
+        ),
+        "moving_proto_particle_candidate_receipt": bool(
+            proto_particle_global.get("moving_proto_particle_candidate_receipt", False)
+        ),
+        "cross_shard_worldline_stitching_receipt": bool(
+            proto_particle_global.get("cross_shard_worldline_stitching_receipt", False)
+        ),
+        "all_shards_local_scale_compressed_pn_witness_receipt": bool(
+            pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt", False)
+        ),
+        "global_capacity_readback_map_receipt": bool(pn_global.get("global_capacity_readback_map_receipt", False)),
+        "finite_capacity_fixed_point_receipt": bool(pn_global.get("finite_capacity_fixed_point_receipt", False)),
+        "global_pn_resonance_receipt": bool(pn_global.get("global_pn_resonance_receipt", False)),
+        "strict_single_global_neutral_bulk_receipt": bool(
+            neutral_global.get("strict_single_global_neutral_bulk_receipt", False)
+        ),
+        "physical_cmb_input_contract_receipt": bool(
+            physical_cmb_global.get("physical_cmb_input_contract_receipt", False)
+        ),
+        "physical_cmb_prediction_receipt": bool(physical_cmb_global.get("physical_cmb_prediction_receipt", False)),
+    }
+    artifact_smoke = bool(
+        gates["all_expected_shards_completed"]
+        and gates["seam_metadata_replay_receipt"]
+        and bool(halo_exchange.get("reducer_halo_exchange_replay_receipt", False))
+    )
+    distributed_kernel_scaling_ready = bool(
+        gates["all_expected_shards_completed"]
+        and gates["online_cross_shard_overlap_repair_receipt"]
+        and gates["per_cycle_cross_shard_halo_exchange_receipt"]
+        and gates["distributed_local_diamond_receipt"]
+        and gates["distributed_repair_completeness_receipt"]
+        and gates["cycle_holonomy_zero_or_classified_receipt"]
+        and gates["fair_block_contraction_receipt"]
+        and gates["schedule_independent_normal_form_receipt"]
+        and gates["partition_naturality_receipt"]
+    )
+    observer_visualization_ready = bool(
+        artifact_smoke
+        and gates["large_visualization_observer_contract_receipt"]
+    )
+    observer_export_experiment_ready = bool(
+        distributed_kernel_scaling_ready
+        and gates["global_observer_modular_time_export_receipt"]
+    )
+    bulk_emergence_experiment_ready = bool(
+        distributed_kernel_scaling_ready
+        and gates["global_observer_modular_time_export_receipt"]
+        and gates["global_proto_particle_worldline_export_receipt"]
+    )
+    cmb_generation_experiment_ready = bool(
+        distributed_kernel_scaling_ready
+        and gates["physical_cmb_input_contract_receipt"]
+    )
+    post_run_science_promotion = bool(
+        distributed_kernel_scaling_ready
+        and gates["strict_single_global_neutral_bulk_receipt"]
+        and gates["cross_shard_worldline_stitching_receipt"]
+        and gates["moving_proto_particle_candidate_receipt"]
+        and gates["global_pn_resonance_receipt"]
+        and gates["physical_cmb_prediction_receipt"]
+    )
+    large_ready = distributed_kernel_scaling_ready
+    profile_requirements = {
+        "distributed_artifact_packaging_smoke": (
+            "all_expected_shards_completed",
+            "seam_metadata_replay_receipt",
+        ),
+        "distributed_kernel_scaling": (
+            "all_expected_shards_completed",
+            "online_cross_shard_overlap_repair_receipt",
+            "per_cycle_cross_shard_halo_exchange_receipt",
+            "distributed_local_diamond_receipt",
+            "distributed_repair_completeness_receipt",
+            "cycle_holonomy_zero_or_classified_receipt",
+            "fair_block_contraction_receipt",
+            "schedule_independent_normal_form_receipt",
+            "partition_naturality_receipt",
+        ),
+        "observer_visualization_payload": (
+            "all_expected_shards_completed",
+            "seam_metadata_replay_receipt",
+            "large_visualization_observer_contract_receipt",
+        ),
+        "observer_export_experiment": (
+            "online_cross_shard_overlap_repair_receipt",
+            "per_cycle_cross_shard_halo_exchange_receipt",
+            "global_observer_modular_time_export_receipt",
+        ),
+        "bulk_emergence_experiment": (
+            "online_cross_shard_overlap_repair_receipt",
+            "per_cycle_cross_shard_halo_exchange_receipt",
+            "global_observer_modular_time_export_receipt",
+            "global_proto_particle_worldline_export_receipt",
+        ),
+        "cmb_generation_experiment": (
+            "online_cross_shard_overlap_repair_receipt",
+            "per_cycle_cross_shard_halo_exchange_receipt",
+            "physical_cmb_input_contract_receipt",
+        ),
+        "post_run_science_promotion": (
+            "strict_single_global_neutral_bulk_receipt",
+            "cross_shard_worldline_stitching_receipt",
+            "global_pn_resonance_receipt",
+            "physical_cmb_prediction_receipt",
+        ),
+    }
+    profile_blockers = {
+        name: [key for key in keys if not gates.get(key, False)]
+        for name, keys in profile_requirements.items()
+    }
+    report = {
+        "mode": "distributed_run_pack_contract_v0",
+        "run_id": manifest.get("run_id"),
+        "distributed_artifact_packaging_smoke_receipt": artifact_smoke,
+        "small_scale_smoke_contract_receipt": artifact_smoke,
+        "observer_visualization_payload_ready_receipt": observer_visualization_ready,
+        "distributed_kernel_scaling_readiness_receipt": distributed_kernel_scaling_ready,
+        "observer_export_experiment_readiness_receipt": observer_export_experiment_ready,
+        "bulk_emergence_experiment_readiness_receipt": bulk_emergence_experiment_ready,
+        "cmb_generation_experiment_readiness_receipt": cmb_generation_experiment_ready,
+        "post_run_science_promotion_receipt": post_run_science_promotion,
+        "large_scale_cloud_run_ready_receipt": large_ready,
+        "gates": gates,
+        "profile_blockers": profile_blockers,
+        "required_artifacts": {
+            "distributed_summary": "distributed_universe_summary.json",
+            "visualization_payload": str(visualization_payload_path),
+            "global_halo_exchange": "halo_exchange_global/global_halo_exchange_report.json",
+            "global_neutral_bulk": "strict_neutral_global/global_neutral_bulk_reduction_report.json",
+            "global_observer_modular_time": "observer_modular_time_global/observer_modular_time_global_payload.json",
+            "global_proto_particles": "proto_particles_global/global_proto_particle_worldlines_report.json",
+            "global_pn_resonance": "pn_resonance_global/global_pn_resonance_report.json",
+            "global_physical_cmb": "physical_cmb_global/physical_cmb_global_reduction_report.json",
+        },
+        "blockers": profile_blockers["distributed_kernel_scaling"],
+        "claim_boundary": (
+            "Run-pack contract with separate profiles. Artifact smoke and observer visualization readiness "
+            "only certify packaging/export health. Science-scale distributed-kernel readiness requires online "
+            "seam repair, atomic/confluent commits, holonomy, fair-block, schedule, and partition receipts. "
+            "Post-run science promotion is separate from launch readiness."
+        ),
+    }
+    _write_json(Path(out_dir) / "DISTRIBUTED_RUN_PACK_CONTRACT.json", report)
+    return report
+
+
+def _global_physical_cmb_reduction(
+    *,
+    manifest: dict[str, Any],
+    completed: list[dict[str, Any]],
+    out_dir: Path,
+) -> dict[str, Any]:
+    """Reduce shard-local finite CMB/theorem inputs before running hard gates."""
+
+    shard_roots = [Path(row["run_dir"]) for row in completed if row.get("completed")]
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if not shard_roots:
+        report = {
+            "mode": "distributed_physical_cmb_global_reduction_v0",
+            "report_dir": str(out_dir),
+            "completed_shard_count": 0,
+            "expected_shard_count": int(manifest.get("shard_count", 0)),
+            "finite_source_global_reduction_receipt": False,
+            "physical_cmb_input_contract_receipt": False,
+            "physical_cmb_output_comparison_receipt": False,
+            "physical_cmb_prediction_receipt": False,
+            "blockers": ["no_completed_shards"],
+            "claim_boundary": (
+                "No physical CMB claim: the distributed reducer had no completed observer-like "
+                "self-reading shards to reduce."
+            ),
+        }
+        _write_json(out_dir / "physical_cmb_global_reduction_report.json", report)
+        return report
+
+    try:
+        from oph_fpe.cosmology.physical_cmb_output import write_physical_cmb_output_comparison_report
+        from oph_fpe.cosmology.physical_cmb_prediction import (
+            write_physical_cmb_frontier_report,
+            write_physical_cmb_input_no_data_use_receipt,
+            write_physical_cmb_input_report,
+            write_physical_cmb_promotion_audit_report,
+        )
+
+        finite_reduction = _write_global_finite_cmb_source_reports(
+            manifest=manifest,
+            shard_roots=shard_roots,
+            out_dir=out_dir,
+        )
+        write_physical_cmb_input_no_data_use_receipt(shard_roots + [out_dir], out_dir)
+        no_data = _write_global_no_data_use_receipt(shard_roots + [out_dir], out_dir)
+        input_report = write_physical_cmb_input_report([out_dir], out_dir)
+        promotion = write_physical_cmb_promotion_audit_report([out_dir], out_dir)
+        output = write_physical_cmb_output_comparison_report([out_dir, *shard_roots], out_dir)
+        frontier = write_physical_cmb_frontier_report([out_dir, *shard_roots], out_dir)
+        blockers = _unique_texts(
+            list(finite_reduction.get("blockers") or [])
+            + list(input_report.get("blockers") or [])
+            + list(promotion.get("promotion_blockers") or [])
+            + list(output.get("contract_blockers") or [])
+            + list(output.get("promotion_blockers") or [])
+            + list(frontier.get("blockers") or [])
+        )
+        report = {
+            "mode": "distributed_physical_cmb_global_reduction_v0",
+            "report_dir": str(out_dir),
+            "completed_shard_count": len(shard_roots),
+            "expected_shard_count": int(manifest.get("shard_count", 0)),
+            "source_run_dirs": [str(path) for path in shard_roots],
+            "finite_source_global_reduction_receipt": bool(
+                finite_reduction.get("FINITE_CMB_GLOBAL_REDUCTION_RECEIPT", False)
+            ),
+            "no_data_use_receipt": bool(no_data.get("NO_DATA_USE_RECEIPT", False)),
+            "physical_cmb_input_contract_receipt": bool(
+                input_report.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+            ),
+            "physical_cmb_prediction_eligible": bool(input_report.get("physical_cmb_prediction_eligible", False)),
+            "physical_cmb_promotion_ready": bool(promotion.get("physical_cmb_promotion_ready", False)),
+            "physical_cmb_output_comparison_receipt": bool(
+                output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
+            ),
+            "usable_physical_cmb_data_receipt": bool(output.get("USABLE_PHYSICAL_CMB_DATA_RECEIPT", False)),
+            "physical_cmb_prediction_receipt": bool(
+                output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+                and frontier.get("physical_cmb_prediction_receipt", False)
+            ),
+            "official_likelihood_ready": bool(frontier.get("official_likelihood_ready", False)),
+            "cdm_limit_regression_passed": bool(frontier.get("cdm_limit_regression_passed", False)),
+            "measurement_comparable_model_count": int(output.get("measurement_comparable_model_count") or 0),
+            "oph_diagnostic_model_count": int(output.get("oph_diagnostic_model_count") or 0),
+            "best_oph_diagnostic_model": output.get("best_oph_diagnostic_model") or {},
+            "finite_reduction_report_path": str(out_dir / "finite_cmb_global_reduction_report.json"),
+            "input_report_path": str(out_dir / "physical_cmb_input_report.json"),
+            "promotion_audit_report_path": str(out_dir / "physical_cmb_promotion_audit_report.json"),
+            "output_comparison_report_path": str(out_dir / "physical_cmb_output_comparison_report.json"),
+            "frontier_report_path": str(out_dir / "physical_cmb_frontier_report.json"),
+            "reduced_source_files": finite_reduction.get("reduced_source_files") or [],
+            "component_receipts": finite_reduction.get("component_receipts") or {},
+            "blockers": blockers,
+            "claim_boundary": (
+                "Global distributed physical-CMB reduction over completed OPH shards. The reducer first "
+                "combines finite-derived theorem/CMB source reports across observer-like self-reading shards, "
+                "then runs the hard physical-CMB contract. Physical-unit TT outputs remain diagnostics unless "
+                "the global input contract, promotion gates, output comparison, and prediction receipts all pass."
+            ),
+        }
+    except Exception as exc:  # pragma: no cover - defensive fail-closed report path.
+        report = {
+            "mode": "distributed_physical_cmb_global_reduction_v0",
+            "report_dir": str(out_dir),
+            "completed_shard_count": len(shard_roots),
+            "expected_shard_count": int(manifest.get("shard_count", 0)),
+            "finite_source_global_reduction_receipt": False,
+            "physical_cmb_input_contract_receipt": False,
+            "physical_cmb_output_comparison_receipt": False,
+            "physical_cmb_prediction_receipt": False,
+            "blockers": [f"global_physical_cmb_reduction_failed:{type(exc).__name__}:{exc}"],
+            "claim_boundary": (
+                "Physical CMB reduction failed closed. No OPH physical CMB prediction receipt was emitted."
+            ),
+        }
+    _write_json(out_dir / "physical_cmb_global_reduction_report.json", report)
+    return report
+
+
+def _write_global_finite_cmb_source_reports(
+    *,
+    manifest: dict[str, Any],
+    shard_roots: list[Path],
+    out_dir: Path,
+) -> dict[str, Any]:
+    expected = len(shard_roots)
+    transition_reports = _collect_named_reports(shard_roots, "finite_repair_transition_matrix_report.json")
+    finite_cert_reports = _collect_named_reports(shard_roots, "finite_certificate_report.json")
+    ba_reports = _collect_named_reports(shard_roots, "B_A_kernel_report.json")
+    ba_parent_reports = _collect_named_reports(shard_roots, "b_a_parent_report.json")
+    scale_reports = _collect_named_reports(shard_roots, "scale_compressed_repair_report.json")
+    screen_capacity_reports = _collect_named_reports(shard_roots, "screen_capacity_closure_report.json")
+    strict_neutral_reports = _collect_named_reports(shard_roots, "strict_neutral_bulk_report.json")
+    compressed_likelihood_reports = _collect_named_reports(shard_roots, "oph_compressed_likelihood_report.json")
+    official_likelihood_reports = _collect_named_reports(shard_roots, "official_planck_likelihood_readiness_report.json")
+    camb_baseline_reports = _collect_named_reports(shard_roots, "camb_lcdm_baseline_report.json")
+
+    eta_values = _finite_values(transition_reports, _transition_eta_value)
+    gamma_values = _finite_values(transition_reports, lambda report: _float_or_none((report.get("primary") or {}).get("gamma_continuous")))
+    a_zeta_values = _finite_values(finite_cert_reports, _finite_cert_a_zeta)
+    q_values = _finite_values(scale_reports, lambda report: _float_or_none((report.get("cmb_parameter_readouts") or {}).get("q_IR")))
+    ell_values = _finite_values(scale_reports, lambda report: _float_or_none((report.get("cmb_parameter_readouts") or {}).get("ell_IR")))
+    n_values = _finite_values(
+        screen_capacity_reports,
+        lambda report: _float_or_none((report.get("observed_branch_normalization") or {}).get("N_CRC")),
+    )
+    b_a_rows = _numeric_rows_from_reports(ba_reports, ("B_A_k_a",))
+    rho_a_rows = _numeric_rows_from_reports(finite_cert_reports, ("derived_outputs", "rho_A_a"))
+    ba_parent_rows = _collect_row_dicts(ba_parent_reports, ("rows", "observer_view_rows"))
+
+    transition_ready = (
+        len(transition_reports) == expected
+        and len(eta_values) == expected
+        and len(gamma_values) == expected
+        and all(
+            bool(report.get("finite_transition_matrix_ready", False))
+            and (
+                bool(report.get("eta_R_finite_lattice_derived", False))
+                or bool(report.get("eta_R_empirical_finite_lattice_derived", False))
+                or bool(((report.get("clock_modes") or {}).get("empirical") or {}).get("eta_R_finite_lattice_derived", False))
+            )
+            for report in transition_reports
+        )
+    )
+    finite_certificate_ready = (
+        len(finite_cert_reports) == expected
+        and len(a_zeta_values) == expected
+        and all(value > 0.0 for value in a_zeta_values)
+        and bool(rho_a_rows)
+        and all(
+            bool(report.get("theorem_grade_finite_inputs", False))
+            and bool(
+                ((report.get("derived_outputs") or {}).get("screen_to_primordial_lift_receipt", False))
+                or report.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)
+                or report.get("screen_to_primordial_lift_receipt", False)
+            )
+            for report in finite_cert_reports
+        )
+    )
+    ba_ready = len(ba_reports) == expected and bool(b_a_rows) and all(
+        bool(report.get("B_A_KERNEL_RECEIPT", False)) for report in ba_reports
+    )
+    scale_ready = (
+        len(scale_reports) == expected
+        and len(q_values) == expected
+        and len(ell_values) == expected
+        and all(value > 0.0 for value in ell_values)
+        and all(bool(report.get("scale_compressed_operator_receipt", False)) for report in scale_reports)
+    )
+    strict_neutral_ready = len(strict_neutral_reports) == expected and all(
+        bool(report.get("strict_neutral_bulk", False)) for report in strict_neutral_reports
+    )
+    official_likelihood_local_any = any(
+        bool(report.get("official_likelihood_ready", False))
+        or bool(report.get("official_likelihood_execution_ready", False))
+        for report in compressed_likelihood_reports + official_likelihood_reports
+    )
+    cdm_limit_regression_local_any = any(
+        bool(report.get("cdm_limit_regression_passed", False))
+        or bool(report.get("CDM_LIMIT_BOLTZMANN_RECEIPT", False))
+        for report in compressed_likelihood_reports + camb_baseline_reports
+    )
+    observed_screen_capacity_ready = bool(n_values)
+    local_component_rollups = {
+        "finite_repair_transition_clock_local_rollup": transition_ready,
+        "finite_certificate_local_rollup": finite_certificate_ready,
+        "B_A_kernel_local_rollup": ba_ready,
+        "scale_compressed_scalar_local_rollup": scale_ready,
+        "strict_neutral_local_rollup": strict_neutral_ready,
+        "official_likelihood_local_any": official_likelihood_local_any,
+        "cdm_limit_regression_local_any": cdm_limit_regression_local_any,
+    }
+    global_pooled_sufficient_statistics_ready = False
+    transition_ready = False
+    finite_certificate_ready = False
+    ba_ready = False
+    scale_ready = False
+    strict_neutral_ready = False
+    official_likelihood_ready = False
+    cdm_limit_regression_passed = False
+
+    component_receipts = {
+        "finite_repair_transition_clock_global_reduction": transition_ready,
+        "finite_certificate_global_reduction": finite_certificate_ready,
+        "B_A_kernel_global_reduction": ba_ready,
+        "scale_compressed_scalar_global_reduction": scale_ready,
+        "neutral_or_scale_freezeout_global_reduction": bool(strict_neutral_ready or scale_ready),
+        "screen_capacity_global_readout": observed_screen_capacity_ready,
+        "global_pooled_sufficient_statistics_receipt": global_pooled_sufficient_statistics_ready,
+        "official_likelihood_ready": official_likelihood_ready,
+        "cdm_limit_regression_passed": cdm_limit_regression_passed,
+    }
+    blockers = [
+        key
+        for key, passed in component_receipts.items()
+        if key
+        in {
+            "finite_repair_transition_clock_global_reduction",
+            "finite_certificate_global_reduction",
+            "B_A_kernel_global_reduction",
+            "scale_compressed_scalar_global_reduction",
+            "neutral_or_scale_freezeout_global_reduction",
+        }
+        and not passed
+    ]
+    if not global_pooled_sufficient_statistics_ready:
+        blockers.append("global_pooled_sufficient_statistics_reducer_missing")
+    finite_global_receipt = not blockers
+
+    _write_json(
+        out_dir / "finite_repair_transition_matrix_report.json",
+        {
+            "mode": "distributed_finite_repair_transition_matrix_reduction_v0",
+            "finite_transition_matrix_ready": transition_ready,
+            "eta_R_finite_lattice_derived": transition_ready,
+            "FINITE_REPAIR_TRANSITION_CLOCK_GLOBAL_REDUCTION_RECEIPT": transition_ready,
+            "primary": {
+                "eta_R_estimate": None,
+                "gamma_continuous": None,
+                "diagnostic_eta_R_shard_mean": _mean_or_none(eta_values),
+                "diagnostic_eta_R_shard_std": _std_or_none(eta_values),
+                "diagnostic_gamma_continuous_shard_mean": _mean_or_none(gamma_values),
+                "diagnostic_gamma_continuous_shard_std": _std_or_none(gamma_values),
+            },
+            "local_component_rollup_receipt": local_component_rollups["finite_repair_transition_clock_local_rollup"],
+            "shard_count": expected,
+            "source_report_count": len(transition_reports),
+            "claim_boundary": (
+                "Diagnostic reducer output from shard-local finite repair transition clocks. The mean of "
+                "shard-local nonlinear estimates is not a physical global estimate; a pooled sufficient-statistic "
+                "reducer is required before this can satisfy the physical CMB contract."
+            ),
+        },
+    )
+    _write_json(
+        out_dir / "finite_certificate_report.json",
+        {
+            "mode": "distributed_finite_certificate_reduction_v0",
+            "theorem_grade_finite_inputs": finite_certificate_ready,
+            "FINITE_CERTIFICATE_GLOBAL_REDUCTION_RECEIPT": finite_certificate_ready,
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": finite_certificate_ready,
+            "derived_outputs": {
+                "A_zeta": None,
+                "diagnostic_A_zeta_shard_mean": _mean_or_none(a_zeta_values),
+                "diagnostic_A_zeta_shard_std": _std_or_none(a_zeta_values),
+                "rho_A_a": None,
+                "diagnostic_rho_A_a_rows": rho_a_rows,
+                "screen_to_primordial_lift_receipt": finite_certificate_ready,
+            },
+            "local_component_rollup_receipt": local_component_rollups["finite_certificate_local_rollup"],
+            "shard_count": expected,
+            "source_report_count": len(finite_cert_reports),
+            "claim_boundary": (
+                "Diagnostic reducer output from shard-local finite theorem certificate reports. A_zeta and "
+                "rho_A(a) are not promoted from shard means/concatenated rows; the screen-to-primordial lift "
+                "requires a global pooled source reducer."
+            ),
+        },
+    )
+    _write_json(
+        out_dir / "B_A_kernel_report.json",
+        {
+            "mode": "distributed_B_A_kernel_reduction_v0",
+            "B_A_KERNEL_RECEIPT": ba_ready,
+            "B_A_GLOBAL_REDUCTION_RECEIPT": ba_ready,
+            "B_A_k_a": None,
+            "diagnostic_B_A_k_a_rows": b_a_rows,
+            "local_component_rollup_receipt": local_component_rollups["B_A_kernel_local_rollup"],
+            "shard_count": expected,
+            "source_report_count": len(ba_reports),
+            "claim_boundary": (
+                "Diagnostic B_A(k,a) reducer output. Concatenated shard rows are not a unit-, grid-, "
+                "coverage-, covariance-, and provenance-aware global kernel."
+            ),
+        },
+    )
+    _write_json(
+        out_dir / "b_a_parent_report.json",
+        {
+            "mode": "distributed_b_a_parent_reduction_v0",
+            "readiness": {"checks": {"no_cmb_data_used": True, "global_shard_reduction": bool(ba_parent_rows)}},
+            "rows": ba_parent_rows,
+            "shard_count": expected,
+            "source_report_count": len(ba_parent_reports),
+        },
+    )
+    _write_json(
+        out_dir / "scale_compressed_repair_report.json",
+        {
+            "mode": "distributed_scale_compressed_repair_reduction_v0",
+            "scale_compressed_operator_receipt": scale_ready,
+            "SCALE_COMPRESSED_GLOBAL_REDUCTION_RECEIPT": scale_ready,
+            "logical_repair_rounds": _median_int_or_none(
+                [_int_or_none(report.get("logical_repair_rounds")) for report in scale_reports]
+            ),
+            "cmb_parameter_readouts": {
+                "q_IR": None,
+                "ell_IR": None,
+                "diagnostic_q_IR_shard_mean": _mean_or_none(q_values),
+                "diagnostic_q_IR_shard_std": _std_or_none(q_values),
+                "diagnostic_ell_IR_shard_mean": _mean_or_none(ell_values),
+                "diagnostic_ell_IR_shard_std": _std_or_none(ell_values),
+            },
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
+            "local_component_rollup_receipt": local_component_rollups["scale_compressed_scalar_local_rollup"],
+            "shard_count": expected,
+            "source_report_count": len(scale_reports),
+        },
+    )
+    _write_json(
+        out_dir / "screen_capacity_closure_report.json",
+        {
+            "mode": "distributed_screen_capacity_closure_reduction_v0",
+            "observed_branch_normalization": {
+                "N_CRC": _consensus_or_none(n_values),
+                "N_CRC_shard_mean": _mean_or_none(n_values),
+                "N_CRC_shard_std": _std_or_none(n_values),
+                "N_CRC_additive_sum_diagnostic": float(sum(n_values)) if n_values else None,
+                "N_CRC_shard_values": n_values,
+            },
+            "readiness_gates": {
+                "observed_branch_N_scr_readout_available": bool(_consensus_or_none(n_values) is not None),
+                "N_CRC_consensus_invariant": bool(_consensus_or_none(n_values) is not None),
+                "additive_capacity_schema_declared": False,
+            },
+            "shard_count": expected,
+            "source_report_count": len(screen_capacity_reports),
+            "claim_boundary": (
+                "Screen capacity closure reduction treats N_CRC as a consensus invariant by default. The "
+                "additive sum is diagnostic only unless shard reports declare non-overlapping coverage and an "
+                "additive capacity schema."
+            ),
+        },
+    )
+    _write_json(
+        out_dir / "strict_neutral_bulk_report.json",
+        {
+            "mode": "distributed_strict_neutral_bulk_reduction_v0",
+            "strict_neutral_bulk": strict_neutral_ready,
+            "STRICT_NEUTRAL_BULK_GLOBAL_REDUCTION_RECEIPT": strict_neutral_ready,
+            "shard_count": expected,
+            "source_report_count": len(strict_neutral_reports),
+        },
+    )
+    _write_json(
+        out_dir / "oph_compressed_likelihood_report.json",
+        {
+            "mode": "distributed_likelihood_gate_reduction_v0",
+            "official_likelihood_ready": official_likelihood_ready,
+            "cdm_limit_regression_passed": cdm_limit_regression_passed,
+            "local_rollups": {
+                "official_likelihood_local_any": official_likelihood_local_any,
+                "cdm_limit_regression_local_any": cdm_limit_regression_local_any,
+            },
+            "source_report_count": len(compressed_likelihood_reports),
+            "claim_boundary": (
+                "Reducer-level likelihood gate report. Shard-local any() readiness is diagnostic only; official "
+                "likelihood and CDM-limit readiness must be executed as global reducer tests."
+            ),
+        },
+    )
+
+    report = {
+        "mode": "distributed_finite_cmb_source_reduction_v0",
+        "FINITE_CMB_GLOBAL_REDUCTION_RECEIPT": finite_global_receipt,
+        "expected_shard_count": expected,
+        "completed_shard_count": len(shard_roots),
+        "component_receipts": component_receipts,
+        "local_component_rollups": local_component_rollups,
+        "blockers": blockers,
+        "input_statistics": {
+            "eta_R": _stats(eta_values),
+            "gamma_continuous": _stats(gamma_values),
+            "A_zeta": _stats(a_zeta_values),
+            "q_IR": _stats(q_values),
+            "ell_IR": _stats(ell_values),
+            "N_CRC": _stats(n_values),
+            "B_A_row_count": len(b_a_rows),
+            "rho_A_row_count": len(rho_a_rows),
+            "b_a_parent_row_count": len(ba_parent_rows),
+        },
+        "source_report_counts": {
+            "finite_repair_transition_matrix_report": len(transition_reports),
+            "finite_certificate_report": len(finite_cert_reports),
+            "B_A_kernel_report": len(ba_reports),
+            "b_a_parent_report": len(ba_parent_reports),
+            "scale_compressed_repair_report": len(scale_reports),
+            "screen_capacity_closure_report": len(screen_capacity_reports),
+            "strict_neutral_bulk_report": len(strict_neutral_reports),
+            "oph_compressed_likelihood_report": len(compressed_likelihood_reports),
+            "official_planck_likelihood_readiness_report": len(official_likelihood_reports),
+            "camb_lcdm_baseline_report": len(camb_baseline_reports),
+        },
+        "reduced_source_files": [
+            "finite_repair_transition_matrix_report.json",
+            "finite_certificate_report.json",
+            "B_A_kernel_report.json",
+            "b_a_parent_report.json",
+            "scale_compressed_repair_report.json",
+            "screen_capacity_closure_report.json",
+            "strict_neutral_bulk_report.json",
+            "oph_compressed_likelihood_report.json",
+        ],
+        "claim_boundary": (
+            "Finite CMB source reduction over completed distributed OPH shards. Current outputs preserve "
+            "diagnostic shard statistics but do not promote nonlinear shard means or row concatenations into "
+            "physical finite inputs. The physical CMB gate requires a future pooled sufficient-statistic reducer."
+        ),
+    }
+    _write_json(out_dir / "finite_cmb_global_reduction_report.json", report)
+    return report
 
 
 def _shard_config(
@@ -436,6 +1577,13 @@ def _receipt_summary(shards: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
+    cmb = summary.get("physical_cmb_global_reduction") or {}
+    halo = summary.get("global_halo_exchange_reduction") or {}
+    neutral = summary.get("global_neutral_bulk_reduction") or {}
+    observer_time = summary.get("global_observer_modular_time_export") or {}
+    proto = summary.get("global_proto_particle_worldlines") or {}
+    pn = summary.get("global_pn_resonance_reduction") or {}
+    contract = summary.get("distributed_run_pack_contract") or {}
     lines = [
         "# Distributed OPH Universe Summary",
         "",
@@ -445,8 +1593,21 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
         f"- Completed patch capacity: `{summary.get('total_patch_capacity_completed')}`",
         f"- Completed observer capacity: `{summary.get('total_observer_capacity_completed')}`",
         f"- Federated large-universe witness receipt: `{str(bool(summary.get('federated_large_universe_witness_receipt'))).lower()}`",
-        f"- Cross-shard overlap repair receipt: `{str(bool(summary.get('cross_shard_overlap_repair_receipt'))).lower()}`",
+        f"- Seam metadata replay receipt: `{str(bool(summary.get('seam_metadata_replay_receipt'))).lower()}`",
+        f"- Online cross-shard overlap repair receipt: `{str(bool(summary.get('online_cross_shard_overlap_repair_receipt'))).lower()}`",
+        f"- Per-cycle cross-shard halo exchange receipt: `{str(bool(summary.get('per_cycle_cross_shard_halo_exchange_receipt'))).lower()}`",
+        f"- Global observer modular-time export receipt: `{str(bool(summary.get('global_observer_modular_time_export_receipt'))).lower()}`",
+        f"- Global proto-particle worldline export receipt: `{str(bool(summary.get('global_proto_particle_worldline_export_receipt'))).lower()}`",
+        f"- Local scale-compressed P/N witness receipt: `{str(bool(summary.get('all_shards_local_scale_compressed_pn_witness_receipt'))).lower()}`",
+        f"- Global P/N resonance receipt: `{str(bool(summary.get('global_pn_resonance_receipt'))).lower()}`",
+        f"- Global physical CMB input contract receipt: `{str(bool(summary.get('global_physical_cmb_input_contract_receipt'))).lower()}`",
+        f"- Global physical CMB output comparison receipt: `{str(bool(summary.get('global_physical_cmb_output_comparison_receipt'))).lower()}`",
+        f"- Global physical CMB prediction receipt: `{str(bool(summary.get('global_physical_cmb_prediction_receipt'))).lower()}`",
         f"- Strict single global neutral bulk receipt: `{str(bool(summary.get('strict_single_global_neutral_bulk_receipt'))).lower()}`",
+        f"- Artifact packaging smoke receipt: `{str(bool(contract.get('distributed_artifact_packaging_smoke_receipt'))).lower()}`",
+        f"- Distributed-kernel scaling readiness receipt: `{str(bool(contract.get('distributed_kernel_scaling_readiness_receipt'))).lower()}`",
+        f"- Observer visualization payload ready receipt: `{str(bool(contract.get('observer_visualization_payload_ready_receipt'))).lower()}`",
+        f"- Large-scale cloud-run ready receipt: `{str(bool(contract.get('large_scale_cloud_run_ready_receipt'))).lower()}`",
         "",
         "## OPH Differentiator",
         "",
@@ -465,6 +1626,53 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
             f"- `{key}`: `{row.get('passed_count')}/{row.get('total_completed')}` "
             f"({row.get('passed_fraction')})"
         )
+    lines.extend(
+        [
+            "",
+            "## Global Physical CMB Reduction",
+            "",
+            f"- Finite source global reduction receipt: `{str(bool(cmb.get('finite_source_global_reduction_receipt'))).lower()}`",
+            f"- Input contract receipt: `{str(bool(cmb.get('physical_cmb_input_contract_receipt'))).lower()}`",
+            f"- Output comparison receipt: `{str(bool(cmb.get('physical_cmb_output_comparison_receipt'))).lower()}`",
+            f"- Physical prediction receipt: `{str(bool(cmb.get('physical_cmb_prediction_receipt'))).lower()}`",
+            f"- Report directory: `{cmb.get('report_dir')}`",
+            "",
+            str(cmb.get("claim_boundary", "")),
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "## Global Distributed Reductions",
+            "",
+            f"- Halo online receipt: `{str(bool(halo.get('per_cycle_cross_shard_halo_exchange_receipt'))).lower()}`",
+            f"- Halo reducer replay receipt: `{str(bool(halo.get('reducer_halo_exchange_replay_receipt'))).lower()}`",
+            f"- Global neutral bulk receipt: `{str(bool(neutral.get('strict_single_global_neutral_bulk_receipt'))).lower()}`",
+            f"- Observer views exported: `{observer_time.get('objectiveObserverViewCount')}`",
+            f"- Observer min time frames: `{observer_time.get('minTimeFrameCount')}`",
+            f"- Proto-particle worldlines: `{proto.get('worldlineCount')}`",
+            f"- Moving proto-particle worldlines: `{proto.get('movingWorldlineCount')}`",
+            f"- P/N report count: `{pn.get('pnResonanceReportCount')}`",
+            "",
+            "Sidecar reports:",
+            "- `halo_exchange_global/global_halo_exchange_report.json`",
+            "- `strict_neutral_global/global_neutral_bulk_reduction_report.json`",
+            "- `observer_modular_time_global/observer_modular_time_global_payload.json`",
+            "- `proto_particles_global/global_proto_particle_worldlines_report.json`",
+            "- `pn_resonance_global/global_pn_resonance_report.json`",
+            "- `DISTRIBUTED_RUN_PACK_CONTRACT.json`",
+        ]
+    )
+    cmb_blockers = cmb.get("blockers") or []
+    if cmb_blockers:
+        lines.extend(["", "### CMB Blockers"])
+        for blocker in cmb_blockers:
+            lines.append(f"- `{blocker}`")
+    contract_blockers = contract.get("blockers") or []
+    if contract_blockers:
+        lines.extend(["", "### Run-Pack Contract Blockers"])
+        for blocker in contract_blockers:
+            lines.append(f"- `{blocker}`")
     blockers = summary.get("strict_single_global_bulk_blockers") or []
     if blockers:
         lines.extend(["", "## Strict Global Bulk Blockers"])
@@ -654,23 +1862,36 @@ def _seam_readout(manifest: dict[str, Any], completed: list[dict[str, Any]]) -> 
                 "final_committed_fraction_source": source_final,
                 "final_committed_fraction_target": target_final,
                 "final_committed_fraction_gap": committed_gap,
+                "synthetic": True,
+                "source": "endpoint_interpolation",
+                "physics_receipt_eligible": False,
                 "overlapRepairTrajectory": _seam_trajectory(source_trace, target_trace),
             }
         )
     completed_count = sum(1 for link in readout_links if link.get("seam_completed"))
+    replay_receipt = bool(
+        readout_links
+        and completed_count / max(len(readout_links), 1) >= 0.95
+        and final_committed_values
+    )
     return {
-        "mode": "cross_shard_core_halo_overlap_readout",
+        "mode": "cross_shard_core_halo_overlap_metadata_replay",
         "seam_link_count": len(readout_links),
         "completed_seam_count": completed_count,
         "completed_seam_fraction": float(completed_count / len(readout_links)) if readout_links else 0.0,
         "mean_final_committed_fraction": (
             float(sum(final_committed_values) / len(final_committed_values)) if final_committed_values else None
         ),
+        "seam_metadata_replay_receipt": replay_receipt,
+        "cross_shard_overlap_repair_receipt": False,
+        "synthetic": True,
+        "source": "endpoint_interpolation",
+        "physics_receipt_eligible": False,
         "links": readout_links,
         "claim_boundary": (
-            "Reducer-level seam readout over core/halo shard overlaps. This gives the visualization app real "
-            "cross-shard observer-overlap links and repair trajectories. It is not yet a per-edge distributed "
-            "repair kernel with synchronized halo exchange at every cycle."
+            "Reducer-level seam metadata replay over core/halo shard overlaps. It gives the visualization app "
+            "cross-shard observer-overlap links and synthetic endpoint-interpolated trajectories. It is not a "
+            "per-edge distributed repair kernel and is not eligible for OPH confluence, bulk, or CMB receipts."
         ),
     }
 
@@ -694,6 +1915,9 @@ def _seam_trajectory(source_trace: dict[str, Any], target_trace: dict[str, Any])
                 "targetCommittedFraction": float(dst),
                 "committedFractionGap": float(abs(src - dst)),
                 "repairLoad": float(1.0 - 0.5 * (src + dst)),
+                "synthetic": True,
+                "source": "endpoint_interpolation",
+                "physics_receipt_eligible": False,
             }
         )
     return trajectory
@@ -704,6 +1928,12 @@ def _distributed_visualization_payload(
     manifest: dict[str, Any],
     shard_rows: list[dict[str, Any]],
     seam_readout: dict[str, Any],
+    physical_cmb_global: dict[str, Any],
+    halo_exchange: dict[str, Any],
+    neutral_global: dict[str, Any],
+    observer_time_global: dict[str, Any],
+    proto_particle_global: dict[str, Any],
+    pn_global: dict[str, Any],
 ) -> dict[str, Any]:
     sampled_payloads = _sample_shard_timeline_payloads(shard_rows, max_payloads=8)
     observers = []
@@ -731,6 +1961,12 @@ def _distributed_visualization_payload(
                 "claimBoundary": link.get("claim_boundary"),
             }
         )
+    if observer_time_global.get("objectiveObserverViews"):
+        observers = list(observer_time_global.get("objectiveObserverViews") or [])
+    if observer_time_global.get("overlapLinks"):
+        overlap_links = list(observer_time_global.get("overlapLinks") or [])[:100000] + overlap_links
+    if proto_particle_global.get("worldlines"):
+        worldlines = list(proto_particle_global.get("worldlines") or [])
     return {
         "schema": "oph_distributed_universe_visualization_payload_v1",
         "kernel": DISTRIBUTED_KERNEL_VERSION,
@@ -739,6 +1975,8 @@ def _distributed_visualization_payload(
         "unifiedUniverse": {
             "atlas": manifest.get("unified_universe_atlas") or {},
             "crossShardSeamReadout": seam_readout,
+            "haloExchange": halo_exchange,
+            "neutralBulk": neutral_global,
             "shardPayloadIndex": [
                 {
                     "shardIndex": row.get("shard_index"),
@@ -764,15 +2002,54 @@ def _distributed_visualization_payload(
         },
         "observerModularTime": {
             "objectiveObserverViews": observers,
-            "overlapLinks": overlap_links[:20000],
+            "overlapLinks": overlap_links[:100000],
             "totalAvailableObserverCapacity": manifest.get("total_observer_capacity"),
-            "observerViewSource": "sampled_per_shard_payloads_with_global_ids",
+            "globalExport": {
+                "reportPath": "observer_modular_time_global/observer_modular_time_global_payload.json",
+                "objectiveObserverViewCount": observer_time_global.get("objectiveObserverViewCount"),
+                "minTimeFrameCount": observer_time_global.get("minTimeFrameCount"),
+                "largeVisualizationObserverContractReceipt": observer_time_global.get(
+                    "large_visualization_observer_contract_receipt"
+                ),
+            },
+            "observerViewSource": (
+                "global_observer_modular_time_export"
+                if observer_time_global.get("objectiveObserverViews")
+                else "sampled_per_shard_payloads_with_global_ids"
+            ),
         },
         "consensusBulk": {
+            "strictNeutralGlobalReduction": neutral_global,
             "protoParticleCandidates": {
                 "worldlines": worldlines,
-                "worldlineSource": "sampled_per_shard_payloads_with_atlas_shard_context",
+                "globalStitchReport": {
+                    "reportPath": "proto_particles_global/global_proto_particle_worldlines_report.json",
+                    "worldlineCount": proto_particle_global.get("worldlineCount"),
+                    "movingWorldlineCount": proto_particle_global.get("movingWorldlineCount"),
+                    "crossShardWorldlineStitchingReceipt": proto_particle_global.get(
+                        "cross_shard_worldline_stitching_receipt"
+                    ),
+                },
+                "worldlineSource": (
+                    "global_proto_particle_worldline_stitch"
+                    if proto_particle_global.get("worldlines")
+                    else "sampled_per_shard_payloads_with_atlas_shard_context"
+                ),
             }
+        },
+        "pnSilenceToObservation": {
+            "globalReduction": pn_global,
+            "claimBoundary": (
+                "Shows the scale-compressed P/N silence-to-observation lane across shards. It is not a full "
+                "finite-capacity N proof unless the global P/N receipt and capacity gates pass."
+            ),
+        },
+        "physicalCMB": {
+            "globalReduction": physical_cmb_global,
+            "claimBoundary": (
+                "Visualization can show globally reduced CMB readiness and physical-unit diagnostic curves. "
+                "It must not label a physical OPH CMB prediction unless physical_cmb_prediction_receipt is true."
+            ),
         },
         "visualizationNotes": [
             "Render the whole object as one atlas, not as separate universes.",
@@ -851,6 +2128,337 @@ def _globalized_worldlines(shard: dict[str, Any], payload: dict[str, Any], *, li
 
 def _global_id(shard: dict[str, Any], local_id: Any, prefix: str) -> str:
     return f"shard{int(shard.get('shard_index', 0)):04d}:{prefix}:{local_id}"
+
+
+def _compact_observer_time_report(report: dict[str, Any]) -> dict[str, Any]:
+    compact = {key: value for key, value in report.items() if key not in {"objectiveObserverViews", "overlapLinks"}}
+    compact["objectiveObserverViewsOmittedFromSummary"] = len(report.get("objectiveObserverViews") or [])
+    compact["overlapLinksOmittedFromSummary"] = len(report.get("overlapLinks") or [])
+    return compact
+
+
+def _compact_proto_particle_report(report: dict[str, Any]) -> dict[str, Any]:
+    compact = {key: value for key, value in report.items() if key not in {"worldlines"}}
+    compact["worldlinesOmittedFromSummary"] = len(report.get("worldlines") or [])
+    return compact
+
+
+def _combined_observer_views(
+    completed: list[dict[str, Any]],
+    *,
+    max_total: int,
+    per_shard: int,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for shard in completed:
+        run_dir = Path(str(shard.get("run_dir")))
+        for row in _read_jsonl_rows(run_dir / "observer_views.jsonl", limit=per_shard):
+            item = dict(row)
+            local_id = item.get("observer_id", item.get("observerId", len(rows)))
+            local_int = _int_or_none(local_id)
+            observer_range = shard.get("global_observer_range") if isinstance(shard.get("global_observer_range"), list) else []
+            base = _int_or_none(observer_range[0]) if observer_range else 0
+            numeric_global_id = int((base or 0) + (local_int if local_int is not None else len(rows)))
+            item["observer_id"] = numeric_global_id
+            item["observerId"] = _global_id(shard, local_id, "observer")
+            item["distributed_observer_id"] = item["observerId"]
+            item["distributed_shard_index"] = shard.get("shard_index")
+            item["distributed_shard_id"] = shard.get("shard_id")
+            rows.append(item)
+            if len(rows) >= int(max_total):
+                return rows
+    return rows
+
+
+def _read_jsonl_rows(path: Path, *, limit: int) -> list[dict[str, Any]]:
+    path = Path(path)
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            if len(rows) >= int(limit):
+                break
+            text = line.strip()
+            if not text:
+                continue
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(data, dict):
+                rows.append(data)
+    return rows
+
+
+def _globalized_worldline_row(shard: dict[str, Any], row: dict[str, Any], *, fallback_index: int) -> dict[str, Any]:
+    local_id = row.get("worldline_id", row.get("worldlineId", fallback_index))
+    events = []
+    for event in row.get("events") or row.get("sample_events") or []:
+        if not isinstance(event, dict):
+            continue
+        point = event.get("h3_spatial_point") or event.get("h3SpatialPoint")
+        if not isinstance(point, list) or len(point) < 3:
+            continue
+        events.append(
+            {
+                "cycle": event.get("cycle"),
+                "h3SpatialPoint": [float(point[0]), float(point[1]), float(point[2])],
+                "fitResidual": event.get("fit_residual", event.get("fitResidual")),
+                "supportNodeCount": event.get("support_node_count", event.get("supportNodeCount")),
+                "shardIndex": shard.get("shard_index"),
+            }
+        )
+    path_length, mean_step = _worldline_path_metrics(events)
+    return {
+        "worldlineId": _global_id(shard, local_id, "worldline"),
+        "localWorldlineId": local_id,
+        "globalWorldlineId": row.get("global_worldline_id") or row.get("globalWorldlineId"),
+        "stitchKey": row.get("stitch_key") or row.get("stitchKey"),
+        "shardIndex": shard.get("shard_index"),
+        "shardId": shard.get("shard_id"),
+        "observationCount": row.get("observation_count", row.get("observationCount", len(events))),
+        "birthCycle": row.get("birth_cycle", row.get("birthCycle")),
+        "deathCycle": row.get("death_cycle", row.get("deathCycle")),
+        "h3PathLength": row.get("h3_path_length", row.get("h3PathLength", path_length)),
+        "meanH3Step": row.get("mean_h3_step", row.get("meanH3Step", mean_step)),
+        "classMode": row.get("class_mode", row.get("classMode")),
+        "events": events,
+        "bulkLocalizationPass": bool(
+            row.get("bulk_localization_pass", False) or row.get("bulkLocalizationPass", False)
+        ),
+        "localizationPass": bool(row.get("localization_pass", False) or row.get("localizationPass", False)),
+        "persistencePass": bool(row.get("persistence_pass", False) or row.get("persistencePass", False)),
+        "sectorStabilityPass": bool(
+            row.get("sector_stability_pass", False) or row.get("sectorStabilityPass", False)
+        ),
+        "transportabilityPass": bool(
+            row.get("transportability_pass", False) or row.get("transportabilityPass", False)
+        ),
+        "claimBoundary": (
+            "Globalized H3-fitted holonomy/defect worldline candidate. Not a matter particle unless "
+            "the global particle receipt passes."
+        ),
+    }
+
+
+def _worldline_path_metrics(events: list[dict[str, Any]]) -> tuple[float, float]:
+    points = [event.get("h3SpatialPoint") for event in events if isinstance(event.get("h3SpatialPoint"), list)]
+    if len(points) < 2:
+        return 0.0, 0.0
+    length = 0.0
+    for left, right in zip(points, points[1:], strict=False):
+        if len(left) < 3 or len(right) < 3:
+            continue
+        length += math.sqrt(sum((float(right[index]) - float(left[index])) ** 2 for index in range(3)))
+    return float(length), float(length / max(len(points) - 1, 1))
+
+
+def _write_global_no_data_use_receipt(roots: list[Path], out_dir: Path) -> dict[str, Any]:
+    source_names = (
+        "finite_repair_transition_matrix_report.json",
+        "finite_certificate_report.json",
+        "B_A_kernel_report.json",
+        "B_A_kernel_refinement_report.json",
+        "b_a_parent_report.json",
+        "scale_compressed_repair_report.json",
+        "strict_neutral_bulk_report.json",
+        "scalar_quotient_report.json",
+        "screen_capacity_closure_report.json",
+    )
+    source_status: dict[str, Any] = {}
+    measurement_used = False
+    for name in source_names:
+        reports = _collect_named_reports(roots, name)
+        flags = [_measurement_data_used_for_input(report) for report in reports]
+        if any(flags):
+            measurement_used = True
+        source_status[name] = {
+            "report_count": len(reports),
+            "measurement_data_used": any(flags),
+        }
+    report = {
+        "mode": "distributed_physical_cmb_global_no_data_use_receipt_v0",
+        "no_data_use_receipt": not measurement_used,
+        "NO_DATA_USE_RECEIPT": not measurement_used,
+        "measurement_data_used_for_input_functions": measurement_used,
+        "source_status": source_status,
+        "run_dirs": [str(path) for path in roots],
+        "claim_boundary": (
+            "Global no-data-use firewall across shard-local and reduced OPH CMB input sources. "
+            "Measurement comparison reports may exist, but they must not set OPH input functions."
+        ),
+    }
+    _write_json(Path(out_dir) / "no_data_use_receipt.json", report)
+    return report
+
+
+def _measurement_data_used_for_input(report: dict[str, Any]) -> bool:
+    if not report:
+        return False
+    explicit_false = (
+        report.get("no_cmb_data_used") is True
+        or (((report.get("readiness") or {}).get("checks") or {}).get("no_cmb_data_used") is True)
+    )
+    data_use_keys = (
+        "measurement_data_used",
+        "cmb_data_used",
+        "cmb_data_used_for_input",
+        "planck_data_used_for_input",
+        "fit_to_measurement",
+        "fit_to_planck",
+        "uses_measurements_to_set_inputs",
+    )
+    measurement_flag = any(bool(report.get(key, False)) for key in data_use_keys)
+    if explicit_false and measurement_flag:
+        return True
+    if explicit_false:
+        return False
+    return measurement_flag
+
+
+def _collect_named_reports(roots: list[Path], name: str) -> list[dict[str, Any]]:
+    reports: list[dict[str, Any]] = []
+    for root in roots:
+        root = Path(root)
+        candidates = [root / name]
+        if root.exists() and root.is_dir():
+            candidates.extend(sorted(root.glob(f"**/{name}")))
+        seen: set[Path] = set()
+        for path in candidates:
+            path = Path(path)
+            if path in seen:
+                continue
+            seen.add(path)
+            data = _read_json(path)
+            if data:
+                reports.append(data)
+                break
+    return reports
+
+
+def _transition_eta_value(report: dict[str, Any]) -> float | None:
+    primary = report.get("primary") or {}
+    value = _float_or_none(primary.get("eta_R_estimate"))
+    if value is not None:
+        return value
+    empirical = (report.get("clock_modes") or {}).get("empirical") or {}
+    return _float_or_none(empirical.get("eta_R_value"))
+
+
+def _finite_cert_a_zeta(report: dict[str, Any]) -> float | None:
+    derived = report.get("derived_outputs") or {}
+    return _float_or_none(derived.get("A_zeta", report.get("A_zeta")))
+
+
+def _finite_values(reports: list[dict[str, Any]], getter: Any) -> list[float]:
+    values: list[float] = []
+    for report in reports:
+        value = getter(report)
+        if value is not None and math.isfinite(float(value)):
+            values.append(float(value))
+    return values
+
+
+def _numeric_rows_from_reports(reports: list[dict[str, Any]], key_path: tuple[str, ...]) -> list[list[float]]:
+    rows: list[list[float]] = []
+    for report in reports:
+        value: Any = report
+        for key in key_path:
+            if isinstance(value, dict):
+                value = value.get(key)
+            else:
+                value = None
+                break
+        rows.extend(_numeric_rows(value))
+    return rows
+
+
+def _numeric_rows(value: Any) -> list[list[float]]:
+    if value is None:
+        return []
+    if isinstance(value, (int, float)) and math.isfinite(float(value)):
+        return [[float(value)]]
+    if not isinstance(value, list):
+        return []
+    rows: list[list[float]] = []
+    if value and all(isinstance(item, (int, float)) for item in value):
+        row = [float(item) for item in value if math.isfinite(float(item))]
+        return [row] if row else []
+    for item in value:
+        if isinstance(item, list):
+            row = []
+            for cell in item:
+                if isinstance(cell, (int, float)) and math.isfinite(float(cell)):
+                    row.append(float(cell))
+            if row:
+                rows.append(row)
+    return rows
+
+
+def _collect_row_dicts(reports: list[dict[str, Any]], row_keys: tuple[str, ...]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for report in reports:
+        for key in row_keys:
+            value = report.get(key)
+            if isinstance(value, list):
+                for row in value:
+                    if isinstance(row, dict):
+                        rows.append(dict(row))
+                if value:
+                    break
+    return rows
+
+
+def _mean_or_none(values: list[float]) -> float | None:
+    return float(sum(values) / len(values)) if values else None
+
+
+def _std_or_none(values: list[float]) -> float | None:
+    if not values:
+        return None
+    mean = sum(values) / len(values)
+    return float(math.sqrt(sum((value - mean) ** 2 for value in values) / len(values)))
+
+
+def _consensus_or_none(values: list[float], *, rtol: float = 1.0e-9, atol: float = 1.0e-12) -> float | None:
+    if not values:
+        return None
+    first = float(values[0])
+    scale = max(abs(first), 1.0)
+    if all(abs(float(value) - first) <= max(atol, rtol * scale) for value in values):
+        return first
+    return None
+
+
+def _stats(values: list[float]) -> dict[str, Any]:
+    if not values:
+        return {"count": 0, "mean": None, "std": None, "min": None, "max": None}
+    return {
+        "count": len(values),
+        "mean": _mean_or_none(values),
+        "std": _std_or_none(values),
+        "min": float(min(values)),
+        "max": float(max(values)),
+    }
+
+
+def _median_int_or_none(values: list[int | None]) -> int | None:
+    finite = sorted(int(value) for value in values if value is not None)
+    if not finite:
+        return None
+    return int(finite[len(finite) // 2])
+
+
+def _unique_texts(values: list[Any]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value)
+        if text and text not in seen:
+            out.append(text)
+            seen.add(text)
+    return out
 
 
 def _read_json(path: Path) -> dict[str, Any]:

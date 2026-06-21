@@ -5787,7 +5787,19 @@ def _correlation_dimension(distance: np.ndarray) -> dict[str, Any]:
     mask = (radii > 1e-12) & (counts > 1e-12) & np.isfinite(radii) & np.isfinite(counts)
     if int(np.sum(mask)) < 3:
         return {"estimate": None, "points_used": int(np.sum(mask))}
-    estimate = float(np.polyfit(np.log(radii[mask]), np.log(counts[mask]), 1)[0])
+    log_radii = np.log(radii[mask])
+    log_counts = np.log(counts[mask])
+    if (
+        not np.all(np.isfinite(log_radii))
+        or not np.all(np.isfinite(log_counts))
+        or float(np.std(log_radii)) < 1e-12
+        or float(np.std(log_counts)) < 1e-12
+    ):
+        return {"estimate": None, "points_used": int(np.sum(mask))}
+    try:
+        estimate = float(np.polyfit(log_radii, log_counts, 1)[0])
+    except (np.linalg.LinAlgError, ValueError, FloatingPointError):
+        return {"estimate": None, "points_used": int(np.sum(mask))}
     return {"estimate": estimate if np.isfinite(estimate) else None, "points_used": int(np.sum(mask))}
 
 
