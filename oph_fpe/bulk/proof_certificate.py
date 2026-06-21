@@ -7,11 +7,15 @@ from typing import Any
 from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
     BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+    BW_KMS_BRANCH_REPLAY_RECEIPT,
     CHART_LORENTZ_H3_RECEIPT,
     CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
+    FINITE_CONSENSUS_THEOREM_RECEIPT,
+    FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
+    OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     PHYSICAL_CMB_RECEIPT,
     PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT,
     PROTO_PARTICLE_RECEIPT,
@@ -42,8 +46,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     conformal_chart = _read_json(root / "conformal_h3_spatial_chart_report.json")
     transition_selection = _read_json(root / "transition_selection_report.json")
     neutral = _read_json(root / "bulk_reconstruction_report.json")
+    neutral_frontier = _read_json(root / "strict_neutral_bulk_frontier_report.json")
     cmb_lite = _read_json(root / "cmb_lite_comparison_report.json")
     cl = _read_json(root / "cl_comparison_report.json")
+    physical_cmb_frontier = _read_json(root / "physical_cmb_frontier_report.json")
+    physical_cmb_output = _read_json(root / "physical_cmb_output_comparison_report.json")
     scale_compressed = _read_json(root / "scale_compressed_repair_report.json")
     scale_compressed_cmb = _read_json(root / "scale_compressed_cmb_camb_report.json")
     scale_compressed_particle = _read_json(root / "scale_compressed_particle_report.json")
@@ -52,16 +59,31 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     prime_rank_sweep = _read_json(root / "prime_geometric_rank_sweep_report.json")
     prime_rank_refinement = _read_json(root / "prime_geometric_rank_refinement_report.json")
     strict_neutral_object = _read_json(root / "strict_neutral_object_bulk_report.json")
+    theorem_core = _read_json(root / "theorem_core_receipts.json")
+    finite_contract_report = _read_json(root / "finite_oph_theorem_contract_report.json")
+    observer_modular_experience = _read_json(root / "observer_modular_experience_report.json")
     object_chart_name, object_chart = _best_object_chart_report(root)
 
-    repair_core = _ladder_passed(ladder, "R0") or _truthy(emergence, "final_phi_zero")
+    finite_settle_diagnostic = bool(
+        _ladder_passed(ladder, "R0")
+        or _truthy(emergence, "final_phi_zero")
+        or _truthy(emergence, FINITE_SETTLE_DIAGNOSTIC_RECEIPT)
+        or theorem_core.get("finite_settle_diagnostic_receipt", False)
+    )
+    finite_consensus_theorem = bool(
+        _truthy(emergence, FINITE_CONSENSUS_THEOREM_RECEIPT)
+        or theorem_core.get(FINITE_CONSENSUS_THEOREM_RECEIPT, False)
+        or theorem_core.get("finite_consensus_theorem_receipt", False)
+    )
+    repair_core = finite_settle_diagnostic
     record_commit = _ladder_passed(ladder, "R1") or _truthy(emergence, "records_committed")
     bw_kms = _truthy_any(
         emergence,
+        BW_KMS_BRANCH_REPLAY_RECEIPT,
         "BW_KMS_DIRECT_2PI_RECEIPT",
         "state_derived_correct_beats_controls",
         "state_derived_selected_2pi",
-    ) or _ladder_passed(ladder, "R2") or bool(
+    ) or _ladder_passed(ladder, "R2") or _ladder_receipt_passed(ladder, BW_KMS_BRANCH_REPLAY_RECEIPT) or bool(
         paper_chart.get("bw_2pi_cap_flow_receipt", False)
         or (
             transition_selection.get("primary_source") == "kms_collar_transport_response"
@@ -114,12 +136,37 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     theorem_assisted_nonboundary_population = bool(
         chart and bw_kms and h3_response and object_nonboundary_population
     )
+    observer_modular_experience_written = bool(observer_modular_experience)
+    observer_modular_time = bool(observer_modular_experience.get("observer_modular_time_receipt", False))
+    observer_facing_3p1d_experience = bool(
+        observer_modular_experience.get(OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT, False)
+        or (
+            chart
+            and bw_kms
+            and h3_response
+            and object_nonboundary_population
+            and (observer_modular_time or not observer_modular_experience_written)
+        )
+    )
+    observer_component_gates = {
+        "observer_modular_time_receipt": bool(
+            observer_modular_time or not observer_modular_experience_written
+        ),
+        "bw_kms_branch_replay_receipt": bw_kms,
+        "conformal_h3_chart_receipt": chart,
+        "h3_modular_response_receipt": h3_response,
+        "observer_h3_object_population_receipt": object_nonboundary_population,
+    }
+    observer_blockers = [
+        gate for gate, passed in observer_component_gates.items() if not passed
+    ]
     strict_neutral_object_bulk = bool(
         strict_neutral_object.get(STRICT_NEUTRAL_OBJECT_BULK_RECEIPT, False)
         or strict_neutral_object.get("strict_neutral_object_bulk", False)
     )
     strict_neutral_bulk = bool(
         neutral.get("bulk_3d_established", False)
+        or neutral_frontier.get("strict_neutral_bulk", False)
         or emergence.get("strict_blind_observer_bulk_receipt", False)
         or emergence.get("neutral_bulk_3d_established", False)
         or strict_neutral_object_bulk
@@ -142,11 +189,14 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         or _ladder_passed(ladder, "R7")
         or cl
         or cmb_lite
+        or physical_cmb_output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
     )
     physical_cmb = bool(
         emergence.get("physical_cmb_prediction", False)
         or cmb_lite.get("physical_cmb_prediction", False)
         or cl.get("physical_cmb_prediction", False)
+        or physical_cmb_frontier.get("physical_cmb_prediction_receipt", False)
+        or physical_cmb_output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
     )
     production_particle = bool(
         emergence.get("particle_matter_receipt", False)
@@ -177,21 +227,50 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     screen_cmb = bool(screen_cmb or scale_compressed_measurement_cmb)
     physical_cmb = bool(physical_cmb or scale_physical_cmb)
 
+    finite_lorentz_contract = bool(
+        finite_contract_report.get(OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT, False)
+        or finite_contract_report.get("finite_lorentz_theorem_contract_receipt", False)
+    )
+    paper_faithful_observer_spacetime = bool(
+        finite_contract_report.get("paper_faithful_observer_spacetime_emergence_receipt", False)
+    )
+    paper_faithful_consensus_bulk = bool(
+        finite_contract_report.get("paper_faithful_consensus_bulk_emergence_receipt", False)
+    )
+
     tiers = {
+        "C0a_finite_settle_diagnostic": _tier(
+            FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
+            finite_settle_diagnostic,
+            "Final finite overlap mismatch settled; diagnostic only, not schedule-confluent consensus theorem.",
+        ),
+        "C0b_finite_consensus_theorem": _tier(
+            FINITE_CONSENSUS_THEOREM_RECEIPT,
+            finite_consensus_theorem,
+            "Strict theorem-phase finite consensus certificate with replay, confluence, and repair-completeness gates.",
+        ),
         "T0_finite_repair_core": _tier(
             REPAIR_CORE_RECEIPT,
             repair_core,
-            "Finite overlap repair settled the declared mismatch/normal-form surface.",
+            "Legacy alias for C0a finite settling diagnostic; not a C0b finite consensus theorem.",
+            canonical_tier="C0a",
         ),
         "T1_record_commit": _tier(
             RECORD_COMMIT_RECEIPT,
             record_commit,
             "Observer-facing records committed and can be read as finite record algebra data.",
         ),
-        "T2_bw_kms_2pi_branch": _tier(
-            BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+        "L0_bw_kms_branch_replay": _tier(
+            BW_KMS_BRANCH_REPLAY_RECEIPT,
             bw_kms,
-            "Finite support-visible cap/collar branch instantiates BW/KMS 2*pi cap transport.",
+            "Declared finite support-visible cap/collar branch replays BW/KMS 2*pi cap transport.",
+            legacy_receipt_name=BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+        ),
+        "T2_bw_kms_2pi_branch": _tier(
+            BW_KMS_BRANCH_REPLAY_RECEIPT,
+            bw_kms,
+            "Legacy alias for L0 branch replay; not a finite Lorentz theorem contract.",
+            legacy_receipt_name=BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
         ),
         "T3_chart_lorentz_h3": _tier(
             CHART_LORENTZ_H3_RECEIPT,
@@ -263,22 +342,57 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             physical_cmb,
             "A physical CMB prediction is emitted through Boltzmann/likelihood-ready finite OPH kernels.",
         ),
+        "L_full_oph_lorentz_finite_contract": _tier(
+            OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
+            finite_lorentz_contract,
+            "Full L1-L7 finite Lorentz theorem contract is audited from finite observer-record receipts.",
+            blockers=finite_contract_report.get("primary_blockers", []),
+        ),
+        "B_full_paper_faithful_observer_spacetime": _tier(
+            "PAPER_FAITHFUL_OBSERVER_SPACETIME_EMERGENCE_RECEIPT",
+            paper_faithful_observer_spacetime,
+            "Observer-local modular time plus H3 spatial chart and object population, gated by the finite theorem contract.",
+            blockers=finite_contract_report.get("primary_blockers", []),
+        ),
+        "B_full_paper_faithful_consensus_bulk": _tier(
+            "PAPER_FAITHFUL_CONSENSUS_BULK_EMERGENCE_RECEIPT",
+            paper_faithful_consensus_bulk,
+            "Paper-faithful consensus 3D bulk: observer spacetime emergence plus strict neutral third-person bulk audit.",
+            blockers=finite_contract_report.get("primary_blockers", []),
+        ),
     }
 
     report = {
         "mode": "oph_3d_bulk_and_measurement_proof_certificate_v0",
         "run_path": str(root),
         "proof_tiers": tiers,
+        FINITE_SETTLE_DIAGNOSTIC_RECEIPT: finite_settle_diagnostic,
+        FINITE_CONSENSUS_THEOREM_RECEIPT: finite_consensus_theorem,
+        "finite_settle_diagnostic_receipt": finite_settle_diagnostic,
+        "finite_consensus_theorem_receipt": finite_consensus_theorem,
         "chart_level_3p1_lorentz_kinematics_established": bool(chart and bw_kms),
+        "paper_route_lorentz_h3_chart_established": bool(chart and bw_kms),
+        OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: finite_lorentz_contract,
+        "finite_lorentz_theorem_contract_receipt": finite_lorentz_contract,
+        "paper_faithful_observer_spacetime_emergence_receipt": paper_faithful_observer_spacetime,
+        "paper_faithful_consensus_bulk_emergence_receipt": paper_faithful_consensus_bulk,
+        "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
+        "finite_theorem_contract_summary": {
+            "written": bool(finite_contract_report),
+            "blockers": finite_contract_report.get("blockers", []),
+            "primary_blockers": finite_contract_report.get("primary_blockers", []),
+            "stages": finite_contract_report.get("stages", {}),
+            "claim_boundary": finite_contract_report.get("claim_boundary"),
+        },
         "theorem_assisted_h3_object_preview_established": theorem_assisted_chart_preview,
         "theorem_assisted_h3_nonboundary_population_established": theorem_assisted_nonboundary_population,
         "theorem_assisted_h3_populated_chart_established": theorem_assisted_nonboundary_population,
         "theorem_assisted_observer_facing_h3_population": theorem_assisted_nonboundary_population,
         THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT: theorem_assisted_nonboundary_population,
         "observer_facing_h3_object_population_receipt": theorem_assisted_nonboundary_population,
-        OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: bool(
-            chart and bw_kms and h3_response and object_nonboundary_population
-        ),
+        "observer_modular_time_receipt": observer_modular_time,
+        OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_facing_3p1d_experience,
+        "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_experience,
         "scale_compressed_operator_receipt": scale_operator,
         "scale_compressed_repair_round_trace_receipt": scale_round_trace,
         "scale_compressed_h3_preview_established": scale_h3_preview,
@@ -317,6 +431,17 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "observer_facing_h3_object_population_receipt",
                 object_chart.get("observer_chart_bulk_population_receipt"),
             ),
+        },
+        "observer_modular_experience_summary": {
+            "written": observer_modular_experience_written,
+            "observer_modular_time_receipt": observer_modular_time,
+            "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_experience,
+            "observer_count": observer_modular_experience.get("observer_count"),
+            "observer_relative_time_count": observer_modular_experience.get("observer_relative_time_count"),
+            "blockers": observer_blockers,
+            "component_gates": observer_component_gates,
+            "source_report_blockers": observer_modular_experience.get("blockers", []),
+            "source_report_component_gates": observer_modular_experience.get("component_gates", {}),
         },
         "scale_compressed_summary": {
             "logical_repair_rounds": scale_compressed.get("logical_repair_rounds"),
@@ -447,8 +572,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             ),
         },
         "claim_boundary": (
-            "Tiered OPH proof/readout certificate. T2-T3 establish the chart-level 3+1D Lorentz/H3 "
-            "branch for this run. T5a is theorem-assisted H3 preview evidence from observer objects. "
+            "Tiered OPH proof/readout certificate. C0a/T0 is only finite settling; C0b finite "
+            "consensus requires strict theorem-phase replay and may remain false even when final_phi is zero. "
+            "L0/T2 is branch replay: the declared BW/KMS 2pi route executes under current controls, "
+            "but the full L1-L7 finite Lorentz theorem contract remains false. T3 is the conformal H3 chart route for this run. "
+            "T5a is theorem-assisted H3 preview evidence from observer objects. "
             "T5b is stricter non-boundary H3 object population evidence. T5c is a scale-compressed "
             "logical repair-round H3 preview and is intentionally not promoted to T5b/T6. "
             "T6 is stricter neutral third-person bulk reconstruction and may remain false even when T5 passes. "
@@ -479,8 +607,10 @@ def write_bulk_proof_certificate(run_dir: Path, out: Path | None = None) -> dict
     return report
 
 
-def _tier(receipt_name: str, passed: bool, description: str) -> dict[str, Any]:
-    return {"receipt_name": receipt_name, "passed": bool(passed), "description": description}
+def _tier(receipt_name: str, passed: bool, description: str, **metadata: Any) -> dict[str, Any]:
+    row = {"receipt_name": receipt_name, "passed": bool(passed), "description": description}
+    row.update(metadata)
+    return row
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -495,6 +625,15 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _ladder_passed(ladder: dict[str, Any], key: str) -> bool:
     return bool(((ladder.get("receipts", {}) or {}).get(key, {}) or {}).get("passed", False))
+
+
+def _ladder_receipt_passed(ladder: dict[str, Any], receipt_name: str) -> bool:
+    receipts = (ladder.get("receipts") or {}).values()
+    return any(
+        bool(row.get("passed", False)) and row.get("receipt_name") == receipt_name
+        for row in receipts
+        if isinstance(row, dict)
+    )
 
 
 def _truthy(data: dict[str, Any], key: str) -> bool:
@@ -574,7 +713,16 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "# OPH 3D Bulk And Measurement Proof Certificate",
         "",
         f"- run: `{report['run_path']}`",
+        f"- finite settle diagnostic: `{str(report['finite_settle_diagnostic_receipt']).lower()}`",
+        f"- finite consensus theorem: `{str(report['finite_consensus_theorem_receipt']).lower()}`",
         f"- chart-level 3+1D Lorentz/H3: `{str(report['chart_level_3p1_lorentz_kinematics_established']).lower()}`",
+        f"- finite Lorentz theorem contract: `{str(report['finite_lorentz_theorem_contract_receipt']).lower()}`",
+        "- paper-faithful observer spacetime emergence: "
+        f"`{str(report['paper_faithful_observer_spacetime_emergence_receipt']).lower()}`",
+        "- paper-faithful consensus bulk emergence: "
+        f"`{str(report['paper_faithful_consensus_bulk_emergence_receipt']).lower()}`",
+        f"- observer modular time: `{str(report['observer_modular_time_receipt']).lower()}`",
+        f"- observer-facing 3+1D/H3 experience: `{str(report['observer_facing_3p1d_h3_experience_receipt']).lower()}`",
         f"- theorem-assisted H3 object preview: `{str(report['theorem_assisted_h3_object_preview_established']).lower()}`",
         f"- theorem-assisted non-boundary H3 population: `{str(report['theorem_assisted_h3_nonboundary_population_established']).lower()}`",
         f"- scale-compressed H3 preview: `{str(report['scale_compressed_h3_preview_established']).lower()}`",
@@ -591,6 +739,17 @@ def _markdown_report(report: dict[str, Any]) -> str:
     ]
     for name, tier in report["proof_tiers"].items():
         lines.append(f"- `{name}`: `{str(tier['passed']).lower()}` - {tier['receipt_name']}")
+    contract = report.get("finite_theorem_contract_summary") or {}
+    if contract:
+        lines.extend(
+            [
+                "",
+                "## Finite Theorem Contract",
+                "",
+                f"- written: `{str(bool(contract.get('written'))).lower()}`",
+                f"- primary blockers: `{contract.get('primary_blockers')}`",
+            ]
+        )
     scale = report.get("scale_compressed_summary") or {}
     if scale:
         lines.extend(

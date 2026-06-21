@@ -923,7 +923,18 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "cmb_anomaly_physical_cmb_prediction": bool(cmb_anomaly.get("physical_cmb_prediction", False)),
         "cmb_lite_report_source": cmb.get("_report_path"),
         "state_bw_written": bool(state_bw),
-        "state_bw_receipt": bool(state_bw.get("BW_KMS_BRANCH_INSTANTIATION_RECEIPT", False)),
+        "state_bw_receipt": bool(
+            state_bw.get("BW_KMS_BRANCH_REPLAY_RECEIPT", False)
+            or state_bw.get("BW_KMS_BRANCH_INSTANTIATION_RECEIPT", False)
+        ),
+        "state_bw_branch_replay_receipt": bool(state_bw.get("BW_KMS_BRANCH_REPLAY_RECEIPT", False)),
+        "state_bw_legacy_branch_instantiation_receipt": bool(
+            state_bw.get("BW_KMS_BRANCH_INSTANTIATION_RECEIPT", False)
+        ),
+        "state_bw_finite_lorentz_theorem_contract_receipt": bool(
+            state_bw.get("OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1", False)
+            or state_bw.get("finite_lorentz_theorem_contract_receipt", False)
+        ),
         "state_bw_state_mode": state_bw.get("state_mode"),
         "state_bw_endogenous_generator": state_bw.get("endogenous_modular_generator"),
         "state_bw_declared_cap_flow_generator": bool(
@@ -4344,9 +4355,10 @@ def _inflation_certificate_summary(rows: list[dict[str, Any]]) -> dict[str, Any]
         "physical_cmb_prediction": False,
         "interpretation": (
             "Finite certificate stack for the inflation-free OPH cosmology branch. This lane is the "
-            "artifact contract for A_zeta, n_s, Q_A, B_A(k,a), Gamma_rec(k,a), and Boltzmann handoff. "
-            "The current report is a physical prediction only when all finite certificates and the "
-            "no-data-use firewall pass before likelihood comparison."
+            "artifact contract for screen tilt/amplitude gates, the pending A_zeta lift, Q_A, B_A(k,a), "
+            "Gamma_rec(k,a), and Boltzmann handoff. The current report is a physical prediction only when "
+            "all finite certificates, the lift receipt, and the no-data-use firewall pass before likelihood "
+            "comparison."
         ),
     }
 
@@ -4409,8 +4421,9 @@ def _oph_inflation_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any
         "interpretation": (
             "Direct CAMB TT transfer for the OPH P/48 screen spectrum plus imported v0.4 IR kernel. "
             "This lane emits an actual CMB curve and compares it with the local Planck TT benchmark table. "
-            "It remains a continuation diagnostic until the finite lattice derives A_zeta, q_IR, ell_IR, "
-            "and angular covariance from cap/collar microphysics."
+            "It remains a continuation diagnostic until the finite lattice derives the screen amplitude, "
+            "passes the screen-to-primordial lift receipt for A_zeta, and derives q_IR, ell_IR, and angular "
+            "covariance from cap/collar microphysics."
         ),
     }
 
@@ -4683,11 +4696,12 @@ def _finite_certificate_authority_summary(rows: list[dict[str, Any]]) -> dict[st
         "mean_Gamma_rec": _mean(row.get("finite_certificates_Gamma_rec") for row in usable),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Finite OPH cosmology certificate authority. This lane computes A_zeta, Q_A, B_A(k,a), "
-            "Gamma_rec, and a Boltzmann handoff contract from finite release/collar/repair inputs. "
-            "Compiler-ready means certificate artifacts are internally consistent, not theorem-grade. "
-            "Toy/proxy inputs validate the compiler only; physical CMB and matter-power gates remain "
-            "closed until real simulator regulator data and cold-limit solver receipts pass the firewall."
+            "Finite OPH cosmology certificate authority. This lane computes scalar-release bounds, Q_A, "
+            "B_A(k,a), Gamma_rec, and a Boltzmann handoff contract from finite release/collar/repair inputs. "
+            "A_zeta remains unavailable until a screen-to-primordial lift receipt passes. Compiler-ready "
+            "means certificate artifacts are internally consistent, not theorem-grade. Toy/proxy inputs "
+            "validate the compiler only; physical CMB and matter-power gates remain closed until real "
+            "simulator regulator data, lift, and cold-limit solver receipts pass the firewall."
         ),
     }
 

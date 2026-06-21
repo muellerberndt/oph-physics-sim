@@ -28,7 +28,7 @@ def test_claim_metadata_writes_canonical_schema_fields():
     )
 
     assert report["receipt_schema_version"] == RECEIPT_SCHEMA_VERSION
-    assert report["receipt_name"] == "BW_KMS_BRANCH_INSTANTIATION_RECEIPT"
+    assert report["receipt_name"] == "BW_KMS_BRANCH_REPLAY_RECEIPT"
     assert report["observable_id"] == "unit_test_observable"
     assert report["fit_objective"] == "unit_test_gate"
     assert report["physical_claim"] is False

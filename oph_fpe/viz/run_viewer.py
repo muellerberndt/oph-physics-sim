@@ -419,10 +419,18 @@ def _read_trace(path: Path) -> list[dict[str, float]]:
     if not path.exists():
         return []
     with path.open("r", encoding="utf-8") as handle:
-        return [
-            {key: float(value) for key, value in row.items() if value != ""}
-            for row in csv.DictReader(handle)
-        ]
+        rows = []
+        for row in csv.DictReader(handle):
+            parsed = {}
+            for key, value in row.items():
+                if value == "":
+                    continue
+                try:
+                    parsed[key] = float(value)
+                except ValueError:
+                    continue
+            rows.append(parsed)
+        return rows
 
 
 def _normalize(values: np.ndarray) -> np.ndarray:

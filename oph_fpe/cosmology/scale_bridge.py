@@ -12,6 +12,27 @@ from oph_fpe.cosmology.screen_capacity import DEFAULT_N_CRC
 
 C_SI = 299_792_458.0
 HBAR_SI = 6.626_070_15e-34 / (2.0 * math.pi)
+NU_CS_HZ = 9_192_631_770.0
+EPSILON_CS_SELECTED = 3.113_930_513_416_012_8e-33
+GAMMA_STAR_SELECTED = EPSILON_CS_SELECTED / (2.0 * math.pi)
+R_GAMMA_REQUIRED_COMPONENTS = (
+    "R_U",
+    "R_alpha",
+    "R_e_abs",
+    "R_QCD_nuc_133Cs",
+    "R_atom_133Cs",
+)
+R_GAMMA_FORBIDDEN_DEPENDENCIES = (
+    "measured_G",
+    "G_SI_measured",
+    "Planck_area",
+    "l_planck_measured",
+    "measured_Lambda",
+    "Lambda_measured",
+    "gravity_calibrated_scale",
+    "electroweak_measured_calibration",
+    "measured_electroweak_calibration",
+)
 
 
 @dataclass(frozen=True)
@@ -28,6 +49,27 @@ class ScaleBridgeInputs:
     Lambda_star_m2_inverse: float | None = None
     B_ell_m2_inverse: float | None = None
     source: str = "simulator_scale_bridge_report"
+
+
+@dataclass(frozen=True)
+class NoGClockBridgeInputs:
+    """Inputs for the OPH no-G R_gamma clock bridge audit.
+
+    The epsilon_Cs/gamma_star checksum is useful bookkeeping, but it is not a
+    source-predictive G receipt unless the public dependency graph and the
+    paper-side source/certificate gates are supplied.
+    """
+
+    epsilon_cs: float = EPSILON_CS_SELECTED
+    nu_cs_hz: float = NU_CS_HZ
+    dependency_graph: dict[str, list[str]] | None = None
+    source_components: tuple[str, ...] = R_GAMMA_REQUIRED_COMPONENTS
+    forbidden_dependencies: tuple[str, ...] = R_GAMMA_FORBIDDEN_DEPENDENCIES
+    source: str = "compact_proof_R_gamma_display"
+    source_readback_map_emitted: bool = False
+    contraction_certificate: bool = False
+    residual_certificate: bool = False
+    public_dependency_graph: bool = False
 
 
 def dimensionless_pn_invariants(
@@ -151,12 +193,143 @@ def scale_bridge_report(inputs: ScaleBridgeInputs | None = None, **kwargs: Any) 
     }
 
 
+def no_g_clock_bridge_report(inputs: NoGClockBridgeInputs | None = None, **kwargs: Any) -> dict[str, Any]:
+    bridge_inputs = inputs if inputs is not None else NoGClockBridgeInputs(**kwargs)
+    epsilon = _positive_finite(bridge_inputs.epsilon_cs, "epsilon_cs")
+    nu_cs = _positive_finite(bridge_inputs.nu_cs_hz, "nu_cs_hz")
+    gamma_star = epsilon / (2.0 * math.pi)
+    ell_star_m = gamma_star * C_SI / nu_cs
+    ell_star_squared = ell_star_m**2
+    g_si = ell_star_squared * C_SI**3 / HBAR_SI
+    b_ell = 3.0 * math.pi / ell_star_squared
+
+    graph = _normalized_dependency_graph(bridge_inputs.dependency_graph)
+    required_components = tuple(str(value) for value in R_GAMMA_REQUIRED_COMPONENTS)
+    supplied_components = tuple(str(value) for value in bridge_inputs.source_components)
+    missing_components = sorted(set(required_components) - set(supplied_components))
+    forbidden_paths = _forbidden_dependency_paths(
+        graph,
+        tuple(str(value) for value in bridge_inputs.forbidden_dependencies),
+    )
+    no_forbidden_paths = bool(bridge_inputs.public_dependency_graph and graph and not forbidden_paths)
+    gates = {
+        "R_gamma_components_complete": not missing_components,
+        "public_dependency_graph": bool(bridge_inputs.public_dependency_graph),
+        "source_readback_map_emitted": bool(bridge_inputs.source_readback_map_emitted),
+        "contraction_certificate": bool(bridge_inputs.contraction_certificate),
+        "residual_certificate": bool(bridge_inputs.residual_certificate),
+        "no_forbidden_dependency_paths": no_forbidden_paths,
+        "forbidden_dependency_path_count": len(forbidden_paths),
+    }
+    blockers: list[str] = []
+    if missing_components:
+        blockers.append("R_gamma_source_components_incomplete")
+    if not bridge_inputs.public_dependency_graph:
+        blockers.append("public_dependency_graph_missing")
+    if not graph:
+        blockers.append("dependency_graph_empty_or_not_supplied")
+    if not bridge_inputs.source_readback_map_emitted:
+        blockers.append("source_readback_map_missing")
+    if not bridge_inputs.contraction_certificate:
+        blockers.append("contraction_certificate_missing")
+    if not bridge_inputs.residual_certificate:
+        blockers.append("residual_certificate_missing")
+    if forbidden_paths:
+        blockers.append("forbidden_dependency_path_present")
+    elif bridge_inputs.public_dependency_graph and graph:
+        pass
+    else:
+        blockers.append("forbidden_dependency_absence_not_certified")
+
+    receipt = bool(
+        gates["R_gamma_components_complete"]
+        and gates["public_dependency_graph"]
+        and gates["source_readback_map_emitted"]
+        and gates["contraction_certificate"]
+        and gates["residual_certificate"]
+        and gates["no_forbidden_dependency_paths"]
+    )
+    clock_bridge = {
+        "source": bridge_inputs.source,
+        "epsilon_Cs": epsilon,
+        "gamma_star": gamma_star,
+        "nu_Cs_Hz": nu_cs,
+        "ell_star_m": ell_star_m,
+        "ell_star_squared_m2": ell_star_squared,
+        "B_ell_m2_inverse": b_ell,
+        "B_ell_m^-2": b_ell,
+        "G_geom": ell_star_squared,
+        "G_SI": g_si,
+        "G_SI_units": "m^3 kg^-1 s^-2",
+        "R_gamma_relation": "gamma_star = epsilon_Cs/(2*pi), ell_star = gamma_star*c/nu_Cs",
+        "forbidden_dependencies": tuple(str(value) for value in bridge_inputs.forbidden_dependencies),
+        "dependency_graph_node_count": len(graph),
+        "source_components": supplied_components,
+        "required_source_components": required_components,
+        "missing_source_components": missing_components,
+        "forbidden_dependency_paths": forbidden_paths,
+        "calibration_checksum_available": True,
+        "source_predictive_G_SI": receipt,
+        "independent_scale_bridge_supplied": receipt,
+        "OPH_independent_scale_bridge_supplied": receipt,
+        "dimensionful_G_SI_eligible": receipt,
+        "finite_simulator_derived_G_SI": False,
+    }
+    return {
+        "mode": "oph_no_g_clock_bridge_v0",
+        "source": bridge_inputs.source,
+        "constants": {
+            "c_SI": C_SI,
+            "hbar_SI": HBAR_SI,
+            "nu_Cs_Hz": NU_CS_HZ,
+            "G_SI_relation": "G_SI = ell_star^2 c^3 / hbar after no-G R_gamma clock bridge certification",
+        },
+        "clock_bridge": clock_bridge,
+        "readiness_gates": gates,
+        "blockers": _unique_strings(blockers),
+        "NO_G_CLOCK_BRIDGE_RECEIPT": receipt,
+        "source_predictive_G_SI": receipt,
+        "independent_scale_bridge_supplied": receipt,
+        "OPH_independent_scale_bridge_supplied": receipt,
+        "dimensionful_G_SI_eligible": receipt,
+        "finite_simulator_derived_G_SI": False,
+        "physical_cmb_prediction": False,
+        "strict_neutral_bulk": False,
+        "claim_boundary": (
+            "No-G R_gamma clock bridge audit. The epsilon_Cs checksum gives ell_star^2 and a G_SI "
+            "checksum, but G_SI is source-predictive only when the public dependency graph, source "
+            "readback map, contraction certificate, residual certificate, and no-forbidden-dependency "
+            "audit all pass. Forbidden dependencies include measured G, Planck-area input, measured "
+            "Lambda, gravity-calibrated scales, and measured electroweak calibration."
+        ),
+    }
+
+
 def write_scale_bridge_report(out_dir: Path, inputs: ScaleBridgeInputs | None = None, **kwargs: Any) -> dict[str, Any]:
     report = scale_bridge_report(inputs, **kwargs)
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "oph_scale_bridge_report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     (out / "oph_scale_bridge_report.md").write_text(_markdown_report(report), encoding="utf-8")
+    return report
+
+
+def write_no_g_clock_bridge_report(
+    out_dir: Path,
+    inputs: NoGClockBridgeInputs | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    report = no_g_clock_bridge_report(inputs, **kwargs)
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "no_g_clock_bridge_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (out / "no_g_clock_bridge_report.md").write_text(
+        _markdown_clock_bridge_report(report),
+        encoding="utf-8",
+    )
     return report
 
 
@@ -171,6 +344,67 @@ def _optional_positive_finite(value: float | None, name: str) -> float | None:
     if value is None:
         return None
     return _positive_finite(value, name)
+
+
+def _normalized_dependency_graph(graph: dict[str, list[str]] | None) -> dict[str, list[str]]:
+    if not isinstance(graph, dict):
+        return {}
+    normalized: dict[str, list[str]] = {}
+    for node, deps in graph.items():
+        if not isinstance(deps, list):
+            continue
+        normalized[str(node)] = [str(dep) for dep in deps]
+    return normalized
+
+
+def _forbidden_dependency_paths(
+    graph: dict[str, list[str]],
+    forbidden_dependencies: tuple[str, ...],
+) -> list[list[str]]:
+    if not graph:
+        return []
+    forbidden_lc = {value.lower() for value in forbidden_dependencies}
+    start_nodes = [node for node in ("gamma_star", "epsilon_Cs") if node in graph]
+    if not start_nodes and "R_gamma" in graph:
+        start_nodes = ["R_gamma"]
+    if not start_nodes:
+        start_nodes = sorted(graph)
+    paths: list[list[str]] = []
+
+    def visit(node: str, path: list[str], active: set[str]) -> None:
+        if node in active:
+            return
+        deps = graph.get(node, [])
+        for dep in deps:
+            dep_text = str(dep)
+            next_path = [*path, dep_text]
+            if dep_text.lower() in forbidden_lc:
+                paths.append(next_path)
+                continue
+            if dep_text in graph:
+                visit(dep_text, next_path, {*active, node})
+
+    for start in start_nodes:
+        visit(start, [start], set())
+    deduped: list[list[str]] = []
+    seen: set[tuple[str, ...]] = set()
+    for path in paths:
+        key = tuple(path)
+        if key not in seen:
+            seen.add(key)
+            deduped.append(path)
+    return deduped
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value)
+        if text not in seen:
+            seen.add(text)
+            out.append(text)
+    return out
 
 
 def _fmt(value: Any) -> str:
@@ -216,3 +450,33 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "",
         ]
     )
+
+
+def _markdown_clock_bridge_report(report: dict[str, Any]) -> str:
+    bridge = report["clock_bridge"]
+    gates = report["readiness_gates"]
+    blockers = report.get("blockers") or []
+    lines = [
+        "# OPH No-G Clock Bridge",
+        "",
+        str(report["claim_boundary"]),
+        "",
+        "## Checksum",
+        "",
+        f"- epsilon_Cs: `{_fmt(bridge['epsilon_Cs'])}`",
+        f"- gamma_star: `{_fmt(bridge['gamma_star'])}`",
+        f"- ell_star^2 [m^2]: `{_fmt(bridge['ell_star_squared_m2'])}`",
+        f"- B_ell [m^-2]: `{_fmt(bridge['B_ell_m2_inverse'])}`",
+        f"- G_SI checksum: `{_fmt(bridge['G_SI'])}`",
+        f"- source-predictive G_SI: `{str(bridge['source_predictive_G_SI']).lower()}`",
+        "",
+        "## Gates",
+        "",
+        *[f"- {key}: `{str(value).lower()}`" for key, value in gates.items()],
+        "",
+        "## Blockers",
+        "",
+    ]
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.append("")
+    return "\n".join(lines)

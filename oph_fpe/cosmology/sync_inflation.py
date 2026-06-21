@@ -40,8 +40,9 @@ def synchronization_inflation_report(run_dirs: list[Path], *, w_eff: float = 1.0
                 "or same-boundary quotient-normal-form selector"
             ),
             "scale_invariant_screen_spectrum": (
-                "Screen Green spectrum: Delta_zeta^2(k)=A_zeta*(k/k_star)^(-P/48), "
-                f"n_s={screen_prediction['n_s']:.12g}, A_zeta={screen_prediction['A_zeta']:.12g}"
+                "Conditional screen Green spectrum: C_l^q uses A_q after scalar-release-energy "
+                f"certification, n_s={screen_prediction['n_s']:.12g}; A_zeta is pending the "
+                "screen-to-primordial lift receipt."
             ),
             "acoustic_transfer_boundary": (
                 "OPH supplies coherent adiabatic zeta_k; standard photon-baryon transfer supplies peaks"
@@ -58,10 +59,11 @@ def synchronization_inflation_report(run_dirs: list[Path], *, w_eff: float = 1.0
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "Inflation-alternative theorem-target diagnostic derived from cached finite-screen receipts. "
-            "The Pro v2 route replaces inflation with zero-holonomy flat-sector selection, a P/48 screen "
-            "Green spectrum, hot MaxEnt release, adiabatic same-boundary records, and Boltzmann transfer. "
-            "The finite lattice still needs curvature-holonomy receipts, low-k synchronization evidence, "
-            "and theorem-grade rho_A(a), B_A(k,a), Gamma_rec(k,a)."
+            "The Pro v2 route keeps inflation replacement conditional on zero-holonomy flat-sector "
+            "selection, a certified screen Green spectrum, scalar-release energy, screen-to-primordial "
+            "lift, hot MaxEnt release, adiabatic same-boundary records, and Boltzmann transfer. The finite "
+            "lattice still needs curvature-holonomy receipts, low-k synchronization evidence, a lift "
+            "receipt, and theorem-grade rho_A(a), B_A(k,a), Gamma_rec(k,a)."
         ),
     }
     return with_claim_metadata(
@@ -300,7 +302,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- run count: {report['run_count']}",
         f"- flat selector Omega_K: {_fmt(flat.get('selected_Omega_K'))}",
         f"- screen-spectrum n_s = 1 - P/48: {_fmt(screen.get('n_s'))}",
-        f"- screen-spectrum A_zeta selector: {_fmt(screen.get('A_zeta'))}",
+        f"- screen-spectrum A_zeta: {screen.get('A_zeta') if screen.get('A_zeta') is not None else 'pending lift receipt'}",
         f"- mean Gamma_sync/H proxy: {_fmt(aggregate.get('mean_Gamma_sync_over_H_proxy'))}",
         f"- mean C_sigma depth proxy: {_fmt(aggregate.get('mean_C_sigma_depth_proxy'))}",
         f"- flatness damping ready count: {aggregate['flatness_holonomy_damping_ready_count']}/{report['run_count']}",

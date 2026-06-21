@@ -52,6 +52,16 @@ def test_valid_physical_cmb_contract_passes_only_with_finite_sources():
     assert validation["blockers"] == []
 
 
+def test_physical_cmb_contract_requires_primordial_lift_receipt():
+    contract = _valid_contract()
+    contract.screen_to_primordial_lift_receipt = False
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "screen_to_primordial_lift_receipt_missing" in validation["blockers"]
+
+
 def test_contract_from_reports_does_not_promote_diagnostic_rows():
     contract = contract_from_reports(
         no_data_use_receipt=True,
@@ -83,6 +93,7 @@ def test_contract_from_reports_does_not_promote_diagnostic_rows():
     assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
     assert "eta_R_not_finite_derived" in validation["blockers"]
     assert "B_A_k_a_missing_or_not_finite" in validation["blockers"]
+    assert "screen_to_primordial_lift_receipt_missing" in validation["blockers"]
 
 
 def _valid_contract() -> PhysicalCMBInputContract:
@@ -109,4 +120,5 @@ def _valid_contract() -> PhysicalCMBInputContract:
         freezeout_surface={"cycle": 24},
         official_likelihood_ready=True,
         cdm_limit_regression_passed=True,
+        screen_to_primordial_lift_receipt=True,
     )

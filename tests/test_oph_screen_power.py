@@ -80,8 +80,11 @@ def test_write_oph_screen_power_report_exports_primordial_table(tmp_path: Path):
 
     assert report["physical_cmb_prediction"] is False
     assert report["aggregate"]["available_fit_count"] == 1
-    assert report["simulator_primordial_reference_ready"] is True
-    assert report["primordial_reference_source"] == "simulator_eta_R_estimate"
+    assert report["simulator_screen_reference_ready"] is True
+    assert report["simulator_primordial_reference_ready"] is False
+    assert report["SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT"] is False
+    assert report["primordial_reference_source"] == "ell_kD_scaffold_from_simulator_eta_R_estimate_not_lift_receipt"
+    assert report["primordial_bridge"]["ell_equals_kD_scaffold_only"] is True
     assert (tmp_path / "out" / "oph_screen_power_report.json").exists()
     assert (tmp_path / "out" / "oph_primordial_power_CLASS_CAMB.txt").exists()
 
@@ -109,7 +112,9 @@ def test_blue_screen_fit_falls_back_to_labeled_planck_target_scaffold(tmp_path: 
     report = write_oph_screen_power_report([tmp_path], tmp_path / "out", primordial_k_count=8)
 
     assert report["simulator_primordial_reference_ready"] is False
-    assert report["primordial_reference_source"] == "phenomenological_planck_eta_target_due_to_invalid_simulator_tilt"
+    assert report["primordial_reference_source"] == (
+        "ell_kD_scaffold_from_phenomenological_planck_eta_target_due_to_invalid_simulator_tilt_not_lift_receipt"
+    )
     assert abs(report["reference_screen_parameters"]["eta_R"] - 0.035) < 1.0e-12
 
 
@@ -142,5 +147,7 @@ def test_simulator_best_reference_mode_keeps_failed_finite_tilt_visible(tmp_path
 
     assert report["reference_mode"] == "simulator-best"
     assert report["simulator_primordial_reference_ready"] is False
-    assert report["primordial_reference_source"] == "simulator_eta_R_diagnostic_outside_planck_target"
+    assert report["primordial_reference_source"] == (
+        "ell_kD_scaffold_from_simulator_eta_R_diagnostic_outside_planck_target_not_lift_receipt"
+    )
     assert report["reference_screen_parameters"]["eta_R"] < 0.0

@@ -1198,8 +1198,13 @@ screen_capacity_closure_report:
   N_CRC observed-branch readout available
   finite simulator fixed point not solved
 
+pn_resonance_report:
+  exact compact-paper P/alpha_U bridge can be replayed as a diagnostic
+  alpha_U source proof record not emitted by simulator
+  global F(N) capacity fixed point not solved by simulator
+
 repair_scale_closure_report:
-  P/N 24-round scale closure matches within 1 percent
+  declared repair-depth ansatz contraction check matches within 1 percent
   24 repair rounds not derived from the finite lattice
   eta_R not finite-lattice-derived
 

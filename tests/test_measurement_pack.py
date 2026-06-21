@@ -53,11 +53,33 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     (run / "paper_3d_bulk_chart_report.json").write_text(json.dumps({"receipt": True}), encoding="utf-8")
     (run / "conformal_h3_spatial_chart_report.json").write_text(json.dumps({"receipt": True}), encoding="utf-8")
     (run / "transition_selection_report.json").write_text(json.dumps({"two_pi_selected": True}), encoding="utf-8")
+    (run / "observer_modular_experience_report.json").write_text(
+        json.dumps(
+            {
+                "observer_modular_time_receipt": True,
+                "observer_count": 16,
+                "observer_relative_time_count": 2,
+                "blockers": ["observer_h3_object_population_receipt"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "observer_views.jsonl").write_text(
+        json.dumps({"observer_id": 1, "modular_depth_mean": 0.5, "observer_relative_times": [0.1, 0.2]})
+        + "\n",
+        encoding="utf-8",
+    )
 
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
 
     assert report["claims"]["chart_level_3p1"] is True
+    assert report["claims"]["observer_modular_time_receipt"] is True
+    assert report["claims"]["observer_modular_time_observer_count"] == 16
+    assert "observer_h3_object_population_receipt" in report["claims"]["observer_modular_experience_blockers"]
+    assert report["claims"]["observer_modular_experience_source_blockers"] == [
+        "observer_h3_object_population_receipt"
+    ]
     assert "bulk_proof_certificate_report.json" in report["files"]
     assert "bulk_proof_certificate_report.md" in report["files"]
     assert "comparable_data_snapshot.json" in report["files"]
@@ -65,6 +87,8 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     assert "paper_3d_bulk_chart_report.json" in report["files"]
     assert "conformal_h3_spatial_chart_report.json" in report["files"]
     assert "transition_selection_report.json" in report["files"]
+    assert "observer_modular_experience_report.json" in report["files"]
+    assert "observer_views.jsonl" in report["files"]
 
 
 def test_export_measurement_pack_regenerates_combined_bulk_certificate(tmp_path: Path) -> None:
@@ -247,17 +271,135 @@ def test_export_measurement_pack_missing_json_placeholders_are_parseable(tmp_pat
     assert json.loads((out / "finite_certificate_report.json").read_text(encoding="utf-8")) == {}
 
 
+def test_export_measurement_pack_prefers_overlap_aware_neutral_audits(tmp_path: Path) -> None:
+    fresh = tmp_path / "fresh"
+    stale = tmp_path / "stale"
+    fresh.mkdir()
+    stale.mkdir()
+
+    (fresh / "neutral_3d_bulk_audit_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "neutral_3d_bulk_audit_v0",
+                "strict_neutral_bulk_ready": False,
+                "control_residualized_rank3_refinement_candidate": True,
+                "sweep_report_count": 4,
+                "control_quotient_candidate_count": 4,
+                "overlap_native_negative_control_report_count": 4,
+                "overlap_native_negative_control_receipt_count": 4,
+                "blockers": ["strict_neutral_bulk_refinement_receipt_false"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (fresh / "neutral_3d_bulk_audit_report.md").write_text("fresh neutral\n", encoding="utf-8")
+    (fresh / "neutral_independent_rank_selector_audit_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "neutral_independent_rank_selector_audit_v0",
+                "NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT": False,
+                "run_count": 4,
+                "control_quotient_rank3_candidate_count": 4,
+                "control_quotient_rank3_selector_count": 0,
+                "control_quotient_median_effective_rank": 127.0,
+                "blockers": ["control_quotient_lane_is_not_a_negative_control"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (fresh / "neutral_independent_rank_selector_audit_report.md").write_text(
+        "fresh selector\n",
+        encoding="utf-8",
+    )
+
+    (stale / "neutral_3d_bulk_audit_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "neutral_3d_bulk_audit_v0",
+                "strict_neutral_bulk_ready": False,
+                "control_residualized_rank3_refinement_candidate": True,
+                "sweep_report_count": 99,
+                "control_quotient_candidate_count": 99,
+                "blockers": ["strict_neutral_bulk_refinement_receipt_false"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (stale / "neutral_3d_bulk_audit_report.md").write_text("stale neutral\n", encoding="utf-8")
+    (stale / "neutral_independent_rank_selector_audit_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "neutral_independent_rank_selector_audit_v0",
+                "NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT": False,
+                "run_count": 99,
+                "control_quotient_rank3_candidate_count": 99,
+                "control_quotient_rank3_selector_count": 0,
+                "control_quotient_median_effective_rank": 999.0,
+                "blockers": ["control_quotient_lane_is_not_a_negative_control"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (stale / "neutral_independent_rank_selector_audit_report.md").write_text(
+        "stale selector\n",
+        encoding="utf-8",
+    )
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([fresh, stale], out)
+
+    neutral = json.loads((out / "neutral_3d_bulk_audit_report.json").read_text(encoding="utf-8"))
+    selector = json.loads(
+        (out / "neutral_independent_rank_selector_audit_report.json").read_text(encoding="utf-8")
+    )
+    assert neutral["control_quotient_candidate_count"] == 4
+    assert neutral["overlap_native_negative_control_receipt_count"] == 4
+    assert (out / "neutral_3d_bulk_audit_report.md").read_text(encoding="utf-8") == "fresh neutral\n"
+    assert selector["run_count"] == 4
+    assert (out / "neutral_independent_rank_selector_audit_report.md").read_text(
+        encoding="utf-8"
+    ) == "fresh selector\n"
+    assert report["claims"]["neutral_3d_bulk_audit_control_quotient_candidate_count"] == 4
+    assert report["claims"]["neutral_independent_rank_selector_run_count"] == 4
+
+
 def test_export_measurement_pack_copies_receipt_viewer(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
     (run / "oph_receipt_viewer.html").write_text("<html>viewer</html>\n", encoding="utf-8")
     (run / "oph_realtime_viewer_summary.json").write_text(json.dumps({"viewer": True}), encoding="utf-8")
+    (run / "object_h3_bulk_viewer.html").write_text("<html>object h3</html>\n", encoding="utf-8")
+    (run / "object_h3_bulk_viewer_summary.json").write_text(
+        json.dumps(
+            {
+                "object_count": 2,
+                "observer_overlap_link_count": 7,
+                "theorem_assisted_h3_bulk": True,
+                "strict_neutral_bulk": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "cmb_neutral_frontier_viewer.html").write_text("<html>cmb frontier</html>\n", encoding="utf-8")
+    (run / "cmb_neutral_frontier_viewer_summary.json").write_text(
+        json.dumps({"tt_bin_count": 11, "physical_cmb_prediction": False}),
+        encoding="utf-8",
+    )
 
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
 
     assert "oph_receipt_viewer.html" in report["files"]
     assert "oph_realtime_viewer_summary.json" in report["files"]
+    assert "object_h3_bulk_viewer.html" in report["files"]
+    assert "object_h3_bulk_viewer_summary.json" in report["files"]
+    assert report["claims"]["object_h3_bulk_viewer_written"] is True
+    assert report["claims"]["object_h3_bulk_viewer_object_count"] == 2
+    assert report["claims"]["object_h3_bulk_viewer_observer_overlap_link_count"] == 7
+    assert "cmb_neutral_frontier_viewer.html" in report["files"]
+    assert "cmb_neutral_frontier_viewer_summary.json" in report["files"]
+    assert report["claims"]["cmb_neutral_frontier_viewer_written"] is True
+    assert report["claims"]["cmb_neutral_frontier_viewer_tt_bin_count"] == 11
     assert (out / "oph_receipt_viewer.html").read_text(encoding="utf-8").startswith("<html>")
 
 
@@ -281,6 +423,40 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         ),
         encoding="utf-8",
     )
+    (run / "screen_capacity_closure_report.md").write_text("# screen capacity", encoding="utf-8")
+    (run / "capacity_readback_proxy_report.json").write_text(
+        json.dumps(
+            {
+                "row_count": 1,
+                "max_observer_count": 16,
+                "max_terminal_normal_form_count_proxy": 8,
+                "readiness_gates": {
+                    "finite_regulator_rows_present": True,
+                    "F_N_readback_map_implemented": False,
+                    "N_CRC_fixed_point_solved_from_finite_simulator": False,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "capacity_readback_proxy_report.md").write_text("# capacity proxy", encoding="utf-8")
+    (run / "capacity_readback_proxy_rows.csv").write_text(
+        "path,patch_count,observer_count\nrun,4096,16\n",
+        encoding="utf-8",
+    )
+    (run / "no_g_clock_bridge_report.json").write_text(
+        json.dumps(
+            {
+                "NO_G_CLOCK_BRIDGE_RECEIPT": False,
+                "source_predictive_G_SI": False,
+                "dimensionful_G_SI_eligible": False,
+                "clock_bridge": {"G_SI": 6.6743e-11},
+                "readiness_gates": {"forbidden_dependency_path_count": 0},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "no_g_clock_bridge_report.md").write_text("# no G", encoding="utf-8")
     (run / "parent" / "parent_collar_ladder_report.json").write_text(
         json.dumps({"local_recovery_density_receipt": True, "theorem_grade_parent_collar_ladder": False}),
         encoding="utf-8",
@@ -351,6 +527,14 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
                 "physical_cmb_prediction": False,
                 "blockers": ["B_A_k_a_missing_or_not_finite"],
                 "input_status": {
+                    "P_source": {
+                        "source": "OPH_pixel_branch_predeclared",
+                        "source_is_theorem_side_constant": True,
+                    },
+                    "N_source": {
+                        "source": "OPH_screen_capacity_observed_branch_readout",
+                        "source_is_theorem_side_constant": True,
+                    },
                     "A_zeta": {"diagnostic_value_present": True, "physical_gate_passed": False},
                     "B_A_k_a": {
                         "diagnostic_value_present": True,
@@ -387,6 +571,129 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         encoding="utf-8",
     )
     (run / "physical_cmb_promotion_audit_report.md").write_text("# promotion", encoding="utf-8")
+    (run / "physical_cmb_frontier_report.json").write_text(
+        json.dumps(
+            {
+                "PHYSICAL_CMB_FRONTIER_REPORT": True,
+                "physical_cmb_prediction_ready": False,
+                "physical_cmb_output_comparison_receipt": True,
+                "physical_cmb_prediction_receipt": False,
+                "official_likelihood_ready": False,
+                "gate_rows": [
+                    {
+                        "gate": "measurement_comparable_cmb_outputs",
+                        "passed": True,
+                        "detail": "2 OPH diagnostic models; 3 total comparable models",
+                    },
+                    {
+                        "gate": "finite_theorem_A_zeta",
+                        "passed": False,
+                        "detail": "source=finite_certificate_report",
+                    },
+                    {
+                        "gate": "finite_B_A_kernel",
+                        "passed": False,
+                        "detail": "rows=4",
+                    },
+                    {
+                        "gate": "finite_rho_A",
+                        "passed": False,
+                        "detail": "rows=3",
+                    },
+                    {
+                        "gate": "official_planck_likelihood_ready",
+                        "passed": False,
+                        "detail": "requires local official clik/Cobaya path",
+                    },
+                ],
+                "gate_gap_rows": [
+                    {
+                        "gate": "finite_theorem_A_zeta",
+                        "missing_receipt": "finite A_zeta source",
+                        "current_evidence": "diagnostic proxy only",
+                        "action_surface": "finite certificate stack",
+                    },
+                    {
+                        "gate": "official_planck_likelihood_ready",
+                        "missing_receipt": "official likelihood readiness",
+                        "current_evidence": "local path missing",
+                        "action_surface": "Planck clik/Cobaya config",
+                    },
+                ],
+                "blockers": [
+                    "A_zeta_not_finite_derived",
+                    "B_A_k_a_missing_or_not_finite",
+                    "official_likelihood_not_ready",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_frontier_report.md").write_text("# frontier", encoding="utf-8")
+    (run / "physical_cmb_output_comparison_report.json").write_text(
+        json.dumps(
+            {
+                "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT": True,
+                "PHYSICAL_CMB_PREDICTION_RECEIPT": False,
+                "measurement_comparable_model_count": 3,
+                "oph_diagnostic_model_count": 2,
+                "best_oph_diagnostic_model": {
+                    "model_id": "scale_compressed_ir_kernel",
+                    "amplitude_fit_chi2_per_bin": 0.94,
+                },
+                "best_oph_residual_summary": {
+                    "available": True,
+                    "bin_count": 2,
+                    "rms_sigma_residual": 1.5,
+                    "max_abs_sigma_residual": 2.0,
+                    "max_abs_sigma_ell": 80.0,
+                },
+                "best_oph_peak_feature_summary": {
+                    "available": True,
+                    "peak_count": 1,
+                    "mean_abs_peak_ell_delta": 0.0,
+                    "max_abs_peak_ell_delta": 0.0,
+                    "mean_abs_peak_height_fractional_delta": 0.033,
+                    "max_abs_peak_height_fractional_delta": 0.033,
+                },
+                "promotion_blockers": ["official_likelihood_not_ready"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_output_comparison_report.md").write_text("# CMB output", encoding="utf-8")
+    (run / "physical_cmb_output_comparison_rows.csv").write_text(
+        "model_id,amplitude_fit_chi2_per_bin\nscale_compressed_ir_kernel,0.94\n",
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_best_oph_residuals.csv").write_text(
+        "ell,residual_sigma\n50,-1\n80,2\n",
+        encoding="utf-8",
+    )
+    (run / "physical_cmb_peak_features.csv").write_text(
+        "model_id,model_role,peak_index,observed_peak_ell,model_peak_ell,ell_delta,fractional_D_ell_delta\n"
+        "scale_compressed_ir_kernel,oph_diagnostic,1,80,80,0,0.033\n",
+        encoding="utf-8",
+    )
+    (run / "official_planck_likelihood_readiness_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "official_planck_likelihood_readiness_v0",
+                "official_likelihood_execution_ready": False,
+                "official_planck_likelihood_data_paths_configured": False,
+                "official_clik_api_available": False,
+                "camb_available": True,
+                "cobaya_available": False,
+                "blockers": [
+                    "official_clik_api_not_available",
+                    "official_planck_likelihood_data_path_not_configured",
+                    "cobaya_not_importable",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "official_planck_likelihood_readiness_report.md").write_text("# official readiness", encoding="utf-8")
     (run / "B_A_k_a.csv").write_text("k_or_row,a_or_col,B_A\n1,1,0.1\n", encoding="utf-8")
     (run / "Gamma_rec_k_a.csv").write_text("k_or_row,a_or_col,Gamma_rec\n1,1,0.03\n", encoding="utf-8")
     (run / "rho_A_a.csv").write_text("row,col,rho_A\n1,1,0.2\n", encoding="utf-8")
@@ -521,6 +828,161 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         encoding="utf-8",
     )
     (run / "neutral_3d_bulk_audit_report.md").write_text("# neutral", encoding="utf-8")
+    (run / "overlap_native_neutral_control_report.json").write_text(
+        json.dumps(
+            {
+                "OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT": True,
+                "overlap_native_spatial_3d_candidate": False,
+                "overlap_native_strict_h3_candidate": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "overlap_native_neutral_control_report.md").write_text("# overlap", encoding="utf-8")
+    (run / "overlap_native_graph_geometry_report.json").write_text(
+        json.dumps(
+            {
+                "OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT": True,
+                "overlap_graph_spatial_3d_candidate": False,
+                "overlap_graph_strict_h3_candidate": False,
+                "rank_selection": {"rank3_selector_receipt": False},
+                "graph_summary": {"edge_count": 12, "component_count": 1},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "overlap_native_graph_geometry_report.md").write_text("# overlap graph", encoding="utf-8")
+    (run / "overlap_native_graph_geometry_sweep_report.json").write_text(
+        json.dumps(
+            {
+                "OVERLAP_NATIVE_GRAPH_GEOMETRY_SWEEP_RECEIPT": True,
+                "case_count": 3,
+                "graph_geometry_receipt_count": 3,
+                "spatial_3d_candidate_count": 1,
+                "strict_h3_candidate_count": 0,
+                "rank3_selector_count": 0,
+                "rank_obstruction_summary": {
+                    "dominant_largest_gap_rank": "2",
+                    "nontrivial_rank3_selector_count": 2,
+                    "dominant_nontrivial_largest_gap_rank": "3",
+                    "max_nontrivial_rank3_cumulative_explained_variance": 0.52,
+                    "median_nontrivial_effective_rank": 9.5,
+                    "spatial_max_nontrivial_rank3_cumulative_explained_variance": 0.49,
+                    "spatial_median_nontrivial_rank3_cumulative_explained_variance": 0.44,
+                    "nontrivial_largest_gap_rank_counts": {"3": 2, "4": 1},
+                },
+                "gate_coincidence_summary": {
+                    "available": True,
+                    "case_count": 3,
+                    "spatial_h3_geometry_count": 1,
+                    "independent_rank3_selector_count": 0,
+                    "nontrivial_rank3_selector_count": 2,
+                    "spatial_h3_independent_rank3_selector_count": 0,
+                    "spatial_h3_nontrivial_rank3_selector_count": 1,
+                    "strict_h3_candidate_count": 0,
+                },
+                "best_case": {
+                    "source_run_dir": "run-a",
+                    "seed": 3,
+                    "max_model_points": 32,
+                    "k_neighbors": 8,
+                    "median_dimension": 3.2,
+                    "selected_model": "H3",
+                },
+                "closest_strict_rows": [
+                    {
+                        "source_run_dir": "run-a",
+                        "seed": 3,
+                        "max_model_points": 32,
+                        "k_neighbors": 8,
+                        "gate_score": 6,
+                        "missing_strict_gates": ["independent_rank3_selector", "strict_h3_candidate"],
+                        "median_dimension": 3.2,
+                        "selected_model": "H3",
+                    }
+                ],
+                "blockers": ["overlap_graph_sweep_no_strict_h3_candidate"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "overlap_native_graph_geometry_sweep_report.md").write_text("# overlap graph sweep", encoding="utf-8")
+    (run / "overlap_native_graph_geometry_sweep_rows.csv").write_text(
+        "source_run_dir,seed,max_model_points,k_neighbors,spatial_3d_candidate\nrun-a,3,32,8,true\n",
+        encoding="utf-8",
+    )
+    (run / "overlap_residualized_graph_geometry_report.json").write_text(
+        json.dumps(
+            {
+                "OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT": True,
+                "overlap_residual_graph_spatial_3d_candidate": True,
+                "overlap_residual_graph_strict_h3_candidate": False,
+                "rank_selection": {"rank3_selector_receipt": False},
+                "graph_summary": {"edge_count": 9, "component_count": 1},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "overlap_residualized_graph_geometry_report.md").write_text(
+        "# residual graph",
+        encoding="utf-8",
+    )
+    (run / "overlap_residualized_graph_geometry_sweep_report.json").write_text(
+        json.dumps(
+            {
+                "OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_SWEEP_RECEIPT": True,
+                "case_count": 4,
+                "residual_graph_receipt_count": 4,
+                "spatial_3d_candidate_count": 2,
+                "strict_h3_candidate_count": 0,
+                "rank3_selector_count": 1,
+                "rank_obstruction_summary": {
+                        "dominant_largest_gap_rank": "2",
+                        "dominant_nontrivial_largest_gap_rank": "3",
+                        "raw_largest_gap_rank1_count": 3,
+                        "nontrivial_rank3_selector_count": 2,
+                        "max_rank3_cumulative_explained_variance": 0.57,
+                        "max_nontrivial_rank3_cumulative_explained_variance": 0.54,
+                        "median_effective_rank": 9.0,
+                        "median_nontrivial_effective_rank": 8.8,
+                        "nontrivial_largest_gap_rank_counts": {"3": 2, "4": 2},
+                },
+                "gate_coincidence_summary": {
+                    "available": True,
+                    "case_count": 4,
+                    "spatial_h3_geometry_count": 2,
+                    "independent_rank3_selector_count": 1,
+                    "nontrivial_rank3_selector_count": 2,
+                    "spatial_h3_independent_rank3_selector_count": 1,
+                    "spatial_h3_nontrivial_rank3_selector_count": 0,
+                    "strict_h3_candidate_count": 0,
+                },
+                "closest_strict_rows": [
+                    {
+                        "source_run_dir": "run-a",
+                        "seed": 3,
+                        "max_model_points": 32,
+                        "k_neighbors": 8,
+                        "remove_modes": 1,
+                        "gate_score": 7,
+                        "missing_strict_gates": ["strict_h3_candidate"],
+                        "median_dimension": 3.1,
+                        "selected_model": "H3",
+                    }
+                ],
+                "blockers": ["overlap_residual_graph_sweep_no_strict_h3_candidate"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "overlap_residualized_graph_geometry_sweep_report.md").write_text(
+        "# residual graph sweep",
+        encoding="utf-8",
+    )
+    (run / "overlap_residualized_graph_geometry_sweep_rows.csv").write_text(
+        "source_run_dir,seed,max_model_points,k_neighbors,remove_modes,spatial_3d_candidate\nrun-a,3,32,8,1,true\n",
+        encoding="utf-8",
+    )
     (run / "neutral_independent_rank_selector_audit_report.json").write_text(
         json.dumps(
             {
@@ -535,6 +997,41 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         encoding="utf-8",
     )
     (run / "neutral_independent_rank_selector_audit_report.md").write_text("# selector", encoding="utf-8")
+    (run / "strict_neutral_bulk_frontier_report.json").write_text(
+        json.dumps(
+            {
+                "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": True,
+                "strict_neutral_bulk": False,
+                "strict_neutral_bulk_ready": False,
+                "control_residualized_rank3_refinement_candidate": True,
+                "overlap_native_negative_control_receipt_all": True,
+                "overlap_native_graph_geometry_receipt_count": 2,
+                "overlap_native_graph_spatial_3d_candidate_count": 1,
+                "overlap_native_graph_strict_h3_candidate_count": 0,
+                "overlap_native_graph_model_order_rank3_selector_count": 0,
+                "overlap_native_graph_nontrivial_model_order_rank3_selector_count": 0,
+                "overlap_residualized_graph_geometry_receipt_count": 4,
+                "overlap_residualized_graph_spatial_3d_candidate_count": 2,
+                "overlap_residualized_graph_strict_h3_candidate_count": 0,
+                "overlap_residualized_graph_rank3_selector_count": 1,
+                "overlap_residualized_graph_model_order_rank3_selector_count": 0,
+                "overlap_residualized_graph_nontrivial_model_order_rank3_selector_count": 0,
+                "neutral_independent_rank3_selector_receipt": False,
+                "directional_strict_ready_total": 0,
+                "gate_gap_rows": [
+                    {
+                        "gate": "independent_rank3_selector",
+                        "missing_receipt": "independent rank-3 selector",
+                        "current_evidence": "control quotient candidate only",
+                        "action_surface": "neutral rank selector audit",
+                    }
+                ],
+                "blockers": ["independent_svd_rank3_selector_not_stable_or_false"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "strict_neutral_bulk_frontier_report.md").write_text("# frontier", encoding="utf-8")
 
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
@@ -542,6 +1039,15 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     claims = report["claims"]
     assert claims["screen_capacity_observed_branch_available"] is True
     assert claims["screen_capacity_finite_fixed_point_solved"] is False
+    assert claims["capacity_readback_proxy_written"] is True
+    assert claims["capacity_readback_proxy_row_count"] == 1
+    assert claims["capacity_readback_proxy_max_observer_count"] == 16
+    assert claims["capacity_readback_proxy_fixed_point_solved"] is False
+    assert claims["capacity_readback_proxy_F_N_implemented"] is False
+    assert claims["no_g_clock_bridge_written"] is True
+    assert claims["no_g_clock_bridge_receipt"] is False
+    assert claims["no_g_clock_bridge_source_predictive_G_SI"] is False
+    assert claims["no_g_clock_bridge_G_SI_checksum"] == 6.6743e-11
     assert claims["parent_collar_local_density_receipt"] is True
     assert claims["parent_collar_theorem_grade"] is False
     assert claims["finite_transition_matrix_ready"] is True
@@ -556,6 +1062,10 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["camb_lcdm_oph_anomaly_module_ready"] is False
     assert claims["physical_cmb_input_contract_receipt"] is False
     assert claims["physical_cmb_input_prediction_eligible"] is False
+    assert claims["physical_cmb_input_P_source"] == "OPH_pixel_branch_predeclared"
+    assert claims["physical_cmb_input_P_source_theorem_side"] is True
+    assert claims["physical_cmb_input_N_source"] == "OPH_screen_capacity_observed_branch_readout"
+    assert claims["physical_cmb_input_N_source_theorem_side"] is True
     assert claims["physical_cmb_input_A_zeta_diagnostic_present"] is True
     assert claims["physical_cmb_input_A_zeta_physical_gate_passed"] is False
     assert claims["physical_cmb_input_B_A_diagnostic_rows"] == 4
@@ -566,6 +1076,38 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["physical_cmb_promotion_ready"] is False
     assert claims["physical_cmb_promotion_official_likelihood_ready"] is False
     assert claims["physical_cmb_promotion_blocker_count"] == 2
+    assert claims["physical_cmb_frontier_written"] is True
+    assert claims["physical_cmb_frontier_ready"] is False
+    assert claims["physical_cmb_frontier_gate_count"] == 5
+    assert claims["physical_cmb_frontier_gap_count"] == 2
+    assert claims["physical_cmb_frontier_blocker_count"] == 3
+    assert claims["physical_cmb_frontier_measurement_outputs"] is True
+    assert claims["physical_cmb_frontier_finite_A_zeta"] is False
+    assert claims["physical_cmb_frontier_finite_B_A"] is False
+    assert claims["physical_cmb_frontier_finite_rho_A"] is False
+    assert claims["physical_cmb_frontier_official_likelihood"] is False
+    assert claims["official_planck_likelihood_readiness_written"] is True
+    assert claims["official_planck_likelihood_execution_ready"] is False
+    assert claims["official_planck_likelihood_data_paths_configured"] is False
+    assert claims["official_planck_clik_api_available"] is False
+    assert claims["official_planck_likelihood_blocker_count"] == 3
+    assert claims["physical_cmb_output_comparison_written"] is True
+    assert claims["physical_cmb_output_comparison_receipt"] is True
+    assert claims["physical_cmb_output_usable_data_receipt"] is True
+    assert claims["physical_cmb_output_prediction_receipt"] is False
+    assert claims["physical_cmb_output_measurement_comparable_model_count"] == 3
+    assert claims["physical_cmb_output_oph_diagnostic_model_count"] == 2
+    assert claims["physical_cmb_output_best_oph_model"] == "scale_compressed_ir_kernel"
+    assert claims["physical_cmb_output_best_oph_chi2_per_bin"] == 0.94
+    assert claims["physical_cmb_output_best_oph_residual_bin_count"] == 2
+    assert claims["physical_cmb_output_best_oph_rms_sigma_residual"] == 1.5
+    assert claims["physical_cmb_output_best_oph_max_abs_sigma_residual"] == 2.0
+    assert claims["physical_cmb_output_best_oph_max_abs_sigma_ell"] == 80.0
+    assert claims["physical_cmb_output_best_oph_peak_count"] == 1
+    assert claims["physical_cmb_output_best_oph_mean_abs_peak_ell_delta"] == 0.0
+    assert claims["physical_cmb_output_best_oph_max_abs_peak_ell_delta"] == 0.0
+    assert claims["physical_cmb_output_best_oph_mean_abs_peak_height_fractional_delta"] == 0.033
+    assert claims["physical_cmb_output_best_oph_max_abs_peak_height_fractional_delta"] == 0.033
     assert claims["b_a_parent_rows_emitted"] is True
     assert claims["b_a_parent_observer_view_variation"] is True
     assert claims["b_a_parent_receipt"] is False
@@ -599,6 +1141,46 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["neutral_3d_bulk_audit_ready"] is False
     assert claims["neutral_3d_bulk_audit_directional_strict_ready_total"] == 0
     assert claims["neutral_3d_bulk_audit_control_quotient_candidate_count"] == 1
+    assert claims["overlap_native_neutral_control_written"] is True
+    assert claims["overlap_native_negative_control_receipt"] is True
+    assert claims["overlap_native_spatial_3d_candidate"] is False
+    assert claims["overlap_native_strict_h3_candidate"] is False
+    assert claims["overlap_native_graph_geometry_written"] is True
+    assert claims["overlap_native_graph_geometry_receipt"] is True
+    assert claims["overlap_native_graph_spatial_3d_candidate"] is False
+    assert claims["overlap_native_graph_strict_h3_candidate"] is False
+    assert claims["overlap_native_graph_rank3_selector"] is False
+    assert claims["overlap_native_graph_sweep_written"] is True
+    assert claims["overlap_native_graph_sweep_receipt"] is True
+    assert claims["overlap_native_graph_sweep_case_count"] == 3
+    assert claims["overlap_native_graph_sweep_receipt_count"] == 3
+    assert claims["overlap_native_graph_sweep_spatial_candidates"] == 1
+    assert claims["overlap_native_graph_sweep_strict_h3_candidates"] == 0
+    assert claims["overlap_native_graph_sweep_rank3_selectors"] == 0
+    assert claims["overlap_native_graph_sweep_closest_strict_candidate_count"] == 1
+    assert claims["overlap_native_graph_sweep_nontrivial_rank3_selectors"] == 2
+    assert claims["overlap_native_graph_sweep_dominant_nontrivial_largest_gap_rank"] == "3"
+    assert claims["overlap_native_graph_sweep_max_nontrivial_rank3_ev"] == 0.52
+    assert claims["overlap_native_graph_sweep_median_nontrivial_effective_rank"] == 9.5
+    assert claims["overlap_residualized_graph_geometry_written"] is True
+    assert claims["overlap_residualized_graph_geometry_receipt"] is True
+    assert claims["overlap_residualized_graph_spatial_3d_candidate"] is True
+    assert claims["overlap_residualized_graph_strict_h3_candidate"] is False
+    assert claims["overlap_residualized_graph_rank3_selector"] is False
+    assert claims["overlap_residualized_graph_sweep_written"] is True
+    assert claims["overlap_residualized_graph_sweep_receipt"] is True
+    assert claims["overlap_residualized_graph_sweep_case_count"] == 4
+    assert claims["overlap_residualized_graph_sweep_receipt_count"] == 4
+    assert claims["overlap_residualized_graph_sweep_spatial_candidates"] == 2
+    assert claims["overlap_residualized_graph_sweep_strict_h3_candidates"] == 0
+    assert claims["overlap_residualized_graph_sweep_rank3_selectors"] == 1
+    assert claims["overlap_residualized_graph_sweep_closest_strict_candidate_count"] == 1
+    assert claims["overlap_residualized_graph_sweep_nontrivial_rank3_selectors"] == 2
+    assert claims["overlap_residualized_graph_sweep_dominant_largest_gap_rank"] == "2"
+    assert claims["overlap_residualized_graph_sweep_dominant_nontrivial_largest_gap_rank"] == "3"
+    assert claims["overlap_residualized_graph_sweep_raw_rank1_cases"] == 3
+    assert claims["overlap_residualized_graph_sweep_max_nontrivial_rank3_ev"] == 0.54
+    assert claims["overlap_residualized_graph_sweep_median_nontrivial_effective_rank"] == 8.8
     assert claims["neutral_independent_rank_selector_audit_written"] is True
     assert claims["neutral_independent_rank3_selector_receipt"] is False
     assert claims["neutral_independent_rank_selector_run_count"] == 2
@@ -606,7 +1188,52 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["neutral_independent_rank_selector_control_candidate_count"] == 2
     assert claims["neutral_independent_rank_selector_control_median_effective_rank"] == 126.0
     assert claims["neutral_independent_rank_selector_control_median_rank3_ev"] == 0.05
+    assert claims["strict_neutral_bulk_frontier_written"] is True
+    assert claims["strict_neutral_bulk_frontier_ready"] is False
+    assert claims["strict_neutral_bulk_frontier_gap_count"] == 1
+    assert claims["strict_neutral_bulk_frontier_rank3_candidate"] is True
+    assert claims["strict_neutral_bulk_frontier_overlap_controls"] is True
+    assert claims["strict_neutral_bulk_frontier_overlap_graph_receipts"] == 2
+    assert claims["strict_neutral_bulk_frontier_overlap_graph_spatial_candidates"] == 1
+    assert claims["strict_neutral_bulk_frontier_overlap_graph_strict_h3_candidates"] == 0
+    assert claims["strict_neutral_bulk_frontier_overlap_graph_model_order_rank3_selectors"] == 0
+    assert claims["strict_neutral_bulk_frontier_overlap_graph_nontrivial_model_order_rank3_selectors"] == 0
+    assert claims["strict_neutral_bulk_frontier_overlap_residual_graph_receipts"] == 4
+    assert claims["strict_neutral_bulk_frontier_overlap_residual_graph_spatial_candidates"] == 2
+    assert claims["strict_neutral_bulk_frontier_overlap_residual_graph_strict_h3_candidates"] == 0
+    assert claims["strict_neutral_bulk_frontier_overlap_residual_graph_rank3_selectors"] == 1
+    assert claims["strict_neutral_bulk_frontier_overlap_residual_graph_model_order_rank3_selectors"] == 0
+    assert (
+        claims[
+            "strict_neutral_bulk_frontier_overlap_residual_graph_nontrivial_model_order_rank3_selectors"
+        ]
+        == 0
+    )
+    assert claims["strict_neutral_bulk_frontier_independent_selector"] is False
+    assert claims["overlap_native_graph_sweep_spatial_h3_rank3_coincidences"] == 0
+    assert claims["overlap_native_graph_sweep_spatial_h3_nontrivial_rank3_coincidences"] == 1
+    assert claims["overlap_residualized_graph_sweep_spatial_h3_rank3_coincidences"] == 1
+    assert claims["overlap_residualized_graph_sweep_spatial_h3_nontrivial_rank3_coincidences"] == 0
     assert "oph_screen_power_primordial_table.csv" in report["files"]
+    assert "screen_capacity_closure_report.json" in report["files"]
+    assert "screen_capacity_closure_report.md" in report["files"]
+    assert "capacity_readback_proxy_report.json" in report["files"]
+    assert "capacity_readback_proxy_report.md" in report["files"]
+    assert "capacity_readback_proxy_rows.csv" in report["files"]
+    assert "no_g_clock_bridge_report.json" in report["files"]
+    assert "no_g_clock_bridge_report.md" in report["files"]
+    assert "overlap_native_neutral_control_report.json" in report["files"]
+    assert "overlap_native_neutral_control_report.md" in report["files"]
+    assert "overlap_native_graph_geometry_report.json" in report["files"]
+    assert "overlap_native_graph_geometry_report.md" in report["files"]
+    assert "overlap_native_graph_geometry_sweep_report.json" in report["files"]
+    assert "overlap_native_graph_geometry_sweep_report.md" in report["files"]
+    assert "overlap_native_graph_geometry_sweep_rows.csv" in report["files"]
+    assert "overlap_residualized_graph_geometry_report.json" in report["files"]
+    assert "overlap_residualized_graph_geometry_report.md" in report["files"]
+    assert "overlap_residualized_graph_geometry_sweep_report.json" in report["files"]
+    assert "overlap_residualized_graph_geometry_sweep_report.md" in report["files"]
+    assert "overlap_residualized_graph_geometry_sweep_rows.csv" in report["files"]
     assert "finite_repair_transition_matrix_report.json" in report["files"]
     assert "finite_repair_transition_rows.csv" in report["files"]
     assert "scalar_repair_semigroup_report.json" in report["files"]
@@ -619,8 +1246,17 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert "camb_lcdm_tt_bins.csv" in report["files"]
     assert "physical_cmb_input_report.json" in report["files"]
     assert "physical_cmb_input_report.md" in report["files"]
+    assert "official_planck_likelihood_readiness_report.json" in report["files"]
+    assert "official_planck_likelihood_readiness_report.md" in report["files"]
     assert "physical_cmb_promotion_audit_report.json" in report["files"]
     assert "physical_cmb_promotion_audit_report.md" in report["files"]
+    assert "physical_cmb_frontier_report.json" in report["files"]
+    assert "physical_cmb_frontier_report.md" in report["files"]
+    assert "physical_cmb_output_comparison_report.json" in report["files"]
+    assert "physical_cmb_output_comparison_report.md" in report["files"]
+    assert "physical_cmb_output_comparison_rows.csv" in report["files"]
+    assert "physical_cmb_best_oph_residuals.csv" in report["files"]
+    assert "physical_cmb_peak_features.csv" in report["files"]
     assert "physical_cmb_input_contract.json" in report["files"]
     assert "physical_cmb_input_validation.json" in report["files"]
     assert "physical_cmb_B_A_k_a.csv" in report["files"]
@@ -644,6 +1280,115 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert "neutral_3d_bulk_audit_report.md" in report["files"]
     assert "neutral_independent_rank_selector_audit_report.json" in report["files"]
     assert "neutral_independent_rank_selector_audit_report.md" in report["files"]
+    assert "strict_neutral_bulk_frontier_report.json" in report["files"]
+    assert "strict_neutral_bulk_frontier_report.md" in report["files"]
+
+
+def test_export_measurement_pack_prefers_residualized_strict_frontier(tmp_path: Path) -> None:
+    stale = tmp_path / "stale"
+    fresh = tmp_path / "fresh"
+    stale.mkdir()
+    fresh.mkdir()
+
+    _write_json(
+        stale / "strict_neutral_bulk_frontier_report.json",
+        {
+            "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": True,
+            "strict_neutral_bulk_ready": False,
+            "control_residualized_rank3_refinement_candidate": True,
+            "overlap_native_negative_control_receipt_all": True,
+            "neutral_independent_rank3_selector_receipt": False,
+            "directional_strict_ready_total": 12,
+            "blockers": ["overlap_graph_strict_h3_candidate_false"],
+        },
+    )
+    (stale / "strict_neutral_bulk_frontier_report.md").write_text("stale frontier\n", encoding="utf-8")
+    _write_json(
+        fresh / "strict_neutral_bulk_frontier_report.json",
+        {
+            "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": True,
+            "strict_neutral_bulk_ready": False,
+            "control_residualized_rank3_refinement_candidate": True,
+            "overlap_native_negative_control_receipt_all": True,
+            "overlap_residualized_graph_geometry_report_count": 3600,
+            "overlap_residualized_graph_geometry_receipt_count": 3593,
+            "overlap_residualized_graph_spatial_3d_candidate_count": 45,
+            "overlap_residualized_graph_strict_h3_candidate_count": 0,
+            "neutral_independent_rank3_selector_receipt": False,
+            "directional_strict_ready_total": 0,
+            "gate_rows": [
+                {"gate": "overlap_residualized_graph_geometry", "passed": False},
+                {"gate": "overlap_residualized_graph_strict_h3", "passed": False},
+            ],
+            "blockers": [
+                "overlap_graph_strict_h3_candidate_false",
+                "overlap_residual_graph_strict_h3_candidate_false",
+            ],
+        },
+    )
+    (fresh / "strict_neutral_bulk_frontier_report.md").write_text("fresh frontier\n", encoding="utf-8")
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([stale, fresh], out)
+    copied = json.loads((out / "strict_neutral_bulk_frontier_report.json").read_text(encoding="utf-8"))
+
+    assert copied["overlap_residualized_graph_geometry_report_count"] == 3600
+    assert copied["overlap_residualized_graph_spatial_3d_candidate_count"] == 45
+    assert (out / "strict_neutral_bulk_frontier_report.md").read_text(encoding="utf-8") == "fresh frontier\n"
+    assert report["claims"]["strict_neutral_bulk_frontier_ready"] is False
+
+
+def test_export_measurement_pack_prefers_model_order_strict_frontier(tmp_path: Path) -> None:
+    count_only = tmp_path / "count_only"
+    model_order = tmp_path / "model_order"
+    count_only.mkdir()
+    model_order.mkdir()
+
+    _write_json(
+        count_only / "strict_neutral_bulk_frontier_report.json",
+        {
+            "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": True,
+            "strict_neutral_bulk_ready": False,
+            "overlap_residualized_graph_geometry_report_count": 5000,
+            "overlap_residualized_graph_geometry_receipt_count": 5000,
+            "overlap_residualized_graph_spatial_3d_candidate_count": 120,
+            "gate_rows": [{"gate": "overlap_residualized_graph_geometry", "passed": True}],
+            "gate_gap_rows": [{"gate": "overlap_residualized_graph_strict_h3", "passed": False}],
+        },
+    )
+    (count_only / "strict_neutral_bulk_frontier_report.md").write_text(
+        "count-only frontier\n",
+        encoding="utf-8",
+    )
+    _write_json(
+        model_order / "strict_neutral_bulk_frontier_report.json",
+        {
+            "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": True,
+            "strict_neutral_bulk_ready": False,
+            "overlap_residualized_graph_geometry_report_count": 16,
+            "overlap_residualized_graph_geometry_receipt_count": 16,
+            "overlap_residualized_graph_spatial_3d_candidate_count": 1,
+            "overlap_residualized_graph_model_order_rank3_selector_count": 0,
+            "overlap_residualized_graph_nontrivial_model_order_rank3_selector_count": 0,
+            "gate_rows": [{"gate": "overlap_residualized_graph_geometry", "passed": True}],
+            "gate_gap_rows": [{"gate": "overlap_residualized_graph_strict_h3", "passed": False}],
+        },
+    )
+    (model_order / "strict_neutral_bulk_frontier_report.md").write_text(
+        "model-order frontier\n",
+        encoding="utf-8",
+    )
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([count_only, model_order], out)
+    copied = json.loads((out / "strict_neutral_bulk_frontier_report.json").read_text(encoding="utf-8"))
+
+    assert copied["overlap_residualized_graph_geometry_report_count"] == 16
+    assert copied["overlap_residualized_graph_model_order_rank3_selector_count"] == 0
+    assert (out / "strict_neutral_bulk_frontier_report.md").read_text(encoding="utf-8") == (
+        "model-order frontier\n"
+    )
+    assert report["claims"]["strict_neutral_bulk_frontier_overlap_residual_graph_receipts"] == 16
 
 
 def test_export_measurement_pack_prefers_stronger_cmb_json_reports(tmp_path: Path) -> None:

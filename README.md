@@ -13,7 +13,9 @@ early-universe, or physical cosmology claim:
 - annealed local repair with verifier receipts,
 - record commits after a stability window,
 - cycle holonomy defects and simple worldline tracking,
-- explicit OPH pixel-ratio `P` screen-cell architecture receipts,
+- explicit OPH local pixel-closure `P` screen-cell architecture receipts,
+- explicit global screen-capacity `N_CRC` closure readouts kept separate from regulator patch count,
+- P/N dimensionless-invariant and independent scale-bridge gate reports,
 - federated echosahedral 12-port screen microphysics metadata,
 - explicit named `P0..P11` port assignment receipts,
 - BW cap-flow residual verifier for `lambda_C(2*pi*t)`,
@@ -45,6 +47,11 @@ python3 -m oph_fpe.cli run-bw-array --config configs/e1_s3_bw_screen_64k.yml --o
 python3 -m oph_fpe.cli run-bw-array --config configs/e1_s3_state_modular_screen_4k.yml --out-dir runs
 python3 -m oph_fpe.cli run-bw-array --config configs/e2_kms_freezeout_cl_screen_64k.yml --out-dir runs
 python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_bw_screen_4k.yml --seeds 20260601,20260602 --out-dir runs
+python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
+python3 -m oph_fpe.cli positive-geometry-kernel-report --out runs/positive_geometry_kernel
+python3 -m oph_fpe.cli screen-capacity-report --out runs/screen_capacity_closure
+python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
+python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
 python3 -m oph_fpe.cli cl-ensemble-report --run-dir runs/kms_freezeout_cl_4k_sweep_20260602 --out runs/cl_ensemble_20260602
 python3 -m oph_fpe.cli h3-ensemble-report --run-dir runs/coarse_object_h3_4k_sweep_20260602 --include runs/coarse_object_h3_64k_20260602 --out runs/h3_ensemble_20260602
 python3 -m oph_fpe.cli cmb-lite-compare --run-dir runs/<run_id> --benchmark runs/benchmarks/COM_PowerSpect_CMB-TT-binned_R3.01.txt
@@ -64,6 +71,11 @@ placeholder, and `verifier_receipts.jsonl`.
 Main BW-array runs also write paper-stack fixed-cutoff receipts:
 `edge_sector_heat_kernel_report.json`, `central_record_born_report.json`, and
 `observer_checkpoint_restoration_report.json`.
+
+The scale/capacity audit commands write standalone reports:
+`pn_resonance_report.json`, `screen_capacity_closure_report.json`, `oph_scale_bridge_report.json`,
+`positive_geometry_kernel_report.json`, and `repair_scale_closure_report.json`. They are
+bookkeeping and gate reports, not physical-CMB or bulk-emergence receipts.
 
 ## Milestones
 
@@ -283,10 +295,132 @@ include `cap_area_planck` and `cap_entropy_capacity`, and BW residual norms use 
 cell-entropy measure. The conformal map and BW normalization remain unchanged:
 `s = 2*pi*t`.
 
-The default `screen_units.mode` is `numerical_regulator`, so `N` is a sampling/refinement count, not
-a literal cosmological horizon cell count. In later `physical_cell_toy_universe` runs, the toy
-radius is `R/lP = sqrt(NP / 4pi)`. In both modes `P` does not force the BW/Lorentz dimension
-estimate; the BW cap-flow verifier is the required mechanism for that.
+## P/N Closure and Scale Bridge
+
+The current paper stack changes the interpretation of scale outputs. `P_star` and `N_star`
+(`N_CRC`) are closure coordinates, not tunable simulation knobs:
+
+- `P_star` is the local pixel closure. In this simulator it normalizes local cell area, local
+  cell entropy `P/4`, cap capacity, and residual weights.
+- `N_CRC` is the global screen-capacity closure. It is the entropy capacity of the cosmic
+  record/screen branch, not the number of finite patches in a local run.
+- Finite run patch counts such as `4096`, `65536`, `262144`, and `1048576` remain numerical
+  regulators unless a dedicated capacity readback map `F(N)` and terminal normal-form enumerator
+  are implemented.
+
+The simulator should now report the local/global dimensionless invariants:
+
+```text
+P_star = a_cell / ell_star^2
+N_star = 3*pi / (Lambda_star ell_star^2)
+B_ell = Lambda_star N_star
+B_ell ell_star^2 = 3*pi
+B_ell a_cell = 3*pi P_star
+Lambda_star a_cell = 3*pi P_star / N_star
+```
+
+Local gravity is also a dimensionless normalization statement:
+
+```text
+a_cell = P_star ell_star^2
+ellbar_shared = P_star / 4
+G_geom = a_cell / (4 ellbar_shared) = ell_star^2
+```
+
+So `P` cancels from the local gravity readout. `P` is still structurally important because it ties
+cell area and shared edge entropy to the same observer-cell unit, but `P` and `N` alone do not fix a
+dimensionful SI scale. A dimensionful `ell_star^2`, `B_ell`, or `G_SI` requires an independent scale
+bridge, supplied either as `B_ell` directly or as an independent `Lambda_star` together with
+`N_star`. The report gate is `finite_simulator_derived_G_SI = false` unless a future finite proof
+exists.
+
+Implemented reports:
+
+```bash
+python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
+python3 -m oph_fpe.cli positive-geometry-kernel-report --out runs/positive_geometry_kernel
+python3 -m oph_fpe.cli screen-capacity-report --out runs/screen_capacity_closure
+python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
+python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_direct_b --b-ell-m2 3.6078739146803216e70
+python3 -m oph_fpe.cli capacity-readback-proxy-report --run-dir runs/<run_id> --out runs/capacity_proxy
+```
+
+`pn-resonance-report` is the paper-faithful wrapper. By default it replays the compact-paper bridge
+`N_EW(P)=pi*exp(6*pi/(P*alpha_U(P)))`, using the declared `alpha_U(P_star)` source value, and writes
+`PN_RESONANCE_NUMERIC_REPLAY = true`. It deliberately keeps `PN_RESONANCE_RECEIPT = false` until the
+simulator emits the missing source proof record for `alpha_U(P)`, solves the global `F(N)` capacity
+fixed point, and derives the repair-depth selector from finite data. Use
+`--n-source screen-capacity-default` to audit the rough observed capacity display as an off-bridge
+diagnostic, or `--b-ell-m2 ...` to add an independent dimensionful scale bridge while still keeping
+`finite_simulator_derived_G_SI = false`.
+
+`screen-capacity-report` carries the observed-branch/declaration readout and keeps
+`N_CRC_fixed_point_solved_from_finite_simulator = false`. `scale-bridge-report` records the
+dimensionless invariants and only unlocks dimensionful `G_SI` eligibility when an independent bridge
+input is supplied. `capacity-readback-proxy-report` summarizes finite-run observer/object proxies
+for future `F(N)` work; it does not solve the global capacity fixed point.
+
+The repair-depth lane should be read as an ansatz consistency diagnostic, not as `P -> N`:
+
+```bash
+python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
+```
+
+It compares the declared 24-round relation `N_CRC ~= |g'(P)|^-48` against the global capacity
+branch. It may be numerically useful for planning scale-compressed operators, but it is not a
+derivation of `N` from `P`, not a dimensionful SI scale bridge, and not a finite proof of 24 repair
+rounds.
+
+The default `screen_units.mode` is `numerical_regulator`, so configured screen size is a
+sampling/refinement count, not a literal cosmological horizon cell count. In later
+`physical_cell_toy_universe` runs, a toy finite-cell radius is
+`R/lP = sqrt(N_patch P / 4pi)` when the configured patch count is intentionally interpreted as toy
+physical cells. In all modes, `P` and `N_CRC` do not force the BW/Lorentz dimension estimate; the BW
+cap-flow verifier is the required mechanism for that.
+
+## Certified Kernel Acceleration
+
+The amplituhedron / positive-geometry work is integrated as a fail-closed optimization layer, not
+as a new OPH axiom. The trusted simulator path remains finite patches, observer records, mismatch,
+accepted repair, quotient normal forms, and observer-facing readout. A mathematical kernel can
+replace generic repair only when it has a typed sector certificate, native geometry certificate,
+semantic readout equivalence, resource report, provenance hash, and fallback receipt.
+
+The current implementation wraps the bundled Positive Geometry Kernel checker from
+`../amplituhedron/engineering-the-simulation/oph_positive_geometry_kernel_v1/`:
+
+```bash
+python3 -m oph_fpe.cli positive-geometry-kernel-report --out runs/positive_geometry_kernel
+```
+
+Normal runs can also request the same checker through the kernel dispatcher:
+
+```yaml
+kernels:
+  positive_geometry:
+    enabled: true
+```
+
+This is currently a receipt hook, not a replacement dynamics path. `run`, `run-array`, and
+`run-bw-array` write `kernel_dispatch_report.json` plus the positive-geometry report files when the
+block is present. The dispatcher records `generic_repair_executed = true`,
+`effective_acceleration_enabled = false`, and `physical_observables_changed = false` unless a future
+OPH sector compiler and readout-substitution backend are certified for the concrete run sector.
+
+The default `A_{6,1,4}` pilot is expected to report:
+
+```text
+verdict: GEOMETRY_CERTIFIED_BACKEND_NOT_ENABLED
+execution mode: CERTIFIED_GEOMETRY
+trusted acceleration enabled: false
+fallback action: EXACT_GENERIC
+```
+
+That is the intended result. It means the exact positive-geometry atlas, positivity checks, facet
+coverage, and oriented internal-wall cancellation are certified, while OPH sector recognition and
+observer-readout equivalence remain open. Only a manifest whose sector recognition, readout
+equivalence, and fail-closed gates pass may return `CERTIFIED_ACCELERATED`; otherwise the simulator
+must route to the generic repair path.
 
 BW configs use a cell-scaled regulator collar:
 

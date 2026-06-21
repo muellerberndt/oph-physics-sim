@@ -4,11 +4,13 @@ import json
 import math
 import hashlib
 import copy
+import csv
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+from scipy.sparse.csgraph import shortest_path
 from scipy.spatial.distance import pdist, squareform
 
 
@@ -1284,6 +1286,13 @@ def neutral_3d_bulk_audit_report(report_paths: list[Path]) -> dict[str, Any]:
     refinement_reports = [
         report for report in refinement_reports if report.get("mode") == "prime_geometric_rank_refinement_v0"
     ]
+    overlap_control_reports = [
+        _read_json(path)
+        for path in _find_overlap_native_control_reports(paths)
+    ]
+    overlap_control_reports = [
+        report for report in overlap_control_reports if report.get("mode") == "overlap_native_neutral_control_v0"
+    ]
     if refinement_reports:
         refinement = _select_neutral_refinement_report(refinement_reports)
         refinement_source = "existing_prime_geometric_rank_refinement_report"
@@ -1295,7 +1304,12 @@ def neutral_3d_bulk_audit_report(report_paths: list[Path]) -> dict[str, Any]:
         refinement_source = "missing"
 
     sweep_summaries = [_neutral_3d_sweep_summary(path, report) for path, report in sweeps]
-    blockers = _neutral_3d_bulk_audit_blockers(refinement, [report for _, report in sweeps])
+    blockers = _neutral_3d_bulk_audit_blockers(
+        refinement,
+        [report for _, report in sweeps],
+        overlap_control_reports=overlap_control_reports,
+    )
+    overlap_summary = _overlap_native_control_audit_summary(overlap_control_reports)
     report = {
         "mode": "neutral_3d_bulk_audit_v0",
         "report_paths": [str(path) for path in paths],
@@ -1323,6 +1337,12 @@ def neutral_3d_bulk_audit_report(report_paths: list[Path]) -> dict[str, Any]:
                 if bool(report.get("prime_geometric_control_quotient_spatial_3d_candidate_receipt", False))
             )
         ),
+        "overlap_native_negative_control_report_count": overlap_summary["report_count"],
+        "overlap_native_negative_control_receipt_count": overlap_summary["receipt_count"],
+        "overlap_native_negative_control_receipt_all": overlap_summary["receipt_all"],
+        "overlap_native_spatial_3d_candidate_count": overlap_summary["spatial_3d_candidate_count"],
+        "overlap_native_strict_h3_candidate_count": overlap_summary["strict_h3_candidate_count"],
+        "overlap_native_control_summary": overlap_summary,
         "blockers": blockers,
         "refinement_summary": _neutral_3d_refinement_summary(refinement),
         "sweeps": sweep_summaries,
@@ -1454,6 +1474,337 @@ def write_neutral_independent_rank_selector_audit_report(
     return report
 
 
+def strict_neutral_bulk_frontier_report(report_paths: list[Path]) -> dict[str, Any]:
+    """Summarize the current strict-neutral-bulk proof frontier.
+
+    The neutral audit is intentionally conservative and can be hard to read at
+    a glance. This report keeps the same claim boundary, but turns the evidence
+    into named gates so a run pack can show exactly which receipts are present
+    and which are still blocking promotion.
+    """
+
+    paths = [Path(path) for path in report_paths]
+    audits = [
+        _read_json(path)
+        for path in _find_neutral_3d_bulk_audit_reports(paths)
+    ]
+    audits = [report for report in audits if report.get("mode") == "neutral_3d_bulk_audit_v0"]
+    selectors = [
+        _read_json(path)
+        for path in _find_neutral_independent_rank_selector_reports(paths)
+    ]
+    selectors = [
+        report for report in selectors if report.get("mode") == "neutral_independent_rank_selector_audit_v0"
+    ]
+    graph_reports = [
+        _read_json(path)
+        for path in _find_overlap_native_graph_geometry_reports(paths)
+    ]
+    graph_reports = [
+        report for report in graph_reports if report.get("mode") == "overlap_native_graph_geometry_v0"
+    ]
+    residual_graph_reports = [
+        _read_json(path)
+        for path in _find_overlap_residualized_graph_geometry_reports(paths)
+    ]
+    residual_graph_reports = [
+        report for report in residual_graph_reports if report.get("mode") == "overlap_residualized_graph_geometry_v0"
+    ]
+    audit = _select_neutral_3d_audit_report(audits) if audits else neutral_3d_bulk_audit_report(paths)
+    selector = (
+        _select_neutral_selector_report(selectors)
+        if selectors
+        else neutral_independent_rank_selector_audit_report(paths)
+    )
+    refinement = audit.get("refinement_summary") if isinstance(audit.get("refinement_summary"), dict) else {}
+    overlap_receipt = bool(audit.get("overlap_native_negative_control_receipt_all", False))
+    overlap_spatial = int(audit.get("overlap_native_spatial_3d_candidate_count") or 0)
+    graph_summary = _overlap_graph_geometry_summary(graph_reports)
+    residual_graph_summary = _overlap_residual_graph_geometry_summary(residual_graph_reports)
+    gate_rows = [
+        {
+            "gate": "control_residualized_rank3_refinement_candidate",
+            "passed": bool(audit.get("control_residualized_rank3_refinement_candidate", False)),
+            "detail": "stable rank-3 diagnostic candidate across supplied finite regulators",
+        },
+        {
+            "gate": "candidate_dimension_stable",
+            "passed": bool(refinement.get("candidate_dimension_stable", False)),
+            "detail": f"dimension drift={audit.get('control_residualized_rank3_dimension_drift')}",
+        },
+        {
+            "gate": "overlap_native_negative_controls",
+            "passed": overlap_receipt,
+            "detail": (
+                f"{audit.get('overlap_native_negative_control_receipt_count', 0)}/"
+                f"{audit.get('overlap_native_negative_control_report_count', 0)} overlap-control receipts"
+            ),
+        },
+        {
+            "gate": "overlap_native_raw_spatial_3d",
+            "passed": bool(overlap_spatial > 0),
+            "detail": f"{overlap_spatial} raw-overlap spatial-3D candidates",
+        },
+        {
+            "gate": "overlap_native_graph_geometry",
+            "passed": bool(graph_summary["receipt_all"]),
+            "detail": (
+                f"{graph_summary['receipt_count']}/{graph_summary['report_count']} graph receipts; "
+                f"{graph_summary['spatial_3d_candidate_count']} spatial-3D candidates; "
+                f"{graph_summary['model_order_rank3_selector_count']} model-order rank-3 selectors"
+            ),
+        },
+        {
+            "gate": "overlap_native_graph_strict_h3",
+            "passed": bool(graph_summary["strict_h3_candidate_count"] > 0),
+            "detail": f"{graph_summary['strict_h3_candidate_count']} strict-H3 graph candidates",
+        },
+        {
+            "gate": "overlap_residualized_graph_geometry",
+            "passed": bool(residual_graph_summary["receipt_all"]),
+            "detail": (
+                f"{residual_graph_summary['receipt_count']}/{residual_graph_summary['report_count']} "
+                f"residualized graph receipts; {residual_graph_summary['spatial_3d_candidate_count']} "
+                "spatial-3D candidates; "
+                f"{residual_graph_summary['model_order_rank3_selector_count']} model-order rank-3 selectors"
+            ),
+        },
+        {
+            "gate": "overlap_residualized_graph_strict_h3",
+            "passed": bool(residual_graph_summary["strict_h3_candidate_count"] > 0),
+            "detail": f"{residual_graph_summary['strict_h3_candidate_count']} strict-H3 residual graph candidates",
+        },
+        {
+            "gate": "independent_rank3_selector",
+            "passed": bool(selector.get("NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT", False)),
+            "detail": (
+                f"control selector count={selector.get('control_quotient_rank3_selector_count', 0)}; "
+                f"candidate count={selector.get('control_quotient_rank3_candidate_count', 0)}"
+            ),
+        },
+        {
+            "gate": "directional_h3_strict_gate",
+            "passed": int(audit.get("directional_strict_ready_total") or 0) > 0,
+            "detail": f"strict-ready directional rows={audit.get('directional_strict_ready_total', 0)}",
+        },
+        {
+            "gate": "strict_neutral_bulk_ready",
+            "passed": bool(audit.get("strict_neutral_bulk_ready", False)),
+            "detail": "all hard promotion gates passed",
+        },
+    ]
+    blockers = _unique_preserve_order(
+        [str(blocker) for blocker in audit.get("blockers", [])]
+        + [str(blocker) for blocker in selector.get("blockers", [])]
+    )
+    if graph_reports and graph_summary["strict_h3_candidate_count"] <= 0:
+        blockers = _unique_preserve_order(blockers + ["overlap_graph_strict_h3_candidate_false"])
+    if residual_graph_reports and residual_graph_summary["strict_h3_candidate_count"] <= 0:
+        blockers = _unique_preserve_order(blockers + ["overlap_residual_graph_strict_h3_candidate_false"])
+    gate_gap_rows = _strict_neutral_frontier_gap_rows(
+        gate_rows=gate_rows,
+        blockers=blockers,
+        graph_summary=graph_summary,
+        residual_graph_summary=residual_graph_summary,
+        selector=selector,
+        audit=audit,
+    )
+    return {
+        "mode": "strict_neutral_bulk_frontier_v0",
+        "report_paths": [str(path) for path in paths],
+        "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": True,
+        "strict_neutral_bulk": bool(audit.get("strict_neutral_bulk", False)),
+        "strict_neutral_bulk_ready": bool(audit.get("strict_neutral_bulk_ready", False)),
+        "control_residualized_rank3_refinement_candidate": bool(
+            audit.get("control_residualized_rank3_refinement_candidate", False)
+        ),
+        "control_residualized_rank3_dimension_drift": audit.get("control_residualized_rank3_dimension_drift"),
+        "overlap_native_negative_control_receipt_all": overlap_receipt,
+        "overlap_native_spatial_3d_candidate_count": overlap_spatial,
+        "overlap_native_graph_geometry_report_count": graph_summary["report_count"],
+        "overlap_native_graph_geometry_receipt_count": graph_summary["receipt_count"],
+        "overlap_native_graph_geometry_receipt_all": graph_summary["receipt_all"],
+        "overlap_native_graph_spatial_3d_candidate_count": graph_summary["spatial_3d_candidate_count"],
+        "overlap_native_graph_strict_h3_candidate_count": graph_summary["strict_h3_candidate_count"],
+        "overlap_native_graph_rank3_selector_count": graph_summary["rank3_selector_count"],
+        "overlap_native_graph_model_order_rank3_selector_count": graph_summary[
+            "model_order_rank3_selector_count"
+        ],
+        "overlap_native_graph_nontrivial_model_order_rank3_selector_count": graph_summary[
+            "nontrivial_model_order_rank3_selector_count"
+        ],
+        "overlap_native_graph_summary": graph_summary,
+        "overlap_residualized_graph_geometry_report_count": residual_graph_summary["report_count"],
+        "overlap_residualized_graph_geometry_receipt_count": residual_graph_summary["receipt_count"],
+        "overlap_residualized_graph_geometry_receipt_all": residual_graph_summary["receipt_all"],
+        "overlap_residualized_graph_spatial_3d_candidate_count": residual_graph_summary[
+            "spatial_3d_candidate_count"
+        ],
+        "overlap_residualized_graph_strict_h3_candidate_count": residual_graph_summary[
+            "strict_h3_candidate_count"
+        ],
+        "overlap_residualized_graph_rank3_selector_count": residual_graph_summary["rank3_selector_count"],
+        "overlap_residualized_graph_model_order_rank3_selector_count": residual_graph_summary[
+            "model_order_rank3_selector_count"
+        ],
+        "overlap_residualized_graph_nontrivial_model_order_rank3_selector_count": residual_graph_summary[
+            "nontrivial_model_order_rank3_selector_count"
+        ],
+        "overlap_residualized_graph_summary": residual_graph_summary,
+        "neutral_independent_rank3_selector_receipt": bool(
+            selector.get("NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT", False)
+        ),
+        "control_quotient_rank3_candidate_count": int(
+            selector.get("control_quotient_rank3_candidate_count")
+            or audit.get("control_quotient_candidate_count")
+            or 0
+        ),
+        "control_quotient_rank3_selector_count": int(
+            selector.get("control_quotient_rank3_selector_count") or 0
+        ),
+        "directional_strict_ready_total": int(audit.get("directional_strict_ready_total") or 0),
+        "gate_rows": gate_rows,
+        "gate_gap_rows": gate_gap_rows,
+        "blockers": blockers,
+        "next_missing_receipts": _strict_neutral_frontier_next_steps(blockers),
+        "claim_boundary": (
+            "Strict-neutral-bulk frontier report. It distinguishes overlap-native negative-control "
+            "receipts and stable rank-3 diagnostics from the missing hard proof gates. It does not "
+            "promote the diagnostic quotient or theorem-assisted H3 viewer to strict neutral bulk."
+        ),
+    }
+
+
+def write_strict_neutral_bulk_frontier_report(report_paths: list[Path], out: Path) -> dict[str, Any]:
+    report = strict_neutral_bulk_frontier_report(report_paths)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "strict_neutral_bulk_frontier_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (out / "strict_neutral_bulk_frontier_report.md").write_text(
+        _strict_neutral_bulk_frontier_markdown(report),
+        encoding="utf-8",
+    )
+    return report
+
+
+def _strict_neutral_frontier_gap_rows(
+    *,
+    gate_rows: list[dict[str, Any]],
+    blockers: list[str],
+    graph_summary: dict[str, Any],
+    residual_graph_summary: dict[str, Any],
+    selector: dict[str, Any],
+    audit: dict[str, Any],
+) -> list[dict[str, Any]]:
+    gate_status = {str(row.get("gate")): bool(row.get("passed", False)) for row in gate_rows}
+    rows = [
+        {
+            "gate": "independent_rank3_selector",
+            "passed": gate_status.get("independent_rank3_selector", False),
+            "missing_receipt": "observer-native target-rank-free rank-3 selector",
+            "current_evidence": (
+                f"selector_receipt={selector.get('NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT')}; "
+                f"control_selector_count={selector.get('control_quotient_rank3_selector_count', 0)}; "
+                f"control_candidate_count={selector.get('control_quotient_rank3_candidate_count', 0)}"
+            ),
+            "action_surface": "prime_geometric_rank_sweep_report/neutral_independent_rank_selector_audit_report",
+            "blockers": [
+                blocker for blocker in blockers
+                if "rank3_selector" in blocker or "rank_selection" in blocker
+            ],
+        },
+        {
+            "gate": "overlap_native_graph_strict_h3",
+            "passed": gate_status.get("overlap_native_graph_strict_h3", False),
+            "missing_receipt": "strict-H3 overlap graph candidate with independent rank-3 selection",
+            "current_evidence": (
+                f"receipts={graph_summary.get('receipt_count', 0)}/{graph_summary.get('report_count', 0)}; "
+                f"spatial={graph_summary.get('spatial_3d_candidate_count', 0)}; "
+                f"strict_h3={graph_summary.get('strict_h3_candidate_count', 0)}; "
+                f"rank3={graph_summary.get('rank3_selector_count', 0)}; "
+                f"model_order_rank3={graph_summary.get('model_order_rank3_selector_count', 0)}; "
+                "nontrivial_model_order_rank3="
+                f"{graph_summary.get('nontrivial_model_order_rank3_selector_count', 0)}"
+            ),
+            "action_surface": "neutral-overlap-graph-sweep",
+            "blockers": [
+                blocker for blocker in blockers
+                if blocker == "overlap_graph_strict_h3_candidate_false"
+            ],
+        },
+        {
+            "gate": "overlap_residualized_graph_geometry",
+            "passed": gate_status.get("overlap_residualized_graph_geometry", False),
+            "missing_receipt": "all residualized graph parameter cases complete",
+            "current_evidence": (
+                f"receipts={residual_graph_summary.get('receipt_count', 0)}/"
+                f"{residual_graph_summary.get('report_count', 0)}"
+            ),
+            "action_surface": "neutral-overlap-residual-graph-sweep",
+            "blockers": [
+                blocker for blocker in blockers
+                if blocker == "overlap_residual_graph_receipt_incomplete"
+            ],
+        },
+        {
+            "gate": "overlap_residualized_graph_strict_h3",
+            "passed": gate_status.get("overlap_residualized_graph_strict_h3", False),
+            "missing_receipt": "strict-H3 residualized overlap graph candidate with independent rank-3 selection",
+            "current_evidence": (
+                f"receipts={residual_graph_summary.get('receipt_count', 0)}/"
+                f"{residual_graph_summary.get('report_count', 0)}; "
+                f"spatial={residual_graph_summary.get('spatial_3d_candidate_count', 0)}; "
+                f"strict_h3={residual_graph_summary.get('strict_h3_candidate_count', 0)}; "
+                f"rank3={residual_graph_summary.get('rank3_selector_count', 0)}; "
+                f"model_order_rank3={residual_graph_summary.get('model_order_rank3_selector_count', 0)}; "
+                "nontrivial_model_order_rank3="
+                f"{residual_graph_summary.get('nontrivial_model_order_rank3_selector_count', 0)}"
+            ),
+            "action_surface": "neutral-overlap-residual-graph-sweep",
+            "blockers": [
+                blocker for blocker in blockers
+                if blocker == "overlap_residual_graph_strict_h3_candidate_false"
+            ],
+        },
+        {
+            "gate": "directional_h3_strict_gate",
+            "passed": gate_status.get("directional_h3_strict_gate", False),
+            "missing_receipt": "directional neutral row passing strict H3 model and leakage gates",
+            "current_evidence": (
+                f"directional_strict_ready_total={audit.get('directional_strict_ready_total', 0)}"
+            ),
+            "action_surface": "neutral-prime-rank-sweep/neutral-3d-bulk-audit",
+            "blockers": [
+                blocker for blocker in blockers
+                if "directional" in blocker
+            ],
+        },
+        {
+            "gate": "strict_neutral_bulk_ready",
+            "passed": gate_status.get("strict_neutral_bulk_ready", False),
+            "missing_receipt": "all strict neutral promotion gates pass in one audit frontier",
+            "current_evidence": f"strict_neutral_bulk_ready={audit.get('strict_neutral_bulk_ready', False)}",
+            "action_surface": "strict-neutral-bulk-frontier",
+            "blockers": list(blockers),
+        },
+    ]
+    return [
+        {
+            **row,
+            "blocking": bool(not row["passed"] or row["blockers"]),
+            "claim_boundary": (
+                "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt "
+                "required for promotion and does not promote theorem-assisted H3 previews."
+            ),
+        }
+        for row in rows
+        if (not row["passed"]) or row["blockers"]
+    ]
+
+
 def shuffled_neutral_control_report(
     observer_views: list[dict[str, Any]],
     *,
@@ -1517,6 +1868,849 @@ def shuffled_neutral_control_report(
     }
 
 
+def overlap_native_neutral_control_report(
+    observer_views: list[dict[str, Any]],
+    *,
+    seed: int = 1,
+    max_model_points: int = 256,
+) -> dict[str, Any]:
+    """Audit neutral geometry from the fundamental observer-overlap operation.
+
+    The distance used here is built only from observer-visible record/object/
+    transition packet overlap. It deliberately does not read screen axes,
+    support coordinates, H3 coordinates, or fitted bulk positions. Passing this
+    report is a negative-control receipt for the overlap substrate, not a strict
+    neutral bulk proof by itself.
+    """
+
+    rng = np.random.default_rng(int(seed))
+    patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    if len(patch_views) < 8:
+        return {
+            "mode": "overlap_native_neutral_control_v0",
+            "observer_count": len(patch_views),
+            "sampled_observer_count": len(patch_views),
+            "OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT": False,
+            "overlap_native_negative_control_receipt": False,
+            "overlap_native_spatial_3d_candidate": False,
+            "strict_neutral_bulk": False,
+            "physical_claim": False,
+            "blockers": ["too_few_patch_observer_views"],
+            "claim_boundary": (
+                "Observer-overlap negative-control audit. It is necessary diagnostic evidence for "
+                "a neutral bulk, but does not by itself promote strict neutral bulk."
+            ),
+        }
+
+    sample_count = min(len(patch_views), max(8, int(max_model_points)))
+    if len(patch_views) > sample_count:
+        sample_indices = set(int(value) for value in rng.choice(len(patch_views), size=sample_count, replace=False))
+        sampled = [view for index, view in enumerate(patch_views) if index in sample_indices]
+    else:
+        sampled = patch_views
+
+    original_features = _overlap_feature_matrix(sampled)
+    original_distance = _overlap_feature_distance_matrix(original_features)
+    original_dimension = strict_neutral_dimension_report(original_distance)
+    original_model = neutral_model_selection(
+        original_distance,
+        seed=int(seed),
+        max_points=min(int(max_model_points), len(sampled)),
+    )
+    original_leakage = neutral_leakage_audit(original_distance, sampled)
+    original_spatial_candidate = _spatial_3d_ready(original_dimension, original_model, original_leakage)
+    original_strict_candidate = bool(
+        original_dimension.get("estimators_agree_3d", False)
+        and original_model.get("best_model") == "H3"
+        and original_model.get("h3_beats_s2", False)
+        and original_model.get("h3_beats_h2_h4", False)
+        and original_leakage.get("s2_leakage_pass", False)
+    )
+
+    control_rows = [
+        _overlap_native_control_row(
+            "shuffled_observer_payloads",
+            original_distance,
+            _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
+            sampled,
+            seed=int(seed) + 11,
+            max_model_points=max_model_points,
+            original_spatial_candidate=original_spatial_candidate,
+        ),
+        _overlap_native_control_row(
+            "per_observer_packet_label_permutation",
+            original_distance,
+            _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
+            sampled,
+            seed=int(seed) + 17,
+            max_model_points=max_model_points,
+            original_spatial_candidate=original_spatial_candidate,
+        ),
+        _overlap_native_control_row(
+            "columnwise_histogram_null",
+            original_distance,
+            _overlap_histogram_null_features(original_features, rng),
+            sampled,
+            seed=int(seed) + 23,
+            max_model_points=max_model_points,
+            original_spatial_candidate=original_spatial_candidate,
+        ),
+    ]
+    all_controls_fail = bool(control_rows and all(row.get("expected_failure_observed", False) for row in control_rows))
+    nondegenerate = bool(
+        original_features.size
+        and np.any(np.std(original_features, axis=0) > 1.0e-12)
+        and np.any(original_distance[np.triu_indices(original_distance.shape[0], k=1)] > 1.0e-12)
+    )
+    blockers: list[str] = []
+    if not nondegenerate:
+        blockers.append("overlap_feature_matrix_degenerate")
+    if not all_controls_fail:
+        blockers.append("overlap_native_negative_controls_did_not_all_fail")
+    if not original_spatial_candidate:
+        blockers.append("overlap_native_distance_not_spatial_3d_candidate")
+    if not original_strict_candidate:
+        blockers.append("overlap_native_distance_not_strict_h3_candidate")
+
+    receipt = bool(nondegenerate and all_controls_fail)
+    return {
+        "mode": "overlap_native_neutral_control_v0",
+        "observer_count": len(patch_views),
+        "sampled_observer_count": len(sampled),
+        "seed": int(seed),
+        "max_model_points": int(max_model_points),
+        "fundamental_operation": (
+            "Overlapping observations by observers: neutral distances are computed from shared "
+            "observer-visible record/object/transition packet content before any H3 chart is assigned."
+        ),
+        "original": {
+            "distance_matrix_shape": list(original_distance.shape),
+            "dimension": original_dimension,
+            "model_selection": original_model,
+            "leakage": original_leakage,
+            "spatial_3d_candidate": bool(original_spatial_candidate),
+            "strict_h3_candidate": bool(original_strict_candidate),
+        },
+        "control_rows": control_rows,
+        "all_expected_failures_observed": all_controls_fail,
+        "overlap_feature_nondegenerate": nondegenerate,
+        "OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT": receipt,
+        "overlap_native_negative_control_receipt": receipt,
+        "overlap_native_spatial_3d_candidate": bool(original_spatial_candidate),
+        "overlap_native_strict_h3_candidate": bool(original_strict_candidate),
+        "strict_neutral_bulk": False,
+        "physical_claim": False,
+        "blockers": blockers,
+        "claim_boundary": (
+            "This is the observer-overlap substrate audit. It can certify that the neutral overlap "
+            "distance is nondegenerate and control-sensitive. Strict neutral bulk still additionally "
+            "requires rank selection, H3/dimension/leakage gates, refinement across regulator sizes, "
+            "and promotion by the neutral 3D audit."
+        ),
+    }
+
+
+def write_overlap_native_neutral_control_report(
+    run_dir: Path,
+    out: Path | None = None,
+    *,
+    seed: int = 1,
+    max_model_points: int = 256,
+) -> dict[str, Any]:
+    run = Path(run_dir)
+    observer_path = run / "observer_views.jsonl"
+    if not observer_path.exists():
+        raise FileNotFoundError(observer_path)
+    report = overlap_native_neutral_control_report(
+        _read_jsonl(observer_path),
+        seed=int(seed),
+        max_model_points=int(max_model_points),
+    )
+    report["source_run_dir"] = str(run)
+    report["observer_views_path"] = str(observer_path)
+    destination = Path(out) if out is not None else run
+    destination.mkdir(parents=True, exist_ok=True)
+    (destination / "overlap_native_neutral_control_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (destination / "overlap_native_neutral_control_report.md").write_text(
+        _overlap_native_neutral_control_markdown(report),
+        encoding="utf-8",
+    )
+    return report
+
+
+def overlap_native_graph_geometry_report(
+    observer_views: list[dict[str, Any]],
+    *,
+    seed: int = 1,
+    max_model_points: int = 256,
+    k_neighbors: int = 12,
+) -> dict[str, Any]:
+    """Audit graph geometry from the fundamental observer-overlap operation.
+
+    This is stricter than displaying an H3 chart and different from the raw
+    overlap-distance control. It builds a graph whose edge weights are shared
+    observer-visible packet mass, then asks whether the induced shortest-path
+    geometry passes the same neutral dimension/model/leakage checks.
+    """
+
+    rng = np.random.default_rng(int(seed))
+    patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    if len(patch_views) < 8:
+        return {
+            "mode": "overlap_native_graph_geometry_v0",
+            "observer_count": len(patch_views),
+            "sampled_observer_count": len(patch_views),
+            "OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT": False,
+            "overlap_graph_spatial_3d_candidate": False,
+            "overlap_graph_strict_h3_candidate": False,
+            "strict_neutral_bulk": False,
+            "physical_claim": False,
+            "blockers": ["too_few_patch_observer_views"],
+            "claim_boundary": (
+                "Observer-overlap graph geometry audit. It is necessary diagnostic evidence for a "
+                "strict neutral bulk, but does not by itself promote strict neutral bulk."
+            ),
+        }
+
+    sample_count = min(len(patch_views), max(8, int(max_model_points)))
+    if len(patch_views) > sample_count:
+        sample_indices = set(int(value) for value in rng.choice(len(patch_views), size=sample_count, replace=False))
+        sampled = [view for index, view in enumerate(patch_views) if index in sample_indices]
+    else:
+        sampled = patch_views
+
+    features = _overlap_feature_matrix(sampled)
+    graph = _overlap_graph_distance_from_features(features, k_neighbors=int(k_neighbors))
+    dimension = strict_neutral_dimension_report(graph["distance"])
+    model = neutral_model_selection(
+        graph["distance"],
+        seed=int(seed),
+        max_points=min(int(max_model_points), len(sampled)),
+    )
+    leakage = neutral_leakage_audit(graph["distance"], sampled)
+    rank_selection = _overlap_graph_rank_selection(graph["affinity"])
+    spatial_candidate = _spatial_3d_ready(dimension, model, leakage)
+    strict_candidate = bool(
+        spatial_candidate
+        and model.get("best_model") == "H3"
+        and model.get("h3_beats_s2", False)
+        and model.get("h3_beats_h2_h4", False)
+        and rank_selection.get("rank3_selector_receipt", False)
+    )
+    control_rows = [
+        _overlap_graph_control_row(
+            "shuffled_observer_payloads",
+            graph["distance"],
+            _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
+            sampled,
+            seed=int(seed) + 31,
+            max_model_points=max_model_points,
+            k_neighbors=k_neighbors,
+            original_spatial_candidate=spatial_candidate,
+        ),
+        _overlap_graph_control_row(
+            "per_observer_packet_label_permutation",
+            graph["distance"],
+            _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
+            sampled,
+            seed=int(seed) + 37,
+            max_model_points=max_model_points,
+            k_neighbors=k_neighbors,
+            original_spatial_candidate=spatial_candidate,
+        ),
+        _overlap_graph_control_row(
+            "columnwise_histogram_null",
+            graph["distance"],
+            _overlap_histogram_null_features(features, rng),
+            sampled,
+            seed=int(seed) + 43,
+            max_model_points=max_model_points,
+            k_neighbors=k_neighbors,
+            original_spatial_candidate=spatial_candidate,
+        ),
+    ]
+    controls_fail = bool(control_rows and all(row.get("expected_failure_observed", False) for row in control_rows))
+    blockers: list[str] = []
+    if not graph["nondegenerate"]:
+        blockers.append("overlap_graph_degenerate_or_disconnected")
+    if not controls_fail:
+        blockers.append("overlap_graph_negative_controls_did_not_all_fail")
+    if not rank_selection.get("rank3_selector_receipt", False):
+        blockers.append("overlap_graph_independent_rank3_selector_false")
+    if not spatial_candidate:
+        blockers.append("overlap_graph_not_spatial_3d_candidate")
+    if not strict_candidate:
+        blockers.append("overlap_graph_not_strict_h3_candidate")
+
+    receipt = bool(graph["nondegenerate"] and controls_fail)
+    return {
+        "mode": "overlap_native_graph_geometry_v0",
+        "observer_count": len(patch_views),
+        "sampled_observer_count": len(sampled),
+        "seed": int(seed),
+        "max_model_points": int(max_model_points),
+        "k_neighbors": int(k_neighbors),
+        "fundamental_operation": (
+            "Overlapping observations by observers: graph edges are shared observer-visible "
+            "record/object/transition packet mass before any H3 chart is assigned."
+        ),
+        "graph_summary": {
+            "edge_count": graph["edge_count"],
+            "component_count": graph["component_count"],
+            "finite_pair_fraction": graph["finite_pair_fraction"],
+            "mean_positive_affinity": graph["mean_positive_affinity"],
+            "nondegenerate": graph["nondegenerate"],
+        },
+        "dimension": dimension,
+        "model_selection": model,
+        "leakage": leakage,
+        "rank_selection": rank_selection,
+        "control_rows": control_rows,
+        "all_expected_failures_observed": controls_fail,
+        "OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT": receipt,
+        "overlap_graph_spatial_3d_candidate": bool(spatial_candidate),
+        "overlap_graph_strict_h3_candidate": bool(strict_candidate),
+        "strict_neutral_bulk": False,
+        "physical_claim": False,
+        "blockers": blockers,
+        "claim_boundary": (
+            "Observer-overlap graph geometry receipt. It can certify that the overlap graph is "
+            "nondegenerate and control-sensitive. Strict neutral bulk still requires independent "
+            "rank selection, H3/dimension/leakage gates, refinement across regulators, and promotion "
+            "by the neutral 3D audit."
+        ),
+    }
+
+
+def overlap_residualized_graph_geometry_report(
+    observer_views: list[dict[str, Any]],
+    *,
+    seed: int = 1,
+    max_model_points: int = 256,
+    k_neighbors: int = 12,
+    remove_modes: int = 1,
+) -> dict[str, Any]:
+    """Audit the observer-overlap graph after removing common overlap modes.
+
+    The raw overlap graph is currently dominated by a rank-1 all-observer mode.
+    This diagnostic removes only target-rank-free common modes from the
+    observer-visible overlap-feature matrix, then reruns the same graph,
+    dimension, H3, leakage, rank-selector, and negative-control gates. It is not
+    a strict-neutral-bulk promotion receipt by itself.
+    """
+
+    rng = np.random.default_rng(int(seed))
+    patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    if len(patch_views) < 8:
+        return {
+            "mode": "overlap_residualized_graph_geometry_v0",
+            "observer_count": len(patch_views),
+            "sampled_observer_count": len(patch_views),
+            "OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT": False,
+            "overlap_residual_graph_spatial_3d_candidate": False,
+            "overlap_residual_graph_strict_h3_candidate": False,
+            "strict_neutral_bulk": False,
+            "physical_claim": False,
+            "blockers": ["too_few_patch_observer_views"],
+            "claim_boundary": (
+                "Residualized observer-overlap graph audit. It is diagnostic evidence about the "
+                "rank-1 common-mode obstruction and does not by itself promote strict neutral bulk."
+            ),
+        }
+
+    sample_count = min(len(patch_views), max(8, int(max_model_points)))
+    if len(patch_views) > sample_count:
+        sample_indices = set(int(value) for value in rng.choice(len(patch_views), size=sample_count, replace=False))
+        sampled = [view for index, view in enumerate(patch_views) if index in sample_indices]
+    else:
+        sampled = patch_views
+
+    features = _overlap_feature_matrix(sampled)
+    residual = _residualize_overlap_features(features, remove_modes=int(remove_modes))
+    raw_graph = _overlap_graph_distance_from_features(features, k_neighbors=int(k_neighbors))
+    graph = _overlap_graph_distance_from_residual_features(residual, k_neighbors=int(k_neighbors))
+    dimension = strict_neutral_dimension_report(graph["distance"])
+    model = neutral_model_selection(
+        graph["distance"],
+        seed=int(seed),
+        max_points=min(int(max_model_points), len(sampled)),
+    )
+    leakage = neutral_leakage_audit(graph["distance"], sampled)
+    rank_selection = _overlap_graph_rank_selection(graph["affinity"])
+    spatial_candidate = _spatial_3d_ready(dimension, model, leakage)
+    strict_candidate = bool(
+        spatial_candidate
+        and model.get("best_model") == "H3"
+        and model.get("h3_beats_s2", False)
+        and model.get("h3_beats_h2_h4", False)
+        and rank_selection.get("rank3_selector_receipt", False)
+    )
+    control_rows = [
+        _overlap_residual_graph_control_row(
+            "shuffled_observer_payloads",
+            graph["distance"],
+            _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
+            sampled,
+            seed=int(seed) + 53,
+            max_model_points=max_model_points,
+            k_neighbors=k_neighbors,
+            remove_modes=remove_modes,
+            original_spatial_candidate=spatial_candidate,
+        ),
+        _overlap_residual_graph_control_row(
+            "per_observer_packet_label_permutation",
+            graph["distance"],
+            _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
+            sampled,
+            seed=int(seed) + 59,
+            max_model_points=max_model_points,
+            k_neighbors=k_neighbors,
+            remove_modes=remove_modes,
+            original_spatial_candidate=spatial_candidate,
+        ),
+        _overlap_residual_graph_control_row(
+            "columnwise_histogram_null",
+            graph["distance"],
+            _overlap_histogram_null_features(features, rng),
+            sampled,
+            seed=int(seed) + 61,
+            max_model_points=max_model_points,
+            k_neighbors=k_neighbors,
+            remove_modes=remove_modes,
+            original_spatial_candidate=spatial_candidate,
+        ),
+    ]
+    controls_fail = bool(control_rows and all(row.get("expected_failure_observed", False) for row in control_rows))
+    blockers: list[str] = []
+    if not graph["nondegenerate"]:
+        blockers.append("overlap_residual_graph_degenerate_or_disconnected")
+    if not controls_fail:
+        blockers.append("overlap_residual_graph_negative_controls_did_not_all_fail")
+    if not rank_selection.get("rank3_selector_receipt", False):
+        blockers.append("overlap_residual_graph_independent_rank3_selector_false")
+    if not spatial_candidate:
+        blockers.append("overlap_residual_graph_not_spatial_3d_candidate")
+    if not strict_candidate:
+        blockers.append("overlap_residual_graph_not_strict_h3_candidate")
+
+    receipt = bool(graph["nondegenerate"] and controls_fail)
+    return {
+        "mode": "overlap_residualized_graph_geometry_v0",
+        "observer_count": len(patch_views),
+        "sampled_observer_count": len(sampled),
+        "seed": int(seed),
+        "max_model_points": int(max_model_points),
+        "k_neighbors": int(k_neighbors),
+        "remove_modes": int(remove_modes),
+        "fundamental_operation": (
+            "Overlapping observations by observers: the graph is built from observer-visible "
+            "record/object/transition packet overlap after target-rank-free common-mode removal."
+        ),
+        "residualization": {
+            "method": "column_center_then_remove_leading_svd_modes",
+            "remove_modes": int(remove_modes),
+            "raw_largest_gap_rank": (raw_graph_rank := _overlap_graph_rank_selection(raw_graph["affinity"])).get(
+                "largest_gap_rank"
+            ),
+            "raw_rank3_selector": bool(raw_graph_rank.get("rank3_selector_receipt", False)),
+            "raw_rank3_cumulative_explained_variance": raw_graph_rank.get(
+                "rank3_cumulative_explained_variance"
+            ),
+            "removed_common_mode_energy_fraction": _removed_mode_energy_fraction(features, int(remove_modes)),
+            "claim_boundary": (
+                "Residualization is target-rank-free but diagnostic. It tests whether the raw rank-1 "
+                "common-overlap obstruction hides a lower-dimensional sector; it is not a promotion gate."
+            ),
+        },
+        "graph_summary": {
+            "edge_count": graph["edge_count"],
+            "component_count": graph["component_count"],
+            "finite_pair_fraction": graph["finite_pair_fraction"],
+            "mean_positive_affinity": graph["mean_positive_affinity"],
+            "nondegenerate": graph["nondegenerate"],
+        },
+        "dimension": dimension,
+        "model_selection": model,
+        "leakage": leakage,
+        "rank_selection": rank_selection,
+        "control_rows": control_rows,
+        "all_expected_failures_observed": controls_fail,
+        "OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT": receipt,
+        "overlap_residual_graph_spatial_3d_candidate": bool(spatial_candidate),
+        "overlap_residual_graph_strict_h3_candidate": bool(strict_candidate),
+        "strict_neutral_bulk": False,
+        "physical_claim": False,
+        "blockers": blockers,
+        "claim_boundary": (
+            "Residualized observer-overlap graph geometry receipt. It can diagnose whether a common "
+            "rank-1 observer-overlap mode is masking a 3D sector. Strict neutral bulk still requires "
+            "raw/negative-control receipts, independent rank selection, H3/dimension/leakage gates, "
+            "refinement across regulators, and promotion by the neutral 3D audit."
+        ),
+    }
+
+
+def write_overlap_native_graph_geometry_report(
+    run_dir: Path,
+    out: Path | None = None,
+    *,
+    seed: int = 1,
+    max_model_points: int = 256,
+    k_neighbors: int = 12,
+) -> dict[str, Any]:
+    run = Path(run_dir)
+    observer_path = run / "observer_views.jsonl"
+    if not observer_path.exists():
+        raise FileNotFoundError(observer_path)
+    report = overlap_native_graph_geometry_report(
+        _read_jsonl(observer_path),
+        seed=int(seed),
+        max_model_points=int(max_model_points),
+        k_neighbors=int(k_neighbors),
+    )
+    report["source_run_dir"] = str(run)
+    report["observer_views_path"] = str(observer_path)
+    destination = Path(out) if out is not None else run
+    destination.mkdir(parents=True, exist_ok=True)
+    (destination / "overlap_native_graph_geometry_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (destination / "overlap_native_graph_geometry_report.md").write_text(
+        _overlap_native_graph_geometry_markdown(report),
+        encoding="utf-8",
+    )
+    return report
+
+
+def write_overlap_residualized_graph_geometry_report(
+    run_dir: Path,
+    out: Path | None = None,
+    *,
+    seed: int = 1,
+    max_model_points: int = 256,
+    k_neighbors: int = 12,
+    remove_modes: int = 1,
+) -> dict[str, Any]:
+    run = Path(run_dir)
+    observer_path = run / "observer_views.jsonl"
+    if not observer_path.exists():
+        raise FileNotFoundError(observer_path)
+    report = overlap_residualized_graph_geometry_report(
+        _read_jsonl(observer_path),
+        seed=int(seed),
+        max_model_points=int(max_model_points),
+        k_neighbors=int(k_neighbors),
+        remove_modes=int(remove_modes),
+    )
+    report["source_run_dir"] = str(run)
+    report["observer_views_path"] = str(observer_path)
+    destination = Path(out) if out is not None else run
+    destination.mkdir(parents=True, exist_ok=True)
+    (destination / "overlap_residualized_graph_geometry_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (destination / "overlap_residualized_graph_geometry_report.md").write_text(
+        _overlap_residualized_graph_geometry_markdown(report),
+        encoding="utf-8",
+    )
+    return report
+
+
+def overlap_native_graph_geometry_sweep_report(
+    run_dirs: list[Path],
+    *,
+    seeds: tuple[int, ...] = (1,),
+    max_model_points_values: tuple[int, ...] = (256,),
+    k_neighbor_values: tuple[int, ...] = (12,),
+) -> dict[str, Any]:
+    """Sweep observer-overlap graph geometry parameters over saved runs.
+
+    A single overlap-graph receipt can be an unlucky parameter point. This
+    sweep turns the strict-neutral frontier blocker into a reproducible search
+    surface: every row is still a diagnostic receipt, and strict neutral bulk
+    remains false unless a downstream frontier report promotes the required hard
+    gates.
+    """
+
+    case_reports: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
+    roots = [Path(path) for path in run_dirs]
+    for run in roots:
+        observer_path = run / "observer_views.jsonl"
+        if not observer_path.exists():
+            rows.append(
+                {
+                    "source_run_dir": str(run),
+                    "error": f"missing {observer_path.name}",
+                    "graph_geometry_receipt": False,
+                    "spatial_3d_candidate": False,
+                    "strict_h3_candidate": False,
+                    "rank3_selector": False,
+                }
+            )
+            continue
+        observer_views = _read_jsonl(observer_path)
+        for seed in seeds:
+            for max_points in max_model_points_values:
+                for k_neighbors in k_neighbor_values:
+                    report = overlap_native_graph_geometry_report(
+                        observer_views,
+                        seed=int(seed),
+                        max_model_points=int(max_points),
+                        k_neighbors=int(k_neighbors),
+                    )
+                    report["source_run_dir"] = str(run)
+                    report["observer_views_path"] = str(observer_path)
+                    case_reports.append(report)
+                    rows.append(_overlap_graph_sweep_row(report))
+
+    valid_rows = [row for row in rows if not row.get("error")]
+    receipt_count = int(sum(1 for row in valid_rows if row.get("graph_geometry_receipt")))
+    spatial_count = int(sum(1 for row in valid_rows if row.get("spatial_3d_candidate")))
+    strict_count = int(sum(1 for row in valid_rows if row.get("strict_h3_candidate")))
+    rank3_count = int(sum(1 for row in valid_rows if row.get("rank3_selector")))
+    best = _best_overlap_graph_sweep_row(valid_rows)
+    rank_obstruction = _overlap_graph_rank_obstruction_summary(valid_rows)
+    gate_coincidence = _overlap_graph_gate_coincidence_summary(valid_rows)
+    strict_candidates = [row for row in valid_rows if row.get("strict_h3_candidate")]
+    closest_rows = _closest_overlap_graph_rows(valid_rows)
+    blockers = []
+    if valid_rows and strict_count <= 0:
+        blockers.append("overlap_graph_sweep_no_strict_h3_candidate")
+    if valid_rows and rank3_count <= 0:
+        blockers.append("overlap_graph_sweep_no_independent_rank3_selector")
+    if valid_rows and spatial_count <= 0:
+        blockers.append("overlap_graph_sweep_no_spatial_3d_candidate")
+    if not valid_rows:
+        blockers.append("overlap_graph_sweep_no_valid_cases")
+    return {
+        "mode": "overlap_native_graph_geometry_sweep_v0",
+        "run_dirs": [str(path) for path in roots],
+        "seed_values": [int(value) for value in seeds],
+        "max_model_points_values": [int(value) for value in max_model_points_values],
+        "k_neighbor_values": [int(value) for value in k_neighbor_values],
+        "case_count": len(valid_rows),
+        "error_count": len(rows) - len(valid_rows),
+        "run_count": len({str(row.get("source_run_dir")) for row in valid_rows}),
+        "OVERLAP_NATIVE_GRAPH_GEOMETRY_SWEEP_RECEIPT": bool(valid_rows and receipt_count == len(valid_rows)),
+        "graph_geometry_receipt_count": receipt_count,
+        "spatial_3d_candidate_count": spatial_count,
+        "strict_h3_candidate_count": strict_count,
+        "rank3_selector_count": rank3_count,
+        "best_case": best,
+        "rank_obstruction_summary": rank_obstruction,
+        "gate_coincidence_summary": gate_coincidence,
+        "strict_candidate_rows": strict_candidates[:20],
+        "closest_strict_rows": closest_rows,
+        "rows": rows,
+        "_case_reports": case_reports,
+        "strict_neutral_bulk": False,
+        "physical_claim": False,
+        "blockers": blockers,
+        "claim_boundary": (
+            "Observer-overlap graph parameter sweep. It broadens the search for strict-H3/rank-3 "
+            "neutral geometry, but each row remains diagnostic. It does not promote strict neutral "
+            "bulk unless the independent-rank, H3/leakage, refinement, and frontier gates all pass."
+        ),
+    }
+
+
+def write_overlap_native_graph_geometry_sweep_report(
+    run_dirs: list[Path],
+    out: Path,
+    *,
+    seeds: tuple[int, ...] = (1,),
+    max_model_points_values: tuple[int, ...] = (256,),
+    k_neighbor_values: tuple[int, ...] = (12,),
+) -> dict[str, Any]:
+    report = overlap_native_graph_geometry_sweep_report(
+        run_dirs,
+        seeds=seeds,
+        max_model_points_values=max_model_points_values,
+        k_neighbor_values=k_neighbor_values,
+    )
+    case_reports = list(report.pop("_case_reports", []))
+    destination = Path(out)
+    destination.mkdir(parents=True, exist_ok=True)
+    cases_dir = destination / "overlap_graph_cases"
+    cases_dir.mkdir(parents=True, exist_ok=True)
+    for index, case in enumerate(case_reports):
+        case_dir = cases_dir / _overlap_graph_case_dir_name(case, index)
+        case_dir.mkdir(parents=True, exist_ok=True)
+        (case_dir / "overlap_native_graph_geometry_report.json").write_text(
+            json.dumps(case, indent=2, default=str),
+            encoding="utf-8",
+        )
+        (case_dir / "overlap_native_graph_geometry_report.md").write_text(
+            _overlap_native_graph_geometry_markdown(case),
+            encoding="utf-8",
+        )
+    (destination / "overlap_native_graph_geometry_sweep_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (destination / "overlap_native_graph_geometry_sweep_report.md").write_text(
+        _overlap_native_graph_geometry_sweep_markdown(report),
+        encoding="utf-8",
+    )
+    _write_overlap_graph_sweep_rows_csv(
+        destination / "overlap_native_graph_geometry_sweep_rows.csv",
+        report.get("rows") if isinstance(report.get("rows"), list) else [],
+    )
+    return report
+
+
+def overlap_residualized_graph_geometry_sweep_report(
+    run_dirs: list[Path],
+    *,
+    seeds: tuple[int, ...] = (1,),
+    max_model_points_values: tuple[int, ...] = (256,),
+    k_neighbor_values: tuple[int, ...] = (12,),
+    remove_mode_values: tuple[int, ...] = (1,),
+) -> dict[str, Any]:
+    """Sweep residualized observer-overlap graph geometry parameters."""
+
+    case_reports: list[dict[str, Any]] = []
+    rows: list[dict[str, Any]] = []
+    roots = [Path(path) for path in run_dirs]
+    for run in roots:
+        observer_path = run / "observer_views.jsonl"
+        if not observer_path.exists():
+            rows.append(
+                {
+                    "source_run_dir": str(run),
+                    "error": f"missing {observer_path.name}",
+                    "residual_graph_receipt": False,
+                    "spatial_3d_candidate": False,
+                    "strict_h3_candidate": False,
+                    "rank3_selector": False,
+                }
+            )
+            continue
+        observer_views = _read_jsonl(observer_path)
+        for seed in seeds:
+            for max_points in max_model_points_values:
+                for k_neighbors in k_neighbor_values:
+                    for remove_modes in remove_mode_values:
+                        report = overlap_residualized_graph_geometry_report(
+                            observer_views,
+                            seed=int(seed),
+                            max_model_points=int(max_points),
+                            k_neighbors=int(k_neighbors),
+                            remove_modes=int(remove_modes),
+                        )
+                        report["source_run_dir"] = str(run)
+                        report["observer_views_path"] = str(observer_path)
+                        case_reports.append(report)
+                        rows.append(_overlap_residual_graph_sweep_row(report))
+
+    valid_rows = [row for row in rows if not row.get("error")]
+    receipt_count = int(sum(1 for row in valid_rows if row.get("residual_graph_receipt")))
+    spatial_count = int(sum(1 for row in valid_rows if row.get("spatial_3d_candidate")))
+    strict_count = int(sum(1 for row in valid_rows if row.get("strict_h3_candidate")))
+    rank3_count = int(sum(1 for row in valid_rows if row.get("rank3_selector")))
+    best = _best_overlap_residual_graph_sweep_row(valid_rows)
+    rank_obstruction = _overlap_residual_graph_rank_obstruction_summary(valid_rows)
+    gate_coincidence = _overlap_graph_gate_coincidence_summary(valid_rows)
+    strict_candidates = [row for row in valid_rows if row.get("strict_h3_candidate")]
+    closest_rows = _closest_overlap_graph_rows(valid_rows)
+    blockers = []
+    if valid_rows and strict_count <= 0:
+        blockers.append("overlap_residual_graph_sweep_no_strict_h3_candidate")
+    if valid_rows and rank3_count <= 0:
+        blockers.append("overlap_residual_graph_sweep_no_independent_rank3_selector")
+    if valid_rows and spatial_count <= 0:
+        blockers.append("overlap_residual_graph_sweep_no_spatial_3d_candidate")
+    if not valid_rows:
+        blockers.append("overlap_residual_graph_sweep_no_valid_cases")
+    return {
+        "mode": "overlap_residualized_graph_geometry_sweep_v0",
+        "run_dirs": [str(path) for path in roots],
+        "seed_values": [int(value) for value in seeds],
+        "max_model_points_values": [int(value) for value in max_model_points_values],
+        "k_neighbor_values": [int(value) for value in k_neighbor_values],
+        "remove_mode_values": [int(value) for value in remove_mode_values],
+        "case_count": len(valid_rows),
+        "error_count": len(rows) - len(valid_rows),
+        "run_count": len({str(row.get("source_run_dir")) for row in valid_rows}),
+        "OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_SWEEP_RECEIPT": bool(
+            valid_rows and receipt_count == len(valid_rows)
+        ),
+        "residual_graph_receipt_count": receipt_count,
+        "spatial_3d_candidate_count": spatial_count,
+        "strict_h3_candidate_count": strict_count,
+        "rank3_selector_count": rank3_count,
+        "best_case": best,
+        "rank_obstruction_summary": rank_obstruction,
+        "gate_coincidence_summary": gate_coincidence,
+        "strict_candidate_rows": strict_candidates[:20],
+        "closest_strict_rows": closest_rows,
+        "rows": rows,
+        "_case_reports": case_reports,
+        "strict_neutral_bulk": False,
+        "physical_claim": False,
+        "blockers": blockers,
+        "claim_boundary": (
+            "Residualized observer-overlap graph parameter sweep. It tests whether target-rank-free "
+            "common-mode removal exposes a stable 3D/H3 sector, but each row remains diagnostic. "
+            "It does not promote strict neutral bulk unless independent-rank, H3/leakage, refinement, "
+            "and frontier gates all pass."
+        ),
+    }
+
+
+def write_overlap_residualized_graph_geometry_sweep_report(
+    run_dirs: list[Path],
+    out: Path,
+    *,
+    seeds: tuple[int, ...] = (1,),
+    max_model_points_values: tuple[int, ...] = (256,),
+    k_neighbor_values: tuple[int, ...] = (12,),
+    remove_mode_values: tuple[int, ...] = (1,),
+) -> dict[str, Any]:
+    report = overlap_residualized_graph_geometry_sweep_report(
+        run_dirs,
+        seeds=seeds,
+        max_model_points_values=max_model_points_values,
+        k_neighbor_values=k_neighbor_values,
+        remove_mode_values=remove_mode_values,
+    )
+    case_reports = list(report.pop("_case_reports", []))
+    destination = Path(out)
+    destination.mkdir(parents=True, exist_ok=True)
+    cases_dir = destination / "overlap_residual_graph_cases"
+    cases_dir.mkdir(parents=True, exist_ok=True)
+    for index, case in enumerate(case_reports):
+        case_dir = cases_dir / _overlap_graph_case_dir_name(case, index)
+        case_dir.mkdir(parents=True, exist_ok=True)
+        (case_dir / "overlap_residualized_graph_geometry_report.json").write_text(
+            json.dumps(case, indent=2, default=str),
+            encoding="utf-8",
+        )
+        (case_dir / "overlap_residualized_graph_geometry_report.md").write_text(
+            _overlap_residualized_graph_geometry_markdown(case),
+            encoding="utf-8",
+        )
+    (destination / "overlap_residualized_graph_geometry_sweep_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (destination / "overlap_residualized_graph_geometry_sweep_report.md").write_text(
+        _overlap_residualized_graph_geometry_sweep_markdown(report),
+        encoding="utf-8",
+    )
+    _write_overlap_residual_graph_sweep_rows_csv(
+        destination / "overlap_residualized_graph_geometry_sweep_rows.csv",
+        report.get("rows") if isinstance(report.get("rows"), list) else [],
+    )
+    return report
+
+
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     with Path(path).open(encoding="utf-8") as handle:
@@ -1566,6 +2760,81 @@ def _find_prime_rank_refinement_reports(paths: list[Path]) -> list[Path]:
     return sorted(found, key=lambda value: str(value))
 
 
+def _find_overlap_native_control_reports(paths: list[Path]) -> list[Path]:
+    found: set[Path] = set()
+    for path in paths:
+        path = Path(path)
+        if path.is_file() and path.name == "overlap_native_neutral_control_report.json":
+            found.add(path)
+            continue
+        direct = path / "overlap_native_neutral_control_report.json"
+        if direct.exists():
+            found.add(direct)
+        if path.exists() and path.is_dir():
+            found.update(path.glob("**/overlap_native_neutral_control_report.json"))
+    return sorted(found, key=lambda value: str(value))
+
+
+def _find_overlap_native_graph_geometry_reports(paths: list[Path]) -> list[Path]:
+    found: set[Path] = set()
+    for path in paths:
+        path = Path(path)
+        if path.is_file() and path.name == "overlap_native_graph_geometry_report.json":
+            found.add(path)
+            continue
+        direct = path / "overlap_native_graph_geometry_report.json"
+        if direct.exists():
+            found.add(direct)
+        if path.exists() and path.is_dir():
+            found.update(path.glob("**/overlap_native_graph_geometry_report.json"))
+    return sorted(found, key=lambda value: str(value))
+
+
+def _find_overlap_residualized_graph_geometry_reports(paths: list[Path]) -> list[Path]:
+    found: set[Path] = set()
+    for path in paths:
+        path = Path(path)
+        if path.is_file() and path.name == "overlap_residualized_graph_geometry_report.json":
+            found.add(path)
+            continue
+        direct = path / "overlap_residualized_graph_geometry_report.json"
+        if direct.exists():
+            found.add(direct)
+        if path.exists() and path.is_dir():
+            found.update(path.glob("**/overlap_residualized_graph_geometry_report.json"))
+    return sorted(found, key=lambda value: str(value))
+
+
+def _find_neutral_3d_bulk_audit_reports(paths: list[Path]) -> list[Path]:
+    found: set[Path] = set()
+    for path in paths:
+        path = Path(path)
+        if path.is_file() and path.name == "neutral_3d_bulk_audit_report.json":
+            found.add(path)
+            continue
+        direct = path / "neutral_3d_bulk_audit_report.json"
+        if direct.exists():
+            found.add(direct)
+        if path.exists() and path.is_dir():
+            found.update(path.glob("**/neutral_3d_bulk_audit_report.json"))
+    return sorted(found, key=lambda value: str(value))
+
+
+def _find_neutral_independent_rank_selector_reports(paths: list[Path]) -> list[Path]:
+    found: set[Path] = set()
+    for path in paths:
+        path = Path(path)
+        if path.is_file() and path.name == "neutral_independent_rank_selector_audit_report.json":
+            found.add(path)
+            continue
+        direct = path / "neutral_independent_rank_selector_audit_report.json"
+        if direct.exists():
+            found.add(direct)
+        if path.exists() and path.is_dir():
+            found.update(path.glob("**/neutral_independent_rank_selector_audit_report.json"))
+    return sorted(found, key=lambda value: str(value))
+
+
 def _select_neutral_refinement_report(reports: list[dict[str, Any]]) -> dict[str, Any]:
     return sorted(
         reports,
@@ -1579,9 +2848,38 @@ def _select_neutral_refinement_report(reports: list[dict[str, Any]]) -> dict[str
     )[0] if reports else {}
 
 
+def _select_neutral_3d_audit_report(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    return sorted(
+        reports,
+        key=lambda report: (
+            bool(report.get("strict_neutral_bulk_ready", False)),
+            bool(report.get("control_residualized_rank3_refinement_candidate", False)),
+            int(report.get("overlap_native_negative_control_receipt_count") or 0),
+            int(report.get("sweep_report_count") or 0),
+            -len(report.get("blockers") or []),
+        ),
+        reverse=True,
+    )[0] if reports else {}
+
+
+def _select_neutral_selector_report(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    return sorted(
+        reports,
+        key=lambda report: (
+            bool(report.get("NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT", False)),
+            int(report.get("control_quotient_rank3_selector_count") or 0),
+            -len(report.get("blockers") or []),
+            int(report.get("run_count") or 0),
+        ),
+        reverse=True,
+    )[0] if reports else {}
+
+
 def _neutral_3d_bulk_audit_blockers(
     refinement: dict[str, Any],
     sweeps: list[dict[str, Any]],
+    *,
+    overlap_control_reports: list[dict[str, Any]] | None = None,
 ) -> list[str]:
     blockers: list[str] = []
     if not sweeps:
@@ -1604,7 +2902,855 @@ def _neutral_3d_bulk_audit_blockers(
         for report in sweeps
     ):
         blockers.append("control_quotient_lane_is_not_a_negative_control")
+    overlap_reports = overlap_control_reports or []
+    if overlap_reports and not all(
+        bool(report.get("OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT", False)) for report in overlap_reports
+    ):
+        blockers.append("overlap_native_negative_control_receipt_false")
     return _unique_preserve_order(blockers)
+
+
+def _overlap_native_control_audit_summary(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    report_count = len(reports)
+    receipt_count = int(sum(1 for report in reports if report.get("OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT")))
+    spatial_count = int(sum(1 for report in reports if report.get("overlap_native_spatial_3d_candidate")))
+    strict_count = int(sum(1 for report in reports if report.get("overlap_native_strict_h3_candidate")))
+    return {
+        "report_count": report_count,
+        "receipt_count": receipt_count,
+        "receipt_all": bool(report_count and receipt_count == report_count),
+        "spatial_3d_candidate_count": spatial_count,
+        "strict_h3_candidate_count": strict_count,
+        "rows": [
+            {
+                "source_run_dir": report.get("source_run_dir"),
+                "observer_count": report.get("observer_count"),
+                "sampled_observer_count": report.get("sampled_observer_count"),
+                "negative_control_receipt": bool(report.get("OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT", False)),
+                "spatial_3d_candidate": bool(report.get("overlap_native_spatial_3d_candidate", False)),
+                "strict_h3_candidate": bool(report.get("overlap_native_strict_h3_candidate", False)),
+                "blockers": report.get("blockers", []),
+            }
+            for report in reports
+        ],
+    }
+
+
+def _overlap_graph_geometry_summary(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    report_count = len(reports)
+    receipt_count = int(sum(1 for report in reports if report.get("OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT")))
+    spatial_count = int(sum(1 for report in reports if report.get("overlap_graph_spatial_3d_candidate")))
+    strict_count = int(sum(1 for report in reports if report.get("overlap_graph_strict_h3_candidate")))
+    rank3_count = int(
+        sum(1 for report in reports if (report.get("rank_selection") or {}).get("rank3_selector_receipt"))
+    )
+    model_order_rank3_count = int(
+        sum(
+            1
+            for report in reports
+            if (report.get("rank_selection") or {}).get("model_order_rank3_selector_receipt")
+        )
+    )
+    nontrivial_model_order_rank3_count = int(
+        sum(
+            1
+            for report in reports
+            if (report.get("rank_selection") or {}).get(
+                "nontrivial_model_order_rank3_selector_receipt"
+            )
+        )
+    )
+    return {
+        "report_count": report_count,
+        "receipt_count": receipt_count,
+        "receipt_all": bool(report_count and receipt_count == report_count),
+        "spatial_3d_candidate_count": spatial_count,
+        "strict_h3_candidate_count": strict_count,
+        "rank3_selector_count": rank3_count,
+        "model_order_rank3_selector_count": model_order_rank3_count,
+        "nontrivial_model_order_rank3_selector_count": nontrivial_model_order_rank3_count,
+        "rows": [
+            {
+                "source_run_dir": report.get("source_run_dir"),
+                "observer_count": report.get("observer_count"),
+                "sampled_observer_count": report.get("sampled_observer_count"),
+                "graph_geometry_receipt": bool(report.get("OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT", False)),
+                "spatial_3d_candidate": bool(report.get("overlap_graph_spatial_3d_candidate", False)),
+                "strict_h3_candidate": bool(report.get("overlap_graph_strict_h3_candidate", False)),
+                "rank3_selector": bool((report.get("rank_selection") or {}).get("rank3_selector_receipt", False)),
+                "model_order_rank3_selector": bool(
+                    (report.get("rank_selection") or {}).get("model_order_rank3_selector_receipt", False)
+                ),
+                "nontrivial_model_order_rank3_selector": bool(
+                    (report.get("rank_selection") or {}).get(
+                        "nontrivial_model_order_rank3_selector_receipt",
+                        False,
+                    )
+                ),
+                "model_order_consensus_rank": (
+                    ((report.get("rank_selection") or {}).get("model_order_selection") or {}).get(
+                        "consensus_rank"
+                    )
+                ),
+                "nontrivial_model_order_consensus_rank": (
+                    ((report.get("rank_selection") or {}).get("nontrivial_model_order_selection") or {}).get(
+                        "consensus_rank"
+                    )
+                ),
+                "median_dimension": (report.get("dimension") or {}).get("median_dimension_estimate"),
+                "selected_model": (report.get("model_selection") or {}).get("best_model"),
+                "edge_count": (report.get("graph_summary") or {}).get("edge_count"),
+                "component_count": (report.get("graph_summary") or {}).get("component_count"),
+                "blockers": report.get("blockers", []),
+            }
+            for report in reports
+        ],
+    }
+
+
+def _overlap_residual_graph_geometry_summary(reports: list[dict[str, Any]]) -> dict[str, Any]:
+    report_count = len(reports)
+    receipt_count = int(
+        sum(1 for report in reports if report.get("OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT"))
+    )
+    spatial_count = int(
+        sum(1 for report in reports if report.get("overlap_residual_graph_spatial_3d_candidate"))
+    )
+    strict_count = int(
+        sum(1 for report in reports if report.get("overlap_residual_graph_strict_h3_candidate"))
+    )
+    rank3_count = int(
+        sum(1 for report in reports if (report.get("rank_selection") or {}).get("rank3_selector_receipt"))
+    )
+    model_order_rank3_count = int(
+        sum(
+            1
+            for report in reports
+            if (report.get("rank_selection") or {}).get("model_order_rank3_selector_receipt")
+        )
+    )
+    nontrivial_model_order_rank3_count = int(
+        sum(
+            1
+            for report in reports
+            if (report.get("rank_selection") or {}).get(
+                "nontrivial_model_order_rank3_selector_receipt"
+            )
+        )
+    )
+    return {
+        "report_count": report_count,
+        "receipt_count": receipt_count,
+        "receipt_all": bool(report_count and receipt_count == report_count),
+        "spatial_3d_candidate_count": spatial_count,
+        "strict_h3_candidate_count": strict_count,
+        "rank3_selector_count": rank3_count,
+        "model_order_rank3_selector_count": model_order_rank3_count,
+        "nontrivial_model_order_rank3_selector_count": nontrivial_model_order_rank3_count,
+        "rows": [
+            {
+                "source_run_dir": report.get("source_run_dir"),
+                "observer_count": report.get("observer_count"),
+                "sampled_observer_count": report.get("sampled_observer_count"),
+                "residual_graph_receipt": bool(
+                    report.get("OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT", False)
+                ),
+                "spatial_3d_candidate": bool(
+                    report.get("overlap_residual_graph_spatial_3d_candidate", False)
+                ),
+                "strict_h3_candidate": bool(
+                    report.get("overlap_residual_graph_strict_h3_candidate", False)
+                ),
+                "rank3_selector": bool((report.get("rank_selection") or {}).get("rank3_selector_receipt", False)),
+                "model_order_rank3_selector": bool(
+                    (report.get("rank_selection") or {}).get("model_order_rank3_selector_receipt", False)
+                ),
+                "nontrivial_model_order_rank3_selector": bool(
+                    (report.get("rank_selection") or {}).get(
+                        "nontrivial_model_order_rank3_selector_receipt",
+                        False,
+                    )
+                ),
+                "model_order_consensus_rank": (
+                    ((report.get("rank_selection") or {}).get("model_order_selection") or {}).get(
+                        "consensus_rank"
+                    )
+                ),
+                "nontrivial_model_order_consensus_rank": (
+                    ((report.get("rank_selection") or {}).get("nontrivial_model_order_selection") or {}).get(
+                        "consensus_rank"
+                    )
+                ),
+                "raw_largest_gap_rank": (report.get("residualization") or {}).get("raw_largest_gap_rank"),
+                "largest_gap_rank": (report.get("rank_selection") or {}).get("largest_gap_rank"),
+                "median_dimension": (report.get("dimension") or {}).get("median_dimension_estimate"),
+                "selected_model": (report.get("model_selection") or {}).get("best_model"),
+                "edge_count": (report.get("graph_summary") or {}).get("edge_count"),
+                "component_count": (report.get("graph_summary") or {}).get("component_count"),
+                "blockers": report.get("blockers", []),
+            }
+            for report in reports
+        ],
+    }
+
+
+def _overlap_graph_sweep_row(report: dict[str, Any]) -> dict[str, Any]:
+    graph = report.get("graph_summary") if isinstance(report.get("graph_summary"), dict) else {}
+    dimension = report.get("dimension") if isinstance(report.get("dimension"), dict) else {}
+    model = report.get("model_selection") if isinstance(report.get("model_selection"), dict) else {}
+    leakage = report.get("leakage") if isinstance(report.get("leakage"), dict) else {}
+    rank = report.get("rank_selection") if isinstance(report.get("rank_selection"), dict) else {}
+    return {
+        "source_run_dir": report.get("source_run_dir"),
+        "seed": report.get("seed"),
+        "max_model_points": report.get("max_model_points"),
+        "k_neighbors": report.get("k_neighbors"),
+        "observer_count": report.get("observer_count"),
+        "sampled_observer_count": report.get("sampled_observer_count"),
+        "graph_geometry_receipt": bool(report.get("OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT", False)),
+        "spatial_3d_candidate": bool(report.get("overlap_graph_spatial_3d_candidate", False)),
+        "strict_h3_candidate": bool(report.get("overlap_graph_strict_h3_candidate", False)),
+        "rank3_selector": bool(rank.get("rank3_selector_receipt", False)),
+        "median_dimension": _to_float_or_none(dimension.get("median_dimension_estimate")),
+        "correlation_dimension": _to_float_or_none(
+            ((dimension.get("correlation_dimension") or {}).get("estimate"))
+        ),
+        "local_mle_dimension": _to_float_or_none(
+            ((dimension.get("local_mle_dimension") or {}).get("median_estimate"))
+        ),
+        "selected_model": model.get("best_model"),
+        "h3_beats_s2": bool(model.get("h3_beats_s2", False)),
+        "h3_beats_h2_h4": bool(model.get("h3_beats_h2_h4", False)),
+        "s2_leakage_pass": bool(leakage.get("s2_leakage_pass", False)),
+        "s2_distance_correlation": _to_float_or_none(leakage.get("s2_distance_correlation")),
+        "largest_gap_rank": rank.get("largest_gap_rank"),
+        "model_order_consensus_rank": (rank.get("model_order_selection") or {}).get("consensus_rank"),
+        "model_order_profile_rank": (rank.get("model_order_selection") or {}).get("profile_likelihood_rank"),
+        "model_order_broken_stick_rank": (rank.get("model_order_selection") or {}).get("broken_stick_rank"),
+        "model_order_rank3_selector": bool(rank.get("model_order_rank3_selector_receipt", False)),
+        "rank3_cumulative_explained_variance": _to_float_or_none(
+            rank.get("rank3_cumulative_explained_variance")
+        ),
+        "effective_rank": _to_float_or_none(rank.get("effective_rank")),
+        "nontrivial_rank3_selector": bool(rank.get("nontrivial_rank3_selector_receipt", False)),
+        "nontrivial_largest_gap_rank": rank.get("nontrivial_largest_gap_rank"),
+        "nontrivial_model_order_consensus_rank": (
+            rank.get("nontrivial_model_order_selection") or {}
+        ).get("consensus_rank"),
+        "nontrivial_model_order_profile_rank": (
+            rank.get("nontrivial_model_order_selection") or {}
+        ).get("profile_likelihood_rank"),
+        "nontrivial_model_order_broken_stick_rank": (
+            rank.get("nontrivial_model_order_selection") or {}
+        ).get("broken_stick_rank"),
+        "nontrivial_model_order_rank3_selector": bool(
+            rank.get("nontrivial_model_order_rank3_selector_receipt", False)
+        ),
+        "nontrivial_rank3_cumulative_explained_variance": _to_float_or_none(
+            rank.get("nontrivial_rank3_cumulative_explained_variance")
+        ),
+        "nontrivial_effective_rank": _to_float_or_none(rank.get("nontrivial_effective_rank")),
+        "edge_count": graph.get("edge_count"),
+        "component_count": graph.get("component_count"),
+        "finite_pair_fraction": _to_float_or_none(graph.get("finite_pair_fraction")),
+        "mean_positive_affinity": _to_float_or_none(graph.get("mean_positive_affinity")),
+        "blockers": report.get("blockers", []),
+    }
+
+
+def _overlap_residual_graph_sweep_row(report: dict[str, Any]) -> dict[str, Any]:
+    graph = report.get("graph_summary") if isinstance(report.get("graph_summary"), dict) else {}
+    dimension = report.get("dimension") if isinstance(report.get("dimension"), dict) else {}
+    model = report.get("model_selection") if isinstance(report.get("model_selection"), dict) else {}
+    leakage = report.get("leakage") if isinstance(report.get("leakage"), dict) else {}
+    rank = report.get("rank_selection") if isinstance(report.get("rank_selection"), dict) else {}
+    residualization = report.get("residualization") if isinstance(report.get("residualization"), dict) else {}
+    receipt = bool(report.get("OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT", False))
+    return {
+        "source_run_dir": report.get("source_run_dir"),
+        "seed": report.get("seed"),
+        "max_model_points": report.get("max_model_points"),
+        "k_neighbors": report.get("k_neighbors"),
+        "remove_modes": report.get("remove_modes"),
+        "observer_count": report.get("observer_count"),
+        "sampled_observer_count": report.get("sampled_observer_count"),
+        "residual_graph_receipt": receipt,
+        "graph_geometry_receipt": receipt,
+        "spatial_3d_candidate": bool(report.get("overlap_residual_graph_spatial_3d_candidate", False)),
+        "strict_h3_candidate": bool(report.get("overlap_residual_graph_strict_h3_candidate", False)),
+        "rank3_selector": bool(rank.get("rank3_selector_receipt", False)),
+        "median_dimension": _to_float_or_none(dimension.get("median_dimension_estimate")),
+        "correlation_dimension": _to_float_or_none(
+            ((dimension.get("correlation_dimension") or {}).get("estimate"))
+        ),
+        "local_mle_dimension": _to_float_or_none(
+            ((dimension.get("local_mle_dimension") or {}).get("median_estimate"))
+        ),
+        "selected_model": model.get("best_model"),
+        "h3_beats_s2": bool(model.get("h3_beats_s2", False)),
+        "h3_beats_h2_h4": bool(model.get("h3_beats_h2_h4", False)),
+        "s2_leakage_pass": bool(leakage.get("s2_leakage_pass", False)),
+        "s2_distance_correlation": _to_float_or_none(leakage.get("s2_distance_correlation")),
+        "largest_gap_rank": rank.get("largest_gap_rank"),
+        "model_order_consensus_rank": (rank.get("model_order_selection") or {}).get("consensus_rank"),
+        "model_order_profile_rank": (rank.get("model_order_selection") or {}).get("profile_likelihood_rank"),
+        "model_order_broken_stick_rank": (rank.get("model_order_selection") or {}).get("broken_stick_rank"),
+        "model_order_rank3_selector": bool(rank.get("model_order_rank3_selector_receipt", False)),
+        "rank3_cumulative_explained_variance": _to_float_or_none(
+            rank.get("rank3_cumulative_explained_variance")
+        ),
+        "effective_rank": _to_float_or_none(rank.get("effective_rank")),
+        "nontrivial_rank3_selector": bool(rank.get("nontrivial_rank3_selector_receipt", False)),
+        "nontrivial_largest_gap_rank": rank.get("nontrivial_largest_gap_rank"),
+        "nontrivial_model_order_consensus_rank": (
+            rank.get("nontrivial_model_order_selection") or {}
+        ).get("consensus_rank"),
+        "nontrivial_model_order_profile_rank": (
+            rank.get("nontrivial_model_order_selection") or {}
+        ).get("profile_likelihood_rank"),
+        "nontrivial_model_order_broken_stick_rank": (
+            rank.get("nontrivial_model_order_selection") or {}
+        ).get("broken_stick_rank"),
+        "nontrivial_model_order_rank3_selector": bool(
+            rank.get("nontrivial_model_order_rank3_selector_receipt", False)
+        ),
+        "nontrivial_rank3_cumulative_explained_variance": _to_float_or_none(
+            rank.get("nontrivial_rank3_cumulative_explained_variance")
+        ),
+        "nontrivial_effective_rank": _to_float_or_none(rank.get("nontrivial_effective_rank")),
+        "raw_largest_gap_rank": residualization.get("raw_largest_gap_rank"),
+        "raw_rank3_selector": bool(residualization.get("raw_rank3_selector", False)),
+        "removed_common_mode_energy_fraction": _to_float_or_none(
+            residualization.get("removed_common_mode_energy_fraction")
+        ),
+        "edge_count": graph.get("edge_count"),
+        "component_count": graph.get("component_count"),
+        "finite_pair_fraction": _to_float_or_none(graph.get("finite_pair_fraction")),
+        "mean_positive_affinity": _to_float_or_none(graph.get("mean_positive_affinity")),
+        "blockers": report.get("blockers", []),
+    }
+
+
+def _best_overlap_graph_sweep_row(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    if not rows:
+        return {}
+
+    def score(row: dict[str, Any]) -> tuple[float, ...]:
+        median = _to_float_or_none(row.get("median_dimension"))
+        dimension_error = abs(float(median) - 3.0) if median is not None else 1.0e9
+        return (
+            float(bool(row.get("strict_h3_candidate", False))),
+            float(bool(row.get("rank3_selector", False))),
+            float(bool(row.get("spatial_3d_candidate", False))),
+            float(bool(row.get("graph_geometry_receipt", False))),
+            float(row.get("selected_model") == "H3"),
+            float(bool(row.get("h3_beats_s2", False))),
+            float(bool(row.get("h3_beats_h2_h4", False))),
+            -dimension_error,
+            -float(len(row.get("blockers") or [])),
+        )
+
+    return sorted(rows, key=score, reverse=True)[0]
+
+
+def _best_overlap_residual_graph_sweep_row(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    return _best_overlap_graph_sweep_row(rows)
+
+
+def _closest_overlap_graph_rows(rows: list[dict[str, Any]], *, limit: int = 12) -> list[dict[str, Any]]:
+    """Return compact nearest witnesses for strict neutral graph gates.
+
+    These rows are diagnostic: they expose which hard gates are nearest to passing
+    without changing the strict-H3 or independent-rank receipts.
+    """
+
+    if not rows:
+        return []
+
+    def num(row: dict[str, Any], key: str, default: float = 0.0) -> float:
+        value = _to_float_or_none(row.get(key))
+        return float(value) if value is not None else default
+
+    def dimension_error(row: dict[str, Any]) -> float:
+        value = _to_float_or_none(row.get("median_dimension"))
+        return abs(float(value) - 3.0) if value is not None else 1.0e9
+
+    def score(row: dict[str, Any]) -> tuple[float, ...]:
+        gates = _overlap_graph_gate_status(row)
+        passed_core = sum(
+            1
+            for key in (
+                "graph_receipt",
+                "spatial_3d_candidate",
+                "h3_model",
+                "h3_beats_s2",
+                "h3_beats_h2_h4",
+                "s2_leakage_pass",
+                "independent_rank3_selector",
+            )
+            if gates.get(key)
+        )
+        return (
+            float(bool(gates.get("strict_h3_candidate"))),
+            float(passed_core),
+            float(bool(gates.get("independent_rank3_selector"))),
+            float(bool(gates.get("nontrivial_rank3_selector_diagnostic"))),
+            -dimension_error(row),
+            num(row, "rank3_cumulative_explained_variance"),
+            num(row, "nontrivial_rank3_cumulative_explained_variance"),
+            -num(row, "effective_rank", default=1.0e9),
+            -num(row, "nontrivial_effective_rank", default=1.0e9),
+            -float(len(row.get("blockers") or [])),
+        )
+
+    out: list[dict[str, Any]] = []
+    for row in sorted(rows, key=score, reverse=True)[: max(0, int(limit))]:
+        gates = _overlap_graph_gate_status(row)
+        missing = [key for key, passed in gates.items() if not passed and key != "nontrivial_rank3_selector_diagnostic"]
+        out.append(
+            {
+                "source_run_dir": row.get("source_run_dir"),
+                "seed": row.get("seed"),
+                "max_model_points": row.get("max_model_points"),
+                "k_neighbors": row.get("k_neighbors"),
+                "remove_modes": row.get("remove_modes"),
+                "gate_score": int(sum(1 for passed in gates.values() if passed)),
+                "gate_status": gates,
+                "missing_strict_gates": missing,
+                "graph_geometry_receipt": bool(row.get("graph_geometry_receipt", False)),
+                "residual_graph_receipt": bool(row.get("residual_graph_receipt", False)),
+                "spatial_3d_candidate": bool(row.get("spatial_3d_candidate", False)),
+                "strict_h3_candidate": bool(row.get("strict_h3_candidate", False)),
+                "median_dimension": _to_float_or_none(row.get("median_dimension")),
+                "selected_model": row.get("selected_model"),
+                "rank3_selector": bool(row.get("rank3_selector", False)),
+                "rank3_cumulative_explained_variance": _to_float_or_none(
+                    row.get("rank3_cumulative_explained_variance")
+                ),
+                "effective_rank": _to_float_or_none(row.get("effective_rank")),
+                "nontrivial_rank3_selector": bool(row.get("nontrivial_rank3_selector", False)),
+                "nontrivial_rank3_cumulative_explained_variance": _to_float_or_none(
+                    row.get("nontrivial_rank3_cumulative_explained_variance")
+                ),
+                "nontrivial_effective_rank": _to_float_or_none(row.get("nontrivial_effective_rank")),
+                "blockers": row.get("blockers") or [],
+            }
+        )
+    return out
+
+
+def _overlap_graph_gate_coincidence_summary(
+    rows: list[dict[str, Any]],
+    *,
+    limit: int = 8,
+) -> dict[str, Any]:
+    """Summarize whether geometric and spectral neutral gates coincide."""
+
+    if not rows:
+        return {
+            "available": False,
+            "case_count": 0,
+            "claim_boundary": "No overlap-graph rows were available for gate-coincidence diagnostics.",
+        }
+
+    def is_h3_geometry(row: dict[str, Any]) -> bool:
+        return (
+            bool(row.get("spatial_3d_candidate", False))
+            and row.get("selected_model") == "H3"
+            and bool(row.get("h3_beats_s2", False))
+            and bool(row.get("h3_beats_h2_h4", False))
+            and bool(row.get("s2_leakage_pass", False))
+        )
+
+    def dimension_error(row: dict[str, Any]) -> float:
+        value = _to_float_or_none(row.get("median_dimension"))
+        return abs(float(value) - 3.0) if value is not None else 1.0e9
+
+    def num(row: dict[str, Any], key: str, default: float = 0.0) -> float:
+        value = _to_float_or_none(row.get(key))
+        return float(value) if value is not None else default
+
+    h3_geometry_rows = [row for row in rows if is_h3_geometry(row)]
+    independent_rows = [row for row in rows if row.get("rank3_selector")]
+    nontrivial_rows = [row for row in rows if row.get("nontrivial_rank3_selector")]
+    h3_independent_rows = [row for row in h3_geometry_rows if row.get("rank3_selector")]
+    h3_nontrivial_rows = [row for row in h3_geometry_rows if row.get("nontrivial_rank3_selector")]
+    strict_rows = [row for row in rows if row.get("strict_h3_candidate")]
+
+    def h3_score(row: dict[str, Any]) -> tuple[float, ...]:
+        return (
+            float(bool(row.get("strict_h3_candidate", False))),
+            float(bool(row.get("rank3_selector", False))),
+            float(bool(row.get("nontrivial_rank3_selector", False))),
+            -dimension_error(row),
+            num(row, "rank3_cumulative_explained_variance"),
+            num(row, "nontrivial_rank3_cumulative_explained_variance"),
+            -num(row, "effective_rank", default=1.0e9),
+        )
+
+    def spectral_score(row: dict[str, Any]) -> tuple[float, ...]:
+        return (
+            float(is_h3_geometry(row)),
+            -dimension_error(row),
+            num(row, "nontrivial_rank3_cumulative_explained_variance"),
+            num(row, "rank3_cumulative_explained_variance"),
+            -num(row, "nontrivial_effective_rank", default=1.0e9),
+        )
+
+    return {
+        "available": True,
+        "case_count": len(rows),
+        "spatial_h3_geometry_count": len(h3_geometry_rows),
+        "independent_rank3_selector_count": len(independent_rows),
+        "nontrivial_rank3_selector_count": len(nontrivial_rows),
+        "spatial_h3_independent_rank3_selector_count": len(h3_independent_rows),
+        "spatial_h3_nontrivial_rank3_selector_count": len(h3_nontrivial_rows),
+        "strict_h3_candidate_count": len(strict_rows),
+        "coincidence_gap": bool(not strict_rows and h3_geometry_rows and (independent_rows or nontrivial_rows)),
+        "best_spatial_h3_rows": [
+            _compact_overlap_gate_witness_row(row)
+            for row in sorted(h3_geometry_rows, key=h3_score, reverse=True)[:limit]
+        ],
+        "best_nontrivial_rank3_rows": [
+            _compact_overlap_gate_witness_row(row)
+            for row in sorted(nontrivial_rows, key=spectral_score, reverse=True)[:limit]
+        ],
+        "coincidence_rows": [
+            _compact_overlap_gate_witness_row(row)
+            for row in sorted(h3_nontrivial_rows + h3_independent_rows, key=h3_score, reverse=True)[:limit]
+        ],
+        "claim_boundary": (
+            "Gate-coincidence diagnostic only. Strict neutral bulk still requires spatial-H3 geometry "
+            "and an independent rank-3 selector to pass in the same neutral witness."
+        ),
+    }
+
+
+def _compact_overlap_gate_witness_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "source_run_dir": row.get("source_run_dir"),
+        "seed": row.get("seed"),
+        "max_model_points": row.get("max_model_points"),
+        "k_neighbors": row.get("k_neighbors"),
+        "remove_modes": row.get("remove_modes"),
+        "spatial_3d_candidate": bool(row.get("spatial_3d_candidate", False)),
+        "strict_h3_candidate": bool(row.get("strict_h3_candidate", False)),
+        "rank3_selector": bool(row.get("rank3_selector", False)),
+        "nontrivial_rank3_selector": bool(row.get("nontrivial_rank3_selector", False)),
+        "selected_model": row.get("selected_model"),
+        "median_dimension": _to_float_or_none(row.get("median_dimension")),
+        "h3_beats_s2": bool(row.get("h3_beats_s2", False)),
+        "h3_beats_h2_h4": bool(row.get("h3_beats_h2_h4", False)),
+        "s2_leakage_pass": bool(row.get("s2_leakage_pass", False)),
+        "largest_gap_rank": row.get("largest_gap_rank"),
+        "nontrivial_largest_gap_rank": row.get("nontrivial_largest_gap_rank"),
+        "rank3_cumulative_explained_variance": _to_float_or_none(
+            row.get("rank3_cumulative_explained_variance")
+        ),
+        "nontrivial_rank3_cumulative_explained_variance": _to_float_or_none(
+            row.get("nontrivial_rank3_cumulative_explained_variance")
+        ),
+        "effective_rank": _to_float_or_none(row.get("effective_rank")),
+        "nontrivial_effective_rank": _to_float_or_none(row.get("nontrivial_effective_rank")),
+        "blockers": row.get("blockers") or [],
+    }
+
+
+def _overlap_graph_gate_status(row: dict[str, Any]) -> dict[str, bool]:
+    receipt = bool(row.get("graph_geometry_receipt", False) or row.get("residual_graph_receipt", False))
+    return {
+        "graph_receipt": receipt,
+        "spatial_3d_candidate": bool(row.get("spatial_3d_candidate", False)),
+        "h3_model": row.get("selected_model") == "H3",
+        "h3_beats_s2": bool(row.get("h3_beats_s2", False)),
+        "h3_beats_h2_h4": bool(row.get("h3_beats_h2_h4", False)),
+        "s2_leakage_pass": bool(row.get("s2_leakage_pass", False)),
+        "independent_rank3_selector": bool(row.get("rank3_selector", False)),
+        "strict_h3_candidate": bool(row.get("strict_h3_candidate", False)),
+        "nontrivial_rank3_selector_diagnostic": bool(row.get("nontrivial_rank3_selector", False)),
+    }
+
+
+def _overlap_graph_rank_obstruction_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    if not rows:
+        return {
+            "available": False,
+            "claim_boundary": (
+                "No valid overlap-graph rows were available. This summary is diagnostic only."
+            ),
+        }
+
+    def finite_values(key: str, source_rows: list[dict[str, Any]]) -> list[float]:
+        values: list[float] = []
+        for row in source_rows:
+            value = _to_float_or_none(row.get(key))
+            if value is not None:
+                values.append(float(value))
+        return values
+
+    def median(values: list[float]) -> float | None:
+        if not values:
+            return None
+        ordered = sorted(values)
+        midpoint = len(ordered) // 2
+        if len(ordered) % 2:
+            return float(ordered[midpoint])
+        return float((ordered[midpoint - 1] + ordered[midpoint]) * 0.5)
+
+    def row_key(row: dict[str, Any], key: str) -> float:
+        value = _to_float_or_none(row.get(key))
+        return float(value) if value is not None else -1.0e100
+
+    spatial_rows = [row for row in rows if row.get("spatial_3d_candidate")]
+    h3_rows = [row for row in rows if row.get("selected_model") == "H3"]
+    rank_rows = [row for row in rows if row.get("largest_gap_rank") is not None]
+    largest_gap_counts: dict[str, int] = {}
+    for row in rank_rows:
+        key = str(row.get("largest_gap_rank"))
+        largest_gap_counts[key] = int(largest_gap_counts.get(key, 0) + 1)
+    model_order_counts: dict[str, int] = {}
+    nontrivial_model_order_counts: dict[str, int] = {}
+    for row in rows:
+        key = str(row.get("model_order_consensus_rank"))
+        if key not in {"None", ""}:
+            model_order_counts[key] = int(model_order_counts.get(key, 0) + 1)
+        nontrivial_key = str(row.get("nontrivial_model_order_consensus_rank"))
+        if nontrivial_key not in {"None", ""}:
+            nontrivial_model_order_counts[nontrivial_key] = int(
+                nontrivial_model_order_counts.get(nontrivial_key, 0) + 1
+            )
+    best_rank3_ev = max(rows, key=lambda row: row_key(row, "rank3_cumulative_explained_variance"))
+    best_spatial_rank3_ev = (
+        max(spatial_rows, key=lambda row: row_key(row, "rank3_cumulative_explained_variance"))
+        if spatial_rows
+        else {}
+    )
+    effective_values = finite_values("effective_rank", rows)
+    rank3_ev_values = finite_values("rank3_cumulative_explained_variance", rows)
+    nontrivial_rank3_ev_values = finite_values(
+        "nontrivial_rank3_cumulative_explained_variance",
+        rows,
+    )
+    nontrivial_effective_values = finite_values("nontrivial_effective_rank", rows)
+    spatial_effective = finite_values("effective_rank", spatial_rows)
+    spatial_rank3_ev = finite_values("rank3_cumulative_explained_variance", spatial_rows)
+    spatial_nontrivial_rank3_ev = finite_values(
+        "nontrivial_rank3_cumulative_explained_variance",
+        spatial_rows,
+    )
+    nontrivial_largest_gap_counts: dict[str, int] = {}
+    for row in rank_rows:
+        key = str(row.get("nontrivial_largest_gap_rank"))
+        if key not in {"None", ""}:
+            nontrivial_largest_gap_counts[key] = int(nontrivial_largest_gap_counts.get(key, 0) + 1)
+    return {
+        "available": True,
+        "case_count": len(rows),
+        "spatial_3d_candidate_count": len(spatial_rows),
+        "h3_model_count": len(h3_rows),
+        "rank3_selector_count": int(sum(1 for row in rows if row.get("rank3_selector"))),
+        "model_order_rank3_selector_count": int(
+            sum(1 for row in rows if row.get("model_order_rank3_selector"))
+        ),
+        "nontrivial_rank3_selector_count": int(
+            sum(1 for row in rows if row.get("nontrivial_rank3_selector"))
+        ),
+        "nontrivial_model_order_rank3_selector_count": int(
+            sum(1 for row in rows if row.get("nontrivial_model_order_rank3_selector"))
+        ),
+        "largest_gap_rank_counts": largest_gap_counts,
+        "dominant_largest_gap_rank": (
+            max(largest_gap_counts.items(), key=lambda item: item[1])[0] if largest_gap_counts else None
+        ),
+        "model_order_consensus_rank_counts": model_order_counts,
+        "dominant_model_order_consensus_rank": (
+            max(model_order_counts.items(), key=lambda item: item[1])[0] if model_order_counts else None
+        ),
+        "nontrivial_largest_gap_rank_counts": nontrivial_largest_gap_counts,
+        "dominant_nontrivial_largest_gap_rank": (
+            max(nontrivial_largest_gap_counts.items(), key=lambda item: item[1])[0]
+            if nontrivial_largest_gap_counts
+            else None
+        ),
+        "nontrivial_model_order_consensus_rank_counts": nontrivial_model_order_counts,
+        "dominant_nontrivial_model_order_consensus_rank": (
+            max(nontrivial_model_order_counts.items(), key=lambda item: item[1])[0]
+            if nontrivial_model_order_counts
+            else None
+        ),
+        "max_rank3_cumulative_explained_variance": max(rank3_ev_values) if rank3_ev_values else None,
+        "median_rank3_cumulative_explained_variance": median(rank3_ev_values),
+        "max_nontrivial_rank3_cumulative_explained_variance": (
+            max(nontrivial_rank3_ev_values) if nontrivial_rank3_ev_values else None
+        ),
+        "median_nontrivial_rank3_cumulative_explained_variance": median(nontrivial_rank3_ev_values),
+        "min_nontrivial_effective_rank": (
+            min(nontrivial_effective_values) if nontrivial_effective_values else None
+        ),
+        "median_nontrivial_effective_rank": median(nontrivial_effective_values),
+        "min_effective_rank": min(effective_values) if effective_values else None,
+        "median_effective_rank": median(effective_values),
+        "spatial_max_rank3_cumulative_explained_variance": max(spatial_rank3_ev) if spatial_rank3_ev else None,
+        "spatial_median_rank3_cumulative_explained_variance": median(spatial_rank3_ev),
+        "spatial_max_nontrivial_rank3_cumulative_explained_variance": (
+            max(spatial_nontrivial_rank3_ev) if spatial_nontrivial_rank3_ev else None
+        ),
+        "spatial_median_nontrivial_rank3_cumulative_explained_variance": (
+            median(spatial_nontrivial_rank3_ev)
+        ),
+        "spatial_min_effective_rank": min(spatial_effective) if spatial_effective else None,
+        "spatial_median_effective_rank": median(spatial_effective),
+        "best_rank3_ev_case": best_rank3_ev,
+        "best_spatial_rank3_ev_case": best_spatial_rank3_ev,
+        "primary_obstruction": (
+            "no_independent_rank3_selector"
+            if not any(row.get("rank3_selector") for row in rows)
+            else "rank3_selector_present_but_other_gates_failed"
+        ),
+        "claim_boundary": (
+            "Diagnostic obstruction summary for the target-rank-free overlap-graph spectrum. "
+            "It explains why strict neutral bulk is not promoted; it is not itself a strict-bulk receipt."
+        ),
+    }
+
+
+def _overlap_residual_graph_rank_obstruction_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    summary = dict(_overlap_graph_rank_obstruction_summary(rows))
+    raw_rank1_count = int(sum(1 for row in rows if str(row.get("raw_largest_gap_rank")) == "1"))
+    residual_rank3_count = int(sum(1 for row in rows if row.get("rank3_selector")))
+    summary.update(
+        {
+            "raw_largest_gap_rank1_count": raw_rank1_count,
+            "residual_rank3_selector_count": residual_rank3_count,
+            "primary_obstruction": (
+                "residualized_no_independent_rank3_selector"
+                if residual_rank3_count <= 0
+                else summary.get("primary_obstruction")
+            ),
+            "claim_boundary": (
+                "Diagnostic obstruction summary for the residualized observer-overlap graph spectrum. "
+                "It tests whether common-mode removal changes the rank selector; it is not itself a "
+                "strict-bulk receipt."
+            ),
+        }
+    )
+    return summary
+
+
+def _overlap_graph_case_dir_name(report: dict[str, Any], index: int) -> str:
+    run_name = Path(str(report.get("source_run_dir") or f"run_{index:04d}")).name
+    safe = "".join(char if char.isalnum() or char in "._-" else "_" for char in run_name)
+    return (
+        f"{index:04d}_{safe}"
+        f"_seed{int(report.get('seed') or 0)}"
+        f"_n{int(report.get('max_model_points') or 0)}"
+        f"_k{int(report.get('k_neighbors') or 0)}"
+    )
+
+
+def _write_overlap_graph_sweep_rows_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    columns = [
+        "source_run_dir",
+        "seed",
+        "max_model_points",
+        "k_neighbors",
+        "observer_count",
+        "sampled_observer_count",
+        "graph_geometry_receipt",
+        "spatial_3d_candidate",
+        "strict_h3_candidate",
+        "rank3_selector",
+        "model_order_consensus_rank",
+        "model_order_profile_rank",
+        "model_order_broken_stick_rank",
+        "model_order_rank3_selector",
+        "median_dimension",
+        "selected_model",
+        "h3_beats_s2",
+        "h3_beats_h2_h4",
+        "s2_leakage_pass",
+        "largest_gap_rank",
+        "rank3_cumulative_explained_variance",
+        "effective_rank",
+        "nontrivial_rank3_selector",
+        "nontrivial_largest_gap_rank",
+        "nontrivial_model_order_consensus_rank",
+        "nontrivial_model_order_profile_rank",
+        "nontrivial_model_order_broken_stick_rank",
+        "nontrivial_model_order_rank3_selector",
+        "nontrivial_rank3_cumulative_explained_variance",
+        "nontrivial_effective_rank",
+        "edge_count",
+        "component_count",
+        "blockers",
+        "error",
+    ]
+    with Path(path).open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        for row in rows:
+            out = {column: row.get(column) for column in columns}
+            blockers = out.get("blockers")
+            if isinstance(blockers, list):
+                out["blockers"] = ";".join(str(value) for value in blockers)
+            writer.writerow(out)
+
+
+def _write_overlap_residual_graph_sweep_rows_csv(path: Path, rows: list[dict[str, Any]]) -> None:
+    columns = [
+        "source_run_dir",
+        "seed",
+        "max_model_points",
+        "k_neighbors",
+        "remove_modes",
+        "observer_count",
+        "sampled_observer_count",
+        "residual_graph_receipt",
+        "spatial_3d_candidate",
+        "strict_h3_candidate",
+        "rank3_selector",
+        "model_order_consensus_rank",
+        "model_order_profile_rank",
+        "model_order_broken_stick_rank",
+        "model_order_rank3_selector",
+        "median_dimension",
+        "correlation_dimension",
+        "local_mle_dimension",
+        "selected_model",
+        "h3_beats_s2",
+        "h3_beats_h2_h4",
+        "s2_leakage_pass",
+        "s2_distance_correlation",
+        "largest_gap_rank",
+        "rank3_cumulative_explained_variance",
+        "effective_rank",
+        "nontrivial_rank3_selector",
+        "nontrivial_largest_gap_rank",
+        "nontrivial_model_order_consensus_rank",
+        "nontrivial_model_order_profile_rank",
+        "nontrivial_model_order_broken_stick_rank",
+        "nontrivial_model_order_rank3_selector",
+        "nontrivial_rank3_cumulative_explained_variance",
+        "nontrivial_effective_rank",
+        "raw_largest_gap_rank",
+        "raw_rank3_selector",
+        "removed_common_mode_energy_fraction",
+        "edge_count",
+        "component_count",
+        "finite_pair_fraction",
+        "mean_positive_affinity",
+        "blockers",
+        "error",
+    ]
+    with Path(path).open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer.writeheader()
+        for row in rows:
+            out = {column: row.get(column) for column in columns}
+            blockers = out.get("blockers")
+            if isinstance(blockers, list):
+                out["blockers"] = ";".join(str(value) for value in blockers)
+            writer.writerow(out)
 
 
 def _neutral_3d_refinement_summary(refinement: dict[str, Any]) -> dict[str, Any]:
@@ -1681,6 +3827,8 @@ def _neutral_3d_bulk_audit_markdown(report: dict[str, Any]) -> str:
         f"- independent rank-3 selector all: `{str(report.get('control_residualized_rank3_independent_selector_all', False)).lower()}`",
         f"- directional strict-ready total: `{report.get('directional_strict_ready_total', 0)}`",
         f"- control-quotient candidate count: `{report.get('control_quotient_candidate_count', 0)}`",
+        f"- overlap-native negative-control receipts: `{report.get('overlap_native_negative_control_receipt_count', 0)}` / `{report.get('overlap_native_negative_control_report_count', 0)}`",
+        f"- overlap-native spatial-3D candidates: `{report.get('overlap_native_spatial_3d_candidate_count', 0)}`",
         "",
         "## Blockers",
         "",
@@ -1756,6 +3904,104 @@ def _neutral_independent_rank_selector_markdown(report: dict[str, Any]) -> str:
     lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
     lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
     return "\n".join(lines)
+
+
+def _strict_neutral_bulk_frontier_markdown(report: dict[str, Any]) -> str:
+    lines = [
+        "# Strict Neutral Bulk Frontier",
+        "",
+        f"- strict neutral bulk ready: `{str(report.get('strict_neutral_bulk_ready', False)).lower()}`",
+        f"- strict neutral bulk: `{str(report.get('strict_neutral_bulk', False)).lower()}`",
+        f"- rank-3 refinement candidate: `{str(report.get('control_residualized_rank3_refinement_candidate', False)).lower()}`",
+        f"- overlap-native negative controls: `{str(report.get('overlap_native_negative_control_receipt_all', False)).lower()}`",
+        f"- overlap graph receipts: `{report.get('overlap_native_graph_geometry_receipt_count', 0)}` / `{report.get('overlap_native_graph_geometry_report_count', 0)}`",
+        f"- overlap graph spatial-3D candidates: `{report.get('overlap_native_graph_spatial_3d_candidate_count', 0)}`",
+        f"- overlap graph strict-H3 candidates: `{report.get('overlap_native_graph_strict_h3_candidate_count', 0)}`",
+        f"- overlap graph model-order rank-3 selectors: `{report.get('overlap_native_graph_model_order_rank3_selector_count', 0)}`",
+        f"- overlap graph nontrivial model-order rank-3 selectors: `{report.get('overlap_native_graph_nontrivial_model_order_rank3_selector_count', 0)}`",
+        f"- residualized graph receipts: `{report.get('overlap_residualized_graph_geometry_receipt_count', 0)}` / `{report.get('overlap_residualized_graph_geometry_report_count', 0)}`",
+        f"- residualized graph spatial-3D candidates: `{report.get('overlap_residualized_graph_spatial_3d_candidate_count', 0)}`",
+        f"- residualized graph strict-H3 candidates: `{report.get('overlap_residualized_graph_strict_h3_candidate_count', 0)}`",
+        f"- residualized graph model-order rank-3 selectors: `{report.get('overlap_residualized_graph_model_order_rank3_selector_count', 0)}`",
+        f"- residualized graph nontrivial model-order rank-3 selectors: `{report.get('overlap_residualized_graph_nontrivial_model_order_rank3_selector_count', 0)}`",
+        f"- independent rank-3 selector: `{str(report.get('neutral_independent_rank3_selector_receipt', False)).lower()}`",
+        "",
+        "## Gates",
+        "",
+    ]
+    for row in report.get("gate_rows") or []:
+        lines.append(
+            f"- `{row.get('gate')}`: `{str(row.get('passed', False)).lower()}`"
+            f" - {row.get('detail', '')}"
+        )
+    lines.extend(["", "## Hard-Gate Gaps", ""])
+    gap_rows = report.get("gate_gap_rows") or []
+    if gap_rows:
+        for row in gap_rows:
+            blockers = ", ".join(str(blocker) for blocker in (row.get("blockers") or [])) or "none"
+            lines.append(
+                f"- `{row.get('gate')}`: missing `{row.get('missing_receipt')}`; "
+                f"current `{row.get('current_evidence')}`; action `{row.get('action_surface')}`; "
+                f"blockers `{blockers}`"
+            )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Blockers", ""])
+    blockers = report.get("blockers") or []
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Next Missing Receipts", ""])
+    next_steps = report.get("next_missing_receipts") or []
+    lines.extend(
+        f"- `{row.get('blocker')}`: {row.get('next_step')}"
+        for row in next_steps
+    ) if next_steps else lines.append("- none")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
+
+
+def _strict_neutral_frontier_next_steps(blockers: list[str]) -> list[dict[str, str]]:
+    suggestions = {
+        "independent_svd_rank3_selector_not_stable_or_false": (
+            "Find an observer-native, target-rank-free selector that independently chooses rank 3 across regulators."
+        ),
+        "control_quotient_lane_is_not_a_negative_control": (
+            "Replace or supplement the control quotient with null controls that test the same rank-3 candidate path."
+        ),
+        "directional_h3_strict_rank_gate_not_passed": (
+            "Close the directional H3 model-selection/leakage gate for a non-coordinate, neutral distance lane."
+        ),
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates": (
+            "Produce at least one directional neutral rank row with strict H3 model selection and leakage pass."
+        ),
+        "requires_independent_rank_selection_rule_before_physical_interpretation": (
+            "Keep rank-3 windows diagnostic until the independent SVD/rank selector receipt passes."
+        ),
+        "strict_neutral_bulk_refinement_receipt_false": (
+            "Rerun refinement only after the independent-rank, negative-control, and directional-H3 gates close."
+        ),
+        "control_quotient_independent_rank3_selector_not_all_true": (
+            "Audit why the control-quotient singular spectrum remains high-dimensional despite rank-3 distance windows."
+        ),
+        "control_quotient_rank3_cumulative_explained_variance_low": (
+            "Do not treat low rank-3 explained variance as a strict 3D source; investigate the high-rank substrate."
+        ),
+        "control_quotient_effective_rank_not_low_dimensional": (
+            "Resolve the gap between low-dimensional distance behavior and high effective spectral rank."
+        ),
+        "overlap_graph_strict_h3_candidate_false": (
+            "Continue overlap-native graph sweeps: current graph geometry is control-sensitive, but has "
+            "not produced a strict H3 candidate with independent rank-3 selection."
+        ),
+    }
+    rows: list[dict[str, str]] = []
+    for blocker in blockers:
+        rows.append(
+            {
+                "blocker": blocker,
+                "next_step": suggestions.get(blocker, "Clear this blocker with an independent neutral receipt."),
+            }
+        )
+    return rows
 
 
 def _unique_preserve_order(values: list[str]) -> list[str]:
@@ -1988,6 +4234,875 @@ def _randomize_histogram_keys(value: Any, rng: np.random.Generator) -> Any:
                 out[str(int(rng.integers(0, 2**50)))] = item
         return out
     return value
+
+
+def _overlap_feature_matrix(observer_views: list[dict[str, Any]]) -> np.ndarray:
+    neutral_views = build_neutral_observer_views(observer_views)
+    if not neutral_views:
+        return np.zeros((0, 0), dtype=float)
+    rows = []
+    for view in neutral_views:
+        rows.append(
+            np.concatenate(
+                [
+                    1.00 * _normalize_or_zero(view.record_signature_hist),
+                    1.00 * _normalize_or_zero(view.object_packet_hist),
+                    0.80 * _normalize_or_zero(view.transition_token_hist),
+                    0.65 * _normalize_or_zero(view.transition_token_persistent_hist),
+                    0.75 * _normalize_or_zero(view.modular_response_hist),
+                    0.60 * _normalize_or_zero(view.transition_affinity_hist),
+                    0.45 * _normalize_or_zero(view.checkpoint_transition_hist),
+                    0.35 * _normalize_or_zero(view.sector_transition_hist),
+                    0.35 * _normalize_or_zero(view.repair_response_hist),
+                ]
+            )
+        )
+    matrix = np.vstack(rows)
+    return np.where(np.isfinite(matrix), matrix, 0.0)
+
+
+def _overlap_feature_distance_matrix(features: np.ndarray, eps: float = 1.0e-12) -> np.ndarray:
+    features = np.asarray(features, dtype=float)
+    if features.ndim != 2 or features.shape[0] == 0:
+        return np.zeros((0, 0), dtype=float)
+    features = np.where(features > 0.0, features, 0.0)
+    n = features.shape[0]
+    distance = np.zeros((n, n), dtype=float)
+    masses = np.sum(features, axis=1)
+    for i in range(n):
+        for j in range(i + 1, n):
+            denom = max(0.5 * (float(masses[i]) + float(masses[j])), eps)
+            similarity = float(np.sum(np.minimum(features[i], features[j])) / denom)
+            value = 1.0 - max(0.0, min(1.0, similarity))
+            distance[i, j] = distance[j, i] = value
+    return distance
+
+
+def _overlap_graph_distance_from_features(
+    features: np.ndarray,
+    *,
+    k_neighbors: int = 12,
+    eps: float = 1.0e-12,
+) -> dict[str, Any]:
+    features = np.asarray(features, dtype=float)
+    if features.ndim != 2 or features.shape[0] == 0:
+        return {
+            "affinity": np.zeros((0, 0), dtype=float),
+            "distance": np.zeros((0, 0), dtype=float),
+            "edge_count": 0,
+            "component_count": 0,
+            "finite_pair_fraction": 0.0,
+            "mean_positive_affinity": None,
+            "nondegenerate": False,
+        }
+    affinity = 1.0 - _overlap_feature_distance_matrix(features, eps=eps)
+    np.fill_diagonal(affinity, 0.0)
+    affinity = np.where(np.isfinite(affinity), np.clip(affinity, 0.0, 1.0), 0.0)
+    n = affinity.shape[0]
+    k = max(1, min(int(k_neighbors), max(n - 1, 1)))
+    graph = np.zeros_like(affinity)
+    for i in range(n):
+        order = np.argsort(affinity[i])[::-1]
+        count = 0
+        for j in order:
+            if int(j) == i or affinity[i, j] <= eps:
+                continue
+            graph[i, int(j)] = affinity[i, int(j)]
+            count += 1
+            if count >= k:
+                break
+    graph = np.maximum(graph, graph.T)
+    lengths = np.where(graph > eps, -np.log(np.clip(graph, eps, 1.0)), 0.0)
+    distance = shortest_path(lengths, directed=False, unweighted=False)
+    finite = np.isfinite(distance)
+    finite_upper = finite[np.triu_indices(n, k=1)] if n > 1 else np.asarray([], dtype=bool)
+    finite_fraction = float(np.mean(finite_upper)) if finite_upper.size else 1.0
+    if finite_fraction < 1.0:
+        finite_values = distance[np.isfinite(distance) & (distance > 0.0)]
+        fill = float(np.max(finite_values) * 2.0) if finite_values.size else 1.0
+        distance = np.where(np.isfinite(distance), distance, fill)
+    np.fill_diagonal(distance, 0.0)
+    components = _graph_component_count(graph > eps)
+    positive = graph[graph > eps]
+    return {
+        "affinity": graph,
+        "distance": distance,
+        "edge_count": int(np.count_nonzero(np.triu(graph > eps, k=1))),
+        "component_count": int(components),
+        "finite_pair_fraction": finite_fraction,
+        "mean_positive_affinity": float(np.mean(positive)) if positive.size else None,
+        "nondegenerate": bool(
+            n >= 8
+            and positive.size > 0
+            and components == 1
+            and np.any(distance[np.triu_indices(n, k=1)] > eps)
+        ),
+    }
+
+
+def _residualize_overlap_features(features: np.ndarray, *, remove_modes: int = 1) -> np.ndarray:
+    features = np.asarray(features, dtype=float)
+    if features.ndim != 2 or features.size == 0:
+        return np.zeros_like(features, dtype=float)
+    centered = np.where(np.isfinite(features), features, 0.0)
+    centered = centered - np.mean(centered, axis=0, keepdims=True)
+    modes = max(0, int(remove_modes))
+    if modes <= 0 or min(centered.shape) <= 1:
+        return centered
+    try:
+        _, _, vt = np.linalg.svd(centered, full_matrices=False)
+    except np.linalg.LinAlgError:
+        return centered
+    count = min(modes, vt.shape[0])
+    basis = vt[:count]
+    return centered - (centered @ basis.T) @ basis
+
+
+def _removed_mode_energy_fraction(features: np.ndarray, remove_modes: int) -> float | None:
+    features = np.asarray(features, dtype=float)
+    if features.ndim != 2 or features.size == 0:
+        return None
+    centered = np.where(np.isfinite(features), features, 0.0)
+    centered = centered - np.mean(centered, axis=0, keepdims=True)
+    total = float(np.sum(centered**2))
+    if total <= 1.0e-12:
+        return None
+    try:
+        singular = np.linalg.svd(centered, compute_uv=False)
+    except np.linalg.LinAlgError:
+        return None
+    count = min(max(0, int(remove_modes)), singular.size)
+    removed = float(np.sum(singular[:count] ** 2))
+    return removed / total
+
+
+def _overlap_graph_distance_from_residual_features(
+    residual_features: np.ndarray,
+    *,
+    k_neighbors: int = 12,
+    eps: float = 1.0e-12,
+) -> dict[str, Any]:
+    residual = np.asarray(residual_features, dtype=float)
+    if residual.ndim != 2 or residual.shape[0] == 0:
+        return _graph_distance_from_affinity(np.zeros((0, 0), dtype=float), k_neighbors=k_neighbors, eps=eps)
+    residual = np.where(np.isfinite(residual), residual, 0.0)
+    norms = np.linalg.norm(residual, axis=1)
+    valid = norms > eps
+    if int(np.sum(valid)) < 4:
+        return _graph_distance_from_affinity(np.zeros((residual.shape[0], residual.shape[0]), dtype=float), k_neighbors=k_neighbors, eps=eps)
+    normalized = residual / np.maximum(norms[:, None], eps)
+    cosine = normalized @ normalized.T
+    affinity = np.where(valid[:, None] & valid[None, :], np.maximum(cosine, 0.0), 0.0)
+    np.fill_diagonal(affinity, 0.0)
+    return _graph_distance_from_affinity(affinity, k_neighbors=k_neighbors, eps=eps)
+
+
+def _graph_distance_from_affinity(
+    affinity: np.ndarray,
+    *,
+    k_neighbors: int,
+    eps: float = 1.0e-12,
+) -> dict[str, Any]:
+    affinity = np.asarray(affinity, dtype=float)
+    if affinity.ndim != 2 or affinity.shape[0] == 0:
+        return {
+            "affinity": np.zeros((0, 0), dtype=float),
+            "distance": np.zeros((0, 0), dtype=float),
+            "edge_count": 0,
+            "component_count": 0,
+            "finite_pair_fraction": 0.0,
+            "mean_positive_affinity": None,
+            "nondegenerate": False,
+        }
+    affinity = np.where(np.isfinite(affinity), np.clip(affinity, 0.0, 1.0), 0.0)
+    np.fill_diagonal(affinity, 0.0)
+    n = affinity.shape[0]
+    k = max(1, min(int(k_neighbors), max(n - 1, 1)))
+    graph = np.zeros_like(affinity)
+    for i in range(n):
+        order = np.argsort(affinity[i])[::-1]
+        count = 0
+        for j in order:
+            if int(j) == i or affinity[i, j] <= eps:
+                continue
+            graph[i, int(j)] = affinity[i, int(j)]
+            count += 1
+            if count >= k:
+                break
+    graph = np.maximum(graph, graph.T)
+    lengths = np.where(graph > eps, -np.log(np.clip(graph, eps, 1.0)), 0.0)
+    distance = shortest_path(lengths, directed=False, unweighted=False)
+    finite = np.isfinite(distance)
+    finite_upper = finite[np.triu_indices(n, k=1)] if n > 1 else np.asarray([], dtype=bool)
+    finite_fraction = float(np.mean(finite_upper)) if finite_upper.size else 1.0
+    if finite_fraction < 1.0:
+        finite_values = distance[np.isfinite(distance) & (distance > 0.0)]
+        fill = float(np.max(finite_values) * 2.0) if finite_values.size else 1.0
+        distance = np.where(np.isfinite(distance), distance, fill)
+    np.fill_diagonal(distance, 0.0)
+    components = _graph_component_count(graph > eps)
+    positive = graph[graph > eps]
+    return {
+        "affinity": graph,
+        "distance": distance,
+        "edge_count": int(np.count_nonzero(np.triu(graph > eps, k=1))),
+        "component_count": int(components),
+        "finite_pair_fraction": finite_fraction,
+        "mean_positive_affinity": float(np.mean(positive)) if positive.size else None,
+        "nondegenerate": bool(
+            n >= 8
+            and positive.size > 0
+            and components == 1
+            and np.any(distance[np.triu_indices(n, k=1)] > eps)
+        ),
+    }
+
+
+def _graph_component_count(adjacency: np.ndarray) -> int:
+    adjacency = np.asarray(adjacency, dtype=bool)
+    n = adjacency.shape[0] if adjacency.ndim == 2 else 0
+    seen = np.zeros(n, dtype=bool)
+    count = 0
+    for start in range(n):
+        if seen[start]:
+            continue
+        count += 1
+        stack = [start]
+        seen[start] = True
+        while stack:
+            current = stack.pop()
+            for nxt in np.flatnonzero(adjacency[current]):
+                if not seen[int(nxt)]:
+                    seen[int(nxt)] = True
+                    stack.append(int(nxt))
+    return count
+
+
+def _overlap_graph_rank_selection(affinity: np.ndarray) -> dict[str, Any]:
+    affinity = np.asarray(affinity, dtype=float)
+    if affinity.ndim != 2 or affinity.shape[0] < 4 or not np.any(affinity > 0.0):
+        return {
+            "available": False,
+            "rank3_selector_receipt": False,
+            "reason": "empty_or_too_small_overlap_graph",
+        }
+    degree = np.sum(np.clip(affinity, 0.0, None), axis=1)
+    keep = degree > 1.0e-12
+    if int(np.sum(keep)) < 4:
+        return {
+            "available": False,
+            "rank3_selector_receipt": False,
+            "reason": "too_few_nonisolated_graph_nodes",
+        }
+    sub = affinity[np.ix_(keep, keep)]
+    degree = np.sum(sub, axis=1)
+    inv_sqrt = np.diag(1.0 / np.sqrt(np.maximum(degree, 1.0e-12)))
+    normalized = inv_sqrt @ sub @ inv_sqrt
+    eigenvalues = np.linalg.eigvalsh((normalized + normalized.T) * 0.5)[::-1]
+    eigenvalues = np.asarray([float(value) for value in eigenvalues if np.isfinite(value) and value > 1.0e-12])
+    if eigenvalues.size == 0:
+        return {
+            "available": False,
+            "rank3_selector_receipt": False,
+            "reason": "no_positive_graph_spectrum",
+        }
+    max_rank = int(min(16, eigenvalues.size))
+    values = eigenvalues[:max_rank]
+    gaps = values[:-1] - values[1:] if values.size > 1 else np.asarray([], dtype=float)
+    largest_gap_rank = int(np.argmax(gaps) + 1) if gaps.size else 1
+    cumulative = np.cumsum(values) / max(float(np.sum(eigenvalues)), 1.0e-12)
+    rank3_ev = float(cumulative[min(2, cumulative.size - 1)])
+    participation = float((np.sum(eigenvalues) ** 2) / max(float(np.sum(eigenvalues**2)), 1.0e-12))
+    entropy_weights = eigenvalues / max(float(np.sum(eigenvalues)), 1.0e-12)
+    effective = float(np.exp(-np.sum(entropy_weights * np.log(np.maximum(entropy_weights, 1.0e-12)))))
+    model_order = _spectral_model_order_selection(eigenvalues)
+    nontrivial = eigenvalues[1:]
+    if nontrivial.size:
+        nontrivial_values = nontrivial[:max_rank]
+        nontrivial_gaps = (
+            nontrivial_values[:-1] - nontrivial_values[1:]
+            if nontrivial_values.size > 1
+            else np.asarray([], dtype=float)
+        )
+        nontrivial_largest_gap_rank = (
+            int(np.argmax(nontrivial_gaps) + 1) if nontrivial_gaps.size else 1
+        )
+        nontrivial_cumulative = np.cumsum(nontrivial_values) / max(
+            float(np.sum(nontrivial)),
+            1.0e-12,
+        )
+        nontrivial_rank3_ev = float(
+            nontrivial_cumulative[min(2, nontrivial_cumulative.size - 1)]
+        )
+        nontrivial_weights = nontrivial / max(float(np.sum(nontrivial)), 1.0e-12)
+        nontrivial_effective = float(
+            np.exp(-np.sum(nontrivial_weights * np.log(np.maximum(nontrivial_weights, 1.0e-12))))
+        )
+        nontrivial_model_order = _spectral_model_order_selection(nontrivial)
+    else:
+        nontrivial_values = np.asarray([], dtype=float)
+        nontrivial_largest_gap_rank = None
+        nontrivial_rank3_ev = None
+        nontrivial_effective = None
+        nontrivial_model_order = {
+            "available": False,
+            "consensus_rank": None,
+            "profile_likelihood_rank": None,
+            "broken_stick_rank": None,
+            "reason": "no_nontrivial_spectrum",
+        }
+    nontrivial_rank3_selector = bool(
+        nontrivial_largest_gap_rank == 3
+        and nontrivial_rank3_ev is not None
+        and nontrivial_rank3_ev >= 0.50
+        and nontrivial_effective is not None
+        and nontrivial_effective <= 8.0
+    )
+    receipt = bool(largest_gap_rank == 3 and rank3_ev >= 0.50 and effective <= 8.0)
+    return {
+        "available": True,
+        "rank3_selector_receipt": receipt,
+        "largest_gap_rank": largest_gap_rank,
+        "model_order_selection": model_order,
+        "model_order_rank3_selector_receipt": bool(model_order.get("consensus_rank") == 3),
+        "rank3_cumulative_explained_variance": rank3_ev,
+        "effective_rank": effective,
+        "participation_rank": participation,
+        "nontrivial_rank3_selector_receipt": nontrivial_rank3_selector,
+        "nontrivial_largest_gap_rank": nontrivial_largest_gap_rank,
+        "nontrivial_model_order_selection": nontrivial_model_order,
+        "nontrivial_model_order_rank3_selector_receipt": bool(
+            nontrivial_model_order.get("consensus_rank") == 3
+        ),
+        "nontrivial_rank3_cumulative_explained_variance": nontrivial_rank3_ev,
+        "nontrivial_effective_rank": nontrivial_effective,
+        "eigenvalue_count": int(eigenvalues.size),
+        "top_eigenvalues": [float(value) for value in eigenvalues[: min(10, eigenvalues.size)]],
+        "nontrivial_top_eigenvalues": [
+            float(value) for value in nontrivial_values[: min(10, nontrivial_values.size)]
+        ],
+        "claim_boundary": (
+            "Target-rank-free rank selector on the observer-overlap graph normalized spectrum. "
+            "It is independent of downstream dimension fitting and H3 model selection. "
+            "The nontrivial fields rerun the same audit after excluding the Perron/common graph mode; "
+            "they are reported as obstruction diagnostics and do not by themselves promote strict neutral bulk."
+        ),
+    }
+
+
+def _spectral_model_order_selection(eigenvalues: np.ndarray, *, max_rank: int = 12) -> dict[str, Any]:
+    """Target-rank-free model-order diagnostics for a positive spectrum.
+
+    This deliberately does not promote strict neutral bulk. It records two
+    independent order selectors so the sweep can distinguish "rank 1 dominates"
+    from "different target-free selectors disagree about the intrinsic order".
+    """
+
+    values = np.asarray(eigenvalues, dtype=float)
+    values = values[np.isfinite(values) & (values > 1.0e-12)]
+    if values.size < 4:
+        return {
+            "available": False,
+            "consensus_rank": None,
+            "profile_likelihood_rank": None,
+            "broken_stick_rank": None,
+            "reason": "too_few_positive_eigenvalues",
+        }
+    values = np.sort(values)[::-1]
+    max_rank = int(max(1, min(int(max_rank), values.size - 2)))
+    profile_rank = _profile_likelihood_spectral_rank(values, max_rank=max_rank)
+    broken_rank = _broken_stick_spectral_rank(values, max_rank=max_rank)
+    consensus = profile_rank if profile_rank == broken_rank else None
+    total = max(float(np.sum(values)), 1.0e-12)
+    return {
+        "available": True,
+        "consensus_rank": consensus,
+        "profile_likelihood_rank": profile_rank,
+        "broken_stick_rank": broken_rank,
+        "selectors_agree": bool(consensus is not None),
+        "max_rank_considered": int(max_rank),
+        "rank3_cumulative_explained_variance": float(np.sum(values[: min(3, values.size)]) / total),
+        "claim_boundary": (
+            "Target-rank-free model-order diagnostic from the overlap graph spectrum. It is recorded "
+            "for obstruction analysis only; strict neutral bulk still uses the hard overlap/H3/rank gates."
+        ),
+    }
+
+
+def _profile_likelihood_spectral_rank(values: np.ndarray, *, max_rank: int) -> int | None:
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values) & (values > 1.0e-12)]
+    if values.size < 4:
+        return None
+    spectrum = np.log(values / max(float(np.sum(values)), 1.0e-12))
+    max_rank = int(max(1, min(int(max_rank), spectrum.size - 2)))
+    best_rank: int | None = None
+    best_bic = float("inf")
+    for rank in range(1, max_rank + 1):
+        head = spectrum[:rank]
+        tail = spectrum[rank:]
+        if head.size == 0 or tail.size < 2:
+            continue
+        head_var = max(float(np.var(head)), 1.0e-8)
+        tail_var = max(float(np.var(tail)), 1.0e-8)
+        head_ll = -0.5 * head.size * (math.log(2.0 * math.pi * head_var) + 1.0)
+        tail_ll = -0.5 * tail.size * (math.log(2.0 * math.pi * tail_var) + 1.0)
+        bic = -2.0 * (head_ll + tail_ll) + 4.0 * math.log(float(spectrum.size))
+        if bic < best_bic:
+            best_bic = float(bic)
+            best_rank = int(rank)
+    return best_rank
+
+
+def _broken_stick_spectral_rank(values: np.ndarray, *, max_rank: int) -> int | None:
+    values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values) & (values > 1.0e-12)]
+    if values.size < 4:
+        return None
+    values = np.sort(values)[::-1]
+    weights = values / max(float(np.sum(values)), 1.0e-12)
+    n = values.size
+    expected = np.asarray([sum(1.0 / j for j in range(index, n + 1)) / n for index in range(1, n + 1)])
+    rank = int(sum(1 for value, threshold in zip(weights, expected) if value > threshold))
+    return int(max(1, min(rank, int(max_rank))))
+
+
+def _overlap_graph_control_row(
+    name: str,
+    original_distance: np.ndarray,
+    control_features: np.ndarray,
+    sampled_observer_rows: list[dict[str, Any]],
+    *,
+    seed: int,
+    max_model_points: int,
+    k_neighbors: int,
+    original_spatial_candidate: bool,
+) -> dict[str, Any]:
+    graph = _overlap_graph_distance_from_features(control_features, k_neighbors=int(k_neighbors))
+    distance = graph["distance"]
+    corr = _upper_triangle_corr(original_distance, distance)
+    delta = _mean_abs_upper_delta(original_distance, distance)
+    dimension = strict_neutral_dimension_report(distance)
+    model = neutral_model_selection(
+        distance,
+        seed=int(seed),
+        max_points=min(int(max_model_points), len(sampled_observer_rows)),
+    )
+    leakage = neutral_leakage_audit(distance, sampled_observer_rows)
+    candidate = _spatial_3d_ready(dimension, model, leakage)
+    distance_degraded = _neutral_distance_control_degraded(corr, delta)
+    expected_failure = bool(distance_degraded and (not original_spatial_candidate or not candidate))
+    return {
+        "control": str(name),
+        "distance_shape_correlation_to_original": corr,
+        "mean_abs_distance_delta": delta,
+        "distance_degraded": bool(distance_degraded),
+        "graph_summary": {
+            "edge_count": graph["edge_count"],
+            "component_count": graph["component_count"],
+            "finite_pair_fraction": graph["finite_pair_fraction"],
+        },
+        "dimension": dimension,
+        "model_selection": model,
+        "leakage": leakage,
+        "spatial_3d_candidate_survives_control": bool(candidate),
+        "expected_failure_observed": expected_failure,
+        "claim_boundary": (
+            "Negative control for the observer-overlap graph geometry. A control passes only if it "
+            "changes the graph distance and does not preserve the same spatial-3D candidate when the "
+            "original overlap graph has one."
+        ),
+    }
+
+
+def _overlap_residual_graph_control_row(
+    name: str,
+    original_distance: np.ndarray,
+    control_features: np.ndarray,
+    sampled_observer_rows: list[dict[str, Any]],
+    *,
+    seed: int,
+    max_model_points: int,
+    k_neighbors: int,
+    remove_modes: int,
+    original_spatial_candidate: bool,
+) -> dict[str, Any]:
+    residual = _residualize_overlap_features(control_features, remove_modes=int(remove_modes))
+    graph = _overlap_graph_distance_from_residual_features(residual, k_neighbors=int(k_neighbors))
+    distance = graph["distance"]
+    corr = _upper_triangle_corr(original_distance, distance)
+    delta = _mean_abs_upper_delta(original_distance, distance)
+    dimension = strict_neutral_dimension_report(distance)
+    model = neutral_model_selection(
+        distance,
+        seed=int(seed),
+        max_points=min(int(max_model_points), len(sampled_observer_rows)),
+    )
+    leakage = neutral_leakage_audit(distance, sampled_observer_rows)
+    candidate = _spatial_3d_ready(dimension, model, leakage)
+    distance_degraded = _neutral_distance_control_degraded(corr, delta)
+    expected_failure = bool(distance_degraded and (not original_spatial_candidate or not candidate))
+    return {
+        "control": str(name),
+        "distance_shape_correlation_to_original": corr,
+        "mean_abs_distance_delta": delta,
+        "distance_degraded": bool(distance_degraded),
+        "graph_summary": {
+            "edge_count": graph["edge_count"],
+            "component_count": graph["component_count"],
+            "finite_pair_fraction": graph["finite_pair_fraction"],
+        },
+        "dimension": dimension,
+        "model_selection": model,
+        "leakage": leakage,
+        "spatial_3d_candidate_survives_control": bool(candidate),
+        "expected_failure_observed": expected_failure,
+        "claim_boundary": (
+            "Negative control for residualized observer-overlap graph geometry. A control passes only "
+            "if it changes the residual graph distance and does not preserve the same spatial-3D "
+            "candidate when the original residual lane has one."
+        ),
+    }
+
+
+def _overlap_native_control_row(
+    name: str,
+    original_distance: np.ndarray,
+    control_features: np.ndarray,
+    sampled_observer_rows: list[dict[str, Any]],
+    *,
+    seed: int,
+    max_model_points: int,
+    original_spatial_candidate: bool,
+) -> dict[str, Any]:
+    distance = _overlap_feature_distance_matrix(control_features)
+    corr = _upper_triangle_corr(original_distance, distance)
+    delta = _mean_abs_upper_delta(original_distance, distance)
+    dimension = strict_neutral_dimension_report(distance)
+    model = neutral_model_selection(
+        distance,
+        seed=int(seed),
+        max_points=min(int(max_model_points), len(sampled_observer_rows)),
+    )
+    leakage = neutral_leakage_audit(distance, sampled_observer_rows)
+    candidate = _spatial_3d_ready(dimension, model, leakage)
+    distance_degraded = _neutral_distance_control_degraded(corr, delta)
+    expected_failure = bool(distance_degraded and (not original_spatial_candidate or not candidate))
+    return {
+        "control": str(name),
+        "distance_shape_correlation_to_original": corr,
+        "mean_abs_distance_delta": delta,
+        "distance_degraded": bool(distance_degraded),
+        "dimension": dimension,
+        "model_selection": model,
+        "leakage": leakage,
+        "spatial_3d_candidate_survives_control": bool(candidate),
+        "expected_failure_observed": expected_failure,
+        "claim_boundary": (
+            "Negative control for the observer-overlap distance. A control passes only if it changes "
+            "the overlap distance and does not preserve the same spatial-3D candidate when the original "
+            "overlap lane has one."
+        ),
+    }
+
+
+def _shuffle_overlap_payloads(
+    observer_views: list[dict[str, Any]],
+    rng: np.random.Generator,
+) -> list[dict[str, Any]]:
+    shuffled = copy.deepcopy(observer_views)
+    patch_indices = [index for index, view in enumerate(shuffled) if view.get("view_type") == "patch_observer"]
+    keys = (
+        "record_signature_histogram",
+        "object_packet_histogram",
+        "transition_history_histograms",
+        "transition_affinity_histograms",
+        "modular_response_histograms",
+        "transition_history_descriptor",
+    )
+    for key in keys:
+        values = [copy.deepcopy(shuffled[index].get(key)) for index in patch_indices]
+        order = rng.permutation(len(values))
+        for local_index, source_index in enumerate(order):
+            value = values[int(source_index)]
+            if value is None:
+                shuffled[patch_indices[local_index]].pop(key, None)
+            else:
+                shuffled[patch_indices[local_index]][key] = copy.deepcopy(value)
+    return shuffled
+
+
+def _permute_overlap_packet_labels(
+    observer_views: list[dict[str, Any]],
+    rng: np.random.Generator,
+) -> list[dict[str, Any]]:
+    shuffled = copy.deepcopy(observer_views)
+    for view in shuffled:
+        if view.get("view_type") != "patch_observer":
+            continue
+        for key in (
+            "record_signature_histogram",
+            "object_packet_histogram",
+            "transition_history_histograms",
+            "transition_affinity_histograms",
+            "modular_response_histograms",
+        ):
+            if isinstance(view.get(key), dict):
+                view[key] = _randomize_histogram_keys(view[key], rng)
+    return shuffled
+
+
+def _overlap_histogram_null_features(features: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    features = np.asarray(features, dtype=float)
+    if features.ndim != 2 or features.size == 0:
+        return features.copy()
+    positive = np.where(features > 0.0, features, 0.0)
+    column_mean = np.mean(positive, axis=0)
+    if not np.any(column_mean > 0.0):
+        return rng.random(size=features.shape)
+    weights = column_mean / max(float(np.sum(column_mean)), 1.0e-12)
+    row_mass = np.sum(positive, axis=1)
+    out = np.zeros_like(positive)
+    width = positive.shape[1]
+    for index, mass in enumerate(row_mass):
+        if mass <= 1.0e-12:
+            continue
+        draws = rng.choice(width, size=max(1, min(width, int(np.count_nonzero(positive[index])) or 1)), replace=False, p=weights)
+        values = rng.random(size=draws.size)
+        values = values / max(float(np.sum(values)), 1.0e-12) * float(mass)
+        out[index, draws] = values
+    return out
+
+
+def _overlap_native_neutral_control_markdown(report: dict[str, Any]) -> str:
+    blockers = report.get("blockers") or []
+    rows = report.get("control_rows") if isinstance(report.get("control_rows"), list) else []
+    lines = [
+        "# Overlap-Native Neutral Control",
+        "",
+        f"- overlap-native negative-control receipt: `{str(report.get('OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT', False)).lower()}`",
+        f"- sampled observers: `{report.get('sampled_observer_count', 0)}` / `{report.get('observer_count', 0)}`",
+        f"- overlap spatial-3D candidate: `{str(report.get('overlap_native_spatial_3d_candidate', False)).lower()}`",
+        f"- overlap strict-H3 candidate: `{str(report.get('overlap_native_strict_h3_candidate', False)).lower()}`",
+        "",
+        "## Controls",
+        "",
+    ]
+    if rows:
+        for row in rows:
+            lines.append(
+                "- "
+                f"`{row.get('control')}`: expected failure `{str(row.get('expected_failure_observed', False)).lower()}`, "
+                f"distance corr `{row.get('distance_shape_correlation_to_original')}`, "
+                f"delta `{row.get('mean_abs_distance_delta')}`"
+            )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Blockers", ""])
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    obstruction = report.get("rank_obstruction_summary") if isinstance(report.get("rank_obstruction_summary"), dict) else {}
+    lines.extend(["", "## Rank Obstruction", ""])
+    if obstruction.get("available", False):
+        lines.extend(
+            [
+                f"- primary obstruction: `{obstruction.get('primary_obstruction')}`",
+                f"- dominant largest-gap rank: `{obstruction.get('dominant_largest_gap_rank')}`",
+                f"- max rank-3 cumulative explained variance: `{obstruction.get('max_rank3_cumulative_explained_variance')}`",
+                f"- median effective rank: `{obstruction.get('median_effective_rank')}`",
+                f"- spatial max rank-3 cumulative explained variance: `{obstruction.get('spatial_max_rank3_cumulative_explained_variance')}`",
+                f"- spatial median effective rank: `{obstruction.get('spatial_median_effective_rank')}`",
+            ]
+        )
+    else:
+        lines.append("- unavailable")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
+
+
+def _overlap_native_graph_geometry_markdown(report: dict[str, Any]) -> str:
+    blockers = report.get("blockers") or []
+    graph = report.get("graph_summary") if isinstance(report.get("graph_summary"), dict) else {}
+    rank = report.get("rank_selection") if isinstance(report.get("rank_selection"), dict) else {}
+    dimension = report.get("dimension") if isinstance(report.get("dimension"), dict) else {}
+    model = report.get("model_selection") if isinstance(report.get("model_selection"), dict) else {}
+    lines = [
+        "# Overlap-Native Graph Geometry",
+        "",
+        f"- graph geometry receipt: `{str(report.get('OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT', False)).lower()}`",
+        f"- sampled observers: `{report.get('sampled_observer_count', 0)}` / `{report.get('observer_count', 0)}`",
+        f"- graph spatial-3D candidate: `{str(report.get('overlap_graph_spatial_3d_candidate', False)).lower()}`",
+        f"- graph strict-H3 candidate: `{str(report.get('overlap_graph_strict_h3_candidate', False)).lower()}`",
+        f"- graph edges: `{graph.get('edge_count')}`",
+        f"- graph components: `{graph.get('component_count')}`",
+        f"- median dimension: `{dimension.get('median_dimension_estimate')}`",
+        f"- selected model: `{model.get('best_model')}`",
+        f"- rank selector: `{str(rank.get('rank3_selector_receipt', False)).lower()}`",
+        f"- largest-gap rank: `{rank.get('largest_gap_rank')}`",
+        f"- nontrivial rank selector: `{str(rank.get('nontrivial_rank3_selector_receipt', False)).lower()}`",
+        f"- nontrivial largest-gap rank: `{rank.get('nontrivial_largest_gap_rank')}`",
+        "",
+        "## Blockers",
+        "",
+    ]
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
+
+
+def _overlap_residualized_graph_geometry_markdown(report: dict[str, Any]) -> str:
+    blockers = report.get("blockers") or []
+    graph = report.get("graph_summary") if isinstance(report.get("graph_summary"), dict) else {}
+    rank = report.get("rank_selection") if isinstance(report.get("rank_selection"), dict) else {}
+    dimension = report.get("dimension") if isinstance(report.get("dimension"), dict) else {}
+    model = report.get("model_selection") if isinstance(report.get("model_selection"), dict) else {}
+    residual = report.get("residualization") if isinstance(report.get("residualization"), dict) else {}
+    lines = [
+        "# Residualized Overlap Graph Geometry",
+        "",
+        f"- residual graph receipt: `{str(report.get('OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT', False)).lower()}`",
+        f"- sampled observers: `{report.get('sampled_observer_count', 0)}` / `{report.get('observer_count', 0)}`",
+        f"- residual spatial-3D candidate: `{str(report.get('overlap_residual_graph_spatial_3d_candidate', False)).lower()}`",
+        f"- residual strict-H3 candidate: `{str(report.get('overlap_residual_graph_strict_h3_candidate', False)).lower()}`",
+        f"- removed common modes: `{report.get('remove_modes')}`",
+        f"- raw largest-gap rank: `{residual.get('raw_largest_gap_rank')}`",
+        f"- removed common-mode energy fraction: `{residual.get('removed_common_mode_energy_fraction')}`",
+        f"- graph edges: `{graph.get('edge_count')}`",
+        f"- graph components: `{graph.get('component_count')}`",
+        f"- median dimension: `{dimension.get('median_dimension_estimate')}`",
+        f"- selected model: `{model.get('best_model')}`",
+        f"- rank selector: `{str(rank.get('rank3_selector_receipt', False)).lower()}`",
+        f"- largest-gap rank after residualization: `{rank.get('largest_gap_rank')}`",
+        f"- nontrivial rank selector: `{str(rank.get('nontrivial_rank3_selector_receipt', False)).lower()}`",
+        f"- nontrivial largest-gap rank after residualization: `{rank.get('nontrivial_largest_gap_rank')}`",
+        "",
+        "## Blockers",
+        "",
+    ]
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
+
+
+def _overlap_native_graph_geometry_sweep_markdown(report: dict[str, Any]) -> str:
+    blockers = report.get("blockers") or []
+    best = report.get("best_case") if isinstance(report.get("best_case"), dict) else {}
+    closest = report.get("closest_strict_rows") if isinstance(report.get("closest_strict_rows"), list) else []
+    coincidence = report.get("gate_coincidence_summary") if isinstance(
+        report.get("gate_coincidence_summary"), dict
+    ) else {}
+    lines = [
+        "# Overlap-Native Graph Geometry Sweep",
+        "",
+        f"- sweep receipt: `{str(report.get('OVERLAP_NATIVE_GRAPH_GEOMETRY_SWEEP_RECEIPT', False)).lower()}`",
+        f"- case count: `{report.get('case_count', 0)}`",
+        f"- graph receipts: `{report.get('graph_geometry_receipt_count', 0)}`",
+        f"- spatial-3D candidates: `{report.get('spatial_3d_candidate_count', 0)}`",
+        f"- strict-H3 candidates: `{report.get('strict_h3_candidate_count', 0)}`",
+        f"- rank-3 selectors: `{report.get('rank3_selector_count', 0)}`",
+        f"- nontrivial rank-3 selectors: `{(report.get('rank_obstruction_summary') or {}).get('nontrivial_rank3_selector_count')}`",
+        f"- spatial-H3 plus independent rank-3 coincidences: `{coincidence.get('spatial_h3_independent_rank3_selector_count')}`",
+        f"- spatial-H3 plus nontrivial rank-3 coincidences: `{coincidence.get('spatial_h3_nontrivial_rank3_selector_count')}`",
+        "",
+        "## Best Case",
+        "",
+    ]
+    if best:
+        lines.extend(
+            [
+                f"- source run: `{best.get('source_run_dir')}`",
+                f"- seed / max points / k: `{best.get('seed')}` / `{best.get('max_model_points')}` / `{best.get('k_neighbors')}`",
+                f"- spatial-3D candidate: `{str(best.get('spatial_3d_candidate', False)).lower()}`",
+                f"- strict-H3 candidate: `{str(best.get('strict_h3_candidate', False)).lower()}`",
+                f"- rank-3 selector: `{str(best.get('rank3_selector', False)).lower()}`",
+                f"- nontrivial rank-3 selector: `{str(best.get('nontrivial_rank3_selector', False)).lower()}`",
+                f"- nontrivial largest-gap rank: `{best.get('nontrivial_largest_gap_rank')}`",
+                f"- median dimension: `{best.get('median_dimension')}`",
+                f"- selected model: `{best.get('selected_model')}`",
+                f"- blockers: `{best.get('blockers', [])}`",
+            ]
+        )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Closest Strict-Gate Rows", ""])
+    if closest:
+        for row in closest[:8]:
+            lines.append(
+                "- "
+                f"`{row.get('source_run_dir')}` seed `{row.get('seed')}` max `{row.get('max_model_points')}` "
+                f"k `{row.get('k_neighbors')}` score `{row.get('gate_score')}` "
+                f"dim `{row.get('median_dimension')}` model `{row.get('selected_model')}` "
+                f"missing `{row.get('missing_strict_gates', [])}`"
+            )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Blockers", ""])
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
+
+
+def _overlap_residualized_graph_geometry_sweep_markdown(report: dict[str, Any]) -> str:
+    blockers = report.get("blockers") or []
+    best = report.get("best_case") if isinstance(report.get("best_case"), dict) else {}
+    closest = report.get("closest_strict_rows") if isinstance(report.get("closest_strict_rows"), list) else []
+    coincidence = report.get("gate_coincidence_summary") if isinstance(
+        report.get("gate_coincidence_summary"), dict
+    ) else {}
+    obstruction = report.get("rank_obstruction_summary") if isinstance(
+        report.get("rank_obstruction_summary"), dict
+    ) else {}
+    lines = [
+        "# Residualized Overlap Graph Geometry Sweep",
+        "",
+        f"- sweep receipt: `{str(report.get('OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_SWEEP_RECEIPT', False)).lower()}`",
+        f"- case count: `{report.get('case_count', 0)}`",
+        f"- residual graph receipts: `{report.get('residual_graph_receipt_count', 0)}`",
+        f"- spatial-3D candidates: `{report.get('spatial_3d_candidate_count', 0)}`",
+        f"- strict-H3 candidates: `{report.get('strict_h3_candidate_count', 0)}`",
+        f"- rank-3 selectors: `{report.get('rank3_selector_count', 0)}`",
+        f"- nontrivial rank-3 selectors: `{obstruction.get('nontrivial_rank3_selector_count')}`",
+        f"- spatial-H3 plus independent rank-3 coincidences: `{coincidence.get('spatial_h3_independent_rank3_selector_count')}`",
+        f"- spatial-H3 plus nontrivial rank-3 coincidences: `{coincidence.get('spatial_h3_nontrivial_rank3_selector_count')}`",
+        f"- raw rank-1 cases: `{obstruction.get('raw_largest_gap_rank1_count')}`",
+        "",
+        "## Best Case",
+        "",
+    ]
+    if best:
+        lines.extend(
+            [
+                f"- source run: `{best.get('source_run_dir')}`",
+                f"- seed / max points / k / remove modes: `{best.get('seed')}` / `{best.get('max_model_points')}` / `{best.get('k_neighbors')}` / `{best.get('remove_modes')}`",
+                f"- spatial-3D candidate: `{str(best.get('spatial_3d_candidate', False)).lower()}`",
+                f"- strict-H3 candidate: `{str(best.get('strict_h3_candidate', False)).lower()}`",
+                f"- rank-3 selector: `{str(best.get('rank3_selector', False)).lower()}`",
+                f"- nontrivial rank-3 selector: `{str(best.get('nontrivial_rank3_selector', False)).lower()}`",
+                f"- raw largest-gap rank: `{best.get('raw_largest_gap_rank')}`",
+                f"- residual largest-gap rank: `{best.get('largest_gap_rank')}`",
+                f"- nontrivial largest-gap rank: `{best.get('nontrivial_largest_gap_rank')}`",
+                f"- median dimension: `{best.get('median_dimension')}`",
+                f"- selected model: `{best.get('selected_model')}`",
+                f"- blockers: `{best.get('blockers', [])}`",
+            ]
+        )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Closest Strict-Gate Rows", ""])
+    if closest:
+        for row in closest[:8]:
+            lines.append(
+                "- "
+                f"`{row.get('source_run_dir')}` seed `{row.get('seed')}` max `{row.get('max_model_points')}` "
+                f"k `{row.get('k_neighbors')}` remove `{row.get('remove_modes')}` score `{row.get('gate_score')}` "
+                f"dim `{row.get('median_dimension')}` model `{row.get('selected_model')}` "
+                f"missing `{row.get('missing_strict_gates', [])}`"
+            )
+    else:
+        lines.append("- none")
+    lines.extend(["", "## Blockers", ""])
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Claim Boundary", "", str(report.get("claim_boundary", "")), ""])
+    return "\n".join(lines)
 
 
 def _prime_geometric_prefix_distance_matrix(

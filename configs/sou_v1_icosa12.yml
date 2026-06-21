@@ -1,0 +1,23 @@
+run_id: small_oph_universe_v1
+seed: 20260620
+schedule_replays: 16
+
+small_universe:
+  version: v1
+  graph: icosahedral_graph
+  patch_count: 12
+  visible_interface_alphabet: Z2
+  root_boundary: 0
+  repair_backend: parent_copy_calibration_v1
+  exact_state_count: 2048
+  emit_tables: true
+
+controls:
+  frustrated_non_tree_edge:
+    enabled: true
+    selection: seed_index
+
+claim_boundary: >
+  Exact small-universe finite consensus and holonomy-obstruction calibration only.
+  This config must not be used as evidence for endogenous modular flow, 2pi,
+  Lorentz symmetry, H3 bulk, particles, or cosmology.

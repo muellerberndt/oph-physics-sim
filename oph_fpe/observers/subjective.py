@@ -47,6 +47,9 @@ def observer_view_rows(
                 "support_entropy_capacity": float(np.sum(support_weight)),
                 "committed_fraction": _weighted_mean(raw_fields.get("committed_mask"), support, support_weight),
                 "record_stability_mean": _weighted_mean(raw_fields.get("stable_count"), support, support_weight),
+                "modular_depth_mean": _weighted_mean(raw_fields.get("modular_depth"), support, support_weight),
+                "modular_depth_std": _weighted_std(raw_fields.get("modular_depth"), support, support_weight),
+                "observer_relative_times": [float(value) for value in times],
                 "repair_load_mean": _weighted_mean(raw_fields.get("repair_load"), support, support_weight),
                 "mismatch_density_mean": _weighted_mean(raw_fields.get("local_mismatch_density"), support, support_weight),
                 "visible_signature_entropy": _entropy(raw_fields.get("record_signature"), support),
@@ -144,7 +147,8 @@ def observer_consensus_report(
         "median_overlap_jaccard": float(np.median(jaccards)) if jaccards.size else 0.0,
         "median_signature_histogram_similarity": float(np.median(similarities)) if similarities.size else 0.0,
         "p10_signature_histogram_similarity": float(np.percentile(similarities, 10)) if similarities.size else 0.0,
-        "sample_pairs": pair_rows[: min(128, len(pair_rows))],
+        "sample_pairs": pair_rows[: min(20_000, len(pair_rows))],
+        "sample_pair_limit": 20_000,
         "claim_boundary": (
             "objectivity proxy: observer-accessible record-family agreement across overlapping "
             "local views; this is not a bulk-dimension estimator"
@@ -156,6 +160,12 @@ def _weighted_mean(values: np.ndarray | None, indices: np.ndarray, weights: np.n
     if values is None or indices.size == 0:
         return 0.0
     return _weighted_full_mean(values[indices], weights)
+
+
+def _weighted_std(values: np.ndarray | None, indices: np.ndarray, weights: np.ndarray) -> float:
+    if values is None or indices.size == 0:
+        return 0.0
+    return _weighted_full_std(values[indices], weights)
 
 
 def _weighted_full_mean(values: np.ndarray | None, weights: np.ndarray) -> float:

@@ -13,6 +13,7 @@ from oph_fpe.bulk.modular_lift import point_cloud_dimension_report
 from oph_fpe.core.graph import fibonacci_sphere_points
 from oph_fpe.core.pixel_scale import pixel_scale_from_config
 from oph_fpe.core.screen_microphysics import ports_per_patch_from_config, screen_microphysics_from_config
+from oph_fpe.dynamics import dispatch_configured_kernels, kernel_dispatch_manifest_summary
 from oph_fpe.evidence import RunBundle
 from oph_fpe.evidence.hashes import stable_json_hash
 
@@ -140,25 +141,30 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     )
     bundle.write_json("state_final_summary.json", _summary(patch_count, edge_count, trace[-1], modular_depth))
     bundle.write_json("seed_material.json", {"config_hash": stable_json_hash(config), "seed": seed})
-    bundle.write_manifest(
-        {
-            "run_id": run_id,
-            "name": config.get("name"),
-            "engine": "array_screen",
-            "claim_boundary": config.get("claim_boundary"),
-            "patch_count": patch_count,
-            "edge_count": edge_count,
-            "group": group_name,
-            "pixel_scale": pixel_scale.as_jsonable(),
-            "oph_constants": pixel_scale.constants.as_jsonable(),
-            "screen_microphysics": screen_microphysics.as_jsonable(),
-            "screen_units": screen_microphysics.as_jsonable()["screen_units"],
-            "cycles": cycles,
-            "final_phi": int(trace[-1]["phi"]),
-            "dimension_report": dimensions,
-        }
-    )
-    return {"run_id": run_id, "path": str(bundle.path), "final_phi": int(trace[-1]["phi"]), "dimensions": dimensions}
+    kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="array_screen")
+    manifest = {
+        "run_id": run_id,
+        "name": config.get("name"),
+        "engine": "array_screen",
+        "claim_boundary": config.get("claim_boundary"),
+        "patch_count": patch_count,
+        "edge_count": edge_count,
+        "group": group_name,
+        "pixel_scale": pixel_scale.as_jsonable(),
+        "oph_constants": pixel_scale.constants.as_jsonable(),
+        "screen_microphysics": screen_microphysics.as_jsonable(),
+        "screen_units": screen_microphysics.as_jsonable()["screen_units"],
+        "cycles": cycles,
+        "final_phi": int(trace[-1]["phi"]),
+        "dimension_report": dimensions,
+    }
+    result = {"run_id": run_id, "path": str(bundle.path), "final_phi": int(trace[-1]["phi"]), "dimensions": dimensions}
+    if kernel_dispatch:
+        summary = kernel_dispatch_manifest_summary(kernel_dispatch)
+        manifest["kernel_dispatch"] = summary
+        result["kernel_dispatch"] = summary
+    bundle.write_manifest(manifest)
+    return result
 
 
 def _knn_edges(points: np.ndarray, neighbors: int) -> tuple[np.ndarray, np.ndarray]:

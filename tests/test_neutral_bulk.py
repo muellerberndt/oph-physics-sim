@@ -7,6 +7,7 @@ import numpy as np
 
 from oph_fpe.cosmology.comparable_data import comparable_data_report
 from oph_fpe.bulk.neutral_bulk import (
+    _overlap_graph_rank_selection,
     _prime_geometric_selected_rank_controls,
     build_neutral_observer_views,
     neutral_distance,
@@ -15,15 +16,27 @@ from oph_fpe.bulk.neutral_bulk import (
     neutral_model_selection,
     neutral_3d_bulk_audit_report,
     neutral_independent_rank_selector_audit_report,
+    overlap_native_graph_geometry_report,
+    overlap_native_graph_geometry_sweep_report,
+    overlap_residualized_graph_geometry_report,
+    overlap_residualized_graph_geometry_sweep_report,
+    overlap_native_neutral_control_report,
     neutral_profile_audit_report,
     planted_neutral_control_report,
     prime_geometric_rank_refinement_report,
     prime_geometric_rank_sweep_report,
     shuffled_neutral_control_report,
+    strict_neutral_bulk_frontier_report,
     strict_neutral_bulk_receipt,
     strict_neutral_bulk_report,
     write_neutral_independent_rank_selector_audit_report,
+    write_overlap_native_graph_geometry_report,
+    write_overlap_native_graph_geometry_sweep_report,
+    write_overlap_residualized_graph_geometry_report,
+    write_overlap_residualized_graph_geometry_sweep_report,
+    write_overlap_native_neutral_control_report,
     write_prime_geometric_rank_sweep_report,
+    write_strict_neutral_bulk_frontier_report,
     write_neutral_3d_bulk_audit_report,
     write_neutral_profile_audit_report,
 )
@@ -269,6 +282,241 @@ def test_shuffled_neutral_control_report_emits_run_specific_controls():
         assert "expected_failure_observed" in row
 
 
+def test_overlap_native_neutral_control_report_uses_observer_overlap_substrate(tmp_path: Path):
+    observer_views = [
+        _observer_view(
+            i,
+            records=[i % 9, (i + 1) % 9, (i + 2) % 9, (i + 3) % 9],
+            checkpoints=[i % 5, (i + 1) % 5],
+            sectors=[i % 3, (i + 1) % 3],
+            repairs=[i % 7, (i + 2) % 7],
+        )
+        for i in range(32)
+    ]
+
+    report = overlap_native_neutral_control_report(observer_views, seed=9, max_model_points=32)
+
+    assert report["mode"] == "overlap_native_neutral_control_v0"
+    assert report["observer_count"] == 32
+    assert report["fundamental_operation"].startswith("Overlapping observations")
+    assert set(row["control"] for row in report["control_rows"]) == {
+        "shuffled_observer_payloads",
+        "per_observer_packet_label_permutation",
+        "columnwise_histogram_null",
+    }
+    assert report["strict_neutral_bulk"] is False
+    assert report["physical_claim"] is False
+    for row in report["control_rows"]:
+        assert "distance_shape_correlation_to_original" in row
+        assert "expected_failure_observed" in row
+
+    run = tmp_path / "run"
+    run.mkdir()
+    with (run / "observer_views.jsonl").open("w", encoding="utf-8") as handle:
+        for row in observer_views:
+            handle.write(json.dumps(row) + "\n")
+    written = write_overlap_native_neutral_control_report(run, tmp_path / "out", seed=9, max_model_points=32)
+
+    assert written["mode"] == "overlap_native_neutral_control_v0"
+    assert (tmp_path / "out" / "overlap_native_neutral_control_report.json").exists()
+    assert (tmp_path / "out" / "overlap_native_neutral_control_report.md").exists()
+
+
+def test_overlap_native_graph_geometry_report_uses_observer_overlap_graph(tmp_path: Path):
+    observer_views = [
+        _observer_view(
+            i,
+            records=[i % 9, (i + 1) % 9, (i + 2) % 9, (i + 3) % 9],
+            checkpoints=[i % 5, (i + 1) % 5],
+            sectors=[i % 3, (i + 1) % 3],
+            repairs=[i % 7, (i + 2) % 7],
+        )
+        for i in range(32)
+    ]
+
+    report = overlap_native_graph_geometry_report(
+        observer_views,
+        seed=11,
+        max_model_points=32,
+        k_neighbors=8,
+    )
+
+    assert report["mode"] == "overlap_native_graph_geometry_v0"
+    assert report["observer_count"] == 32
+    assert report["fundamental_operation"].startswith("Overlapping observations")
+    assert report["graph_summary"]["edge_count"] > 0
+    assert "dimension" in report
+    assert "model_selection" in report
+    assert "rank_selection" in report
+    assert set(row["control"] for row in report["control_rows"]) == {
+        "shuffled_observer_payloads",
+        "per_observer_packet_label_permutation",
+        "columnwise_histogram_null",
+    }
+    assert report["strict_neutral_bulk"] is False
+    assert report["physical_claim"] is False
+
+    run = tmp_path / "run"
+    run.mkdir()
+    with (run / "observer_views.jsonl").open("w", encoding="utf-8") as handle:
+        for row in observer_views:
+            handle.write(json.dumps(row) + "\n")
+    written = write_overlap_native_graph_geometry_report(
+        run,
+        tmp_path / "graph",
+        seed=11,
+        max_model_points=32,
+        k_neighbors=8,
+    )
+
+    assert written["mode"] == "overlap_native_graph_geometry_v0"
+    assert (tmp_path / "graph" / "overlap_native_graph_geometry_report.json").exists()
+    assert (tmp_path / "graph" / "overlap_native_graph_geometry_report.md").exists()
+
+
+def test_overlap_native_graph_geometry_sweep_writes_cases_and_summary(tmp_path: Path):
+    observer_views = [
+        _observer_view(
+            i,
+            records=[i % 7, (i + 1) % 7, (i + 2) % 7],
+            checkpoints=[i % 4, (i + 1) % 4],
+            sectors=[i % 3],
+            repairs=[i % 5],
+        )
+        for i in range(18)
+    ]
+    run = tmp_path / "run"
+    run.mkdir()
+    with (run / "observer_views.jsonl").open("w", encoding="utf-8") as handle:
+        for row in observer_views:
+            handle.write(json.dumps(row) + "\n")
+
+    report = overlap_native_graph_geometry_sweep_report(
+        [run],
+        seeds=(3,),
+        max_model_points_values=(18,),
+        k_neighbor_values=(4, 6),
+    )
+    written = write_overlap_native_graph_geometry_sweep_report(
+        [run],
+        tmp_path / "sweep",
+        seeds=(3,),
+        max_model_points_values=(18,),
+        k_neighbor_values=(4, 6),
+    )
+
+    assert report["mode"] == "overlap_native_graph_geometry_sweep_v0"
+    assert report["case_count"] == 2
+    assert report["strict_neutral_bulk"] is False
+    assert report["physical_claim"] is False
+    assert "best_case" in report
+    assert report["rank_obstruction_summary"]["available"] is True
+    assert report["rank_obstruction_summary"]["case_count"] == 2
+    assert "dominant_largest_gap_rank" in report["rank_obstruction_summary"]
+    assert report["gate_coincidence_summary"]["available"] is True
+    assert report["gate_coincidence_summary"]["case_count"] == 2
+    assert "spatial_h3_nontrivial_rank3_selector_count" in report["gate_coincidence_summary"]
+    assert len(report["closest_strict_rows"]) == 2
+    assert "missing_strict_gates" in report["closest_strict_rows"][0]
+    assert "gate_status" in report["closest_strict_rows"][0]
+    assert "rank3_selector" in report["closest_strict_rows"][0]
+    assert "nontrivial_rank3_selector" in report["closest_strict_rows"][0]
+    assert "strict_h3_candidate" in report["closest_strict_rows"][0]
+    assert written["case_count"] == 2
+    assert len(written["closest_strict_rows"]) == 2
+    assert (tmp_path / "sweep" / "overlap_native_graph_geometry_sweep_report.json").exists()
+    assert (tmp_path / "sweep" / "overlap_native_graph_geometry_sweep_report.md").exists()
+    assert (tmp_path / "sweep" / "overlap_native_graph_geometry_sweep_rows.csv").exists()
+    assert len(list((tmp_path / "sweep" / "overlap_graph_cases").glob("*/overlap_native_graph_geometry_report.json"))) == 2
+
+
+def test_overlap_residualized_graph_geometry_sweep_writes_common_mode_diagnostics(tmp_path: Path):
+    observer_views = [
+        _observer_view(
+            i,
+            records=[i % 7, (i + 1) % 7, (i + 2) % 7],
+            checkpoints=[i % 4, (i + 1) % 4],
+            sectors=[i % 3],
+            repairs=[i % 5],
+        )
+        for i in range(18)
+    ]
+    run = tmp_path / "run"
+    run.mkdir()
+    with (run / "observer_views.jsonl").open("w", encoding="utf-8") as handle:
+        for row in observer_views:
+            handle.write(json.dumps(row) + "\n")
+
+    single = overlap_residualized_graph_geometry_report(
+        observer_views,
+        seed=3,
+        max_model_points=18,
+        k_neighbors=4,
+        remove_modes=1,
+    )
+    written_single = write_overlap_residualized_graph_geometry_report(
+        run,
+        tmp_path / "single",
+        seed=3,
+        max_model_points=18,
+        k_neighbors=4,
+        remove_modes=1,
+    )
+    report = overlap_residualized_graph_geometry_sweep_report(
+        [run],
+        seeds=(3,),
+        max_model_points_values=(18,),
+        k_neighbor_values=(4, 6),
+        remove_mode_values=(0, 1),
+    )
+    written = write_overlap_residualized_graph_geometry_sweep_report(
+        [run],
+        tmp_path / "residual_sweep",
+        seeds=(3,),
+        max_model_points_values=(18,),
+        k_neighbor_values=(4, 6),
+        remove_mode_values=(0, 1),
+    )
+
+    assert single["mode"] == "overlap_residualized_graph_geometry_v0"
+    assert single["fundamental_operation"].startswith("Overlapping observations")
+    assert single["residualization"]["method"] == "column_center_then_remove_leading_svd_modes"
+    assert "raw_largest_gap_rank" in single["residualization"]
+    assert single["strict_neutral_bulk"] is False
+    assert single["physical_claim"] is False
+    assert written_single["mode"] == "overlap_residualized_graph_geometry_v0"
+    assert (tmp_path / "single" / "overlap_residualized_graph_geometry_report.json").exists()
+    assert (tmp_path / "single" / "overlap_residualized_graph_geometry_report.md").exists()
+    assert report["mode"] == "overlap_residualized_graph_geometry_sweep_v0"
+    assert report["case_count"] == 4
+    assert report["strict_neutral_bulk"] is False
+    assert report["physical_claim"] is False
+    assert report["rank_obstruction_summary"]["available"] is True
+    assert report["rank_obstruction_summary"]["case_count"] == 4
+    assert "raw_largest_gap_rank1_count" in report["rank_obstruction_summary"]
+    assert report["gate_coincidence_summary"]["available"] is True
+    assert report["gate_coincidence_summary"]["case_count"] == 4
+    assert "spatial_h3_nontrivial_rank3_selector_count" in report["gate_coincidence_summary"]
+    assert len(report["closest_strict_rows"]) == 4
+    assert "missing_strict_gates" in report["closest_strict_rows"][0]
+    assert "gate_status" in report["closest_strict_rows"][0]
+    assert "rank3_selector" in report["closest_strict_rows"][0]
+    assert "nontrivial_rank3_selector" in report["closest_strict_rows"][0]
+    assert "strict_h3_candidate" in report["closest_strict_rows"][0]
+    assert written["case_count"] == 4
+    assert len(written["closest_strict_rows"]) == 4
+    assert (tmp_path / "residual_sweep" / "overlap_residualized_graph_geometry_sweep_report.json").exists()
+    assert (tmp_path / "residual_sweep" / "overlap_residualized_graph_geometry_sweep_report.md").exists()
+    assert (tmp_path / "residual_sweep" / "overlap_residualized_graph_geometry_sweep_rows.csv").exists()
+    assert len(
+        list(
+            (tmp_path / "residual_sweep" / "overlap_residual_graph_cases").glob(
+                "*/overlap_residualized_graph_geometry_report.json"
+            )
+        )
+    ) == 4
+
+
 def test_neutral_model_selection_reports_required_metric_families():
     rng = np.random.default_rng(12)
     coords = rng.normal(size=(48, 3))
@@ -474,6 +722,26 @@ def test_prime_rank_sweep_writer_carries_independent_rank_selector(tmp_path: Pat
     )
 
 
+def test_overlap_rank_selection_carries_model_order_diagnostics():
+    rng = np.random.default_rng(123)
+    coords = rng.normal(size=(32, 3))
+    distance = np.linalg.norm(coords[:, None, :] - coords[None, :, :], axis=2)
+    sigma = float(np.median(distance[distance > 0.0]))
+    affinity = np.exp(-(distance**2) / max(sigma**2, 1.0e-12))
+    np.fill_diagonal(affinity, 0.0)
+
+    report = _overlap_graph_rank_selection(affinity)
+
+    assert report["available"] is True
+    assert "model_order_selection" in report
+    assert "nontrivial_model_order_selection" in report
+    assert "model_order_rank3_selector_receipt" in report
+    assert "nontrivial_model_order_rank3_selector_receipt" in report
+    assert report["model_order_selection"]["available"] is True
+    assert report["model_order_selection"]["profile_likelihood_rank"] is not None
+    assert report["model_order_selection"]["broken_stick_rank"] is not None
+
+
 def test_prime_rank_refinement_candidate_is_not_strict_without_independent_rank(tmp_path: Path):
     def write_report(index: int, patch_count: int, median: float, corr: float, mle: float) -> None:
         source = tmp_path / f"source_{index}"
@@ -534,6 +802,8 @@ def test_neutral_3d_bulk_audit_summarizes_rank3_candidate_blockers(tmp_path: Pat
     sweep_dir.mkdir()
     refinement_dir = tmp_path / "refinement"
     refinement_dir.mkdir()
+    overlap_dir = tmp_path / "overlap"
+    overlap_dir.mkdir()
     sweep_payload = {
         "mode": "prime_geometric_rank_sweep_v0",
         "source_run_dir": str(source),
@@ -590,6 +860,21 @@ def test_neutral_3d_bulk_audit_summarizes_rank3_candidate_blockers(tmp_path: Pat
         json.dumps(refinement_payload),
         encoding="utf-8",
     )
+    (overlap_dir / "overlap_native_neutral_control_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "overlap_native_neutral_control_v0",
+                "source_run_dir": str(source),
+                "observer_count": 128,
+                "sampled_observer_count": 128,
+                "OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT": True,
+                "overlap_native_spatial_3d_candidate": False,
+                "overlap_native_strict_h3_candidate": False,
+                "blockers": ["overlap_native_distance_not_spatial_3d_candidate"],
+            }
+        ),
+        encoding="utf-8",
+    )
 
     report = neutral_3d_bulk_audit_report([tmp_path])
     written = write_neutral_3d_bulk_audit_report([tmp_path], tmp_path / "audit")
@@ -600,11 +885,143 @@ def test_neutral_3d_bulk_audit_summarizes_rank3_candidate_blockers(tmp_path: Pat
     assert report["strict_neutral_bulk"] is False
     assert report["directional_strict_ready_total"] == 0
     assert report["control_quotient_candidate_count"] == 1
+    assert report["overlap_native_negative_control_report_count"] == 1
+    assert report["overlap_native_negative_control_receipt_count"] == 1
+    assert report["overlap_native_negative_control_receipt_all"] is True
     assert "independent_svd_rank3_selector_not_stable_or_false" in report["blockers"]
     assert "control_quotient_lane_is_not_a_negative_control" in report["blockers"]
     assert report["sweeps"][0]["control_quotient_candidate"]["rank"] == 3
     assert written["mode"] == "neutral_3d_bulk_audit_v0"
     assert (tmp_path / "audit" / "neutral_3d_bulk_audit_report.json").exists()
+
+
+def test_strict_neutral_bulk_frontier_summarizes_missing_receipts(tmp_path: Path):
+    audit_dir = tmp_path / "audit"
+    selector_dir = tmp_path / "selector"
+    graph_dir = tmp_path / "graph"
+    residual_dir = tmp_path / "residual"
+    audit_dir.mkdir()
+    selector_dir.mkdir()
+    graph_dir.mkdir()
+    residual_dir.mkdir()
+    (audit_dir / "neutral_3d_bulk_audit_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "neutral_3d_bulk_audit_v0",
+                "strict_neutral_bulk_ready": False,
+                "strict_neutral_bulk": False,
+                "control_residualized_rank3_refinement_candidate": True,
+                "control_residualized_rank3_dimension_drift": 0.027,
+                "directional_strict_ready_total": 0,
+                "control_quotient_candidate_count": 4,
+                "overlap_native_negative_control_report_count": 4,
+                "overlap_native_negative_control_receipt_count": 4,
+                "overlap_native_negative_control_receipt_all": True,
+                "overlap_native_spatial_3d_candidate_count": 0,
+                "refinement_summary": {
+                    "candidate_dimension_stable": True,
+                    "control_quotient_rank3_refinement_candidate_receipt": True,
+                },
+                "blockers": [
+                    "independent_svd_rank3_selector_not_stable_or_false",
+                    "directional_h3_strict_rank_gate_not_passed",
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (selector_dir / "neutral_independent_rank_selector_audit_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "neutral_independent_rank_selector_audit_v0",
+                "NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT": False,
+                "run_count": 4,
+                "control_quotient_rank3_candidate_count": 4,
+                "control_quotient_rank3_selector_count": 0,
+                "blockers": ["control_quotient_independent_rank3_selector_not_all_true"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (graph_dir / "overlap_native_graph_geometry_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "overlap_native_graph_geometry_v0",
+                "OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT": True,
+                "overlap_graph_spatial_3d_candidate": True,
+                "overlap_graph_strict_h3_candidate": False,
+                "rank_selection": {
+                    "rank3_selector_receipt": False,
+                    "model_order_rank3_selector_receipt": True,
+                    "nontrivial_model_order_rank3_selector_receipt": False,
+                    "model_order_selection": {"consensus_rank": 3},
+                    "nontrivial_model_order_selection": {"consensus_rank": 4},
+                },
+                "graph_summary": {"edge_count": 16, "component_count": 1},
+                "blockers": ["overlap_graph_not_strict_h3_candidate"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (residual_dir / "overlap_residualized_graph_geometry_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "overlap_residualized_graph_geometry_v0",
+                "OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT": True,
+                "overlap_residual_graph_spatial_3d_candidate": True,
+                "overlap_residual_graph_strict_h3_candidate": False,
+                "rank_selection": {
+                    "rank3_selector_receipt": False,
+                    "largest_gap_rank": 2,
+                    "model_order_rank3_selector_receipt": False,
+                    "nontrivial_model_order_rank3_selector_receipt": True,
+                    "model_order_selection": {"consensus_rank": 2},
+                    "nontrivial_model_order_selection": {"consensus_rank": 3},
+                },
+                "residualization": {"raw_largest_gap_rank": 1},
+                "graph_summary": {"edge_count": 12, "component_count": 1},
+                "blockers": ["overlap_residual_graph_not_strict_h3_candidate"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = strict_neutral_bulk_frontier_report([tmp_path])
+    written = write_strict_neutral_bulk_frontier_report([tmp_path], tmp_path / "frontier")
+
+    assert report["STRICT_NEUTRAL_BULK_FRONTIER_REPORT"] is True
+    assert report["strict_neutral_bulk"] is False
+    assert report["strict_neutral_bulk_ready"] is False
+    assert report["control_residualized_rank3_refinement_candidate"] is True
+    assert report["overlap_native_negative_control_receipt_all"] is True
+    assert report["overlap_native_graph_geometry_report_count"] == 1
+    assert report["overlap_native_graph_geometry_receipt_count"] == 1
+    assert report["overlap_native_graph_spatial_3d_candidate_count"] == 1
+    assert report["overlap_native_graph_strict_h3_candidate_count"] == 0
+    assert report["overlap_native_graph_model_order_rank3_selector_count"] == 1
+    assert report["overlap_native_graph_nontrivial_model_order_rank3_selector_count"] == 0
+    assert report["overlap_residualized_graph_geometry_receipt_count"] == 1
+    assert report["overlap_residualized_graph_spatial_3d_candidate_count"] == 1
+    assert report["overlap_residualized_graph_strict_h3_candidate_count"] == 0
+    assert report["overlap_residualized_graph_model_order_rank3_selector_count"] == 0
+    assert report["overlap_residualized_graph_nontrivial_model_order_rank3_selector_count"] == 1
+    assert report["neutral_independent_rank3_selector_receipt"] is False
+    assert report["control_quotient_rank3_candidate_count"] == 4
+    assert {row["gate"] for row in report["gate_rows"]} >= {
+        "control_residualized_rank3_refinement_candidate",
+        "independent_rank3_selector",
+        "directional_h3_strict_gate",
+        "overlap_native_graph_geometry",
+        "overlap_native_graph_strict_h3",
+        "overlap_residualized_graph_geometry",
+        "overlap_residualized_graph_strict_h3",
+    }
+    assert "independent_svd_rank3_selector_not_stable_or_false" in report["blockers"]
+    assert "overlap_graph_strict_h3_candidate_false" in report["blockers"]
+    assert "overlap_residual_graph_strict_h3_candidate_false" in report["blockers"]
+    assert written["mode"] == "strict_neutral_bulk_frontier_v0"
+    assert (tmp_path / "frontier" / "strict_neutral_bulk_frontier_report.json").exists()
+    assert (tmp_path / "frontier" / "strict_neutral_bulk_frontier_report.md").exists()
 
 
 def test_neutral_independent_rank_selector_audit_keeps_rank3_candidate_diagnostic(tmp_path: Path):

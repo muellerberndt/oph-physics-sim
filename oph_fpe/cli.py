@@ -21,6 +21,20 @@ def main(argv: list[str] | None = None) -> int:
     bw_array_parser.add_argument("--config", required=True, type=Path)
     bw_array_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
 
+    universe_parser = subparsers.add_parser(
+        "run-oph-universe",
+        help="run the canonical theorem-following OPH universe pipeline",
+    )
+    universe_parser.add_argument("--config", required=True, type=Path)
+    universe_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
+    universe_parser.add_argument("--run-id", default=None)
+    universe_parser.add_argument("--source-run-dir", default=None, type=Path)
+    universe_parser.add_argument("--skip-base-run", action="store_true")
+    universe_parser.add_argument("--max-screen-points", default=5000, type=int)
+    universe_parser.add_argument("--max-observers", default=128, type=int)
+    universe_parser.add_argument("--max-h3-objects", default=512, type=int)
+    universe_parser.add_argument("--skip-visualizations", action="store_true")
+
     shape_parser = subparsers.add_parser("shape-dodeca-smoke", help="run declared Shape dodecahedral substrate witness")
     shape_parser.add_argument("--config", default=None, type=Path)
     shape_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
@@ -495,6 +509,21 @@ def main(argv: list[str] | None = None) -> int:
         help="comma-separated finite regulator patch counts to compare against N_scr",
     )
 
+    capacity_proxy_parser = subparsers.add_parser(
+        "capacity-readback-proxy-report",
+        help="write finite-regulator proxy rows for the OPH F(N) capacity readback audit",
+    )
+    capacity_proxy_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    capacity_proxy_parser.add_argument("--out", required=True, type=Path)
+    capacity_proxy_parser.add_argument("--p-value", default=None, type=float)
+    capacity_proxy_parser.add_argument(
+        "--n-crc",
+        default=None,
+        type=float,
+        help="global OPH capacity value used only for finite-regulator fraction reporting",
+    )
+    capacity_proxy_parser.add_argument("--max-observer-views", default=4096, type=int)
+
     scale_bridge_parser = subparsers.add_parser(
         "scale-bridge-report",
         help="write OPH P/N dimensionless-invariant and independent-scale-bridge gate report",
@@ -520,6 +549,87 @@ def main(argv: list[str] | None = None) -> int:
         help="independent B_ell in m^-2; if supplied, gives ell_star^2 and G_SI",
     )
     scale_bridge_parser.add_argument("--source", default="cli_scale_bridge_report")
+
+    pn_resonance_parser = subparsers.add_parser(
+        "pn-resonance-report",
+        help="write the paper-faithful P/N resonance replay and promotion-gate report",
+    )
+    pn_resonance_parser.add_argument("--out", required=True, type=Path)
+    pn_resonance_parser.add_argument(
+        "--n-source",
+        default="ew-bridge",
+        choices=("ew-bridge", "screen-capacity-default", "direct"),
+        help="capacity source for the replay; default uses N=pi*exp(6*pi/(P*alpha_U))",
+    )
+    pn_resonance_parser.add_argument("--n-star", default=None, type=float)
+    pn_resonance_parser.add_argument("--p-star", default=None, type=float)
+    pn_resonance_parser.add_argument("--alpha-u", default=None, type=float)
+    pn_resonance_parser.add_argument("--b-ell-m2", default=None, type=float)
+    pn_resonance_parser.add_argument("--lambda-star-m2", default=None, type=float)
+    pn_resonance_parser.add_argument("--repair-rounds", default=24, type=int)
+    pn_resonance_parser.add_argument(
+        "--regulator-patch-counts",
+        default="4096,65536,262144,1048576",
+        help="comma-separated finite regulator patch counts for scale/capacity sidecars",
+    )
+    pn_resonance_parser.add_argument("--run-dir", nargs="*", default=None, type=Path)
+    pn_resonance_parser.add_argument("--source", default="cli_pn_resonance_report")
+
+    silence_parser = subparsers.add_parser(
+        "silence-to-observation-report",
+        help="write the finite scale-compressed P/N silence-to-observation witness for a run",
+    )
+    silence_parser.add_argument("--run-dir", required=True, type=Path)
+    silence_parser.add_argument("--out", default=None, type=Path)
+    silence_parser.add_argument(
+        "--n-source",
+        default="ew-bridge",
+        choices=("ew-bridge", "screen-capacity-default", "direct"),
+        help="capacity source for the P/N replay; default uses N=pi*exp(6*pi/(P*alpha_U))",
+    )
+    silence_parser.add_argument("--n-star", default=None, type=float)
+    silence_parser.add_argument("--p-star", default=None, type=float)
+    silence_parser.add_argument("--alpha-u", default=None, type=float)
+    silence_parser.add_argument("--repair-rounds", default=24, type=int)
+    silence_parser.add_argument("--source", default="cli_silence_to_observation_report")
+
+    pgk_parser = subparsers.add_parser(
+        "positive-geometry-kernel-report",
+        help="run the OPH positive-geometry kernel checker and emit fail-closed simulator gates",
+    )
+    pgk_parser.add_argument("--out", required=True, type=Path)
+    pgk_parser.add_argument(
+        "--manifest",
+        default=None,
+        type=Path,
+        help="PGK manifest; defaults to the bundled A614 geometry pilot",
+    )
+    pgk_parser.add_argument(
+        "--pgk-root",
+        default=None,
+        type=Path,
+        help="directory containing pgk_reference.py; defaults to the amplituhedron bundle",
+    )
+    pgk_parser.add_argument("--source", default="cli_positive_geometry_kernel_report")
+
+    no_g_clock_parser = subparsers.add_parser(
+        "no-g-clock-bridge-report",
+        help="write the OPH R_gamma no-G clock-bridge checksum and source-predictive gate audit",
+    )
+    no_g_clock_parser.add_argument("--out", required=True, type=Path)
+    no_g_clock_parser.add_argument("--epsilon-cs", default=None, type=float)
+    no_g_clock_parser.add_argument("--nu-cs-hz", default=None, type=float)
+    no_g_clock_parser.add_argument(
+        "--dependency-graph",
+        default=None,
+        type=Path,
+        help="JSON object mapping R_gamma/gamma_star nodes to their source dependencies",
+    )
+    no_g_clock_parser.add_argument("--source", default="compact_proof_R_gamma_display")
+    no_g_clock_parser.add_argument("--public-dependency-graph", action="store_true")
+    no_g_clock_parser.add_argument("--source-readback-map-emitted", action="store_true")
+    no_g_clock_parser.add_argument("--contraction-certificate", action="store_true")
+    no_g_clock_parser.add_argument("--residual-certificate", action="store_true")
 
     repair_scale_parser = subparsers.add_parser(
         "repair-scale-closure",
@@ -656,6 +766,38 @@ def main(argv: list[str] | None = None) -> int:
     physical_cmb_promotion_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
     physical_cmb_promotion_parser.add_argument("--include", nargs="*", default=[], type=Path)
     physical_cmb_promotion_parser.add_argument("--out", required=True, type=Path)
+
+    physical_cmb_frontier_parser = subparsers.add_parser(
+        "physical-cmb-frontier",
+        help="write a gate-by-gate frontier between CMB diagnostics and physical prediction status",
+    )
+    physical_cmb_frontier_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    physical_cmb_frontier_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    physical_cmb_frontier_parser.add_argument("--out", required=True, type=Path)
+
+    physical_cmb_output_parser = subparsers.add_parser(
+        "physical-cmb-output-comparison",
+        help="aggregate measurement-comparable CMB TT output metrics without promoting the hard CMB gate",
+    )
+    physical_cmb_output_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    physical_cmb_output_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    physical_cmb_output_parser.add_argument("--out", required=True, type=Path)
+
+    observer_consensus_bulk_parser = subparsers.add_parser(
+        "observer-consensus-bulk-readout",
+        help="write observer-local self-reading and theorem-assisted consensus 3D bulk readouts",
+    )
+    observer_consensus_bulk_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    observer_consensus_bulk_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    observer_consensus_bulk_parser.add_argument("--out", required=True, type=Path)
+    observer_consensus_bulk_parser.add_argument("--observer-sample-count", default=12, type=int)
+    observer_consensus_bulk_parser.add_argument("--object-sample-count", default=24, type=int)
+
+    official_planck_readiness_parser = subparsers.add_parser(
+        "official-planck-readiness",
+        help="write an environment readiness receipt for official Planck likelihood execution",
+    )
+    official_planck_readiness_parser.add_argument("--out", required=True, type=Path)
 
     finite_collar_boltzmann_parser = subparsers.add_parser(
         "finite-collar-boltzmann-bundle",
@@ -859,6 +1001,64 @@ def main(argv: list[str] | None = None) -> int:
     neutral_rank_selector_parser.add_argument("--report", nargs="+", required=True, type=Path)
     neutral_rank_selector_parser.add_argument("--out", required=True, type=Path)
 
+    neutral_frontier_parser = subparsers.add_parser(
+        "strict-neutral-bulk-frontier",
+        help="write a strict-neutral-bulk proof-frontier report from neutral audit receipts",
+    )
+    neutral_frontier_parser.add_argument("--report", nargs="+", required=True, type=Path)
+    neutral_frontier_parser.add_argument("--out", required=True, type=Path)
+
+    overlap_neutral_parser = subparsers.add_parser(
+        "neutral-overlap-control-report",
+        help="write observer-overlap native neutral negative-control diagnostics from observer_views.jsonl",
+    )
+    overlap_neutral_parser.add_argument("--run-dir", required=True, type=Path)
+    overlap_neutral_parser.add_argument("--out", default=None, type=Path)
+    overlap_neutral_parser.add_argument("--seed", default=1, type=int)
+    overlap_neutral_parser.add_argument("--max-model-points", default=256, type=int)
+
+    overlap_graph_parser = subparsers.add_parser(
+        "neutral-overlap-graph-geometry",
+        help="write observer-overlap graph geometry diagnostics from observer_views.jsonl",
+    )
+    overlap_graph_parser.add_argument("--run-dir", required=True, type=Path)
+    overlap_graph_parser.add_argument("--out", default=None, type=Path)
+    overlap_graph_parser.add_argument("--seed", default=1, type=int)
+    overlap_graph_parser.add_argument("--max-model-points", default=256, type=int)
+    overlap_graph_parser.add_argument("--k-neighbors", default=12, type=int)
+
+    overlap_graph_sweep_parser = subparsers.add_parser(
+        "neutral-overlap-graph-sweep",
+        help="sweep observer-overlap graph geometry parameters over one or more observer-view runs",
+    )
+    overlap_graph_sweep_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    overlap_graph_sweep_parser.add_argument("--out", required=True, type=Path)
+    overlap_graph_sweep_parser.add_argument("--seeds", default="1")
+    overlap_graph_sweep_parser.add_argument("--max-model-points-values", default="256")
+    overlap_graph_sweep_parser.add_argument("--k-neighbor-values", default="12")
+
+    overlap_residual_graph_parser = subparsers.add_parser(
+        "neutral-overlap-residual-graph",
+        help="write residualized observer-overlap graph geometry diagnostics from observer_views.jsonl",
+    )
+    overlap_residual_graph_parser.add_argument("--run-dir", required=True, type=Path)
+    overlap_residual_graph_parser.add_argument("--out", default=None, type=Path)
+    overlap_residual_graph_parser.add_argument("--seed", default=1, type=int)
+    overlap_residual_graph_parser.add_argument("--max-model-points", default=256, type=int)
+    overlap_residual_graph_parser.add_argument("--k-neighbors", default=12, type=int)
+    overlap_residual_graph_parser.add_argument("--remove-modes", default=1, type=int)
+
+    overlap_residual_graph_sweep_parser = subparsers.add_parser(
+        "neutral-overlap-residual-graph-sweep",
+        help="sweep residualized observer-overlap graph geometry parameters over one or more runs",
+    )
+    overlap_residual_graph_sweep_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    overlap_residual_graph_sweep_parser.add_argument("--out", required=True, type=Path)
+    overlap_residual_graph_sweep_parser.add_argument("--seeds", default="1")
+    overlap_residual_graph_sweep_parser.add_argument("--max-model-points-values", default="256")
+    overlap_residual_graph_sweep_parser.add_argument("--k-neighbor-values", default="12")
+    overlap_residual_graph_sweep_parser.add_argument("--remove-mode-values", default="1")
+
     paper_chart_parser = subparsers.add_parser(
         "paper-chart-receipts",
         help="write paper-side S2 conformal/Lorentz/H3 chart receipts into a run folder",
@@ -909,12 +1109,47 @@ def main(argv: list[str] | None = None) -> int:
     viewer_parser.add_argument("--out", default=None, type=Path)
     viewer_parser.add_argument("--max-screen-points", default=6000, type=int)
 
+    object_h3_viewer_parser = subparsers.add_parser(
+        "run-object-h3-viewer",
+        help="write a standalone 3D object-H3 bulk viewer from exported object coordinates",
+    )
+    object_h3_viewer_parser.add_argument("--run-dir", required=True, type=Path)
+    object_h3_viewer_parser.add_argument("--out", default=None, type=Path)
+    object_h3_viewer_parser.add_argument("--max-objects", default=512, type=int)
+
+    universe_timeline_viewer_parser = subparsers.add_parser(
+        "run-universe-timeline-viewer",
+        help="write a combined OPH screen/repair/observer-time/H3/CMB visualization bundle",
+    )
+    universe_timeline_viewer_parser.add_argument("--small-universe-dir", required=True, type=Path)
+    universe_timeline_viewer_parser.add_argument("--observer-run-dir", required=True, type=Path)
+    universe_timeline_viewer_parser.add_argument("--consensus-pack-dir", default=None, type=Path)
+    universe_timeline_viewer_parser.add_argument("--consensus-readout-dir", default=None, type=Path)
+    universe_timeline_viewer_parser.add_argument("--out-dir", required=True, type=Path)
+    universe_timeline_viewer_parser.add_argument("--max-screen-points", default=3500, type=int)
+    universe_timeline_viewer_parser.add_argument("--max-observers", default=96, type=int)
+    universe_timeline_viewer_parser.add_argument("--max-h3-objects", default=512, type=int)
+
     scale_viewer_parser = subparsers.add_parser(
         "run-scale-compressed-viewer",
         help="write a standalone viewer for scale-compressed repair/CMB outputs",
     )
     scale_viewer_parser.add_argument("--run-dir", required=True, type=Path)
     scale_viewer_parser.add_argument("--out", default=None, type=Path)
+
+    cmb_neutral_viewer_parser = subparsers.add_parser(
+        "run-cmb-neutral-frontier-viewer",
+        help="write a pack-level CMB/neutral-bulk frontier viewer",
+    )
+    cmb_neutral_viewer_parser.add_argument("--run-dir", required=True, type=Path)
+    cmb_neutral_viewer_parser.add_argument("--out", default=None, type=Path)
+
+    cmb_static_plots_parser = subparsers.add_parser(
+        "run-cmb-static-plots",
+        help="write static CMB comparison and neutral-gate PNG plots",
+    )
+    cmb_static_plots_parser.add_argument("--run-dir", required=True, type=Path)
+    cmb_static_plots_parser.add_argument("--out-dir", default=None, type=Path)
 
     defect_assay_parser = subparsers.add_parser(
         "controlled-defect-assay",
@@ -962,6 +1197,22 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.scale import run_bw_array_config
 
         result = run_bw_array_config(load_config(args.config), args.out_dir)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "run-oph-universe":
+        from oph_fpe.pipelines import run_oph_universe_pipeline
+
+        result = run_oph_universe_pipeline(
+            config_path=args.config,
+            out_dir=args.out_dir,
+            run_id=args.run_id,
+            source_run_dir=args.source_run_dir,
+            skip_base_run=args.skip_base_run,
+            max_screen_points=args.max_screen_points,
+            max_observers=args.max_observers,
+            max_h3_objects=args.max_h3_objects,
+            emit_visualizations=not args.skip_visualizations,
+        )
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command in {"shape-dodeca-smoke", "run-shape-substrate"}:
@@ -1448,6 +1699,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "capacity-readback-proxy-report":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.screen_capacity import DEFAULT_N_CRC, write_capacity_readback_proxy_report
+
+        result = write_capacity_readback_proxy_report(
+            args.run_dir,
+            args.out,
+            p_value=P_STAR if args.p_value is None else args.p_value,
+            n_crc=DEFAULT_N_CRC if args.n_crc is None else args.n_crc,
+            max_observer_views=args.max_observer_views,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "scale-bridge-report":
         from oph_fpe.constants.oph_pixel import P_STAR
         from oph_fpe.cosmology.scale_bridge import ScaleBridgeInputs, write_scale_bridge_report
@@ -1461,6 +1725,92 @@ def main(argv: list[str] | None = None) -> int:
                 Lambda_star_m2_inverse=args.lambda_star_m2,
                 B_ell_m2_inverse=args.b_ell_m2,
                 source=args.source,
+            ),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "pn-resonance-report":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.pn_resonance import (
+            ALPHA_U_P_STAR,
+            PNResonanceInputs,
+            write_pn_resonance_report,
+        )
+
+        patch_counts = tuple(
+            int(value.strip()) for value in args.regulator_patch_counts.split(",") if value.strip()
+        )
+        result = write_pn_resonance_report(
+            args.out,
+            PNResonanceInputs(
+                P_star=P_STAR if args.p_star is None else args.p_star,
+                alpha_U=ALPHA_U_P_STAR if args.alpha_u is None else args.alpha_u,
+                N_star=args.n_star,
+                N_source=args.n_source,
+                B_ell_m2_inverse=args.b_ell_m2,
+                Lambda_star_m2_inverse=args.lambda_star_m2,
+                repair_rounds=args.repair_rounds,
+                regulator_patch_counts=patch_counts,
+                source=args.source,
+            ),
+            run_dirs=args.run_dir,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "silence-to-observation-report":
+        from oph_fpe.cosmology.pn_resonance import ALPHA_U_P_STAR
+        from oph_fpe.cosmology.silence_to_observation import (
+            SilenceToObservationInputs,
+            write_silence_to_observation_report,
+        )
+
+        result = write_silence_to_observation_report(
+            args.run_dir,
+            args.out,
+            SilenceToObservationInputs(
+                P_star=args.p_star,
+                alpha_U=ALPHA_U_P_STAR if args.alpha_u is None else args.alpha_u,
+                N_star=args.n_star,
+                N_source=args.n_source,
+                repair_rounds=args.repair_rounds,
+                source=args.source,
+            ),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "positive-geometry-kernel-report":
+        from oph_fpe.dynamics.positive_geometry import write_positive_geometry_kernel_report
+
+        result = write_positive_geometry_kernel_report(
+            args.out,
+            manifest_path=args.manifest,
+            pgk_root=args.pgk_root,
+            source=args.source,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "no-g-clock-bridge-report":
+        from oph_fpe.cosmology.scale_bridge import (
+            EPSILON_CS_SELECTED,
+            NU_CS_HZ,
+            NoGClockBridgeInputs,
+            write_no_g_clock_bridge_report,
+        )
+
+        dependency_graph = None
+        if args.dependency_graph is not None:
+            dependency_graph = json.loads(args.dependency_graph.read_text(encoding="utf-8"))
+        result = write_no_g_clock_bridge_report(
+            args.out,
+            NoGClockBridgeInputs(
+                epsilon_cs=EPSILON_CS_SELECTED if args.epsilon_cs is None else args.epsilon_cs,
+                nu_cs_hz=NU_CS_HZ if args.nu_cs_hz is None else args.nu_cs_hz,
+                dependency_graph=dependency_graph,
+                source=args.source,
+                source_readback_map_emitted=args.source_readback_map_emitted,
+                contraction_certificate=args.contraction_certificate,
+                residual_certificate=args.residual_certificate,
+                public_dependency_graph=args.public_dependency_graph,
             ),
         )
         print(json.dumps(result, indent=2, default=str))
@@ -1578,6 +1928,35 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.cosmology.physical_cmb_prediction import write_physical_cmb_promotion_audit_report
 
         result = write_physical_cmb_promotion_audit_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "physical-cmb-frontier":
+        from oph_fpe.cosmology.physical_cmb_prediction import write_physical_cmb_frontier_report
+
+        result = write_physical_cmb_frontier_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "physical-cmb-output-comparison":
+        from oph_fpe.cosmology.physical_cmb_output import write_physical_cmb_output_comparison_report
+
+        result = write_physical_cmb_output_comparison_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "observer-consensus-bulk-readout":
+        from oph_fpe.bulk.observer_consensus_bulk import write_observer_consensus_bulk_readout_report
+
+        result = write_observer_consensus_bulk_readout_report(
+            [*args.run_dir, *args.include],
+            args.out,
+            observer_sample_count=args.observer_sample_count,
+            object_sample_count=args.object_sample_count,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "official-planck-readiness":
+        from oph_fpe.cosmology.camb_adapter import write_official_planck_readiness_report
+
+        result = write_official_planck_readiness_report(args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "finite-collar-boltzmann-bundle":
@@ -1786,6 +2165,73 @@ def main(argv: list[str] | None = None) -> int:
         result = write_neutral_independent_rank_selector_audit_report(args.report, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "strict-neutral-bulk-frontier":
+        from oph_fpe.bulk.neutral_bulk import write_strict_neutral_bulk_frontier_report
+
+        result = write_strict_neutral_bulk_frontier_report(args.report, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-overlap-control-report":
+        from oph_fpe.bulk.neutral_bulk import write_overlap_native_neutral_control_report
+
+        result = write_overlap_native_neutral_control_report(
+            args.run_dir,
+            args.out,
+            seed=args.seed,
+            max_model_points=args.max_model_points,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-overlap-graph-geometry":
+        from oph_fpe.bulk.neutral_bulk import write_overlap_native_graph_geometry_report
+
+        result = write_overlap_native_graph_geometry_report(
+            args.run_dir,
+            args.out,
+            seed=args.seed,
+            max_model_points=args.max_model_points,
+            k_neighbors=args.k_neighbors,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-overlap-graph-sweep":
+        from oph_fpe.bulk.neutral_bulk import write_overlap_native_graph_geometry_sweep_report
+
+        result = write_overlap_native_graph_geometry_sweep_report(
+            args.run_dir,
+            args.out,
+            seeds=tuple(int(value) for value in _csv_values(args.seeds)),
+            max_model_points_values=tuple(int(value) for value in _csv_values(args.max_model_points_values)),
+            k_neighbor_values=tuple(int(value) for value in _csv_values(args.k_neighbor_values)),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-overlap-residual-graph":
+        from oph_fpe.bulk.neutral_bulk import write_overlap_residualized_graph_geometry_report
+
+        result = write_overlap_residualized_graph_geometry_report(
+            args.run_dir,
+            args.out,
+            seed=args.seed,
+            max_model_points=args.max_model_points,
+            k_neighbors=args.k_neighbors,
+            remove_modes=args.remove_modes,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "neutral-overlap-residual-graph-sweep":
+        from oph_fpe.bulk.neutral_bulk import write_overlap_residualized_graph_geometry_sweep_report
+
+        result = write_overlap_residualized_graph_geometry_sweep_report(
+            args.run_dir,
+            args.out,
+            seeds=tuple(int(value) for value in _csv_values(args.seeds)),
+            max_model_points_values=tuple(int(value) for value in _csv_values(args.max_model_points_values)),
+            k_neighbor_values=tuple(int(value) for value in _csv_values(args.k_neighbor_values)),
+            remove_mode_values=tuple(int(value) for value in _csv_values(args.remove_mode_values)),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "paper-chart-receipts":
         from oph_fpe.bulk.conformal_spatial_chart import write_paper_chart_receipts
 
@@ -1848,10 +2294,43 @@ def main(argv: list[str] | None = None) -> int:
         result = write_run_viewer(args.run_dir, args.out, max_screen_points=args.max_screen_points)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "run-object-h3-viewer":
+        from oph_fpe.viz import write_object_h3_bulk_viewer
+
+        result = write_object_h3_bulk_viewer(args.run_dir, args.out, max_objects=args.max_objects)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "run-universe-timeline-viewer":
+        from oph_fpe.viz import write_universe_timeline_bundle
+
+        result = write_universe_timeline_bundle(
+            small_universe_dir=args.small_universe_dir,
+            observer_run_dir=args.observer_run_dir,
+            consensus_pack_dir=args.consensus_pack_dir,
+            consensus_readout_dir=args.consensus_readout_dir,
+            out_dir=args.out_dir,
+            max_screen_points=args.max_screen_points,
+            max_observers=args.max_observers,
+            max_h3_objects=args.max_h3_objects,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "run-scale-compressed-viewer":
         from oph_fpe.viz import write_scale_compressed_viewer
 
         result = write_scale_compressed_viewer(args.run_dir, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "run-cmb-neutral-frontier-viewer":
+        from oph_fpe.viz import write_cmb_neutral_frontier_viewer
+
+        result = write_cmb_neutral_frontier_viewer(args.run_dir, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "run-cmb-static-plots":
+        from oph_fpe.viz import write_cmb_static_plots
+
+        result = write_cmb_static_plots(args.run_dir, args.out_dir)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "controlled-defect-assay":

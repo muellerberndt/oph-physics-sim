@@ -2,11 +2,12 @@ OPH repair-round scale-closure note
 ===================================
 
 Status: hypothesis / diagnostic lane. This is not a finite proof of 3D bulk,
-not a physical CMB prediction, and not a derivation of exactly 24 repair
-rounds. It is useful because it links the local P closure, the global N_CRC
-capacity closure, and the observed scalar-tilt target in one compact scale law.
+not a physical CMB prediction, not a derivation of N_CRC from P alone, and not
+a derivation of exactly 24 repair rounds. It is useful because it compares the
+local P closure, the global N_CRC capacity closure, and the observed
+scalar-tilt target through one declared repair-depth ansatz.
 
-Maarten's equation:
+Declared consistency equation:
 
   |g'(P)| = N_CRC^(-1/48)
 
@@ -37,7 +38,7 @@ OPH local-pixel form:
   |g'(P)| = alpha(P) / phi^2
           = (P - phi) / (sqrt(pi) phi^2)
 
-and therefore:
+and the declared 24-round ansatz therefore implies:
 
   N_CRC = |g'(P)|^-48
 
@@ -45,8 +46,13 @@ Numerically, with P ~= 1.6309682094039593:
 
   alpha(P) / phi^2 ~= 0.002787
   q ~= 359
-  N_CRC(P) ~= 4.3e122
+  N_CRC implied by the 24-round ansatz ~= 4.3e122
   n_s = 1 - P/48 ~= 0.9660215
+
+This is a consistency diagnostic for the declared repair-depth lane. In the
+current paper stack P and N_CRC are separate closure coordinates; P/N invariants
+are dimensionless, and a dimensionful SI scale requires an independent scale
+bridge.
 
 Practical simulation consequence:
 

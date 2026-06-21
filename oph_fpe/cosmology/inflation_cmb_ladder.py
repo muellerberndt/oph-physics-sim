@@ -23,23 +23,19 @@ def screen_spectrum_prediction(
     epsilon_star_bits: float = EPSILON_CMB_STAR_BITS,
     sachs_wolfe_curvature_ratio: float = 5.0,
 ) -> dict[str, Any]:
-    """Return the Pro v2 OPH screen-spectrum theorem-target numbers.
+    """Return the claim-bounded OPH screen-spectrum theorem-target numbers.
 
-    The note's scalar branch is
-
-        Delta_zeta^2(k) = A_zeta (k/k_*)^(-P/48)
-
-    with A_zeta = R_zeta^2 * 4 ln(2) * epsilon_star and R_zeta ~= 5
-    from the Sachs-Wolfe temperature-to-curvature conversion.
+    CMI/Fawzi-Renner control is an upper bound on screen release observables.
+    It is not an equality for A_q and it is not a source of A_zeta. A_zeta is
+    null until scalar-release-energy and screen-to-primordial lift receipts pass.
     """
 
     theta_oph = float(P) / 48.0
     lambda_collar = math.exp(-float(P) / 24.0)
-    a_temperature = 4.0 * math.log(2.0) * float(epsilon_star_bits)
-    a_zeta = float(sachs_wolfe_curvature_ratio) ** 2 * a_temperature
+    a_q_cmi_upper_bound = 4.0 * math.log(2.0) * float(epsilon_star_bits)
     ns = 1.0 - theta_oph
     return {
-        "mode": "oph_screen_green_spectrum_theorem_target",
+        "mode": "oph_screen_green_spectrum_conditional_target",
         "P": float(P),
         "lambda_collar": float(lambda_collar),
         "theta_OPH": float(theta_oph),
@@ -48,16 +44,21 @@ def screen_spectrum_prediction(
         "planck_n_s_sigma": PLANCK_NS_SIGMA,
         "n_s_pull_vs_planck": float((ns - PLANCK_NS_TARGET) / PLANCK_NS_SIGMA),
         "epsilon_star_bits": float(epsilon_star_bits),
-        "A_T_temperature": float(a_temperature),
-        "sachs_wolfe_curvature_ratio": float(sachs_wolfe_curvature_ratio),
-        "A_zeta": float(a_zeta),
+        "A_q_cmi_upper_bound": float(a_q_cmi_upper_bound),
+        "bound_saturation_claimed": False,
+        "sachs_wolfe_curvature_ratio_rejected": float(sachs_wolfe_curvature_ratio),
+        "Sachs_Wolfe_conversion_used": False,
+        "A_q_energy": None,
+        "A_zeta": None,
         "Planck_A_s_reference": PLANCK_AS_REFERENCE,
-        "A_zeta_over_Planck_A_s_reference": float(a_zeta / PLANCK_AS_REFERENCE),
-        "primordial_power_law": "Delta_zeta^2(k)=A_zeta*(k/k_star)^(-P/48)",
+        "A_zeta_over_Planck_A_s_reference": None,
+        "screen_power_law": "C_l^q=A_q*[ell(ell+1)]^(-1-P/96) after amplitude receipt",
+        "primordial_power_law": None,
+        "screen_to_primordial_lift_receipt": False,
         "claim_boundary": (
-            "Theorem-target scalar screen spectrum from the Pro inflation/CMB notes. This is a "
-            "quantitative OPH continuation target, not evidence that the current finite lattice "
-            "has derived the scalar spectrum from collar microphysics."
+            "Conditional scalar screen-spectrum target. The tilt target is theorem-side until a finite "
+            "operator/clock certificate passes; CMI gives only an A_q upper bound; A_zeta remains null "
+            "until the radial lift receipt passes."
         ),
     }
 
@@ -203,7 +204,7 @@ def inflation_cmb_bridge_report(source_dir: Path | None = None) -> dict[str, Any
         "inflation_replacement_modules": {
             "flatness": "zero visible curvature holonomy sector, Omega_K=0",
             "spectrum": "legacy screen Green target n_s=1-P/48 plus current unique target n_s=1-e*alpha(0)*sqrt(pi)",
-            "amplitude": "collar-error amplitude selector A_zeta=100 ln(2) epsilon_star",
+            "amplitude": "scalar release energy and radial lift certificates pending; no derived A_zeta",
             "transfer": "standard photon-baryon Boltzmann transfer with an OPH anomaly stress component",
             "hot_start": "hot MaxEnt release state, not inflaton reheating",
             "adiabaticity": "same-boundary scalar normal form gives S_ij=0 up to synchronization residue",
@@ -381,7 +382,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- theta_OPH = P/48: {screen['theta_OPH']:.12g}",
         f"- n_s = 1 - P/48: {screen['n_s']:.12g}",
         f"- Planck n_s pull: {screen['n_s_pull_vs_planck']:.4g} sigma",
-        f"- A_zeta selector: {screen['A_zeta']:.12g}",
+        f"- A_q CMI upper bound: {screen['A_q_cmi_upper_bound']:.12g}",
+        f"- A_zeta: {screen['A_zeta'] if screen['A_zeta'] is not None else 'pending lift receipt'}",
         "",
         "## Flat Sector",
         "",

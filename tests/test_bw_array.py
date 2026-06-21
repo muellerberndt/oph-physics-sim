@@ -8,6 +8,9 @@ from oph_fpe.experiments import load_config
 from oph_fpe.scale.bw_array import (
     _attach_modular_response_histograms,
     _attach_transition_history_histograms,
+    _array_port_pair_consensus_replay_report,
+    _collar_report,
+    _collar_width_from_config,
     _lorentz_branch_receipts,
     run_bw_array_config,
 )
@@ -59,6 +62,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "edge_sector_heat_kernel_report.json").exists()
     assert (run_path / "central_record_born_report.json").exists()
     assert (run_path / "observer_checkpoint_restoration_report.json").exists()
+    assert (run_path / "observer_modular_experience_report.json").exists()
     assert (run_path / "array_holonomy_report.json").exists()
     assert (run_path / "freezeout_fields.npz").exists()
     assert (run_path / "freezeout_map_summary.json").exists()
@@ -90,6 +94,8 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     edge_sector = json.loads((run_path / "edge_sector_heat_kernel_report.json").read_text(encoding="utf-8"))
     born = json.loads((run_path / "central_record_born_report.json").read_text(encoding="utf-8"))
     checkpoint = json.loads((run_path / "observer_checkpoint_restoration_report.json").read_text(encoding="utf-8"))
+    theorem = json.loads((run_path / "theorem_core_receipts.json").read_text(encoding="utf-8"))
+    experience = json.loads((run_path / "observer_modular_experience_report.json").read_text(encoding="utf-8"))
 
     assert bw_report["rows"][0]["weight_measure"] == "cell_entropy_capacity"
     assert isclose(bw_report["rows"][0]["target_scale"], 2.0 * pi)
@@ -108,18 +114,35 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert defect_cluster_h3["mode"] == "support_profile_h3_fit"
     assert cap_report["regulator_collar"]["mode"] == "cell_scaled"
     assert cap_report["regulator_collar"]["collar_width"] > 0.0
+    assert cap_report["regulator_collar"]["collar_to_cell_ratio"] > 0.0
+    assert cap_report["regulator_collar"]["double_scaling_delta_to_zero"] is False
     assert cap_report["caps"][0]["soft_cap_area_planck"] > 0.0
     assert cap_report["caps"][0]["soft_cap_entropy_capacity"] > 0.0
     assert observer_rows
     assert {row["view_type"] for row in observer_rows} == {"patch_observer", "cap_observer"}
+    patch_rows = [row for row in observer_rows if row["view_type"] == "patch_observer"]
+    assert "modular_depth_mean" in patch_rows[0]
+    assert "observer_relative_times" in patch_rows[0]
+    assert experience["observer_modular_time_receipt"] is True
+    assert experience["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
+    assert "h3_modular_response_receipt" in experience["blockers"]
     assert consensus_report["observer_count"] > 0
     assert consensus_report["global_committed_fraction"] >= 0.0
     assert emergence_status["bulk_3d_established"] is False
+    assert emergence_status["final_phi_zero"] is (result["final_phi"] == 0)
+    assert emergence_status["FINITE_SETTLE_DIAGNOSTIC_RECEIPT"] is (result["final_phi"] == 0)
+    assert emergence_status["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert "theorem_phase_repair_events" in emergence_status["finite_consensus_missing_evidence"]
     assert emergence_status["requires_refinement_scaling"] is True
+    assert theorem["finite_settle_diagnostic"]["canonical_tier"] == "C0a"
+    assert theorem["finite_consensus_theorem"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert theorem["finite_consensus_theorem_receipt"] is False
     assert "observer_consensus" in manifest
     assert "mandatory_controls" in manifest
     assert "emergence_status" in manifest
     assert "cosmology_observables" in manifest
+    assert manifest["theorem_core_receipts"]["finite_consensus_theorem_receipt"] is False
+    assert manifest["observer_modular_experience"]["observer_modular_time_receipt"] is True
     assert "harmonic_time_trace" in manifest
     assert harmonic_trace["cycles"].shape[0] == 3
     assert harmonic_trace["ell"].shape[0] == 5
@@ -242,6 +265,10 @@ def test_lorentz_branch_receipts_split_chart_automorphism_and_endogenous():
 
     assert direct_receipts["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
     assert direct_receipts["BW_AUTOMORPHISM_SANITY_RECEIPT"] is True
+    assert direct_receipts["BW_KMS_BRANCH_REPLAY_RECEIPT"] is True
+    assert direct_receipts["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
+    assert direct_receipts["finite_lorentz_theorem_contract_receipt"] is False
+    assert direct_receipts["lorentz_receipt_taxonomy"] == "L0_branch_replay_not_L1_L7_finite_contract"
     assert direct_receipts["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
     assert direct_receipts["support_visible_lorentz_3p1_kinematics_receipt"] is True
 
@@ -255,7 +282,48 @@ def test_lorentz_branch_receipts_split_chart_automorphism_and_endogenous():
     assert cap_flow_receipts["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
     assert cap_flow_receipts["DECLARED_CAP_FLOW_GENERATOR_DIAGNOSTIC"] is True
     assert cap_flow_receipts["BW_AUTOMORPHISM_SANITY_RECEIPT"] is False
+    assert cap_flow_receipts["BW_KMS_BRANCH_REPLAY_RECEIPT"] is False
+    assert cap_flow_receipts["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
     assert cap_flow_receipts["support_visible_lorentz_3p1_kinematics_receipt"] is False
+
+
+def test_double_scaling_collar_shrinks_but_expands_relative_to_uv():
+    cfg = {
+        "collar_width_mode": "double_scaling",
+        "angular_prefactor": 0.8,
+        "angular_exponent": 0.25,
+    }
+
+    width_4k = _collar_width_from_config(cfg, 4096)
+    width_256k = _collar_width_from_config(cfg, 262144)
+    report_4k = _collar_report(cfg, 4096, width_4k)
+    report_256k = _collar_report(cfg, 262144, width_256k)
+
+    assert isclose(width_4k, 0.8 * 4096.0 ** -0.25)
+    assert width_256k < width_4k
+    assert report_4k["double_scaling_delta_to_zero"] is True
+    assert report_4k["double_scaling_collar_to_cell_diverges"] is True
+    assert report_256k["collar_to_cell_ratio"] > report_4k["collar_to_cell_ratio"]
+
+
+def test_array_port_pair_consensus_replay_emits_c0b_evidence():
+    left = np.asarray([2, 1, 4, 3, 0], dtype=np.int16)
+    right = np.asarray([1, 1, 0, 5, 0], dtype=np.int16)
+
+    report = _array_port_pair_consensus_replay_report(
+        left,
+        right,
+        group_order=6,
+        config={"enabled": True, "schedule_replays": 4, "requested_schedule_replays": 4, "max_event_rows": 2},
+        seed=17,
+    )
+
+    assert report["receipt"] is True
+    assert report["evidence"]["theorem_phase_event_count"] == 3
+    assert report["evidence"]["strict_descent_violation_count"] == 0
+    assert report["evidence"]["unique_terminal_quotient_hash_count"] == 1
+    assert len(report["sample_events"]) == 2
+    assert all(event["phase"] == "theorem" for event in report["sample_events"])
 
 
 def test_state_modular_array_writes_gated_receipts(tmp_path: Path):
@@ -311,6 +379,15 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     config["bw"]["selection"] = dict(config["bw"]["selection"], max_basis=16)
     config["observers"] = dict(config["observers"], sample_count=16, neighborhood_size=16)
     config["observer_objects"] = dict(config["observer_objects"], max_families=64)
+    config["theorem_core"] = {
+        "consensus_replay": {
+            "enabled": True,
+            "schedule_replays": 4,
+            "requested_schedule_replays": 4,
+            "max_event_rows": 4,
+            "disjoint_checks": 16,
+        }
+    }
 
     result = run_bw_array_config(config, tmp_path)
     run_path = Path(result["path"])
@@ -318,6 +395,8 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     selection = json.loads((run_path / "transition_scale_selection_report.json").read_text(encoding="utf-8"))
     state = json.loads((run_path / "bw_state_derived_report.json").read_text(encoding="utf-8"))
     status = json.loads((run_path / "emergence_status_report.json").read_text(encoding="utf-8"))
+    theorem = json.loads((run_path / "theorem_core_receipts.json").read_text(encoding="utf-8"))
+    replay = json.loads((run_path / "finite_consensus_replay_report.json").read_text(encoding="utf-8"))
     manifest = json.loads((run_path / "manifest.json").read_text(encoding="utf-8"))
 
     assert state["direct_transition_automorphism"] is True
@@ -332,16 +411,28 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     assert "transition_two_pi_selected_by_primary" in status
     assert "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT" in status
     assert "BW_AUTOMORPHISM_SANITY_RECEIPT" in status
+    assert "BW_KMS_BRANCH_REPLAY_RECEIPT" in status
+    assert "OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1" in status
     assert "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT" in status
     assert "support_visible_lorentz_3p1_kinematics_receipt" in status
     assert status["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
+    assert status["BW_KMS_BRANCH_REPLAY_RECEIPT"] is True
+    assert status["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
+    assert status["finite_consensus_theorem_receipt"] is True
+    assert status["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
+    assert status["finite_lorentz_theorem_contract_receipt"] is False
     assert status["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
     assert status["bulk_3d_established"] is False
     assert "Endogenous observer-record modular generators" in status["lorentz_claim_boundary"]
     assert manifest["transition_scale_selection"]["primary_source"] == "kms_collar_transport_response"
     assert "support_visible_lorentz_3p1_kinematics_receipt" in manifest["emergence_status"]
+    assert manifest["theorem_core_receipts"]["finite_consensus_theorem_receipt"] is True
     assert manifest["emergence_status"]["bulk_3d_established"] is False
     assert result["transition_scale_selection"]["primary_source"] == "kms_collar_transport_response"
+    assert result["theorem_core_receipts"]["finite_consensus_theorem"] is True
+    assert theorem["finite_consensus_theorem"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
+    assert replay["receipt"] is True
+    assert replay["evidence"]["schedule_replay_count"] == 4
 
 
 def test_lorentz_receipt_uses_direct_kms_selection_when_endogenous_state_fails():
@@ -361,9 +452,12 @@ def test_lorentz_receipt_uses_direct_kms_selection_when_endogenous_state_fails()
 
     assert receipts["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
     assert receipts["BW_KMS_DIRECT_2PI_RECEIPT"] is True
+    assert receipts["BW_KMS_BRANCH_REPLAY_RECEIPT"] is True
     assert receipts["CHART_LORENTZ_H3_RECEIPT"] is True
     assert receipts["support_visible_lorentz_3p1_kinematics_receipt"] is True
     assert receipts["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
+    assert receipts["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
+    assert receipts["finite_lorentz_theorem_contract_receipt"] is False
 
 
 def test_kms_freezeout_cl_proxy_is_gate_checked(tmp_path: Path):
@@ -476,6 +570,8 @@ def test_e3_cosmo_proxy_compact_profile_suppresses_debug_payloads(tmp_path: Path
     assert modular_h3["physical_claim"] is False
     assert theorem["lyapunov"]["LYAPUNOV_DESCENT_RECEIPT"] is True
     assert theorem["exact_repair_projection"]["EXACT_REPAIR_EQUALS_PROJECTION_RECEIPT"] is True
+    assert theorem["finite_settle_diagnostic"]["FINITE_SETTLE_DIAGNOSTIC_RECEIPT"] is True
+    assert theorem["finite_consensus_theorem"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
     assert theorem["sm_quotient_gate"]["SM_QUOTIENT_GATE_RECEIPT"] is True
     assert cl_report["output_profile"] == "compact"
     assert cl_report["claim_level"] == "proxy"

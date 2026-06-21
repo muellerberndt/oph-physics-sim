@@ -268,6 +268,11 @@ def _perturb_remeasure_pullback(
     response_matrix = np.zeros((basis.size, basis.size), dtype=float)
     total_perturbed_edges = 0
     total_repaired_edges = 0
+    exact_basis_masses: list[float] = []
+    projected_basis_masses: list[float] = []
+    projection_fallbacks = 0
+    source_echo_masses: list[float] = []
+    source_echo_suppressed = 0
 
     for row, node in enumerate(basis):
         pl = port_left.copy()
@@ -301,9 +306,23 @@ def _perturb_remeasure_pullback(
         after_signature = _node_packet_signature(pl, pr, left, right, patch_count)
         changed = (after_signature != before_signature).astype(float)
         response = repair_count + 0.5 * changed
-        if not np.any(response[basis] > 0.0):
-            response[int(node)] = 1.0
-        response_matrix[row, :] = response[basis]
+        exact_basis_masses.append(float(np.sum(response[basis])))
+        basis_response = _project_patch_response_to_basis(points, basis, response, source_node=int(node))
+        if not np.any(basis_response > 0.0):
+            projection_fallbacks += 1
+            source_position = int(np.flatnonzero(basis == int(node))[0]) if np.any(basis == int(node)) else 0
+            basis_response[source_position] = 1.0
+        source_positions = np.flatnonzero(basis == int(node))
+        if source_positions.size:
+            source_position = int(source_positions[0])
+            source_echo = float(basis_response[source_position])
+            nonself_mass = float(np.sum(basis_response) - source_echo)
+            if nonself_mass > 1.0e-12:
+                source_echo_masses.append(source_echo)
+                basis_response[source_position] = 0.0
+                source_echo_suppressed += 1
+        projected_basis_masses.append(float(np.sum(basis_response)))
+        response_matrix[row, :] = basis_response
 
     if cap_flow_scale is not None:
         transition, eta_response, flow_meta = _cap_flow_graph_transition(
@@ -335,12 +354,65 @@ def _perturb_remeasure_pullback(
         assignment_metric_name: float(assignment_metric),
         "mean_perturbed_edges_per_source": float(total_perturbed_edges / max(int(basis.size), 1)),
         "mean_repaired_edges_per_source": float(total_repaired_edges / max(int(basis.size), 1)),
+        "exact_basis_response_mass_mean": float(np.mean(exact_basis_masses)) if exact_basis_masses else 0.0,
+        "projected_basis_response_mass_mean": (
+            float(np.mean(projected_basis_masses)) if projected_basis_masses else 0.0
+        ),
+        "basis_response_projection_fallback_fraction": float(projection_fallbacks / max(int(basis.size), 1)),
+        "source_echo_suppression_fraction": float(source_echo_suppressed / max(int(basis.size), 1)),
+        "source_echo_mass_mean_before_suppression": (
+            float(np.mean(source_echo_masses)) if source_echo_masses else 0.0
+        ),
+        "basis_response_projection": "local_full_graph_response_projected_to_sparse_cap_basis",
         "probe_steps": int(probe_steps),
         "probe_repairs_per_source": int(probe_repairs_per_source),
         "probe_max_incident_edges": int(probe_max_incident_edges),
         "response_feature_count": 0,
         **flow_meta,
     }
+
+
+def _project_patch_response_to_basis(
+    points: np.ndarray,
+    basis: np.ndarray,
+    response: np.ndarray,
+    *,
+    source_node: int,
+    projection_k: int = 8,
+) -> np.ndarray:
+    """Compress all-patch perturb/repair response onto a sparse cap basis."""
+
+    basis = np.asarray(basis, dtype=np.int64)
+    response = np.asarray(response, dtype=float)
+    if basis.size == 0:
+        return np.zeros(0, dtype=float)
+    projected = np.asarray(response[basis], dtype=float).copy()
+    active = np.flatnonzero(response > 0.0)
+    if active.size:
+        basis_points = np.asarray(points[basis], dtype=float)
+        active_points = np.asarray(points[active], dtype=float)
+        distances = np.linalg.norm(active_points[:, None, :] - basis_points[None, :, :], axis=2)
+        k = min(max(1, int(projection_k)), basis.size)
+        nearest = np.argpartition(distances, kth=k - 1, axis=1)[:, :k]
+        nearest_distances = np.take_along_axis(distances, nearest, axis=1)
+        basis_spacing = _positive_median(np.linalg.norm(basis_points[:, None, :] - basis_points[None, :, :], axis=2))
+        active_spacing = _positive_median(nearest_distances[:, 0])
+        sigma = max(0.35 * basis_spacing, active_spacing, 1.0e-12)
+        for active_row, neighbors in enumerate(nearest):
+            local_distances = nearest_distances[active_row]
+            weights = np.exp(-0.5 * np.square(local_distances / sigma))
+            weight_sum = float(np.sum(weights))
+            if weight_sum <= 1.0e-15:
+                continue
+            projected[neighbors] += float(response[active[active_row]]) * weights / weight_sum
+    if not np.any(projected > 0.0) and 0 <= int(source_node) < points.shape[0]:
+        source_distances = np.linalg.norm(np.asarray(points[basis], dtype=float) - np.asarray(points[int(source_node)], dtype=float), axis=1)
+        k = min(max(1, int(projection_k)), basis.size)
+        nearest = np.argpartition(source_distances, kth=k - 1)[:k]
+        weights = np.exp(-0.5 * np.square(source_distances[nearest] / max(_positive_median(source_distances), 1.0e-12)))
+        weight_sum = float(np.sum(weights))
+        projected[nearest] = weights / max(weight_sum, 1.0e-15)
+    return projected
 
 
 def _cap_flow_graph_transition(

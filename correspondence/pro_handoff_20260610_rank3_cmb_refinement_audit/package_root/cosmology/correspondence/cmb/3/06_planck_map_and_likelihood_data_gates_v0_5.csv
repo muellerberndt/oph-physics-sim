@@ -1,8 +1,0 @@
-product,url,role,local_status
-Planck PR3 CMB component maps directory,https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/,SMICA/NILC/Commander/SEVEM maps for phase-sensitive anomaly tests,not downloaded in this runtime; direct HTTP unavailable from container
-SMICA noSZ full map,https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-smica-nosz_2048_R3.00_full.fits,smaller 384 MB CMB I/Q/U map useful for smoke test,"download script emitted, not run"
-SMICA full map,https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-smica_2048_R3.00_full.fits,official SMICA component-separated map for temperature/polarization analysis,"download script emitted, not run"
-NILC full map,https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-nilc_2048_R3.00_full.fits,component-separation cross-check,"download script emitted, not run"
-Commander full map,https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-commander_2048_R3.00_full.fits,component-separation cross-check,"download script emitted, not run"
-SEVEM full map,https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-sevem_2048_R3.00_full.fits,component-separation cross-check,"download script emitted, not run"
-Planck PR3 cosmoparams spectra directory,https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/,TT/TE/EE public spectra and best-fit theory already used in v0.2-v0.5,spectra present locally

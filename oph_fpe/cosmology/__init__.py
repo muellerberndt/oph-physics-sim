@@ -74,6 +74,22 @@ _EXPORTS = {
         "oph_fpe.cosmology.physical_cmb_prediction",
         "write_physical_cmb_input_no_data_use_receipt",
     ),
+    "physical_cmb_frontier_report": (
+        "oph_fpe.cosmology.physical_cmb_prediction",
+        "physical_cmb_frontier_report",
+    ),
+    "write_physical_cmb_frontier_report": (
+        "oph_fpe.cosmology.physical_cmb_prediction",
+        "write_physical_cmb_frontier_report",
+    ),
+    "physical_cmb_output_comparison_report": (
+        "oph_fpe.cosmology.physical_cmb_output",
+        "physical_cmb_output_comparison_report",
+    ),
+    "write_physical_cmb_output_comparison_report": (
+        "oph_fpe.cosmology.physical_cmb_output",
+        "write_physical_cmb_output_comparison_report",
+    ),
     "finite_collar_boltzmann_bundle_report": (
         "oph_fpe.cosmology.finite_collar_boltzmann_bundle",
         "finite_collar_boltzmann_bundle_report",
@@ -128,6 +144,10 @@ _EXPORTS = {
     "official_planck_readiness_report": (
         "oph_fpe.cosmology.camb_adapter",
         "official_planck_readiness_report",
+    ),
+    "write_official_planck_readiness_report": (
+        "oph_fpe.cosmology.camb_adapter",
+        "write_official_planck_readiness_report",
     ),
     "OPHConstants": ("oph_fpe.cosmology.oph_constants", "OPHConstants"),
     "B_A_z6_poisson_five_of_seven": (
@@ -189,9 +209,21 @@ _EXPORTS = {
         "oph_fpe.cosmology.screen_capacity",
         "write_screen_capacity_closure_report",
     ),
+    "capacity_readback_proxy_report": (
+        "oph_fpe.cosmology.screen_capacity",
+        "capacity_readback_proxy_report",
+    ),
+    "write_capacity_readback_proxy_report": (
+        "oph_fpe.cosmology.screen_capacity",
+        "write_capacity_readback_proxy_report",
+    ),
     "ScaleBridgeInputs": (
         "oph_fpe.cosmology.scale_bridge",
         "ScaleBridgeInputs",
+    ),
+    "NoGClockBridgeInputs": (
+        "oph_fpe.cosmology.scale_bridge",
+        "NoGClockBridgeInputs",
     ),
     "dimensionless_pn_invariants": (
         "oph_fpe.cosmology.scale_bridge",
@@ -204,6 +236,42 @@ _EXPORTS = {
     "write_scale_bridge_report": (
         "oph_fpe.cosmology.scale_bridge",
         "write_scale_bridge_report",
+    ),
+    "no_g_clock_bridge_report": (
+        "oph_fpe.cosmology.scale_bridge",
+        "no_g_clock_bridge_report",
+    ),
+    "write_no_g_clock_bridge_report": (
+        "oph_fpe.cosmology.scale_bridge",
+        "write_no_g_clock_bridge_report",
+    ),
+    "PNResonanceInputs": (
+        "oph_fpe.cosmology.pn_resonance",
+        "PNResonanceInputs",
+    ),
+    "ew_bridge_capacity_from_p_alpha": (
+        "oph_fpe.cosmology.pn_resonance",
+        "ew_bridge_capacity_from_p_alpha",
+    ),
+    "pn_resonance_report": (
+        "oph_fpe.cosmology.pn_resonance",
+        "pn_resonance_report",
+    ),
+    "write_pn_resonance_report": (
+        "oph_fpe.cosmology.pn_resonance",
+        "write_pn_resonance_report",
+    ),
+    "SilenceToObservationInputs": (
+        "oph_fpe.cosmology.silence_to_observation",
+        "SilenceToObservationInputs",
+    ),
+    "silence_to_observation_report": (
+        "oph_fpe.cosmology.silence_to_observation",
+        "silence_to_observation_report",
+    ),
+    "write_silence_to_observation_report": (
+        "oph_fpe.cosmology.silence_to_observation",
+        "write_silence_to_observation_report",
     ),
     "compressed_likelihood_reference_report": (
         "oph_fpe.cosmology.compressed_likelihood",

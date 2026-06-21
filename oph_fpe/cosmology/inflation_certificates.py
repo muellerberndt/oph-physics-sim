@@ -90,7 +90,11 @@ def inflation_certificate_bundle_report(
         "schema_contracts": schema_contracts(),
         "no_data_use_manifest": no_data_use,
         "readiness_gates": {
-            "scalar_release_certificate": bool(validations["scalar_release"].get("validator_receipt")),
+            "scalar_release_certificate": bool(
+                (validations["scalar_release"].get("computed_outputs") or {}).get(
+                    "SCALAR_RELEASE_AMPLITUDE_CERTIFICATE", False
+                )
+            ),
             "edge_center_certificate": bool(validations["edge_center"].get("validator_receipt")),
             "homogeneous_anomaly_certificate": bool(validations["homogeneous_anomaly"].get("validator_receipt")),
             "parent_collar_kernel_certificate": bool(validations["parent_collar"].get("validator_receipt")),
@@ -106,8 +110,8 @@ def inflation_certificate_bundle_report(
         "claim_boundary": (
             "Inflation/CMB finite-certificate contract and validator report. Certificates must be emitted "
             "by finite OPH screen/collar evaluators before CMB/BAO/lensing/SPARC/cluster/SN/RSD likelihoods "
-            "are consulted. Missing or failed certificates keep A_zeta, Q_A, B_A(k,a), Gamma_rec(k,a), "
-            "and Boltzmann handoff gates closed."
+            "are consulted. Missing or failed certificates keep A_q, the screen-to-primordial lift, "
+            "A_zeta, Q_A, B_A(k,a), Gamma_rec(k,a), and Boltzmann handoff gates closed."
         ),
     }
     report["inflation_certificate_stack_ready"] = bool(
@@ -329,7 +333,14 @@ def schema_contracts() -> dict[str, dict[str, Any]]:
             "packet_required": ["packet_id", "scalar_visible"],
             "packet_required_one_of": ["entropy", "cmi"],
             "entropy_required": ["AB", "BD", "B", "ABD"],
-            "computed_outputs": ["epsilon_star", "kappa_rel", "A_zeta"],
+            "computed_outputs": [
+                "epsilon_star",
+                "kappa_rel",
+                "A_q_cmi_upper_bound",
+                "A_q_energy",
+                "A_zeta",
+                "SCALAR_RELEASE_AMPLITUDE_CERTIFICATE",
+            ],
         },
         "edge_center": {
             "required": [
@@ -388,6 +399,13 @@ def certificate_templates(*, p_value: float = P_STAR) -> dict[str, dict[str, Any
                 }
             ],
             "scalar_readout_normalization": {"kappa_rel": None},
+            "scalar_energy_budget": None,
+            "physical_mode_count": None,
+            "bound_saturation_claimed": False,
+            "DEFAULT_A_S_used": False,
+            "CMB_homogeneity_target_used": False,
+            "Sachs_Wolfe_conversion_used": False,
+            "A_zeta": None,
             "no_data_use_manifest": _template_no_data_use(),
             "template_only": True,
         },
@@ -437,6 +455,20 @@ def certificate_templates(*, p_value: float = P_STAR) -> dict[str, dict[str, Any
 def _validate_scalar_release(certificate: dict[str, Any]) -> dict[str, Any]:
     packets = certificate.get("release_packets") or []
     kappa = _nested(certificate, "scalar_readout_normalization", "kappa_rel")
+    forbidden_flags = [
+        name
+        for name in (
+            "bound_saturation_claimed",
+            "DEFAULT_A_S_used",
+            "CMB_homogeneity_target_used",
+            "Sachs_Wolfe_conversion_used",
+        )
+        if bool(certificate.get(name, False))
+    ]
+    if certificate.get("A_zeta") is not None:
+        forbidden_flags.append("A_zeta_present_before_lift_receipt")
+    if forbidden_flags:
+        return _failed_receipt("scalar_release", f"forbidden scalar-amplitude shortcut: {forbidden_flags}")
     if not isinstance(packets, list) or not packets:
         return _failed_receipt("scalar_release", "missing release_packets")
     kappa_value = _float_or_none(kappa)
@@ -462,10 +494,35 @@ def _validate_scalar_release(certificate: dict[str, Any]) -> dict[str, Any]:
     if not positives:
         return _failed_receipt("scalar_release", "no positive scalar-visible CMI packet", rows=rows)
     epsilon = float(min(positives))
-    a_zeta = float(100.0 * math.log(2.0) * kappa_value * epsilon)
+    cmi_upper_bound = float(4.0 * math.log(2.0) * kappa_value * epsilon)
+    energy_budget = _float_or_none(certificate.get("scalar_energy_budget"))
+    physical_mode_count = _float_or_none(certificate.get("physical_mode_count"))
+    a_q_energy = None
+    amplitude_receipt = False
+    if energy_budget is not None and physical_mode_count is not None and energy_budget >= 0.0 and physical_mode_count > 0.0:
+        a_q_energy = float(energy_budget / physical_mode_count)
+        amplitude_receipt = True
     return _receipt(
         "scalar_release",
-        computed_outputs={"epsilon_star": epsilon, "kappa_rel": kappa_value, "A_zeta": a_zeta},
+        computed_outputs={
+            "epsilon_star": epsilon,
+            "kappa_rel": kappa_value,
+            "A_q_cmi_upper_bound": cmi_upper_bound,
+            "A_q_energy": a_q_energy,
+            "scalar_energy_budget": energy_budget,
+            "physical_mode_count": physical_mode_count,
+            "SCALAR_RELEASE_AMPLITUDE_CERTIFICATE": amplitude_receipt,
+            "bound_saturation_claimed": False,
+            "DEFAULT_A_S_used": False,
+            "CMB_homogeneity_target_used": False,
+            "Sachs_Wolfe_conversion_used": False,
+            "A_zeta": None,
+            "claim_boundary": (
+                "CMI supplies an upper bound on scalar release observables. A_q is derived only from "
+                "finite scalar release energy divided by physical mode count; A_zeta remains null until "
+                "a screen-to-primordial lift receipt passes."
+            ),
+        },
         rows=rows,
         no_data_use=_no_data_use_ok(certificate),
     )

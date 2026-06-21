@@ -55,6 +55,7 @@ class PhysicalCMBInputContract:
 
     official_likelihood_ready: bool
     cdm_limit_regression_passed: bool
+    screen_to_primordial_lift_receipt: bool = False
 
 
 def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[str, Any]:
@@ -76,6 +77,9 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
 
     if str(contract.A_zeta_source) not in FINITE_CMB_SOURCES or not _finite_positive_scalar(contract.A_zeta_value):
         blockers.append("A_zeta_not_finite_derived")
+
+    if not bool(contract.screen_to_primordial_lift_receipt):
+        blockers.append("screen_to_primordial_lift_receipt_missing")
 
     if str(contract.q_IR_source) not in FINITE_CMB_SOURCES or not _finite_scalar(contract.q_IR_value):
         blockers.append("q_IR_not_finite_derived")
@@ -155,6 +159,10 @@ def contract_from_reports(
         freezeout_surface=freezeout_report.get("freezeout_surface"),
         official_likelihood_ready=bool(likelihood_report.get("official_likelihood_ready", False)),
         cdm_limit_regression_passed=bool(likelihood_report.get("cdm_limit_regression_passed", False)),
+        screen_to_primordial_lift_receipt=bool(
+            scalar_release_report.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)
+            or scalar_release_report.get("screen_to_primordial_lift_receipt", False)
+        ),
     )
 
 

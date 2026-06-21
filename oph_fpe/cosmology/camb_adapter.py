@@ -4,6 +4,7 @@ import json
 import hashlib
 import importlib
 import math
+import os
 import platform
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -529,7 +530,14 @@ def oph_inflation_cmb_camb_report(
     core = dict(cmb_ladder.get("core_numbers", {}) or {})
 
     ns_oph = float(screen.get("n_s", baseline.ns))
-    a_zeta = float(screen.get("A_zeta", baseline.As))
+    screen_a_zeta = _float_or_none(screen.get("A_zeta"))
+    lift_ready = bool(screen.get("screen_to_primordial_lift_receipt", False) or screen.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False))
+    a_zeta = screen_a_zeta if screen_a_zeta is not None and lift_ready else float(baseline.As)
+    a_zeta_source = (
+        "screen_to_primordial_lift_receipt"
+        if screen_a_zeta is not None and lift_ready
+        else "diagnostic_baseline_As_not_derived"
+    )
     q_ir = _float_or(core.get("v0_2_IR_bestfit_q_IR"), 0.0)
     ell_ir = _float_or(core.get("v0_2_IR_bestfit_ell_IR"), 6.0)
 
@@ -597,7 +605,8 @@ def oph_inflation_cmb_camb_report(
             "n_s": ns_unique,
             "eta_R": _float_or_none(unique_scalar.get("eta_R")),
             "A_zeta": a_zeta,
-            "A_zeta_source": "legacy_collar_amplitude_selector_pending_unique_amplitude_derivation",
+            "A_zeta_source": a_zeta_source,
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": lift_ready,
             "q_IR": q_unique,
             "ell_IR": ell_unique,
             "theta_IR_deg": _float_or_none(unique_ir.get("theta_IR_deg")),
@@ -654,6 +663,8 @@ def oph_inflation_cmb_camb_report(
             "theta_OPH": screen.get("theta_OPH"),
             "n_s": ns_oph,
             "A_zeta": a_zeta,
+            "A_zeta_source": a_zeta_source,
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": lift_ready,
             "q_IR": q_ir,
             "ell_IR": ell_ir,
             "k0_mpc": float(k0_mpc),
@@ -670,7 +681,7 @@ def oph_inflation_cmb_camb_report(
             "baseline_lambda_cdm_parameters": lcdm_params.as_jsonable(),
             "oph_p48_lambda_cdm_parameters": p48_params.as_jsonable(),
             "oph_unique_lambda_cdm_parameters": unique_params.as_jsonable() if unique_params is not None else None,
-            "custom_primordial_power": "A_zeta*(k/k0)^(n_s-1)*(1-q_IR*exp[-ell(k)(ell(k)+1)/(ell_IR(ell_IR+1))])",
+            "custom_primordial_power": "diagnostic_A_s*(k/k0)^(n_s-1)*(1-q_IR*exp[-ell(k)(ell(k)+1)/(ell_IR(ell_IR+1))])",
         },
         "software": _software_versions(),
         "input_hashes": {
@@ -1162,19 +1173,115 @@ def official_planck_readiness_report() -> dict[str, Any]:
         modules.get("clik", {}).get("importable")
         and modules.get("clik", {}).get("has_clik_api")
     )
+    data_paths = _official_planck_likelihood_data_paths()
+    data_paths_configured = bool(any(row.get("exists") for row in data_paths))
+    execution_ready = bool(official_clik_ready and data_paths_configured)
     return {
+        "mode": "official_planck_likelihood_readiness_v0",
         "camb_available": bool(modules.get("camb", {}).get("importable")),
         "cobaya_available": bool(modules.get("cobaya", {}).get("importable")),
         "healpy_available": bool(modules.get("healpy", {}).get("importable")),
         "official_clik_api_available": official_clik_ready,
-        "official_planck_likelihood_data_paths_configured": False,
-        "official_likelihood_execution_ready": False,
+        "official_planck_likelihood_data_paths_configured": data_paths_configured,
+        "official_likelihood_execution_ready": execution_ready,
+        "data_paths": data_paths,
+        "blockers": _official_planck_readiness_blockers(
+            modules=modules,
+            official_clik_ready=official_clik_ready,
+            data_paths_configured=data_paths_configured,
+        ),
         "modules": modules,
         "claim_boundary": (
             "Runtime readiness check only. Official Planck likelihood execution also needs the ESA PR3 "
             "likelihood data files and validated nuisance/path configuration."
         ),
     }
+
+
+def write_official_planck_readiness_report(out_dir: Path) -> dict[str, Any]:
+    report = official_planck_readiness_report()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "official_planck_likelihood_readiness_report.json").write_text(
+        json.dumps(report, indent=2, default=str),
+        encoding="utf-8",
+    )
+    (out / "official_planck_likelihood_readiness_report.md").write_text(
+        _official_planck_readiness_markdown(report),
+        encoding="utf-8",
+    )
+    return report
+
+
+def _official_planck_likelihood_data_paths() -> list[dict[str, Any]]:
+    env_names = (
+        "OPH_PLANCK_LIKELIHOOD_DIR",
+        "PLANCK_PR3_LIKELIHOOD_DIR",
+        "PLANCK_LIKELIHOOD_DIR",
+        "CLIK_DATA",
+    )
+    rows: list[dict[str, Any]] = []
+    for name in env_names:
+        value = os.environ.get(name)
+        path = Path(value).expanduser() if value else None
+        exists = bool(path is not None and path.exists())
+        rows.append(
+            {
+                "env_var": name,
+                "configured": bool(value),
+                "exists": exists,
+                "is_dir": bool(path is not None and path.is_dir()) if exists else False,
+                "path": str(path) if path is not None else None,
+            }
+        )
+    return rows
+
+
+def _official_planck_readiness_blockers(
+    *,
+    modules: dict[str, Any],
+    official_clik_ready: bool,
+    data_paths_configured: bool,
+) -> list[str]:
+    blockers: list[str] = []
+    if not bool(modules.get("camb", {}).get("importable")):
+        blockers.append("camb_not_importable")
+    if not bool(official_clik_ready):
+        blockers.append("official_clik_api_not_available")
+    if not bool(data_paths_configured):
+        blockers.append("official_planck_likelihood_data_path_not_configured")
+    if not bool(modules.get("cobaya", {}).get("importable")):
+        blockers.append("cobaya_not_importable")
+    return blockers
+
+
+def _official_planck_readiness_markdown(report: dict[str, Any]) -> str:
+    blockers = report.get("blockers") or []
+    lines = [
+        "# Official Planck Likelihood Readiness",
+        "",
+        report.get("claim_boundary", ""),
+        "",
+        "## Gates",
+        "",
+        f"- CAMB available: `{str(report.get('camb_available', False)).lower()}`",
+        f"- Cobaya available: `{str(report.get('cobaya_available', False)).lower()}`",
+        f"- official clik API available: `{str(report.get('official_clik_api_available', False)).lower()}`",
+        f"- likelihood data paths configured: `{str(report.get('official_planck_likelihood_data_paths_configured', False)).lower()}`",
+        f"- official likelihood execution ready: `{str(report.get('official_likelihood_execution_ready', False)).lower()}`",
+        "",
+        "## Blockers",
+        "",
+    ]
+    lines.extend(f"- `{blocker}`" for blocker in blockers) if blockers else lines.append("- none")
+    lines.extend(["", "## Data Path Environment", ""])
+    for row in report.get("data_paths") or []:
+        lines.append(
+            f"- `{row.get('env_var')}`: configured `{str(row.get('configured', False)).lower()}`, "
+            f"exists `{str(row.get('exists', False)).lower()}`"
+        )
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _run_camb_tt(params: LambdaCDMParameters, lmax: int) -> tuple[np.ndarray, np.ndarray]:

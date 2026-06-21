@@ -40,9 +40,12 @@ def test_finite_certificate_bundle_recomputes_toy_values():
     assert release["minimizer_packets"] == ["q2_defect"]
     assert release["N_rel"] == 2
     assert math.isclose(
-        release["A_zeta"],
-        100.0 * math.log(2.0) * release["kappa_rel"] * release["epsilon_star_bits"],
+        release["A_q_cmi_upper_bound"],
+        4.0 * math.log(2.0) * release["kappa_rel"] * release["epsilon_star_bits"],
     )
+    assert release["A_q_energy"] is None
+    assert release["A_zeta"] is None
+    assert release["SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT"] is False
     assert parent["small_field_support"]["passes"] is True
     assert parent["Q_A"] > 0.0
     assert parent["kernels"][0]["B_A"] > 0.0
@@ -50,8 +53,10 @@ def test_finite_certificate_bundle_recomputes_toy_values():
     assert repair["detailed_balance_max_error"] < 1.0e-12
     assert repair["Gamma_rec"] > 0.0
     assert math.isclose(boltzmann["n_s"], 1.0 - toy_certificate_input()["metadata"]["P"] / 48.0)
+    assert boltzmann["A_zeta"] is None
+    assert boltzmann["primordial_lift_ready"] is False
     assert report["report"]["finite_certificate_compiler_ready"] is True
-    assert report["report"]["finite_certificate_stack_ready"] is True
+    assert report["report"]["finite_certificate_stack_ready"] is False
     assert report["report"]["theorem_grade_finite_inputs"] is False
     assert report["report"]["proxy_certificate"] is True
     assert report["report"]["physical_cmb_prediction"] is False
@@ -73,7 +78,7 @@ def test_finite_certificate_writer_outputs_manifest_and_report(tmp_path: Path):
     manifest = json.loads((out_dir / "finite_certificate_manifest.json").read_text())
     assert manifest["manifest_type"] == "oph_finite_certificate_manifest"
     assert manifest["finite_certificate_compiler_ready"] is True
-    assert manifest["finite_certificate_stack_ready"] is True
+    assert manifest["finite_certificate_stack_ready"] is False
     assert manifest["theorem_grade_finite_inputs"] is False
     assert manifest["proxy_certificate"] is True
     assert report["physical_cmb_prediction"] is False
@@ -99,13 +104,13 @@ def test_comparable_data_includes_finite_certificate_lane(tmp_path: Path):
     assert report["run_count"] == 1
     assert lane["run_count"] == 1
     assert lane["compiler_ready_count"] == 1
-    assert lane["stack_ready_count"] == 1
+    assert lane["stack_ready_count"] == 0
     assert lane["theorem_grade_finite_inputs_count"] == 0
     assert lane["proxy_certificate_count"] == 1
     assert lane["no_data_use_count"] == 1
     assert lane["real_physics_certificate_count"] == 0
     assert lane["physical_cmb_prediction_count"] == 0
-    assert lane["mean_A_zeta"] is not None
+    assert lane["mean_A_zeta"] is None
 
 
 def test_run_proxy_certificate_bundle_uses_cached_run_receipts(tmp_path: Path):
@@ -168,7 +173,7 @@ def test_run_proxy_certificate_bundle_uses_cached_run_receipts(tmp_path: Path):
     out = tmp_path / "bundle"
     report = write_run_proxy_finite_certificate_bundle(run, out)
     assert report["finite_certificate_compiler_ready"] is True
-    assert report["finite_certificate_stack_ready"] is True
+    assert report["finite_certificate_stack_ready"] is False
     assert report["theorem_grade_finite_inputs"] is False
     assert report["real_physics_certificate"] is False
     assert report["physical_cmb_prediction"] is False

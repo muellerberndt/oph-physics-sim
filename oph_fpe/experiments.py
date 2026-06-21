@@ -19,7 +19,15 @@ from oph_fpe.bulk import (
 from oph_fpe.core import PatchNet, build_patch_graph, pixel_scale_from_config, screen_microphysics_from_config
 from oph_fpe.core.records import RecordEvent, update_records
 from oph_fpe.defects import DefectTracker, scan_holonomy_defects
-from oph_fpe.dynamics import RepairEvent, RepairKernel, apply_modular_flow, beta_at, collect_modular_sample
+from oph_fpe.dynamics import (
+    RepairEvent,
+    RepairKernel,
+    apply_modular_flow,
+    beta_at,
+    collect_modular_sample,
+    dispatch_configured_kernels,
+    kernel_dispatch_manifest_summary,
+)
 from oph_fpe.evidence import RunBundle, verify_local_law
 from oph_fpe.groups import get_group
 
@@ -148,27 +156,32 @@ def run_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     )
     bundle.write_json("controls/control_report.json", controls)
     bundle.write_jsonl("verifier_receipts.jsonl", receipts)
-    bundle.write_manifest(
-        {
-            "run_id": run_id,
-            "name": config.get("name"),
-            "claim_boundary": config.get(
-                "claim_boundary",
-                "CPU MVP receipt: patch repair, records, holonomy defects, and dimension estimators only.",
-            ),
-            "patch_count": graph.number_of_nodes(),
-            "edge_count": graph.number_of_edges(),
-            "group": group.name,
-            "pixel_scale": pixel_scale.as_jsonable(),
-            "oph_constants": pixel_scale.constants.as_jsonable(),
-            "screen_microphysics": screen_microphysics.as_jsonable(),
-            "screen_units": screen_microphysics.as_jsonable()["screen_units"],
-            "cycles": cycles,
-            "final_phi": net.total_phi(),
-            "bundle_files": sorted(path.name for path in bundle.path.iterdir()),
-        }
-    )
-    return {"run_id": run_id, "path": str(bundle.path), "final_phi": net.total_phi(), "dimensions": dimensions}
+    kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="patchnet")
+    manifest = {
+        "run_id": run_id,
+        "name": config.get("name"),
+        "claim_boundary": config.get(
+            "claim_boundary",
+            "CPU MVP receipt: patch repair, records, holonomy defects, and dimension estimators only.",
+        ),
+        "patch_count": graph.number_of_nodes(),
+        "edge_count": graph.number_of_edges(),
+        "group": group.name,
+        "pixel_scale": pixel_scale.as_jsonable(),
+        "oph_constants": pixel_scale.constants.as_jsonable(),
+        "screen_microphysics": screen_microphysics.as_jsonable(),
+        "screen_units": screen_microphysics.as_jsonable()["screen_units"],
+        "cycles": cycles,
+        "final_phi": net.total_phi(),
+        "bundle_files": sorted(path.name for path in bundle.path.iterdir()),
+    }
+    result = {"run_id": run_id, "path": str(bundle.path), "final_phi": net.total_phi(), "dimensions": dimensions}
+    if kernel_dispatch:
+        summary = kernel_dispatch_manifest_summary(kernel_dispatch)
+        manifest["kernel_dispatch"] = summary
+        result["kernel_dispatch"] = summary
+    bundle.write_manifest(manifest)
+    return result
 
 
 def _inject_defects(net: PatchNet, config: dict[str, Any], seed: int) -> None:

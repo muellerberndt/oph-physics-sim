@@ -12,13 +12,17 @@ from oph_fpe.cosmology.inflation_cmb_ladder import (
 )
 
 
-def test_screen_spectrum_prediction_uses_p_over_48_and_collar_amplitude():
+def test_screen_spectrum_prediction_keeps_amplitude_and_lift_gated():
     report = screen_spectrum_prediction()
 
     assert math.isclose(report["theta_OPH"], P_STAR / 48.0)
     assert math.isclose(report["n_s"], 1.0 - P_STAR / 48.0)
     assert abs(report["n_s"] - 0.9660214956) < 1.0e-9
-    assert math.isclose(report["A_zeta"], 100.0 * math.log(2.0) * 3.61e-11)
+    assert math.isclose(report["A_q_cmi_upper_bound"], 4.0 * math.log(2.0) * 3.61e-11)
+    assert report["A_q_energy"] is None
+    assert report["A_zeta"] is None
+    assert report["Sachs_Wolfe_conversion_used"] is False
+    assert report["screen_to_primordial_lift_receipt"] is False
     assert report["physical_claim"] is False if "physical_claim" in report else True
 
 

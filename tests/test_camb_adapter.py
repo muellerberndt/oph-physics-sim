@@ -11,6 +11,7 @@ from oph_fpe.cosmology.camb_adapter import (
     official_planck_readiness_report,
     write_camb_lcdm_baseline_report,
     write_finite_repair_clock_cmb_camb_report,
+    write_official_planck_readiness_report,
     write_oph_exact_cmb_camb_report,
     write_oph_inflation_cmb_camb_report,
     write_oph_screen_camb_report,
@@ -325,12 +326,43 @@ def test_write_finite_repair_clock_cmb_camb_report_smoke(tmp_path: Path):
     assert report["comparison"]["finite_repair_clock_plus_selector_ir"]["usable"] is True
 
 
-def test_official_planck_readiness_report_is_gated():
+def test_official_planck_readiness_report_is_gated(monkeypatch: pytest.MonkeyPatch):
+    for name in (
+        "OPH_PLANCK_LIKELIHOOD_DIR",
+        "PLANCK_PR3_LIKELIHOOD_DIR",
+        "PLANCK_LIKELIHOOD_DIR",
+        "CLIK_DATA",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
     report = official_planck_readiness_report()
 
     assert "modules" in report
     assert report["official_planck_likelihood_data_paths_configured"] is False
     assert report["official_likelihood_execution_ready"] is False
+    assert "official_planck_likelihood_data_path_not_configured" in report["blockers"]
+
+
+def test_write_official_planck_readiness_report_records_configured_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    for name in (
+        "PLANCK_PR3_LIKELIHOOD_DIR",
+        "PLANCK_LIKELIHOOD_DIR",
+        "CLIK_DATA",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    data_dir = tmp_path / "planck_pr3"
+    data_dir.mkdir()
+    monkeypatch.setenv("OPH_PLANCK_LIKELIHOOD_DIR", str(data_dir))
+
+    report = write_official_planck_readiness_report(tmp_path / "out")
+
+    assert report["official_planck_likelihood_data_paths_configured"] is True
+    assert report["official_likelihood_execution_ready"] is report["official_clik_api_available"]
+    assert (tmp_path / "out" / "official_planck_likelihood_readiness_report.json").exists()
+    assert (tmp_path / "out" / "official_planck_likelihood_readiness_report.md").exists()
 
 
 def _write_selector_status_csv(path: Path) -> None:

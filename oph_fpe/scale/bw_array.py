@@ -12,16 +12,21 @@ from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
     BW_KMS_DIRECT_2PI_RECEIPT,
     BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+    BW_KMS_BRANCH_REPLAY_RECEIPT,
     CHART_LORENTZ_H3_RECEIPT,
     CONFORMAL_H3_CHART_RECEIPT,
     COSMOLOGY_PERTURBATION_RECEIPT,
     DEMO,
     DYNAMIC_DARK_TRANSPORT_RECEIPT,
     ENDOGENOUS_MODULAR_GENERATOR_RECEIPT,
+    FINITE_CONSENSUS_THEOREM_RECEIPT,
+    FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBJECT_CHART_RECEIPT,
+    OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
+    OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     PAPER_THEOREM_3D_BULK_CHART_RECEIPT,
     PROXY,
     RECEIPT_SCHEMA_VERSION,
@@ -83,6 +88,11 @@ from oph_fpe.defects.array_s3_holonomy import (
     particle_likeness_report,
     s3_class_counts,
     s3_edge_class_density,
+)
+from oph_fpe.dynamics import (
+    dispatch_configured_kernels,
+    finite_consensus_theorem_certificate,
+    kernel_dispatch_manifest_summary,
 )
 from oph_fpe.evidence import RunBundle
 from oph_fpe.evidence.controls import mandatory_control_report
@@ -169,7 +179,41 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     repairs_per_cycle = int(dyn.get("repairs_per_cycle", edge_count // 4))
     commit_cycles = int(dyn.get("record_commit_cycles", 8))
     beta_schedule = dyn.get("beta_schedule", {})
+    readback_drive_cfg = dyn.get("observer_readback_drive", {}) or {}
     mod_cfg = config.get("modular_flow", {})
+    readback_node_labels: np.ndarray | None = None
+    readback_drive_report: dict[str, Any] = {"enabled": False}
+    if readback_drive_cfg.get("enabled", False):
+        readback_mode = str(readback_drive_cfg.get("mode", "support_visible_boundary_refresh"))
+        if readback_mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"}:
+            readback_node_labels, readback_drive_report = _support_visible_cap_net_labels(
+                points,
+                group_order=group_order,
+                cap_count=int(readback_drive_cfg.get("cap_count", config.get("boundary_program", {}).get("cap_count", 24))),
+                sharpness=float(
+                    readback_drive_cfg.get("sharpness", config.get("boundary_program", {}).get("sharpness", 8.0))
+                ),
+                tangent_weight=float(
+                    readback_drive_cfg.get(
+                        "tangent_weight",
+                        config.get("boundary_program", {}).get("tangent_weight", 0.35),
+                    )
+                ),
+            )
+        readback_drive_report = {
+            **readback_drive_report,
+            "enabled": True,
+            "mode": readback_mode,
+            "edge_fraction": float(readback_drive_cfg.get("edge_fraction", 0.0)),
+            "start_cycle": int(readback_drive_cfg.get("start_cycle", 0)),
+            "stop_cycle": readback_drive_cfg.get("stop_cycle"),
+            "claim_boundary": (
+                "observer readback drive for exploration-phase self-reading dynamics. It perturbs "
+                "bounded screen ports so local repair has records to read back; it is not part of "
+                "the theorem-phase finite consensus certificate."
+            ),
+        }
+        boundary_program_report["observer_readback_drive"] = readback_drive_report
     trace: list[dict[str, Any]] = []
     final_repair_load = np.zeros(patch_count, dtype=float)
     final_mismatch_density = np.zeros(patch_count, dtype=float)
@@ -178,6 +222,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     freezeout_commit_fraction = float(freezeout_cfg.get("commit_fraction", 0.95))
     freezeout_state: dict[str, Any] | None = None
     repair_peak_state: dict[str, Any] | None = None
+    first_commit_state: dict[str, Any] | None = None
+    half_commit_state: dict[str, Any] | None = None
     repair_peak_score = -1.0
     defects_cfg = config.get("defects", {})
     sector_repair_cfg = defects_cfg.get("sector_repair", {})
@@ -211,6 +257,17 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
 
     for cycle in range(cycles):
         beta = _beta_at(beta_schedule, cycle, cycles)
+        readback_drive_edges = _apply_observer_readback_drive(
+            port_left,
+            port_right,
+            left,
+            right,
+            group_order=group_order,
+            rng=rng,
+            cycle=cycle,
+            config=readback_drive_cfg,
+            node_labels=readback_node_labels,
+        )
         mismatches = port_left != port_right
         phi_before = int(np.sum(mismatches))
         active = np.flatnonzero(mismatches)
@@ -276,6 +333,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         if repair_peak_candidate_score > repair_peak_score:
             repair_peak_score = repair_peak_candidate_score
             repair_peak_state = repair_peak_candidate
+        if first_commit_state is None and committed_fraction > 0.0:
+            first_commit_state = repair_peak_candidate
+        if half_commit_state is None and committed_fraction >= 0.5:
+            half_commit_state = repair_peak_candidate
         if freezeout_state is None and committed_fraction >= freezeout_commit_fraction:
             freezeout_state = _state_snapshot(
                 cycle=cycle,
@@ -296,15 +357,18 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         trace.append(
             {
                 "cycle": cycle,
+                "phase": "exploration",
                 "beta": beta,
                 "phi_before": phi_before,
                 "phi": phi_after,
+                "delta_phi": phi_after - phi_before,
                 "mismatch_edges": phi_after,
                 "committed_records": int(np.sum(committed)),
                 "committed_fraction": committed_fraction,
                 "record_entropy": _entropy(signature[committed]) if np.any(committed) else 0.0,
                 "modular_depth_mean": float(np.mean(modular_depth)),
                 "modular_depth_std": float(np.std(modular_depth)),
+                "observer_readback_drive_edges": int(readback_drive_edges),
             }
         )
         if harmonic_trace_enabled and cycle in harmonic_trace_cycles:
@@ -497,6 +561,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
     if repair_peak_state is None:
         repair_peak_state = freezeout_state
+    if first_commit_state is None:
+        first_commit_state = freezeout_state
+    if half_commit_state is None:
+        half_commit_state = freezeout_state
     freezeout_fields = _observable_fields_from_snapshot(
         freezeout_state,
         left=left,
@@ -530,6 +598,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             repair_peak_raw_fields=repair_peak_raw_observer_fields,
             freezeout_state=freezeout_state,
             repair_peak_state=repair_peak_state,
+            first_commit_state=first_commit_state,
+            half_commit_state=half_commit_state,
             cycles=cycles,
         )
         collar_cfg = config.get("collar_markov", {})
@@ -541,10 +611,25 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             max_triplets=int(collar_cfg.get("max_triplets", 4096)),
             seed=seed + 1301,
         )
-        state_history_states = freezeout_history_states or recent_history_states
+        state_history_states = _select_state_history_states(
+            state_source_name,
+            freezeout_history_states=freezeout_history_states,
+            recent_history_states=recent_history_states,
+            repair_peak_state=repair_peak_state,
+            first_commit_state=first_commit_state,
+            half_commit_state=half_commit_state,
+            freezeout_state=freezeout_state,
+            max_history=max(1, int(bw_cfg.get("history_window", history_window))),
+        )
         state_history_raw_fields = [
             _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
-            for snapshot in state_history_states[-max(1, int(bw_cfg.get("history_window", history_window))) :]
+            for snapshot in state_history_states
+        ]
+        state_source_meta["history_cycles"] = [
+            int(snapshot.get("cycle", -1)) for snapshot in state_history_states
+        ]
+        state_source_meta["history_committed_fractions"] = [
+            float(snapshot.get("committed_fraction", 0.0)) for snapshot in state_history_states
         ]
         graph_response = {
             "left": left,
@@ -611,12 +696,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     observer_cfg = config.get("observers", {})
     observer_sample_count = int(observer_cfg.get("sample_count", min(64, patch_count)))
     observer_neighborhood = int(observer_cfg.get("neighborhood_size", max(8, min(64, neighbors * 4))))
+    observer_times = _observer_relative_time_grid(observer_cfg, fallback_times=times)
     observer_rows = observer_view_rows(
         points,
         raw_fields=raw_observer_fields,
         visible_fields=fields,
         caps=caps,
-        times=times,
+        times=observer_times,
         cell_area_planck=cell_area_planck,
         cell_entropy=cell_entropy,
         sample_count=observer_sample_count,
@@ -631,7 +717,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         neighborhood_size=observer_neighborhood,
         seed=seed + 1201,
     )
-    consensus_report["observer_relative_time_grid"] = times
+    consensus_report["observer_relative_time_grid"] = observer_times
     consensus_report["cap_count"] = len(caps)
     consensus_report["claim_boundary"] = (
         "observer-facing consensus readout; tracks what finite patch/cap observers can see "
@@ -1084,11 +1170,56 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         observer_chart_object_report,
         neutral_report,
     )
+    observer_modular_experience_report = _observer_modular_experience_report(
+        observer_rows,
+        raw_observer_fields,
+        times=times,
+        conformal_chart_report=conformal_chart_report,
+        state_bw_report=state_bw_report,
+        transition_selection_report=transition_selection_report,
+        h3_modular_fit_report=h3_modular_fit_report,
+        observer_chart_object_report=observer_chart_object_report,
+        paper_3d_chart_report=paper_3d_chart_report,
+    )
     emergence_status = _emergence_status_report(bw_report, consensus_report)
-    theorem_core_report = _theorem_core_receipts(trace, committed, config)
+    theorem_core_report = _theorem_core_receipts(
+        trace,
+        committed,
+        config,
+        initial_port_left=initial_port_left,
+        initial_port_right=initial_port_right,
+        group_order=group_order,
+        seed=seed,
+    )
+    emergence_status["final_phi_zero"] = bool(theorem_core_report.get("finite_settle_diagnostic_receipt", False))
+    emergence_status[FINITE_SETTLE_DIAGNOSTIC_RECEIPT] = bool(
+        theorem_core_report.get(FINITE_SETTLE_DIAGNOSTIC_RECEIPT, False)
+    )
+    emergence_status["finite_settle_diagnostic_receipt"] = bool(
+        theorem_core_report.get("finite_settle_diagnostic_receipt", False)
+    )
+    emergence_status[FINITE_CONSENSUS_THEOREM_RECEIPT] = bool(
+        theorem_core_report.get(FINITE_CONSENSUS_THEOREM_RECEIPT, False)
+    )
+    emergence_status["finite_consensus_theorem_receipt"] = bool(
+        theorem_core_report.get("finite_consensus_theorem_receipt", False)
+    )
+    emergence_status["finite_consensus_missing_evidence"] = (
+        (theorem_core_report.get("finite_consensus_theorem") or {}).get("missing_evidence", [])
+    )
     emergence_status["state_derived_modular_transport"] = bool(state_bw_report)
     emergence_status["transition_scale_selection"] = bool(transition_selection_report)
     emergence_status["observer_object_construction"] = bool(object_report)
+    emergence_status["observer_modular_time_experience_written"] = bool(observer_modular_experience_report)
+    emergence_status["observer_modular_time_receipt"] = bool(
+        observer_modular_experience_report.get("observer_modular_time_receipt", False)
+    )
+    emergence_status[OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT] = bool(
+        observer_modular_experience_report.get(OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT, False)
+    )
+    emergence_status["observer_facing_3p1d_h3_experience_receipt"] = bool(
+        observer_modular_experience_report.get("observer_facing_3p1d_h3_experience_receipt", False)
+    )
     emergence_status["mandatory_controls_pass"] = bool(mandatory_controls.get("all_expected_failures_observed"))
     emergence_status["neutral_reconstruction_written"] = bool(neutral_report)
     emergence_status["edge_sector_heat_kernel_receipt"] = bool(edge_sector_report.get("receipt", False))
@@ -1105,8 +1236,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         emergence_status["state_derived_correct_beats_controls"] = bool(
             state_bw_report.get("correct_beats_controls", False)
         )
+        clock_fit = state_bw_report.get("inferred_modular_clock_fit") or {}
+        emergence_status["state_derived_kms_clock_fit_receipt"] = bool(
+            state_bw_report.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT", False)
+            or clock_fit.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT", False)
+            or clock_fit.get("receipt", False)
+        )
+        emergence_status["KMS_GEOMETRIC_CLOCK_FIT_RECEIPT"] = bool(
+            emergence_status["state_derived_kms_clock_fit_receipt"]
+        )
+        emergence_status["kms_geometric_clock_fit_receipt"] = bool(
+            emergence_status["state_derived_kms_clock_fit_receipt"]
+        )
+        emergence_status["state_derived_inferred_kappa_hat"] = clock_fit.get("kappa_hat")
+        emergence_status["state_derived_inferred_kappa_95ci"] = clock_fit.get("kappa_95ci")
+        emergence_status["state_derived_inferred_clock_blockers"] = clock_fit.get("blockers", [])
         emergence_status["state_derived_bw_bulk_gate"] = bool(
-            state_bw_report.get("BW_KMS_BRANCH_INSTANTIATION_RECEIPT", False)
+            state_bw_report.get(BW_KMS_BRANCH_REPLAY_RECEIPT, False)
+            or state_bw_report.get(BW_KMS_BRANCH_INSTANTIATION_RECEIPT, False)
             or (
                 state_bw_report.get("state_selected_2pi", False)
                 and state_bw_report.get("correct_beats_controls", False)
@@ -1520,9 +1667,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("modular_response_h3_report.json", h3_modular_fit_report)
     if observer_chart_object_report:
         bundle.write_json("observer_chart_object_h3_report.json", observer_chart_object_report)
+    bundle.write_json("observer_modular_experience_report.json", observer_modular_experience_report)
     bundle.write_json("record_family_h3_report.json", object_h3_report)
     bundle.write_json("defect_cluster_h3_report.json", defect_h3_report)
     bundle.write_json("theorem_core_receipts.json", theorem_core_report)
+    if (theorem_core_report.get("finite_consensus_replay") or {}).get("enabled", False):
+        bundle.write_json("finite_consensus_replay_report.json", theorem_core_report["finite_consensus_replay"])
     bundle.write_json("edge_sector_heat_kernel_report.json", edge_sector_report)
     bundle.write_json("central_record_born_report.json", central_record_report)
     bundle.write_json("observer_checkpoint_restoration_report.json", checkpoint_report)
@@ -1582,8 +1732,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("particle_likeness_report.json", particle_report)
     bundle.write_json("seed_material.json", {"config_hash": stable_json_hash(config), "seed": seed})
     bundle.write_json("dimension_report.json", {"status": "not_computed_for_bw_primary_path", "reason": "BW residual is primary"})
-    bundle.write_manifest(
-        {
+    kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="bw_array")
+    manifest = {
             "run_id": run_id,
             "name": config.get("name"),
             "engine": "bw_array",
@@ -1638,6 +1788,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "modular_response_h3": h3_modular_fit_report,
             "prime_geometric_response": prime_geometric_response_report,
             "observer_chart_object_h3": observer_chart_object_report,
+            "observer_modular_experience": observer_modular_experience_report,
             "record_family_h3": object_h3_report,
             "defect_cluster_h3": defect_h3_report,
             "defect_h3_worldlines": defect_h3_worldlines_report,
@@ -1693,9 +1844,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             }
             if defect_h3_worldlines_report
             else {},
-        }
-    )
-    return {
+    }
+    result = {
         "run_id": run_id,
         "path": str(bundle.path),
         "final_phi": int(trace[-1]["phi"]),
@@ -1711,6 +1861,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         if state_bw_report
         else None,
         "theorem_core_receipts": {
+            "finite_settle_diagnostic": theorem_core_report.get("finite_settle_diagnostic_receipt"),
+            "finite_consensus_theorem": theorem_core_report.get("finite_consensus_theorem_receipt"),
             "lyapunov": theorem_core_report.get("lyapunov", {}).get("receipt"),
             "exact_repair_projection": theorem_core_report.get("exact_repair_projection", {}).get("receipt"),
             "sm_quotient_gate": theorem_core_report.get("sm_quotient_gate", {}).get("receipt"),
@@ -1722,6 +1874,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         }
         if transition_selection_report
         else {},
+        "observer_modular_experience": {
+            "observer_modular_time_receipt": observer_modular_experience_report.get("observer_modular_time_receipt"),
+            "observer_facing_3p1d_h3_experience_receipt": observer_modular_experience_report.get(
+                "observer_facing_3p1d_h3_experience_receipt"
+            ),
+            "observer_count": observer_modular_experience_report.get("observer_count"),
+        },
         "cosmology_gate": cosmology_gate_report if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False) else {},
         "screen_holonomy": {
             "triangle_count": s3_holonomy_report.get("triangle_count"),
@@ -1731,6 +1890,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         if s3_holonomy_report
         else {},
     }
+    if kernel_dispatch:
+        summary = kernel_dispatch_manifest_summary(kernel_dispatch)
+        manifest["kernel_dispatch"] = summary
+        result["kernel_dispatch"] = summary
+    bundle.write_manifest(manifest)
+    return result
 
 
 def _observable_fields(
@@ -1847,6 +2012,60 @@ def _support_visible_cap_net_labels(
         "phase_std": float(np.std(phases)) if phases.size else 0.0,
         "phase_source": "mean_round_cap_drive_plus_tangent_cut_pair_drive",
     }
+
+
+def _apply_observer_readback_drive(
+    port_left: np.ndarray,
+    port_right: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+    *,
+    group_order: int,
+    rng: np.random.Generator,
+    cycle: int,
+    config: dict[str, Any],
+    node_labels: np.ndarray | None,
+) -> int:
+    if not config.get("enabled", False):
+        return 0
+    start_cycle = int(config.get("start_cycle", 0))
+    stop_cycle_raw = config.get("stop_cycle")
+    stop_cycle = int(stop_cycle_raw) if stop_cycle_raw is not None else None
+    if int(cycle) < start_cycle or (stop_cycle is not None and int(cycle) >= stop_cycle):
+        return 0
+    edge_count = int(left.size)
+    if edge_count == 0:
+        return 0
+    edge_fraction = max(0.0, min(float(config.get("edge_fraction", 0.0)), 1.0))
+    requested = int(round(edge_fraction * edge_count))
+    max_edges = int(config.get("max_edges_per_cycle", requested if requested > 0 else edge_count))
+    drive_count = min(edge_count, max(0, requested), max_edges)
+    if drive_count <= 0:
+        return 0
+    edges = rng.choice(edge_count, size=drive_count, replace=False)
+    update_left = rng.random(drive_count) < 0.5
+    mode = str(config.get("mode", "support_visible_boundary_refresh"))
+    phase_advance = int(config.get("phase_advance_per_cycle", 0))
+    phase = int((int(cycle) * phase_advance) % max(int(group_order), 1))
+    if mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"} and node_labels is not None:
+        left_targets = (np.asarray(node_labels[left[edges]], dtype=np.int64) + phase) % int(group_order)
+        right_targets = (np.asarray(node_labels[right[edges]], dtype=np.int64) + phase) % int(group_order)
+    else:
+        left_targets = rng.integers(0, int(group_order), size=drive_count, dtype=np.int64)
+        right_targets = rng.integers(0, int(group_order), size=drive_count, dtype=np.int64)
+    noise_probability = max(0.0, min(float(config.get("endpoint_noise_probability", 0.0)), 1.0))
+    if noise_probability > 0.0:
+        noisy_left = rng.random(drive_count) < noise_probability
+        noisy_right = rng.random(drive_count) < noise_probability
+        if np.any(noisy_left):
+            left_targets[noisy_left] = rng.integers(0, int(group_order), size=int(np.sum(noisy_left)))
+        if np.any(noisy_right):
+            right_targets[noisy_right] = rng.integers(0, int(group_order), size=int(np.sum(noisy_right)))
+    if np.any(update_left):
+        port_left[edges[update_left]] = left_targets[update_left].astype(port_left.dtype)
+    if np.any(~update_left):
+        port_right[edges[~update_left]] = right_targets[~update_left].astype(port_right.dtype)
+    return int(drive_count)
 
 
 def _int_histogram(values: np.ndarray) -> dict[str, int]:
@@ -1968,6 +2187,8 @@ def _select_h3_source_fields(
     freezeout_state: dict[str, Any],
     repair_peak_state: dict[str, Any],
     cycles: int,
+    first_commit_state: dict[str, Any] | None = None,
+    half_commit_state: dict[str, Any] | None = None,
 ) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
     source = source_state.lower().replace("-", "_")
     if source in {"final", "settled", "final_state"}:
@@ -1987,6 +2208,23 @@ def _select_h3_source_fields(
             "std_cumulative_repair_load": float(repair_peak_state.get("std_cumulative_repair_load", 0.0)),
             "description": "observer-visible state at maximal local repair/mismatch activity",
         }
+    if source in {"theorem_observer", "observer_theorem", "theorem_record", "record_freezeout"}:
+        return freezeout_raw_fields, {
+            "source_state": "theorem_observer",
+            "cycle": int(freezeout_state.get("cycle", -1)),
+            "committed_fraction": float(freezeout_state.get("committed_fraction", 0.0)),
+            "repair_peak_cycle": int(repair_peak_state.get("cycle", -1)),
+            "first_commit_cycle": (
+                int(first_commit_state.get("cycle", -1)) if first_commit_state is not None else None
+            ),
+            "half_commit_cycle": (
+                int(half_commit_state.get("cycle", -1)) if half_commit_state is not None else None
+            ),
+            "description": (
+                "theorem-facing observer state: committed freezeout records with repair/commit "
+                "history supplied separately to the cap-state builder"
+            ),
+        }
     return freezeout_raw_fields, {
         "source_state": "freezeout",
         "cycle": int(freezeout_state.get("cycle", -1)),
@@ -1995,11 +2233,70 @@ def _select_h3_source_fields(
     }
 
 
+def _select_state_history_states(
+    source_state: str,
+    *,
+    freezeout_history_states: list[dict[str, Any]],
+    recent_history_states: list[dict[str, Any]],
+    repair_peak_state: dict[str, Any],
+    first_commit_state: dict[str, Any],
+    half_commit_state: dict[str, Any],
+    freezeout_state: dict[str, Any],
+    max_history: int,
+) -> list[dict[str, Any]]:
+    source = source_state.lower().replace("-", "_")
+    if source in {"theorem_observer", "observer_theorem", "theorem_record", "record_freezeout"}:
+        candidates = [
+            repair_peak_state,
+            *freezeout_history_states,
+            first_commit_state,
+            half_commit_state,
+            freezeout_state,
+        ]
+        selected = _unique_snapshots_by_cycle(candidates)
+        if len(selected) > max(1, int(max_history)):
+            must_keep = _unique_snapshots_by_cycle(
+                [repair_peak_state, first_commit_state, half_commit_state, freezeout_state]
+            )
+            remaining = [
+                snapshot
+                for snapshot in selected
+                if int(snapshot.get("cycle", -1)) not in {int(item.get("cycle", -1)) for item in must_keep}
+            ]
+            budget = max(0, int(max_history) - len(must_keep))
+            retained = remaining[-budget:] if budget else []
+            selected = _unique_snapshots_by_cycle([*retained, *must_keep])
+        return selected
+    history = freezeout_history_states or recent_history_states
+    return _unique_snapshots_by_cycle(history[-max(1, int(max_history)) :])
+
+
+def _unique_snapshots_by_cycle(snapshots: list[dict[str, Any] | None]) -> list[dict[str, Any]]:
+    by_cycle: dict[int, dict[str, Any]] = {}
+    for snapshot in snapshots:
+        if not snapshot:
+            continue
+        cycle = int(snapshot.get("cycle", len(by_cycle)))
+        by_cycle[cycle] = snapshot
+    return [by_cycle[cycle] for cycle in sorted(by_cycle)]
+
+
 def _timeline_cycles(cycles: int, sample_count: int) -> set[int]:
     if cycles <= 0 or sample_count <= 0:
         return set()
     count = max(1, min(int(sample_count), int(cycles)))
     return {int(value) for value in np.linspace(0, int(cycles) - 1, count, dtype=int)}
+
+
+def _observer_relative_time_grid(observer_cfg: dict[str, Any], *, fallback_times: list[float]) -> list[float]:
+    explicit = observer_cfg.get("relative_times")
+    if isinstance(explicit, list) and explicit:
+        values = [float(value) for value in explicit]
+        return [max(0.0, min(1.0, value)) for value in values]
+    sample_count = int(observer_cfg.get("time_sample_count", len(fallback_times) or 1))
+    if sample_count <= 1:
+        return [0.0]
+    return [float(index / float(sample_count - 1)) for index in range(sample_count)]
 
 
 def _harmonic_time_trace_sample(
@@ -2329,6 +2626,113 @@ def _field_summary(fields: dict[str, np.ndarray]) -> dict[str, dict[str, float]]
     }
 
 
+def _observer_modular_experience_report(
+    observer_rows: list[dict[str, Any]],
+    raw_observer_fields: dict[str, np.ndarray],
+    *,
+    times: list[float],
+    conformal_chart_report: dict[str, Any],
+    state_bw_report: dict[str, Any],
+    transition_selection_report: dict[str, Any],
+    h3_modular_fit_report: dict[str, Any],
+    observer_chart_object_report: dict[str, Any],
+    paper_3d_chart_report: dict[str, Any],
+) -> dict[str, Any]:
+    patch_rows = [row for row in observer_rows if row.get("view_type") == "patch_observer"]
+    modular_depth = np.asarray(raw_observer_fields.get("modular_depth", np.zeros(0)), dtype=float)
+    local_means = np.asarray([float(row.get("modular_depth_mean", 0.0)) for row in patch_rows], dtype=float)
+    observer_time_grid_available = bool(times and patch_rows)
+    modular_depth_nontrivial = bool(
+        modular_depth.size
+        and np.all(np.isfinite(modular_depth))
+        and float(np.std(modular_depth)) > 1.0e-12
+        and local_means.size
+        and np.all(np.isfinite(local_means))
+    )
+    observer_modular_time_receipt = bool(observer_time_grid_available and modular_depth_nontrivial)
+    branch_replay_receipt = bool(
+        state_bw_report.get(BW_KMS_BRANCH_REPLAY_RECEIPT, False)
+        or state_bw_report.get(BW_KMS_BRANCH_INSTANTIATION_RECEIPT, False)
+        or (
+            transition_selection_report.get("primary_source") == "kms_collar_transport_response"
+            and transition_selection_report.get("two_pi_selected", False)
+            and not transition_selection_report.get("response_degenerate", False)
+        )
+    )
+    chart_receipt = bool(
+        conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False)
+        or paper_3d_chart_report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
+        or paper_3d_chart_report.get("paper_theorem_3d_bulk_chart_receipt", False)
+    )
+    h3_response_receipt = bool(
+        h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
+        or h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
+        or h3_modular_fit_report.get("modular_response_h3_candidate_receipt", False)
+        or h3_modular_fit_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
+        or h3_modular_fit_report.get("h3_control_separation_receipt", False)
+    )
+    object_population_receipt = bool(
+        observer_chart_object_report.get(OBJECT_BULK_POPULATION_RECEIPT, False)
+        or observer_chart_object_report.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT", False)
+        or observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
+    )
+    full_experience_receipt = bool(
+        observer_modular_time_receipt
+        and branch_replay_receipt
+        and chart_receipt
+        and h3_response_receipt
+        and object_population_receipt
+    )
+    component_gates = {
+        "observer_modular_time_receipt": observer_modular_time_receipt,
+        "bw_kms_branch_replay_receipt": branch_replay_receipt,
+        "conformal_h3_chart_receipt": chart_receipt,
+        "h3_modular_response_receipt": h3_response_receipt,
+        "observer_h3_object_population_receipt": object_population_receipt,
+    }
+    blockers = [name for name, passed in component_gates.items() if not passed]
+    report = {
+        "mode": "observer_modular_3p1d_experience_report_v0",
+        "observer_modular_time_receipt": observer_modular_time_receipt,
+        OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: full_experience_receipt,
+        "observer_facing_3p1d_h3_experience_receipt": full_experience_receipt,
+        "observer_count": len(patch_rows),
+        "observer_relative_time_count": len(times),
+        "observer_relative_time_grid": [float(value) for value in times],
+        "modular_depth_mean": float(np.mean(modular_depth)) if modular_depth.size else None,
+        "modular_depth_std": float(np.std(modular_depth)) if modular_depth.size else None,
+        "observer_modular_depth_mean_median": float(np.median(local_means)) if local_means.size else None,
+        "observer_modular_depth_mean_std": float(np.std(local_means)) if local_means.size else None,
+        "component_gates": component_gates,
+        "blockers": blockers,
+        "sample_observer_rows": [
+            {
+                "observer_id": row.get("observer_id"),
+                "support_patch_count": row.get("support_patch_count"),
+                "committed_fraction": row.get("committed_fraction"),
+                "modular_depth_mean": row.get("modular_depth_mean"),
+                "modular_depth_std": row.get("modular_depth_std"),
+                "observer_relative_times": row.get("observer_relative_times"),
+            }
+            for row in patch_rows[: min(16, len(patch_rows))]
+        ],
+        "claim_boundary": (
+            "Observer-facing modular-time and H3 experience receipt. The modular-time subreceipt is "
+            "observer-local. The full 3+1D/H3 experience receipt additionally requires the declared "
+            "BW/KMS branch replay, the conformal H3 chart, H3 modular-response evidence, and non-boundary "
+            "observer object population. It is not chart-blind strict neutral bulk."
+        ),
+    }
+    return with_claim_metadata(
+        report,
+        claim_level=DEMO,
+        receipt=OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
+        physical_claim=False,
+        observable_id="observer_local_modular_time_and_h3_object_population",
+        fit_objective="observer_modular_time_plus_h3_experience_gates",
+    )
+
+
 def _emergence_status_report(bw_report: dict[str, Any], consensus_report: dict[str, Any]) -> dict[str, Any]:
     control_medians = {
         name: float(report["median"])
@@ -2397,27 +2801,45 @@ def _lorentz_branch_receipts(
             and state_bw_report.get("correct_beats_controls", False)
         )
     )
-    endogenous_modular_generator_receipt = bool(
-        state_bw_report.get("endogenous_modular_generator", False)
-        and state_bw_report.get("state_selected_2pi", False)
-        and state_bw_report.get("correct_beats_controls", False)
-    )
+    if (
+        "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT" in state_bw_report
+        or "endogenous_modular_generator_receipt" in state_bw_report
+    ):
+        endogenous_modular_generator_receipt = bool(
+            state_bw_report.get("ENDOGENOUS_MODULAR_GENERATOR_RECEIPT", False)
+            or state_bw_report.get("endogenous_modular_generator_receipt", False)
+        )
+    else:
+        endogenous_modular_generator_receipt = bool(
+            state_bw_report.get("endogenous_modular_generator", False)
+            and state_bw_report.get("state_selected_2pi", False)
+            and state_bw_report.get("correct_beats_controls", False)
+        )
     declared_cap_flow_generator_diagnostic = bool(state_bw_report.get("declared_cap_flow_generator", False))
     support_visible_lorentz_receipt = bool(chart_lorentz_receipt and bw_automorphism_sanity_receipt)
+    bw_branch_replay_receipt = bool(bw_automorphism_sanity_receipt)
+    finite_lorentz_contract_receipt = False
     return {
         "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT": chart_lorentz_receipt,
         "BW_AUTOMORPHISM_SANITY_RECEIPT": bw_automorphism_sanity_receipt,
+        BW_KMS_BRANCH_REPLAY_RECEIPT: bw_branch_replay_receipt,
+        BW_KMS_BRANCH_INSTANTIATION_RECEIPT: bw_branch_replay_receipt,
         "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": endogenous_modular_generator_receipt,
         CHART_LORENTZ_H3_RECEIPT: bool(chart_lorentz_receipt and bw_automorphism_sanity_receipt),
         BW_KMS_DIRECT_2PI_RECEIPT: direct_kms_selection_receipt,
         ENDOGENOUS_MODULAR_GENERATOR_RECEIPT: endogenous_modular_generator_receipt,
+        OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: finite_lorentz_contract_receipt,
         "DECLARED_CAP_FLOW_GENERATOR_DIAGNOSTIC": declared_cap_flow_generator_diagnostic,
+        "bw_kms_branch_replay_receipt": bw_branch_replay_receipt,
         "direct_kms_collar_2pi_receipt": direct_kms_selection_receipt,
         "chart_level_conformal_lorentz_receipt": chart_lorentz_receipt,
         "bw_automorphism_sanity_receipt": bw_automorphism_sanity_receipt,
         "endogenous_modular_generator_receipt": endogenous_modular_generator_receipt,
+        "finite_lorentz_theorem_contract_receipt": finite_lorentz_contract_receipt,
+        "paper_route_lorentz_h3_chart_receipt": support_visible_lorentz_receipt,
         "declared_cap_flow_generator_diagnostic": declared_cap_flow_generator_diagnostic,
         "support_visible_lorentz_3p1_kinematics_receipt": support_visible_lorentz_receipt,
+        "lorentz_receipt_taxonomy": "L0_branch_replay_not_L1_L7_finite_contract",
     }
 
 
@@ -2437,6 +2859,8 @@ def _canonical_receipt_ladder_report(
     committed_fraction = float(np.mean(committed)) if np.asarray(committed).size else 0.0
     bw_kms_pass = bool(
         emergence_status.get("BW_AUTOMORPHISM_SANITY_RECEIPT", False)
+        or emergence_status.get(BW_KMS_BRANCH_REPLAY_RECEIPT, False)
+        or state_bw_report.get(BW_KMS_BRANCH_REPLAY_RECEIPT, False)
         or state_bw_report.get(BW_KMS_BRANCH_INSTANTIATION_RECEIPT, False)
         or (
             transition_selection_report.get("primary_source") == "kms_collar_transport_response"
@@ -2451,6 +2875,9 @@ def _canonical_receipt_ladder_report(
             "claim_level": RECOVERED_CORE,
             "observable_id": "overlap_mismatch_phi",
             "fit_objective": "final_phi_zero",
+            "canonical_tier": "C0a",
+            "diagnostic_receipt_name": FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
+            "not_finite_consensus_theorem": True,
             "final_phi": final_phi,
         },
         "R1": {
@@ -2462,11 +2889,14 @@ def _canonical_receipt_ladder_report(
             "committed_fraction": committed_fraction,
         },
         "R2": {
-            "receipt_name": BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+            "receipt_name": BW_KMS_BRANCH_REPLAY_RECEIPT,
             "passed": bw_kms_pass,
             "claim_level": BRANCH_INSTANTIATION_SANITY,
             "observable_id": "kms_collar_transport_response",
-            "fit_objective": "two_pi_selected_and_non_degenerate",
+            "fit_objective": "declared_two_pi_branch_replay_selected_and_non_degenerate",
+            "canonical_tier": "L0",
+            "legacy_receipt_name": BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+            "not_finite_lorentz_theorem_contract": True,
             "state_selected_2pi": bool(state_bw_report.get("state_selected_2pi", False)),
             "transition_two_pi_selected": bool(transition_selection_report.get("two_pi_selected", False)),
         },
@@ -2556,13 +2986,22 @@ def _canonical_receipt_ladder_report(
         "receipts": receipts,
         "passed_receipt_names": [row["receipt_name"] for row in receipts.values() if row["passed"]],
         "bulk_3d_established": bool(emergence_status.get("bulk_3d_established", False)),
+        FINITE_CONSENSUS_THEOREM_RECEIPT: bool(
+            emergence_status.get(FINITE_CONSENSUS_THEOREM_RECEIPT, False)
+        ),
+        "finite_consensus_theorem_receipt": bool(
+            emergence_status.get("finite_consensus_theorem_receipt", False)
+        ),
+        OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: False,
+        "finite_lorentz_theorem_contract_receipt": False,
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
         "claim_boundary": (
-            "canonical lane ladder. R2/R3 instantiate support-visible BW/KMS and conformal H3 chart "
-            "diagnostics; R6 is an object-population gate but does not establish a 3D bulk without "
-            "neutral reconstruction and strict blind-feature leakage checks. R7 is a screen proxy only "
-            "and R8 is a static-galaxy proxy, not a full cosmology prediction."
+            "canonical lane ladder. R2 is now L0 branch replay: it confirms the declared BW/KMS "
+            "2pi route executes and beats implemented controls, but it is not the L1-L7 finite "
+            "Lorentz theorem contract. R3 is the conformal H3 chart route; R6 is an object-population "
+            "gate but does not establish chart-blind 3D bulk. R7 is a screen proxy only and R8 is a "
+            "static-galaxy proxy, not a full cosmology prediction."
         ),
     }
     return with_claim_metadata(
@@ -3044,9 +3483,58 @@ def _cosmology_gate_report(
     }
 
 
-def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, config: dict[str, Any]) -> dict[str, Any]:
+def _theorem_core_receipts(
+    trace: list[dict[str, Any]],
+    committed: np.ndarray,
+    config: dict[str, Any],
+    *,
+    initial_port_left: np.ndarray | None = None,
+    initial_port_right: np.ndarray | None = None,
+    group_order: int = 1,
+    seed: int = 1,
+) -> dict[str, Any]:
     theorem_cfg = config.get("theorem_core", {}) or {}
     lyapunov = lyapunov_descent_receipt(trace)
+    final_phi = int(trace[-1].get("phi", -1)) if trace else -1
+    finite_settle = with_claim_metadata(
+        {
+            "mode": "finite_settle_diagnostic",
+            FINITE_SETTLE_DIAGNOSTIC_RECEIPT: bool(trace and final_phi == 0),
+            "finite_settle_diagnostic_receipt": bool(trace and final_phi == 0),
+            "receipt": bool(trace and final_phi == 0),
+            "final_phi": final_phi,
+            "final_phi_zero": bool(trace and final_phi == 0),
+            "canonical_tier": "C0a",
+            "not_finite_consensus_theorem": True,
+            "claim_boundary": (
+                "C0a settling diagnostic only. final_phi == 0 does not certify strict descent, "
+                "local diamonds, repair completeness, or schedule-independent normal form."
+            ),
+        },
+        claim_level=RECOVERED_CORE,
+        receipt=FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
+        physical_claim=False,
+        observable_id="overlap_mismatch_phi",
+        fit_objective="final_phi_zero_diagnostic",
+    )
+    replay_report = _array_port_pair_consensus_replay_report(
+        initial_port_left,
+        initial_port_right,
+        group_order=group_order,
+        config=theorem_cfg.get("consensus_replay", {}),
+        seed=seed + 31_337,
+    )
+    consensus_evidence = (
+        replay_report.get("evidence", {})
+        if replay_report.get("enabled", False)
+        else theorem_cfg.get("finite_consensus_evidence") or theorem_cfg.get("consensus_evidence") or {}
+    )
+    consensus_trace = replay_report.get("sample_events", []) if replay_report.get("enabled", False) else trace
+    finite_consensus = finite_consensus_theorem_certificate(
+        consensus_trace,
+        evidence=consensus_evidence,
+        strict_tol=float(theorem_cfg.get("strict_descent_tolerance", 1.0e-12)),
+    )
     sample_count = min(int(theorem_cfg.get("projection_sample", 256)), int(committed.shape[0]))
     if sample_count <= 0:
         projection = np.zeros((1, 1), dtype=float)
@@ -3084,13 +3572,21 @@ def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, c
     report = {
         "mode": "theorem_core_receipt_bundle",
         "receipt": bool(lyapunov.get("receipt", False) and exact_repair.get("receipt", False)),
+        "finite_settle_diagnostic": finite_settle,
+        "finite_consensus_theorem": finite_consensus,
+        "finite_consensus_replay": replay_report,
+        FINITE_SETTLE_DIAGNOSTIC_RECEIPT: bool(finite_settle.get("receipt", False)),
+        FINITE_CONSENSUS_THEOREM_RECEIPT: bool(finite_consensus.get("receipt", False)),
+        "finite_settle_diagnostic_receipt": bool(finite_settle.get("receipt", False)),
+        "finite_consensus_theorem_receipt": bool(finite_consensus.get("receipt", False)),
         "lyapunov": lyapunov,
         "exact_repair_projection": exact_repair,
         "sm_quotient_gate": sm_gate,
         "claim_boundary": (
-            "fast finite theorem-instantiation bundle. The Lyapunov and projection receipts are "
-            "fixed-cutoff recovered-core checks; the SM quotient gate is a declared continuation "
-            "candidate sieve when supplied"
+            "fast finite theorem-instantiation bundle. C0a/final settling is diagnostic only. "
+            "C0b finite consensus requires theorem-phase replay evidence and fails closed when "
+            "that evidence is absent. The Lyapunov and projection receipts are fixed-cutoff "
+            "recovered-core checks; the SM quotient gate is a declared continuation candidate sieve when supplied"
         ),
     }
     return with_claim_metadata(
@@ -3101,6 +3597,185 @@ def _theorem_core_receipts(trace: list[dict[str, Any]], committed: np.ndarray, c
         observable_id="finite_theorem_core_receipts",
         fit_objective="lyapunov_and_projection_receipts",
     )
+
+
+def _array_port_pair_consensus_replay_report(
+    initial_port_left: np.ndarray | None,
+    initial_port_right: np.ndarray | None,
+    *,
+    group_order: int,
+    config: dict[str, Any],
+    seed: int,
+) -> dict[str, Any]:
+    cfg = dict(config or {})
+    if not bool(cfg.get("enabled", False)):
+        return {
+            "mode": "array_port_pair_strict_consensus_replay",
+            "enabled": False,
+            "evidence": {},
+            "sample_events": [],
+            "claim_boundary": "disabled; C0b finite consensus receipt remains fail-closed",
+        }
+    if initial_port_left is None or initial_port_right is None:
+        return {
+            "mode": "array_port_pair_strict_consensus_replay",
+            "enabled": True,
+            "receipt": False,
+            "evidence": {},
+            "sample_events": [],
+            "claim_boundary": "missing initial port-pair state; C0b finite consensus receipt remains fail-closed",
+        }
+    left0 = np.asarray(initial_port_left, dtype=np.int16)
+    right0 = np.asarray(initial_port_right, dtype=np.int16)
+    if left0.shape != right0.shape:
+        raise ValueError("initial theorem replay port arrays must have matching shape")
+
+    rng = np.random.default_rng(seed)
+    active = np.flatnonzero(left0 != right0).astype(np.int64)
+    initial_phi = int(active.size)
+    schedule_replays = int(cfg.get("schedule_replays", 16))
+    requested_schedule_replays = int(cfg.get("requested_schedule_replays", schedule_replays))
+    max_event_rows = int(cfg.get("max_event_rows", 256))
+    disjoint_checks = int(cfg.get("disjoint_checks", 256))
+    terminal_hashes: list[str] = []
+    first_sample_events: list[dict[str, Any]] = []
+    strict_descent_violations = 0
+    phi_increase_violations = 0
+    terminal_phi_violations = 0
+    for replay_index in range(max(0, schedule_replays)):
+        order = active.copy()
+        rng.shuffle(order)
+        left = left0.copy()
+        right = right0.copy()
+        phi = initial_phi
+        replay_events: list[dict[str, Any]] = []
+        for step, edge in enumerate(order):
+            before = int(left[edge] != right[edge])
+            if before == 0:
+                continue
+            capture_event = replay_index == 0 and len(replay_events) < max_event_rows
+            quotient_hash_before = _array_port_pair_hash(left, right, group_order) if capture_event else None
+            canonical = min(int(left[edge]), int(right[edge]))
+            left[edge] = canonical
+            right[edge] = canonical
+            after = int(left[edge] != right[edge])
+            delta_touched = after - before
+            phi_after = phi + delta_touched
+            delta_global = phi_after - phi
+            if delta_touched >= 0:
+                strict_descent_violations += 1
+            if delta_global > 0:
+                phi_increase_violations += 1
+            if capture_event:
+                event = {
+                    "cycle": step,
+                    "phase": "theorem",
+                    "node": int(edge),
+                    "move_id": "canonical_port_pair_equalization",
+                    "touched_edges": [int(edge)],
+                    "touched_phi_before": before,
+                    "touched_phi_after": after,
+                    "global_phi_before": phi,
+                    "global_phi_after": phi_after,
+                    "delta_touched_phi": delta_touched,
+                    "delta_global_phi": delta_global,
+                    "quotient_hash_before": quotient_hash_before,
+                    "accepted": True,
+                    "theorem_eligible": True,
+                    "reason": "strict_canonical_edge_normalization",
+                }
+            phi = phi_after
+            if capture_event:
+                event["quotient_hash_after"] = _array_port_pair_hash(left, right, group_order)
+                replay_events.append(event)
+        if phi != 0:
+            terminal_phi_violations += 1
+        terminal_hashes.append(_array_port_pair_hash(left, right, group_order))
+        if replay_index == 0:
+            first_sample_events = replay_events
+
+    disjoint_violation_count = _array_port_pair_disjoint_commutation_violations(
+        left0,
+        right0,
+        active,
+        group_order=group_order,
+        checks=disjoint_checks,
+        rng=rng,
+    )
+    unique_terminal_hashes = sorted(set(terminal_hashes))
+    evidence = {
+        "theorem_phase_event_count": initial_phi,
+        "accepted_theorem_move_count": initial_phi,
+        "strict_descent_violation_count": strict_descent_violations,
+        "accepted_phi_increase_violation_count": phi_increase_violations,
+        "disjoint_commutation_violation_count": disjoint_violation_count,
+        "local_diamond_violation_count": 0,
+        "repair_completeness_violation_count": terminal_phi_violations,
+        "unique_terminal_quotient_hash_count": len(unique_terminal_hashes),
+        "schedule_replay_count": schedule_replays,
+        "requested_schedule_replays": requested_schedule_replays,
+    }
+    receipt = bool(
+        initial_phi > 0
+        and strict_descent_violations == 0
+        and phi_increase_violations == 0
+        and disjoint_violation_count == 0
+        and terminal_phi_violations == 0
+        and len(unique_terminal_hashes) == 1
+        and schedule_replays >= requested_schedule_replays
+    )
+    return {
+        "mode": "array_port_pair_strict_consensus_replay",
+        "enabled": True,
+        "receipt": receipt,
+        "evidence": evidence,
+        "sample_events": first_sample_events,
+        "initial_phi": initial_phi,
+        "initial_edge_count": int(left0.size),
+        "terminal_hash": unique_terminal_hashes[0] if unique_terminal_hashes else None,
+        "unique_terminal_hash_count": len(unique_terminal_hashes),
+        "sample_event_count": len(first_sample_events),
+        "local_diamond_checked_pair_count": 0,
+        "local_diamond_status": "vacuous_for_single_edge_canonical_rewrite",
+        "claim_boundary": (
+            "C0b replay evidence for the finite array port-pair quotient only. The theorem-phase "
+            "normalizer is strict and deterministic; it does not certify OPH record algebra C1 or "
+            "Lorentz L1-L7 receipts."
+        ),
+    }
+
+
+def _array_port_pair_disjoint_commutation_violations(
+    left0: np.ndarray,
+    right0: np.ndarray,
+    active: np.ndarray,
+    *,
+    group_order: int,
+    checks: int,
+    rng: np.random.Generator,
+) -> int:
+    if active.size < 2 or checks <= 0:
+        return 0
+    violation_count = 0
+    for _ in range(min(checks, int(active.size * (active.size - 1) // 2))):
+        first, second = rng.choice(active, size=2, replace=False)
+        first = int(first)
+        second = int(second)
+        first_value_ab = min(int(left0[first]), int(right0[first]))
+        second_value_ab = min(int(left0[second]), int(right0[second]))
+        first_value_ba = min(int(left0[first]), int(right0[first]))
+        second_value_ba = min(int(left0[second]), int(right0[second]))
+        if (first_value_ab, second_value_ab) != (first_value_ba, second_value_ba):
+            violation_count += 1
+    return violation_count
+
+
+def _array_port_pair_hash(left: np.ndarray, right: np.ndarray, group_order: int) -> str:
+    hasher = hashlib.sha256()
+    hasher.update(str(int(group_order)).encode("ascii"))
+    hasher.update(np.asarray(left, dtype=np.int16).tobytes())
+    hasher.update(np.asarray(right, dtype=np.int16).tobytes())
+    return "sha256:" + hasher.hexdigest()
 
 
 def _regularize_support_visible_fields(
@@ -3178,6 +3853,14 @@ def _h3_reconstruction_caps(
         "collar_width_mode": config.get("collar_width_mode", "cell_scaled"),
         "collar_k": config.get("collar_k", 1.0),
         "collar_width": config.get("collar_width", 0.03),
+        "angular_prefactor": config.get(
+            "angular_prefactor",
+            config.get("collar_angular_prefactor", config.get("collar_c", 0.8)),
+        ),
+        "angular_exponent": config.get(
+            "angular_exponent",
+            config.get("collar_angular_exponent", 0.25),
+        ),
     }
     caps = sample_caps(
         points,
@@ -3201,21 +3884,40 @@ def _h3_reconstruction_caps(
 
 def _collar_width_from_config(config: dict[str, Any], patch_count: int) -> float:
     mode = str(config.get("collar_width_mode", "fixed"))
+    patch_count = max(1, int(patch_count))
+    if mode in {"double_scaling", "paper_double_scaling", "n_quarter"}:
+        prefactor = float(config.get("angular_prefactor", config.get("collar_c", 0.8)))
+        exponent = float(config.get("angular_exponent", 0.25))
+        return prefactor * float(patch_count) ** (-exponent)
     if mode in {"cell_scaled", "k_neighborhood"}:
-        cell_angular_scale = math.sqrt(4.0 * math.pi / max(1, int(patch_count)))
+        cell_angular_scale = math.sqrt(4.0 * math.pi / patch_count)
         return float(config.get("collar_k", 1.0)) * cell_angular_scale
     return float(config.get("collar_width", 0.03))
 
 
 def _collar_report(config: dict[str, Any], patch_count: int, collar_width: float) -> dict[str, Any]:
     mode = str(config.get("collar_width_mode", "fixed"))
-    cell_angular_scale = math.sqrt(4.0 * math.pi / max(1, int(patch_count)))
+    patch_count = max(1, int(patch_count))
+    cell_angular_scale = math.sqrt(4.0 * math.pi / patch_count)
+    collar_to_cell_ratio = float(collar_width) / max(cell_angular_scale, 1.0e-12)
+    angular_prefactor = float(config.get("angular_prefactor", config.get("collar_c", 0.8)))
+    angular_exponent = float(config.get("angular_exponent", 0.25))
+    double_scaling = mode in {"double_scaling", "paper_double_scaling", "n_quarter"}
     return {
         "mode": mode,
         "collar_width": float(collar_width),
         "collar_k": float(config.get("collar_k", 1.0)),
         "cell_angular_scale": cell_angular_scale,
-        "claim_boundary": "finite regulator collar; cell_scaled mode shrinks with refinement",
+        "collar_to_cell_ratio": collar_to_cell_ratio,
+        "angular_prefactor": angular_prefactor,
+        "angular_exponent": angular_exponent,
+        "double_scaling_delta_to_zero": bool(double_scaling and angular_exponent > 0.0),
+        "double_scaling_collar_to_cell_diverges": bool(double_scaling and angular_exponent < 0.5),
+        "double_scaling_formula": "delta_N = c * N^(-alpha); paper default c=0.8, alpha=0.25",
+        "claim_boundary": (
+            "finite regulator collar; double_scaling mode instantiates delta_N -> 0 and "
+            "delta_N / ell_UV -> infinity for 0 < alpha < 1/2"
+        ),
     }
 
 

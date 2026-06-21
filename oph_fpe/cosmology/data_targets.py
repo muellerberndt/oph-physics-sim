@@ -100,11 +100,11 @@ TARGETS = {
         name="OPH_P_over_48_screen_spectrum",
         lane="oph_inflation_cmb_bridge",
         source_url="local:cosmology/correspondence/inflation/2/comms.md",
-        status="theorem_target_available",
+        status="conditional_screen_theorem_target_available",
         claim_boundary=(
-            "Theorem-target scalar spectrum n_s=1-P/48 and A_zeta=100 ln(2) epsilon_star. "
-            "It must still be derived from finite-collar microphysics before it can be counted "
-            "as a lattice simulation result."
+            "Conditional finite-screen target for the MaxEnt Gaussian screen covariance and "
+            "n_s=1-P/48 tilt after scalar-readout and repair-operator receipts. Scalar release "
+            "amplitude, screen-to-primordial lift, and physical TT/TE/EE spectra remain separate gates."
         ),
     ),
     "pantheon_plus": MeasurementTarget(

@@ -5,10 +5,19 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 import numpy as np
-from scipy.linalg import expm
+from scipy.linalg import expm, logm, polar
 from scipy.optimize import linear_sum_assignment
 
-from oph_fpe.claims import BRANCH_INSTANTIATION_SANITY, DEMO, with_claim_metadata
+from oph_fpe.claims import (
+    BRANCH_INSTANTIATION_SANITY,
+    BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+    BW_KMS_BRANCH_REPLAY_RECEIPT,
+    DEMO,
+    ENDOGENOUS_MODULAR_GENERATOR_RECEIPT,
+    OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
+    with_claim_metadata,
+)
+from oph_fpe.algebra.maxent_cap_state import maxent_record_operator_cap_state
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap
 from oph_fpe.bulk.collar_state import cap_collar_partition, fawzi_renner_bound, visible_packets
 
@@ -20,6 +29,8 @@ REPAIR_RESPONSE_DENSITY_STATE_MODES = frozenset({"repair_affinity_response_densi
 PERTURB_RESPONSE_DENSITY_STATE_MODES = frozenset({"perturb_remeasure_response_density_log"})
 PERTURB_RESPONSE_KERNEL_STATE_MODES = frozenset({"perturb_remeasure_response_kernel_log"})
 COLLAR_OPERATOR_STATE_MODES = frozenset({"collar_operator_system", "support_visible_collar_operator_system"})
+MAXENT_RECORD_OPERATOR_STATE_MODES = frozenset({"maxent_record_operator_state"})
+KOOPMAN_GENERATOR_STATE_MODES = frozenset({"history_koopman_generator_state"})
 
 
 @dataclass
@@ -88,6 +99,33 @@ def geometric_permutation_operator(points: np.ndarray, cap: RoundCap, s: float, 
     L = np.zeros((basis_indices.size, basis_indices.size), dtype=complex)
     L[row_ind, col_ind] = 1.0
     eta = float(np.mean(distances[row_ind, col_ind])) if distances.size else 0.0
+    return L, eta
+
+
+def geometric_soft_transport_operator(
+    points: np.ndarray,
+    cap: RoundCap,
+    s: float,
+    basis_indices: np.ndarray,
+    *,
+    k: int = 8,
+) -> tuple[np.ndarray, float]:
+    basis_points = points[basis_indices]
+    mapped = lambda_cap(basis_points, cap, s)
+    distances = np.linalg.norm(mapped[:, None, :] - basis_points[None, :, :], axis=2)
+    if distances.size == 0:
+        return np.zeros((basis_indices.size, basis_indices.size), dtype=complex), 0.0
+    neighbor_count = min(max(1, int(k)), basis_indices.size)
+    nearest = np.argpartition(distances, kth=neighbor_count - 1, axis=1)[:, :neighbor_count]
+    nearest_distances = np.take_along_axis(distances, nearest, axis=1)
+    positive = nearest_distances[nearest_distances > 0.0]
+    sigma = max(float(np.median(positive)) if positive.size else _positive_median(distances), 1.0e-12)
+    weights = np.exp(-0.5 * np.square(nearest_distances / sigma))
+    weights = weights / np.maximum(np.sum(weights, axis=1, keepdims=True), 1.0e-15)
+    L = np.zeros((basis_indices.size, basis_indices.size), dtype=complex)
+    rows = np.arange(basis_indices.size)[:, None]
+    L[rows, nearest] = weights
+    eta = float(np.mean(np.sum(weights * nearest_distances, axis=1)))
     return L, eta
 
 
@@ -186,7 +224,12 @@ def cap_state_density(
             probe_max_incident_edges=probe_max_incident_edges,
         )
         return rho, support, packets
-    if state_mode in {"history_transition_kernel", "transition_count_kernel", "record_history_kernel"}:
+    if state_mode in {
+        "history_transition_kernel",
+        "transition_count_kernel",
+        "record_history_kernel",
+        *KOOPMAN_GENERATOR_STATE_MODES,
+    }:
         rho = history_transition_density(
             points,
             cap,
@@ -196,6 +239,14 @@ def cap_state_density(
             regularizer=regularizer,
         )
         return rho, support, packets
+    if state_mode in MAXENT_RECORD_OPERATOR_STATE_MODES:
+        result = maxent_record_operator_cap_state(
+            raw_fields,
+            history_fields or [],
+            support,
+            regularizer=regularizer,
+        )
+        return result.rho, support, packets
     if state_mode in COLLAR_OPERATOR_STATE_MODES:
         rho = collar_operator_system_density(
             points,
@@ -699,6 +750,85 @@ def modular_generator_from_unitary_transition(transition: np.ndarray, response_t
     return _hermitian(generator)
 
 
+def history_koopman_modular_generator(
+    raw_fields: dict[str, np.ndarray],
+    history_fields: list[dict[str, np.ndarray]],
+    basis: np.ndarray,
+    *,
+    response_lag: float,
+    regularizer: float = 1.0e-6,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Infer a finite unitary generator from observer-visible record histories."""
+
+    basis = np.asarray(basis, dtype=np.int64)
+    if basis.size == 0:
+        return np.zeros((0, 0), dtype=complex), {"usable": False, "reason": "empty_basis"}
+    if basis.size == 1:
+        return np.zeros((1, 1), dtype=complex), {"usable": True, "rank": 1, "nonunitary_defect": 0.0}
+    states = [state for state in [*list(history_fields or []), raw_fields] if state]
+    series = _koopman_feature_series(states, basis)
+    if len(series) < 2:
+        return np.zeros((basis.size, basis.size), dtype=complex), {
+            "usable": False,
+            "reason": "requires_at_least_two_history_states",
+            "rank": 0,
+            "nonunitary_defect": 1.0,
+        }
+    left_columns: list[np.ndarray] = []
+    right_columns: list[np.ndarray] = []
+    for before, after in zip(series[:-1], series[1:], strict=False):
+        width = min(before.shape[1], after.shape[1])
+        if width <= 0:
+            continue
+        left_columns.append(_standardize_columns(before[:, :width]))
+        right_columns.append(_standardize_columns(after[:, :width]))
+    if not left_columns:
+        return np.zeros((basis.size, basis.size), dtype=complex), {
+            "usable": False,
+            "reason": "empty_history_feature_pairs",
+            "rank": 0,
+            "nonunitary_defect": 1.0,
+        }
+    X = np.hstack(left_columns)
+    Y = np.hstack(right_columns)
+    sample_count = max(float(X.shape[1]), 1.0)
+    eye = np.eye(basis.size, dtype=float)
+    C00 = (X @ X.T) / sample_count + float(regularizer) * eye
+    C01 = (X @ Y.T) / sample_count
+    C11 = (Y @ Y.T) / sample_count + float(regularizer) * eye
+    C00_inv, rank_00 = _psd_invsqrt(C00)
+    C11_inv, rank_11 = _psd_invsqrt(C11)
+    transition = C00_inv @ C01 @ C11_inv
+    try:
+        unitary, _positive = polar(transition)
+        log_unitary = logm(unitary)
+        generator = _hermitian((-1j / max(float(response_lag), 1.0e-12)) * log_unitary)
+    except Exception:
+        generator = np.zeros((basis.size, basis.size), dtype=complex)
+        unitary = np.eye(basis.size, dtype=complex)
+    if not np.all(np.isfinite(generator)):
+        generator = np.zeros((basis.size, basis.size), dtype=complex)
+    nonunitary_defect = _relative_frobenius(transition - unitary, transition)
+    generator_norm = float(np.linalg.norm(generator, ord="fro"))
+    return generator, {
+        "usable": True,
+        "mode": "history_koopman_modular_generator",
+        "history_state_count": int(len(series)),
+        "history_pair_count": int(len(left_columns)),
+        "feature_column_count": int(X.shape[1]),
+        "rank": int(min(rank_00, rank_11)),
+        "rank_00": int(rank_00),
+        "rank_11": int(rank_11),
+        "nonunitary_defect": float(nonunitary_defect),
+        "generator_frobenius_norm": generator_norm,
+        "geometry_dependency_count": 0,
+        "claim_boundary": (
+            "finite Koopman generator inferred from observer-visible record/history feature vectors. "
+            "It does not use lambda_C, cap tangent coordinates, H3 coordinates, or a declared 2*pi target."
+        ),
+    }
+
+
 def bw_state_derived_residual(
     points: np.ndarray,
     raw_fields: dict[str, np.ndarray],
@@ -754,6 +884,16 @@ def bw_state_derived_residual(
         )
         U = modular_unitary(K_direct, t)
         O_sim = U @ O @ U.conj().T
+    elif state_mode in KOOPMAN_GENERATOR_STATE_MODES and sim_modular_flow:
+        K_koopman, koopman_meta = history_koopman_modular_generator(
+            raw_fields,
+            history_fields or [],
+            basis,
+            response_lag=transition_response_time,
+        )
+        U = modular_unitary(K_koopman, t)
+        eta_direct = float(koopman_meta.get("nonunitary_defect", 0.0))
+        O_sim = U @ O @ U.conj().T
     else:
         eta_direct = None
         O_sim = (
@@ -763,6 +903,8 @@ def bw_state_derived_residual(
         )
     if target_operator_mode == "permutation":
         L, eta_interpolation = geometric_permutation_operator(points, cap, target_scale * t, basis)
+    elif target_operator_mode == "soft":
+        L, eta_interpolation = geometric_soft_transport_operator(points, cap, target_scale * t, basis)
     else:
         L, eta_interpolation = geometric_transport_operator(points, cap, target_scale * t, basis)
     O_bw = L.conj().T @ O @ L
@@ -1000,6 +1142,28 @@ def state_derived_bw_report(
         probe_max_incident_edges=probe_max_incident_edges,
         seed=seed + 7919,
     )
+    inferred_clock_fit = _inferred_modular_clock_fit(
+        points,
+        caps,
+        raw_fields,
+        collar_by_cap,
+        times=times,
+        observables=observables,
+        regularizers=regularizers,
+        max_basis=max_basis,
+        state_mode=state_mode,
+        target_operator_mode=target_operator_mode,
+        transition_response_time=transition_response_time,
+        transition_response_scale=transition_response_scale,
+        density_inverse_temperature=density_inverse_temperature,
+        generator_scale=generator_scale,
+        history_fields=history_fields,
+        graph_response=graph_response,
+        probe_steps=probe_steps,
+        probe_repairs_per_source=probe_repairs_per_source,
+        probe_max_incident_edges=probe_max_incident_edges,
+        seed=seed + 15401,
+    )
     return _state_summary(
         rows,
         control_reports,
@@ -1010,6 +1174,7 @@ def state_derived_bw_report(
         density_inverse_temperature=density_inverse_temperature,
         generator_scale=generator_scale,
         generator_scale_audit=generator_scale_audit,
+        inferred_clock_fit=inferred_clock_fit,
     )
 
 
@@ -1089,6 +1254,10 @@ def _state_rows(
                         rows[-1]["generator_source"] = "perturb_remeasure_response_density_log"
                     elif state_mode in PERTURB_RESPONSE_KERNEL_STATE_MODES:
                         rows[-1]["generator_source"] = "perturb_remeasure_response_kernel_log"
+                    elif state_mode in MAXENT_RECORD_OPERATOR_STATE_MODES:
+                        rows[-1]["generator_source"] = "maxent_record_operator_state"
+                    elif state_mode in KOOPMAN_GENERATOR_STATE_MODES:
+                        rows[-1]["generator_source"] = "history_koopman_generator_state"
                     elif state_mode in DECLARED_CAP_FLOW_STATE_MODES:
                         rows[-1]["generator_source"] = "declared_cap_flow_graph_generator"
                     else:
@@ -1107,6 +1276,7 @@ def _state_summary(
     density_inverse_temperature: float,
     generator_scale: float,
     generator_scale_audit: dict[str, Any] | None = None,
+    inferred_clock_fit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     residuals = [row["support_visible_residual"] for row in rows]
     corrected = [row["corrected_residual_upper"] for row in rows]
@@ -1117,6 +1287,8 @@ def _state_summary(
     repair_response_density = state_mode in REPAIR_RESPONSE_DENSITY_STATE_MODES
     perturb_response_density = state_mode in PERTURB_RESPONSE_DENSITY_STATE_MODES
     perturb_response_kernel = state_mode in PERTURB_RESPONSE_KERNEL_STATE_MODES
+    maxent_record_operator = state_mode in MAXENT_RECORD_OPERATOR_STATE_MODES
+    koopman_generator = state_mode in KOOPMAN_GENERATOR_STATE_MODES
     endogenous_generator = bool(not direct_automorphism and not declared_cap_flow and not declared_response_density)
     not_applicable_controls: list[str] = []
     gate_control_reports = dict(control_reports)
@@ -1153,10 +1325,23 @@ def _state_summary(
         and correct_beats_controls
         and math.isclose(float(transition_response_scale), 2.0 * math.pi)
     )
+    inferred_clock_fit = inferred_clock_fit or {"enabled": False, "receipt": False}
+    endogenous_modular_generator_receipt = bool(
+        endogenous_generator
+        and selected_scale_label == "2pi"
+        and correct_beats_controls
+        and not bool(inferred_clock_fit.get("response_degenerate", False))
+    )
+    kms_geometric_clock_fit_receipt = bool(inferred_clock_fit.get("receipt", False))
     summary = {
         "mode": "state_derived_modular_probe",
-        "receipt_name": "BW_KMS_BRANCH_INSTANTIATION_RECEIPT",
-        "BW_KMS_BRANCH_INSTANTIATION_RECEIPT": bool(normalization_declared and correct_beats_controls),
+        "receipt_name": BW_KMS_BRANCH_REPLAY_RECEIPT,
+        BW_KMS_BRANCH_REPLAY_RECEIPT: bool(normalization_declared and correct_beats_controls),
+        BW_KMS_BRANCH_INSTANTIATION_RECEIPT: bool(normalization_declared and correct_beats_controls),
+        "legacy_receipt_name": BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
+        OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: False,
+        "finite_lorentz_theorem_contract_receipt": False,
+        "receipt_taxonomy": "L0_branch_replay_not_L1_L7_finite_contract",
         "state_mode": state_mode,
         "target_operator_mode": target_operator_mode,
         "transition_response_time": float(transition_response_time),
@@ -1169,7 +1354,14 @@ def _state_summary(
         "repair_affinity_response_density": repair_response_density,
         "perturb_remeasure_response_density": perturb_response_density,
         "perturb_remeasure_response_kernel": perturb_response_kernel,
+        "maxent_record_operator_state": maxent_record_operator,
+        "history_koopman_generator_state": koopman_generator,
         "TRANSITION_RESPONSE_DENSITY_LOG_CALIBRATION_RECEIPT": density_log_calibration_receipt,
+        ENDOGENOUS_MODULAR_GENERATOR_RECEIPT: endogenous_modular_generator_receipt,
+        "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": endogenous_modular_generator_receipt,
+        "endogenous_modular_generator_receipt": endogenous_modular_generator_receipt,
+        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": kms_geometric_clock_fit_receipt,
+        "kms_geometric_clock_fit_receipt": kms_geometric_clock_fit_receipt,
         "direct_transition_automorphism": direct_automorphism,
         "normalization_declared": normalization_declared,
         "physical_bw_claim": False,
@@ -1186,6 +1378,10 @@ def _state_summary(
             if perturb_response_density
             else "endogenous_perturb_remeasure_response_kernel_log"
             if perturb_response_kernel
+            else "endogenous_maxent_record_operator_state"
+            if maxent_record_operator
+            else "endogenous_history_koopman_generator_state"
+            if koopman_generator
             else "bw_normalized_finite_state_generator"
             if math.isclose(float(generator_scale), 2.0 * math.pi)
             else "finite_state_surrogate"
@@ -1201,7 +1397,10 @@ def _state_summary(
             "cap/collar rho_C reconstruction. perturb_remeasure_response_density_log builds its transition "
             "from bounded support-visible port perturbations, declared repair, and packet remeasurement on "
             "the actual screen graph. perturb_remeasure_response_kernel_log uses the same measured response "
-            "counts directly as M M^T instead of forcing a permutation assignment. These are current "
+            "counts directly as M M^T instead of forcing a permutation assignment. maxent_record_operator_state "
+            "constructs rho_C from observer record/history operators without the geometric flow target. "
+            "history_koopman_generator_state infers a unitary transition generator from observer-visible "
+            "history features without lambda_C or H3 input. These are current "
             "endogenous finite-regulator probes, not completed continuum BW proofs. None of these lanes is "
             "an unregularized type-I density proof, a 3D bulk claim, or a completed continuum BW proof"
         ),
@@ -1231,6 +1430,7 @@ def _state_summary(
                 "K=-log(rho+aI) generator wants a different sign or scale against lambda_C(2*pi*t)."
             ),
         },
+        "inferred_modular_clock_fit": inferred_clock_fit,
         "all_control_medians": {
             name: float(report["median"])
             for name, report in control_reports.items()
@@ -1254,9 +1454,233 @@ def _state_summary(
     return with_claim_metadata(
         summary,
         claim_level=BRANCH_INSTANTIATION_SANITY if normalization_declared else DEMO,
-        receipt="BW_KMS_BRANCH_INSTANTIATION_RECEIPT",
+        receipt=BW_KMS_BRANCH_REPLAY_RECEIPT,
         physical_claim=False,
     )
+
+
+def _inferred_modular_clock_fit(
+    points: np.ndarray,
+    caps: list[RoundCap],
+    raw_fields: dict[str, np.ndarray],
+    collar_by_cap: dict[int, dict[str, Any]],
+    *,
+    times: list[float],
+    observables: list[str],
+    regularizers: list[float],
+    max_basis: int,
+    state_mode: str,
+    target_operator_mode: str,
+    transition_response_time: float,
+    transition_response_scale: float,
+    density_inverse_temperature: float,
+    generator_scale: float,
+    history_fields: list[dict[str, np.ndarray]] | None,
+    graph_response: dict[str, Any] | None,
+    probe_steps: int,
+    probe_repairs_per_source: int,
+    probe_max_incident_edges: int,
+    seed: int,
+) -> dict[str, Any]:
+    if state_mode in (
+        DIRECT_AUTOMORPHISM_STATE_MODES
+        | DECLARED_CAP_FLOW_STATE_MODES
+        | DECLARED_RESPONSE_DENSITY_STATE_MODES
+    ):
+        return {
+            "enabled": False,
+            "not_applicable": True,
+            "receipt": False,
+            "state_mode": state_mode,
+            "claim_boundary": (
+                "not run for declared/direct BW lanes. L3 requires a clock coefficient inferred "
+                "from an endogenous observer-record cap state, not from a supplied geometric flow."
+            ),
+        }
+    finite_times = sorted({float(t) for t in times if np.isfinite(float(t)) and abs(float(t)) > 1.0e-12})
+    known_scales = [0.0, 1.0, math.pi, 2.0 * math.pi, 4.0 * math.pi]
+    scale_grid = _unique_floats(
+        [
+            *[float(value) for value in np.linspace(0.0, 4.0 * math.pi, 33)],
+            *known_scales,
+        ]
+    )
+    rows: list[dict[str, Any]] = []
+    for cap_id, cap in enumerate(caps):
+        for time_index, t in enumerate(finite_times):
+            for reg_index, reg in enumerate(regularizers):
+                rho, basis, _ = cap_state_density(
+                    points,
+                    cap,
+                    raw_fields,
+                    history_fields=history_fields,
+                    max_basis=max_basis,
+                    regularizer=float(reg),
+                    seed=seed + cap_id * 1009 + time_index * 101 + reg_index,
+                    state_mode=state_mode,
+                    transition_response_time=transition_response_time,
+                    transition_response_scale=transition_response_scale,
+                    density_inverse_temperature=density_inverse_temperature,
+                    graph_response=graph_response,
+                    probe_steps=probe_steps,
+                    probe_repairs_per_source=probe_repairs_per_source,
+                    probe_max_incident_edges=probe_max_incident_edges,
+                )
+                if basis.size == 0:
+                    continue
+                for observable in observables:
+                    O = _observable_matrix(raw_fields, observable, basis, points=points, cap=cap)
+                    if state_mode in KOOPMAN_GENERATOR_STATE_MODES:
+                        K_koopman, _koopman_meta = history_koopman_modular_generator(
+                            raw_fields,
+                            history_fields or [],
+                            basis,
+                            response_lag=transition_response_time,
+                        )
+                        U = modular_unitary(K_koopman, float(t))
+                        O_sim = U @ O @ U.conj().T
+                    else:
+                        O_sim = state_derived_modular_transport(
+                            O,
+                            rho,
+                            float(t),
+                            float(reg),
+                            generator_scale=generator_scale,
+                        )
+                    residual_by_scale: dict[str, float] = {}
+                    best_scale = None
+                    best_residual = float("inf")
+                    for scale in scale_grid:
+                        if target_operator_mode == "permutation":
+                            L, _ = geometric_permutation_operator(points, cap, float(scale) * float(t), basis)
+                        elif target_operator_mode == "soft":
+                            L, _ = geometric_soft_transport_operator(points, cap, float(scale) * float(t), basis)
+                        else:
+                            L, _ = geometric_transport_operator(points, cap, float(scale) * float(t), basis)
+                        O_target = L.conj().T @ O @ L
+                        residual = _relative_frobenius(O_sim - O_target, O)
+                        label = _scale_label(scale)
+                        residual_by_scale[label] = float(residual)
+                        if residual < best_residual:
+                            best_residual = float(residual)
+                            best_scale = float(scale)
+                    known_residuals = {
+                        _scale_label(scale): residual_by_scale.get(_scale_label(scale))
+                        for scale in known_scales
+                        if residual_by_scale.get(_scale_label(scale)) is not None
+                    }
+                    rows.append(
+                        {
+                            "cap_id": int(cap_id),
+                            "time": float(t),
+                            "observable": str(observable),
+                            "regularizer_a": float(reg),
+                            "s_hat": float(best_scale * float(t)) if best_scale is not None else None,
+                            "kappa_row_hat": float(best_scale) if best_scale is not None else None,
+                            "best_scale_label": _scale_label(float(best_scale)) if best_scale is not None else None,
+                            "best_residual": float(best_residual),
+                            "known_scale_residuals": known_residuals,
+                            "basis_count": int(basis.size),
+                        }
+                    )
+    valid = [
+        row
+        for row in rows
+        if row.get("s_hat") is not None
+        and row.get("kappa_row_hat") is not None
+        and np.isfinite(float(row["s_hat"]))
+        and np.isfinite(float(row["kappa_row_hat"]))
+    ]
+    distinct_time_count = len({float(row["time"]) for row in valid})
+    if not valid or distinct_time_count < 3:
+        return {
+            "enabled": True,
+            "receipt": False,
+            "mode": "inferred_modular_clock_fit",
+            "row_count": int(len(rows)),
+            "distinct_time_count": int(distinct_time_count),
+            "blockers": ["requires_at_least_three_nonzero_modular_times"],
+            "rows": rows[:128],
+            "claim_boundary": (
+                "finite inferred-clock audit. It searches continuously over cap-flow coefficient "
+                "kappa through s_hat(t)=kappa*t+b and only then compares against 2*pi controls."
+            ),
+        }
+    x = np.asarray([float(row["time"]) for row in valid], dtype=float)
+    y = np.asarray([float(row["s_hat"]) for row in valid], dtype=float)
+    design = np.column_stack([x, np.ones_like(x)])
+    kappa_hat, intercept_hat = np.linalg.lstsq(design, y, rcond=None)[0]
+    fitted = design @ np.asarray([kappa_hat, intercept_hat], dtype=float)
+    residual = y - fitted
+    row_kappas = np.asarray([float(row["kappa_row_hat"]) for row in valid], dtype=float)
+    stderr = float(np.std(row_kappas, ddof=1) / math.sqrt(max(row_kappas.size, 1))) if row_kappas.size > 1 else float("inf")
+    ci_half_width = 1.96 * stderr if np.isfinite(stderr) else float("inf")
+    ci_low = float(kappa_hat - ci_half_width)
+    ci_high = float(kappa_hat + ci_half_width)
+    known = {
+        "1x": 1.0,
+        "pi": math.pi,
+        "2pi": 2.0 * math.pi,
+        "4pi": 4.0 * math.pi,
+    }
+    nearest_known = min(known, key=lambda label: abs(float(kappa_hat) - known[label]))
+    median_known_residuals: dict[str, float] = {}
+    for label in ["0", "1x", "pi", "2pi", "4pi"]:
+        values = [
+            float(row["known_scale_residuals"][label])
+            for row in valid
+            if label in row.get("known_scale_residuals", {})
+            and np.isfinite(float(row["known_scale_residuals"][label]))
+        ]
+        if values:
+            median_known_residuals[label] = float(np.median(values))
+    two_pi_residual = median_known_residuals.get("2pi")
+    wrong_scale_ratios = {
+        label: float(value) / max(float(two_pi_residual), 1.0e-15)
+        for label, value in median_known_residuals.items()
+        if label != "2pi" and two_pi_residual is not None
+    }
+    no_flow_fraction = float(np.mean(np.isclose(row_kappas, 0.0, atol=0.25))) if row_kappas.size else 1.0
+    response_degenerate = bool(no_flow_fraction >= 0.5 or nearest_known == "1x")
+    blockers: list[str] = []
+    if not (ci_low <= 2.0 * math.pi <= ci_high):
+        blockers.append("two_pi_not_inside_kappa_confidence_interval")
+    for label in ("1x", "pi", "4pi"):
+        value = known[label]
+        if ci_low <= value <= ci_high:
+            blockers.append(f"{label}_not_excluded_by_kappa_confidence_interval")
+    if nearest_known != "2pi":
+        blockers.append(f"nearest_known_scale_is_{nearest_known}")
+    if response_degenerate:
+        blockers.append("inferred_clock_response_degenerate_or_wrong_scale")
+    receipt = bool(not blockers)
+    return {
+        "enabled": True,
+        "receipt": receipt,
+        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": receipt,
+        "kms_geometric_clock_fit_receipt": receipt,
+        "mode": "inferred_modular_clock_fit",
+        "row_count": int(len(rows)),
+        "valid_row_count": int(len(valid)),
+        "distinct_time_count": int(distinct_time_count),
+        "kappa_hat": float(kappa_hat),
+        "kappa_95ci": [ci_low, ci_high],
+        "intercept_hat": float(intercept_hat),
+        "median_fit_abs_residual": float(np.median(np.abs(residual))) if residual.size else None,
+        "nearest_known_scale": nearest_known,
+        "median_known_scale_residuals": median_known_residuals,
+        "wrong_scale_residual_ratios_vs_2pi": wrong_scale_ratios,
+        "no_flow_selected_fraction": no_flow_fraction,
+        "response_degenerate": response_degenerate,
+        "blockers": blockers,
+        "rows": rows[:128],
+        "claim_boundary": (
+            "finite inferred-clock audit. The fit searches over cap-flow parameter s without naming "
+            "2*pi, fits s_hat(t)=kappa*t+b from endogenous modular transport, and only afterward "
+            "compares kappa to 1, pi, 2*pi, and 4*pi. Passing this is still finite-regulator evidence, "
+            "not a continuum theorem proof."
+        ),
+    }
 
 
 def _generator_scale_audit(
@@ -1546,6 +1970,11 @@ def _perturb_remeasure_response_matrix(
     response_matrix = np.zeros((basis.size, basis.size), dtype=float)
     total_perturbed_edges = 0
     total_repaired_edges = 0
+    exact_basis_masses: list[float] = []
+    projected_basis_masses: list[float] = []
+    projection_fallbacks = 0
+    source_echo_masses: list[float] = []
+    source_echo_suppressed = 0
 
     for row, node_raw in enumerate(basis):
         node = int(node_raw)
@@ -1582,9 +2011,23 @@ def _perturb_remeasure_response_matrix(
         after_signature = _node_packet_signature(pl, pr, left, right, patch_count)
         changed = (after_signature != before_signature).astype(float)
         response = repair_count + 0.5 * changed
-        if not np.any(response[basis] > 0.0):
-            response[node] = 1.0
-        response_matrix[row, :] = response[basis]
+        exact_basis_masses.append(float(np.sum(response[basis])))
+        basis_response = _project_patch_response_to_basis(points, basis, response, source_node=node)
+        if not np.any(basis_response > 0.0):
+            projection_fallbacks += 1
+            source_position = int(np.flatnonzero(basis == node)[0]) if np.any(basis == node) else 0
+            basis_response[source_position] = 1.0
+        source_positions = np.flatnonzero(basis == node)
+        if source_positions.size:
+            source_position = int(source_positions[0])
+            source_echo = float(basis_response[source_position])
+            nonself_mass = float(np.sum(basis_response) - source_echo)
+            if nonself_mass > 1.0e-12:
+                source_echo_masses.append(source_echo)
+                basis_response[source_position] = 0.0
+                source_echo_suppressed += 1
+        projected_basis_masses.append(float(np.sum(basis_response)))
+        response_matrix[row, :] = basis_response
 
     row_mass = np.sum(response_matrix, axis=1)
     return response_matrix, {
@@ -1592,11 +2035,70 @@ def _perturb_remeasure_response_matrix(
         "mean_repaired_edges_per_source": float(total_repaired_edges / max(int(basis.size), 1)),
         "response_row_mass_mean": float(np.mean(row_mass)) if row_mass.size else 0.0,
         "response_row_mass_std": float(np.std(row_mass)) if row_mass.size else 0.0,
+        "exact_basis_response_mass_mean": float(np.mean(exact_basis_masses)) if exact_basis_masses else 0.0,
+        "projected_basis_response_mass_mean": (
+            float(np.mean(projected_basis_masses)) if projected_basis_masses else 0.0
+        ),
+        "basis_response_projection_fallback_fraction": float(projection_fallbacks / max(int(basis.size), 1)),
+        "source_echo_suppression_fraction": float(source_echo_suppressed / max(int(basis.size), 1)),
+        "source_echo_mass_mean_before_suppression": (
+            float(np.mean(source_echo_masses)) if source_echo_masses else 0.0
+        ),
+        "basis_response_projection": "local_full_graph_response_projected_to_sparse_cap_basis",
         "probe_steps": int(probe_steps),
         "probe_repairs_per_source": int(probe_repairs_per_source),
         "probe_max_incident_edges": int(probe_max_incident_edges),
         "response_feature_count": 0,
     }
+
+
+def _project_patch_response_to_basis(
+    points: np.ndarray,
+    basis: np.ndarray,
+    response: np.ndarray,
+    *,
+    source_node: int,
+    projection_k: int = 8,
+) -> np.ndarray:
+    """Compress a full-graph repair response onto the finite cap basis.
+
+    The perturb/repair probe measures on all graph patches, but the finite
+    density is represented on a sparse support basis. Directly reading only
+    `response[basis]` turns local responses into identity rows whenever the
+    changed neighboring patches are not themselves sampled in the basis.
+    """
+
+    basis = np.asarray(basis, dtype=np.int64)
+    response = np.asarray(response, dtype=float)
+    if basis.size == 0:
+        return np.zeros(0, dtype=float)
+    projected = np.asarray(response[basis], dtype=float).copy()
+    active = np.flatnonzero(response > 0.0)
+    if active.size:
+        basis_points = np.asarray(points[basis], dtype=float)
+        active_points = np.asarray(points[active], dtype=float)
+        distances = np.linalg.norm(active_points[:, None, :] - basis_points[None, :, :], axis=2)
+        k = min(max(1, int(projection_k)), basis.size)
+        nearest = np.argpartition(distances, kth=k - 1, axis=1)[:, :k]
+        nearest_distances = np.take_along_axis(distances, nearest, axis=1)
+        basis_spacing = _positive_median(np.linalg.norm(basis_points[:, None, :] - basis_points[None, :, :], axis=2))
+        active_spacing = _positive_median(nearest_distances[:, 0])
+        sigma = max(0.35 * basis_spacing, active_spacing, 1.0e-12)
+        for active_row, neighbors in enumerate(nearest):
+            local_distances = nearest_distances[active_row]
+            weights = np.exp(-0.5 * np.square(local_distances / sigma))
+            weight_sum = float(np.sum(weights))
+            if weight_sum <= 1.0e-15:
+                continue
+            projected[neighbors] += float(response[active[active_row]]) * weights / weight_sum
+    if not np.any(projected > 0.0) and 0 <= int(source_node) < points.shape[0]:
+        source_distances = np.linalg.norm(np.asarray(points[basis], dtype=float) - np.asarray(points[int(source_node)], dtype=float), axis=1)
+        k = min(max(1, int(projection_k)), basis.size)
+        nearest = np.argpartition(source_distances, kth=k - 1)[:k]
+        weights = np.exp(-0.5 * np.square(source_distances[nearest] / max(_positive_median(source_distances), 1.0e-12)))
+        weight_sum = float(np.sum(weights))
+        projected[nearest] = weights / max(weight_sum, 1.0e-15)
+    return projected
 
 
 def _repair_affinity_features(
@@ -1732,6 +2234,35 @@ def _history_field_series(states: list[dict[str, np.ndarray]], key: str, basis: 
     return np.vstack(rows) if rows else np.zeros((0, basis.size), dtype=float)
 
 
+def _koopman_feature_series(states: list[dict[str, np.ndarray]], basis: np.ndarray) -> list[np.ndarray]:
+    fields = (
+        "record_signature",
+        "stable_count",
+        "committed_mask",
+        "repair_load",
+        "cumulative_repair_load",
+        "local_mismatch_density",
+        "modular_depth",
+        "s3_class_density",
+        "s3_sector_class",
+    )
+    result: list[np.ndarray] = []
+    max_index = int(np.max(basis, initial=-1))
+    for state in states:
+        columns: list[np.ndarray] = []
+        for field in fields:
+            values = state.get(field)
+            if values is None:
+                continue
+            array = np.asarray(values)
+            if array.ndim != 1 or array.size <= max_index:
+                continue
+            columns.append(_standardize(array[basis].astype(float)))
+        if columns:
+            result.append(np.column_stack(columns))
+    return result
+
+
 def _packet_histogram_features(packet_sequence: np.ndarray, *, bins: int) -> np.ndarray:
     sequence = np.asarray(packet_sequence, dtype=np.int64)
     if sequence.ndim != 2 or sequence.size == 0:
@@ -1751,6 +2282,15 @@ def _standardize_columns(values: np.ndarray) -> np.ndarray:
     std = np.std(values, axis=0)
     std = np.where(std < 1e-12, 1.0, std)
     return (values - np.mean(values, axis=0)) / std
+
+
+def _psd_invsqrt(matrix: np.ndarray, *, cutoff: float = 1.0e-9) -> tuple[np.ndarray, int]:
+    matrix = np.asarray(matrix, dtype=float)
+    eigvals, eigvecs = np.linalg.eigh((matrix + matrix.T) / 2.0)
+    positive = eigvals > float(cutoff)
+    inv = np.zeros_like(eigvals, dtype=float)
+    inv[positive] = 1.0 / np.sqrt(eigvals[positive])
+    return (eigvecs * inv) @ eigvecs.T, int(np.sum(positive))
 
 
 def _observable_matrix(

@@ -41,6 +41,15 @@ dynamics:
   cycles: 64
   repairs_per_cycle: 65536
   record_commit_cycles: 8
+  observer_readback_drive:
+    enabled: true
+    mode: support_visible_boundary_refresh
+    edge_fraction: 0.03
+    max_edges_per_cycle: 16000
+    start_cycle: 0
+    stop_cycle: 48
+    endpoint_noise_probability: 0.03
+    phase_advance_per_cycle: 0
   beta_schedule:
     kind: geometric
     beta_start: 0.05
@@ -55,20 +64,36 @@ modular_flow:
   cap_axes: 20
 bw:
   mode: state_derived_modular_probe
-  state_mode: transition_response_unitary
-  target_operator_mode: permutation
-  transition_response_time: 0.1
+  source_state: theorem_observer
+  state_mode: maxent_record_operator_state
+  target_operator_mode: soft
+  transition_response_time: 0.25
   transition_response_scale: 6.283185307179586
+  density_inverse_temperature: 0.1
+  generator_scale: 1.0
+  generator_scale_candidates:
+  - 0.0
+  - 1.0
+  - 3.141592653589793
+  - 6.283185307179586
+  - 10.0
+  - 12.566370614359172
+  probe_steps: 4
+  probe_repairs_per_source: 48
+  probe_max_incident_edges: 12
   cap_count: 4
   theta0:
   - 0.35
   - 0.55
   - 0.75
   - 1.0
-  collar_width_mode: cell_scaled
-  collar_k: 1.0
+  collar_width_mode: double_scaling
+  angular_prefactor: 0.8
+  angular_exponent: 0.25
   times:
-  - 0.1
+  - 0.125
+  - 0.25
+  - 0.5
   normalization: 2pi
   observables:
   - record_signature_projectors
@@ -96,7 +121,7 @@ bw:
     - 6.283185307179586
     - 12.566370614359172
     times:
-    - 0.1
+    - 0.25
     observables:
     - record_signature_projectors
     - repair_load_projectors
@@ -205,8 +230,9 @@ h3_support_profiles:
   - 0.75
   - 1.0
   - 1.25
-  collar_width_mode: cell_scaled
-  collar_k: 1.0
+  collar_width_mode: double_scaling
+  angular_prefactor: 0.8
+  angular_exponent: 0.25
   candidate_count: 2048
   candidate_radius: 2.0
   softness: 0.25
@@ -281,6 +307,12 @@ h3_modular_response:
 theorem_core:
   projection_sample: 512
   include_default_sm_candidate: true
+  consensus_replay:
+    enabled: true
+    schedule_replays: 16
+    requested_schedule_replays: 16
+    max_event_rows: 256
+    disjoint_checks: 256
 cosmology:
   output_profile: compact
   write_freezeout_npz: true

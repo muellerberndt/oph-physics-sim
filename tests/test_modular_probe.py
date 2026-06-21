@@ -67,7 +67,9 @@ def test_state_derived_bw_report_writes_matrix_rows():
     )
 
     assert report["mode"] == "state_derived_modular_probe"
-    assert report["receipt_name"] == "BW_KMS_BRANCH_INSTANTIATION_RECEIPT"
+    assert report["receipt_name"] == "BW_KMS_BRANCH_REPLAY_RECEIPT"
+    assert report["legacy_receipt_name"] == "BW_KMS_BRANCH_INSTANTIATION_RECEIPT"
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
     assert "claim_level" in report
     assert report["row_count"] == 4
     assert report["median"] >= 0.0

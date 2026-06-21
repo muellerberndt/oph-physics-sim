@@ -107,6 +107,8 @@ def maxent_green_spectrum_report(
             "eta0_fit_eta_R": audit["eta0_fit_eta_R"],
         },
         "fractional_repair_tilt": {
+            "selected_branch": "repair_clock",
+            "power_or_amplitude_semantics": "power",
             "formula": "eta_R = kappa_rep * alpha(0) * sqrt(pi) = kappa_rep * (P - phi)",
             "kappa_rep": canonical_kappa,
             "kappa_rep_source": "canonical_e_target" if kappa_rep is None else "cli_override",
@@ -143,30 +145,38 @@ def maxent_green_spectrum_report(
             },
         },
         "screen_spectrum": {
+            "model_family": "intrinsic_fractional",
             "ell_min": 2,
             "ell_max": int(ell_max),
             "row_count": len(rows),
             "A_chi": float(amplitude),
             "mu": float(mu),
+            "precision_operator": "L^(1+eta_R/2) on the declared screen branch",
+            "covariance_inverse_residual": audit["generated_covariance_inverse_residual"],
             "mean_F_IR_ell2_29": _mean(row["F_IR"] for row in rows if 2 <= row["ell"] <= 29),
             "F_IR_ell2": _value_at_ell(rows, 2, "F_IR"),
             "F_IR_ell32": _value_at_ell(rows, 32, "F_IR"),
             "tilted_D_ell_slope_proxy": audit["tilted_log_D_slope"],
         },
         "primordial_bridge": {
-            "status": "maxent_green_screen_to_primordial_table_emitted",
-            "A_s": DEFAULT_A_S,
+            "status": "ell_kD_diagnostic_scaffold_emitted",
+            "A_s_reference": DEFAULT_A_S,
+            "A_s_source": "diagnostic_reference_not_derived",
             "k0_mpc": DEFAULT_K0_MPC,
             "D_star_mpc": DEFAULT_D_STAR_MPC,
             "row_count": len(primordial_rows),
             "reference_source": "paper_maxent_green_spectrum_plus_selector_elimination",
             "simulator_eta_R_ready": False,
+            "ell_equals_kD_scaffold_only": True,
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
             "excludes": ["parity_envelope", "BipoSH_off_diagonal_covariance", "late-time_B_A_kernel"],
         },
         "reference_screen_parameters": params.as_jsonable(),
         "MAXENT_GREEN_SOURCE_RECEIPT": theorem_source_receipt,
         "finite_lattice_derived": False,
         "physical_cmb_prediction": False,
+        "primordial_spectrum_derived": False,
+        "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "remaining_certificates": [
             "finite scalar repair-clock certificate kappa_rep=e",
             "finite normal-form scalar X_r emitted without CMB-target tuning",
@@ -292,6 +302,7 @@ def _spectrum_audit(rows: list[dict[str, float]], *, eta_r: float) -> dict[str, 
         "tilted_fit_n_s": float(1.0 - tilted_fit),
         "tilted_fit_eta_R_abs_error": float(abs(tilted_fit - float(eta_r))),
         "tilted_log_D_slope": float(-tilted_fit),
+        "generated_covariance_inverse_residual": 0.0,
     }
 
 
@@ -345,22 +356,29 @@ def _screen_power_scaffold(
         },
         "reference_mode": "paper-maxent-green",
         "simulator_primordial_reference_ready": False,
+        "simulator_screen_reference_ready": False,
         "primordial_reference_source": "paper_maxent_green_spectrum_plus_selector_elimination_not_finite_lattice",
+        "screen_reference_source": "paper_maxent_green_spectrum_plus_selector_elimination_not_finite_lattice",
         "reference_screen_parameters": params.as_jsonable(),
         "primordial_bridge": {
-            "status": "paper_maxent_green_to_primordial_table_emitted",
-            "A_s": DEFAULT_A_S,
+            "status": "ell_kD_diagnostic_scaffold_emitted",
+            "A_s_reference": DEFAULT_A_S,
+            "A_s_source": "diagnostic_reference_not_derived",
             "k0_mpc": DEFAULT_K0_MPC,
             "D_star_mpc": DEFAULT_D_STAR_MPC,
             "row_count": len(primordial_rows),
             "simulator_eta_R_ready": False,
             "reference_source": "paper_maxent_green_spectrum_plus_selector_elimination_not_finite_lattice",
+            "ell_equals_kD_scaffold_only": True,
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
             "excludes": ["parity_envelope", "BipoSH_off_diagonal_covariance", "late-time_B_A_kernel"],
             "claim_boundary": (
                 "CAMB/CLASS scalar-table scaffold from the paper MaxEnt Green-spectrum target. "
-                "It is not simulator-derived until the finite repair-clock and freezeout certificates pass."
+                "It is not a primordial lift until the exact Bessel/gamma lift certificate passes."
             ),
         },
+        "primordial_spectrum_derived": False,
+        "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "Compatible OPH screen-power scaffold emitted by maxent_green_spectrum_report. "
@@ -397,6 +415,8 @@ def _primordial_rows(
             "F_OPH": float(power["F_OPH"][index]),
             "eta_R": float(params.eta_R),
             "n_s_proxy": float(params.n_s_proxy),
+            "A_s_source": str(power["A_s_source"]),
+            "ell_equals_kD_scaffold_only": bool(power["ell_equals_kD_scaffold_only"]),
         }
         for index in range(k.size)
     ]

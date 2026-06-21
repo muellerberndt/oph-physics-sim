@@ -114,7 +114,14 @@ def release_code_certificate(data: dict[str, Any], input_hash: str) -> dict[str,
     kappa_base = float(release.get("kappa_rel", 1.0))
     weight_avg = sum(weight for _, _, weight in minimizers) / len(minimizers)
     kappa_rel = kappa_base * weight_avg
-    a_zeta = 100.0 * LN2 * kappa_rel * epsilon_star
+    a_q_cmi_upper_bound = 4.0 * LN2 * kappa_rel * epsilon_star
+    energy_budget = _float_or_none(release.get("scalar_energy_budget"))
+    physical_mode_count = _float_or_none(release.get("physical_mode_count"))
+    a_q_energy = None
+    scalar_release_amplitude_certificate = False
+    if energy_budget is not None and physical_mode_count is not None and energy_budget >= 0.0 and physical_mode_count > 0.0:
+        a_q_energy = float(energy_budget / physical_mode_count)
+        scalar_release_amplitude_certificate = True
     no_data = no_data_use_receipt(data)
     return {
         "certificate_type": "release_code_certificate",
@@ -122,8 +129,14 @@ def release_code_certificate(data: dict[str, Any], input_hash: str) -> dict[str,
         "epsilon_star_bits": float(epsilon_star),
         "kappa_rel": float(kappa_rel),
         "N_rel": len(positive),
-        "A_zeta": float(a_zeta),
-        "A_zeta_formula": "A_zeta = 100 ln(2) kappa_rel epsilon_star_bits",
+        "A_q_cmi_upper_bound": float(a_q_cmi_upper_bound),
+        "A_q_energy": a_q_energy,
+        "scalar_energy_budget": energy_budget,
+        "physical_mode_count": physical_mode_count,
+        "SCALAR_RELEASE_AMPLITUDE_CERTIFICATE": scalar_release_amplitude_certificate,
+        "A_zeta": None,
+        "A_zeta_formula": "pending SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT",
+        "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "minimizer_packets": [packet_id for packet_id, _, _ in minimizers],
         "packets_checked": len(packets),
         "scalar_visible_packets_checked": len(cmi_values),
@@ -131,9 +144,10 @@ def release_code_certificate(data: dict[str, Any], input_hash: str) -> dict[str,
         "no_data_use": bool(no_data["no_data_use_receipt"]),
         "input_hash": input_hash,
         "claim_boundary": (
-            "Finite scalar-release code certificate from packet/collar CMI data. This certifies the "
-            "finite input and algorithm only; it is a physical CMB-amplitude input only when the source "
-            "data are real OPH regulator outputs and the full certificate stack passes."
+            "Finite scalar-release code certificate from packet/collar CMI data. CMI supplies an upper "
+            "bound on scalar release observables, not A_zeta. A_q is derived only when finite scalar "
+            "release energy and physical mode count are supplied; A_zeta remains null until the "
+            "screen-to-primordial lift receipt passes."
         ),
     }
 
@@ -277,7 +291,11 @@ def boltzmann_export_certificate(
         "certificate_type": "boltzmann_export_certificate",
         "mode": "finite_certificate_boltzmann_handoff",
         "n_s": float(1.0 - p_value / 48.0),
-        "A_zeta": float(release["A_zeta"]),
+        "A_zeta": release.get("A_zeta"),
+        "A_q_energy": release.get("A_q_energy"),
+        "A_q_cmi_upper_bound": release.get("A_q_cmi_upper_bound"),
+        "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": bool(release.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)),
+        "primordial_lift_ready": bool(release.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)),
         "rho_A_by_a": dict(parent["rho_A_by_a"]),
         "kernels": list(parent["kernels"]),
         "Gamma_rec": float(repair["Gamma_rec"]),
@@ -298,7 +316,9 @@ def boltzmann_export_certificate(
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "Boltzmann-export certificate assembled from finite OPH certificates. It is a handoff "
-            "contract, not a physical CMB prediction until the OPH anomaly module and cold-limit tests pass."
+            "contract, not a physical CMB prediction. Primordial amplitude remains unavailable until "
+            "the screen-to-primordial lift receipt passes, and transfer remains gated by OPH anomaly "
+            "kernels and cold-limit tests."
         ),
     }
 
@@ -344,14 +364,23 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
     output_hashes = {name: sha256_json(obj) for name, obj in outputs.items()}
     readiness = {
         "release_code_certificate": bool(release.get("no_data_use")),
+        "scalar_release_amplitude_certificate": bool(release.get("SCALAR_RELEASE_AMPLITUDE_CERTIFICATE")),
+        "screen_to_primordial_lift_receipt": bool(release.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT")),
         "parent_collar_certificate": bool(parent.get("no_data_use")),
         "repair_matrix_certificate": bool(repair.get("no_data_use"))
         and repair.get("row_sum_max_error", 1.0) <= 1.0e-12
         and repair.get("detailed_balance_max_error", 1.0) <= 1.0e-12,
-        "boltzmann_export_certificate": bool(boltzmann.get("no_data_use")),
+        "boltzmann_export_certificate": bool(boltzmann.get("no_data_use"))
+        and bool(boltzmann.get("primordial_lift_ready", False)),
         "no_data_use_firewall": bool(no_data.get("no_data_use_receipt")),
     }
-    compiler_ready = bool(all(readiness.values()))
+    compiler_ready = bool(
+        readiness["release_code_certificate"]
+        and readiness["parent_collar_certificate"]
+        and readiness["repair_matrix_certificate"]
+        and readiness["no_data_use_firewall"]
+    )
+    stack_ready = bool(all(readiness.values()))
     theorem_grade_inputs = bool(_theorem_grade_finite_inputs(data))
     real_physics_certificate = bool(
         compiler_ready
@@ -364,7 +393,7 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         "output_hashes": output_hashes,
         "readiness_gates": readiness,
         "finite_certificate_compiler_ready": compiler_ready,
-        "finite_certificate_stack_ready": compiler_ready,
+        "finite_certificate_stack_ready": stack_ready,
         "theorem_grade_finite_inputs": theorem_grade_inputs,
         "proxy_certificate": not theorem_grade_inputs,
         "no_data_use_receipt": no_data,
@@ -372,6 +401,10 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
             "epsilon_star_bits": release["epsilon_star_bits"],
             "kappa_rel": release["kappa_rel"],
             "N_rel": release["N_rel"],
+            "A_q_cmi_upper_bound": release["A_q_cmi_upper_bound"],
+            "A_q_energy": release["A_q_energy"],
+            "scalar_release_amplitude_certificate": release["SCALAR_RELEASE_AMPLITUDE_CERTIFICATE"],
+            "screen_to_primordial_lift_receipt": release["SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT"],
             "A_zeta": release["A_zeta"],
             "Q_A": parent["Q_A"],
             "rho_A_by_a": parent["rho_A_by_a"],
@@ -386,8 +419,9 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
             "Computed finite OPH cosmology certificate bundle. `finite_certificate_compiler_ready` means "
             "the compiler emitted internally consistent artifacts. It does not mean the inputs are "
             "theorem-grade. Physical prediction gates stay closed until the simulator emits real OPH "
-            "regulator release packets, collar response ladders, repair packet spaces, and Boltzmann "
-            "cold-limit receipts without measurement data."
+            "regulator release packets, scalar-release energy, a screen-to-primordial lift receipt, "
+            "collar response ladders, repair packet spaces, and Boltzmann cold-limit receipts without "
+            "measurement data."
         ),
     }
     manifest = {
@@ -746,6 +780,14 @@ def _nested_float(data: dict[str, Any], keys: tuple[str, ...], *, default: float
     return _float_from_any(_nested_get(data, *keys, default=default), default)
 
 
+def _float_or_none(value: Any) -> float | None:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if np.isfinite(parsed) else None
+
+
 def _float_from_any(value: Any, default: float) -> float:
     try:
         parsed = float(value)
@@ -822,7 +864,9 @@ def _markdown_report(report: dict[str, Any], input_label: str) -> str:
             "## Derived Values",
             "",
             f"- epsilon_star_bits: {derived['epsilon_star_bits']}",
-            f"- A_zeta: {derived['A_zeta']}",
+            f"- A_q CMI upper bound: {derived['A_q_cmi_upper_bound']}",
+            f"- A_q energy: {derived['A_q_energy']}",
+            f"- A_zeta: {derived['A_zeta'] if derived['A_zeta'] is not None else 'pending lift receipt'}",
             f"- n_s: {derived['n_s']}",
             f"- Q_A: {derived['Q_A']}",
             f"- B_A: {derived['B_A']}",

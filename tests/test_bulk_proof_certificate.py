@@ -37,6 +37,14 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     report = bulk_proof_certificate(run)
 
     assert report["chart_level_3p1_lorentz_kinematics_established"] is True
+    assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["passed"] is True
+    assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["receipt_name"] == "BW_KMS_BRANCH_REPLAY_RECEIPT"
+    assert report["proof_tiers"]["T2_bw_kms_2pi_branch"]["legacy_receipt_name"] == (
+        "BW_KMS_BRANCH_INSTANTIATION_RECEIPT"
+    )
+    assert report["proof_tiers"]["L_full_oph_lorentz_finite_contract"]["passed"] is False
+    assert report["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
     assert report["theorem_assisted_h3_object_preview_established"] is True
     assert report["theorem_assisted_h3_nonboundary_population_established"] is True
     assert report["theorem_assisted_h3_populated_chart_established"] is True
@@ -73,6 +81,55 @@ def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path:
     assert report["theorem_assisted_h3_populated_chart_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is False
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+
+
+def test_bulk_proof_certificate_splits_c0a_settle_from_c0b_consensus(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "theorem_core_receipts.json",
+        {
+            "FINITE_SETTLE_DIAGNOSTIC_RECEIPT": True,
+            "finite_settle_diagnostic_receipt": True,
+            "FINITE_CONSENSUS_THEOREM_RECEIPT": False,
+            "finite_consensus_theorem_receipt": False,
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["finite_settle_diagnostic_receipt"] is True
+    assert report["finite_consensus_theorem_receipt"] is False
+    assert report["proof_tiers"]["C0a_finite_settle_diagnostic"]["passed"] is True
+    assert report["proof_tiers"]["C0b_finite_consensus_theorem"]["passed"] is False
+    assert report["proof_tiers"]["T0_finite_repair_core"]["canonical_tier"] == "C0a"
+
+
+def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "observer_modular_experience_report.json",
+        {
+            "observer_modular_time_receipt": True,
+            "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": False,
+            "observer_facing_3p1d_h3_experience_receipt": False,
+            "observer_count": 16,
+            "observer_relative_time_count": 2,
+            "blockers": ["observer_h3_object_population_receipt"],
+            "component_gates": {"observer_modular_time_receipt": True},
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["observer_modular_time_receipt"] is True
+    assert report["observer_facing_3p1d_h3_experience_receipt"] is False
+    assert report["observer_modular_experience_summary"]["observer_count"] == 16
+    assert report["observer_modular_experience_summary"]["source_report_blockers"] == [
+        "observer_h3_object_population_receipt"
+    ]
+    assert "observer_h3_object_population_receipt" in report["observer_modular_experience_summary"]["blockers"]
 
 
 def test_bulk_proof_certificate_writes_and_comparable_data_collects_tiers(tmp_path: Path):

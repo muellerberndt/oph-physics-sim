@@ -134,9 +134,13 @@ def test_inflation_certificate_validators_recompute_toy_bundle(tmp_path: Path):
     repair = report["derived_outputs"]["repair_matrix"]
 
     assert report["certificate_summary"]["passed_count"] == 6
-    assert report["inflation_certificate_stack_ready"] is True
+    assert report["inflation_certificate_stack_ready"] is False
+    assert report["readiness_gates"]["scalar_release_certificate"] is False
     assert math.isclose(scalar["epsilon_star"], 0.15)
-    assert math.isclose(scalar["A_zeta"], 100.0 * math.log(2.0) * 2.0 * 0.15)
+    assert math.isclose(scalar["A_q_cmi_upper_bound"], 4.0 * math.log(2.0) * 2.0 * 0.15)
+    assert scalar["A_q_energy"] is None
+    assert scalar["A_zeta"] is None
+    assert scalar["SCALAR_RELEASE_AMPLITUDE_CERTIFICATE"] is False
     assert math.isclose(edge["n_s"], 1.0 - P_STAR / 48.0)
     assert math.isclose(repair["mean_Gamma_rec"], -math.log(0.8) / 0.5)
     assert report["physical_cmb_prediction"] is False
@@ -205,7 +209,31 @@ def test_emit_scalar_release_certificate_from_collar_run(tmp_path: Path):
     assert report["certificate_summary"]["passed_count"] == 1
     assert report["inflation_certificate_stack_ready"] is False
     assert math.isclose(scalar["epsilon_star"], 0.03)
-    assert math.isclose(scalar["A_zeta"], 100.0 * math.log(2.0) * 2.0 * 0.03)
+    assert math.isclose(scalar["A_q_cmi_upper_bound"], 4.0 * math.log(2.0) * 2.0 * 0.03)
+    assert scalar["A_zeta"] is None
+
+
+def test_scalar_release_rejects_a_zeta_shortcut(tmp_path: Path):
+    cert_dir = tmp_path / "certs"
+    cert_dir.mkdir()
+    _write_json(
+        cert_dir / "scalar_release_certificate.json",
+        {
+            "id": "scalar",
+            "type": "scalar_release",
+            "release_packets": [{"packet_id": "q0", "scalar_visible": True, "cmi": 0.1}],
+            "scalar_readout_normalization": {"kappa_rel": 1.0},
+            "A_zeta": 2.1e-9,
+            "Sachs_Wolfe_conversion_used": True,
+            "no_data_use_manifest": _no_data_use(),
+        },
+    )
+
+    report = inflation_certificate_bundle_report(cert_dir, source_path=None)
+    validation = report["certificate_validations"]["scalar_release"]
+
+    assert validation["validator_receipt"] is False
+    assert "forbidden scalar-amplitude shortcut" in validation["reason"]
 
 
 def test_emit_edge_center_certificate(tmp_path: Path):

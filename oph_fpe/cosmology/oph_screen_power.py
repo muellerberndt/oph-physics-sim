@@ -105,10 +105,23 @@ def primordial_power_oph(
     k0_mpc: float = DEFAULT_K0_MPC,
     D_star_mpc: float = DEFAULT_D_STAR_MPC,
 ) -> dict[str, np.ndarray]:
+    """Return the legacy ell=kD primordial-table scaffold.
+
+    The default amplitude is a diagnostic reference, not a derived OPH
+    primordial amplitude. A passed screen-to-primordial lift receipt is required
+    before this can be promoted to a primordial spectrum.
+    """
+
     k_arr = np.asarray(k_mpc, dtype=float)
     correction = F_oph_k(k_arr, params, D_star_mpc=D_star_mpc)
     base = float(A_s) * (np.maximum(k_arr, 1.0e-30) / float(k0_mpc)) ** (-float(params.eta_R))
-    return correction | {"k_mpc": k_arr, "P_R": base * correction["F_OPH"], "P_R_base": base}
+    return correction | {
+        "k_mpc": k_arr,
+        "P_R": base * correction["F_OPH"],
+        "P_R_base": base,
+        "A_s_source": "diagnostic_reference_not_derived",
+        "ell_equals_kD_scaffold_only": True,
+    }
 
 
 def screen_power_fit_from_spectrum(
@@ -193,7 +206,10 @@ def write_oph_screen_power_report(
 ) -> dict[str, Any]:
     rows = collect_screen_power_runs(run_dirs, field_names=field_names, ell_min=ell_min, ell_max=ell_max)
     aggregate = _aggregate_rows(rows)
-    reference_params, reference_source, simulator_reference_ready = _reference_params(rows, reference_mode=reference_mode)
+    reference_params, reference_source, simulator_screen_reference_ready = _reference_params(
+        rows,
+        reference_mode=reference_mode,
+    )
     primordial_rows = _primordial_rows(
         reference_params,
         k_count=int(primordial_k_count),
@@ -207,28 +223,38 @@ def write_oph_screen_power_report(
         "fit_rows": rows,
         "aggregate": aggregate,
         "reference_mode": str(reference_mode),
-        "simulator_primordial_reference_ready": simulator_reference_ready,
-        "primordial_reference_source": reference_source,
+        "simulator_screen_reference_ready": simulator_screen_reference_ready,
+        "simulator_primordial_reference_ready": False,
+        "screen_reference_source": reference_source,
+        "primordial_reference_source": f"ell_kD_scaffold_from_{reference_source}_not_lift_receipt",
         "reference_screen_parameters": reference_params.as_jsonable(),
         "primordial_bridge": {
-            "status": "isotropic_screen_to_primordial_table_emitted",
-            "A_s": DEFAULT_A_S,
+            "status": "ell_kD_diagnostic_scaffold_emitted",
+            "A_s_reference": DEFAULT_A_S,
+            "A_s_source": "diagnostic_reference_not_derived",
             "k0_mpc": DEFAULT_K0_MPC,
             "D_star_mpc": DEFAULT_D_STAR_MPC,
             "row_count": len(primordial_rows),
-            "simulator_eta_R_ready": simulator_reference_ready,
+            "simulator_eta_R_ready": simulator_screen_reference_ready,
             "reference_source": reference_source,
+            "ell_equals_kD_scaffold_only": True,
+            "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
             "excludes": ["parity_envelope", "BipoSH_off_diagonal_covariance"],
             "claim_boundary": (
-                "Exports the isotropic scalar OPH screen correction as a primordial-table scaffold for "
-                "future CAMB/CLASS runs. Parity and BipoSH effects remain angular covariance diagnostics."
+                "Exports the old ell=kD isotropic scalar scaffold for diagnostics only. A primordial "
+                "curvature spectrum requires the exact Bessel/gamma lift receipt; parity and BipoSH "
+                "effects remain angular covariance diagnostics."
             ),
         },
+        "screen_spectrum_derived": False,
+        "primordial_spectrum_derived": False,
+        "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "OPH screen/freezeout covariance effective-theory diagnostic. It estimates screen parameters "
-            "from finite C_l receipts and exports a primordial scalar table scaffold. It is not a physical "
-            "TT/TE/EE prediction until a Boltzmann solver and likelihood are run."
+            "from finite C_l receipts and exports only an ell=kD primordial-table scaffold. It is not a "
+            "derived primordial spectrum until a screen-to-radial lift receipt passes, and it is not a "
+            "physical TT/TE/EE prediction until transfer and likelihood gates pass."
         ),
     }
     report = with_claim_metadata(
@@ -494,6 +520,8 @@ def _primordial_rows(
             "F_OPH": float(power["F_OPH"][index]),
             "eta_R": float(params.eta_R),
             "n_s_proxy": float(params.n_s_proxy),
+            "A_s_source": str(power["A_s_source"]),
+            "ell_equals_kD_scaffold_only": bool(power["ell_equals_kD_scaffold_only"]),
         }
         for index in range(k.size)
     ]
@@ -546,7 +574,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- best Planck-eta diagnostic field: {best or 'n/a'}",
         f"- reference eta_R: {report['reference_screen_parameters']['eta_R']:.10g}",
         f"- reference n_s proxy: {report['reference_screen_parameters']['n_s_proxy']:.10g}",
-        f"- primordial reference source: {report['primordial_reference_source']}",
+        f"- screen reference source: {report['screen_reference_source']}",
+        f"- simulator screen reference ready: {report['simulator_screen_reference_ready']}",
         f"- simulator primordial reference ready: {report['simulator_primordial_reference_ready']}",
         f"- physical CMB prediction: {report['physical_cmb_prediction']}",
         "",

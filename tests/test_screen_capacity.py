@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from pathlib import Path
 
@@ -8,10 +9,12 @@ from oph_fpe.cosmology.screen_capacity import (
     DEFAULT_L_PLANCK_M,
     OPHScreenCapacityConstants,
     bare_horizon_area_ratio,
+    capacity_readback_proxy_report,
     entropy_capacity_from_radius,
     lambda_planck2_from_capacity,
     physical_cells_for_entropy_capacity,
     screen_capacity_closure_report,
+    write_capacity_readback_proxy_report,
     write_screen_capacity_closure_report,
 )
 
@@ -67,3 +70,52 @@ def test_write_screen_capacity_report(tmp_path: Path):
     assert (tmp_path / "capacity" / "screen_capacity_closure_report.json").exists()
     assert (tmp_path / "capacity" / "screen_capacity_closure_report.md").exists()
     assert report["readiness_gates"]["F_N_readback_map_implemented"] is False
+
+
+def test_capacity_readback_proxy_reports_finite_rows_without_fixed_point(tmp_path: Path):
+    run = tmp_path / "run_4096"
+    run.mkdir()
+    (run / "manifest.json").write_text(json.dumps({"run_id": "proxy", "patch_count": 4096}), encoding="utf-8")
+    (run / "observer_views.jsonl").write_text(
+        "\n".join(
+            [
+                json.dumps({"record_signature": "a", "object_id": "o1"}),
+                json.dumps({"record_signature": "b", "object_id": "o2"}),
+                json.dumps({"record_signature": "a", "object_id": "o3"}),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (run / "observer_chart_object_h3_report.json").write_text(
+        json.dumps({"observer_chart_object_h3_receipt": True, "object_count": 5}),
+        encoding="utf-8",
+    )
+
+    report = capacity_readback_proxy_report([tmp_path])
+    row = report["rows"][0]
+
+    assert report["row_count"] == 1
+    assert row["patch_count"] == 4096
+    assert row["observer_count"] == 3
+    assert row["active_record_signature_count"] == 2
+    assert row["terminal_normal_form_count_proxy"] == 5
+    assert report["readiness_gates"]["finite_regulator_rows_present"] is True
+    assert report["readiness_gates"]["F_N_readback_map_implemented"] is False
+    assert report["readiness_gates"]["N_CRC_fixed_point_solved_from_finite_simulator"] is False
+
+
+def test_write_capacity_readback_proxy_report(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "observer_chart_object_h3_lineage_report.json").write_text(
+        json.dumps({"observer_chart_object_h3_receipt": True, "object_count": 7}),
+        encoding="utf-8",
+    )
+
+    report = write_capacity_readback_proxy_report([run], tmp_path / "proxy")
+
+    assert report["row_count"] == 1
+    assert (tmp_path / "proxy" / "capacity_readback_proxy_report.json").exists()
+    assert (tmp_path / "proxy" / "capacity_readback_proxy_report.md").exists()
+    assert (tmp_path / "proxy" / "capacity_readback_proxy_rows.csv").exists()
