@@ -35,6 +35,30 @@ def main(argv: list[str] | None = None) -> int:
     universe_parser.add_argument("--max-h3-objects", default=512, type=int)
     universe_parser.add_argument("--skip-visualizations", action="store_true")
 
+    distributed_prepare_parser = subparsers.add_parser(
+        "prepare-distributed-oph-universe",
+        help="prepare portable shard configs and worker scripts for a distributed OPH universe run",
+    )
+    distributed_prepare_parser.add_argument("--config", required=True, type=Path)
+    distributed_prepare_parser.add_argument("--out-dir", required=True, type=Path)
+    distributed_prepare_parser.add_argument("--run-id", required=True)
+    distributed_prepare_parser.add_argument("--shard-count", required=True, type=int)
+    distributed_prepare_parser.add_argument("--patch-count-per-shard", required=True, type=int)
+    distributed_prepare_parser.add_argument("--observers-per-shard", required=True, type=int)
+    distributed_prepare_parser.add_argument("--worker-count", required=True, type=int)
+    distributed_prepare_parser.add_argument("--max-screen-points", default=8000, type=int)
+    distributed_prepare_parser.add_argument("--max-h3-objects", default=1024, type=int)
+    distributed_prepare_parser.add_argument("--seed-stride", default=1009, type=int)
+    distributed_prepare_parser.add_argument("--seam-halo-width", default=2048, type=int)
+
+    distributed_reduce_parser = subparsers.add_parser(
+        "reduce-distributed-oph-universe",
+        help="reduce finished distributed OPH universe shards into one receipt summary",
+    )
+    distributed_reduce_parser.add_argument("--manifest", required=True, type=Path)
+    distributed_reduce_parser.add_argument("--shard-root", required=True, type=Path)
+    distributed_reduce_parser.add_argument("--out-dir", required=True, type=Path)
+
     shape_parser = subparsers.add_parser("shape-dodeca-smoke", help="run declared Shape dodecahedral substrate witness")
     shape_parser.add_argument("--config", default=None, type=Path)
     shape_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
@@ -1212,6 +1236,34 @@ def main(argv: list[str] | None = None) -> int:
             max_observers=args.max_observers,
             max_h3_objects=args.max_h3_objects,
             emit_visualizations=not args.skip_visualizations,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "prepare-distributed-oph-universe":
+        from oph_fpe.pipelines import prepare_distributed_oph_universe
+
+        result = prepare_distributed_oph_universe(
+            config_path=args.config,
+            out_dir=args.out_dir,
+            run_id=args.run_id,
+            shard_count=args.shard_count,
+            patch_count_per_shard=args.patch_count_per_shard,
+            observers_per_shard=args.observers_per_shard,
+            worker_count=args.worker_count,
+            max_screen_points=args.max_screen_points,
+            max_h3_objects=args.max_h3_objects,
+            seed_stride=args.seed_stride,
+            seam_halo_width=args.seam_halo_width,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "reduce-distributed-oph-universe":
+        from oph_fpe.pipelines import reduce_distributed_oph_universe
+
+        result = reduce_distributed_oph_universe(
+            manifest_path=args.manifest,
+            shard_root=args.shard_root,
+            out_dir=args.out_dir,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0

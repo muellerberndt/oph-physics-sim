@@ -1,399 +1,227 @@
 # oph-physics-sim
 
-Finite OPH screen-consensus and BW/cap-flow diagnostic.
+OPH-FPE is the finite simulator for Observer-Patch Holography physics experiments. It models bounded software patches with local state, ports, readback, records, feedback and repair moves, then writes public evidence bundles that say which claims passed and which gates are closed.
 
-Working package: `OPH-FPE` — Observer-Patch Fundamental Physics Emergence.
+The package name is `OPH-FPE`: Observer-Patch Fundamental Physics Emergence.
 
-This is currently a CPU-first MVP. It tests finite regulator mechanics before any 3D-bulk,
-early-universe, or physical cosmology claim:
+The working surface includes finite consensus receipts, observer record algebra, support-visible BW/KMS and H3 chart diagnostics, theorem-assisted H3 object population, strict neutral-bulk frontiers, screen-level CMB diagnostics, finite cosmology certificate gates, defect and proto-particle assays, scale/capacity audits, viewer exports, and handoff bundles.
 
-- finite patch graphs with per-edge interface packets,
-- finite groups (`Z2`, `S3`, and clock groups),
-- local overlap mismatch `Phi`,
-- annealed local repair with verifier receipts,
-- record commits after a stability window,
-- cycle holonomy defects and simple worldline tracking,
-- explicit OPH local pixel-closure `P` screen-cell architecture receipts,
-- explicit global screen-capacity `N_CRC` closure readouts kept separate from regulator patch count,
-- P/N dimensionless-invariant and independent scale-bridge gate reports,
-- federated echosahedral 12-port screen microphysics metadata,
-- explicit named `P0..P11` port assignment receipts,
-- BW cap-flow residual verifier for `lambda_C(2*pi*t)`,
-- state-derived support-visible modular-probe receipts,
-- collar Markov / recovery-error receipts,
-- support-visible cap-net hot boundary program receipts,
-- record/object/defect support-profile fits into the canonical H3 chart,
-- time-resolved S3 defect timelines and H3 fitted worldline-path diagnostics,
-- mandatory negative-control receipts,
-- gated freezeout-screen `C_l` proxy receipts from observer-facing fields,
-- planted and smoke-test dimension estimators,
-- evidence bundles under `runs/<run_id>/`.
+## Reference Receipt Split
 
-The original E1 dimension path is deliberately labeled `graph_shortest_path_mvp`; it is a scaffold
-for later observer-record reconstruction, not a claim that a 3D bulk emerged. The older large-screen
-path `array_modular_lift_record_history` is a visualization/regulator diagnostic only. The current
-theorem-aligned path is `state_derived_modular_probe`: build cap/collar observer-visible states,
-compute collar Markov receipts, form regularized `K_a = -log(rho_C + aI)`, and compare
-state-derived modular matrix elements against `lambda_C(2*pi*t)`.
+Local reference pack inspected for this README:
+
+```text
+runs/oph_universe_256k_observers4096_20260620_m/
+  oph_universe_256k_observers4096_theorem_20260620_m
+```
+
+Run size and settlement:
+
+```text
+patches: 262,144
+patch observers: 4,096
+cap observers: 4
+observer rows with modular time: 4,100
+cycles: 64
+final Phi: 0
+```
+
+Main receipt split:
+
+```text
+observer-like self-reading system: true
+finite consensus theorem: true
+observer modular time: true
+chart-level 3+1D Lorentz/H3: true
+observer-facing H3 object population: true
+theorem-assisted consensus 3D bulk readout: true
+screen CMB proxy: true
+
+finite Lorentz theorem contract: false
+paper-faithful observer spacetime emergence: false
+paper-faithful consensus bulk emergence: false
+strict neutral third-person 3D bulk: false
+production particle matter receipt: false
+physical CMB output comparison: false
+physical CMB prediction: false
+```
+
+The theorem-assisted H3 result is a paper-route readout. It uses the support-visible chart route and observer-facing records. The strict neutral gate asks a stronger question: whether chart-blind third-person reconstruction from observer records independently recovers a 3D bulk. That gate is false in the reference pack.
+
+Observer-object population in the selected H3 chart:
+
+```text
+object_count: 174
+localized_object_count: 174
+localized_not_boundary_object_count: 164
+median_h3_compactness_normalized: 0.09342925960790732
+median_s2_boundary_compactness_normalized: 0.4253039230819643
+median_shuffled_h3_compactness_normalized: 0.11118774448459985
+H3 beats shuffled incidence controls: true
+observer_chart_bulk_population_receipt: true
+```
+
+Finite theorem contract blockers in the same pack:
+
+```text
+L2_endogenous_modular_generator
+L3_kms_modular_clock_fit
+L5_ordered_cut_pair_rigidity
+L7_refinement_naturality
+B4_strict_neutral_bulk_audit
+```
+
+Physical CMB hard gates are closed. The local pack has the no-data-use firewall receipt, zero measurement-comparable OPH diagnostic models in the physical frontier report, no official likelihood readiness, and missing finite sources for `eta_R`, `A_zeta`, `q_IR`, `ell_IR`, `B_A(k,a)`, `Gamma_rec(k,a)`, `rho_A(a)`, the freezeout handoff, CDM-limit regression, official likelihood execution, and the physical `B_A` kernel receipt.
+
+## What The Simulator Emits
+
+Main run families:
+
+- finite patch graphs and vectorized screens with `Z2`, `S3`, and clock groups;
+- explicit screen ports, local pixel closure, screen-capacity readouts, and scale-bridge reports;
+- finite overlap mismatch, annealed repair, stability-window records, readback hashes, and replayable verifier receipts;
+- support-visible cap/collar states, collar Markov reports, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
+- observer objects, observer-local modular time, H3 object-population reports, and theorem-assisted consensus readouts;
+- strict neutral frontiers with overlap-native controls, graph sweeps, residualized graph sweeps, independent rank-selector audits, and closed promotion gates;
+- freezeout-screen angular spectra, CMB frontier reports, no-data-use receipts, finite certificate schemas, and Boltzmann/likelihood gate reports;
+- screen holonomy clusters, defect timelines, H3 worldline fits, interaction proxies, particle-likeness reports, and controlled planted-defect assays;
+- static galaxy, neutrino, H0/S8, dark-response, CMB anomaly, and compressed-likelihood diagnostics with physical-prediction gates separated from diagnostics;
+- viewer bundles for screen/repair playback, object-H3 displays, universe timelines, CMB/neutral frontiers, and scale-compressed outputs.
+
+Every substantive output is receipt-gated. A false receipt is part of the result, especially for strict neutral bulk, production particles, and physical CMB.
 
 ## Quickstart
 
 ```bash
 python3 -m pytest -q
+
 python3 -m oph_fpe.cli run --config configs/e0_z2_patchnet.yml --out-dir runs
-python3 -m oph_fpe.cli run --config configs/e1_s3_bulk_emergence.yml --out-dir runs
 python3 -m oph_fpe.cli run-array --config configs/e1_s3_modular_screen_64k.yml --out-dir runs
-python3 -m oph_fpe.cli run-bw-array --config configs/e1_s3_bw_screen_64k.yml --out-dir runs
 python3 -m oph_fpe.cli run-bw-array --config configs/e1_s3_state_modular_screen_4k.yml --out-dir runs
-python3 -m oph_fpe.cli run-bw-array --config configs/e2_kms_freezeout_cl_screen_64k.yml --out-dir runs
-python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_bw_screen_4k.yml --seeds 20260601,20260602 --out-dir runs
-python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
-python3 -m oph_fpe.cli positive-geometry-kernel-report --out runs/positive_geometry_kernel
+python3 -m oph_fpe.cli run-bw-array --config configs/e2_kms_freezeout_cl_screen_256k.yml --out-dir runs
+
+python3 -m oph_fpe.cli run-oph-universe \
+  --config configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml \
+  --out-dir runs \
+  --run-id oph_universe_256k_observers4096_theorem_local
+```
+
+Parallel BW sweeps:
+
+```bash
+python3 -m oph_fpe.cli run-bw-sweep \
+  --configs configs/e1_s3_bw_screen_4k.yml \
+  --seeds 20260601,20260602 \
+  --out-dir runs
+```
+
+CPU planning:
+
+- `run-bw-sweep` fills available CPUs when `--workers` and `--inner-jobs` are omitted.
+- `OPH_FPE_CPUS=<N>` overrides detected CPU count.
+- For a single `run-bw-array`, set `bw.n_jobs: auto` and `cosmology.angular_power.n_jobs: auto` in the config.
+- The hot path is CPU/RAM bound: NumPy, SciPy, KD-tree geometry, harmonic estimators, CAMB where installed, and receipt aggregation.
+
+## Claim-Gate Commands
+
+```bash
+python3 -m oph_fpe.cli bulk-proof-certificate \
+  --run-dir runs/<run_id> \
+  --out runs/<run_id>/bulk_proof_certificate_report.json
+
+python3 -m oph_fpe.cli strict-neutral-bulk-frontier \
+  --report runs/<run_id>/neutral_3d_bulk_audit_report.json \
+  --out runs/<run_id>/strict_neutral_bulk_frontier
+
+python3 -m oph_fpe.cli physical-cmb-frontier \
+  --run-dir runs/<run_id> \
+  --out runs/<run_id>/physical_cmb_frontier
+
+python3 -m oph_fpe.cli export-measurement-pack \
+  --run-dir runs/<run_id> \
+  --out runs/<run_id>/measurement_pack
+```
+
+Selected cosmology and scale gates:
+
+```bash
 python3 -m oph_fpe.cli screen-capacity-report --out runs/screen_capacity_closure
+python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
 python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
 python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
-python3 -m oph_fpe.cli cl-ensemble-report --run-dir runs/kms_freezeout_cl_4k_sweep_20260602 --out runs/cl_ensemble_20260602
-python3 -m oph_fpe.cli h3-ensemble-report --run-dir runs/coarse_object_h3_4k_sweep_20260602 --include runs/coarse_object_h3_64k_20260602 --out runs/h3_ensemble_20260602
+python3 -m oph_fpe.cli finite-certificates --out runs/finite_certificates
+python3 -m oph_fpe.cli physical-cmb-promotion-audit --run-dir runs/<run_id> --out runs/cmb_promotion_audit
+python3 -m oph_fpe.cli official-planck-readiness --out runs/official_planck_readiness
+```
+
+Viewer exports:
+
+```bash
+python3 -m oph_fpe.cli run-viewer --run-dir runs/<run_id> --out runs/<run_id>/oph_realtime_viewer.html
+python3 -m oph_fpe.cli run-object-h3-viewer --run-dir runs/<run_id> --out runs/<run_id>/object_h3_bulk_viewer.html
+python3 -m oph_fpe.cli run-cmb-neutral-frontier-viewer --run-dir runs/<run_id> --out runs/<run_id>/cmb_neutral_frontier_viewer.html
+```
+
+## Screen, Scale, And Capacity
+
+`P` is carried as the local pixel/cell closure value. In finite screen runs it normalizes cell area, cell entropy `P/4`, cap capacity, and residual weights.
+
+`N_CRC` is carried as the global screen-capacity closure value. Regulator patch counts such as `4096`, `65536`, `262144`, and `1048576` are sampling counts unless a dedicated capacity readback map and terminal normal-form enumerator close the finite capacity gate.
+
+The scale reports write dimensionless-invariant and independent-bridge receipts. `finite_simulator_derived_G_SI` remains false without an accepted dimensionful scale bridge and finite capacity proof.
+
+## BW, H3, And Bulk
+
+The simulator separates these layers:
+
+```text
+finite settling and finite consensus: receipt-gated
+BW/KMS 2*pi branch replay: receipt-gated
+conformal Lorentz/H3 chart: receipt-gated
+observer-facing H3 object population: receipt-gated
+finite Lorentz theorem contract: closed in the reference pack
+strict neutral third-person bulk: closed in the reference pack
+```
+
+The old graph-distance and modular-lift dimension estimates are debug diagnostics. Bulk claims flow through BW/KMS, support-visible cap/collar data, the conformal H3 chart, observer records, object population, and neutral-bulk gates.
+
+## CMB And Cosmology
+
+Screen-level angular spectra are measurement-facing diagnostics. They are useful for seed/control studies and viewer payloads.
+
+Physical CMB prediction has a stricter contract: finite OPH sources for amplitude, scalar quotient, IR selectors, finite-collar kernels, recovery rates, Boltzmann handoff, CDM-limit regression, and official likelihood execution. Those gates are false in the reference pack.
+
+Related commands include:
+
+```bash
 python3 -m oph_fpe.cli cmb-lite-compare --run-dir runs/<run_id> --benchmark runs/benchmarks/COM_PowerSpect_CMB-TT-binned_R3.01.txt
-python3 -m oph_fpe.cli run-viewer --run-dir runs/<run_id>
+python3 -m oph_fpe.cli cl-from-freezeout-npz --run-dir runs/<run_id> --out runs/<run_id>/cl_recomputed
+python3 -m oph_fpe.cli oph-screen-power --run-dir runs/<run_id> --out runs/screen_power
+python3 -m oph_fpe.cli cmb-anomaly-report --run-dir runs/<run_id> --source-dir runs/<run_id> --out runs/cmb_anomaly
+python3 -m oph_fpe.cli physical-cmb-output-comparison --run-dir runs/<run_id> --out runs/physical_cmb_output_comparison
 ```
 
-`run-bw-sweep` now auto-fills available CPUs when `--workers` and `--inner-jobs` are omitted.
-Set `OPH_FPE_CPUS=<N>` to override the detected CPU budget, or pass explicit worker caps when the
-machine is shared. The sweep planner applies the inner-job budget to both BW cap probes and
-freezeout angular spectra. For a single `run-bw-array` run, set `bw.n_jobs: auto` and
-`cosmology.angular_power.n_jobs: auto` in the config to use the available CPU budget inside that run.
+## Defects And Particles
 
-Object-engine runs write state snapshots, repair events, record events, defect worldlines, and
-controls. Array-engine runs write compact summaries instead. Both write a manifest, config copy,
-mismatch trace, `pixel_scale.json`, `screen_microphysics.json`, dimension report, cosmology proxy
-placeholder, and `verifier_receipts.jsonl`.
-Main BW-array runs also write paper-stack fixed-cutoff receipts:
-`edge_sector_heat_kernel_report.json`, `central_record_born_report.json`, and
-`observer_checkpoint_restoration_report.json`.
+The screen-holonomy layer writes defect clusters, timelines, interaction proxies, H3 worldline fits, and particle-likeness reports. These are screen/collar diagnostics. The production particle matter receipt is false in the reference pack, and the particle derivation is work in progress.
 
-The scale/capacity audit commands write standalone reports:
-`pn_resonance_report.json`, `screen_capacity_closure_report.json`, `oph_scale_bridge_report.json`,
-`positive_geometry_kernel_report.json`, and `repair_scale_closure_report.json`. They are
-bookkeeping and gate reports, not physical-CMB or bulk-emergence receipts.
-
-## Milestones
-
-- `E0`: finite patch-net calibration with `Z2` repair, record stability, and exposed defects.
-- `E1`: `S3` smoke run with holonomy defects and dimension-estimator scaffolding.
-- `E1-large`: vectorized spherical screen plus legacy modular-flow record-history lift.
-- `E1-state`: state-derived cap/collar modular probe with CMI/recovery receipts.
-- `E1-microphysics`: fixed-cutoff screen receipts for the edge-sector heat-kernel/Casimir
-  surrogate, central record/Born-Luders event algebra, and observer checkpoint/restoration.
-- `E2-screen`: first gated freezeout-screen `C_l` proxy from observer-facing fields.
-- `E2-defects`: S3 screen holonomy clusters can be tested as H3 support profiles, sampled as
-  repair-time defect-worldline precursors, fitted into H3 worldline paths for visualization, and
-  scored by a conservative particle-likeness diagnostic. The current particle receipt remains false.
-- Next: stronger record-object construction, repeated-seed refinement scaling, neutral
-  observer-record reconstruction, defect worldlines/fusion, then physical cosmology adapters.
-
-## Current Large-Scale Smoke
-
-On this workstation:
-
-```text
-4k S3 mutual 12-port screen:  final Phi=0, d ~= 2.77, 69,632 modular-lift points
-64k S3 mutual 12-port screen: final Phi=0, d ~= 2.79, 200,000 sampled modular-lift points
-1M S3 mutual 12-port screen:  final Phi=0, d ~= 2.72, 500,000 sampled modular-lift points
-```
-
-Those numbers are legacy diagnostics. They do not establish 3D bulk emergence. GPUs are not needed
-until we add large dense modular blocks, learned repair policies, persistent homology at large point
-count, or later Boltzmann/CAMB sweeps.
-
-## BW Cap-Flow Receipts
-
-The primary theorem-aligned diagnostic is now the state-derived BW residual, not the radialized
-modular-depth dimension estimate. The legacy kinematic verifier compares finite cap-local geometric
-transport against `lambda_C(2*pi*t)` and remains useful as a geometry/interpolation sanity check.
-The state-derived verifier instead constructs `rho_C` from observer-visible cap/collar packets,
-uses `K_a = -log(rho_C + aI)`, and compares finite modular matrix elements to the same
-`lambda_C(2*pi*t)` target.
-
-Legacy P-weighted, support-visible-regularized kinematic receipts:
-
-```text
-4k BW screen:  R_BW median ~= 0.385, p90 ~= 0.471, controls median ~= 0.627-1.257
-64k BW screen: R_BW median ~= 0.383, p90 ~= 0.470, controls median ~= 1.089-1.272
-1M BW screen:  R_BW median ~= 0.384, p90 ~= 0.465, controls median ~= 1.260-1.275
-```
-
-The correct `2*pi` transport separates from controls and p90 improves with refinement. The median
-improves from 4k to 64k but rebounds slightly at 1M, so this is not a theorem-grade monotone BW
-refinement result. These runs are now labeled `kinematic_geometric_bw_sanity`; new
-`state_derived_modular_probe` receipts are required before neutral bulk reconstruction.
-
-Current state-derived status has two layers:
-
-```text
-cooccurrence-density state surrogate:
-  fails the state-derived control gate
-
-transition-response automorphism probe:
-  runs at 4k, 64k, and 256k
-  final Phi = 0
-  mandatory negative controls pass
-  state-derived BW median ~= numerical floor
-  correct 2*pi beats wrong-normalization / shuffled / no-flow controls
-  refinement slope is not meaningful because residuals are at numerical floor
-```
-
-The transition-response mode is a branch-instantiation test: it constructs the finite cap
-automorphism generator from a declared KMS/BW-normalized perturb/remeasure transition operator. It
-is useful for testing the downstream observer-record machinery, but by itself it does not prove
-that consensus dynamics generated the BW branch. So 3D bulk emergence is still not observed.
-
-Current status distinguishes three layers:
-
-```text
-support-visible BW/KMS Lorentz / 3+1D kinematics receipt: true on the KMS branch
-conformal H3 spatial chart receipt: true when cap-normal/H3 checks pass
-record-populated 3D bulk reconstruction receipt: false
-```
-
-The paper-side mechanism is that cap modular flow on the support-visible \(S^2\) chart gives the
-Lorentz group, and the canonical spatial chart is the 3D homogeneous space
-`SO+(3,1)/SO(3)` represented by `H3`. The simulator now records this conformal/H3 chart
-diagnostic separately from record-populated spatial bulk reconstruction. The old observer-similarity
-dimension estimator is retained only as a debug diagnostic and has no physics claim.
-
-Current observer-similarity debug diagnostics:
-
-```text
-4k neutral sweep:
-  4/4 seeds pass BW/KMS and planted/shuffled controls
-  old local-MLE debug estimates: 3.016-3.215
-  old median debug estimate ~= 3.165
-
-current stricter 4k report:
-  local MLE ~= 3.162
-  correlation log-fit ~= 2.105
-  dimension_estimators_agree = false
-  spatial_bulk_3d_reconstruction_receipt = false
-
-64k scale check:
-  local MLE ~= 6.278
-  correlation log-fit ~= 2.025
-  dimension_estimators_agree = false
-  spatial_bulk_3d_reconstruction_receipt = false
-```
-
-Those fractional/debug values are not bulk dimensions. The simulator now writes
-`record_populated_h3_report.json`, which fits observer record/cap-response profiles into the
-conformal H3 chart and compares residuals against S2-boundary and shuffled controls. The populated
-bulk receipt remains false unless H3 wins those controls. The screen holonomy report now writes
-pre-bulk S3 defect clusters, screen-local interaction proxies, and a particle-likeness diagnostic.
-Current runs find localized/persistent/sector-stable screen defects plus screen-local
-transport/fusion/scattering proxies, but they do not yet pass H3 worldline, contractible-path
-transport, full interaction controls, or neutral-bulk gates, so they are not matter particles.
-
-## First Measurement-Facing Screen Proxy
-
-The first reproducible comparison-facing output is now a gated freezeout-screen angular spectrum,
-not a physical CMB prediction. The run:
-
-```text
-runs/kms_freezeout_cl_20260602/e2_kms_freezeout_cl_screen_64k_1780360849
-  final Phi = 0
-  primary transition source = kms_collar_transport_response
-  selected scale = 2pi
-  state-derived BW median ~= 2.49e-15
-  state-derived controls pass
-  cosmology gate allowed = true
-  neutral reconstruction written = false
-  bulk_3d_established = false
-```
-
-It writes:
-
-```text
-freezeout_fields.npz
-freezeout_map_summary.json
-cl_comparison_report.json
-cl_proxy.csv
-cl_controls.csv
-cosmology_observables.json
-cosmology_gate_report.json
-```
-
-`cl_comparison_report.json` uses the direct `spherical_harmonic` auto-power estimator with OPH
-cell-entropy quadrature weights, so reported `C_ell` values are nonnegative. In this 64k receipt,
-the strongest fields peak at high regulator multipoles:
-
-```text
-record_signature:       peak ell 32, peak D_ell ~= 0.0821
-s3_class_density:       peak ell 32, peak D_ell ~= 0.0642
-cumulative_repair_load: peak ell 31, peak D_ell ~= 0.0560
-```
-
-Control separation is present but not yet strong enough for measurement claims: relative L2
-separation from shuffled/random controls is roughly `0.21-0.52`, while shape correlations can remain
-high. This is therefore a useful reproducible screen statistic to compare across seeds and controls,
-not a Planck likelihood, not CAMB/CLASS input, and not evidence that a 3D bulk has emerged.
-
-Repeated-seed screen ensemble:
-
-```text
-runs/cl_ensemble_20260602
-  input runs: 5
-  gate-allowed runs: 5
-  4k seeds: 4/4 gate allowed
-  64k seeds: 1/1 gate allowed
-```
-
-For the 4k repeated-seed set, the screen-spectrum shapes are stable but not yet measurement-grade:
-
-```text
-record_signature:       peak ell mode 22, seed-shape corr ~= 0.912, control L2 delta ~= 0.369
-s3_class_density:       peak ell mode 24, seed-shape corr ~= 0.914, control L2 delta ~= 0.398
-cumulative_repair_load: peak ell mode 23, seed-shape corr ~= 0.887, control L2 delta ~= 0.359
-stable_count:           peak ell mode 24, seed-shape corr ~= 0.908, control L2 delta ~= 0.253
-modular_depth:          peak ell mode 24, seed-shape corr ~= 0.883, control L2 delta ~= 0.289
-```
-
-Interpretation: the finite KMS/BW screen pipeline now emits reproducible angular statistics under
-strict gates. The next accuracy step is stronger control separation and scale/refinement behavior,
-not a direct comparison to Planck or DESI.
-
-See `docs/paper_stack_alignment.md` for the current claim-by-claim alignment against the core paper
-stack.
-
-## OPH Screen Microphysics
-
-Run configs now include:
-
-```yaml
-screen:
-  chart: support_visible_s2_cellulation
-  carrier: federated_echosahedral_patch
-  ports_per_patch: 12
-  cap_family: round_caps_on_s2
-  edge_sector_law: fixed_cutoff_heat_kernel_casimir_surrogate
-
-oph_constants:
-  P: 1.6309682094039593
-  P_source: endpoint_public
-  use_P_for:
-    - cell_area
-    - cell_entropy
-    - cap_capacity
-    - residual_weighting
-
-screen_units:
-  mode: numerical_regulator
-```
-
-The simulator writes `pixel_report.json`, `pixel_scale.json`, and `screen_microphysics.json`, then
-mirrors the same structures into the manifest and cosmology proxy. `P` is now part of the finite
-screen normalization layer: `cell_area_planck = P`, `cell_entropy_capacity = P/4`, cap reports
-include `cap_area_planck` and `cap_entropy_capacity`, and BW residual norms use the local
-cell-entropy measure. The conformal map and BW normalization remain unchanged:
-`s = 2*pi*t`.
-
-## P/N Closure and Scale Bridge
-
-The current paper stack changes the interpretation of scale outputs. `P_star` and `N_star`
-(`N_CRC`) are closure coordinates, not tunable simulation knobs:
-
-- `P_star` is the local pixel closure. In this simulator it normalizes local cell area, local
-  cell entropy `P/4`, cap capacity, and residual weights.
-- `N_CRC` is the global screen-capacity closure. It is the entropy capacity of the cosmic
-  record/screen branch, not the number of finite patches in a local run.
-- Finite run patch counts such as `4096`, `65536`, `262144`, and `1048576` remain numerical
-  regulators unless a dedicated capacity readback map `F(N)` and terminal normal-form enumerator
-  are implemented.
-
-The simulator should now report the local/global dimensionless invariants:
-
-```text
-P_star = a_cell / ell_star^2
-N_star = 3*pi / (Lambda_star ell_star^2)
-B_ell = Lambda_star N_star
-B_ell ell_star^2 = 3*pi
-B_ell a_cell = 3*pi P_star
-Lambda_star a_cell = 3*pi P_star / N_star
-```
-
-Local gravity is also a dimensionless normalization statement:
-
-```text
-a_cell = P_star ell_star^2
-ellbar_shared = P_star / 4
-G_geom = a_cell / (4 ellbar_shared) = ell_star^2
-```
-
-So `P` cancels from the local gravity readout. `P` is still structurally important because it ties
-cell area and shared edge entropy to the same observer-cell unit, but `P` and `N` alone do not fix a
-dimensionful SI scale. A dimensionful `ell_star^2`, `B_ell`, or `G_SI` requires an independent scale
-bridge, supplied either as `B_ell` directly or as an independent `Lambda_star` together with
-`N_star`. The report gate is `finite_simulator_derived_G_SI = false` unless a future finite proof
-exists.
-
-Implemented reports:
+Useful commands:
 
 ```bash
-python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
-python3 -m oph_fpe.cli positive-geometry-kernel-report --out runs/positive_geometry_kernel
-python3 -m oph_fpe.cli screen-capacity-report --out runs/screen_capacity_closure
-python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
-python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_direct_b --b-ell-m2 3.6078739146803216e70
-python3 -m oph_fpe.cli capacity-readback-proxy-report --run-dir runs/<run_id> --out runs/capacity_proxy
+python3 -m oph_fpe.cli controlled-defect-assay --out runs/controlled_defect_assay
+python3 -m oph_fpe.cli shape-dodeca-smoke --config configs/shape_dodeca_vertex_smoke.yml --out-dir runs
+python3 -m oph_fpe.cli shape-ensemble --config configs/shape_dodeca_ensemble.yml --seeds 1,2,3,4 --out-dir runs
 ```
 
-`pn-resonance-report` is the paper-faithful wrapper. By default it replays the compact-paper bridge
-`N_EW(P)=pi*exp(6*pi/(P*alpha_U(P)))`, using the declared `alpha_U(P_star)` source value, and writes
-`PN_RESONANCE_NUMERIC_REPLAY = true`. It deliberately keeps `PN_RESONANCE_RECEIPT = false` until the
-simulator emits the missing source proof record for `alpha_U(P)`, solves the global `F(N)` capacity
-fixed point, and derives the repair-depth selector from finite data. Use
-`--n-source screen-capacity-default` to audit the rough observed capacity display as an off-bridge
-diagnostic, or `--b-ell-m2 ...` to add an independent dimensionful scale bridge while still keeping
-`finite_simulator_derived_G_SI = false`.
+## Positive Geometry Kernel
 
-`screen-capacity-report` carries the observed-branch/declaration readout and keeps
-`N_CRC_fixed_point_solved_from_finite_simulator = false`. `scale-bridge-report` records the
-dimensionless invariants and only unlocks dimensionful `G_SI` eligibility when an independent bridge
-input is supplied. `capacity-readback-proxy-report` summarizes finite-run observer/object proxies
-for future `F(N)` work; it does not solve the global capacity fixed point.
-
-The repair-depth lane should be read as an ansatz consistency diagnostic, not as `P -> N`:
-
-```bash
-python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
-```
-
-It compares the declared 24-round relation `N_CRC ~= |g'(P)|^-48` against the global capacity
-branch. It may be numerically useful for planning scale-compressed operators, but it is not a
-derivation of `N` from `P`, not a dimensionful SI scale bridge, and not a finite proof of 24 repair
-rounds.
-
-The default `screen_units.mode` is `numerical_regulator`, so configured screen size is a
-sampling/refinement count, not a literal cosmological horizon cell count. In later
-`physical_cell_toy_universe` runs, a toy finite-cell radius is
-`R/lP = sqrt(N_patch P / 4pi)` when the configured patch count is intentionally interpreted as toy
-physical cells. In all modes, `P` and `N_CRC` do not force the BW/Lorentz dimension estimate; the BW
-cap-flow verifier is the required mechanism for that.
-
-## Certified Kernel Acceleration
-
-The amplituhedron / positive-geometry work is integrated as a fail-closed optimization layer, not
-as a new OPH axiom. The trusted simulator path remains finite patches, observer records, mismatch,
-accepted repair, quotient normal forms, and observer-facing readout. A mathematical kernel can
-replace generic repair only when it has a typed sector certificate, native geometry certificate,
-semantic readout equivalence, resource report, provenance hash, and fallback receipt.
-
-The current implementation wraps the bundled Positive Geometry Kernel checker from
-`../amplituhedron/engineering-the-simulation/oph_positive_geometry_kernel_v1/`:
+The amplituhedron and positive-geometry checker is a fail-closed optimization layer. The trusted path remains finite patches, records, mismatch, accepted repair, quotient normal forms, observer readout, and evidence receipts.
 
 ```bash
 python3 -m oph_fpe.cli positive-geometry-kernel-report --out runs/positive_geometry_kernel
 ```
 
-Normal runs can also request the same checker through the kernel dispatcher:
+Normal runs can request the checker through:
 
 ```yaml
 kernels:
@@ -401,56 +229,30 @@ kernels:
     enabled: true
 ```
 
-This is currently a receipt hook, not a replacement dynamics path. `run`, `run-array`, and
-`run-bw-array` write `kernel_dispatch_report.json` plus the positive-geometry report files when the
-block is present. The dispatcher records `generic_repair_executed = true`,
-`effective_acceleration_enabled = false`, and `physical_observables_changed = false` unless a future
-OPH sector compiler and readout-substitution backend are certified for the concrete run sector.
+The expected safe verdict is `GEOMETRY_CERTIFIED_BACKEND_NOT_ENABLED` unless OPH sector recognition, native geometry certification, observer-readout equivalence, resource accounting, provenance hashes, and fallback receipts all pass for the concrete sector.
 
-The default `A_{6,1,4}` pilot is expected to report:
+## Cloud And Reproducibility
 
-```text
-verdict: GEOMETRY_CERTIFIED_BACKEND_NOT_ENABLED
-execution mode: CERTIFIED_GEOMETRY
-trusted acceleration enabled: false
-fallback action: EXACT_GENERIC
-```
+Cloud credentials, project IDs, bucket names, account IDs, tokens, and keys belong in `.env.local`, shell exports, or cloud-native identity. They do not belong in committed files.
 
-That is the intended result. It means the exact positive-geometry atlas, positivity checks, facet
-coverage, and oriented internal-wall cancellation are certified, while OPH sector recognition and
-observer-readout equivalence remain open. Only a manifest whose sector recognition, readout
-equivalence, and fail-closed gates pass may return `CERTIFIED_ACCELERATED`; otherwise the simulator
-must route to the generic repair path.
+Cloud template defaults live in `configs/`. See `docs/cloud.md`, `docs/parallel_cloud_plan.md`, and `docs/digitalocean_pool_setup.md` for provider boundaries and sizing notes.
 
-BW configs use a cell-scaled regulator collar:
-
-```text
-collar_width = collar_k * sqrt(4*pi/N_patch)
-```
-
-This keeps the finite collar tied to the screen resolution, matching the paper stack's shrinking
-collar / carried-error framing better than a fixed angular collar.
-
-## Cloud
-
-Use a local Google Cloud project configured outside the repository. A convenient pattern is a named
-`gcloud` configuration:
+For CPU sweeps, cap BLAS fan-out per worker:
 
 ```bash
-gcloud config configurations activate <your-config-name>
+OMP_NUM_THREADS=1 \
+OPENBLAS_NUM_THREADS=1 \
+MKL_NUM_THREADS=1 \
+VECLIB_MAXIMUM_THREADS=1 \
+NUMEXPR_NUM_THREADS=1 \
+python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen_64k.yml --seeds 1,2,3,4 --out-dir runs
 ```
 
-Cloud template defaults live in `configs/` and secret-free local placeholders are documented in
-`.env.example`. Put real project IDs, bucket names, account IDs, tokens, and keys in `.env.local`,
-shell exports, or cloud-native identity, not in committed files.
-See `docs/cloud.md` for quota notes and provider boundaries.
+## Key Documentation
 
-For parallel execution and hardware sizing, see `docs/parallel_cloud_plan.md`.
-For DigitalOcean fixed-pool worker setup, see `docs/digitalocean_pool_setup.md`.
-For the current 3D-bulk claim boundary and observer-facing readouts, see `docs/bulk_emergence_status.md`.
-
-Current implementation boundary: the finite OPH KMS/BW collar-transport branch now selects `2pi`
-at 4k, 64k, and 256k, with the selector score improving over refinement. The raw
-perturb/remeasure and repair-affinity selectors still select `1x`, so this is a
-branch-instantiation receipt rather than proof that raw repair dynamics endogenously selected the
-Lorentz/BW branch.
+- `docs/OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: theorem-to-simulator contract.
+- `docs/theory_conformance_audit_20260609.md`: paper-stack conformance and open gates.
+- `docs/bulk_emergence_status.md`: dated bulk, H3, CMB, and particle receipt splits.
+- `docs/cmb_bulk_particle_execution_plan.md`: CMB, neutral-bulk, and particle execution boundaries.
+- `docs/cosmo_proxy_results_20260605.md`: screen-spectrum diagnostics and comparison-facing caveats.
+- `REPRODUCTION.md`: reproducibility notes.

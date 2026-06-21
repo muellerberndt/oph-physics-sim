@@ -1,0 +1,4486 @@
+{
+  "kernel": "distributed_observer_patch_kernel_v1",
+  "run_id": "oph_distributed_federated_4m64shards_20260621",
+  "config_path": "configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml",
+  "claim_boundary": "Distributed OPH-FPE execution over observer-like self-reading screen shards. Each shard has bounded local state, ports/boundaries, readback, records, feedback/repair moves, and public receipts. The reducer can certify a federated large-universe witness; it cannot by itself certify a strict single neutral third-person bulk without explicit cross-shard overlap repair receipts.",
+  "shard_count": 64,
+  "worker_count": 2,
+  "patch_count_per_shard": 65536,
+  "observer_count_per_shard": 256,
+  "total_patch_capacity": 4194304,
+  "total_observer_capacity": 16384,
+  "max_screen_points": 8000,
+  "max_h3_objects": 1024,
+  "seed_stride": 1009,
+  "unified_universe_atlas": {
+    "mode": "one_unified_screen_atlas_core_halo_shards",
+    "run_id": "oph_distributed_federated_4m64shards_20260621",
+    "global_patch_capacity": 4194304,
+    "global_observer_capacity": 16384,
+    "shard_count": 64,
+    "seam_halo_width": 2048,
+    "shards": [
+      {
+        "shard_index": 0,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0000",
+        "global_patch_range": [
+          0,
+          65536
+        ],
+        "global_observer_range": [
+          0,
+          256
+        ],
+        "atlas_center": [
+          0.17608480733726006,
+          0.0,
+          0.984375
+        ],
+        "seam_neighbor_indices": [
+          1,
+          3,
+          63
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 1,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+        "global_patch_range": [
+          65536,
+          131072
+        ],
+        "global_observer_range": [
+          256,
+          512
+        ],
+        "atlas_center": [
+          -0.22311073318820154,
+          0.20438770782809604,
+          0.953125
+        ],
+        "seam_neighbor_indices": [
+          0,
+          2,
+          4,
+          6
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 2,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0002",
+        "global_patch_range": [
+          131072,
+          196608
+        ],
+        "global_observer_range": [
+          512,
+          768
+        ],
+        "atlas_center": [
+          0.03387636667527373,
+          -0.38600372557254214,
+          0.921875
+        ],
+        "seam_neighbor_indices": [
+          1,
+          3,
+          7
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 3,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+        "global_patch_range": [
+          196608,
+          262144
+        ],
+        "global_observer_range": [
+          768,
+          1024
+        ],
+        "atlas_center": [
+          0.27668057899237797,
+          0.360880820470474,
+          0.890625
+        ],
+        "seam_neighbor_indices": [
+          0,
+          2,
+          4,
+          8
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 4,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0004",
+        "global_patch_range": [
+          262144,
+          327680
+        ],
+        "global_observer_range": [
+          1024,
+          1280
+        ],
+        "atlas_center": [
+          -0.5035291840643238,
+          -0.08906722276189095,
+          0.859375
+        ],
+        "seam_neighbor_indices": [
+          1,
+          3,
+          5
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 5,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0005",
+        "global_patch_range": [
+          327680,
+          393216
+        ],
+        "global_observer_range": [
+          1280,
+          1536
+        ],
+        "atlas_center": [
+          0.4729615227533923,
+          -0.30085940631762265,
+          0.828125
+        ],
+        "seam_neighbor_indices": [
+          4,
+          6,
+          13
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 6,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0006",
+        "global_patch_range": [
+          393216,
+          458752
+        ],
+        "global_observer_range": [
+          1536,
+          1792
+        ],
+        "atlas_center": [
+          -0.1568384393943196,
+          0.5834311770066409,
+          0.796875
+        ],
+        "seam_neighbor_indices": [
+          1,
+          5,
+          7
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 7,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0007",
+        "global_patch_range": [
+          458752,
+          524288
+        ],
+        "global_observer_range": [
+          1792,
+          2048
+        ],
+        "atlas_center": [
+          -0.296495567066451,
+          -0.57088417221442,
+          0.765625
+        ],
+        "seam_neighbor_indices": [
+          2,
+          6,
+          8
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 8,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+        "global_patch_range": [
+          524288,
+          589824
+        ],
+        "global_observer_range": [
+          2048,
+          2304
+        ],
+        "atlas_center": [
+          0.6375586537073916,
+          0.2328353977766658,
+          0.734375
+        ],
+        "seam_neighbor_indices": [
+          3,
+          7,
+          9,
+          16
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 9,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0009",
+        "global_patch_range": [
+          589824,
+          655360
+        ],
+        "global_observer_range": [
+          2304,
+          2560
+        ],
+        "atlas_center": [
+          -0.657270942922291,
+          0.27131189057069055,
+          0.703125
+        ],
+        "seam_neighbor_indices": [
+          8,
+          10,
+          17
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 10,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0010",
+        "global_patch_range": [
+          655360,
+          720896
+        ],
+        "global_observer_range": [
+          2560,
+          2816
+        ],
+        "atlas_center": [
+          0.3139277056945738,
+          -0.6708452727509833,
+          0.671875
+        ],
+        "seam_neighbor_indices": [
+          9,
+          11,
+          18
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 11,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0011",
+        "global_patch_range": [
+          720896,
+          786432
+        ],
+        "global_observer_range": [
+          2816,
+          3072
+        ],
+        "atlas_center": [
+          0.22980628205915257,
+          0.7326586395458319,
+          0.640625
+        ],
+        "seam_neighbor_indices": [
+          10,
+          12,
+          19
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 12,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0012",
+        "global_patch_range": [
+          786432,
+          851968
+        ],
+        "global_observer_range": [
+          3072,
+          3328
+        ],
+        "atlas_center": [
+          -0.6860105272412337,
+          -0.3975571228002395,
+          0.609375
+        ],
+        "seam_neighbor_indices": [
+          11,
+          13,
+          20
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 13,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+        "global_patch_range": [
+          851968,
+          917504
+        ],
+        "global_observer_range": [
+          3328,
+          3584
+        ],
+        "atlas_center": [
+          0.7969168510214679,
+          -0.1751999341695868,
+          0.578125
+        ],
+        "seam_neighbor_indices": [
+          5,
+          12,
+          14,
+          21
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 14,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0014",
+        "global_patch_range": [
+          917504,
+          983040
+        ],
+        "global_observer_range": [
+          3584,
+          3840
+        ],
+        "atlas_center": [
+          -0.48150656533876957,
+          0.6848935405671901,
+          0.546875
+        ],
+        "seam_neighbor_indices": [
+          13,
+          15,
+          22
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 15,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0015",
+        "global_patch_range": [
+          983040,
+          1048576
+        ],
+        "global_observer_range": [
+          3840,
+          4096
+        ],
+        "atlas_center": [
+          -0.11010980532366277,
+          -0.8497097681835751,
+          0.515625
+        ],
+        "seam_neighbor_indices": [
+          14,
+          16,
+          23
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 16,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+        "global_patch_range": [
+          1048576,
+          1114112
+        ],
+        "global_observer_range": [
+          4096,
+          4352
+        ],
+        "atlas_center": [
+          0.6689611871564978,
+          0.5638011967468403,
+          0.484375
+        ],
+        "seam_neighbor_indices": [
+          8,
+          15,
+          17,
+          24
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 17,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+        "global_patch_range": [
+          1114112,
+          1179648
+        ],
+        "global_observer_range": [
+          4352,
+          4608
+        ],
+        "atlas_center": [
+          -0.8906857415156827,
+          0.03683265175979679,
+          0.453125
+        ],
+        "seam_neighbor_indices": [
+          9,
+          16,
+          18,
+          25
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 18,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+        "global_patch_range": [
+          1179648,
+          1245184
+        ],
+        "global_observer_range": [
+          4608,
+          4864
+        ],
+        "atlas_center": [
+          0.6426630271806866,
+          -0.6395355485584489,
+          0.421875
+        ],
+        "seam_neighbor_indices": [
+          10,
+          17,
+          19,
+          26
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 19,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+        "global_patch_range": [
+          1245184,
+          1310720
+        ],
+        "global_observer_range": [
+          4864,
+          5120
+        ],
+        "atlas_center": [
+          -0.042521530715078804,
+          0.9195673052042719,
+          0.390625
+        ],
+        "seam_neighbor_indices": [
+          11,
+          18,
+          20,
+          27
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 20,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+        "global_patch_range": [
+          1310720,
+          1376256
+        ],
+        "global_observer_range": [
+          5120,
+          5376
+        ],
+        "atlas_center": [
+          -0.5979054381466168,
+          -0.7164905417447618,
+          0.359375
+        ],
+        "seam_neighbor_indices": [
+          12,
+          19,
+          21,
+          28
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 21,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+        "global_patch_range": [
+          1376256,
+          1441792
+        ],
+        "global_observer_range": [
+          5376,
+          5632
+        ],
+        "atlas_center": [
+          0.9361981733488518,
+          0.12596414010849727,
+          0.328125
+        ],
+        "seam_neighbor_indices": [
+          13,
+          20,
+          22,
+          29
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 22,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+        "global_patch_range": [
+          1441792,
+          1507328
+        ],
+        "global_observer_range": [
+          5632,
+          5888
+        ],
+        "atlas_center": [
+          -0.7838510465201524,
+          0.5453831416942239,
+          0.296875
+        ],
+        "seam_neighbor_indices": [
+          14,
+          21,
+          23,
+          30
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 23,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+        "global_patch_range": [
+          1507328,
+          1572864
+        ],
+        "global_observer_range": [
+          5888,
+          6144
+        ],
+        "atlas_center": [
+          0.21159681451541415,
+          -0.940569055126698,
+          0.265625
+        ],
+        "seam_neighbor_indices": [
+          15,
+          22,
+          24,
+          31
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 24,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0024",
+        "global_patch_range": [
+          1572864,
+          1638400
+        ],
+        "global_observer_range": [
+          6144,
+          6400
+        ],
+        "atlas_center": [
+          0.4833325303255987,
+          0.8434797119694427,
+          0.234375
+        ],
+        "seam_neighbor_indices": [
+          16,
+          23,
+          25
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 25,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0025",
+        "global_patch_range": [
+          1638400,
+          1703936
+        ],
+        "global_observer_range": [
+          6400,
+          6656
+        ],
+        "atlas_center": [
+          -0.9328318142586943,
+          -0.2975987914656791,
+          0.203125
+        ],
+        "seam_neighbor_indices": [
+          17,
+          24,
+          26
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 26,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0026",
+        "global_patch_range": [
+          1703936,
+          1769472
+        ],
+        "global_observer_range": [
+          6656,
+          6912
+        ],
+        "atlas_center": [
+          0.8942820818781708,
+          -0.41318100441167965,
+          0.171875
+        ],
+        "seam_neighbor_indices": [
+          18,
+          25,
+          27
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 27,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0027",
+        "global_patch_range": [
+          1769472,
+          1835008
+        ],
+        "global_observer_range": [
+          6912,
+          7168
+        ],
+        "atlas_center": [
+          -0.38222476698907004,
+          0.9133065404754042,
+          0.140625
+        ],
+        "seam_neighbor_indices": [
+          19,
+          26,
+          28
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 28,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0028",
+        "global_patch_range": [
+          1835008,
+          1900544
+        ],
+        "global_observer_range": [
+          7168,
+          7424
+        ],
+        "atlas_center": [
+          -0.3364217546663529,
+          -0.9353381807465213,
+          0.109375
+        ],
+        "seam_neighbor_indices": [
+          20,
+          27,
+          29
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 29,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0029",
+        "global_patch_range": [
+          1900544,
+          1966080
+        ],
+        "global_observer_range": [
+          7424,
+          7680
+        ],
+        "atlas_center": [
+          0.8824839190100603,
+          0.4638088152069186,
+          0.078125
+        ],
+        "seam_neighbor_indices": [
+          21,
+          28,
+          30
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 30,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0030",
+        "global_patch_range": [
+          1966080,
+          2031616
+        ],
+        "global_observer_range": [
+          7680,
+          7936
+        ],
+        "atlas_center": [
+          -0.9659070760328131,
+          0.25461000539008943,
+          0.046875
+        ],
+        "seam_neighbor_indices": [
+          22,
+          29,
+          31
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 31,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0031",
+        "global_patch_range": [
+          2031616,
+          2097152
+        ],
+        "global_observer_range": [
+          7936,
+          8192
+        ],
+        "atlas_center": [
+          0.5407717140962143,
+          -0.8410242639831756,
+          0.015625
+        ],
+        "seam_neighbor_indices": [
+          23,
+          30,
+          32
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 32,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0032",
+        "global_patch_range": [
+          2097152,
+          2162688
+        ],
+        "global_observer_range": [
+          8192,
+          8448
+        ],
+        "atlas_center": [
+          0.16935549543945927,
+          0.9854311622530797,
+          -0.015625
+        ],
+        "seam_neighbor_indices": [
+          31,
+          33,
+          40
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 33,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0033",
+        "global_patch_range": [
+          2162688,
+          2228224
+        ],
+        "global_observer_range": [
+          8448,
+          8704
+        ],
+        "atlas_center": [
+          -0.7897540927167819,
+          -0.6116299595442434,
+          -0.046875
+        ],
+        "seam_neighbor_indices": [
+          32,
+          34,
+          41
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 34,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0034",
+        "global_patch_range": [
+          2228224,
+          2293760
+        ],
+        "global_observer_range": [
+          8704,
+          8960
+        ],
+        "atlas_center": [
+          0.9935396814284652,
+          -0.0823127317128023,
+          -0.078125
+        ],
+        "seam_neighbor_indices": [
+          33,
+          35,
+          42
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 35,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0035",
+        "global_patch_range": [
+          2293760,
+          2359296
+        ],
+        "global_observer_range": [
+          8960,
+          9216
+        ],
+        "atlas_center": [
+          -0.6750052493244947,
+          0.729660895731282,
+          -0.109375
+        ],
+        "seam_neighbor_indices": [
+          34,
+          36,
+          43
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 36,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0036",
+        "global_patch_range": [
+          2359296,
+          2424832
+        ],
+        "global_observer_range": [
+          9216,
+          9472
+        ],
+        "atlas_center": [
+          0.004829801391683504,
+          -0.9900511514025508,
+          -0.140625
+        ],
+        "seam_neighbor_indices": [
+          35,
+          37,
+          44
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 37,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0037",
+        "global_patch_range": [
+          2424832,
+          2490368
+        ],
+        "global_observer_range": [
+          9472,
+          9728
+        ],
+        "atlas_center": [
+          0.6618866869707114,
+          0.7296334682468557,
+          -0.171875
+        ],
+        "seam_neighbor_indices": [
+          36,
+          38,
+          45
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 38,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0038",
+        "global_patch_range": [
+          2490368,
+          2555904
+        ],
+        "global_observer_range": [
+          9728,
+          9984
+        ],
+        "atlas_center": [
+          -0.9749744764429643,
+          -0.09036041533640489,
+          -0.203125
+        ],
+        "seam_neighbor_indices": [
+          37,
+          39,
+          46
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 39,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0039",
+        "global_patch_range": [
+          2555904,
+          2621440
+        ],
+        "global_observer_range": [
+          9984,
+          10240
+        ],
+        "atlas_center": [
+          0.7743722856595951,
+          -0.5877209563877525,
+          -0.234375
+        ],
+        "seam_neighbor_indices": [
+          38,
+          40,
+          47
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 40,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+        "global_patch_range": [
+          2621440,
+          2686976
+        ],
+        "global_observer_range": [
+          10240,
+          10496
+        ],
+        "atlas_center": [
+          -0.17255385351723249,
+          0.9485085803572646,
+          -0.265625
+        ],
+        "seam_neighbor_indices": [
+          32,
+          39,
+          41,
+          48
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 41,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+        "global_patch_range": [
+          2686976,
+          2752512
+        ],
+        "global_observer_range": [
+          10496,
+          10752
+        ],
+        "atlas_center": [
+          -0.5085937894852695,
+          -0.8082064041270729,
+          -0.296875
+        ],
+        "seam_neighbor_indices": [
+          33,
+          40,
+          42,
+          49
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 42,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+        "global_patch_range": [
+          2752512,
+          2818048
+        ],
+        "global_observer_range": [
+          10752,
+          11008
+        ],
+        "atlas_center": [
+          0.9110404352134207,
+          0.24967841272553218,
+          -0.328125
+        ],
+        "seam_neighbor_indices": [
+          34,
+          41,
+          43,
+          50
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 43,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+        "global_patch_range": [
+          2818048,
+          2883584
+        ],
+        "global_observer_range": [
+          11008,
+          11264
+        ],
+        "atlas_center": [
+          -0.8302492360063659,
+          0.42607020018518765,
+          -0.359375
+        ],
+        "seam_neighbor_indices": [
+          35,
+          42,
+          44,
+          51
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 44,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+        "global_patch_range": [
+          2883584,
+          2949120
+        ],
+        "global_observer_range": [
+          11264,
+          11520
+        ],
+        "atlas_center": [
+          0.3199986260206788,
+          -0.863141349212212,
+          -0.390625
+        ],
+        "seam_neighbor_indices": [
+          36,
+          43,
+          45,
+          52
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 45,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+        "global_patch_range": [
+          2949120,
+          3014656
+        ],
+        "global_observer_range": [
+          11520,
+          11776
+        ],
+        "atlas_center": [
+          0.34184723273622036,
+          0.8397392177608405,
+          -0.421875
+        ],
+        "seam_neighbor_indices": [
+          37,
+          44,
+          46,
+          53
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 46,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+        "global_patch_range": [
+          3014656,
+          3080192
+        ],
+        "global_observer_range": [
+          11776,
+          12032
+        ],
+        "atlas_center": [
+          -0.8055612930008001,
+          -0.3817705300227861,
+          -0.453125
+        ],
+        "seam_neighbor_indices": [
+          38,
+          45,
+          47,
+          54
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 47,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+        "global_patch_range": [
+          3080192,
+          3145728
+        ],
+        "global_observer_range": [
+          12032,
+          12288
+        ],
+        "atlas_center": [
+          0.8360278347780077,
+          -0.25775631680212285,
+          -0.484375
+        ],
+        "seam_neighbor_indices": [
+          39,
+          46,
+          48,
+          55
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 48,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0048",
+        "global_patch_range": [
+          3145728,
+          3211264
+        ],
+        "global_observer_range": [
+          12288,
+          12544
+        ],
+        "atlas_center": [
+          -0.4332244981219977,
+          0.7392208016566791,
+          -0.515625
+        ],
+        "seam_neighbor_indices": [
+          40,
+          47,
+          49
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 49,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0049",
+        "global_patch_range": [
+          3211264,
+          3276800
+        ],
+        "global_observer_range": [
+          12544,
+          12800
+        ],
+        "atlas_center": [
+          -0.1757751277808731,
+          -0.818554114783267,
+          -0.546875
+        ],
+        "seam_neighbor_indices": [
+          41,
+          48,
+          50
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 50,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+        "global_patch_range": [
+          3276800,
+          3342336
+        ],
+        "global_observer_range": [
+          12800,
+          13056
+        ],
+        "atlas_center": [
+          0.6651993770836362,
+          0.4725264787316605,
+          -0.578125
+        ],
+        "seam_neighbor_indices": [
+          42,
+          49,
+          51,
+          58
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 51,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0051",
+        "global_patch_range": [
+          3342336,
+          3407872
+        ],
+        "global_observer_range": [
+          13056,
+          13312
+        ],
+        "atlas_center": [
+          -0.7867953829706278,
+          0.09805679329400425,
+          -0.609375
+        ],
+        "seam_neighbor_indices": [
+          43,
+          50,
+          52
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 52,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0052",
+        "global_patch_range": [
+          3407872,
+          3473408
+        ],
+        "global_observer_range": [
+          13312,
+          13568
+        ],
+        "atlas_center": [
+          0.497699465479315,
+          -0.5847177536526527,
+          -0.640625
+        ],
+        "seam_neighbor_indices": [
+          44,
+          51,
+          53
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 53,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0053",
+        "global_patch_range": [
+          3473408,
+          3538944
+        ],
+        "global_observer_range": [
+          13568,
+          13824
+        ],
+        "atlas_center": [
+          0.02699220371529747,
+          0.7401725510403583,
+          -0.671875
+        ],
+        "seam_neighbor_indices": [
+          45,
+          52,
+          54
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 54,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0054",
+        "global_patch_range": [
+          3538944,
+          3604480
+        ],
+        "global_observer_range": [
+          13824,
+          14080
+        ],
+        "atlas_center": [
+          -0.4991071405073964,
+          -0.5064654940561399,
+          -0.703125
+        ],
+        "seam_neighbor_indices": [
+          46,
+          53,
+          55
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 55,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+        "global_patch_range": [
+          3604480,
+          3670016
+        ],
+        "global_observer_range": [
+          14080,
+          14336
+        ],
+        "atlas_center": [
+          0.6778584573739476,
+          0.03465935864398168,
+          -0.734375
+        ],
+        "seam_neighbor_indices": [
+          47,
+          54,
+          56,
+          60
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 56,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0056",
+        "global_patch_range": [
+          3670016,
+          3735552
+        ],
+        "global_observer_range": [
+          14336,
+          14592
+        ],
+        "atlas_center": [
+          -0.4959101352871499,
+          0.40974564926851953,
+          -0.765625
+        ],
+        "seam_neighbor_indices": [
+          55,
+          57,
+          61
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 57,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0057",
+        "global_patch_range": [
+          3735552,
+          3801088
+        ],
+        "global_observer_range": [
+          14592,
+          14848
+        ],
+        "atlas_center": [
+          0.08348071572637865,
+          -0.5983487314909354,
+          -0.796875
+        ],
+        "seam_neighbor_indices": [
+          56,
+          58,
+          62
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 58,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0058",
+        "global_patch_range": [
+          3801088,
+          3866624
+        ],
+        "global_observer_range": [
+          14848,
+          15104
+        ],
+        "atlas_center": [
+          0.3178957953001336,
+          0.4616830597991392,
+          -0.828125
+        ],
+        "seam_neighbor_indices": [
+          50,
+          57,
+          59
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 59,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0059",
+        "global_patch_range": [
+          3866624,
+          3932160
+        ],
+        "global_observer_range": [
+          15104,
+          15360
+        ],
+        "atlas_center": [
+          -0.49832414649111745,
+          -0.11466322164887625,
+          -0.859375
+        ],
+        "seam_neighbor_indices": [
+          58,
+          60,
+          62
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 60,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+        "global_patch_range": [
+          3932160,
+          3997696
+        ],
+        "global_observer_range": [
+          15360,
+          15616
+        ],
+        "atlas_center": [
+          0.3956506863211547,
+          -0.2241598621265619,
+          -0.890625
+        ],
+        "seam_neighbor_indices": [
+          55,
+          59,
+          61,
+          63
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 61,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0061",
+        "global_patch_range": [
+          3997696,
+          4063232
+        ],
+        "global_observer_range": [
+          15616,
+          15872
+        ],
+        "atlas_center": [
+          -0.11957042111618797,
+          0.36857753427073864,
+          -0.921875
+        ],
+        "seam_neighbor_indices": [
+          56,
+          60,
+          62
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 62,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+        "global_patch_range": [
+          4063232,
+          4128768
+        ],
+        "global_observer_range": [
+          15872,
+          16128
+        ],
+        "atlas_center": [
+          -0.12556607825354404,
+          -0.27529237978379434,
+          -0.953125
+        ],
+        "seam_neighbor_indices": [
+          57,
+          59,
+          61,
+          63
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      },
+      {
+        "shard_index": 63,
+        "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0063",
+        "global_patch_range": [
+          4128768,
+          4194304
+        ],
+        "global_observer_range": [
+          16128,
+          16384
+        ],
+        "atlas_center": [
+          0.16209996356578596,
+          0.06877107812860624,
+          -0.984375
+        ],
+        "seam_neighbor_indices": [
+          0,
+          60,
+          62
+        ],
+        "core_patch_count": 65536,
+        "halo_patch_count_per_neighbor": 2048
+      }
+    ],
+    "seam_links": [
+      {
+        "link_id": "seam_0000_0001",
+        "source_shard_index": 0,
+        "target_shard_index": 1,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0000",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0000_0003",
+        "source_shard_index": 0,
+        "target_shard_index": 3,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0000",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0000_0063",
+        "source_shard_index": 0,
+        "target_shard_index": 63,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0000",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0063",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0001_0002",
+        "source_shard_index": 1,
+        "target_shard_index": 2,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0002",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0001_0006",
+        "source_shard_index": 1,
+        "target_shard_index": 6,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0006",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0002_0003",
+        "source_shard_index": 2,
+        "target_shard_index": 3,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0002",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0002_0007",
+        "source_shard_index": 2,
+        "target_shard_index": 7,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0002",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0007",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0003_0004",
+        "source_shard_index": 3,
+        "target_shard_index": 4,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0004",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0001_0004",
+        "source_shard_index": 1,
+        "target_shard_index": 4,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0004",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0004_0005",
+        "source_shard_index": 4,
+        "target_shard_index": 5,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0004",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0005",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0005_0013",
+        "source_shard_index": 5,
+        "target_shard_index": 13,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0005",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0005_0006",
+        "source_shard_index": 5,
+        "target_shard_index": 6,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0005",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0006",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0006_0007",
+        "source_shard_index": 6,
+        "target_shard_index": 7,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0006",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0007",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0007_0008",
+        "source_shard_index": 7,
+        "target_shard_index": 8,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0007",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0008_0009",
+        "source_shard_index": 8,
+        "target_shard_index": 9,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0009",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0003_0008",
+        "source_shard_index": 3,
+        "target_shard_index": 8,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0009_0017",
+        "source_shard_index": 9,
+        "target_shard_index": 17,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0009",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0009_0010",
+        "source_shard_index": 9,
+        "target_shard_index": 10,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0009",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0010",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0010_0018",
+        "source_shard_index": 10,
+        "target_shard_index": 18,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0010",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0010_0011",
+        "source_shard_index": 10,
+        "target_shard_index": 11,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0010",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0011",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0011_0019",
+        "source_shard_index": 11,
+        "target_shard_index": 19,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0011",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0011_0012",
+        "source_shard_index": 11,
+        "target_shard_index": 12,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0011",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0012",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0012_0020",
+        "source_shard_index": 12,
+        "target_shard_index": 20,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0012",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0012_0013",
+        "source_shard_index": 12,
+        "target_shard_index": 13,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0012",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0013_0021",
+        "source_shard_index": 13,
+        "target_shard_index": 21,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0013_0014",
+        "source_shard_index": 13,
+        "target_shard_index": 14,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0014",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0014_0022",
+        "source_shard_index": 14,
+        "target_shard_index": 22,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0014",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0014_0015",
+        "source_shard_index": 14,
+        "target_shard_index": 15,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0014",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0015",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0015_0016",
+        "source_shard_index": 15,
+        "target_shard_index": 16,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0015",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0015_0023",
+        "source_shard_index": 15,
+        "target_shard_index": 23,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0015",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0008_0016",
+        "source_shard_index": 8,
+        "target_shard_index": 16,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0016_0017",
+        "source_shard_index": 16,
+        "target_shard_index": 17,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0017_0018",
+        "source_shard_index": 17,
+        "target_shard_index": 18,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0018_0019",
+        "source_shard_index": 18,
+        "target_shard_index": 19,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0019_0020",
+        "source_shard_index": 19,
+        "target_shard_index": 20,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0020_0021",
+        "source_shard_index": 20,
+        "target_shard_index": 21,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0021_0022",
+        "source_shard_index": 21,
+        "target_shard_index": 22,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0022_0023",
+        "source_shard_index": 22,
+        "target_shard_index": 23,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0023_0024",
+        "source_shard_index": 23,
+        "target_shard_index": 24,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0024",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0016_0024",
+        "source_shard_index": 16,
+        "target_shard_index": 24,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0024",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0024_0025",
+        "source_shard_index": 24,
+        "target_shard_index": 25,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0024",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0025",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0017_0025",
+        "source_shard_index": 17,
+        "target_shard_index": 25,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0025",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0025_0026",
+        "source_shard_index": 25,
+        "target_shard_index": 26,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0025",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0026",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0018_0026",
+        "source_shard_index": 18,
+        "target_shard_index": 26,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0026",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0026_0027",
+        "source_shard_index": 26,
+        "target_shard_index": 27,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0026",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0027",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0019_0027",
+        "source_shard_index": 19,
+        "target_shard_index": 27,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0027",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0027_0028",
+        "source_shard_index": 27,
+        "target_shard_index": 28,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0027",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0028",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0020_0028",
+        "source_shard_index": 20,
+        "target_shard_index": 28,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0028",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0028_0029",
+        "source_shard_index": 28,
+        "target_shard_index": 29,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0028",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0029",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0021_0029",
+        "source_shard_index": 21,
+        "target_shard_index": 29,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0029",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0029_0030",
+        "source_shard_index": 29,
+        "target_shard_index": 30,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0029",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0030",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0022_0030",
+        "source_shard_index": 22,
+        "target_shard_index": 30,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0030",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0030_0031",
+        "source_shard_index": 30,
+        "target_shard_index": 31,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0030",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0031",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0031_0032",
+        "source_shard_index": 31,
+        "target_shard_index": 32,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0031",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0032",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0023_0031",
+        "source_shard_index": 23,
+        "target_shard_index": 31,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0031",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0032_0040",
+        "source_shard_index": 32,
+        "target_shard_index": 40,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0032",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0032_0033",
+        "source_shard_index": 32,
+        "target_shard_index": 33,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0032",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0033",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0033_0041",
+        "source_shard_index": 33,
+        "target_shard_index": 41,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0033",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0033_0034",
+        "source_shard_index": 33,
+        "target_shard_index": 34,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0033",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0034",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0034_0042",
+        "source_shard_index": 34,
+        "target_shard_index": 42,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0034",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0034_0035",
+        "source_shard_index": 34,
+        "target_shard_index": 35,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0034",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0035",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0035_0043",
+        "source_shard_index": 35,
+        "target_shard_index": 43,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0035",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0035_0036",
+        "source_shard_index": 35,
+        "target_shard_index": 36,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0035",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0036",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0036_0044",
+        "source_shard_index": 36,
+        "target_shard_index": 44,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0036",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0036_0037",
+        "source_shard_index": 36,
+        "target_shard_index": 37,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0036",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0037",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0037_0045",
+        "source_shard_index": 37,
+        "target_shard_index": 45,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0037",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0037_0038",
+        "source_shard_index": 37,
+        "target_shard_index": 38,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0037",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0038",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0038_0046",
+        "source_shard_index": 38,
+        "target_shard_index": 46,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0038",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0038_0039",
+        "source_shard_index": 38,
+        "target_shard_index": 39,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0038",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0039",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0039_0040",
+        "source_shard_index": 39,
+        "target_shard_index": 40,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0039",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0039_0047",
+        "source_shard_index": 39,
+        "target_shard_index": 47,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0039",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0040_0048",
+        "source_shard_index": 40,
+        "target_shard_index": 48,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0048",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0040_0041",
+        "source_shard_index": 40,
+        "target_shard_index": 41,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0041_0049",
+        "source_shard_index": 41,
+        "target_shard_index": 49,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0049",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0041_0042",
+        "source_shard_index": 41,
+        "target_shard_index": 42,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0042_0050",
+        "source_shard_index": 42,
+        "target_shard_index": 50,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0042_0043",
+        "source_shard_index": 42,
+        "target_shard_index": 43,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0043_0051",
+        "source_shard_index": 43,
+        "target_shard_index": 51,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0051",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0043_0044",
+        "source_shard_index": 43,
+        "target_shard_index": 44,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0044_0052",
+        "source_shard_index": 44,
+        "target_shard_index": 52,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0052",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0044_0045",
+        "source_shard_index": 44,
+        "target_shard_index": 45,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0045_0053",
+        "source_shard_index": 45,
+        "target_shard_index": 53,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0053",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0045_0046",
+        "source_shard_index": 45,
+        "target_shard_index": 46,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0046_0054",
+        "source_shard_index": 46,
+        "target_shard_index": 54,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0054",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0046_0047",
+        "source_shard_index": 46,
+        "target_shard_index": 47,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0047_0048",
+        "source_shard_index": 47,
+        "target_shard_index": 48,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0048",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0047_0055",
+        "source_shard_index": 47,
+        "target_shard_index": 55,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0048_0049",
+        "source_shard_index": 48,
+        "target_shard_index": 49,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0048",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0049",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0049_0050",
+        "source_shard_index": 49,
+        "target_shard_index": 50,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0049",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0050_0051",
+        "source_shard_index": 50,
+        "target_shard_index": 51,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0051",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0051_0052",
+        "source_shard_index": 51,
+        "target_shard_index": 52,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0051",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0052",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0052_0053",
+        "source_shard_index": 52,
+        "target_shard_index": 53,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0052",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0053",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0053_0054",
+        "source_shard_index": 53,
+        "target_shard_index": 54,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0053",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0054",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0054_0055",
+        "source_shard_index": 54,
+        "target_shard_index": 55,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0054",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0055_0056",
+        "source_shard_index": 55,
+        "target_shard_index": 56,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0056",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0055_0060",
+        "source_shard_index": 55,
+        "target_shard_index": 60,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0056_0057",
+        "source_shard_index": 56,
+        "target_shard_index": 57,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0056",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0057",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0056_0061",
+        "source_shard_index": 56,
+        "target_shard_index": 61,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0056",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0061",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0057_0058",
+        "source_shard_index": 57,
+        "target_shard_index": 58,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0057",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0058",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0057_0062",
+        "source_shard_index": 57,
+        "target_shard_index": 62,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0057",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0050_0058",
+        "source_shard_index": 50,
+        "target_shard_index": 58,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0058",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0058_0059",
+        "source_shard_index": 58,
+        "target_shard_index": 59,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0058",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0059",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0059_0060",
+        "source_shard_index": 59,
+        "target_shard_index": 60,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0059",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0059_0062",
+        "source_shard_index": 59,
+        "target_shard_index": 62,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0059",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0060_0061",
+        "source_shard_index": 60,
+        "target_shard_index": 61,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0061",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0060_0063",
+        "source_shard_index": 60,
+        "target_shard_index": 63,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0063",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0061_0062",
+        "source_shard_index": 61,
+        "target_shard_index": 62,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0061",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      },
+      {
+        "link_id": "seam_0062_0063",
+        "source_shard_index": 62,
+        "target_shard_index": 63,
+        "source_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+        "target_shard_id": "oph_distributed_federated_4m64shards_20260621_shard0063",
+        "seam_halo_width": 2048,
+        "overlap_model": "core_halo_observer_support_overlap",
+        "claim_boundary": "Cross-shard overlap edge in the global atlas. This is a reducer-visible observer-overlap seam, not a hidden independent-universe join."
+      }
+    ],
+    "unified_universe_receipt_boundary": "The run is one distributed atlas of bounded screen charts. Observers may overlap across neighboring shard seams through the declared halo. The first implementation audits seam compatibility in the reducer; a later stronger kernel should update cross-shard halo state during every repair cycle."
+  },
+  "shards": [
+    {
+      "shard_index": 0,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0000",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0000.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0000",
+      "seed": 20260752,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        0,
+        65536
+      ],
+      "global_observer_range": [
+        0,
+        256
+      ],
+      "atlas_center": [
+        0.17608480733726006,
+        0.0,
+        0.984375
+      ],
+      "seam_neighbor_indices": [
+        1,
+        3,
+        63
+      ]
+    },
+    {
+      "shard_index": 1,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0001.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0001",
+      "seed": 20261761,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        65536,
+        131072
+      ],
+      "global_observer_range": [
+        256,
+        512
+      ],
+      "atlas_center": [
+        -0.22311073318820154,
+        0.20438770782809604,
+        0.953125
+      ],
+      "seam_neighbor_indices": [
+        0,
+        2,
+        4,
+        6
+      ]
+    },
+    {
+      "shard_index": 2,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0002",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0002.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0002",
+      "seed": 20262770,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        131072,
+        196608
+      ],
+      "global_observer_range": [
+        512,
+        768
+      ],
+      "atlas_center": [
+        0.03387636667527373,
+        -0.38600372557254214,
+        0.921875
+      ],
+      "seam_neighbor_indices": [
+        1,
+        3,
+        7
+      ]
+    },
+    {
+      "shard_index": 3,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0003.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0003",
+      "seed": 20263779,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        196608,
+        262144
+      ],
+      "global_observer_range": [
+        768,
+        1024
+      ],
+      "atlas_center": [
+        0.27668057899237797,
+        0.360880820470474,
+        0.890625
+      ],
+      "seam_neighbor_indices": [
+        0,
+        2,
+        4,
+        8
+      ]
+    },
+    {
+      "shard_index": 4,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0004",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0004.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0004",
+      "seed": 20264788,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        262144,
+        327680
+      ],
+      "global_observer_range": [
+        1024,
+        1280
+      ],
+      "atlas_center": [
+        -0.5035291840643238,
+        -0.08906722276189095,
+        0.859375
+      ],
+      "seam_neighbor_indices": [
+        1,
+        3,
+        5
+      ]
+    },
+    {
+      "shard_index": 5,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0005",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0005.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0005",
+      "seed": 20265797,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        327680,
+        393216
+      ],
+      "global_observer_range": [
+        1280,
+        1536
+      ],
+      "atlas_center": [
+        0.4729615227533923,
+        -0.30085940631762265,
+        0.828125
+      ],
+      "seam_neighbor_indices": [
+        4,
+        6,
+        13
+      ]
+    },
+    {
+      "shard_index": 6,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0006",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0006.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0006",
+      "seed": 20266806,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        393216,
+        458752
+      ],
+      "global_observer_range": [
+        1536,
+        1792
+      ],
+      "atlas_center": [
+        -0.1568384393943196,
+        0.5834311770066409,
+        0.796875
+      ],
+      "seam_neighbor_indices": [
+        1,
+        5,
+        7
+      ]
+    },
+    {
+      "shard_index": 7,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0007",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0007.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0007",
+      "seed": 20267815,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        458752,
+        524288
+      ],
+      "global_observer_range": [
+        1792,
+        2048
+      ],
+      "atlas_center": [
+        -0.296495567066451,
+        -0.57088417221442,
+        0.765625
+      ],
+      "seam_neighbor_indices": [
+        2,
+        6,
+        8
+      ]
+    },
+    {
+      "shard_index": 8,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0008.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0008",
+      "seed": 20268824,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        524288,
+        589824
+      ],
+      "global_observer_range": [
+        2048,
+        2304
+      ],
+      "atlas_center": [
+        0.6375586537073916,
+        0.2328353977766658,
+        0.734375
+      ],
+      "seam_neighbor_indices": [
+        3,
+        7,
+        9,
+        16
+      ]
+    },
+    {
+      "shard_index": 9,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0009",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0009.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0009",
+      "seed": 20269833,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        589824,
+        655360
+      ],
+      "global_observer_range": [
+        2304,
+        2560
+      ],
+      "atlas_center": [
+        -0.657270942922291,
+        0.27131189057069055,
+        0.703125
+      ],
+      "seam_neighbor_indices": [
+        8,
+        10,
+        17
+      ]
+    },
+    {
+      "shard_index": 10,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0010",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0010.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0010",
+      "seed": 20270842,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        655360,
+        720896
+      ],
+      "global_observer_range": [
+        2560,
+        2816
+      ],
+      "atlas_center": [
+        0.3139277056945738,
+        -0.6708452727509833,
+        0.671875
+      ],
+      "seam_neighbor_indices": [
+        9,
+        11,
+        18
+      ]
+    },
+    {
+      "shard_index": 11,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0011",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0011.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0011",
+      "seed": 20271851,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        720896,
+        786432
+      ],
+      "global_observer_range": [
+        2816,
+        3072
+      ],
+      "atlas_center": [
+        0.22980628205915257,
+        0.7326586395458319,
+        0.640625
+      ],
+      "seam_neighbor_indices": [
+        10,
+        12,
+        19
+      ]
+    },
+    {
+      "shard_index": 12,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0012",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0012.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0012",
+      "seed": 20272860,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        786432,
+        851968
+      ],
+      "global_observer_range": [
+        3072,
+        3328
+      ],
+      "atlas_center": [
+        -0.6860105272412337,
+        -0.3975571228002395,
+        0.609375
+      ],
+      "seam_neighbor_indices": [
+        11,
+        13,
+        20
+      ]
+    },
+    {
+      "shard_index": 13,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0013.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0013",
+      "seed": 20273869,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        851968,
+        917504
+      ],
+      "global_observer_range": [
+        3328,
+        3584
+      ],
+      "atlas_center": [
+        0.7969168510214679,
+        -0.1751999341695868,
+        0.578125
+      ],
+      "seam_neighbor_indices": [
+        5,
+        12,
+        14,
+        21
+      ]
+    },
+    {
+      "shard_index": 14,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0014",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0014.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0014",
+      "seed": 20274878,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        917504,
+        983040
+      ],
+      "global_observer_range": [
+        3584,
+        3840
+      ],
+      "atlas_center": [
+        -0.48150656533876957,
+        0.6848935405671901,
+        0.546875
+      ],
+      "seam_neighbor_indices": [
+        13,
+        15,
+        22
+      ]
+    },
+    {
+      "shard_index": 15,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0015",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0015.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0015",
+      "seed": 20275887,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        983040,
+        1048576
+      ],
+      "global_observer_range": [
+        3840,
+        4096
+      ],
+      "atlas_center": [
+        -0.11010980532366277,
+        -0.8497097681835751,
+        0.515625
+      ],
+      "seam_neighbor_indices": [
+        14,
+        16,
+        23
+      ]
+    },
+    {
+      "shard_index": 16,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0016.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0016",
+      "seed": 20276896,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1048576,
+        1114112
+      ],
+      "global_observer_range": [
+        4096,
+        4352
+      ],
+      "atlas_center": [
+        0.6689611871564978,
+        0.5638011967468403,
+        0.484375
+      ],
+      "seam_neighbor_indices": [
+        8,
+        15,
+        17,
+        24
+      ]
+    },
+    {
+      "shard_index": 17,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0017.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0017",
+      "seed": 20277905,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1114112,
+        1179648
+      ],
+      "global_observer_range": [
+        4352,
+        4608
+      ],
+      "atlas_center": [
+        -0.8906857415156827,
+        0.03683265175979679,
+        0.453125
+      ],
+      "seam_neighbor_indices": [
+        9,
+        16,
+        18,
+        25
+      ]
+    },
+    {
+      "shard_index": 18,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0018.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0018",
+      "seed": 20278914,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1179648,
+        1245184
+      ],
+      "global_observer_range": [
+        4608,
+        4864
+      ],
+      "atlas_center": [
+        0.6426630271806866,
+        -0.6395355485584489,
+        0.421875
+      ],
+      "seam_neighbor_indices": [
+        10,
+        17,
+        19,
+        26
+      ]
+    },
+    {
+      "shard_index": 19,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0019.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0019",
+      "seed": 20279923,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1245184,
+        1310720
+      ],
+      "global_observer_range": [
+        4864,
+        5120
+      ],
+      "atlas_center": [
+        -0.042521530715078804,
+        0.9195673052042719,
+        0.390625
+      ],
+      "seam_neighbor_indices": [
+        11,
+        18,
+        20,
+        27
+      ]
+    },
+    {
+      "shard_index": 20,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0020.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0020",
+      "seed": 20280932,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1310720,
+        1376256
+      ],
+      "global_observer_range": [
+        5120,
+        5376
+      ],
+      "atlas_center": [
+        -0.5979054381466168,
+        -0.7164905417447618,
+        0.359375
+      ],
+      "seam_neighbor_indices": [
+        12,
+        19,
+        21,
+        28
+      ]
+    },
+    {
+      "shard_index": 21,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0021.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0021",
+      "seed": 20281941,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1376256,
+        1441792
+      ],
+      "global_observer_range": [
+        5376,
+        5632
+      ],
+      "atlas_center": [
+        0.9361981733488518,
+        0.12596414010849727,
+        0.328125
+      ],
+      "seam_neighbor_indices": [
+        13,
+        20,
+        22,
+        29
+      ]
+    },
+    {
+      "shard_index": 22,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0022.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0022",
+      "seed": 20282950,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1441792,
+        1507328
+      ],
+      "global_observer_range": [
+        5632,
+        5888
+      ],
+      "atlas_center": [
+        -0.7838510465201524,
+        0.5453831416942239,
+        0.296875
+      ],
+      "seam_neighbor_indices": [
+        14,
+        21,
+        23,
+        30
+      ]
+    },
+    {
+      "shard_index": 23,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0023.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0023",
+      "seed": 20283959,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1507328,
+        1572864
+      ],
+      "global_observer_range": [
+        5888,
+        6144
+      ],
+      "atlas_center": [
+        0.21159681451541415,
+        -0.940569055126698,
+        0.265625
+      ],
+      "seam_neighbor_indices": [
+        15,
+        22,
+        24,
+        31
+      ]
+    },
+    {
+      "shard_index": 24,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0024",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0024.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0024",
+      "seed": 20284968,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1572864,
+        1638400
+      ],
+      "global_observer_range": [
+        6144,
+        6400
+      ],
+      "atlas_center": [
+        0.4833325303255987,
+        0.8434797119694427,
+        0.234375
+      ],
+      "seam_neighbor_indices": [
+        16,
+        23,
+        25
+      ]
+    },
+    {
+      "shard_index": 25,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0025",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0025.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0025",
+      "seed": 20285977,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1638400,
+        1703936
+      ],
+      "global_observer_range": [
+        6400,
+        6656
+      ],
+      "atlas_center": [
+        -0.9328318142586943,
+        -0.2975987914656791,
+        0.203125
+      ],
+      "seam_neighbor_indices": [
+        17,
+        24,
+        26
+      ]
+    },
+    {
+      "shard_index": 26,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0026",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0026.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0026",
+      "seed": 20286986,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1703936,
+        1769472
+      ],
+      "global_observer_range": [
+        6656,
+        6912
+      ],
+      "atlas_center": [
+        0.8942820818781708,
+        -0.41318100441167965,
+        0.171875
+      ],
+      "seam_neighbor_indices": [
+        18,
+        25,
+        27
+      ]
+    },
+    {
+      "shard_index": 27,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0027",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0027.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0027",
+      "seed": 20287995,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1769472,
+        1835008
+      ],
+      "global_observer_range": [
+        6912,
+        7168
+      ],
+      "atlas_center": [
+        -0.38222476698907004,
+        0.9133065404754042,
+        0.140625
+      ],
+      "seam_neighbor_indices": [
+        19,
+        26,
+        28
+      ]
+    },
+    {
+      "shard_index": 28,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0028",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0028.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0028",
+      "seed": 20289004,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1835008,
+        1900544
+      ],
+      "global_observer_range": [
+        7168,
+        7424
+      ],
+      "atlas_center": [
+        -0.3364217546663529,
+        -0.9353381807465213,
+        0.109375
+      ],
+      "seam_neighbor_indices": [
+        20,
+        27,
+        29
+      ]
+    },
+    {
+      "shard_index": 29,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0029",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0029.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0029",
+      "seed": 20290013,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        1900544,
+        1966080
+      ],
+      "global_observer_range": [
+        7424,
+        7680
+      ],
+      "atlas_center": [
+        0.8824839190100603,
+        0.4638088152069186,
+        0.078125
+      ],
+      "seam_neighbor_indices": [
+        21,
+        28,
+        30
+      ]
+    },
+    {
+      "shard_index": 30,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0030",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0030.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0030",
+      "seed": 20291022,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        1966080,
+        2031616
+      ],
+      "global_observer_range": [
+        7680,
+        7936
+      ],
+      "atlas_center": [
+        -0.9659070760328131,
+        0.25461000539008943,
+        0.046875
+      ],
+      "seam_neighbor_indices": [
+        22,
+        29,
+        31
+      ]
+    },
+    {
+      "shard_index": 31,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0031",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0031.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0031",
+      "seed": 20292031,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2031616,
+        2097152
+      ],
+      "global_observer_range": [
+        7936,
+        8192
+      ],
+      "atlas_center": [
+        0.5407717140962143,
+        -0.8410242639831756,
+        0.015625
+      ],
+      "seam_neighbor_indices": [
+        23,
+        30,
+        32
+      ]
+    },
+    {
+      "shard_index": 32,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0032",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0032.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0032",
+      "seed": 20293040,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2097152,
+        2162688
+      ],
+      "global_observer_range": [
+        8192,
+        8448
+      ],
+      "atlas_center": [
+        0.16935549543945927,
+        0.9854311622530797,
+        -0.015625
+      ],
+      "seam_neighbor_indices": [
+        31,
+        33,
+        40
+      ]
+    },
+    {
+      "shard_index": 33,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0033",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0033.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0033",
+      "seed": 20294049,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2162688,
+        2228224
+      ],
+      "global_observer_range": [
+        8448,
+        8704
+      ],
+      "atlas_center": [
+        -0.7897540927167819,
+        -0.6116299595442434,
+        -0.046875
+      ],
+      "seam_neighbor_indices": [
+        32,
+        34,
+        41
+      ]
+    },
+    {
+      "shard_index": 34,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0034",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0034.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0034",
+      "seed": 20295058,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2228224,
+        2293760
+      ],
+      "global_observer_range": [
+        8704,
+        8960
+      ],
+      "atlas_center": [
+        0.9935396814284652,
+        -0.0823127317128023,
+        -0.078125
+      ],
+      "seam_neighbor_indices": [
+        33,
+        35,
+        42
+      ]
+    },
+    {
+      "shard_index": 35,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0035",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0035.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0035",
+      "seed": 20296067,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2293760,
+        2359296
+      ],
+      "global_observer_range": [
+        8960,
+        9216
+      ],
+      "atlas_center": [
+        -0.6750052493244947,
+        0.729660895731282,
+        -0.109375
+      ],
+      "seam_neighbor_indices": [
+        34,
+        36,
+        43
+      ]
+    },
+    {
+      "shard_index": 36,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0036",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0036.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0036",
+      "seed": 20297076,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2359296,
+        2424832
+      ],
+      "global_observer_range": [
+        9216,
+        9472
+      ],
+      "atlas_center": [
+        0.004829801391683504,
+        -0.9900511514025508,
+        -0.140625
+      ],
+      "seam_neighbor_indices": [
+        35,
+        37,
+        44
+      ]
+    },
+    {
+      "shard_index": 37,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0037",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0037.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0037",
+      "seed": 20298085,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2424832,
+        2490368
+      ],
+      "global_observer_range": [
+        9472,
+        9728
+      ],
+      "atlas_center": [
+        0.6618866869707114,
+        0.7296334682468557,
+        -0.171875
+      ],
+      "seam_neighbor_indices": [
+        36,
+        38,
+        45
+      ]
+    },
+    {
+      "shard_index": 38,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0038",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0038.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0038",
+      "seed": 20299094,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2490368,
+        2555904
+      ],
+      "global_observer_range": [
+        9728,
+        9984
+      ],
+      "atlas_center": [
+        -0.9749744764429643,
+        -0.09036041533640489,
+        -0.203125
+      ],
+      "seam_neighbor_indices": [
+        37,
+        39,
+        46
+      ]
+    },
+    {
+      "shard_index": 39,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0039",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0039.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0039",
+      "seed": 20300103,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2555904,
+        2621440
+      ],
+      "global_observer_range": [
+        9984,
+        10240
+      ],
+      "atlas_center": [
+        0.7743722856595951,
+        -0.5877209563877525,
+        -0.234375
+      ],
+      "seam_neighbor_indices": [
+        38,
+        40,
+        47
+      ]
+    },
+    {
+      "shard_index": 40,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0040.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0040",
+      "seed": 20301112,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2621440,
+        2686976
+      ],
+      "global_observer_range": [
+        10240,
+        10496
+      ],
+      "atlas_center": [
+        -0.17255385351723249,
+        0.9485085803572646,
+        -0.265625
+      ],
+      "seam_neighbor_indices": [
+        32,
+        39,
+        41,
+        48
+      ]
+    },
+    {
+      "shard_index": 41,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0041.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0041",
+      "seed": 20302121,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2686976,
+        2752512
+      ],
+      "global_observer_range": [
+        10496,
+        10752
+      ],
+      "atlas_center": [
+        -0.5085937894852695,
+        -0.8082064041270729,
+        -0.296875
+      ],
+      "seam_neighbor_indices": [
+        33,
+        40,
+        42,
+        49
+      ]
+    },
+    {
+      "shard_index": 42,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0042.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0042",
+      "seed": 20303130,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2752512,
+        2818048
+      ],
+      "global_observer_range": [
+        10752,
+        11008
+      ],
+      "atlas_center": [
+        0.9110404352134207,
+        0.24967841272553218,
+        -0.328125
+      ],
+      "seam_neighbor_indices": [
+        34,
+        41,
+        43,
+        50
+      ]
+    },
+    {
+      "shard_index": 43,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0043.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0043",
+      "seed": 20304139,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2818048,
+        2883584
+      ],
+      "global_observer_range": [
+        11008,
+        11264
+      ],
+      "atlas_center": [
+        -0.8302492360063659,
+        0.42607020018518765,
+        -0.359375
+      ],
+      "seam_neighbor_indices": [
+        35,
+        42,
+        44,
+        51
+      ]
+    },
+    {
+      "shard_index": 44,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0044.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0044",
+      "seed": 20305148,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        2883584,
+        2949120
+      ],
+      "global_observer_range": [
+        11264,
+        11520
+      ],
+      "atlas_center": [
+        0.3199986260206788,
+        -0.863141349212212,
+        -0.390625
+      ],
+      "seam_neighbor_indices": [
+        36,
+        43,
+        45,
+        52
+      ]
+    },
+    {
+      "shard_index": 45,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0045.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0045",
+      "seed": 20306157,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        2949120,
+        3014656
+      ],
+      "global_observer_range": [
+        11520,
+        11776
+      ],
+      "atlas_center": [
+        0.34184723273622036,
+        0.8397392177608405,
+        -0.421875
+      ],
+      "seam_neighbor_indices": [
+        37,
+        44,
+        46,
+        53
+      ]
+    },
+    {
+      "shard_index": 46,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0046.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0046",
+      "seed": 20307166,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3014656,
+        3080192
+      ],
+      "global_observer_range": [
+        11776,
+        12032
+      ],
+      "atlas_center": [
+        -0.8055612930008001,
+        -0.3817705300227861,
+        -0.453125
+      ],
+      "seam_neighbor_indices": [
+        38,
+        45,
+        47,
+        54
+      ]
+    },
+    {
+      "shard_index": 47,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0047.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0047",
+      "seed": 20308175,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3080192,
+        3145728
+      ],
+      "global_observer_range": [
+        12032,
+        12288
+      ],
+      "atlas_center": [
+        0.8360278347780077,
+        -0.25775631680212285,
+        -0.484375
+      ],
+      "seam_neighbor_indices": [
+        39,
+        46,
+        48,
+        55
+      ]
+    },
+    {
+      "shard_index": 48,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0048",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0048.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0048",
+      "seed": 20309184,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3145728,
+        3211264
+      ],
+      "global_observer_range": [
+        12288,
+        12544
+      ],
+      "atlas_center": [
+        -0.4332244981219977,
+        0.7392208016566791,
+        -0.515625
+      ],
+      "seam_neighbor_indices": [
+        40,
+        47,
+        49
+      ]
+    },
+    {
+      "shard_index": 49,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0049",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0049.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0049",
+      "seed": 20310193,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3211264,
+        3276800
+      ],
+      "global_observer_range": [
+        12544,
+        12800
+      ],
+      "atlas_center": [
+        -0.1757751277808731,
+        -0.818554114783267,
+        -0.546875
+      ],
+      "seam_neighbor_indices": [
+        41,
+        48,
+        50
+      ]
+    },
+    {
+      "shard_index": 50,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0050.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0050",
+      "seed": 20311202,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3276800,
+        3342336
+      ],
+      "global_observer_range": [
+        12800,
+        13056
+      ],
+      "atlas_center": [
+        0.6651993770836362,
+        0.4725264787316605,
+        -0.578125
+      ],
+      "seam_neighbor_indices": [
+        42,
+        49,
+        51,
+        58
+      ]
+    },
+    {
+      "shard_index": 51,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0051",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0051.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0051",
+      "seed": 20312211,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3342336,
+        3407872
+      ],
+      "global_observer_range": [
+        13056,
+        13312
+      ],
+      "atlas_center": [
+        -0.7867953829706278,
+        0.09805679329400425,
+        -0.609375
+      ],
+      "seam_neighbor_indices": [
+        43,
+        50,
+        52
+      ]
+    },
+    {
+      "shard_index": 52,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0052",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0052.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0052",
+      "seed": 20313220,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3407872,
+        3473408
+      ],
+      "global_observer_range": [
+        13312,
+        13568
+      ],
+      "atlas_center": [
+        0.497699465479315,
+        -0.5847177536526527,
+        -0.640625
+      ],
+      "seam_neighbor_indices": [
+        44,
+        51,
+        53
+      ]
+    },
+    {
+      "shard_index": 53,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0053",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0053.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0053",
+      "seed": 20314229,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3473408,
+        3538944
+      ],
+      "global_observer_range": [
+        13568,
+        13824
+      ],
+      "atlas_center": [
+        0.02699220371529747,
+        0.7401725510403583,
+        -0.671875
+      ],
+      "seam_neighbor_indices": [
+        45,
+        52,
+        54
+      ]
+    },
+    {
+      "shard_index": 54,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0054",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0054.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0054",
+      "seed": 20315238,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3538944,
+        3604480
+      ],
+      "global_observer_range": [
+        13824,
+        14080
+      ],
+      "atlas_center": [
+        -0.4991071405073964,
+        -0.5064654940561399,
+        -0.703125
+      ],
+      "seam_neighbor_indices": [
+        46,
+        53,
+        55
+      ]
+    },
+    {
+      "shard_index": 55,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0055.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0055",
+      "seed": 20316247,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3604480,
+        3670016
+      ],
+      "global_observer_range": [
+        14080,
+        14336
+      ],
+      "atlas_center": [
+        0.6778584573739476,
+        0.03465935864398168,
+        -0.734375
+      ],
+      "seam_neighbor_indices": [
+        47,
+        54,
+        56,
+        60
+      ]
+    },
+    {
+      "shard_index": 56,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0056",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0056.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0056",
+      "seed": 20317256,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3670016,
+        3735552
+      ],
+      "global_observer_range": [
+        14336,
+        14592
+      ],
+      "atlas_center": [
+        -0.4959101352871499,
+        0.40974564926851953,
+        -0.765625
+      ],
+      "seam_neighbor_indices": [
+        55,
+        57,
+        61
+      ]
+    },
+    {
+      "shard_index": 57,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0057",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0057.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0057",
+      "seed": 20318265,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3735552,
+        3801088
+      ],
+      "global_observer_range": [
+        14592,
+        14848
+      ],
+      "atlas_center": [
+        0.08348071572637865,
+        -0.5983487314909354,
+        -0.796875
+      ],
+      "seam_neighbor_indices": [
+        56,
+        58,
+        62
+      ]
+    },
+    {
+      "shard_index": 58,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0058",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0058.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0058",
+      "seed": 20319274,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3801088,
+        3866624
+      ],
+      "global_observer_range": [
+        14848,
+        15104
+      ],
+      "atlas_center": [
+        0.3178957953001336,
+        0.4616830597991392,
+        -0.828125
+      ],
+      "seam_neighbor_indices": [
+        50,
+        57,
+        59
+      ]
+    },
+    {
+      "shard_index": 59,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0059",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0059.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0059",
+      "seed": 20320283,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3866624,
+        3932160
+      ],
+      "global_observer_range": [
+        15104,
+        15360
+      ],
+      "atlas_center": [
+        -0.49832414649111745,
+        -0.11466322164887625,
+        -0.859375
+      ],
+      "seam_neighbor_indices": [
+        58,
+        60,
+        62
+      ]
+    },
+    {
+      "shard_index": 60,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0060.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0060",
+      "seed": 20321292,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        3932160,
+        3997696
+      ],
+      "global_observer_range": [
+        15360,
+        15616
+      ],
+      "atlas_center": [
+        0.3956506863211547,
+        -0.2241598621265619,
+        -0.890625
+      ],
+      "seam_neighbor_indices": [
+        55,
+        59,
+        61,
+        63
+      ]
+    },
+    {
+      "shard_index": 61,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0061",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0061.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0061",
+      "seed": 20322301,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        3997696,
+        4063232
+      ],
+      "global_observer_range": [
+        15616,
+        15872
+      ],
+      "atlas_center": [
+        -0.11957042111618797,
+        0.36857753427073864,
+        -0.921875
+      ],
+      "seam_neighbor_indices": [
+        56,
+        60,
+        62
+      ]
+    },
+    {
+      "shard_index": 62,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0062.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0062",
+      "seed": 20323310,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 0,
+      "global_patch_range": [
+        4063232,
+        4128768
+      ],
+      "global_observer_range": [
+        15872,
+        16128
+      ],
+      "atlas_center": [
+        -0.12556607825354404,
+        -0.27529237978379434,
+        -0.953125
+      ],
+      "seam_neighbor_indices": [
+        57,
+        59,
+        61,
+        63
+      ]
+    },
+    {
+      "shard_index": 63,
+      "shard_id": "oph_distributed_federated_4m64shards_20260621_shard0063",
+      "config_path": "configs/oph_distributed_federated_4m64shards_20260621_shard0063.yml",
+      "run_id": "oph_distributed_federated_4m64shards_20260621_shard0063",
+      "seed": 20324319,
+      "patch_count": 65536,
+      "observer_count": 256,
+      "worker_index": 1,
+      "global_patch_range": [
+        4128768,
+        4194304
+      ],
+      "global_observer_range": [
+        16128,
+        16384
+      ],
+      "atlas_center": [
+        0.16209996356578596,
+        0.06877107812860624,
+        -0.984375
+      ],
+      "seam_neighbor_indices": [
+        0,
+        60,
+        62
+      ]
+    }
+  ]
+}
