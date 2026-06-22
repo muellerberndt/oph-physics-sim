@@ -40,6 +40,16 @@ def test_export_measurement_pack_copies_static_galaxy_tables(tmp_path: Path) -> 
 def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
+    (run / "emergence_status_report.json").write_text(
+        json.dumps(
+            {
+                "BW_KMS_BRANCH_REPLAY_RECEIPT": True,
+                "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": True,
+                "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+            }
+        ),
+        encoding="utf-8",
+    )
     (run / "bulk_proof_certificate_report.json").write_text(
         json.dumps({"chart_level_3p1_lorentz_kinematics_established": True}),
         encoding="utf-8",
@@ -50,16 +60,41 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
         encoding="utf-8",
     )
     (run / "comparable_data_snapshot.md").write_text("# snapshot\n", encoding="utf-8")
-    (run / "paper_3d_bulk_chart_report.json").write_text(json.dumps({"receipt": True}), encoding="utf-8")
-    (run / "conformal_h3_spatial_chart_report.json").write_text(json.dumps({"receipt": True}), encoding="utf-8")
-    (run / "transition_selection_report.json").write_text(json.dumps({"two_pi_selected": True}), encoding="utf-8")
+    (run / "paper_3d_bulk_chart_report.json").write_text(
+        json.dumps(
+            {
+                "paper_theorem_3d_bulk_chart_receipt": True,
+                "bw_2pi_cap_flow_receipt": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "conformal_h3_spatial_chart_report.json").write_text(
+        json.dumps({"conformal_h3_spatial_chart_receipt": True}),
+        encoding="utf-8",
+    )
+    (run / "transition_selection_report.json").write_text(
+        json.dumps(
+            {
+                "primary_source": "kms_collar_transport_response",
+                "two_pi_selected": True,
+                "response_degenerate": False,
+            }
+        ),
+        encoding="utf-8",
+    )
     (run / "observer_modular_experience_report.json").write_text(
         json.dumps(
             {
                 "observer_modular_time_receipt": True,
+                "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True,
+                "observer_facing_3p1d_h3_experience_receipt": True,
+                "observer_facing_populated_h3_experience_receipt": False,
+                "observer_h3_object_population_receipt": False,
                 "observer_count": 16,
                 "observer_relative_time_count": 2,
-                "blockers": ["observer_h3_object_population_receipt"],
+                "blockers": [],
+                "populated_h3_experience_blockers": ["observer_h3_object_population_receipt"],
             }
         ),
         encoding="utf-8",
@@ -69,15 +104,35 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
         + "\n",
         encoding="utf-8",
     )
+    timeline = run / "universe_timeline"
+    timeline.mkdir()
+    (timeline / "visualization_payload.json").write_text(
+        json.dumps(
+            {
+                "schema": "oph_universe_timeline_visualization_payload_v1",
+                "subjectiveObserverCameras": [],
+                "comparableObservations": {"datasets": []},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (timeline / "oph_universe_timeline_viewer.html").write_text("<html>viewer</html>", encoding="utf-8")
+    (timeline / "universe_timeline_summary.json").write_text(json.dumps({"ok": True}), encoding="utf-8")
+    (timeline / "VISUALIZATION_INSTRUCTIONS.md").write_text("# instructions\n", encoding="utf-8")
+    (timeline / "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md").write_text("# brief\n", encoding="utf-8")
 
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
 
     assert report["claims"]["chart_level_3p1"] is True
     assert report["claims"]["observer_modular_time_receipt"] is True
+    assert report["claims"]["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert report["claims"]["observer_facing_populated_h3_experience_receipt"] is False
     assert report["claims"]["observer_modular_time_observer_count"] == 16
-    assert "observer_h3_object_population_receipt" in report["claims"]["observer_modular_experience_blockers"]
-    assert report["claims"]["observer_modular_experience_source_blockers"] == [
+    assert report["claims"]["observer_modular_experience_blockers"] == []
+    assert "observer_h3_object_population_receipt" in report["claims"]["observer_populated_h3_experience_blockers"]
+    assert report["claims"]["observer_modular_experience_source_blockers"] == []
+    assert report["claims"]["observer_populated_h3_experience_blockers"] == [
         "observer_h3_object_population_receipt"
     ]
     assert "bulk_proof_certificate_report.json" in report["files"]
@@ -89,6 +144,9 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     assert "transition_selection_report.json" in report["files"]
     assert "observer_modular_experience_report.json" in report["files"]
     assert "observer_views.jsonl" in report["files"]
+    assert "visualization_payload.json" in report["files"]
+    assert "oph_universe_timeline_viewer.html" in report["files"]
+    assert "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md" in report["files"]
 
 
 def test_export_measurement_pack_regenerates_combined_bulk_certificate(tmp_path: Path) -> None:

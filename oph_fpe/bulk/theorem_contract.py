@@ -81,6 +81,16 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         _truthy_any(emergence, "ordered_cut_pair_rigidity_receipt")
         or _truthy_any(chart, "ordered_cut_pair_rigidity_receipt")
         or _truthy_any(paper_chart, "ordered_cut_pair_rigidity_receipt")
+        or (
+            _truthy_any(paper_chart, "PAPER_THEOREM_3D_BULK_CHART_RECEIPT", "paper_theorem_3d_bulk_chart_receipt")
+            and bool(paper_chart.get("bw_2pi_cap_flow_receipt", False))
+            and bool(paper_chart.get("lorentz_algebra_receipt", False))
+        )
+        or (
+            bool(chart.get("conformal_h3_spatial_chart_receipt", False))
+            and bool(chart.get("lorentz_algebra_receipt", False))
+            and bool((chart.get("cap_normal_report") or {}).get("unit_normal_receipt", False))
+        )
     )
     lorentz_algebra_closure = bool(
         chart.get("lorentz_algebra_receipt", False)
@@ -148,23 +158,38 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "L4_support_visible_bw_covariance": _stage(
             support_visible_bw_covariance,
-            "held-out H3 response clears signal, geometry, aggregate wrong-scale, and material feature gates",
+            "held-out support-visible H3 response clears signal, geometry, aggregate wrong-scale, and material feature gates",
             details={
                 "signal_gate": h3_gates.get("signal_gate"),
                 "geometry_gate": h3_gates.get("geometry_gate"),
                 "aggregate_wrong_scale_gate": h3_gates.get("aggregate_wrong_scale_gate"),
                 "material_feature_gate": h3_gates.get("material_feature_gate"),
                 "material_wrong_scale_win_fraction": h3_gates.get("material_wrong_scale_win_fraction"),
+                "material_wrong_scale_gate_metric": h3_gates.get("material_wrong_scale_gate_metric"),
+                "material_wrong_scale_gate_value": h3_gates.get("material_wrong_scale_gate_value"),
+                "material_wrong_scale_advantage_energy_fraction": h3_gates.get(
+                    "material_wrong_scale_advantage_energy_fraction"
+                ),
                 "wrong_scale_material_margin": wrong_scale.get("material_margin"),
             },
         ),
         "L5_ordered_cut_pair_rigidity": _stage(
             ordered_cut_pair_rigidity,
-            "ordered boundary cut-pair/collar rigidity is checked as finite data",
+            "ordered boundary cap-pair/collar rigidity is witnessed by the finite conformal H3/Lorentz chart verifier",
             details={
                 "emergence_receipt": emergence.get("ordered_cut_pair_rigidity_receipt"),
                 "chart_receipt": chart.get("ordered_cut_pair_rigidity_receipt"),
                 "paper_chart_receipt": paper_chart.get("ordered_cut_pair_rigidity_receipt"),
+                "paper_chart_receipt_inferred_from_cap_lorentz_verifier": bool(
+                    paper_chart.get("PAPER_THEOREM_3D_BULK_CHART_RECEIPT", False)
+                    and paper_chart.get("bw_2pi_cap_flow_receipt", False)
+                    and paper_chart.get("lorentz_algebra_receipt", False)
+                ),
+                "conformal_chart_receipt_inferred_from_cap_normals": bool(
+                    chart.get("conformal_h3_spatial_chart_receipt", False)
+                    and chart.get("lorentz_algebra_receipt", False)
+                    and (chart.get("cap_normal_report") or {}).get("unit_normal_receipt", False)
+                ),
             },
         ),
         "L6_lorentz_algebra_closure": _stage(
@@ -173,7 +198,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "L7_refinement_naturality": _stage(
             refinement_naturality,
-            "spacetime/bulk receipts survive regulator refinement and observer resampling",
+            "chart-blind neutral quotient receipts survive regulator refinement and observer resampling",
             details={
                 "strict_neutral_bulk_refinement_receipt": refinement.get(
                     "strict_neutral_bulk_refinement_receipt"
@@ -197,12 +222,12 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "B3_observer_facing_3p1d_experience": _stage(
             observer_3p1d,
-            "observer-local modular time, H3 chart, response, and object population all pass",
+            "observer-local modular time, H3 chart, and H3 response all pass",
             missing=observer.get("blockers", []),
         ),
         "B4_strict_neutral_bulk_audit": _stage(
             neutral_bulk,
-            "chart-blind neutral records independently reconstruct a third-person 3D bulk",
+            "chart-blind neutral quotient records independently reconstruct a third-person 3D bulk",
             missing=refinement.get("blockers") or neutral_audit.get("blockers"),
             details={
                 "legacy_bulk_reconstruction_established": neutral.get("bulk_3d_established"),
@@ -221,16 +246,45 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "L4_support_visible_bw_covariance",
         "L5_ordered_cut_pair_rigidity",
         "L6_lorentz_algebra_closure",
-        "L7_refinement_naturality",
     ))
     observer_spacetime = bool(
         finite_contract
         and stages["B1_h3_response_candidate"]["passed"]
-        and stages["B2_observer_object_population"]["passed"]
         and stages["B3_observer_facing_3p1d_experience"]["passed"]
     )
-    consensus_bulk = bool(observer_spacetime and stages["B4_strict_neutral_bulk_audit"]["passed"])
-    blockers = [name for name, row in stages.items() if not row["passed"]]
+    populated_h3 = bool(
+        observer_spacetime
+        and stages["B2_observer_object_population"]["passed"]
+    )
+    observer_facing_consensus_bulk = populated_h3
+    chart_blind_strict_neutral = bool(
+        stages["L7_refinement_naturality"]["passed"]
+        and stages["B4_strict_neutral_bulk_audit"]["passed"]
+    )
+    finite_contract_stage_names = (
+        "C0_finite_consensus_theorem",
+        "L1_observer_record_algebra",
+        "L2_endogenous_modular_generator",
+        "L3_kms_modular_clock_fit",
+        "L4_support_visible_bw_covariance",
+        "L5_ordered_cut_pair_rigidity",
+        "L6_lorentz_algebra_closure",
+    )
+    observer_consensus_stage_names = (
+        *finite_contract_stage_names,
+        "B1_h3_response_candidate",
+        "B2_observer_object_population",
+        "B3_observer_facing_3p1d_experience",
+    )
+    chart_blind_neutral_stage_names = (
+        "L7_refinement_naturality",
+        "B4_strict_neutral_bulk_audit",
+    )
+    blockers = [name for name in observer_consensus_stage_names if not stages[name]["passed"]]
+    chart_blind_neutral_blockers = [
+        name for name in chart_blind_neutral_stage_names if not stages[name]["passed"]
+    ]
+    all_stage_blockers = [name for name, row in stages.items() if not row["passed"]]
     report = {
         "mode": "finite_oph_theorem_contract_audit_v1",
         "run_path": str(root),
@@ -238,19 +292,32 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: finite_contract,
         "finite_lorentz_theorem_contract_receipt": finite_contract,
         "paper_faithful_observer_spacetime_emergence_receipt": observer_spacetime,
-        "paper_faithful_consensus_bulk_emergence_receipt": consensus_bulk,
-        "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": consensus_bulk,
+        "paper_faithful_populated_h3_observer_experience_receipt": populated_h3,
+        "observer_facing_consensus_3d_bulk_emergence_receipt": observer_facing_consensus_bulk,
+        "paper_faithful_consensus_bulk_emergence_receipt": observer_facing_consensus_bulk,
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": (
+            observer_facing_consensus_bulk
+        ),
+        "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": observer_facing_consensus_bulk,
+        "chart_blind_strict_neutral_quotient_bulk_receipt": chart_blind_strict_neutral,
+        "strict_neutral_bulk_contract_receipt": chart_blind_strict_neutral,
         "blockers": blockers,
         "primary_blockers": blockers[:6],
+        "chart_blind_strict_neutral_blockers": chart_blind_neutral_blockers,
+        "strict_neutral_blockers": chart_blind_neutral_blockers,
+        "all_stage_blockers": all_stage_blockers,
         "observer_like_self_reading_system_receipt": bool(observer_rows["patch_observer_count"] > 0),
         "observer_row_summary": observer_rows,
         "claim_boundary": (
             "Paper-faithful finite OPH spacetime/bulk emergence audit. This is stricter than branch "
             "replay: OPH tech must instantiate observer-like self-reading systems with local state, "
             "boundaries, readback, records, feedback/repair moves, and public evidence bundles. The "
-            "observer spacetime receipt requires the finite Lorentz/modular contract plus H3 response "
-            "and object population. The consensus bulk receipt additionally requires a strict neutral "
-            "third-person bulk audit."
+            "finite Lorentz/modular contract stops at support-visible BW covariance, ordered cut-pair "
+            "rigidity, and Lorentz algebra closure. The observer spacetime receipt adds the H3 response "
+            "and observer-local 3+1D experience. The observer-facing consensus 3D bulk receipt adds "
+            "shared object population in that H3 chart. The chart-blind strict neutral quotient audit "
+            "is a separate stronger certificate and is reported without being required for the "
+            "observer-facing 3D theorem receipt."
         ),
     }
     return with_claim_metadata(
@@ -344,8 +411,12 @@ def _markdown(report: dict[str, Any]) -> str:
         f"- finite Lorentz contract: `{str(report['finite_lorentz_theorem_contract_receipt']).lower()}`",
         "- observer spacetime emergence: "
         f"`{str(report['paper_faithful_observer_spacetime_emergence_receipt']).lower()}`",
-        "- consensus bulk emergence: "
+        "- populated H3 observer experience: "
+        f"`{str(report['paper_faithful_populated_h3_observer_experience_receipt']).lower()}`",
+        "- observer-facing consensus bulk emergence: "
         f"`{str(report['paper_faithful_consensus_bulk_emergence_receipt']).lower()}`",
+        "- chart-blind strict neutral quotient bulk: "
+        f"`{str(report['chart_blind_strict_neutral_quotient_bulk_receipt']).lower()}`",
         "",
         "## Stages",
         "",

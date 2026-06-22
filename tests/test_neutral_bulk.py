@@ -8,11 +8,14 @@ import numpy as np
 from oph_fpe.cosmology.comparable_data import comparable_data_report
 from oph_fpe.bulk.quotient_geometry import ChannelMetricSpec, quotient_geometry_certificate
 from oph_fpe.bulk.neutral_bulk import (
+    DEFAULT_NEUTRAL_WEIGHTS,
     _overlap_graph_rank_selection,
     _prime_geometric_selected_rank_controls,
     build_neutral_observer_views,
+    neutral_channel_duplicate_audit,
     neutral_distance,
     neutral_distance_matrix,
+    neutral_feature_matrix,
     neutral_leakage_audit,
     neutral_model_selection,
     neutral_3d_bulk_audit_report,
@@ -167,6 +170,82 @@ def test_neutral_distance_matrix_is_symmetric_and_zero_diagonal():
     assert np.all(distance[np.triu_indices(3, k=1)] >= 0.0)
 
 
+def test_primary_neutral_distance_uses_fixed_embedding_metric_without_rank_prefixes():
+    observer_views = [
+        _observer_view(1, records=[1, 1, 2], checkpoints=[1], sectors=[0, 1], repairs=[1]),
+        _observer_view(2, records=[2, 3, 3], checkpoints=[2], sectors=[1, 1], repairs=[2]),
+        _observer_view(3, records=[7, 8, 9], checkpoints=[3], sectors=[2, 2], repairs=[3]),
+        _observer_view(4, records=[4, 5, 6], checkpoints=[4], sectors=[3, 3], repairs=[4]),
+    ]
+    views = build_neutral_observer_views(observer_views)
+
+    features = neutral_feature_matrix(views)
+    distance = neutral_distance_matrix(views)
+
+    assert features.shape[0] == 4
+    assert distance.shape == (4, 4)
+    assert np.allclose(distance, distance.T)
+    assert "prime_geometric_rank3" not in DEFAULT_NEUTRAL_WEIGHTS
+    assert "transition_token" not in DEFAULT_NEUTRAL_WEIGHTS
+    assert "support_visible_modular" not in DEFAULT_NEUTRAL_WEIGHTS
+
+
+def test_duplicate_primary_channel_audit_blocks_identical_weighted_channels():
+    observer_views = []
+    rng = np.random.default_rng(123)
+    for index in range(8):
+        row = _observer_view(
+            index,
+            records=[index, index + 1],
+            checkpoints=[index % 4],
+            sectors=[index % 3],
+            repairs=[index % 5],
+        )
+        spectrum = [float(index + j) for j in range(64)]
+        row["prime_geometric_modular_spectrum"] = spectrum
+        row["prime_geometric_control_quotient_spectrum"] = rng.normal(size=64).tolist()
+        row["support_visible_modular_spectrum"] = spectrum
+        observer_views.append(row)
+    views = build_neutral_observer_views(observer_views)
+
+    default_audit = neutral_channel_duplicate_audit(
+        views,
+        weights={"prime_geometric_modular": 1.0, "prime_geometric_control_quotient": 1.0},
+    )
+    diagnostic_audit = neutral_channel_duplicate_audit(
+        views,
+        weights={"prime_geometric_modular": 1.0, "support_visible_modular": 1.0},
+    )
+
+    assert default_audit["duplicate_channel_gate_pass"] is True
+    assert diagnostic_audit["duplicate_channel_gate_pass"] is False
+    assert diagnostic_audit["duplicate_pairs"]
+
+
+def test_primary_neutral_distance_is_invariant_under_transition_token_relabeling():
+    observer_views = [
+        _observer_view(i, records=[i, i + 1], checkpoints=[i % 4], sectors=[i % 3], repairs=[i % 5])
+        for i in range(8)
+    ]
+    relabeled = []
+    for row in observer_views:
+        copy = json.loads(json.dumps(row))
+        histograms = copy["transition_history_histograms"]
+        token_hist = histograms.get("local_transition_token", {})
+        histograms["local_transition_token"] = {
+            str(900000 + int(key)): value for key, value in token_hist.items()
+        }
+        histograms["local_transition_token_persistent"] = {
+            str(800000 + int(key)): value for key, value in token_hist.items()
+        }
+        relabeled.append(copy)
+
+    original_distance = neutral_distance_matrix(build_neutral_observer_views(observer_views))
+    relabeled_distance = neutral_distance_matrix(build_neutral_observer_views(relabeled))
+
+    assert np.allclose(original_distance, relabeled_distance)
+
+
 def test_neutral_leakage_audit_is_posthoc_and_flags_primary_no_geometry_use():
     observer_views = [
         _observer_view(1, records=[1, 2], checkpoints=[1], sectors=[0], repairs=[1], axis=[1.0, 0.0, 0.0]),
@@ -291,6 +370,8 @@ def test_dimension_gate_uses_finite_regulator_median_for_planted_3d():
 
     dimension = report["rows"]["planted_3d"]["dimension"]
 
+    assert dimension["diagnostic_target"] == "neutral_record_feature_quotient_dimension"
+    assert dimension["not_the_support_visible_chart_dimension"] is True
     assert report["controls"]["planted_3d_returns_3d"] is True
     assert dimension["estimators_agree_3d"] is True
     assert 2.7 <= dimension["median_dimension_estimate"] <= 3.3
@@ -313,6 +394,7 @@ def test_current_rank3_candidate_not_strict_without_refinement():
     assert report["strict_neutral_bulk"] is False
     assert report["receipt"]["strict_neutral_bulk"] is False
     assert "H3 fitted points" in report["forbidden_primary_features"]
+    assert "support-visible S2/H3 chart" in report["chart_boundary"]
 
 
 def test_shuffled_neutral_control_report_emits_run_specific_controls():
@@ -580,7 +662,7 @@ def test_neutral_model_selection_reports_required_metric_families():
 
     report = neutral_model_selection(distance, seed=2, max_points=48)
 
-    assert set(report["models"]) == {"S2", "E2", "E3", "H2", "H3", "H4"}
+    assert set(report["models"]) == {"S2", "E2", "E3", "E4", "H2", "H3", "H4"}
     assert report["best_model"] in report["models"]
     assert report["fit_observer_count"] == 48
     assert report["heldout_pair_count"] > 0

@@ -140,13 +140,17 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     observer_modular_time = bool(observer_modular_experience.get("observer_modular_time_receipt", False))
     observer_facing_3p1d_experience = bool(
         observer_modular_experience.get(OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT, False)
+        or observer_modular_experience.get("observer_facing_3p1d_h3_experience_receipt", False)
         or (
             chart
             and bw_kms
             and h3_response
-            and object_nonboundary_population
             and (observer_modular_time or not observer_modular_experience_written)
         )
+    )
+    observer_facing_populated_h3_experience = bool(
+        observer_modular_experience.get("observer_facing_populated_h3_experience_receipt", False)
+        or (observer_facing_3p1d_experience and object_nonboundary_population)
     )
     observer_component_gates = {
         "observer_modular_time_receipt": bool(
@@ -155,10 +159,16 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "bw_kms_branch_replay_receipt": bw_kms,
         "conformal_h3_chart_receipt": chart,
         "h3_modular_response_receipt": h3_response,
+    }
+    observer_populated_h3_component_gates = {
+        **observer_component_gates,
         "observer_h3_object_population_receipt": object_nonboundary_population,
     }
     observer_blockers = [
         gate for gate, passed in observer_component_gates.items() if not passed
+    ]
+    observer_populated_h3_blockers = [
+        gate for gate, passed in observer_populated_h3_component_gates.items() if not passed
     ]
     strict_neutral_object_bulk = bool(
         strict_neutral_object.get(STRICT_NEUTRAL_OBJECT_BULK_RECEIPT, False)
@@ -234,6 +244,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     paper_faithful_observer_spacetime = bool(
         finite_contract_report.get("paper_faithful_observer_spacetime_emergence_receipt", False)
     )
+    paper_faithful_populated_h3 = bool(
+        finite_contract_report.get("paper_faithful_populated_h3_observer_experience_receipt", False)
+    )
     paper_faithful_consensus_bulk = bool(
         finite_contract_report.get("paper_faithful_consensus_bulk_emergence_receipt", False)
     )
@@ -297,10 +310,16 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             scale_h3_preview,
             "Scale-compressed logical repair-round branch populates the paper-side H3 chart as a preview artifact.",
         ),
+        "T6_chart_blind_strict_neutral_quotient_bulk": _tier(
+            STRICT_NEUTRAL_BULK_RECEIPT,
+            strict_neutral_bulk,
+            "Chart-blind neutral quotient reconstruction establishes a third-person 3D bulk without S2/H3 chart prior.",
+        ),
         "T6_strict_neutral_third_person_bulk": _tier(
             STRICT_NEUTRAL_BULK_RECEIPT,
             strict_neutral_bulk,
-            "Neutral observer-record reconstruction establishes a third-person 3D bulk without chart prior.",
+            "Legacy alias for T6 chart-blind strict neutral quotient bulk; separate from observer-facing H3 consensus bulk.",
+            canonical_tier="T6_chart_blind_strict_neutral_quotient_bulk",
         ),
         "T6_object_strict_neutral_bulk": _tier(
             STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
@@ -315,7 +334,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "T6b_prime_geometric_rank3_refinement_diagnostic": _tier(
             CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
             prime_geometric_rank3_refinement,
-            "Control-quotient coordinate rank-3/E3 candidate is stable across supplied finite-regulator sizes; this is still diagnostic, not strict neutral bulk proof.",
+            "Control-quotient coordinate rank-3/E3 candidate is stable across supplied finite-regulator sizes; this is still diagnostic, not chart-blind strict neutral quotient proof.",
         ),
         "T7_production_particles": _tier(
             PROTO_PARTICLE_RECEIPT,
@@ -345,19 +364,25 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "L_full_oph_lorentz_finite_contract": _tier(
             OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
             finite_lorentz_contract,
-            "Full L1-L7 finite Lorentz theorem contract is audited from finite observer-record receipts.",
+            "Finite Lorentz theorem contract through support-visible BW covariance and Lorentz closure is audited from finite observer-record receipts.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
         "B_full_paper_faithful_observer_spacetime": _tier(
             "PAPER_FAITHFUL_OBSERVER_SPACETIME_EMERGENCE_RECEIPT",
             paper_faithful_observer_spacetime,
-            "Observer-local modular time plus H3 spatial chart and object population, gated by the finite theorem contract.",
+            "Observer-local modular time plus H3 spatial chart and H3 response, gated by the finite theorem contract.",
+            blockers=finite_contract_report.get("primary_blockers", []),
+        ),
+        "B_populated_h3_observer_experience": _tier(
+            "PAPER_FAITHFUL_POPULATED_H3_OBSERVER_EXPERIENCE_RECEIPT",
+            paper_faithful_populated_h3,
+            "Observer-facing H3 spacetime plus controlled object population in that chart.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
         "B_full_paper_faithful_consensus_bulk": _tier(
             "PAPER_FAITHFUL_CONSENSUS_BULK_EMERGENCE_RECEIPT",
             paper_faithful_consensus_bulk,
-            "Paper-faithful consensus 3D bulk: observer spacetime emergence plus strict neutral third-person bulk audit.",
+            "Paper-faithful observer-facing consensus 3D bulk: observer spacetime emergence plus populated H3 object records.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
     }
@@ -375,12 +400,20 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: finite_lorentz_contract,
         "finite_lorentz_theorem_contract_receipt": finite_lorentz_contract,
         "paper_faithful_observer_spacetime_emergence_receipt": paper_faithful_observer_spacetime,
+        "paper_faithful_populated_h3_observer_experience_receipt": paper_faithful_populated_h3,
+        "observer_facing_consensus_3d_bulk_emergence_receipt": paper_faithful_consensus_bulk,
         "paper_faithful_consensus_bulk_emergence_receipt": paper_faithful_consensus_bulk,
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
         "finite_theorem_contract_summary": {
             "written": bool(finite_contract_report),
             "blockers": finite_contract_report.get("blockers", []),
             "primary_blockers": finite_contract_report.get("primary_blockers", []),
+            "chart_blind_strict_neutral_blockers": finite_contract_report.get(
+                "chart_blind_strict_neutral_blockers", []
+            ),
+            "strict_neutral_blockers": finite_contract_report.get("strict_neutral_blockers", []),
+            "all_stage_blockers": finite_contract_report.get("all_stage_blockers", []),
             "stages": finite_contract_report.get("stages", {}),
             "claim_boundary": finite_contract_report.get("claim_boundary"),
         },
@@ -393,12 +426,19 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "observer_modular_time_receipt": observer_modular_time,
         OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_facing_3p1d_experience,
         "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_experience,
+        "observer_facing_populated_h3_experience_receipt": observer_facing_populated_h3_experience,
+        "observer_h3_object_population_receipt": object_nonboundary_population,
         "scale_compressed_operator_receipt": scale_operator,
         "scale_compressed_repair_round_trace_receipt": scale_round_trace,
         "scale_compressed_h3_preview_established": scale_h3_preview,
         "scale_compressed_measurement_comparable_cmb_curve": scale_compressed_measurement_cmb,
         "scale_compressed_particle_preview_established": scale_particle_preview,
         "strict_neutral_third_person_bulk_established": strict_neutral_bulk,
+        "chart_blind_strict_neutral_quotient_bulk_established": strict_neutral_bulk,
+        "chart_blind_strict_neutral_quotient_bulk_receipt": strict_neutral_bulk,
+        "strict_neutral_bulk_contract_receipt": bool(
+            finite_contract_report.get("chart_blind_strict_neutral_quotient_bulk_receipt", strict_neutral_bulk)
+        ),
         STRICT_NEUTRAL_OBJECT_BULK_RECEIPT: strict_neutral_object_bulk,
         STRICT_NEUTRAL_BULK_RECEIPT: strict_neutral_bulk,
         "prime_geometric_quotient_3d_diagnostic": prime_geometric_quotient_3d,
@@ -407,7 +447,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT: prime_geometric_rank3_refinement,
         "prime_geometric_rank3_refinement_strict_neutral": prime_geometric_strict_refinement,
         "bulk_3d_established_theorem_assisted": theorem_assisted_nonboundary_population,
+        "bulk_3d_established_observer_facing_consensus": paper_faithful_consensus_bulk,
         "bulk_3d_established_strict": strict_neutral_bulk,
+        "bulk_3d_established_chart_blind_strict_neutral": strict_neutral_bulk,
         "screen_cmb_proxy_available": screen_cmb,
         "physical_cmb_prediction": physical_cmb,
         "production_particle_matter_receipt": production_particle,
@@ -436,12 +478,22 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "written": observer_modular_experience_written,
             "observer_modular_time_receipt": observer_modular_time,
             "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_experience,
+            "observer_facing_populated_h3_experience_receipt": observer_facing_populated_h3_experience,
+            "observer_h3_object_population_receipt": object_nonboundary_population,
             "observer_count": observer_modular_experience.get("observer_count"),
             "observer_relative_time_count": observer_modular_experience.get("observer_relative_time_count"),
             "blockers": observer_blockers,
+            "populated_h3_experience_blockers": observer_populated_h3_blockers,
             "component_gates": observer_component_gates,
+            "populated_h3_component_gates": observer_populated_h3_component_gates,
             "source_report_blockers": observer_modular_experience.get("blockers", []),
+            "source_report_populated_h3_blockers": observer_modular_experience.get(
+                "populated_h3_experience_blockers", []
+            ),
             "source_report_component_gates": observer_modular_experience.get("component_gates", {}),
+            "source_report_populated_h3_component_gates": observer_modular_experience.get(
+                "populated_h3_component_gates", {}
+            ),
         },
         "scale_compressed_summary": {
             "logical_repair_rounds": scale_compressed.get("logical_repair_rounds"),
@@ -563,8 +615,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "spatial_chart": "H3 is the spatial homogeneous chart SO+(3,1)/SO(3).",
             "finite_gate": "finite runs must separately show observer records/objects/defects populate that chart under controls.",
             "strict_neutral_route": (
-                "strict third-person bulk must be reconstructed from neutral observer/object records without "
-                "H3/S2/support coordinates and must pass held-out latent-geometry controls."
+                "chart-blind strict neutral quotient bulk must be reconstructed from neutral observer/object "
+                "records without H3/S2/support coordinates and must pass held-out latent-geometry controls."
             ),
             "scale_compressed_branch": (
                 "Logical scale compression can expose OPH repair-round/CMB readouts and H3 previews, but it "
@@ -579,7 +631,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "T5a is theorem-assisted H3 preview evidence from observer objects. "
             "T5b is stricter non-boundary H3 object population evidence. T5c is a scale-compressed "
             "logical repair-round H3 preview and is intentionally not promoted to T5b/T6. "
-            "T6 is stricter neutral third-person bulk reconstruction and may remain false even when T5 passes. "
+            "T6 is stricter chart-blind neutral quotient reconstruction and may remain false even when "
+            "the observer-facing H3 consensus-bulk receipt passes. "
             "T6a/T6b are intermediate residualized prime-geometric quotient diagnostics and are not promoted to T6. "
             "T8/T8b are measurement-facing screen/CAMB-transfer data only. T9 is a physical CMB prediction and remains false "
             "until finite OPH kernels feed a Boltzmann/likelihood-ready pipeline."
@@ -719,14 +772,15 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- finite Lorentz theorem contract: `{str(report['finite_lorentz_theorem_contract_receipt']).lower()}`",
         "- paper-faithful observer spacetime emergence: "
         f"`{str(report['paper_faithful_observer_spacetime_emergence_receipt']).lower()}`",
-        "- paper-faithful consensus bulk emergence: "
+        "- paper-faithful observer-facing consensus bulk emergence: "
         f"`{str(report['paper_faithful_consensus_bulk_emergence_receipt']).lower()}`",
         f"- observer modular time: `{str(report['observer_modular_time_receipt']).lower()}`",
         f"- observer-facing 3+1D/H3 experience: `{str(report['observer_facing_3p1d_h3_experience_receipt']).lower()}`",
         f"- theorem-assisted H3 object preview: `{str(report['theorem_assisted_h3_object_preview_established']).lower()}`",
         f"- theorem-assisted non-boundary H3 population: `{str(report['theorem_assisted_h3_nonboundary_population_established']).lower()}`",
         f"- scale-compressed H3 preview: `{str(report['scale_compressed_h3_preview_established']).lower()}`",
-        f"- strict neutral third-person bulk: `{str(report['strict_neutral_third_person_bulk_established']).lower()}`",
+        "- chart-blind strict neutral quotient bulk: "
+        f"`{str(report['chart_blind_strict_neutral_quotient_bulk_established']).lower()}`",
         f"- prime-geometric quotient 3D diagnostic: `{str(report['prime_geometric_quotient_3d_diagnostic']).lower()}`",
         f"- screen CMB proxy available: `{str(report['screen_cmb_proxy_available']).lower()}`",
         f"- scale-compressed CAMB TT curve: `{str(report['scale_compressed_measurement_comparable_cmb_curve']).lower()}`",
@@ -748,6 +802,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
                 "",
                 f"- written: `{str(bool(contract.get('written'))).lower()}`",
                 f"- primary blockers: `{contract.get('primary_blockers')}`",
+                f"- chart-blind neutral blockers: `{contract.get('chart_blind_strict_neutral_blockers')}`",
             ]
         )
     scale = report.get("scale_compressed_summary") or {}

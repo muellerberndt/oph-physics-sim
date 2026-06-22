@@ -35,6 +35,7 @@ from oph_fpe.cosmology.physical_cmb_prediction import (
     write_physical_cmb_input_report,
     write_physical_cmb_promotion_audit_report,
 )
+from oph_fpe.cosmology.physical_cmb_sources import write_physical_cmb_source_readiness_report
 from oph_fpe.cosmology.silence_to_observation import write_silence_to_observation_report
 from oph_fpe.experiments import load_config
 from oph_fpe.scale.bw_array import run_bw_array_config
@@ -52,6 +53,9 @@ class H3RefitRecipe:
     kwargs: dict[str, Any]
 
 
+H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES: tuple[str, ...] = ("record_family", "repair_load_bucket")
+
+
 REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
     H3RefitRecipe(
         "scale_rank_512",
@@ -66,7 +70,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "max_fit_features": 512,
             "min_feature_std": 0.01,
             "min_wrong_scale_feature_delta": 1.0e-4,
-            "exclude_observables": ("record_family",),
+            "exclude_observables": H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES,
             "max_features_per_cap_time_observable": 4,
             "refine_steps": 1,
             "refine_max_rows": 24,
@@ -89,7 +93,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "max_fit_features": 512,
             "min_feature_std": 0.01,
             "min_wrong_scale_feature_delta": 1.0e-4,
-            "exclude_observables": ("record_family",),
+            "exclude_observables": H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES,
             "max_features_per_cap_time_observable": 4,
             "refine_steps": 1,
             "refine_max_rows": 24,
@@ -112,7 +116,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "max_fit_features": 768,
             "min_feature_std": 0.01,
             "min_wrong_scale_feature_delta": 1.0e-4,
-            "exclude_observables": ("record_family",),
+            "exclude_observables": H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES,
             "max_features_per_cap_time_observable": 6,
             "refine_steps": 1,
             "refine_max_rows": 24,
@@ -135,7 +139,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "max_fit_features": 1024,
             "min_feature_std": 0.01,
             "min_wrong_scale_feature_delta": 1.0e-4,
-            "exclude_observables": ("record_family",),
+            "exclude_observables": H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES,
             "max_features_per_cap_time_observable": 8,
             "refine_steps": 1,
             "refine_max_rows": 24,
@@ -158,7 +162,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "max_fit_features": 512,
             "min_feature_std": 0.01,
             "min_wrong_scale_feature_delta": 1.0e-4,
-            "exclude_observables": ("record_family",),
+            "exclude_observables": H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES,
             "max_features_per_cap_time_observable": 8,
             "refine_steps": 1,
             "refine_max_rows": 24,
@@ -181,6 +185,8 @@ def run_oph_universe_pipeline(
     config_path: Path,
     out_dir: Path,
     run_id: str | None = None,
+    seed: int | None = None,
+    inner_jobs: int | None = None,
     source_run_dir: Path | None = None,
     skip_base_run: bool = False,
     max_screen_points: int = 5000,
@@ -198,6 +204,7 @@ def run_oph_universe_pipeline(
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    base_config = dict(load_config(config_path))
     if skip_base_run:
         if source_run_dir is None:
             raise ValueError("skip_base_run requires source_run_dir")
@@ -210,9 +217,20 @@ def run_oph_universe_pipeline(
             "config": str(config_path),
         }
     else:
-        config = dict(load_config(config_path))
+        config = dict(base_config)
         if run_id:
             config["run_id"] = str(run_id)
+        if seed is not None:
+            config["seed"] = int(seed)
+        if inner_jobs is not None:
+            bw_cfg = dict(config.get("bw", {}) or {})
+            bw_cfg["n_jobs"] = int(inner_jobs)
+            config["bw"] = bw_cfg
+            cosmology_cfg = dict(config.get("cosmology", {}) or {})
+            angular_cfg = dict(cosmology_cfg.get("angular_power", {}) or {})
+            angular_cfg["n_jobs"] = int(inner_jobs)
+            cosmology_cfg["angular_power"] = angular_cfg
+            config["cosmology"] = cosmology_cfg
         base_result = run_bw_array_config(config, out_dir)
         run_dir = Path(base_result["path"])
     refinement_dir = run_dir / "auto_theorem_refinement"
@@ -258,7 +276,7 @@ def run_oph_universe_pipeline(
         selected_object_report,
         observer_report,
     )
-    frontier_artifacts = _write_frontier_artifacts(run_dir)
+    frontier_artifacts = _write_frontier_artifacts(run_dir, base_config)
 
     theorem_contract = write_finite_oph_theorem_contract_report(
         run_dir,
@@ -273,6 +291,7 @@ def run_oph_universe_pipeline(
         object_sample_count=max(24, min(int(max_h3_objects), 1024)),
     )
     silence_to_observation = write_silence_to_observation_report(run_dir, run_dir)
+    cmb_diagnostics = _cmb_diagnostic_summary(run_dir)
     object_viewer: dict[str, Any] = {}
     run_viewer: dict[str, Any] = {}
     timeline: dict[str, Any] = {}
@@ -330,6 +349,15 @@ def run_oph_universe_pipeline(
             "theorem_assisted_consensus_3d_bulk_readout_receipt": bool(
                 readout.get("theorem_assisted_consensus_3d_bulk_readout_receipt", False)
             ),
+            "observer_facing_consensus_3d_bulk_readout_receipt": bool(
+                readout.get(
+                    "observer_facing_consensus_3d_bulk_readout_receipt",
+                    readout.get("theorem_assisted_consensus_3d_bulk_readout_receipt", False),
+                )
+            ),
+            "chart_blind_strict_neutral_quotient_bulk_receipt": bool(
+                readout.get("chart_blind_strict_neutral_quotient_bulk_receipt", False)
+            ),
             "strict_neutral_third_person_bulk_receipt": bool(
                 readout.get("strict_neutral_third_person_bulk_receipt", False)
             ),
@@ -337,6 +365,11 @@ def run_oph_universe_pipeline(
                 readout.get("physical_cmb_output_comparison_receipt", False)
             ),
             "physical_cmb_prediction_receipt": bool(readout.get("physical_cmb_prediction_receipt", False)),
+            "screen_proxy_cmb_receipt": bool(cmb_diagnostics["screen_proxy_cmb_receipt"]),
+            "cmb_lite_shape_comparison_receipt": bool(cmb_diagnostics["cmb_lite_shape_comparison_receipt"]),
+            "cmb_lite_real_ell_physical_comparison_receipt": bool(
+                cmb_diagnostics["cmb_lite_real_ell_physical_comparison_receipt"]
+            ),
             "finite_lorentz_theorem_contract_receipt": bool(
                 theorem_contract.get("finite_lorentz_theorem_contract_receipt", False)
             ),
@@ -345,6 +378,15 @@ def run_oph_universe_pipeline(
             ),
             "paper_faithful_consensus_bulk_emergence_receipt": bool(
                 theorem_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False)
+            ),
+            "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": bool(
+                theorem_contract.get(
+                    "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt",
+                    theorem_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False),
+                )
+            ),
+            "strict_neutral_bulk_contract_receipt": bool(
+                theorem_contract.get("strict_neutral_bulk_contract_receipt", False)
             ),
             "scale_compressed_pn_silence_to_observation_receipt": bool(
                 silence_to_observation.get("scale_compressed_pn_silence_to_observation_receipt", False)
@@ -366,13 +408,24 @@ def run_oph_universe_pipeline(
             "paper_faithful_consensus_bulk_emergence_receipt": theorem_contract.get(
                 "paper_faithful_consensus_bulk_emergence_receipt"
             ),
+            "strict_neutral_bulk_contract_receipt": theorem_contract.get("strict_neutral_bulk_contract_receipt"),
+            "chart_blind_strict_neutral_blockers": theorem_contract.get(
+                "chart_blind_strict_neutral_blockers", []
+            ),
             "primary_blockers": theorem_contract.get("primary_blockers", []),
         },
         "proof_summary": {
             "bulk_3d_established_theorem_assisted": proof.get("bulk_3d_established_theorem_assisted"),
+            "bulk_3d_established_observer_facing_consensus": proof.get(
+                "bulk_3d_established_observer_facing_consensus"
+            ),
             "bulk_3d_established_strict": proof.get("bulk_3d_established_strict"),
+            "bulk_3d_established_chart_blind_strict_neutral": proof.get(
+                "bulk_3d_established_chart_blind_strict_neutral"
+            ),
             "physical_cmb_prediction": proof.get("physical_cmb_prediction"),
         },
+        "cmb_diagnostic_summary": cmb_diagnostics,
         "silence_to_observation_summary": {
             "scale_compressed_pn_silence_to_observation_receipt": silence_to_observation.get(
                 "scale_compressed_pn_silence_to_observation_receipt"
@@ -415,9 +468,10 @@ def run_oph_universe_pipeline(
     return summary
 
 
-def _write_frontier_artifacts(run_dir: Path) -> dict[str, Any]:
+def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = None) -> dict[str, Any]:
     """Emit hard-gate frontier reports before proof/readout aggregation."""
 
+    neutral_cfg = _neutral_frontier_settings(config or {})
     neutral_paths: list[Path] = []
     observer_path = run_dir / "observer_views.jsonl"
     neutral_summary: dict[str, Any] = {"neutral_frontier_written": False}
@@ -431,16 +485,16 @@ def _write_frontier_artifacts(run_dir: Path) -> dict[str, Any]:
         write_overlap_native_neutral_control_report(
             run_dir,
             overlap_dir,
-            seed=11,
-            max_model_points=384,
+            seed=neutral_cfg["seed"],
+            max_model_points=neutral_cfg["overlap_control_max_model_points"],
         )
         write_prime_geometric_rank_sweep_report(
             run_dir,
             sweep_dir / "prime_geometric_rank_sweep_report.json",
-            ranks=(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
-            seed=11,
-            sample_count=384,
-            max_model_points=256,
+            ranks=neutral_cfg["ranks"],
+            seed=neutral_cfg["seed"],
+            sample_count=neutral_cfg["sample_count"],
+            max_model_points=neutral_cfg["max_model_points"],
         )
         write_prime_geometric_rank_refinement_report([sweep_dir], refinement_dir)
         write_neutral_independent_rank_selector_audit_report(
@@ -450,17 +504,17 @@ def _write_frontier_artifacts(run_dir: Path) -> dict[str, Any]:
         write_overlap_native_graph_geometry_sweep_report(
             [run_dir],
             graph_dir,
-            seeds=(7, 11),
-            max_model_points_values=(256, 384),
-            k_neighbor_values=(8, 12, 16),
+            seeds=neutral_cfg["graph_seeds"],
+            max_model_points_values=neutral_cfg["graph_max_model_points_values"],
+            k_neighbor_values=neutral_cfg["graph_k_neighbor_values"],
         )
         write_overlap_residualized_graph_geometry_sweep_report(
             [run_dir],
             residual_graph_dir,
-            seeds=(7, 11),
-            max_model_points_values=(256, 384),
-            k_neighbor_values=(8, 12, 16),
-            remove_mode_values=(1, 2, 3),
+            seeds=neutral_cfg["graph_seeds"],
+            max_model_points_values=neutral_cfg["graph_max_model_points_values"],
+            k_neighbor_values=neutral_cfg["graph_k_neighbor_values"],
+            remove_mode_values=neutral_cfg["residual_remove_mode_values"],
         )
         neutral_paths = [
             overlap_dir,
@@ -482,9 +536,11 @@ def _write_frontier_artifacts(run_dir: Path) -> dict[str, Any]:
             "neutral_blockers": list(neutral_frontier.get("blockers") or [])[:16],
             "neutral_audit_blockers": list(neutral_audit.get("blockers") or [])[:16],
             "neutral_report_dirs": [str(path) for path in neutral_paths],
+            "neutral_frontier_settings": neutral_cfg,
         }
 
     no_data = write_physical_cmb_input_no_data_use_receipt([run_dir], run_dir)
+    cmb_sources = write_physical_cmb_source_readiness_report([run_dir], run_dir)
     cmb_input = write_physical_cmb_input_report([run_dir], run_dir)
     cmb_promotion = write_physical_cmb_promotion_audit_report([run_dir], run_dir)
     cmb_output = write_physical_cmb_output_comparison_report([run_dir], run_dir)
@@ -492,6 +548,23 @@ def _write_frontier_artifacts(run_dir: Path) -> dict[str, Any]:
     return {
         **neutral_summary,
         "physical_cmb_frontier_written": True,
+        "physical_cmb_source_readiness_written": True,
+        "finite_covariant_parent_receipt": bool(
+            (cmb_sources.get("finite_covariant_parent") or {}).get("parent_receipt", False)
+        ),
+        "finite_covariant_parent_blockers": list(
+            ((cmb_sources.get("finite_covariant_parent") or {}).get("blockers") or [])
+        )[:16],
+        "oph_boltzmann_input_written": bool((cmb_sources.get("oph_boltzmann_input") or {}).get("written", False)),
+        "oph_boltzmann_physical_prediction_ready": bool(
+            (cmb_sources.get("oph_boltzmann_input") or {}).get("physical_prediction_ready", False)
+        ),
+        "finite_collar_boltzmann_bundle_receipt": bool(
+            (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("source_bundle_receipt", False)
+        ),
+        "finite_collar_boltzmann_physical_certificate": bool(
+            (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("physical_certificate", False)
+        ),
         "physical_cmb_no_data_use_receipt": bool(no_data.get("NO_DATA_USE_RECEIPT", False)),
         "physical_cmb_input_contract_receipt": bool(
             cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
@@ -507,6 +580,95 @@ def _write_frontier_artifacts(run_dir: Path) -> dict[str, Any]:
             cmb_frontier.get("physical_cmb_prediction_receipt", False)
         ),
         "physical_cmb_blockers": list(cmb_frontier.get("blockers") or [])[:16],
+    }
+
+
+def _neutral_frontier_settings(config: dict[str, Any]) -> dict[str, Any]:
+    cfg = dict(config.get("neutral_frontier", {}) or {})
+    observer_cfg = dict(config.get("observers", {}) or {})
+    observer_sample_count = int(observer_cfg.get("sample_count", 384) or 384)
+    sample_count = int(cfg.get("sample_count", observer_sample_count) or observer_sample_count)
+    max_model_points = int(cfg.get("max_model_points", min(sample_count, 512)) or min(sample_count, 512))
+    graph_max = tuple(
+        int(value)
+        for value in cfg.get(
+            "graph_max_model_points_values",
+            sorted({min(max_model_points, 256), min(max_model_points, 384), max_model_points}),
+        )
+    )
+    graph_max = tuple(value for value in graph_max if value > 0)
+    return {
+        "seed": int(cfg.get("seed", 11) or 11),
+        "sample_count": max(8, sample_count),
+        "max_model_points": max(8, max_model_points),
+        "overlap_control_max_model_points": max(
+            8,
+            int(cfg.get("overlap_control_max_model_points", max(max_model_points, 384)) or max(max_model_points, 384)),
+        ),
+        "ranks": tuple(
+            int(value)
+            for value in cfg.get("ranks", (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16))
+            if int(value) > 0
+        ),
+        "graph_seeds": tuple(int(value) for value in cfg.get("graph_seeds", (7, 11))),
+        "graph_max_model_points_values": graph_max or (max(8, max_model_points),),
+        "graph_k_neighbor_values": tuple(
+            int(value) for value in cfg.get("graph_k_neighbor_values", (8, 12, 16)) if int(value) > 0
+        ),
+        "residual_remove_mode_values": tuple(
+            int(value) for value in cfg.get("residual_remove_mode_values", (1, 2, 3)) if int(value) > 0
+        ),
+    }
+
+
+def _cmb_diagnostic_summary(run_dir: Path) -> dict[str, Any]:
+    emergence = _read_json(Path(run_dir) / "emergence_status_report.json")
+    cl_report = _read_json(Path(run_dir) / "cl_comparison_report.json")
+    lite_report = _read_json(Path(run_dir) / "cmb_lite_comparison_report.json")
+    fields = lite_report.get("field_comparisons") if isinstance(lite_report.get("field_comparisons"), dict) else {}
+    positive_shape_fields = [
+        str(name)
+        for name, row in fields.items()
+        if isinstance(row, dict) and bool(row.get("usable_positive_shape", False))
+    ]
+    real_ell_fields = [
+        str(name)
+        for name, row in fields.items()
+        if isinstance(row, dict)
+        and bool((row.get("real_ell_physical_comparison") or {}).get("usable", False))
+    ]
+    overlap_ell_fields = [
+        str(name)
+        for name, row in fields.items()
+        if isinstance(row, dict)
+        and bool((row.get("overlap_ell_physical_comparison") or {}).get("usable", False))
+    ]
+    return {
+        "mode": "cmb_diagnostic_summary_v0",
+        "screen_proxy_cmb_receipt": bool(
+            cl_report.get("SCREEN_PROXY_CMB_RECEIPT", False)
+            or cl_report.get("screen_proxy_cmb_receipt", False)
+            or (
+                cl_report.get("receipt_name") == "SCREEN_PROXY_CMB_RECEIPT"
+                and (cl_report.get("cosmo_proxy_receipt") or {}).get("receipt", False)
+            )
+            or emergence.get("SCREEN_PROXY_CMB_RECEIPT", False)
+            or emergence.get("screen_proxy_cmb_receipt", False)
+        ),
+        "cmb_lite_shape_comparison_receipt": bool(lite_report.get("best_shape_field")),
+        "cmb_lite_best_shape_field": lite_report.get("best_shape_field"),
+        "cmb_lite_best_positive_shape_field": lite_report.get("best_positive_shape_field"),
+        "cmb_lite_positive_shape_field_count": len(positive_shape_fields),
+        "cmb_lite_positive_shape_fields_sample": positive_shape_fields[:12],
+        "cmb_lite_real_ell_physical_comparison_receipt": bool(real_ell_fields),
+        "cmb_lite_real_ell_fields_sample": real_ell_fields[:12],
+        "cmb_lite_overlap_ell_physical_comparison_receipt": bool(overlap_ell_fields),
+        "cmb_lite_overlap_ell_fields_sample": overlap_ell_fields[:12],
+        "claim_boundary": (
+            "Screen/CMB-lite diagnostics only. Shape comparisons and finite-screen angular spectra are "
+            "measurement-facing debug data, not a physical CMB prediction and not a substitute for the "
+            "finite source, Boltzmann-transfer, and frozen-likelihood gates."
+        ),
     }
 
 
@@ -596,21 +758,32 @@ def _postprocess_observer_experience(
         "bw_kms_branch_replay_receipt": bw_kms,
         "conformal_h3_chart_receipt": chart,
         "h3_modular_response_receipt": h3_response,
+    }
+    populated_h3_component_gates = {
+        **component_gates,
         "observer_h3_object_population_receipt": object_population,
     }
-    full = bool(all(component_gates.values()))
+    observer_3p1d = bool(all(component_gates.values()))
+    populated_h3 = bool(all(populated_h3_component_gates.values()))
     report = dict(original)
     report.update(
         {
             "postprocessed_by_oph_universe_pipeline": True,
             "component_gates": component_gates,
             "blockers": [name for name, passed in component_gates.items() if not passed],
-            OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: full,
-            "observer_facing_3p1d_h3_experience_receipt": full,
+            "populated_h3_component_gates": populated_h3_component_gates,
+            "populated_h3_experience_blockers": [
+                name for name, passed in populated_h3_component_gates.items() if not passed
+            ],
+            OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_3p1d,
+            "observer_facing_3p1d_h3_experience_receipt": observer_3p1d,
+            "observer_facing_populated_h3_experience_receipt": populated_h3,
+            "observer_h3_object_population_receipt": object_population,
             "claim_boundary": (
                 str(original.get("claim_boundary", "")).strip()
                 + " Postprocessed after canonical H3 refit/object-chart selection; this only updates "
-                "downstream receipt wiring from selected audited reports and does not relax thresholds."
+                "downstream receipt wiring from selected audited reports and does not relax thresholds. "
+                "Observer-facing 3+1D/H3 experience is split from populated-H3 object emergence."
             ).strip(),
         }
     )
@@ -695,6 +868,8 @@ def _patch_emergence_status_from_selected(
 def _h3_candidate_row(label: str, path: Path, report: dict[str, Any]) -> dict[str, Any]:
     gates = report.get("h3_response_stage_gates", {}) if isinstance(report, dict) else {}
     h3_fit = report.get("h3_fit", {}) if isinstance(report, dict) else {}
+    excluded_observables = _h3_excluded_observables(report)
+    theorem_clean_feature_policy = set(H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES) <= set(excluded_observables)
     row = {
         "label": label,
         "path": str(path),
@@ -714,7 +889,11 @@ def _h3_candidate_row(label: str, path: Path, report: dict[str, Any]) -> dict[st
             gates.get("h3_heldout_normalized_rmse", h3_fit.get("heldout_normalized_rmse"))
         ),
         "material_wrong_scale_win_fraction": _maybe_float(gates.get("material_wrong_scale_win_fraction")),
+        "material_wrong_scale_gate_metric": gates.get("material_wrong_scale_gate_metric"),
+        "material_wrong_scale_gate_value": _maybe_float(gates.get("material_wrong_scale_gate_value")),
         "feature_count": int(report.get("feature_count", 0) or 0),
+        "excluded_observables": excluded_observables,
+        "theorem_clean_feature_policy": theorem_clean_feature_policy,
     }
     row["score"] = _h3_score(row)
     return row
@@ -752,9 +931,12 @@ def _object_candidate_row(label: str, path: Path, report: dict[str, Any]) -> dic
 def _h3_score(row: dict[str, Any]) -> tuple[Any, ...]:
     ev = row.get("heldout_explained_variance")
     rmse = row.get("heldout_normalized_rmse")
-    material = row.get("material_wrong_scale_win_fraction")
+    material = row.get("material_wrong_scale_gate_value")
+    if material is None:
+        material = row.get("material_wrong_scale_win_fraction")
     return (
         int(row["candidate_receipt"]),
+        int(row.get("theorem_clean_feature_policy", False)),
         int(row["control_separation_receipt"]),
         int(row["signal_gate"]),
         int(row["geometry_gate"]),
@@ -765,6 +947,15 @@ def _h3_score(row: dict[str, Any]) -> tuple[Any, ...]:
         -(float(rmse) if rmse is not None else 1.0e9),
         int(row["feature_count"]),
     )
+
+
+def _h3_excluded_observables(report: dict[str, Any]) -> list[str]:
+    feature_selection = report.get("feature_selection") if isinstance(report, dict) else {}
+    if isinstance(feature_selection, dict):
+        values = feature_selection.get("exclude_observables", [])
+    else:
+        values = []
+    return sorted({str(value) for value in values if str(value)})
 
 
 def _object_score(row: dict[str, Any]) -> tuple[Any, ...]:

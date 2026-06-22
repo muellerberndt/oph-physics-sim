@@ -166,6 +166,8 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
                 "observer_like_self_reading_system_receipt": True,
                 "observer_modular_time_receipt": True,
                 "observer_facing_3p1d_h3_experience_receipt": True,
+                "observer_facing_populated_h3_experience_receipt": False,
+                "observer_h3_object_population_receipt": False,
                 "theorem_assisted_consensus_3d_bulk_readout_receipt": True,
                 "strict_neutral_third_person_bulk_receipt": False,
                 "physical_cmb_output_comparison_receipt": True,
@@ -244,16 +246,39 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert payload.exists()
     assert "OPH Universe Timeline Visualization" in viewer.read_text(encoding="utf-8")
     parsed = json.loads(payload.read_text(encoding="utf-8"))
+    assert parsed["schemaVersion"] == "oph_universe_timeline_visualization_payload_v1"
     assert parsed["smallUniverse"]["receipts"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
     assert "pnSilenceToObservation" in parsed
     assert len(parsed["screen"]["clusters"]["snapshots"]) >= 2
+    assert parsed["subjectiveObserverCameras"][0]["kind"] == "observer_local_subjective_camera"
+    assert parsed["subjectiveObserverCameras"][0]["timeFrames"][0]["visibleReadoutHash"] == "abc"
     assert parsed["observerModularTime"]["receipts"]["observer_modular_time_receipt"] is True
+    assert parsed["observerModularTime"]["receipts"]["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert parsed["observerModularTime"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is False
+    assert parsed["observerModularTime"]["receipts"]["observer_h3_object_population_receipt"] is False
+    assert parsed["observerModularTime"]["subjectiveObserverCameras"][0]["cameraId"].startswith(
+        "subjective_observer_"
+    )
     assert len(parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"]) >= 32
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["dominantObjectPacket"] == 3
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["visibleObjectPackets"]
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["polarFieldReadout"]
     assert parsed["consensusBulk"]["receipts"]["theorem_assisted_consensus_3d_bulk_readout_receipt"] is True
+    assert parsed["consensusBulk"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is False
     assert parsed["consensusBulk"]["protoParticleCandidates"]["worldlines"][0]["worldlineId"] == "w0"
     assert parsed["consensusBulk"]["protoParticleCandidates"]["receipts"]["particle_matter_receipt"] is False
     assert parsed["cmbComparison"]["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+    assert parsed["comparableObservations"]["datasets"][0]["id"] == "cmb_tt_residual_rows"
+    assert parsed["comparableObservations"]["datasets"][0]["datasetId"] == "cmb_tt_residual_rows"
+    assert parsed["comparableObservations"]["receipts"]["physical_cmb_prediction"] is False
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["viewId"] == "fluctuatingQuantumVacuum"
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["receipts"][
+        "physical_cmb_prediction_receipt"
+    ] is False
+    assert parsed["visualizationViews"]["observerCamera"]["exportSufficiency"] == (
+        "sufficient_for_observer_local_camera_visualization"
+    )
+    assert "subjectiveObserverCameras" in parsed["visualizationViews"]["observerCamera"]["dataSources"]
+    assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"]["critical_edge_cft_receipt"] is False
+    assert "smallUniverse.cycles" in parsed["visualizationViews"]["effectiveStringTheory"]["dataSources"]
     assert Path(summary["web_coding_agent_brief_path"]).exists()

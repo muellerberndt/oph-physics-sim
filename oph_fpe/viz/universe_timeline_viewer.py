@@ -105,8 +105,11 @@ def write_universe_timeline_bundle(
                 "theorem_assisted_consensus_3d_bulk_readout_receipt", False
             )
         ),
-        "strict_neutral_bulk_receipt": bool(
-            payload["consensusBulk"]["receipts"].get("strict_neutral_third_person_bulk_receipt", False)
+        "chart_blind_strict_neutral_quotient_bulk_receipt": bool(
+            payload["consensusBulk"]["receipts"].get(
+                "chart_blind_strict_neutral_quotient_bulk_receipt",
+                payload["consensusBulk"]["receipts"].get("strict_neutral_third_person_bulk_receipt", False),
+            )
         ),
         "physical_cmb_output_comparison_receipt": bool(
             payload["cmbComparison"]["receipts"].get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
@@ -134,7 +137,17 @@ def build_universe_timeline_payload(
     max_h3_objects: int,
 ) -> dict[str, Any]:
     small_payload = _small_universe_payload(Path(small_universe_dir))
-    observer_payload = _observer_modular_time_payload(Path(observer_run_dir), max_observers=max_observers)
+    observer_payload = _observer_modular_time_payload(
+        Path(observer_run_dir),
+        readout_dir=(
+            Path(consensus_readout_dir)
+            if consensus_readout_dir is not None
+            else Path(consensus_pack_dir)
+            if consensus_pack_dir is not None
+            else None
+        ),
+        max_observers=max_observers,
+    )
     screen_payload = _screen_payload(Path(observer_run_dir), max_points=max_screen_points)
     bulk_payload = _consensus_bulk_payload(
         Path(consensus_pack_dir) if consensus_pack_dir is not None else None,
@@ -142,6 +155,12 @@ def build_universe_timeline_payload(
         max_objects=max_h3_objects,
     )
     cmb_payload = _cmb_payload(Path(consensus_pack_dir) if consensus_pack_dir is not None else None)
+    subjective_cameras = _subjective_observer_cameras(observer_payload)
+    observer_payload["subjectiveObserverCameras"] = subjective_cameras
+    comparable_payload = _comparable_observations_payload(
+        Path(consensus_pack_dir) if consensus_pack_dir is not None else None,
+        cmb_payload,
+    )
     pn_silence_payload = _pn_silence_to_observation_payload(
         Path(observer_run_dir),
         Path(consensus_pack_dir) if consensus_pack_dir is not None else None,
@@ -152,7 +171,16 @@ def build_universe_timeline_payload(
         bulk_payload,
         pn_silence_payload,
     )
+    visualization_views = _visualization_views_payload(
+        small_payload=small_payload,
+        screen_payload=screen_payload,
+        observer_payload=observer_payload,
+        bulk_payload=bulk_payload,
+        cmb_payload=cmb_payload,
+        pn_silence_payload=pn_silence_payload,
+    )
     return {
+        "schemaVersion": "oph_universe_timeline_visualization_payload_v1",
         "schema": "oph_universe_timeline_visualization_payload_v1",
         "title": "OPH Universe Timeline Visualization",
         "sourcePaths": {
@@ -165,7 +193,7 @@ def build_universe_timeline_payload(
             "Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite "
             "observer screen, overlap repair, observer-local modular-time readouts, theorem-assisted H3 "
             "consensus object charts, and measurement-comparable CMB diagnostics when present. It does "
-            "not promote strict neutral third-person bulk or physical CMB prediction unless those receipts "
+            "not promote chart-blind strict neutral quotient bulk or physical CMB prediction unless those receipts "
             "are true in the payload."
         ),
         "ophDifferentiator": (
@@ -174,11 +202,14 @@ def build_universe_timeline_payload(
         ),
         "smallUniverse": small_payload,
         "screen": screen_payload,
+        "subjectiveObserverCameras": subjective_cameras,
         "observerModularTime": observer_payload,
         "consensusBulk": bulk_payload,
         "pnSilenceToObservation": pn_silence_payload,
         "cmbComparison": cmb_payload,
+        "comparableObservations": comparable_payload,
         "geometriesAndSymmetries": geometry_payload,
+        "visualizationViews": visualization_views,
     }
 
 
@@ -290,10 +321,16 @@ def _repair_frames(run_dir: Path, *, node_count: int, max_steps: int = 32) -> li
     return frames
 
 
-def _observer_modular_time_payload(run_dir: Path, *, max_observers: int) -> dict[str, Any]:
+def _observer_modular_time_payload(
+    run_dir: Path,
+    *,
+    readout_dir: Path | None = None,
+    max_observers: int,
+) -> dict[str, Any]:
     observer_report = _read_json(run_dir / "observer_modular_experience_report.json")
     status = _read_json(run_dir / "emergence_status_report.json")
     consensus = _read_json(run_dir / "observer_consensus_report.json")
+    readout = _read_json((readout_dir or run_dir) / "observer_consensus_bulk_readout_report.json")
     views = _read_jsonl(run_dir / "observer_views.jsonl", limit=max_observers)
     trace = _read_trace(run_dir / "mismatch_trace.csv")
     time_grid = observer_report.get("observer_relative_time_grid")
@@ -352,9 +389,21 @@ def _observer_modular_time_payload(run_dir: Path, *, max_observers: int) -> dict
         },
         "timeFrames": trace_frames,
         "receipts": {
-            "observer_modular_time_receipt": bool(observer_report.get("observer_modular_time_receipt", False)),
+            "observer_modular_time_receipt": bool(
+                readout.get("observer_modular_time_receipt", False)
+                or observer_report.get("observer_modular_time_receipt", False)
+            ),
             "observer_facing_3p1d_h3_experience_receipt": bool(
-                observer_report.get("observer_facing_3p1d_h3_experience_receipt", False)
+                readout.get("observer_facing_3p1d_h3_experience_receipt", False)
+                or observer_report.get("observer_facing_3p1d_h3_experience_receipt", False)
+            ),
+            "observer_facing_populated_h3_experience_receipt": bool(
+                readout.get("observer_facing_populated_h3_experience_receipt", False)
+                or observer_report.get("observer_facing_populated_h3_experience_receipt", False)
+            ),
+            "observer_h3_object_population_receipt": bool(
+                readout.get("observer_h3_object_population_receipt", False)
+                or observer_report.get("observer_h3_object_population_receipt", False)
             ),
             "support_visible_lorentz_3p1_kinematics_receipt": bool(
                 status.get("support_visible_lorentz_3p1_kinematics_receipt", False)
@@ -365,7 +414,7 @@ def _observer_modular_time_payload(run_dir: Path, *, max_observers: int) -> dict
         "blockers": observer_report.get("blockers", []),
         "claimBoundary": observer_report.get(
             "claim_boundary",
-            "Observer-local modular-time readout; not strict neutral third-person bulk.",
+            "Observer-local modular-time readout; not chart-blind strict neutral quotient bulk.",
         ),
     }
 
@@ -389,6 +438,182 @@ def _screen_payload(run_dir: Path, *, max_points: int) -> dict[str, Any]:
         "claimBoundary": (
             "The screen is the finite observer boundary/readback surface. It is not an initialized "
             "third-person 3D bulk lattice."
+        ),
+    }
+
+
+def _subjective_observer_cameras(observer_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    cameras: list[dict[str, Any]] = []
+    perspectives = observer_payload.get("objectiveObserverViews", [])
+    if not isinstance(perspectives, list):
+        return cameras
+    for index, row in enumerate(perspectives):
+        if not isinstance(row, dict):
+            continue
+        axis = row.get("axis")
+        if not isinstance(axis, list) or len(axis) < 3:
+            continue
+        forward = _unit_vec([float(axis[0]), float(axis[1]), float(axis[2])])
+        if _vec_norm(forward) <= 0.0:
+            continue
+        eye = [float(1.18 * value) for value in forward]
+        look_at = [0.0, 0.0, 0.0]
+        ref_up = [0.0, 0.0, 1.0] if abs(forward[2]) < 0.92 else [0.0, 1.0, 0.0]
+        right = _unit_vec(_cross(ref_up, forward))
+        up = _unit_vec(_cross(forward, right))
+        frames = []
+        for frame in list(row.get("timeFrames", []))[:96] if isinstance(row.get("timeFrames"), list) else []:
+            if not isinstance(frame, dict):
+                continue
+            frames.append(
+                {
+                    "relativeTime": frame.get("relativeTime"),
+                    "cycle": frame.get("cycle"),
+                    "visibleReadoutHash": frame.get("visibleReadoutHash"),
+                    "dominantRecordSignature": frame.get("dominantRecordSignature"),
+                    "dominantObjectPacket": frame.get("dominantObjectPacket"),
+                    "visibleObjectPackets": frame.get("visibleObjectPackets", []),
+                    "visibleRecordPackets": frame.get("visibleRecordPackets", []),
+                    "polarFieldReadout": frame.get("polarFieldReadout", []),
+                    "localTransitionStep": frame.get("localTransitionStep"),
+                    "framePacketSource": frame.get("framePacketSource"),
+                }
+            )
+        cameras.append(
+            {
+                "cameraId": f"subjective_observer_{row.get('observerId', index)}",
+                "observerId": row.get("observerId"),
+                "kind": "observer_local_subjective_camera",
+                "eye": eye,
+                "lookAt": look_at,
+                "up": up,
+                "right": right,
+                "forward": [-float(value) for value in forward],
+                "fovDegrees": 72.0,
+                "screenProjection": "local_tangent_readout_camera_on_s2_boundary",
+                "supportPatchCount": row.get("supportPatchCount"),
+                "supportNodeSample": row.get("supportNodeSample", []),
+                "supportEntropyCapacity": row.get("supportEntropyCapacity"),
+                "visibleObjectPackets": row.get("visibleObjectPackets", []),
+                "visibleRecordPackets": row.get("visibleRecordPackets", []),
+                "timeFrames": frames,
+                "claimBoundary": (
+                    "Subjective observer camera derived from one observer-local visible readout. "
+                    "It is a rendering camera for the observer's finite support, not a hidden global view."
+                ),
+            }
+        )
+    return cameras
+
+
+def _comparable_observations_payload(consensus_pack_dir: Path | None, cmb_payload: dict[str, Any]) -> dict[str, Any]:
+    if consensus_pack_dir is None or not consensus_pack_dir.exists():
+        return {
+            "description": "No comparable observation pack supplied.",
+            "source": None,
+            "measurementLanes": [],
+            "datasets": [],
+            "receipts": {
+                "physical_cmb_prediction": False,
+                "physical_matter_power_prediction": False,
+            },
+            "claimBoundary": "No measurement-comparable rows were supplied.",
+        }
+    try:
+        from oph_fpe.cosmology.comparable_data import comparable_data_report
+
+        report = comparable_data_report([consensus_pack_dir])
+    except Exception as exc:  # pragma: no cover - retained for long-run viewer bundles
+        return {
+            "description": "Comparable-data report failed during visualization payload export.",
+            "source": str(consensus_pack_dir),
+            "error": repr(exc),
+            "measurementLanes": [],
+            "datasets": [],
+            "receipts": {
+                "physical_cmb_prediction": False,
+                "physical_matter_power_prediction": False,
+            },
+            "claimBoundary": "Comparable-data export failed; no measurement claim is promoted.",
+        }
+
+    lanes = report.get("measurement_lanes", {}) if isinstance(report.get("measurement_lanes"), dict) else {}
+    lane_rows = []
+    preferred_lanes = (
+        "planck_tt_shape_lite",
+        "finite_repair_clock_cmb_camb_transfer",
+        "oph_exact_cmb_camb_transfer",
+        "finite_screen_cmb_anomaly_readouts",
+        "static_galaxy_measurement_fit",
+        "static_galaxy_proxy",
+        "oph_cnb_neutrino_background",
+        "h0_s8_branch_diagnostic",
+        "oph_repair_clock_kappa",
+        "oph_screen_power_effective_theory",
+        "oph_maxent_green_screen_source",
+        "observer_chart_object_population",
+        "defect_worldline_particle_precursors",
+        "neutral_distance_profile_audit",
+        "prime_geometric_rank_sweep",
+    )
+    for lane_name in preferred_lanes:
+        lane = lanes.get(lane_name)
+        if not isinstance(lane, dict) or int(lane.get("run_count", 0) or 0) <= 0:
+            continue
+        lane_rows.append(
+            {
+                "id": lane_name,
+                "lane": lane_name,
+                "runCount": int(lane.get("run_count", 0) or 0),
+                "metrics": _compact_metric_map(lane, limit=18),
+            }
+        )
+    datasets = []
+    cmb_rows = cmb_payload.get("residualRows", []) if isinstance(cmb_payload, dict) else []
+    if isinstance(cmb_rows, list) and cmb_rows:
+        datasets.append(
+            {
+                "id": "cmb_tt_residual_rows",
+                "datasetId": "cmb_tt_residual_rows",
+                "kind": "cmb_tt_comparison",
+                "rowCount": len(cmb_rows),
+                "rows": cmb_rows[:240],
+                "receipts": (cmb_payload.get("receipts") or {}) if isinstance(cmb_payload, dict) else {},
+                "claimBoundary": (cmb_payload.get("claimBoundary") if isinstance(cmb_payload, dict) else None),
+            }
+        )
+    run_rows = report.get("rows", []) if isinstance(report.get("rows"), list) else []
+    compact_runs = [_compact_comparable_run_row(row) for row in run_rows[:64] if isinstance(row, dict)]
+    if compact_runs:
+        datasets.append(
+            {
+                "id": "comparable_run_receipt_rows",
+                "datasetId": "comparable_run_receipt_rows",
+                "kind": "multi_lane_receipt_summary",
+                "rowCount": len(run_rows),
+                "rows": compact_runs,
+            }
+        )
+    return {
+        "description": (
+            "Measurement-comparable diagnostics exported for plotting against public data. These include "
+            "screen-CMB/TT residual rows when present plus compact summaries for galaxy, CNB, H0/S8, "
+            "repair-clock, object-population, and neutral-frontier lanes."
+        ),
+        "source": str(consensus_pack_dir),
+        "measurementLanes": lane_rows,
+        "datasets": datasets,
+        "receipts": {
+            "physical_cmb_prediction": bool(report.get("physical_cmb_prediction", False)),
+            "physical_matter_power_prediction": bool(report.get("physical_matter_power_prediction", False)),
+            "bulk_3d_established_any": bool(report.get("bulk_3d_established_any", False)),
+            "theorem_assisted_h3_bulk_any": bool(report.get("theorem_assisted_h3_bulk_any", False)),
+            "strict_neutral_3d_bulk_any": bool(report.get("strict_neutral_3d_bulk_any", False)),
+            "chart_level_3p1_any": bool(report.get("chart_level_3p1_any", False)),
+        },
+        "claimBoundary": report.get(
+            "claim_boundary",
+            "Comparable observation diagnostics only; prediction gates stay controlled by source receipts.",
         ),
     }
 
@@ -580,8 +805,23 @@ def _consensus_bulk_payload(
             "observer_facing_3p1d_h3_experience_receipt": bool(
                 readout.get("observer_facing_3p1d_h3_experience_receipt", False)
             ),
+            "observer_facing_populated_h3_experience_receipt": bool(
+                readout.get("observer_facing_populated_h3_experience_receipt", False)
+            ),
+            "observer_h3_object_population_receipt": bool(
+                readout.get("observer_h3_object_population_receipt", False)
+            ),
             "theorem_assisted_consensus_3d_bulk_readout_receipt": bool(
                 readout.get("theorem_assisted_consensus_3d_bulk_readout_receipt", False)
+            ),
+            "observer_facing_consensus_3d_bulk_readout_receipt": bool(
+                readout.get(
+                    "observer_facing_consensus_3d_bulk_readout_receipt",
+                    readout.get("theorem_assisted_consensus_3d_bulk_readout_receipt", False),
+                )
+            ),
+            "chart_blind_strict_neutral_quotient_bulk_receipt": bool(
+                readout.get("chart_blind_strict_neutral_quotient_bulk_receipt", False)
             ),
             "strict_neutral_third_person_bulk_receipt": bool(
                 readout.get("strict_neutral_third_person_bulk_receipt", False)
@@ -594,7 +834,7 @@ def _consensus_bulk_payload(
         "strictNeutralBlockers": readout.get("strict_neutral_blockers", []),
         "claimBoundary": readout.get(
             "claim_boundary",
-            "Theorem-assisted H3 chart visualization; not strict neutral bulk, matter particles, "
+            "Theorem-assisted H3 chart visualization; not chart-blind strict neutral quotient bulk, matter particles, "
             "or physical CMB prediction.",
         ),
     }
@@ -985,7 +1225,10 @@ def _geometry_and_symmetry_payload(
             "theoremAssistedConsensus3dBulkReceipt": bulk_receipts.get(
                 "theorem_assisted_consensus_3d_bulk_readout_receipt", False
             ),
-            "strictNeutralBulkReceipt": bulk_receipts.get("strict_neutral_third_person_bulk_receipt", False),
+            "chartBlindStrictNeutralQuotientBulkReceipt": bulk_receipts.get(
+                "chart_blind_strict_neutral_quotient_bulk_receipt",
+                bulk_receipts.get("strict_neutral_third_person_bulk_receipt", False),
+            ),
         },
         "protoParticleCandidates": {
             "name": "H3 holonomy/defect worldlines",
@@ -999,6 +1242,190 @@ def _geometry_and_symmetry_payload(
             "particleMatterReceipt": bulk_payload.get("protoParticleCandidates", {})
             .get("receipts", {})
             .get("particle_matter_receipt", False),
+        },
+    }
+
+
+def _visualization_views_payload(
+    *,
+    small_payload: dict[str, Any],
+    screen_payload: dict[str, Any],
+    observer_payload: dict[str, Any],
+    bulk_payload: dict[str, Any],
+    cmb_payload: dict[str, Any],
+    pn_silence_payload: dict[str, Any],
+) -> dict[str, Any]:
+    small_receipts = small_payload.get("receipts", {})
+    observer_receipts = observer_payload.get("receipts", {})
+    bulk_receipts = bulk_payload.get("receipts", {})
+    proto_receipts = bulk_payload.get("protoParticleCandidates", {}).get("receipts", {})
+    cmb_receipts = cmb_payload.get("receipts", {})
+    pn_receipts = pn_silence_payload.get("receipts", {})
+    return {
+        "fluctuatingQuantumVacuum": {
+            "viewId": "fluctuatingQuantumVacuum",
+            "label": "Fluctuating quantum vacuum / finite readback field",
+            "description": (
+                "Render the finite S2 screen as the observer-facing vacuum/readback regulator. "
+                "Animate screen.clusters.snapshots and screen.repairTrace as repair/holonomy "
+                "fluctuations. This is a diagnostic OPH readback field, not a literal QFT vacuum "
+                "unless a separate quantum-field receipt is added."
+            ),
+            "dataSources": [
+                "screen.points",
+                "screen.values",
+                "screen.fieldName",
+                "screen.clusters.snapshots",
+                "screen.repairTrace",
+                "smallUniverse.repairFrames",
+                "cmbComparison.residualRows",
+            ],
+            "primaryFields": ["screen.values", "screen.clusters.snapshots", "screen.repairTrace"],
+            "renderLayers": [
+                {"layer": "screen_s2_field", "source": "screen.points + screen.values"},
+                {"layer": "repair_fluctuation_markers", "source": "screen.clusters.snapshots[*].clusters"},
+                {"layer": "mismatch_commit_trace", "source": "screen.repairTrace"},
+                {"layer": "cmb_diagnostic_overlay", "source": "cmbComparison.residualRows"},
+            ],
+            "receipts": {
+                "finite_consensus_theorem_receipt": bool(
+                    small_receipts.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
+                ),
+                "screen_cmb_diagnostic_receipt": bool(
+                    cmb_receipts.get("SCREEN_CMB_LITE_DIAGNOSTIC_RECEIPT", False)
+                    or cmb_receipts.get("USABLE_PHYSICAL_CMB_DATA_RECEIPT", False)
+                ),
+                "physical_cmb_prediction_receipt": bool(
+                    cmb_receipts.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+                ),
+            },
+            "exportSufficiency": "sufficient_for_diagnostic_visualization_not_physical_qft_vacuum",
+            "claimBoundary": (
+                "Shows finite OPH screen/readback fluctuations and repair residues. Do not label as a "
+                "literal fluctuating quantum vacuum without a dedicated QFT-vacuum receipt."
+            ),
+        },
+        "observerCamera": {
+            "viewId": "observerCamera",
+            "label": "Observer camera / local modular-time readout",
+            "description": (
+                "Render one observer-local camera at a time from subjectiveObserverCameras. Each camera "
+                "is derived from visible support, readback records, packet histograms, and modular-time "
+                "frames; it is not a hidden global camera."
+            ),
+            "dataSources": [
+                "subjectiveObserverCameras",
+                "observerModularTime.objectiveObserverViews",
+                "observerModularTime.overlapLinks",
+                "observerModularTime.timeFrames",
+            ],
+            "primaryFields": [
+                "subjectiveObserverCameras[*].eye",
+                "subjectiveObserverCameras[*].forward",
+                "subjectiveObserverCameras[*].timeFrames",
+            ],
+            "renderLayers": [
+                {"layer": "observer_axis_camera", "source": "subjectiveObserverCameras[*]"},
+                {"layer": "visible_record_packets", "source": "subjectiveObserverCameras[*].timeFrames"},
+                {"layer": "overlap_support_graph", "source": "observerModularTime.overlapLinks"},
+            ],
+            "receipts": {
+                "observer_modular_time_receipt": bool(
+                    observer_receipts.get("observer_modular_time_receipt", False)
+                ),
+                "observer_facing_3p1d_h3_experience_receipt": bool(
+                    observer_receipts.get("observer_facing_3p1d_h3_experience_receipt", False)
+                ),
+                "observer_facing_populated_h3_experience_receipt": bool(
+                    observer_receipts.get("observer_facing_populated_h3_experience_receipt", False)
+                ),
+            },
+            "exportSufficiency": "sufficient_for_observer_local_camera_visualization",
+            "claimBoundary": (
+                "Subjective observer cameras are visible-readout cameras. They do not expose hidden "
+                "state or objective global time."
+            ),
+        },
+        "effectiveStringTheory": {
+            "viewId": "effectiveStringTheory",
+            "label": "Effective string-theory edge/worldsheet view",
+            "description": (
+                "Render cyclic repair paths, collar-like screen defect worldlines, and H3 proto-particle "
+                "tracks as the current effective string/worldsheet diagnostic layer. The export is enough "
+                "for a schematic edge-string view, but not enough to claim a critical string CFT; that "
+                "requires EDGE_CYLINDER current, Virasoro, Sugawara, supercurrent, and spin-structure receipts."
+            ),
+            "dataSources": [
+                "smallUniverse.cycles",
+                "smallUniverse.edges",
+                "smallUniverse.repairFrames",
+                "screen.clusters.snapshots",
+                "consensusBulk.protoParticleCandidates.worldlines",
+                "consensusBulk.objects",
+            ],
+            "primaryFields": [
+                "smallUniverse.cycles.exactConsensus",
+                "smallUniverse.repairFrames",
+                "consensusBulk.protoParticleCandidates.worldlines[*].events",
+            ],
+            "renderLayers": [
+                {"layer": "cyclic_edge_normal_forms", "source": "smallUniverse.cycles"},
+                {"layer": "repair_history_worldsheet_ribbons", "source": "smallUniverse.repairFrames"},
+                {"layer": "collar_defect_tracks", "source": "screen.clusters.snapshots"},
+                {"layer": "h3_worldline_overlay", "source": "consensusBulk.protoParticleCandidates.worldlines"},
+            ],
+            "receipts": {
+                "finite_consensus_theorem_receipt": bool(
+                    small_receipts.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
+                ),
+                "bulk_worldline_precursor_receipt": bool(
+                    proto_receipts.get("bulk_worldline_precursor_receipt", False)
+                ),
+                "particle_matter_receipt": bool(proto_receipts.get("particle_matter_receipt", False)),
+                "observer_facing_consensus_3d_bulk_readout_receipt": bool(
+                    bulk_receipts.get(
+                        "observer_facing_consensus_3d_bulk_readout_receipt",
+                        bulk_receipts.get("theorem_assisted_consensus_3d_bulk_readout_receipt", False),
+                    )
+                ),
+                "critical_edge_cft_receipt": False,
+            },
+            "exportSufficiency": "sufficient_for_schematic_edge_string_view_not_critical_worldsheet_claim",
+            "claimBoundary": (
+                "This is an effective edge-string diagnostic view. It must not be labeled a proven critical "
+                "heterotic worldsheet until the finite-carrier critical-edge receipt suite passes."
+            ),
+        },
+        "silenceToObservation": {
+            "viewId": "silenceToObservation",
+            "label": "Silence-to-observation bridge",
+            "description": (
+                "Render the scale-compressed sequence from record silence through P detuning, finite "
+                "repair depth, and observer/H3 readout emergence."
+            ),
+            "dataSources": ["pnSilenceToObservation"],
+            "primaryFields": [
+                "pnSilenceToObservation.silenceInitialState",
+                "pnSilenceToObservation.closureCoordinates",
+                "pnSilenceToObservation.finiteRegulatorDepth",
+                "pnSilenceToObservation.observationEmergence",
+            ],
+            "renderLayers": [
+                {"layer": "silent_initial_state", "source": "pnSilenceToObservation.silenceInitialState"},
+                {"layer": "p_detuning", "source": "pnSilenceToObservation.closureCoordinates"},
+                {"layer": "finite_repair_depth", "source": "pnSilenceToObservation.finiteRegulatorDepth"},
+                {"layer": "readout_emergence", "source": "pnSilenceToObservation.observationEmergence"},
+            ],
+            "receipts": {
+                "scale_compressed_pn_silence_to_observation_receipt": bool(
+                    pn_receipts.get("scale_compressed_pn_silence_to_observation_receipt", False)
+                ),
+                "literal_global_N_capacity_simulated_receipt": bool(
+                    pn_receipts.get("literal_global_N_capacity_simulated_receipt", False)
+                ),
+            },
+            "exportSufficiency": "sufficient_for_scale_compressed_bridge_visualization",
+            "claimBoundary": pn_silence_payload.get("claimBoundary"),
         },
     }
 
@@ -1051,7 +1478,7 @@ select {{ background:#10151b; color:#eef2f6; border:1px solid var(--line); borde
 </header>
 <main>
 <section>
-<h2>1. Finite Screen / Boundary Readback</h2>
+<h2>1. Fluctuating Quantum Vacuum / Boundary Readback</h2>
 <svg id="screenSvg"></svg>
 <div class="controls"><span>repair cycle</span><input id="screenCycle" type="range" min="0" max="0" value="0"><span class="readout" id="screenCycleText"></span></div>
 <div class="note" id="screenNote"></div>
@@ -1063,13 +1490,13 @@ select {{ background:#10151b; color:#eef2f6; border:1px solid var(--line); borde
 <div class="note" id="smallNote"></div>
 </section>
 <section>
-<h2>3. Observer Modular-Time Perspective</h2>
+<h2>3. Observer Camera / Modular-Time Perspective</h2>
 <svg id="observerSvg"></svg>
 <div class="controls"><span>observer</span><select id="observerSelect"></select><span>time</span><input id="observerTime" type="range" min="0" max="0" value="0"><span class="readout" id="observerTimeText"></span></div>
 <div class="note" id="observerNote"></div>
 </section>
 <section>
-<h2>4. Emergent H3 Bulk And Proto-Particle Candidates</h2>
+<h2>4. Effective String / H3 Edge-Worldline View</h2>
 <svg id="h3Svg"></svg>
 <div class="note" id="h3Note"></div>
 </section>
@@ -1170,7 +1597,7 @@ function drawH3() {{
     svg.appendChild(el("circle",{{cx:q[0],cy:q[1],r:4+Math.min(5,Math.sqrt(Number(line.observationCount)||1)*0.45),fill:line.particleLike?"#ff6b6b":"#d66bff",opacity:0.86,stroke:"#10151b","stroke-width":0.9}}));
   }});
   const pr=(DATA.consensusBulk.protoParticleCandidates||{{}}).receipts||{{}};
-  document.getElementById("h3Note").textContent = `${{objs.length}} consensus object packets and ${{lines.length}} holonomy/proto-particle candidate worldlines in the derived H3 chart. Theorem-assisted consensus bulk=${{DATA.consensusBulk.receipts.theorem_assisted_consensus_3d_bulk_readout_receipt}}, strict neutral bulk=${{DATA.consensusBulk.receipts.strict_neutral_third_person_bulk_receipt}}, bulk worldline precursor=${{pr.bulk_worldline_precursor_receipt}}, particle matter=${{pr.particle_matter_receipt}}. ${{DATA.consensusBulk.claimBoundary}}`;
+  document.getElementById("h3Note").textContent = `${{objs.length}} consensus object packets and ${{lines.length}} holonomy/proto-particle candidate worldlines in the derived H3 chart. Observer-facing consensus bulk=${{DATA.consensusBulk.receipts.observer_facing_consensus_3d_bulk_readout_receipt || DATA.consensusBulk.receipts.theorem_assisted_consensus_3d_bulk_readout_receipt}}, chart-blind neutral quotient=${{DATA.consensusBulk.receipts.chart_blind_strict_neutral_quotient_bulk_receipt || DATA.consensusBulk.receipts.strict_neutral_third_person_bulk_receipt}}, bulk worldline precursor=${{pr.bulk_worldline_precursor_receipt}}, particle matter=${{pr.particle_matter_receipt}}. ${{DATA.consensusBulk.claimBoundary}}`;
 }}
 function drawLine(svg, rows, key, stroke, yLabel) {{
   const vals=rows.map(r=>Number(r[key])).filter(Number.isFinite); if(!vals.length) return;
@@ -1215,8 +1642,8 @@ function init() {{
     gate("P/N silence witness", pn.scale_compressed_pn_silence_to_observation_receipt)+
     gate("observer modular time", om.observer_modular_time_receipt)+
     gate("observer 3+1D/H3", om.observer_facing_3p1d_h3_experience_receipt)+
-    gate("theorem-assisted H3 bulk", cb.theorem_assisted_consensus_3d_bulk_readout_receipt)+
-    gate("strict neutral bulk", cb.strict_neutral_third_person_bulk_receipt)+
+    gate("observer H3 consensus bulk", cb.observer_facing_consensus_3d_bulk_readout_receipt || cb.theorem_assisted_consensus_3d_bulk_readout_receipt)+
+    gate("chart-blind neutral quotient", cb.chart_blind_strict_neutral_quotient_bulk_receipt || cb.strict_neutral_third_person_bulk_receipt)+
     gate("usable CMB comparison", cmb.USABLE_PHYSICAL_CMB_DATA_RECEIPT)+
     gate("physical CMB prediction", cmb.PHYSICAL_CMB_PREDICTION_RECEIPT);
   const observerSelect=document.getElementById("observerSelect");
@@ -1251,12 +1678,14 @@ Data payload for custom viewers:
 
 What to inspect:
 
-- Panel 1 shows the finite S2 observer screen/boundary readback from the larger observer-flow run. Colors are screen readback fields; rings are screen-local defect/holonomy residues.
+- Panel 1 shows the fluctuating-vacuum diagnostic view: the finite S2 observer screen/boundary readback from the larger observer-flow run. Colors are screen readback fields; rings are screen-local defect/holonomy residues. This is a diagnostic OPH readback field, not a literal QFT vacuum unless a future receipt says so.
 - Panel 2 shows one deterministic repair path through the exact 12-patch mini-universe certificate. The full certificate checks all finite states/schedules; the slider is a readable path through that certified graph.
-- Panel 3 shows observer-local modular time. Each dot is an observer-like self-reading row with local support, records, readback hash, and modular-depth readout. Use the observer selector to inspect one observer's objective readout across its modular-time frames: record packet, object packet, transition step, local packet histograms, and the global trace cycle used only for synchronization.
-- Panel 4 shows the emergent H3 chart. Consensus object packets are shared readback/object packets from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates, not matter particles unless the particle receipt passes.
+- Panel 3 shows the observer-camera view and observer-local modular time. Each dot is an observer-like self-reading row with local support, records, readback hash, and modular-depth readout. Use the observer selector to inspect one observer's objective readout across its modular-time frames: record packet, object packet, transition step, local packet histograms, and the global trace cycle used only for synchronization.
+- The payload also exports `subjectiveObserverCameras`: first-person rendering cameras derived from visible observer-local readouts. These are the right inputs for a subjective observer camera map.
+- Panel 4 shows the effective string-theory diagnostic view. Consensus object packets are shared readback/object packets from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates and edge-worldline/collar diagnostics, not matter particles or a critical worldsheet unless the corresponding receipts pass.
 - Panel 6 shows the scale-compressed P/N silence-to-observation witness: initial record silence, P detuning, finite regulator depth, and observer/H3 readout emergence. This is not a literal brute-force simulation of astronomical N_CRC.
-- Panel 7 shows usable CMB comparison diagnostics when present. It is not a physical CMB prediction unless the physical CMB prediction receipt passes.
+- Panel 7 shows usable CMB comparison diagnostics when present. `comparableObservations` also carries compact measurement-lane summaries for other public-data-facing diagnostics. None of this is a physical prediction unless the relevant prediction receipt passes.
+- `visualizationViews.fluctuatingQuantumVacuum`, `visualizationViews.observerCamera`, and `visualizationViews.effectiveStringTheory` are the canonical view contracts for a custom visualizer.
 
 Claim boundary:
 
@@ -1279,11 +1708,12 @@ Create an interactive OPH visualization of observer-like self-reading systems. T
 
 Required views:
 
-1. **Finite screen view**
+1. **Fluctuating quantum vacuum / finite screen view**
    - Render `screen.points` as an S2/equirectangular or sphere view.
    - Color by `screen.values` and label the field with `screen.fieldName`.
    - Overlay `screen.clusters.snapshots[*].clusters` as repair/holonomy residues.
-   - Explain that this is the observer boundary/readback surface, not a pre-existing 3D bulk.
+   - Use `visualizationViews.fluctuatingQuantumVacuum` for the canonical layer list and claim boundary.
+   - Explain that this is the observer boundary/readback surface, not a literal QFT vacuum or a pre-existing 3D bulk.
 
 2. **Overlap repair view**
    - Render `smallUniverse.nodes`, `smallUniverse.edges`, and `smallUniverse.repairFrames`.
@@ -1297,23 +1727,30 @@ Required views:
    - Gate `scale_compressed_pn_silence_to_observation_receipt`, `literal_global_N_capacity_simulated_receipt`, and `dynamic_p_detuning_control_receipt` separately.
    - Explain that this is a finite scale-compressed witness of the OPH thesis, not literal global `N_CRC` cells.
 
-4. **Observer modular-time view**
+4. **Observer camera / modular-time view**
    - Render `observerModularTime.observers` on the screen by `axis`.
    - Render `observerModularTime.overlapLinks` as the observer-overlap substrate. These are not decorative graph edges; they are the local shared-support relations from which objectivity is read.
    - Animate `observerModularTime.timeFrames`.
    - Add an observer selector backed by `observerModularTime.objectiveObserverViews`.
    - For the selected observer, animate `objectiveObserverViews[*].timeFrames`: show `relativeTime`, `localTransitionStep`, `dominantRecordSignature`, `dominantObjectPacket`, `visibleReadoutHash`, support size, and packet histograms.
+   - Use `subjectiveObserverCameras` for subjective/first-person camera rendering. Each camera is derived from one observer-local visible readout and includes `eye`, `lookAt`, `up`, `right`, `forward`, `fovDegrees`, support samples, and time frames.
+   - Use `visualizationViews.observerCamera` for the canonical layer list and claim boundary.
    - Do not present this as external global time. It is observer-local modular readout.
 
-5. **Consensus H3 chart and proto-particle view**
+5. **Effective string-theory edge/worldsheet view**
+   - Use `visualizationViews.effectiveStringTheory` for the canonical layer list and claim boundary.
+   - Render `smallUniverse.cycles` and `smallUniverse.repairFrames` as cyclic edge normal forms and swept repair histories.
+   - Render `screen.clusters.snapshots[*].clusters` as collar/defect fluctuation markers.
    - Render `consensusBulk.objects` as a 3D scatter/cloud.
    - Size by `observerCount`; color by `h3CompactnessNormalized`.
    - Render `consensusBulk.protoParticleCandidates.worldlines[*].events` as H3 tracks.
-   - Use neutral wording: "consensus object packet" and "holonomy/proto-particle candidate" unless `consensusBulk.protoParticleCandidates.receipts.particle_matter_receipt` is true.
-   - Gate labels must show theorem-assisted H3 bulk and strict neutral bulk separately.
+   - Use neutral wording: "edge-worldline diagnostic", "consensus object packet", and "holonomy/proto-particle candidate" unless the stronger receipts pass.
+   - Do not label it a critical string CFT unless a future critical-edge receipt is true.
+   - Gate labels must show observer-facing H3 consensus bulk and chart-blind neutral quotient bulk separately.
 
 6. **CMB diagnostics view**
    - Plot `cmbComparison.residualRows`.
+   - Use `comparableObservations.measurementLanes` and `comparableObservations.datasets` for additional public-data-facing diagnostics such as galaxy, CNB, H0/S8, anomaly, repair-clock, object-population, and neutral-frontier lanes when present.
    - Display `USABLE_PHYSICAL_CMB_DATA_RECEIPT` and `PHYSICAL_CMB_PREDICTION_RECEIPT` separately.
    - Never label diagnostic TT comparison as a physical prediction unless the receipt is true.
 
@@ -1583,6 +2020,67 @@ def _mean_optional(*values: Any) -> float | None:
     if not finite:
         return None
     return float(sum(finite) / len(finite))
+
+
+def _vec_norm(values: list[float]) -> float:
+    return float(math.sqrt(sum(float(value) * float(value) for value in values)))
+
+
+def _unit_vec(values: list[float]) -> list[float]:
+    norm = _vec_norm(values)
+    if norm <= 0.0:
+        return [0.0, 0.0, 0.0]
+    return [float(value) / norm for value in values[:3]]
+
+
+def _cross(left: list[float], right: list[float]) -> list[float]:
+    return [
+        float(left[1] * right[2] - left[2] * right[1]),
+        float(left[2] * right[0] - left[0] * right[2]),
+        float(left[0] * right[1] - left[1] * right[0]),
+    ]
+
+
+def _compact_metric_map(row: dict[str, Any], *, limit: int) -> dict[str, Any]:
+    skip = {"mode", "claim_boundary", "rows", "sample_rows", "run_paths", "source_paths"}
+    result: dict[str, Any] = {}
+    for key in sorted(row):
+        if key in skip or key.endswith("_rows"):
+            continue
+        value = row.get(key)
+        if isinstance(value, (bool, int, float, str)) or value is None:
+            result[key] = value
+        if len(result) >= limit:
+            break
+    return result
+
+
+def _compact_comparable_run_row(row: dict[str, Any]) -> dict[str, Any]:
+    keys = (
+        "run_id",
+        "name",
+        "patch_count",
+        "bulk_3d_established",
+        "bulk_proof_chart_level_3p1",
+        "bulk_proof_theorem_assisted_h3_populated_chart",
+        "bulk_proof_theorem_assisted_h3_nonboundary_population",
+        "bulk_proof_strict_neutral_3d_bulk",
+        "bulk_proof_screen_cmb_proxy",
+        "bulk_proof_physical_cmb_prediction",
+        "object_bulk_population_receipt",
+        "object_h3_nonboundary_population_receipt",
+        "observer_chart_object_count",
+        "observer_chart_localized_object_count",
+        "observer_chart_localized_not_boundary_object_count",
+        "cmb_lite_best_shape_field",
+        "cmb_lite_best_shape_correlation",
+        "cmb_lite_best_normalized_rmse",
+        "physical_cmb_prediction",
+        "strict_neutral_bulk_receipt",
+        "strict_neutral_median_dimension_estimate",
+        "strict_neutral_selected_model",
+    )
+    return {key: row.get(key) for key in keys if key in row}
 
 
 def _relative_time_frames(time_grid: list[Any], trace: list[dict[str, Any]]) -> list[dict[str, Any]]:

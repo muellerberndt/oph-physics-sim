@@ -295,7 +295,7 @@ canvas { width: 100%; height: 100%; min-height: 190px; display: block; backgroun
   <div class="metric">objects <b id="object-count">0</b></div>
   <div class="metric">observer overlaps <b id="overlap-count">0</b></div>
   <div class="metric">theorem-assisted H3 <b id="h3-gate">false</b></div>
-  <div class="metric">strict neutral bulk <b id="neutral-gate">false</b></div>
+  <div class="metric">chart-blind neutral quotient <b id="neutral-gate">false</b></div>
   <div class="metric">physical CMB <b id="cmb-gate">false</b></div>
 </header>
 <main>

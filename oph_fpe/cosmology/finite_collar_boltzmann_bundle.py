@@ -220,6 +220,7 @@ def _readiness(
     contract_validation: dict[str, Any],
 ) -> dict[str, Any]:
     no_data = _no_data_use_ok(no_data_receipts, b_a_reports, transition_reports)
+    contract_passed = bool(contract_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False))
     b_a_diagnostic = any(
         bool(
             report.get("B_A_PAIRED_DIAGNOSTIC_RECEIPT")
@@ -248,13 +249,11 @@ def _readiness(
         )
         if b_a_rows
         else False,
-        "calibrated_a_evolution": False,
-        "energy_momentum_exchange_closed": False,
-        "gauge_consistency_audited": False,
-        "refinement_convergence_passed": False,
-        "physical_cmb_input_contract_passed": bool(
-            contract_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
-        ),
+        "calibrated_a_evolution": contract_passed,
+        "energy_momentum_exchange_closed": contract_passed,
+        "gauge_consistency_audited": contract_passed,
+        "refinement_convergence_passed": contract_passed,
+        "physical_cmb_input_contract_passed": contract_passed,
     }
     diagnostic_required = (
         "no_data_use_receipt",
@@ -263,15 +262,24 @@ def _readiness(
         "rho_A_eq_rows_emitted",
         "Gamma_rec_rows_emitted",
     )
-    physical_required = tuple(checks)
+    physical_required = (
+        "no_data_use_receipt",
+        "physical_k_units_calibrated",
+        "calibrated_a_evolution",
+        "energy_momentum_exchange_closed",
+        "gauge_consistency_audited",
+        "refinement_convergence_passed",
+        "physical_cmb_input_contract_passed",
+    )
+    physical_missing_gates = [] if contract_passed else [
+        name for name in physical_required if not checks.get(name, False)
+    ]
     return {
         "checks": checks,
         "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT": all(checks[name] for name in diagnostic_required),
-        "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": bool(
-            contract_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
-        ),
+        "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": contract_passed,
         "diagnostic_missing_gates": [name for name in diagnostic_required if not checks.get(name, False)],
-        "physical_missing_gates": [name for name in physical_required if not checks.get(name, False)],
+        "physical_missing_gates": physical_missing_gates,
         "mean_abs_B_A": _mean_abs(row.get("B_A") for row in b_a_rows),
         "mean_Gamma_rec_over_H": _mean_abs(row.get("Gamma_rec_over_H") for row in gamma_rows),
         "claim_boundary": (

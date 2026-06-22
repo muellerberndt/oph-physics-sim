@@ -6,6 +6,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "schemaVersion",
     "schema",
     "title",
     "claimBoundary",
@@ -13,13 +14,19 @@
     "sourcePaths",
     "smallUniverse",
     "screen",
+    "subjectiveObserverCameras",
     "observerModularTime",
     "consensusBulk",
     "pnSilenceToObservation",
     "cmbComparison",
-    "geometriesAndSymmetries"
+    "comparableObservations",
+    "geometriesAndSymmetries",
+    "visualizationViews"
   ],
   "properties": {
+    "schemaVersion": {
+      "const": "oph_universe_timeline_visualization_payload_v1"
+    },
     "schema": {
       "const": "oph_universe_timeline_visualization_payload_v1"
     },
@@ -41,6 +48,13 @@
     "screen": {
       "$ref": "#/$defs/screen"
     },
+    "subjectiveObserverCameras": {
+      "type": "array",
+      "description": "Observer-local rendering cameras derived from visible observer readouts. These are subjective readout cameras, not hidden global cameras.",
+      "items": {
+        "$ref": "#/$defs/subjectiveObserverCamera"
+      }
+    },
     "observerModularTime": {
       "$ref": "#/$defs/observerModularTime"
     },
@@ -53,10 +67,16 @@
     "cmbComparison": {
       "$ref": "#/$defs/cmbComparison"
     },
+    "comparableObservations": {
+      "$ref": "#/$defs/comparableObservations"
+    },
     "geometriesAndSymmetries": {
       "type": "object",
       "description": "Human-readable explanations and receipt summaries for visible geometries and symmetries.",
       "additionalProperties": true
+    },
+    "visualizationViews": {
+      "$ref": "#/$defs/visualizationViews"
     }
   },
   "$defs": {
@@ -73,6 +93,98 @@
     "openObject": {
       "type": "object",
       "additionalProperties": true
+    },
+    "visualizationViews": {
+      "type": "object",
+      "description": "First-class view contracts for web visualizers. These views name the intended panels and the payload fields that support them without promoting closed receipts.",
+      "additionalProperties": {
+        "$ref": "#/$defs/visualizationView"
+      },
+      "required": [
+        "fluctuatingQuantumVacuum",
+        "observerCamera",
+        "effectiveStringTheory"
+      ],
+      "properties": {
+        "fluctuatingQuantumVacuum": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "observerCamera": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "effectiveStringTheory": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "silenceToObservation": {
+          "$ref": "#/$defs/visualizationView"
+        }
+      }
+    },
+    "visualizationView": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "viewId",
+        "label",
+        "description",
+        "dataSources",
+        "primaryFields",
+        "renderLayers",
+        "receipts",
+        "exportSufficiency",
+        "claimBoundary"
+      ],
+      "properties": {
+        "viewId": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dataSources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primaryFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "renderLayers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/renderLayer"
+          }
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "exportSufficiency": {
+          "type": "string"
+        },
+        "claimBoundary": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "renderLayer": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["layer", "source"],
+      "properties": {
+        "layer": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
     },
     "vec3": {
       "type": "array",
@@ -450,6 +562,86 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "subjectiveObserverCamera": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "cameraId",
+        "observerId",
+        "kind",
+        "eye",
+        "lookAt",
+        "up",
+        "right",
+        "forward",
+        "fovDegrees",
+        "screenProjection",
+        "timeFrames",
+        "claimBoundary"
+      ],
+      "properties": {
+        "cameraId": {
+          "type": "string"
+        },
+        "observerId": {
+          "$ref": "#/$defs/scalar"
+        },
+        "kind": {
+          "const": "observer_local_subjective_camera"
+        },
+        "eye": {
+          "$ref": "#/$defs/vec3"
+        },
+        "lookAt": {
+          "$ref": "#/$defs/vec3"
+        },
+        "up": {
+          "$ref": "#/$defs/vec3"
+        },
+        "right": {
+          "$ref": "#/$defs/vec3"
+        },
+        "forward": {
+          "$ref": "#/$defs/vec3"
+        },
+        "fovDegrees": {
+          "type": "number"
+        },
+        "screenProjection": {
+          "type": "string"
+        },
+        "supportPatchCount": {
+          "type": ["integer", "number", "null"]
+        },
+        "supportNodeSample": {
+          "type": "array",
+          "items": {
+            "type": ["integer", "number"]
+          }
+        },
+        "visibleObjectPackets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packetWeight"
+          }
+        },
+        "visibleRecordPackets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/packetWeight"
+          }
+        },
+        "timeFrames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/objectiveObserverFrame"
           }
         },
         "claimBoundary": {
@@ -1021,6 +1213,92 @@
         },
         "residualSigma": {
           "type": ["number", "null"]
+        }
+      }
+    },
+    "comparableObservations": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["description", "measurementLanes", "datasets", "receipts", "claimBoundary"],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "source": {
+          "type": ["string", "null"]
+        },
+        "measurementLanes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/measurementLane"
+          }
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comparableDataset"
+          }
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "measurementLane": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "lane", "runCount", "metrics"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "lane": {
+          "type": "string"
+        },
+        "runCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/scalar"
+          }
+        }
+      }
+    },
+    "comparableDataset": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind", "rowCount"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "datasetId": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "rowCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
+        "receipts": {
+          "$ref": "#/$defs/receiptMap"
+        },
+        "claimBoundary": {
+          "type": ["string", "null"]
         }
       }
     }

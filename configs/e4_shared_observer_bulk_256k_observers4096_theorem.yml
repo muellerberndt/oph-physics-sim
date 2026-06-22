@@ -295,12 +295,13 @@ h3_modular_response:
   min_wrong_scale_feature_delta: 0.0
   exclude_observables:
   - record_family
+  - repair_load_bucket
   exclusion_claim_boundary: >
-    record_family is still used for observer-object extraction, but it is a
-    coarse modulo bookkeeping label and was the dominant wrong-normalization
-    alias in the strict H3 modular-response audit. Excluding it from this fit
-    tests whether sector/stability/repair transition observables carry the
-    BW/H3 response without letting the record-family label decide the receipt.
+    record_family and repair_load_bucket are still used for observer-object
+    extraction and diagnostics, but they are auxiliary record/repair labels.
+    Excluding them from this fit tests whether the support-visible geometric
+    transition observables carry the BW/H3 response without letting auxiliary
+    labels decide the receipt.
   max_fit_features: 1536
   max_features_per_cap_time_observable: 8
   refine_steps: 2

@@ -600,6 +600,41 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
         exported,
         "cmb_neutral_frontier_viewer_summary.json",
     )
+    _copy_path(
+        roots,
+        out / "visualization_payload.json",
+        exported,
+        "universe_timeline/visualization_payload.json",
+        "visualization_payload.json",
+    )
+    _copy_path(
+        roots,
+        out / "oph_universe_timeline_viewer.html",
+        exported,
+        "universe_timeline/oph_universe_timeline_viewer.html",
+        "oph_universe_timeline_viewer.html",
+    )
+    _copy_path(
+        roots,
+        out / "universe_timeline_summary.json",
+        exported,
+        "universe_timeline/universe_timeline_summary.json",
+        "universe_timeline_summary.json",
+    )
+    _copy_path(
+        roots,
+        out / "VISUALIZATION_INSTRUCTIONS.md",
+        exported,
+        "universe_timeline/VISUALIZATION_INSTRUCTIONS.md",
+        "VISUALIZATION_INSTRUCTIONS.md",
+    )
+    _copy_path(
+        roots,
+        out / "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md",
+        exported,
+        "universe_timeline/WEB_CODING_AGENT_VISUALIZATION_BRIEF.md",
+        "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md",
+    )
     _copy_first(roots, out / "cmb_static_plots_summary.json", exported, "cmb_static_plots_summary.json")
     _copy_first(roots, out / "physical_cmb_tt_comparison.png", exported, "physical_cmb_tt_comparison.png")
     _copy_first(
@@ -645,6 +680,7 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "no_data_use_receipt.json", exported, "no_data_use_receipt.json")
     _write_finite_certificate_outputs(roots, out / "finite_certificate_outputs.csv")
     _refresh_bulk_proof_certificate(out, exported)
+    _refresh_visualization_artifacts(out, roots, exported)
 
     claims = _collect_claims([out] + roots)
     (out / "claims.json").write_text(json.dumps(claims, indent=2, default=str), encoding="utf-8")
@@ -667,6 +703,61 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     (out / "measurement_pack_report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     (out / "README.md").write_text(_readme(report), encoding="utf-8")
     return report
+
+
+def _refresh_visualization_artifacts(out: Path, roots: list[Path], exported: dict[str, str]) -> None:
+    try:
+        from oph_fpe.viz import (
+            write_cmb_neutral_frontier_viewer,
+            write_cmb_static_plots,
+            write_object_h3_bulk_viewer,
+        )
+    except Exception:
+        return
+
+    object_summary = _read_json(out / "object_h3_bulk_viewer_summary.json")
+    object_viewer_path = out / "object_h3_bulk_viewer.html"
+    try:
+        if not object_summary or not object_viewer_path.exists() or object_viewer_path.stat().st_size == 0:
+            write_object_h3_bulk_viewer(out, object_viewer_path)
+            exported["object_h3_bulk_viewer.html"] = "generated from exported receipt bundle"
+            exported["object_h3_bulk_viewer_summary.json"] = "generated from exported receipt bundle"
+    except Exception:
+        pass
+
+    claims = _collect_claims([out] + roots)
+    (out / "claims.json").write_text(json.dumps(claims, indent=2, default=str), encoding="utf-8")
+
+    try:
+        write_cmb_static_plots(out, out)
+        exported["cmb_static_plots_summary.json"] = "generated from exported receipt bundle"
+        for name in (
+            "physical_cmb_tt_comparison.png",
+            "physical_cmb_best_oph_residuals.png",
+            "physical_cmb_peak_features.png",
+            "cmb_screen_proxy_spectra.png",
+            "strict_neutral_gate_coincidence.png",
+            "strict_neutral_rank_selector_diagnostics.png",
+            "strict_neutral_near_miss_frontier.png",
+            "strict_neutral_near_miss_frontier.csv",
+        ):
+            if (out / name).exists():
+                exported[name] = "generated from exported receipt bundle"
+    except Exception:
+        pass
+
+    claims = _collect_claims([out] + roots)
+    (out / "claims.json").write_text(json.dumps(claims, indent=2, default=str), encoding="utf-8")
+
+    cmb_summary = _read_json(out / "cmb_neutral_frontier_viewer_summary.json")
+    cmb_viewer_path = out / "cmb_neutral_frontier_viewer.html"
+    try:
+        if not cmb_summary or not cmb_viewer_path.exists() or cmb_viewer_path.stat().st_size == 0:
+            write_cmb_neutral_frontier_viewer(out, cmb_viewer_path)
+            exported["cmb_neutral_frontier_viewer.html"] = "generated from exported receipt bundle"
+            exported["cmb_neutral_frontier_viewer_summary.json"] = "generated from exported receipt bundle"
+    except Exception:
+        pass
 
 
 def _refresh_bulk_proof_certificate(out: Path, exported: dict[str, str]) -> None:
@@ -782,6 +873,13 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     observer_modular_experience_source_blockers = bulk_observer_modular_summary.get("source_report_blockers")
     if observer_modular_experience_source_blockers is None:
         observer_modular_experience_source_blockers = observer_modular_experience.get("blockers") or []
+    observer_populated_h3_experience_blockers = bulk_observer_modular_summary.get(
+        "populated_h3_experience_blockers"
+    )
+    if observer_populated_h3_experience_blockers is None:
+        observer_populated_h3_experience_blockers = (
+            observer_modular_experience.get("populated_h3_experience_blockers") or []
+        )
     physical_cmb_frontier_gates = {
         str(row.get("gate")): bool(row.get("passed", False))
         for row in (physical_cmb_frontier.get("gate_rows") or [])
@@ -861,7 +959,9 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         ),
         "observer_facing_3p1d_h3_experience": bool(
             bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
-            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+            or bulk.get("observer_facing_3p1d_h3_experience_receipt", False)
+            or observer_modular_experience.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
+            or observer_modular_experience.get("observer_facing_3p1d_h3_experience_receipt", False)
         ),
         "observer_modular_experience_written": bool(observer_modular_experience),
         "observer_modular_time_receipt": bool(
@@ -880,8 +980,22 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             or bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
             or bulk.get("observer_facing_3p1d_h3_experience_receipt", False)
         ),
+        "observer_facing_populated_h3_experience_receipt": bool(
+            observer_modular_experience.get("observer_facing_populated_h3_experience_receipt", False)
+            or bulk.get("observer_facing_populated_h3_experience_receipt", False)
+            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+        ),
+        "observer_h3_object_population_receipt": bool(
+            observer_modular_experience.get("observer_h3_object_population_receipt", False)
+            or bulk.get("observer_h3_object_population_receipt", False)
+            or bulk.get("observer_facing_h3_object_population_receipt", False)
+            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+        ),
         "observer_modular_experience_blockers": list(
             observer_modular_experience_blockers
+        ),
+        "observer_populated_h3_experience_blockers": list(
+            observer_populated_h3_experience_blockers
         ),
         "observer_modular_experience_source_blockers": list(
             observer_modular_experience_source_blockers
@@ -1587,6 +1701,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "cmb_static_plots_best_oph_model": cmb_static_plots.get("best_oph_model"),
         "cmb_static_plots_best_oph_chi2_per_bin": cmb_static_plots.get("best_oph_chi2_per_bin"),
         "cmb_static_plots_file_count": int(len(cmb_static_plots.get("files") or [])),
+        "cmb_static_plots_screen_cmb_proxy_row_count": int(
+            cmb_static_plots.get("screen_cmb_proxy_row_count") or 0
+        ),
+        "cmb_static_plots_screen_cmb_proxy_field_count": int(
+            cmb_static_plots.get("screen_cmb_proxy_field_count") or 0
+        ),
         "cmb_static_plots_strict_neutral_near_miss_count": int(
             cmb_static_plots.get("strict_neutral_near_miss_count") or 0
         ),
@@ -1621,12 +1741,12 @@ def _copy_preferred_report_pair(
         _write_missing_placeholder(markdown_target)
         return
 
-    shutil.copy2(json_path, json_target)
+    _copy_export_file(json_path, json_target)
     exported[json_target.name] = str(json_path)
 
     markdown_path = json_path.with_name(markdown_name)
     if markdown_path.exists():
-        shutil.copy2(markdown_path, markdown_target)
+        _copy_export_file(markdown_path, markdown_target)
         exported[markdown_target.name] = str(markdown_path)
     else:
         _write_missing_placeholder(markdown_target)
@@ -1636,14 +1756,14 @@ def _copy_first(roots: list[Path], target: Path, exported: dict[str, str], *name
     if target.suffix.lower() == ".json":
         path = _find_preferred_json(roots, names)
         if path is not None:
-            shutil.copy2(path, target)
+            _copy_export_file(path, target)
             exported[target.name] = str(path)
             return
     else:
         for name in names:
             path = _find_first(roots, name)
             if path is not None:
-                shutil.copy2(path, target)
+                _copy_export_file(path, target)
                 exported[target.name] = str(path)
                 return
     _write_missing_placeholder(target)
@@ -1654,10 +1774,18 @@ def _copy_path(roots: list[Path], target: Path, exported: dict[str, str], *relat
         for root in roots:
             path = Path(root) / relative_path
             if path.exists():
-                shutil.copy2(path, target)
+                _copy_export_file(path, target)
                 exported[target.name] = str(path)
                 return
     _write_missing_placeholder(target)
+
+
+def _copy_export_file(path: Path, target: Path) -> None:
+    source = Path(path)
+    destination = Path(target)
+    if source.resolve() == destination.resolve():
+        return
+    shutil.copy2(source, destination)
 
 
 def _write_cmb_screen_cl(roots: list[Path], target: Path) -> None:
@@ -1783,6 +1911,8 @@ def _write_missing_placeholder(target: Path) -> None:
     suffix = target.suffix.lower()
     if suffix == ".json":
         target.write_text("{}\n", encoding="utf-8")
+        return
+    if suffix in {".html", ".png"}:
         return
     if suffix in {".md", ".txt", ".html"}:
         target.write_text("", encoding="utf-8")

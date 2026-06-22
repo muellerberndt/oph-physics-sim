@@ -389,7 +389,14 @@ def observer_chart_object_population_report(
     shuffled_localized_not_boundary_counts: list[int] = []
     for _shuffle_index in range(shuffle_count):
         shuffled_points = h3_points[rng.permutation(h3_points.shape[0])]
-        if str(incidence_mode) in {
+        if object_rows and all("_observer_indices" in row for row in object_rows):
+            current_shuffled_rows = _fixed_membership_object_chart_rows(
+                object_rows,
+                shuffled_points,
+                axes,
+                chart_observer_ids,
+            )
+        elif str(incidence_mode) in {
             "record_family_modular_response_mixture",
             "transition_affinity_modular_response_mixture",
         }:
@@ -700,9 +707,11 @@ def observer_chart_object_population_report(
             "control-separation H3 receipt, but the populated-bulk receipt cannot. This is not a CMB or "
             "particle claim. When split_h3_components is "
             "true, broad observer-visible packet classes are split into local H3 components and the same split "
-            "is applied to shuffled controls."
+            "memberships are held fixed under shuffled-H3 controls, preventing the control from choosing new "
+            "local components after observer H3 labels are randomized."
         )
     )
+    sample_objects = [_public_object_row(row) for row in object_rows[:256]]
     return {
         "mode": "observer_chart_object_h3_population",
         "observer_count": int(h3_points.shape[0]),
@@ -781,7 +790,7 @@ def observer_chart_object_population_report(
         "observer_chart_object_h3_median_receipt": chart_median_receipt,
         "observer_chart_object_h3_receipt": h3_object_preview_receipt,
         "observer_chart_bulk_population_receipt": bulk_receipt,
-        "sample_objects": object_rows[:256],
+        "sample_objects": sample_objects,
         "claim_boundary": selected_claim_boundary,
     }
 
@@ -2603,7 +2612,56 @@ def _object_chart_row(
         "s2_boundary_compactness": float(s2_compactness),
         "s2_boundary_compactness_normalized": float(s2_compactness / max(global_s2_scale, 1e-12)),
         "observer_ids_sample": [int(chart_observer_ids[index]) for index in indices[:32]],
+        "_observer_indices": [int(index) for index in indices],
+        "_observer_weights": [float(value) for value in weights.tolist()],
     }
+
+
+def _fixed_membership_object_chart_rows(
+    source_rows: list[dict[str, Any]],
+    h3_points: np.ndarray,
+    axes: np.ndarray,
+    chart_observer_ids: list[int],
+) -> list[dict[str, Any]]:
+    global_h3_scale = _median_pairwise_h3_distance(h3_points)
+    global_s2_scale = _median_pairwise_s2_distance(axes)
+    rows: list[dict[str, Any]] = []
+    metadata_keys = {
+        "cluster_key",
+        "family_mode",
+        "mean_observer_key_weight",
+        "component_split",
+        "parent_observer_count",
+        "component_index",
+        "source_object_id",
+    }
+    for source in source_rows:
+        indices = [int(index) for index in source.get("_observer_indices", [])]
+        if not indices:
+            continue
+        weights = np.asarray(source.get("_observer_weights", []), dtype=float)
+        if weights.size != len(indices):
+            weights = np.ones(len(indices), dtype=float)
+        row = _object_chart_row(
+            object_id=str(source.get("object_id", f"fixed_object_{len(rows):06d}")),
+            indices=indices,
+            weights=weights,
+            h3_points=h3_points,
+            axes=axes,
+            chart_observer_ids=chart_observer_ids,
+            global_h3_scale=global_h3_scale,
+            global_s2_scale=global_s2_scale,
+            support_size=int(source.get("support_size", 0) or 0),
+        )
+        for key in metadata_keys:
+            if key in source:
+                row[key] = source[key]
+        rows.append(row)
+    return rows
+
+
+def _public_object_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {str(key): value for key, value in row.items() if not str(key).startswith("_")}
 
 
 def _component_object_chart_rows(

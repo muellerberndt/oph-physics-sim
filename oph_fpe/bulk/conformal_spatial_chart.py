@@ -40,12 +40,17 @@ def conformal_h3_spatial_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
         },
         "conformal_h3_spatial_chart_receipt": receipt,
         "lorentz_algebra_receipt": bool(algebra_report.get("lorentz_algebra_receipt", False)),
+        "spatial_homogeneous_space": chart_report.get("homogeneous_space", "SO+(3,1)/SO(3)"),
+        "spatial_dimension_derivation": chart_report.get(
+            "spatial_dimension_derivation",
+            "dim SO+(3,1)-dim SO(3)=6-3=3",
+        ),
         "record_populated_h3_receipt": False,
         "defect_localized_in_h3_receipt": False,
         "claim_boundary": (
             "constructs the canonical 3D H3 spatial chart from the S2 cap/conformal Lorentz branch. "
-            "This replaces fractional observer-similarity dimensions as the chart receipt, but it is "
-            "not yet a populated spatial-bulk, particle, or CMB prediction receipt."
+            "The receipt tier is chart-level; populated spatial-bulk, particle, and CMB prediction "
+            "claims require separate gates."
         ),
     }
 
@@ -76,11 +81,29 @@ def paper_theorem_3d_bulk_chart_report(
     spatial_dimension = int(algebra.get("h3_spatial_dimension_from_boost_orbit", 0) or 0)
     chart_dimension = int(h3_chart.get("spatial_dimension", 0) or 0)
     group_dimension = int(algebra.get("group_dimension", 0) or 0)
+    spatial_dimension_derivation = str(
+        algebra.get(
+            "spatial_dimension_derivation",
+            h3_chart.get("spatial_dimension_derivation", "dim SO+(3,1)-dim SO(3)=6-3=3"),
+        )
+    )
     object_report = observer_chart_object_report or {}
     neutral = neutral_report or {}
-    object_precursor = bool(
+    localized_object_precursor = bool(
+        object_report.get("localized_object_precursor_receipt", False)
+        or object_report.get("localized_nonboundary_object_precursor_receipt", False)
+        or object_report.get("localized_h3_object_precursor_receipt", False)
+    )
+    h3_object_precursor = bool(
         object_report.get("observer_chart_object_h3_receipt", False)
-        and object_report.get("localized_object_precursor_receipt", False)
+        or object_report.get("THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT", False)
+        or object_report.get("modular_response_h3_control_separation_receipt", False)
+        or object_report.get("H3_RESPONSE_CONTROL_SEPARATION_RECEIPT", False)
+        or object_report.get("h3_control_separation_receipt", False)
+    )
+    object_precursor = bool(
+        localized_object_precursor
+        and h3_object_precursor
     )
     populated_bulk = bool(
         object_report.get("localized_nonboundary_bulk_population_receipt", False)
@@ -109,14 +132,25 @@ def paper_theorem_3d_bulk_chart_report(
         "lorentz_group_dimension": group_dimension,
         "h3_spatial_dimension_from_boost_orbit": spatial_dimension,
         "h3_chart_spatial_dimension": chart_dimension,
+        "spatial_dimension_derivation": spatial_dimension_derivation,
         "finite_point_cloud_dimension_estimator_used": False,
         "neutral_reconstruction_bulk_3d_established": bool(neutral.get("bulk_3d_established", False)),
         "observer_object_precursor_available": object_precursor,
+        "observer_object_precursor_components": {
+            "localized_object_precursor_receipt": localized_object_precursor,
+            "h3_object_precursor_receipt": h3_object_precursor,
+            "strict_object_h3_receipt": bool(object_report.get("observer_chart_object_h3_receipt", False)),
+            "h3_control_separation_receipt": bool(
+                object_report.get("modular_response_h3_control_separation_receipt", False)
+                or object_report.get("H3_RESPONSE_CONTROL_SEPARATION_RECEIPT", False)
+                or object_report.get("h3_control_separation_receipt", False)
+            ),
+        },
         "source_alignment": {
             "screen_net": "Axiom Screen Net: physical data is organized on a horizon screen S2 carrying local algebras.",
             "bw_normalization": "The BW branch fixes sigma_t = alpha_{lambda_C(2*pi*t)} on the support-visible cap pair.",
             "lorentz_group": "Conf+(S2) ~= PSL(2,C) ~= SO+(3,1).",
-            "spatial_chart": "The 3D spatial chart is H3 = SO+(3,1)/SO(3), checked by boost-orbit rank 3.",
+            "spatial_chart": "The 3D spatial chart is H3 = SO+(3,1)/SO(3), with dimension 6-3=3.",
             "finite_regulator_boundary": (
                 "The finite cellulated carrier is the regulator side; the theorem concerns the "
                 "support-visible scaling-limit spherical cap chart."
@@ -125,8 +159,9 @@ def paper_theorem_3d_bulk_chart_report(
         "claim_boundary": (
             "This is the paper-side 3D spatial chart receipt: S2 cap/conformal geometry plus "
             "BW-normalized 2*pi cap flow yields the SO+(3,1) Lorentz branch and the H3 spatial "
-            "chart of dimension 3. It is not a finite neutral point-cloud dimension receipt, not "
-            "a populated third-person bulk proof, not a particle claim, and not a physical CMB prediction."
+            "chart of dimension 3. The receipt tier is chart-level; finite neutral point-cloud "
+            "dimension, populated third-person bulk, particle, and physical CMB claims require "
+            "separate gates."
         ),
     }
 
@@ -142,7 +177,7 @@ def write_paper_chart_receipts(
     """Write paper-aligned S2 -> Lorentz -> H3 chart receipts for a run folder.
 
     This is a chart/theorem receipt, not a state-derived finite modular-probe
-    receipt. It is useful when a run already emits H3/CMB diagnostics and needs
+    receipt. It is useful when a run emits H3/CMB diagnostics and needs
     the paper-side chart proof recorded in the same evidence folder.
     """
 
@@ -160,7 +195,7 @@ def write_paper_chart_receipts(
         "claim_boundary": (
             "Paper-side chart certificate for the BW-normalized cap-flow branch. "
             "This records the theorem target sigma_t = alpha_{lambda_C(2*pi*t)}; "
-            "it is not a fresh finite state-derived modular matrix-element run."
+            "fresh finite state-derived modular matrix-element runs use their own gate."
         ),
     }
     object_report = _read_json(root / "observer_chart_object_h3_scale_compressed_report.json") or _read_json(
@@ -215,7 +250,7 @@ def write_paper_chart_receipts(
         "strict_neutral_third_person_bulk": bool(neutral.get("bulk_3d_established", False)),
         "claim_boundary": (
             "Co-located paper-chart receipt writer. It records the exact chart-level 3+1D Lorentz/H3 "
-            "route but does not create a strict neutral finite bulk proof."
+            "route. Strict neutral finite bulk proof claims require their separate gate."
         ),
     }
 

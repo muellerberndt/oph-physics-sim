@@ -27,10 +27,12 @@ def write_cmb_static_plots(run_dir: Path, out_dir: Path | None = None) -> dict[s
     residual_rows = _read_rows(run / "physical_cmb_best_oph_residuals.csv")
     comparison_rows = _read_rows(run / "physical_cmb_output_comparison_rows.csv")
     peak_rows = _read_rows(run / "physical_cmb_peak_features.csv")
+    screen_rows = _read_rows(run / "cmb_screen_cl.csv")
 
     comparison_path = out / "physical_cmb_tt_comparison.png"
     residual_path = out / "physical_cmb_best_oph_residuals.png"
     peak_path = out / "physical_cmb_peak_features.png"
+    screen_path = out / "cmb_screen_proxy_spectra.png"
     frontier_path = out / "strict_neutral_gate_coincidence.png"
     rank_selector_path = out / "strict_neutral_rank_selector_diagnostics.png"
     near_miss_path = out / "strict_neutral_near_miss_frontier.png"
@@ -41,6 +43,7 @@ def write_cmb_static_plots(run_dir: Path, out_dir: Path | None = None) -> dict[s
     _plot_tt_comparison(plt, comparison_path, lcdm_rows, scale_rows, finite_rows)
     _plot_best_residuals(plt, residual_path, residual_rows)
     _plot_peak_features(plt, peak_path, peak_rows, str(best_oph.get("model_id") or ""))
+    screen_field_count = _plot_screen_proxy_spectra(plt, screen_path, screen_rows)
     _plot_neutral_coincidence(plt, frontier_path, neutral_sweep)
     _plot_rank_selector_diagnostics(plt, rank_selector_path, neutral_sweep)
     near_miss_rows = _write_neutral_near_miss_rows(near_miss_csv_path, neutral_sweep)
@@ -96,10 +99,13 @@ def write_cmb_static_plots(run_dir: Path, out_dir: Path | None = None) -> dict[s
         ),
         "strict_neutral_best_near_miss_missing_gates": best_near_miss.get("missing_strict_gates", ""),
         "model_comparison_count": len(comparison_rows),
+        "screen_cmb_proxy_row_count": len(screen_rows),
+        "screen_cmb_proxy_field_count": screen_field_count,
         "files": [
             comparison_path.name,
             residual_path.name,
             peak_path.name,
+            screen_path.name,
             frontier_path.name,
             rank_selector_path.name,
             near_miss_path.name,
@@ -107,8 +113,8 @@ def write_cmb_static_plots(run_dir: Path, out_dir: Path | None = None) -> dict[s
         ],
         "claim_boundary": (
             "Static measurement-facing plots. They visualize physical-unit CMB output comparisons "
-            "and neutral-gate diagnostics, but do not promote physical_cmb_prediction or "
-            "strict_neutral_bulk."
+            "when present, screen-level CMB proxy spectra, and neutral-gate diagnostics, but do not "
+            "promote physical_cmb_prediction or strict_neutral_bulk."
         ),
     }
     (out / "cmb_static_plots_summary.json").write_text(
@@ -151,7 +157,9 @@ def _plot_tt_comparison(
     ax.set_xlabel("ell")
     ax.set_ylabel("D_ell [microK^2]")
     ax.grid(True, alpha=0.25)
-    ax.legend(loc="upper right", fontsize=8)
+    handles, _ = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(loc="upper right", fontsize=8)
     fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)
@@ -228,6 +236,42 @@ def _plot_peak_features(
     fig.tight_layout()
     fig.savefig(out)
     plt.close(fig)
+
+
+def _plot_screen_proxy_spectra(plt: Any, out: Path, screen_rows: list[dict[str, str]]) -> int:
+    fig, ax = plt.subplots(figsize=(10.8, 5.8), dpi=150)
+    by_field: dict[str, list[tuple[float, float]]] = {}
+    for row in screen_rows:
+        field = str(row.get("field") or "screen_proxy")
+        ell = _float_or_none(row.get("ell"))
+        d_ell = _float_or_none(row.get("D_ell"))
+        if ell is None or d_ell is None:
+            continue
+        by_field.setdefault(field, []).append((ell, d_ell))
+
+    colors = ["#4b6cb7", "#c26a2c", "#2a9d8f", "#9367a8", "#7a3b3f", "#5d6d7e", "#b0822f", "#2f7d63"]
+    for index, field in enumerate(sorted(by_field)[: len(colors)]):
+        points = sorted(by_field[field])
+        ax.plot(
+            [point[0] for point in points],
+            [point[1] for point in points],
+            linewidth=1.35,
+            color=colors[index],
+            label=field,
+        )
+    if not by_field:
+        ax.text(0.5, 0.5, "No screen CMB proxy rows", ha="center", va="center", transform=ax.transAxes)
+    ax.set_title("Screen-level CMB proxy spectra")
+    ax.set_xlabel("ell")
+    ax.set_ylabel("D_ell [diagnostic units]")
+    ax.grid(True, alpha=0.25)
+    handles, _ = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(loc="upper right", fontsize=7)
+    fig.tight_layout()
+    fig.savefig(out)
+    plt.close(fig)
+    return len(by_field)
 
 
 def _plot_neutral_coincidence(plt: Any, out: Path, sweep: dict[str, Any]) -> None:

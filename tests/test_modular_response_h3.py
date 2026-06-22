@@ -11,7 +11,9 @@ from oph_fpe.bulk.h3_refit import (
 from oph_fpe.bulk.h3_response_fit import (
     _channel_keys,
     _h3_profile_matrix,
+    _h3_response_stage_gates,
     _select_fit_features,
+    _strict_wrong_scale_feature_audit,
     modular_response_h3_report,
     synthetic_h3_modular_kernel,
 )
@@ -580,6 +582,51 @@ def test_synthetic_modular_response_joint_h3_receipt_can_pass_controls():
     assert "2pi_h3_fit" in report["wrong_scale_feature_audit"]["material_winner_counts"]
     assert report["wrong_scale_feature_audit"]["material_margin"] == 0.02
     assert report["wrong_scale_feature_audit"]["worst_groups"]
+    assert "material_wrong_scale_advantage_energy_fraction" in report["wrong_scale_feature_audit"]
+    assert report["h3_response_stage_gates"]["material_wrong_scale_gate_metric"] == (
+        "material_wrong_scale_advantage_energy_fraction"
+    )
+
+
+def test_material_wrong_scale_gate_uses_residual_energy_not_singleton_count():
+    h3_rmse = np.ones(20, dtype=float)
+    wrong = np.ones(20, dtype=float) + 0.2
+    wrong[:8] = 0.95
+    feature_rows = [
+        {
+            "cap_index": index,
+            "time_index": 0,
+            "time": 0.1,
+            "observable": "checkpoint_class",
+            "feature_type": "class_distribution_delta",
+        }
+        for index in range(20)
+    ]
+
+    audit = _strict_wrong_scale_feature_audit(
+        {"feature_rmse": h3_rmse},
+        {"pi": {"feature_rmse": wrong}},
+        feature_rows,
+        np.zeros(20, dtype=bool),
+    )
+    gates = _h3_response_stage_gates(
+        {
+            "heldout_normalized_rmse": 0.90,
+            "heldout_explained_variance": 0.12,
+        },
+        {"heldout_normalized_rmse": 0.96},
+        {
+            "no_perturbation": {"heldout_normalized_rmse": 1.0},
+            "shuffled_response": {"heldout_normalized_rmse": 1.0},
+        },
+        {"pi": {"heldout_normalized_rmse": 1.0}},
+        audit,
+    )
+
+    assert audit["material_wrong_scale_win_fraction"] == 0.4
+    assert audit["material_wrong_scale_advantage_energy_fraction"] < 0.05
+    assert gates["material_feature_gate"] is True
+    assert gates["H3_RESPONSE_CANDIDATE_RECEIPT"] is True
 
 
 def test_modular_response_h3_feature_selection_filters_dead_columns():
@@ -1034,6 +1081,7 @@ def test_h3_ensemble_gate_uses_aggregate_control_separation_not_candidate_fracti
             "heldout_explained_variance": 0.13,
             "heldout_normalized_rmse": 0.93,
             "material_wrong_scale_win_fraction": 0.05859375,
+            "material_wrong_scale_gate_value": 0.01,
             "assignment_unique_count": 150,
             "candidate_3d_dimension_window": False,
             "receipt": index < 4,
@@ -1052,12 +1100,14 @@ def test_h3_ensemble_gate_uses_aggregate_control_separation_not_candidate_fracti
     assert report["candidate_receipt_fraction"] == 0.5
     assert report["candidate_receipt_fraction_diagnostic_only"] == 0.5
     assert report["control_separation_receipt_fraction"] == 1.0
+    assert report["p75_material_wrong_scale_win_fraction"] == 0.05859375
+    assert report["p75_material_wrong_scale_gate_value"] == 0.01
     assert report["H3_RESPONSE_ENSEMBLE_RECEIPT"] is True
     assert report["h3_chart_3d_seed_robust_receipt"] is False
     assert report["ensemble_gate_uses"] == [
         "control_separation_receipt_fraction",
         "median_heldout_explained_variance",
-        "p75_material_wrong_scale_win_fraction",
+        "p75_material_wrong_scale_gate_value",
     ]
 
 

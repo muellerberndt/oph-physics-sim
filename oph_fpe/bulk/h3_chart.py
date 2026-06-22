@@ -76,6 +76,10 @@ def h3_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
         "model": "H3 hyperboloid {X: eta(X,X)=-1, X0>0}",
         "minkowski_signature": "(-,+,+,+)",
         "spatial_dimension": 3,
+        "lorentz_group_dimension": 6,
+        "stabilizer_group": "SO(3)",
+        "stabilizer_dimension": 3,
+        "spatial_dimension_derivation": "dim SO+(3,1)-dim SO(3)=6-3=3",
         "origin_norm": origin_norm,
         "cap_count": len(caps),
         "max_cap_normal_unit_error": max_normal_error,
@@ -83,6 +87,6 @@ def h3_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
         "record_population_receipt": False,
         "claim_boundary": (
             "canonical 3D spatial chart implied by the conformal/Lorentz cap branch; "
-            "records and defects still have to fit this chart before a populated-bulk claim"
+            "record and defect population requires a separate populated-bulk gate"
         ),
     }

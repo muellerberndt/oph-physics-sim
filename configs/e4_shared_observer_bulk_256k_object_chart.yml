@@ -209,10 +209,12 @@ h3_modular_response:
   min_feature_std: 0.01
   exclude_observables:
   - record_family
+  - repair_load_bucket
   exclusion_claim_boundary: >
-    record_family is retained for observer-object extraction but excluded
-    from this support-visible H3 modular-response fit because it is a
-    pointer/bookkeeping channel, not a strict geometric response feature.
+    record_family and repair_load_bucket are retained for observer-object
+    extraction and diagnostics but excluded from this support-visible H3
+    modular-response fit because they are auxiliary record/repair channels,
+    not strict geometric response features.
   pass_ratio: 1.0
   min_observers: 64
   min_features: 16

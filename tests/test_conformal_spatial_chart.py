@@ -53,6 +53,8 @@ def test_conformal_h3_spatial_chart_receipt_from_caps():
     assert report["lorentz_algebra_receipt"] is True
     assert report["record_populated_h3_receipt"] is False
     assert report["h3_chart_report"]["spatial_dimension"] == 3
+    assert report["h3_chart_report"]["spatial_dimension_derivation"] == "dim SO+(3,1)-dim SO(3)=6-3=3"
+    assert report["spatial_dimension_derivation"] == "dim SO+(3,1)-dim SO(3)=6-3=3"
     assert report["lorentz_algebra_report"]["h3_spatial_dimension_from_boost_orbit"] == 3
     assert normal_report["unit_normal_receipt"] is True
 
@@ -79,7 +81,34 @@ def test_paper_theorem_3d_bulk_chart_receipt_is_separate_from_neutral_bulk():
     assert report["paper_theorem_object_populated_chart_precursor_receipt"] is True
     assert report["paper_theorem_neutral_populated_bulk_receipt"] is False
     assert report["h3_spatial_dimension_from_boost_orbit"] == 3
+    assert report["spatial_dimension_derivation"] == "dim SO+(3,1)-dim SO(3)=6-3=3"
     assert report["finite_point_cloud_dimension_estimator_used"] is False
+
+
+def test_paper_theorem_object_precursor_accepts_control_separation_without_strict_bulk():
+    points = fibonacci_sphere_points(128)
+    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=52)
+    chart = conformal_h3_spatial_chart_report(caps)
+    transition = {
+        "primary_source": "kms_collar_transport_response",
+        "two_pi_selected": True,
+        "response_degenerate": False,
+    }
+    objects = {
+        "observer_chart_object_h3_receipt": False,
+        "localized_object_precursor_receipt": True,
+        "modular_response_h3_control_separation_receipt": True,
+        "localized_nonboundary_bulk_population_receipt": False,
+    }
+    neutral = {"bulk_3d_established": False}
+
+    report = paper_theorem_3d_bulk_chart_report(chart, transition, objects, neutral)
+
+    assert report["paper_theorem_3d_bulk_chart_receipt"] is True
+    assert report["paper_theorem_object_populated_chart_precursor_receipt"] is True
+    assert report["paper_theorem_neutral_populated_bulk_receipt"] is False
+    assert report["observer_object_precursor_components"]["strict_object_h3_receipt"] is False
+    assert report["observer_object_precursor_components"]["h3_control_separation_receipt"] is True
 
 
 def test_lorentz_algebra_report_verifies_so_3_1_relations():
@@ -89,6 +118,8 @@ def test_lorentz_algebra_report_verifies_so_3_1_relations():
     assert report["group"] == "SO+(3,1)"
     assert report["spatial_homogeneous_space"] == "H3 = SO+(3,1)/SO(3)"
     assert report["h3_spatial_dimension_from_boost_orbit"] == 3
+    assert report["stabilizer_dimension"] == 3
+    assert report["spatial_dimension_derivation"] == "dim SO+(3,1)-dim SO(3)=6-3=3"
     assert report["max_commutator_error"] < 1e-12
     assert report["max_null_cone_preservation_error"] < 1e-12
 

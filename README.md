@@ -8,7 +8,7 @@ The working surface includes finite consensus receipts, observer record algebra,
 
 ## Receipt Boundaries
 
-The README describes the simulator surface, not the outcome of any particular run. Current pass/fail status belongs in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles.
+The README describes the simulator surface. Pass/fail status belongs in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles.
 
 The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, and production particle route are separate claim paths. A diagnostic chart or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output.
 
@@ -127,7 +127,7 @@ Use the run-pack contract as the small-scale-first gate before launching cloud j
 
 The CMB reducer preserves shard-local source statistics as diagnostics, but it does not average nonlinear shard estimates into physical inputs. Physical CMB promotion requires a pooled sufficient-statistic reducer, screen-to-radial lift receipt, Boltzmann transfer, CDM-limit regression, and frozen likelihood comparison. The P/N reducer similarly distinguishes `all_shards_local_scale_compressed_pn_witness_receipt` from `global_pn_resonance_receipt`; the latter requires a finite global readback map and fixed-point solve.
 
-The intended large-run claim is conservative: one declared global finite carrier presented through distributed workers, with cut interfaces visible in the evidence bundle. A strict single neutral third-person 3D bulk still requires the normal neutral-bulk gates plus genuine online cut repair, common quotient transport, and global neutral reduction receipts. The strict neutral report now embeds a quotient-geometry contract receipt: raw rows must descend to terminal quotient IDs, atlas transport and feature descent must be certified, missingness must be metric-safe, presentation and partition distortions must be bounded, refinement must have a tail modulus, and train/validation/test ancestry must be split by generative batch. Without that receipt, rank/model/leakage diagnostics remain diagnostics.
+The intended large-run claim is conservative: one declared global finite carrier presented through distributed workers, with cut interfaces visible in the evidence bundle. A strict single neutral third-person 3D bulk requires the normal neutral-bulk gates plus genuine online cut repair, common quotient transport, and global neutral reduction receipts. The strict neutral report embeds a quotient-geometry contract receipt: raw rows must descend to terminal quotient IDs, atlas transport and feature descent must be certified, missingness must be metric-safe, presentation and partition distortions must be bounded, refinement must have a tail modulus, and train/validation/test ancestry must be split by generative batch. Without that receipt, rank/model/leakage diagnostics remain diagnostics.
 
 ## Claim-Gate Commands
 
@@ -203,7 +203,12 @@ finite Lorentz theorem contract: receipt-gated proof contract
 strict neutral third-person bulk: receipt-gated frontier
 ```
 
-The old graph-distance and modular-lift dimension estimates are debug diagnostics. Bulk claims flow through BW/KMS, support-visible cap/collar data, the conformal H3 chart, observer records, object population, and neutral-bulk gates.
+The chart receipt records the theorem-level dimension count
+`H3 = SO+(3,1)/SO(3)`, hence `6-3=3`, before any finite neutral point-cloud
+estimator is consulted. The old graph-distance and modular-lift dimension
+estimates are debug diagnostics. Bulk claims flow through BW/KMS,
+support-visible cap/collar data, the conformal H3 chart, observer records,
+object population, and neutral-bulk gates.
 
 ## CMB And Cosmology
 
@@ -270,9 +275,11 @@ python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen
 
 ## Key Documentation
 
+- `docs/README.md`: simulator documentation policy and stable-doc index.
 - `docs/OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: theorem-to-simulator contract.
-- `docs/theory_conformance_audit_20260609.md`: paper-stack conformance and open gates.
-- `docs/bulk_emergence_status.md`: dated bulk, H3, CMB, and particle receipt splits.
 - `docs/cmb_bulk_particle_execution_plan.md`: CMB, neutral-bulk, and particle execution boundaries.
-- `docs/cosmo_proxy_results_20260605.md`: screen-spectrum diagnostics and comparison-facing caveats.
+- `docs/oph_universe_timeline_visualization_payload_v1.schema.json`: visualizer payload schema, including fluctuating-vacuum, observer-camera, and effective-string view contracts.
+- `docs/small_oph_universe_v1.md`: exact finite-consensus calibration harness.
+- `docs/paper_implementation_notes.md`: imported paper-side simulator constraints.
+- `docs/paper_stack_alignment.md`: screen-computation alignment notes.
 - `REPRODUCTION.md`: reproducibility notes.

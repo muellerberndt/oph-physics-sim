@@ -32,27 +32,31 @@ DEFAULT_NEUTRAL_WEIGHTS = {
     "modular_response": 0.75,
     "prime_geometric_modular": 0.9,
     "prime_geometric_control_quotient": 0.9,
-    "prime_geometric_rank3": 0.9,
-    "prime_geometric_rank4": 0.9,
-    "prime_geometric_rank8": 0.9,
-    "prime_geometric_rank16": 0.9,
-    "prime_geometric_rank32": 0.9,
-    "prime_geometric_control_quotient_rank3": 0.9,
-    "prime_geometric_control_quotient_rank4": 0.9,
-    "prime_geometric_control_quotient_rank8": 0.9,
-    "prime_geometric_control_quotient_rank16": 0.9,
-    "prime_geometric_control_quotient_rank32": 0.9,
-    "support_visible_modular": 0.8,
     "repair_modular": 0.35,
-    "transition_token": 0.9,
-    "transition_token_persistent": 0.65,
-    "transition_affinity": 0.75,
     "persistence": 0.25,
     "scalar_readout": 0.35,
 }
 
+DIAGNOSTIC_ONLY_NEUTRAL_CHANNELS = (
+    "prime_geometric_rank3",
+    "prime_geometric_rank4",
+    "prime_geometric_rank8",
+    "prime_geometric_rank16",
+    "prime_geometric_rank32",
+    "prime_geometric_control_quotient_rank3",
+    "prime_geometric_control_quotient_rank4",
+    "prime_geometric_control_quotient_rank8",
+    "prime_geometric_control_quotient_rank16",
+    "prime_geometric_control_quotient_rank32",
+    "support_visible_modular",
+    "transition_token",
+    "transition_token_persistent",
+    "transition_affinity",
+)
+
 MODEL_SELECTION_ABS_TOLERANCE = 0.01
 MODEL_SELECTION_REL_TOLERANCE = 0.08
+DUPLICATE_CHANNEL_CORRELATION_THRESHOLD = 0.995
 
 NEUTRAL_PROFILE_WEIGHTS: dict[str, dict[str, float] | None] = {
     "all_observer_visible": None,
@@ -253,82 +257,7 @@ def neutral_distance(
     b: NeutralObserverView,
     weights: dict[str, float] | None = None,
 ) -> float:
-    weights = weights or DEFAULT_NEUTRAL_WEIGHTS
-    terms = {
-        "record": js_distance(a.record_transition_hist, b.record_transition_hist),
-        "record_signature": js_distance(a.record_signature_hist, b.record_signature_hist),
-        "object_packet": js_distance(a.object_packet_hist, b.object_packet_hist),
-        "counterfactual": js_distance(a.counterfactual_hist, b.counterfactual_hist),
-        "checkpoint": js_distance(a.checkpoint_transition_hist, b.checkpoint_transition_hist),
-        "sector": js_distance(a.sector_transition_hist, b.sector_transition_hist),
-        "repair": js_distance(a.repair_response_hist, b.repair_response_hist),
-        "repair_spectrum": cosine_distance(a.repair_response_spectrum, b.repair_response_spectrum),
-        "modular_response": js_distance(a.modular_response_hist, b.modular_response_hist),
-        "prime_geometric_modular": cosine_distance(
-            a.prime_geometric_modular_spectrum,
-            b.prime_geometric_modular_spectrum,
-        ),
-        "prime_geometric_control_quotient": cosine_distance(
-            a.prime_geometric_control_quotient_spectrum,
-            b.prime_geometric_control_quotient_spectrum,
-        ),
-        "prime_geometric_rank3": cosine_distance(
-            a.prime_geometric_modular_spectrum[:3],
-            b.prime_geometric_modular_spectrum[:3],
-        ),
-        "prime_geometric_rank4": cosine_distance(
-            a.prime_geometric_modular_spectrum[:4],
-            b.prime_geometric_modular_spectrum[:4],
-        ),
-        "prime_geometric_rank8": cosine_distance(
-            a.prime_geometric_modular_spectrum[:8],
-            b.prime_geometric_modular_spectrum[:8],
-        ),
-        "prime_geometric_rank16": cosine_distance(
-            a.prime_geometric_modular_spectrum[:16],
-            b.prime_geometric_modular_spectrum[:16],
-        ),
-        "prime_geometric_rank32": cosine_distance(
-            a.prime_geometric_modular_spectrum[:32],
-            b.prime_geometric_modular_spectrum[:32],
-        ),
-        "prime_geometric_control_quotient_rank3": cosine_distance(
-            a.prime_geometric_control_quotient_spectrum[:3],
-            b.prime_geometric_control_quotient_spectrum[:3],
-        ),
-        "prime_geometric_control_quotient_rank4": cosine_distance(
-            a.prime_geometric_control_quotient_spectrum[:4],
-            b.prime_geometric_control_quotient_spectrum[:4],
-        ),
-        "prime_geometric_control_quotient_rank8": cosine_distance(
-            a.prime_geometric_control_quotient_spectrum[:8],
-            b.prime_geometric_control_quotient_spectrum[:8],
-        ),
-        "prime_geometric_control_quotient_rank16": cosine_distance(
-            a.prime_geometric_control_quotient_spectrum[:16],
-            b.prime_geometric_control_quotient_spectrum[:16],
-        ),
-        "prime_geometric_control_quotient_rank32": cosine_distance(
-            a.prime_geometric_control_quotient_spectrum[:32],
-            b.prime_geometric_control_quotient_spectrum[:32],
-        ),
-        "support_visible_modular": cosine_distance(
-            a.support_visible_modular_spectrum,
-            b.support_visible_modular_spectrum,
-        ),
-        "repair_modular": cosine_distance(a.repair_modular_spectrum, b.repair_modular_spectrum),
-        "transition_token": js_distance(a.transition_token_hist, b.transition_token_hist),
-        "transition_token_persistent": js_distance(
-            a.transition_token_persistent_hist,
-            b.transition_token_persistent_hist,
-        ),
-        "transition_affinity": js_distance(a.transition_affinity_hist, b.transition_affinity_hist),
-        "persistence": scaled_l2_distance(a.persistence_features, b.persistence_features),
-        "scalar_readout": scaled_l2_distance(a.scalar_readout_features, b.scalar_readout_features),
-    }
-    total = max(float(sum(float(weights.get(key, 0.0)) for key in terms)), 1e-12)
-    value = float(sum(float(weights.get(key, 0.0)) * terms[key] for key in terms) / total)
-    return float(max(0.0, value))
+    return float(neutral_distance_matrix([a, b], weights=weights)[0, 1])
 
 
 def neutral_distance_matrix(
@@ -336,12 +265,208 @@ def neutral_distance_matrix(
     weights: dict[str, float] | None = None,
 ) -> np.ndarray:
     n = len(views)
-    distance = np.zeros((n, n), dtype=float)
-    for i in range(n):
-        for j in range(i + 1, n):
-            value = neutral_distance(views[i], views[j], weights)
-            distance[i, j] = distance[j, i] = value
+    if n <= 0:
+        return np.zeros((0, 0), dtype=float)
+    features = neutral_feature_matrix(views, weights=weights)
+    if features.shape[1] == 0:
+        return np.zeros((n, n), dtype=float)
+    distance = squareform(pdist(features, metric="euclidean"))
+    distance = np.where(np.isfinite(distance), np.maximum(distance, 0.0), 0.0)
+    np.fill_diagonal(distance, 0.0)
     return distance
+
+
+def neutral_feature_matrix(
+    views: list[NeutralObserverView],
+    weights: dict[str, float] | None = None,
+) -> np.ndarray:
+    """Build the fixed claim-bearing neutral embedding.
+
+    Each active channel contributes a globally transformed Euclidean block:
+    histograms use the Hellinger embedding, signed spectra/scalars use a
+    run-global standardized Euclidean embedding, and channel weights enter as
+    sqrt(w). No per-pair renormalization is allowed.
+    """
+
+    weights = weights or DEFAULT_NEUTRAL_WEIGHTS
+    n = len(views)
+    if n <= 0:
+        return np.zeros((0, 0), dtype=float)
+    active = [(str(key), float(value)) for key, value in weights.items() if float(value) > 0.0]
+    total_weight = float(sum(value for _, value in active))
+    if total_weight <= 1e-12:
+        return np.zeros((n, 0), dtype=float)
+    blocks: list[np.ndarray] = []
+    for key, weight in active:
+        raw = _neutral_channel_matrix(views, key)
+        if raw.shape[0] != n or raw.shape[1] == 0:
+            continue
+        embedded = _neutral_channel_embedding(raw, key)
+        if embedded.shape[1] == 0:
+            continue
+        blocks.append(math.sqrt(weight / total_weight) * embedded)
+    return np.hstack(blocks) if blocks else np.zeros((n, 0), dtype=float)
+
+
+def neutral_channel_duplicate_audit(
+    views: list[NeutralObserverView],
+    weights: dict[str, float] | None = None,
+    *,
+    threshold: float = DUPLICATE_CHANNEL_CORRELATION_THRESHOLD,
+) -> dict[str, Any]:
+    weights = weights or DEFAULT_NEUTRAL_WEIGHTS
+    active = [str(key) for key, value in weights.items() if float(value) > 0.0]
+    channel_distances: dict[str, np.ndarray] = {}
+    degenerate_channels: list[str] = []
+    for key in active:
+        features = neutral_feature_matrix(views, weights={key: 1.0})
+        if features.shape[0] < 3 or features.shape[1] == 0:
+            degenerate_channels.append(key)
+            continue
+        distance = squareform(pdist(features, metric="euclidean"))
+        upper = _upper_triangle(distance)
+        if upper.size < 2 or float(np.std(upper)) <= 1e-12:
+            degenerate_channels.append(key)
+            continue
+        channel_distances[key] = distance
+    duplicate_pairs: list[dict[str, Any]] = []
+    keys = sorted(channel_distances)
+    for left_index, left in enumerate(keys):
+        for right in keys[left_index + 1 :]:
+            corr = _upper_triangle_corr(channel_distances[left], channel_distances[right])
+            if corr is not None and abs(float(corr)) > float(threshold):
+                duplicate_pairs.append(
+                    {
+                        "left": left,
+                        "right": right,
+                        "distance_correlation": float(corr),
+                    }
+                )
+    return {
+        "mode": "neutral_primary_channel_duplicate_audit_v0",
+        "active_primary_channels": active,
+        "diagnostic_only_channels": list(DIAGNOSTIC_ONLY_NEUTRAL_CHANNELS),
+        "correlation_threshold": float(threshold),
+        "duplicate_pairs": duplicate_pairs,
+        "degenerate_channels": degenerate_channels,
+        "duplicate_channel_gate_pass": not duplicate_pairs,
+        "claim_boundary": (
+            "Primary-channel audit for strict neutral distance. Rank prefixes, support-visible "
+            "duplicates, and hash/token channels are kept diagnostic-only by default; any remaining "
+            "near-duplicate primary channels block strict neutral promotion."
+        ),
+    }
+
+
+def _neutral_channel_matrix(views: list[NeutralObserverView], key: str) -> np.ndarray:
+    if not views:
+        return np.zeros((0, 0), dtype=float)
+    if key == "record":
+        return _stack_channel(views, "record_transition_hist")
+    if key == "record_signature":
+        return _stack_channel(views, "record_signature_hist")
+    if key == "object_packet":
+        return _stack_channel(views, "object_packet_hist")
+    if key == "counterfactual":
+        return _stack_channel(views, "counterfactual_hist")
+    if key == "checkpoint":
+        return _stack_channel(views, "checkpoint_transition_hist")
+    if key == "sector":
+        return _stack_channel(views, "sector_transition_hist")
+    if key == "repair":
+        return _stack_channel(views, "repair_response_hist")
+    if key == "repair_spectrum":
+        return _stack_channel(views, "repair_response_spectrum")
+    if key == "modular_response":
+        return _stack_channel(views, "modular_response_hist")
+    if key == "prime_geometric_modular":
+        return _stack_channel(views, "prime_geometric_modular_spectrum")
+    if key == "prime_geometric_control_quotient":
+        return _stack_channel(views, "prime_geometric_control_quotient_spectrum")
+    if key == "prime_geometric_rank3":
+        return _stack_channel(views, "prime_geometric_modular_spectrum")[:, :3]
+    if key == "prime_geometric_rank4":
+        return _stack_channel(views, "prime_geometric_modular_spectrum")[:, :4]
+    if key == "prime_geometric_rank8":
+        return _stack_channel(views, "prime_geometric_modular_spectrum")[:, :8]
+    if key == "prime_geometric_rank16":
+        return _stack_channel(views, "prime_geometric_modular_spectrum")[:, :16]
+    if key == "prime_geometric_rank32":
+        return _stack_channel(views, "prime_geometric_modular_spectrum")[:, :32]
+    if key == "prime_geometric_control_quotient_rank3":
+        return _stack_channel(views, "prime_geometric_control_quotient_spectrum")[:, :3]
+    if key == "prime_geometric_control_quotient_rank4":
+        return _stack_channel(views, "prime_geometric_control_quotient_spectrum")[:, :4]
+    if key == "prime_geometric_control_quotient_rank8":
+        return _stack_channel(views, "prime_geometric_control_quotient_spectrum")[:, :8]
+    if key == "prime_geometric_control_quotient_rank16":
+        return _stack_channel(views, "prime_geometric_control_quotient_spectrum")[:, :16]
+    if key == "prime_geometric_control_quotient_rank32":
+        return _stack_channel(views, "prime_geometric_control_quotient_spectrum")[:, :32]
+    if key == "support_visible_modular":
+        return _stack_channel(views, "support_visible_modular_spectrum")
+    if key == "repair_modular":
+        return _stack_channel(views, "repair_modular_spectrum")
+    if key == "transition_token":
+        return _stack_channel(views, "transition_token_hist")
+    if key == "transition_token_persistent":
+        return _stack_channel(views, "transition_token_persistent_hist")
+    if key == "transition_affinity":
+        return _stack_channel(views, "transition_affinity_hist")
+    if key == "persistence":
+        return _stack_channel(views, "persistence_features")
+    if key == "scalar_readout":
+        return _stack_channel(views, "scalar_readout_features")
+    return np.zeros((len(views), 0), dtype=float)
+
+
+def _stack_channel(views: list[NeutralObserverView], attr: str) -> np.ndarray:
+    rows = [np.asarray(getattr(view, attr), dtype=float).reshape(-1) for view in views]
+    width = max((row.size for row in rows), default=0)
+    if width <= 0:
+        return np.zeros((len(views), 0), dtype=float)
+    return np.vstack([_pad(row, width) for row in rows])
+
+
+def _neutral_channel_embedding(matrix: np.ndarray, key: str) -> np.ndarray:
+    matrix = np.asarray(matrix, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[0] == 0 or matrix.shape[1] == 0:
+        return np.zeros((matrix.shape[0] if matrix.ndim == 2 else 0, 0), dtype=float)
+    matrix = np.where(np.isfinite(matrix), matrix, 0.0)
+    if _neutral_channel_kind(key) == "histogram":
+        nonnegative = np.maximum(matrix, 0.0)
+        totals = np.sum(nonnegative, axis=1, keepdims=True)
+        probs = np.divide(nonnegative, totals, out=np.zeros_like(nonnegative), where=totals > 1e-12)
+        return np.sqrt(np.maximum(probs, 0.0))
+    centered = matrix - np.mean(matrix, axis=0, keepdims=True)
+    scale = np.std(centered, axis=0, keepdims=True)
+    standardized = np.divide(centered, scale, out=np.zeros_like(centered), where=scale > 1e-12)
+    row_observed = (np.linalg.norm(matrix, axis=1) > 1e-12).astype(float)[:, None]
+    return np.hstack([standardized, row_observed])
+
+
+def _neutral_channel_kind(key: str) -> str:
+    if key in {
+        "repair_spectrum",
+        "prime_geometric_modular",
+        "prime_geometric_control_quotient",
+        "prime_geometric_rank3",
+        "prime_geometric_rank4",
+        "prime_geometric_rank8",
+        "prime_geometric_rank16",
+        "prime_geometric_rank32",
+        "prime_geometric_control_quotient_rank3",
+        "prime_geometric_control_quotient_rank4",
+        "prime_geometric_control_quotient_rank8",
+        "prime_geometric_control_quotient_rank16",
+        "prime_geometric_control_quotient_rank32",
+        "support_visible_modular",
+        "repair_modular",
+        "persistence",
+        "scalar_readout",
+    }:
+        return "signed"
+    return "histogram"
 
 
 def strict_neutral_dimension_report(distance: np.ndarray) -> dict[str, Any]:
@@ -369,6 +494,14 @@ def strict_neutral_dimension_report(distance: np.ndarray) -> dict[str, Any]:
         and agree_gap <= 0.50
     )
     return {
+        "diagnostic_target": "neutral_record_feature_quotient_dimension",
+        "not_the_support_visible_chart_dimension": True,
+        "does_not_measure": [
+            "support_visible_s2_screen_dimension",
+            "canonical_h3_spatial_chart_dimension",
+            "forced_simulator_chart_dimension",
+            "paper_D3_support_visible_lorentz_chart_receipt",
+        ],
         "correlation_dimension": corr,
         "local_mle_dimension": mle,
         "spectral_dimension": spectral,
@@ -379,12 +512,14 @@ def strict_neutral_dimension_report(distance: np.ndarray) -> dict[str, Any]:
         "all_estimators_individually_3d": all_estimators_individually_3d,
         "estimators_agree_3d": estimators_agree_3d,
         "claim_boundary": (
-            "Strict neutral dimension diagnostic from observer-visible records only. The finite-regulator "
-            "gate uses the median of correlation and local-MLE estimators plus a pairwise-gap bound, because "
-            "planted 3D controls show a small finite-sample low bias in the correlation estimator. The "
-            "spectral proxy is reported but not gated because it is not calibrated on the finite planted "
-            "controls. This is not sufficient for strict neutral bulk without leakage, controls, and "
-            "refinement gates."
+            "Strict neutral dimension diagnostic for the record-feature quotient after H3 fitted points, "
+            "cap normals, S2 axes, screen coordinates, radial depth, and modular depth have been excluded. "
+            "It is not a measurement of the support-visible S2/H3 chart dimension, which is the separate "
+            "D3 Lorentz/H3 chart branch. The finite-regulator gate uses the median of correlation and "
+            "local-MLE estimators plus a pairwise-gap bound, because planted 3D controls show a small "
+            "finite-sample low bias in the correlation estimator. The spectral proxy is reported but not "
+            "gated because it is not calibrated on the finite planted controls. This is not sufficient for "
+            "strict neutral bulk without leakage, controls, and refinement gates."
         ),
     }
 
@@ -423,15 +558,18 @@ def strict_neutral_bulk_receipt(
     controls: dict[str, Any],
     refinement: dict[str, Any],
     quotient_geometry: dict[str, Any] | None = None,
+    channel_audit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     quotient_contract = quotient_geometry or {}
     quotient_contract_passed = bool(quotient_contract.get(GEOMETRY_CONTRACT_RECEIPT, False))
+    channel_audit_passed = bool((channel_audit or {}).get("duplicate_channel_gate_pass", True))
     passed = bool(
         dimension.get("estimators_agree_3d", False)
         and model_selection.get("best_model") == "H3"
         and model_selection.get("h3_beats_s2", False)
         and model_selection.get("h3_beats_h2_h4", False)
         and leakage.get("s2_leakage_pass", False)
+        and channel_audit_passed
         and controls.get("shuffled_records_fail", False)
         and controls.get("shuffled_transition_labels_fail", False)
         and controls.get("planted_2d_returns_2d", False)
@@ -446,11 +584,14 @@ def strict_neutral_bulk_receipt(
         "physical_claim": passed,
         GEOMETRY_CONTRACT_RECEIPT: quotient_contract_passed,
         "quotient_geometry_blockers": list(quotient_contract.get("blockers", [])),
+        "duplicate_channel_gate_pass": channel_audit_passed,
+        "duplicate_channel_blockers": list((channel_audit or {}).get("duplicate_pairs", [])),
         "claim_boundary": (
             "Neutral third-person bulk reconstructed from observer-visible records without H3/cap-normal "
-            "target features. This receipt is false unless quotient chart transport, metric validity, "
-            "feature missingness, presentation invariance, split leakage, dimension, model-selection, "
-            "controls, and refinement gates all pass."
+            "target features. It is intentionally stricter than, and does not negate, the support-visible "
+            "S2/Lorentz/H3 chart receipt. This receipt is false unless quotient chart transport, metric "
+            "validity, feature missingness, presentation invariance, split leakage, duplicate-channel, "
+            "record-feature quotient dimension, model-selection, controls, and refinement gates all pass."
         ),
     }
 
@@ -491,6 +632,7 @@ def neutral_model_selection(
         "S2": _spherical_model_stress(work, dim=2, heldout=heldout),
         "E2": _euclidean_model_stress(work, dim=2, heldout=heldout),
         "E3": _euclidean_model_stress(work, dim=3, heldout=heldout),
+        "E4": _euclidean_model_stress(work, dim=4, heldout=heldout),
         "H2": _hyperbolic_model_stress(work, dim=2, heldout=heldout),
         "H3": _hyperbolic_model_stress(work, dim=3, heldout=heldout),
         "H4": _hyperbolic_model_stress(work, dim=4, heldout=heldout),
@@ -503,6 +645,7 @@ def neutral_model_selection(
     h3 = models.get("H3", {})
     s2 = models.get("S2", {})
     e3 = models.get("E3", {})
+    e4 = models.get("E4", {})
     h2 = models.get("H2", {})
     h4 = models.get("H4", {})
     h3_stress = float(h3.get("heldout_stress", np.inf))
@@ -527,6 +670,7 @@ def neutral_model_selection(
         "h3_beats_h2_h4": bool(
             selected["selected_model"] == "H3"
             and h3_stress < float(h2.get("heldout_stress", np.inf))
+            and h3_stress < float(e4.get("heldout_stress", np.inf))
             and h3_h4_compatible
         ),
         "h3_h4_compatible": h3_h4_compatible,
@@ -566,7 +710,7 @@ def planted_neutral_control_report(
         "planted_3d_returns_3d": _dimension_in_range(rows["planted_3d"]["dimension"], 2.7, 3.3),
         "planted_4d_returns_4d": bool(
             _dimension_in_range(rows["planted_4d"]["dimension"], 3.3, 4.4)
-            and rows["planted_4d"]["model_selection"].get("selected_model") == "H4"
+            and rows["planted_4d"]["model_selection"].get("selected_model") == "E4"
         ),
         "planted_h3_returns_h3": rows["planted_h3"]["model_selection"].get("best_model") == "H3",
     }
@@ -592,6 +736,7 @@ def strict_neutral_bulk_report(
 ) -> dict[str, Any]:
     neutral_views = build_neutral_observer_views(observer_views)
     distance = neutral_distance_matrix(neutral_views, weights)
+    channel_audit = neutral_channel_duplicate_audit(neutral_views, weights)
     quotient_contract = _neutral_quotient_geometry_contract(
         distance,
         neutral_views,
@@ -611,11 +756,14 @@ def strict_neutral_bulk_report(
         controls or {},
         refinement or {},
         quotient_contract,
+        channel_audit,
     )
     return {
         "mode": "strict_neutral_bulk_record_transition_audit",
         "observer_count": len(neutral_views),
         "distance_matrix_shape": list(distance.shape),
+        "neutral_metric_construction": "fixed_weighted_euclidean_feature_embedding_v1",
+        "channel_audit": channel_audit,
         "quotient_geometry_contract": quotient_contract,
         "dimension": dimension,
         "model_selection": model_selection,
@@ -636,13 +784,17 @@ def strict_neutral_bulk_report(
             "modular_response_hist",
             "prime_geometric_modular_spectrum",
             "prime_geometric_control_quotient_spectrum",
-            "support_visible_modular_spectrum",
             "repair_modular_spectrum",
+            "persistence_features",
+            "scalar_readout_features",
+        ],
+        "diagnostic_only_features": [
+            "prime_geometric_rank_prefixes",
+            "prime_geometric_control_quotient_rank_prefixes",
+            "support_visible_modular_spectrum",
             "transition_token_hist",
             "transition_token_persistent_hist",
             "transition_affinity_hist",
-            "persistence_features",
-            "scalar_readout_features",
         ],
         "forbidden_primary_features": [
             "H3 fitted points",
@@ -654,6 +806,11 @@ def strict_neutral_bulk_report(
             "modular_depth",
         ],
         "claim_boundary": "Strict neutral audit scaffold; receipt remains false until Pro-defined gates pass.",
+        "chart_boundary": (
+            "This report audits an observer-record-only quotient after excluding the simulator's "
+            "support-visible S2/H3 chart features. A high neutral record-feature dimension is not a "
+            "measurement of, or contradiction to, the forced support-visible 3+1D Lorentz/H3 chart."
+        ),
     }
 
 
@@ -664,7 +821,7 @@ def _neutral_quotient_geometry_contract(
     refinement: dict[str, Any],
 ) -> dict[str, Any]:
     channel_manifest = [
-        ChannelMetricSpec(name=name, weight=weight, missingness="complete_case")
+        ChannelMetricSpec(name=name, weight=weight, missingness="fixed_missing_symbol")
         for name, weight in DEFAULT_NEUTRAL_WEIGHTS.items()
         if float(weight) > 0.0
     ]
@@ -4139,6 +4296,8 @@ def _strict_neutral_blockers(report: dict[str, Any]) -> list[str]:
         blockers.append("h3_does_not_clear_h2_h4_stress_margin")
     if not report.get("leakage", {}).get("s2_leakage_pass", False):
         blockers.append("s2_leakage_audit_failed")
+    if not report.get("channel_audit", {}).get("duplicate_channel_gate_pass", True):
+        blockers.append("duplicate_primary_neutral_channels")
     receipt = report.get("receipt", {})
     if not receipt.get("strict_neutral_bulk", False):
         blockers.append("strict_neutral_receipt_false_pending_controls_or_refinement")
@@ -4166,21 +4325,22 @@ def _neutral_control_degraded(
         and control_h3 > original_h3 + max(0.01, 0.15 * max(original_h3, 0.0))
     )
     distance_degraded = bool(
-        distance_corr is None
-        or not np.isfinite(float(distance_corr))
-        or float(distance_corr) < 0.97
-        or float(mean_abs_delta) > 1e-6
+        (
+            distance_corr is None
+            or not np.isfinite(float(distance_corr))
+            or float(distance_corr) < 0.50
+        )
+        and float(mean_abs_delta) > 1e-3
     )
     return bool(distance_degraded and (h3_structure_lost or stress_degraded))
 
 
 def _neutral_distance_control_degraded(distance_corr: float | None, mean_abs_delta: float) -> bool:
-    return bool(
-        distance_corr is None
-        or not np.isfinite(float(distance_corr))
-        or float(distance_corr) < 0.99
-        or float(mean_abs_delta) > 1e-6
-    )
+    if float(mean_abs_delta) <= 1e-3:
+        return False
+    if distance_corr is None or not np.isfinite(float(distance_corr)):
+        return True
+    return bool(float(distance_corr) < 0.50)
 
 
 def _neutral_profile_blockers(
@@ -5526,6 +5686,7 @@ def _parsimonious_model_selection(models: dict[str, dict[str, Any]]) -> dict[str
         "H2": (2, 2),
         "E3": (3, 1),
         "H3": (3, 2),
+        "E4": (4, 1),
         "H4": (4, 2),
     }
     selected = min(

@@ -140,3 +140,159 @@ def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp
     assert report["paper_faithful_observer_spacetime_emergence_receipt"] is True
     assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
     assert report["blockers"] == []
+
+
+def test_finite_theorem_contract_splits_observer_h3_from_populated_and_neutral(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_json(
+        run / "emergence_status_report.json",
+        {
+            "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": True,
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+            "ordered_cut_pair_rigidity_receipt": True,
+        },
+    )
+    _write_json(
+        run / "bw_state_derived_report.json",
+        {
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+            "inferred_modular_clock_fit": {"kappa_hat": 6.283185307179586, "blockers": []},
+        },
+    )
+    _write_json(run / "conformal_h3_spatial_chart_report.json", {"lorentz_algebra_receipt": True})
+    _write_json(
+        run / "modular_response_h3_report.json",
+        {
+            "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+            "h3_response_stage_gates": {
+                "signal_gate": True,
+                "geometry_gate": True,
+                "aggregate_wrong_scale_gate": True,
+                "material_feature_gate": True,
+                "material_wrong_scale_win_fraction": 0.38,
+                "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+                "material_wrong_scale_gate_value": 0.015,
+                "material_wrong_scale_advantage_energy_fraction": 0.015,
+            },
+        },
+    )
+    _write_json(run / "observer_chart_object_h3_report.json", {"OBJECT_BULK_POPULATION_RECEIPT": False})
+    _write_json(
+        run / "observer_modular_experience_report.json",
+        {"OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True},
+    )
+    (run / "observer_views.jsonl").write_text(
+        json.dumps(
+            {
+                "view_type": "patch_observer",
+                "observer_id": 1,
+                "support_nodes": [1, 2],
+                "visible_readout_hash": "abc",
+                "observer_relative_times": [0.1],
+                "transition_history_histograms": {"transition_history_key": {"1": 1.0}},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["finite_lorentz_theorem_contract_receipt"] is True
+    assert report["paper_faithful_observer_spacetime_emergence_receipt"] is True
+    assert report["paper_faithful_populated_h3_observer_experience_receipt"] is False
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
+    assert report["stages"]["L7_refinement_naturality"]["passed"] is False
+    assert report["stages"]["B2_observer_object_population"]["passed"] is False
+    assert report["stages"]["B4_strict_neutral_bulk_audit"]["passed"] is False
+
+
+def test_observer_facing_consensus_bulk_does_not_require_chart_blind_neutral(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_json(
+        run / "emergence_status_report.json",
+        {
+            "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": True,
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+            "ordered_cut_pair_rigidity_receipt": True,
+        },
+    )
+    _write_json(
+        run / "bw_state_derived_report.json",
+        {
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+            "inferred_modular_clock_fit": {"kappa_hat": 6.283185307179586, "blockers": []},
+        },
+    )
+    _write_json(run / "conformal_h3_spatial_chart_report.json", {"lorentz_algebra_receipt": True})
+    _write_json(
+        run / "modular_response_h3_report.json",
+        {
+            "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+            "h3_response_stage_gates": {
+                "signal_gate": True,
+                "geometry_gate": True,
+                "aggregate_wrong_scale_gate": True,
+                "material_feature_gate": True,
+            },
+        },
+    )
+    _write_json(run / "observer_chart_object_h3_report.json", {"OBJECT_BULK_POPULATION_RECEIPT": True})
+    _write_json(
+        run / "observer_modular_experience_report.json",
+        {"OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True},
+    )
+    _write_json(run / "strict_neutral_bulk_frontier_report.json", {"strict_neutral_bulk": False})
+    (run / "observer_views.jsonl").write_text(
+        json.dumps(
+            {
+                "view_type": "patch_observer",
+                "observer_id": 1,
+                "support_nodes": [1, 2],
+                "visible_readout_hash": "abc",
+                "observer_relative_times": [0.1],
+                "transition_history_histograms": {"transition_history_key": {"1": 1.0}},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["finite_lorentz_theorem_contract_receipt"] is True
+    assert report["paper_faithful_populated_h3_observer_experience_receipt"] is True
+    assert report["observer_facing_consensus_3d_bulk_emergence_receipt"] is True
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
+    assert report["chart_blind_strict_neutral_quotient_bulk_receipt"] is False
+    assert report["strict_neutral_bulk_contract_receipt"] is False
+    assert report["blockers"] == []
+    assert report["strict_neutral_blockers"] == [
+        "L7_refinement_naturality",
+        "B4_strict_neutral_bulk_audit",
+    ]
+
+
+def test_finite_theorem_contract_accepts_chart_verifier_as_cut_pair_rigidity(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": False})
+    _write_json(
+        run / "paper_3d_bulk_chart_report.json",
+        {
+            "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": True,
+            "bw_2pi_cap_flow_receipt": True,
+            "lorentz_algebra_receipt": True,
+        },
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["stages"]["L5_ordered_cut_pair_rigidity"]["passed"] is True
+    assert report["stages"]["L5_ordered_cut_pair_rigidity"]["details"][
+        "paper_chart_receipt_inferred_from_cap_lorentz_verifier"
+    ] is True

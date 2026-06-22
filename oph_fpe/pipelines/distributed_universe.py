@@ -32,6 +32,8 @@ RECEIPT_KEYS: tuple[str, ...] = (
     "observer_h3_object_population_receipt",
     "observer_facing_3p1d_h3_experience_receipt",
     "theorem_assisted_consensus_3d_bulk_readout_receipt",
+    "observer_facing_consensus_3d_bulk_readout_receipt",
+    "chart_blind_strict_neutral_quotient_bulk_receipt",
     "strict_neutral_third_person_bulk_receipt",
     "physical_cmb_prediction_receipt",
     "finite_lorentz_theorem_contract_receipt",
@@ -59,7 +61,7 @@ def prepare_distributed_oph_universe(
 
     Each shard is a bounded observer-like self-reading screen patch. The reducer
     may certify a federated witness, but it must not promote the run to a single
-    strict neutral bulk unless future cross-shard repair/overlap receipts exist.
+    chart-blind strict neutral quotient bulk unless future cross-shard repair/overlap receipts exist.
     """
 
     if shard_count <= 0:
@@ -140,6 +142,14 @@ def prepare_distributed_oph_universe(
             }
         )
 
+    observer_view_reduction_cfg = dict(
+        ((base_config.get("distributed_universe") or {}).get("observer_view_reduction") or {})
+    )
+    observer_view_reduction = {
+        "max_total": int(observer_view_reduction_cfg.get("max_total", 4096) or 4096),
+        "per_shard": int(observer_view_reduction_cfg.get("per_shard", 512) or 512),
+    }
+
     manifest = {
         "kernel": DISTRIBUTED_KERNEL_VERSION,
         "run_id": run_id,
@@ -157,6 +167,7 @@ def prepare_distributed_oph_universe(
         "observer_count_per_shard": int(observers_per_shard),
         "total_patch_capacity": int(shard_count) * int(patch_count_per_shard),
         "total_observer_capacity": int(shard_count) * int(observers_per_shard),
+        "observer_view_reduction": observer_view_reduction,
         "max_screen_points": int(max_screen_points),
         "max_h3_objects": int(max_h3_objects),
         "seed_stride": int(seed_stride),
@@ -575,7 +586,12 @@ def _global_neutral_bulk_reduction(
     shard_roots = [Path(row["run_dir"]) for row in completed if row.get("completed")]
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    observer_views = _combined_observer_views(completed, max_total=4096, per_shard=512)
+    reduction_limits = _observer_view_reduction_limits(manifest)
+    observer_views = _combined_observer_views(
+        completed,
+        max_total=reduction_limits["max_total"],
+        per_shard=reduction_limits["per_shard"],
+    )
     combined_path = out_dir / "observer_views.jsonl"
     if observer_views:
         combined_path.write_text(
@@ -628,6 +644,7 @@ def _global_neutral_bulk_reduction(
         "expected_shard_count": int(manifest.get("shard_count", 0)),
         "completed_shard_count": len(shard_roots),
         "combined_observer_view_count": len(observer_views),
+        "observer_view_reduction_limits": reduction_limits,
         "combined_observer_views_path": str(combined_path) if observer_views else None,
         "cross_shard_overlap_repair_receipt": bool(cross_shard_overlap_repair_receipt),
         "online_cross_shard_overlap_repair_receipt": bool(cross_shard_overlap_repair_receipt),
@@ -646,7 +663,7 @@ def _global_neutral_bulk_reduction(
         "claim_boundary": (
             "Global neutral-bulk reduction over the distributed atlas. The strict single-bulk receipt requires "
             "a global neutral audit plus cross-shard overlap repair and live per-cycle halo exchange. "
-            "A reducer-only replay cannot certify strict neutral third-person bulk."
+            "A reducer-only replay cannot certify chart-blind strict neutral quotient bulk."
         ),
     }
     _write_json(out_dir / "global_neutral_bulk_reduction_report.json", report)
@@ -723,7 +740,7 @@ def _global_observer_modular_time_export(
             "Global observer modular-time export for visualization and finite evidence. It separates "
             "execution_epoch and scheduler_event_index from observer_record_order, observer_modular_parameter, "
             "and observer_clock_uncertainty. It does not by itself certify scheduler-independent observer "
-            "clock naturality or strict neutral bulk."
+            "clock naturality or chart-blind strict neutral quotient bulk."
         ),
     }
     _write_json(out_dir / "observer_modular_time_global_payload.json", report)
@@ -1672,6 +1689,7 @@ def _global_physical_cmb_reduction(
             write_physical_cmb_input_report,
             write_physical_cmb_promotion_audit_report,
         )
+        from oph_fpe.cosmology.physical_cmb_sources import write_physical_cmb_source_readiness_report
 
         finite_reduction = _write_global_finite_cmb_source_reports(
             manifest=manifest,
@@ -1680,12 +1698,14 @@ def _global_physical_cmb_reduction(
         )
         write_physical_cmb_input_no_data_use_receipt(shard_roots + [out_dir], out_dir)
         no_data = _write_global_no_data_use_receipt(shard_roots + [out_dir], out_dir)
+        cmb_sources = write_physical_cmb_source_readiness_report([out_dir], out_dir)
         input_report = write_physical_cmb_input_report([out_dir], out_dir)
         promotion = write_physical_cmb_promotion_audit_report([out_dir], out_dir)
         output = write_physical_cmb_output_comparison_report([out_dir, *shard_roots], out_dir)
         frontier = write_physical_cmb_frontier_report([out_dir, *shard_roots], out_dir)
         blockers = _unique_texts(
             list(finite_reduction.get("blockers") or [])
+            + list(cmb_sources.get("blockers") or [])
             + list(input_report.get("blockers") or [])
             + list(promotion.get("promotion_blockers") or [])
             + list(output.get("contract_blockers") or [])
@@ -1707,6 +1727,16 @@ def _global_physical_cmb_reduction(
             ),
             "physical_cmb_prediction_eligible": bool(input_report.get("physical_cmb_prediction_eligible", False)),
             "physical_cmb_promotion_ready": bool(promotion.get("physical_cmb_promotion_ready", False)),
+            "physical_cmb_source_readiness_written": True,
+            "finite_covariant_parent_receipt": bool(
+                (cmb_sources.get("finite_covariant_parent") or {}).get("parent_receipt", False)
+            ),
+            "finite_collar_boltzmann_bundle_receipt": bool(
+                (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("source_bundle_receipt", False)
+            ),
+            "finite_collar_boltzmann_physical_certificate": bool(
+                (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("physical_certificate", False)
+            ),
             "physical_cmb_output_comparison_receipt": bool(
                 output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
             ),
@@ -1723,6 +1753,7 @@ def _global_physical_cmb_reduction(
             "finite_reduction_report_path": str(out_dir / "finite_cmb_global_reduction_report.json"),
             "input_report_path": str(out_dir / "physical_cmb_input_report.json"),
             "promotion_audit_report_path": str(out_dir / "physical_cmb_promotion_audit_report.json"),
+            "source_readiness_report_path": str(out_dir / "physical_cmb_source_readiness_report.json"),
             "output_comparison_report_path": str(out_dir / "physical_cmb_output_comparison_report.json"),
             "frontier_report_path": str(out_dir / "physical_cmb_frontier_report.json"),
             "reduced_source_files": finite_reduction.get("reduced_source_files") or [],
@@ -2760,7 +2791,7 @@ def _distributed_visualization_payload(
             "Render the whole object as one atlas, not as separate universes.",
             "Use crossShardOverlapLinks to draw observer support overlap across declared carrier cuts.",
             "Use per-shard timelinePayloadPath values for drill-down into high-detail shard videos.",
-            "Do not label strict neutral third-person bulk unless strict_single_global_neutral_bulk_receipt passes.",
+            "Do not label chart-blind strict neutral quotient bulk unless strict_single_global_neutral_bulk_receipt passes.",
         ],
     }
 
@@ -2891,6 +2922,21 @@ def _combined_observer_views(
             if len(rows) >= int(max_total):
                 return rows
     return rows
+
+
+def _observer_view_reduction_limits(manifest: dict[str, Any]) -> dict[str, int]:
+    cfg = manifest.get("observer_view_reduction") if isinstance(manifest.get("observer_view_reduction"), dict) else {}
+    def positive_int(key: str, default: int) -> int:
+        try:
+            value = int(cfg.get(key, default))
+        except (TypeError, ValueError):
+            value = int(default)
+        return max(1, value)
+
+    return {
+        "max_total": positive_int("max_total", 4096),
+        "per_shard": positive_int("per_shard", 512),
+    }
 
 
 def _read_jsonl_rows(path: Path, *, limit: int) -> list[dict[str, Any]]:

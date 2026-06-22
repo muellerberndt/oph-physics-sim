@@ -9,8 +9,10 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+    assert schema["properties"]["schemaVersion"]["const"] == "oph_universe_timeline_visualization_payload_v1"
     assert schema["properties"]["schema"]["const"] == "oph_universe_timeline_visualization_payload_v1"
     assert set(schema["required"]) == {
+        "schemaVersion",
         "schema",
         "title",
         "claimBoundary",
@@ -18,11 +20,14 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
         "sourcePaths",
         "smallUniverse",
         "screen",
+        "subjectiveObserverCameras",
         "observerModularTime",
         "consensusBulk",
         "pnSilenceToObservation",
         "cmbComparison",
+        "comparableObservations",
         "geometriesAndSymmetries",
+        "visualizationViews",
     }
 
 
@@ -52,3 +57,43 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
 
     screen_clusters_required = set(defs["screenClusters"]["required"])
     assert {"clusters", "snapshots", "rawSnapshotCount", "snapshotSource"} <= screen_clusters_required
+
+    camera_required = set(defs["subjectiveObserverCamera"]["required"])
+    assert {
+        "cameraId",
+        "eye",
+        "lookAt",
+        "up",
+        "right",
+        "forward",
+        "timeFrames",
+        "claimBoundary",
+    } <= camera_required
+
+    comparable_required = set(defs["comparableObservations"]["required"])
+    assert {"measurementLanes", "datasets", "receipts", "claimBoundary"} <= comparable_required
+
+    lane_required = set(defs["measurementLane"]["required"])
+    assert {"id", "lane", "runCount", "metrics"} <= lane_required
+
+    dataset_required = set(defs["comparableDataset"]["required"])
+    assert {"id", "kind", "rowCount"} <= dataset_required
+
+    view_set_required = set(defs["visualizationViews"]["required"])
+    assert {
+        "fluctuatingQuantumVacuum",
+        "observerCamera",
+        "effectiveStringTheory",
+    } <= view_set_required
+
+    view_required = set(defs["visualizationView"]["required"])
+    assert {
+        "viewId",
+        "label",
+        "dataSources",
+        "primaryFields",
+        "renderLayers",
+        "receipts",
+        "exportSufficiency",
+        "claimBoundary",
+    } <= view_required

@@ -80,7 +80,7 @@ def repair_scale_closure_report(
     ]
     report = {
         "mode": "oph_repair_scale_closure_hypothesis_v0",
-        "source": "Maarten repair-round scale-closure note; docs/repair_rounds.txt",
+        "source": "declared repair-depth ansatz carried by oph_fpe.cosmology.repair_scale_closure",
         "hypothesis": {
             "local_repair_map": "delta_{n+1} = g'(P) delta_n",
             "contraction_formula": "|g'(P)| = alpha(P) / phi^2",

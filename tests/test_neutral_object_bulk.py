@@ -52,6 +52,26 @@ def test_neutral_object_distance_matrix_is_symmetric():
     assert np.all(distance[np.triu_indices(len(objects), k=1)] >= 0.0)
 
 
+def test_vector_sector_signatures_do_not_collapse_to_zero_bucket():
+    rows = []
+    for i in range(18):
+        group = i // 6
+        row = _observer_view(i, group=group)
+        row["sector_change_signature"] = [0.0, 0.0, 0.0]
+        row["sector_change_signature"][group] = 1.0
+        row["transition_history_histograms"] = {
+            key: value
+            for key, value in row["transition_history_histograms"].items()
+            if key != "s3_sector_class"
+        }
+        rows.append(row)
+
+    objects = extract_neutral_objects(rows, min_observers_per_object=3)
+
+    assert len(objects) >= 3
+    assert len({obj.visible_signature_key.split(":")[2] for obj in objects}) >= 3
+
+
 def test_strict_neutral_object_bulk_blocks_too_few_objects():
     rows = [_observer_view(i, group=0) for i in range(8)]
 
@@ -61,13 +81,14 @@ def test_strict_neutral_object_bulk_blocks_too_few_objects():
     assert report["STRICT_NEUTRAL_OBJECT_BULK_RECEIPT"] is False
     assert "too_few_neutral_objects" in report["blockers"]
     assert "axis" in report["forbidden_primary_features"]
+    assert report["dimension"]["reason"] == "too_few_neutral_objects"
 
 
 def test_strict_neutral_object_bulk_writer_outputs_report_and_objects(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
     with (run / "observer_views.jsonl").open("w", encoding="utf-8") as handle:
-        for i in range(24):
+        for i in range(32):
             handle.write(json.dumps(_observer_view(i, group=i // 4)) + "\n")
 
     report = write_strict_neutral_object_bulk_report(
@@ -81,6 +102,7 @@ def test_strict_neutral_object_bulk_writer_outputs_report_and_objects(tmp_path: 
     assert (run / "strict_neutral_object_bulk_report.json").exists()
     assert (run / "neutral_objects.jsonl").exists()
     assert report["object_count"] >= 4
+    assert report["dimension"]["not_the_support_visible_chart_dimension"] is True
     assert report["physical_claim"] is False
 
 
@@ -117,4 +139,3 @@ def _observer_view(observer_id: int, *, group: int) -> dict:
         "radial_depth": 1.0,
         "modular_depth": 2.0,
     }
-

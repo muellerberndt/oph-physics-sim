@@ -83,6 +83,33 @@ def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path:
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
 
 
+def test_bulk_proof_certificate_keeps_observer_consensus_separate_from_neutral_quotient(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "finite_oph_theorem_contract_report.json",
+        {
+            "finite_lorentz_theorem_contract_receipt": True,
+            "paper_faithful_observer_spacetime_emergence_receipt": True,
+            "paper_faithful_populated_h3_observer_experience_receipt": True,
+            "paper_faithful_consensus_bulk_emergence_receipt": True,
+            "chart_blind_strict_neutral_quotient_bulk_receipt": False,
+            "strict_neutral_blockers": ["B4_strict_neutral_bulk_audit"],
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["observer_facing_consensus_3d_bulk_emergence_receipt"] is True
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
+    assert report["bulk_3d_established_observer_facing_consensus"] is True
+    assert report["chart_blind_strict_neutral_quotient_bulk_receipt"] is False
+    assert report["bulk_3d_established_chart_blind_strict_neutral"] is False
+    assert report["finite_theorem_contract_summary"]["strict_neutral_blockers"] == [
+        "B4_strict_neutral_bulk_audit"
+    ]
+
+
 def test_bulk_proof_certificate_splits_c0a_settle_from_c0b_consensus(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
@@ -109,27 +136,48 @@ def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path
     run = tmp_path / "run"
     run.mkdir()
     _write_json(
+        run / "emergence_status_report.json",
+        {
+            "BW_KMS_BRANCH_REPLAY_RECEIPT": True,
+            "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": True,
+            "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+        },
+    )
+    _write_json(
         run / "observer_modular_experience_report.json",
         {
             "observer_modular_time_receipt": True,
-            "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": False,
-            "observer_facing_3p1d_h3_experience_receipt": False,
+            "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True,
+            "observer_facing_3p1d_h3_experience_receipt": True,
+            "observer_facing_populated_h3_experience_receipt": False,
+            "observer_h3_object_population_receipt": False,
             "observer_count": 16,
             "observer_relative_time_count": 2,
-            "blockers": ["observer_h3_object_population_receipt"],
-            "component_gates": {"observer_modular_time_receipt": True},
+            "blockers": [],
+            "populated_h3_experience_blockers": ["observer_h3_object_population_receipt"],
+            "component_gates": {
+                "observer_modular_time_receipt": True,
+                "bw_kms_branch_replay_receipt": True,
+                "conformal_h3_chart_receipt": True,
+                "h3_modular_response_receipt": True,
+            },
         },
     )
 
     report = bulk_proof_certificate(run)
 
     assert report["observer_modular_time_receipt"] is True
-    assert report["observer_facing_3p1d_h3_experience_receipt"] is False
+    assert report["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert report["observer_facing_populated_h3_experience_receipt"] is False
     assert report["observer_modular_experience_summary"]["observer_count"] == 16
-    assert report["observer_modular_experience_summary"]["source_report_blockers"] == [
+    assert report["observer_modular_experience_summary"]["source_report_blockers"] == []
+    assert report["observer_modular_experience_summary"]["source_report_populated_h3_blockers"] == [
         "observer_h3_object_population_receipt"
     ]
-    assert "observer_h3_object_population_receipt" in report["observer_modular_experience_summary"]["blockers"]
+    assert report["observer_modular_experience_summary"]["blockers"] == []
+    assert "observer_h3_object_population_receipt" in report["observer_modular_experience_summary"][
+        "populated_h3_experience_blockers"
+    ]
 
 
 def test_bulk_proof_certificate_writes_and_comparable_data_collects_tiers(tmp_path: Path):

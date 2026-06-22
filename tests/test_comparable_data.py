@@ -733,6 +733,45 @@ def test_comparable_data_prefers_bulk_proof_over_legacy_emergence_flag(tmp_path:
     assert lane["object_bulk_population_count"] == 0
 
 
+def test_comparable_data_separates_observer_3p1d_from_populated_h3(tmp_path: Path):
+    run = tmp_path / "run"
+    (run / "observer_consensus_bulk").mkdir(parents=True)
+    _write_json(
+        run / "observer_consensus_bulk" / "observer_consensus_bulk_readout_report.json",
+        {
+            "observer_like_self_reading_system_receipt": True,
+            "observer_modular_time_receipt": True,
+            "observer_facing_3p1d_h3_experience_receipt": True,
+            "observer_facing_populated_h3_experience_receipt": False,
+            "observer_h3_object_population_receipt": False,
+            "theorem_assisted_consensus_3d_bulk_readout_receipt": False,
+            "strict_neutral_third_person_bulk_receipt": False,
+        },
+    )
+    _write_json(
+        run / "observer_modular_experience_report.json",
+        {
+            "observer_modular_time_receipt": True,
+            "observer_facing_3p1d_h3_experience_receipt": True,
+            "observer_facing_populated_h3_experience_receipt": False,
+            "observer_h3_object_population_receipt": False,
+        },
+    )
+
+    report = comparable_data_report([tmp_path])
+    lane = report["measurement_lanes"]["support_visible_lorentz_branch"]
+    row = report["rows"][0]
+
+    assert row["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert row["observer_facing_populated_h3_experience_receipt"] is False
+    assert report["observer_facing_3p1d_h3_experience_count"] == 1
+    assert report["observer_facing_3p1d_h3_experience_any"] is True
+    assert report["theorem_assisted_observer_facing_h3_population_count"] == 0
+    assert report["theorem_assisted_observer_facing_h3_population_any"] is False
+    assert lane["observer_facing_3p1d_h3_experience_count"] == 1
+    assert lane["observer_facing_populated_h3_experience_count"] == 0
+
+
 def test_comparable_data_collects_standalone_strict_neutral_report(tmp_path: Path):
     report_path = tmp_path / "strict_neutral_seed.json"
     _write_json(

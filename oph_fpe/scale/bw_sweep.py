@@ -123,6 +123,8 @@ def _large_run_readiness_summary(results: list[dict[str, Any]]) -> dict[str, Any
     recommended_counts: Counter[str] = Counter()
     state_bw_worthwhile = 0
     any_scale_candidate = 0
+    claim_scale_candidate = 0
+    stability_only_candidate = 0
     for row in ok_results:
         readiness = row.get("large_run_readiness") or {}
         recommended_counts[str(readiness.get("recommended_large_run_lane", "unknown"))] += 1
@@ -130,6 +132,10 @@ def _large_run_readiness_summary(results: list[dict[str, Any]]) -> dict[str, Any
             state_bw_worthwhile += 1
         if readiness.get("any_scale_candidate", False):
             any_scale_candidate += 1
+        if readiness.get("claim_scale_candidate", False):
+            claim_scale_candidate += 1
+        if readiness.get("stability_only_candidate", False):
+            stability_only_candidate += 1
         for blocker in readiness.get("blockers", []):
             blocker_counts[str(blocker)] += 1
         for lane_name, lane in (readiness.get("lanes") or {}).items():
@@ -141,7 +147,10 @@ def _large_run_readiness_summary(results: list[dict[str, Any]]) -> dict[str, Any
         "failed_job_count": len(results) - len(ok_results),
         "recommended_large_run_lanes": dict(sorted(recommended_counts.items())),
         "any_scale_candidate_count": int(any_scale_candidate),
+        "claim_scale_candidate_count": int(claim_scale_candidate),
+        "stability_only_candidate_count": int(stability_only_candidate),
         "state_bw_expensive_run_worthwhile_count": int(state_bw_worthwhile),
+        "all_ok_jobs_claim_scale_worthwhile": bool(ok_results and claim_scale_candidate == len(ok_results)),
         "all_ok_jobs_state_bw_worthwhile": bool(ok_results and state_bw_worthwhile == len(ok_results)),
         "lane_status_counts": {
             lane_name: dict(sorted(counts.items()))

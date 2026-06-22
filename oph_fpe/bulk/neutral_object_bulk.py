@@ -432,9 +432,9 @@ def _mean_transition_hist(
         if not np.any(hist):
             hist = _histogram_dict_to_vector(histograms.get(f"{transition_key}_path"), width)
         if not np.any(hist) and scalar_key:
-            scalar = _safe_int(row.get(scalar_key))
-            if scalar is not None:
-                hist[int(scalar) % width] = 1.0
+            bucket = _maybe_scalar_bucket(row.get(scalar_key), width)
+            if bucket is not None:
+                hist[int(bucket)] = 1.0
         values.append(_normalize(hist, width))
     return _normalize(np.mean(np.vstack(values), axis=0) if values else np.zeros(width), width)
 
@@ -533,8 +533,26 @@ def _dominant_nested_bucket(histograms: Any, key: str, width: int) -> int:
 
 
 def _scalar_bucket(value: Any, width: int) -> int:
+    bucket = _maybe_scalar_bucket(value, width)
+    return int(bucket or 0) % max(1, int(width))
+
+
+def _maybe_scalar_bucket(value: Any, width: int) -> int | None:
     parsed = _safe_int(value)
-    return int(parsed or 0) % max(1, int(width))
+    if parsed is not None:
+        return int(parsed) % max(1, int(width))
+    if isinstance(value, (list, tuple, np.ndarray)):
+        try:
+            array = np.asarray(value, dtype=float).reshape(-1)
+        except (TypeError, ValueError):
+            array = np.zeros(0, dtype=float)
+        array = array[np.isfinite(array)]
+        if array.size:
+            if float(np.max(np.abs(array))) > 1e-12:
+                return int(np.argmax(np.abs(array))) % max(1, int(width))
+            rounded = ",".join(f"{float(item):.6g}" for item in array[:16])
+            return _stable_bucket(rounded, width)
+    return None
 
 
 def _normalize(values: np.ndarray, width: int) -> np.ndarray:
@@ -603,7 +621,11 @@ def _mean_abs_upper_delta(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def _control_degraded(corr: float | None, delta: float) -> bool:
-    return bool(corr is None or not np.isfinite(float(corr)) or float(corr) < 0.99 or float(delta) > 1e-6)
+    if float(delta) <= 1e-3:
+        return False
+    if corr is None or not np.isfinite(float(corr)):
+        return True
+    return bool(float(corr) < 0.50)
 
 
 def _strict_neutral_object_blockers(

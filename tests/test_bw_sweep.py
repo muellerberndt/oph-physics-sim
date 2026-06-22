@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 
 from oph_fpe.experiments import load_config
+import oph_fpe.pipelines.oph_universe_sweep as universe_sweep
 from oph_fpe.scale.bw_array import _large_run_readiness_report
 from oph_fpe.scale.bw_sweep import run_bw_sweep
 from oph_fpe.scale.parallel import jobs_from_config, sweep_parallel_plan
@@ -28,7 +29,9 @@ def test_bw_sweep_runs_configs_in_parallel(tmp_path: Path):
     assert all("large_run_readiness" in row for row in summary["results"])
     readiness = summary["large_run_readiness_summary"]
     assert readiness["ok_job_count"] == 2
-    assert readiness["recommended_large_run_lanes"]["receipt_stability_refinement"] == 2
+    assert readiness["recommended_large_run_lanes"]["do_not_scale_yet"] == 2
+    assert readiness["claim_scale_candidate_count"] == 0
+    assert readiness["stability_only_candidate_count"] == 2
     assert readiness["state_bw_expensive_run_worthwhile_count"] == 0
 
 
@@ -49,6 +52,45 @@ def test_parallel_plan_respects_explicit_limits(monkeypatch):
     assert workers == 4
     assert inner_jobs == 2
     assert jobs_from_config("auto", reserve=1) == 32
+
+
+def test_oph_universe_sweep_aggregates_stubbed_pipeline(tmp_path: Path, monkeypatch):
+    config = load_config(Path("configs/e1_s3_bw_screen_4k.yml"))
+    config = dict(config)
+    config["name"] = "universe_sweep_stub"
+    config_path = tmp_path / "universe_sweep_stub.yml"
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+
+    def fake_pipeline(**kwargs):
+        return {
+            "run_dir": str(tmp_path / str(kwargs["run_id"])),
+            "final_receipts": {
+                "observer_modular_time_receipt": True,
+                "physical_cmb_prediction_receipt": False,
+            },
+            "viewer_outputs": {"timeline_payload": "payload.json"},
+            "proof_summary": {"physical_cmb_prediction": False},
+            "frontier_artifacts": {},
+        }
+
+    monkeypatch.setattr(universe_sweep, "run_oph_universe_pipeline", fake_pipeline)
+
+    summary = universe_sweep.run_oph_universe_sweep(
+        [config_path],
+        tmp_path / "runs",
+        seeds=[11, 12],
+        workers=1,
+        inner_jobs=3,
+        max_observers=4,
+    )
+
+    assert summary["job_count"] == 2
+    assert summary["workers"] == 1
+    assert summary["inner_jobs"] == 3
+    assert Path(summary["summary_path"]).exists()
+    assert all(row["ok"] for row in summary["results"])
+    assert summary["receipt_summary"]["passed_receipt_counts"]["observer_modular_time_receipt"] == 2
+    assert "physical_cmb_prediction_receipt" not in summary["receipt_summary"]["passed_receipt_counts"]
 
 
 def test_large_run_readiness_blocks_wrong_scale_state_bw():
@@ -84,6 +126,7 @@ def test_large_run_readiness_blocks_wrong_scale_state_bw():
     assert "state_bw_selected_1x_not_2pi" in state_lane["blockers"]
     assert report["state_bw_expensive_run_worthwhile"] is False
     assert report["recommended_large_run_lane"] == "do_not_scale_yet"
+    assert report["claim_scale_candidate"] is False
 
 
 def test_large_run_readiness_routes_screen_proxy_without_state_bw_promotion():
@@ -110,7 +153,7 @@ def test_large_run_readiness_routes_screen_proxy_without_state_bw_promotion():
         observer_modular_experience_report={"observer_modular_time_receipt": True},
         paper_3d_chart_report={
             "paper_theorem_3d_bulk_chart_receipt": True,
-            "paper_theorem_object_populated_chart_precursor_receipt": False,
+            "paper_theorem_object_populated_chart_precursor_receipt": True,
             "paper_theorem_neutral_populated_bulk_receipt": False,
         },
         theorem_core_report={"finite_consensus_theorem_receipt": False},
@@ -119,5 +162,9 @@ def test_large_run_readiness_routes_screen_proxy_without_state_bw_promotion():
     assert report["lanes"]["state_bw"]["scale_candidate"] is False
     assert report["lanes"]["screen_cmb_proxy"]["scale_candidate"] is True
     assert report["lanes"]["bulk_3d"]["scale_candidate"] is False
+    assert report["lanes"]["bulk_3d"]["blockers"] == [
+        "strict_neutral_bulk_gate_not_established",
+    ]
     assert report["recommended_large_run_lane"] == "screen_cmb_proxy_refinement"
+    assert report["claim_scale_candidate"] is True
     assert report["state_bw_expensive_run_worthwhile"] is False

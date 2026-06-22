@@ -1934,6 +1934,16 @@ def _large_run_readiness_report(
         "observer_modular_time": observer_lane,
         "finite_consensus": finite_consensus_lane,
     }
+    claim_lanes = {
+        "state_bw": state_lane,
+        "transition_scale": transition_lane,
+        "screen_cmb_proxy": cmb_lane,
+        "bulk_3d": bulk_lane,
+    }
+    stability_lanes = {
+        "observer_modular_time": observer_lane,
+        "finite_consensus": finite_consensus_lane,
+    }
     if bulk_lane["scale_candidate"]:
         recommended = "bulk_3d_refinement"
     elif cmb_lane["scale_candidate"]:
@@ -1942,10 +1952,13 @@ def _large_run_readiness_report(
         recommended = "transition_scale_refinement"
     elif state_lane["scale_candidate"]:
         recommended = "state_bw_refinement"
-    elif observer_lane["scale_candidate"] or finite_consensus_lane["scale_candidate"]:
-        recommended = "receipt_stability_refinement"
     else:
         recommended = "do_not_scale_yet"
+    claim_scale_candidate = bool(any(lane["scale_candidate"] for lane in claim_lanes.values()))
+    stability_only_candidate = bool(
+        not claim_scale_candidate
+        and any(lane["scale_candidate"] for lane in stability_lanes.values())
+    )
     blockers = sorted(
         {
             str(blocker)
@@ -1961,6 +1974,11 @@ def _large_run_readiness_report(
             "diagnostic rows into bulk, particle, or physical-CMB claims."
         ),
         "recommended_large_run_lane": recommended,
+        "claim_scale_candidate": claim_scale_candidate,
+        "stability_only_candidate": stability_only_candidate,
+        "stability_only_lanes": [
+            name for name, lane in stability_lanes.items() if lane["scale_candidate"]
+        ],
         "any_scale_candidate": bool(any(lane["scale_candidate"] for lane in lanes.values())),
         "state_bw_expensive_run_worthwhile": bool(state_lane["scale_candidate"]),
         "lanes": lanes,
@@ -2061,7 +2079,7 @@ def _bulk_3d_readiness(report: dict[str, Any]) -> dict[str, Any]:
     if not object_precursor:
         blockers.append("paper_theorem_object_populated_chart_precursor_receipt_false")
     if not neutral_populated:
-        blockers.append("paper_theorem_neutral_populated_bulk_receipt_false")
+        blockers.append("strict_neutral_bulk_gate_not_established")
     return _readiness_lane(
         "scale_candidate" if ready else "blocked",
         scale_candidate=ready,
@@ -2071,6 +2089,15 @@ def _bulk_3d_readiness(report: dict[str, Any]) -> dict[str, Any]:
             "paper_theorem_object_populated_chart_precursor_receipt": object_precursor,
             "paper_theorem_neutral_populated_bulk_receipt": neutral_populated,
             "h3_spatial_dimension_from_boost_orbit": report.get("h3_spatial_dimension_from_boost_orbit"),
+            "neutral_reconstruction_bulk_3d_established": bool(
+                report.get("neutral_reconstruction_bulk_3d_established", False)
+            ),
+            "strict_neutral_note": (
+                "Scaling the legacy neutral_summary_distance_diagnostic cannot make this pass; "
+                "run strict-neutral object/frontier audits for a strict neutral-bulk claim."
+            )
+            if not neutral_populated
+            else None,
         },
     )
 
@@ -2915,11 +2942,14 @@ def _observer_modular_experience_report(
         or observer_chart_object_report.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT", False)
         or observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
     )
-    full_experience_receipt = bool(
+    observer_3p1d_experience_receipt = bool(
         observer_modular_time_receipt
         and branch_replay_receipt
         and chart_receipt
         and h3_response_receipt
+    )
+    populated_h3_experience_receipt = bool(
+        observer_3p1d_experience_receipt
         and object_population_receipt
     )
     component_gates = {
@@ -2927,14 +2957,22 @@ def _observer_modular_experience_report(
         "bw_kms_branch_replay_receipt": branch_replay_receipt,
         "conformal_h3_chart_receipt": chart_receipt,
         "h3_modular_response_receipt": h3_response_receipt,
+    }
+    populated_h3_component_gates = {
+        **component_gates,
         "observer_h3_object_population_receipt": object_population_receipt,
     }
     blockers = [name for name, passed in component_gates.items() if not passed]
+    populated_h3_blockers = [
+        name for name, passed in populated_h3_component_gates.items() if not passed
+    ]
     report = {
         "mode": "observer_modular_3p1d_experience_report_v0",
         "observer_modular_time_receipt": observer_modular_time_receipt,
-        OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: full_experience_receipt,
-        "observer_facing_3p1d_h3_experience_receipt": full_experience_receipt,
+        OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_3p1d_experience_receipt,
+        "observer_facing_3p1d_h3_experience_receipt": observer_3p1d_experience_receipt,
+        "observer_facing_populated_h3_experience_receipt": populated_h3_experience_receipt,
+        "observer_h3_object_population_receipt": object_population_receipt,
         "observer_count": len(patch_rows),
         "observer_relative_time_count": len(times),
         "observer_relative_time_grid": [float(value) for value in times],
@@ -2943,7 +2981,9 @@ def _observer_modular_experience_report(
         "observer_modular_depth_mean_median": float(np.median(local_means)) if local_means.size else None,
         "observer_modular_depth_mean_std": float(np.std(local_means)) if local_means.size else None,
         "component_gates": component_gates,
+        "populated_h3_component_gates": populated_h3_component_gates,
         "blockers": blockers,
+        "populated_h3_experience_blockers": populated_h3_blockers,
         "sample_observer_rows": [
             {
                 "observer_id": row.get("observer_id"),
@@ -2957,9 +2997,10 @@ def _observer_modular_experience_report(
         ],
         "claim_boundary": (
             "Observer-facing modular-time and H3 experience receipt. The modular-time subreceipt is "
-            "observer-local. The full 3+1D/H3 experience receipt additionally requires the declared "
-            "BW/KMS branch replay, the conformal H3 chart, H3 modular-response evidence, and non-boundary "
-            "observer object population. It is not chart-blind strict neutral bulk."
+            "observer-local. The 3+1D/H3 experience receipt additionally requires the declared BW/KMS "
+            "branch replay, the conformal H3 chart, and H3 modular-response evidence. Non-boundary "
+            "observer object population is reported separately as observer_facing_populated_h3_experience_receipt; "
+            "it is not part of the paper-side D3 observer-facing chart claim and is not chart-blind strict neutral bulk."
         ),
     }
     return with_claim_metadata(
@@ -2967,7 +3008,7 @@ def _observer_modular_experience_report(
         claim_level=DEMO,
         receipt=OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
         physical_claim=False,
-        observable_id="observer_local_modular_time_and_h3_object_population",
+        observable_id="observer_local_modular_time_and_h3_chart",
         fit_objective="observer_modular_time_plus_h3_experience_gates",
     )
 

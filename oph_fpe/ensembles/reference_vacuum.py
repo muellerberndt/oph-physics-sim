@@ -87,9 +87,16 @@ def free_scalar_ensemble_spec(
         coarse_map_hashes=(stable_hash({"coarse_map": "mode_truncation", "retains": "ell<=L"}),),
         zero_mode_projector_hash=stable_hash({"projector": "drop_ell_0_ell_1"}),
         amplitude_convention="A=E[q^T K q]/d; if H=(1/2)q^T K q then A=2E[H]/d",
-        sampler_kernel_hash=stable_hash({"sampler": "direct_independent_gaussian_coefficients", "mcmc": False}),
+        sampler_kernel_hash=stable_hash(
+            {
+                "sampler": "per_mode_seeded_gaussian_sequence_coefficients",
+                "mcmc": False,
+                "sample_index": "sequence_offset",
+            }
+        ),
         rng_event_label_schema=(
-            "PRF(seed_key, ensemble_id, sample_index, ell, m, draw='normal'); "
+            "PRF(seed_key, ensemble_id, ell, m, draw='normal_sequence') seeds one deterministic "
+            "Gaussian stream per harmonic mode; sample_index is the stream offset; "
             "regulator size, worker id, thread id, and execution order are excluded"
         ),
         smoothing_policy=(
@@ -202,21 +209,21 @@ def sample_harmonic_coefficients(
     theta = float(spec.action_definition_and_coefficients["theta"])
     modes = _harmonic_modes(ell_max)
     variances = np.array([_harmonic_variance(mode["ell"], amplitude=amplitude, theta=theta) for mode in modes])
-    coefficients = np.empty((int(sample_count), len(modes)), dtype=float)
-    tasks = [(sample, index) for sample in range(int(sample_count)) for index in range(len(modes))]
-    parts = np.array_split(np.array(tasks, dtype=int), max(1, int(partition_count)))
-    for part in parts:
-        for sample, index in part:
-            mode = modes[int(index)]
-            label = {
-                "ensemble_id": spec.ensemble_id,
-                "sample": int(sample),
-                "ell": mode["ell"],
-                "m": mode["m"],
-                "draw": "normal",
-            }
-            z = _normal_from_event(seed_key, label)
-            coefficients[int(sample), int(index)] = math.sqrt(float(variances[int(index)])) * z
+    count = int(sample_count)
+    if count < 0:
+        raise ValueError("sample_count must be non-negative")
+    coefficients = np.empty((count, len(modes)), dtype=float)
+    # One deterministic stream per mode preserves coarse/fine regulator replay while avoiding
+    # millions of per-event RNG constructions for high-ell diagnostic baselines.
+    for index, mode in enumerate(modes):
+        label = {
+            "ensemble_id": spec.ensemble_id,
+            "ell": mode["ell"],
+            "m": mode["m"],
+            "draw": "normal_sequence",
+        }
+        rng = np.random.default_rng(_seed_from_event(seed_key, label))
+        coefficients[:, index] = math.sqrt(float(variances[index])) * rng.normal(size=count)
     return modes, variances, coefficients
 
 
@@ -411,8 +418,7 @@ def _normal_from_event(seed_key: str, event: dict[str, Any]) -> float:
 
 
 def _uniform_from_event(seed_key: str, event: dict[str, Any]) -> float:
-    rng = np.random.default_rng(_seed_from_event(seed_key, event))
-    return float(rng.random())
+    return _unit_interval_from_seed(_seed_from_event(seed_key, event))
 
 
 def _seed_from_event(seed_key: str, event: dict[str, Any]) -> int:
@@ -422,6 +428,10 @@ def _seed_from_event(seed_key: str, event: dict[str, Any]) -> int:
         digest_size=16,
     ).digest()
     return int.from_bytes(digest, "little", signed=False)
+
+
+def _unit_interval_from_seed(seed: int) -> float:
+    return float((int(seed) + 0.5) / float(1 << 128))
 
 
 def _smooth_coefficients(

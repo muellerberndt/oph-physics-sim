@@ -30,6 +30,8 @@ RELEVANT_REPORTS = (
     "observer_chart_object_h3_recomputed.json",
     "observer_consensus_report.json",
     "object_consensus_report.json",
+    "observer_modular_experience_report.json",
+    "observer_consensus_bulk_readout_report.json",
     "bulk_reconstruction_report.json",
     "strict_neutral_bulk_report.json",
     "strict_neutral_object_bulk_report.json",
@@ -143,6 +145,10 @@ def comparable_data_report(run_dirs: list[Path]) -> dict[str, Any]:
         if bool(row.get("bulk_proof_theorem_assisted_h3_nonboundary_population"))
         or bool(row.get("bulk_proof_theorem_assisted_h3_populated_chart"))
     )
+    observer_3p1_count = sum(1 for row in rows if bool(row.get("observer_facing_3p1d_h3_experience_receipt")))
+    observer_populated_h3_count = sum(
+        1 for row in rows if bool(row.get("observer_facing_populated_h3_experience_receipt"))
+    )
     chart_level_3p1_count = sum(1 for row in rows if bool(row.get("bulk_proof_chart_level_3p1")))
     return {
         "mode": "oph_fpe_comparable_data_snapshot",
@@ -209,10 +215,10 @@ def comparable_data_report(run_dirs: list[Path]) -> dict[str, Any]:
         "bulk_3d_established_any": bool(bulk_pass_count > 0),
         "theorem_assisted_h3_bulk_count": int(theorem_assisted_bulk_count),
         "theorem_assisted_h3_bulk_any": bool(theorem_assisted_bulk_count > 0),
-        "theorem_assisted_observer_facing_h3_population_count": int(theorem_assisted_bulk_count),
-        "theorem_assisted_observer_facing_h3_population_any": bool(theorem_assisted_bulk_count > 0),
-        "observer_facing_3p1d_h3_experience_count": int(theorem_assisted_bulk_count),
-        "observer_facing_3p1d_h3_experience_any": bool(theorem_assisted_bulk_count > 0),
+        "theorem_assisted_observer_facing_h3_population_count": int(observer_populated_h3_count),
+        "theorem_assisted_observer_facing_h3_population_any": bool(observer_populated_h3_count > 0),
+        "observer_facing_3p1d_h3_experience_count": int(observer_3p1_count),
+        "observer_facing_3p1d_h3_experience_any": bool(observer_3p1_count > 0),
         "chart_level_3p1_count": int(chart_level_3p1_count),
         "chart_level_3p1_any": bool(chart_level_3p1_count > 0),
         "strict_neutral_3d_bulk_count": int(strict_neutral_bulk_count),
@@ -263,6 +269,8 @@ def _find_run_dirs(roots: list[Path]) -> list[Path]:
 
 def _row_parent_for_report(report_path: Path) -> Path:
     parent = Path(report_path).parent
+    if parent.name == "observer_consensus_bulk":
+        return parent.parent
     current = parent
     for _ in range(6):
         if (current / "manifest.json").exists():
@@ -449,6 +457,10 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         object_chart = standalone_report
     observer_consensus = _read_json(standalone_parent / "observer_consensus_report.json")
     object_consensus = _read_json(standalone_parent / "object_consensus_report.json")
+    observer_modular = _read_json(standalone_parent / "observer_modular_experience_report.json")
+    observer_bulk_readout = _read_json(
+        standalone_parent / "observer_consensus_bulk" / "observer_consensus_bulk_readout_report.json"
+    ) or _read_json(standalone_parent / "observer_consensus_bulk_readout_report.json")
     neutral = _read_json(standalone_parent / "bulk_reconstruction_report.json")
     strict_neutral = _read_json(standalone_parent / "strict_neutral_bulk_report.json")
     if standalone_report.get("mode") == "strict_neutral_bulk_record_transition_audit":
@@ -677,6 +689,22 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             or emergence.get("paper_theorem_assisted_h3_chart_precursor_receipt")
         )
 
+    observer_facing_3p1d_h3_experience_receipt = bool(
+        observer_bulk_readout.get("observer_facing_3p1d_h3_experience_receipt", False)
+        or observer_modular.get("observer_facing_3p1d_h3_experience_receipt", False)
+        or bulk_proof.get("observer_facing_3p1d_h3_experience_receipt", False)
+    )
+    observer_facing_populated_h3_experience_receipt = bool(
+        observer_bulk_readout.get("observer_facing_populated_h3_experience_receipt", False)
+        or observer_modular.get("observer_facing_populated_h3_experience_receipt", False)
+        or bulk_proof.get("observer_facing_populated_h3_experience_receipt", False)
+    )
+    observer_h3_object_population_receipt = bool(
+        observer_bulk_readout.get("observer_h3_object_population_receipt", False)
+        or observer_modular.get("observer_h3_object_population_receipt", False)
+        or bulk_proof.get("observer_h3_object_population_receipt", False)
+    )
+
     row = {
         "run_path": str(run_path),
         "run_id": manifest.get("run_id") or run_path.name,
@@ -744,6 +772,8 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
                 controlled_particle,
                 defect_h3_worldlines,
                 bulk_proof,
+                observer_modular,
+                observer_bulk_readout,
                 shape_summary,
                 shape_vertex,
                 shape_cell,
@@ -799,6 +829,9 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "chart_level_conformal_lorentz_receipt": chart_level_lorentz,
         "bw_automorphism_sanity_receipt": bw_automorphism_sanity,
         "endogenous_modular_generator_receipt": endogenous_modular_generator_receipt,
+        "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_h3_experience_receipt,
+        "observer_facing_populated_h3_experience_receipt": observer_facing_populated_h3_experience_receipt,
+        "observer_h3_object_population_receipt": observer_h3_object_population_receipt,
         "object_bulk_population_receipt": object_bulk_population_receipt,
         "theorem_assisted_h3_object_preview_receipt": theorem_assisted_h3_object_preview_receipt,
         "object_h3_nonboundary_population_receipt": object_h3_nonboundary_population_receipt,
@@ -3610,6 +3643,8 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "bw_automorphism_sanity_receipt",
                 "support_visible_lorentz_3p1_kinematics_receipt",
                 "endogenous_modular_generator_receipt",
+                "observer_facing_3p1d_h3_experience_receipt",
+                "observer_facing_populated_h3_experience_receipt",
                 "paper_theorem_3d_bulk_chart_receipt",
                 "support_visible_h3_populated_bulk_receipt",
                 "theorem_assisted_h3_object_preview_receipt",
@@ -3632,6 +3667,12 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "endogenous_modular_generator_count": sum(
             1 for row in usable if row.get("endogenous_modular_generator_receipt")
+        ),
+        "observer_facing_3p1d_h3_experience_count": sum(
+            1 for row in usable if row.get("observer_facing_3p1d_h3_experience_receipt")
+        ),
+        "observer_facing_populated_h3_experience_count": sum(
+            1 for row in usable if row.get("observer_facing_populated_h3_experience_receipt")
         ),
         "paper_theorem_3d_bulk_chart_count": sum(
             1 for row in usable if row.get("paper_theorem_3d_bulk_chart_receipt")
@@ -3701,7 +3742,8 @@ def _lorentz_branch_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "A support-visible Lorentz count means conformal H3 chart plus direct BW/KMS automorphism sanity; "
             "a paper-theorem 3D bulk chart count means the simulator has verified the exact chart route "
             "Conf+(S2) -> SO+(3,1) -> H3 with boost-orbit dimension 3, rather than fitting a finite "
-            "point cloud dimension. A support-visible populated-H3 count means persistent record-family "
+            "point cloud dimension. An observer-facing 3+1D/H3 count is the modular-time chart receipt; "
+            "it is weaker than populated H3 and strict neutral bulk. A support-visible populated-H3 count means persistent record-family "
             "support profiles populate that H3 chart under S2-boundary and shuffled-cap controls. "
             "Defect-cluster support in H3 is reported separately as a matter/particle precursor. "
             "a theorem-assisted object-preview count means the Lorentz chart, BW automorphism sanity, "

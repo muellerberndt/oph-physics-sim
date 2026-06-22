@@ -90,6 +90,14 @@ _EXPORTS = {
         "oph_fpe.cosmology.physical_cmb_output",
         "write_physical_cmb_output_comparison_report",
     ),
+    "build_finite_covariant_parent_artifact_from_reports": (
+        "oph_fpe.cosmology.physical_cmb_sources",
+        "build_finite_covariant_parent_artifact_from_reports",
+    ),
+    "write_physical_cmb_source_readiness_report": (
+        "oph_fpe.cosmology.physical_cmb_sources",
+        "write_physical_cmb_source_readiness_report",
+    ),
     "finite_collar_boltzmann_bundle_report": (
         "oph_fpe.cosmology.finite_collar_boltzmann_bundle",
         "finite_collar_boltzmann_bundle_report",

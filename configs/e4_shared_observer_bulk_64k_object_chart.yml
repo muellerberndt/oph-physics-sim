@@ -43,6 +43,15 @@ dynamics:
   cycles: 64
   repairs_per_cycle: 65536
   record_commit_cycles: 8
+  observer_readback_drive:
+    enabled: true
+    mode: support_visible_boundary_refresh
+    edge_fraction: 0.03
+    max_edges_per_cycle: 32000
+    start_cycle: 0
+    stop_cycle: 48
+    endpoint_noise_probability: 0.03
+    phase_advance_per_cycle: 0
   beta_schedule:
     kind: geometric
     beta_start: 0.05
@@ -59,15 +68,36 @@ modular_flow:
 
 bw:
   mode: state_derived_modular_probe
-  state_mode: transition_response_unitary
-  target_operator_mode: permutation
-  transition_response_time: 0.1
+  source_state: theorem_observer
+  state_mode: maxent_record_operator_state
+  target_operator_mode: soft
+  transition_response_time: 0.25
   transition_response_scale: 6.283185307179586
+  density_inverse_temperature: 0.1
+  generator_scale: 1.0
+  generator_scale_candidates:
+  - 0.0
+  - 1.0
+  - 3.141592653589793
+  - 6.283185307179586
+  - 10.0
+  - 12.566370614359172
+  probe_steps: 4
+  probe_repairs_per_source: 48
+  probe_max_incident_edges: 12
   cap_count: 4
-  theta0: [0.35, 0.55, 0.75, 1.0]
-  collar_width_mode: cell_scaled
-  collar_k: 1.0
-  times: [0.1]
+  theta0:
+  - 0.35
+  - 0.55
+  - 0.75
+  - 1.0
+  collar_width_mode: double_scaling
+  angular_prefactor: 0.8
+  angular_exponent: 0.25
+  times:
+  - 0.125
+  - 0.25
+  - 0.5
   normalization: 2pi
   observables:
   - record_signature_projectors
@@ -89,7 +119,8 @@ bw:
     - repair_affinity_response
     include_declared_sanity: true
     candidate_scales: [1.0, 3.141592653589793, 6.283185307179586, 12.566370614359172]
-    times: [0.1]
+    times:
+    - 0.25
     observables:
     - record_signature_projectors
     - repair_load_projectors
@@ -114,8 +145,24 @@ collar_markov:
   write_recovery_bound: true
 
 observers:
-  sample_count: 192
+  sample_count: 1024
   neighborhood_size: 96
+
+neutral_frontier:
+  seed: 11
+  sample_count: 1024
+  max_model_points: 768
+  overlap_control_max_model_points: 768
+  ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+  graph_seeds: [7, 11, 17]
+  graph_max_model_points_values: [512, 768, 1024]
+  graph_k_neighbor_values: [8, 12, 16, 24]
+  residual_remove_mode_values: [1, 2, 3, 4]
+
+distributed_universe:
+  observer_view_reduction:
+    max_total: 32768
+    per_shard: 4096
 
 observer_objects:
   enabled: true
@@ -204,20 +251,50 @@ h3_modular_response:
   - repair_load_bucket
   transition_bins: 8
   record_family_modulus: 16
-  transform: signed_zscore
+  feature_types:
+  - class_distribution_delta
+  - entropy_delta
+  - sector_preservation_delta
+  - change_probability_delta
+  transform: signed_robust_zscore
   perturb_strength: 1.0
+  perturb_budget_mode: modular_amount
+  fixed_perturb_fraction: null
+  perturb_selection_mode: lambda_displacement
+  transition_readout_mode: transported_support
   repair_steps: 4
   repairs_per_step: 192
   wrong_scales: [1.0, 3.141592653589793, 12.566370614359172]
   transport_scale: 6.283185307179586
   k_transport: 1
   fit_mode: joint_global
+  control_fit_mode: same_h3_model_not_affine_target_fit
   candidate_count: 4096
   candidate_radius: 2.0
   softness: 0.25
   heldout_fraction: 0.25
   anchor_weight: 0.05
-  max_iterations: 4
+  max_iterations: 6
+  candidate_mode: fibonacci_ball
+  channel_mode: time_observable_class
+  profile_mode: static_halfspace
+  profile_time_scale: 6.283185307179586
+  feature_selection: grouped_signed_transition_no_matrix_scale_weighted_rank
+  min_feature_std: 0.01
+  min_wrong_scale_feature_delta: 0.0001
+  exclude_observables:
+  - record_family
+  - repair_load_bucket
+  exclusion_claim_boundary: >
+    record_family and repair_load_bucket are retained for observer-object
+    extraction and diagnostics, but they are auxiliary record/repair labels.
+    The theorem-side BW/H3 response receipt is fitted on the support-visible
+    geometric transition lane without letting those labels select the chart.
+  max_fit_features: 512
+  max_features_per_cap_time_observable: 8
+  refine_steps: 1
+  refine_max_rows: 24
+  refine_max_nfev: 24
   pass_ratio: 1.0
   min_observers: 32
   min_features: 16
@@ -225,6 +302,12 @@ h3_modular_response:
 theorem_core:
   projection_sample: 512
   include_default_sm_candidate: true
+  consensus_replay:
+    enabled: true
+    schedule_replays: 16
+    requested_schedule_replays: 16
+    max_event_rows: 256
+    disjoint_checks: 256
 
 cosmology:
   output_profile: compact

@@ -137,8 +137,10 @@ def test_observer_consensus_bulk_readout_is_theorem_assisted_not_strict(tmp_path
     assert report["OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT"] is True
     assert report["observer_modular_time_receipt"] is True
     assert report["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert report["observer_facing_consensus_3d_bulk_readout_receipt"] is True
     assert report["THEOREM_ASSISTED_CONSENSUS_3D_BULK_READOUT_RECEIPT"] is True
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+    assert report["chart_blind_strict_neutral_quotient_bulk_receipt"] is False
     assert report["physical_cmb_output_comparison_receipt"] is True
     assert report["physical_cmb_prediction_receipt"] is False
     assert report["bulk_status"] == "theorem_assisted_observer_facing_consensus_3d_bulk"

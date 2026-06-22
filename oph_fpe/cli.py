@@ -28,12 +28,28 @@ def main(argv: list[str] | None = None) -> int:
     universe_parser.add_argument("--config", required=True, type=Path)
     universe_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
     universe_parser.add_argument("--run-id", default=None)
+    universe_parser.add_argument("--seed", default=None, type=int)
+    universe_parser.add_argument("--inner-jobs", default=None, type=int)
     universe_parser.add_argument("--source-run-dir", default=None, type=Path)
     universe_parser.add_argument("--skip-base-run", action="store_true")
     universe_parser.add_argument("--max-screen-points", default=5000, type=int)
     universe_parser.add_argument("--max-observers", default=128, type=int)
     universe_parser.add_argument("--max-h3-objects", default=512, type=int)
     universe_parser.add_argument("--skip-visualizations", action="store_true")
+
+    universe_sweep_parser = subparsers.add_parser(
+        "run-oph-universe-sweep",
+        help="run theorem-following OPH universe configs/seeds in parallel",
+    )
+    universe_sweep_parser.add_argument("--configs", required=True, nargs="+", type=Path)
+    universe_sweep_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
+    universe_sweep_parser.add_argument("--workers", type=int, default=None)
+    universe_sweep_parser.add_argument("--inner-jobs", type=int, default=None)
+    universe_sweep_parser.add_argument("--seeds", default=None, help="comma-separated seed list; defaults to each config seed")
+    universe_sweep_parser.add_argument("--max-screen-points", default=5000, type=int)
+    universe_sweep_parser.add_argument("--max-observers", default=128, type=int)
+    universe_sweep_parser.add_argument("--max-h3-objects", default=512, type=int)
+    universe_sweep_parser.add_argument("--skip-visualizations", action="store_true")
 
     distributed_prepare_parser = subparsers.add_parser(
         "prepare-distributed-oph-universe",
@@ -1262,8 +1278,27 @@ def main(argv: list[str] | None = None) -> int:
             config_path=args.config,
             out_dir=args.out_dir,
             run_id=args.run_id,
+            seed=args.seed,
+            inner_jobs=args.inner_jobs,
             source_run_dir=args.source_run_dir,
             skip_base_run=args.skip_base_run,
+            max_screen_points=args.max_screen_points,
+            max_observers=args.max_observers,
+            max_h3_objects=args.max_h3_objects,
+            emit_visualizations=not args.skip_visualizations,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "run-oph-universe-sweep":
+        from oph_fpe.pipelines import run_oph_universe_sweep
+
+        seeds = [int(value) for value in args.seeds.split(",") if value.strip()] if args.seeds else None
+        result = run_oph_universe_sweep(
+            args.configs,
+            args.out_dir,
+            seeds=seeds,
+            workers=args.workers,
+            inner_jobs=args.inner_jobs,
             max_screen_points=args.max_screen_points,
             max_observers=args.max_observers,
             max_h3_objects=args.max_h3_objects,

@@ -56,9 +56,11 @@ def observer_consensus_bulk_readout_report(
         or proof.get("theorem_assisted_h3_nonboundary_population_established", False)
         or claims.get("theorem_assisted_h3_bulk", False)
     )
-    strict_neutral_bulk = bool(
+    chart_blind_strict_neutral = bool(
         proof.get("STRICT_NEUTRAL_BULK_RECEIPT", False)
         or proof.get("bulk_3d_established_strict", False)
+        or proof.get("bulk_3d_established_chart_blind_strict_neutral", False)
+        or proof.get("chart_blind_strict_neutral_quotient_bulk_receipt", False)
         or frontier.get("strict_neutral_bulk", False)
         or frontier.get("strict_neutral_bulk_frontier_ready", False)
         or claims.get("strict_neutral_bulk", False)
@@ -99,21 +101,26 @@ def observer_consensus_bulk_readout_report(
         "observer_like_self_reading_system_receipt": bool(observer_readout["observer_view_count"] > 0),
         "observer_modular_time_receipt": observer_modular_time,
         "observer_facing_3p1d_h3_experience_receipt": observer_3p1d_experience,
+        "observer_facing_consensus_3d_bulk_readout_receipt": consensus_bulk_readout,
         "theorem_assisted_consensus_3d_bulk_readout_receipt": consensus_bulk_readout,
         "THEOREM_ASSISTED_CONSENSUS_3D_BULK_READOUT_RECEIPT": consensus_bulk_readout,
         "finite_lorentz_theorem_contract_receipt": finite_theorem_contract,
         "paper_faithful_observer_spacetime_emergence_receipt": paper_faithful_observer_spacetime,
         "paper_faithful_consensus_bulk_emergence_receipt": paper_faithful_consensus_bulk,
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
-        "strict_neutral_third_person_bulk_receipt": strict_neutral_bulk,
-        "STRICT_NEUTRAL_BULK_RECEIPT": strict_neutral_bulk,
+        "chart_blind_strict_neutral_quotient_bulk_receipt": chart_blind_strict_neutral,
+        "strict_neutral_third_person_bulk_receipt": chart_blind_strict_neutral,
+        "STRICT_NEUTRAL_BULK_RECEIPT": chart_blind_strict_neutral,
         "physical_cmb_output_comparison_receipt": physical_cmb_output,
         "physical_cmb_prediction_receipt": physical_cmb_prediction,
         "bulk_status": (
             "theorem_assisted_observer_facing_consensus_3d_bulk"
-            if consensus_bulk_readout and not strict_neutral_bulk
-            else "strict_neutral_3d_bulk"
-            if strict_neutral_bulk
+            if consensus_bulk_readout and not chart_blind_strict_neutral
+            else "observer_facing_consensus_3d_bulk_plus_chart_blind_strict_neutral_quotient"
+            if consensus_bulk_readout and chart_blind_strict_neutral
+            else "chart_blind_strict_neutral_quotient_bulk_only"
+            if chart_blind_strict_neutral
             else "not_established"
         ),
         "observer_readout": observer_readout,
@@ -146,9 +153,10 @@ def observer_consensus_bulk_readout_report(
             "record, modular-time, and visible-object data from run artifacts. A true theorem-assisted "
             "consensus 3D bulk readout means observer-local records share objects in a 3D H3 chart under "
             "the current theorem-assisted route. The stricter paper-faithful observer-spacetime and "
-            "consensus-bulk receipts additionally require the finite OPH theorem contract. It is not "
-            "strict neutral third-person bulk unless STRICT_NEUTRAL_BULK_RECEIPT also passes, and it is "
-            "not a physical CMB prediction unless physical_cmb_prediction_receipt passes."
+            "observer-facing consensus-bulk receipts additionally require the finite OPH theorem contract. "
+            "The chart-blind strict neutral quotient audit is separate: it deliberately discards the S2/H3 "
+            "chart prior and can fail without falsifying the observer-facing 3+1D/H3 theorem receipt. "
+            "This is not a physical CMB prediction unless physical_cmb_prediction_receipt passes."
         ),
     }
 
@@ -311,7 +319,7 @@ def _neutral_object_summary(path: Path | None, sample_count: int) -> dict[str, A
         "sample_neutral_objects": rows,
         "claim_boundary": (
             "Neutral-object rows are included for audit context. Their existence does not by itself "
-            "clear strict neutral bulk gates."
+            "clear chart-blind strict neutral quotient bulk gates."
         ),
     }
 
@@ -576,7 +584,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"{report['paper_faithful_observer_spacetime_emergence_receipt']}\n"
         f"- paper-faithful consensus bulk emergence: "
         f"{report['paper_faithful_consensus_bulk_emergence_receipt']}\n"
-        f"- strict neutral third-person bulk receipt: {report['strict_neutral_third_person_bulk_receipt']}\n"
+        "- chart-blind strict neutral quotient bulk receipt: "
+        f"{report['chart_blind_strict_neutral_quotient_bulk_receipt']}\n"
         f"- physical CMB output comparison receipt: {report['physical_cmb_output_comparison_receipt']}\n"
         f"- physical CMB prediction receipt: {report['physical_cmb_prediction_receipt']}\n"
         f"- bulk status: `{report['bulk_status']}`\n\n"

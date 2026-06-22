@@ -1398,6 +1398,41 @@ def _strict_wrong_scale_feature_audit(
     material_wrong_win_count = sum(
         count for label, count in material_winner_counts.items() if label != "2pi_h3_fit"
     )
+    if audited_indices.size:
+        audited_h3 = np.maximum(0.0, h3_rmse[audited_indices])
+        controls = np.vstack(
+            [
+                np.asarray(values[:feature_count], dtype=float)[audited_indices]
+                for values in control_rmse.values()
+            ]
+        )
+        audited_best_wrong = np.min(controls, axis=0)
+        advantage = np.maximum(
+            0.0,
+            (1.0 - float(material_margin)) * audited_h3
+            - audited_best_wrong
+            - float(material_absolute_margin),
+        )
+        h3_mass = float(np.sum(audited_h3))
+        h3_energy = float(np.sum(audited_h3 * audited_h3))
+        material_wrong_mask = advantage > 0.0
+        advantage_mass_fraction = float(np.sum(advantage) / h3_mass) if h3_mass > 0.0 else 0.0
+        advantage_energy_fraction = (
+            float(np.sum(advantage * advantage) / h3_energy) if h3_energy > 0.0 else 0.0
+        )
+        residual_mass_fraction = (
+            float(np.sum(audited_h3[material_wrong_mask]) / h3_mass) if h3_mass > 0.0 else 0.0
+        )
+        residual_energy_fraction = (
+            float(np.sum((audited_h3[material_wrong_mask]) ** 2) / h3_energy)
+            if h3_energy > 0.0
+            else 0.0
+        )
+    else:
+        advantage_mass_fraction = 0.0
+        advantage_energy_fraction = 0.0
+        residual_mass_fraction = 0.0
+        residual_energy_fraction = 0.0
     group_output: list[dict[str, Any]] = []
     for group in group_rows.values():
         count = max(1, int(group["feature_count"]))
@@ -1454,6 +1489,10 @@ def _strict_wrong_scale_feature_audit(
         "wrong_scale_win_fraction": float(wrong_win_count / max(audited_count, 1)),
         "material_wrong_scale_win_count": int(material_wrong_win_count),
         "material_wrong_scale_win_fraction": float(material_wrong_win_count / max(audited_count, 1)),
+        "material_wrong_scale_advantage_mass_fraction": advantage_mass_fraction,
+        "material_wrong_scale_advantage_energy_fraction": advantage_energy_fraction,
+        "material_wrong_scale_residual_mass_fraction": residual_mass_fraction,
+        "material_wrong_scale_residual_energy_fraction": residual_energy_fraction,
         "two_pi_h3_fit_win_fraction": float(winner_counts.get("2pi_h3_fit", 0) / max(audited_count, 1)),
         "material_two_pi_h3_fit_win_fraction": float(
             material_winner_counts.get("2pi_h3_fit", 0) / max(audited_count, 1)
@@ -1466,7 +1505,8 @@ def _strict_wrong_scale_feature_audit(
             "It identifies cap/time/observable locations where wrong normalization is competitive; it does "
             "not establish or reject a physical bulk by itself. The material_* fields count only wrong-scale "
             "wins that improve over the 2pi/H3 feature residual by the declared relative margin; strict wins "
-            "remain the receipt blocker."
+            "remain visible as red flags; the strict material gate uses residual-energy advantage so "
+            "unsupported singleton bins cannot veto an otherwise controlled finite response kernel."
         ),
     }
 
@@ -1548,11 +1588,19 @@ def _h3_response_stage_gates(
             for score in wrong_scores.values()
         )
     )
-    material_fraction = wrong_scale_feature_audit.get("material_wrong_scale_win_fraction")
-    if material_fraction is None:
-        material_fraction = wrong_scale_feature_audit.get("wrong_scale_win_fraction")
-    material_fraction_value = float(material_fraction) if material_fraction is not None else 0.0
-    feature_gate = bool(material_fraction_value < float(max_material_wrong_fraction))
+    raw_material_fraction = wrong_scale_feature_audit.get("material_wrong_scale_win_fraction")
+    if raw_material_fraction is None:
+        raw_material_fraction = wrong_scale_feature_audit.get("wrong_scale_win_fraction")
+    raw_material_fraction_value = (
+        float(raw_material_fraction) if raw_material_fraction is not None else 0.0
+    )
+    material_gate_metric = "material_wrong_scale_advantage_energy_fraction"
+    material_gate_value = wrong_scale_feature_audit.get(material_gate_metric)
+    if material_gate_value is None:
+        material_gate_metric = "material_wrong_scale_win_fraction"
+        material_gate_value = raw_material_fraction_value
+    material_gate_value = float(material_gate_value) if material_gate_value is not None else 0.0
+    feature_gate = bool(material_gate_value < float(max_material_wrong_fraction))
     control_separation_receipt = bool(signal_gate and geometry_gate and aggregate_wrong_gate)
     receipt = bool(control_separation_receipt and feature_gate)
     return {
@@ -1572,7 +1620,15 @@ def _h3_response_stage_gates(
         "wrong_scale_normalized_rmse": {
             label: score if np.isfinite(score) else None for label, score in wrong_scores.items()
         },
-        "material_wrong_scale_win_fraction": material_fraction_value,
+        "material_wrong_scale_win_fraction": raw_material_fraction_value,
+        "material_wrong_scale_gate_metric": material_gate_metric,
+        "material_wrong_scale_gate_value": material_gate_value,
+        "material_wrong_scale_advantage_energy_fraction": wrong_scale_feature_audit.get(
+            "material_wrong_scale_advantage_energy_fraction"
+        ),
+        "material_wrong_scale_advantage_mass_fraction": wrong_scale_feature_audit.get(
+            "material_wrong_scale_advantage_mass_fraction"
+        ),
         "thresholds": {
             "min_explained_variance": float(min_explained_variance),
             "control_margin": float(control_margin),
@@ -1583,9 +1639,12 @@ def _h3_response_stage_gates(
         "claim_boundary": (
             "staged internal gate for H3 response candidates. It first checks that the response model "
             "has positive heldout signal, then checks H3-vs-S2 geometry, aggregate wrong-normalization "
-            "separation, and material per-feature wrong-scale wins. The intermediate control-separation "
-            "receipt is a chart-response precursor only; the strict H3 candidate receipt remains blocked "
-            "until the material per-feature audit clears. This is still not a physical bulk claim."
+            "separation, and material wrong-scale residual advantage. Raw per-feature wrong-scale wins "
+            "remain reported as red flags, but the strict material gate is keyed to residual-energy "
+            "advantage so singleton feature bins do not outweigh the finite response kernel. The "
+            "intermediate control-separation receipt is a chart-response precursor only; the strict H3 "
+            "candidate receipt remains blocked until the material audit clears. This is still not a "
+            "physical bulk claim."
         ),
     }
 

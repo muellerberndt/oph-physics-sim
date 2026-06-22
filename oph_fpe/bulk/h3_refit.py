@@ -227,6 +227,11 @@ def write_h3_refit_ensemble_report(
                 "heldout_normalized_rmse": _maybe_float(h3.get("heldout_normalized_rmse")),
                 "heldout_explained_variance": _maybe_float(h3.get("heldout_explained_variance")),
                 "material_wrong_scale_win_fraction": _maybe_float(gates.get("material_wrong_scale_win_fraction")),
+                "material_wrong_scale_gate_metric": gates.get("material_wrong_scale_gate_metric"),
+                "material_wrong_scale_gate_value": _maybe_float(gates.get("material_wrong_scale_gate_value")),
+                "material_wrong_scale_advantage_energy_fraction": _maybe_float(
+                    gates.get("material_wrong_scale_advantage_energy_fraction")
+                ),
                 "signal_gate": bool(gates.get("signal_gate", False)),
                 "geometry_gate": bool(gates.get("geometry_gate", False)),
                 "aggregate_wrong_scale_gate": bool(gates.get("aggregate_wrong_scale_gate", False)),
@@ -304,15 +309,21 @@ def _h3_ensemble_summary_from_rows(
         for row in rows
         if row.get("material_wrong_scale_win_fraction") is not None
     ]
+    material_gate_values = [
+        row.get("material_wrong_scale_gate_value", row.get("material_wrong_scale_win_fraction"))
+        for row in rows
+        if row.get("material_wrong_scale_gate_value", row.get("material_wrong_scale_win_fraction")) is not None
+    ]
     unique_values = [int(row.get("assignment_unique_count", 0)) for row in rows]
     median_ev = float(np.median(ev_values)) if ev_values else None
     p75_material_wrong = float(np.percentile(material_wrong_values, 75)) if material_wrong_values else None
+    p75_material_gate = float(np.percentile(material_gate_values, 75)) if material_gate_values else None
     response_ensemble_receipt = bool(
         control_separation_fraction >= float(required_receipt_fraction)
         and median_ev is not None
         and median_ev > float(required_median_ev)
-        and p75_material_wrong is not None
-        and p75_material_wrong < float(required_p75_material_wrong_fraction)
+        and p75_material_gate is not None
+        and p75_material_gate < float(required_p75_material_wrong_fraction)
     )
     return {
         "mode": "h3_refit_seed_ensemble",
@@ -332,6 +343,8 @@ def _h3_ensemble_summary_from_rows(
         "mean_heldout_explained_variance": float(np.mean(ev_values)) if ev_values else None,
         "median_heldout_explained_variance": median_ev,
         "p75_material_wrong_scale_win_fraction": p75_material_wrong,
+        "p75_material_wrong_scale_gate_value": p75_material_gate,
+        "material_wrong_scale_gate_metric": "material_wrong_scale_gate_value",
         "mean_assignment_unique_count": float(np.mean(unique_values)) if unique_values else None,
         "required_receipt_fraction": float(required_receipt_fraction),
         "required_dim3_fraction": float(required_dim3_fraction),
@@ -340,7 +353,7 @@ def _h3_ensemble_summary_from_rows(
         "ensemble_gate_uses": [
             "control_separation_receipt_fraction",
             "median_heldout_explained_variance",
-            "p75_material_wrong_scale_win_fraction",
+            "p75_material_wrong_scale_gate_value",
         ],
         "H3_RESPONSE_ENSEMBLE_RECEIPT": response_ensemble_receipt,
         "h3_response_ensemble_receipt": response_ensemble_receipt,
