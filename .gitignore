@@ -14,6 +14,22 @@ __pycache__/
 credentials/
 secrets/
 
+# Local correspondence and handoff scratch space.
+correspondence/
+
+# Local/generated run configs. Curated examples stay tracked under configs/.
+configs/local/
+configs/generated/
+configs/*.local.yml
+configs/*.local.yaml
+configs/*.local.toml
+configs/*.private.yml
+configs/*.private.yaml
+configs/*.private.toml
+configs/*.tmp.yml
+configs/*.tmp.yaml
+configs/*.tmp.toml
+
 # Generated artifacts.
 artifacts/
 receipts/

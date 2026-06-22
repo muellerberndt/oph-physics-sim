@@ -4,6 +4,7 @@ This directory is for stable documentation about how the simulator works:
 
 - architecture and theorem-to-code contracts;
 - payload and receipt schemas;
+- curated config format and claim-boundary rules;
 - cloud/runtime setup notes;
 - stable execution boundaries and claim gates.
 
@@ -16,6 +17,7 @@ and one-off closeout bundles do not belong here. Keep those under `runs/`, `repo
 - `OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`
 - `cmb_bulk_particle_execution_plan.md`
 - `cloud.md`
+- `configuration.md`
 - `digitalocean_pool_setup.md`
 - `oph_issue361_certificate_schema.json`
 - `oph_universe_timeline_visualization_payload_v1.schema.json`
