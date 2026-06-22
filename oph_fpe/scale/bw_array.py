@@ -1733,6 +1733,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("seed_material.json", {"config_hash": stable_json_hash(config), "seed": seed})
     bundle.write_json("dimension_report.json", {"status": "not_computed_for_bw_primary_path", "reason": "BW residual is primary"})
     kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="bw_array")
+    large_run_readiness = _large_run_readiness_report(
+        config,
+        state_bw_report=state_bw_report,
+        transition_selection_report=transition_selection_report,
+        cosmology_gate_report=cosmology_gate_report,
+        observer_modular_experience_report=observer_modular_experience_report,
+        paper_3d_chart_report=paper_3d_chart_report,
+        theorem_core_report=theorem_core_report,
+    )
+    bundle.write_json("large_run_readiness_report.json", large_run_readiness)
     manifest = {
             "run_id": run_id,
             "name": config.get("name"),
@@ -1844,6 +1854,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             }
             if defect_h3_worldlines_report
             else {},
+            "large_run_readiness": large_run_readiness,
     }
     result = {
         "run_id": run_id,
@@ -1889,6 +1900,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         }
         if s3_holonomy_report
         else {},
+        "large_run_readiness": large_run_readiness,
     }
     if kernel_dispatch:
         summary = kernel_dispatch_manifest_summary(kernel_dispatch)
@@ -1896,6 +1908,233 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         result["kernel_dispatch"] = summary
     bundle.write_manifest(manifest)
     return result
+
+
+def _large_run_readiness_report(
+    config: dict[str, Any],
+    *,
+    state_bw_report: dict[str, Any],
+    transition_selection_report: dict[str, Any],
+    cosmology_gate_report: dict[str, Any],
+    observer_modular_experience_report: dict[str, Any],
+    paper_3d_chart_report: dict[str, Any],
+    theorem_core_report: dict[str, Any],
+) -> dict[str, Any]:
+    state_lane = _state_bw_readiness(state_bw_report)
+    transition_lane = _transition_scale_readiness(transition_selection_report)
+    cmb_lane = _screen_cmb_readiness(config, cosmology_gate_report)
+    bulk_lane = _bulk_3d_readiness(paper_3d_chart_report)
+    observer_lane = _observer_modular_time_readiness(observer_modular_experience_report)
+    finite_consensus_lane = _finite_consensus_readiness(theorem_core_report)
+    lanes = {
+        "state_bw": state_lane,
+        "transition_scale": transition_lane,
+        "screen_cmb_proxy": cmb_lane,
+        "bulk_3d": bulk_lane,
+        "observer_modular_time": observer_lane,
+        "finite_consensus": finite_consensus_lane,
+    }
+    if bulk_lane["scale_candidate"]:
+        recommended = "bulk_3d_refinement"
+    elif cmb_lane["scale_candidate"]:
+        recommended = "screen_cmb_proxy_refinement"
+    elif transition_lane["scale_candidate"]:
+        recommended = "transition_scale_refinement"
+    elif state_lane["scale_candidate"]:
+        recommended = "state_bw_refinement"
+    elif observer_lane["scale_candidate"] or finite_consensus_lane["scale_candidate"]:
+        recommended = "receipt_stability_refinement"
+    else:
+        recommended = "do_not_scale_yet"
+    blockers = sorted(
+        {
+            str(blocker)
+            for lane in lanes.values()
+            for blocker in lane.get("blockers", [])
+            if str(blocker)
+        }
+    )
+    return {
+        "mode": "large_run_preflight_readiness",
+        "claim_boundary": (
+            "Scale-readiness is a routing summary over existing finite receipts. It does not promote "
+            "diagnostic rows into bulk, particle, or physical-CMB claims."
+        ),
+        "recommended_large_run_lane": recommended,
+        "any_scale_candidate": bool(any(lane["scale_candidate"] for lane in lanes.values())),
+        "state_bw_expensive_run_worthwhile": bool(state_lane["scale_candidate"]),
+        "lanes": lanes,
+        "blockers": blockers,
+    }
+
+
+def _state_bw_readiness(report: dict[str, Any]) -> dict[str, Any]:
+    if not report:
+        return _readiness_lane("not_requested", blockers=["state_bw_not_requested"])
+    blockers: list[str] = []
+    if not bool(report.get("correct_beats_controls", False)):
+        blockers.append("state_bw_controls_failed")
+    selected_label = report.get("state_selected_scale_label")
+    if not bool(report.get("state_selected_2pi", False)):
+        blockers.append(f"state_bw_selected_{selected_label or 'none'}_not_2pi")
+    audit = report.get("generator_scale_audit") or {}
+    if audit.get("enabled", False) and audit.get("best_label") not in {None, "2pi"}:
+        blockers.append(f"generator_scale_best_{audit.get('best_label')}_not_2pi")
+    clock = report.get("inferred_modular_clock_fit") or {}
+    clock_applicable = bool(clock.get("enabled", False)) and not bool(clock.get("not_applicable", False))
+    if clock_applicable and not bool(clock.get("receipt", False)):
+        blockers.extend(f"clock_{blocker}" for blocker in clock.get("blockers", []))
+    ready = bool(not blockers)
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "median": report.get("median"),
+            "selected_scale_label": selected_label,
+            "correct_beats_controls": bool(report.get("correct_beats_controls", False)),
+            "best_control": report.get("best_control"),
+            "generator_scale_diagnosis": audit.get("diagnosis"),
+            "inferred_kappa_hat": clock.get("kappa_hat"),
+            "clock_receipt": bool(clock.get("receipt", False)),
+        },
+    )
+
+
+def _transition_scale_readiness(report: dict[str, Any]) -> dict[str, Any]:
+    if not report:
+        return _readiness_lane("not_requested", blockers=["transition_scale_selection_not_requested"])
+    blockers: list[str] = []
+    if not bool(report.get("two_pi_selected", False)):
+        blockers.append(f"transition_selected_{report.get('selected_label') or 'none'}_not_2pi")
+    if bool(report.get("response_degenerate", False)):
+        blockers.append("transition_response_degenerate")
+    ready = bool(not blockers)
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "selected_label": report.get("selected_label"),
+            "primary_source": report.get("primary_source"),
+            "two_pi_over_best": report.get("two_pi_over_best"),
+            "normalization_source": report.get("normalization_source"),
+        },
+    )
+
+
+def _screen_cmb_readiness(config: dict[str, Any], report: dict[str, Any]) -> dict[str, Any]:
+    freezeout_enabled = bool((config.get("cosmology", {}) or {}).get("freezeout", {}).get("enabled", False))
+    if not freezeout_enabled:
+        return _readiness_lane("not_requested", blockers=["freezeout_screen_cmb_not_requested"])
+    if not bool(report.get("enabled", False)):
+        return _readiness_lane("blocked", blockers=[str(report.get("reason", "cosmology_gate_disabled"))])
+    blockers = [str(value) for value in report.get("missing_requirements", [])]
+    if not bool(report.get("allowed", False)) and not blockers:
+        blockers.append("cosmology_gate_not_allowed")
+    ready = bool(report.get("allowed", False) and not blockers)
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "checks": report.get("checks", {}),
+            "required": report.get("required", {}),
+            "allowed": bool(report.get("allowed", False)),
+        },
+    )
+
+
+def _bulk_3d_readiness(report: dict[str, Any]) -> dict[str, Any]:
+    if not report:
+        return _readiness_lane("not_requested", blockers=["paper_3d_bulk_chart_not_requested"])
+    chart_receipt = bool(
+        report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
+        or report.get("paper_theorem_3d_bulk_chart_receipt", False)
+    )
+    object_precursor = bool(report.get("paper_theorem_object_populated_chart_precursor_receipt", False))
+    neutral_populated = bool(report.get("paper_theorem_neutral_populated_bulk_receipt", False))
+    ready = bool(chart_receipt and object_precursor and neutral_populated)
+    blockers: list[str] = []
+    if not chart_receipt:
+        blockers.append("paper_3d_bulk_chart_receipt_false")
+    if not object_precursor:
+        blockers.append("paper_theorem_object_populated_chart_precursor_receipt_false")
+    if not neutral_populated:
+        blockers.append("paper_theorem_neutral_populated_bulk_receipt_false")
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "paper_theorem_3d_bulk_chart_receipt": chart_receipt,
+            "paper_theorem_object_populated_chart_precursor_receipt": object_precursor,
+            "paper_theorem_neutral_populated_bulk_receipt": neutral_populated,
+            "h3_spatial_dimension_from_boost_orbit": report.get("h3_spatial_dimension_from_boost_orbit"),
+        },
+    )
+
+
+def _observer_modular_time_readiness(report: dict[str, Any]) -> dict[str, Any]:
+    if not report:
+        return _readiness_lane("not_requested", blockers=["observer_modular_time_not_requested"])
+    ready = bool(report.get("observer_modular_time_receipt", False))
+    blockers = [] if ready else [str(value) for value in report.get("blockers", [])]
+    if not ready and not blockers:
+        blockers.append("observer_modular_time_receipt_false")
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "observer_modular_time_receipt": ready,
+            "observer_facing_3p1d_h3_experience_receipt": bool(
+                report.get("observer_facing_3p1d_h3_experience_receipt", False)
+            ),
+            "observer_count": report.get("observer_count"),
+            "observer_facing_3p1d_blockers": [str(value) for value in report.get("blockers", [])],
+        },
+    )
+
+
+def _finite_consensus_readiness(report: dict[str, Any]) -> dict[str, Any]:
+    if not report:
+        return _readiness_lane("not_requested", blockers=["finite_consensus_not_requested"])
+    ready = bool(
+        report.get(FINITE_CONSENSUS_THEOREM_RECEIPT, False)
+        or report.get("finite_consensus_theorem_receipt", False)
+    )
+    missing = (report.get("finite_consensus_theorem") or {}).get("missing_evidence", [])
+    blockers = [str(value) for value in missing]
+    if not ready and not blockers:
+        blockers.append("finite_consensus_theorem_receipt_false")
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "finite_settle_diagnostic_receipt": bool(
+                report.get(FINITE_SETTLE_DIAGNOSTIC_RECEIPT, False)
+                or report.get("finite_settle_diagnostic_receipt", False)
+            ),
+            "finite_consensus_theorem_receipt": ready,
+        },
+    )
+
+
+def _readiness_lane(
+    status: str,
+    *,
+    scale_candidate: bool = False,
+    blockers: list[str] | None = None,
+    details: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "status": status,
+        "scale_candidate": bool(scale_candidate),
+        "blockers": blockers or [],
+        "details": details or {},
+    }
 
 
 def _observable_fields(

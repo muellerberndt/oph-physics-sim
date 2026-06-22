@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from copy import deepcopy
 import multiprocessing as mp
@@ -74,6 +75,7 @@ def run_bw_sweep(
         "job_count": len(jobs),
         "results": results,
     }
+    summary["large_run_readiness_summary"] = _large_run_readiness_summary(results)
     out_dir.mkdir(parents=True, exist_ok=True)
     summary_path = out_dir / f"bw_sweep_{int(started)}.json"
     import json
@@ -112,3 +114,45 @@ def _process_context() -> mp.context.BaseContext | None:
 
 def _slug(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in value.lower()).strip("_")
+
+
+def _large_run_readiness_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    ok_results = [row for row in results if row.get("ok", False)]
+    lane_counts: dict[str, Counter[str]] = {}
+    blocker_counts: Counter[str] = Counter()
+    recommended_counts: Counter[str] = Counter()
+    state_bw_worthwhile = 0
+    any_scale_candidate = 0
+    for row in ok_results:
+        readiness = row.get("large_run_readiness") or {}
+        recommended_counts[str(readiness.get("recommended_large_run_lane", "unknown"))] += 1
+        if readiness.get("state_bw_expensive_run_worthwhile", False):
+            state_bw_worthwhile += 1
+        if readiness.get("any_scale_candidate", False):
+            any_scale_candidate += 1
+        for blocker in readiness.get("blockers", []):
+            blocker_counts[str(blocker)] += 1
+        for lane_name, lane in (readiness.get("lanes") or {}).items():
+            lane_counts.setdefault(str(lane_name), Counter())[str(lane.get("status", "unknown"))] += 1
+    return {
+        "mode": "large_run_preflight_readiness_summary",
+        "job_count": len(results),
+        "ok_job_count": len(ok_results),
+        "failed_job_count": len(results) - len(ok_results),
+        "recommended_large_run_lanes": dict(sorted(recommended_counts.items())),
+        "any_scale_candidate_count": int(any_scale_candidate),
+        "state_bw_expensive_run_worthwhile_count": int(state_bw_worthwhile),
+        "all_ok_jobs_state_bw_worthwhile": bool(ok_results and state_bw_worthwhile == len(ok_results)),
+        "lane_status_counts": {
+            lane_name: dict(sorted(counts.items()))
+            for lane_name, counts in sorted(lane_counts.items())
+        },
+        "top_blockers": [
+            {"blocker": blocker, "count": int(count)}
+            for blocker, count in blocker_counts.most_common(12)
+        ],
+        "claim_boundary": (
+            "Aggregate of per-run preflight readiness reports. This is routing metadata for run design, "
+            "not a physics receipt."
+        ),
+    }
