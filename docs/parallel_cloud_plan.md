@@ -1,7 +1,5 @@
 # Parallel Execution And Cloud Plan
 
-Updated: 2026-06-02
-
 ## Current Bottleneck
 
 The current OPH-FPE BW path is CPU-bound:
@@ -40,7 +38,7 @@ bw:
 ```bash
 python3 -m oph_fpe.cli run-bw-sweep \
   --configs configs/e1_s3_bw_screen_4k.yml configs/e1_s3_bw_screen_64k.yml \
-  --seeds 20260601,20260602,20260603,20260604 \
+  --seeds 11,12,13,14 \
   --workers 4 \
   --inner-jobs 1 \
   --out-dir runs
@@ -50,7 +48,7 @@ Use either high `--workers` or high `--inner-jobs`, not both, unless the machine
 RAM. For seed sweeps, prefer `--workers N --inner-jobs 1`. For one very large run, prefer
 `--workers 1 --inner-jobs N`.
 
-As of 2026-06-02, `run-bw-sweep` auto-plans CPU use when `--workers` and `--inner-jobs` are omitted:
+`run-bw-sweep` auto-plans CPU use when `--workers` and `--inner-jobs` are omitted:
 
 ```text
 workers = min(job_count, available_cpus)
@@ -62,23 +60,6 @@ inner_jobs = floor(available_cpus / workers)
 same `inner_jobs` budget into both `bw.n_jobs` and `cosmology.angular_power.n_jobs` unless a config
 sets an explicit angular-power value. Single `run-bw-array` configs can use `bw.n_jobs: auto` and
 `cosmology.angular_power.n_jobs: auto` to use the same available-CPU count.
-
-On this local machine:
-
-```text
-os.cpu_count(): 10
-auto available CPUs: 9
-single BW run with n_jobs:auto: 9 inner BW threads
-3-job sweep with no explicit caps: workers=3, inner_jobs=3
-```
-
-Current E2 timing baseline on this machine:
-
-```text
-64k full E2 run, workers=1, inner_jobs=8: about 32-38 seconds
-two 64k seeds, workers=2, inner_jobs=4: about 52 seconds total
-256k full E2 run, workers=1, inner_jobs=8, ell_max=48: about 255-310 seconds
-```
 
 For local iteration, use 4k and 64k runs. Use 256k as a single-seed scale check after a meaningful
 dynamics/readout change. Use cloud CPU batches for repeated 256k runs or 1M runs. GPUs and TPUs are
@@ -104,8 +85,8 @@ Run:
 
 ```bash
 python3 -m oph_fpe.cli run-bw-sweep \
-  --configs configs/e1_s3_bw_screen_4k.yml configs/e1_s3_bw_screen_64k.yml configs/e1_s3_bw_screen_1m.yml \
-  --seeds 20260601,20260602,20260603,20260604 \
+  --configs configs/e1_s3_bw_screen_4k.yml configs/e1_s3_bw_screen_64k.yml \
+  --seeds 11,12,13,14 \
   --workers 4 \
   --inner-jobs 1 \
   --out-dir runs
@@ -203,8 +184,8 @@ Example queued follow-up run:
 ```text
 tmux_session: oph-fpe-gcp-256k-next
 behavior: waits for active session to finish, then starts
-config: configs/e1_s3_bw_screen_256k.yml
-seeds: 20260620,20260621,20260622,20260623
+config: configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml
+seeds: 11,12,13,14
 workers: 4
 inner_jobs: 1
 run_dir: runs/gcp_256k_<date>
@@ -266,10 +247,10 @@ For future GPU work:
 - Use Vast.ai for marketplace availability and cheap opportunistic GPU/CPU hosts; expect variability.
 - Use Lambda/CoreWeave only when we need serious multi-GPU clusters after the code is GPU-native.
 
-## Current Count Guidance
+## Resource Count Guidance
 
 ```text
-Right now:
+CPU-bound engine:
   CPUs: 32-64 vCPUs to start, 256+ vCPUs for real seed batches
   GPUs: 0
   TPUs: 0

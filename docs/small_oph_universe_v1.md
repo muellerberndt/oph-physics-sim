@@ -25,9 +25,9 @@ python3 tools/verify_small_universe.py \
   --config configs/sou_v1_icosa12.yml \
   --seed 20260620 \
   --schedule-replays 16 \
-  --out runs/small_oph_universe_v1_20260620
+  --out runs/small_oph_universe_v1
 
-cd runs/small_oph_universe_v1_20260620
+cd runs/small_oph_universe_v1
 shasum -a 256 -c SHA256SUMS
 ```
 
@@ -51,24 +51,9 @@ SHA256SUMS
 SHA256.txt
 ```
 
-Tables are JSONL rather than Parquet so the exact verifier remains dependency-light and reproducible under the current project dependencies.
-
-## Reference Result
-
-For seed `20260620` and 16 schedule replays:
-
-```text
-exact branch states: 2048
-exact enabled repair events: 11264
-exact strict-descent violations: 0
-exact accepted Phi increases: 0
-exact disjoint/local/schedule/completeness violations: 0
-exact terminal Phi: 0
-frustrated globally consistent states: 0
-frustrated nonzero holonomy cycles: 2
-frustrated terminal Phi: 1
-bundle receipt: true
-```
+Tables are JSONL rather than Parquet so the exact verifier remains dependency-light and reproducible
+under the current project dependencies. Concrete run counts and hashes belong in the generated run
+directory, not in this stable documentation page.
 
 ## Next Work
 

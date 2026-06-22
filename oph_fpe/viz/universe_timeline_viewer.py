@@ -1264,7 +1264,9 @@ def _visualization_views_payload(
     return {
         "fluctuatingQuantumVacuum": {
             "viewId": "fluctuatingQuantumVacuum",
+            "sectionKind": "quantum_vacuum_fluctuation",
             "label": "Fluctuating quantum vacuum / finite readback field",
+            "visualMetaphor": "finite_boundary_readback_fluctuations",
             "description": (
                 "Render the finite S2 screen as the observer-facing vacuum/readback regulator. "
                 "Animate screen.clusters.snapshots and screen.repairTrace as repair/holonomy "
@@ -1287,6 +1289,46 @@ def _visualization_views_payload(
                 {"layer": "mismatch_commit_trace", "source": "screen.repairTrace"},
                 {"layer": "cmb_diagnostic_overlay", "source": "cmbComparison.residualRows"},
             ],
+            "visualEncodings": [
+                {
+                    "field": "readback_amplitude",
+                    "source": "screen.values",
+                    "encoding": "screen color and optional surface displacement",
+                    "palette": "diverging_vacuum_field",
+                },
+                {
+                    "field": "repair_or_holonomy_residue",
+                    "source": "screen.clusters.snapshots[*].clusters",
+                    "encoding": "spark/ring pulses on the S2 boundary",
+                    "palette": "residue_highlight",
+                },
+                {
+                    "field": "finite_repair_descent",
+                    "source": "screen.repairTrace",
+                    "encoding": "time scrubber, opacity pulse, and Phi/record trace",
+                    "palette": "repair_trace",
+                },
+            ],
+            "animationChannels": [
+                {
+                    "channel": "vacuum_field_flicker",
+                    "source": "screen.values",
+                    "timeSource": "screen.repairTrace[*].cycle",
+                    "encoding": "low-amplitude temporal color shimmer",
+                },
+                {
+                    "channel": "holonomy_burst",
+                    "source": "screen.clusters.snapshots",
+                    "timeSource": "screen.clusters.snapshots[*].cycle",
+                    "encoding": "cluster-local pulse/ripple",
+                },
+                {
+                    "channel": "diagnostic_cmb_residual_overlay",
+                    "source": "cmbComparison.residualRows",
+                    "timeSource": None,
+                    "encoding": "optional static spectrum inset or boundary contour",
+                },
+            ],
             "receipts": {
                 "finite_consensus_theorem_receipt": bool(
                     small_receipts.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
@@ -1300,6 +1342,16 @@ def _visualization_views_payload(
                 ),
             },
             "exportSufficiency": "sufficient_for_diagnostic_visualization_not_physical_qft_vacuum",
+            "promotionReceiptsRequired": [
+                "finite_consensus_theorem_receipt",
+                "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT",
+                "dedicated_qft_vacuum_receipt",
+            ],
+            "nonClaims": [
+                "literal QFT vacuum",
+                "physical CMB prediction",
+                "pre-existing neutral 3D bulk",
+            ],
             "claimBoundary": (
                 "Shows finite OPH screen/readback fluctuations and repair residues. Do not label as a "
                 "literal fluctuating quantum vacuum without a dedicated QFT-vacuum receipt."
@@ -1307,7 +1359,9 @@ def _visualization_views_payload(
         },
         "observerCamera": {
             "viewId": "observerCamera",
+            "sectionKind": "observer_camera",
             "label": "Observer camera / local modular-time readout",
+            "visualMetaphor": "observer_local_camera_from_visible_records",
             "description": (
                 "Render one observer-local camera at a time from subjectiveObserverCameras. Each camera "
                 "is derived from visible support, readback records, packet histograms, and modular-time "
@@ -1329,6 +1383,40 @@ def _visualization_views_payload(
                 {"layer": "visible_record_packets", "source": "subjectiveObserverCameras[*].timeFrames"},
                 {"layer": "overlap_support_graph", "source": "observerModularTime.overlapLinks"},
             ],
+            "visualEncodings": [
+                {
+                    "field": "observer_pose",
+                    "source": "subjectiveObserverCameras[*].eye/lookAt/up/right/forward",
+                    "encoding": "camera transform and frustum",
+                    "palette": "observer_axis",
+                },
+                {
+                    "field": "visible_packets",
+                    "source": "subjectiveObserverCameras[*].timeFrames",
+                    "encoding": "local labels, point highlights, and packet glyphs",
+                    "palette": "record_packet",
+                },
+                {
+                    "field": "overlap_links",
+                    "source": "observerModularTime.overlapLinks",
+                    "encoding": "visible readback-link arcs",
+                    "palette": "overlap_support",
+                },
+            ],
+            "animationChannels": [
+                {
+                    "channel": "observer_modular_time",
+                    "source": "subjectiveObserverCameras[*].timeFrames",
+                    "timeSource": "subjectiveObserverCameras[*].timeFrames[*].cycle",
+                    "encoding": "camera frame stepping through visible local readout",
+                },
+                {
+                    "channel": "overlap_repair_trajectory",
+                    "source": "observerModularTime.overlapLinks[*].repairTrajectory",
+                    "timeSource": "observerModularTime.overlapLinks[*].repairTrajectory[*].cycle",
+                    "encoding": "link pulse along observer-overlap supports",
+                },
+            ],
             "receipts": {
                 "observer_modular_time_receipt": bool(
                     observer_receipts.get("observer_modular_time_receipt", False)
@@ -1341,6 +1429,15 @@ def _visualization_views_payload(
                 ),
             },
             "exportSufficiency": "sufficient_for_observer_local_camera_visualization",
+            "promotionReceiptsRequired": [
+                "observer_modular_time_receipt",
+                "observer_facing_3p1d_h3_experience_receipt",
+            ],
+            "nonClaims": [
+                "hidden global camera",
+                "objective global time",
+                "omniscient bulk state readout",
+            ],
             "claimBoundary": (
                 "Subjective observer cameras are visible-readout cameras. They do not expose hidden "
                 "state or objective global time."
@@ -1348,7 +1445,9 @@ def _visualization_views_payload(
         },
         "effectiveStringTheory": {
             "viewId": "effectiveStringTheory",
+            "sectionKind": "effective_string_theory_edge_worldsheet",
             "label": "Effective string-theory edge/worldsheet view",
+            "visualMetaphor": "edge_cycles_as_worldsheet_ribbons",
             "description": (
                 "Render cyclic repair paths, collar-like screen defect worldlines, and H3 proto-particle "
                 "tracks as the current effective string/worldsheet diagnostic layer. The export is enough "
@@ -1374,6 +1473,52 @@ def _visualization_views_payload(
                 {"layer": "collar_defect_tracks", "source": "screen.clusters.snapshots"},
                 {"layer": "h3_worldline_overlay", "source": "consensusBulk.protoParticleCandidates.worldlines"},
             ],
+            "visualEncodings": [
+                {
+                    "field": "finite_edge_cycle",
+                    "source": "smallUniverse.cycles",
+                    "encoding": "closed loops or edge strings on the finite carrier",
+                    "palette": "cycle_string",
+                },
+                {
+                    "field": "repair_history",
+                    "source": "smallUniverse.repairFrames",
+                    "encoding": "ribbon swept over repair time",
+                    "palette": "worldsheet_ribbon",
+                },
+                {
+                    "field": "screen_defect_track",
+                    "source": "screen.clusters.snapshots",
+                    "encoding": "moving collar/defect string segment",
+                    "palette": "defect_string",
+                },
+                {
+                    "field": "h3_proto_particle_worldline",
+                    "source": "consensusBulk.protoParticleCandidates.worldlines",
+                    "encoding": "H3 trajectory overlay with dashed non-particle styling until receipts pass",
+                    "palette": "proto_worldline",
+                },
+            ],
+            "animationChannels": [
+                {
+                    "channel": "edge_string_sweep",
+                    "source": "smallUniverse.edges",
+                    "timeSource": "smallUniverse.repairFrames[*].step",
+                    "encoding": "edge activation traveling along finite cycles",
+                },
+                {
+                    "channel": "worldsheet_ribbon_growth",
+                    "source": "smallUniverse.repairFrames",
+                    "timeSource": "smallUniverse.repairFrames[*].step",
+                    "encoding": "ribbon surface swept by repair-frame sequence",
+                },
+                {
+                    "channel": "h3_worldline_motion",
+                    "source": "consensusBulk.protoParticleCandidates.worldlines[*].events",
+                    "timeSource": "consensusBulk.protoParticleCandidates.worldlines[*].events[*].cycle",
+                    "encoding": "track interpolation through H3 event samples",
+                },
+            ],
             "receipts": {
                 "finite_consensus_theorem_receipt": bool(
                     small_receipts.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
@@ -1391,6 +1536,20 @@ def _visualization_views_payload(
                 "critical_edge_cft_receipt": False,
             },
             "exportSufficiency": "sufficient_for_schematic_edge_string_view_not_critical_worldsheet_claim",
+            "promotionReceiptsRequired": [
+                "finite_consensus_theorem_receipt",
+                "bulk_worldline_precursor_receipt",
+                "critical_edge_cft_receipt",
+                "virasoro_receipt",
+                "sugawara_receipt",
+                "spin_structure_receipt",
+            ],
+            "nonClaims": [
+                "critical string CFT",
+                "heterotic worldsheet derivation",
+                "production matter particles",
+                "strict neutral third-person bulk",
+            ],
             "claimBoundary": (
                 "This is an effective edge-string diagnostic view. It must not be labeled a proven critical "
                 "heterotic worldsheet until the finite-carrier critical-edge receipt suite passes."
@@ -1398,7 +1557,9 @@ def _visualization_views_payload(
         },
         "silenceToObservation": {
             "viewId": "silenceToObservation",
+            "sectionKind": "silence_to_observation",
             "label": "Silence-to-observation bridge",
+            "visualMetaphor": "scale_compressed_readout_emergence",
             "description": (
                 "Render the scale-compressed sequence from record silence through P detuning, finite "
                 "repair depth, and observer/H3 readout emergence."
@@ -1416,6 +1577,28 @@ def _visualization_views_payload(
                 {"layer": "finite_repair_depth", "source": "pnSilenceToObservation.finiteRegulatorDepth"},
                 {"layer": "readout_emergence", "source": "pnSilenceToObservation.observationEmergence"},
             ],
+            "visualEncodings": [
+                {
+                    "field": "silent_initial_state",
+                    "source": "pnSilenceToObservation.silenceInitialState",
+                    "encoding": "dark or low-contrast initial field",
+                    "palette": "silence",
+                },
+                {
+                    "field": "repair_depth",
+                    "source": "pnSilenceToObservation.finiteRegulatorDepth",
+                    "encoding": "radial progress or depth bars",
+                    "palette": "repair_depth",
+                },
+            ],
+            "animationChannels": [
+                {
+                    "channel": "silence_to_readout",
+                    "source": "pnSilenceToObservation",
+                    "timeSource": "pnSilenceToObservation.finiteRegulatorDepth",
+                    "encoding": "staged fade-in from silence to observer readout",
+                },
+            ],
             "receipts": {
                 "scale_compressed_pn_silence_to_observation_receipt": bool(
                     pn_receipts.get("scale_compressed_pn_silence_to_observation_receipt", False)
@@ -1425,6 +1608,13 @@ def _visualization_views_payload(
                 ),
             },
             "exportSufficiency": "sufficient_for_scale_compressed_bridge_visualization",
+            "promotionReceiptsRequired": [
+                "scale_compressed_pn_silence_to_observation_receipt",
+            ],
+            "nonClaims": [
+                "literal global N simulation",
+                "physical cosmology prediction",
+            ],
             "claimBoundary": pn_silence_payload.get("claimBoundary"),
         },
     }

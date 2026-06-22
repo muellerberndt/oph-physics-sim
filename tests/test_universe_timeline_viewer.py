@@ -272,6 +272,11 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["comparableObservations"]["datasets"][0]["datasetId"] == "cmb_tt_residual_rows"
     assert parsed["comparableObservations"]["receipts"]["physical_cmb_prediction"] is False
     assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["viewId"] == "fluctuatingQuantumVacuum"
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["sectionKind"] == (
+        "quantum_vacuum_fluctuation"
+    )
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["animationChannels"]
+    assert "literal QFT vacuum" in parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["nonClaims"]
     assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["receipts"][
         "physical_cmb_prediction_receipt"
     ] is False
@@ -280,5 +285,12 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     )
     assert "subjectiveObserverCameras" in parsed["visualizationViews"]["observerCamera"]["dataSources"]
     assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"]["critical_edge_cft_receipt"] is False
+    assert parsed["visualizationViews"]["effectiveStringTheory"]["sectionKind"] == (
+        "effective_string_theory_edge_worldsheet"
+    )
+    assert "critical_edge_cft_receipt" in parsed["visualizationViews"]["effectiveStringTheory"][
+        "promotionReceiptsRequired"
+    ]
+    assert "critical string CFT" in parsed["visualizationViews"]["effectiveStringTheory"]["nonClaims"]
     assert "smallUniverse.cycles" in parsed["visualizationViews"]["effectiveStringTheory"]["dataSources"]
     assert Path(summary["web_coding_agent_brief_path"]).exists()

@@ -42,9 +42,8 @@ B200/H200/A100 work usually needs quota approval first.
 
 ## Processing Recommendation
 
-The current vectorized large-screen engine is CPU/RAM bound, not GPU bound. A 64k-patch S3 modular
-screen smoke run completes locally in a few seconds and uses sampled point-cloud estimators. For the
-next scale step, prefer high-core CPU workers:
+The current vectorized large-screen engine is CPU/RAM bound, not GPU bound. For scale checks and
+seed batches, prefer high-core CPU workers:
 
 ```text
 Local / workstation: 64k patches, repeated seeds, control sweeps

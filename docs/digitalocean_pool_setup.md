@@ -1,7 +1,5 @@
 # DigitalOcean Pool Setup
 
-Updated: 2026-06-01
-
 ## Pool Type
 
 Use a fixed-size Droplet autoscale pool for OPH-FPE batch simulation.
@@ -38,8 +36,7 @@ After the pool exists, provide either:
 2. The public IP addresses of the Droplets plus SSH access through the local public key.
 ```
 
-This machine does not currently have `doctl` installed. If you want API-based pool discovery and
-droplet management from here, install and authenticate it:
+For API-based pool discovery and droplet management, install and authenticate `doctl`:
 
 ```bash
 brew install doctl
@@ -79,8 +76,8 @@ ssh oph@DROPLET_IP '
   source .venv/bin/activate &&
   tmux new -d -s oph-fpe \
     "python3 -m oph_fpe.cli run-bw-sweep \
-      --configs configs/e1_s3_bw_screen_64k.yml configs/e1_s3_bw_screen_1m.yml \
-      --seeds 20260601,20260602,20260603,20260604 \
+      --configs configs/e1_s3_bw_screen_4k.yml configs/e1_s3_bw_screen_64k.yml \
+      --seeds 11,12,13,14 \
       --workers 4 \
       --inner-jobs 1 \
       --out-dir runs"

@@ -54,9 +54,9 @@ Every substantive output is receipt-gated. A false receipt is part of the result
 python3 -m pytest -q
 
 python3 -m oph_fpe.cli run --config configs/e0_z2_patchnet.yml --out-dir runs
-python3 -m oph_fpe.cli run-array --config configs/e1_s3_modular_screen_64k.yml --out-dir runs
+python3 -m oph_fpe.cli run-array --config configs/e1_s3_modular_screen_4k.yml --out-dir runs
 python3 -m oph_fpe.cli run-bw-array --config configs/e1_s3_state_modular_screen_4k.yml --out-dir runs
-python3 -m oph_fpe.cli run-bw-array --config configs/e2_kms_freezeout_cl_screen_256k.yml --out-dir runs
+python3 -m oph_fpe.cli run-bw-array --config configs/e2_kms_freezeout_cl_screen_64k.yml --out-dir runs
 
 python3 -m oph_fpe.cli run-oph-universe \
   --config configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml \
@@ -260,7 +260,10 @@ The expected safe verdict is `GEOMETRY_CERTIFIED_BACKEND_NOT_ENABLED` unless OPH
 
 Cloud credentials, project IDs, bucket names, account IDs, tokens, and keys belong in `.env.local`, shell exports, or cloud-native identity. They do not belong in committed files.
 
-Cloud template defaults live in `configs/`. See `docs/cloud.md`, `docs/parallel_cloud_plan.md`, and `docs/digitalocean_pool_setup.md` for provider boundaries and sizing notes.
+Curated example configs live in `configs/`. Local or generated configs belong under ignored paths
+such as `configs/local/`, `configs/generated/`, or `*.local.yml`; see `docs/configuration.md` for
+the format and claim-boundary rules. See `docs/cloud.md`, `docs/parallel_cloud_plan.md`, and
+`docs/digitalocean_pool_setup.md` for provider boundaries and sizing notes.
 
 For CPU sweeps, cap BLAS fan-out per worker:
 
@@ -270,16 +273,16 @@ OPENBLAS_NUM_THREADS=1 \
 MKL_NUM_THREADS=1 \
 VECLIB_MAXIMUM_THREADS=1 \
 NUMEXPR_NUM_THREADS=1 \
-python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen_64k.yml --seeds 1,2,3,4 --out-dir runs
+python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen_4k.yml --seeds 1,2,3,4 --out-dir runs
 ```
 
 ## Key Documentation
 
 - `docs/README.md`: simulator documentation policy and stable-doc index.
-- `docs/OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: theorem-to-simulator contract.
-- `docs/cmb_bulk_particle_execution_plan.md`: CMB, neutral-bulk, and particle execution boundaries.
+- `docs/configuration.md`: config format, tracked-fixture policy, and local-config ignore rules.
+- `configs/README.md`: current curated config inventory.
+- `docs/OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: single simulator state, theorem-to-code,
+  paper-alignment, and claim-promotion contract.
 - `docs/oph_universe_timeline_visualization_payload_v1.schema.json`: visualizer payload schema, including fluctuating-vacuum, observer-camera, and effective-string view contracts.
 - `docs/small_oph_universe_v1.md`: exact finite-consensus calibration harness.
-- `docs/paper_implementation_notes.md`: imported paper-side simulator constraints.
-- `docs/paper_stack_alignment.md`: screen-computation alignment notes.
 - `REPRODUCTION.md`: reproducibility notes.

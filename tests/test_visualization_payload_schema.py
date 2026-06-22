@@ -89,11 +89,23 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
     view_required = set(defs["visualizationView"]["required"])
     assert {
         "viewId",
+        "sectionKind",
         "label",
+        "visualMetaphor",
         "dataSources",
         "primaryFields",
         "renderLayers",
+        "visualEncodings",
+        "animationChannels",
         "receipts",
         "exportSufficiency",
+        "promotionReceiptsRequired",
+        "nonClaims",
         "claimBoundary",
     } <= view_required
+
+    encoding_required = set(defs["visualEncoding"]["required"])
+    assert {"field", "source", "encoding"} <= encoding_required
+
+    channel_required = set(defs["animationChannel"]["required"])
+    assert {"channel", "source", "encoding"} <= channel_required

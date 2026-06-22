@@ -125,21 +125,35 @@
       "additionalProperties": true,
       "required": [
         "viewId",
+        "sectionKind",
         "label",
+        "visualMetaphor",
         "description",
         "dataSources",
         "primaryFields",
         "renderLayers",
+        "visualEncodings",
+        "animationChannels",
         "receipts",
         "exportSufficiency",
+        "promotionReceiptsRequired",
+        "nonClaims",
         "claimBoundary"
       ],
       "properties": {
         "viewId": {
           "type": "string"
         },
+        "sectionKind": {
+          "type": "string",
+          "description": "Stable machine-readable section type for custom visualizers."
+        },
         "label": {
           "type": "string"
+        },
+        "visualMetaphor": {
+          "type": "string",
+          "description": "Short visual intent, not a physical claim."
         },
         "description": {
           "type": "string"
@@ -162,11 +176,37 @@
             "$ref": "#/$defs/renderLayer"
           }
         },
+        "visualEncodings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/visualEncoding"
+          }
+        },
+        "animationChannels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/animationChannel"
+          }
+        },
         "receipts": {
           "$ref": "#/$defs/receiptMap"
         },
         "exportSufficiency": {
           "type": "string"
+        },
+        "promotionReceiptsRequired": {
+          "type": "array",
+          "description": "Receipt names that would be required before upgrading this view from diagnostic rendering to the corresponding physical claim.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nonClaims": {
+          "type": "array",
+          "description": "Labels the visualizer must avoid unless future receipts explicitly pass.",
+          "items": {
+            "type": "string"
+          }
         },
         "claimBoundary": {
           "type": ["string", "null"]
@@ -182,6 +222,44 @@
           "type": "string"
         },
         "source": {
+          "type": "string"
+        }
+      }
+    },
+    "visualEncoding": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["field", "source", "encoding"],
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "encoding": {
+          "type": "string"
+        },
+        "palette": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "animationChannel": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["channel", "source", "encoding"],
+      "properties": {
+        "channel": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "timeSource": {
+          "type": ["string", "null"]
+        },
+        "encoding": {
           "type": "string"
         }
       }
