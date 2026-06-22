@@ -14,6 +14,19 @@ from oph_fpe.cosmology.physical_cmb_contract import (
     THEOREM_SIDE_SOURCES,
     validate_physical_cmb_contract,
 )
+from oph_fpe.cosmology.finite_covariant_parent import (
+    CAUSAL_RESPONSE_RECEIPT,
+    EXPLICIT_RECIPIENT_STRESS_RECEIPT,
+    FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT,
+    GAUGE_INDEPENDENCE_RECEIPT,
+    PARENT_RECEIPT,
+    REFINEMENT_CONVERGENCE_RECEIPT,
+    STRESS_CLOSURE_RECEIPT,
+)
+from oph_fpe.cosmology.source_provenance import (
+    PROMOTED_CMB_SOURCE_QUANTITIES,
+    certify_cmb_source_provenance,
+)
 
 
 def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMBInputContract, dict[str, Any]]:
@@ -22,21 +35,24 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     finite_transition = _first_json(roots, "finite_repair_transition_matrix_report.json")
     scalar = _first_json(roots, "scalar_repair_semigroup_report.json")
     finite_cert = _first_json(roots, "finite_certificate_report.json")
+    finite_parent = _first_json(roots, "finite_covariant_collar_packet_parent_report.json")
     ba_kernel = _first_json(roots, "B_A_kernel_report.json")
     ba_kernel_refinement = _first_json(roots, "B_A_kernel_refinement_report.json")
     ba_parent = _first_json(roots, "b_a_parent_report.json")
     scale = _first_json(roots, "scale_compressed_repair_report.json")
+    screen_to_radial_lift = _first_json(roots, "screen_to_radial_lift_report.json")
     screen_capacity = _first_json(roots, "screen_capacity_closure_report.json")
     strict_neutral = _first_json(roots, "strict_neutral_bulk_report.json")
     scalar_quotient = _first_json(roots, "scalar_quotient_report.json")
     compressed_likelihood = _first_json(roots, "oph_compressed_likelihood_report.json")
     official_likelihood = _first_json(roots, "official_planck_likelihood_readiness_report.json")
     camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
+    explicit_source_provenance = _first_json(roots, "cmb_source_provenance_report.json")
 
     eta_source, eta_value = _eta_R_from_reports(finite_transition, scalar, scale, scalar_quotient)
     gamma_source, gamma_grid = _Gamma_rec_from_reports(finite_transition)
     a_source, a_value = _A_zeta_from_reports(finite_cert, scale)
-    lift_receipt = _screen_to_primordial_lift_from_reports(finite_cert, scale)
+    lift_receipt = _screen_to_primordial_lift_from_reports(finite_cert, scale, screen_to_radial_lift)
     q_source, q_value = _scalar_value_from_reports(scale, scalar_quotient, "q_IR")
     ell_source, ell_value = _scalar_value_from_reports(scale, scalar_quotient, "ell_IR")
     b_source, b_grid = _B_A_from_reports(ba_kernel, ba_parent)
@@ -74,16 +90,31 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         official_likelihood_ready=official_likelihood_ready,
         cdm_limit_regression_passed=cdm_limit_regression_passed,
         screen_to_primordial_lift_receipt=lift_receipt,
+        finite_covariant_parent_receipt=bool(finite_parent.get(PARENT_RECEIPT, False)),
+        stress_energy_closure_receipt=bool(finite_parent.get(STRESS_CLOSURE_RECEIPT, False)),
+        gauge_independence_receipt=bool(finite_parent.get(GAUGE_INDEPENDENCE_RECEIPT, False)),
+        causal_response_receipt=bool(finite_parent.get(CAUSAL_RESPONSE_RECEIPT, False)),
+        refinement_convergence_receipt=bool(finite_parent.get(REFINEMENT_CONVERGENCE_RECEIPT, False)),
+        explicit_recipient_stress_receipt=bool(finite_parent.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT, False)),
+        frozen_likelihood_protocol_receipt=bool(
+            finite_parent.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
+            or official_likelihood.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
+        ),
+        frozen_source_hash=finite_parent.get("source_hash"),
+        frozen_solver_hash=official_likelihood.get("solver_hash") or finite_parent.get("solver_hash"),
+        frozen_likelihood_hash=official_likelihood.get("likelihood_hash") or finite_parent.get("likelihood_hash"),
     )
     sources = {
         "no_data_use_receipt": no_data,
         "finite_transition_matrix_report": finite_transition,
         "scalar_repair_semigroup_report": scalar,
         "finite_certificate_report": finite_cert,
+        "finite_covariant_collar_packet_parent_report": finite_parent,
         "B_A_kernel_report": ba_kernel,
         "B_A_kernel_refinement_report": ba_kernel_refinement,
         "b_a_parent_report": ba_parent,
         "scale_compressed_repair_report": scale,
+        "screen_to_radial_lift_report": screen_to_radial_lift,
         "screen_capacity_closure_report": screen_capacity,
         "strict_neutral_bulk_report": strict_neutral,
         "scalar_quotient_report": scalar_quotient,
@@ -91,6 +122,24 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         "official_planck_likelihood_readiness_report": official_likelihood,
         "camb_lcdm_baseline_report": camb_baseline,
     }
+    source_provenance = _cmb_source_provenance_from_contract(
+        contract,
+        sources,
+        explicit_source_provenance,
+        roots,
+    )
+    contract.source_provenance_receipt = bool(source_provenance.get("CMB_SOURCE_PROVENANCE_RECEIPT", False))
+    contract.pooled_source_reducer_receipt = bool(source_provenance.get("pooled_source_reducer_receipt", False))
+    contract.contradiction_free_provenance_receipt = bool(
+        source_provenance.get("contradiction_free_provenance_receipt", False)
+    )
+    contract.N_CRC_consensus_invariant_receipt = bool(
+        source_provenance.get("N_CRC_consensus_invariant_receipt", False)
+    )
+    contract.global_likelihood_reduction_receipt = bool(
+        source_provenance.get("global_likelihood_reduction_receipt", False)
+    )
+    sources["cmb_source_provenance_report"] = source_provenance
     return contract, sources
 
 
@@ -102,6 +151,10 @@ def write_physical_cmb_input_report(run_dirs: list[Path], out_dir: Path) -> dict
     contract_dict = _contract_to_jsonable(contract)
     (out / "physical_cmb_input_contract.json").write_text(json.dumps(contract_dict, indent=2, default=str), encoding="utf-8")
     (out / "physical_cmb_input_validation.json").write_text(json.dumps(validation, indent=2, default=str), encoding="utf-8")
+    (out / "cmb_source_provenance_report.json").write_text(
+        json.dumps(sources.get("cmb_source_provenance_report") or {}, indent=2, default=str),
+        encoding="utf-8",
+    )
     _write_array(out / "B_A_k_a.csv", contract.B_A_k_a, ["k_or_row", "a_or_col", "B_A"])
     _write_array(out / "Gamma_rec_k_a.csv", contract.Gamma_rec_k_a, ["k_or_row", "a_or_col", "Gamma_rec"])
     _write_array(out / "rho_A_a.csv", contract.rho_A_a, ["row", "col", "rho_A"])
@@ -116,6 +169,7 @@ def write_physical_cmb_input_report(run_dirs: list[Path], out_dir: Path) -> dict
         "blockers": validation["blockers"],
         "input_status": _input_status(contract),
         "source_summary": _source_summary(sources),
+        "source_provenance": sources.get("cmb_source_provenance_report") or {},
         "claim_boundary": (
             "Physical CMB input contract assembly. This report may gather measurement-comparable diagnostics, "
             "but it does not run a physical CMB prediction unless every finite-input and likelihood gate passes."
@@ -213,6 +267,12 @@ def write_physical_cmb_input_no_data_use_receipt(run_dirs: list[Path], out_dir: 
             "used_for": ["cdm_limit_regression_gate_only"],
             "measurement_data_used": False,
             "note": "External LambdaCDM baseline checks Boltzmann plumbing only; it does not set OPH input functions.",
+        },
+        "finite_covariant_collar_packet_parent_report": {
+            "present": bool(_first_json(roots, "finite_covariant_collar_packet_parent_report.json")),
+            "used_for": ["stress_closure_gate", "recipient_stress_gate", "gauge_gate", "causal_response_gate"],
+            "measurement_data_used": False,
+            "note": "Source-contract receipt only; it does not fit OPH input functions to CMB data.",
         },
     }
     measurement_used = any(bool(row.get("measurement_data_used", False)) for row in source_status.values())
@@ -431,13 +491,20 @@ def _A_zeta_from_reports(finite_cert: dict[str, Any], scale: dict[str, Any]) -> 
     return "diagnostic_proxy", value
 
 
-def _screen_to_primordial_lift_from_reports(finite_cert: dict[str, Any], scale: dict[str, Any]) -> bool:
+def _screen_to_primordial_lift_from_reports(
+    finite_cert: dict[str, Any],
+    scale: dict[str, Any],
+    screen_to_radial_lift: dict[str, Any],
+) -> bool:
     derived = finite_cert.get("derived_outputs") or {}
     params = scale.get("cmb_parameter_readouts") or {}
     return bool(
         derived.get("screen_to_primordial_lift_receipt", False)
         or finite_cert.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)
+        or finite_cert.get("SCREEN_TO_RADIAL_LIFT_RECEIPT", False)
         or finite_cert.get("screen_to_primordial_lift_receipt", False)
+        or screen_to_radial_lift.get("SCREEN_TO_RADIAL_LIFT_RECEIPT", False)
+        or screen_to_radial_lift.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)
         or (
             params.get("A_zeta") is not None
             and scale.get("scale_compressed_operator_receipt", False)
@@ -516,6 +583,255 @@ def _freezeout_from_reports(strict_neutral: dict[str, Any], scale: dict[str, Any
     return "unknown", None
 
 
+def _cmb_source_provenance_from_contract(
+    contract: PhysicalCMBInputContract,
+    sources: dict[str, dict[str, Any]],
+    explicit_report: dict[str, Any],
+    roots: list[Path],
+) -> dict[str, Any]:
+    report_counts = _json_report_counts(
+        roots,
+        {
+            _source_report_filename(report_name)
+            for report_name in {
+                "finite_transition_matrix_report",
+                "finite_certificate_report",
+                "scale_compressed_repair_report",
+                "B_A_kernel_report",
+                "b_a_parent_report",
+                "screen_capacity_closure_report",
+                "scalar_quotient_report",
+            }
+        },
+    )
+    generated_nodes = [
+        _provenance_node("eta_R", contract.eta_R_source, "finite_transition_matrix_report", sources, contract),
+        _provenance_node("Gamma_rec", contract.Gamma_rec_source, "finite_transition_matrix_report", sources, contract),
+        _provenance_node("A_zeta", contract.A_zeta_source, "finite_certificate_report", sources, contract),
+        _provenance_node("q_IR", contract.q_IR_source, "scale_compressed_repair_report", sources, contract),
+        _provenance_node("ell_IR", contract.ell_IR_source, "scale_compressed_repair_report", sources, contract),
+        _provenance_node("B_A_k_a", contract.B_A_source, "B_A_kernel_report", sources, contract),
+        _provenance_node("rho_A_a", contract.rho_A_source, "finite_certificate_report", sources, contract),
+        _provenance_node("N_CRC", contract.N_source, "screen_capacity_closure_report", sources, contract),
+    ]
+    explicit_nodes = explicit_report.get("nodes") if isinstance(explicit_report.get("nodes"), list) else []
+    reducers = _source_reducers_from_contract(contract, sources, report_counts)
+    explicit_reducers = explicit_report.get("reducers") or explicit_report.get("source_reducers") or {}
+    if isinstance(explicit_reducers, dict):
+        for quantity, reducer in explicit_reducers.items():
+            if isinstance(reducer, dict):
+                reducers[str(quantity)] = reducer
+    global_checks = _global_likelihood_checks(sources)
+    explicit_global = explicit_report.get("global_checks") if isinstance(explicit_report.get("global_checks"), dict) else {}
+    global_checks.update(explicit_global)
+    certificate = certify_cmb_source_provenance(
+        list(explicit_nodes) if explicit_nodes else generated_nodes,
+        reducers,
+        global_checks=global_checks,
+    )
+    blockers = list(certificate.get("blockers") or [])
+    if explicit_report and explicit_report.get("CMB_SOURCE_PROVENANCE_RECEIPT") is False:
+        blockers.append("explicit_source_provenance_report_false")
+        blockers.extend(str(blocker) for blocker in (explicit_report.get("blockers") or []))
+    blockers = _unique_strings(blockers)
+    receipt = len(blockers) == 0
+    certificate.update(
+        {
+            "CMB_SOURCE_PROVENANCE_RECEIPT": receipt,
+            "source_provenance_receipt": receipt,
+            "blockers": blockers,
+            "nodes": list(explicit_nodes) if explicit_nodes else generated_nodes,
+            "reducers": reducers,
+            "explicit_report_present": bool(explicit_report),
+            "explicit_report_receipt": explicit_report.get("CMB_SOURCE_PROVENANCE_RECEIPT"),
+        }
+    )
+    return certificate
+
+
+def _provenance_node(
+    quantity: str,
+    source: str,
+    default_report_name: str,
+    sources: dict[str, dict[str, Any]],
+    contract: PhysicalCMBInputContract,
+) -> dict[str, Any]:
+    report_name = _source_report_name_for_quantity(quantity, source, default_report_name)
+    report = sources.get(report_name) or {}
+    return {
+        "node_id": quantity,
+        "quantity": quantity,
+        "source": source,
+        "source_kind": source,
+        "source_report": report_name,
+        "source_hash": report.get("source_hash") or contract.frozen_source_hash,
+        "parents": [],
+        "source_only": source in FINITE_CMB_SOURCES or source in THEOREM_SIDE_SOURCES,
+        "no_cmb_data_used": bool(contract.no_data_use_receipt or _explicit_no_cmb_data_used(report)),
+        "fit_to_planck": bool(report.get("fit_to_planck", False)),
+        "fit_to_measurement": bool(report.get("fit_to_measurement", False)),
+        "measurement_data_used": _raw_measurement_data_used(report),
+        "cmb_data_used": bool(report.get("cmb_data_used", False)),
+        "cmb_data_used_for_input": bool(report.get("cmb_data_used_for_input", False)),
+        "planck_data_used_for_input": bool(report.get("planck_data_used_for_input", False)),
+        "uses_measurements_to_set_inputs": bool(report.get("uses_measurements_to_set_inputs", False)),
+    }
+
+
+def _source_reducers_from_contract(
+    contract: PhysicalCMBInputContract,
+    sources: dict[str, dict[str, Any]],
+    report_counts: dict[str, int],
+) -> dict[str, dict[str, Any]]:
+    reducers = {
+        "eta_R": _source_reducer_row(
+            "eta_R", contract.eta_R_source, "finite_transition_matrix_report", sources, report_counts
+        ),
+        "Gamma_rec": _source_reducer_row(
+            "Gamma_rec", contract.Gamma_rec_source, "finite_transition_matrix_report", sources, report_counts
+        ),
+        "A_zeta": _source_reducer_row(
+            "A_zeta", contract.A_zeta_source, "finite_certificate_report", sources, report_counts
+        ),
+        "q_IR": _source_reducer_row("q_IR", contract.q_IR_source, "scale_compressed_repair_report", sources, report_counts),
+        "ell_IR": _source_reducer_row(
+            "ell_IR", contract.ell_IR_source, "scale_compressed_repair_report", sources, report_counts
+        ),
+        "B_A_k_a": _source_reducer_row("B_A_k_a", contract.B_A_source, "B_A_kernel_report", sources, report_counts),
+        "rho_A_a": _source_reducer_row(
+            "rho_A_a", contract.rho_A_source, "finite_certificate_report", sources, report_counts
+        ),
+        "N_CRC": {
+            "mode": "consensus_invariant",
+            "consensus_invariant": contract.N_source in THEOREM_SIDE_SOURCES,
+            "additive_capacity_schema": False,
+            "disjoint_coverage_receipt": False,
+        },
+    }
+    return reducers
+
+
+def _source_reducer_row(
+    quantity: str,
+    source: str,
+    default_report_name: str,
+    sources: dict[str, dict[str, Any]],
+    report_counts: dict[str, int],
+) -> dict[str, Any]:
+    report_name = _source_report_name_for_quantity(quantity, source, default_report_name)
+    report = sources.get(report_name) or {}
+    nested = (report.get("source_reducers") or {}).get(quantity) if isinstance(report.get("source_reducers"), dict) else None
+    if isinstance(nested, dict):
+        return nested
+    report_count = int(report_counts.get(_source_report_filename(report_name), 0))
+    pooled_receipt = bool(
+        report.get("pooled_sufficient_statistics_receipt", False)
+        or report.get("POOLED_SOURCE_REDUCER_RECEIPT", False)
+    )
+    if pooled_receipt:
+        return {
+            "mode": "pooled_sufficient_statistics",
+            "pooled_sufficient_statistics": True,
+            "units_validated": bool(report.get("units_validated", True)),
+            "coordinate_grid_validated": bool(report.get("coordinate_grid_validated", True)),
+            "coverage_validated": bool(report.get("coverage_validated", True)),
+            "duplicates_checked": bool(report.get("duplicates_checked", True)),
+            "interpolation_policy_frozen": bool(report.get("interpolation_policy_frozen", True)),
+            "covariance_validated": bool(report.get("covariance_validated", True)),
+            "shard_local_nonlinear_average": False,
+        }
+    if report_count <= 1 and source in FINITE_CMB_SOURCES.union(THEOREM_SIDE_SOURCES):
+        return {
+            "mode": "single_global_source",
+            "single_global_source": True,
+            "pooled_sufficient_statistics": False,
+            "shard_local_nonlinear_average": False,
+        }
+    return {
+        "mode": "requires_pooled_sufficient_statistics",
+        "single_global_source": False,
+        "pooled_sufficient_statistics": False,
+        "shard_local_nonlinear_average": bool(report.get("shard_local_nonlinear_average", False)),
+    }
+
+
+def _global_likelihood_checks(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    compressed = sources.get("oph_compressed_likelihood_report") or {}
+    official = sources.get("official_planck_likelihood_readiness_report") or {}
+    camb = sources.get("camb_lcdm_baseline_report") or {}
+    return {
+        "official_likelihood_rollup": _rollup_mode(compressed, official),
+        "cdm_limit_rollup": _rollup_mode(compressed, camb),
+    }
+
+
+def _rollup_mode(*reports: dict[str, Any]) -> str:
+    for report in reports:
+        if not report:
+            continue
+        rollup = str(report.get("rollup") or report.get("reduction") or "")
+        if rollup:
+            return rollup
+        if report.get("shard_local_any_rollup", False) or report.get("uses_shard_any_rollup", False):
+            return "shard_any"
+    return "global"
+
+
+def _source_report_name_for_quantity(quantity: str, source: str, default_report_name: str) -> str:
+    if quantity in {"eta_R", "Gamma_rec"} and source == "scale_compressed_24_round_finite_ladder":
+        return "scale_compressed_repair_report"
+    if quantity in {"eta_R", "q_IR", "ell_IR"} and source == "finite_lattice":
+        return "scalar_quotient_report"
+    if quantity in {"A_zeta", "rho_A_a"} and source == "scale_compressed_24_round_finite_ladder":
+        return "scale_compressed_repair_report"
+    if quantity == "B_A_k_a" and source == "diagnostic_proxy":
+        return "b_a_parent_report"
+    return default_report_name
+
+
+def _source_report_filename(report_name: str) -> str:
+    filenames = {
+        "finite_transition_matrix_report": "finite_repair_transition_matrix_report.json",
+        "scalar_repair_semigroup_report": "scalar_repair_semigroup_report.json",
+        "finite_certificate_report": "finite_certificate_report.json",
+        "finite_covariant_collar_packet_parent_report": "finite_covariant_collar_packet_parent_report.json",
+        "B_A_kernel_report": "B_A_kernel_report.json",
+        "B_A_kernel_refinement_report": "B_A_kernel_refinement_report.json",
+        "b_a_parent_report": "b_a_parent_report.json",
+        "scale_compressed_repair_report": "scale_compressed_repair_report.json",
+        "screen_capacity_closure_report": "screen_capacity_closure_report.json",
+        "strict_neutral_bulk_report": "strict_neutral_bulk_report.json",
+        "scalar_quotient_report": "scalar_quotient_report.json",
+        "oph_compressed_likelihood_report": "oph_compressed_likelihood_report.json",
+        "official_planck_likelihood_readiness_report": "official_planck_likelihood_readiness_report.json",
+        "camb_lcdm_baseline_report": "camb_lcdm_baseline_report.json",
+    }
+    return filenames.get(report_name, f"{report_name}.json")
+
+
+def _json_report_counts(roots: list[Path], names: set[str]) -> dict[str, int]:
+    counts = {name: 0 for name in names}
+    seen: set[Path] = set()
+    for root in roots:
+        root = Path(root)
+        candidates = [root / name for name in names]
+        if root.exists() and root.is_dir():
+            for name in names:
+                candidates.extend(sorted(root.glob(f"**/{name}")))
+        for path in candidates:
+            resolved = path.resolve() if path.exists() else path
+            if resolved in seen or not path.exists() or not path.is_file():
+                continue
+            seen.add(resolved)
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                continue
+            if isinstance(data, dict) and data:
+                counts[path.name] = counts.get(path.name, 0) + 1
+    return counts
+
+
 def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
     summary: dict[str, Any] = {}
     for name, report in sources.items():
@@ -537,6 +853,39 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     "official_clik_api_available": report.get("official_clik_api_available"),
                     "camb_available": report.get("camb_available"),
                     "cobaya_available": report.get("cobaya_available"),
+                    "blockers": report.get("blockers") or [],
+                }
+            )
+        if name == "finite_covariant_collar_packet_parent_report":
+            row.update(
+                {
+                    "parent_receipt": report.get(PARENT_RECEIPT),
+                    "stress_energy_closure_receipt": report.get(STRESS_CLOSURE_RECEIPT),
+                    "explicit_recipient_stress_receipt": report.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT),
+                    "gauge_independence_receipt": report.get(GAUGE_INDEPENDENCE_RECEIPT),
+                    "causal_response_receipt": report.get(CAUSAL_RESPONSE_RECEIPT),
+                    "refinement_convergence_receipt": report.get(REFINEMENT_CONVERGENCE_RECEIPT),
+                    "frozen_likelihood_protocol_receipt": report.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT),
+                    "source_hash_present": _nonempty_string(report.get("source_hash")),
+                    "solver_hash_present": _nonempty_string(report.get("solver_hash")),
+                    "likelihood_hash_present": _nonempty_string(report.get("likelihood_hash")),
+                    "blockers": report.get("blockers") or [],
+                }
+            )
+        if name == "cmb_source_provenance_report":
+            row.update(
+                {
+                    "CMB_SOURCE_PROVENANCE_RECEIPT": report.get("CMB_SOURCE_PROVENANCE_RECEIPT"),
+                    "pooled_source_reducer_receipt": report.get("pooled_source_reducer_receipt"),
+                    "contradiction_free_provenance_receipt": report.get(
+                        "contradiction_free_provenance_receipt"
+                    ),
+                    "N_CRC_consensus_invariant_receipt": report.get(
+                        "N_CRC_consensus_invariant_receipt"
+                    ),
+                    "global_likelihood_reduction_receipt": report.get(
+                        "global_likelihood_reduction_receipt"
+                    ),
                     "blockers": report.get("blockers") or [],
                 }
             )
@@ -570,10 +919,59 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
         "official_likelihood": {
             "ready": bool(contract.official_likelihood_ready),
         },
+        "source_provenance": {
+            "receipt": bool(contract.source_provenance_receipt),
+            "pooled_source_reducer_receipt": bool(contract.pooled_source_reducer_receipt),
+            "contradiction_free_provenance_receipt": bool(
+                contract.contradiction_free_provenance_receipt
+            ),
+            "N_CRC_consensus_invariant_receipt": bool(contract.N_CRC_consensus_invariant_receipt),
+            "global_likelihood_reduction_receipt": bool(contract.global_likelihood_reduction_receipt),
+            "physical_gate_passed": bool(
+                contract.source_provenance_receipt
+                and contract.pooled_source_reducer_receipt
+                and contract.contradiction_free_provenance_receipt
+                and contract.N_CRC_consensus_invariant_receipt
+                and contract.global_likelihood_reduction_receipt
+            ),
+        },
+        "finite_covariant_parent": {
+            "parent_receipt": bool(contract.finite_covariant_parent_receipt),
+            "stress_energy_closure_receipt": bool(contract.stress_energy_closure_receipt),
+            "explicit_recipient_stress_receipt": bool(contract.explicit_recipient_stress_receipt),
+            "gauge_independence_receipt": bool(contract.gauge_independence_receipt),
+            "causal_response_receipt": bool(contract.causal_response_receipt),
+            "refinement_convergence_receipt": bool(contract.refinement_convergence_receipt),
+            "Gamma_rec_nonzero": _array_has_positive(contract.Gamma_rec_k_a),
+            "physical_gate_passed": bool(
+                contract.finite_covariant_parent_receipt
+                and contract.stress_energy_closure_receipt
+                and contract.gauge_independence_receipt
+                and contract.causal_response_receipt
+                and contract.refinement_convergence_receipt
+                and (
+                    not _array_has_positive(contract.Gamma_rec_k_a)
+                    or contract.explicit_recipient_stress_receipt
+                )
+            ),
+        },
+        "frozen_likelihood_protocol": {
+            "receipt": bool(contract.frozen_likelihood_protocol_receipt),
+            "source_hash_present": _nonempty_string(contract.frozen_source_hash),
+            "solver_hash_present": _nonempty_string(contract.frozen_solver_hash),
+            "likelihood_hash_present": _nonempty_string(contract.frozen_likelihood_hash),
+            "physical_gate_passed": bool(
+                contract.frozen_likelihood_protocol_receipt
+                and _nonempty_string(contract.frozen_source_hash)
+                and _nonempty_string(contract.frozen_solver_hash)
+                and _nonempty_string(contract.frozen_likelihood_hash)
+            ),
+        },
         "claim_boundary": (
             "Presence means the simulator emitted a finite diagnostic value. Physical-gate passage also "
-            "requires the source label to be one of the hard finite CMB sources accepted by the contract. "
-            "P and N are reported separately as theorem-side constants and do not count as finite CMB inputs."
+            "requires the source label to be one of the hard finite CMB sources accepted by the contract, "
+            "plus source-only provenance, pooled reducers, a finite covariant stress parent, and frozen "
+            "source/solver/likelihood hashes. P and N are reported separately as theorem-side constants."
         ),
     }
 
@@ -670,6 +1068,7 @@ def _physical_cmb_source_readiness(
     finite_collar_projection: dict[str, Any],
 ) -> dict[str, Any]:
     finite_cert = sources.get("finite_certificate_report") or {}
+    finite_parent = sources.get("finite_covariant_collar_packet_parent_report") or {}
     ba_kernel = sources.get("B_A_kernel_report") or {}
     ba_kernel_refinement = sources.get("B_A_kernel_refinement_report") or {}
     ba_parent = sources.get("b_a_parent_report") or {}
@@ -690,6 +1089,25 @@ def _physical_cmb_source_readiness(
             "proxy_certificate": bool(finite_cert.get("proxy_certificate", False)),
             "A_zeta_available": derived.get("A_zeta") is not None or finite_cert.get("A_zeta") is not None,
             "rho_A_a_available": derived.get("rho_A_a") is not None or finite_cert.get("rho_A_a") is not None,
+        },
+        "finite_covariant_parent": {
+            "present": bool(finite_parent),
+            "parent_receipt": bool(finite_parent.get(PARENT_RECEIPT, False)),
+            "stress_energy_closure_receipt": bool(finite_parent.get(STRESS_CLOSURE_RECEIPT, False)),
+            "explicit_recipient_stress_receipt": bool(
+                finite_parent.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT, False)
+            ),
+            "gauge_independence_receipt": bool(finite_parent.get(GAUGE_INDEPENDENCE_RECEIPT, False)),
+            "causal_response_receipt": bool(finite_parent.get(CAUSAL_RESPONSE_RECEIPT, False)),
+            "refinement_convergence_receipt": bool(finite_parent.get(REFINEMENT_CONVERGENCE_RECEIPT, False)),
+            "frozen_likelihood_protocol_receipt": bool(
+                finite_parent.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
+            ),
+            "source_hash_present": _nonempty_string(finite_parent.get("source_hash")),
+            "solver_hash_present": _nonempty_string(finite_parent.get("solver_hash")),
+            "likelihood_hash_present": _nonempty_string(finite_parent.get("likelihood_hash")),
+            "Gamma_rec_nonzero": bool(finite_parent.get("Gamma_rec_nonzero", False)),
+            "blockers": finite_parent.get("blockers") or [],
         },
         "B_A_kernel": {
             "present": bool(ba_kernel),
@@ -739,6 +1157,27 @@ def _physical_cmb_source_readiness(
 
 def _physical_cmb_next_steps(blockers: list[str]) -> list[dict[str, str]]:
     suggestions = {
+        "finite_covariant_parent_receipt_missing": (
+            "Supply a finite covariant collar-packet parent receipt before treating scalar source tables as physical."
+        ),
+        "stress_energy_closure_not_certified": (
+            "Certify exact stress-energy closure of anomaly and recipient packet stresses."
+        ),
+        "recipient_stress_missing_for_nonzero_Gamma_rec": (
+            "Add explicit recipient stress when Gamma_rec is nonzero; repair exchange cannot disappear into a scalar sink."
+        ),
+        "gauge_independence_not_certified": (
+            "Certify B_A(k,a) with the gauge-invariant baryon density measured in the anomaly frame."
+        ),
+        "causal_response_not_certified": (
+            "Supply a causal auxiliary-response receipt with subluminal characteristics."
+        ),
+        "refinement_convergence_not_certified": (
+            "Run the finite-parent regulator refinement ladder and freeze the converged source tables."
+        ),
+        "frozen_likelihood_protocol_not_certified": (
+            "Freeze immutable source, solver, and likelihood hashes before running physical likelihood comparisons."
+        ),
         "finite_certificate_proxy_not_theorem_grade": (
             "Replace proxy finite-certificate inputs with theorem-grade finite A_zeta/rho_A receipts."
         ),
@@ -750,6 +1189,21 @@ def _physical_cmb_next_steps(blockers: list[str]) -> list[dict[str, str]]:
         ),
         "official_likelihood_not_ready": (
             "Connect the OPH source tables to the official likelihood path after finite-source gates pass."
+        ),
+        "source_provenance_receipt_missing": (
+            "Emit a source-only dependency-DAG receipt for eta_R, Gamma_rec, A_zeta, q_IR, ell_IR, B_A, rho_A, and N_CRC."
+        ),
+        "pooled_source_reducer_receipt_missing": (
+            "Pool additive sufficient statistics before nonlinear source estimates, or declare a single global source."
+        ),
+        "source_provenance_contradiction_check_failed": (
+            "Remove contradictory provenance such as no_cmb_data_used together with fit_to_planck."
+        ),
+        "N_CRC_consensus_invariant_receipt_missing": (
+            "Treat N_CRC as a consensus invariant unless an additive capacity schema proves disjoint coverage."
+        ),
+        "global_likelihood_reduction_receipt_missing": (
+            "Use global official-likelihood and CDM-limit reductions, not shard-local any() rollups."
         ),
         "finite_collar_boltzmann_missing_refinement_convergence_passed": (
             "Run regulator/refinement convergence for the finite-collar source tables."
@@ -779,6 +1233,7 @@ def _physical_cmb_frontier_gate_rows(
     contract: PhysicalCMBInputContract,
 ) -> list[dict[str, Any]]:
     finite_certificate = source_readiness.get("finite_certificate") or {}
+    finite_parent = source_readiness.get("finite_covariant_parent") or {}
     b_a_kernel = source_readiness.get("B_A_kernel") or {}
     b_a_refinement = source_readiness.get("B_A_kernel_refinement") or {}
     finite_collar_boltzmann = source_readiness.get("finite_collar_boltzmann") or {}
@@ -796,6 +1251,21 @@ def _physical_cmb_frontier_gate_rows(
             "gate": "no_data_use_firewall",
             "passed": bool(contract.no_data_use_receipt),
             "detail": "OPH input functions were assembled without measurement tables",
+        },
+        {
+            "gate": "source_provenance_firewall",
+            "passed": bool(contract.source_provenance_receipt),
+            "detail": "promoted CMB inputs have source-only dependency-DAG provenance",
+        },
+        {
+            "gate": "pooled_source_reducers",
+            "passed": bool(contract.pooled_source_reducer_receipt),
+            "detail": "nonlinear CMB input estimates are global, not shard-local averages",
+        },
+        {
+            "gate": "N_CRC_consensus_invariant",
+            "passed": bool(contract.N_CRC_consensus_invariant_receipt),
+            "detail": "N_CRC is not additively combined without a disjoint-capacity proof",
         },
         {
             "gate": "finite_theorem_A_zeta",
@@ -819,6 +1289,39 @@ def _physical_cmb_frontier_gate_rows(
                 f"compiler_ready={finite_certificate.get('compiler_ready')}; "
                 f"proxy={finite_certificate.get('proxy_certificate')}"
             ),
+        },
+        {
+            "gate": "finite_covariant_parent",
+            "passed": bool(finite_parent.get("parent_receipt", False)),
+            "detail": f"blockers={finite_parent.get('blockers', [])}",
+        },
+        {
+            "gate": "stress_energy_closure",
+            "passed": bool(finite_parent.get("stress_energy_closure_receipt", False)),
+            "detail": "anomaly plus recipient stress tensors close exactly",
+        },
+        {
+            "gate": "recipient_stress_for_nonzero_Gamma_rec",
+            "passed": bool(
+                (not _array_has_positive(contract.Gamma_rec_k_a))
+                or finite_parent.get("explicit_recipient_stress_receipt", False)
+            ),
+            "detail": f"Gamma_rec_nonzero={_array_has_positive(contract.Gamma_rec_k_a)}",
+        },
+        {
+            "gate": "gauge_independent_B_A",
+            "passed": bool(finite_parent.get("gauge_independence_receipt", False)),
+            "detail": "B_A must be built from anomaly-frame baryon density, not a gauge-fixed scalar table",
+        },
+        {
+            "gate": "causal_response",
+            "passed": bool(finite_parent.get("causal_response_receipt", False)),
+            "detail": "finite packet or auxiliary response characteristics are subluminal",
+        },
+        {
+            "gate": "finite_parent_refinement_convergence",
+            "passed": bool(finite_parent.get("refinement_convergence_receipt", False)),
+            "detail": "stress, response, and source projections converge under regulator refinement",
         },
         {
             "gate": "B_A_kernel_physical_receipt",
@@ -854,6 +1357,20 @@ def _physical_cmb_frontier_gate_rows(
             "detail": "requires local official clik/Cobaya path and Planck likelihood data",
         },
         {
+            "gate": "frozen_likelihood_protocol",
+            "passed": bool(
+                contract.frozen_likelihood_protocol_receipt
+                and _nonempty_string(contract.frozen_source_hash)
+                and _nonempty_string(contract.frozen_solver_hash)
+                and _nonempty_string(contract.frozen_likelihood_hash)
+            ),
+            "detail": (
+                f"source_hash={_nonempty_string(contract.frozen_source_hash)}; "
+                f"solver_hash={_nonempty_string(contract.frozen_solver_hash)}; "
+                f"likelihood_hash={_nonempty_string(contract.frozen_likelihood_hash)}"
+            ),
+        },
+        {
             "gate": "physical_cmb_input_contract",
             "passed": bool(validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)),
             "detail": f"{len(validation.get('blockers') or [])} hard input blockers",
@@ -876,6 +1393,7 @@ def _physical_cmb_frontier_gap_rows(
 ) -> list[dict[str, Any]]:
     gate_status = {str(row.get("gate")): bool(row.get("passed", False)) for row in gate_rows}
     finite_certificate = source_readiness.get("finite_certificate") or {}
+    finite_parent = source_readiness.get("finite_covariant_parent") or {}
     b_a_kernel = source_readiness.get("B_A_kernel") or {}
     b_a_refinement = source_readiness.get("B_A_kernel_refinement") or {}
     finite_collar_boltzmann = source_readiness.get("finite_collar_boltzmann") or {}
@@ -895,6 +1413,31 @@ def _physical_cmb_frontier_gap_rows(
             ),
             "action_surface": "measurement_output",
             "blockers": [],
+        },
+        {
+            "gate": "source_provenance_firewall",
+            "passed": gate_status.get("source_provenance_firewall", False),
+            "missing_receipt": "CMB source-provenance dependency-DAG receipt",
+            "current_evidence": (
+                f"receipt={status('source_provenance').get('receipt')}; "
+                f"pooled={status('source_provenance').get('pooled_source_reducer_receipt')}; "
+                f"N_CRC={status('source_provenance').get('N_CRC_consensus_invariant_receipt')}"
+            ),
+            "action_surface": "cmb_source_provenance_report",
+            "blockers": [
+                blocker for blocker in blockers
+                if blocker
+                in {
+                    "source_provenance_receipt_missing",
+                    "pooled_source_reducer_receipt_missing",
+                    "source_provenance_contradiction_check_failed",
+                    "N_CRC_consensus_invariant_receipt_missing",
+                    "global_likelihood_reduction_receipt_missing",
+                }
+                or blocker.startswith("contradictory_no_data_use_provenance")
+                or blocker.endswith("_source_reducer_missing")
+                or blocker.endswith("_not_source_derived")
+            ],
         },
         {
             "gate": "finite_theorem_A_zeta",
@@ -938,6 +1481,50 @@ def _physical_cmb_frontier_gap_rows(
             "blockers": [
                 blocker for blocker in blockers
                 if blocker in {"rho_A_missing_or_not_finite", "rho_A_diagnostic_rows_not_physical_source"}
+            ],
+        },
+        {
+            "gate": "finite_covariant_parent",
+            "passed": gate_status.get("finite_covariant_parent", False),
+            "missing_receipt": "finite covariant collar-packet parent receipt",
+            "current_evidence": (
+                f"present={finite_parent.get('present')}; parent_receipt={finite_parent.get('parent_receipt')}; "
+                f"blockers={finite_parent.get('blockers')}"
+            ),
+            "action_surface": "finite_covariant_collar_packet_parent_report",
+            "blockers": [
+                blocker for blocker in blockers
+                if blocker
+                in {
+                    "finite_covariant_parent_receipt_missing",
+                    "stress_energy_closure_not_certified",
+                    "recipient_stress_missing_for_nonzero_Gamma_rec",
+                    "gauge_independence_not_certified",
+                    "causal_response_not_certified",
+                    "refinement_convergence_not_certified",
+                }
+            ],
+        },
+        {
+            "gate": "frozen_likelihood_protocol",
+            "passed": gate_status.get("frozen_likelihood_protocol", False),
+            "missing_receipt": "frozen immutable source/solver/likelihood hash protocol",
+            "current_evidence": (
+                f"receipt={finite_parent.get('frozen_likelihood_protocol_receipt')}; "
+                f"source_hash={finite_parent.get('source_hash_present')}; "
+                f"solver_hash={finite_parent.get('solver_hash_present')}; "
+                f"likelihood_hash={finite_parent.get('likelihood_hash_present')}"
+            ),
+            "action_surface": "finite_covariant_collar_packet_parent_report/official_likelihood_report",
+            "blockers": [
+                blocker for blocker in blockers
+                if blocker
+                in {
+                    "frozen_likelihood_protocol_not_certified",
+                    "frozen_source_hash_missing",
+                    "frozen_solver_hash_missing",
+                    "frozen_likelihood_hash_missing",
+                }
             ],
         },
         {
@@ -1018,6 +1605,19 @@ def _unique_strings(values: list[str]) -> list[str]:
             out.append(text)
             seen.add(text)
     return out
+
+
+def _array_has_positive(value: np.ndarray | None) -> bool:
+    if value is None:
+        return False
+    array = np.asarray(value, dtype=float)
+    if not array.size or not np.all(np.isfinite(array)):
+        return False
+    return bool(np.any(array > 0.0))
+
+
+def _nonempty_string(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
 
 
 def _N_source_from_screen_capacity(screen_capacity: dict[str, Any]) -> str:
@@ -1175,14 +1775,15 @@ def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
     return any(bool(data.get(key, False)) for key in keys)
 
 
-def _measurement_data_used(report: dict[str, Any]) -> bool:
-    if not report:
-        return False
-    explicit_false = (
+def _explicit_no_cmb_data_used(report: dict[str, Any]) -> bool:
+    return bool(
         report.get("no_cmb_data_used") is True
         or (((report.get("readiness") or {}).get("checks") or {}).get("no_cmb_data_used") is True)
     )
-    if explicit_false:
+
+
+def _raw_measurement_data_used(report: dict[str, Any]) -> bool:
+    if not report:
         return False
     data_use_keys = (
         "measurement_data_used",
@@ -1194,6 +1795,18 @@ def _measurement_data_used(report: dict[str, Any]) -> bool:
         "uses_measurements_to_set_inputs",
     )
     return any(bool(report.get(key, False)) for key in data_use_keys)
+
+
+def _measurement_data_used(report: dict[str, Any]) -> bool:
+    if not report:
+        return False
+    explicit_false = _explicit_no_cmb_data_used(report)
+    raw_measurement_use = _raw_measurement_data_used(report)
+    if explicit_false and raw_measurement_use:
+        return True
+    if explicit_false:
+        return False
+    return raw_measurement_use
 
 
 def _float(value: Any) -> float | None:

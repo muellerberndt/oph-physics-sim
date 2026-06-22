@@ -336,6 +336,9 @@ def test_state_derived_bw_report_records_generator_scale():
     assert report["generator_scale"] == 2.0 * np.pi
     assert report["normalization_source"] == "bw_normalized_finite_state_generator"
     assert report["rows"][0]["generator_scale"] == 2.0 * np.pi
+    assert report["generator_scale_audit"]["enabled"] is True
+    assert report["generator_scale_audit"]["candidate_source"] == "auto_from_wrong_normalization_controls"
+    assert {"0", "1x", "pi", "2pi", "4pi"}.issubset(report["generator_scale_audit"]["by_scale"])
 
 
 def test_state_derived_bw_report_accepts_cap_flow_graph_generator():
@@ -411,6 +414,7 @@ def test_state_derived_bw_report_writes_generator_scale_audit():
 
     audit = report["generator_scale_audit"]
     assert audit["enabled"] is True
+    assert audit["candidate_source"] == "explicit_config"
     assert audit["configured_scale_label"] == "2pi"
     assert audit["target_scale_label"] == "2pi"
     assert "2pi" in audit["by_scale"]

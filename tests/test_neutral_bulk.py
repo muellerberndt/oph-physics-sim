@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from oph_fpe.cosmology.comparable_data import comparable_data_report
+from oph_fpe.bulk.quotient_geometry import ChannelMetricSpec, quotient_geometry_certificate
 from oph_fpe.bulk.neutral_bulk import (
     _overlap_graph_rank_selection,
     _prime_geometric_selected_rank_controls,
@@ -208,6 +209,61 @@ def test_strict_neutral_bulk_receipt_requires_refinement():
 
 
 def test_strict_neutral_bulk_receipt_can_pass_all_gates():
+    quotient_contract = quotient_geometry_certificate(
+        np.array([[0.0, 1.0], [1.0, 0.0]]),
+        quotient_ids=["a", "b"],
+        channel_manifest=[ChannelMetricSpec(name="record")],
+        jointly_separating=True,
+        atlas_receipt={
+            "identity_defect": 0.0,
+            "inverse_defect": 0.0,
+            "cocycle_defect": 0.0,
+            "cycle_holonomy_defect": 0.0,
+        },
+        feature_receipt={
+            "max_transport_defect": 0.0,
+            "quotient_visible_missingness": True,
+        },
+        invariance_receipt={
+            "gauge_distortion": 0.0,
+            "port_distortion": 0.0,
+            "order_distortion": 0.0,
+            "schedule_distortion": 0.0,
+            "partition_distortion": 0.0,
+        },
+        refinement_receipt={"convergent": True},
+        statistics_receipt={
+            "ancestry_leakage_count": 0,
+            "test_used_once": True,
+            "positive_controls_passed": True,
+            "negative_controls_passed": True,
+        },
+    )
+    receipt = strict_neutral_bulk_receipt(
+        dimension={"estimators_agree_3d": True},
+        model_selection={
+            "best_model": "H3",
+            "h3_beats_s2": True,
+            "h3_beats_h2_h4": True,
+        },
+        leakage={"s2_leakage_pass": True},
+        controls={
+            "shuffled_records_fail": True,
+            "shuffled_transition_labels_fail": True,
+            "planted_2d_returns_2d": True,
+            "planted_3d_returns_3d": True,
+            "planted_h3_returns_h3": True,
+        },
+        refinement={"stable_across_64k_256k_1m": True},
+        quotient_geometry=quotient_contract,
+    )
+
+    assert receipt["strict_neutral_bulk"] is True
+    assert receipt["physical_claim"] is True
+    assert receipt["QUOTIENT_GEOMETRY_CONTRACT_RECEIPT"] is True
+
+
+def test_strict_neutral_bulk_receipt_blocks_without_quotient_contract():
     receipt = strict_neutral_bulk_receipt(
         dimension={"estimators_agree_3d": True},
         model_selection={
@@ -226,8 +282,8 @@ def test_strict_neutral_bulk_receipt_can_pass_all_gates():
         refinement={"stable_across_64k_256k_1m": True},
     )
 
-    assert receipt["strict_neutral_bulk"] is True
-    assert receipt["physical_claim"] is True
+    assert receipt["strict_neutral_bulk"] is False
+    assert receipt["QUOTIENT_GEOMETRY_CONTRACT_RECEIPT"] is False
 
 
 def test_dimension_gate_uses_finite_regulator_median_for_planted_3d():

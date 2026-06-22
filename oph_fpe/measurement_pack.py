@@ -47,6 +47,12 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "particle_likeness_report.json", exported, "particle_likeness_report.json")
     _copy_first(
         roots,
+        out / "h3_worldline_stitch_certificate_report.json",
+        exported,
+        "h3_worldline_stitch_certificate_report.json",
+    )
+    _copy_first(
+        roots,
         out / "controlled_defect_particle_assay_report.json",
         exported,
         "controlled_defect_particle_assay_report.json",
@@ -437,6 +443,12 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
         exported,
         "B_A_kernel_refinement_key_pairs.csv",
     )
+    _copy_first(
+        roots,
+        out / "finite_covariant_collar_packet_parent_report.json",
+        exported,
+        "finite_covariant_collar_packet_parent_report.json",
+    )
     _copy_first(roots, out / "paired_b_a_perturbation_report.json", exported, "paired_b_a_perturbation_report.json")
     _copy_first(roots, out / "paired_b_a_perturbation_report.md", exported, "paired_b_a_perturbation_report.md")
     _copy_first(roots, out / "paired_b_a_perturbation_rows.csv", exported, "paired_b_a_perturbation_rows.csv")
@@ -695,6 +707,7 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     boltzmann_inputs = _first_json(roots, "oph_boltzmann_input_report.json")
     finite_collar_boltzmann = _first_json(roots, "finite_collar_boltzmann_bundle_report.json")
     finite_collar_projection = _first_json(roots, "finite_collar_cmb_projection_report.json")
+    finite_covariant_parent = _first_json(roots, "finite_covariant_collar_packet_parent_report.json")
     physical_cmb_input = _first_json(roots, "physical_cmb_input_report.json")
     physical_cmb_promotion = _first_json(roots, "physical_cmb_promotion_audit_report.json")
     physical_cmb_frontier = _first_json(roots, "physical_cmb_frontier_report.json")
@@ -717,6 +730,7 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     neutral_rank_selector_audit = _first_json(roots, "neutral_independent_rank_selector_audit_report.json")
     strict_neutral_frontier = _first_json(roots, "strict_neutral_bulk_frontier_report.json")
     observer_modular_experience = _first_json(roots, "observer_modular_experience_report.json")
+    h3_worldline_stitch = _first_json(roots, "h3_worldline_stitch_certificate_report.json")
     ba_parent = _first_json(roots, "b_a_parent_report.json")
     ba_kernel = _first_json(roots, "B_A_kernel_report.json")
     ba_kernel_refinement = _first_json(roots, "B_A_kernel_refinement_report.json")
@@ -759,6 +773,8 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     physical_cmb_a_zeta = physical_cmb_input_status.get("A_zeta") or {}
     physical_cmb_b_a = physical_cmb_input_status.get("B_A_k_a") or {}
     physical_cmb_rho_a = physical_cmb_input_status.get("rho_A_a") or {}
+    physical_cmb_finite_parent = physical_cmb_input_status.get("finite_covariant_parent") or {}
+    physical_cmb_frozen_likelihood = physical_cmb_input_status.get("frozen_likelihood_protocol") or {}
     bulk_observer_modular_summary = bulk.get("observer_modular_experience_summary") or {}
     observer_modular_experience_blockers = bulk_observer_modular_summary.get("blockers")
     if observer_modular_experience_blockers is None:
@@ -870,6 +886,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "observer_modular_experience_source_blockers": list(
             observer_modular_experience_source_blockers
         ),
+        "h3_worldline_stitch_status": h3_worldline_stitch.get("terminal_status"),
+        "h3_worldline_stitch_certificate_receipt": bool(
+            h3_worldline_stitch.get("h3_worldline_stitch_certificate_receipt", False)
+        ),
+        "h3_worldline_stitch_gap": h3_worldline_stitch.get("certified_assignment_gap"),
+        "h3_worldline_stitch_blockers": list(h3_worldline_stitch.get("blockers") or []),
         "strict_neutral_bulk": bool(
             comparable.get("strict_neutral_3d_bulk_any", False)
             or comparable.get("strict_neutral_3d_bulk_count", 0)
@@ -1307,6 +1329,27 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "finite_collar_cmb_projection_physical_k": bool(
             finite_collar_projection.get("PHYSICAL_K_CALIBRATION_RECEIPT", False)
         ),
+        "finite_covariant_parent_receipt": bool(
+            finite_covariant_parent.get("FINITE_COVARIANT_COLLAR_PACKET_PARENT_RECEIPT", False)
+        ),
+        "finite_covariant_parent_stress_closure": bool(
+            finite_covariant_parent.get("STRESS_ENERGY_CLOSURE_RECEIPT", False)
+        ),
+        "finite_covariant_parent_recipient_stress": bool(
+            finite_covariant_parent.get("EXPLICIT_RECIPIENT_STRESS_RECEIPT", False)
+        ),
+        "finite_covariant_parent_gauge_independence": bool(
+            finite_covariant_parent.get("GAUGE_INDEPENDENCE_RECEIPT", False)
+        ),
+        "finite_covariant_parent_causal_response": bool(
+            finite_covariant_parent.get("CAUSAL_RESPONSE_RECEIPT", False)
+        ),
+        "finite_covariant_parent_refinement_convergence": bool(
+            finite_covariant_parent.get("REFINEMENT_CONVERGENCE_RECEIPT", False)
+        ),
+        "finite_covariant_parent_frozen_likelihood": bool(
+            finite_covariant_parent.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
+        ),
         "physical_cmb_input_contract_receipt": bool(
             physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
         ),
@@ -1334,6 +1377,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "physical_cmb_input_rho_A_diagnostic_rows": int(physical_cmb_rho_a.get("row_count") or 0),
         "physical_cmb_input_rho_A_physical_gate_passed": bool(
             physical_cmb_rho_a.get("physical_gate_passed", False)
+        ),
+        "physical_cmb_input_finite_parent_gate_passed": bool(
+            physical_cmb_finite_parent.get("physical_gate_passed", False)
+        ),
+        "physical_cmb_input_frozen_likelihood_gate_passed": bool(
+            physical_cmb_frozen_likelihood.get("physical_gate_passed", False)
         ),
         "physical_cmb_promotion_audit_written": bool(physical_cmb_promotion),
         "physical_cmb_promotion_ready": bool(
@@ -1363,6 +1412,18 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         ),
         "physical_cmb_frontier_finite_rho_A": bool(
             physical_cmb_frontier_gates.get("finite_rho_A", False)
+        ),
+        "physical_cmb_frontier_finite_covariant_parent": bool(
+            physical_cmb_frontier_gates.get("finite_covariant_parent", False)
+        ),
+        "physical_cmb_frontier_stress_closure": bool(
+            physical_cmb_frontier_gates.get("stress_energy_closure", False)
+        ),
+        "physical_cmb_frontier_recipient_stress": bool(
+            physical_cmb_frontier_gates.get("recipient_stress_for_nonzero_Gamma_rec", False)
+        ),
+        "physical_cmb_frontier_frozen_likelihood": bool(
+            physical_cmb_frontier_gates.get("frozen_likelihood_protocol", False)
         ),
         "physical_cmb_frontier_official_likelihood": bool(
             physical_cmb_frontier_gates.get("official_planck_likelihood_ready", False)
@@ -2119,6 +2180,8 @@ def _readme(report: dict[str, Any]) -> str:
         f"- observer modular-time observer count: {claims.get('observer_modular_time_observer_count')}\n"
         f"- observer-facing 3+1D/H3 receipt: {claims.get('observer_facing_3p1d_h3_experience_receipt')}\n"
         f"- observer-facing 3+1D/H3 blockers: {claims.get('observer_modular_experience_blockers')}\n"
+        f"- H3 record-worldline stitch status: {claims.get('h3_worldline_stitch_status')}\n"
+        f"- H3 record-worldline stitch receipt: {claims.get('h3_worldline_stitch_certificate_receipt')}\n"
         f"- strict neutral bulk: {claims.get('strict_neutral_bulk')}\n"
         f"- neutral profile audit written: {claims.get('neutral_profile_audit_written')}\n"
         f"- neutral profile strict-3D ready count: {claims.get('neutral_profile_strict_3d_ready_count')}\n"

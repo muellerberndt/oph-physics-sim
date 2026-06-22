@@ -2,14 +2,24 @@ from __future__ import annotations
 
 import csv
 from copy import deepcopy
+import hashlib
 import json
 import math
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import yaml
 
+from oph_fpe.bulk.h3_worldline_stitch import h3_distance
 from oph_fpe.experiments import load_config
+from oph_fpe.observers.semantic_clock import (
+    OBSERVER_KINDS,
+    distributed_observer_uid,
+    normalize_observer_frame,
+    observer_registry_audit,
+    semantic_history_digest,
+)
 
 
 DISTRIBUTED_KERNEL_VERSION = "distributed_observer_patch_kernel_v1"
@@ -75,11 +85,25 @@ def prepare_distributed_oph_universe(
         observers_per_shard=observers_per_shard,
         seam_halo_width=seam_halo_width,
     )
+    global_carrier = _write_global_carrier_artifacts(
+        out_dir=out_dir,
+        config_path=config_path,
+        run_id=run_id,
+        shard_count=shard_count,
+        patch_count_per_shard=patch_count_per_shard,
+        observers_per_shard=observers_per_shard,
+        base_seed=base_seed,
+    )
+    shard_carriers = {
+        int(row["shard_index"]): row
+        for row in ((global_carrier.get("partition_map") or {}).get("shards") or [])
+    }
 
     shards: list[dict[str, Any]] = []
     for shard_index in range(int(shard_count)):
         shard_id = f"{run_id}_shard{shard_index:04d}"
         atlas_shard = atlas["shards"][shard_index]
+        carrier_shard = shard_carriers.get(shard_index, {})
         shard_config = _shard_config(
             base_config,
             run_id=run_id,
@@ -90,6 +114,8 @@ def prepare_distributed_oph_universe(
             observers_per_shard=observers_per_shard,
             seed=base_seed + shard_index * int(seed_stride),
             atlas_shard=atlas_shard,
+            carrier_shard=carrier_shard,
+            global_carrier_artifacts=global_carrier.get("artifacts", {}),
             seam_halo_width=seam_halo_width,
         )
         path = config_dir / f"{shard_id}.yml"
@@ -108,6 +134,9 @@ def prepare_distributed_oph_universe(
                 "global_observer_range": atlas_shard["global_observer_range"],
                 "atlas_center": atlas_shard["atlas_center"],
                 "seam_neighbor_indices": atlas_shard["seam_neighbor_indices"],
+                "owned_nodes": carrier_shard.get("owned_nodes", []),
+                "ghost_nodes": carrier_shard.get("ghost_nodes", []),
+                "cut_edge_ids": carrier_shard.get("cut_edge_ids", []),
             }
         )
 
@@ -131,6 +160,20 @@ def prepare_distributed_oph_universe(
         "max_screen_points": int(max_screen_points),
         "max_h3_objects": int(max_h3_objects),
         "seed_stride": int(seed_stride),
+        "global_carrier": {
+            "schema": "oph_distributed_global_carrier_contract_v1",
+            "one_global_carrier_before_partition": True,
+            "authoritative_owner_projection": "node_owner in partition_map.json is the authoritative copy rule",
+            "physical_projection": (
+                "Authoritative node states project to the monolithic finite quotient; worker queues, retries, "
+                "checkpoints, and logs are implementation metadata."
+            ),
+            "artifacts": global_carrier.get("artifacts", {}),
+            "expected_shard_ids": [row["shard_id"] for row in shards],
+            "config_sha256": global_carrier.get("config_sha256"),
+            "code_sha256": global_carrier.get("code_sha256"),
+            "certificate_fields": global_carrier.get("certificate_fields", {}),
+        },
         "unified_universe_atlas": atlas,
         "shards": shards,
     }
@@ -155,6 +198,11 @@ def reduce_distributed_oph_universe(
     shard_root = Path(shard_root)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    global_carrier = _global_carrier_contract(
+        manifest_path=manifest_path,
+        manifest=manifest,
+        out_dir=out_dir / "global_carrier_contract",
+    )
 
     shard_rows: list[dict[str, Any]] = []
     for shard in manifest.get("shards", []):
@@ -266,6 +314,7 @@ def reduce_distributed_oph_universe(
         shard_rows=shard_rows,
         seam_readout=seam_readout,
         physical_cmb_global=physical_cmb_global,
+        global_carrier=global_carrier,
         halo_exchange=halo_exchange,
         neutral_global=neutral_global,
         observer_time_global=observer_time_global,
@@ -277,6 +326,7 @@ def reduce_distributed_oph_universe(
         all_expected_completed=all_expected_completed,
         federated_receipt=federated_receipt,
         seam_metadata_replay_receipt=seam_metadata_replay_receipt,
+        global_carrier=global_carrier,
         halo_exchange=halo_exchange,
         neutral_global=neutral_global,
         observer_time_global=observer_time_global,
@@ -301,6 +351,21 @@ def reduce_distributed_oph_universe(
         "total_object_candidates_completed": total_objects,
         "total_h3_worldlines_completed": total_worldlines,
         "receipt_summary": receipt_summary,
+        "global_carrier_contract_receipt": bool(
+            global_carrier.get("global_carrier_contract_receipt", False)
+        ),
+        "one_global_carrier_before_partition_receipt": bool(
+            global_carrier.get("one_global_carrier_before_partition_receipt", False)
+        ),
+        "stable_global_identity_initial_state_receipt": bool(
+            global_carrier.get("stable_global_identity_initial_state_receipt", False)
+        ),
+        "authoritative_owner_projection_receipt": bool(
+            global_carrier.get("authoritative_owner_projection_receipt", False)
+        ),
+        "distributed_realization_event_certificate_receipt": bool(
+            global_carrier.get("distributed_realization_event_certificate_receipt", False)
+        ),
         "federated_large_universe_witness_receipt": federated_receipt,
         "seam_metadata_replay_receipt": seam_metadata_replay_receipt,
         "cross_shard_overlap_repair_receipt": cross_shard_overlap_repair_receipt,
@@ -340,6 +405,7 @@ def reduce_distributed_oph_universe(
         "global_observer_modular_time_export": _compact_observer_time_report(observer_time_global),
         "global_proto_particle_worldlines": _compact_proto_particle_report(proto_particle_global),
         "global_pn_resonance_reduction": pn_global,
+        "global_carrier_contract": global_carrier,
         "distributed_run_pack_contract": run_pack_contract,
         "unified_universe_atlas": manifest.get("unified_universe_atlas", {}),
         "cross_shard_seam_readout": seam_readout,
@@ -388,6 +454,9 @@ def _global_halo_exchange_reduction(
         "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT",
         "DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT",
         "CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT",
+        "SELECTED_FIBER_NONTRIVIAL_ELIMINATION_RECEIPT",
+        "SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT",
+        "QUOTIENT_NORMAL_FORM_CANONICAL_HASH_RECEIPT",
         "FAIR_BLOCK_CONTRACTION_RECEIPT",
         "SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT",
         "PARTITION_NATURALITY_RECEIPT",
@@ -596,6 +665,8 @@ def _global_observer_modular_time_export(
     observers: list[dict[str, Any]] = []
     overlap_links: list[dict[str, Any]] = []
     time_frame_counts: list[int] = []
+    semantic_history_digests: list[str] = []
+    clock_field_separation_count = 0
     visible_object_packet_count = 0
     visible_record_packet_count = 0
     for item in payloads:
@@ -604,6 +675,9 @@ def _global_observer_modular_time_export(
         for view in _globalized_observers(shard, payload, limit=2048):
             frames = view.get("timeFrames") if isinstance(view.get("timeFrames"), list) else []
             time_frame_counts.append(len(frames))
+            if bool(view.get("execution_clock_fields_separated_receipt", False)):
+                clock_field_separation_count += 1
+            semantic_history_digests.append(str(view.get("semantic_history_digest", "")))
             for frame in frames:
                 if isinstance(frame, dict):
                     visible_object_packet_count += len(frame.get("visibleObjectPackets") or [])
@@ -621,6 +695,9 @@ def _global_observer_modular_time_export(
         "run_id": manifest.get("run_id"),
         "reportPath": str(out_dir / "observer_modular_time_global_payload.json"),
         "global_observer_modular_time_export_receipt": bool(observers and time_frame_counts),
+        "execution_clock_fields_separated_receipt": bool(observers and clock_field_separation_count == len(observers)),
+        "observer_clock_naturality_receipt": False,
+        "semantic_history_digest_count": len([digest for digest in semantic_history_digests if digest]),
         "large_visualization_observer_contract_receipt": large_contract,
         "objectiveObserverViewCount": len(observers),
         "overlapLinkCount": len(overlap_links),
@@ -632,13 +709,21 @@ def _global_observer_modular_time_export(
         "overlapLinks": overlap_links[:100000],
         "blockers": _unique_texts(
             ([] if observers else ["objective_observer_views_missing"])
+            + (
+                []
+                if bool(observers and clock_field_separation_count == len(observers))
+                else ["execution_clock_fields_not_separated"]
+            )
             + ([] if (min(time_frame_counts) if time_frame_counts else 0) >= 32 else ["observer_time_frames_below_32"])
             + ([] if visible_object_packet_count > 0 else ["visible_object_packets_missing"])
             + ([] if visible_record_packet_count > 0 else ["visible_record_packets_missing"])
+            + ["observer_clock_naturality_certificate_missing"]
         ),
         "claim_boundary": (
-            "Global observer modular-time export for visualization. It shows observer-local readout frames "
-            "over modular time; it does not by itself certify strict neutral bulk."
+            "Global observer modular-time export for visualization and finite evidence. It separates "
+            "execution_epoch and scheduler_event_index from observer_record_order, observer_modular_parameter, "
+            "and observer_clock_uncertainty. It does not by itself certify scheduler-independent observer "
+            "clock naturality or strict neutral bulk."
         ),
     }
     _write_json(out_dir / "observer_modular_time_global_payload.json", report)
@@ -758,12 +843,563 @@ def _global_pn_resonance_reduction(
     return report
 
 
+def _write_global_carrier_artifacts(
+    *,
+    out_dir: Path,
+    config_path: Path,
+    run_id: str,
+    shard_count: int,
+    patch_count_per_shard: int,
+    observers_per_shard: int,
+    base_seed: int,
+) -> dict[str, Any]:
+    carrier_dir = Path(out_dir) / "global_carrier"
+    carrier_dir.mkdir(parents=True, exist_ok=True)
+    shard_count = int(shard_count)
+    patch_count_per_shard = int(patch_count_per_shard)
+    observers_per_shard = int(observers_per_shard)
+    total_nodes = shard_count * patch_count_per_shard
+    total_observers = shard_count * observers_per_shard
+
+    nodes = np.arange(total_nodes, dtype=np.int64)
+    owners = np.array([_owner_for_node(int(node), patch_count_per_shard) for node in nodes], dtype=np.int64)
+    edges = _global_graph_edges(total_nodes)
+    for edge in edges:
+        source_owner = int(owners[int(edge["source_node"])])
+        target_owner = int(owners[int(edge["target_node"])])
+        edge["source_owner"] = source_owner
+        edge["target_owner"] = target_owner
+        edge["is_cut_edge"] = source_owner != target_owner
+    edge_array = np.array([[edge["source_node"], edge["target_node"]] for edge in edges], dtype=np.int64)
+    cut_edge_mask = np.array([bool(edge["is_cut_edge"]) for edge in edges], dtype=np.bool_)
+    state_words = np.array(
+        [_stable_uint63(run_id, "patch", int(node), base_seed) for node in nodes],
+        dtype=np.int64,
+    )
+    boundary_sector = np.array([int(value % 17) for value in state_words], dtype=np.int64)
+
+    graph_path = carrier_dir / "global_graph.npz"
+    np.savez_compressed(
+        graph_path,
+        nodes=nodes,
+        edges=edge_array,
+        node_owner=owners,
+        cut_edge_mask=cut_edge_mask,
+    )
+    state_path = carrier_dir / "global_initial_state.npz"
+    np.savez_compressed(
+        state_path,
+        nodes=nodes,
+        canonical_state_word=state_words,
+        boundary_sector=boundary_sector,
+    )
+
+    cut_edges = [edge for edge in edges if edge["is_cut_edge"]]
+    partition_map = _partition_map_payload(
+        run_id=run_id,
+        shard_count=shard_count,
+        patch_count_per_shard=patch_count_per_shard,
+        observers_per_shard=observers_per_shard,
+        owners=owners,
+        cut_edges=cut_edges,
+    )
+    cut_interfaces = _cut_interfaces_payload(run_id=run_id, cut_edges=cut_edges)
+    observer_registry = _observer_registry_payload(
+        run_id=run_id,
+        shard_count=shard_count,
+        patch_count_per_shard=patch_count_per_shard,
+        observers_per_shard=observers_per_shard,
+        base_seed=base_seed,
+    )
+
+    partition_path = carrier_dir / "partition_map.json"
+    cut_path = carrier_dir / "cut_interfaces.json"
+    registry_path = carrier_dir / "global_observer_registry.json"
+    _write_json(partition_path, partition_map)
+    _write_json(cut_path, cut_interfaces)
+    _write_json(registry_path, observer_registry)
+
+    artifacts = {
+        "global_graph": _artifact_row(graph_path, out_dir),
+        "global_initial_state": _artifact_row(state_path, out_dir),
+        "partition_map": _artifact_row(partition_path, out_dir),
+        "cut_interfaces": _artifact_row(cut_path, out_dir),
+        "global_observer_registry": _artifact_row(registry_path, out_dir),
+    }
+    return {
+        "artifacts": artifacts,
+        "partition_map": partition_map,
+        "cut_interfaces": cut_interfaces,
+        "global_observer_registry": observer_registry,
+        "config_sha256": _file_sha256(Path(config_path)),
+        "code_sha256": _file_sha256(Path(__file__)),
+        "certificate_fields": {
+            "global_graph": "global_graph.npz",
+            "global_initial_state": "global_initial_state.npz",
+            "partition_map": "partition_map.json",
+            "cut_interfaces": "cut_interfaces.json",
+            "global_observer_registry": "global_observer_registry.json",
+            "linearized_committed_event_log": "required for theorem-grade distributed realization",
+            "rollback_checkpoint_roots": "required for restart/replay invariance",
+            "monolithic_normal_form_certificate": "required for final equality to n_r(q_0)",
+            "final_readout_recomputation": "required for observer-readout equality",
+        },
+    }
+
+
+def _global_carrier_contract(
+    *,
+    manifest_path: Path,
+    manifest: dict[str, Any],
+    out_dir: Path,
+) -> dict[str, Any]:
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    carrier = manifest.get("global_carrier") or {}
+    artifacts = carrier.get("artifacts") if isinstance(carrier.get("artifacts"), dict) else {}
+    required = (
+        "global_graph",
+        "global_initial_state",
+        "partition_map",
+        "cut_interfaces",
+        "global_observer_registry",
+    )
+    blockers: list[str] = []
+    artifact_status: dict[str, Any] = {}
+    resolved_paths: dict[str, Path] = {}
+    manifest_dir = Path(manifest_path).parent
+
+    for key in required:
+        row = artifacts.get(key) if isinstance(artifacts, dict) else None
+        if not isinstance(row, dict):
+            artifact_status[key] = {"present": False, "blocker": "manifest_artifact_entry_missing"}
+            blockers.append(f"{key}_manifest_artifact_entry_missing")
+            continue
+        path_text = str(row.get("path") or "")
+        artifact_path = Path(path_text)
+        if not artifact_path.is_absolute():
+            artifact_path = manifest_dir / artifact_path
+        resolved_paths[key] = artifact_path
+        exists = artifact_path.exists()
+        sha = _file_sha256(artifact_path) if exists else None
+        expected_sha = row.get("sha256")
+        hash_ok = bool(exists and expected_sha and sha == expected_sha)
+        artifact_status[key] = {
+            "path": str(artifact_path),
+            "declared_path": path_text,
+            "exists": exists,
+            "sha256": sha,
+            "expected_sha256": expected_sha,
+            "hash_receipt": hash_ok,
+        }
+        if not exists:
+            blockers.append(f"{key}_missing")
+        elif not hash_ok:
+            blockers.append(f"{key}_hash_mismatch")
+
+    graph_info = _npz_graph_info(resolved_paths.get("global_graph"))
+    state_info = _npz_state_info(resolved_paths.get("global_initial_state"))
+    partition = _read_json(resolved_paths.get("partition_map", Path()))
+    cut = _read_json(resolved_paths.get("cut_interfaces", Path()))
+    registry = _read_json(resolved_paths.get("global_observer_registry", Path()))
+    config_path = Path(str(manifest.get("config_path") or ""))
+    if config_path and not config_path.is_absolute():
+        config_path = manifest_dir / config_path
+    config_sha = _file_sha256(config_path) if config_path else None
+    config_hash_receipt = bool(config_sha and config_sha == carrier.get("config_sha256"))
+    if not config_hash_receipt:
+        blockers.append("config_hash_mismatch_or_missing")
+    code_sha = _file_sha256(Path(__file__))
+    code_hash_receipt = bool(code_sha and code_sha == carrier.get("code_sha256"))
+    if not code_hash_receipt:
+        blockers.append("code_hash_mismatch_or_missing")
+    run_id_receipt = bool(manifest.get("run_id") and partition.get("run_id") == manifest.get("run_id"))
+    if not run_id_receipt:
+        blockers.append("run_id_mismatch")
+
+    expected_shard_ids = [str(row.get("shard_id") or row.get("run_id")) for row in manifest.get("shards", [])]
+    partition_shard_ids = [str(row.get("shard_id")) for row in partition.get("shards", [])]
+    shard_ids_match = bool(expected_shard_ids and partition_shard_ids == expected_shard_ids)
+    if not shard_ids_match:
+        blockers.append("partition_shard_ids_do_not_match_manifest")
+
+    total_nodes = int(manifest.get("total_patch_capacity", 0) or 0)
+    total_observers = int(manifest.get("total_observer_capacity", 0) or 0)
+    graph_receipt = bool(
+        graph_info.get("load_receipt")
+        and graph_info.get("node_count") == total_nodes
+        and graph_info.get("edge_count", 0) >= max(total_nodes - 1, 0)
+    )
+    if not graph_receipt:
+        blockers.append("global_graph_shape_invalid")
+    state_receipt = bool(
+        state_info.get("load_receipt")
+        and state_info.get("node_count") == total_nodes
+        and state_info.get("stable_identity_rule") == "blake2b_run_patch_base_seed_uint63"
+    )
+    if not state_receipt:
+        blockers.append("global_initial_state_invalid")
+    partition_receipt = bool(
+        partition.get("schema") == "oph_distributed_partition_map_v1"
+        and partition.get("node_count") == total_nodes
+        and partition.get("synthetic_partition") is False
+        and shard_ids_match
+    )
+    if not partition_receipt:
+        blockers.append("partition_map_invalid")
+    cut_edges = cut.get("cut_edges") if isinstance(cut.get("cut_edges"), list) else []
+    cut_required = int(manifest.get("shard_count", 0) or 0) > 1
+    cut_receipt = bool(
+        cut.get("schema") == "oph_distributed_cut_interfaces_v1"
+        and cut.get("synthetic_physics_receipt") is False
+        and (bool(cut_edges) if cut_required else True)
+    )
+    if not cut_receipt:
+        blockers.append("cut_interfaces_invalid")
+    observer_registry_receipt = bool(
+        registry.get("schema") == "oph_global_observer_registry_v2"
+        and registry.get("observer_count") == total_observers
+        and registry.get("stable_identity_rule") == "blake2b_run_observer_kind_global_index_base_seed_uint63"
+        and registry.get("observer_kinds") == list(OBSERVER_KINDS)
+        and registry.get("registered_identity_count") == total_observers * len(OBSERVER_KINDS)
+        and bool(registry.get("global_observer_registry_namespace_receipt", False))
+    )
+    if not observer_registry_receipt:
+        blockers.append("global_observer_registry_invalid")
+
+    artifact_receipt = all(bool((artifact_status.get(key) or {}).get("hash_receipt")) for key in required)
+    owner_receipt = bool(partition_receipt and graph_receipt and cut_receipt)
+    event_certificate = carrier.get("event_certificate") if isinstance(carrier.get("event_certificate"), dict) else {}
+    event_receipt = bool(
+        event_certificate.get("linearized_committed_event_log_receipt", False)
+        and event_certificate.get("monolithic_normal_form_certificate_receipt", False)
+        and event_certificate.get("final_readout_recomputed_receipt", False)
+    )
+    if not event_receipt:
+        blockers.extend(
+            [
+                "linearized_committed_event_log_missing",
+                "monolithic_normal_form_certificate_missing",
+                "final_readout_recomputed_receipt_missing",
+            ]
+        )
+
+    contract_receipt = bool(
+        carrier.get("one_global_carrier_before_partition", False)
+        and artifact_receipt
+        and graph_receipt
+        and state_receipt
+        and partition_receipt
+        and cut_receipt
+        and observer_registry_receipt
+        and owner_receipt
+        and config_hash_receipt
+        and code_hash_receipt
+        and run_id_receipt
+    )
+    report = {
+        "mode": "distributed_global_carrier_contract_v1",
+        "run_id": manifest.get("run_id"),
+        "global_carrier_contract_receipt": contract_receipt,
+        "one_global_carrier_before_partition_receipt": bool(
+            carrier.get("one_global_carrier_before_partition", False) and artifact_receipt
+        ),
+        "manifest_declared_global_artifacts_receipt": artifact_receipt,
+        "global_graph_receipt": graph_receipt,
+        "partition_map_receipt": partition_receipt,
+        "cut_interface_receipt": cut_receipt,
+        "stable_global_identity_initial_state_receipt": state_receipt,
+        "global_observer_registry_receipt": observer_registry_receipt,
+        "authoritative_owner_projection_receipt": owner_receipt,
+        "config_hash_receipt": config_hash_receipt,
+        "code_hash_receipt": code_hash_receipt,
+        "run_id_receipt": run_id_receipt,
+        "distributed_realization_event_certificate_receipt": event_receipt,
+        "monolithic_normal_form_certificate_receipt": bool(
+            event_certificate.get("monolithic_normal_form_certificate_receipt", False)
+        ),
+        "final_readout_recomputed_receipt": bool(
+            event_certificate.get("final_readout_recomputed_receipt", False)
+        ),
+        "artifact_status": artifact_status,
+        "graph_info": graph_info,
+        "state_info": state_info,
+        "expected_shard_ids": expected_shard_ids,
+        "partition_shard_ids": partition_shard_ids,
+        "cut_edge_count": len(cut_edges),
+        "observer_count": registry.get("observer_count"),
+        "blockers": _unique_texts(blockers),
+        "claim_boundary": (
+            "This verifies that the run pack declares one finite global OPH carrier before worker "
+            "partitioning and that shard ownership, cut interfaces, stable initial identities, and "
+            "observer registry artifacts match their manifest hashes. It does not certify distributed "
+            "realization of the monolithic normal-form map unless committed events are linearized, "
+            "rollbacks return to prior committed roots, and final readouts are recomputed from the "
+            "projected monolithic state."
+        ),
+    }
+    _write_json(out_dir / "GLOBAL_CARRIER_CONTRACT.json", report)
+    return report
+
+
+def _global_graph_edges(node_count: int) -> list[dict[str, Any]]:
+    if node_count <= 1:
+        return []
+    pairs = [(node, node + 1) for node in range(node_count - 1)]
+    if node_count > 2:
+        pairs.append((node_count - 1, 0))
+    edges = []
+    for index, (source, target) in enumerate(pairs):
+        edges.append(
+            {
+                "edge_id": f"e{index:06d}",
+                "source_node": int(source),
+                "target_node": int(target),
+                "is_cut_edge": False,
+            }
+        )
+    return edges
+
+
+def _partition_map_payload(
+    *,
+    run_id: str,
+    shard_count: int,
+    patch_count_per_shard: int,
+    observers_per_shard: int,
+    owners: np.ndarray,
+    cut_edges: list[dict[str, Any]],
+) -> dict[str, Any]:
+    edge_ids_by_shard: dict[int, list[str]] = {index: [] for index in range(shard_count)}
+    ghost_nodes_by_shard: dict[int, set[int]] = {index: set() for index in range(shard_count)}
+    for edge in cut_edges:
+        source = int(edge["source_node"])
+        target = int(edge["target_node"])
+        source_owner = int(edge["source_owner"])
+        target_owner = int(edge["target_owner"])
+        edge_ids_by_shard[source_owner].append(str(edge["edge_id"]))
+        edge_ids_by_shard[target_owner].append(str(edge["edge_id"]))
+        ghost_nodes_by_shard[source_owner].add(target)
+        ghost_nodes_by_shard[target_owner].add(source)
+
+    shards = []
+    for index in range(shard_count):
+        patch_start = index * patch_count_per_shard
+        observer_start = index * observers_per_shard
+        owned = list(range(patch_start, patch_start + patch_count_per_shard))
+        shards.append(
+            {
+                "shard_index": index,
+                "shard_id": f"{run_id}_shard{index:04d}",
+                "owned_nodes": owned,
+                "ghost_nodes": sorted(ghost_nodes_by_shard[index]),
+                "cut_edge_ids": sorted(edge_ids_by_shard[index]),
+                "global_patch_range": [patch_start, patch_start + patch_count_per_shard],
+                "global_observer_range": [observer_start, observer_start + observers_per_shard],
+            }
+        )
+    return {
+        "schema": "oph_distributed_partition_map_v1",
+        "run_id": run_id,
+        "node_count": int(len(owners)),
+        "shard_count": int(shard_count),
+        "node_owner": [int(value) for value in owners.tolist()],
+        "synthetic_partition": False,
+        "owner_rule": "contiguous_global_patch_ranges_declared_before_shard_configs",
+        "shards": shards,
+    }
+
+
+def _cut_interfaces_payload(*, run_id: str, cut_edges: list[dict[str, Any]]) -> dict[str, Any]:
+    rows = []
+    for edge in cut_edges:
+        source = int(edge["source_node"])
+        target = int(edge["target_node"])
+        source_owner = int(edge["source_owner"])
+        target_owner = int(edge["target_owner"])
+        rows.append(
+            {
+                "edge_id": edge["edge_id"],
+                "source_node": source,
+                "target_node": target,
+                "source_owner": source_owner,
+                "target_owner": target_owner,
+                "owner_pair": [source_owner, target_owner],
+                "restriction_maps": {
+                    "source_to_target_visible_boundary": [source, target],
+                    "target_to_source_visible_boundary": [target, source],
+                },
+                "authoritative_commit_rule": (
+                    "A cross-cut physical update is admissible only with a linearization witness whose "
+                    "projection is a legal monolithic repair path or a physical stutter."
+                ),
+            }
+        )
+    return {
+        "schema": "oph_distributed_cut_interfaces_v1",
+        "run_id": run_id,
+        "cut_edge_count": len(rows),
+        "synthetic_physics_receipt": False,
+        "cut_edges": rows,
+        "claim_boundary": (
+            "Cut interfaces are derived from declared global graph edges whose endpoint owners differ. "
+            "They replace visualization-only atlas seams as the physics-facing boundary contract."
+        ),
+    }
+
+
+def _observer_registry_payload(
+    *,
+    run_id: str,
+    shard_count: int,
+    patch_count_per_shard: int,
+    observers_per_shard: int,
+    base_seed: int,
+) -> dict[str, Any]:
+    shards = []
+    samples = []
+    registry_entries: list[dict[str, Any]] = []
+    for shard_index in range(shard_count):
+        observer_start = shard_index * observers_per_shard
+        patch_start = shard_index * patch_count_per_shard
+        observer_stop = observer_start + observers_per_shard
+        shards.append(
+            {
+                "shard_index": shard_index,
+                "shard_id": f"{run_id}_shard{shard_index:04d}",
+                "global_observer_range": [observer_start, observer_stop],
+                "home_patch_rule": "namespaced local_anchor_patch_id = patch:((2*local_observer_index+1) modulo patch_count_per_shard)",
+                "home_patch_range": [patch_start, patch_start + patch_count_per_shard],
+            }
+        )
+        for local_observer_index in range(observers_per_shard):
+            global_observer_index = observer_start + local_observer_index
+            local_anchor_index = (2 * local_observer_index + 1) % max(int(patch_count_per_shard), 1)
+            global_anchor_index = patch_start + local_anchor_index
+            for observer_kind in OBSERVER_KINDS:
+                uid = distributed_observer_uid(
+                    run_id=run_id,
+                    observer_kind=observer_kind,
+                    global_observer_index=global_observer_index,
+                )
+                entry = {
+                    "distributed_observer_uid": uid,
+                    "global_observer_index": global_observer_index,
+                    "observer_kind": observer_kind,
+                    "local_observer_index": local_observer_index,
+                    "local_anchor_patch_id": f"patch:{local_anchor_index}",
+                    "global_anchor_patch_id": f"patch:{global_anchor_index}",
+                    "owner_shard": shard_index,
+                    "lineage_parent_uid": None if observer_kind == "patch" else distributed_observer_uid(
+                        run_id=run_id,
+                        observer_kind="patch",
+                        global_observer_index=global_observer_index,
+                    ),
+                    "stable_identity": _stable_uint63(run_id, observer_kind, global_observer_index, base_seed),
+                }
+                registry_entries.append(entry)
+                if len(samples) < max(1, min(12, shard_count * max(observers_per_shard, 1))):
+                    samples.append(entry)
+    audit = observer_registry_audit(registry_entries)
+    return {
+        "schema": "oph_global_observer_registry_v2",
+        "run_id": run_id,
+        "observer_count": shard_count * observers_per_shard,
+        "registered_identity_count": len(registry_entries),
+        "observer_kinds": list(OBSERVER_KINDS),
+        "namespace_rule": "distributed_observer_uid = run_id:observer_kind:global_observer_index",
+        "stable_identity_rule": "blake2b_run_observer_kind_global_index_base_seed_uint63",
+        "registry_namespace_audit": audit,
+        "global_observer_registry_namespace_receipt": bool(audit.get("GLOBAL_OBSERVER_REGISTRY_NAMESPACE_RECEIPT", False)),
+        "shards": shards,
+        "sample_observers": samples,
+        "claim_boundary": (
+            "Global observer registry with disjoint patch/cap/future namespaces and explicit anchor-patch "
+            "IDs. It is an evidence contract for finite distributed runs, not a proof of dynamic observer "
+            "identity across all OPH branches."
+        ),
+    }
+
+
+def _owner_for_node(node: int, patch_count_per_shard: int) -> int:
+    return int(node // max(int(patch_count_per_shard), 1))
+
+
+def _global_cut_pairs(shard_count: int) -> list[tuple[int, int]]:
+    if shard_count <= 1:
+        return []
+    pairs = []
+    seen: set[tuple[int, int]] = set()
+    for index in range(shard_count):
+        pair = tuple(sorted((index, (index + 1) % shard_count)))
+        if pair in seen or pair[0] == pair[1]:
+            continue
+        seen.add(pair)
+        pairs.append(pair)
+    return pairs
+
+
+def _artifact_row(path: Path, root: Path) -> dict[str, Any]:
+    return {
+        "path": str(Path(path).relative_to(root)),
+        "sha256": _file_sha256(path),
+        "required": True,
+    }
+
+
+def _stable_uint63(*parts: Any) -> int:
+    digest = hashlib.blake2b(
+        "|".join(str(part) for part in parts).encode("utf-8"),
+        digest_size=8,
+    ).digest()
+    return int.from_bytes(digest, "big") & ((1 << 63) - 1)
+
+
+def _npz_graph_info(path: Path | None) -> dict[str, Any]:
+    if path is None or not Path(path).exists():
+        return {"load_receipt": False}
+    try:
+        with np.load(path) as data:
+            nodes = data["nodes"]
+            edges = data["edges"]
+            owners = data["node_owner"]
+            cut_mask = data["cut_edge_mask"]
+            return {
+                "load_receipt": True,
+                "node_count": int(len(nodes)),
+                "edge_count": int(len(edges)),
+                "owner_count": int(len(set(int(value) for value in owners.tolist()))),
+                "cut_edge_count": int(np.count_nonzero(cut_mask)),
+            }
+    except Exception as exc:  # pragma: no cover - defensive artifact report path.
+        return {"load_receipt": False, "error": f"{type(exc).__name__}:{exc}"}
+
+
+def _npz_state_info(path: Path | None) -> dict[str, Any]:
+    if path is None or not Path(path).exists():
+        return {"load_receipt": False}
+    try:
+        with np.load(path) as data:
+            nodes = data["nodes"]
+            state = data["canonical_state_word"]
+            sectors = data["boundary_sector"]
+            return {
+                "load_receipt": bool(len(nodes) == len(state) == len(sectors)),
+                "node_count": int(len(nodes)),
+                "stable_identity_rule": "blake2b_run_patch_base_seed_uint63",
+                "state_word_dtype": str(state.dtype),
+            }
+    except Exception as exc:  # pragma: no cover - defensive artifact report path.
+        return {"load_receipt": False, "error": f"{type(exc).__name__}:{exc}"}
+
+
 def _distributed_run_pack_contract(
     *,
     manifest: dict[str, Any],
     all_expected_completed: bool,
     federated_receipt: bool,
     seam_metadata_replay_receipt: bool,
+    global_carrier: dict[str, Any],
     halo_exchange: dict[str, Any],
     neutral_global: dict[str, Any],
     observer_time_global: dict[str, Any],
@@ -777,6 +1413,29 @@ def _distributed_run_pack_contract(
     gates = {
         "all_expected_shards_completed": bool(all_expected_completed),
         "federated_large_universe_witness_receipt": bool(federated_receipt),
+        "global_carrier_contract_receipt": bool(
+            global_carrier.get("global_carrier_contract_receipt", False)
+        ),
+        "one_global_carrier_before_partition_receipt": bool(
+            global_carrier.get("one_global_carrier_before_partition_receipt", False)
+        ),
+        "manifest_declared_global_artifacts_receipt": bool(
+            global_carrier.get("manifest_declared_global_artifacts_receipt", False)
+        ),
+        "partition_map_receipt": bool(global_carrier.get("partition_map_receipt", False)),
+        "cut_interface_receipt": bool(global_carrier.get("cut_interface_receipt", False)),
+        "stable_global_identity_initial_state_receipt": bool(
+            global_carrier.get("stable_global_identity_initial_state_receipt", False)
+        ),
+        "global_observer_registry_receipt": bool(
+            global_carrier.get("global_observer_registry_receipt", False)
+        ),
+        "authoritative_owner_projection_receipt": bool(
+            global_carrier.get("authoritative_owner_projection_receipt", False)
+        ),
+        "distributed_realization_event_certificate_receipt": bool(
+            global_carrier.get("distributed_realization_event_certificate_receipt", False)
+        ),
         "seam_metadata_replay_receipt": bool(seam_metadata_replay_receipt),
         "online_cross_shard_overlap_repair_receipt": bool(
             halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
@@ -790,6 +1449,15 @@ def _distributed_run_pack_contract(
         ),
         "cycle_holonomy_zero_or_classified_receipt": bool(
             online_receipts.get("CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT", False)
+        ),
+        "selected_fiber_nontrivial_elimination_receipt": bool(
+            online_receipts.get("SELECTED_FIBER_NONTRIVIAL_ELIMINATION_RECEIPT", False)
+        ),
+        "same_boundary_multistart_confluence_receipt": bool(
+            online_receipts.get("SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT", False)
+        ),
+        "quotient_normal_form_canonical_hash_receipt": bool(
+            online_receipts.get("QUOTIENT_NORMAL_FORM_CANONICAL_HASH_RECEIPT", False)
         ),
         "fair_block_contraction_receipt": bool(online_receipts.get("FAIR_BLOCK_CONTRACTION_RECEIPT", False)),
         "schedule_independent_normal_form_receipt": bool(
@@ -827,16 +1495,22 @@ def _distributed_run_pack_contract(
     }
     artifact_smoke = bool(
         gates["all_expected_shards_completed"]
+        and gates["global_carrier_contract_receipt"]
         and gates["seam_metadata_replay_receipt"]
         and bool(halo_exchange.get("reducer_halo_exchange_replay_receipt", False))
     )
     distributed_kernel_scaling_ready = bool(
         gates["all_expected_shards_completed"]
+        and gates["global_carrier_contract_receipt"]
+        and gates["distributed_realization_event_certificate_receipt"]
         and gates["online_cross_shard_overlap_repair_receipt"]
         and gates["per_cycle_cross_shard_halo_exchange_receipt"]
         and gates["distributed_local_diamond_receipt"]
         and gates["distributed_repair_completeness_receipt"]
         and gates["cycle_holonomy_zero_or_classified_receipt"]
+        and gates["selected_fiber_nontrivial_elimination_receipt"]
+        and gates["same_boundary_multistart_confluence_receipt"]
+        and gates["quotient_normal_form_canonical_hash_receipt"]
         and gates["fair_block_contraction_receipt"]
         and gates["schedule_independent_normal_form_receipt"]
         and gates["partition_naturality_receipt"]
@@ -870,15 +1544,21 @@ def _distributed_run_pack_contract(
     profile_requirements = {
         "distributed_artifact_packaging_smoke": (
             "all_expected_shards_completed",
+            "global_carrier_contract_receipt",
             "seam_metadata_replay_receipt",
         ),
         "distributed_kernel_scaling": (
             "all_expected_shards_completed",
+            "global_carrier_contract_receipt",
+            "distributed_realization_event_certificate_receipt",
             "online_cross_shard_overlap_repair_receipt",
             "per_cycle_cross_shard_halo_exchange_receipt",
             "distributed_local_diamond_receipt",
             "distributed_repair_completeness_receipt",
             "cycle_holonomy_zero_or_classified_receipt",
+            "selected_fiber_nontrivial_elimination_receipt",
+            "same_boundary_multistart_confluence_receipt",
+            "quotient_normal_form_canonical_hash_receipt",
             "fair_block_contraction_receipt",
             "schedule_independent_normal_form_receipt",
             "partition_naturality_receipt",
@@ -938,12 +1618,15 @@ def _distributed_run_pack_contract(
             "global_proto_particles": "proto_particles_global/global_proto_particle_worldlines_report.json",
             "global_pn_resonance": "pn_resonance_global/global_pn_resonance_report.json",
             "global_physical_cmb": "physical_cmb_global/physical_cmb_global_reduction_report.json",
+            "global_carrier_contract": "global_carrier_contract/GLOBAL_CARRIER_CONTRACT.json",
         },
+        "global_carrier_contract": global_carrier,
         "blockers": profile_blockers["distributed_kernel_scaling"],
         "claim_boundary": (
             "Run-pack contract with separate profiles. Artifact smoke and observer visualization readiness "
             "only certify packaging/export health. Science-scale distributed-kernel readiness requires online "
-            "seam repair, atomic/confluent commits, holonomy, fair-block, schedule, and partition receipts. "
+            "seam repair, atomic/confluent commits, selected-fiber elimination, normal-form hash, holonomy, "
+            "fair-block, schedule, and partition receipts. "
             "Post-run science promotion is separate from launch readiness."
         ),
     }
@@ -1416,6 +2099,8 @@ def _shard_config(
     observers_per_shard: int,
     seed: int,
     atlas_shard: dict[str, Any],
+    carrier_shard: dict[str, Any],
+    global_carrier_artifacts: dict[str, Any],
     seam_halo_width: int,
 ) -> dict[str, Any]:
     config = deepcopy(base_config)
@@ -1459,6 +2144,23 @@ def _shard_config(
         "shard_count": int(shard_count),
         "patch_count_per_shard": int(patch_count_per_shard),
         "observers_per_shard": int(observers_per_shard),
+        "global_carrier": {
+            "one_global_carrier_before_partition": True,
+            "artifact_paths": {
+                key: (value or {}).get("path")
+                for key, value in global_carrier_artifacts.items()
+                if isinstance(value, dict)
+            },
+            "owned_nodes": list(carrier_shard.get("owned_nodes") or []),
+            "ghost_nodes": list(carrier_shard.get("ghost_nodes") or []),
+            "cut_edge_ids": list(carrier_shard.get("cut_edge_ids") or []),
+            "authoritative_owner": int(carrier_shard.get("shard_index", shard_index)),
+            "projection_rule": (
+                "Only owned nodes are authoritative physical state. Ghost nodes, queues, retry logs, "
+                "and checkpoints are implementation metadata unless a committed event certificate "
+                "projects them to a monolithic repair."
+            ),
+        },
         "unified_atlas": {
             "global_patch_range": atlas_shard["global_patch_range"],
             "global_observer_range": atlas_shard["global_observer_range"],
@@ -1584,6 +2286,7 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
     proto = summary.get("global_proto_particle_worldlines") or {}
     pn = summary.get("global_pn_resonance_reduction") or {}
     contract = summary.get("distributed_run_pack_contract") or {}
+    carrier = summary.get("global_carrier_contract") or {}
     lines = [
         "# Distributed OPH Universe Summary",
         "",
@@ -1592,6 +2295,10 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
         f"- Completed shards: `{summary.get('completed_shard_count')}/{summary.get('expected_shard_count')}`",
         f"- Completed patch capacity: `{summary.get('total_patch_capacity_completed')}`",
         f"- Completed observer capacity: `{summary.get('total_observer_capacity_completed')}`",
+        f"- Global carrier contract receipt: `{str(bool(summary.get('global_carrier_contract_receipt'))).lower()}`",
+        f"- One carrier before partition receipt: `{str(bool(summary.get('one_global_carrier_before_partition_receipt'))).lower()}`",
+        f"- Stable global identity state receipt: `{str(bool(summary.get('stable_global_identity_initial_state_receipt'))).lower()}`",
+        f"- Distributed realization event certificate receipt: `{str(bool(summary.get('distributed_realization_event_certificate_receipt'))).lower()}`",
         f"- Federated large-universe witness receipt: `{str(bool(summary.get('federated_large_universe_witness_receipt'))).lower()}`",
         f"- Seam metadata replay receipt: `{str(bool(summary.get('seam_metadata_replay_receipt'))).lower()}`",
         f"- Online cross-shard overlap repair receipt: `{str(bool(summary.get('online_cross_shard_overlap_repair_receipt'))).lower()}`",
@@ -1645,6 +2352,8 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
             "",
             "## Global Distributed Reductions",
             "",
+            f"- Global carrier graph nodes: `{(carrier.get('graph_info') or {}).get('node_count')}`",
+            f"- Global carrier graph cut edges: `{carrier.get('cut_edge_count')}`",
             f"- Halo online receipt: `{str(bool(halo.get('per_cycle_cross_shard_halo_exchange_receipt'))).lower()}`",
             f"- Halo reducer replay receipt: `{str(bool(halo.get('reducer_halo_exchange_replay_receipt'))).lower()}`",
             f"- Global neutral bulk receipt: `{str(bool(neutral.get('strict_single_global_neutral_bulk_receipt'))).lower()}`",
@@ -1673,6 +2382,11 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
         lines.extend(["", "### Run-Pack Contract Blockers"])
         for blocker in contract_blockers:
             lines.append(f"- `{blocker}`")
+    carrier_blockers = carrier.get("blockers") or []
+    if carrier_blockers:
+        lines.extend(["", "### Global Carrier Contract Blockers"])
+        for blocker in carrier_blockers:
+            lines.append(f"- `{blocker}`")
     blockers = summary.get("strict_single_global_bulk_blockers") or []
     if blockers:
         lines.extend(["", "## Strict Global Bulk Blockers"])
@@ -1691,35 +2405,24 @@ def _unified_atlas(
 ) -> dict[str, Any]:
     centers = _fibonacci_centers(shard_count)
     seam_links: list[dict[str, Any]] = []
-    seen: set[tuple[int, int]] = set()
-    for index in range(shard_count):
-        candidates = {
-            (index - 1) % shard_count,
-            (index + 1) % shard_count,
-            _nearest_center(index, centers),
-        }
-        for other in candidates:
-            if other == index:
-                continue
-            pair = tuple(sorted((index, other)))
-            if pair in seen:
-                continue
-            seen.add(pair)
-            seam_links.append(
-                {
-                    "link_id": f"seam_{pair[0]:04d}_{pair[1]:04d}",
-                    "source_shard_index": pair[0],
-                    "target_shard_index": pair[1],
-                    "source_shard_id": f"{run_id}_shard{pair[0]:04d}",
-                    "target_shard_id": f"{run_id}_shard{pair[1]:04d}",
-                    "seam_halo_width": int(seam_halo_width),
-                    "overlap_model": "core_halo_observer_support_overlap",
-                    "claim_boundary": (
-                        "Cross-shard overlap edge in the global atlas. This is a reducer-visible "
-                        "observer-overlap seam, not a hidden independent-universe join."
-                    ),
-                }
-            )
+    for pair in _global_cut_pairs(shard_count):
+        seam_links.append(
+            {
+                "link_id": f"cut_{pair[0]:04d}_{pair[1]:04d}",
+                "source_shard_index": pair[0],
+                "target_shard_index": pair[1],
+                "source_shard_id": f"{run_id}_shard{pair[0]:04d}",
+                "target_shard_id": f"{run_id}_shard{pair[1]:04d}",
+                "seam_halo_width": int(seam_halo_width),
+                "overlap_model": "global_carrier_cut_edge_visible_collar",
+                "source": "partition_map_cut_interfaces",
+                "physics_receipt_eligible": False,
+                "claim_boundary": (
+                    "Cross-shard overlap link derived from a declared global-carrier cut edge. The reducer may "
+                    "display its collar metadata, but physics receipts still require online linearized commits."
+                ),
+            }
+        )
     neighbor_map: dict[int, list[int]] = {index: [] for index in range(shard_count)}
     for link in seam_links:
         a = int(link["source_shard_index"])
@@ -1743,7 +2446,7 @@ def _unified_atlas(
             }
         )
     return {
-        "mode": "one_unified_screen_atlas_core_halo_shards",
+        "mode": "one_unified_screen_atlas_with_global_carrier_cut_links",
         "run_id": run_id,
         "global_patch_capacity": int(shard_count) * int(patch_count_per_shard),
         "global_observer_capacity": int(shard_count) * int(observers_per_shard),
@@ -1752,10 +2455,9 @@ def _unified_atlas(
         "shards": shards,
         "seam_links": seam_links,
         "unified_universe_receipt_boundary": (
-            "The run is one distributed atlas of bounded screen charts. Observers may overlap across "
-            "neighboring shard seams through the declared halo. The first implementation audits seam "
-            "compatibility in the reducer; a later stronger kernel should update cross-shard halo state "
-            "during every repair cycle."
+            "The run is one distributed atlas of bounded screen charts. Display centers are visualization "
+            "coordinates only. Cross-shard links used by the reducer are the declared cut edges of the "
+            "global carrier, and online repair receipts are required before any physics promotion."
         ),
     }
 
@@ -1875,7 +2577,7 @@ def _seam_readout(manifest: dict[str, Any], completed: list[dict[str, Any]]) -> 
         and final_committed_values
     )
     return {
-        "mode": "cross_shard_core_halo_overlap_metadata_replay",
+        "mode": "cross_shard_global_carrier_cut_metadata_replay",
         "seam_link_count": len(readout_links),
         "completed_seam_count": completed_count,
         "completed_seam_fraction": float(completed_count / len(readout_links)) if readout_links else 0.0,
@@ -1889,9 +2591,10 @@ def _seam_readout(manifest: dict[str, Any], completed: list[dict[str, Any]]) -> 
         "physics_receipt_eligible": False,
         "links": readout_links,
         "claim_boundary": (
-            "Reducer-level seam metadata replay over core/halo shard overlaps. It gives the visualization app "
-            "cross-shard observer-overlap links and synthetic endpoint-interpolated trajectories. It is not a "
-            "per-edge distributed repair kernel and is not eligible for OPH confluence, bulk, or CMB receipts."
+            "Reducer-level metadata replay over declared global-carrier cut links. It gives the visualization "
+            "app cross-shard observer-overlap links and synthetic endpoint-interpolated trajectories. It is "
+            "not a per-edge distributed repair kernel and is not eligible for OPH confluence, bulk, or CMB "
+            "receipts."
         ),
     }
 
@@ -1929,6 +2632,7 @@ def _distributed_visualization_payload(
     shard_rows: list[dict[str, Any]],
     seam_readout: dict[str, Any],
     physical_cmb_global: dict[str, Any],
+    global_carrier: dict[str, Any],
     halo_exchange: dict[str, Any],
     neutral_global: dict[str, Any],
     observer_time_global: dict[str, Any],
@@ -1956,7 +2660,7 @@ def _distributed_visualization_payload(
                 "targetObserverId": f"shard{int(link.get('target_shard_index', 0)):04d}:seam",
                 "sourceShardIndex": link.get("source_shard_index"),
                 "targetShardIndex": link.get("target_shard_index"),
-                "type": "cross_shard_core_halo_overlap",
+                "type": "cross_shard_global_carrier_cut_overlap",
                 "repairTrajectory": link.get("overlapRepairTrajectory") or [],
                 "claimBoundary": link.get("claim_boundary"),
             }
@@ -1974,6 +2678,7 @@ def _distributed_visualization_payload(
         "claimBoundary": manifest.get("claim_boundary"),
         "unifiedUniverse": {
             "atlas": manifest.get("unified_universe_atlas") or {},
+            "globalCarrier": global_carrier,
             "crossShardSeamReadout": seam_readout,
             "haloExchange": halo_exchange,
             "neutralBulk": neutral_global,
@@ -1989,7 +2694,7 @@ def _distributed_visualization_payload(
             ],
             "unifiedUniverseInterpretation": (
                 "One global atlas of OPH observer-like self-reading shards. Display shard centers as one screen/bulk "
-                "atlas and render seam links as overlapping observer supports across partitions."
+                "atlas and render declared carrier-cut links as overlapping observer supports across partitions."
             ),
         },
         "screen": {
@@ -2053,7 +2758,7 @@ def _distributed_visualization_payload(
         },
         "visualizationNotes": [
             "Render the whole object as one atlas, not as separate universes.",
-            "Use crossShardOverlapLinks to draw observer support overlap across shard seams.",
+            "Use crossShardOverlapLinks to draw observer support overlap across declared carrier cuts.",
             "Use per-shard timelinePayloadPath values for drill-down into high-detail shard videos.",
             "Do not label strict neutral third-person bulk unless strict_single_global_neutral_bulk_receipt passes.",
         ],
@@ -2080,7 +2785,25 @@ def _globalized_observers(shard: dict[str, Any], payload: dict[str, Any], *, lim
     result = []
     for view in views:
         item = dict(view)
-        item["observerId"] = _global_id(shard, item.get("observerId", item.get("id", len(result))), "observer")
+        local_observer = item.get("observerId", item.get("id", len(result)))
+        item["observerId"] = _global_id(shard, local_observer, "observer")
+        frames = item.get("timeFrames") if isinstance(item.get("timeFrames"), list) else []
+        normalized_frames = [
+            normalize_observer_frame(frame if isinstance(frame, dict) else {"value": frame}, record_order=index)
+            for index, frame in enumerate(frames)
+        ]
+        item["timeFrames"] = normalized_frames
+        item["semantic_history_digest"] = semantic_history_digest(normalized_frames)
+        item["execution_clock_fields_separated_receipt"] = all(
+            all(key in frame for key in (
+                "execution_epoch",
+                "scheduler_event_index",
+                "observer_record_order",
+                "observer_modular_parameter",
+                "observer_clock_uncertainty",
+            ))
+            for frame in normalized_frames
+        )
         item["shardIndex"] = shard.get("shard_index")
         item["globalPatchRange"] = shard.get("global_patch_range")
         result.append(item)
@@ -2200,10 +2923,11 @@ def _globalized_worldline_row(shard: dict[str, Any], row: dict[str, Any], *, fal
         point = event.get("h3_spatial_point") or event.get("h3SpatialPoint")
         if not isinstance(point, list) or len(point) < 3:
             continue
+        normalized_point = [float(value) for value in point[:4]] if len(point) >= 4 else [float(value) for value in point[:3]]
         events.append(
             {
                 "cycle": event.get("cycle"),
-                "h3SpatialPoint": [float(point[0]), float(point[1]), float(point[2])],
+                "h3SpatialPoint": normalized_point,
                 "fitResidual": event.get("fit_residual", event.get("fitResidual")),
                 "supportNodeCount": event.get("support_node_count", event.get("supportNodeCount")),
                 "shardIndex": shard.get("shard_index"),
@@ -2250,7 +2974,7 @@ def _worldline_path_metrics(events: list[dict[str, Any]]) -> tuple[float, float]
     for left, right in zip(points, points[1:], strict=False):
         if len(left) < 3 or len(right) < 3:
             continue
-        length += math.sqrt(sum((float(right[index]) - float(left[index])) ** 2 for index in range(3)))
+        length += h3_distance(left[:4] if len(left) >= 4 else left[:3], right[:4] if len(right) >= 4 else right[:3])
     return float(length), float(length / max(len(points) - 1, 1))
 
 
@@ -2463,7 +3187,7 @@ def _unique_texts(values: list[Any]) -> list[str]:
 
 def _read_json(path: Path) -> dict[str, Any]:
     path = Path(path)
-    if not path.exists():
+    if not path.exists() or not path.is_file():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -2471,6 +3195,17 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+
+
+def _file_sha256(path: Path) -> str | None:
+    path = Path(path)
+    if not path.exists() or not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _int_or_none(value: Any) -> int | None:

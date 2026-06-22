@@ -62,6 +62,50 @@ def test_physical_cmb_contract_requires_primordial_lift_receipt():
     assert "screen_to_primordial_lift_receipt_missing" in validation["blockers"]
 
 
+def test_physical_cmb_contract_requires_source_provenance_receipts():
+    contract = _valid_contract()
+    contract.source_provenance_receipt = False
+    contract.pooled_source_reducer_receipt = False
+    contract.contradiction_free_provenance_receipt = False
+    contract.N_CRC_consensus_invariant_receipt = False
+    contract.global_likelihood_reduction_receipt = False
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "source_provenance_receipt_missing" in validation["blockers"]
+    assert "pooled_source_reducer_receipt_missing" in validation["blockers"]
+    assert "source_provenance_contradiction_check_failed" in validation["blockers"]
+    assert "N_CRC_consensus_invariant_receipt_missing" in validation["blockers"]
+    assert "global_likelihood_reduction_receipt_missing" in validation["blockers"]
+
+
+def test_physical_cmb_contract_requires_finite_covariant_parent_and_frozen_hashes():
+    contract = _valid_contract()
+    contract.finite_covariant_parent_receipt = False
+    contract.stress_energy_closure_receipt = False
+    contract.frozen_likelihood_protocol_receipt = False
+    contract.frozen_source_hash = None
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "finite_covariant_parent_receipt_missing" in validation["blockers"]
+    assert "stress_energy_closure_not_certified" in validation["blockers"]
+    assert "frozen_likelihood_protocol_not_certified" in validation["blockers"]
+    assert "frozen_source_hash_missing" in validation["blockers"]
+
+
+def test_physical_cmb_contract_requires_recipient_stress_for_nonzero_Gamma_rec():
+    contract = _valid_contract()
+    contract.explicit_recipient_stress_receipt = False
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "recipient_stress_missing_for_nonzero_Gamma_rec" in validation["blockers"]
+
+
 def test_contract_from_reports_does_not_promote_diagnostic_rows():
     contract = contract_from_reports(
         no_data_use_receipt=True,
@@ -121,4 +165,19 @@ def _valid_contract() -> PhysicalCMBInputContract:
         official_likelihood_ready=True,
         cdm_limit_regression_passed=True,
         screen_to_primordial_lift_receipt=True,
+        finite_covariant_parent_receipt=True,
+        stress_energy_closure_receipt=True,
+        gauge_independence_receipt=True,
+        causal_response_receipt=True,
+        refinement_convergence_receipt=True,
+        explicit_recipient_stress_receipt=True,
+        source_provenance_receipt=True,
+        pooled_source_reducer_receipt=True,
+        contradiction_free_provenance_receipt=True,
+        N_CRC_consensus_invariant_receipt=True,
+        global_likelihood_reduction_receipt=True,
+        frozen_likelihood_protocol_receipt=True,
+        frozen_source_hash="sha256:source",
+        frozen_solver_hash="sha256:solver",
+        frozen_likelihood_hash="sha256:likelihood",
     )

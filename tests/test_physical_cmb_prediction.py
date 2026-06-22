@@ -78,11 +78,16 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
             "cmb_parameter_readouts": {"q_IR": 0.25, "ell_IR": 32.0},
         },
     )
+    _write_json(
+        run / "screen_capacity_closure_report.json",
+        {"SCREEN_CAPACITY_CLOSURE_RECEIPT": True},
+    )
     _write_json(run / "strict_neutral_bulk_report.json", {"strict_neutral_bulk": True})
     _write_json(
         run / "oph_compressed_likelihood_report.json",
         {"official_likelihood_ready": True, "cdm_limit_regression_passed": True},
     )
+    _write_json(run / "finite_covariant_collar_packet_parent_report.json", _finite_parent_report())
 
     report = write_physical_cmb_input_report([run], out)
 
@@ -90,6 +95,8 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
     assert report["physical_cmb_prediction_eligible"] is True
     assert report["physical_cmb_prediction"] is False
     assert report["blockers"] == []
+    assert report["source_provenance"]["CMB_SOURCE_PROVENANCE_RECEIPT"] is True
+    assert (out / "cmb_source_provenance_report.json").exists()
 
 
 def test_physical_cmb_input_no_data_use_receipt_only_certifies_firewall(tmp_path: Path):
@@ -323,6 +330,8 @@ def test_physical_cmb_frontier_keeps_measurement_outputs_below_prediction_gate(t
     assert gates["measurement_comparable_cmb_outputs"] is True
     assert gates["finite_theorem_A_zeta"] is False
     assert gates["finite_B_A_kernel"] is False
+    assert gates["finite_covariant_parent"] is False
+    assert gates["frozen_likelihood_protocol"] is False
     assert gates["official_planck_likelihood_ready"] is False
     assert "A_zeta_not_finite_derived" in report["blockers"]
     assert "official_likelihood_not_ready" in report["blockers"]
@@ -419,3 +428,23 @@ def test_physical_cmb_promotion_audit_names_proxy_blockers(tmp_path: Path):
 
 def _write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data), encoding="utf-8")
+
+
+def _finite_parent_report() -> dict:
+    return {
+        "mode": "finite_covariant_collar_packet_parent_v0",
+        "FINITE_COVARIANT_COLLAR_PACKET_PARENT_RECEIPT": True,
+        "STRESS_ENERGY_CLOSURE_RECEIPT": True,
+        "GAUGE_INDEPENDENCE_RECEIPT": True,
+        "EXPLICIT_RECIPIENT_STRESS_RECEIPT": True,
+        "CAUSAL_RESPONSE_RECEIPT": True,
+        "REFINEMENT_CONVERGENCE_RECEIPT": True,
+        "CDM_LIMIT_RECOVERY_RECEIPT": True,
+        "FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT": True,
+        "Gamma_rec_nonzero": True,
+        "source_hash": "sha256:source",
+        "solver_hash": "sha256:solver",
+        "likelihood_hash": "sha256:likelihood",
+        "blockers": [],
+        "physical_cmb_prediction": False,
+    }

@@ -82,10 +82,14 @@ def test_write_oph_screen_power_report_exports_primordial_table(tmp_path: Path):
     assert report["aggregate"]["available_fit_count"] == 1
     assert report["simulator_screen_reference_ready"] is True
     assert report["simulator_primordial_reference_ready"] is False
+    assert report["SCREEN_TO_RADIAL_LIFT_RECEIPT"] is False
     assert report["SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT"] is False
+    assert report["screen_to_radial_lift"]["radial_null_space"]["nullspace_dimension"] >= 0
+    assert report["screen_to_radial_lift"]["forward_projection_residual"]["available"] is True
     assert report["primordial_reference_source"] == "ell_kD_scaffold_from_simulator_eta_R_estimate_not_lift_receipt"
     assert report["primordial_bridge"]["ell_equals_kD_scaffold_only"] is True
     assert (tmp_path / "out" / "oph_screen_power_report.json").exists()
+    assert (tmp_path / "out" / "screen_to_radial_lift_report.json").exists()
     assert (tmp_path / "out" / "oph_primordial_power_CLASS_CAMB.txt").exists()
 
 

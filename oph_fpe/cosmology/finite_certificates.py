@@ -136,6 +136,7 @@ def release_code_certificate(data: dict[str, Any], input_hash: str) -> dict[str,
         "SCALAR_RELEASE_AMPLITUDE_CERTIFICATE": scalar_release_amplitude_certificate,
         "A_zeta": None,
         "A_zeta_formula": "pending SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT",
+        "SCREEN_TO_RADIAL_LIFT_RECEIPT": False,
         "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "minimizer_packets": [packet_id for packet_id, _, _ in minimizers],
         "packets_checked": len(packets),
@@ -295,6 +296,7 @@ def boltzmann_export_certificate(
         "A_q_energy": release.get("A_q_energy"),
         "A_q_cmi_upper_bound": release.get("A_q_cmi_upper_bound"),
         "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": bool(release.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)),
+        "SCREEN_TO_RADIAL_LIFT_RECEIPT": bool(release.get("SCREEN_TO_RADIAL_LIFT_RECEIPT", False)),
         "primordial_lift_ready": bool(release.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT", False)),
         "rho_A_by_a": dict(parent["rho_A_by_a"]),
         "kernels": list(parent["kernels"]),
@@ -366,6 +368,7 @@ def finite_certificate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         "release_code_certificate": bool(release.get("no_data_use")),
         "scalar_release_amplitude_certificate": bool(release.get("SCALAR_RELEASE_AMPLITUDE_CERTIFICATE")),
         "screen_to_primordial_lift_receipt": bool(release.get("SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT")),
+        "screen_to_radial_lift_receipt": bool(release.get("SCREEN_TO_RADIAL_LIFT_RECEIPT")),
         "parent_collar_certificate": bool(parent.get("no_data_use")),
         "repair_matrix_certificate": bool(repair.get("no_data_use"))
         and repair.get("row_sum_max_error", 1.0) <= 1.0e-12

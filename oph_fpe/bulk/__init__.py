@@ -14,6 +14,14 @@ from oph_fpe.bulk.theorem_contract import (
     finite_oph_theorem_contract_report,
     write_finite_oph_theorem_contract_report,
 )
+from oph_fpe.bulk.quotient_geometry import (
+    ChannelMetricSpec,
+    ProvenanceRecord,
+    ancestry_split_report,
+    euclidean_distance_certificate,
+    metric_validity_report,
+    quotient_geometry_certificate,
+)
 from oph_fpe.bulk.h3_ensemble import collect_h3_runs, h3_ensemble_report, write_h3_ensemble_report
 from oph_fpe.bulk.neutral_bulk import (
     NeutralObserverView,
@@ -91,8 +99,13 @@ __all__ = [
     "LatentGeometryFit",
     "NeutralObject",
     "NeutralObserverView",
+    "ChannelMetricSpec",
+    "ProvenanceRecord",
+    "ancestry_split_report",
     "build_neutral_observer_views",
     "bulk_reconstruction_report",
+    "euclidean_distance_certificate",
+    "metric_validity_report",
     "neutral_distance_matrix",
     "neutral_object_distance_matrix",
     "neutral_model_selection",
@@ -110,6 +123,7 @@ __all__ = [
     "planted_neutral_control_report",
     "prime_geometric_rank_refinement_report",
     "prime_geometric_rank_sweep_report",
+    "quotient_geometry_certificate",
     "pullback_field",
     "record_feature_matrix",
     "record_populated_h3_report",

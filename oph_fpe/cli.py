@@ -108,6 +108,14 @@ def main(argv: list[str] | None = None) -> int:
     h3_parser.add_argument("--include", nargs="*", default=[], type=Path)
     h3_parser.add_argument("--out", required=True, type=Path)
 
+    h3_stitch_parser = subparsers.add_parser(
+        "h3-worldline-stitch-certificate",
+        help="validate an H3 record-worldline stitch certificate artifact",
+    )
+    h3_stitch_parser.add_argument("--source", required=True, type=Path)
+    h3_stitch_parser.add_argument("--out", required=True, type=Path)
+    h3_stitch_parser.add_argument("--tolerance", default=1.0e-9, type=float)
+
     h3_refit_parser = subparsers.add_parser("h3-refit", help="refit cached modular-response kernel into H3")
     h3_refit_parser.add_argument("--run-dir", required=True, type=Path)
     h3_refit_parser.add_argument("--out", default=None, type=Path)
@@ -350,6 +358,23 @@ def main(argv: list[str] | None = None) -> int:
     maxent_green_parser.add_argument("--primordial-k-count", default=256, type=int)
     maxent_green_parser.add_argument("--primordial-k-min", default=1.0e-4, type=float)
     maxent_green_parser.add_argument("--primordial-k-max", default=1.0, type=float)
+
+    reference_vacuum_parser = subparsers.add_parser(
+        "reference-vacuum-baseline",
+        help="write conventional free-scalar and compact-U1 vacuum reference baselines with promotion gates closed",
+    )
+    reference_vacuum_parser.add_argument("--out", required=True, type=Path)
+    reference_vacuum_parser.add_argument("--ell-max", default=16, type=int)
+    reference_vacuum_parser.add_argument("--sample-count", default=256, type=int)
+    reference_vacuum_parser.add_argument("--amplitude", default=1.0, type=float)
+    reference_vacuum_parser.add_argument("--theta", default=0.0, type=float)
+    reference_vacuum_parser.add_argument("--seed-key", default="reference-vacuum-v1")
+    reference_vacuum_parser.add_argument("--smoothing-sigma", default=None, type=float)
+    reference_vacuum_parser.add_argument("--coarse-ell-max", default=None, type=int)
+    reference_vacuum_parser.add_argument("--u1-lattice-size", default=4, type=int)
+    reference_vacuum_parser.add_argument("--u1-sweeps", default=32, type=int)
+    reference_vacuum_parser.add_argument("--u1-beta", default=0.5, type=float)
+    reference_vacuum_parser.add_argument("--u1-step-size", default=1.5707963267948966, type=float)
 
     repair_clock_parser = subparsers.add_parser(
         "repair-clock-report",
@@ -830,6 +855,13 @@ def main(argv: list[str] | None = None) -> int:
     finite_collar_boltzmann_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
     finite_collar_boltzmann_parser.add_argument("--include", nargs="*", default=[], type=Path)
     finite_collar_boltzmann_parser.add_argument("--out", required=True, type=Path)
+
+    finite_covariant_parent_parser = subparsers.add_parser(
+        "finite-covariant-collar-parent",
+        help="validate a frozen finite covariant collar-packet parent artifact for physical Boltzmann handoff",
+    )
+    finite_covariant_parent_parser.add_argument("--source", required=True, type=Path)
+    finite_covariant_parent_parser.add_argument("--out", required=True, type=Path)
 
     finite_collar_projection_parser = subparsers.add_parser(
         "finite-collar-cmb-projection",
@@ -1334,6 +1366,16 @@ def main(argv: list[str] | None = None) -> int:
         result = write_h3_ensemble_report([*args.run_dir, *args.include], args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "h3-worldline-stitch-certificate":
+        from oph_fpe.bulk.h3_worldline_stitch import write_h3_worldline_stitch_certificate_report
+
+        result = write_h3_worldline_stitch_certificate_report(
+            args.source,
+            args.out,
+            tolerance=args.tolerance,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "h3-refit":
         from oph_fpe.bulk.h3_refit import write_h3_refit_report
 
@@ -1587,6 +1629,25 @@ def main(argv: list[str] | None = None) -> int:
             primordial_k_count=args.primordial_k_count,
             primordial_k_min=args.primordial_k_min,
             primordial_k_max=args.primordial_k_max,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "reference-vacuum-baseline":
+        from oph_fpe.ensembles import write_reference_vacuum_baseline_report
+
+        result = write_reference_vacuum_baseline_report(
+            args.out,
+            ell_max=args.ell_max,
+            sample_count=args.sample_count,
+            amplitude=args.amplitude,
+            theta=args.theta,
+            seed_key=args.seed_key,
+            smoothing_sigma=args.smoothing_sigma,
+            coarse_ell_max=args.coarse_ell_max,
+            u1_lattice_size=args.u1_lattice_size,
+            u1_sweeps=args.u1_sweeps,
+            u1_beta=args.u1_beta,
+            u1_step_size=args.u1_step_size,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
@@ -2017,6 +2078,14 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         result = write_finite_collar_boltzmann_bundle_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "finite-covariant-collar-parent":
+        from oph_fpe.cosmology.finite_covariant_parent import (
+            write_finite_covariant_collar_packet_parent_report,
+        )
+
+        result = write_finite_covariant_collar_packet_parent_report(args.source, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "finite-collar-cmb-projection":

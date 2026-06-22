@@ -12,6 +12,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 from oph_fpe.claims import PROXY, SCREEN_PROXY_CMB_RECEIPT, with_claim_metadata
+from oph_fpe.cosmology.screen_to_primordial import screen_to_radial_lift_report
 
 
 PLANCK_ETA_R_TARGET = 0.035
@@ -216,6 +217,11 @@ def write_oph_screen_power_report(
         k_min=float(primordial_k_min),
         k_max=float(primordial_k_max),
     )
+    radial_lift = _diagnostic_radial_lift_artifact(
+        reference_params,
+        primordial_rows,
+        simulator_screen_reference_ready=simulator_screen_reference_ready,
+    )
     report = {
         "mode": "oph_screen_power_effective_theory_v0",
         "source_run_count": len({row["run_path"] for row in rows}),
@@ -238,6 +244,7 @@ def write_oph_screen_power_report(
             "simulator_eta_R_ready": simulator_screen_reference_ready,
             "reference_source": reference_source,
             "ell_equals_kD_scaffold_only": True,
+            "SCREEN_TO_RADIAL_LIFT_RECEIPT": radial_lift["SCREEN_TO_RADIAL_LIFT_RECEIPT"],
             "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
             "excludes": ["parity_envelope", "BipoSH_off_diagonal_covariance"],
             "claim_boundary": (
@@ -246,8 +253,10 @@ def write_oph_screen_power_report(
                 "effects remain angular covariance diagnostics."
             ),
         },
+        "screen_to_radial_lift": radial_lift,
         "screen_spectrum_derived": False,
         "primordial_spectrum_derived": False,
+        "SCREEN_TO_RADIAL_LIFT_RECEIPT": radial_lift["SCREEN_TO_RADIAL_LIFT_RECEIPT"],
         "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "physical_cmb_prediction": False,
         "claim_boundary": (
@@ -268,11 +277,52 @@ def write_oph_screen_power_report(
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "oph_screen_power_report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    (out / "screen_to_radial_lift_report.json").write_text(
+        json.dumps(radial_lift, indent=2, default=str),
+        encoding="utf-8",
+    )
     (out / "oph_screen_power_report.md").write_text(_markdown_report(report), encoding="utf-8")
     _write_csv(out / "oph_screen_power_fit_rows.csv", rows)
     _write_csv(out / "oph_primordial_power_table.csv", primordial_rows)
     _write_primordial_txt(out / "oph_primordial_power_CLASS_CAMB.txt", primordial_rows)
     return report
+
+
+def _diagnostic_radial_lift_artifact(
+    params: OPHScreenPowerParams,
+    primordial_rows: list[dict[str, Any]],
+    *,
+    simulator_screen_reference_ready: bool,
+) -> dict[str, Any]:
+    ell_count = max(8, min(64, len(primordial_rows)))
+    ell = np.arange(2, 2 + ell_count, dtype=float)
+    k = np.asarray([float(row["k_mpc"]) for row in primordial_rows], dtype=float)
+    prior = np.asarray([float(row["P_R"]) for row in primordial_rows], dtype=float)
+    screen_cl = C_ell_oph(ell, params)
+    artifact = screen_to_radial_lift_report(
+        ell=ell,
+        screen_cl=screen_cl,
+        k=k,
+        radial_prior_delta_zeta2=prior,
+        radius=DEFAULT_D_STAR_MPC,
+        radial_prior_declared=False,
+        source_only_screen_scalar=False,
+        theorem_gate=False,
+        total_stress_closure_receipt=False,
+        single_clock_normal_form_receipt=False,
+        entropy_repair_gap_receipt=False,
+        curvature_freezeout_receipt=False,
+        adiabatic_mode_receipt=False,
+        isocurvature_bound_receipt=False,
+        primordial_phase_coherence_receipt=False,
+        no_observation_ancestry_receipt=False,
+    )
+    artifact["diagnostic_source"] = {
+        "screen_reference_ready": bool(simulator_screen_reference_ready),
+        "screen_parameters": params.as_jsonable(),
+        "radial_prior_source": "legacy_ell_kD_scaffold_not_declared_source_prior",
+    }
+    return artifact
 
 
 def collect_screen_power_runs(

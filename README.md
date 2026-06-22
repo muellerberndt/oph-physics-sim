@@ -12,6 +12,24 @@ The README describes the simulator surface, not the outcome of any particular ru
 
 The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, and production particle route are separate claim paths. A diagnostic chart or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output.
 
+Every ensemble-facing output must name its claim tier:
+
+- `E0`: seed noise, proposal noise, or repair jitter.
+- `E1`: conventional reference ensemble.
+- `E2`: OPH-native quotient ensemble.
+- `E3`: OPH vacuum.
+- `E4`: OPH primordial field.
+- `E5`: observable cosmological prediction.
+
+Reference baselines are useful for distributed correctness, visualization calibration, and regression tests, but they do not become OPH-native vacuum or primordial-field claims. The explicit receipts `OPH_NATIVE_VACUUM_PROMOTION_RECEIPT` and `OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT` must stay false unless the corresponding paper-side transfer or lift theorem is supplied.
+
+The issue #361 continuum bridge is represented by `oph_fpe.scale.reference_tower` and
+`docs/oph_issue361_certificate_schema.json`. A passing finite reference-tower identity check is
+only the finite-regulator gate. Continuum correlations, BW modular convergence, Lorentzian
+unitarity, and Yang-Mills identification remain closed or conditional until the emitted
+certificate includes Cauchy envelopes, transported-state/cutoff bounds, positive-transfer plus
+transfer-tower convergence, and the four-dimensional OS/gauge certificate.
+
 ## What The Simulator Emits
 
 Main run families:
@@ -24,6 +42,7 @@ Main run families:
 - strict neutral frontiers with overlap-native controls, graph sweeps, residualized graph sweeps, independent rank-selector audits, and closed promotion gates;
 - freezeout-screen angular spectra, CMB frontier reports, no-data-use receipts, finite certificate schemas, and Boltzmann/likelihood gate reports;
 - screen holonomy clusters, defect timelines, H3 worldline fits, interaction proxies, particle-likeness reports, and controlled planted-defect assays;
+- H3 record-worldline stitch certificates that require a declared hyperboloid atlas, real cut interface, observer-time adjacency, sector/gauge transport, ID-independent assignment gap, and coarse/fine contraction before emitting a cross-boundary continuation receipt;
 - static galaxy, neutrino, H0/S8, dark-response, CMB anomaly, and compressed-likelihood diagnostics with physical-prediction gates separated from diagnostics;
 - viewer bundles for screen/repair playback, object-H3 displays, universe timelines, CMB/neutral frontiers, and scale-compressed outputs.
 
@@ -45,6 +64,18 @@ python3 -m oph_fpe.cli run-oph-universe \
   --run-id oph_universe_256k_observers4096_theorem_local
 ```
 
+Reference vacuum baselines:
+
+```bash
+python3 -m oph_fpe.cli reference-vacuum-baseline \
+  --out runs/reference_vacuum_baseline \
+  --ell-max 16 \
+  --sample-count 256 \
+  --smoothing-sigma 0.05
+```
+
+This writes a direct-sampled free-scalar harmonic Gaussian baseline, a compact-`U(1)` lattice-gauge reference sampler, partition-replay receipts, smoothing provenance, finite-mode refinement diagnostics, and false OPH-native promotion receipts.
+
 Parallel BW sweeps:
 
 ```bash
@@ -63,7 +94,7 @@ CPU planning:
 
 ## Distributed Universe Runs
 
-The distributed runner prepares one OPH atlas and splits it into shard-local observer-patch jobs. Each shard remains an observer-like self-reading system: bounded local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts. Current shard configs carry global patch ranges, global observer ranges, atlas centers, and core/halo seam metadata, but that metadata is not yet a theorem-faithful online seam-repair kernel.
+The distributed runner prepares one finite OPH carrier before it writes shard configs. Each shard remains an observer-like self-reading system: bounded local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts. The pack emits `global_graph.npz`, `global_initial_state.npz`, `partition_map.json`, `cut_interfaces.json`, and `global_observer_registry.json` under `global_carrier/`. Shard configs then receive owned nodes, ghost nodes, cut-edge IDs, and the manifest-declared carrier artifact paths. Atlas centers are visualization coordinates only.
 
 Generated distributed packs belong under `distributed/` and are ignored by Git. Commit the kernel code, base configs, docs, and reducer logic, not generated shard YAMLs.
 
@@ -90,13 +121,13 @@ python3 -m oph_fpe.cli reduce-distributed-oph-universe \
   --out-dir runs/<run_id>/reduced
 ```
 
-The reducer emits a distributed summary, seam metadata replay, visualization payload, `DISTRIBUTED_RUN_PACK_CONTRACT.json`, and sidecar report directories for `halo_exchange_global/`, `strict_neutral_global/`, `observer_modular_time_global/`, `proto_particles_global/`, `pn_resonance_global/`, and `physical_cmb_global/`. The seam replay is endpoint-interpolated metadata for audit and visualization; it is not live cross-shard repair and is marked `physics_receipt_eligible: false`.
+The reducer emits a distributed summary, carrier-contract report, cut-link metadata replay, visualization payload, `DISTRIBUTED_RUN_PACK_CONTRACT.json`, and sidecar report directories for `global_carrier_contract/`, `halo_exchange_global/`, `strict_neutral_global/`, `observer_modular_time_global/`, `proto_particles_global/`, `pn_resonance_global/`, and `physical_cmb_global/`. The cut-link replay is endpoint-interpolated metadata for audit and visualization; it is not live cross-shard repair and is marked `physics_receipt_eligible: false`.
 
-Use the run-pack contract as the small-scale-first gate before launching cloud jobs. `distributed_artifact_packaging_smoke_receipt` checks only packaging/export health. `distributed_kernel_scaling_readiness_receipt` and the legacy `large_scale_cloud_run_ready_receipt` remain false until the online distributed kernel emits seam packet reciprocity, visible restriction, repair descent, atomic commit, local diamond, repair completeness, holonomy, fair-block contraction, schedule independence, and partition naturality receipts.
+Use the run-pack contract as the small-scale-first gate before launching cloud jobs. `distributed_artifact_packaging_smoke_receipt` checks packaging/export health plus the exact global-carrier manifest, path, run/config/code-hash, partition, cut-interface, stable-initial-state, and observer-registry receipts. `distributed_kernel_scaling_readiness_receipt` and the legacy `large_scale_cloud_run_ready_receipt` remain false until the online distributed kernel emits a linearized committed-event log, restart/rollback roots, final monolithic normal-form/readout certificates, seam packet reciprocity, visible restriction, repair descent, atomic commit, local diamond, repair completeness, selected-fiber nontrivial elimination, same-boundary multistart confluence, quotient normal-form canonical hash, holonomy, fair-block contraction, schedule independence, and partition naturality receipts. The hash is an equality receipt after quotienting, not a selector among distinct physical endpoints.
 
 The CMB reducer preserves shard-local source statistics as diagnostics, but it does not average nonlinear shard estimates into physical inputs. Physical CMB promotion requires a pooled sufficient-statistic reducer, screen-to-radial lift receipt, Boltzmann transfer, CDM-limit regression, and frozen likelihood comparison. The P/N reducer similarly distinguishes `all_shards_local_scale_compressed_pn_witness_receipt` from `global_pn_resonance_receipt`; the latter requires a finite global readback map and fixed-point solve.
 
-The intended large-run claim is conservative: a single global atlas/federated large-universe witness with explicit overlap seams. A strict single neutral third-person 3D bulk still requires the normal neutral-bulk gates plus genuine online seam repair, common quotient transport, and global neutral reduction receipts.
+The intended large-run claim is conservative: one declared global finite carrier presented through distributed workers, with cut interfaces visible in the evidence bundle. A strict single neutral third-person 3D bulk still requires the normal neutral-bulk gates plus genuine online cut repair, common quotient transport, and global neutral reduction receipts. The strict neutral report now embeds a quotient-geometry contract receipt: raw rows must descend to terminal quotient IDs, atlas transport and feature descent must be certified, missingness must be metric-safe, presentation and partition distortions must be bounded, refinement must have a tail modulus, and train/validation/test ancestry must be split by generative batch. Without that receipt, rank/model/leakage diagnostics remain diagnostics.
 
 ## Claim-Gate Commands
 
@@ -113,6 +144,10 @@ python3 -m oph_fpe.cli physical-cmb-frontier \
   --run-dir runs/<run_id> \
   --out runs/<run_id>/physical_cmb_frontier
 
+python3 -m oph_fpe.cli h3-worldline-stitch-certificate \
+  --source runs/<run_id>/h3_worldline_stitch_source.json \
+  --out runs/<run_id>/h3_worldline_stitch_certificate_report.json
+
 python3 -m oph_fpe.cli export-measurement-pack \
   --run-dir runs/<run_id> \
   --out runs/<run_id>/measurement_pack
@@ -126,9 +161,18 @@ python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
 python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
 python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
 python3 -m oph_fpe.cli finite-certificates --out runs/finite_certificates
+python3 -m oph_fpe.cli finite-covariant-collar-parent \
+  --source runs/<run_id>/finite_covariant_parent_source.json \
+  --out runs/<run_id>/finite_covariant_collar_packet_parent_report.json
 python3 -m oph_fpe.cli physical-cmb-promotion-audit --run-dir runs/<run_id> --out runs/cmb_promotion_audit
 python3 -m oph_fpe.cli official-planck-readiness --out runs/official_planck_readiness
 ```
+
+The physical CMB gate remains closed unless finite source arrays are backed by a
+finite covariant collar-packet parent with stress closure, recipient stress for
+nonzero repair exchange, gauge-independent \(B_A\), convergence/CDM-limit
+receipts, and frozen source/solver/likelihood hashes. CAMB/CLASS-compatible
+curves without that report are diagnostic plumbing.
 
 Viewer exports:
 

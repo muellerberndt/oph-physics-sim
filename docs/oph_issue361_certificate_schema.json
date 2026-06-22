@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.example/schemas/oph-issue361-certificate.schema.json",
+  "title": "OPH issue #361 regulator and continuum certificate",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "regulator",
+    "reference_tower",
+    "renormalized_observables",
+    "modular_certificate",
+    "transfer_certificate",
+    "promotion_status"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "minLength": 1},
+    "code_commit": {"type": "string"},
+    "data_hash": {"type": "string"},
+    "regulator": {
+      "type": "object",
+      "required": ["resolution_level", "lattice_spacing", "physical_volume", "boundary_label"],
+      "properties": {
+        "stage_id": {"type": "string", "minLength": 1},
+        "resolution_level": {"type": "integer", "minimum": 0},
+        "m": {"type": "integer", "minimum": 0},
+        "lattice_spacing": {"type": "number", "exclusiveMinimum": 0},
+        "a_s": {"type": "number", "exclusiveMinimum": 0},
+        "temporal_spacing": {"type": "number", "exclusiveMinimum": 0},
+        "a_t": {"type": "number", "exclusiveMinimum": 0},
+        "physical_volume": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+        "boundary_label": {"type": "string"},
+        "phase_label": {"type": "string"},
+        "cellulation_hash": {"type": "string"},
+        "factor_ids": {"type": "array", "items": {"type": "string"}},
+        "presentation_circuit_hash": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "reference_tower": {
+      "type": "object",
+      "required": ["factor_manifest", "presentation_circuit_hash", "identity_defects"],
+      "properties": {
+        "factor_manifest": {"type": "array", "items": {"type": "object"}},
+        "presentation_circuit_hash": {"type": "string"},
+        "identity_defects": {
+          "type": "object",
+          "required": ["embedding_composition", "expectation_idempotence", "bimodule", "state_preservation", "modular_compatibility"],
+          "properties": {
+            "embedding_composition": {"type": "number", "minimum": 0},
+            "expectation_idempotence": {"type": "number", "minimum": 0},
+            "bimodule": {"type": "number", "minimum": 0},
+            "state_preservation": {"type": "number", "minimum": 0},
+            "modular_compatibility": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "renormalized_observables": {
+      "type": "object",
+      "required": ["basis_hash", "mixing_matrix", "subtractions", "tail_bounds", "pairwise_cauchy"],
+      "properties": {
+        "basis_hash": {"type": "string"},
+        "mixing_matrix": {"type": "array"},
+        "subtractions": {"type": "array"},
+        "tail_bounds": {"type": "array", "items": {"type": "number", "minimum": 0}},
+        "pairwise_cauchy": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "modular_certificate": {
+      "type": "object",
+      "required": ["local_stage_ids", "transported_state_errors", "regularizers", "compact_time_bounds"],
+      "properties": {
+        "local_stage_ids": {"type": "array", "items": {"type": "string"}},
+        "transported_state_errors": {"type": "array", "items": {"type": "number", "minimum": 0}},
+        "regularizers": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}},
+        "compact_time_bounds": {"type": "array", "items": {"type": "number", "minimum": 0}},
+        "cutoff_schedule_pass": {"type": "boolean"}
+      }
+    },
+    "transfer_certificate": {
+      "type": "object",
+      "required": ["hermitian_defect", "lambda_min", "lambda_max", "markov_defect", "reflection_gram_lower_bound"],
+      "properties": {
+        "hermitian_defect": {"type": "number", "minimum": 0},
+        "lambda_min": {"type": "number"},
+        "lambda_max": {"type": "number"},
+        "markov_defect": {"type": "number", "minimum": 0},
+        "reflection_gram_lower_bound": {"type": "number"},
+        "vacuum_projection_defect": {"type": "number", "minimum": 0},
+        "gap_lower_bound": {"type": "number", "minimum": 0}
+      }
+    },
+    "symmetry_defects": {
+      "type": "object",
+      "additionalProperties": {"type": "number", "minimum": 0}
+    },
+    "promotion_status": {
+      "type": "object",
+      "required": ["finite_regulator", "continuum_correlations", "modular_bw", "lorentzian_unitarity", "yang_mills_identification"],
+      "properties": {
+        "finite_regulator": {"enum": ["pass", "fail"]},
+        "continuum_correlations": {"enum": ["pass", "conditional", "fail"]},
+        "modular_bw": {"enum": ["pass", "conditional", "fail"]},
+        "lorentzian_unitarity": {"enum": ["pass", "conditional", "fail"]},
+        "yang_mills_identification": {"enum": ["pass", "conditional", "fail"]},
+        "reasons": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "additionalProperties": true
+}

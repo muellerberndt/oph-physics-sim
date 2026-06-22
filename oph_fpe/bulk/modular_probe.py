@@ -1119,6 +1119,11 @@ def state_derived_bw_report(
                     mode="shuffled_observables",
                 )
             )
+    audit_candidates, audit_candidate_source = _generator_scale_audit_candidates(
+        configured_generator_scale=generator_scale,
+        explicit_candidates=generator_scale_candidates,
+        controls=controls or [],
+    )
     generator_scale_audit = _generator_scale_audit(
         points,
         caps,
@@ -1128,7 +1133,8 @@ def state_derived_bw_report(
         observables=observables,
         regularizers=regularizers,
         configured_generator_scale=generator_scale,
-        generator_scale_candidates=generator_scale_candidates,
+        generator_scale_candidates=audit_candidates,
+        candidate_source=audit_candidate_source,
         max_basis=max_basis,
         state_mode=state_mode,
         target_operator_mode=target_operator_mode,
@@ -1694,6 +1700,7 @@ def _generator_scale_audit(
     regularizers: list[float],
     configured_generator_scale: float,
     generator_scale_candidates: list[float] | None,
+    candidate_source: str,
     max_basis: int,
     state_mode: str,
     target_operator_mode: str,
@@ -1711,6 +1718,7 @@ def _generator_scale_audit(
         return {
             "enabled": False,
             "not_applicable": True,
+            "candidate_source": candidate_source,
             "state_mode": state_mode,
             "claim_boundary": (
                 "not run: direct transition-response automorphism lanes construct the finite "
@@ -1723,6 +1731,7 @@ def _generator_scale_audit(
     if not generator_scale_candidates:
         return {
             "enabled": False,
+            "candidate_source": candidate_source,
             "claim_boundary": (
                 "not run. Enable bw.generator_scale_candidates to test whether the finite "
                 "K=-log(rho+aI) generator wants a different sign or scale against lambda_C(2*pi*t)."
@@ -1791,6 +1800,7 @@ def _generator_scale_audit(
     return {
         "enabled": True,
         "mode": "generator_scale_audit",
+        "candidate_source": candidate_source,
         "target_scale_label": "2pi",
         "target_scale": float(2.0 * math.pi),
         "configured_scale_label": configured_label,
@@ -1818,6 +1828,31 @@ def _control_scale_label(control_name: str) -> str:
     if text.startswith("wrong_") and text.endswith("_normalization"):
         return text[len("wrong_") : -len("_normalization")]
     return text
+
+
+def _generator_scale_audit_candidates(
+    *,
+    configured_generator_scale: float,
+    explicit_candidates: list[float] | None,
+    controls: list[str],
+) -> tuple[list[float] | None, str]:
+    if explicit_candidates:
+        return [float(value) for value in explicit_candidates], "explicit_config"
+    if not any(name.startswith("wrong_") and name.endswith("_normalization") for name in controls):
+        return None, "not_requested"
+    return (
+        _unique_floats(
+            [
+                float(configured_generator_scale),
+                0.0,
+                1.0,
+                math.pi,
+                2.0 * math.pi,
+                4.0 * math.pi,
+            ]
+        ),
+        "auto_from_wrong_normalization_controls",
+    )
 
 
 def _scale_label(value: float) -> str:

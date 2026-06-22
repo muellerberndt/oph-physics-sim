@@ -5,7 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from oph_fpe.pipelines.distributed_universe import reduce_distributed_oph_universe
+from oph_fpe.pipelines.distributed_universe import (
+    prepare_distributed_oph_universe,
+    reduce_distributed_oph_universe,
+)
 
 
 def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path) -> None:
@@ -31,12 +34,20 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert (tmp_path / "reduced" / "proto_particles_global" / "global_proto_particle_worldlines_report.json").exists()
     assert (tmp_path / "reduced" / "pn_resonance_global" / "global_pn_resonance_report.json").exists()
     assert (tmp_path / "reduced" / "DISTRIBUTED_RUN_PACK_CONTRACT.json").exists()
+    assert (tmp_path / "reduced" / "global_carrier_contract" / "GLOBAL_CARRIER_CONTRACT.json").exists()
+    assert summary["global_carrier_contract_receipt"] is True
+    assert summary["one_global_carrier_before_partition_receipt"] is True
+    assert summary["stable_global_identity_initial_state_receipt"] is True
+    assert summary["distributed_realization_event_certificate_receipt"] is False
     assert summary["reducer_halo_exchange_replay_receipt"] is True
     assert summary["seam_metadata_replay_receipt"] is True
     assert summary["cross_shard_overlap_repair_receipt"] is False
     assert summary["online_cross_shard_overlap_repair_receipt"] is False
     assert summary["per_cycle_cross_shard_halo_exchange_receipt"] is False
     assert summary["global_observer_modular_time_export_receipt"] is True
+    observer_time = summary["global_observer_modular_time_export"]
+    assert observer_time["execution_clock_fields_separated_receipt"] is True
+    assert observer_time["observer_clock_naturality_receipt"] is False
     assert summary["global_proto_particle_worldline_export_receipt"] is True
     assert summary["all_shards_local_scale_compressed_pn_witness_receipt"] is True
     assert summary["global_pn_resonance_receipt"] is False
@@ -45,11 +56,23 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     payload = json.loads((tmp_path / "reduced" / "distributed_visualization_payload.json").read_text())
     assert payload["physicalCMB"]["globalReduction"]["physical_cmb_prediction_receipt"] is False
     assert payload["observerModularTime"]["globalExport"]["objectiveObserverViewCount"] == 2
+    observer_sidecar = json.loads(
+        (tmp_path / "reduced" / "observer_modular_time_global" / "observer_modular_time_global_payload.json").read_text()
+    )
+    exported_view = observer_sidecar["objectiveObserverViews"][0]
+    assert exported_view["execution_clock_fields_separated_receipt"] is True
+    exported_frame = exported_view["timeFrames"][0]
+    assert "execution_epoch" in exported_frame
+    assert "scheduler_event_index" in exported_frame
+    assert "observer_record_order" in exported_frame
+    assert "observer_modular_parameter" in exported_frame
+    assert "observer_clock_uncertainty" in exported_frame
     assert payload["consensusBulk"]["protoParticleCandidates"]["globalStitchReport"]["movingWorldlineCount"] == 2
     contract = json.loads((tmp_path / "reduced" / "DISTRIBUTED_RUN_PACK_CONTRACT.json").read_text())
     assert contract["distributed_artifact_packaging_smoke_receipt"] is True
     assert contract["observer_visualization_payload_ready_receipt"] is False
     assert contract["distributed_kernel_scaling_readiness_receipt"] is False
+    assert "distributed_realization_event_certificate_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
     assert "online_cross_shard_overlap_repair_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
 
 
@@ -125,7 +148,96 @@ def test_distributed_reducer_rejects_conflicting_no_data_firewall_flags(tmp_path
     assert status["measurement_data_used"] is True
 
 
+def test_prepare_distributed_universe_emits_global_carrier_artifacts(tmp_path: Path) -> None:
+    manifest_path = _write_manifest(tmp_path, shard_count=4)
+    manifest = json.loads(manifest_path.read_text())
+
+    carrier = manifest["global_carrier"]
+    artifact_paths = {
+        name: manifest_path.parent / row["path"]
+        for name, row in carrier["artifacts"].items()
+    }
+    assert set(artifact_paths) == {
+        "global_graph",
+        "global_initial_state",
+        "partition_map",
+        "cut_interfaces",
+        "global_observer_registry",
+    }
+    assert all(path.exists() for path in artifact_paths.values())
+
+    partition = json.loads(artifact_paths["partition_map"].read_text())
+    cut = json.loads(artifact_paths["cut_interfaces"].read_text())
+    registry = json.loads(artifact_paths["global_observer_registry"].read_text())
+    assert partition["node_count"] == 64
+    assert [row["shard_id"] for row in partition["shards"]] == [
+        f"u_shard{index:04d}" for index in range(4)
+    ]
+    assert cut["cut_edge_count"] > 0
+    assert registry["observer_count"] == 32
+    assert registry["schema"] == "oph_global_observer_registry_v2"
+    assert registry["observer_kinds"] == ["patch", "cap", "future"]
+    assert registry["registered_identity_count"] == 96
+    assert registry["global_observer_registry_namespace_receipt"] is True
+    sample = registry["sample_observers"][0]
+    assert sample["distributed_observer_uid"].startswith("u:patch:")
+    assert sample["observer_kind"] == "patch"
+    assert str(sample["local_anchor_patch_id"]).startswith("patch:")
+    assert sample["local_anchor_patch_id"] != str(sample["local_observer_index"])
+
+
+def test_distributed_reducer_fails_closed_without_global_carrier_contract(tmp_path: Path) -> None:
+    manifest = _write_manifest_without_carrier(tmp_path, shard_count=2)
+    shard_root = tmp_path / "shards"
+    _write_shard(shard_root / "u_shard0000")
+    _write_shard(shard_root / "u_shard0001")
+
+    summary = reduce_distributed_oph_universe(
+        manifest_path=manifest,
+        shard_root=shard_root,
+        out_dir=tmp_path / "reduced",
+    )
+
+    contract = summary["distributed_run_pack_contract"]
+    carrier = summary["global_carrier_contract"]
+    assert summary["global_carrier_contract_receipt"] is False
+    assert contract["distributed_artifact_packaging_smoke_receipt"] is False
+    assert "global_carrier_contract_receipt" in contract["profile_blockers"]["distributed_artifact_packaging_smoke"]
+    assert "global_graph_manifest_artifact_entry_missing" in carrier["blockers"]
+
+
 def _write_manifest(tmp_path: Path, *, shard_count: int) -> Path:
+    config = tmp_path / "base.yml"
+    config.write_text(
+        "\n".join(
+            [
+                "name: test_distributed",
+                "seed: 7",
+                "graph:",
+                "  patch_count: 16",
+                "dynamics:",
+                "  repairs_per_cycle: 4",
+                "observers:",
+                "  sample_count: 8",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    out_dir = tmp_path / "pack"
+    prepare_distributed_oph_universe(
+        config_path=config,
+        out_dir=out_dir,
+        run_id="u",
+        shard_count=shard_count,
+        patch_count_per_shard=16,
+        observers_per_shard=8,
+        worker_count=max(1, shard_count),
+    )
+    return out_dir / "distributed_universe_manifest.json"
+
+
+def _write_manifest_without_carrier(tmp_path: Path, *, shard_count: int) -> Path:
     shards = [
         {
             "shard_index": index,

@@ -13,6 +13,12 @@ import numpy as np
 from scipy.sparse.csgraph import shortest_path
 from scipy.spatial.distance import pdist, squareform
 
+from oph_fpe.bulk.quotient_geometry import (
+    ChannelMetricSpec,
+    GEOMETRY_CONTRACT_RECEIPT,
+    quotient_geometry_certificate,
+)
+
 
 DEFAULT_NEUTRAL_WEIGHTS = {
     "record": 1.0,
@@ -416,7 +422,10 @@ def strict_neutral_bulk_receipt(
     leakage: dict[str, Any],
     controls: dict[str, Any],
     refinement: dict[str, Any],
+    quotient_geometry: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    quotient_contract = quotient_geometry or {}
+    quotient_contract_passed = bool(quotient_contract.get(GEOMETRY_CONTRACT_RECEIPT, False))
     passed = bool(
         dimension.get("estimators_agree_3d", False)
         and model_selection.get("best_model") == "H3"
@@ -429,15 +438,19 @@ def strict_neutral_bulk_receipt(
         and controls.get("planted_3d_returns_3d", False)
         and controls.get("planted_h3_returns_h3", False)
         and refinement.get("stable_across_64k_256k_1m", False)
+        and quotient_contract_passed
     )
     return {
         "receipt": "STRICT_NEUTRAL_BULK_RECEIPT",
         "strict_neutral_bulk": passed,
         "physical_claim": passed,
+        GEOMETRY_CONTRACT_RECEIPT: quotient_contract_passed,
+        "quotient_geometry_blockers": list(quotient_contract.get("blockers", [])),
         "claim_boundary": (
             "Neutral third-person bulk reconstructed from observer-visible records without H3/cap-normal "
-            "target features. This receipt is false unless dimension, model-selection, leakage, controls, "
-            "and refinement gates all pass."
+            "target features. This receipt is false unless quotient chart transport, metric validity, "
+            "feature missingness, presentation invariance, split leakage, dimension, model-selection, "
+            "controls, and refinement gates all pass."
         ),
     }
 
@@ -579,6 +592,11 @@ def strict_neutral_bulk_report(
 ) -> dict[str, Any]:
     neutral_views = build_neutral_observer_views(observer_views)
     distance = neutral_distance_matrix(neutral_views, weights)
+    quotient_contract = _neutral_quotient_geometry_contract(
+        distance,
+        neutral_views,
+        refinement=refinement or {},
+    )
     dimension = strict_neutral_dimension_report(distance)
     leakage = neutral_leakage_audit(distance, observer_views)
     model_selection = model_selection or neutral_model_selection(
@@ -592,11 +610,13 @@ def strict_neutral_bulk_report(
         leakage,
         controls or {},
         refinement or {},
+        quotient_contract,
     )
     return {
         "mode": "strict_neutral_bulk_record_transition_audit",
         "observer_count": len(neutral_views),
         "distance_matrix_shape": list(distance.shape),
+        "quotient_geometry_contract": quotient_contract,
         "dimension": dimension,
         "model_selection": model_selection,
         "leakage": leakage,
@@ -635,6 +655,37 @@ def strict_neutral_bulk_report(
         ],
         "claim_boundary": "Strict neutral audit scaffold; receipt remains false until Pro-defined gates pass.",
     }
+
+
+def _neutral_quotient_geometry_contract(
+    distance: np.ndarray,
+    neutral_views: list[NeutralObserverView],
+    *,
+    refinement: dict[str, Any],
+) -> dict[str, Any]:
+    channel_manifest = [
+        ChannelMetricSpec(name=name, weight=weight, missingness="complete_case")
+        for name, weight in DEFAULT_NEUTRAL_WEIGHTS.items()
+        if float(weight) > 0.0
+    ]
+    # The neutral report only knows the record-space distance. Atlas, feature
+    # transport, invariance, and statistical split receipts must come from the
+    # run pack before strict neutral bulk can promote.
+    return quotient_geometry_certificate(
+        distance,
+        quotient_ids=[str(view.observer_id) for view in neutral_views],
+        channel_manifest=channel_manifest,
+        metric_mode="complete_case",
+        jointly_separating=False,
+        missingness_quotient_visible=True,
+        atlas_receipt={},
+        feature_receipt={"quotient_visible_missingness": True, "max_transport_defect": 0.0},
+        invariance_receipt={},
+        refinement_receipt=refinement,
+        statistics_receipt={},
+        require_metric=True,
+        require_euclidean=False,
+    )
 
 
 def write_strict_neutral_bulk_report(

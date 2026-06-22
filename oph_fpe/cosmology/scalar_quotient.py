@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.screen_to_primordial import source_only_quotient_screen_scalar
 
 
 SCALAR_READOUT_FIELDS = (
@@ -64,6 +65,11 @@ def scalar_quotient_report(
     center_removed = scalar_field - float(np.mean(scalar_field))
     axes = _unit_axes(observer_views)
     dipole = _remove_monopole_dipole(scalar_field, axes)
+    source_scalar = source_only_quotient_screen_scalar(scalar_field, axes)
+    source_scalar_values = source_scalar.pop("values")
+    source_scalar["values_sha256"] = hashlib.sha256(
+        json.dumps(source_scalar_values, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    ).hexdigest()
 
     target_level_count = int(target_ell_ir) + 1
     observer_level_proxy = int(math.floor(math.sqrt(len(observer_views))))
@@ -111,6 +117,11 @@ def scalar_quotient_report(
             "variance": float(np.var(scalar_field)),
             "centered_variance": float(np.var(center_removed)),
             **dipole,
+        },
+        "source_only_quotient_scalar": {
+            **source_scalar,
+            "low_mode_projector": "weighted_l0_l1_removal",
+            "source": "observer_visible_scalar_readout_fields",
         },
         "active_angular_levels": {
             "target_ell_IR": int(target_ell_ir),
