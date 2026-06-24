@@ -4,7 +4,14 @@ from oph_fpe.bulk.dimensions import dimension_report
 from oph_fpe.bulk.modular_lift import final_modular_embedding, modular_lift_dimension_report
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap, pullback_field, sample_caps
 from oph_fpe.bulk.bw_verifier import BWResidualReport, bw_residual_report
-from oph_fpe.bulk.collar_state import CollarPartition, classical_cmi, fawzi_renner_bound
+from oph_fpe.bulk.collar_state import (
+    CollarPartition,
+    classical_cmi,
+    classical_diagonal_cmi_nats,
+    fawzi_renner_bound,
+    fawzi_renner_trace_bound_nats,
+    visible_packet_encoding_report,
+)
 from oph_fpe.bulk.markov_collar import collar_markov_report
 from oph_fpe.bulk.modular_probe import state_derived_bw_report
 from oph_fpe.bulk.conformal_spatial_chart import conformal_h3_spatial_chart_report
@@ -84,11 +91,13 @@ __all__ = [
     "bw_residual_report",
     "cap_weights",
     "classical_cmi",
+    "classical_diagonal_cmi_nats",
     "collar_markov_report",
     "conformal_h3_spatial_chart_report",
     "collect_h3_runs",
     "dimension_report",
     "fawzi_renner_bound",
+    "fawzi_renner_trace_bound_nats",
     "final_modular_embedding",
     "finite_oph_theorem_contract_report",
     "graph_distance_matrix",
@@ -118,6 +127,7 @@ __all__ = [
     "neutral_dimension_report_from_distance",
     "observer_distance_matrix",
     "observer_similarity_matrix",
+    "visible_packet_encoding_report",
     "observer_similarity_components",
     "planted_dimension_report",
     "planted_neutral_control_report",

@@ -137,6 +137,8 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
         "compressed_dark_sector": {
             "a0_eff_m_s2": 1.179018696e-10,
             "rho_A_over_rho_b": 5.363470441,
+            "Omega_A_source": "RESIDUAL_DEFINITION_FLAT_BENCHMARK",
+            "Omega_K_source": "EXPLICIT_ASSUMPTION_FLAT_BENCHMARK",
             "rho_A_over_rho_b_planck_ratio": PLANCK_RATIO_OMEGA_C_OVER_B,
             "rho_A_over_rho_b_pull_sigma": (5.363470441 - PLANCK_RATIO_OMEGA_C_OVER_B)
             / PLANCK_RATIO_OMEGA_C_OVER_B_SIGMA,

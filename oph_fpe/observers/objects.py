@@ -165,7 +165,7 @@ def counterfactual_stability(
 
 def observer_object_report(record_families: list[RecordFamily], observer_views: Iterable[dict[str, Any]]) -> dict[str, Any]:
     views = list(observer_views)
-    agreements = np.array([object_consensus_score(family, views) for family in record_families], dtype=float)
+    agreements = _object_consensus_scores(record_families, views)
     persistent = [family for family in record_families if family.persistence > 0 and family.overlap_agreement > 0.0]
     return {
         "object_count": len(record_families),
@@ -188,6 +188,72 @@ def observer_object_report(record_families: list[RecordFamily], observer_views: 
             "This is not yet bulk reconstruction."
         ),
     }
+
+
+def _object_consensus_scores(record_families: list[RecordFamily], observer_views: list[dict[str, Any]]) -> np.ndarray:
+    patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    mass_cache: dict[tuple[str, int], np.ndarray] = {}
+    descriptor_score_cache: dict[tuple[tuple[str, int], ...], float] = {}
+    scores = np.zeros(len(record_families), dtype=float)
+    for index, family in enumerate(record_families):
+        descriptor = family.transition_affinity if isinstance(family.transition_affinity, dict) else {}
+        if descriptor:
+            descriptor_key = tuple(sorted((str(name), int(value)) for name, value in descriptor.items()))
+            cached = descriptor_score_cache.get(descriptor_key)
+            if cached is None:
+                cached = _transition_descriptor_consensus_score(descriptor_key, patch_views, mass_cache)
+                descriptor_score_cache[descriptor_key] = cached
+            if cached > 0.0:
+                scores[index] = cached
+                continue
+        scores[index] = object_consensus_score(family, patch_views)
+    return scores
+
+
+def _transition_descriptor_consensus_score(
+    descriptor_key: tuple[tuple[str, int], ...],
+    patch_views: list[dict[str, Any]],
+    mass_cache: dict[tuple[str, int], np.ndarray],
+) -> float:
+    if not descriptor_key or not patch_views:
+        return 0.0
+    term_arrays = [_view_histogram_mass_array(patch_views, field, value, mass_cache) for field, value in descriptor_key]
+    if not term_arrays:
+        return 0.0
+    masses = np.vstack(term_arrays)
+    positive = masses > 0.0
+    positive_counts = np.sum(positive, axis=0)
+    valid = positive_counts > 0
+    if not np.any(valid):
+        return 0.0
+    log_sum = np.sum(np.where(positive, np.log(np.maximum(masses, 1e-12)), 0.0), axis=0)
+    view_scores = np.exp(log_sum[valid] / positive_counts[valid])
+    return float(np.mean(np.clip(view_scores, 0.0, 1.0))) if view_scores.size else 0.0
+
+
+def _view_histogram_mass_array(
+    patch_views: list[dict[str, Any]],
+    field: str,
+    value: int,
+    mass_cache: dict[tuple[str, int], np.ndarray],
+) -> np.ndarray:
+    key = (str(field), int(value))
+    cached = mass_cache.get(key)
+    if cached is not None:
+        return cached
+    masses = np.zeros(len(patch_views), dtype=float)
+    for index, view in enumerate(patch_views):
+        if field == "object_packet":
+            masses[index] = _histogram_value(view.get("object_packet_histogram", {}), value)
+            continue
+        histograms = view.get("transition_affinity_histograms", {})
+        mass = _histogram_value(histograms.get(field, {}) if isinstance(histograms, dict) else {}, value)
+        if mass <= 0.0:
+            history = view.get("transition_history_histograms", {})
+            mass = _histogram_value(history.get(field, {}) if isinstance(history, dict) else {}, value)
+        masses[index] = mass
+    mass_cache[key] = masses
+    return masses
 
 
 def assign_counterfactual_stability_from_records(

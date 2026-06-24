@@ -17,10 +17,12 @@ def test_selector_elimination_derives_exact_targets_without_source_dir():
     pixel = OPHPixelConstants()
     expected_eta = math.e * (pixel.P - pixel.phi)
 
-    assert report["THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT"] is True
+    assert report["THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT"] is False
     assert report["SOURCE_PACKET_AUDIT_RECEIPT"] is False
-    assert report["selector_elimination"]["q_IR_selector_removed"] is True
-    assert report["selector_elimination"]["ell_IR_selector_removed"] is True
+    assert report["selector_elimination"]["q_IR_selector_removed"] is False
+    assert report["selector_elimination"]["ell_IR_selector_removed"] is False
+    assert report["selector_elimination"]["IR_SEMIGROUP_TIME_RECEIPT"] is False
+    assert report["selector_elimination"]["IR_SOURCE_RECEIPT"] is False
     assert report["selector_elimination"]["eta_R_free_selector_removed"] is False
     assert report["selector_elimination"]["eta_R_reduced_to_repair_clock_certificate"] is True
     assert report["cmb_ir_kernel"]["q_IR"] == 0.25

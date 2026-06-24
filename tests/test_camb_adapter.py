@@ -251,7 +251,7 @@ def test_write_oph_exact_cmb_camb_report_smoke(tmp_path: Path):
     assert abs(report["oph_exact_input"]["n_s"] - 0.964841143031) < 2.0e-12
     assert report["oph_exact_input"]["q_IR"] == 0.25
     assert report["oph_exact_input"]["ell_IR"] == 32.0
-    assert report["oph_exact_input"]["selector_elimination_theorem_receipt"] is True
+    assert report["oph_exact_input"]["selector_elimination_theorem_receipt"] is False
     assert report["oph_exact_input"]["selector_elimination_source_audit_receipt"] is True
     assert report["selector_elimination_v1_5"]["SOURCE_PACKET_AUDIT_RECEIPT"] is True
     assert report["comparison"]["oph_exact_ir_v10"]["usable"] is True

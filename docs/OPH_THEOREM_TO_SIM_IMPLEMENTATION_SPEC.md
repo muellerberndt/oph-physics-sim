@@ -2,7 +2,7 @@
 
 This document is the stable contract between OPH paper claims and the finite OPH-FPE simulator. It
 describes what the simulator exports, which receipts gate each claim, and which visual or diagnostic
-surfaces must remain non-claims. Concrete run outcomes, dated status notes, and intermediate
+surfaces must remain non-claims. Concrete run outcomes, dated run notes, and intermediate
 experiment logs belong in run artifacts, reports, handoffs, or correspondence directories, not here.
 
 ## Scope

@@ -8,7 +8,7 @@ The working surface includes finite consensus receipts, observer record algebra,
 
 ## Receipt Boundaries
 
-The README describes the simulator surface. Pass/fail status belongs in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles.
+The README describes the simulator surface. Pass/fail receipt labels belong in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles. Mutable project progress belongs in GitHub issues.
 
 The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, and production particle route are separate claim paths. A diagnostic chart or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output.
 
@@ -74,7 +74,7 @@ python3 -m oph_fpe.cli reference-vacuum-baseline \
   --smoothing-sigma 0.05
 ```
 
-This writes a direct-sampled free-scalar harmonic Gaussian baseline, a compact-`U(1)` lattice-gauge reference sampler, partition-replay receipts, smoothing provenance, finite-mode refinement diagnostics, and false OPH-native promotion receipts.
+This writes a direct-sampled free-scalar harmonic Gaussian baseline, a compact-`U(1)` lattice-gauge reference sampler, deterministic replay receipts, smoothing provenance, finite-mode refinement diagnostics, and false OPH-native promotion receipts. Semantic-stream replay and canonical serial-chain replay are reported separately from pathwise partition invariance, which remains false unless a concrete commuting-event or transaction-serialization receipt passes.
 
 Parallel BW sweeps:
 
@@ -228,7 +228,7 @@ python3 -m oph_fpe.cli physical-cmb-output-comparison --run-dir runs/<run_id> --
 
 ## Defects And Particles
 
-The screen-holonomy layer writes defect clusters, timelines, interaction proxies, H3 worldline fits, and particle-likeness reports. These are screen/collar diagnostics. Production particle matter requires a separate receipt, and the particle derivation is work in progress.
+The screen-holonomy layer writes defect clusters, timelines, interaction proxies, H3 worldline fits, and particle-likeness reports. These are screen/collar diagnostics. Production particle matter requires a separate receipt; until that receipt passes, the simulator emits diagnostics only.
 
 Useful commands:
 
@@ -284,5 +284,7 @@ python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen
 - `docs/OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: single simulator state, theorem-to-code,
   paper-alignment, and claim-promotion contract.
 - `docs/oph_universe_timeline_visualization_payload_v1.schema.json`: visualizer payload schema, including fluctuating-vacuum, observer-camera, and effective-string view contracts.
+- `docs/VISUALIZATION_APP_AGENT_MANUAL.md`: app-agent manual for producing the quantum-vacuum,
+  observer-camera, effective-string, repair, H3, and CMB diagnostic visualizations from the payload.
 - `docs/small_oph_universe_v1.md`: exact finite-consensus calibration harness.
 - `REPRODUCTION.md`: reproducibility notes.

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from oph_fpe.cosmology.screen_spectrum import screen_cl
+
 
 def cl_oph_screen(
     ell: np.ndarray,
@@ -14,8 +16,16 @@ def cl_oph_screen(
     """Analytic OPH-CET screen covariance used as a CMB fossil diagnostic."""
 
     ell_values = np.asarray(ell, dtype=float)
-    denom = np.maximum(ell_values * (ell_values + 1.0) + float(mu) * float(mu), 1e-30)
-    base = float(A) / np.power(denom, 1.0 - float(eta) / 2.0)
+    base = np.asarray(
+        screen_cl(
+            ell_values,
+            A_q=float(A),
+            theta=float(eta),
+            mu=float(mu),
+            model="FRACTIONAL_LAPLACIAN_ASYMPTOTIC",
+        ),
+        dtype=float,
+    )
     window = np.exp(-ell_values * (ell_values + 1.0) / (float(ell_cap) * float(ell_cap)))
     return base * window * window
 

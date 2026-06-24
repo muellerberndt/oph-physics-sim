@@ -7,7 +7,7 @@ from oph_fpe.cosmology.source_provenance import (
 
 
 def test_cmb_source_provenance_certificate_accepts_clean_source_graph():
-    cert = certify_cmb_source_provenance(_clean_nodes(), _clean_reducers())
+    cert = certify_cmb_source_provenance(_clean_nodes(), _clean_reducers(), global_checks=_clean_global_checks())
 
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is True
     assert cert["blockers"] == []
@@ -19,17 +19,40 @@ def test_cmb_source_provenance_fails_closed_on_no_data_contradiction():
     nodes[0]["no_cmb_data_used"] = True
     nodes[0]["fit_to_planck"] = True
 
-    cert = certify_cmb_source_provenance(nodes, _clean_reducers())
+    cert = certify_cmb_source_provenance(nodes, _clean_reducers(), global_checks=_clean_global_checks())
 
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
     assert "contradictory_no_data_use_provenance:eta_R" in cert["blockers"]
+
+
+def test_cmb_source_provenance_rejects_measurement_dependent_ancestor():
+    nodes = _clean_nodes()
+    nodes[0]["parents"] = ["planck_selector"]
+    nodes.append(
+        {
+            "node_id": "planck_selector",
+            "quantity": "model_selection",
+            "source": "measurement_fit",
+            "source_kind": "measurement_fit",
+            "source_only": False,
+            "no_cmb_data_used": False,
+            "measurement_data_used": True,
+            "parents": [],
+        }
+    )
+
+    cert = certify_cmb_source_provenance(nodes, _clean_reducers(), global_checks=_clean_global_checks())
+
+    assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
+    assert cert["TRANSITIVE_SOURCE_ANCESTRY_RECEIPT"] is False
+    assert any("planck_selector" in blocker and "eta_R->planck_selector" in blocker for blocker in cert["blockers"])
 
 
 def test_cmb_source_provenance_requires_pooled_or_single_global_reducers():
     reducers = _clean_reducers()
     reducers["B_A_k_a"] = {"mode": "shard_local_average"}
 
-    cert = certify_cmb_source_provenance(_clean_nodes(), reducers)
+    cert = certify_cmb_source_provenance(_clean_nodes(), reducers, global_checks=_clean_global_checks())
 
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
     assert "B_A_k_a_source_reducer_not_pooled_or_global" in cert["blockers"]
@@ -44,7 +67,7 @@ def test_cmb_source_provenance_blocks_additive_N_CRC_without_disjoint_schema():
         "disjoint_coverage_receipt": False,
     }
 
-    cert = certify_cmb_source_provenance(_clean_nodes(), reducers)
+    cert = certify_cmb_source_provenance(_clean_nodes(), reducers, global_checks=_clean_global_checks())
 
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
     assert "N_CRC_not_consensus_invariant_or_additive_disjoint" in cert["blockers"]
@@ -94,3 +117,12 @@ def _clean_reducers() -> dict[str, dict]:
         "disjoint_coverage_receipt": False,
     }
     return reducers
+
+
+def _clean_global_checks() -> dict[str, object]:
+    return {
+        "official_likelihood_rollup": "global",
+        "cdm_limit_rollup": "global",
+        "HERMETIC_READ_SET_RECEIPT": True,
+        "SOURCE_MODEL_FREEZE_RECEIPT": True,
+    }

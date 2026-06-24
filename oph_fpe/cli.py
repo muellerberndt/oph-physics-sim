@@ -1154,8 +1154,10 @@ def main(argv: list[str] | None = None) -> int:
         default="record_family_modular_response_mixture",
         choices=[
             "record_family_modular_response_mixture",
+            "transition_affinity_modular_response_mixture",
             "record_sector_checkpoint_lineage",
             "transition_history",
+            "transition_history_mixture_cluster",
             "observer_transition_mixture_cluster",
         ],
     )
@@ -1200,7 +1202,23 @@ def main(argv: list[str] | None = None) -> int:
     universe_timeline_viewer_parser.add_argument("--out-dir", required=True, type=Path)
     universe_timeline_viewer_parser.add_argument("--max-screen-points", default=3500, type=int)
     universe_timeline_viewer_parser.add_argument("--max-observers", default=96, type=int)
+    universe_timeline_viewer_parser.add_argument(
+        "--max-objective-observer-views",
+        default=None,
+        type=int,
+        help="cap detailed observer-local camera/readout payloads; default exports every observer row",
+    )
     universe_timeline_viewer_parser.add_argument("--max-h3-objects", default=512, type=int)
+    universe_timeline_viewer_parser.add_argument(
+        "--skip-viewer",
+        action="store_true",
+        help="write the JSON/sidecar payload without embedding it into a standalone HTML viewer",
+    )
+    universe_timeline_viewer_parser.add_argument(
+        "--compact-json",
+        action="store_true",
+        help="write compact JSON for large full-data exports",
+    )
 
     scale_viewer_parser = subparsers.add_parser(
         "run-scale-compressed-viewer",
@@ -1234,6 +1252,23 @@ def main(argv: list[str] | None = None) -> int:
     defect_assay_parser.add_argument("--holonomy", default=1, type=int)
     defect_assay_parser.add_argument("--cycle-stride", default=8, type=int)
     defect_assay_parser.add_argument("--max-support-fraction", default=0.05, type=float)
+
+    gravity_assay_parser = subparsers.add_parser(
+        "controlled-two-defect-gravity-assay",
+        help="write a controlled two-defect stress-contraction diagnostic assay report",
+    )
+    gravity_assay_parser.add_argument("--out", required=True, type=Path)
+    gravity_assay_parser.add_argument("--patch-count", default=65_536, type=int)
+    gravity_assay_parser.add_argument("--steps", default=16, type=int)
+    gravity_assay_parser.add_argument("--support-node-count", default=8, type=int)
+    gravity_assay_parser.add_argument("--holonomy", default=1, type=int)
+    gravity_assay_parser.add_argument("--initial-separation", default=1.2, type=float)
+    gravity_assay_parser.add_argument("--stress-coupling", default=0.04, type=float)
+    gravity_assay_parser.add_argument("--stress-radius", default=1.0, type=float)
+    gravity_assay_parser.add_argument("--curvature-radius", default=1.0, type=float)
+    gravity_assay_parser.add_argument("--cycle-stride", default=4, type=int)
+    gravity_assay_parser.add_argument("--min-approach-fraction", default=0.25, type=float)
+    gravity_assay_parser.add_argument("--min-control-margin", default=0.15, type=float)
 
     caps_to_h3_parser = subparsers.add_parser(
         "caps-to-h3-minimal",
@@ -2467,7 +2502,10 @@ def main(argv: list[str] | None = None) -> int:
             out_dir=args.out_dir,
             max_screen_points=args.max_screen_points,
             max_observers=args.max_observers,
+            max_objective_observer_views=args.max_objective_observer_views,
             max_h3_objects=args.max_h3_objects,
+            write_viewer=not args.skip_viewer,
+            compact_json=args.compact_json,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
@@ -2500,6 +2538,25 @@ def main(argv: list[str] | None = None) -> int:
             holonomy=args.holonomy,
             cycle_stride=args.cycle_stride,
             max_support_fraction=args.max_support_fraction,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "controlled-two-defect-gravity-assay":
+        from oph_fpe.defects.gravity_assay import write_two_defect_stress_contraction_assay_report
+
+        result = write_two_defect_stress_contraction_assay_report(
+            args.out,
+            patch_count=args.patch_count,
+            steps=args.steps,
+            support_node_count=args.support_node_count,
+            holonomy=args.holonomy,
+            initial_separation=args.initial_separation,
+            stress_coupling=args.stress_coupling,
+            stress_radius=args.stress_radius,
+            curvature_radius=args.curvature_radius,
+            cycle_stride=args.cycle_stride,
+            min_approach_fraction=args.min_approach_fraction,
+            min_control_margin=args.min_control_margin,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0

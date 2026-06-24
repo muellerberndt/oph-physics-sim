@@ -129,6 +129,44 @@ def test_large_run_readiness_blocks_wrong_scale_state_bw():
     assert report["claim_scale_candidate"] is False
 
 
+def test_large_run_readiness_accepts_finite_lorentz_clock_over_legacy_scale_diagnostic():
+    report = _large_run_readiness_report(
+        {"cosmology": {"freezeout": {"enabled": False}}},
+        state_bw_report={
+            "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": True,
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+            "correct_beats_controls": False,
+            "state_selected_scale_label": "1x",
+            "state_selected_2pi": False,
+            "generator_scale_audit": {
+                "enabled": True,
+                "best_label": "0",
+                "diagnosis": "no_flow_best",
+            },
+            "inferred_modular_clock_fit": {
+                "enabled": True,
+                "receipt": True,
+                "nearest_known_scale": "2pi",
+                "blockers": [],
+            },
+        },
+        transition_selection_report={},
+        cosmology_gate_report={},
+        observer_modular_experience_report={},
+        paper_3d_chart_report={},
+        theorem_core_report={},
+    )
+
+    state_lane = report["lanes"]["state_bw"]
+    assert state_lane["scale_candidate"] is True
+    assert state_lane["blockers"] == []
+    assert state_lane["details"]["finite_lorentz_modular_clock_receipt"] is True
+    assert "state_bw_controls_failed" in state_lane["details"]["legacy_scale_diagnostic_blockers"]
+    assert report["state_bw_expensive_run_worthwhile"] is True
+    assert report["recommended_large_run_lane"] == "state_bw_refinement"
+    assert report["claim_scale_candidate"] is True
+
+
 def test_large_run_readiness_routes_screen_proxy_without_state_bw_promotion():
     report = _large_run_readiness_report(
         {"cosmology": {"freezeout": {"enabled": True}}},
@@ -168,3 +206,28 @@ def test_large_run_readiness_routes_screen_proxy_without_state_bw_promotion():
     assert report["recommended_large_run_lane"] == "screen_cmb_proxy_refinement"
     assert report["claim_scale_candidate"] is True
     assert report["state_bw_expensive_run_worthwhile"] is False
+
+
+def test_large_run_readiness_routes_observer_facing_bulk_without_strict_neutral():
+    report = _large_run_readiness_report(
+        {"cosmology": {"freezeout": {"enabled": False}}},
+        state_bw_report={},
+        transition_selection_report={},
+        cosmology_gate_report={},
+        observer_modular_experience_report={
+            "observer_modular_time_receipt": True,
+            "observer_facing_3p1d_h3_experience_receipt": True,
+            "observer_facing_populated_h3_experience_receipt": True,
+        },
+        paper_3d_chart_report={
+            "paper_theorem_3d_bulk_chart_receipt": True,
+            "paper_theorem_object_populated_chart_precursor_receipt": True,
+            "paper_theorem_neutral_populated_bulk_receipt": False,
+        },
+        theorem_core_report={},
+    )
+
+    assert report["lanes"]["observer_facing_bulk"]["scale_candidate"] is True
+    assert report["lanes"]["bulk_3d"]["scale_candidate"] is False
+    assert report["recommended_large_run_lane"] == "observer_facing_bulk_visualization_refinement"
+    assert report["claim_scale_candidate"] is True

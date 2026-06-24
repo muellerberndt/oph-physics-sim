@@ -1452,6 +1452,24 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "finite_covariant_parent_recipient_stress": bool(
             finite_covariant_parent.get("EXPLICIT_RECIPIENT_STRESS_RECEIPT", False)
         ),
+        "finite_covariant_parent_exchange_current_closure": bool(
+            finite_covariant_parent.get("EXCHANGE_CURRENT_CLOSURE_RECEIPT", False)
+        ),
+        "finite_covariant_parent_physical_clock": bool(
+            finite_covariant_parent.get("PHYSICAL_CLOCK_RECEIPT", False)
+            or finite_covariant_parent.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+        ),
+        "finite_covariant_parent_active_fiber": bool(
+            finite_covariant_parent.get("ACTIVE_FIBER_RECEIPT", False)
+            or finite_covariant_parent.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+        ),
+        "finite_covariant_parent_conserved_sector_decomposition": bool(
+            finite_covariant_parent.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+        ),
+        "finite_covariant_parent_common_parent_response_pole": bool(
+            finite_covariant_parent.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+            or finite_covariant_parent.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+        ),
         "finite_covariant_parent_gauge_independence": bool(
             finite_covariant_parent.get("GAUGE_INDEPENDENCE_RECEIPT", False)
         ),
@@ -1535,6 +1553,21 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         ),
         "physical_cmb_frontier_recipient_stress": bool(
             physical_cmb_frontier_gates.get("recipient_stress_for_nonzero_Gamma_rec", False)
+        ),
+        "physical_cmb_frontier_exchange_current_closure": bool(
+            physical_cmb_frontier_gates.get("exchange_current_closure_for_nonzero_Gamma_rec", False)
+        ),
+        "physical_cmb_frontier_physical_clock": bool(
+            physical_cmb_frontier_gates.get("physical_clock_for_Gamma_rec", False)
+        ),
+        "physical_cmb_frontier_active_fiber": bool(
+            physical_cmb_frontier_gates.get("active_fiber_for_Gamma_rec", False)
+        ),
+        "physical_cmb_frontier_conserved_sector_decomposition": bool(
+            physical_cmb_frontier_gates.get("conserved_sector_decomposition_for_Gamma_rec", False)
+        ),
+        "physical_cmb_frontier_common_parent_response_pole": bool(
+            physical_cmb_frontier_gates.get("common_parent_response_pole_for_Gamma_rec", False)
         ),
         "physical_cmb_frontier_frozen_likelihood": bool(
             physical_cmb_frontier_gates.get("frozen_likelihood_protocol", False)

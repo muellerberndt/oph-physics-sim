@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from oph_fpe.cosmology.cosmological_scale_bridge import imported_flrw_reference_receipts
 from oph_fpe.cosmology.physical_cmb_prediction import (
     write_physical_cmb_frontier_report,
     write_physical_cmb_input_no_data_use_receipt,
@@ -48,6 +49,10 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
         {
             "finite_transition_matrix_ready": True,
             "eta_R_finite_lattice_derived": True,
+            "PHYSICAL_CLOCK_RECEIPT": True,
+            "ACTIVE_FIBER_RECEIPT": True,
+            "CONSERVED_SECTOR_DECOMPOSITION_RECEIPT": True,
+            "COMMON_PARENT_RESPONSE_POLE_RECEIPT": True,
             "primary": {"eta_R_estimate": 0.035, "gamma_continuous": 0.1},
         },
     )
@@ -82,12 +87,14 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
         run / "screen_capacity_closure_report.json",
         {"SCREEN_CAPACITY_CLOSURE_RECEIPT": True},
     )
-    _write_json(run / "strict_neutral_bulk_report.json", {"strict_neutral_bulk": True})
+    _write_json(run / "strict_neutral_bulk_report.json", {"strict_neutral_bulk": True, "freezeout_cycle": 24})
     _write_json(
         run / "oph_compressed_likelihood_report.json",
-        {"official_likelihood_ready": True, "cdm_limit_regression_passed": True},
+        {"official_likelihood_ready": True, "cdm_limit_regression_passed": True, "rollup": "global"},
     )
     _write_json(run / "finite_covariant_collar_packet_parent_report.json", _finite_parent_report())
+    _write_physical_scale_bridge(run)
+    _write_clean_source_provenance(run)
 
     report = write_physical_cmb_input_report([run], out)
 
@@ -194,6 +201,31 @@ def test_physical_cmb_input_report_accepts_official_readiness_likelihood_gate(tm
     assert summary["official_clik_api_available"] is True
 
 
+def test_generated_pooled_reducer_metadata_fails_closed_when_fields_absent(tmp_path: Path):
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_json(run / "no_data_use_receipt.json", {"NO_DATA_USE_RECEIPT": True})
+    _write_json(
+        run / "finite_certificate_report.json",
+        {
+            "theorem_grade_finite_inputs": True,
+            "no_cmb_data_used": True,
+            "pooled_sufficient_statistics_receipt": True,
+            "derived_outputs": {"A_zeta": 2.1e-9, "rho_A_a": [[0.5, 0.2]]},
+        },
+    )
+    _write_json(run / "oph_compressed_likelihood_report.json", {"rollup": "global"})
+    _write_json(run / "camb_lcdm_baseline_report.json", {"rollup": "global"})
+
+    report = write_physical_cmb_input_report([run], out)
+    provenance = report["source_provenance"]
+
+    assert provenance["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
+    assert "A_zeta_reducer_units_validated_missing" in provenance["blockers"]
+    assert "rho_A_a_reducer_units_validated_missing" in provenance["blockers"]
+
+
 def test_physical_cmb_input_report_uses_paired_parent_rho_A_rows(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
@@ -220,6 +252,26 @@ def test_physical_cmb_input_report_uses_paired_parent_rho_A_rows(tmp_path: Path)
     assert report["input_status"]["rho_A_a"]["source_is_finite_cmb_source"] is False
     assert report["physical_cmb_prediction"] is False
     assert "B_A_k_a_missing_or_not_finite" in report["blockers"]
+
+
+def test_physical_cmb_input_report_preserves_negative_diagnostic_rho_A(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "b_a_parent_report.json",
+        {
+            "mode": "paired_cap_collar_perturb_resettle_B_A_parent_v0",
+            "rows": [{"k_h_mpc": 0.1, "a": 0.5, "B_A_mean": 1.0, "rho_A": -7.5}],
+        },
+    )
+
+    out = tmp_path / "out"
+    report = write_physical_cmb_input_report([run], out)
+    contract = json.loads((out / "physical_cmb_input_contract.json").read_text(encoding="utf-8"))
+
+    assert contract["rho_A_a"] == [[0.5, -7.5]]
+    assert report["input_status"]["rho_A_a"]["positive_values"] is False
+    assert "rho_A_nonpositive_source_values" in report["blockers"]
 
 
 def test_physical_cmb_input_report_prefers_kernel_candidate_as_diagnostic(tmp_path: Path):
@@ -430,6 +482,10 @@ def _write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data), encoding="utf-8")
 
 
+def _write_physical_scale_bridge(run: Path) -> None:
+    _write_json(run / "physical_scale_bridge_report.json", imported_flrw_reference_receipts())
+
+
 def _finite_parent_report() -> dict:
     return {
         "mode": "finite_covariant_collar_packet_parent_v0",
@@ -437,14 +493,81 @@ def _finite_parent_report() -> dict:
         "STRESS_ENERGY_CLOSURE_RECEIPT": True,
         "GAUGE_INDEPENDENCE_RECEIPT": True,
         "EXPLICIT_RECIPIENT_STRESS_RECEIPT": True,
+        "EXCHANGE_CURRENT_CLOSURE_RECEIPT": True,
+        "PHYSICAL_CLOCK_RECEIPT": True,
+        "ACTIVE_FIBER_RECEIPT": True,
+        "CONSERVED_SECTOR_DECOMPOSITION_RECEIPT": True,
+        "COMMON_PARENT_RESPONSE_POLE_RECEIPT": True,
         "CAUSAL_RESPONSE_RECEIPT": True,
         "REFINEMENT_CONVERGENCE_RECEIPT": True,
         "CDM_LIMIT_RECOVERY_RECEIPT": True,
         "FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT": True,
         "Gamma_rec_nonzero": True,
-        "source_hash": "sha256:source",
-        "solver_hash": "sha256:solver",
-        "likelihood_hash": "sha256:likelihood",
+        "source_hash": _hash("0"),
+        "solver_hash": _hash("1"),
+        "likelihood_hash": _hash("2"),
         "blockers": [],
         "physical_cmb_prediction": False,
     }
+
+
+def _write_clean_source_provenance(run: Path) -> None:
+    sources = {
+        "eta_R": "finite_repair_transition_clock",
+        "Gamma_rec": "finite_repair_transition_clock",
+        "A_zeta": "finite_lattice",
+        "q_IR": "scale_compressed_24_round_finite_ladder",
+        "ell_IR": "scale_compressed_24_round_finite_ladder",
+        "B_A_k_a": "parent_collar_finite_difference",
+        "rho_A_a": "finite_lattice",
+        "N_CRC": "OPH_screen_capacity_branch_predeclared",
+    }
+    nodes = [
+        {
+            "node_id": quantity,
+            "quantity": quantity,
+            "source": source,
+            "source_kind": source,
+            "source_only": True,
+            "no_cmb_data_used": True,
+            "parents": [],
+        }
+        for quantity, source in sources.items()
+    ]
+    reducers = {
+        quantity: {
+            "mode": "pooled_sufficient_statistics",
+            "pooled_sufficient_statistics": True,
+            "units_validated": True,
+            "coordinate_grid_validated": True,
+            "coverage_validated": True,
+            "duplicates_checked": True,
+            "interpolation_policy_frozen": True,
+            "covariance_validated": True,
+            "shard_local_nonlinear_average": False,
+        }
+        for quantity in sources
+    }
+    reducers["N_CRC"] = {
+        "mode": "consensus_invariant",
+        "consensus_invariant": True,
+        "additive_capacity_schema": False,
+        "disjoint_coverage_receipt": False,
+    }
+    _write_json(
+        run / "cmb_source_provenance_report.json",
+        {
+            "nodes": nodes,
+            "reducers": reducers,
+            "global_checks": {
+                "official_likelihood_rollup": "global",
+                "cdm_limit_rollup": "global",
+                "HERMETIC_READ_SET_RECEIPT": True,
+                "SOURCE_MODEL_FREEZE_RECEIPT": True,
+            },
+        },
+    )
+
+
+def _hash(char: str) -> str:
+    return "sha256:" + char * 64

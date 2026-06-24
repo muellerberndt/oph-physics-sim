@@ -84,6 +84,14 @@ def observer_consensus_bulk_readout_report(
         finite_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False)
         or proof.get("paper_faithful_consensus_bulk_emergence_receipt", False)
     )
+    paper_geometric_branch_observer_spacetime = bool(
+        finite_contract.get("paper_geometric_branch_observer_spacetime_emergence_receipt", False)
+        or proof.get("paper_geometric_branch_observer_spacetime_emergence_receipt", False)
+    )
+    paper_geometric_branch_consensus_bulk = bool(
+        finite_contract.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
+        or proof.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
+    )
     physical_cmb_output = bool(
         cmb_output.get("USABLE_PHYSICAL_CMB_DATA_RECEIPT", False)
         or claims.get("physical_cmb_output_usable_data_receipt", False)
@@ -107,7 +115,15 @@ def observer_consensus_bulk_readout_report(
         "finite_lorentz_theorem_contract_receipt": finite_theorem_contract,
         "paper_faithful_observer_spacetime_emergence_receipt": paper_faithful_observer_spacetime,
         "paper_faithful_consensus_bulk_emergence_receipt": paper_faithful_consensus_bulk,
-        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
+        "paper_geometric_branch_observer_spacetime_emergence_receipt": (
+            paper_geometric_branch_observer_spacetime
+        ),
+        "paper_geometric_branch_consensus_bulk_emergence_receipt": (
+            paper_geometric_branch_consensus_bulk
+        ),
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": (
+            paper_geometric_branch_consensus_bulk
+        ),
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
         "chart_blind_strict_neutral_quotient_bulk_receipt": chart_blind_strict_neutral,
         "strict_neutral_third_person_bulk_receipt": chart_blind_strict_neutral,
@@ -148,12 +164,24 @@ def observer_consensus_bulk_readout_report(
             or proof.get("finite_theorem_contract_summary", {}).get("primary_blockers")
             or []
         ),
+        "paper_geometric_branch_blockers": list(
+            finite_contract.get("paper_geometric_branch_blockers")
+            or proof.get("finite_theorem_contract_summary", {}).get("paper_geometric_branch_blockers")
+            or []
+        ),
+        "paper_geometric_branch_primary_blockers": list(
+            finite_contract.get("paper_geometric_branch_primary_blockers")
+            or proof.get("finite_theorem_contract_summary", {}).get("paper_geometric_branch_primary_blockers")
+            or []
+        ),
         "claim_boundary": (
             "Instantiation of observer-like self-reading systems: local observer rows read support, "
             "record, modular-time, and visible-object data from run artifacts. A true theorem-assisted "
             "consensus 3D bulk readout means observer-local records share objects in a 3D H3 chart under "
-            "the current theorem-assisted route. The stricter paper-faithful observer-spacetime and "
-            "observer-facing consensus-bulk receipts additionally require the finite OPH theorem contract. "
+            "the current theorem-assisted route. The paper-geometric branch receipts additionally require "
+            "the declared KMS collar/cap 2*pi theorem branch. The stricter paper-faithful observer-spacetime "
+            "and observer-facing consensus-bulk receipts additionally require the endogenous finite OPH "
+            "theorem contract. "
             "The chart-blind strict neutral quotient audit is separate: it deliberately discards the S2/H3 "
             "chart prior and can fail without falsifying the observer-facing 3+1D/H3 theorem receipt. "
             "This is not a physical CMB prediction unless physical_cmb_prediction_receipt passes."
@@ -572,6 +600,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
     blocker_text = "\n".join(f"- {item}" for item in blockers[:12]) or "- none"
     contract_blockers = report.get("finite_theorem_contract_primary_blockers") or []
     contract_blocker_text = "\n".join(f"- {item}" for item in contract_blockers[:12]) or "- none"
+    branch_blockers = report.get("paper_geometric_branch_primary_blockers") or []
+    branch_blocker_text = "\n".join(f"- {item}" for item in branch_blockers[:12]) or "- none"
     return (
         "# Observer Consensus Bulk Readout\n\n"
         f"- observer-like self-reading receipt: {report['observer_like_self_reading_system_receipt']}\n"
@@ -584,6 +614,10 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"{report['paper_faithful_observer_spacetime_emergence_receipt']}\n"
         f"- paper-faithful consensus bulk emergence: "
         f"{report['paper_faithful_consensus_bulk_emergence_receipt']}\n"
+        f"- paper-geometric branch observer spacetime emergence: "
+        f"{report['paper_geometric_branch_observer_spacetime_emergence_receipt']}\n"
+        f"- paper-geometric branch consensus bulk emergence: "
+        f"{report['paper_geometric_branch_consensus_bulk_emergence_receipt']}\n"
         "- chart-blind strict neutral quotient bulk receipt: "
         f"{report['chart_blind_strict_neutral_quotient_bulk_receipt']}\n"
         f"- physical CMB output comparison receipt: {report['physical_cmb_output_comparison_receipt']}\n"
@@ -602,6 +636,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- median observers per neutral object: {neutral['median_observers_per_neutral_object']}\n\n"
         "## Finite Theorem Contract Blockers\n\n"
         f"{contract_blocker_text}\n\n"
+        "## Paper-Geometric Branch Blockers\n\n"
+        f"{branch_blocker_text}\n\n"
         "## Strict-Neutral Blockers\n\n"
         f"{blocker_text}\n\n"
         "## Claim Boundary\n\n"

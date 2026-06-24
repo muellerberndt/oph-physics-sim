@@ -7,11 +7,12 @@ import numpy as np
 from oph_fpe.bulk.cap_geometry import RoundCap
 from oph_fpe.bulk.collar_state import (
     cap_collar_partition,
-    classical_cmi,
+    classical_diagonal_cmi_nats,
     collar_triplet_packets,
     empirical_packet_distribution,
     fawzi_renner_bound,
     sector_conditioned_cmi,
+    visible_packet_encoding_report,
     visible_packets,
 )
 
@@ -26,6 +27,7 @@ def collar_markov_report(
     seed: int = 1,
 ) -> dict[str, Any]:
     packets = visible_packets(raw_fields, packet_bins)
+    packet_encoding = visible_packet_encoding_report(raw_fields, packet_bins)
     sector_packets = _sector_packets(raw_fields, packets)
     rows = []
     for cap_id, cap in enumerate(caps):
@@ -38,7 +40,7 @@ def collar_markov_report(
             seed=seed + cap_id,
         )
         if a.size:
-            epsilon_cmi = classical_cmi(a, b, d)
+            epsilon_cmi = classical_diagonal_cmi_nats(a, b, d)
             sector_cmi = sector_conditioned_cmi(a, b, d, sector_packets[collar_nodes])
         else:
             epsilon_cmi = 0.0
@@ -53,18 +55,32 @@ def collar_markov_report(
                 "collar_count": int(np.sum(partition.collar_mask)),
                 "outside_count": int(np.sum(partition.outside_mask)),
                 "epsilon_cmi": float(epsilon_cmi),
+                "classical_diagonal_cmi_nats": float(epsilon_cmi),
+                "state_semantics": "classical_commuting",
+                "log_unit": "nat",
                 "sector_conditioned_cmi": sector_cmi,
                 "r_fr_bound": fawzi_renner_bound(epsilon_cmi),
                 "sample_count": int(points.shape[0]),
                 "packet_alphabet_size": int(len(alphabet)),
                 "triplet_count": int(a.size),
-                "claim_boundary": "classical diagonal collar-Markov receipt, not final noncommutative BW proof",
+                "claim_boundary": (
+                    "classical diagonal collar-Markov diagnostic in nats; not a noncommutative "
+                    "collar CMI, not a modular source charge, and not a finite Einstein-source proof"
+                ),
             }
         )
     eps = [row["epsilon_cmi"] for row in rows]
     return {
         "mode": "diagonal_empirical_collar_state",
-        "claim_boundary": "classical diagonal collar-Markov receipt, not final noncommutative BW proof",
+        "state_semantics": "classical_commuting",
+        "log_unit": "nat",
+        "packet_encoding": packet_encoding,
+        "SOURCE_LOCALIZATION_SATURATION_RECEIPT": False,
+        "MODULAR_SOURCE_CHARGE_RECEIPT": False,
+        "claim_boundary": (
+            "classical diagonal collar-Markov diagnostic in nats; not final noncommutative BW proof, "
+            "not a modular source charge, and not a physical anomaly-density source"
+        ),
         "cap_count": len(rows),
         "median_epsilon_cmi": float(np.median(eps)) if eps else 0.0,
         "mean_epsilon_cmi": float(np.mean(eps)) if eps else 0.0,

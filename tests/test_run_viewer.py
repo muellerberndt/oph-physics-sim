@@ -147,6 +147,22 @@ def test_object_h3_bulk_viewer_writes_object_cloud(tmp_path: Path):
     assert (viewer.parent / "object_h3_bulk_viewer_summary.json").exists()
 
 
+def test_object_h3_bulk_viewer_reads_split_h3_object_columns(tmp_path: Path):
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    (run_dir / "h3_objects.csv").write_text(
+        "object_id,observer_count,support_size,h3_compactness,h3_compactness_normalized,h3_x,h3_y,h3_z\n"
+        "obj0,4,12,0.2,0.5,0.1,0.2,0.3\n"
+        "obj1,9,22,0.4,0.7,-0.4,0.3,0.2\n",
+        encoding="utf-8",
+    )
+
+    summary = write_object_h3_bulk_viewer(run_dir)
+
+    assert summary["source_path"].endswith("h3_objects.csv")
+    assert summary["object_count"] == 2
+
+
 def test_cmb_neutral_frontier_viewer_writes_gate_and_cmb_summary(tmp_path: Path):
     run_dir = tmp_path / "pack"
     run_dir.mkdir()

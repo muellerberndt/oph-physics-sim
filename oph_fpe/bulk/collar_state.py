@@ -1,12 +1,24 @@
 from __future__ import annotations
 
 import math
+from hashlib import sha256
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, collar_mask
+
+_VISIBLE_PACKET_FIELDS = (
+    "record_signature",
+    "committed_mask",
+    "stable_count",
+    "repair_load",
+    "s3_class_density",
+    "local_mismatch_density",
+)
+_VISIBLE_PACKET_CACHE_MAX_ENTRIES = 256
+_VISIBLE_PACKET_CACHE: dict[tuple[Any, ...], np.ndarray] = {}
 
 
 @dataclass(frozen=True)
@@ -41,17 +53,12 @@ def visible_packets(state: dict[str, np.ndarray], bins: dict[str, int] | None = 
     """Encode observer-visible per-node fields into compact integer packet ids."""
 
     bins = bins or {}
-    keys = [
-        "record_signature",
-        "committed_mask",
-        "stable_count",
-        "repair_load",
-        "s3_class_density",
-        "local_mismatch_density",
-    ]
-    present = [key for key in keys if key in state]
+    present = [key for key in _VISIBLE_PACKET_FIELDS if key in state]
     if not present:
         raise ValueError("visible_packets requires at least one visible field")
+    cache_key = _visible_packet_cache_key(state, bins, present)
+    if cache_key is not None and cache_key in _VISIBLE_PACKET_CACHE:
+        return _VISIBLE_PACKET_CACHE[cache_key]
     encoded = np.zeros(len(np.asarray(state[present[0]])), dtype=np.int64)
     radix = 1
     for key in present:
@@ -61,11 +68,72 @@ def visible_packets(state: dict[str, np.ndarray], bins: dict[str, int] | None = 
         elif key == "committed_mask":
             component = values.astype(bool).astype(np.int64)
         else:
-            component = _bin_float(values.astype(float), int(bins.get(key, 8)))
+            component = _bin_float(
+                values.astype(float),
+                int(bins.get(key, 8)),
+                edges=bins.get(f"{key}_edges"),
+            )
         base = int(np.max(component)) + 1 if component.size else 1
         encoded += radix * component
         radix *= max(base, 1)
+    if cache_key is not None:
+        if len(_VISIBLE_PACKET_CACHE) >= _VISIBLE_PACKET_CACHE_MAX_ENTRIES:
+            _VISIBLE_PACKET_CACHE.clear()
+        _VISIBLE_PACKET_CACHE[cache_key] = encoded
     return encoded
+
+
+def visible_packet_encoding_report(state: dict[str, np.ndarray], bins: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return theorem-facing metadata for the visible packet encoding.
+
+    The packet ids are diagnostics unless integer compression is collision-free
+    and any float bin edges are declared/frozen outside the promoted sample.
+    """
+
+    bins = bins or {}
+    present = [key for key in _VISIBLE_PACKET_FIELDS if key in state]
+    if not present:
+        raise ValueError("visible_packet_encoding_report requires at least one visible field")
+    rows: list[dict[str, Any]] = []
+    theorem_safe = True
+    for key in present:
+        values = np.asarray(state[key])
+        if key == "record_signature":
+            component = _compress_ints(values.astype(np.int64), max_classes=int(bins.get(key, 64)))
+            collision_count = _compressed_int_collision_count(values.astype(np.int64), component)
+            theorem_safe = theorem_safe and collision_count == 0
+            rows.append(
+                {
+                    "field": key,
+                    "encoding": "canonical_unique_inverse",
+                    "collision_count": int(collision_count),
+                    "theorem_safe": collision_count == 0,
+                }
+            )
+        elif key == "committed_mask":
+            rows.append({"field": key, "encoding": "boolean", "collision_count": 0, "theorem_safe": True})
+        else:
+            edge_key = f"{key}_edges"
+            explicit = edge_key in bins
+            theorem_safe = theorem_safe and explicit
+            rows.append(
+                {
+                    "field": key,
+                    "encoding": "frozen_edges" if explicit else "sample_quantile_edges",
+                    "collision_count": 0,
+                    "theorem_safe": explicit,
+                }
+            )
+    return {
+        "state_semantics": "classical_commuting",
+        "log_unit": "nat",
+        "fields": rows,
+        "THEOREM_SAFE_PACKET_ENCODING_RECEIPT": bool(theorem_safe),
+        "claim_boundary": (
+            "Visible packet ids encode the commuting classical readout used by diagnostics. "
+            "Theorem promotion requires collision-free integer ids and externally frozen float bins."
+        ),
+    }
 
 
 def empirical_packet_distribution(packets: np.ndarray, mask: np.ndarray, *, min_count: int = 1) -> dict[int, float]:
@@ -113,12 +181,18 @@ def entropy_from_distribution(distribution: dict[Any, float]) -> float:
     return float(-np.sum(probs * np.log(probs)))
 
 
-def classical_cmi(a_packets: np.ndarray, b_packets: np.ndarray, d_packets: np.ndarray) -> float:
+def classical_diagonal_cmi_nats(a_packets: np.ndarray, b_packets: np.ndarray, d_packets: np.ndarray) -> float:
     h_ab = entropy_from_distribution(joint_packet_distribution(a_packets, b_packets))
     h_bd = entropy_from_distribution(joint_packet_distribution(b_packets, d_packets))
     h_b = entropy_from_distribution(empirical_packet_distribution(b_packets, np.ones_like(b_packets, dtype=bool)))
     h_abd = entropy_from_distribution(joint_packet_distribution(a_packets, b_packets, d_packets))
     return max(0.0, float(h_ab + h_bd - h_b - h_abd))
+
+
+def classical_cmi(a_packets: np.ndarray, b_packets: np.ndarray, d_packets: np.ndarray) -> float:
+    """Backward-compatible alias for the commuting diagnostic CMI in nats."""
+
+    return classical_diagonal_cmi_nats(a_packets, b_packets, d_packets)
 
 
 def sector_conditioned_cmi(
@@ -134,12 +208,23 @@ def sector_conditioned_cmi(
         mask = sectors == sector
         if int(np.sum(mask)) < 3:
             continue
-        result[names.get(int(sector), str(int(sector)))] = classical_cmi(a_packets[mask], b_packets[mask], d_packets[mask])
+        result[names.get(int(sector), str(int(sector)))] = classical_diagonal_cmi_nats(
+            a_packets[mask],
+            b_packets[mask],
+            d_packets[mask],
+        )
     return result
 
 
+def fawzi_renner_trace_bound_nats(cmi_nats: float) -> float:
+    value = max(float(cmi_nats), 0.0)
+    return min(2.0, 2.0 * math.sqrt(max(0.0, 1.0 - math.exp(-value))))
+
+
 def fawzi_renner_bound(epsilon_cmi: float) -> float:
-    return 2.0 * math.sqrt(max(float(epsilon_cmi), 0.0))
+    """Backward-compatible Fawzi--Renner trace-distance bound for CMI in nats."""
+
+    return fawzi_renner_trace_bound_nats(epsilon_cmi)
 
 
 def collar_triplet_packets(
@@ -173,17 +258,56 @@ def _nearest(points: np.ndarray, candidates: np.ndarray, queries: np.ndarray) ->
 
 
 def _compress_ints(values: np.ndarray, max_classes: int) -> np.ndarray:
-    max_classes = max(1, int(max_classes))
     _, inverse = np.unique(values, return_inverse=True)
-    return (inverse % max_classes).astype(np.int64)
+    return inverse.astype(np.int64)
 
 
-def _bin_float(values: np.ndarray, count: int) -> np.ndarray:
+def _compressed_int_collision_count(values: np.ndarray, encoded: np.ndarray) -> int:
+    rows = np.stack([np.asarray(encoded, dtype=np.int64), np.asarray(values, dtype=np.int64)], axis=1)
+    encoded_values = np.unique(rows[:, 0])
+    collisions = 0
+    for code in encoded_values:
+        originals = np.unique(rows[rows[:, 0] == code, 1])
+        collisions += max(0, int(originals.size) - 1)
+    return int(collisions)
+
+
+def _visible_packet_cache_key(
+    state: dict[str, np.ndarray],
+    bins: dict[str, int],
+    present: list[str],
+) -> tuple[Any, ...] | None:
+    parts: list[Any] = []
+    for key in present:
+        raw_values = state.get(key)
+        values = np.asarray(raw_values)
+        if values.ndim != 1:
+            return None
+        bin_count = int(bins.get(key, 64 if key == "record_signature" else 8))
+        parts.append((key, _array_hash(values), values.shape, values.dtype.str, bin_count))
+    return tuple(parts)
+
+
+def _bin_float(values: np.ndarray, count: int, *, edges: Any = None) -> np.ndarray:
     count = max(1, int(count))
     if count == 1 or values.size == 0:
         return np.zeros_like(values, dtype=np.int64)
+    if edges is not None:
+        edge_array = np.asarray(edges, dtype=float)
+        if edge_array.ndim != 1 or not np.all(np.isfinite(edge_array)):
+            raise ValueError("explicit packet bin edges must be a finite one-dimensional array")
+        return np.searchsorted(edge_array, values, side="right").astype(np.int64)
     finite = values[np.isfinite(values)]
     if finite.size == 0 or float(np.std(finite)) < 1e-12:
         return np.zeros_like(values, dtype=np.int64)
     quantiles = np.quantile(finite, np.linspace(0.0, 1.0, count + 1)[1:-1])
     return np.searchsorted(quantiles, values, side="right").astype(np.int64)
+
+
+def _array_hash(values: np.ndarray) -> str:
+    array = np.ascontiguousarray(values)
+    digest = sha256()
+    digest.update(array.dtype.str.encode("utf-8"))
+    digest.update(str(array.shape).encode("utf-8"))
+    digest.update(array.view(np.uint8))
+    return digest.hexdigest()

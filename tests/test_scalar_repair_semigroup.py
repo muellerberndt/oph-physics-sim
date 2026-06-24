@@ -15,9 +15,10 @@ from oph_fpe.cosmology.scalar_repair_semigroup import (
 def test_declared_scalar_semigroup_hits_e_but_is_not_finite_certificate() -> None:
     report = scalar_repair_semigroup_report()
 
-    assert report["SEMIGROUP_TARGET_RECEIPT"] is True
+    assert report["SEMIGROUP_TARGET_RECEIPT"] is False
     assert report["finite_lattice_derived"] is False
     assert report["repair_clock_certificate"] is False
+    assert report["matrix_source_audit"]["matrix_loaded"] is False
     assert report["semigroup"]["constant_mode_zero"] is True
     assert report["semigroup"]["centered_scalar_relaxation"] is True
     assert abs(report["semigroup"]["kappa_rep_estimate"] - math.e) < 1.0e-12
@@ -37,7 +38,7 @@ def test_repair_clock_keeps_declared_semigroup_target_diagnostic_only(tmp_path: 
     assert "declared Euler repair-time target" in report["rows"][0]["reason"]
 
 
-def test_repair_clock_accepts_three_finite_semigroup_certificate_rows(tmp_path: Path) -> None:
+def test_repair_clock_rejects_finite_semigroup_rows_without_matrix_artifacts(tmp_path: Path) -> None:
     roots = []
     for idx in range(3):
         run = tmp_path / f"run{idx}"
@@ -54,9 +55,9 @@ def test_repair_clock_accepts_three_finite_semigroup_certificate_rows(tmp_path: 
 
     aggregate = repair_clock_report(roots, relative_tolerance=1.0e-12)
 
-    assert aggregate["summary"]["eligible_estimator_count"] == 3
-    assert aggregate["summary"]["passed_estimator_count"] == 3
-    assert aggregate["finite_repair_clock_certificate"] is True
+    assert aggregate["summary"]["eligible_estimator_count"] == 0
+    assert aggregate["summary"]["passed_estimator_count"] == 0
+    assert aggregate["finite_repair_clock_certificate"] is False
     assert abs(aggregate["summary"]["median_kappa_rep_estimate"] - math.e) < 1.0e-12
 
 

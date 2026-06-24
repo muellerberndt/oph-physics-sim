@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 import numpy as np
@@ -96,6 +97,7 @@ def observer_consensus_report(
     sample_count: int = 64,
     neighborhood_size: int = 32,
     seed: int = 1,
+    sample_pair_limit: int = 20_000,
 ) -> dict[str, Any]:
     if points.shape[0] == 0:
         return {"status": "empty"}
@@ -110,45 +112,50 @@ def observer_consensus_report(
     signatures = raw_fields.get("record_signature")
     committed = raw_fields.get("committed_mask")
     repair = raw_fields.get("repair_load")
+    support_sets = [set(int(value) for value in row) for row in neighbor_indices]
+    histograms = [_signature_histogram(signatures, row) for row in neighbor_indices]
+    overlap_counts = _observer_overlap_counts(neighbor_indices)
+    similarities = np.empty(len(overlap_counts), dtype=float)
+    jaccards = np.empty(len(overlap_counts), dtype=float)
     pair_rows: list[dict[str, Any]] = []
-    for a in range(count):
-        support_a = set(int(value) for value in neighbor_indices[a])
-        hist_a = _signature_histogram(signatures, neighbor_indices[a])
-        for b in range(a + 1, count):
-            support_b = set(int(value) for value in neighbor_indices[b])
-            union_size = len(support_a | support_b)
-            if union_size == 0:
-                continue
+    sample_pair_limit = max(0, int(sample_pair_limit))
+    for pair_count, ((a, b), overlap_size) in enumerate(sorted(overlap_counts.items())):
+        support_a = support_sets[a]
+        support_b = support_sets[b]
+        union_size = len(support_a) + len(support_b) - int(overlap_size)
+        if union_size <= 0:
+            continue
+        jaccard = float(overlap_size / union_size)
+        similarity = _histogram_similarity(histograms[a], histograms[b])
+        jaccards[pair_count] = jaccard
+        similarities[pair_count] = similarity
+        if len(pair_rows) < sample_pair_limit:
             overlap = np.array(sorted(support_a & support_b), dtype=np.int64)
-            if overlap.size == 0:
-                continue
-            hist_b = _signature_histogram(signatures, neighbor_indices[b])
             pair_rows.append(
                 {
                     "observer_a": int(observer_ids[a]),
                     "observer_b": int(observer_ids[b]),
-                    "overlap_patch_count": int(overlap.size),
-                    "jaccard": float(overlap.size / union_size),
-                    "signature_histogram_similarity": _histogram_similarity(hist_a, hist_b),
+                    "overlap_patch_count": int(overlap_size),
+                    "jaccard": jaccard,
+                    "signature_histogram_similarity": similarity,
                     "overlap_committed_fraction": _weighted_mean(committed, overlap, cell_entropy[overlap]),
                     "overlap_repair_load_mean": _weighted_mean(repair, overlap, cell_entropy[overlap]),
                 }
             )
-    similarities = np.array([row["signature_histogram_similarity"] for row in pair_rows], dtype=float)
-    jaccards = np.array([row["jaccard"] for row in pair_rows], dtype=float)
+    pair_count = int(len(overlap_counts))
     committed_fraction = _weighted_full_mean(committed, cell_entropy)
     repair_mean = _weighted_full_mean(repair, cell_entropy)
     return {
         "observer_count": int(count),
         "neighborhood_size": int(k),
-        "pair_count": int(len(pair_rows)),
+        "pair_count": int(pair_count),
         "global_committed_fraction": committed_fraction,
         "global_repair_load_mean": repair_mean,
         "median_overlap_jaccard": float(np.median(jaccards)) if jaccards.size else 0.0,
         "median_signature_histogram_similarity": float(np.median(similarities)) if similarities.size else 0.0,
         "p10_signature_histogram_similarity": float(np.percentile(similarities, 10)) if similarities.size else 0.0,
-        "sample_pairs": pair_rows[: min(20_000, len(pair_rows))],
-        "sample_pair_limit": 20_000,
+        "sample_pairs": pair_rows,
+        "sample_pair_limit": sample_pair_limit,
         "claim_boundary": (
             "objectivity proxy: observer-accessible record-family agreement across overlapping "
             "local views; this is not a bulk-dimension estimator"
@@ -160,6 +167,22 @@ def _weighted_mean(values: np.ndarray | None, indices: np.ndarray, weights: np.n
     if values is None or indices.size == 0:
         return 0.0
     return _weighted_full_mean(values[indices], weights)
+
+
+def _observer_overlap_counts(neighbor_indices: np.ndarray) -> dict[tuple[int, int], int]:
+    patch_observers: dict[int, list[int]] = defaultdict(list)
+    for observer_index, support in enumerate(np.asarray(neighbor_indices, dtype=np.int64)):
+        for patch_index in support:
+            patch_observers[int(patch_index)].append(int(observer_index))
+    overlap_counts: dict[tuple[int, int], int] = defaultdict(int)
+    for observers in patch_observers.values():
+        if len(observers) < 2:
+            continue
+        observers = sorted(set(observers))
+        for left_index, observer_a in enumerate(observers[:-1]):
+            for observer_b in observers[left_index + 1 :]:
+                overlap_counts[(observer_a, observer_b)] += 1
+    return dict(overlap_counts)
 
 
 def _weighted_std(values: np.ndarray | None, indices: np.ndarray, weights: np.ndarray) -> float:

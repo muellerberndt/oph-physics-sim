@@ -9,6 +9,7 @@ from oph_fpe.bulk.h3_refit import (
     write_modular_response_kernel_cache,
 )
 from oph_fpe.bulk.h3_response_fit import (
+    _assign_candidates,
     _channel_keys,
     _h3_profile_matrix,
     _h3_response_stage_gates,
@@ -39,6 +40,47 @@ def test_geometry_cache_reuses_cap_transport_map():
     assert np.array_equal(first_indices, second_indices)
     assert np.array_equal(first_weights, second_weights)
     assert cache.report()["transport_map_count"] == 1
+
+
+def test_assign_candidates_matches_scalar_cost_formula():
+    rng = np.random.default_rng(17)
+    response = rng.normal(size=(7, 11))
+    candidate_profiles = rng.normal(size=(13, 11))
+    train_mask = np.array([True, False, True, True, False, True, True, False, True, True, False])
+    offsets = rng.normal(scale=0.1, size=11)
+    amplitudes = rng.normal(loc=1.0, scale=0.2, size=11)
+    observer_axes = rng.normal(size=(7, 3))
+    candidates = rng.normal(size=(13, 4))
+
+    actual = _assign_candidates(
+        response,
+        candidate_profiles,
+        train_mask,
+        offsets,
+        amplitudes,
+        observer_axes,
+        candidates,
+        anchor_weight=0.15,
+    )
+
+    train_indices = np.flatnonzero(train_mask)
+    predicted = offsets[None, :] + candidate_profiles * amplitudes[None, :]
+    anchor_cost = 1.0 - np.clip(
+        (observer_axes / np.maximum(np.linalg.norm(observer_axes, axis=1, keepdims=True), 1e-12))
+        @ (
+            candidates[:, 1:]
+            / np.maximum(np.linalg.norm(candidates[:, 1:], axis=1, keepdims=True), 1e-12)
+        ).T,
+        -1.0,
+        1.0,
+    )
+    expected = []
+    for row_index in range(response.shape[0]):
+        diff = predicted[:, train_indices] - response[row_index, train_indices][None, :]
+        costs = np.mean(diff * diff, axis=1) + 0.15 * anchor_cost[row_index]
+        expected.append(int(np.argmin(costs)))
+
+    assert actual.tolist() == expected
 
 
 def test_geometry_cache_persists_cap_transport_map(tmp_path):

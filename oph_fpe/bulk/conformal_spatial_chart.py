@@ -60,6 +60,7 @@ def paper_theorem_3d_bulk_chart_report(
     transition_selection_report: dict[str, Any],
     observer_chart_object_report: dict[str, Any] | None = None,
     neutral_report: dict[str, Any] | None = None,
+    state_bw_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Report the paper-side 3D spatial chart receipt separately from neutral reconstruction.
 
@@ -73,11 +74,25 @@ def paper_theorem_3d_bulk_chart_report(
     algebra = conformal_chart_report.get("lorentz_algebra_report", {})
     chart_receipt = bool(conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False))
     lorentz_receipt = bool(algebra.get("lorentz_algebra_receipt", False))
-    bw_2pi_receipt = bool(
+    declared_bw_2pi_receipt = bool(
         transition_selection_report.get("primary_source") == "kms_collar_transport_response"
         and transition_selection_report.get("two_pi_selected", False)
         and not transition_selection_report.get("response_degenerate", False)
     )
+    state_bw = state_bw_report or {}
+    inferred_clock = state_bw.get("inferred_modular_clock_fit") or {}
+    finite_lorentz_modular_clock_receipt = bool(
+        (
+            state_bw.get("ENDOGENOUS_MODULAR_GENERATOR_RECEIPT", False)
+            or state_bw.get("endogenous_modular_generator_receipt", False)
+        )
+        and (
+            state_bw.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT", False)
+            or state_bw.get("kms_geometric_clock_fit_receipt", False)
+            or inferred_clock.get("receipt", False)
+        )
+    )
+    bw_2pi_receipt = bool(declared_bw_2pi_receipt or finite_lorentz_modular_clock_receipt)
     spatial_dimension = int(algebra.get("h3_spatial_dimension_from_boost_orbit", 0) or 0)
     chart_dimension = int(h3_chart.get("spatial_dimension", 0) or 0)
     group_dimension = int(algebra.get("group_dimension", 0) or 0)
@@ -125,6 +140,15 @@ def paper_theorem_3d_bulk_chart_report(
         "paper_theorem_neutral_populated_bulk_receipt": bool(chart_receipt_pass and populated_bulk),
         "chart_level_conformal_lorentz_receipt": chart_receipt,
         "bw_2pi_cap_flow_receipt": bw_2pi_receipt,
+        "declared_bw_2pi_cap_flow_receipt": declared_bw_2pi_receipt,
+        "finite_lorentz_modular_clock_receipt": finite_lorentz_modular_clock_receipt,
+        "bw_2pi_cap_flow_source": (
+            "declared_kms_collar_transport_response"
+            if declared_bw_2pi_receipt
+            else "finite_endogenous_l2_l3_modular_clock"
+            if finite_lorentz_modular_clock_receipt
+            else None
+        ),
         "lorentz_algebra_receipt": lorentz_receipt,
         "conformal_boundary_group": algebra.get("conformal_boundary_group", "Conf+(S2) ~= PSL(2,C)"),
         "lorentz_group": algebra.get("group", "SO+(3,1)"),
@@ -148,7 +172,10 @@ def paper_theorem_3d_bulk_chart_report(
         },
         "source_alignment": {
             "screen_net": "Axiom Screen Net: physical data is organized on a horizon screen S2 carrying local algebras.",
-            "bw_normalization": "The BW branch fixes sigma_t = alpha_{lambda_C(2*pi*t)} on the support-visible cap pair.",
+            "bw_normalization": (
+                "The BW branch fixes sigma_t = alpha_{lambda_C(2*pi*t)} on the support-visible cap pair; "
+                "finite simulations may establish the same normalization via the endogenous L2/L3 modular-clock receipt."
+            ),
             "lorentz_group": "Conf+(S2) ~= PSL(2,C) ~= SO+(3,1).",
             "spatial_chart": "The 3D spatial chart is H3 = SO+(3,1)/SO(3), with dimension 6-3=3.",
             "finite_regulator_boundary": (

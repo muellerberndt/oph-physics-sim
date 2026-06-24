@@ -655,20 +655,17 @@ def observer_chart_object_population_report(
         compactness_distribution_population_receipt
         or (
             eligible
-            and localized_h3_subpopulation_receipt
+            and (
+                localized_h3_subpopulation_receipt
+                or localized_nonboundary_subpopulation_receipt
+            )
             and chart_receipt
             and h3_strict_receipt
         )
     )
     nonboundary_object_population_receipt = bool(
         compactness_distribution_population_receipt
-        or (
-            eligible
-            and localized_nonboundary_subpopulation_receipt
-            and chart_receipt
-            and h3_strict_receipt
-            and boundary_leakage_audit_pass
-        )
+        or localized_nonboundary_bulk_population_receipt
     )
     strict_bulk_population_receipt = bool(nonboundary_object_population_receipt)
     normalized_boundary_gate_mode = str(boundary_gate_mode).strip().lower().replace("-", "_")
@@ -692,9 +689,11 @@ def observer_chart_object_population_report(
         "H3 chart using only sampled observers that see the object. The preview receipt requires either a "
         "localized H3 object subpopulation beating shuffled incidence or a whole-population compactness "
         "distribution that robustly beats shuffled incidence, plus the strict modular-response H3 chart gate. "
-        "The bulk-population receipt additionally requires the non-boundary leakage audit to pass. If "
-        "boundary_leakage_audit_pass is false, this is an H3 preview, not a bulk-population proof. This is "
-        "not a neutral third-person reconstruction, CMB, or particle claim."
+        "The displayed localized H3 precursor is not by itself a bulk-population proof: the final "
+        "bulk-population receipt still requires either a localized non-boundary subpopulation that beats "
+        "its matched shuffled controls, or a robust whole-population compactness distribution with the "
+        "non-boundary leakage audit passing. This is not a neutral third-person reconstruction, CMB, or "
+        "particle claim."
         if selected_gate_mode.startswith("localized_h3")
         else (
             "places persistent observer-facing record objects into the observer-derived modular-response "

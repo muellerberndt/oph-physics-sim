@@ -3,9 +3,11 @@ import numpy as np
 from oph_fpe.bulk.cap_geometry import sample_caps
 from oph_fpe.bulk.markov_collar import collar_markov_report
 from oph_fpe.bulk.modular_probe import (
+    _clock_fit_from_rows,
     cap_state_density,
     collar_operator_system_density,
     geometric_permutation_operator,
+    history_koopman_modular_generator,
     modular_unitary,
     perturb_remeasure_response_density,
     perturb_remeasure_response_kernel_density,
@@ -37,6 +39,59 @@ def test_modular_transport_identity_at_t0_and_unitary_norm():
 
     assert np.allclose(state_derived_modular_transport(O, rho, 0.0, 1e-3), O)
     assert np.allclose(U.conj().T @ U, np.eye(2), atol=1e-10)
+
+
+def test_inferred_clock_fit_uses_nonstatic_clock_carrier_rows():
+    rows = []
+    for time in (0.125, 0.25, 0.5):
+        for _ in range(4):
+            rows.append(
+                {
+                    "time": time,
+                    "s_hat": 0.0,
+                    "kappa_row_hat": 0.0,
+                    "known_scale_residuals": {
+                        "0": 0.1,
+                        "1x": 0.5,
+                        "pi": 1.0,
+                        "2pi": 2.0,
+                        "4pi": 4.0,
+                    },
+                    "best_known_scale_label": "0",
+                    "clock_carrier_row": False,
+                }
+            )
+        rows.append(
+            {
+                "time": time,
+                "s_hat": float(2.0 * np.pi * time),
+                "kappa_row_hat": float(2.0 * np.pi),
+                "known_scale_residuals": {
+                    "0": 2.0,
+                    "1x": 1.5,
+                    "pi": 1.0,
+                    "2pi": 0.1,
+                    "4pi": 1.0,
+                },
+                "best_known_scale_label": "2pi",
+                "clock_carrier_row": True,
+            }
+        )
+
+    all_rows = _clock_fit_from_rows(
+        rows,
+        known={"1x": 1.0, "pi": float(np.pi), "2pi": float(2.0 * np.pi), "4pi": float(4.0 * np.pi)},
+        fit_label="all_rows",
+    )
+    carrier_rows = _clock_fit_from_rows(
+        [row for row in rows if row["clock_carrier_row"]],
+        known={"1x": 1.0, "pi": float(np.pi), "2pi": float(2.0 * np.pi), "4pi": float(4.0 * np.pi)},
+        fit_label="nonstatic_clock_carrier_rows",
+    )
+
+    assert all_rows["receipt"] is False
+    assert carrier_rows["receipt"] is True
+    assert carrier_rows["nearest_known_scale"] == "2pi"
 
 
 def test_state_derived_bw_report_writes_matrix_rows():
@@ -133,6 +188,79 @@ def test_state_derived_bw_report_accepts_history_transition_kernel():
     assert report["scale_controls_same_basis"] is True
     assert "target_scale_control_degenerate" in report
     assert "degenerate_target_scale_controls" in report
+
+
+def test_history_koopman_generator_uses_visible_modular_time_lag():
+    basis = np.arange(4)
+    base = {
+        "record_signature": np.arange(4),
+        "stable_count": np.arange(4),
+        "committed_mask": np.ones(4),
+        "repair_load": np.linspace(0.1, 0.4, 4),
+        "cumulative_repair_load": np.linspace(0.2, 0.5, 4),
+        "local_mismatch_density": np.linspace(0.3, 0.6, 4),
+        "modular_depth": np.linspace(0.4, 0.7, 4),
+        "modular_time": np.zeros(4),
+        "s3_class_density": np.linspace(0.5, 0.8, 4),
+        "s3_sector_class": np.arange(4) % 3,
+    }
+    history = [
+        base,
+        {**base, "record_signature": np.arange(4) + 1, "modular_time": np.full(4, 0.03)},
+    ]
+    raw = {**base, "record_signature": np.arange(4) + 2, "modular_time": np.full(4, 0.06)}
+
+    _generator, meta = history_koopman_modular_generator(raw, history, basis, response_lag=0.25)
+
+    assert meta["response_lag_source"] == "observer_visible_modular_time_median_increment"
+    assert meta["effective_response_lag"] == 0.03
+    assert meta["configured_response_lag"] == 0.25
+
+
+def test_endogenous_generator_receipt_is_separate_from_2pi_clock():
+    points = fibonacci_sphere_points(384)
+    caps = sample_caps(points, count=2, theta_values=[0.55], seed=14, collar_width=0.1)
+    fields = {
+        "record_signature": np.arange(points.shape[0]) % 31,
+        "committed_mask": np.ones(points.shape[0]),
+        "stable_count": np.arange(points.shape[0]) % 7,
+        "repair_load": np.sin(points[:, 2] * 3.0),
+        "cumulative_repair_load": np.cos(points[:, 0] * 4.0),
+        "local_mismatch_density": np.maximum(points[:, 1], 0.0),
+        "modular_depth": np.linspace(0.0, 1.0, points.shape[0]),
+        "modular_time": np.full(points.shape[0], 0.09),
+        "s3_class_density": np.abs(points[:, 1]),
+        "s3_sector_class": (np.arange(points.shape[0]) % 3),
+    }
+    history = [
+        {
+            **fields,
+            "record_signature": (np.arange(points.shape[0]) + shift) % 31,
+            "modular_time": np.full(points.shape[0], 0.03 * index),
+        }
+        for index, shift in enumerate((3, 2, 1), start=0)
+    ]
+    collar = collar_markov_report(points, caps, fields, max_triplets=128, seed=8)
+
+    report = state_derived_bw_report(
+        points,
+        caps,
+        fields,
+        collar,
+        times=[0.125, 0.25, 0.5],
+        observables=["record_signature", "repair_load"],
+        regularizers=[1e-6],
+        controls=[],
+        state_mode="history_koopman_generator_state",
+        history_fields=history,
+        max_basis=24,
+        seed=15,
+    )
+
+    assert report["endogenous_modular_generator"] is True
+    assert "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT" in report
+    assert "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT" in report
+    assert report["endogenous_generator_receipt_boundary"].startswith("L2 only")
 
 
 def test_collar_operator_system_density_is_positive_finite():

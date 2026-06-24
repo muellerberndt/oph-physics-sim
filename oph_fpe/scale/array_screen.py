@@ -56,6 +56,7 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     commit_cycles = int(dyn.get("record_commit_cycles", 8))
     beta_schedule = dyn.get("beta_schedule", {})
     mod_cfg = config.get("modular_flow", {})
+    modular_cap_drive = _modular_cap_drive(points, mod_cfg)
     trace_interval = int(mod_cfg.get("trace_interval", 4))
     depth_samples: list[np.ndarray] = []
     trace: list[dict[str, Any]] = []
@@ -99,6 +100,7 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
             modular_time,
             repair_load,
             mod_cfg,
+            cap_drive=modular_cap_drive,
         )
         signature = _node_signature(port_left, port_right, left, right, patch_count)
         stable_count = np.where(signature == prev_signature, stable_count + 1, 1)
@@ -217,6 +219,8 @@ def _modular_update(
     modular_time: np.ndarray,
     repair_load: np.ndarray,
     config: dict[str, Any],
+    *,
+    cap_drive: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     if not config.get("enabled", True):
         return depth, modular_time
@@ -225,8 +229,8 @@ def _modular_update(
     load_coupling = float(config.get("repair_load_coupling", 0.35))
     cap_coupling = float(config.get("cap_coupling", 0.08))
     diffusion = float(config.get("diffusion", 0.06))
-    axes = fibonacci_sphere_points(int(config.get("cap_axes", 12)))
-    cap_drive = np.mean(np.tanh(3.0 * (points @ axes.T)), axis=1)
+    if cap_drive is None:
+        cap_drive = _modular_cap_drive(points, config)
     neighbor_sum = (
         np.bincount(left, weights=depth[right], minlength=depth.size)
         + np.bincount(right, weights=depth[left], minlength=depth.size)
@@ -241,6 +245,13 @@ def _modular_update(
         - damping * depth
     )
     return new_depth, new_time
+
+
+def _modular_cap_drive(points: np.ndarray, config: dict[str, Any]) -> np.ndarray:
+    if not config.get("enabled", True):
+        return np.zeros(points.shape[0], dtype=np.float64)
+    axes = fibonacci_sphere_points(int(config.get("cap_axes", 12)))
+    return np.mean(np.tanh(3.0 * (points @ axes.T)), axis=1)
 
 
 def _node_signature(

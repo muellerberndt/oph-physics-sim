@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from oph_fpe.cosmology.cosmological_scale_bridge import imported_flrw_reference_receipts
 from oph_fpe.cosmology.physical_cmb_contract import (
     PhysicalCMBInputContract,
     contract_from_reports,
@@ -50,6 +51,38 @@ def test_valid_physical_cmb_contract_passes_only_with_finite_sources():
 
     assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is True
     assert validation["blockers"] == []
+
+
+def test_physical_cmb_contract_rejects_nonpositive_rho_A_column():
+    contract = _valid_contract()
+    contract.rho_A_a = np.asarray([[0.5, -0.2], [1.0, 0.1]])
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "rho_A_missing_or_not_finite" in validation["blockers"]
+
+
+def test_physical_cmb_contract_rejects_adversarial_stub_values():
+    contract = _valid_contract()
+    contract.q_IR_value = -99.0
+    contract.B_A_k_a = np.zeros((1, 1))
+    contract.Gamma_rec_k_a = np.zeros((1, 1))
+    contract.rho_A_a = np.zeros((1, 1))
+    contract.freezeout_surface = {}
+    contract.frozen_source_hash = "x"
+    contract.frozen_solver_hash = "y"
+    contract.frozen_likelihood_hash = "z"
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "q_IR_not_finite_derived" in validation["blockers"]
+    assert "B_A_k_a_missing_or_not_finite" in validation["blockers"]
+    assert "Gamma_rec_k_a_missing_or_not_finite" in validation["blockers"]
+    assert "rho_A_missing_or_not_finite" in validation["blockers"]
+    assert "freezeout_missing_or_not_finite" in validation["blockers"]
+    assert "frozen_source_hash_missing" in validation["blockers"]
 
 
 def test_physical_cmb_contract_requires_primordial_lift_receipt():
@@ -106,6 +139,32 @@ def test_physical_cmb_contract_requires_recipient_stress_for_nonzero_Gamma_rec()
     assert "recipient_stress_missing_for_nonzero_Gamma_rec" in validation["blockers"]
 
 
+def test_physical_cmb_contract_requires_exchange_current_for_nonzero_Gamma_rec():
+    contract = _valid_contract()
+    contract.exchange_current_closure_receipt = False
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "exchange_current_closure_missing_for_nonzero_Gamma_rec" in validation["blockers"]
+
+
+def test_physical_cmb_contract_requires_Gamma_rec_promotion_receipts():
+    contract = _valid_contract()
+    contract.physical_clock_receipt = False
+    contract.active_fiber_receipt = False
+    contract.conserved_sector_decomposition_receipt = False
+    contract.common_parent_response_pole_receipt = False
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "physical_clock_missing_for_promoted_Gamma_rec" in validation["blockers"]
+    assert "active_fiber_missing_for_promoted_Gamma_rec" in validation["blockers"]
+    assert "conserved_sector_decomposition_missing_for_promoted_Gamma_rec" in validation["blockers"]
+    assert "common_parent_response_pole_missing_for_promoted_Gamma_rec" in validation["blockers"]
+
+
 def test_contract_from_reports_does_not_promote_diagnostic_rows():
     contract = contract_from_reports(
         no_data_use_receipt=True,
@@ -142,6 +201,7 @@ def test_contract_from_reports_does_not_promote_diagnostic_rows():
 
 def _valid_contract() -> PhysicalCMBInputContract:
     finite = "finite_lattice"
+    scale_bridge = imported_flrw_reference_receipts()
     return PhysicalCMBInputContract(
         no_data_use_receipt=True,
         P_source="OPH_pixel_branch_predeclared",
@@ -161,7 +221,7 @@ def _valid_contract() -> PhysicalCMBInputContract:
         rho_A_source=finite,
         rho_A_a=np.ones((3, 2)),
         freezeout_source="neutral_bulk_freezeout",
-        freezeout_surface={"cycle": 24},
+        freezeout_surface=_freezeout_surface(scale_bridge),
         official_likelihood_ready=True,
         cdm_limit_regression_passed=True,
         screen_to_primordial_lift_receipt=True,
@@ -171,13 +231,30 @@ def _valid_contract() -> PhysicalCMBInputContract:
         causal_response_receipt=True,
         refinement_convergence_receipt=True,
         explicit_recipient_stress_receipt=True,
+        exchange_current_closure_receipt=True,
+        physical_clock_receipt=True,
+        active_fiber_receipt=True,
+        conserved_sector_decomposition_receipt=True,
+        common_parent_response_pole_receipt=True,
         source_provenance_receipt=True,
         pooled_source_reducer_receipt=True,
         contradiction_free_provenance_receipt=True,
         N_CRC_consensus_invariant_receipt=True,
         global_likelihood_reduction_receipt=True,
         frozen_likelihood_protocol_receipt=True,
-        frozen_source_hash="sha256:source",
-        frozen_solver_hash="sha256:solver",
-        frozen_likelihood_hash="sha256:likelihood",
+        frozen_source_hash="sha256:" + "0" * 64,
+        frozen_solver_hash="sha256:" + "1" * 64,
+        frozen_likelihood_hash="sha256:" + "2" * 64,
+        physical_scale_bridge_receipts=scale_bridge,
     )
+
+
+def _freezeout_surface(scale_bridge: dict) -> dict:
+    return {
+        "PHYSICAL_FREEZEOUT_SURFACE_RECEIPT": True,
+        "surface_mesh_hash": scale_bridge["surface_mesh_hash"],
+        "clock_hash": scale_bridge["clock_hash"],
+        "state_vector_hash": scale_bridge["state_vector_hash"],
+        "normal_derivative_hash": scale_bridge["normal_derivative_hash"],
+        "common_surface_passed": True,
+    }

@@ -23,7 +23,8 @@ def test_free_scalar_reference_keeps_vacuum_promotion_closed() -> None:
     )
 
     assert report["claim_tier"] == "E1"
-    assert report["partition_randomness"]["partition_replay_receipt"] is True
+    assert report["deterministic_replay"]["SEMANTIC_STREAM_DETERMINISTIC_REPLAY"] is True
+    assert report["deterministic_replay"]["PATHWISE_PARTITION_INVARIANCE_RECEIPT"] is False
     assert report["refinement_diagnostics"]["exact_mode_truncation_refinement_receipt"] is True
     assert report["reference_theory_regression_receipt"] is True
     assert report["OPH_NATIVE_VACUUM_PROMOTION_RECEIPT"] is False
@@ -54,7 +55,8 @@ def test_compact_u1_reference_is_diagnostic_only() -> None:
     assert report["claim_tier"] == "E1"
     assert report["lattice_gauge_stage"]["compact_u1_reference"] is True
     assert report["lattice_gauge_stage"]["su2_reference"] is False
-    assert report["partition_randomness"]["partition_replay_receipt"] is True
+    assert report["canonical_serial_chain_replay"]["CANONICAL_SERIAL_CHAIN_REPLAY"] is True
+    assert report["canonical_serial_chain_replay"]["PATHWISE_PARTITION_INVARIANCE_RECEIPT"] is False
     assert report["OPH_NATIVE_VACUUM_PROMOTION_RECEIPT"] is False
     assert len(report["plaquette_trace"]) == 6
 
@@ -73,6 +75,9 @@ def test_reference_vacuum_bundle_writes_artifacts(tmp_path: Path) -> None:
     )
 
     assert report["claim_tier"] == "E1"
+    assert report["receipt_contract"]["semantic_stream_deterministic_replay"] is True
+    assert report["receipt_contract"]["canonical_serial_chain_replay"] is True
+    assert report["receipt_contract"]["PATHWISE_PARTITION_INVARIANCE_RECEIPT"] is False
     assert report["OPH_NATIVE_VACUUM_PROMOTION_RECEIPT"] is False
     assert (tmp_path / "reference_vacuum_baseline_report.json").exists()
     assert (tmp_path / "free_scalar_harmonic_coefficients.npz").exists()

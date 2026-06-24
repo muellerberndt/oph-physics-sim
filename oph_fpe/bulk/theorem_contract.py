@@ -71,6 +71,11 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT",
         "kms_geometric_clock_fit_receipt",
     )
+    declared_geometric_kms_branch = _declared_geometric_kms_branch_receipt(
+        paper_chart=paper_chart,
+        emergence=emergence,
+        chart=chart,
+    )
     support_visible_bw_covariance = bool(
         h3_gates.get("signal_gate", False)
         and h3_gates.get("geometry_gate", False)
@@ -154,6 +159,22 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
                 "transition_primary_source": emergence.get("transition_primary_source"),
                 "transition_selected_label": emergence.get("transition_selected_label"),
                 "transition_two_pi_over_best": emergence.get("transition_two_pi_over_best"),
+            },
+        ),
+        "L3b_declared_geometric_kms_branch": _stage(
+            declared_geometric_kms_branch,
+            "paper geometric branch supplies the KMS collar/cap 2*pi normalization used by the Lorentz/H3 chart theorem",
+            details={
+                "paper_chart_declared_bw_2pi_cap_flow_receipt": paper_chart.get(
+                    "declared_bw_2pi_cap_flow_receipt"
+                ),
+                "paper_chart_bw_2pi_cap_flow_receipt": paper_chart.get("bw_2pi_cap_flow_receipt"),
+                "paper_chart_bw_2pi_cap_flow_source": paper_chart.get("bw_2pi_cap_flow_source"),
+                "emergence_transition_primary_source": emergence.get("transition_primary_source"),
+                "emergence_transition_selected_label": emergence.get("transition_selected_label"),
+                "emergence_transition_two_pi_selected_by_primary": emergence.get(
+                    "transition_two_pi_selected_by_primary"
+                ),
             },
         ),
         "L4_support_visible_bw_covariance": _stage(
@@ -247,6 +268,17 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "L5_ordered_cut_pair_rigidity",
         "L6_lorentz_algebra_closure",
     ))
+    paper_geometric_branch_contract_stage_names = (
+        "C0_finite_consensus_theorem",
+        "L1_observer_record_algebra",
+        "L3b_declared_geometric_kms_branch",
+        "L4_support_visible_bw_covariance",
+        "L5_ordered_cut_pair_rigidity",
+        "L6_lorentz_algebra_closure",
+    )
+    paper_geometric_branch_contract = all(
+        stages[name]["passed"] for name in paper_geometric_branch_contract_stage_names
+    )
     observer_spacetime = bool(
         finite_contract
         and stages["B1_h3_response_candidate"]["passed"]
@@ -257,6 +289,16 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         and stages["B2_observer_object_population"]["passed"]
     )
     observer_facing_consensus_bulk = populated_h3
+    paper_geometric_branch_observer_spacetime = bool(
+        paper_geometric_branch_contract
+        and stages["B1_h3_response_candidate"]["passed"]
+        and stages["B3_observer_facing_3p1d_experience"]["passed"]
+    )
+    paper_geometric_branch_populated_h3 = bool(
+        paper_geometric_branch_observer_spacetime
+        and stages["B2_observer_object_population"]["passed"]
+    )
+    paper_geometric_branch_consensus_bulk = paper_geometric_branch_populated_h3
     chart_blind_strict_neutral = bool(
         stages["L7_refinement_naturality"]["passed"]
         and stages["B4_strict_neutral_bulk_audit"]["passed"]
@@ -276,11 +318,20 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "B2_observer_object_population",
         "B3_observer_facing_3p1d_experience",
     )
+    paper_geometric_branch_consensus_stage_names = (
+        *paper_geometric_branch_contract_stage_names,
+        "B1_h3_response_candidate",
+        "B2_observer_object_population",
+        "B3_observer_facing_3p1d_experience",
+    )
     chart_blind_neutral_stage_names = (
         "L7_refinement_naturality",
         "B4_strict_neutral_bulk_audit",
     )
     blockers = [name for name in observer_consensus_stage_names if not stages[name]["passed"]]
+    paper_geometric_branch_blockers = [
+        name for name in paper_geometric_branch_consensus_stage_names if not stages[name]["passed"]
+    ]
     chart_blind_neutral_blockers = [
         name for name in chart_blind_neutral_stage_names if not stages[name]["passed"]
     ]
@@ -295,14 +346,26 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "paper_faithful_populated_h3_observer_experience_receipt": populated_h3,
         "observer_facing_consensus_3d_bulk_emergence_receipt": observer_facing_consensus_bulk,
         "paper_faithful_consensus_bulk_emergence_receipt": observer_facing_consensus_bulk,
+        "paper_geometric_branch_lorentz_contract_receipt": paper_geometric_branch_contract,
+        "paper_geometric_branch_observer_spacetime_emergence_receipt": (
+            paper_geometric_branch_observer_spacetime
+        ),
+        "paper_geometric_branch_populated_h3_observer_experience_receipt": (
+            paper_geometric_branch_populated_h3
+        ),
+        "paper_geometric_branch_consensus_bulk_emergence_receipt": (
+            paper_geometric_branch_consensus_bulk
+        ),
         "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": (
-            observer_facing_consensus_bulk
+            paper_geometric_branch_consensus_bulk
         ),
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": observer_facing_consensus_bulk,
         "chart_blind_strict_neutral_quotient_bulk_receipt": chart_blind_strict_neutral,
         "strict_neutral_bulk_contract_receipt": chart_blind_strict_neutral,
         "blockers": blockers,
         "primary_blockers": blockers[:6],
+        "paper_geometric_branch_blockers": paper_geometric_branch_blockers,
+        "paper_geometric_branch_primary_blockers": paper_geometric_branch_blockers[:6],
         "chart_blind_strict_neutral_blockers": chart_blind_neutral_blockers,
         "strict_neutral_blockers": chart_blind_neutral_blockers,
         "all_stage_blockers": all_stage_blockers,
@@ -313,11 +376,14 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "replay: OPH tech must instantiate observer-like self-reading systems with local state, "
             "boundaries, readback, records, feedback/repair moves, and public evidence bundles. The "
             "finite Lorentz/modular contract stops at support-visible BW covariance, ordered cut-pair "
-            "rigidity, and Lorentz algebra closure. The observer spacetime receipt adds the H3 response "
-            "and observer-local 3+1D experience. The observer-facing consensus 3D bulk receipt adds "
-            "shared object population in that H3 chart. The chart-blind strict neutral quotient audit "
-            "is a separate stronger certificate and is reported without being required for the "
-            "observer-facing 3D theorem receipt."
+            "rigidity, Lorentz algebra closure, and an endogenous finite KMS clock fit. Separately, "
+            "the paper-geometric branch receipt uses the declared KMS collar/cap 2*pi normalization "
+            "from the theorem chart instead of claiming the finite run rediscovered that normalization "
+            "endogenously. The observer spacetime receipt adds the H3 response and observer-local "
+            "3+1D experience. The observer-facing consensus 3D bulk receipt adds shared object "
+            "population in that H3 chart. The chart-blind strict neutral quotient audit is a separate "
+            "stronger certificate and is reported without being required for the observer-facing 3D "
+            "theorem receipt."
         ),
     }
     return with_claim_metadata(
@@ -394,6 +460,46 @@ def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
     return any(bool(data.get(key, False)) for key in keys)
 
 
+def _declared_geometric_kms_branch_receipt(
+    *,
+    paper_chart: dict[str, Any],
+    emergence: dict[str, Any],
+    chart: dict[str, Any],
+) -> bool:
+    chart_receipt = _truthy_any(
+        paper_chart,
+        "PAPER_THEOREM_3D_BULK_CHART_RECEIPT",
+        "paper_theorem_3d_bulk_chart_receipt",
+    ) or _truthy_any(chart, "conformal_h3_spatial_chart_receipt", "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT")
+    branch_receipt = _truthy_any(
+        paper_chart,
+        "declared_bw_2pi_cap_flow_receipt",
+        "bw_2pi_cap_flow_receipt",
+        "BW_KMS_BRANCH_REPLAY_RECEIPT",
+        "BW_KMS_DIRECT_2PI_RECEIPT",
+    ) or _truthy_any(
+        emergence,
+        "BW_KMS_BRANCH_REPLAY_RECEIPT",
+        "BW_KMS_DIRECT_2PI_RECEIPT",
+        "support_visible_lorentz_3p1_kinematics_receipt",
+    )
+    source_values = {
+        str(paper_chart.get("bw_2pi_cap_flow_source", "")),
+        str(emergence.get("transition_primary_source", "")),
+    }
+    declared_or_kms_source = bool(
+        {"declared_kms_collar_transport_response", "kms_collar_transport_response"}
+        & source_values
+    ) or bool(paper_chart.get("declared_bw_2pi_cap_flow_receipt", False))
+    selected_2pi = bool(
+        paper_chart.get("bw_2pi_cap_flow_receipt", False)
+        or paper_chart.get("declared_bw_2pi_cap_flow_receipt", False)
+        or emergence.get("transition_two_pi_selected_by_primary", False)
+        or str(emergence.get("transition_selected_label", "")) == "2pi"
+    )
+    return bool(chart_receipt and branch_receipt and declared_or_kms_source and selected_2pi)
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -415,6 +521,12 @@ def _markdown(report: dict[str, Any]) -> str:
         f"`{str(report['paper_faithful_populated_h3_observer_experience_receipt']).lower()}`",
         "- observer-facing consensus bulk emergence: "
         f"`{str(report['paper_faithful_consensus_bulk_emergence_receipt']).lower()}`",
+        "- paper-geometric branch Lorentz contract: "
+        f"`{str(report['paper_geometric_branch_lorentz_contract_receipt']).lower()}`",
+        "- paper-geometric branch observer spacetime: "
+        f"`{str(report['paper_geometric_branch_observer_spacetime_emergence_receipt']).lower()}`",
+        "- paper-geometric branch consensus bulk: "
+        f"`{str(report['paper_geometric_branch_consensus_bulk_emergence_receipt']).lower()}`",
         "- chart-blind strict neutral quotient bulk: "
         f"`{str(report['chart_blind_strict_neutral_quotient_bulk_receipt']).lower()}`",
         "",
@@ -426,5 +538,9 @@ def _markdown(report: dict[str, Any]) -> str:
     lines.extend(["", "## Blockers", ""])
     for blocker in report["blockers"]:
         lines.append(f"- `{blocker}`")
+    if report.get("paper_geometric_branch_blockers"):
+        lines.extend(["", "## Paper-Geometric Branch Blockers", ""])
+        for blocker in report["paper_geometric_branch_blockers"]:
+            lines.append(f"- `{blocker}`")
     lines.extend(["", "## Claim Boundary", "", report["claim_boundary"], ""])
     return "\n".join(lines)

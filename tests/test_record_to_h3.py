@@ -979,6 +979,7 @@ def test_observer_chart_object_population_can_split_broad_tokens_into_h3_compone
     assert report["h3_localized"] is True
     assert report["h3_not_boundary_dominated"] is True
     assert report["observer_chart_bulk_population_receipt"] is True
+    assert report["observer_chart_object_h3_receipt"] is True
     assert report["localized_h3_bulk_population_receipt"] is True
     assert report["shuffled_localized_object_p90"] < report["localized_object_count"]
     assert "_observer_indices" not in report["sample_objects"][0]

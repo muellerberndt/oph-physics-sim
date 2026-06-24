@@ -69,7 +69,8 @@ modular_flow:
 bw:
   mode: state_derived_modular_probe
   source_state: theorem_observer
-  state_mode: maxent_record_operator_state
+  state_mode: history_koopman_generator_state
+  history_window: 16
   target_operator_mode: soft
   transition_response_time: 0.25
   transition_response_scale: 6.283185307179586
@@ -95,6 +96,7 @@ bw:
   angular_prefactor: 0.8
   angular_exponent: 0.25
   times:
+  - 0.0625
   - 0.125
   - 0.25
   - 0.5
@@ -105,7 +107,7 @@ bw:
   - s3_sector_projectors
   - cumulative_repair_load_projectors
   regularizer_a:
-  - 1.0e-12
+  - 1.0e-6
   max_basis: 48
   k_interp: 8
   sim_k_interp: 1
@@ -151,6 +153,17 @@ observers:
   sample_count: 4096
   neighborhood_size: 160
   time_sample_count: 32
+neutral_frontier:
+  seed: 11
+  sample_count: 2048
+  max_model_points: 1024
+  graph_workers: 32
+  overlap_control_max_model_points: 1024
+  ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+  graph_seeds: [7, 11, 17]
+  graph_max_model_points_values: [512, 768, 1024]
+  graph_k_neighbor_values: [8, 12, 16, 24]
+  residual_remove_mode_values: [1, 2, 3, 4]
 observer_objects:
   enabled: true
   family_mode: transition_affinity
@@ -390,6 +403,24 @@ cosmology:
     - record_signature_smooth_k32
     - record_repair_mix
     - record_sector_mix
+  b_a_paired_perturbation:
+    enabled: true
+    source_state: theorem_observer
+    cap_source: h3
+    max_caps: 8
+    modes_per_cap_time: 2
+    a_grid: [0.0009090909090909091, 0.01, 0.1, 1.0]
+    times: [0.25]
+    controls:
+    - shuffled_source
+    - sign_flip
+    response_field: cumulative_repair_load
+    perturb_strength: 1.0
+    perturb_budget_mode: modular_amount
+    perturb_selection_mode: lambda_collar_generator
+    repair_steps: 4
+    repairs_per_step: 192
+    transition_scale: 6.283185307179586
 defects:
   max_triangles: 32000
   sector_repair:

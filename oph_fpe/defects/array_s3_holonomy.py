@@ -29,6 +29,8 @@ S3_CLASS = np.array(
     ],
     dtype=np.int16,
 )
+_EDGE_LOOKUP_CACHE_MAX = 4
+_EDGE_LOOKUP_CACHE: dict[tuple[int, int, int], dict[tuple[int, int], tuple[int, int, int]]] = {}
 
 
 def s3_edge_class_density(
@@ -89,15 +91,16 @@ def s3_triangle_holonomy(g_ij: np.ndarray | int, g_jk: np.ndarray | int, g_ki: n
 
 
 def triangle_holonomies(triangles: np.ndarray, left: np.ndarray, right: np.ndarray, gauge: np.ndarray) -> np.ndarray:
-    labels = _oriented_edge_labels(left, right, gauge)
+    lookup = _edge_index_lookup(left, right)
+    gauge = np.asarray(gauge, dtype=np.int64)
     holonomies: list[int] = []
     for i, j, k in np.asarray(triangles, dtype=np.int64):
         holonomies.append(
             int(
                 s3_triangle_holonomy(
-                    labels[(int(i), int(j))],
-                    labels[(int(j), int(k))],
-                    labels[(int(k), int(i))],
+                    _edge_label(lookup, gauge, int(i), int(j)),
+                    _edge_label(lookup, gauge, int(j), int(k)),
+                    _edge_label(lookup, gauge, int(k), int(i)),
                 )
             )
         )
@@ -594,6 +597,35 @@ def _oriented_edge_labels(left: np.ndarray, right: np.ndarray, gauge: np.ndarray
         labels[(int(a), int(b))] = int(value)
         labels[(int(b), int(a))] = int(S3_INV[int(value)])
     return labels
+
+
+def _edge_index_lookup(left: np.ndarray, right: np.ndarray) -> dict[tuple[int, int], tuple[int, int, int]]:
+    left_array = np.asarray(left, dtype=np.int64)
+    right_array = np.asarray(right, dtype=np.int64)
+    key = (id(left), id(right), int(left_array.size))
+    cached = _EDGE_LOOKUP_CACHE.get(key)
+    if cached is not None:
+        return cached
+    if len(_EDGE_LOOKUP_CACHE) >= _EDGE_LOOKUP_CACHE_MAX:
+        _EDGE_LOOKUP_CACHE.clear()
+    lookup: dict[tuple[int, int], tuple[int, int, int]] = {}
+    for edge_index, (a_raw, b_raw) in enumerate(zip(left_array, right_array, strict=False)):
+        a = int(a_raw)
+        b = int(b_raw)
+        lookup[(min(a, b), max(a, b))] = (int(edge_index), a, b)
+    _EDGE_LOOKUP_CACHE[key] = lookup
+    return lookup
+
+
+def _edge_label(
+    lookup: dict[tuple[int, int], tuple[int, int, int]],
+    gauge: np.ndarray,
+    source: int,
+    target: int,
+) -> int:
+    edge_index, left_node, right_node = lookup[(min(int(source), int(target)), max(int(source), int(target)))]
+    value = int(gauge[edge_index])
+    return value if int(source) == left_node and int(target) == right_node else int(S3_INV[value])
 
 
 def _class_name(class_id: int) -> str:

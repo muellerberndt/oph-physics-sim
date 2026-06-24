@@ -8,6 +8,11 @@ from typing import Any
 
 from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_claim_metadata
 from oph_fpe.constants.oph_pixel import P_STAR, OPHPixelConstants
+from oph_fpe.cosmology.spatial_curvature import (
+    DensitySource,
+    GeometryBranch,
+    spatial_curvature_status_report,
+)
 from oph_fpe.cosmology.unique_predictions import unique_prediction_gate_report
 
 
@@ -69,32 +74,23 @@ def flat_sector_selection_report(
     omega_b0: float = 0.04931,
     omega_nu0: float = 0.00230,
     omega_r0: float = 9.2e-5,
+    omega_k0: float | None = None,
+    omega_k_source: str | DensitySource = DensitySource.UNKNOWN,
+    geometry_branch: str | GeometryBranch = GeometryBranch.UNRESOLVED,
+    topology_policy: str = "LOCAL_TOPOLOGY_UNRESOLVED",
+    **curvature_kwargs: Any,
 ) -> dict[str, Any]:
-    omega_a0 = 1.0 - float(omega_lambda_oph) - float(omega_b0) - float(omega_nu0) - float(omega_r0)
-    return {
-        "mode": "oph_flat_zero_holonomy_sector_selector",
-        "selected_curvature_holonomy": 0.0,
-        "selected_K": 0.0,
-        "selected_Omega_K": 0.0,
-        "inputs": {
-            "Omega_Lambda_OPH": float(omega_lambda_oph),
-            "Omega_b0": float(omega_b0),
-            "Omega_nu0": float(omega_nu0),
-            "Omega_r0": float(omega_r0),
-        },
-        "Omega_A0_residual": float(omega_a0),
-        "rho_A_over_rho_b": float(omega_a0 / omega_b0) if omega_b0 else None,
-        "selector_statement": (
-            "Nonzero FLRW spatial curvature is treated as visible geometric holonomy. In the ordinary "
-            "cosmological boundary sector with no independent curvature charge, MAR zero-obstruction "
-            "selection chooses h_K=0, hence K=0 and Omega_K=0."
-        ),
-        "claim_boundary": (
-            "Flat-sector theorem target from the Pro notes. This is a branch-selection statement; "
-            "a finite simulation still has to emit curvature-holonomy receipts and boundary-sector "
-            "bookkeeping before it becomes a lattice-derived result."
-        ),
-    }
+    return spatial_curvature_status_report(
+        omega_lambda_oph=omega_lambda_oph,
+        omega_b0=omega_b0,
+        omega_nu0=omega_nu0,
+        omega_r0=omega_r0,
+        omega_k0=omega_k0,
+        omega_k_source=omega_k_source,
+        geometry_branch=geometry_branch,
+        topology_policy=topology_policy,
+        **curvature_kwargs,
+    )
 
 
 def cmb_success_ladder_report(source_dir: Path) -> dict[str, Any]:
@@ -198,11 +194,12 @@ def inflation_cmb_bridge_report(source_dir: Path | None = None) -> dict[str, Any
         "mode": "oph_inflation_cmb_bridge_v0",
         "oph_constants": OPHPixelConstants().as_jsonable(),
         "flat_sector_selection": flat,
+        "spatial_curvature_status": flat,
         "screen_spectrum_prediction": screen,
         "unique_prediction_gate_v0_9": unique,
         "cmb_success_ladder": cmb,
         "inflation_replacement_modules": {
-            "flatness": "zero visible curvature holonomy sector, Omega_K=0",
+            "flatness": "clock-slice Levi-Civita holonomy identifies flatness; selection remains direct/CMH/assumption-gated",
             "spectrum": "legacy screen Green target n_s=1-P/48 plus current unique target n_s=1-e*alpha(0)*sqrt(pi)",
             "amplitude": "scalar release energy and radial lift certificates pending; no derived A_zeta",
             "transfer": "standard photon-baryon Boltzmann transfer with an OPH anomaly stress component",
@@ -213,7 +210,8 @@ def inflation_cmb_bridge_report(source_dir: Path | None = None) -> dict[str, Any
         "claim_boundary": (
             "Integrated theorem-target and measured-diagnostic bridge from the Pro CMB/inflation notes. "
             "It gives comparable numbers now, but it is not yet a proof that the finite OPH lattice "
-            "derives the same numbers from state-derived cap/collar microphysics."
+            "derives the same numbers from state-derived cap/collar microphysics, nor that the flat "
+            "FLRW branch has been selected rather than assumed."
         ),
     }
     return with_claim_metadata(
@@ -387,9 +385,12 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "",
         "## Flat Sector",
         "",
+        f"- curvature status: {flat['status']}",
+        f"- geometry branch: {flat['geometry_branch']}",
+        f"- exact flat-sector selection: {flat['exact_flat_sector_selection']}",
         f"- Omega_K selected: {flat['selected_Omega_K']}",
-        f"- Omega_A0 residual: {flat['Omega_A0_residual']:.12g}",
-        f"- rho_A/rho_b: {flat['rho_A_over_rho_b']:.12g}",
+        f"- Omega_A0 + Omega_K0 closure residual: {flat['Omega_A0_plus_Omega_K0']:.12g}",
+        f"- Omega_A0: {flat['Omega_A0'] if flat['Omega_A0'] is not None else 'undetermined without Omega_K0'}",
         "",
         "## CMB v0.4 Diagnostic Import",
         "",

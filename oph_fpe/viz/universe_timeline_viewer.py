@@ -23,7 +23,10 @@ def write_universe_timeline_bundle(
     consensus_readout_dir: Path | None = None,
     max_screen_points: int = 3500,
     max_observers: int = 96,
+    max_objective_observer_views: int | None = None,
     max_h3_objects: int = 512,
+    write_viewer: bool = True,
+    compact_json: bool = False,
 ) -> dict[str, Any]:
     """Write a compact OPH universe visualization bundle.
 
@@ -54,21 +57,34 @@ def write_universe_timeline_bundle(
         consensus_readout_dir=readout_path,
         max_screen_points=max_screen_points,
         max_observers=max_observers,
+        max_objective_observer_views=max_objective_observer_views,
         max_h3_objects=max_h3_objects,
     )
     payload_path = output_path / "visualization_payload.json"
     viewer_path = output_path / "oph_universe_timeline_viewer.html"
     instructions_path = output_path / "VISUALIZATION_INSTRUCTIONS.md"
     web_agent_path = output_path / "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md"
-    payload_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
-    viewer_path.write_text(_render_html(payload), encoding="utf-8")
-    instructions_path.write_text(_visualization_instructions(viewer_path, payload_path, payload), encoding="utf-8")
+    if compact_json:
+        payload_json = json.dumps(payload, separators=(",", ":"), default=str)
+    else:
+        payload_json = json.dumps(payload, indent=2, default=str)
+    payload_path.write_text(payload_json, encoding="utf-8")
+    sidecar_exports = _write_visualization_sidecars(output_path, payload, payload_path)
+    if write_viewer:
+        viewer_path.write_text(_render_html(payload), encoding="utf-8")
+    instructions_path.write_text(
+        _visualization_instructions(viewer_path if write_viewer else None, payload_path, payload),
+        encoding="utf-8",
+    )
     web_agent_path.write_text(_web_agent_brief(payload_path, payload), encoding="utf-8")
     summary = {
         "mode": "oph_universe_timeline_visualization_bundle",
         "bundle_dir": str(output_path),
-        "viewer_path": str(viewer_path),
+        "viewer_path": str(viewer_path) if write_viewer else None,
+        "embedded_viewer_written": bool(write_viewer),
+        "compact_json": bool(compact_json),
         "payload_path": str(payload_path),
+        "sidecar_exports": sidecar_exports,
         "instructions_path": str(instructions_path),
         "web_coding_agent_brief_path": str(web_agent_path),
         "small_universe_dir": str(small_path),
@@ -126,6 +142,838 @@ def write_universe_timeline_bundle(
     return summary
 
 
+def _write_visualization_sidecars(
+    output_path: Path,
+    payload: dict[str, Any],
+    payload_path: Path,
+) -> dict[str, Any]:
+    files: dict[str, Any] = {}
+    screen = payload.get("screen", {}) if isinstance(payload.get("screen"), dict) else {}
+    points = screen.get("points", []) if isinstance(screen.get("points"), list) else []
+    values = screen.get("values", []) if isinstance(screen.get("values"), list) else []
+    field_name = str(screen.get("fieldName") or "field")
+    screen_rows = []
+    for index, point in enumerate(points):
+        xyz = _coord3(point)
+        if xyz is None:
+            continue
+        screen_rows.append(
+            {
+                "screen_point_index": index,
+                "x": xyz[0],
+                "y": xyz[1],
+                "z": xyz[2],
+                "field_name": field_name,
+                "value": values[index] if index < len(values) else None,
+            }
+        )
+    files["screen_points_csv"] = _write_sidecar_csv(
+        output_path / "screen_points.csv",
+        ("screen_point_index", "x", "y", "z", "field_name", "value"),
+        screen_rows,
+    )
+    observer_run_dir = _payload_source_dir(payload, "observerRunDir")
+    files["screen_full_bin"] = _write_full_screen_field_bin(output_path, observer_run_dir)
+
+    cameras = payload.get("subjectiveObserverCameras", [])
+    if not isinstance(cameras, list):
+        cameras = []
+    camera_rows = []
+    frame_rows = []
+    for camera in cameras:
+        if not isinstance(camera, dict):
+            continue
+        eye = _coord3(camera.get("eye")) or [None, None, None]
+        look_at = _coord3(camera.get("lookAt")) or [None, None, None]
+        up = _coord3(camera.get("up")) or [None, None, None]
+        right = _coord3(camera.get("right")) or [None, None, None]
+        forward = _coord3(camera.get("forward")) or [None, None, None]
+        frames = camera.get("timeFrames", []) if isinstance(camera.get("timeFrames"), list) else []
+        camera_rows.append(
+            {
+                "camera_id": camera.get("cameraId"),
+                "observer_id": camera.get("observerId"),
+                "eye_x": eye[0],
+                "eye_y": eye[1],
+                "eye_z": eye[2],
+                "look_at_x": look_at[0],
+                "look_at_y": look_at[1],
+                "look_at_z": look_at[2],
+                "up_x": up[0],
+                "up_y": up[1],
+                "up_z": up[2],
+                "right_x": right[0],
+                "right_y": right[1],
+                "right_z": right[2],
+                "forward_x": forward[0],
+                "forward_y": forward[1],
+                "forward_z": forward[2],
+                "fov_degrees": camera.get("fovDegrees"),
+                "support_patch_count": camera.get("supportPatchCount"),
+                "time_frame_count": len(frames),
+                "support_node_sample_json": camera.get("supportNodeSample", []),
+                "visible_object_packets_json": camera.get("visibleObjectPackets", []),
+                "visible_record_packets_json": camera.get("visibleRecordPackets", []),
+            }
+        )
+        for frame_index, frame in enumerate(frames):
+            if not isinstance(frame, dict):
+                continue
+            frame_rows.append(
+                {
+                    "camera_id": camera.get("cameraId"),
+                    "observer_id": camera.get("observerId"),
+                    "frame_index": frame_index,
+                    "relative_time": frame.get("relativeTime"),
+                    "cycle": frame.get("cycle"),
+                    "visible_readout_hash": frame.get("visibleReadoutHash"),
+                    "dominant_record_signature": frame.get("dominantRecordSignature"),
+                    "dominant_object_packet": frame.get("dominantObjectPacket"),
+                    "local_transition_step": frame.get("localTransitionStep"),
+                    "visible_object_packets_json": frame.get("visibleObjectPackets", []),
+                    "visible_record_packets_json": frame.get("visibleRecordPackets", []),
+                    "polar_field_readout_json": frame.get("polarFieldReadout", []),
+                }
+            )
+    files["subjective_observer_cameras_csv"] = _write_sidecar_csv(
+        output_path / "subjective_observer_cameras.csv",
+        (
+            "camera_id",
+            "observer_id",
+            "eye_x",
+            "eye_y",
+            "eye_z",
+            "look_at_x",
+            "look_at_y",
+            "look_at_z",
+            "up_x",
+            "up_y",
+            "up_z",
+            "right_x",
+            "right_y",
+            "right_z",
+            "forward_x",
+            "forward_y",
+            "forward_z",
+            "fov_degrees",
+            "support_patch_count",
+            "time_frame_count",
+            "support_node_sample_json",
+            "visible_object_packets_json",
+            "visible_record_packets_json",
+        ),
+        camera_rows,
+    )
+    files["subjective_observer_camera_frames_csv"] = _write_sidecar_csv(
+        output_path / "subjective_observer_camera_frames.csv",
+        (
+            "camera_id",
+            "observer_id",
+            "frame_index",
+            "relative_time",
+            "cycle",
+            "visible_readout_hash",
+            "dominant_record_signature",
+            "dominant_object_packet",
+            "local_transition_step",
+            "visible_object_packets_json",
+            "visible_record_packets_json",
+            "polar_field_readout_json",
+        ),
+        frame_rows,
+    )
+    files["observers_full_json"] = _write_full_observers_json(output_path, observer_run_dir)
+    files["cameras_full_json"] = _write_full_cameras_json(output_path, observer_run_dir)
+
+    consensus = payload.get("consensusBulk", {}) if isinstance(payload.get("consensusBulk"), dict) else {}
+    objects = consensus.get("objects", []) if isinstance(consensus.get("objects"), list) else []
+    object_rows = [
+        {
+            "object_id": row.get("objectId"),
+            "record_family_id": row.get("recordFamilyId"),
+            "x": row.get("x"),
+            "y": row.get("y"),
+            "z": row.get("z"),
+            "observer_count": row.get("observerCount"),
+            "support_size": row.get("supportSize"),
+            "h3_compactness": row.get("h3Compactness"),
+            "h3_compactness_normalized": row.get("h3CompactnessNormalized"),
+        }
+        for row in objects
+        if isinstance(row, dict)
+    ]
+    files["consensus_h3_objects_csv"] = _write_sidecar_csv(
+        output_path / "consensus_h3_objects.csv",
+        (
+            "object_id",
+            "record_family_id",
+            "x",
+            "y",
+            "z",
+            "observer_count",
+            "support_size",
+            "h3_compactness",
+            "h3_compactness_normalized",
+        ),
+        object_rows,
+    )
+
+    cmb = payload.get("cmbComparison", {}) if isinstance(payload.get("cmbComparison"), dict) else {}
+    residual_rows = cmb.get("residualRows", []) if isinstance(cmb.get("residualRows"), list) else []
+    cmb_rows = [
+        {
+            "row_index": index,
+            "ell": row.get("ell"),
+            "observed": row.get("observed"),
+            "model": row.get("model"),
+            "residual_sigma": row.get("residualSigma"),
+        }
+        for index, row in enumerate(residual_rows)
+        if isinstance(row, dict)
+    ]
+    files["cmb_residual_rows_csv"] = _write_sidecar_csv(
+        output_path / "cmb_residual_rows.csv",
+        ("row_index", "ell", "observed", "model", "residual_sigma"),
+        cmb_rows,
+    )
+    screen_spectrum_rows = (
+        cmb.get("screenDiagnosticSpectrumRows", [])
+        if isinstance(cmb.get("screenDiagnosticSpectrumRows"), list)
+        else []
+    )
+    screen_cmb_rows = [
+        {
+            "row_index": index,
+            "field": row.get("field"),
+            "ell": row.get("ell"),
+            "C_ell": row.get("C_ell"),
+            "D_ell": row.get("D_ell"),
+            "normalized_D_ell": row.get("normalizedD_ell"),
+        }
+        for index, row in enumerate(screen_spectrum_rows)
+        if isinstance(row, dict)
+    ]
+    files["cmb_screen_spectrum_rows_csv"] = _write_sidecar_csv(
+        output_path / "cmb_screen_spectrum_rows.csv",
+        ("row_index", "field", "ell", "C_ell", "D_ell", "normalized_D_ell"),
+        screen_cmb_rows,
+    )
+
+    vacuum_view = (
+        (payload.get("visualizationViews") or {}).get("fluctuatingQuantumVacuum", {})
+        if isinstance(payload.get("visualizationViews"), dict)
+        else {}
+    )
+    reference_vacuum = (
+        vacuum_view.get("referenceVacuumBaseline", {})
+        if isinstance(vacuum_view.get("referenceVacuumBaseline"), dict)
+        else {}
+    )
+    scalar = (
+        reference_vacuum.get("freeScalarGaussian", {})
+        if isinstance(reference_vacuum.get("freeScalarGaussian"), dict)
+        else {}
+    )
+    vacuum_rows = []
+    for spectrum_kind, source_key in (("raw", "rawSpectrum"), ("smoothed", "smoothedSpectrum")):
+        rows = scalar.get(source_key, []) if isinstance(scalar.get(source_key), list) else []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            vacuum_rows.append(
+                {
+                    "spectrum_kind": spectrum_kind,
+                    "ell": row.get("ell"),
+                    "mean_coefficient_power": row.get("mean_coefficient_power"),
+                    "mode_count": row.get("mode_count"),
+                }
+            )
+    files["reference_vacuum_scalar_spectrum_csv"] = _write_sidecar_csv(
+        output_path / "reference_vacuum_scalar_spectrum.csv",
+        ("spectrum_kind", "ell", "mean_coefficient_power", "mode_count"),
+        vacuum_rows,
+    )
+    compact_u1 = (
+        reference_vacuum.get("compactU1LatticeGauge", {})
+        if isinstance(reference_vacuum.get("compactU1LatticeGauge"), dict)
+        else {}
+    )
+    plaquette_trace = compact_u1.get("plaquetteTrace", [])
+    if not isinstance(plaquette_trace, list):
+        plaquette_trace = []
+    plaquette_rows = [{"sweep": index, "mean_plaquette": value} for index, value in enumerate(plaquette_trace)]
+    files["reference_vacuum_u1_plaquette_trace_csv"] = _write_sidecar_csv(
+        output_path / "reference_vacuum_u1_plaquette_trace.csv",
+        ("sweep", "mean_plaquette"),
+        plaquette_rows,
+    )
+
+    small = payload.get("smallUniverse", {}) if isinstance(payload.get("smallUniverse"), dict) else {}
+    repair_rows = []
+    repair_frames = small.get("repairFrames", []) if isinstance(small.get("repairFrames"), list) else []
+    for frame in repair_frames:
+        if not isinstance(frame, dict):
+            continue
+        repair_rows.append(
+            {
+                "step": frame.get("step"),
+                "state_id": frame.get("stateId"),
+                "phi": frame.get("phi"),
+                "phi_before": frame.get("phiBefore"),
+                "delta_phi": frame.get("deltaPhi"),
+                "enabled_repair_count": frame.get("enabledRepairCount"),
+                "action": frame.get("action"),
+                "node": frame.get("node"),
+                "parent": frame.get("parent"),
+                "strict_descent": frame.get("strictDescent"),
+                "state_json": frame.get("state", []),
+            }
+        )
+    files["finite_repair_frames_csv"] = _write_sidecar_csv(
+        output_path / "finite_repair_frames.csv",
+        (
+            "step",
+            "state_id",
+            "phi",
+            "phi_before",
+            "delta_phi",
+            "enabled_repair_count",
+            "action",
+            "node",
+            "parent",
+            "strict_descent",
+            "state_json",
+        ),
+        repair_rows,
+    )
+    cycle_rows = []
+    cycles = small.get("cycles", {}) if isinstance(small.get("cycles"), dict) else {}
+    for cycle_kind, source_rows in (
+        ("exact_consensus", cycles.get("exactConsensus", [])),
+        ("frustrated_control", cycles.get("frustratedControl", [])),
+    ):
+        if not isinstance(source_rows, list):
+            continue
+        for cycle_index, row in enumerate(source_rows):
+            if not isinstance(row, dict):
+                continue
+            cycle_edges = row.get("edges", []) if isinstance(row.get("edges"), list) else []
+            cycle_rows.append(
+                {
+                    "cycle_kind": cycle_kind,
+                    "cycle_index": cycle_index,
+                    "holonomy_z2": row.get("holonomyZ2"),
+                    "node_count": len(row.get("cycle", [])) if isinstance(row.get("cycle"), list) else None,
+                    "edge_count": len(cycle_edges),
+                    "cycle_json": row.get("cycle", []),
+                    "edges_json": cycle_edges,
+                }
+            )
+    files["finite_cycle_rows_csv"] = _write_sidecar_csv(
+        output_path / "finite_cycle_rows.csv",
+        (
+            "cycle_kind",
+            "cycle_index",
+            "holonomy_z2",
+            "node_count",
+            "edge_count",
+            "cycle_json",
+            "edges_json",
+        ),
+        cycle_rows,
+    )
+
+    cluster_snapshots = (
+        (screen.get("clusters") or {}).get("snapshots", [])
+        if isinstance(screen.get("clusters"), dict)
+        else []
+    )
+    cluster_rows = []
+    if not isinstance(cluster_snapshots, list):
+        cluster_snapshots = []
+    for snapshot_index, snapshot in enumerate(cluster_snapshots):
+        if not isinstance(snapshot, dict):
+            continue
+        clusters = snapshot.get("clusters", []) if isinstance(snapshot.get("clusters"), list) else []
+        for cluster_index, cluster in enumerate(clusters):
+            if not isinstance(cluster, dict):
+                continue
+            point = _coord3(cluster.get("point")) or [None, None, None]
+            cluster_rows.append(
+                {
+                    "snapshot_index": snapshot_index,
+                    "cycle": snapshot.get("cycle"),
+                    "cluster_index": cluster_index,
+                    "cluster_id": cluster.get("clusterId"),
+                    "worldline_id": cluster.get("worldlineId"),
+                    "x": point[0],
+                    "y": point[1],
+                    "z": point[2],
+                    "cluster_class": cluster.get("class"),
+                    "support_node_count": cluster.get("supportNodeCount"),
+                    "interpolated": snapshot.get("interpolated"),
+                }
+            )
+    files["screen_cluster_tracks_csv"] = _write_sidecar_csv(
+        output_path / "screen_cluster_tracks.csv",
+        (
+            "snapshot_index",
+            "cycle",
+            "cluster_index",
+            "cluster_id",
+            "worldline_id",
+            "x",
+            "y",
+            "z",
+            "cluster_class",
+            "support_node_count",
+            "interpolated",
+        ),
+        cluster_rows,
+    )
+
+    proto = consensus.get("protoParticleCandidates", {}) if isinstance(consensus.get("protoParticleCandidates"), dict) else {}
+    proto_worldline_rows = []
+    proto_event_rows = []
+    proto_worldlines = proto.get("worldlines", []) if isinstance(proto.get("worldlines"), list) else []
+    for worldline in proto_worldlines:
+        if not isinstance(worldline, dict):
+            continue
+        worldline_id = worldline.get("worldlineId")
+        proto_worldline_rows.append(
+            {
+                "worldline_id": worldline_id,
+                "observation_count": worldline.get("observationCount"),
+                "birth_cycle": worldline.get("birthCycle"),
+                "death_cycle": worldline.get("deathCycle"),
+                "h3_path_length": worldline.get("h3PathLength"),
+                "mean_h3_step": worldline.get("meanH3Step"),
+                "class_mode": worldline.get("classMode"),
+                "particle_like": worldline.get("particleLike"),
+                "localization_pass": worldline.get("localizationPass"),
+                "persistence_pass": worldline.get("persistencePass"),
+                "sector_stability_pass": worldline.get("sectorStabilityPass"),
+                "transportability_pass": worldline.get("transportabilityPass"),
+                "bulk_localization_pass": worldline.get("bulkLocalizationPass"),
+            }
+        )
+        events = worldline.get("events", []) if isinstance(worldline.get("events"), list) else []
+        for event_index, event in enumerate(events):
+            if not isinstance(event, dict):
+                continue
+            point = _coord3(event.get("h3SpatialPoint")) or [None, None, None]
+            proto_event_rows.append(
+                {
+                    "worldline_id": worldline_id,
+                    "event_index": event_index,
+                    "cycle": event.get("cycle"),
+                    "x": point[0],
+                    "y": point[1],
+                    "z": point[2],
+                    "fit_residual": event.get("fitResidual"),
+                    "support_node_count": event.get("supportNodeCount"),
+                    "particle_like": worldline.get("particleLike"),
+                }
+            )
+    files["proto_particle_worldlines_csv"] = _write_sidecar_csv(
+        output_path / "proto_particle_worldlines.csv",
+        (
+            "worldline_id",
+            "observation_count",
+            "birth_cycle",
+            "death_cycle",
+            "h3_path_length",
+            "mean_h3_step",
+            "class_mode",
+            "particle_like",
+            "localization_pass",
+            "persistence_pass",
+            "sector_stability_pass",
+            "transportability_pass",
+            "bulk_localization_pass",
+        ),
+        proto_worldline_rows,
+    )
+    files["proto_particle_worldline_events_csv"] = _write_sidecar_csv(
+        output_path / "proto_particle_worldline_events.csv",
+        (
+            "worldline_id",
+            "event_index",
+            "cycle",
+            "x",
+            "y",
+            "z",
+            "fit_residual",
+            "support_node_count",
+            "particle_like",
+        ),
+        proto_event_rows,
+    )
+
+    effective_string = (
+        (payload.get("visualizationViews") or {}).get("effectiveStringTheory", {})
+        if isinstance(payload.get("visualizationViews"), dict)
+        else {}
+    )
+    stress = (
+        effective_string.get("twoDefectStressContractionAssay", {})
+        if isinstance(effective_string.get("twoDefectStressContractionAssay"), dict)
+        else {}
+    )
+    stress_rows = _stress_sidecar_rows(stress.get("trajectoryRows", []), control_name="stress_contraction")
+    control_rows = []
+    controls = stress.get("controlTrajectoryRows", {}) if isinstance(stress.get("controlTrajectoryRows"), dict) else {}
+    for control_name, rows in controls.items():
+        control_rows.extend(_stress_sidecar_rows(rows, control_name=str(control_name)))
+    files["two_defect_stress_trajectory_csv"] = _write_sidecar_csv(
+        output_path / "two_defect_stress_trajectory.csv",
+        _STRESS_SIDECAR_FIELDS,
+        stress_rows,
+    )
+    files["two_defect_stress_controls_csv"] = _write_sidecar_csv(
+        output_path / "two_defect_stress_controls.csv",
+        _STRESS_SIDECAR_FIELDS,
+        control_rows,
+    )
+    stress_worldline_rows = []
+    stress_event_rows = []
+    for worldline in stress.get("worldlines", []) if isinstance(stress.get("worldlines"), list) else []:
+        if not isinstance(worldline, dict):
+            continue
+        worldline_id = worldline.get("worldlineId")
+        stress_worldline_rows.append(
+            {
+                "worldline_id": worldline_id,
+                "observation_count": worldline.get("observationCount"),
+                "birth_cycle": worldline.get("birthCycle"),
+                "death_cycle": worldline.get("deathCycle"),
+                "lifetime_cycles": worldline.get("lifetimeCycles"),
+                "persistent": worldline.get("persistent"),
+                "mean_transport_distance": worldline.get("meanTransportDistance"),
+            }
+        )
+        events = worldline.get("events", []) if isinstance(worldline.get("events"), list) else []
+        for event_index, event in enumerate(events):
+            if not isinstance(event, dict):
+                continue
+            point = _coord3(event.get("h3SpatialPoint")) or [None, None, None]
+            stress_event_rows.append(
+                {
+                    "worldline_id": worldline_id,
+                    "event_index": event_index,
+                    "cycle": event.get("cycle"),
+                    "event": event.get("event"),
+                    "class": event.get("class"),
+                    "holonomy_mode": event.get("holonomyMode"),
+                    "support_node_count": event.get("supportNodeCount"),
+                    "x": point[0],
+                    "y": point[1],
+                    "z": point[2],
+                    "pair_h3_separation": event.get("pairH3Separation"),
+                    "local_readout_contraction": event.get("localReadoutContraction"),
+                    "transport_distance": event.get("transportDistance"),
+                }
+            )
+    files["two_defect_stress_worldlines_csv"] = _write_sidecar_csv(
+        output_path / "two_defect_stress_worldlines.csv",
+        (
+            "worldline_id",
+            "observation_count",
+            "birth_cycle",
+            "death_cycle",
+            "lifetime_cycles",
+            "persistent",
+            "mean_transport_distance",
+        ),
+        stress_worldline_rows,
+    )
+    files["two_defect_stress_worldline_events_csv"] = _write_sidecar_csv(
+        output_path / "two_defect_stress_worldline_events.csv",
+        (
+            "worldline_id",
+            "event_index",
+            "cycle",
+            "event",
+            "class",
+            "holonomy_mode",
+            "support_node_count",
+            "x",
+            "y",
+            "z",
+            "pair_h3_separation",
+            "local_readout_contraction",
+            "transport_distance",
+        ),
+        stress_event_rows,
+    )
+
+    receipts = {
+        "observer_facing_consensus_3d_bulk_readout_receipt": bool(
+            (consensus.get("receipts") or {}).get("observer_facing_consensus_3d_bulk_readout_receipt", False)
+        ),
+        "theorem_assisted_consensus_3d_bulk_readout_receipt": bool(
+            (consensus.get("receipts") or {}).get("theorem_assisted_consensus_3d_bulk_readout_receipt", False)
+        ),
+        "strict_neutral_third_person_bulk_receipt": bool(
+            (consensus.get("receipts") or {}).get("strict_neutral_third_person_bulk_receipt", False)
+        ),
+        "physical_cmb_prediction_receipt": bool(
+            (cmb.get("receipts") or {}).get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+            or (cmb.get("receipts") or {}).get("physical_cmb_prediction", False)
+        ),
+        "reference_vacuum_regression_receipt": bool(
+            (reference_vacuum.get("receipts") or {}).get("reference_vacuum_regression_receipt", False)
+        ),
+        "oph_native_vacuum_promotion_receipt": bool(
+            (reference_vacuum.get("receipts") or {}).get("OPH_NATIVE_VACUUM_PROMOTION_RECEIPT", False)
+        ),
+        "bulk_worldline_precursor_receipt": bool(
+            (proto.get("receipts") or {}).get("bulk_worldline_precursor_receipt", False)
+        ),
+        "particle_matter_receipt": bool((proto.get("receipts") or {}).get("particle_matter_receipt", False)),
+        "two_defect_stress_contraction_assay_receipt": bool(
+            (stress.get("receipts") or {}).get("two_defect_stress_contraction_assay_receipt", False)
+        ),
+        "production_gravity_receipt": bool(
+            (stress.get("receipts") or {}).get("production_gravity_receipt", False)
+        ),
+        "physical_gravity_prediction": bool(
+            (stress.get("receipts") or {}).get("physical_gravity_prediction", False)
+        ),
+    }
+    manifest = {
+        "schema": "oph_universe_visualization_sidecars_v1",
+        "payload_path": str(payload_path),
+        "payload_schema": payload.get("schemaVersion") or payload.get("schema"),
+        "files": files,
+        "receipts": receipts,
+        "claim_boundary": (
+            "CSV sidecars are normalized mirrors of visualization_payload.json for renderer throughput. "
+            "The JSON payload remains authoritative for receipts and claim status."
+        ),
+    }
+    manifest_path = output_path / "visualization_export_manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
+    return {
+        "schema": manifest["schema"],
+        "manifest_path": str(manifest_path),
+        "files": files,
+        "receipts": receipts,
+    }
+
+
+def _payload_source_dir(payload: dict[str, Any], key: str) -> Path | None:
+    source_paths = payload.get("sourcePaths") if isinstance(payload.get("sourcePaths"), dict) else {}
+    value = source_paths.get(key)
+    if not value:
+        return None
+    path = Path(str(value))
+    return path if path.exists() else None
+
+
+def _write_full_screen_field_bin(output_path: Path, run_dir: Path | None) -> dict[str, Any]:
+    if run_dir is None:
+        return {"path": None, "row_count": 0, "written": False, "reason": "observer_run_dir_missing"}
+    npz_path = Path(run_dir) / "freezeout_fields.npz"
+    if not npz_path.exists():
+        return {"path": None, "row_count": 0, "written": False, "reason": "freezeout_fields_npz_missing"}
+    try:
+        with np.load(npz_path) as data:
+            points = np.asarray(data["points"], dtype=float)
+            field_name = "record_signature" if "record_signature" in data.files else next(
+                (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
+                "uniform",
+            )
+            values = (
+                np.asarray(data[field_name], dtype=float)
+                if field_name in data.files
+                else np.zeros(points.shape[0], dtype=float)
+            )
+    except Exception as exc:  # pragma: no cover - corrupted run artifact path.
+        return {
+            "path": None,
+            "row_count": 0,
+            "written": False,
+            "reason": f"freezeout_fields_npz_unreadable:{type(exc).__name__}",
+        }
+    if points.ndim != 2 or points.shape[1] < 3 or values.ndim != 1 or values.shape[0] != points.shape[0]:
+        return {
+            "path": None,
+            "row_count": 0,
+            "written": False,
+            "reason": "freezeout_fields_shape_mismatch",
+            "source": str(npz_path),
+        }
+    row_count = int(points.shape[0])
+    path = output_path / f"screen_full_{row_count}.bin"
+    packed = np.column_stack([points[:, :3], _normalize(values)]).astype("<f4", copy=False)
+    packed.tofile(path)
+    return {
+        "path": str(path),
+        "row_count": row_count,
+        "byte_count": int(path.stat().st_size),
+        "dtype": "float32-le",
+        "layout": "x,y,z,value",
+        "field_name": field_name,
+        "source": str(npz_path),
+        "written": True,
+    }
+
+
+def _write_full_observers_json(output_path: Path, run_dir: Path | None) -> dict[str, Any]:
+    if run_dir is None:
+        return {"path": None, "row_count": 0, "written": False, "reason": "observer_run_dir_missing"}
+    views = _read_jsonl(Path(run_dir) / "observer_views.jsonl", limit=10_000_000)
+    observers = []
+    for row in views:
+        axis = row.get("axis")
+        if not isinstance(axis, list) or len(axis) < 3:
+            continue
+        observers.append(
+            {
+                "observerId": row.get("observer_id"),
+                "axis": [float(axis[0]), float(axis[1]), float(axis[2])],
+                "supportPatchCount": row.get("support_patch_count"),
+                "visibleSignatureEntropy": row.get("visible_signature_entropy"),
+                "modularDepthMean": row.get("modular_depth_mean"),
+                "dominantRecordSignature": row.get("dominant_record_signature"),
+                "dominantObjectPacket": row.get("dominant_object_packet"),
+                "visibleReadoutHash": row.get("visible_readout_hash"),
+                "claimBoundary": row.get("claim_boundary"),
+            }
+        )
+    path = output_path / f"observers_full_{len(observers)}.json"
+    data = {
+        "schema": "oph_observers_full_v1",
+        "source": str(Path(run_dir) / "observer_views.jsonl"),
+        "observerCount": len(observers),
+        "observers": observers,
+    }
+    path.write_text(json.dumps(data, separators=(",", ":"), default=str), encoding="utf-8")
+    return {
+        "path": str(path),
+        "row_count": len(observers),
+        "byte_count": int(path.stat().st_size),
+        "written": True,
+    }
+
+
+def _write_full_cameras_json(output_path: Path, run_dir: Path | None) -> dict[str, Any]:
+    if run_dir is None:
+        return {"path": None, "row_count": 0, "written": False, "reason": "observer_run_dir_missing"}
+    run_path = Path(run_dir)
+    views = _read_jsonl(run_path / "observer_views.jsonl", limit=10_000_000)
+    observer_report = _read_json(run_path / "observer_modular_experience_report.json")
+    trace = _read_trace(run_path / "mismatch_trace.csv")
+    time_grid = observer_report.get("observer_relative_time_grid")
+    if not isinstance(time_grid, list) or not time_grid:
+        time_grid = next((row.get("observer_relative_times") for row in views if row.get("observer_relative_times")), [])
+    if not isinstance(time_grid, list) or not time_grid:
+        time_grid = [0.0]
+    trace_frames = _relative_time_frames(_expanded_time_grid(time_grid, trace, min_count=32), trace)
+    objective_views = _observer_perspective_payloads(views, trace_frames, limit=len(views))
+    subjective_cameras = _subjective_observer_cameras({"objectiveObserverViews": objective_views})
+    path = output_path / f"cameras_full_{len(subjective_cameras)}.json"
+    data = {
+        "schema": "oph_observer_cameras_full_v1",
+        "source": str(run_path / "observer_views.jsonl"),
+        "objectiveObserverViewCount": len(objective_views),
+        "subjectiveObserverCameraCount": len(subjective_cameras),
+        "objectiveObserverViews": objective_views,
+        "subjectiveObserverCameras": subjective_cameras,
+        "claimBoundary": (
+            "Full observer camera sidecar generated from observer-local readouts. It is a renderer input, "
+            "not a hidden global observer state."
+        ),
+    }
+    path.write_text(json.dumps(data, separators=(",", ":"), default=str), encoding="utf-8")
+    return {
+        "path": str(path),
+        "row_count": len(subjective_cameras),
+        "objective_observer_view_count": len(objective_views),
+        "byte_count": int(path.stat().st_size),
+        "written": True,
+    }
+
+
+_STRESS_SIDECAR_FIELDS: tuple[str, ...] = (
+    "control_name",
+    "mode",
+    "step",
+    "cycle",
+    "left_x",
+    "left_y",
+    "left_z",
+    "right_x",
+    "right_y",
+    "right_z",
+    "tangent_separation",
+    "h3_separation",
+    "stress_kernel",
+    "local_readout_contraction",
+)
+
+
+def _stress_sidecar_rows(value: Any, *, control_name: str) -> list[dict[str, Any]]:
+    rows = value if isinstance(value, list) else []
+    out = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        left = _coord3(row.get("leftH3SpatialPoint")) or [None, None, None]
+        right = _coord3(row.get("rightH3SpatialPoint")) or [None, None, None]
+        out.append(
+            {
+                "control_name": control_name,
+                "mode": row.get("mode"),
+                "step": row.get("step"),
+                "cycle": row.get("cycle"),
+                "left_x": left[0],
+                "left_y": left[1],
+                "left_z": left[2],
+                "right_x": right[0],
+                "right_y": right[1],
+                "right_z": right[2],
+                "tangent_separation": row.get("tangentSeparation"),
+                "h3_separation": row.get("h3Separation"),
+                "stress_kernel": row.get("stressKernel"),
+                "local_readout_contraction": row.get("localReadoutContraction"),
+            }
+        )
+    return out
+
+
+def _write_sidecar_csv(
+    path: Path,
+    fieldnames: tuple[str, ...],
+    rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: _csv_cell(row.get(field)) for field in fieldnames})
+    return {"path": str(path), "row_count": len(rows), "written": True}
+
+
+def _csv_cell(value: Any) -> Any:
+    if isinstance(value, (list, dict)):
+        return json.dumps(value, separators=(",", ":"), default=str)
+    if value is None:
+        return ""
+    return value
+
+
+def _coord3(value: Any) -> list[float] | None:
+    if not isinstance(value, list) or len(value) < 3:
+        return None
+    try:
+        return [float(value[0]), float(value[1]), float(value[2])]
+    except (TypeError, ValueError):
+        return None
+
+
 def build_universe_timeline_payload(
     *,
     small_universe_dir: Path,
@@ -134,6 +982,7 @@ def build_universe_timeline_payload(
     consensus_readout_dir: Path | None,
     max_screen_points: int,
     max_observers: int,
+    max_objective_observer_views: int | None,
     max_h3_objects: int,
 ) -> dict[str, Any]:
     small_payload = _small_universe_payload(Path(small_universe_dir))
@@ -147,6 +996,7 @@ def build_universe_timeline_payload(
             else None
         ),
         max_observers=max_observers,
+        max_objective_observer_views=max_objective_observer_views,
     )
     screen_payload = _screen_payload(Path(observer_run_dir), max_points=max_screen_points)
     bulk_payload = _consensus_bulk_payload(
@@ -178,6 +1028,7 @@ def build_universe_timeline_payload(
         bulk_payload=bulk_payload,
         cmb_payload=cmb_payload,
         pn_silence_payload=pn_silence_payload,
+        diagnostic_run_dir=Path(consensus_pack_dir) if consensus_pack_dir is not None else Path(observer_run_dir),
     )
     return {
         "schemaVersion": "oph_universe_timeline_visualization_payload_v1",
@@ -217,6 +1068,8 @@ def _small_universe_payload(run_dir: Path) -> dict[str, Any]:
     exact = _read_json(run_dir / "exact_consensus_receipt.json")
     frustrated = _read_json(run_dir / "frustrated_control_receipt.json")
     evidence = _read_json(run_dir / "small_oph_universe_evidence.json")
+    theorem_core = _read_json(run_dir / "theorem_core_receipts.json")
+    finite_replay = _read_json(run_dir / "finite_consensus_replay_report.json")
     cycle_holonomy = _read_json(run_dir / "cycle_holonomy.json")
     edges = _edges_from_cycles(cycle_holonomy.get("exact_consensus", []))
     node_count = _infer_node_count(edges, exact.get("terminal_normal_form"))
@@ -245,6 +1098,9 @@ def _small_universe_payload(run_dir: Path) -> dict[str, Any]:
         "receipts": {
             "FINITE_CONSENSUS_THEOREM_RECEIPT": bool(
                 exact.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
+                or theorem_core.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
+                or theorem_core.get("finite_consensus_theorem_receipt", False)
+                or finite_replay.get("receipt", False)
             ),
             "exact_nonzero_holonomy_cycle_count": exact_nonzero,
             "frustrated_control_holonomy_obstruction_receipt": bool(
@@ -260,11 +1116,16 @@ def _small_universe_payload(run_dir: Path) -> dict[str, Any]:
             ),
             "terminal_phi": exact.get("terminal_phi"),
             "terminal_normal_form": exact.get("terminal_normal_form"),
-            "bundle_receipt": bool(evidence.get("bundle_receipt", False)),
+            "bundle_receipt": bool(evidence.get("bundle_receipt", False) or theorem_core.get("receipt", False)),
         },
         "claimBoundary": exact.get(
             "claim_boundary",
-            "Exact small-universe repair receipt only; not a Lorentz, H3, particle, or cosmology claim.",
+            theorem_core.get(
+                "claim_boundary",
+                "Finite overlap-repair receipt/readout. Large-run fallbacks use theorem-core receipts "
+                "when exact mini-universe files are absent; this is not by itself a Lorentz, H3, particle, "
+                "or cosmology claim.",
+            ),
         ),
     }
 
@@ -326,6 +1187,7 @@ def _observer_modular_time_payload(
     *,
     readout_dir: Path | None = None,
     max_observers: int,
+    max_objective_observer_views: int | None,
 ) -> dict[str, Any]:
     observer_report = _read_json(run_dir / "observer_modular_experience_report.json")
     status = _read_json(run_dir / "emergence_status_report.json")
@@ -359,7 +1221,8 @@ def _observer_modular_time_payload(
             }
         )
     overlap_links = _observer_overlap_links(views, consensus, trace_frames, max_links=20_000)
-    objective_limit = int(max_observers) if int(max_observers) < 64 else min(int(max_observers), 128)
+    objective_limit = int(max_observers if max_objective_observer_views is None else max_objective_observer_views)
+    objective_limit = max(0, min(int(max_observers), objective_limit))
     return {
         "description": (
             "Observer-local modular time readout. The slider is the observer relative-time grid emitted "
@@ -374,6 +1237,8 @@ def _observer_modular_time_payload(
             "observerCount": consensus.get("observer_count"),
             "pairCount": consensus.get("pair_count"),
             "exportedPairCount": len(overlap_links),
+            "exportedObserverCount": len(observers),
+            "exportedObjectiveObserverViewCount": objective_limit,
             "overlapLinkSource": (
                 "recomputed_from_exported_observer_supports"
                 if overlap_links
@@ -1011,24 +1876,9 @@ def _cmb_payload(consensus_pack_dir: Path | None) -> dict[str, Any]:
     if consensus_pack_dir is None:
         return {"description": "No CMB comparison pack supplied.", "receipts": {}, "residualRows": []}
     report = _read_json(consensus_pack_dir / "physical_cmb_output_comparison_report.json")
+    screen_rows, screen_model = _screen_cmb_diagnostic_rows(consensus_pack_dir)
     if not report:
         cmb_lite = _read_json(consensus_pack_dir / "cmb_lite_comparison_report.json")
-        cl_report = _read_json(consensus_pack_dir / "cl_comparison_report.json")
-        best_field = cmb_lite.get("best_shape_field")
-        fields = cl_report.get("fields", {}) if cl_report else {}
-        field_report = fields.get(best_field) if isinstance(best_field, str) else None
-        if field_report is None and fields:
-            best_field, field_report = next(iter(fields.items()))
-        rows = []
-        for row in list((field_report or {}).get("spectrum", []))[:160]:
-            rows.append(
-                {
-                    "ell": _optional_float(row.get("ell")),
-                    "observed": None,
-                    "model": _optional_float(row.get("D_ell")),
-                    "residualSigma": None,
-                }
-            )
         return {
             "description": (
                 "Fresh-run CMB-lite/screen angular-spectrum diagnostic. This is useful for visualization "
@@ -1040,11 +1890,14 @@ def _cmb_payload(consensus_pack_dir: Path | None) -> dict[str, Any]:
                 "USABLE_PHYSICAL_CMB_DATA_RECEIPT": False,
                 "PHYSICAL_CMB_PREDICTION_RECEIPT": False,
                 "physical_cmb_prediction": False,
-                "SCREEN_CMB_LITE_DIAGNOSTIC_RECEIPT": bool(cmb_lite or cl_report),
+                "SCREEN_CMB_LITE_DIAGNOSTIC_RECEIPT": bool(
+                    cmb_lite or screen_rows or screen_model.get("screenProxyReceipt", False)
+                ),
             },
-            "bestOphDiagnosticModel": {"source": "cmb_lite_screen_proxy", "field": best_field},
+            "bestOphDiagnosticModel": screen_model,
             "bestOphResidualSummary": {},
-            "residualRows": rows,
+            "residualRows": [],
+            "screenDiagnosticSpectrumRows": screen_rows,
             "claimBoundary": cmb_lite.get(
                 "claim_boundary",
                 "Screen C_l diagnostic only; not a physical CMB prediction.",
@@ -1077,13 +1930,66 @@ def _cmb_payload(consensus_pack_dir: Path | None) -> dict[str, Any]:
             "physical_cmb_prediction": bool(report.get("physical_cmb_prediction", False)),
         },
         "bestOphDiagnosticModel": best_model,
+        "screenDiagnosticModel": screen_model,
         "bestOphResidualSummary": residual_summary,
         "residualRows": rows,
+        "screenDiagnosticSpectrumRows": screen_rows,
         "claimBoundary": report.get(
             "claim_boundary",
             "CMB output comparison diagnostic; not a physical CMB prediction without hard gates.",
         ),
     }
+
+
+def _screen_cmb_diagnostic_rows(consensus_pack_dir: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    cmb_lite = _read_json(consensus_pack_dir / "cmb_lite_comparison_report.json")
+    cl_report = _read_json(consensus_pack_dir / "cl_comparison_report.json")
+    fields = cl_report.get("fields", {}) if isinstance(cl_report.get("fields"), dict) else {}
+    best_field = (
+        cmb_lite.get("best_positive_shape_field")
+        or cmb_lite.get("best_shape_field")
+        or cl_report.get("best_shape_field")
+    )
+    field_report = fields.get(best_field) if isinstance(best_field, str) else None
+    if field_report is None and fields:
+        best_field, field_report = next(iter(fields.items()))
+    spectrum = field_report.get("spectrum", []) if isinstance(field_report, dict) else []
+    d_values = [
+        float(value)
+        for row in spectrum
+        for value in [_optional_float(row.get("D_ell")) if isinstance(row, dict) else None]
+        if value is not None and math.isfinite(float(value))
+    ]
+    max_abs = max((abs(value) for value in d_values), default=0.0)
+    rows = []
+    for row in list(spectrum)[:320]:
+        if not isinstance(row, dict):
+            continue
+        d_ell = _optional_float(row.get("D_ell"))
+        rows.append(
+            {
+                "field": best_field,
+                "ell": _optional_float(row.get("ell")),
+                "C_ell": _optional_float(row.get("C_ell")),
+                "D_ell": d_ell,
+                "normalizedD_ell": float(d_ell / max_abs) if d_ell is not None and max_abs > 0.0 else None,
+            }
+        )
+    model = {
+        "source": "cmb_lite_screen_proxy",
+        "field": best_field,
+        "rowCount": len(rows),
+        "ellMax": cl_report.get("ell_max"),
+        "pointCount": cl_report.get("point_count"),
+        "screenProxyReceipt": bool(
+            (cl_report.get("cosmo_proxy_receipt") or {}).get("receipt", False)
+            or cl_report.get("receipt_name") == "SCREEN_PROXY_CMB_RECEIPT"
+            or cmb_lite
+        ),
+        "physicalPrediction": False,
+        "claimBoundary": "Screen angular-spectrum diagnostic; not physical CMB prediction.",
+    }
+    return rows, model
 
 
 def _pn_silence_to_observation_payload(run_dir: Path, alternate_dir: Path | None) -> dict[str, Any]:
@@ -1246,6 +2152,190 @@ def _geometry_and_symmetry_payload(
     }
 
 
+def _reference_vacuum_visualization_payload(run_dir: Path | None) -> dict[str, Any]:
+    report_path = (
+        Path(run_dir) / "reference_vacuum_baseline" / "reference_vacuum_baseline_report.json"
+        if run_dir is not None
+        else None
+    )
+    report = _read_json(report_path) if report_path is not None else {}
+    free_scalar = report.get("free_scalar_gaussian") if isinstance(report.get("free_scalar_gaussian"), dict) else {}
+    compact_u1 = (
+        report.get("compact_u1_lattice_gauge")
+        if isinstance(report.get("compact_u1_lattice_gauge"), dict)
+        else {}
+    )
+    receipt_contract = (
+        report.get("receipt_contract") if isinstance(report.get("receipt_contract"), dict) else {}
+    )
+    explicit_nonclaims = report.get("explicit_nonclaims") if isinstance(report.get("explicit_nonclaims"), list) else []
+    return {
+        "written": bool(report),
+        "source": str(report_path) if report_path is not None else None,
+        "claimTier": report.get("claim_tier"),
+        "claimTierMeaning": report.get("claim_tier_meaning"),
+        "freeScalarGaussian": {
+            "modeCount": free_scalar.get("mode_count"),
+            "sampleCount": free_scalar.get("sample_count"),
+            "rawSpectrum": list(free_scalar.get("raw_spectrum", []) or [])[:64],
+            "smoothedSpectrum": list(free_scalar.get("smoothed_spectrum", []) or [])[:64],
+            "covarianceDiagnostics": free_scalar.get("covariance_diagnostics", {}),
+            "refinementDiagnostics": free_scalar.get("refinement_diagnostics", {}),
+            "artifacts": free_scalar.get("artifacts", {}),
+        },
+        "compactU1LatticeGauge": {
+            "latticeSize": compact_u1.get("lattice_size"),
+            "sweeps": compact_u1.get("sweeps"),
+            "acceptanceRate": compact_u1.get("acceptance_rate"),
+            "postBurnInMeanPlaquette": compact_u1.get("post_burn_in_mean_plaquette"),
+            "plaquetteTrace": list(compact_u1.get("plaquette_trace", []) or [])[:128],
+            "thermalizationAutocorrelation": compact_u1.get("thermalization_autocorrelation", {}),
+        },
+        "receipts": {
+            "reference_vacuum_regression_receipt": bool(
+                receipt_contract.get(
+                    "reference_theory_regression",
+                    free_scalar.get("reference_theory_regression_receipt", False)
+                    and compact_u1.get("reference_theory_regression_receipt", False),
+                )
+            ),
+            "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": bool(
+                report.get("OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT", False)
+            ),
+            "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": bool(
+                report.get("OPH_NATIVE_VACUUM_PROMOTION_RECEIPT", False)
+            ),
+            "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": bool(
+                report.get("OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT", False)
+            ),
+        },
+        "explicitNonClaims": explicit_nonclaims,
+        "claimBoundary": (
+            "Reference free-scalar and compact-U1 baseline for visualization/regression only; "
+            "not promoted to an OPH-native vacuum or primordial physical field without the promotion receipts."
+        ),
+    }
+
+
+def _two_defect_stress_contraction_visualization_payload(run_dir: Path | None) -> dict[str, Any]:
+    report_path = Path(run_dir) / "two_defect_stress_contraction_assay_report.json" if run_dir is not None else None
+    report = _read_json(report_path) if report_path is not None else {}
+    control_rows = report.get("control_trajectory_rows") if isinstance(report.get("control_trajectory_rows"), dict) else {}
+    return {
+        "written": bool(report),
+        "source": str(report_path) if report_path is not None else None,
+        "controlledPlantedAssay": bool(report.get("controlled_planted_assay", False)),
+        "patchCount": report.get("patch_count"),
+        "steps": report.get("steps"),
+        "supportNodeCount": report.get("support_node_count"),
+        "declaredStressContractionLaw": report.get("declared_stress_contraction_law", {}),
+        "stressContractionSummary": _compact_trajectory_summary(
+            report.get("stress_contraction_summary", {})
+        ),
+        "noContractionControlSummary": _compact_trajectory_summary(
+            report.get("no_contraction_control_summary", {})
+        ),
+        "shuffledPairControlSummary": _compact_trajectory_summary(
+            report.get("shuffled_pair_control_summary", {})
+        ),
+        "approachMarginVsControls": report.get("approach_margin_vs_controls"),
+        "trajectoryRows": _compact_stress_contraction_rows(report.get("trajectory_rows", []), limit=128),
+        "controlTrajectoryRows": {
+            "noContraction": _compact_stress_contraction_rows(control_rows.get("no_contraction", []), limit=64),
+            "shuffledPair": _compact_stress_contraction_rows(control_rows.get("shuffled_pair", []), limit=64),
+        },
+        "worldlines": _compact_stress_contraction_worldlines(report.get("worldlines", []), limit=4),
+        "receipts": {
+            "two_defect_stress_contraction_assay_receipt": bool(
+                report.get("two_defect_stress_contraction_assay_receipt", False)
+            ),
+            "gravity_like_attraction_diagnostic_receipt": bool(
+                report.get("gravity_like_attraction_diagnostic_receipt", False)
+            ),
+            "production_gravity_receipt": bool(report.get("production_gravity_receipt", False)),
+            "physical_gravity_prediction": bool(report.get("physical_gravity_prediction", False)),
+            "particle_matter_receipt": bool(report.get("particle_matter_receipt", False)),
+        },
+        "claimBoundary": report.get(
+            "claim_boundary",
+            "Controlled/planted stress-contraction diagnostic only; not spontaneous particle formation, "
+            "production gravity, or a physical prediction.",
+        ),
+    }
+
+
+def _compact_trajectory_summary(value: Any) -> dict[str, Any]:
+    source = value if isinstance(value, dict) else {}
+    return {
+        "initialH3Separation": source.get("initial_h3_separation"),
+        "finalH3Separation": source.get("final_h3_separation"),
+        "absoluteH3Approach": source.get("absolute_h3_approach"),
+        "approachFraction": source.get("approach_fraction"),
+        "minH3Separation": source.get("min_h3_separation"),
+        "maxH3Separation": source.get("max_h3_separation"),
+    }
+
+
+def _compact_stress_contraction_rows(value: Any, *, limit: int) -> list[dict[str, Any]]:
+    rows = value if isinstance(value, list) else []
+    compact = []
+    for row in rows[:limit]:
+        if not isinstance(row, dict):
+            continue
+        compact.append(
+            {
+                "mode": row.get("mode"),
+                "step": row.get("step"),
+                "cycle": row.get("cycle"),
+                "leftH3SpatialPoint": row.get("left_h3_spatial_point"),
+                "rightH3SpatialPoint": row.get("right_h3_spatial_point"),
+                "tangentSeparation": row.get("tangent_separation"),
+                "h3Separation": row.get("h3_separation"),
+                "stressKernel": row.get("stress_kernel"),
+                "localReadoutContraction": row.get("local_readout_contraction"),
+            }
+        )
+    return compact
+
+
+def _compact_stress_contraction_worldlines(value: Any, *, limit: int) -> list[dict[str, Any]]:
+    rows = value if isinstance(value, list) else []
+    compact = []
+    for row in rows[:limit]:
+        if not isinstance(row, dict):
+            continue
+        events = []
+        for event in list(row.get("events", []) or [])[:64]:
+            if not isinstance(event, dict):
+                continue
+            events.append(
+                {
+                    "cycle": event.get("cycle"),
+                    "event": event.get("event"),
+                    "class": event.get("class"),
+                    "holonomyMode": event.get("holonomy_mode"),
+                    "supportNodeCount": event.get("support_node_count"),
+                    "h3SpatialPoint": event.get("h3_spatial_point"),
+                    "pairH3Separation": event.get("pair_h3_separation"),
+                    "localReadoutContraction": event.get("local_readout_contraction"),
+                    "transportDistance": event.get("transport_distance"),
+                }
+            )
+        compact.append(
+            {
+                "worldlineId": row.get("worldline_id"),
+                "observationCount": row.get("observation_count"),
+                "birthCycle": row.get("birth_cycle"),
+                "deathCycle": row.get("death_cycle"),
+                "lifetimeCycles": row.get("lifetime_cycles"),
+                "persistent": bool(row.get("persistent", False)),
+                "meanTransportDistance": row.get("mean_transport_distance"),
+                "events": events,
+            }
+        )
+    return compact
+
+
 def _visualization_views_payload(
     *,
     small_payload: dict[str, Any],
@@ -1254,6 +2344,7 @@ def _visualization_views_payload(
     bulk_payload: dict[str, Any],
     cmb_payload: dict[str, Any],
     pn_silence_payload: dict[str, Any],
+    diagnostic_run_dir: Path | None = None,
 ) -> dict[str, Any]:
     small_receipts = small_payload.get("receipts", {})
     observer_receipts = observer_payload.get("receipts", {})
@@ -1261,6 +2352,8 @@ def _visualization_views_payload(
     proto_receipts = bulk_payload.get("protoParticleCandidates", {}).get("receipts", {})
     cmb_receipts = cmb_payload.get("receipts", {})
     pn_receipts = pn_silence_payload.get("receipts", {})
+    reference_vacuum = _reference_vacuum_visualization_payload(diagnostic_run_dir)
+    stress_contraction = _two_defect_stress_contraction_visualization_payload(diagnostic_run_dir)
     return {
         "fluctuatingQuantumVacuum": {
             "viewId": "fluctuatingQuantumVacuum",
@@ -1281,6 +2374,7 @@ def _visualization_views_payload(
                 "screen.repairTrace",
                 "smallUniverse.repairFrames",
                 "cmbComparison.residualRows",
+                "visualizationViews.fluctuatingQuantumVacuum.referenceVacuumBaseline",
             ],
             "primaryFields": ["screen.values", "screen.clusters.snapshots", "screen.repairTrace"],
             "renderLayers": [
@@ -1288,6 +2382,10 @@ def _visualization_views_payload(
                 {"layer": "repair_fluctuation_markers", "source": "screen.clusters.snapshots[*].clusters"},
                 {"layer": "mismatch_commit_trace", "source": "screen.repairTrace"},
                 {"layer": "cmb_diagnostic_overlay", "source": "cmbComparison.residualRows"},
+                {
+                    "layer": "reference_vacuum_baseline_inset",
+                    "source": "visualizationViews.fluctuatingQuantumVacuum.referenceVacuumBaseline",
+                },
             ],
             "visualEncodings": [
                 {
@@ -1329,6 +2427,7 @@ def _visualization_views_payload(
                     "encoding": "optional static spectrum inset or boundary contour",
                 },
             ],
+            "referenceVacuumBaseline": reference_vacuum,
             "receipts": {
                 "finite_consensus_theorem_receipt": bool(
                     small_receipts.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
@@ -1339,6 +2438,15 @@ def _visualization_views_payload(
                 ),
                 "physical_cmb_prediction_receipt": bool(
                     cmb_receipts.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+                ),
+                "reference_vacuum_regression_receipt": bool(
+                    reference_vacuum.get("receipts", {}).get("reference_vacuum_regression_receipt", False)
+                ),
+                "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": bool(
+                    reference_vacuum.get("receipts", {}).get("OPH_NATIVE_VACUUM_PROMOTION_RECEIPT", False)
+                ),
+                "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": bool(
+                    reference_vacuum.get("receipts", {}).get("OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT", False)
                 ),
             },
             "exportSufficiency": "sufficient_for_diagnostic_visualization_not_physical_qft_vacuum",
@@ -1461,6 +2569,7 @@ def _visualization_views_payload(
                 "screen.clusters.snapshots",
                 "consensusBulk.protoParticleCandidates.worldlines",
                 "consensusBulk.objects",
+                "visualizationViews.effectiveStringTheory.twoDefectStressContractionAssay",
             ],
             "primaryFields": [
                 "smallUniverse.cycles.exactConsensus",
@@ -1472,6 +2581,10 @@ def _visualization_views_payload(
                 {"layer": "repair_history_worldsheet_ribbons", "source": "smallUniverse.repairFrames"},
                 {"layer": "collar_defect_tracks", "source": "screen.clusters.snapshots"},
                 {"layer": "h3_worldline_overlay", "source": "consensusBulk.protoParticleCandidates.worldlines"},
+                {
+                    "layer": "controlled_two_defect_stress_contraction",
+                    "source": "visualizationViews.effectiveStringTheory.twoDefectStressContractionAssay",
+                },
             ],
             "visualEncodings": [
                 {
@@ -1519,6 +2632,7 @@ def _visualization_views_payload(
                     "encoding": "track interpolation through H3 event samples",
                 },
             ],
+            "twoDefectStressContractionAssay": stress_contraction,
             "receipts": {
                 "finite_consensus_theorem_receipt": bool(
                     small_receipts.get("FINITE_CONSENSUS_THEOREM_RECEIPT", False)
@@ -1534,6 +2648,22 @@ def _visualization_views_payload(
                     )
                 ),
                 "critical_edge_cft_receipt": False,
+                "two_defect_stress_contraction_assay_receipt": bool(
+                    stress_contraction.get("receipts", {}).get(
+                        "two_defect_stress_contraction_assay_receipt", False
+                    )
+                ),
+                "gravity_like_attraction_diagnostic_receipt": bool(
+                    stress_contraction.get("receipts", {}).get(
+                        "gravity_like_attraction_diagnostic_receipt", False
+                    )
+                ),
+                "production_gravity_receipt": bool(
+                    stress_contraction.get("receipts", {}).get("production_gravity_receipt", False)
+                ),
+                "physical_gravity_prediction": bool(
+                    stress_contraction.get("receipts", {}).get("physical_gravity_prediction", False)
+                ),
             },
             "exportSufficiency": "sufficient_for_schematic_edge_string_view_not_critical_worldsheet_claim",
             "promotionReceiptsRequired": [
@@ -1548,6 +2678,7 @@ def _visualization_views_payload(
                 "critical string CFT",
                 "heterotic worldsheet derivation",
                 "production matter particles",
+                "physical gravity prediction",
                 "strict neutral third-person bulk",
             ],
             "claimBoundary": (
@@ -1851,14 +2982,21 @@ init();
 """
 
 
-def _visualization_instructions(viewer_path: Path, payload_path: Path, payload: dict[str, Any]) -> str:
-    return f"""# OPH Universe Visualization Instructions
-
-Open the standalone viewer:
+def _visualization_instructions(viewer_path: Path | None, payload_path: Path, payload: dict[str, Any]) -> str:
+    viewer_block = (
+        f"""Open the standalone viewer:
 
 ```bash
 open {viewer_path}
 ```
+"""
+        if viewer_path is not None
+        else """No embedded standalone viewer was emitted for this export. This is a full-data payload; build the app against the JSON and sidecar files directly.
+"""
+    )
+    return f"""# OPH Universe Visualization Instructions
+
+{viewer_block}
 
 Data payload for custom viewers:
 

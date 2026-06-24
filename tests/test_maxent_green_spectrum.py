@@ -16,13 +16,16 @@ def test_maxent_green_spectrum_encodes_paper_source_without_physical_claim():
     pixel = OPHPixelConstants()
     expected_eta = math.e * (pixel.P - pixel.phi)
 
-    assert report["MAXENT_GREEN_SOURCE_RECEIPT"] is True
+    assert report["MAXENT_GREEN_SOURCE_RECEIPT"] is False
     assert report["maxent_inverse_laplacian"]["eta0_flat_D_ell_receipt"] is True
     assert report["finite_regulator"]["bandlimit_for_ir_receipt"] is True
     assert report["finite_regulator"]["bandlimit_for_requested_ell_receipt"] is True
     assert report["selector_elimination_v1_5"]["q_IR"] == 0.25
     assert report["selector_elimination_v1_5"]["ell_IR"] == 32.0
     assert report["selector_elimination_v1_5"]["N_frz_proxy"] == 1089
+    assert report["selector_elimination_v1_5"]["theorem_side_receipt"] is False
+    assert report["selector_elimination_v1_5"]["q_IR_selector_removed"] is False
+    assert report["selector_elimination_v1_5"]["ell_IR_selector_removed"] is False
     assert math.isclose(report["fractional_repair_tilt"]["eta_R"], expected_eta)
     assert abs(report["fractional_repair_tilt"]["n_s"] - 0.964841143031) < 2.0e-12
     assert report["fractional_repair_tilt"]["repair_clock_certificate"] is False

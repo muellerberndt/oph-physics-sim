@@ -1274,8 +1274,24 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "oph_inflation_cmb_Omega_K": _nested(
             inflation_cmb_bridge, "flat_sector_selection", "selected_Omega_K"
         ),
+        "oph_inflation_cmb_Omega_A0_plus_Omega_K0": _nested(
+            inflation_cmb_bridge, "flat_sector_selection", "Omega_A0_plus_Omega_K0"
+        ),
         "oph_inflation_cmb_Omega_A0": _nested(
+            inflation_cmb_bridge, "flat_sector_selection", "Omega_A0"
+        )
+        if _nested(inflation_cmb_bridge, "flat_sector_selection", "Omega_A0") is not None
+        else _nested(
             inflation_cmb_bridge, "flat_sector_selection", "Omega_A0_residual"
+        ),
+        "oph_inflation_cmb_Omega_A_source": _nested(
+            inflation_cmb_bridge, "flat_sector_selection", "Omega_A_source"
+        ),
+        "oph_inflation_cmb_Omega_K_source": _nested(
+            inflation_cmb_bridge, "flat_sector_selection", "Omega_K_source"
+        ),
+        "oph_inflation_cmb_exact_flat_sector_selection": bool(
+            _nested(inflation_cmb_bridge, "flat_sector_selection", "exact_flat_sector_selection")
         ),
         "oph_inflation_cmb_rho_A_over_rho_b": _nested(
             inflation_cmb_bridge, "flat_sector_selection", "rho_A_over_rho_b"
@@ -4321,8 +4337,14 @@ def _oph_inflation_cmb_bridge_summary(rows: list[dict[str, Any]]) -> dict[str, A
         "mean_A_zeta": _mean(row.get("oph_inflation_cmb_A_zeta") for row in usable),
         "mean_n_s_pull_vs_planck": _mean(row.get("oph_inflation_cmb_n_s_pull") for row in usable),
         "mean_Omega_K": _mean(row.get("oph_inflation_cmb_Omega_K") for row in usable),
+        "mean_Omega_A0_plus_Omega_K0": _mean(
+            row.get("oph_inflation_cmb_Omega_A0_plus_Omega_K0") for row in usable
+        ),
         "mean_Omega_A0": _mean(row.get("oph_inflation_cmb_Omega_A0") for row in usable),
         "mean_rho_A_over_rho_b": _mean(row.get("oph_inflation_cmb_rho_A_over_rho_b") for row in usable),
+        "exact_flat_sector_selection_count": sum(
+            bool(row.get("oph_inflation_cmb_exact_flat_sector_selection")) for row in usable
+        ),
         "mean_q_IR": _mean(row.get("oph_inflation_cmb_v04_q_IR") for row in usable),
         "mean_ell_IR": _mean(row.get("oph_inflation_cmb_v04_ell_IR") for row in usable),
         "mean_camb_lcdm_lowell_chi2": _mean(
@@ -7002,8 +7024,10 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean A_zeta: {_fmt(inflation_cmb['mean_A_zeta'])}",
         f"- mean n_s pull vs Planck target: {_fmt(inflation_cmb['mean_n_s_pull_vs_planck'])}",
         f"- mean selected Omega_K: {_fmt(inflation_cmb['mean_Omega_K'])}",
-        f"- mean residual Omega_A0: {_fmt(inflation_cmb['mean_Omega_A0'])}",
+        f"- mean Omega_A0+Omega_K0 closure residual: {_fmt(inflation_cmb.get('mean_Omega_A0_plus_Omega_K0'))}",
+        f"- mean independently licensed Omega_A0: {_fmt(inflation_cmb['mean_Omega_A0'])}",
         f"- mean rho_A/rho_b: {_fmt(inflation_cmb['mean_rho_A_over_rho_b'])}",
+        f"- exact flat-sector selection count: {inflation_cmb.get('exact_flat_sector_selection_count', 0)}",
         f"- mean OPH IR q_IR: {_fmt(inflation_cmb['mean_q_IR'])}",
         f"- mean OPH IR ell_IR: {_fmt(inflation_cmb['mean_ell_IR'])}",
         f"- mean CAMB LCDM low-ell chi2: {_fmt(inflation_cmb['mean_camb_lcdm_lowell_chi2'])}",

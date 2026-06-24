@@ -111,6 +111,35 @@ def test_paper_theorem_object_precursor_accepts_control_separation_without_stric
     assert report["observer_object_precursor_components"]["h3_control_separation_receipt"] is True
 
 
+def test_paper_theorem_chart_accepts_finite_lorentz_modular_clock():
+    points = fibonacci_sphere_points(128)
+    caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=53)
+    chart = conformal_h3_spatial_chart_report(caps)
+    objects = {
+        "observer_chart_object_h3_receipt": True,
+        "localized_nonboundary_object_precursor_receipt": True,
+    }
+    state_bw = {
+        "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": True,
+        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+        "inferred_modular_clock_fit": {"receipt": True, "nearest_known_scale": "2pi"},
+    }
+
+    report = paper_theorem_3d_bulk_chart_report(
+        chart,
+        {},
+        objects,
+        {"bulk_3d_established": False},
+        state_bw,
+    )
+
+    assert report["paper_theorem_3d_bulk_chart_receipt"] is True
+    assert report["declared_bw_2pi_cap_flow_receipt"] is False
+    assert report["finite_lorentz_modular_clock_receipt"] is True
+    assert report["bw_2pi_cap_flow_source"] == "finite_endogenous_l2_l3_modular_clock"
+    assert report["paper_theorem_object_populated_chart_precursor_receipt"] is True
+
+
 def test_lorentz_algebra_report_verifies_so_3_1_relations():
     report = lorentz_algebra_report()
 

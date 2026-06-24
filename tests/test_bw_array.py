@@ -11,6 +11,7 @@ from oph_fpe.scale.bw_array import (
     _array_port_pair_consensus_replay_report,
     _collar_report,
     _collar_width_from_config,
+    _drop_source_snapshot_from_history,
     _lorentz_branch_receipts,
     run_bw_array_config,
 )
@@ -59,6 +60,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "boundary_program_report.json").exists()
     assert (run_path / "emergence_status_report.json").exists()
     assert (run_path / "screen_microphysics.json").exists()
+    assert (run_path / "base_progress.json").exists()
     assert (run_path / "edge_sector_heat_kernel_report.json").exists()
     assert (run_path / "central_record_born_report.json").exists()
     assert (run_path / "observer_checkpoint_restoration_report.json").exists()
@@ -88,6 +90,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
         if line.strip()
     ]
     manifest = json.loads((run_path / "manifest.json").read_text(encoding="utf-8"))
+    base_progress = json.loads((run_path / "base_progress.json").read_text(encoding="utf-8"))
     ports_report = json.loads((run_path / "screen_ports.json").read_text(encoding="utf-8"))
     boundary_report = json.loads((run_path / "boundary_program_report.json").read_text(encoding="utf-8"))
     holonomy_report = json.loads((run_path / "array_holonomy_report.json").read_text(encoding="utf-8"))
@@ -140,6 +143,9 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert "observer_consensus" in manifest
     assert "mandatory_controls" in manifest
     assert "emergence_status" in manifest
+    assert manifest["base_loop_elapsed_seconds"] >= 0.0
+    assert base_progress["stage"] == "base_repair_loop_complete"
+    assert base_progress["completed_cycles"] == 8
     assert "cosmology_observables" in manifest
     assert manifest["theorem_core_receipts"]["finite_consensus_theorem_receipt"] is False
     assert manifest["observer_modular_experience"]["observer_modular_time_receipt"] is True
@@ -304,6 +310,18 @@ def test_double_scaling_collar_shrinks_but_expands_relative_to_uv():
     assert report_4k["double_scaling_delta_to_zero"] is True
     assert report_4k["double_scaling_collar_to_cell_diverges"] is True
     assert report_256k["collar_to_cell_ratio"] > report_4k["collar_to_cell_ratio"]
+
+
+def test_state_history_excludes_current_source_snapshot():
+    history = [
+        {"cycle": 0, "committed_fraction": 0.0},
+        {"cycle": 7, "committed_fraction": 0.1},
+        {"cycle": 18, "committed_fraction": 0.95},
+    ]
+
+    trimmed = _drop_source_snapshot_from_history(history, {"cycle": 18})
+
+    assert [row["cycle"] for row in trimmed] == [0, 7]
 
 
 def test_array_port_pair_consensus_replay_emits_c0b_evidence():

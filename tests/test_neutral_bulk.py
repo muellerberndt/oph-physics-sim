@@ -9,6 +9,8 @@ from oph_fpe.cosmology.comparable_data import comparable_data_report
 from oph_fpe.bulk.quotient_geometry import ChannelMetricSpec, quotient_geometry_certificate
 from oph_fpe.bulk.neutral_bulk import (
     DEFAULT_NEUTRAL_WEIGHTS,
+    _double_center_squared_distance,
+    _overlap_feature_distance_matrix,
     _overlap_graph_rank_selection,
     _prime_geometric_selected_rank_controls,
     build_neutral_observer_views,
@@ -168,6 +170,46 @@ def test_neutral_distance_matrix_is_symmetric_and_zero_diagonal():
     assert np.allclose(distance, distance.T)
     assert np.allclose(np.diag(distance), 0.0)
     assert np.all(distance[np.triu_indices(3, k=1)] >= 0.0)
+
+
+def test_overlap_feature_distance_matrix_matches_literal_shared_mass_definition():
+    features = np.array(
+        [
+            [1.0, 0.0, 2.0, 0.0],
+            [0.5, 1.5, 0.0, 0.0],
+            [0.0, 1.0, 1.0, 2.0],
+            [0.0, 0.0, 0.0, 0.0],
+        ],
+        dtype=float,
+    )
+    distance = _overlap_feature_distance_matrix(features)
+    expected = np.zeros((features.shape[0], features.shape[0]), dtype=float)
+    masses = np.sum(np.maximum(features, 0.0), axis=1)
+    for i in range(features.shape[0]):
+        for j in range(i + 1, features.shape[0]):
+            denom = max(0.5 * (float(masses[i]) + float(masses[j])), 1.0e-12)
+            similarity = float(np.sum(np.minimum(features[i], features[j])) / denom)
+            expected[i, j] = expected[j, i] = 1.0 - max(0.0, min(1.0, similarity))
+
+    assert np.allclose(distance, expected)
+    assert np.allclose(distance, distance.T)
+    assert np.allclose(np.diag(distance), 0.0)
+
+
+def test_double_center_squared_distance_matches_projection_formula():
+    distance = np.array(
+        [
+            [0.0, 1.0, 2.0],
+            [1.0, 0.0, 3.0],
+            [2.0, 3.0, 0.0],
+        ],
+        dtype=float,
+    )
+    squared = distance**2
+    projector = np.eye(3) - np.ones((3, 3), dtype=float) / 3.0
+    expected = -0.5 * projector @ squared @ projector
+
+    assert np.allclose(_double_center_squared_distance(squared), expected)
 
 
 def test_primary_neutral_distance_uses_fixed_embedding_metric_without_rank_prefixes():

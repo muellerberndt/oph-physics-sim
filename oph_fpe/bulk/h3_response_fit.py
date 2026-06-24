@@ -1792,16 +1792,28 @@ def _assign_candidates(
     anchor_weight: float,
 ) -> np.ndarray:
     train_indices = np.flatnonzero(train_mask)
+    if train_indices.size == 0:
+        return np.zeros(response.shape[0], dtype=np.int64)
     predicted = offsets[None, :] + candidate_profiles * amplitudes[None, :]
     predicted_train = predicted[:, train_indices]
     assignments = np.zeros(response.shape[0], dtype=np.int64)
     anchor_cost = _anchor_cost(candidates, observer_axes)
-    for row_index in range(response.shape[0]):
-        diff = predicted_train - response[row_index, train_indices][None, :]
-        costs = np.mean(diff * diff, axis=1)
+    candidate_norm = np.mean(predicted_train * predicted_train, axis=1)
+    scale = 2.0 / float(train_indices.size)
+    chunk_size = max(1, min(256, int(response.shape[0])))
+    predicted_train_t = predicted_train.T
+    for start in range(0, response.shape[0], chunk_size):
+        stop = min(start + chunk_size, response.shape[0])
+        response_train = response[start:stop, :][:, train_indices]
+        response_norm = np.mean(response_train * response_train, axis=1)
+        costs = (
+            response_norm[:, None]
+            + candidate_norm[None, :]
+            - scale * (response_train @ predicted_train_t)
+        )
         if anchor_cost.size:
-            costs = costs + float(anchor_weight) * anchor_cost[row_index]
-        assignments[row_index] = int(np.argmin(costs))
+            costs = costs + float(anchor_weight) * anchor_cost[start:stop]
+        assignments[start:stop] = np.argmin(costs, axis=1).astype(np.int64, copy=False)
     return assignments
 
 

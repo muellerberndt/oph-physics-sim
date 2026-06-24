@@ -22,6 +22,15 @@ def test_screen_covariance_has_positive_decaying_shape():
     assert cl[0] > cl[-1]
 
 
+def test_screen_covariance_red_tilt_sign_is_not_blue():
+    ell = np.arange(30, 1000, dtype=float)
+    flat = ell * (ell + 1.0) * cl_oph_screen(ell, eta=0.0, ell_cap=1.0e9)
+    red = ell * (ell + 1.0) * cl_oph_screen(ell, eta=0.035, ell_cap=1.0e9)
+
+    assert abs(np.polyfit(np.log(ell), np.log(flat), 1)[0]) < 0.01
+    assert np.polyfit(np.log(ell), np.log(red), 1)[0] < -0.03
+
+
 def test_low_l_repair_suppression_and_parity_are_finite():
     ell = np.arange(2, 32)
     cl = cl_oph_screen(ell)

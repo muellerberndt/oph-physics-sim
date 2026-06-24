@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import asdict, dataclass
 from typing import Any
 
 import numpy as np
 from scipy.special import gammaln, spherical_jn
 
+from oph_fpe.cosmology.screen_spectrum import screen_cl, screen_precision_eigenvalue
+from oph_fpe.cosmology.spatial_curvature import GeometryBranch, PhysicalPromotionBlocked
+
 
 PRIMORDIAL_RECEIPT_ALIASES = {
+    "SCREEN_SCALAR_QUOTIENT_RECEIPT": "geometric_screen_scalar_receipt",
     "SOURCE_STRESS_EIGENCLOCK_RECEIPT": "source_stress_eigenclock_receipt",
     "TIME_ORIENTATION_HOLONOMY_RECEIPT": "time_orientation_holonomy_receipt",
     "UNIFORM_DENSITY_SLICE_RECEIPT": "uniform_density_slice_receipt",
@@ -29,6 +34,7 @@ PRIMORDIAL_RECEIPT_ALIASES = {
     "SPATIAL_CURVATURE_BRANCH_RECEIPT": "spatial_curvature_branch_receipt",
     "RADIAL_PRIOR_DECLARATION_RECEIPT": "radial_prior_declaration_receipt",
     "RADIAL_NULL_SPACE_REPORT_RECEIPT": "radial_null_space_report_receipt",
+    "RADIAL_KERNEL_GEOMETRY_COMPATIBILITY_RECEIPT": "radial_kernel_geometry_compatibility_receipt",
     "EXACT_BESSEL_FORWARD_RECEIPT": "exact_bessel_forward_receipt",
     "FORWARD_PROJECTION_RESIDUAL_RECEIPT": "forward_projection_residual_receipt",
     "PRIMORDIAL_AMPLITUDE_RECEIPT": "primordial_amplitude_receipt",
@@ -39,11 +45,13 @@ PRIMORDIAL_BLOCKER_STATUS = {
     "source_stress_eigenclock_receipt": ("SOURCE_CLOCK_UNPROVEN",),
     "uniform_density_slice_receipt": ("UNIFORM_DENSITY_SLICE_UNPROVEN",),
     "finite_geometric_volume_receipt": ("GEOMETRIC_VOLUME_READOUT_UNPROVEN",),
+    "geometric_screen_scalar_receipt": ("GEOMETRIC_SCREEN_SCALAR_UNPROVEN",),
     "freeze_limit_receipt": ("FREEZE_LIMIT_UNPROVEN",),
     "scalar_rg_naturality_receipt": ("SCALAR_RG_MAP_UNDEFINED",),
     "scalar_eigenvalue_isolation_receipt": ("SCALAR_RG_EIGENMODE_DEGENERATE", "SCALAR_RG_GAP_UNPROVEN"),
     "conformal_intertwiner_receipt": ("CONFORMAL_NATURALITY_UNPROVEN",),
     "spatial_curvature_branch_receipt": ("SPATIAL_CURVATURE_UNRESOLVED",),
+    "radial_kernel_geometry_compatibility_receipt": ("RADIAL_KERNEL_GEOMETRY_UNRESOLVED",),
     "radial_prior_declaration_receipt": ("RADIAL_PRIOR_UNDECLARED",),
     "forward_projection_residual_receipt": ("RADIAL_FORWARD_RESIDUAL_FAILED",),
     "adiabatic_mode_receipt": ("ADIABATIC_RANK_ONE_FAILED",),
@@ -106,8 +114,11 @@ def source_only_quotient_screen_scalar(
     centered_variance = _weighted_mean(centered * centered, sample_weights)
     residual_variance = _weighted_mean(residual * residual, sample_weights)
     return {
-        "field_type": "SCREEN_CURVATURE_CANDIDATE",
+        "field_type": "DIAGNOSTIC_LOW_MODE_REMOVED_SCREEN_SCALAR",
         "source_only": True,
+        "semantic_type": "DIAGNOSTIC_PROXY",
+        "SCREEN_SCALAR_QUOTIENT_RECEIPT": False,
+        "DIAGNOSTIC_LOW_MODE_SCALAR_RECEIPT": True,
         "sample_count": int(field.size),
         "background_removed": True,
         "dipole_removed": bool(valid_axes),
@@ -120,8 +131,9 @@ def source_only_quotient_screen_scalar(
         ),
         "values": [float(value) for value in residual],
         "claim_boundary": (
-            "Low-mode-removed quotient-visible screen scalar. This is source-only screen instrumentation, "
-            "not a primordial spectrum or CMB prediction."
+            "Low-mode-removed screen scalar diagnostic. The theorem-grade q_r additionally requires the "
+            "geometric collar-volume readout J_X/Jbar_X, mass matrix, quotient naturality, and low-mode "
+            "projector receipts. This diagnostic is not a primordial spectrum or CMB prediction."
         ),
     }
 
@@ -134,7 +146,7 @@ def shell_precision_eigenvalue(ell: float | np.ndarray, theta: float) -> float |
     """
 
     ell_arr = np.asarray(ell, dtype=float)
-    values = np.exp(gammaln(ell_arr + 2.0 + 0.5 * float(theta)) - gammaln(ell_arr - 0.5 * float(theta)))
+    values = screen_precision_eigenvalue(ell_arr, float(theta), model="EXACT_GAMMA_CONFORMAL")
     if np.isscalar(ell):
         return float(values)
     return values
@@ -166,7 +178,12 @@ def fractional_screen_cl(ell: float | np.ndarray, A_q: float, theta: float) -> f
     """Intrinsic fractional screen spectrum used before a radial lift."""
 
     ell_arr = np.asarray(ell, dtype=float)
-    values = float(A_q) / (ell_arr * (ell_arr + 1.0)) ** (1.0 + 0.5 * float(theta))
+    values = screen_cl(
+        ell_arr,
+        A_q=float(A_q),
+        theta=float(theta),
+        model="FRACTIONAL_LAPLACIAN_ASYMPTOTIC",
+    )
     if np.isscalar(ell):
         return float(values)
     return values
@@ -176,23 +193,31 @@ def bessel_window_response(
     ell: np.ndarray | list[float],
     k: np.ndarray | list[float],
     *,
+    geometry_branch: str | GeometryBranch = GeometryBranch.UNRESOLVED,
     radius: float | None = None,
     radial_nodes: np.ndarray | list[float] | None = None,
     radial_weights: np.ndarray | list[float] | None = None,
 ) -> np.ndarray:
-    """Return Psi_l(k) for a thin shell or declared radial window.
+    """Return Psi_l(k) for a declared geometry branch.
 
-    For a thin shell, ``Psi_l(k)=j_l(k R)``. For a finite window, the caller
-    supplies quadrature nodes and weights for ``int dr W(r) j_l(k r)``.
+    Flat branches use the exact spherical-Bessel kernel. Curved branches use
+    explicit hyperspherical-mode placeholders and remain diagnostic until the
+    corresponding curved-kernel theorem is implemented. An unresolved branch
+    blocks promotion instead of silently using the flat kernel.
     """
 
     ell_arr = _as_1d(ell, "ell")
     k_arr = _positive_1d(k, "k")
+    branch = _geometry_branch(geometry_branch)
+    if branch is GeometryBranch.UNRESOLVED:
+        raise PhysicalPromotionBlocked("SPATIAL_CURVATURE_UNRESOLVED")
     if radius is not None:
         r_value = float(radius)
         if not np.isfinite(r_value) or r_value <= 0.0:
             raise ValueError("radius must be positive")
-        return spherical_jn(ell_arr[:, None].astype(int), k_arr[None, :] * r_value)
+        if branch in {GeometryBranch.FLAT_EXACT, GeometryBranch.FLAT_ASSUMED}:
+            return spherical_jn(ell_arr[:, None].astype(int), k_arr[None, :] * r_value)
+        return _curved_hyperspherical_window_response(ell_arr, k_arr, branch=branch, radius=r_value)
     if radial_nodes is None or radial_weights is None:
         raise ValueError("provide radius or radial_nodes/radial_weights")
     nodes = _positive_1d(radial_nodes, "radial_nodes")
@@ -201,12 +226,29 @@ def bessel_window_response(
         raise ValueError("radial_nodes and radial_weights must have the same length")
     if not np.all(np.isfinite(weights)):
         raise ValueError("radial_weights must be finite")
+    if np.any(weights < 0.0):
+        raise ValueError("radial_weights must be non-negative")
+    weight_total = float(np.sum(weights))
+    if not np.isfinite(weight_total) or weight_total <= 0.0:
+        raise ValueError("radial_weights must have positive total mass")
+    if abs(weight_total - 1.0) > 1.0e-6:
+        raise ValueError("radial_weights must be normalized to int W(r) dr = 1")
     response = np.zeros((ell_arr.size, k_arr.size), dtype=float)
     for index, l_value in enumerate(ell_arr.astype(int)):
-        response[index, :] = np.sum(
-            weights[:, None] * spherical_jn(l_value, k_arr[None, :] * nodes[:, None]),
-            axis=0,
-        )
+        if branch in {GeometryBranch.FLAT_EXACT, GeometryBranch.FLAT_ASSUMED}:
+            response[index, :] = np.sum(
+                weights[:, None] * spherical_jn(l_value, k_arr[None, :] * nodes[:, None]),
+                axis=0,
+            )
+        else:
+            curved = _curved_hyperspherical_window_response(
+                np.asarray([float(l_value)]),
+                k_arr,
+                branch=branch,
+                radial_nodes=nodes,
+                radial_weights=weights,
+            )
+            response[index, :] = curved[0, :]
     return response
 
 
@@ -214,6 +256,7 @@ def bessel_projection_matrix(
     ell: np.ndarray | list[float],
     k: np.ndarray | list[float],
     *,
+    geometry_branch: str | GeometryBranch = GeometryBranch.UNRESOLVED,
     radius: float | None = None,
     radial_nodes: np.ndarray | list[float] | None = None,
     radial_weights: np.ndarray | list[float] | None = None,
@@ -224,6 +267,7 @@ def bessel_projection_matrix(
     response = bessel_window_response(
         ell,
         k_arr,
+        geometry_branch=geometry_branch,
         radius=radius,
         radial_nodes=radial_nodes,
         radial_weights=radial_weights,
@@ -236,6 +280,7 @@ def project_primordial_to_screen(
     delta_zeta2: np.ndarray | list[float],
     ell: np.ndarray | list[float],
     *,
+    geometry_branch: str | GeometryBranch = GeometryBranch.UNRESOLVED,
     radius: float | None = None,
     radial_nodes: np.ndarray | list[float] | None = None,
     radial_weights: np.ndarray | list[float] | None = None,
@@ -246,6 +291,7 @@ def project_primordial_to_screen(
     matrix = bessel_projection_matrix(
         ell,
         k,
+        geometry_branch=geometry_branch,
         radius=radius,
         radial_nodes=radial_nodes,
         radial_weights=radial_weights,
@@ -266,8 +312,10 @@ def screen_to_radial_lift_report(
     radius: float | None = None,
     radial_nodes: np.ndarray | list[float] | None = None,
     radial_weights: np.ndarray | list[float] | None = None,
+    background_geometry_branch: str | GeometryBranch = GeometryBranch.UNRESOLVED,
     radial_prior_declared: bool = False,
     source_only_screen_scalar: bool = False,
+    geometric_screen_scalar_receipt: bool = False,
     theorem_gate: bool = False,
     source_stress_eigenclock_receipt: bool = False,
     time_orientation_holonomy_receipt: bool = False,
@@ -303,14 +351,16 @@ def screen_to_radial_lift_report(
     if ell_arr.size != screen.size:
         raise ValueError("ell and screen_cl must have the same length")
     k_arr = _positive_1d(k, "k")
+    branch = _geometry_branch(background_geometry_branch)
     matrix = bessel_projection_matrix(
         ell_arr,
         k_arr,
+        geometry_branch=branch,
         radius=radius,
         radial_nodes=radial_nodes,
         radial_weights=radial_weights,
     )
-    singular_values = np.linalg.svd(matrix, compute_uv=False)
+    _u, singular_values, vh = np.linalg.svd(matrix, full_matrices=True)
     tol = (
         float(rank_tolerance)
         if rank_tolerance is not None
@@ -348,13 +398,27 @@ def screen_to_radial_lift_report(
 
     radial_prior_receipt = bool(radial_prior_declared)
     forward_residual_receipt = bool(residual_l2 is not None and residual_l2 <= float(residual_tolerance))
-    radial_null_space_receipt = True
-    exact_bessel_forward_receipt = bool(forward_residual_receipt and (radius is not None or radial_nodes is not None))
+    null_basis = vh[effective_rank:, :] if vh.ndim == 2 and effective_rank <= vh.shape[0] else np.zeros((0, matrix.shape[1]))
+    null_basis_hash = _array_sha256(null_basis)
+    radial_null_space_receipt = bool(
+        np.all(np.isfinite(singular_values))
+        and null_basis.ndim == 2
+        and int(null_basis.shape[0]) == nullspace_dimension
+        and bool(null_basis_hash)
+    )
+    radial_kernel_geometry_compatibility_receipt = bool(branch is not GeometryBranch.UNRESOLVED)
+    exact_bessel_forward_receipt = bool(
+        branch is GeometryBranch.FLAT_EXACT
+        and forward_residual_receipt
+        and (radius is not None or radial_nodes is not None)
+    )
     primordial_amplitude_receipt = bool(radial_prior_receipt and positivity and prior_values is not None)
     curvature_evolution_receipt = bool(curvature_freezeout_receipt)
+    exact_spatial_branch_receipt = bool(spatial_curvature_branch_receipt and branch is GeometryBranch.FLAT_EXACT)
     gates = {
         "theorem_gate": bool(theorem_gate),
         "source_only_screen_scalar": bool(source_only_screen_scalar),
+        "geometric_screen_scalar_receipt": bool(geometric_screen_scalar_receipt),
         "source_stress_eigenclock_receipt": bool(source_stress_eigenclock_receipt),
         "time_orientation_holonomy_receipt": bool(time_orientation_holonomy_receipt),
         "uniform_density_slice_receipt": bool(uniform_density_slice_receipt),
@@ -370,12 +434,13 @@ def screen_to_radial_lift_report(
         "scalar_rg_naturality_receipt": bool(scalar_rg_naturality_receipt),
         "scalar_eigenvalue_isolation_receipt": bool(scalar_eigenvalue_isolation_receipt),
         "conformal_intertwiner_receipt": bool(conformal_intertwiner_receipt),
-        "spatial_curvature_branch_receipt": bool(spatial_curvature_branch_receipt),
+        "spatial_curvature_branch_receipt": exact_spatial_branch_receipt,
         "adiabatic_mode_receipt": bool(adiabatic_mode_receipt),
         "isocurvature_bound_receipt": bool(isocurvature_bound_receipt),
         "primordial_phase_coherence_receipt": bool(primordial_phase_coherence_receipt),
         "radial_prior_declaration_receipt": radial_prior_receipt,
         "radial_null_space_report_receipt": radial_null_space_receipt,
+        "radial_kernel_geometry_compatibility_receipt": radial_kernel_geometry_compatibility_receipt,
         "exact_bessel_forward_receipt": exact_bessel_forward_receipt,
         "no_observation_ancestry_receipt": bool(no_observation_ancestry_receipt),
         "positive_radial_prior": bool(positivity) if positivity is not None else False,
@@ -413,6 +478,14 @@ def screen_to_radial_lift_report(
         "primordial_promotion_status": "RECEIPT_PASSED" if receipt else "RECEIPT_GATED",
         "projection": {
             "formula": "C_ell = 4 pi int dlnk Delta_zeta^2(k) |Psi_ell(k)|^2",
+            "geometry_branch": branch.value,
+            "kernel_family": (
+                "flat_spherical_bessel"
+                if branch is GeometryBranch.FLAT_EXACT
+                else "flat_spherical_bessel_assumption"
+                if branch is GeometryBranch.FLAT_ASSUMED
+                else "curved_hyperspherical_diagnostic"
+            ),
             "window": "thin_shell" if radius is not None else "radial_window",
             "radius": float(radius) if radius is not None else None,
             "ell_min": float(np.min(ell_arr)),
@@ -433,6 +506,13 @@ def screen_to_radial_lift_report(
             "effective_rank": effective_rank,
             "rank_tolerance": float(tol),
             "nullspace_dimension": nullspace_dimension,
+            "null_basis_shape": [int(value) for value in null_basis.shape],
+            "null_basis_sha256": null_basis_hash,
+            "null_basis_sample": [
+                [float(value) for value in row[: min(8, null_basis.shape[1])]]
+                for row in null_basis[: min(8, null_basis.shape[0])]
+            ],
+            "receipt": radial_null_space_receipt,
             "analytic_statement": (
                 "A finite screen C_l vector constrains only the row space of the Bessel projection. "
                 "Any component in the radial null space is invisible without an additional source prior "
@@ -508,13 +588,13 @@ def exact_shell_gamma_lift_receipt(
     blockers: list[str] = []
     if ell_equals_kD_scaffold_only:
         blockers.append("ell_equals_kD_scaffold_only")
-    if not W_star_hash:
+    if not _valid_sha256_hash(W_star_hash):
         blockers.append("W_star_hash_missing")
     if not Z_star_source or not _finite_positive(Z_star):
         blockers.append("Z_star_missing")
     if not D_star_source or not _finite_positive(D_star):
         blockers.append("D_star_missing")
-    if not bessel_kernel_hash:
+    if not _valid_sha256_hash(bessel_kernel_hash):
         blockers.append("bessel_kernel_hash_missing")
     if kernel_rank is None or int(kernel_rank) <= 0:
         blockers.append("kernel_rank_missing")
@@ -635,6 +715,53 @@ def _as_1d(values: np.ndarray | list[float], name: str) -> np.ndarray:
     return arr
 
 
+def _geometry_branch(value: str | GeometryBranch) -> GeometryBranch:
+    if isinstance(value, GeometryBranch):
+        return value
+    return GeometryBranch(str(value))
+
+
+def _curved_hyperspherical_window_response(
+    ell: np.ndarray,
+    k: np.ndarray,
+    *,
+    branch: GeometryBranch,
+    radius: float | None = None,
+    radial_nodes: np.ndarray | None = None,
+    radial_weights: np.ndarray | None = None,
+) -> np.ndarray:
+    """Deterministic curved-branch radial kernel scaffold.
+
+    This is intentionally not used as a physical receipt. It prevents the
+    curved branches from falling back to the flat spherical-Bessel kernel while
+    keeping diagnostic runs executable.
+    """
+
+    if branch not in {GeometryBranch.OPEN_CURVED, GeometryBranch.CLOSED_CURVED}:
+        raise ValueError("curved kernel requires OPEN_CURVED or CLOSED_CURVED")
+    if radius is not None:
+        x = k[None, :] * float(radius)
+        return _curved_mode_values(ell[:, None], x, branch=branch)
+    if radial_nodes is None or radial_weights is None:
+        raise ValueError("provide radius or radial window for curved kernel")
+    response = np.zeros((ell.size, k.size), dtype=float)
+    for index, l_value in enumerate(ell):
+        x = k[None, :] * radial_nodes[:, None]
+        values = _curved_mode_values(np.full_like(x, float(l_value)), x, branch=branch)
+        response[index, :] = np.sum(radial_weights[:, None] * values, axis=0)
+    return response
+
+
+def _curved_mode_values(ell: np.ndarray, x: np.ndarray, *, branch: GeometryBranch) -> np.ndarray:
+    x_safe = np.maximum(np.asarray(x, dtype=float), 1.0e-12)
+    phase = x_safe - 0.5 * np.pi * ell
+    if branch is GeometryBranch.OPEN_CURVED:
+        envelope = 1.0 / np.sqrt(1.0 + x_safe * x_safe)
+        return envelope * np.sin(phase) / x_safe
+    envelope = 1.0 / np.sqrt(1.0 + 0.25 * x_safe * x_safe)
+    return envelope * np.cos(phase) / np.maximum(1.0, x_safe)
+
+
 def _positive_1d(values: np.ndarray | list[float], name: str) -> np.ndarray:
     arr = _as_1d(values, name)
     if np.any(arr <= 0.0):
@@ -655,6 +782,17 @@ def _weights_like(values: np.ndarray | list[float] | None, size: int) -> np.ndar
 
 def _weighted_mean(values: np.ndarray, weights: np.ndarray) -> float:
     return float(np.sum(weights * values) / np.sum(weights))
+
+
+def _array_sha256(values: np.ndarray) -> str:
+    arr = np.ascontiguousarray(np.asarray(values, dtype=np.float64))
+    import hashlib
+
+    return "sha256:" + hashlib.sha256(arr.tobytes()).hexdigest()
+
+
+def _valid_sha256_hash(value: str | None) -> bool:
+    return bool(isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-fA-F]{64}", value.strip()))
 
 
 def _log_trapezoid_weights(k: np.ndarray) -> np.ndarray:

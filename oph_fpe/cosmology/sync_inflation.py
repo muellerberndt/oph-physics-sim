@@ -11,6 +11,7 @@ import numpy as np
 
 from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_claim_metadata
 from oph_fpe.cosmology.inflation_cmb_ladder import flat_sector_selection_report, screen_spectrum_prediction
+from oph_fpe.cosmology.spatial_curvature import s3_holonomy_spatial_curvature_gate
 
 
 def synchronization_inflation_report(run_dirs: list[Path], *, w_eff: float = 1.0 / 3.0) -> dict[str, Any]:
@@ -27,13 +28,13 @@ def synchronization_inflation_report(run_dirs: list[Path], *, w_eff: float = 1.0
         "screen_spectrum_prediction": screen_prediction,
         "theorem_targets": {
             "flat_sector_selection": (
-                "Nonzero FLRW spatial curvature is visible geometric holonomy. In the ordinary "
-                "cosmological boundary sector with no independent curvature charge, MAR selects h_K=0, "
-                "so K=0 and Omega_K=0."
+                "Zero clock-slice spatial Levi-Civita holonomy identifies the flat FLRW branch. "
+                "Exact selection is separate direct theorem, conditional CMH theorem, or explicit "
+                "branch assumption; MAR is not used as a cosmological flatness selector."
             ),
-            "curvature_holonomy_damping_diagnostic": (
-                "Optional finite-run diagnostic: dOmega_K/dN = [1 + 3 w_eff - 2 Gamma_K/H] Omega_K + Xi_K. "
-                "This is not the primary flatness selector in the Pro v2 notes."
+            "screen_s3_defect_decay_diagnostic": (
+                "Optional finite-run repair diagnostic on the S3 screen/collar permutation defect. "
+                "It is not a spatial Levi-Civita holonomy and does not prove K=0 or Omega_K=0."
             ),
             "horizon_synchronization": (
                 "C_sigma(k) = integral Gamma_sigma(k,eta)deta >> 1, requiring a low-k repair gap "
@@ -62,7 +63,8 @@ def synchronization_inflation_report(run_dirs: list[Path], *, w_eff: float = 1.0
             "The Pro v2 route keeps inflation replacement conditional on zero-holonomy flat-sector "
             "selection, a certified screen Green spectrum, scalar-release energy, screen-to-primordial "
             "lift, hot MaxEnt release, adiabatic same-boundary records, and Boltzmann transfer. The finite "
-            "lattice still needs curvature-holonomy receipts, low-k synchronization evidence, a lift "
+            "lattice still needs spatial Levi-Civita curvature-holonomy receipts or a CMH/direct theorem, "
+            "low-k synchronization evidence, a lift "
             "receipt, and theorem-grade rho_A(a), B_A(k,a), Gamma_rec(k,a)."
         ),
     }
@@ -130,13 +132,8 @@ def _run_sync_row(
     gamma_sync = phi_fit.get("gamma_per_cycle")
     gamma_sync_over_H = float(gamma_sync * cycles) if isinstance(gamma_sync, (int, float)) else None
     sync_depth = float(gamma_sync * max(cycles - 1, 1)) if isinstance(gamma_sync, (int, float)) else None
-    holonomy_fit = _holonomy_decay(holonomy)
-    gamma_K_over_H = holonomy_fit.get("Gamma_K_over_H_proxy")
-    flatness_margin = (
-        float(2.0 * gamma_K_over_H - (1.0 + 3.0 * float(w_eff)))
-        if isinstance(gamma_K_over_H, (int, float))
-        else None
-    )
+    holonomy_fit = _screen_s3_defect_decay_proxy(holonomy)
+    curvature_gate = s3_holonomy_spatial_curvature_gate(holonomy)
     finite_collar_parent_grade = bool(
         ((stress.get("physical_prediction_readiness", {}) or {}).get("checks", {}) or {}).get(
             "finite_collar_parent_theorem_grade", False
@@ -146,7 +143,7 @@ def _run_sync_row(
     same_boundary_selector_established = False
     low_k_gap_established = False
     horizon_ready = bool(same_boundary_selector_established or low_k_gap_established)
-    flatness_ready = bool(flatness_margin is not None and flatness_margin > 0.0)
+    exact_curvature_ready = False
     scale_spectrum_ready = False
     return {
         "run_id": manifest.get("run_id", run_path.name),
@@ -159,10 +156,12 @@ def _run_sync_row(
         "collar_median_epsilon_cmi": cmi,
         "fawzi_renner_recovery_bound_proxy": 2.0 * math.sqrt(max(cmi, 0.0)) if cmi is not None else None,
         "holonomy_defect_fraction_final": _float_or_none(holonomy.get("defect_fraction")),
-        "holonomy_decay": holonomy_fit,
+        "screen_s3_defect_decay_proxy": holonomy_fit,
+        "s3_holonomy_spatial_curvature_gate": curvature_gate,
         "w_eff": float(w_eff),
-        "flatness_repair_margin_proxy": flatness_margin,
-        "flatness_holonomy_damping_ready": flatness_ready,
+        "flatness_repair_margin_proxy": None,
+        "flatness_holonomy_damping_ready": False,
+        "spatial_curvature_exact_selection_ready": exact_curvature_ready,
         "same_boundary_selector_established": same_boundary_selector_established,
         "low_k_repair_gap_established": low_k_gap_established,
         "horizon_synchronization_ready": horizon_ready,
@@ -175,7 +174,7 @@ def _run_sync_row(
             name
             for name, passed in {
                 "same_boundary_selector_or_low_k_gap": horizon_ready,
-                "flatness_holonomy_damping": flatness_ready,
+                "spatial_levi_civita_curvature_receipt_or_cmh": exact_curvature_ready,
                 "finite_collar_parent_theorem_grade": finite_collar_parent_grade,
                 "scale_spectrum_theta_sigma_derived": scale_spectrum_ready,
                 "Boltzmann_transfer_likelihood": False,
@@ -212,7 +211,7 @@ def _fit_decay(trace: list[dict[str, float]], key: str) -> dict[str, Any]:
     }
 
 
-def _holonomy_decay(holonomy: dict[str, Any]) -> dict[str, Any]:
+def _screen_s3_defect_decay_proxy(holonomy: dict[str, Any]) -> dict[str, Any]:
     timeline = holonomy.get("timeline") or holonomy.get("timeline_trace") or []
     if isinstance(timeline, list) and len(timeline) >= 2:
         rows = []
@@ -224,13 +223,21 @@ def _holonomy_decay(holonomy: dict[str, Any]) -> dict[str, Any]:
         fit = _fit_decay(rows, "defect_fraction") if rows else {"available": False}
         if fit.get("available"):
             cycles = max(row["cycle"] for row in rows) + 1.0
-            return fit | {"Gamma_K_over_H_proxy": float(fit["gamma_per_cycle"] * cycles)}
+            return fit | {
+                "screen_s3_defect_decay_per_H_proxy": float(fit["gamma_per_cycle"] * cycles),
+                "structure_group": "S3",
+                "geometric_connection": False,
+                "spatial_levi_civita_interpretation": False,
+            }
     final_fraction = _float_or_none(holonomy.get("defect_fraction"))
     return {
         "available": False,
         "reason": "holonomy_timeline_not_available",
         "final_defect_fraction": final_fraction,
-        "Gamma_K_over_H_proxy": None,
+        "screen_s3_defect_decay_per_H_proxy": None,
+        "structure_group": "S3",
+        "geometric_connection": False,
+        "spatial_levi_civita_interpretation": False,
     }
 
 
@@ -242,7 +249,10 @@ def _aggregate(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_Gamma_sync_over_H_proxy": float(fmean(gamma)) if gamma else None,
         "mean_C_sigma_depth_proxy": float(fmean(depth)) if depth else None,
         "mean_collar_median_epsilon_cmi": float(fmean(cmi)) if cmi else None,
-        "flatness_holonomy_damping_ready_count": sum(bool(row.get("flatness_holonomy_damping_ready")) for row in rows),
+        "flatness_holonomy_damping_ready_count": 0,
+        "spatial_curvature_exact_selection_ready_count": sum(
+            bool(row.get("spatial_curvature_exact_selection_ready")) for row in rows
+        ),
         "horizon_synchronization_ready_count": sum(bool(row.get("horizon_synchronization_ready")) for row in rows),
         "finite_collar_parent_theorem_grade_count": sum(bool(row.get("finite_collar_parent_theorem_grade")) for row in rows),
         "inflation_replacement_ready_count": sum(bool(row.get("inflation_replacement_ready")) for row in rows),
@@ -300,12 +310,13 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "## Summary",
         "",
         f"- run count: {report['run_count']}",
+        f"- curvature status: {flat.get('status', 'n/a')}",
         f"- flat selector Omega_K: {_fmt(flat.get('selected_Omega_K'))}",
         f"- screen-spectrum n_s = 1 - P/48: {_fmt(screen.get('n_s'))}",
         f"- screen-spectrum A_zeta: {screen.get('A_zeta') if screen.get('A_zeta') is not None else 'pending lift receipt'}",
         f"- mean Gamma_sync/H proxy: {_fmt(aggregate.get('mean_Gamma_sync_over_H_proxy'))}",
         f"- mean C_sigma depth proxy: {_fmt(aggregate.get('mean_C_sigma_depth_proxy'))}",
-        f"- flatness damping ready count: {aggregate['flatness_holonomy_damping_ready_count']}/{report['run_count']}",
+        f"- exact curvature selection ready count: {aggregate['spatial_curvature_exact_selection_ready_count']}/{report['run_count']}",
         f"- horizon synchronization ready count: {aggregate['horizon_synchronization_ready_count']}/{report['run_count']}",
         f"- finite collar parent theorem-grade count: {aggregate['finite_collar_parent_theorem_grade_count']}/{report['run_count']}",
         f"- inflation replacement ready: {report['inflation_replacement_ready']}",

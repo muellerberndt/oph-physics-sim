@@ -69,15 +69,23 @@ def test_inflation_certificate_validators_recompute_toy_bundle(tmp_path: Path):
         {
             "id": "anomaly",
             "type": "homogeneous_anomaly",
+            "SOURCE_LOCALIZATION_SATURATION_RECEIPT": True,
+            "ANOMALY_CURRENT_CONSERVATION_RECEIPT": True,
             "refinement_levels": [
-                {"level": 0, "a": 1.0, "V_com": 1.0, "ell_r": 1.0, "collars": [{"weight": 1.0, "cmi": 1.0}]},
+                {
+                    "level": 0,
+                    "a": 1.0,
+                    "V_com": 1.0,
+                    "proper_ell_m": 1.0,
+                    "collars": [{"weight": 1.0, "cmi_diagnostic_nats": 1.0, "modular_source_charge_nats": 1.0}],
+                },
                 {
                     "level": 1,
                     "a": 1.0,
                     "V_com": 1.0,
-                    "ell_r": 1.0,
+                    "proper_ell_m": 1.0,
                     "epsilon_r": 0.0,
-                    "collars": [{"weight": 1.0, "cmi": 1.0}],
+                    "collars": [{"weight": 1.0, "cmi_diagnostic_nats": 1.0, "modular_source_charge_nats": 1.0}],
                 },
             ],
             "no_data_use_manifest": _no_data_use(),

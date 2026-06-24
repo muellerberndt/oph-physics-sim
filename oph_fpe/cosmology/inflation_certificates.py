@@ -11,6 +11,12 @@ import numpy as np
 
 from oph_fpe.claims import COSMOLOGY_PERTURBATION_RECEIPT, QUANTITATIVE_BRANCH, with_claim_metadata
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.finite_certificates import (
+    ANOMALY_CURRENT_CONSERVATION_RECEIPT,
+    C_SI,
+    HBAR_SI,
+    SOURCE_LOCALIZATION_SATURATION_RECEIPT,
+)
 
 
 DEFAULT_SOURCE_PATH = Path("/Users/muellerberndt/Projects/oph-meta/cosmology/correspondence/inflation/3/comms.md")
@@ -559,35 +565,52 @@ def _validate_homogeneous_anomaly(certificate: dict[str, Any]) -> dict[str, Any]
     levels = certificate.get("refinement_levels") or []
     if not isinstance(levels, list) or not levels:
         return _failed_receipt("homogeneous_anomaly", "missing refinement_levels")
+    if not bool(certificate.get(SOURCE_LOCALIZATION_SATURATION_RECEIPT, False)):
+        return _failed_receipt("homogeneous_anomaly", "missing SOURCE_LOCALIZATION_SATURATION_RECEIPT")
     rows = []
     for level in levels:
         a = _float_or_none(level.get("a"))
         v_com = _float_or_none(level.get("V_com"))
-        ell = _float_or_none(level.get("ell_r"))
+        ell = _float_or_none(level.get("proper_ell_m", level.get("ell_r")))
+        c_light = _float_or_none(level.get("c_si")) or C_SI
         collars = level.get("collars") or []
         if a is None or v_com is None or ell is None or ell <= 0.0 or not collars:
             continue
         weights = np.asarray([_float_or(row.get("weight"), 0.0) for row in collars], dtype=float)
-        cmi = np.asarray([_float_or(row.get("cmi"), 0.0) for row in collars], dtype=float)
+        cmi = np.asarray([_float_or(row.get("cmi_diagnostic_nats", row.get("cmi")), 0.0) for row in collars], dtype=float)
+        charge = np.asarray([_float_or(row.get("modular_source_charge_nats"), math.nan) for row in collars], dtype=float)
         if np.sum(weights) <= 0.0:
             continue
+        if not np.all(np.isfinite(charge)) or np.any(charge < 0.0):
+            continue
         weighted_cmi = float(np.sum(weights * cmi) / np.sum(weights))
-        rho_a = float((15.0 / (8.0 * math.pi * math.pi * ell**4)) * weighted_cmi)
-        q_a = float((a**3) * v_com * rho_a)
+        weighted_charge = float(np.sum(weights * charge) / np.sum(weights))
+        rho_a = float((15.0 * HBAR_SI / (8.0 * math.pi * math.pi * c_light * ell**4)) * weighted_charge)
+        q_a = float((a**3) * v_com * rho_a) if certificate.get(ANOMALY_CURRENT_CONSERVATION_RECEIPT, False) else None
         rows.append(
             {
                 "level": level.get("level"),
                 "a": a,
                 "V_com": v_com,
-                "ell_r": ell,
-                "weighted_cmi": weighted_cmi,
+                "proper_ell_m": ell,
+                "weighted_cmi_diagnostic_nats": weighted_cmi,
+                "weighted_modular_source_charge_nats": weighted_charge,
                 "rho_A_r": rho_a,
                 "Q_A_r": q_a,
             }
         )
     if not rows:
         return _failed_receipt("homogeneous_anomaly", "no valid refinement rows")
-    q_values = [row["Q_A_r"] for row in rows]
+    if not certificate.get(ANOMALY_CURRENT_CONSERVATION_RECEIPT, False):
+        return _receipt(
+            "homogeneous_anomaly",
+            validator_receipt=False,
+            reason="missing ANOMALY_CURRENT_CONSERVATION_RECEIPT for conserved Q_A refinement",
+            computed_outputs={"Q_A_last": None, "row_count": len(rows)},
+            rows=rows,
+            no_data_use=_no_data_use_ok(certificate),
+        )
+    q_values = [row["Q_A_r"] for row in rows if row["Q_A_r"] is not None]
     diffs = [abs(q_values[index + 1] - q_values[index]) for index in range(len(q_values) - 1)]
     tolerances = [float(level.get("epsilon_r", math.inf)) for level in levels[1:]]
     cauchy = bool(not diffs or all(diff <= tol for diff, tol in zip(diffs, tolerances)))

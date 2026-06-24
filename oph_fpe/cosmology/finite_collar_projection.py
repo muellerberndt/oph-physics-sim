@@ -9,6 +9,8 @@ from typing import Any
 
 import numpy as np
 
+from oph_fpe.cosmology.claim_tiers import ClaimTier, GeometryOrigin
+
 
 DEFAULT_CHI_STAR_MPC = 13_850.0
 DEFAULT_H = 0.6736
@@ -59,6 +61,8 @@ def finite_collar_cmb_projection_report(
     }
     return {
         "mode": "finite_collar_cmb_projection_diagnostic_v0",
+        "claim_tier": ClaimTier.DIAGNOSTIC_PROXY.value,
+        "geometry_origin": GeometryOrigin.EXTERNAL_FIDUCIAL.value,
         "projection": {
             "chi_star_mpc": chi,
             "h": hubble,
@@ -68,6 +72,7 @@ def finite_collar_cmb_projection_report(
             "calibration_source": "external_fiducial_last_scattering_distance_for_comparison_only",
             "measurement_data_used_for_finite_source_functions": False,
             "physical_k_calibration": False,
+            "FIDUCIAL_CMB_AXIS_PROJECTION_DIAGNOSTIC": True,
         },
         "projected_B_A_rows": b_rows,
         "background_rows": rho_rows,
@@ -77,6 +82,8 @@ def finite_collar_cmb_projection_report(
             readiness["finite_collar_source_bundle_receipt"] and readiness["ell_k_axes_emitted"]
         ),
         "PHYSICAL_K_CALIBRATION_RECEIPT": False,
+        "PHYSICAL_K_RECEIPT": False,
+        "FIDUCIAL_CMB_AXIS_PROJECTION_DIAGNOSTIC": True,
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
         "claim_boundary": (

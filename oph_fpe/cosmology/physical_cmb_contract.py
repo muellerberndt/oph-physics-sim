@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+
+from oph_fpe.cosmology.cosmological_scale_bridge import validate_physical_scale_bridge_receipts
 
 
 FINITE_CMB_SOURCES = {
@@ -62,6 +65,11 @@ class PhysicalCMBInputContract:
     causal_response_receipt: bool = False
     refinement_convergence_receipt: bool = False
     explicit_recipient_stress_receipt: bool = False
+    exchange_current_closure_receipt: bool = False
+    physical_clock_receipt: bool = False
+    active_fiber_receipt: bool = False
+    conserved_sector_decomposition_receipt: bool = False
+    common_parent_response_pole_receipt: bool = False
     source_provenance_receipt: bool = False
     pooled_source_reducer_receipt: bool = False
     contradiction_free_provenance_receipt: bool = False
@@ -71,6 +79,7 @@ class PhysicalCMBInputContract:
     frozen_source_hash: str | None = None
     frozen_solver_hash: str | None = None
     frozen_likelihood_hash: str | None = None
+    physical_scale_bridge_receipts: dict[str, Any] | None = None
 
 
 def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[str, Any]:
@@ -86,6 +95,20 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
 
     if not bool(contract.no_data_use_receipt):
         blockers.append("no_data_use_receipt_false")
+
+    scale_bridge_validation = validate_physical_scale_bridge_receipts(contract.physical_scale_bridge_receipts)
+    if not bool(scale_bridge_validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT", False)):
+        blockers.append("physical_scale_bridge_receipt_missing")
+    if not bool(scale_bridge_validation.get("PHYSICAL_K_RECEIPT", False)):
+        blockers.append("physical_k_receipt_missing")
+    if not bool(scale_bridge_validation.get("SOURCE_ANGULAR_MODE_RECEIPT", False)):
+        blockers.append("source_angular_mode_receipt_missing")
+    if not bool(scale_bridge_validation.get("CALIBRATED_A_EVOLUTION_RECEIPT", False)):
+        blockers.append("calibrated_a_evolution_receipt_missing")
+    if not bool(scale_bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False)):
+        blockers.append("physical_freezeout_surface_receipt_missing")
+    if not bool(scale_bridge_validation.get("NO_POSTHOC_CALIBRATION_RECEIPT", False)):
+        blockers.append("no_posthoc_calibration_receipt_missing")
 
     if not bool(contract.source_provenance_receipt):
         blockers.append("source_provenance_receipt_missing")
@@ -111,19 +134,36 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
     if not bool(contract.screen_to_primordial_lift_receipt):
         blockers.append("screen_to_primordial_lift_receipt_missing")
 
-    if str(contract.q_IR_source) not in FINITE_CMB_SOURCES or not _finite_scalar(contract.q_IR_value):
+    if str(contract.q_IR_source) not in FINITE_CMB_SOURCES or not _finite_nonnegative_scalar(contract.q_IR_value):
         blockers.append("q_IR_not_finite_derived")
 
     if str(contract.ell_IR_source) not in FINITE_CMB_SOURCES or not _finite_positive_scalar(contract.ell_IR_value):
         blockers.append("ell_IR_not_finite_derived")
 
-    if str(contract.B_A_source) not in FINITE_CMB_SOURCES or not _finite_array(contract.B_A_k_a):
+    if str(contract.B_A_source) not in FINITE_CMB_SOURCES or not _finite_table(contract.B_A_k_a, min_cols=3):
         blockers.append("B_A_k_a_missing_or_not_finite")
 
-    if str(contract.Gamma_rec_source) not in FINITE_CMB_SOURCES or not _finite_array(contract.Gamma_rec_k_a):
+    gamma_rec_table_ready = str(contract.Gamma_rec_source) in FINITE_CMB_SOURCES and _finite_table(
+        contract.Gamma_rec_k_a,
+        min_cols=3,
+    )
+    if not gamma_rec_table_ready:
         blockers.append("Gamma_rec_k_a_missing_or_not_finite")
+    else:
+        if not bool(contract.physical_clock_receipt):
+            blockers.append("physical_clock_missing_for_promoted_Gamma_rec")
+        if not bool(contract.active_fiber_receipt):
+            blockers.append("active_fiber_missing_for_promoted_Gamma_rec")
+        if not bool(contract.conserved_sector_decomposition_receipt):
+            blockers.append("conserved_sector_decomposition_missing_for_promoted_Gamma_rec")
+        if not bool(contract.common_parent_response_pole_receipt):
+            blockers.append("common_parent_response_pole_missing_for_promoted_Gamma_rec")
 
-    if str(contract.rho_A_source) not in FINITE_CMB_SOURCES or not _finite_array(contract.rho_A_a):
+    if (
+        str(contract.rho_A_source) not in FINITE_CMB_SOURCES
+        or not _finite_table(contract.rho_A_a, min_cols=2)
+        or not _table_column_positive(contract.rho_A_a, column=1)
+    ):
         blockers.append("rho_A_missing_or_not_finite")
 
     if not bool(contract.finite_covariant_parent_receipt):
@@ -135,6 +175,9 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
     if _array_has_positive(contract.Gamma_rec_k_a) and not bool(contract.explicit_recipient_stress_receipt):
         blockers.append("recipient_stress_missing_for_nonzero_Gamma_rec")
 
+    if _array_has_positive(contract.Gamma_rec_k_a) and not bool(contract.exchange_current_closure_receipt):
+        blockers.append("exchange_current_closure_missing_for_nonzero_Gamma_rec")
+
     if not bool(contract.gauge_independence_receipt):
         blockers.append("gauge_independence_not_certified")
 
@@ -144,7 +187,11 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
     if not bool(contract.refinement_convergence_receipt):
         blockers.append("refinement_convergence_not_certified")
 
-    if str(contract.freezeout_source) not in FINITE_CMB_SOURCES or not isinstance(contract.freezeout_surface, dict):
+    if (
+        str(contract.freezeout_source) not in FINITE_CMB_SOURCES
+        or not _valid_freezeout_surface(contract.freezeout_surface)
+        or not bool(scale_bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False))
+    ):
         blockers.append("freezeout_missing_or_not_finite")
 
     if not bool(contract.cdm_limit_regression_passed):
@@ -156,13 +203,13 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
     if not bool(contract.frozen_likelihood_protocol_receipt):
         blockers.append("frozen_likelihood_protocol_not_certified")
 
-    if not _nonempty_string(contract.frozen_source_hash):
+    if not _valid_sha256_hash(contract.frozen_source_hash):
         blockers.append("frozen_source_hash_missing")
 
-    if not _nonempty_string(contract.frozen_solver_hash):
+    if not _valid_sha256_hash(contract.frozen_solver_hash):
         blockers.append("frozen_solver_hash_missing")
 
-    if not _nonempty_string(contract.frozen_likelihood_hash):
+    if not _valid_sha256_hash(contract.frozen_likelihood_hash):
         blockers.append("frozen_likelihood_hash_missing")
 
     receipt = len(blockers) == 0
@@ -172,10 +219,13 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
         "blockers": blockers,
         "finite_sources": sorted(FINITE_CMB_SOURCES),
         "theorem_side_sources_allowed_as_constants": sorted(THEOREM_SIDE_SOURCES),
+        "physical_scale_bridge": scale_bridge_validation,
         "claim_boundary": (
             "Hard input contract for physical CMB prediction. Measurement-comparable TT curves remain "
             "diagnostics until every blocker is cleared by finite-derived inputs, a finite covariant "
-            "stress parent, source-only provenance, pooled reducers, frozen hashes, and likelihood plumbing."
+            "stress parent, recipient stress and exchange-current closure for nonzero exchange, "
+            "active-fiber/physical-clock/common-parent Gamma_rec receipts, source-only provenance, "
+            "pooled reducers, physical scale-bridge receipts, frozen hashes, and likelihood plumbing."
         ),
     }
 
@@ -234,6 +284,31 @@ def contract_from_reports(
         explicit_recipient_stress_receipt=bool(
             background_report.get("EXPLICIT_RECIPIENT_STRESS_RECEIPT", False)
         ),
+        exchange_current_closure_receipt=bool(
+            background_report.get("EXCHANGE_CURRENT_CLOSURE_RECEIPT", False)
+        ),
+        physical_clock_receipt=bool(
+            repair_clock_report.get("PHYSICAL_CLOCK_RECEIPT", False)
+            or repair_clock_report.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+            or background_report.get("PHYSICAL_CLOCK_RECEIPT", False)
+            or background_report.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+        ),
+        active_fiber_receipt=bool(
+            background_report.get("ACTIVE_FIBER_RECEIPT", False)
+            or background_report.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+            or repair_clock_report.get("ACTIVE_FIBER_RECEIPT", False)
+            or repair_clock_report.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+        ),
+        conserved_sector_decomposition_receipt=bool(
+            background_report.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+            or repair_clock_report.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+        ),
+        common_parent_response_pole_receipt=bool(
+            background_report.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+            or background_report.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+            or repair_clock_report.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+            or repair_clock_report.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+        ),
         source_provenance_receipt=bool(likelihood_report.get("CMB_SOURCE_PROVENANCE_RECEIPT", False)),
         pooled_source_reducer_receipt=bool(likelihood_report.get("pooled_source_reducer_receipt", False)),
         contradiction_free_provenance_receipt=bool(
@@ -252,6 +327,11 @@ def contract_from_reports(
         frozen_source_hash=background_report.get("source_hash"),
         frozen_solver_hash=likelihood_report.get("solver_hash") or background_report.get("solver_hash"),
         frozen_likelihood_hash=likelihood_report.get("likelihood_hash") or background_report.get("likelihood_hash"),
+        physical_scale_bridge_receipts=(
+            freezeout_report.get("physical_scale_bridge_receipts")
+            or background_report.get("physical_scale_bridge_receipts")
+            or likelihood_report.get("physical_scale_bridge_receipts")
+        ),
     )
 
 
@@ -278,11 +358,22 @@ def _finite_positive_scalar(value: float | None) -> bool:
     return _finite_scalar(value) and float(value) > 0.0
 
 
+def _finite_nonnegative_scalar(value: float | None) -> bool:
+    return _finite_scalar(value) and float(value) >= 0.0
+
+
 def _finite_array(value: np.ndarray | None) -> bool:
     if value is None:
         return False
     array = np.asarray(value, dtype=float)
     return bool(array.size and np.all(np.isfinite(array)))
+
+
+def _finite_table(value: np.ndarray | None, *, min_cols: int) -> bool:
+    if not _finite_array(value):
+        return False
+    array = np.asarray(value, dtype=float)
+    return bool(array.ndim == 2 and array.shape[0] > 0 and array.shape[1] >= int(min_cols))
 
 
 def _array_has_positive(value: np.ndarray | None) -> bool:
@@ -294,5 +385,27 @@ def _array_has_positive(value: np.ndarray | None) -> bool:
     return bool(np.any(array > 0.0))
 
 
+def _table_column_positive(value: np.ndarray | None, *, column: int) -> bool:
+    if not _finite_table(value, min_cols=int(column) + 1):
+        return False
+    array = np.asarray(value, dtype=float)
+    return bool(np.all(array[:, int(column)] > 0.0))
+
+
 def _nonempty_string(value: str | None) -> bool:
     return bool(isinstance(value, str) and value.strip())
+
+
+def _valid_freezeout_surface(value: dict[str, Any] | None) -> bool:
+    if not isinstance(value, dict) or not value:
+        return False
+    required_hashes = ("surface_mesh_hash", "clock_hash", "state_vector_hash", "normal_derivative_hash")
+    if not all(_valid_sha256_hash(value.get(key)) for key in required_hashes):
+        return False
+    if not bool(value.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT")):
+        return False
+    return bool(value.get("common_surface_passed") or value.get("mode_dependent_freezeout_map"))
+
+
+def _valid_sha256_hash(value: str | None) -> bool:
+    return bool(isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-fA-F]{64}", value.strip()))

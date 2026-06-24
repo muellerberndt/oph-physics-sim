@@ -12,6 +12,7 @@ import numpy as np
 from scipy.optimize import least_squares
 
 from oph_fpe.claims import PROXY, SCREEN_PROXY_CMB_RECEIPT, with_claim_metadata
+from oph_fpe.cosmology.screen_spectrum import screen_cl
 from oph_fpe.cosmology.screen_to_primordial import screen_to_radial_lift_report
 
 
@@ -52,7 +53,16 @@ class OPHScreenPowerParams:
 def C_ell_oph(ell: np.ndarray | list[float], params: OPHScreenPowerParams) -> np.ndarray:
     ell_arr = np.asarray(ell, dtype=float)
     safe_ell = np.maximum(ell_arr, 1.0)
-    denom = (safe_ell * (safe_ell + 1.0) + float(params.mu) ** 2) ** (1.0 + float(params.eta_R) / 2.0)
+    base = np.asarray(
+        screen_cl(
+            safe_ell,
+            A_q=float(params.A_chi),
+            theta=float(params.eta_R),
+            mu=float(params.mu),
+            model="FRACTIONAL_LAPLACIAN_ASYMPTOTIC",
+        ),
+        dtype=float,
+    )
     window = np.ones_like(safe_ell)
     if params.ell_cap is not None and float(params.ell_cap) > 0.0 and math.isfinite(float(params.ell_cap)):
         window = np.exp(-(safe_ell * (safe_ell + 1.0)) / (float(params.ell_cap) ** 2))
@@ -65,7 +75,7 @@ def C_ell_oph(ell: np.ndarray | list[float], params: OPHScreenPowerParams) -> np
     cap_noise = 0.0
     if params.N_cap_eff is not None and float(params.N_cap_eff) > 0.0:
         cap_noise = float(params.A_chi) / float(params.N_cap_eff)
-    return float(params.A_chi) * window * np.maximum(fir, 0.0) * np.maximum(parity, 0.0) / denom + cap_noise
+    return base * window * np.maximum(fir, 0.0) * np.maximum(parity, 0.0) + cap_noise
 
 
 def D_ell_from_C_ell(ell: np.ndarray | list[float], c_ell: np.ndarray | list[float]) -> np.ndarray:
@@ -304,6 +314,7 @@ def _diagnostic_radial_lift_artifact(
         screen_cl=screen_cl,
         k=k,
         radial_prior_delta_zeta2=prior,
+        background_geometry_branch="FLAT_ASSUMED",
         radius=DEFAULT_D_STAR_MPC,
         radial_prior_declared=False,
         source_only_screen_scalar=False,

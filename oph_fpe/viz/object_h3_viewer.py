@@ -85,7 +85,7 @@ def _load_object_rows(run_path: Path, *, max_objects: int) -> tuple[list[dict[st
             reader = csv.DictReader(handle)
             for row in reader:
                 h3_point = _parse_hyperboloid(row.get("h3_point"))
-                point = _parse_point(row.get("h3_spatial_point")) or _spatial_from_hyperboloid(h3_point)
+                point = _spatial_point_from_row(row, h3_point)
                 if point is None:
                     continue
                 objects.append(
@@ -127,7 +127,7 @@ def _load_object_rows(run_path: Path, *, max_objects: int) -> tuple[list[dict[st
             if not isinstance(row, dict):
                 continue
             h3_point = _parse_hyperboloid(row.get("h3_point"))
-            point = _parse_point(row.get("h3_spatial_point")) or _spatial_from_hyperboloid(h3_point)
+            point = _spatial_point_from_row(row, h3_point)
             if point is None:
                 continue
             objects.append(
@@ -170,6 +170,24 @@ def _parse_point(value: Any) -> list[float] | None:
         return None
     try:
         return [float(value[0]), float(value[1]), float(value[2])]
+    except (TypeError, ValueError):
+        return None
+
+
+def _spatial_point_from_row(row: dict[str, Any], h3_point: list[float] | None) -> list[float] | None:
+    return (
+        _parse_point(row.get("h3_spatial_point"))
+        or _parse_split_point(row, "h3_x", "h3_y", "h3_z")
+        or _parse_split_point(row, "x", "y", "z")
+        or _spatial_from_hyperboloid(h3_point)
+    )
+
+
+def _parse_split_point(row: dict[str, Any], x_key: str, y_key: str, z_key: str) -> list[float] | None:
+    if not {x_key, y_key, z_key}.issubset(row):
+        return None
+    try:
+        return [float(row[x_key]), float(row[y_key]), float(row[z_key])]
     except (TypeError, ValueError):
         return None
 

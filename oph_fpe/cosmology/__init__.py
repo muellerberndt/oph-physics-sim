@@ -13,6 +13,11 @@ from typing import Any
 _EXPORTS = {
     "anomaly_background_rhs": ("oph_fpe.cosmology.anomaly_fluid", "anomaly_background_rhs"),
     "anomaly_perturbation_rhs": ("oph_fpe.cosmology.anomaly_fluid", "anomaly_perturbation_rhs"),
+    "covariant_exchange_current": ("oph_fpe.cosmology.anomaly_fluid", "covariant_exchange_current"),
+    "covariant_exchange_closure_report": (
+        "oph_fpe.cosmology.anomaly_fluid",
+        "covariant_exchange_closure_report",
+    ),
     "exchange_closure_report": ("oph_fpe.cosmology.anomaly_fluid", "exchange_closure_report"),
     "angular_power_report": ("oph_fpe.cosmology.angular_power", "angular_power_report"),
     "background_adapter_status": ("oph_fpe.cosmology.background_adapter", "background_adapter_status"),
@@ -54,6 +59,16 @@ _EXPORTS = {
         "oph_fpe.cosmology.physical_cmb_contract",
         "PhysicalCMBInputContract",
     ),
+    "ClaimTier": ("oph_fpe.cosmology.claim_tiers", "ClaimTier"),
+    "GeometryOrigin": ("oph_fpe.cosmology.claim_tiers", "GeometryOrigin"),
+    "validate_physical_scale_bridge_receipts": (
+        "oph_fpe.cosmology.cosmological_scale_bridge",
+        "validate_physical_scale_bridge_receipts",
+    ),
+    "imported_flrw_reference_receipts": (
+        "oph_fpe.cosmology.cosmological_scale_bridge",
+        "imported_flrw_reference_receipts",
+    ),
     "contract_from_reports": (
         "oph_fpe.cosmology.physical_cmb_contract",
         "contract_from_reports",
@@ -93,6 +108,10 @@ _EXPORTS = {
     "build_finite_covariant_parent_artifact_from_reports": (
         "oph_fpe.cosmology.physical_cmb_sources",
         "build_finite_covariant_parent_artifact_from_reports",
+    ),
+    "build_finite_parent_readiness_summary_from_reports": (
+        "oph_fpe.cosmology.physical_cmb_sources",
+        "build_finite_parent_readiness_summary_from_reports",
     ),
     "write_physical_cmb_source_readiness_report": (
         "oph_fpe.cosmology.physical_cmb_sources",
@@ -297,6 +316,16 @@ _EXPORTS = {
         "oph_fpe.cosmology.inflation_cmb_ladder",
         "flat_sector_selection_report",
     ),
+    "GeometryBranch": ("oph_fpe.cosmology.spatial_curvature", "GeometryBranch"),
+    "CurvatureClaimStatus": ("oph_fpe.cosmology.spatial_curvature", "CurvatureClaimStatus"),
+    "spatial_curvature_status_report": (
+        "oph_fpe.cosmology.spatial_curvature",
+        "spatial_curvature_status_report",
+    ),
+    "friedmann_curvature_readout": (
+        "oph_fpe.cosmology.spatial_curvature",
+        "friedmann_curvature_readout",
+    ),
     "cmb_success_ladder_report": (
         "oph_fpe.cosmology.inflation_cmb_ladder",
         "cmb_success_ladder_report",
@@ -364,6 +393,11 @@ _EXPORTS = {
     "OPHScreenPowerParams": ("oph_fpe.cosmology.oph_screen_power", "OPHScreenPowerParams"),
     "primordial_power_oph": ("oph_fpe.cosmology.oph_screen_power", "primordial_power_oph"),
     "write_oph_screen_power_report": ("oph_fpe.cosmology.oph_screen_power", "write_oph_screen_power_report"),
+    "ScreenSpectrumParams": ("oph_fpe.cosmology.screen_spectrum", "ScreenSpectrumParams"),
+    "screen_precision_eigenvalue": ("oph_fpe.cosmology.screen_spectrum", "screen_precision_eigenvalue"),
+    "screen_cl": ("oph_fpe.cosmology.screen_spectrum", "screen_cl"),
+    "screen_d_ell": ("oph_fpe.cosmology.screen_spectrum", "screen_d_ell"),
+    "red_tilt_slope_check": ("oph_fpe.cosmology.screen_spectrum", "red_tilt_slope_check"),
     "maxent_green_spectrum_report": (
         "oph_fpe.cosmology.maxent_green_spectrum",
         "maxent_green_spectrum_report",

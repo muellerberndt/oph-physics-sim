@@ -14,8 +14,10 @@ from oph_fpe.cosmology.physical_cmb_contract import (
     THEOREM_SIDE_SOURCES,
     validate_physical_cmb_contract,
 )
+from oph_fpe.cosmology.cosmological_scale_bridge import validate_physical_scale_bridge_receipts
 from oph_fpe.cosmology.finite_covariant_parent import (
     CAUSAL_RESPONSE_RECEIPT,
+    EXCHANGE_CURRENT_CLOSURE_RECEIPT,
     EXPLICIT_RECIPIENT_STRESS_RECEIPT,
     FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT,
     GAUGE_INDEPENDENCE_RECEIPT,
@@ -47,6 +49,10 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     compressed_likelihood = _first_json(roots, "oph_compressed_likelihood_report.json")
     official_likelihood = _first_json(roots, "official_planck_likelihood_readiness_report.json")
     camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
+    physical_scale_bridge = (
+        _first_json(roots, "physical_scale_bridge_report.json")
+        or _first_json(roots, "cosmological_scale_bridge_report.json")
+    )
     explicit_source_provenance = _first_json(roots, "cmb_source_provenance_report.json")
 
     eta_source, eta_value = _eta_R_from_reports(finite_transition, scalar, scale, scalar_quotient)
@@ -57,7 +63,7 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     ell_source, ell_value = _scalar_value_from_reports(scale, scalar_quotient, "ell_IR")
     b_source, b_grid = _B_A_from_reports(ba_kernel, ba_parent)
     rho_source, rho_grid = _rho_A_from_reports(finite_cert, ba_parent)
-    freezeout_source, freezeout_surface = _freezeout_from_reports(strict_neutral, scale)
+    freezeout_source, freezeout_surface = _freezeout_from_reports(strict_neutral, scale, physical_scale_bridge)
     official_likelihood_ready = bool(
         compressed_likelihood.get("official_likelihood_ready", False)
         or official_likelihood.get("official_likelihood_execution_ready", False)
@@ -96,6 +102,29 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         causal_response_receipt=bool(finite_parent.get(CAUSAL_RESPONSE_RECEIPT, False)),
         refinement_convergence_receipt=bool(finite_parent.get(REFINEMENT_CONVERGENCE_RECEIPT, False)),
         explicit_recipient_stress_receipt=bool(finite_parent.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT, False)),
+        exchange_current_closure_receipt=bool(finite_parent.get(EXCHANGE_CURRENT_CLOSURE_RECEIPT, False)),
+        physical_clock_receipt=bool(
+            finite_transition.get("PHYSICAL_CLOCK_RECEIPT", False)
+            or finite_transition.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+            or finite_parent.get("PHYSICAL_CLOCK_RECEIPT", False)
+            or finite_parent.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+        ),
+        active_fiber_receipt=bool(
+            finite_parent.get("ACTIVE_FIBER_RECEIPT", False)
+            or finite_parent.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+            or finite_transition.get("ACTIVE_FIBER_RECEIPT", False)
+            or finite_transition.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+        ),
+        conserved_sector_decomposition_receipt=bool(
+            finite_parent.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+            or finite_transition.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+        ),
+        common_parent_response_pole_receipt=bool(
+            finite_parent.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+            or finite_parent.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+            or finite_transition.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+            or finite_transition.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+        ),
         frozen_likelihood_protocol_receipt=bool(
             finite_parent.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
             or official_likelihood.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
@@ -103,6 +132,7 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         frozen_source_hash=finite_parent.get("source_hash"),
         frozen_solver_hash=official_likelihood.get("solver_hash") or finite_parent.get("solver_hash"),
         frozen_likelihood_hash=official_likelihood.get("likelihood_hash") or finite_parent.get("likelihood_hash"),
+        physical_scale_bridge_receipts=physical_scale_bridge,
     )
     sources = {
         "no_data_use_receipt": no_data,
@@ -121,6 +151,7 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         "oph_compressed_likelihood_report": compressed_likelihood,
         "official_planck_likelihood_readiness_report": official_likelihood,
         "camb_lcdm_baseline_report": camb_baseline,
+        "physical_scale_bridge_report": physical_scale_bridge,
     }
     source_provenance = _cmb_source_provenance_from_contract(
         contract,
@@ -158,6 +189,8 @@ def write_physical_cmb_input_report(run_dirs: list[Path], out_dir: Path) -> dict
     _write_array(out / "B_A_k_a.csv", contract.B_A_k_a, ["k_or_row", "a_or_col", "B_A"])
     _write_array(out / "Gamma_rec_k_a.csv", contract.Gamma_rec_k_a, ["k_or_row", "a_or_col", "Gamma_rec"])
     _write_array(out / "rho_A_a.csv", contract.rho_A_a, ["row", "col", "rho_A"])
+    input_status = _input_status(contract)
+    blockers = _physical_cmb_promotion_blockers(validation, input_status, sources, {}, {})
     report = {
         "mode": "physical_cmb_input_contract_report_v0",
         "run_dirs": [str(path) for path in run_dirs],
@@ -166,8 +199,8 @@ def write_physical_cmb_input_report(run_dirs: list[Path], out_dir: Path) -> dict
         "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"],
         "physical_cmb_prediction": False,
         "physical_cmb_prediction_eligible": validation["physical_cmb_prediction_eligible"],
-        "blockers": validation["blockers"],
-        "input_status": _input_status(contract),
+        "blockers": blockers,
+        "input_status": input_status,
         "source_summary": _source_summary(sources),
         "source_provenance": sources.get("cmb_source_provenance_report") or {},
         "claim_boundary": (
@@ -477,7 +510,7 @@ def _Gamma_rec_from_reports(finite_transition: dict[str, Any]) -> tuple[str, np.
     if gamma is None:
         return "unknown", None
     source = "finite_repair_transition_clock" if finite_transition.get("finite_transition_matrix_ready", False) else "diagnostic_proxy"
-    return source, np.asarray([[gamma]], dtype=float)
+    return source, np.asarray([[0.0, 1.0, gamma]], dtype=float)
 
 
 def _A_zeta_from_reports(finite_cert: dict[str, Any], scale: dict[str, Any]) -> tuple[str, float | None]:
@@ -561,26 +594,47 @@ def _rho_A_from_reports(finite_cert: dict[str, Any], ba_parent: dict[str, Any]) 
     values = []
     for row in rows:
         a = _float(row.get("a"))
-        base = _float(
-            row.get(
-                "rho_A",
-                row.get("rho_A_base", row.get("base_epsilon_cmi", row.get("B_A_mean"))),
-            )
-        )
+        base = _float(row.get("rho_A", row.get("rho_A_base")))
         if a is not None and base is not None:
-            values.append([a, abs(base)])
+            values.append([a, base])
     return ("diagnostic_proxy", np.asarray(values, dtype=float) if values else None)
 
 
-def _freezeout_from_reports(strict_neutral: dict[str, Any], scale: dict[str, Any]) -> tuple[str, dict[str, Any] | None]:
+def _freezeout_from_reports(
+    strict_neutral: dict[str, Any],
+    scale: dict[str, Any],
+    physical_scale_bridge: dict[str, Any],
+) -> tuple[str, dict[str, Any] | None]:
+    bridge_validation = validate_physical_scale_bridge_receipts(physical_scale_bridge)
+    if bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False):
+        return "neutral_bulk_freezeout", _freezeout_surface_from_scale_bridge(physical_scale_bridge)
     if strict_neutral.get("strict_neutral_bulk", False):
-        return "neutral_bulk_freezeout", {"source": "strict_neutral_bulk_report"}
+        cycle = strict_neutral.get("freezeout_cycle", strict_neutral.get("neutral_bulk_freezeout_cycle"))
+        surface = {"source": "strict_neutral_bulk_report"}
+        if cycle is not None:
+            surface["freezeout_cycle"] = cycle
+        return "neutral_bulk_freezeout", surface
     if scale.get("scale_compressed_operator_receipt", False):
         return "scale_compressed_24_round_finite_ladder", {
             "repair_rounds": scale.get("logical_repair_rounds"),
             "source": "scale_compressed_repair_report",
         }
     return "unknown", None
+
+
+def _freezeout_surface_from_scale_bridge(physical_scale_bridge: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "source": physical_scale_bridge.get("source") or "physical_scale_bridge_report",
+        "PHYSICAL_FREEZEOUT_SURFACE_RECEIPT": True,
+        "surface_mesh_hash": physical_scale_bridge.get("surface_mesh_hash"),
+        "clock_hash": physical_scale_bridge.get("clock_hash"),
+        "state_vector_hash": physical_scale_bridge.get("state_vector_hash"),
+        "normal_derivative_hash": physical_scale_bridge.get("normal_derivative_hash"),
+        "common_surface_passed": bool(physical_scale_bridge.get("common_surface_passed", False)),
+        "mode_dependent_freezeout_map": physical_scale_bridge.get("mode_dependent_freezeout_map"),
+        "claim_tier": physical_scale_bridge.get("claim_tier"),
+        "geometry_origin": physical_scale_bridge.get("geometry_origin"),
+    }
 
 
 def _cmb_source_provenance_from_contract(
@@ -732,19 +786,12 @@ def _source_reducer_row(
         return {
             "mode": "pooled_sufficient_statistics",
             "pooled_sufficient_statistics": True,
-            "units_validated": bool(report.get("units_validated", True)),
-            "coordinate_grid_validated": bool(report.get("coordinate_grid_validated", True)),
-            "coverage_validated": bool(report.get("coverage_validated", True)),
-            "duplicates_checked": bool(report.get("duplicates_checked", True)),
-            "interpolation_policy_frozen": bool(report.get("interpolation_policy_frozen", True)),
-            "covariance_validated": bool(report.get("covariance_validated", True)),
-            "shard_local_nonlinear_average": False,
-        }
-    if report_count <= 1 and source in FINITE_CMB_SOURCES.union(THEOREM_SIDE_SOURCES):
-        return {
-            "mode": "single_global_source",
-            "single_global_source": True,
-            "pooled_sufficient_statistics": False,
+            "units_validated": bool(report.get("units_validated", False)),
+            "coordinate_grid_validated": bool(report.get("coordinate_grid_validated", False)),
+            "coverage_validated": bool(report.get("coverage_validated", False)),
+            "duplicates_checked": bool(report.get("duplicates_checked", False)),
+            "interpolation_policy_frozen": bool(report.get("interpolation_policy_frozen", False)),
+            "covariance_validated": bool(report.get("covariance_validated", False)),
             "shard_local_nonlinear_average": False,
         }
     return {
@@ -752,6 +799,7 @@ def _source_reducer_row(
         "single_global_source": False,
         "pooled_sufficient_statistics": False,
         "shard_local_nonlinear_average": bool(report.get("shard_local_nonlinear_average", False)),
+        "report_count": report_count,
     }
 
 
@@ -774,7 +822,7 @@ def _rollup_mode(*reports: dict[str, Any]) -> str:
             return rollup
         if report.get("shard_local_any_rollup", False) or report.get("uses_shard_any_rollup", False):
             return "shard_any"
-    return "global"
+    return "missing"
 
 
 def _source_report_name_for_quantity(quantity: str, source: str, default_report_name: str) -> str:
@@ -862,6 +910,22 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     "parent_receipt": report.get(PARENT_RECEIPT),
                     "stress_energy_closure_receipt": report.get(STRESS_CLOSURE_RECEIPT),
                     "explicit_recipient_stress_receipt": report.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT),
+                    "exchange_current_closure_receipt": report.get(EXCHANGE_CURRENT_CLOSURE_RECEIPT),
+                    "physical_clock_receipt": (
+                        report.get("PHYSICAL_CLOCK_RECEIPT")
+                        or report.get("PHYSICAL_REPAIR_CLOCK_RECEIPT")
+                    ),
+                    "active_fiber_receipt": (
+                        report.get("ACTIVE_FIBER_RECEIPT")
+                        or report.get("ACTIVE_FIBER_RESPONSE_RECEIPT")
+                    ),
+                    "conserved_sector_decomposition_receipt": report.get(
+                        "CONSERVED_SECTOR_DECOMPOSITION_RECEIPT"
+                    ),
+                    "common_parent_response_pole_receipt": (
+                        report.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT")
+                        or report.get("COMMON_PARENT_RESPONSE_RECEIPT")
+                    ),
                     "gauge_independence_receipt": report.get(GAUGE_INDEPENDENCE_RECEIPT),
                     "causal_response_receipt": report.get(CAUSAL_RESPONSE_RECEIPT),
                     "refinement_convergence_receipt": report.get(REFINEMENT_CONVERGENCE_RECEIPT),
@@ -889,11 +953,28 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     "blockers": report.get("blockers") or [],
                 }
             )
+        if name == "physical_scale_bridge_report":
+            validation = validate_physical_scale_bridge_receipts(report)
+            row.update(
+                {
+                    "PHYSICAL_SCALE_BRIDGE_RECEIPT": validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT"),
+                    "PHYSICAL_K_RECEIPT": validation.get("PHYSICAL_K_RECEIPT"),
+                    "SOURCE_ANGULAR_MODE_RECEIPT": validation.get("SOURCE_ANGULAR_MODE_RECEIPT"),
+                    "CALIBRATED_A_EVOLUTION_RECEIPT": validation.get("CALIBRATED_A_EVOLUTION_RECEIPT"),
+                    "PHYSICAL_FREEZEOUT_SURFACE_RECEIPT": validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT"),
+                    "SCALE_BRIDGE_REFINEMENT_RECEIPT": validation.get("SCALE_BRIDGE_REFINEMENT_RECEIPT"),
+                    "NO_POSTHOC_CALIBRATION_RECEIPT": validation.get("NO_POSTHOC_CALIBRATION_RECEIPT"),
+                    "claim_tier": validation.get("claim_tier"),
+                    "geometry_origin": validation.get("geometry_origin"),
+                    "blockers": validation.get("blockers") or [],
+                }
+            )
         summary[name] = row
     return summary
 
 
 def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
+    scale_bridge_validation = validate_physical_scale_bridge_receipts(contract.physical_scale_bridge_receipts)
     return {
         "P_source": _theorem_constant_status(contract.P_source),
         "N_source": _theorem_constant_status(contract.N_source),
@@ -903,7 +984,7 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
         "ell_IR": _scalar_status(contract.ell_IR_source, contract.ell_IR_value, positive=True),
         "B_A_k_a": _array_status(contract.B_A_source, contract.B_A_k_a),
         "Gamma_rec_k_a": _array_status(contract.Gamma_rec_source, contract.Gamma_rec_k_a),
-        "rho_A_a": _array_status(contract.rho_A_source, contract.rho_A_a),
+        "rho_A_a": _array_status(contract.rho_A_source, contract.rho_A_a, positive_column=1),
         "freezeout_surface": {
             "source": contract.freezeout_source,
             "source_is_finite_cmb_source": contract.freezeout_source in FINITE_CMB_SOURCES,
@@ -911,7 +992,36 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
             "physical_gate_passed": (
                 contract.freezeout_source in FINITE_CMB_SOURCES
                 and isinstance(contract.freezeout_surface, dict)
+                and bool(scale_bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False))
+                and bool((contract.freezeout_surface or {}).get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False))
             ),
+        },
+        "physical_scale_bridge": {
+            "claim_tier": scale_bridge_validation.get("claim_tier"),
+            "geometry_origin": scale_bridge_validation.get("geometry_origin"),
+            "PHYSICAL_SCALE_BRIDGE_RECEIPT": bool(
+                scale_bridge_validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT", False)
+            ),
+            "PHYSICAL_K_RECEIPT": bool(scale_bridge_validation.get("PHYSICAL_K_RECEIPT", False)),
+            "SOURCE_ANGULAR_MODE_RECEIPT": bool(
+                scale_bridge_validation.get("SOURCE_ANGULAR_MODE_RECEIPT", False)
+            ),
+            "CALIBRATED_A_EVOLUTION_RECEIPT": bool(
+                scale_bridge_validation.get("CALIBRATED_A_EVOLUTION_RECEIPT", False)
+            ),
+            "PHYSICAL_FREEZEOUT_SURFACE_RECEIPT": bool(
+                scale_bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False)
+            ),
+            "SCALE_BRIDGE_REFINEMENT_RECEIPT": bool(
+                scale_bridge_validation.get("SCALE_BRIDGE_REFINEMENT_RECEIPT", False)
+            ),
+            "NO_POSTHOC_CALIBRATION_RECEIPT": bool(
+                scale_bridge_validation.get("NO_POSTHOC_CALIBRATION_RECEIPT", False)
+            ),
+            "physical_gate_passed": bool(
+                scale_bridge_validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT", False)
+            ),
+            "blockers": scale_bridge_validation.get("blockers") or [],
         },
         "cdm_limit_regression": {
             "passed": bool(contract.cdm_limit_regression_passed),
@@ -939,6 +1049,13 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
             "parent_receipt": bool(contract.finite_covariant_parent_receipt),
             "stress_energy_closure_receipt": bool(contract.stress_energy_closure_receipt),
             "explicit_recipient_stress_receipt": bool(contract.explicit_recipient_stress_receipt),
+            "exchange_current_closure_receipt": bool(contract.exchange_current_closure_receipt),
+            "physical_clock_receipt": bool(contract.physical_clock_receipt),
+            "active_fiber_receipt": bool(contract.active_fiber_receipt),
+            "conserved_sector_decomposition_receipt": bool(
+                contract.conserved_sector_decomposition_receipt
+            ),
+            "common_parent_response_pole_receipt": bool(contract.common_parent_response_pole_receipt),
             "gauge_independence_receipt": bool(contract.gauge_independence_receipt),
             "causal_response_receipt": bool(contract.causal_response_receipt),
             "refinement_convergence_receipt": bool(contract.refinement_convergence_receipt),
@@ -951,8 +1068,15 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
                 and contract.refinement_convergence_receipt
                 and (
                     not _array_has_positive(contract.Gamma_rec_k_a)
-                    or contract.explicit_recipient_stress_receipt
+                    or (
+                        contract.explicit_recipient_stress_receipt
+                        and contract.exchange_current_closure_receipt
+                    )
                 )
+                and contract.physical_clock_receipt
+                and contract.active_fiber_receipt
+                and contract.conserved_sector_decomposition_receipt
+                and contract.common_parent_response_pole_receipt
             ),
         },
         "frozen_likelihood_protocol": {
@@ -1002,9 +1126,16 @@ def _scalar_status(source: str, value: float | None, *, positive: bool = False) 
     }
 
 
-def _array_status(source: str, value: np.ndarray | None) -> dict[str, Any]:
+def _array_status(source: str, value: np.ndarray | None, *, positive_column: int | None = None) -> dict[str, Any]:
     array = None if value is None else np.asarray(value, dtype=float)
     finite = bool(array is not None and array.size and np.all(np.isfinite(array)))
+    positive_ok = True
+    if finite and positive_column is not None:
+        positive_ok = bool(
+            array.ndim == 2
+            and array.shape[1] > positive_column
+            and np.all(array[:, positive_column] > 0.0)
+        )
     source_ok = str(source) in FINITE_CMB_SOURCES
     return {
         "source": source,
@@ -1012,7 +1143,9 @@ def _array_status(source: str, value: np.ndarray | None) -> dict[str, Any]:
         "diagnostic_value_present": finite,
         "row_count": int(array.shape[0]) if finite and array.ndim >= 1 else 0,
         "column_count": int(array.shape[1]) if finite and array.ndim >= 2 else (1 if finite else 0),
-        "physical_gate_passed": bool(source_ok and finite),
+        "positive_column": positive_column,
+        "positive_values": bool(positive_ok) if positive_column is not None else None,
+        "physical_gate_passed": bool(source_ok and finite and positive_ok),
     }
 
 
@@ -1049,6 +1182,9 @@ def _physical_cmb_promotion_blockers(
         blockers.append("B_A_diagnostic_rows_not_physical_kernel")
     if _diagnostic_present_not_physical(input_status, "rho_A_a"):
         blockers.append("rho_A_diagnostic_rows_not_physical_source")
+    rho_status = input_status.get("rho_A_a") or {}
+    if rho_status.get("positive_values") is False:
+        blockers.append("rho_A_nonpositive_source_values")
     if finite_collar_boltzmann:
         if not bool(finite_collar_boltzmann.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False)):
             blockers.append("finite_collar_boltzmann_physical_certificate_false")
@@ -1096,6 +1232,24 @@ def _physical_cmb_source_readiness(
             "stress_energy_closure_receipt": bool(finite_parent.get(STRESS_CLOSURE_RECEIPT, False)),
             "explicit_recipient_stress_receipt": bool(
                 finite_parent.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT, False)
+            ),
+            "exchange_current_closure_receipt": bool(
+                finite_parent.get(EXCHANGE_CURRENT_CLOSURE_RECEIPT, False)
+            ),
+            "physical_clock_receipt": bool(
+                finite_parent.get("PHYSICAL_CLOCK_RECEIPT", False)
+                or finite_parent.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+            ),
+            "active_fiber_receipt": bool(
+                finite_parent.get("ACTIVE_FIBER_RECEIPT", False)
+                or finite_parent.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+            ),
+            "conserved_sector_decomposition_receipt": bool(
+                finite_parent.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+            ),
+            "common_parent_response_pole_receipt": bool(
+                finite_parent.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+                or finite_parent.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
             ),
             "gauge_independence_receipt": bool(finite_parent.get(GAUGE_INDEPENDENCE_RECEIPT, False)),
             "causal_response_receipt": bool(finite_parent.get(CAUSAL_RESPONSE_RECEIPT, False)),
@@ -1165,6 +1319,21 @@ def _physical_cmb_next_steps(blockers: list[str]) -> list[dict[str, str]]:
         ),
         "recipient_stress_missing_for_nonzero_Gamma_rec": (
             "Add explicit recipient stress when Gamma_rec is nonzero; repair exchange cannot disappear into a scalar sink."
+        ),
+        "exchange_current_closure_missing_for_nonzero_Gamma_rec": (
+            "Add equal-and-opposite exchange-current closure for the nonzero repair exchange branch."
+        ),
+        "physical_clock_missing_for_promoted_Gamma_rec": (
+            "Certify the physical clock that converts repair-step decay into a Gamma_rec(k,a) kernel."
+        ),
+        "active_fiber_missing_for_promoted_Gamma_rec": (
+            "Certify the active fiber used by the promoted Gamma_rec response calculation."
+        ),
+        "conserved_sector_decomposition_missing_for_promoted_Gamma_rec": (
+            "Certify the conserved-sector decomposition for the promoted repair-response kernel."
+        ),
+        "common_parent_response_pole_missing_for_promoted_Gamma_rec": (
+            "Certify the common-parent response pole before promoting gamma_repair_step to Gamma_rec."
         ),
         "gauge_independence_not_certified": (
             "Certify B_A(k,a) with the gauge-invariant baryon density measured in the anomaly frame."
@@ -1307,6 +1476,34 @@ def _physical_cmb_frontier_gate_rows(
                 or finite_parent.get("explicit_recipient_stress_receipt", False)
             ),
             "detail": f"Gamma_rec_nonzero={_array_has_positive(contract.Gamma_rec_k_a)}",
+        },
+        {
+            "gate": "exchange_current_closure_for_nonzero_Gamma_rec",
+            "passed": bool(
+                (not _array_has_positive(contract.Gamma_rec_k_a))
+                or finite_parent.get("exchange_current_closure_receipt", False)
+            ),
+            "detail": f"Gamma_rec_nonzero={_array_has_positive(contract.Gamma_rec_k_a)}",
+        },
+        {
+            "gate": "physical_clock_for_Gamma_rec",
+            "passed": bool(contract.physical_clock_receipt),
+            "detail": "repair-step transition rate has a certified physical clock",
+        },
+        {
+            "gate": "active_fiber_for_Gamma_rec",
+            "passed": bool(contract.active_fiber_receipt),
+            "detail": "Gamma_rec response is calculated on the certified active fiber",
+        },
+        {
+            "gate": "conserved_sector_decomposition_for_Gamma_rec",
+            "passed": bool(contract.conserved_sector_decomposition_receipt),
+            "detail": "repair exchange is decomposed against the conserved sectors before promotion",
+        },
+        {
+            "gate": "common_parent_response_pole_for_Gamma_rec",
+            "passed": bool(contract.common_parent_response_pole_receipt),
+            "detail": "response pole is read in a common finite parent",
         },
         {
             "gate": "gauge_independent_B_A",
@@ -1499,6 +1696,11 @@ def _physical_cmb_frontier_gap_rows(
                     "finite_covariant_parent_receipt_missing",
                     "stress_energy_closure_not_certified",
                     "recipient_stress_missing_for_nonzero_Gamma_rec",
+                    "exchange_current_closure_missing_for_nonzero_Gamma_rec",
+                    "physical_clock_missing_for_promoted_Gamma_rec",
+                    "active_fiber_missing_for_promoted_Gamma_rec",
+                    "conserved_sector_decomposition_missing_for_promoted_Gamma_rec",
+                    "common_parent_response_pole_missing_for_promoted_Gamma_rec",
                     "gauge_independence_not_certified",
                     "causal_response_not_certified",
                     "refinement_convergence_not_certified",

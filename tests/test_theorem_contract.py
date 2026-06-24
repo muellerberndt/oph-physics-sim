@@ -70,7 +70,81 @@ def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contrac
     assert report["stages"]["L4_support_visible_bw_covariance"]["passed"] is False
     assert report["finite_lorentz_theorem_contract_receipt"] is False
     assert report["paper_faithful_observer_spacetime_emergence_receipt"] is False
+    assert report["paper_geometric_branch_consensus_bulk_emergence_receipt"] is False
     assert "L2_endogenous_modular_generator" in report["blockers"]
+
+
+def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_json(
+        run / "emergence_status_report.json",
+        {
+            "BW_KMS_BRANCH_REPLAY_RECEIPT": True,
+            "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": False,
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": False,
+            "transition_primary_source": "kms_collar_transport_response",
+            "transition_selected_label": "2pi",
+            "transition_two_pi_selected_by_primary": True,
+        },
+    )
+    _write_json(
+        run / "paper_3d_bulk_chart_report.json",
+        {
+            "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": True,
+            "paper_theorem_3d_bulk_chart_receipt": True,
+            "declared_bw_2pi_cap_flow_receipt": True,
+            "bw_2pi_cap_flow_receipt": True,
+            "bw_2pi_cap_flow_source": "declared_kms_collar_transport_response",
+            "lorentz_algebra_receipt": True,
+        },
+    )
+    _write_json(run / "conformal_h3_spatial_chart_report.json", {"lorentz_algebra_receipt": True})
+    _write_json(
+        run / "modular_response_h3_report.json",
+        {
+            "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+            "h3_response_stage_gates": {
+                "signal_gate": True,
+                "geometry_gate": True,
+                "aggregate_wrong_scale_gate": True,
+                "material_feature_gate": True,
+            },
+        },
+    )
+    _write_json(run / "observer_chart_object_h3_report.json", {"OBJECT_BULK_POPULATION_RECEIPT": True})
+    _write_json(
+        run / "observer_modular_experience_report.json",
+        {"OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True},
+    )
+    (run / "observer_views.jsonl").write_text(
+        json.dumps(
+            {
+                "view_type": "patch_observer",
+                "observer_id": 1,
+                "support_nodes": [1, 2],
+                "visible_readout_hash": "abc",
+                "observer_relative_times": [0.1],
+                "transition_history_histograms": {"transition_history_key": {"1": 1.0}},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
+    assert report["paper_geometric_branch_lorentz_contract_receipt"] is True
+    assert report["paper_geometric_branch_observer_spacetime_emergence_receipt"] is True
+    assert report["paper_geometric_branch_consensus_bulk_emergence_receipt"] is True
+    assert report["simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt"] is True
+    assert report["simulation_matches_full_oph_spacetime_bulk_prediction_receipt"] is False
+    assert report["paper_geometric_branch_blockers"] == []
+    assert "L2_endogenous_modular_generator" in report["blockers"]
+    assert "L3_kms_modular_clock_fit" in report["blockers"]
 
 
 def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp_path: Path) -> None:

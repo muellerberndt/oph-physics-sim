@@ -50,19 +50,21 @@ def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None
     relative_error = abs(float(spec.kappa_rep) - target_kappa) / target_kappa
     controls = _wrong_kappa_controls(delta_p=delta_p, target_gap=target_gap)
     semigroup_controls_passed = bool(controls["target_gap_beats_wrong_kappas"])
+    matrix_audit = _matrix_source_audit(spec.matrix_source)
     eligible = bool(
         spec.finite_lattice_derived
         and spec.source == "finite_state_transition_matrix"
+        and matrix_audit["matrix_loaded"]
         and constants_zero
         and centered_scalar
         and contractive
-        and semigroup_controls_passed
         and relative_error <= 0.05
     )
     report = {
         "mode": "oph_scalar_repair_semigroup_gap_audit_v0",
         "source": spec.source,
         "matrix_source": spec.matrix_source,
+        "matrix_source_audit": matrix_audit,
         "dimension": int(spec.dimension),
         "centered_subspace_dimension": int(spec.dimension - 1),
         "target": {
@@ -94,13 +96,14 @@ def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None
         "eligible_for_repair_clock_certificate": eligible,
         "repair_clock_certificate": eligible,
         "SEMIGROUP_TARGET_RECEIPT": bool(
-            constants_zero and centered_scalar and contractive and relative_error <= 1.0e-12
+            eligible and constants_zero and centered_scalar and contractive and relative_error <= 1.0e-12
         ),
+        "claim_class": "COMPUTER_ASSISTED_THEOREM" if eligible else "DIAGNOSTIC_PROXY",
         "claim_boundary": (
             "Scalar repair-semigroup gap audit for the exact OPH CMB branch. "
-            "A declared Euler target can verify the algebraic normalization path, "
-            "but only a source='finite_state_transition_matrix' report with "
-            "finite_lattice_derived=true is eligible to close the finite repair-clock certificate."
+            "A declared Euler target is diagnostic only. Certificate eligibility requires a loaded "
+            "finite transition matrix artifact, finite_lattice_derived=true, and independent clock "
+            "normalization; caller-supplied kappa values are never theorem receipts."
         ),
     }
     return report
@@ -163,6 +166,46 @@ def _wrong_kappa_controls(*, delta_p: float, target_gap: float) -> dict[str, Any
         "rows": rows,
         "best_control": best["name"],
         "target_gap_beats_wrong_kappas": best["name"] == "correct_e",
+        "claim_boundary": "Diagnostic target comparison only; this control does not certify the source of kappa_rep.",
+    }
+
+
+def _matrix_source_audit(matrix_source: str | None) -> dict[str, Any]:
+    if not matrix_source:
+        return {
+            "matrix_loaded": False,
+            "matrix_source_sha256": None,
+            "matrix_keys": [],
+            "reason": "matrix_source_missing",
+        }
+    path = Path(matrix_source)
+    if not path.exists():
+        return {
+            "matrix_loaded": False,
+            "matrix_source_sha256": None,
+            "matrix_keys": [],
+            "reason": "matrix_source_not_found",
+        }
+    import hashlib
+
+    digest = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    keys: list[str] = []
+    try:
+        with np.load(path, allow_pickle=False) as data:
+            keys = sorted(str(key) for key in data.files)
+            matrix_loaded = bool(keys)
+    except Exception as exc:  # pragma: no cover - defensive report path
+        return {
+            "matrix_loaded": False,
+            "matrix_source_sha256": digest,
+            "matrix_keys": keys,
+            "reason": f"matrix_load_failed:{type(exc).__name__}",
+        }
+    return {
+        "matrix_loaded": matrix_loaded,
+        "matrix_source_sha256": digest,
+        "matrix_keys": keys,
+        "reason": "loaded" if matrix_loaded else "matrix_empty",
     }
 
 

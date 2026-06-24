@@ -10,6 +10,8 @@ from typing import Any
 
 import numpy as np
 
+from oph_fpe.ensembles.quotient_ensemble import claim_tier_gate, fail_closed_promotion_receipts
+
 
 CLAIM_TIERS: dict[str, str] = {
     "E0": "seed noise, proposal noise, repair jitter",
@@ -158,7 +160,13 @@ def harmonic_gaussian_reference_report(
         "claim_tier": spec.claim_tier,
         "claim_tier_meaning": CLAIM_TIERS[spec.claim_tier],
         "ensemble_spec": spec.as_jsonable(),
+        "claim_tier_gate": claim_tier_gate(
+            claim_tier=spec.claim_tier,
+            explicit_nonclaims=spec.explicit_nonclaims,
+        ),
         "seed_receipt": {
+            "claim_tier": "E0",
+            "claim_tier_meaning": CLAIM_TIERS["E0"],
             "seed_key_hash": stable_hash({"seed_key": seed_key}),
             "seed_not_in_ensemble_spec": True,
         },
@@ -179,10 +187,18 @@ def harmonic_gaussian_reference_report(
             "integrated_autocorrelation_time": 1.0,
         },
         "refinement_diagnostics": refinement,
-        "partition_randomness": {
+        "deterministic_replay": {
             "event_label_schema": spec.rng_event_label_schema,
-            "partition_replay_receipt": partition_replay,
+            "SEMANTIC_STREAM_DETERMINISTIC_REPLAY": partition_replay,
+            "PATHWISE_PARTITION_INVARIANCE_RECEIPT": False,
+            "partition_count_argument_used_for_path_scheduling": False,
             "worker_thread_ids_excluded": True,
+        },
+        "partition_randomness": {
+            "receipt_renamed_to": "SEMANTIC_STREAM_DETERMINISTIC_REPLAY",
+            "partition_replay_receipt": partition_replay,
+            "PATHWISE_PARTITION_INVARIANCE_RECEIPT": False,
+            "overstatement_fixed": True,
         },
         "reference_theory_regression_receipt": bool(
             partition_replay
@@ -193,6 +209,10 @@ def harmonic_gaussian_reference_report(
         "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": False,
         "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": False,
         "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": False,
+        "quotient_ensemble_receipts": fail_closed_promotion_receipts(
+            claim_tier=spec.claim_tier,
+            baseline_kind="free_scalar_harmonic_gaussian_reference",
+        ),
         "explicit_nonclaims": list(spec.explicit_nonclaims),
     }
 
@@ -261,6 +281,10 @@ def u1_lattice_gauge_reference_report(
         "mode": "reference_vacuum_compact_u1_lattice_gauge",
         "claim_tier": "E1",
         "claim_tier_meaning": CLAIM_TIERS["E1"],
+        "claim_tier_gate": claim_tier_gate(
+            claim_tier="E1",
+            explicit_nonclaims=NONCLAIMS,
+        ),
         "lattice_gauge_stage": {
             "compact_u1_reference": True,
             "su2_reference": False,
@@ -284,18 +308,32 @@ def u1_lattice_gauge_reference_report(
             "autocorrelation_receipt": bool(tau_int is not None and np.isfinite(tau_int)),
             "diagnostic_only_not_stationary_law_proof": True,
         },
-        "partition_randomness": {
+        "canonical_serial_chain_replay": {
             "event_label_schema": (
                 "PRF(seed_key, ensemble_id='compact_u1_wilson_reference_v1', sweep, x, y, mu, draw); "
                 "canonical serial order is used for noncommuting local updates"
             ),
-            "partition_replay_receipt": bool(np.array_equal(angles, replay_angles) and trace == replay_trace),
+            "CANONICAL_SERIAL_CHAIN_REPLAY": bool(np.array_equal(angles, replay_angles) and trace == replay_trace),
+            "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": False,
+            "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": False,
+            "PATHWISE_PARTITION_INVARIANCE_RECEIPT": False,
+            "noncommuting_link_updates": True,
             "worker_thread_ids_excluded": True,
+        },
+        "partition_randomness": {
+            "receipt_renamed_to": "CANONICAL_SERIAL_CHAIN_REPLAY",
+            "partition_replay_receipt": bool(np.array_equal(angles, replay_angles) and trace == replay_trace),
+            "PATHWISE_PARTITION_INVARIANCE_RECEIPT": False,
+            "overstatement_fixed": True,
         },
         "reference_theory_regression_receipt": bool(np.isfinite(trace[-1])),
         "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": False,
         "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": False,
         "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": False,
+        "quotient_ensemble_receipts": fail_closed_promotion_receipts(
+            claim_tier="E1",
+            baseline_kind="compact_u1_lattice_gauge_reference",
+        ),
         "explicit_nonclaims": list(NONCLAIMS),
         "final_state_hash": stable_hash({"angles": np.round(angles, 15).tolist()}),
     }
@@ -362,14 +400,21 @@ def write_reference_vacuum_baseline_report(
         "mode": "reference_vacuum_baseline_bundle",
         "claim_tier": "E1",
         "claim_tier_meaning": CLAIM_TIERS["E1"],
+        "claim_tier_gate": claim_tier_gate(claim_tier="E1", explicit_nonclaims=NONCLAIMS),
         "free_scalar_gaussian": free_scalar,
         "compact_u1_lattice_gauge": u1,
         "receipt_contract": {
             "ensemble_definition": True,
-            "partition_invariant_randomness": bool(
-                free_scalar["partition_randomness"]["partition_replay_receipt"]
-                and u1["partition_randomness"]["partition_replay_receipt"]
+            "semantic_stream_deterministic_replay": bool(
+                free_scalar["deterministic_replay"]["SEMANTIC_STREAM_DETERMINISTIC_REPLAY"]
             ),
+            "canonical_serial_chain_replay": bool(
+                u1["canonical_serial_chain_replay"]["CANONICAL_SERIAL_CHAIN_REPLAY"]
+            ),
+            "partition_invariant_randomness": False,
+            "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": False,
+            "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": False,
+            "PATHWISE_PARTITION_INVARIANCE_RECEIPT": False,
             "thermalization_autocorrelation": u1["thermalization_autocorrelation"],
             "smoothing_provenance": free_scalar["smoothing_provenance"],
             "finite_volume_lattice_spacing": free_scalar["refinement_diagnostics"],
@@ -381,6 +426,10 @@ def write_reference_vacuum_baseline_report(
         "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": False,
         "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": False,
         "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": False,
+        "quotient_ensemble_receipts": fail_closed_promotion_receipts(
+            claim_tier="E1",
+            baseline_kind="reference_vacuum_baseline_bundle",
+        ),
         "explicit_nonclaims": list(NONCLAIMS),
     }
     report_path = out / "reference_vacuum_baseline_report.json"

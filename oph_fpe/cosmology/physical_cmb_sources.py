@@ -26,11 +26,10 @@ from oph_fpe.cosmology.finite_covariant_parent import (
 def write_physical_cmb_source_readiness_report(run_dirs: list[Path], out_dir: Path) -> dict[str, Any]:
     """Build and audit the source-side artifacts needed by physical-CMB gates.
 
-    This function is intentionally fail-closed. It may synthesize the finite
-    covariant collar-packet parent artifact from upstream finite reports, but
-    the artifact only passes if those reports already carry the required
-    theorem-grade, physical-kernel, refinement, stress, CDM, likelihood, and
-    frozen-hash receipts.
+    This function is intentionally fail-closed. It writes a readiness summary
+    when no primitive parent artifact exists; it does not synthesize a
+    parent-shaped model. A parent passes only when an explicit finite covariant
+    collar-packet parent artifact is supplied and independently verified.
     """
 
     roots = _unique_roots([Path(path) for path in run_dirs])
@@ -39,58 +38,81 @@ def write_physical_cmb_source_readiness_report(run_dirs: list[Path], out_dir: Pa
 
     existing_parent = _first_json([*roots, out], "finite_covariant_collar_packet_parent_report.json")
     existing_artifact = _first_json([*roots, out], "finite_covariant_collar_packet_parent_artifact.json")
-    existing_parent_generated = bool(
-        existing_parent.get("source_readiness_builder_generated", False)
-        or ((existing_artifact.get("manifest") or {}).get("builder") == "physical_cmb_source_readiness_builder_v0")
+    existing_parent_generated = bool(existing_parent.get("source_readiness_builder_generated", False))
+    existing_artifact_generated = bool(
+        (existing_artifact.get("manifest") or {}).get("builder") == "physical_cmb_source_readiness_builder_v0"
     )
     parent_report_written = False
     parent_artifact_status: dict[str, Any]
-    if existing_parent and not existing_parent_generated:
-        parent_report = existing_parent
-        parent_artifact_status = {
-            "existing_parent_report_used": True,
-            "candidate_artifact_written": False,
-            "source_blockers": [],
-        }
-    else:
-        artifact, parent_artifact_status = build_finite_covariant_parent_artifact_from_reports(roots)
-        (out / "finite_covariant_collar_packet_parent_artifact.json").write_text(
-            json.dumps(artifact, indent=2, default=str),
-            encoding="utf-8",
-        )
-        parent_report = finite_covariant_collar_packet_parent_report(artifact)
-        parent_report["source_readiness_builder_generated"] = True
-        parent_report["source_gate_status"] = parent_artifact_status.get("source_gate_status") or {}
+    if existing_artifact and not existing_artifact_generated:
+        parent_report = finite_covariant_collar_packet_parent_report(existing_artifact)
+        parent_report_written = True
         (out / "finite_covariant_collar_packet_parent_report.json").write_text(
             json.dumps(parent_report, indent=2, default=str),
             encoding="utf-8",
         )
-        parent_report_written = True
+        parent_artifact_status = {
+            "existing_parent_artifact_used": True,
+            "existing_parent_report_used": False,
+            "candidate_artifact_written": False,
+            "readiness_summary_written": False,
+            "source_blockers": [],
+        }
+    elif existing_parent and not existing_parent_generated:
+        parent_report = existing_parent
+        parent_artifact_status = {
+            "existing_parent_artifact_used": False,
+            "existing_parent_report_used": True,
+            "candidate_artifact_written": False,
+            "readiness_summary_written": False,
+            "source_blockers": ["finite_parent_model_artifact_missing_for_report"],
+        }
+        parent_report = dict(parent_report)
+        parent_report["blockers"] = _unique_strings(
+            [*list(parent_report.get("blockers") or []), "finite_parent_model_artifact_missing_for_report"]
+        )
+        parent_report[PARENT_RECEIPT] = False
+    else:
+        summary, parent_artifact_status = build_finite_parent_readiness_summary_from_reports(roots)
+        (out / "finite_parent_readiness_summary.json").write_text(
+            json.dumps(summary, indent=2, default=str),
+            encoding="utf-8",
+        )
+        parent_report = _missing_parent_report(summary)
 
     source_roots = _unique_roots([*roots, out])
     boltzmann = write_oph_boltzmann_input_report(source_roots, out)
     finite_collar = write_finite_collar_boltzmann_bundle_report(source_roots, out)
     finite_collar_physical = bool(finite_collar.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False))
-    boltzmann_missing = [] if finite_collar_physical else list(
+    boltzmann_diagnostic_missing = [] if finite_collar_physical else list(
         ((boltzmann.get("readiness") or {}).get("missing_gates") or [])
+    )
+    finite_collar_physical_missing = list(
+        ((finite_collar.get("readiness") or {}).get("physical_missing_gates") or [])
     )
     blockers = _unique_strings(
         [
             *list(parent_artifact_status.get("source_blockers") or []),
             *list(parent_report.get("blockers") or []),
-            *boltzmann_missing,
-            *list(((finite_collar.get("readiness") or {}).get("physical_missing_gates") or [])),
+            *[
+                f"finite_collar_boltzmann_missing_{gate}"
+                for gate in finite_collar_physical_missing
+            ],
         ]
     )
     report = {
         "mode": "physical_cmb_source_readiness_builder_v0",
         "run_dirs": [str(path) for path in roots],
         "report_dir": str(out),
-        "finite_covariant_parent": {
+            "finite_covariant_parent": {
+            "existing_parent_artifact_used": bool(
+                parent_artifact_status.get("existing_parent_artifact_used", False)
+            ),
             "existing_parent_report_used": bool(
                 parent_artifact_status.get("existing_parent_report_used", False)
             ),
             "parent_report_written": parent_report_written,
+            "readiness_summary_written": bool(parent_artifact_status.get("readiness_summary_written", False)),
             "candidate_artifact_written": bool(parent_artifact_status.get("candidate_artifact_written", False)),
             "parent_receipt": bool(parent_report.get(PARENT_RECEIPT, False)),
             "stress_energy_closure_receipt": bool(parent_report.get(STRESS_CLOSURE_RECEIPT, False)),
@@ -127,7 +149,8 @@ def write_physical_cmb_source_readiness_report(run_dirs: list[Path], out_dir: Pa
                 (boltzmann.get("readiness") or {}).get("physical_prediction_ready")
             ),
             "missing_gates": list((boltzmann.get("readiness") or {}).get("missing_gates") or []),
-            "hard_blocking_missing_gates": boltzmann_missing,
+            "diagnostic_missing_gates": boltzmann_diagnostic_missing,
+            "hard_blocking_missing_gates": [],
         },
         "finite_collar_boltzmann_bundle": {
             "written": True,
@@ -143,6 +166,10 @@ def write_physical_cmb_source_readiness_report(run_dirs: list[Path], out_dir: Pa
             "physical_missing_gates": list(
                 (finite_collar.get("readiness") or {}).get("physical_missing_gates") or []
             ),
+            "hard_blocking_missing_gates": [
+                f"finite_collar_boltzmann_missing_{gate}"
+                for gate in finite_collar_physical_missing
+            ],
         },
         "gate_summary": {
             "finite_covariant_source_parent": bool(parent_report.get(PARENT_RECEIPT, False)),
@@ -179,7 +206,7 @@ def write_physical_cmb_source_readiness_report(run_dirs: list[Path], out_dir: Pa
     return report
 
 
-def build_finite_covariant_parent_artifact_from_reports(run_dirs: list[Path]) -> tuple[dict[str, Any], dict[str, Any]]:
+def build_finite_parent_readiness_summary_from_reports(run_dirs: list[Path]) -> tuple[dict[str, Any], dict[str, Any]]:
     roots = _unique_roots([Path(path) for path in run_dirs])
     reports = {
         "finite_transition": _first_json(roots, "finite_repair_transition_matrix_report.json"),
@@ -263,33 +290,30 @@ def build_finite_covariant_parent_artifact_from_reports(run_dirs: list[Path]) ->
         official_ready=official_ready,
         frozen_ready=frozen_ready,
     )
-    packets = []
-    if anomaly_rho is not None:
-        packets.append({"label": "anomaly", "rho": float(abs(anomaly_rho)), "u_mu": [1.0, 0.0, 0.0, 0.0]})
-        packets.append({"label": "recipient", "rho": float(max(abs(anomaly_rho) * 0.5, 1.0e-30)), "u_mu": [1.0, 0.0, 0.0, 0.0]})
-    artifact = {
+    source_blockers = _unique_strings(
+        [
+            "explicit_finite_covariant_parent_artifact_missing",
+            *source_blockers,
+        ]
+    )
+    summary = {
+        "mode": "finite_parent_readiness_summary_from_reports_v0",
+        "not_a_model_artifact": True,
+        "not_a_verification_report": True,
+        "physical_parent_builder": False,
         "manifest": {
             "source_hash": source_hash,
             "regulator_id": _regulator_id(reports),
             "parent_theorem_version": "finite_covariant_collar_packet_parent_from_sources_v1",
             "builder": "physical_cmb_source_readiness_builder_v0",
+            "promotion_allowed": False,
         },
-        "packets": {"states": packets},
-        "repair": {
-            "Gamma_rec": float(gamma) if _finite(gamma) else None,
-            "detailed_balance_residual": 0.0 if transition_ready and stress_ready else 1.0,
-        },
-        "stress": {"stress_energy_closure_residual": 0.0 if stress_ready else 1.0},
-        "causal_response": _causal_response(causal_ready),
-        "gauge": {"newtonian_synchronous_agree_within_error": gauge_ready},
-        "refinement": {"stress_and_response_converge": refinement_ready},
-        "cdm_limit": {"CDM_LIMIT_RECOVERY_RECEIPT": cdm_ready},
-        "frozen_run": {
-            "source_hash": source_hash,
-            "solver_hash": solver_hash if frozen_ready else None,
-            "likelihood_hash": likelihood_hash if frozen_ready else None,
-            "mutable_source_artifacts": not frozen_ready,
-        },
+        "gamma_repair_step": float(gamma) if _finite(gamma) else None,
+        "Gamma_rec": None,
+        "Gamma_rec_status": "UNPROMOTED_REPAIR_STEP_DIAGNOSTIC",
+        "finite_covariant_parent_artifact": None,
+        "finite_covariant_parent_verification_report": None,
+        "source_blockers": source_blockers,
         "source_gate_status": {
             "finite_transition_ready": transition_ready,
             "finite_certificate_ready": finite_certificate_ready,
@@ -302,13 +326,53 @@ def build_finite_covariant_parent_artifact_from_reports(run_dirs: list[Path]) ->
             "frozen_likelihood_protocol_ready": frozen_ready,
         },
     }
-    return artifact, {
+    return summary, {
         "existing_parent_report_used": False,
-        "candidate_artifact_written": True,
+        "candidate_artifact_written": False,
+        "readiness_summary_written": True,
         "source_hash": source_hash,
         "source_blockers": source_blockers,
         "source_report_presence": {name: bool(report) for name, report in reports.items()},
-        "source_gate_status": artifact["source_gate_status"],
+        "source_gate_status": summary["source_gate_status"],
+    }
+
+
+def build_finite_covariant_parent_artifact_from_reports(run_dirs: list[Path]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Compatibility wrapper returning a non-promotable readiness summary.
+
+    This function no longer builds a parent-shaped JSON artifact from downstream
+    reports. Call ``build_finite_parent_readiness_summary_from_reports`` for the
+    explicit API name.
+    """
+
+    summary, status = build_finite_parent_readiness_summary_from_reports(run_dirs)
+    status = dict(status)
+    status["candidate_artifact_written"] = False
+    status["compatibility_wrapper"] = True
+    return summary, status
+
+
+def _missing_parent_report(summary: dict[str, Any]) -> dict[str, Any]:
+    blockers = _unique_strings(
+        [
+            "explicit_finite_covariant_parent_artifact_missing",
+            *list(summary.get("source_blockers") or []),
+        ]
+    )
+    source_hash = ((summary.get("manifest") or {}).get("source_hash")) if isinstance(summary.get("manifest"), dict) else None
+    return {
+        "mode": "finite_covariant_collar_packet_parent_missing_v0",
+        PARENT_RECEIPT: False,
+        STRESS_CLOSURE_RECEIPT: False,
+        EXPLICIT_RECIPIENT_STRESS_RECEIPT: False,
+        GAUGE_INDEPENDENCE_RECEIPT: False,
+        CAUSAL_RESPONSE_RECEIPT: False,
+        REFINEMENT_CONVERGENCE_RECEIPT: False,
+        FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT: False,
+        "source_hash": source_hash,
+        "solver_hash": None,
+        "likelihood_hash": None,
+        "blockers": blockers,
     }
 
 
@@ -343,20 +407,28 @@ def _source_blockers(**checks: bool) -> list[str]:
 
 
 def _causal_response(ready: bool) -> dict[str, Any]:
-    if not ready:
-        return {"characteristic_speed_bound": 2.0}
     return {
-        "characteristic_speed_bound": 1.0,
-        "kinetic_matrix": [[1.0]],
-        "damping_matrix": [[1.0]],
-        "propagation_matrix": [[1.0]],
-        "source_matrix": [[1.0]],
-        "output_matrix": [[1.0]],
+        "characteristic_speed_bound": None,
+        "synthetic_placeholder": True,
+        "source_ready_diagnostic": bool(ready),
     }
 
 
 def _source_hash(reports: dict[str, dict[str, Any]]) -> str:
-    payload = json.dumps(reports, sort_keys=True, default=str).encode("utf-8")
+    source_side_names = (
+        "finite_transition",
+        "finite_certificate",
+        "B_A_kernel",
+        "B_A_kernel_refinement",
+        "b_a_parent",
+        "scale_compressed",
+        "strict_neutral",
+    )
+    payload = json.dumps(
+        {name: reports.get(name, {}) for name in source_side_names},
+        sort_keys=True,
+        default=str,
+    ).encode("utf-8")
     return f"sha256:{sha256(payload).hexdigest()}"
 
 
@@ -391,15 +463,15 @@ def _anomaly_rho(finite_certificate: dict[str, Any], ba_parent: dict[str, Any]) 
     if rho is not None:
         arr = np.asarray(rho, dtype=float)
         if arr.ndim == 1 and arr.size:
-            return float(abs(arr[-1]))
+            return float(arr[-1])
         if arr.ndim >= 2 and arr.shape[0] and arr.shape[1] >= 2:
-            return float(abs(arr[0, 1]))
+            return float(arr[0, 1])
     for row in ba_parent.get("rows") or ba_parent.get("observer_view_rows") or []:
         if not isinstance(row, dict):
             continue
         value = _float(row.get("rho_A", row.get("rho_A_base", row.get("base_epsilon_cmi"))))
         if value is not None:
-            return float(abs(value))
+            return float(value)
     return None
 
 

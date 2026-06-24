@@ -14,6 +14,7 @@ from oph_fpe.cosmology.oph_screen_power import (
     screen_power_fit_from_spectrum,
     write_oph_screen_power_report,
 )
+from oph_fpe.cosmology.screen_spectrum import red_tilt_slope_check, screen_precision_eigenvalue
 
 
 def test_red_eta_r_makes_D_ell_red_not_blue():
@@ -26,6 +27,8 @@ def test_red_eta_r_makes_D_ell_red_not_blue():
 
     assert abs(flat_slope) < 0.01
     assert red_slope < -0.03
+    assert red_tilt_slope_check(theta=0.035)["red_tilt_sign_receipt"] is True
+    assert np.isclose(screen_precision_eigenvalue(12.0, 0.0), 12.0 * 13.0)
 
 
 def test_screen_power_fit_recovers_eta_convention():

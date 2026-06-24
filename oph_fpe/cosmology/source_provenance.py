@@ -31,8 +31,15 @@ THEOREM_SIDE_PROVENANCE_SOURCES = {
 
 FORBIDDEN_SOURCE_KINDS = {
     "diagnostic_proxy",
+    "measurement",
     "measurement_fit",
+    "measurement_calibrated",
+    "residual_fit",
+    "likelihood",
     "cmb_likelihood_fit",
+    "posterior",
+    "posterior_selected",
+    "fitted_parameter",
     "shard_local_average",
 }
 
@@ -44,6 +51,10 @@ POOLED_REDUCER_CHECKS = (
     "interpolation_policy_frozen",
     "covariance_validated",
 )
+
+TRANSITIVE_SOURCE_ANCESTRY_RECEIPT = "TRANSITIVE_SOURCE_ANCESTRY_RECEIPT"
+HERMETIC_READ_SET_RECEIPT = "HERMETIC_READ_SET_RECEIPT"
+SOURCE_MODEL_FREEZE_RECEIPT = "SOURCE_MODEL_FREEZE_RECEIPT"
 
 
 def certify_cmb_source_provenance(
@@ -79,6 +90,7 @@ def certify_cmb_source_provenance(
     blockers.extend(_graph_blockers(node_by_id))
 
     contradiction_free = True
+    transitive_ancestry = True
     source_only_status: dict[str, Any] = {}
     for quantity, rows in quantity_nodes.items():
         if not rows:
@@ -89,24 +101,28 @@ def certify_cmb_source_provenance(
             blockers.append(f"{quantity}_ambiguous_provenance_nodes")
         row = rows[0]
         node_id = _node_id(row, 0)
-        contradictions = _contradiction_blockers(node_id, row)
-        if contradictions:
+        ancestry = _transitive_ancestry_status(node_id, node_by_id)
+        if ancestry["blockers"]:
             contradiction_free = False
-            blockers.extend(contradictions)
+            transitive_ancestry = False
+            blockers.extend(ancestry["blockers"])
         source_ok = _source_allowed_for_quantity(quantity, str(row.get("source", row.get("source_kind", ""))))
         source_kind = str(row.get("source_kind", row.get("source", "")))
         if source_kind in FORBIDDEN_SOURCE_KINDS or str(row.get("source", "")) in FORBIDDEN_SOURCE_KINDS:
             source_ok = False
             blockers.append(f"{quantity}_forbidden_source_kind:{source_kind}")
-        if not bool(row.get("source_only", source_ok)):
+        if not bool(row.get("source_only", False)):
             source_ok = False
             blockers.append(f"{quantity}_not_source_only")
+        if not ancestry["source_only"]:
+            source_ok = False
         source_only_status[quantity] = {
             "present": True,
             "source": row.get("source"),
             "source_report": row.get("source_report"),
             "source_only": source_ok,
             "node_id": node_id,
+            "ancestry": ancestry,
         }
         if not source_ok:
             blockers.append(f"{quantity}_not_source_derived")
@@ -120,6 +136,12 @@ def certify_cmb_source_provenance(
 
     global_status, global_blockers = _global_likelihood_status(global_checks)
     blockers.extend(global_blockers)
+    hermetic_read_set = bool(global_checks.get(HERMETIC_READ_SET_RECEIPT, global_checks.get("hermetic_read_set_receipt", False)))
+    source_model_freeze = bool(global_checks.get(SOURCE_MODEL_FREEZE_RECEIPT, global_checks.get("source_model_freeze_receipt", False)))
+    if not hermetic_read_set:
+        blockers.append("hermetic_read_set_receipt_missing")
+    if not source_model_freeze:
+        blockers.append("source_model_freeze_receipt_missing")
 
     blockers = _unique_strings(blockers)
     reducer_receipt = all(bool(row.get("receipt", False)) for row in reducer_status.values())
@@ -128,6 +150,9 @@ def certify_cmb_source_provenance(
         "mode": "cmb_source_provenance_certificate_v0",
         "CMB_SOURCE_PROVENANCE_RECEIPT": receipt,
         "source_provenance_receipt": receipt,
+        TRANSITIVE_SOURCE_ANCESTRY_RECEIPT: bool(transitive_ancestry),
+        HERMETIC_READ_SET_RECEIPT: hermetic_read_set,
+        SOURCE_MODEL_FREEZE_RECEIPT: source_model_freeze,
         "pooled_source_reducer_receipt": reducer_receipt,
         "contradiction_free_provenance_receipt": contradiction_free,
         "N_CRC_consensus_invariant_receipt": n_crc_status["receipt"],
@@ -176,7 +201,41 @@ def _graph_blockers(node_by_id: dict[str, dict[str, Any]]) -> list[str]:
     return blockers
 
 
-def _contradiction_blockers(node_id: str, node: dict[str, Any]) -> list[str]:
+def _transitive_ancestry_status(node_id: str, node_by_id: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    blockers: list[str] = []
+    visited: set[str] = set()
+    source_only = True
+
+    def visit(current_id: str, path: list[str]) -> None:
+        nonlocal source_only
+        if current_id in visited:
+            return
+        visited.add(current_id)
+        node = node_by_id[current_id]
+        local = _local_source_blockers(current_id, node)
+        if local:
+            source_only = False
+            path_text = "->".join(path + [current_id])
+            blockers.extend(local)
+            blockers.extend(f"{blocker}|path:{path_text}" for blocker in local)
+        source_kind = str(node.get("source_kind", node.get("source", "")))
+        if source_kind in FORBIDDEN_SOURCE_KINDS or str(node.get("source", "")) in FORBIDDEN_SOURCE_KINDS:
+            source_only = False
+            blockers.append(f"forbidden_source_ancestor:{current_id}:{source_kind}|path:{'->'.join(path + [current_id])}")
+        if not bool(node.get("source_only", False)):
+            source_only = False
+            blockers.append(f"ancestor_not_source_only:{current_id}|path:{'->'.join(path + [current_id])}")
+        for parent in _parents(node):
+            if parent in node_by_id:
+                visit(parent, path + [current_id])
+
+    if node_id not in node_by_id:
+        return {"source_only": False, "ancestor_ids": [], "blockers": [f"missing_ancestry_root:{node_id}"]}
+    visit(node_id, [])
+    return {"source_only": source_only, "ancestor_ids": sorted(visited), "blockers": _unique_strings(blockers)}
+
+
+def _local_source_blockers(node_id: str, node: dict[str, Any]) -> list[str]:
     blockers: list[str] = []
     no_cmb_data_used = bool(node.get("no_cmb_data_used", False))
     measurement_flags = (
@@ -263,12 +322,16 @@ def _n_crc_status(reducer: dict[str, Any]) -> dict[str, Any]:
 
 def _global_likelihood_status(global_checks: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
     blockers: list[str] = []
-    official_rollup = str(global_checks.get("official_likelihood_rollup", "global"))
-    cdm_rollup = str(global_checks.get("cdm_limit_rollup", "global"))
+    official_rollup = str(global_checks.get("official_likelihood_rollup", "missing"))
+    cdm_rollup = str(global_checks.get("cdm_limit_rollup", "missing"))
     if official_rollup in {"shard_any", "any"}:
         blockers.append("official_likelihood_shard_any_rollup_forbidden")
     if cdm_rollup in {"shard_any", "any"}:
         blockers.append("cdm_limit_shard_any_rollup_forbidden")
+    if official_rollup != "global":
+        blockers.append("official_likelihood_global_rollup_missing")
+    if cdm_rollup != "global":
+        blockers.append("cdm_limit_global_rollup_missing")
     receipt = not blockers
     return (
         {

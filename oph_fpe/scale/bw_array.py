@@ -108,7 +108,16 @@ from oph_fpe.observers import (
     transition_affinity_packet_fields,
     visible_object_packets,
 )
-from oph_fpe.scale.array_screen import _beta_at, _entropy, _group_order, _knn_edges, _modular_update, _node_signature, _write_csv
+from oph_fpe.scale.array_screen import (
+    _beta_at,
+    _entropy,
+    _group_order,
+    _knn_edges,
+    _modular_cap_drive,
+    _modular_update,
+    _node_signature,
+    _write_csv,
+)
 from oph_fpe.scale.parallel import jobs_from_config
 
 
@@ -181,6 +190,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     beta_schedule = dyn.get("beta_schedule", {})
     readback_drive_cfg = dyn.get("observer_readback_drive", {}) or {}
     mod_cfg = config.get("modular_flow", {})
+    modular_cap_drive = _modular_cap_drive(points, mod_cfg)
     readback_node_labels: np.ndarray | None = None
     readback_drive_report: dict[str, Any] = {"enabled": False}
     if readback_drive_cfg.get("enabled", False):
@@ -231,11 +241,19 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     defect_timeline_enabled = bool(group_name == "S3" and timeline_cfg.get("enabled", False))
     defect_timeline_cycles = _timeline_cycles(cycles, int(timeline_cfg.get("sample_count", 8)))
     defect_gauge_snapshots: list[tuple[int, np.ndarray]] = []
+    bw_pre_cfg = config.get("bw", {}) or {}
     object_history_cfg = config.get("observer_objects", {}) or {}
     chart_history_cfg = config.get("observer_chart_population", {}) or {}
+    bw_history_window = int(
+        bw_pre_cfg.get(
+            "history_window",
+            8 if str(bw_pre_cfg.get("mode", "")) == "state_derived_modular_probe" else 1,
+        )
+    )
     history_window = max(
         int(object_history_cfg.get("history_window", 1)),
         int(chart_history_cfg.get("history_window", 1)),
+        bw_history_window,
     )
     history_enabled = bool(
         history_window > 1
@@ -254,6 +272,23 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         else set()
     )
     harmonic_trace_samples: list[dict[str, Any]] = []
+    progress_cfg = config.get("progress", {}) or {}
+    base_progress_interval = max(0, int(progress_cfg.get("base_cycle_interval", dyn.get("progress_interval", 4))))
+    base_loop_started = time.time()
+    bundle.write_json(
+        "base_progress.json",
+        _base_repair_progress_report(
+            stage="base_repair_loop_started",
+            cycle=-1,
+            cycles=cycles,
+            started_at=base_loop_started,
+            phi_before=None,
+            phi_after=None,
+            active_edges=None,
+            chosen_edges=None,
+            committed_fraction=0.0,
+        ),
+    )
 
     for cycle in range(cycles):
         beta = _beta_at(beta_schedule, cycle, cycles)
@@ -306,6 +341,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             modular_time,
             final_repair_load,
             mod_cfg,
+            cap_drive=modular_cap_drive,
         )
         signature = _node_signature(port_left, port_right, left, right, patch_count)
         stable_count = np.where(signature == prev_signature, stable_count + 1, 1)
@@ -321,6 +357,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             repair_load=final_repair_load,
             mismatch_density=final_mismatch_density,
             modular_depth=modular_depth,
+            modular_time=modular_time,
             cumulative_repair_load=cumulative_repair_load,
         )
         repair_peak_candidate["mean_mismatch_density"] = float(np.mean(final_mismatch_density))
@@ -347,6 +384,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 repair_load=final_repair_load,
                 mismatch_density=final_mismatch_density,
                 modular_depth=modular_depth,
+                modular_time=modular_time,
                 cumulative_repair_load=cumulative_repair_load,
             )
             if history_enabled:
@@ -385,6 +423,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                     repair_load=final_repair_load,
                     mismatch_density=final_mismatch_density,
                     modular_depth=modular_depth,
+                    modular_time=modular_time,
                     cumulative_repair_load=cumulative_repair_load,
                     cell_entropy=cell_entropy,
                     cycle=cycle,
@@ -394,9 +433,47 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             )
         if defect_timeline_enabled and cycle in defect_timeline_cycles:
             defect_gauge_snapshots.append((cycle, gauge.copy()))
+        if _should_write_base_progress(cycle, cycles, base_progress_interval):
+            bundle.write_json(
+                "base_progress.json",
+                _base_repair_progress_report(
+                    stage="base_repair_loop",
+                    cycle=cycle,
+                    cycles=cycles,
+                    started_at=base_loop_started,
+                    phi_before=phi_before,
+                    phi_after=phi_after,
+                    active_edges=int(active.size),
+                    chosen_edges=int(chosen.size),
+                    committed_fraction=committed_fraction,
+                    readback_drive_edges=int(readback_drive_edges),
+                    record_entropy=trace[-1]["record_entropy"],
+                    modular_depth_mean=trace[-1]["modular_depth_mean"],
+                    modular_depth_std=trace[-1]["modular_depth_std"],
+                ),
+            )
 
     if defect_timeline_enabled and (not defect_gauge_snapshots or defect_gauge_snapshots[-1][0] != cycles - 1):
         defect_gauge_snapshots.append((cycles - 1, gauge.copy()))
+    base_loop_elapsed_seconds = time.time() - base_loop_started
+    bundle.write_json(
+        "base_progress.json",
+        _base_repair_progress_report(
+            stage="base_repair_loop_complete",
+            cycle=cycles - 1,
+            cycles=cycles,
+            started_at=base_loop_started,
+            phi_before=trace[-1]["phi"] - trace[-1]["delta_phi"] if trace else None,
+            phi_after=trace[-1]["phi"] if trace else None,
+            active_edges=trace[-1]["phi"] if trace else None,
+            chosen_edges=None,
+            committed_fraction=float(np.mean(committed)),
+            readback_drive_edges=trace[-1]["observer_readback_drive_edges"] if trace else None,
+            record_entropy=trace[-1]["record_entropy"] if trace else None,
+            modular_depth_mean=trace[-1]["modular_depth_mean"] if trace else None,
+            modular_depth_std=trace[-1]["modular_depth_std"] if trace else None,
+        ),
+    )
     harmonic_time_trace_report = _write_harmonic_time_trace(
         bundle.path,
         harmonic_trace_samples,
@@ -418,6 +495,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         repair_load=final_repair_load,
         mismatch_density=final_mismatch_density,
         modular_depth=modular_depth,
+        modular_time=modular_time,
         cumulative_repair_load=cumulative_repair_load,
     )
     bw_cfg = config.get("bw", {})
@@ -545,6 +623,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         repair_load=final_repair_load,
         mismatch_density=final_mismatch_density,
         modular_depth=modular_depth,
+        modular_time=modular_time,
         cumulative_repair_load=cumulative_repair_load,
     )
     if freezeout_state is None:
@@ -557,6 +636,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             repair_load=final_repair_load,
             mismatch_density=final_mismatch_density,
             modular_depth=modular_depth,
+            modular_time=modular_time,
             cumulative_repair_load=cumulative_repair_load,
         )
     if repair_peak_state is None:
@@ -621,6 +701,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             freezeout_state=freezeout_state,
             max_history=max(1, int(bw_cfg.get("history_window", history_window))),
         )
+        state_history_states = _drop_source_snapshot_from_history(state_history_states, state_source_meta)
         state_history_raw_fields = [
             _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
             for snapshot in state_history_states
@@ -716,6 +797,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         sample_count=observer_sample_count,
         neighborhood_size=observer_neighborhood,
         seed=seed + 1201,
+        sample_pair_limit=int(observer_cfg.get("sample_pair_limit", 20_000)),
     )
     consensus_report["observer_relative_time_grid"] = observer_times
     consensus_report["cap_count"] = len(caps)
@@ -1169,6 +1251,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         transition_selection_report,
         observer_chart_object_report,
         neutral_report,
+        state_bw_report,
     )
     observer_modular_experience_report = _observer_modular_experience_report(
         observer_rows,
@@ -1761,6 +1844,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "screen_units": screen_microphysics.as_jsonable()["screen_units"],
             "cycles": cycles,
             "final_phi": int(trace[-1]["phi"]),
+            "base_loop_elapsed_seconds": base_loop_elapsed_seconds,
             "bw_median": bw_report["median"],
             "bw_p90": bw_report["p90"],
             "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
@@ -1864,6 +1948,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         "bw_p90": bw_report["p90"],
         "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
         "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
+        "base_loop_elapsed_seconds": base_loop_elapsed_seconds,
         "controls": bw_report["controls"],
         "geometric_controls": bw_report["controls"],
         "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
@@ -1910,6 +1995,58 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     return result
 
 
+def _should_write_base_progress(cycle: int, cycles: int, interval: int) -> bool:
+    if cycles <= 0:
+        return False
+    if cycle == 0 or cycle == cycles - 1:
+        return True
+    return interval > 0 and (cycle + 1) % interval == 0
+
+
+def _base_repair_progress_report(
+    *,
+    stage: str,
+    cycle: int,
+    cycles: int,
+    started_at: float,
+    phi_before: int | None,
+    phi_after: int | None,
+    active_edges: int | None,
+    chosen_edges: int | None,
+    committed_fraction: float,
+    readback_drive_edges: int | None = None,
+    record_entropy: float | None = None,
+    modular_depth_mean: float | None = None,
+    modular_depth_std: float | None = None,
+) -> dict[str, Any]:
+    now = time.time()
+    completed_cycles = max(0, min(cycles, cycle + 1))
+    elapsed_seconds = max(0.0, now - started_at)
+    estimated_total_seconds: float | None = None
+    estimated_remaining_seconds: float | None = None
+    if completed_cycles > 0 and cycles > 0:
+        estimated_total_seconds = elapsed_seconds * float(cycles) / float(completed_cycles)
+        estimated_remaining_seconds = max(0.0, estimated_total_seconds - elapsed_seconds)
+    return {
+        "stage": stage,
+        "cycle": int(cycle),
+        "cycles": int(cycles),
+        "completed_cycles": int(completed_cycles),
+        "elapsed_seconds": float(elapsed_seconds),
+        "estimated_total_seconds": estimated_total_seconds,
+        "estimated_remaining_seconds": estimated_remaining_seconds,
+        "phi_before": phi_before,
+        "phi_after": phi_after,
+        "active_edges": active_edges,
+        "chosen_edges": chosen_edges,
+        "committed_fraction": float(committed_fraction),
+        "readback_drive_edges": readback_drive_edges,
+        "record_entropy": record_entropy,
+        "modular_depth_mean": modular_depth_mean,
+        "modular_depth_std": modular_depth_std,
+    }
+
+
 def _large_run_readiness_report(
     config: dict[str, Any],
     *,
@@ -1925,12 +2062,17 @@ def _large_run_readiness_report(
     cmb_lane = _screen_cmb_readiness(config, cosmology_gate_report)
     bulk_lane = _bulk_3d_readiness(paper_3d_chart_report)
     observer_lane = _observer_modular_time_readiness(observer_modular_experience_report)
+    observer_facing_bulk_lane = _observer_facing_bulk_readiness(
+        paper_3d_chart_report,
+        observer_modular_experience_report,
+    )
     finite_consensus_lane = _finite_consensus_readiness(theorem_core_report)
     lanes = {
         "state_bw": state_lane,
         "transition_scale": transition_lane,
         "screen_cmb_proxy": cmb_lane,
         "bulk_3d": bulk_lane,
+        "observer_facing_bulk": observer_facing_bulk_lane,
         "observer_modular_time": observer_lane,
         "finite_consensus": finite_consensus_lane,
     }
@@ -1939,6 +2081,7 @@ def _large_run_readiness_report(
         "transition_scale": transition_lane,
         "screen_cmb_proxy": cmb_lane,
         "bulk_3d": bulk_lane,
+        "observer_facing_bulk": observer_facing_bulk_lane,
     }
     stability_lanes = {
         "observer_modular_time": observer_lane,
@@ -1946,6 +2089,8 @@ def _large_run_readiness_report(
     }
     if bulk_lane["scale_candidate"]:
         recommended = "bulk_3d_refinement"
+    elif observer_facing_bulk_lane["scale_candidate"]:
+        recommended = "observer_facing_bulk_visualization_refinement"
     elif cmb_lane["scale_candidate"]:
         recommended = "screen_cmb_proxy_refinement"
     elif transition_lane["scale_candidate"]:
@@ -1989,20 +2134,37 @@ def _large_run_readiness_report(
 def _state_bw_readiness(report: dict[str, Any]) -> dict[str, Any]:
     if not report:
         return _readiness_lane("not_requested", blockers=["state_bw_not_requested"])
-    blockers: list[str] = []
+    diagnostic_blockers: list[str] = []
     if not bool(report.get("correct_beats_controls", False)):
-        blockers.append("state_bw_controls_failed")
+        diagnostic_blockers.append("state_bw_controls_failed")
     selected_label = report.get("state_selected_scale_label")
     if not bool(report.get("state_selected_2pi", False)):
-        blockers.append(f"state_bw_selected_{selected_label or 'none'}_not_2pi")
+        diagnostic_blockers.append(f"state_bw_selected_{selected_label or 'none'}_not_2pi")
     audit = report.get("generator_scale_audit") or {}
     if audit.get("enabled", False) and audit.get("best_label") not in {None, "2pi"}:
-        blockers.append(f"generator_scale_best_{audit.get('best_label')}_not_2pi")
+        diagnostic_blockers.append(f"generator_scale_best_{audit.get('best_label')}_not_2pi")
     clock = report.get("inferred_modular_clock_fit") or {}
     clock_applicable = bool(clock.get("enabled", False)) and not bool(clock.get("not_applicable", False))
     if clock_applicable and not bool(clock.get("receipt", False)):
-        blockers.extend(f"clock_{blocker}" for blocker in clock.get("blockers", []))
-    ready = bool(not blockers)
+        diagnostic_blockers.extend(f"clock_{blocker}" for blocker in clock.get("blockers", []))
+    endogenous_generator_receipt = bool(
+        report.get("ENDOGENOUS_MODULAR_GENERATOR_RECEIPT", False)
+        or report.get("endogenous_modular_generator_receipt", False)
+    )
+    kms_clock_receipt = bool(
+        report.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT", False)
+        or report.get("kms_geometric_clock_fit_receipt", False)
+        or bool(clock.get("receipt", False))
+    )
+    finite_lorentz_clock_receipt = bool(endogenous_generator_receipt and kms_clock_receipt)
+    blockers: list[str] = []
+    if not finite_lorentz_clock_receipt:
+        if not endogenous_generator_receipt:
+            blockers.append("l2_endogenous_modular_generator_missing")
+        if not kms_clock_receipt:
+            blockers.append("l3_kms_modular_clock_fit_missing")
+        blockers.extend(diagnostic_blockers)
+    ready = bool(finite_lorentz_clock_receipt or not blockers)
     return _readiness_lane(
         "scale_candidate" if ready else "blocked",
         scale_candidate=ready,
@@ -2015,6 +2177,10 @@ def _state_bw_readiness(report: dict[str, Any]) -> dict[str, Any]:
             "generator_scale_diagnosis": audit.get("diagnosis"),
             "inferred_kappa_hat": clock.get("kappa_hat"),
             "clock_receipt": bool(clock.get("receipt", False)),
+            "endogenous_modular_generator_receipt": endogenous_generator_receipt,
+            "kms_geometric_clock_fit_receipt": kms_clock_receipt,
+            "finite_lorentz_modular_clock_receipt": finite_lorentz_clock_receipt,
+            "legacy_scale_diagnostic_blockers": diagnostic_blockers,
         },
     )
 
@@ -2102,6 +2268,53 @@ def _bulk_3d_readiness(report: dict[str, Any]) -> dict[str, Any]:
     )
 
 
+def _observer_facing_bulk_readiness(
+    paper_chart_report: dict[str, Any],
+    observer_modular_experience_report: dict[str, Any],
+) -> dict[str, Any]:
+    if not paper_chart_report and not observer_modular_experience_report:
+        return _readiness_lane("not_requested", blockers=["observer_facing_bulk_not_requested"])
+    chart_receipt = bool(
+        paper_chart_report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
+        or paper_chart_report.get("paper_theorem_3d_bulk_chart_receipt", False)
+    )
+    object_precursor = bool(
+        paper_chart_report.get("paper_theorem_object_populated_chart_precursor_receipt", False)
+    )
+    observer_populated = bool(
+        observer_modular_experience_report.get("observer_facing_populated_h3_experience_receipt", False)
+    )
+    ready = bool(chart_receipt and object_precursor and observer_populated)
+    blockers: list[str] = []
+    if not chart_receipt:
+        blockers.append("paper_3d_bulk_chart_receipt_false")
+    if not object_precursor:
+        blockers.append("paper_theorem_object_populated_chart_precursor_receipt_false")
+    if not observer_populated:
+        blockers.extend(
+            str(value)
+            for value in observer_modular_experience_report.get("populated_h3_experience_blockers", [])
+            if str(value)
+        )
+        if not blockers or blockers[-1] != "observer_facing_populated_h3_experience_receipt_false":
+            blockers.append("observer_facing_populated_h3_experience_receipt_false")
+    return _readiness_lane(
+        "scale_candidate" if ready else "blocked",
+        scale_candidate=ready,
+        blockers=blockers,
+        details={
+            "paper_theorem_3d_bulk_chart_receipt": chart_receipt,
+            "paper_theorem_object_populated_chart_precursor_receipt": object_precursor,
+            "observer_facing_populated_h3_experience_receipt": observer_populated,
+            "strict_neutral_not_required": True,
+            "claim_boundary": (
+                "observer-facing consensus H3 bulk visualization lane. It is not a chart-blind strict neutral "
+                "third-person bulk, particle, or physical-CMB claim."
+            ),
+        },
+    )
+
+
 def _observer_modular_time_readiness(report: dict[str, Any]) -> dict[str, Any]:
     if not report:
         return _readiness_lane("not_requested", blockers=["observer_modular_time_not_requested"])
@@ -2178,6 +2391,7 @@ def _observable_fields(
     repair_load: np.ndarray,
     mismatch_density: np.ndarray,
     modular_depth: np.ndarray,
+    modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
 ) -> dict[str, np.ndarray]:
     fields = {
@@ -2188,6 +2402,7 @@ def _observable_fields(
         "cumulative_repair_load": _standardize(cumulative_repair_load.astype(float)),
         "local_mismatch_density": _standardize(mismatch_density.astype(float)),
         "modular_depth": _standardize(modular_depth.astype(float)),
+        "modular_time": _standardize(modular_time.astype(float)),
     }
     if gauge.size:
         fields["s3_class_density"] = _standardize(s3_edge_class_density(left, right, gauge, patch_count))
@@ -2349,6 +2564,7 @@ def _state_snapshot(
     repair_load: np.ndarray,
     mismatch_density: np.ndarray,
     modular_depth: np.ndarray,
+    modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
 ) -> dict[str, Any]:
     return {
@@ -2360,6 +2576,7 @@ def _state_snapshot(
         "repair_load": np.asarray(repair_load, dtype=float).copy(),
         "mismatch_density": np.asarray(mismatch_density, dtype=float).copy(),
         "modular_depth": np.asarray(modular_depth, dtype=float).copy(),
+        "modular_time": np.asarray(modular_time, dtype=float).copy(),
         "cumulative_repair_load": np.asarray(cumulative_repair_load, dtype=float).copy(),
     }
 
@@ -2385,6 +2602,7 @@ def _observable_fields_from_snapshot(
         repair_load=np.asarray(snapshot["repair_load"], dtype=float),
         mismatch_density=np.asarray(snapshot["mismatch_density"], dtype=float),
         modular_depth=np.asarray(snapshot["modular_depth"], dtype=float),
+        modular_time=np.asarray(snapshot.get("modular_time", snapshot["modular_depth"]), dtype=float),
         cumulative_repair_load=np.asarray(snapshot["cumulative_repair_load"], dtype=float),
     )
 
@@ -2401,6 +2619,7 @@ def _observer_raw_fields(
     repair_load: np.ndarray,
     mismatch_density: np.ndarray,
     modular_depth: np.ndarray,
+    modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
 ) -> dict[str, np.ndarray]:
     fields = {
@@ -2411,6 +2630,7 @@ def _observer_raw_fields(
         "cumulative_repair_load": cumulative_repair_load.astype(float),
         "local_mismatch_density": mismatch_density.astype(float),
         "modular_depth": modular_depth.astype(float),
+        "modular_time": modular_time.astype(float),
     }
     if gauge.size:
         fields["s3_class_density"] = s3_edge_class_density(left, right, gauge, patch_count)
@@ -2440,6 +2660,7 @@ def _observer_raw_fields_from_snapshot(
         repair_load=np.asarray(snapshot["repair_load"], dtype=float),
         mismatch_density=np.asarray(snapshot["mismatch_density"], dtype=float),
         modular_depth=np.asarray(snapshot["modular_depth"], dtype=float),
+        modular_time=np.asarray(snapshot.get("modular_time", snapshot["modular_depth"]), dtype=float),
         cumulative_repair_load=np.asarray(snapshot["cumulative_repair_load"], dtype=float),
     )
 
@@ -2537,6 +2758,29 @@ def _select_state_history_states(
     return _unique_snapshots_by_cycle(history[-max(1, int(max_history)) :])
 
 
+def _drop_source_snapshot_from_history(
+    history_states: list[dict[str, Any]],
+    source_meta: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Keep history strictly before the current source snapshot.
+
+    `state_derived_bw_report` receives `history_fields` and the current
+    `raw_fields` separately, then appends the current fields when building
+    history-dependent states. If the history list already contains the source
+    cycle, the final Koopman/history transition is an artificial identity pair.
+    """
+
+    try:
+        source_cycle = int(source_meta.get("cycle"))
+    except (TypeError, ValueError):
+        return list(history_states)
+    return [
+        snapshot
+        for snapshot in history_states
+        if int(snapshot.get("cycle", -1)) != source_cycle
+    ]
+
+
 def _unique_snapshots_by_cycle(snapshots: list[dict[str, Any] | None]) -> list[dict[str, Any]]:
     by_cycle: dict[int, dict[str, Any]] = {}
     for snapshot in snapshots:
@@ -2578,6 +2822,7 @@ def _harmonic_time_trace_sample(
     repair_load: np.ndarray,
     mismatch_density: np.ndarray,
     modular_depth: np.ndarray,
+    modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
     cell_entropy: np.ndarray,
     cycle: int,
@@ -2597,6 +2842,7 @@ def _harmonic_time_trace_sample(
         repair_load=repair_load,
         mismatch_density=mismatch_density,
         modular_depth=modular_depth,
+        modular_time=modular_time,
         cumulative_repair_load=cumulative_repair_load,
     )
     field_names = [
@@ -2925,6 +3171,18 @@ def _observer_modular_experience_report(
             and not transition_selection_report.get("response_degenerate", False)
         )
     )
+    finite_lorentz_modular_clock_receipt = bool(
+        (
+            state_bw_report.get("ENDOGENOUS_MODULAR_GENERATOR_RECEIPT", False)
+            or state_bw_report.get("endogenous_modular_generator_receipt", False)
+        )
+        and (
+            state_bw_report.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT", False)
+            or state_bw_report.get("kms_geometric_clock_fit_receipt", False)
+            or (state_bw_report.get("inferred_modular_clock_fit") or {}).get("receipt", False)
+        )
+    )
+    lorentz_clock_receipt = bool(branch_replay_receipt or finite_lorentz_modular_clock_receipt)
     chart_receipt = bool(
         conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False)
         or paper_3d_chart_report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
@@ -2944,7 +3202,7 @@ def _observer_modular_experience_report(
     )
     observer_3p1d_experience_receipt = bool(
         observer_modular_time_receipt
-        and branch_replay_receipt
+        and lorentz_clock_receipt
         and chart_receipt
         and h3_response_receipt
     )
@@ -2954,7 +3212,7 @@ def _observer_modular_experience_report(
     )
     component_gates = {
         "observer_modular_time_receipt": observer_modular_time_receipt,
-        "bw_kms_branch_replay_receipt": branch_replay_receipt,
+        "bw_kms_branch_replay_receipt": lorentz_clock_receipt,
         "conformal_h3_chart_receipt": chart_receipt,
         "h3_modular_response_receipt": h3_response_receipt,
     }
@@ -2973,6 +3231,8 @@ def _observer_modular_experience_report(
         "observer_facing_3p1d_h3_experience_receipt": observer_3p1d_experience_receipt,
         "observer_facing_populated_h3_experience_receipt": populated_h3_experience_receipt,
         "observer_h3_object_population_receipt": object_population_receipt,
+        "declared_bw_kms_branch_replay_receipt": branch_replay_receipt,
+        "finite_lorentz_modular_clock_receipt": finite_lorentz_modular_clock_receipt,
         "observer_count": len(patch_rows),
         "observer_relative_time_count": len(times),
         "observer_relative_time_grid": [float(value) for value in times],
@@ -2997,8 +3257,9 @@ def _observer_modular_experience_report(
         ],
         "claim_boundary": (
             "Observer-facing modular-time and H3 experience receipt. The modular-time subreceipt is "
-            "observer-local. The 3+1D/H3 experience receipt additionally requires the declared BW/KMS "
-            "branch replay, the conformal H3 chart, and H3 modular-response evidence. Non-boundary "
+            "observer-local. The 3+1D/H3 experience receipt additionally requires either declared BW/KMS "
+            "branch replay or the finite endogenous L2/L3 modular-clock receipt, the conformal H3 chart, "
+            "and H3 modular-response evidence. Non-boundary "
             "observer object population is reported separately as observer_facing_populated_h3_experience_receipt; "
             "it is not part of the paper-side D3 observer-facing chart claim and is not chart-blind strict neutral bulk."
         ),

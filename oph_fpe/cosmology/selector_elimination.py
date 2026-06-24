@@ -22,10 +22,15 @@ def ir_kernel(
     *,
     q_ir: float = 0.25,
     ell_ir: float = 32.0,
+    t_ir: float | None = None,
 ) -> np.ndarray:
     ell_arr = np.asarray(ell, dtype=float)
-    denom = max(float(ell_ir) * (float(ell_ir) + 1.0), 1.0e-30)
-    return 1.0 - float(q_ir) * np.exp(-(ell_arr * (ell_arr + 1.0)) / denom)
+    t_value = float(t_ir) if t_ir is not None else 1.0 / max(float(ell_ir) * (float(ell_ir) + 1.0), 1.0e-30)
+    if not (0.0 <= float(q_ir) <= 1.0):
+        raise ValueError("q_ir must lie in [0, 1]")
+    if t_value < 0.0:
+        raise ValueError("t_ir must be nonnegative")
+    return 1.0 - float(q_ir) * np.exp(-t_value * ell_arr * (ell_arr + 1.0))
 
 
 def selector_elimination_report(
@@ -52,24 +57,26 @@ def selector_elimination_report(
     l0_dim = 1
     l1_dim = 3
     q_ir = float(l0_dim / (l0_dim + l1_dim))
+    q_ir_receipt = False
 
     dodeca_faces = 12
     dodeca_vertices = 20
     visible_scalar_channels = dodeca_faces + dodeca_vertices
     identity_record = 1
-    visible_covariance_rank = visible_scalar_channels + identity_record
-    ell_ir = float(visible_covariance_rank - 1)
+    legacy_visible_covariance_rank = visible_scalar_channels + identity_record
+    t_ir = 1.0 / (32.0 * 33.0)
+    ell_ir = float((-1.0 + math.sqrt(1.0 + 4.0 / t_ir)) / 2.0)
     harmonic_capacity = int((ell_ir + 1.0) ** 2)
 
     source = Path(source_dir) if source_dir is not None else None
     source_files = _source_file_status(source)
-    exact_table = _exact_kernel_table(DEFAULT_KERNEL_ELL, q_ir=q_ir, ell_ir=ell_ir)
+    exact_table = _exact_kernel_table(DEFAULT_KERNEL_ELL, q_ir=q_ir, ell_ir=ell_ir, t_ir=t_ir)
     csv_audit = _audit_kernel_csv(source, q_ir=q_ir, ell_ir=ell_ir, tolerance=csv_tolerance)
     status_rows = _read_status_rows(source)
     status_audit = _audit_status_rows(status_rows)
 
-    q_removed = bool(math.isclose(q_ir, 0.25, abs_tol=1.0e-15))
-    ell_removed = bool(math.isclose(ell_ir, 32.0, abs_tol=1.0e-15))
+    q_removed = False
+    ell_removed = False
     eta_reduced = bool(eta_r > 0.0 and n_s < 1.0)
     source_audit_pass = bool(
         source is not None
@@ -79,7 +86,7 @@ def selector_elimination_report(
         and status_audit.get("ell_ir_selector_removed", False)
         and status_audit.get("eta_r_reduced_to_repair_clock_certificate", False)
     )
-    theorem_receipt = bool(q_removed and ell_removed and eta_reduced)
+    theorem_receipt = False
 
     return {
         "mode": "oph_cmb_selector_elimination_v1_5",
@@ -87,17 +94,27 @@ def selector_elimination_report(
         "selector_elimination": {
             "q_IR_selector_removed": q_removed,
             "q_IR": q_ir,
-            "q_IR_derivation": "dim(H_ell0) / dim(H_ell0 plus H_ell1) = 1 / (1 + 3)",
+            "q_IR_derivation": "diagnostic affine-sector value; theorem receipt requires harmonic readout and uniform affine covariance",
+            "IR_SUPPRESSION_DEPTH_RECEIPT": q_ir_receipt,
             "affine_sector_dimensions": {"ell0_checkpoint_scalar": l0_dim, "ell1_global_repair_modes": l1_dim},
             "ell_IR_selector_removed": ell_removed,
             "ell_IR": ell_ir,
-            "ell_IR_derivation": "F+V visible scalar channels plus identity: Q=12+20+1=33, so L=Q-1=32",
-            "visible_covariance_rank": visible_covariance_rank,
+            "t_IR": t_ir,
+            "ell_IR_derivation": "derived display scale from t_IR = 1/[32*33]; the old F+V+1=33 -> ell_IR=32 proof is retired",
+            "IR_SEMIGROUP_TIME_RECEIPT": False,
+            "IR_SOURCE_RECEIPT": False,
+            "legacy_visible_covariance_rank": legacy_visible_covariance_rank,
             "visible_scalar_channels": visible_scalar_channels,
             "harmonic_capacity_slots": harmonic_capacity,
             "eta_R_free_selector_removed": False,
             "eta_R_reduced_to_repair_clock_certificate": eta_reduced,
             "remaining_eta_R_certificate": "derive_or_measure kappa_rep=e from finite-patch scalar repair semigroup",
+            "semantic_type_boundary": {
+                "eta_R": "TEMPORAL_REPAIR_GAP",
+                "theta": "SPATIAL_RG_EIGENEXPONENT",
+                "n_s": "PRIMORDIAL_SPECTRAL_TILT",
+                "Gamma_rec": "PHYSICAL_EXCHANGE_RATE_KERNEL",
+            },
         },
         "scalar_tilt": {
             "formula": "eta_R = kappa_rep * alpha(0) * sqrt(pi) = kappa_rep * (P - phi)",
@@ -110,8 +127,9 @@ def selector_elimination_report(
             "alpha_inverse_from_P": pixel.alpha_inverse_from_P,
         },
         "cmb_ir_kernel": {
-            "formula": "F_IR(ell)=1-(1/4)*exp[-ell(ell+1)/(32*33)]",
+            "formula": "F_IR(ell)=1-q_IR*exp[-t_IR ell(ell+1)]",
             "q_IR": q_ir,
+            "t_IR": t_ir,
             "ell_IR": ell_ir,
             "theta_IR_deg": 180.0 / ell_ir,
             "k_IR_Mpc_inverse": ell_ir / DEFAULT_D_STAR_MPC,
@@ -128,16 +146,16 @@ def selector_elimination_report(
         "physical_cmb_prediction": False,
         "remaining_certificates": [
             "finite-patch scalar repair-clock normalization kappa_rep=e",
-            "finite-register visible-covariance noncollapse for ell_IR=32",
-            "freezeout branch couples protected reserve to affine ell=0 sector for q_IR=1/4",
+            "finite harmonic readout and weighted quadrature for the IR source",
+            "uniform affine covariance theorem for q_IR=1/4",
+            "IR semigroup time source receipt for t_IR",
             "official masked Planck likelihood and map-space parity/BipoSH tests",
         ],
         "claim_boundary": (
-            "Selector-elimination receipt for the exact OPH-CMB target branch. q_IR=1/4 and ell_IR=32 "
-            "are no longer treated as free fit selectors in this report; they are computed from the affine "
-            "zero-mode reserve and dodecahedral visible-covariance rank. eta_R is reduced to the single "
-            "repair-clock certificate kappa_rep=e, which is not yet derived by the finite lattice. This is "
-            "therefore a theorem-side target/certificate audit, not a completed physical CMB prediction."
+            "Diagnostic selector-elimination audit for the legacy OPH-CMB target branch. q_IR=1/4 and "
+            "the display scale ell_IR=32 remain reference values, but the old dimension-count proof for "
+            "ell_IR is retired. The source parameter is t_IR in the heat-semigroup kernel, and q_IR, "
+            "t_IR, eta_R, n_s, and Gamma_rec remain distinct semantic objects until their receipts pass."
         ),
     }
 
@@ -160,8 +178,8 @@ def write_selector_elimination_report(
     return report
 
 
-def _exact_kernel_table(ells: tuple[int, ...], *, q_ir: float, ell_ir: float) -> list[dict[str, float]]:
-    values = ir_kernel(list(ells), q_ir=q_ir, ell_ir=ell_ir)
+def _exact_kernel_table(ells: tuple[int, ...], *, q_ir: float, ell_ir: float, t_ir: float) -> list[dict[str, float]]:
+    values = ir_kernel(list(ells), q_ir=q_ir, ell_ir=ell_ir, t_ir=t_ir)
     return [
         {"ell": float(ell), "F_IR_exact_q1over4_L32": float(value)}
         for ell, value in zip(ells, values, strict=True)

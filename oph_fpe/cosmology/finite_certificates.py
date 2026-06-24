@@ -11,6 +11,12 @@ import numpy as np
 from oph_fpe.constants.oph_pixel import P_STAR
 
 LN2 = math.log(2.0)
+HBAR_SI = 1.054571817e-34
+C_SI = 299_792_458.0
+
+SOURCE_LOCALIZATION_SATURATION_RECEIPT = "SOURCE_LOCALIZATION_SATURATION_RECEIPT"
+MODULAR_SOURCE_CHARGE_RECEIPT = "MODULAR_SOURCE_CHARGE_RECEIPT"
+ANOMALY_CURRENT_CONSERVATION_RECEIPT = "ANOMALY_CURRENT_CONSERVATION_RECEIPT"
 
 FORBIDDEN_INPUT_KEYS = (
     "cmb_likelihood",
@@ -162,45 +168,92 @@ def parent_collar_certificate(data: dict[str, Any], input_hash: str) -> dict[str
     weights = np.asarray([float(sample.get("weight", 1.0)) for sample in samples], dtype=np.float64)
     if float(np.sum(weights)) <= 0.0:
         raise ValueError("parent collar weights have zero mass")
-    cmi_values = np.asarray([float(sample.get("I_bits", sample.get("cmi_bits", sample.get("cmi", 0.0)))) for sample in samples])
-    d_cmi_values = np.asarray([float(sample.get("dI_d_delta_b", sample.get("d_cmi_d_delta_b", 0.0))) for sample in samples])
-    weighted_cmi = float(np.sum(weights * cmi_values) / np.sum(weights))
-    weighted_derivative = float(np.sum(weights * d_cmi_values) / np.sum(weights))
+    cmi_nats_values = np.asarray([_sample_cmi_diagnostic_nats(sample) for sample in samples], dtype=np.float64)
+    d_cmi_values = np.asarray(
+        [float(sample.get("d_cmi_d_cap_angle_proxy", sample.get("dI_d_delta_b", sample.get("d_cmi_d_delta_b", 0.0)))) for sample in samples],
+        dtype=np.float64,
+    )
+    weighted_cmi_nats = float(np.sum(weights * cmi_nats_values) / np.sum(weights))
+    weighted_derivative_proxy = float(np.sum(weights * d_cmi_values) / np.sum(weights))
 
-    ell = float(parent.get("ell", parent.get("ell_r", 1.0)))
-    c_light = float(parent.get("c", 1.0))
+    source_receipt = bool(parent.get(SOURCE_LOCALIZATION_SATURATION_RECEIPT, False))
+    conservation_receipt = bool(parent.get(ANOMALY_CURRENT_CONSERVATION_RECEIPT, False))
+    modular_charge_values = [
+        _float_or_none(sample.get("modular_source_charge_nats", sample.get("source_charge_nats")))
+        for sample in samples
+    ]
+    charge_available = all(value is not None and value >= 0.0 for value in modular_charge_values)
+    weighted_modular_charge_nats = (
+        float(np.sum(weights * np.asarray(modular_charge_values, dtype=np.float64)) / np.sum(weights))
+        if charge_available
+        else None
+    )
+    source_residual_values = [
+        _float_or_none(sample.get("source_localization_residual_nats"))
+        for sample in samples
+        if sample.get("source_localization_residual_nats") is not None
+    ]
+    source_localization_residual_nats = (
+        float(max(source_residual_values)) if source_residual_values else _float_or_none(parent.get("source_localization_residual_nats"))
+    )
+
+    ell = float(parent.get("proper_ell_m", parent.get("ell_m", parent.get("ell", parent.get("ell_r", 1.0)))))
+    c_light = float(parent.get("c_si", parent.get("c", C_SI)))
     if ell <= 0.0 or c_light <= 0.0:
         raise ValueError("parent_collar.ell and parent_collar.c must be positive")
-    factor = 15.0 / (8.0 * math.pi**2 * ell**4 * c_light**2)
-    rho_a0 = factor * weighted_cmi
-    drho_a_ddeltab = factor * weighted_derivative
+    density_factor = 15.0 * HBAR_SI / (8.0 * math.pi**2 * c_light * ell**4)
+    energy_density_factor = 15.0 * HBAR_SI * c_light / (8.0 * math.pi**2 * ell**4)
+    rho_a0 = density_factor * weighted_modular_charge_nats if source_receipt and weighted_modular_charge_nats is not None else None
+    epsilon_a0 = energy_density_factor * weighted_modular_charge_nats if source_receipt and weighted_modular_charge_nats is not None else None
     rho_b = float(parent.get("rho_b", parent.get("rho_b_background", 1.0)))
-    rho_a_background = float(parent.get("rho_A_background", rho_a0 if rho_a0 > 0.0 else 1.0))
+    rho_a_background_default = rho_a0 if rho_a0 is not None and rho_a0 > 0.0 else 1.0
+    rho_a_background = float(parent.get("rho_A_background", rho_a_background_default))
     if rho_b == 0.0 or rho_a_background == 0.0:
         raise ValueError("rho_b and rho_A_background must be non-zero for kernel export")
-    k_a_rho = drho_a_ddeltab / rho_b
-    b_a = (rho_b / rho_a_background) * k_a_rho
+    k_a_rho = None
+    b_a = None
     v_com = float(parent.get("V_com", 1.0))
     a_values = parent.get("a_values", [1.0])
-    rho_a_by_a = {str(a): float(rho_a0 * (float(a) ** -3)) for a in a_values}
+    rho_a_by_a = (
+        {str(a): float(rho_a0 * (float(a) ** -3)) for a in a_values}
+        if rho_a0 is not None and conservation_receipt
+        else {}
+    )
     no_data = no_data_use_receipt(data)
     return {
         "certificate_type": "parent_collar_certificate",
-        "mode": "finite_parent_collar_anomaly_load",
-        "Q_A": float(rho_a0 * v_com),
+        "mode": "finite_parent_collar_source_localization",
+        "Q_A": float(rho_a0 * v_com) if rho_a0 is not None and conservation_receipt else None,
+        "rho_A0_kg_m3": float(rho_a0) if rho_a0 is not None else None,
+        "epsilon_A0_J_m3": float(epsilon_a0) if epsilon_a0 is not None else None,
         "rho_A_by_a": rho_a_by_a,
-        "kernels": [{"k": sample.get("k", "aggregate"), "a": sample.get("a", 1.0), "K_A_rho": float(k_a_rho), "B_A": float(b_a)} for sample in samples[:1]],
-        "weighted_collar_cmi_bits": float(weighted_cmi),
-        "weighted_collar_derivative_bits": float(weighted_derivative),
+        "kernels": [
+            {
+                "k_screen_angle_proxy": sample.get("k_screen_angle_proxy", sample.get("k", "aggregate")),
+                "a": sample.get("a", 1.0),
+                "K_A_rho": k_a_rho,
+                "B_A": b_a,
+            }
+            for sample in samples[:1]
+        ],
+        "cmi_diagnostic_nats": float(weighted_cmi_nats),
+        "weighted_collar_cmi_nats": float(weighted_cmi_nats),
+        "weighted_collar_derivative_cap_angle_proxy_nats": float(weighted_derivative_proxy),
+        "modular_source_charge_nats": float(weighted_modular_charge_nats) if weighted_modular_charge_nats is not None else None,
+        "source_localization_residual_nats": source_localization_residual_nats,
+        SOURCE_LOCALIZATION_SATURATION_RECEIPT: bool(source_receipt and weighted_modular_charge_nats is not None),
+        MODULAR_SOURCE_CHARGE_RECEIPT: bool(weighted_modular_charge_nats is not None),
+        ANOMALY_CURRENT_CONSERVATION_RECEIPT: conservation_receipt,
         "samples_checked": len(samples),
         "small_field_support": parent.get("small_field_support", {"passes": False}),
         "refinement_convergence": parent.get("refinement_convergence", {"provided": False}),
-        "parent_formula": "rho_A_eq c^2 = 15/(8 pi^2 ell^4) weighted_avg I(A:D|B)",
+        "parent_formula": "rho_A = 15 hbar modular_source_charge_nats/(8 pi^2 c proper_ell_m^4) after SOURCE_LOCALIZATION_SATURATION_RECEIPT",
         "no_data_use": bool(no_data["no_data_use_receipt"]),
         "input_hash": input_hash,
         "claim_boundary": (
-            "Finite parent-collar certificate for homogeneous anomaly load and first response-kernel row. "
-            "It remains a finite-collar diagnostic until a regulator ladder and small-field response checks pass."
+            "Finite parent-collar certificate. Classical collar CMI is diagnostic only; physical anomaly "
+            "density is emitted only from modular_source_charge_nats after the source-localization saturation "
+            "receipt, and rho_A(a) is emitted only after anomaly-current conservation is certified."
         ),
     }
 
@@ -541,7 +594,8 @@ def run_proxy_certificate_input(run_dir: Path) -> dict[str, Any]:
             {
                 "id": f"cap_{cap_id}",
                 "scalar_visible": True,
-                "cmi": float(cmi),
+                "cmi_bits": float(cmi / LN2),
+                "cmi_diagnostic_nats": float(cmi),
                 "W_rel": float(collar_fraction),
                 "source": "collar_markov_report",
                 "theta0": row.get("theta0"),
@@ -557,9 +611,11 @@ def run_proxy_certificate_input(run_dir: Path) -> dict[str, Any]:
                 "id": f"cap_{cap_id}",
                 "weight": float(collar_count),
                 "I_bits": float(cmi),
-                "dI_d_delta_b": float(derivative),
+                "cmi_diagnostic_nats": float(cmi * LN2),
+                "d_cmi_d_cap_angle_proxy": float(derivative * LN2),
                 "theta0": row.get("theta0"),
-                "k": _theta_to_k_proxy(row.get("theta0")),
+                "k_screen_angle_proxy": _theta_to_k_proxy(row.get("theta0")),
+                "k_proxy_units": "inverse_cap_opening_angle_proxy",
                 "a": 1.0,
                 "source": "finite_collar_derivative_proxy_from_collar_markov_report",
             }
@@ -617,9 +673,13 @@ def run_proxy_certificate_input(run_dir: Path) -> dict[str, Any]:
         "parent_collar": {
             "theorem_grade_parent_collar_ladder": False,
             "ell": 1.0,
+            "proper_ell_m": 1.0,
+            SOURCE_LOCALIZATION_SATURATION_RECEIPT: False,
+            MODULAR_SOURCE_CHARGE_RECEIPT: False,
+            ANOMALY_CURRENT_CONSERVATION_RECEIPT: False,
             "a_values": a_values,
             "V_com": 1.0,
-            "c": 1.0,
+            "c_si": C_SI,
             "rho_b": omega_b,
             "rho_A_background": omega_a,
             "samples": parent_samples,
@@ -711,15 +771,40 @@ def toy_certificate_input() -> dict[str, Any]:
         },
         "parent_collar": {
             "ell": 1.0,
+            "proper_ell_m": 1.0,
+            SOURCE_LOCALIZATION_SATURATION_RECEIPT: True,
+            MODULAR_SOURCE_CHARGE_RECEIPT: True,
+            ANOMALY_CURRENT_CONSERVATION_RECEIPT: True,
             "a_values": [1.0, 0.5],
             "V_com": 1.0,
-            "c": 1.0,
+            "c_si": C_SI,
             "rho_b": 0.049,
             "rho_A_background": 0.264,
             "samples": [
-                {"id": "C0", "weight": 1.0, "I_bits": 0.012, "dI_d_delta_b": 0.0010},
-                {"id": "C1", "weight": 2.0, "I_bits": 0.018, "dI_d_delta_b": 0.0015},
-                {"id": "C2", "weight": 1.5, "I_bits": 0.015, "dI_d_delta_b": 0.0012},
+                {
+                    "id": "C0",
+                    "weight": 1.0,
+                    "I_bits": 0.012,
+                    "modular_source_charge_nats": 0.012 * LN2,
+                    "source_localization_residual_nats": 0.0,
+                    "d_cmi_d_cap_angle_proxy": 0.0010 * LN2,
+                },
+                {
+                    "id": "C1",
+                    "weight": 2.0,
+                    "I_bits": 0.018,
+                    "modular_source_charge_nats": 0.018 * LN2,
+                    "source_localization_residual_nats": 0.0,
+                    "d_cmi_d_cap_angle_proxy": 0.0015 * LN2,
+                },
+                {
+                    "id": "C2",
+                    "weight": 1.5,
+                    "I_bits": 0.015,
+                    "modular_source_charge_nats": 0.015 * LN2,
+                    "source_localization_residual_nats": 0.0,
+                    "d_cmi_d_cap_angle_proxy": 0.0012 * LN2,
+                },
             ],
             "small_field_support": {"passes": True, "min_x_positive": 0.001},
         },
@@ -817,6 +902,18 @@ def _packet_cmi_bits(packet: dict[str, Any]) -> float:
             - float(entropy.get("ABD", 0.0)),
         )
     raise ValueError(f"packet {packet.get('id') or packet.get('packet_id')} has no CMI source")
+
+
+def _sample_cmi_diagnostic_nats(sample: dict[str, Any]) -> float:
+    for key in ("cmi_diagnostic_nats", "I_nats", "cmi_nats"):
+        value = _float_or_none(sample.get(key))
+        if value is not None:
+            return max(0.0, float(value))
+    for key in ("I_bits", "cmi_bits", "cmi", "I"):
+        value = _float_or_none(sample.get(key))
+        if value is not None:
+            return max(0.0, float(value) * LN2)
+    return 0.0
 
 
 def _validate_state_index(index: int, state_count: int) -> None:

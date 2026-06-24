@@ -8,6 +8,8 @@ import numpy as np
 
 from oph_fpe.cosmology.comparable_data import comparable_data_report
 from oph_fpe.cosmology.finite_certificates import (
+    HBAR_SI,
+    C_SI,
     cmi_bits,
     finite_certificate_bundle,
     no_data_use_receipt,
@@ -48,7 +50,12 @@ def test_finite_certificate_bundle_recomputes_toy_values():
     assert release["SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT"] is False
     assert parent["small_field_support"]["passes"] is True
     assert parent["Q_A"] > 0.0
-    assert parent["kernels"][0]["B_A"] > 0.0
+    assert parent["kernels"][0]["B_A"] is None
+    expected_charge = ((1.0 * 0.012 + 2.0 * 0.018 + 1.5 * 0.015) / 4.5) * math.log(2.0)
+    expected_rho = 15.0 * HBAR_SI * expected_charge / (8.0 * math.pi**2 * C_SI)
+    assert math.isclose(parent["modular_source_charge_nats"], expected_charge)
+    assert math.isclose(parent["rho_A0_kg_m3"], expected_rho)
+    assert parent["SOURCE_LOCALIZATION_SATURATION_RECEIPT"] is True
     assert repair["row_sum_max_error"] < 1.0e-12
     assert repair["detailed_balance_max_error"] < 1.0e-12
     assert repair["Gamma_rec"] > 0.0
@@ -164,6 +171,7 @@ def test_run_proxy_certificate_bundle_uses_cached_run_receipts(tmp_path: Path):
     assert data["parent_collar"]["theorem_grade_parent_collar_ladder"] is False
     assert data["parent_collar"]["small_field_support"]["passes"] is False
     assert data["parent_collar"]["refinement_convergence"]["passes"] is False
+    assert data["parent_collar"]["SOURCE_LOCALIZATION_SATURATION_RECEIPT"] is False
     assert data["repair_matrix"]["theorem_grade_repair_matrix"] is False
     assert data["repair_matrix"]["actual_repair_event_trace"] is False
     assert len(data["release_code"]["packets"]) == 2
@@ -179,3 +187,18 @@ def test_run_proxy_certificate_bundle_uses_cached_run_receipts(tmp_path: Path):
     assert report["physical_cmb_prediction"] is False
     assert report["proxy_certificate"] is True
     assert (out / "finite_certificate_input_from_run.json").exists()
+
+
+def test_parent_collar_keeps_cmi_proxy_out_of_density_without_source_receipt():
+    data = toy_certificate_input()
+    data["parent_collar"]["SOURCE_LOCALIZATION_SATURATION_RECEIPT"] = False
+    for sample in data["parent_collar"]["samples"]:
+        sample.pop("modular_source_charge_nats", None)
+
+    report = finite_certificate_bundle(data)
+    parent = report["parent_collar"]
+
+    assert parent["cmi_diagnostic_nats"] > 0.0
+    assert parent["modular_source_charge_nats"] is None
+    assert parent["rho_A0_kg_m3"] is None
+    assert parent["rho_A_by_a"] == {}

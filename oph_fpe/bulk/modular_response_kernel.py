@@ -724,6 +724,7 @@ def _perturb_resettle_matrix(
                             target_packets,
                             weights,
                             class_count,
+                            feature_types=feature_types,
                         )
                     else:
                         values = _transition_features_same_support(
@@ -732,6 +733,7 @@ def _perturb_resettle_matrix(
                             target_packets,
                             weights,
                             class_count,
+                            feature_types=feature_types,
                         )
                     for feature_type in feature_types:
                         feature_values[feature_type][row_index] = values[feature_type]
@@ -1055,6 +1057,8 @@ def _transition_features_same_support(
     target_packets: np.ndarray,
     weights: np.ndarray,
     class_count: int,
+    *,
+    feature_types: tuple[str, ...] | None = None,
 ) -> dict[str, np.ndarray | float]:
     support = np.asarray(support, dtype=np.int64)
     valid = (support >= 0) & (support < source_packets.size) & (support < target_packets.size) & (support < weights.size)
@@ -1068,6 +1072,7 @@ def _transition_features_same_support(
         target_packets,
         weights,
         class_count,
+        feature_types=feature_types,
     )
 
 
@@ -1114,6 +1119,8 @@ def _transition_features_between_supports(
     target_packets: np.ndarray,
     weights: np.ndarray,
     class_count: int,
+    *,
+    feature_types: tuple[str, ...] | None = None,
 ) -> dict[str, np.ndarray | float]:
     support = np.asarray(support, dtype=np.int64)
     transported = np.asarray(transported, dtype=np.int64)
@@ -1138,6 +1145,7 @@ def _transition_features_between_supports(
         target_packets,
         weights,
         class_count,
+        feature_types=feature_types,
     )
 
 
@@ -1148,36 +1156,62 @@ def _transition_features_from_indices(
     target_packets: np.ndarray,
     weights: np.ndarray,
     class_count: int,
+    *,
+    feature_types: tuple[str, ...] | None = None,
 ) -> dict[str, np.ndarray | float]:
-    source_values = np.clip(np.asarray(source_packets[source], dtype=np.int64), 0, int(class_count) - 1)
-    target_values = np.clip(np.asarray(target_packets[target], dtype=np.int64), 0, int(class_count) - 1)
+    requested = set(_normalized_transition_feature_types(feature_types)) if feature_types is not None else {
+        "class_distribution_delta",
+        "class_log_odds_delta",
+        "transition_matrix_delta",
+        "entropy_delta",
+        "sector_preservation_delta",
+        "change_probability_delta",
+    }
+    class_count = max(1, int(class_count))
+    source_values = np.clip(np.asarray(source_packets[source], dtype=np.int64), 0, class_count - 1)
+    target_values = np.clip(np.asarray(target_packets[target], dtype=np.int64), 0, class_count - 1)
     local_weights = np.asarray(weights[source], dtype=float)
     total = max(float(np.sum(local_weights)), 1e-12)
-    base = np.bincount(source_values, weights=local_weights, minlength=int(class_count)) / total
-    pert = np.bincount(target_values, weights=local_weights, minlength=int(class_count)) / total
-    class_delta = pert - base
-    eps = 1e-6
-    log_odds_delta = (
-        np.log((pert + eps) / (1.0 - pert + eps))
-        - np.log((base + eps) / (1.0 - base + eps))
+    result: dict[str, np.ndarray | float] = {}
+    needs_distribution = bool(
+        requested
+        & {
+            "class_distribution_delta",
+            "class_log_odds_delta",
+            "transition_matrix_delta",
+            "entropy_delta",
+        }
     )
-    joint_index = source_values * int(class_count) + target_values
-    joint = np.bincount(joint_index, weights=local_weights, minlength=int(class_count) * int(class_count))
-    joint = joint.reshape((int(class_count), int(class_count))) / total
-    baseline_joint = np.diag(base)
-    transition_delta = joint - baseline_joint
-    same_probability = float(np.sum(local_weights[source_values == target_values]) / total)
-    change_probability = 1.0 - same_probability
-    entropy_delta = _entropy_from_probabilities(pert) - _entropy_from_probabilities(base)
-    return {
-        "class_distribution_delta": class_delta,
-        "target_distribution_delta": class_delta,
-        "class_log_odds_delta": log_odds_delta,
-        "transition_matrix_delta": transition_delta.reshape(-1),
-        "entropy_delta": float(entropy_delta),
-        "sector_preservation_delta": float(same_probability - 1.0),
-        "change_probability_delta": float(change_probability),
-    }
+    base: np.ndarray | None = None
+    pert: np.ndarray | None = None
+    class_delta: np.ndarray | None = None
+    if needs_distribution:
+        base = np.bincount(source_values, weights=local_weights, minlength=class_count) / total
+        pert = np.bincount(target_values, weights=local_weights, minlength=class_count) / total
+        class_delta = pert - base
+    if "class_distribution_delta" in requested and class_delta is not None:
+        result["class_distribution_delta"] = class_delta
+        result["target_distribution_delta"] = class_delta
+    if "class_log_odds_delta" in requested and base is not None and pert is not None:
+        eps = 1e-6
+        result["class_log_odds_delta"] = (
+            np.log((pert + eps) / (1.0 - pert + eps))
+            - np.log((base + eps) / (1.0 - base + eps))
+        )
+    if "transition_matrix_delta" in requested and base is not None:
+        joint_index = source_values * class_count + target_values
+        joint = np.bincount(joint_index, weights=local_weights, minlength=class_count * class_count)
+        joint = joint.reshape((class_count, class_count)) / total
+        result["transition_matrix_delta"] = (joint - np.diag(base)).reshape(-1)
+    if "entropy_delta" in requested and base is not None and pert is not None:
+        result["entropy_delta"] = float(_entropy_from_probabilities(pert) - _entropy_from_probabilities(base))
+    if requested & {"sector_preservation_delta", "change_probability_delta"}:
+        same_probability = float(np.sum(local_weights[source_values == target_values]) / total)
+        if "sector_preservation_delta" in requested:
+            result["sector_preservation_delta"] = float(same_probability - 1.0)
+        if "change_probability_delta" in requested:
+            result["change_probability_delta"] = float(1.0 - same_probability)
+    return result
 
 
 def _empty_transition_features(class_count: int) -> dict[str, np.ndarray | float]:
@@ -1466,7 +1500,14 @@ def _object_transition_matrix(
                     for feature_type in feature_types
                 }
                 for row_index, (support, transported) in enumerate(zip(supports, transported_supports, strict=False)):
-                    values = _transition_features_for_support(support, transported, packets, weights, class_count)
+                    values = _transition_features_for_support(
+                        support,
+                        transported,
+                        packets,
+                        weights,
+                        class_count,
+                        feature_types=feature_types,
+                    )
                     for feature_type in feature_types:
                         feature_values[feature_type][row_index] = values[feature_type]
                 columns.extend(_transition_feature_columns(feature_values, feature_types, class_count))
@@ -1512,6 +1553,7 @@ def _collar_operator_transition_matrix(
                         np.asarray(packets, dtype=np.int64),
                         operator_weights,
                         class_count,
+                        feature_types=feature_types,
                     )
                     for feature_type in feature_types:
                         feature_values[feature_type][row_index] = values[feature_type]
@@ -1590,6 +1632,8 @@ def _transition_features_for_support(
     packets: np.ndarray,
     weights: np.ndarray,
     class_count: int,
+    *,
+    feature_types: tuple[str, ...] | None = None,
 ) -> dict[str, np.ndarray | float]:
     support = np.asarray(support, dtype=np.int64)
     transported = np.asarray(transported, dtype=np.int64)
@@ -1615,6 +1659,7 @@ def _transition_features_for_support(
         packets,
         weights,
         class_count,
+        feature_types=feature_types,
     )
 
 

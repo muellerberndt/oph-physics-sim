@@ -34,9 +34,13 @@ def test_flat_sector_selection_reports_residual_anomaly():
         omega_r0=0.0001,
     )
 
-    assert report["selected_Omega_K"] == 0.0
-    assert math.isclose(report["Omega_A0_residual"], 0.2679)
-    assert report["rho_A_over_rho_b"] > 5.0
+    assert report["status"] == "OPEN_THEOREM"
+    assert report["geometry_branch"] == "UNRESOLVED"
+    assert report["selected_Omega_K"] is None
+    assert report["Omega_A0"] is None
+    assert report["Omega_A0_residual"] is None
+    assert math.isclose(report["Omega_A0_plus_Omega_K0"], 0.2679)
+    assert report["anomaly_curvature_degeneracy"] is True
 
 
 def test_cmb_success_ladder_imports_v04_tables(tmp_path: Path):

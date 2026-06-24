@@ -16,12 +16,16 @@ def test_scalar_quotient_report_emits_center_free_scalar_without_physical_claim(
     report = scalar_quotient_report(run)
 
     assert report["mode"] == "oph_scalar_geometric_quotient_report_v0"
-    assert report["SCALAR_QUOTIENT_RECEIPT"] is True
+    assert report["SCALAR_QUOTIENT_RECEIPT"] is False
+    assert report["SCREEN_SCALAR_QUOTIENT_RECEIPT"] is False
+    assert report["DIAGNOSTIC_SCALAR_FEATURE_PROXY_RECEIPT"] is True
     assert report["physical_cmb_prediction"] is False
     assert report["scalar_packet_alphabet_size"] > 1
     assert report["scalar_field_statistics"]["monopole_dipole_removed"] is True
     assert report["readiness_gates"]["primary_no_forbidden_geometry"] is True
+    assert report["readiness_gates"]["geometric_volume_jacobian_readout"] is False
     assert report["readiness_gates"]["theorem_grade_scalar_release_code"] is False
+    assert "screen_scalar_quotient_receipt_missing" in report["blockers"]
     assert math.isclose(report["edge_center_readout"]["n_s_P_over_48"], 1.0 - P_STAR / 48.0)
 
 
@@ -47,7 +51,7 @@ def test_scalar_quotient_writer_and_comparable_lane(tmp_path: Path):
     assert (run / "scalar_quotient_report.md").exists()
     assert (run / "scalar_quotient_packets.csv").exists()
     assert lane["run_count"] == 1
-    assert lane["scalar_quotient_receipt_count"] == 1
+    assert lane["scalar_quotient_receipt_count"] == 0
     assert lane["finite_ready_count"] == 0
     assert lane["theorem_grade_release_count"] == 0
 

@@ -321,6 +321,7 @@ def history_transition_density(
         "repair_load",
         "cumulative_repair_load",
         "local_mismatch_density",
+        "modular_time",
         "s3_class_density",
         "s3_sector_class",
     ):
@@ -398,6 +399,7 @@ def collar_operator_system_density(
         "repair_load",
         "cumulative_repair_load",
         "local_mismatch_density",
+        "modular_time",
         "s3_class_density",
         "s3_sector_class",
     ):
@@ -789,6 +791,11 @@ def history_koopman_modular_generator(
             "rank": 0,
             "nonunitary_defect": 1.0,
         }
+    effective_response_lag, response_lag_source = _koopman_effective_response_lag(
+        states,
+        basis,
+        fallback_lag=float(response_lag),
+    )
     X = np.hstack(left_columns)
     Y = np.hstack(right_columns)
     sample_count = max(float(X.shape[1]), 1.0)
@@ -802,7 +809,7 @@ def history_koopman_modular_generator(
     try:
         unitary, _positive = polar(transition)
         log_unitary = logm(unitary)
-        generator = _hermitian((-1j / max(float(response_lag), 1.0e-12)) * log_unitary)
+        generator = _hermitian((-1j / max(float(effective_response_lag), 1.0e-12)) * log_unitary)
     except Exception:
         generator = np.zeros((basis.size, basis.size), dtype=complex)
         unitary = np.eye(basis.size, dtype=complex)
@@ -819,6 +826,9 @@ def history_koopman_modular_generator(
         "rank": int(min(rank_00, rank_11)),
         "rank_00": int(rank_00),
         "rank_11": int(rank_11),
+        "configured_response_lag": float(response_lag),
+        "effective_response_lag": float(effective_response_lag),
+        "response_lag_source": response_lag_source,
         "nonunitary_defect": float(nonunitary_defect),
         "generator_frobenius_norm": generator_norm,
         "geometry_dependency_count": 0,
@@ -827,6 +837,42 @@ def history_koopman_modular_generator(
             "It does not use lambda_C, cap tangent coordinates, H3 coordinates, or a declared 2*pi target."
         ),
     }
+
+
+def _koopman_effective_response_lag(
+    states: list[dict[str, np.ndarray]],
+    basis: np.ndarray,
+    *,
+    fallback_lag: float,
+) -> tuple[float, str]:
+    """Infer Koopman time units from observer-visible modular-time records."""
+
+    basis = np.asarray(basis, dtype=np.int64)
+    if basis.size == 0:
+        return float(fallback_lag), "configured_fallback_empty_basis"
+    max_index = int(np.max(basis, initial=-1))
+    increments: list[float] = []
+    for before, after in zip(states[:-1], states[1:], strict=False):
+        before_time = before.get("modular_time")
+        after_time = after.get("modular_time")
+        if before_time is None or after_time is None:
+            continue
+        before_array = np.asarray(before_time, dtype=float)
+        after_array = np.asarray(after_time, dtype=float)
+        if before_array.ndim != 1 or after_array.ndim != 1:
+            continue
+        if before_array.size <= max_index or after_array.size <= max_index:
+            continue
+        delta = after_array[basis] - before_array[basis]
+        finite = delta[np.isfinite(delta)]
+        positive = finite[finite > 1.0e-12]
+        if positive.size:
+            increments.append(float(np.median(positive)))
+    if increments:
+        lag = float(np.median(increments))
+        if np.isfinite(lag) and lag > 1.0e-12:
+            return lag, "observer_visible_modular_time_median_increment"
+    return float(fallback_lag), "configured_fallback_no_modular_time_increment"
 
 
 def bw_state_derived_residual(
@@ -1332,11 +1378,12 @@ def _state_summary(
         and math.isclose(float(transition_response_scale), 2.0 * math.pi)
     )
     inferred_clock_fit = inferred_clock_fit or {"enabled": False, "receipt": False}
+    finite_generator_rows = bool(rows and np.isfinite(float(median)))
+    clock_response_degenerate = bool(inferred_clock_fit.get("response_degenerate", False))
     endogenous_modular_generator_receipt = bool(
         endogenous_generator
-        and selected_scale_label == "2pi"
-        and correct_beats_controls
-        and not bool(inferred_clock_fit.get("response_degenerate", False))
+        and finite_generator_rows
+        and not clock_response_degenerate
     )
     kms_geometric_clock_fit_receipt = bool(inferred_clock_fit.get("receipt", False))
     summary = {
@@ -1355,6 +1402,12 @@ def _state_summary(
         "density_inverse_temperature": float(density_inverse_temperature),
         "generator_scale": float(generator_scale),
         "endogenous_modular_generator": endogenous_generator,
+        "endogenous_generator_non_degenerate": bool(endogenous_modular_generator_receipt),
+        "endogenous_generator_receipt_boundary": (
+            "L2 only: the modular generator is finite and observer-record/cap-state derived. "
+            "It does not certify the 2*pi KMS/BW clock; that is the separate L3 "
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT gate."
+        ),
         "declared_cap_flow_generator": declared_cap_flow,
         "declared_transition_response_density": declared_response_density,
         "repair_affinity_response_density": repair_response_density,
@@ -1575,6 +1628,10 @@ def _inferred_modular_clock_fit(
                         for scale in known_scales
                         if residual_by_scale.get(_scale_label(scale)) is not None
                     }
+                    best_known_scale_label = (
+                        min(known_residuals, key=known_residuals.get) if known_residuals else None
+                    )
+                    scale_diagnostics = _clock_row_scale_diagnostics(known_residuals)
                     rows.append(
                         {
                             "cap_id": int(cap_id),
@@ -1586,6 +1643,14 @@ def _inferred_modular_clock_fit(
                             "best_scale_label": _scale_label(float(best_scale)) if best_scale is not None else None,
                             "best_residual": float(best_residual),
                             "known_scale_residuals": known_residuals,
+                            "best_known_scale_label": best_known_scale_label,
+                            **scale_diagnostics,
+                            "clock_carrier_row": bool(best_known_scale_label not in (None, "0")),
+                            "informative_clock_carrier_row": bool(
+                                best_known_scale_label not in (None, "0")
+                                and scale_diagnostics["known_scale_best_advantage"] >= 0.005
+                                and scale_diagnostics["known_scale_best_gap"] >= 0.001
+                            ),
                             "basis_count": int(basis.size),
                         }
                     )
@@ -1612,6 +1677,175 @@ def _inferred_modular_clock_fit(
                 "kappa through s_hat(t)=kappa*t+b and only then compares against 2*pi controls."
             ),
         }
+    known = {
+        "1x": 1.0,
+        "pi": math.pi,
+        "2pi": 2.0 * math.pi,
+        "4pi": 4.0 * math.pi,
+    }
+    all_row_fit = _clock_fit_from_rows(valid, known=known, fit_label="all_rows")
+    clock_carrier_rows = [row for row in valid if bool(row.get("clock_carrier_row", False))]
+    clock_carrier_fit = _clock_fit_from_rows(
+        clock_carrier_rows,
+        known=known,
+        fit_label="nonstatic_clock_carrier_rows",
+    )
+    informative_clock_carrier_rows = [
+        row for row in clock_carrier_rows if bool(row.get("informative_clock_carrier_row", False))
+    ]
+    informative_clock_carrier_fit = _clock_fit_from_rows(
+        informative_clock_carrier_rows,
+        known=known,
+        fit_label="informative_nonstatic_clock_carrier_rows",
+    )
+    selected_fit = (
+        all_row_fit
+        if all_row_fit.get("receipt", False)
+        else clock_carrier_fit
+        if clock_carrier_fit.get("receipt", False)
+        else informative_clock_carrier_fit
+    )
+    receipt = bool(selected_fit.get("receipt", False))
+    blockers: list[str] = []
+    if not receipt:
+        blockers.extend(
+            f"all_rows:{blocker}" for blocker in list(all_row_fit.get("blockers") or [])
+        )
+        blockers.extend(
+            f"clock_carrier_rows:{blocker}"
+            for blocker in list(clock_carrier_fit.get("blockers") or [])
+        )
+        blockers.extend(
+            f"informative_clock_carrier_rows:{blocker}"
+            for blocker in list(informative_clock_carrier_fit.get("blockers") or [])
+        )
+    return {
+        "enabled": True,
+        "receipt": receipt,
+        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": receipt,
+        "kms_geometric_clock_fit_receipt": receipt,
+        "mode": "inferred_modular_clock_fit",
+        "selected_clock_fit": selected_fit.get("fit_label"),
+        "row_count": int(len(rows)),
+        "valid_row_count": int(len(valid)),
+        "clock_carrier_row_count": int(len(clock_carrier_rows)),
+        "informative_clock_carrier_row_count": int(len(informative_clock_carrier_rows)),
+        "static_or_no_flow_row_count": int(len(valid) - len(clock_carrier_rows)),
+        "distinct_time_count": int(distinct_time_count),
+        "kappa_hat": selected_fit.get("kappa_hat"),
+        "kappa_95ci": selected_fit.get("kappa_95ci"),
+        "intercept_hat": selected_fit.get("intercept_hat"),
+        "median_fit_abs_residual": selected_fit.get("median_fit_abs_residual"),
+        "nearest_known_scale": selected_fit.get("nearest_known_scale"),
+        "median_known_scale_residuals": selected_fit.get("median_known_scale_residuals", {}),
+        "wrong_scale_residual_ratios_vs_2pi": selected_fit.get(
+            "wrong_scale_residual_ratios_vs_2pi",
+            {},
+        ),
+        "no_flow_selected_fraction": selected_fit.get("no_flow_selected_fraction"),
+        "response_degenerate": selected_fit.get("response_degenerate", False),
+        "all_row_fit": all_row_fit,
+        "clock_carrier_fit": clock_carrier_fit,
+        "informative_clock_carrier_fit": informative_clock_carrier_fit,
+        "clock_row_quality_summary": _clock_row_quality_summary(valid),
+        "blockers": blockers,
+        "rows": rows[:128],
+        "claim_boundary": (
+            "finite inferred-clock audit. The fit searches over cap-flow parameter s without naming "
+            "2*pi, fits s_hat(t)=kappa*t+b from endogenous modular transport, and only afterward "
+            "compares kappa to 1, pi, 2*pi, and 4*pi. Static rows whose own known-scale diagnostic "
+            "selects zero flow are retained in all_row_fit but excluded from clock_carrier_fit, so "
+            "invariant repair/readout observables cannot dominate the KMS clock estimate. Rows also "
+            "report target-free known-scale contrast and gap diagnostics, so nearly flat residual "
+            "landscapes are visible rather than treated as strong clock evidence. Passing this is still "
+            "finite-regulator evidence, not a continuum theorem proof."
+        ),
+    }
+
+
+def _clock_row_scale_diagnostics(known_residuals: dict[str, float]) -> dict[str, Any]:
+    finite = {
+        str(label): float(value)
+        for label, value in (known_residuals or {}).items()
+        if value is not None and np.isfinite(float(value))
+    }
+    if len(finite) < 2:
+        return {
+            "known_scale_spread": 0.0,
+            "known_scale_best_advantage": 0.0,
+            "known_scale_best_gap": 0.0,
+            "known_scale_residual_flat": True,
+        }
+    values = sorted(finite.values())
+    median = max(float(np.median(values)), 1.0e-15)
+    best = values[0]
+    second = values[1]
+    spread = (values[-1] - best) / median
+    advantage = (median - best) / median
+    gap = (second - best) / median
+    return {
+        "known_scale_spread": float(spread),
+        "known_scale_best_advantage": float(advantage),
+        "known_scale_best_gap": float(gap),
+        "known_scale_residual_flat": bool(advantage < 0.005 or gap < 0.001),
+    }
+
+
+def _clock_row_quality_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    valid = [
+        row
+        for row in rows
+        if row.get("known_scale_best_advantage") is not None
+        and np.isfinite(float(row.get("known_scale_best_advantage", 0.0)))
+    ]
+    if not valid:
+        return {
+            "row_count": 0,
+            "flat_known_scale_residual_count": 0,
+            "informative_clock_carrier_count": 0,
+        }
+    advantages = np.asarray([float(row.get("known_scale_best_advantage", 0.0)) for row in valid], dtype=float)
+    gaps = np.asarray([float(row.get("known_scale_best_gap", 0.0)) for row in valid], dtype=float)
+    return {
+        "row_count": int(len(valid)),
+        "flat_known_scale_residual_count": int(sum(bool(row.get("known_scale_residual_flat", False)) for row in valid)),
+        "clock_carrier_count": int(sum(bool(row.get("clock_carrier_row", False)) for row in valid)),
+        "informative_clock_carrier_count": int(
+            sum(bool(row.get("informative_clock_carrier_row", False)) for row in valid)
+        ),
+        "median_known_scale_best_advantage": float(np.median(advantages)),
+        "median_known_scale_best_gap": float(np.median(gaps)),
+        "claim_boundary": (
+            "Target-free row-quality diagnostics for the inferred KMS/BW clock. A row with a nearly "
+            "flat known-scale residual landscape is retained for audit but should not be read as strong "
+            "clock evidence."
+        ),
+    }
+
+
+def _clock_fit_from_rows(
+    rows: list[dict[str, Any]],
+    *,
+    known: dict[str, float],
+    fit_label: str,
+) -> dict[str, Any]:
+    valid = [
+        row
+        for row in rows
+        if row.get("s_hat") is not None
+        and row.get("kappa_row_hat") is not None
+        and np.isfinite(float(row["s_hat"]))
+        and np.isfinite(float(row["kappa_row_hat"]))
+    ]
+    distinct_time_count = len({float(row["time"]) for row in valid})
+    if not valid or distinct_time_count < 3:
+        return {
+            "fit_label": fit_label,
+            "receipt": False,
+            "valid_row_count": int(len(valid)),
+            "distinct_time_count": int(distinct_time_count),
+            "blockers": ["requires_at_least_three_nonzero_modular_times"],
+        }
     x = np.asarray([float(row["time"]) for row in valid], dtype=float)
     y = np.asarray([float(row["s_hat"]) for row in valid], dtype=float)
     design = np.column_stack([x, np.ones_like(x)])
@@ -1619,16 +1853,14 @@ def _inferred_modular_clock_fit(
     fitted = design @ np.asarray([kappa_hat, intercept_hat], dtype=float)
     residual = y - fitted
     row_kappas = np.asarray([float(row["kappa_row_hat"]) for row in valid], dtype=float)
-    stderr = float(np.std(row_kappas, ddof=1) / math.sqrt(max(row_kappas.size, 1))) if row_kappas.size > 1 else float("inf")
+    stderr = (
+        float(np.std(row_kappas, ddof=1) / math.sqrt(max(row_kappas.size, 1)))
+        if row_kappas.size > 1
+        else float("inf")
+    )
     ci_half_width = 1.96 * stderr if np.isfinite(stderr) else float("inf")
     ci_low = float(kappa_hat - ci_half_width)
     ci_high = float(kappa_hat + ci_half_width)
-    known = {
-        "1x": 1.0,
-        "pi": math.pi,
-        "2pi": 2.0 * math.pi,
-        "4pi": 4.0 * math.pi,
-    }
     nearest_known = min(known, key=lambda label: abs(float(kappa_hat) - known[label]))
     median_known_residuals: dict[str, float] = {}
     for label in ["0", "1x", "pi", "2pi", "4pi"]:
@@ -1649,24 +1881,20 @@ def _inferred_modular_clock_fit(
     no_flow_fraction = float(np.mean(np.isclose(row_kappas, 0.0, atol=0.25))) if row_kappas.size else 1.0
     response_degenerate = bool(no_flow_fraction >= 0.5 or nearest_known == "1x")
     blockers: list[str] = []
-    if not (ci_low <= 2.0 * math.pi <= ci_high):
+    ci_tol = 1.0e-9
+    if not (ci_low - ci_tol <= 2.0 * math.pi <= ci_high + ci_tol):
         blockers.append("two_pi_not_inside_kappa_confidence_interval")
     for label in ("1x", "pi", "4pi"):
         value = known[label]
-        if ci_low <= value <= ci_high:
+        if ci_low + ci_tol <= value <= ci_high - ci_tol:
             blockers.append(f"{label}_not_excluded_by_kappa_confidence_interval")
     if nearest_known != "2pi":
         blockers.append(f"nearest_known_scale_is_{nearest_known}")
     if response_degenerate:
         blockers.append("inferred_clock_response_degenerate_or_wrong_scale")
-    receipt = bool(not blockers)
     return {
-        "enabled": True,
-        "receipt": receipt,
-        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": receipt,
-        "kms_geometric_clock_fit_receipt": receipt,
-        "mode": "inferred_modular_clock_fit",
-        "row_count": int(len(rows)),
+        "fit_label": fit_label,
+        "receipt": bool(not blockers),
         "valid_row_count": int(len(valid)),
         "distinct_time_count": int(distinct_time_count),
         "kappa_hat": float(kappa_hat),
@@ -1679,13 +1907,6 @@ def _inferred_modular_clock_fit(
         "no_flow_selected_fraction": no_flow_fraction,
         "response_degenerate": response_degenerate,
         "blockers": blockers,
-        "rows": rows[:128],
-        "claim_boundary": (
-            "finite inferred-clock audit. The fit searches over cap-flow parameter s without naming "
-            "2*pi, fits s_hat(t)=kappa*t+b from endogenous modular transport, and only afterward "
-            "compares kappa to 1, pi, 2*pi, and 4*pi. Passing this is still finite-regulator evidence, "
-            "not a continuum theorem proof."
-        ),
     }
 
 
@@ -2278,6 +2499,7 @@ def _koopman_feature_series(states: list[dict[str, np.ndarray]], basis: np.ndarr
         "cumulative_repair_load",
         "local_mismatch_density",
         "modular_depth",
+        "modular_time",
         "s3_class_density",
         "s3_sector_class",
     )

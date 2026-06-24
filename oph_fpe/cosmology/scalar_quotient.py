@@ -80,18 +80,19 @@ def scalar_quotient_report(
     n_s = 1.0 - theta_oph
     scalar_entropy = _entropy_bits(np.asarray(list(packet_counts.values()), dtype=float))
     no_forbidden_primary = _primary_does_not_depend_on_forbidden(observer_views)
-    basic_receipt = bool(
+    diagnostic_proxy_receipt = bool(
         no_forbidden_primary
         and len(packet_counts) > 0
         and np.isfinite(float(np.var(center_removed)))
         and dipole["center_free_scalar_variance"] is not None
     )
+    geometric_scalar_receipt = False
     active_33_level_clause = bool(observer_level_proxy >= target_level_count)
     support_capacity_clause = bool(
         patch_capacity_level_proxy is not None and patch_capacity_level_proxy >= target_level_count
     )
     theorem_grade = False
-    finite_ready = bool(basic_receipt and active_33_level_clause and theorem_grade)
+    finite_ready = bool(geometric_scalar_receipt and active_33_level_clause and theorem_grade)
     report = {
         "mode": "oph_scalar_geometric_quotient_report_v0",
         "source_run_dir": str(root),
@@ -122,6 +123,7 @@ def scalar_quotient_report(
             **source_scalar,
             "low_mode_projector": "weighted_l0_l1_removal",
             "source": "observer_visible_scalar_readout_fields",
+            "geometric_q_r": False,
         },
         "active_angular_levels": {
             "target_ell_IR": int(target_ell_ir),
@@ -148,19 +150,26 @@ def scalar_quotient_report(
             "scalar_packets_emitted": bool(len(packet_counts) > 0),
             "center_free_scalar_field_emitted": bool(dipole["center_free_scalar_variance"] is not None),
             "primary_no_forbidden_geometry": no_forbidden_primary,
+            "geometric_volume_jacobian_readout": False,
+            "screen_mass_matrix_readout": False,
+            "low_mode_projector_receipt": bool(dipole["monopole_dipole_removed"]),
+            "screen_scalar_quotient_receipt": geometric_scalar_receipt,
             "active_33_level_freezeout_clause": active_33_level_clause,
             "patch_capacity_33_level_support": support_capacity_clause,
             "theorem_grade_scalar_release_code": theorem_grade,
             "finite_lattice_cmb_scalar_release_ready": finite_ready,
         },
-        "SCALAR_QUOTIENT_RECEIPT": basic_receipt,
+        "SCALAR_QUOTIENT_RECEIPT": geometric_scalar_receipt,
+        "SCREEN_SCALAR_QUOTIENT_RECEIPT": geometric_scalar_receipt,
+        "DIAGNOSTIC_SCALAR_FEATURE_PROXY_RECEIPT": diagnostic_proxy_receipt,
         "finite_lattice_cmb_scalar_release_ready": finite_ready,
         "physical_cmb_prediction": False,
         "claim_boundary": (
-            "Finite scalar/geometric quotient report from observer-visible readouts. It is useful CMB "
-            "input instrumentation, but it is not a physical CMB prediction and not a strict 3D bulk "
-            "proof. The physical CMB gate stays closed until the theorem-grade scalar release code, "
-            "33-level freezeout clause, parent-collar response, repair matrix, and likelihood gates pass."
+            "Diagnostic scalar feature proxy from observer-visible readouts. It is useful CMB input "
+            "instrumentation, but it is not the theorem-grade geometric q_r. The physical CMB gate "
+            "stays closed until the volume-Jacobian readout, mass matrix, quotient-natural low-mode "
+            "projector, scalar precision, source release energy, refinement tilt, parent-collar "
+            "response, repair matrix, and likelihood gates pass."
         ),
     }
     report["blockers"] = _blockers(report)
@@ -307,6 +316,10 @@ def _blockers(report: dict[str, Any]) -> list[str]:
         blockers.append("center_free_scalar_field_missing")
     if not gates.get("primary_no_forbidden_geometry", False):
         blockers.append("scalar_primary_uses_forbidden_geometry")
+    if not gates.get("geometric_volume_jacobian_readout", False):
+        blockers.append("geometric_volume_jacobian_readout_missing")
+    if not gates.get("screen_scalar_quotient_receipt", False):
+        blockers.append("screen_scalar_quotient_receipt_missing")
     if not gates.get("active_33_level_freezeout_clause", False):
         blockers.append("active_33_level_freezeout_clause_not_established")
     if not gates.get("theorem_grade_scalar_release_code", False):

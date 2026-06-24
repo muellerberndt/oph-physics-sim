@@ -84,7 +84,7 @@ def finite_collar_boltzmann_bundle_report(run_dirs: list[Path]) -> dict[str, Any
         "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT": readiness[
             "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT"
         ],
-        "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"],
+        "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": readiness["PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE"],
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
         "contract_source_summary": {
@@ -134,6 +134,14 @@ def _b_a_rows(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "z": (1.0 / a_value - 1.0) if a_value > 0.0 else None,
                     "k": k_value,
                     "k_units": row.get("k_units", "inverse_cap_opening_angle_proxy"),
+                    "k_proxy_inverse_theta": k_value
+                    if str(row.get("k_units", "inverse_cap_opening_angle_proxy")) != "Mpc^-1"
+                    else None,
+                    "k_comoving_Mpc_inverse": k_value
+                    if str(row.get("k_units", "inverse_cap_opening_angle_proxy")) == "Mpc^-1"
+                    else None,
+                    "physical_calibration": str(row.get("k_units", "")) == "Mpc^-1"
+                    and bool(row.get("physical_calibration", False)),
                     "B_A": b_a,
                     "B_A_sem": _float(row.get("B_A_sem")),
                     "theta0": _float(row.get("theta0")),
@@ -156,7 +164,8 @@ def _rho_rows(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
             a_value = _float(row.get("a"))
             if a_value is None:
                 continue
-            rho_a = _float(row.get("rho_A", row.get("rho_A_base", row.get("base_epsilon_cmi"))))
+            rho_a = _float(row.get("rho_A", row.get("rho_A_base")))
+            cmi_diagnostic = _float(row.get("base_epsilon_cmi", row.get("cmi_diagnostic_nats")))
             rho_eq_plus = _float(row.get("rho_A_eq_plus_mean"))
             rho_eq_minus = _float(row.get("rho_A_eq_minus_mean"))
             rho_eq = _mean_optional([rho_eq_plus, rho_eq_minus])
@@ -167,10 +176,11 @@ def _rho_rows(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "source_report_index": report_index,
                     "a": a_value,
                     "z": (1.0 / a_value - 1.0) if a_value > 0.0 else None,
-                    "rho_A": abs(rho_a) if rho_a is not None else None,
-                    "rho_A_eq": abs(rho_eq) if rho_eq is not None else None,
+                    "rho_A": rho_a if rho_a is not None else None,
+                    "rho_A_eq": rho_eq if rho_eq is not None else None,
                     "rho_A_eq_plus": rho_eq_plus,
                     "rho_A_eq_minus": rho_eq_minus,
+                    "cmi_diagnostic_nats": cmi_diagnostic,
                     "rho_units": "finite_screen_response_units",
                     "control": row.get("control"),
                     "source": row.get("source", report.get("primary_parent_source", report.get("mode"))),
@@ -221,6 +231,8 @@ def _readiness(
 ) -> dict[str, Any]:
     no_data = _no_data_use_ok(no_data_receipts, b_a_reports, transition_reports)
     contract_passed = bool(contract_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False))
+    bridge = contract_validation.get("physical_scale_bridge") or {}
+    blockers = set(str(blocker) for blocker in (contract_validation.get("blockers") or []))
     b_a_diagnostic = any(
         bool(
             report.get("B_A_PAIRED_DIAGNOSTIC_RECEIPT")
@@ -245,14 +257,21 @@ def _readiness(
             bool(report.get("finite_transition_matrix_ready", False)) for report in transition_reports
         ),
         "physical_k_units_calibrated": all(
-            str(row.get("k_units")) == "h_Mpc^-1" for row in b_a_rows
+            bool(row.get("physical_calibration"))
+            and str(row.get("k_units")) == "Mpc^-1"
+            and row.get("k_comoving_Mpc_inverse") is not None
+            for row in b_a_rows
         )
-        if b_a_rows
+        if b_a_rows and bridge.get("PHYSICAL_K_RECEIPT", False)
         else False,
-        "calibrated_a_evolution": contract_passed,
-        "energy_momentum_exchange_closed": contract_passed,
-        "gauge_consistency_audited": contract_passed,
-        "refinement_convergence_passed": contract_passed,
+        "calibrated_a_evolution": bool(bridge.get("CALIBRATED_A_EVOLUTION_RECEIPT", False)),
+        "energy_momentum_exchange_closed": "stress_energy_closure_not_certified" not in blockers
+        and "recipient_stress_missing_for_nonzero_Gamma_rec" not in blockers,
+        "gauge_consistency_audited": "gauge_independence_not_certified" not in blockers,
+        "refinement_convergence_passed": bool(bridge.get("SCALE_BRIDGE_REFINEMENT_RECEIPT", False))
+        and "refinement_convergence_not_certified" not in blockers,
+        "physical_freezeout_surface": bool(bridge.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False)),
+        "no_posthoc_calibration_receipt": bool(bridge.get("NO_POSTHOC_CALIBRATION_RECEIPT", False)),
         "physical_cmb_input_contract_passed": contract_passed,
     }
     diagnostic_required = (
@@ -269,15 +288,16 @@ def _readiness(
         "energy_momentum_exchange_closed",
         "gauge_consistency_audited",
         "refinement_convergence_passed",
+        "physical_freezeout_surface",
+        "no_posthoc_calibration_receipt",
         "physical_cmb_input_contract_passed",
     )
-    physical_missing_gates = [] if contract_passed else [
-        name for name in physical_required if not checks.get(name, False)
-    ]
+    physical_missing_gates = [name for name in physical_required if not checks.get(name, False)]
+    physical_export_certificate = all(checks[name] for name in physical_required)
     return {
         "checks": checks,
         "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT": all(checks[name] for name in diagnostic_required),
-        "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": contract_passed,
+        "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": physical_export_certificate,
         "diagnostic_missing_gates": [name for name in diagnostic_required if not checks.get(name, False)],
         "physical_missing_gates": physical_missing_gates,
         "mean_abs_B_A": _mean_abs(row.get("B_A") for row in b_a_rows),

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,7 +37,19 @@ from oph_fpe.cosmology.physical_cmb_prediction import (
     write_physical_cmb_promotion_audit_report,
 )
 from oph_fpe.cosmology.physical_cmb_sources import write_physical_cmb_source_readiness_report
+from oph_fpe.cosmology.ba_kernel import ba_kernel_report_from_parent_report
+from oph_fpe.cosmology.camb_adapter import write_official_planck_readiness_report
+from oph_fpe.cosmology.compressed_likelihood import write_compressed_likelihood_reference_report
+from oph_fpe.cosmology.finite_certificates import write_run_proxy_finite_certificate_bundle
+from oph_fpe.cosmology.finite_repair_transition_clock import write_finite_repair_transition_clock_report
+from oph_fpe.cosmology.camb_adapter import (
+    write_camb_lcdm_baseline_report,
+    write_finite_repair_clock_cmb_camb_report,
+    write_scale_compressed_cmb_camb_report,
+)
 from oph_fpe.cosmology.silence_to_observation import write_silence_to_observation_report
+from oph_fpe.defects.gravity_assay import write_two_defect_stress_contraction_assay_report
+from oph_fpe.ensembles.reference_vacuum import write_reference_vacuum_baseline_report
 from oph_fpe.experiments import load_config
 from oph_fpe.scale.bw_array import run_bw_array_config
 from oph_fpe.viz import (
@@ -290,8 +303,16 @@ def run_oph_universe_pipeline(
         observer_sample_count=max(12, min(int(max_observers), 512)),
         object_sample_count=max(24, min(int(max_h3_objects), 1024)),
     )
+    visualizer_csv_aliases = _write_visualizer_csv_aliases(run_dir, readout_dir)
     silence_to_observation = write_silence_to_observation_report(run_dir, run_dir)
     cmb_diagnostics = _cmb_diagnostic_summary(run_dir)
+    post_theorem_readiness = _post_theorem_large_run_readiness(
+        theorem_contract=theorem_contract,
+        proof=proof,
+        readout=readout,
+        frontier_artifacts=frontier_artifacts,
+        cmb_diagnostics=cmb_diagnostics,
+    )
     object_viewer: dict[str, Any] = {}
     run_viewer: dict[str, Any] = {}
     timeline: dict[str, Any] = {}
@@ -379,10 +400,19 @@ def run_oph_universe_pipeline(
             "paper_faithful_consensus_bulk_emergence_receipt": bool(
                 theorem_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False)
             ),
+            "paper_geometric_branch_lorentz_contract_receipt": bool(
+                theorem_contract.get("paper_geometric_branch_lorentz_contract_receipt", False)
+            ),
+            "paper_geometric_branch_observer_spacetime_emergence_receipt": bool(
+                theorem_contract.get("paper_geometric_branch_observer_spacetime_emergence_receipt", False)
+            ),
+            "paper_geometric_branch_consensus_bulk_emergence_receipt": bool(
+                theorem_contract.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
+            ),
             "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": bool(
                 theorem_contract.get(
                     "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt",
-                    theorem_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False),
+                    theorem_contract.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False),
                 )
             ),
             "strict_neutral_bulk_contract_receipt": bool(
@@ -408,9 +438,21 @@ def run_oph_universe_pipeline(
             "paper_faithful_consensus_bulk_emergence_receipt": theorem_contract.get(
                 "paper_faithful_consensus_bulk_emergence_receipt"
             ),
+            "paper_geometric_branch_lorentz_contract_receipt": theorem_contract.get(
+                "paper_geometric_branch_lorentz_contract_receipt"
+            ),
+            "paper_geometric_branch_observer_spacetime_emergence_receipt": theorem_contract.get(
+                "paper_geometric_branch_observer_spacetime_emergence_receipt"
+            ),
+            "paper_geometric_branch_consensus_bulk_emergence_receipt": theorem_contract.get(
+                "paper_geometric_branch_consensus_bulk_emergence_receipt"
+            ),
             "strict_neutral_bulk_contract_receipt": theorem_contract.get("strict_neutral_bulk_contract_receipt"),
             "chart_blind_strict_neutral_blockers": theorem_contract.get(
                 "chart_blind_strict_neutral_blockers", []
+            ),
+            "paper_geometric_branch_primary_blockers": theorem_contract.get(
+                "paper_geometric_branch_primary_blockers", []
             ),
             "primary_blockers": theorem_contract.get("primary_blockers", []),
         },
@@ -419,12 +461,16 @@ def run_oph_universe_pipeline(
             "bulk_3d_established_observer_facing_consensus": proof.get(
                 "bulk_3d_established_observer_facing_consensus"
             ),
+            "bulk_3d_established_paper_geometric_branch_observer_facing_consensus": proof.get(
+                "bulk_3d_established_paper_geometric_branch_observer_facing_consensus"
+            ),
             "bulk_3d_established_strict": proof.get("bulk_3d_established_strict"),
             "bulk_3d_established_chart_blind_strict_neutral": proof.get(
                 "bulk_3d_established_chart_blind_strict_neutral"
             ),
             "physical_cmb_prediction": proof.get("physical_cmb_prediction"),
         },
+        "post_theorem_large_run_readiness": post_theorem_readiness,
         "cmb_diagnostic_summary": cmb_diagnostics,
         "silence_to_observation_summary": {
             "scale_compressed_pn_silence_to_observation_receipt": silence_to_observation.get(
@@ -451,9 +497,11 @@ def run_oph_universe_pipeline(
             "object_h3_viewer": object_viewer.get("viewer_path"),
             "timeline_viewer": timeline.get("viewer_path"),
             "timeline_payload": timeline.get("payload_path"),
+            "timeline_sidecar_exports": timeline.get("sidecar_exports"),
             "timeline_instructions": timeline.get("instructions_path"),
             "web_agent_brief": timeline.get("web_coding_agent_brief_path"),
             "cmb_neutral_frontier_viewer": cmb_neutral_viewer.get("viewer_path"),
+            "visualizer_csv_aliases": visualizer_csv_aliases,
         },
         "claim_boundary": (
             "Canonical theorem-following OPH universe run. The pipeline instantiates observer-like "
@@ -466,6 +514,143 @@ def run_oph_universe_pipeline(
     _write_json(run_dir / "AUTO_THEOREM_UNIVERSE_SUMMARY.json", summary)
     _write_readme(run_dir / "README_OPH_UNIVERSE_PACK.md", summary)
     return summary
+
+
+def _write_visualizer_csv_aliases(run_dir: Path, readout_dir: Path) -> dict[str, Any]:
+    """Expose stable root-level CSV names consumed by standalone viewers."""
+
+    aliases: dict[str, Any] = {}
+    for source_name, alias_name in (
+        ("consensus_h3_object_rows.csv", "h3_objects.csv"),
+        ("observer_perspective_rows.csv", "observer_perspective_rows.csv"),
+    ):
+        source = Path(readout_dir) / source_name
+        destination = Path(run_dir) / alias_name
+        if not source.exists():
+            aliases[alias_name] = {
+                "written": False,
+                "source": str(source),
+                "path": str(destination),
+                "reason": "source_missing",
+            }
+            continue
+        shutil.copyfile(source, destination)
+        aliases[alias_name] = {
+            "written": True,
+            "source": str(source),
+            "path": str(destination),
+        }
+    return aliases
+
+
+def _post_theorem_large_run_readiness(
+    *,
+    theorem_contract: dict[str, Any],
+    proof: dict[str, Any],
+    readout: dict[str, Any],
+    frontier_artifacts: dict[str, Any],
+    cmb_diagnostics: dict[str, Any],
+) -> dict[str, Any]:
+    observer_facing_bulk = bool(
+        readout.get("observer_facing_consensus_3d_bulk_readout_receipt", False)
+        and (
+            theorem_contract.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
+            or theorem_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False)
+        )
+    )
+    strict_neutral = bool(
+        theorem_contract.get("strict_neutral_bulk_contract_receipt", False)
+        or proof.get("bulk_3d_established_chart_blind_strict_neutral", False)
+    )
+    physical_cmb = bool(
+        frontier_artifacts.get("physical_cmb_prediction_receipt", False)
+        or proof.get("physical_cmb_prediction", False)
+    )
+    screen_cmb = bool(cmb_diagnostics.get("screen_proxy_cmb_receipt", False))
+    vacuum_reference = bool(frontier_artifacts.get("reference_vacuum_regression_receipt", False))
+    vacuum_native = bool(frontier_artifacts.get("oph_native_vacuum_promotion_receipt", False))
+    gravity_diagnostic = bool(frontier_artifacts.get("two_defect_stress_contraction_assay_receipt", False))
+    production_gravity = bool(frontier_artifacts.get("production_gravity_receipt", False))
+
+    if physical_cmb and strict_neutral and observer_facing_bulk:
+        recommended = "physical_cmb_and_strict_bulk_large_run"
+    elif observer_facing_bulk:
+        recommended = "observer_facing_visualization_large_run_with_diagnostic_cmb_vacuum"
+    elif screen_cmb:
+        recommended = "screen_cmb_proxy_refinement"
+    else:
+        recommended = "do_not_scale_yet"
+
+    blockers = []
+    if not observer_facing_bulk:
+        blockers.extend(
+            theorem_contract.get("paper_geometric_branch_primary_blockers")
+            or readout.get("paper_geometric_branch_primary_blockers")
+            or readout.get("finite_theorem_contract_primary_blockers")
+            or ["observer_facing_consensus_bulk_receipt_false"]
+        )
+    if not strict_neutral:
+        blockers.extend(theorem_contract.get("strict_neutral_blockers") or [])
+    if not physical_cmb:
+        blockers.extend(frontier_artifacts.get("physical_cmb_blockers") or [])
+    if not vacuum_native:
+        blockers.append("oph_native_vacuum_promotion_receipt_false")
+    if not production_gravity:
+        blockers.append("production_gravity_receipt_false")
+
+    return {
+        "mode": "post_theorem_large_run_readiness_v0",
+        "recommended_large_run_lane": recommended,
+        "cloud_run_safe_for_visualization_data": observer_facing_bulk,
+        "cloud_run_safe_for_physical_cmb_prediction": physical_cmb,
+        "cloud_run_safe_for_strict_neutral_bulk_claim": strict_neutral,
+        "lanes": {
+            "observer_facing_3p1d_h3_bulk_visualization": {
+                "status": "scale_candidate" if observer_facing_bulk else "blocked",
+                "scale_candidate": observer_facing_bulk,
+                "details": {
+                    "readout_receipt": readout.get("observer_facing_consensus_3d_bulk_readout_receipt"),
+                    "paper_geometric_branch_receipt": theorem_contract.get(
+                        "paper_geometric_branch_consensus_bulk_emergence_receipt"
+                    ),
+                    "paper_faithful_receipt": theorem_contract.get(
+                        "paper_faithful_consensus_bulk_emergence_receipt"
+                    ),
+                },
+            },
+            "strict_neutral_third_person_bulk": {
+                "status": "scale_candidate" if strict_neutral else "blocked",
+                "scale_candidate": strict_neutral,
+                "blockers": list(theorem_contract.get("strict_neutral_blockers") or []),
+            },
+            "screen_cmb_proxy": {
+                "status": "scale_candidate" if screen_cmb else "blocked",
+                "scale_candidate": screen_cmb,
+                "physical_prediction": False,
+            },
+            "physical_cmb_prediction": {
+                "status": "scale_candidate" if physical_cmb else "blocked",
+                "scale_candidate": physical_cmb,
+                "blockers": list(frontier_artifacts.get("physical_cmb_blockers") or []),
+            },
+            "reference_vacuum": {
+                "status": "diagnostic_ready" if vacuum_reference else "blocked",
+                "scale_candidate": vacuum_reference,
+                "oph_native_vacuum": vacuum_native,
+            },
+            "two_defect_gravity": {
+                "status": "diagnostic_ready" if gravity_diagnostic else "blocked",
+                "scale_candidate": gravity_diagnostic,
+                "production_gravity": production_gravity,
+            },
+        },
+        "blockers": sorted({str(blocker) for blocker in blockers if str(blocker)}),
+        "claim_boundary": (
+            "Post-theorem routing after H3/object refinement, finite theorem contract audit, proof "
+            "certificate, and observer readout. A visualization-safe lane can be true while physical "
+            "CMB, strict-neutral bulk, OPH-native vacuum, and production-gravity lanes remain closed."
+        ),
+    }
 
 
 def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -507,6 +692,7 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
             seeds=neutral_cfg["graph_seeds"],
             max_model_points_values=neutral_cfg["graph_max_model_points_values"],
             k_neighbor_values=neutral_cfg["graph_k_neighbor_values"],
+            workers=neutral_cfg["graph_workers"],
         )
         write_overlap_residualized_graph_geometry_sweep_report(
             [run_dir],
@@ -515,6 +701,7 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
             max_model_points_values=neutral_cfg["graph_max_model_points_values"],
             k_neighbor_values=neutral_cfg["graph_k_neighbor_values"],
             remove_mode_values=neutral_cfg["residual_remove_mode_values"],
+            workers=neutral_cfg["graph_workers"],
         )
         neutral_paths = [
             overlap_dir,
@@ -539,6 +726,9 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
             "neutral_frontier_settings": neutral_cfg,
         }
 
+    visualization_diagnostics = _write_visualization_diagnostic_artifacts(run_dir, config or {})
+    source_artifacts = _write_physical_cmb_source_artifacts(run_dir)
+    transfer_artifacts = _write_physical_cmb_transfer_artifacts(run_dir, config or {})
     no_data = write_physical_cmb_input_no_data_use_receipt([run_dir], run_dir)
     cmb_sources = write_physical_cmb_source_readiness_report([run_dir], run_dir)
     cmb_input = write_physical_cmb_input_report([run_dir], run_dir)
@@ -547,6 +737,9 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
     cmb_frontier = write_physical_cmb_frontier_report([run_dir], run_dir)
     return {
         **neutral_summary,
+        **visualization_diagnostics,
+        **source_artifacts,
+        **transfer_artifacts,
         "physical_cmb_frontier_written": True,
         "physical_cmb_source_readiness_written": True,
         "finite_covariant_parent_receipt": bool(
@@ -583,6 +776,232 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
     }
 
 
+def _write_physical_cmb_source_artifacts(run_dir: Path) -> dict[str, Any]:
+    """Emit fail-closed source reports consumed by the physical-CMB contract.
+
+    These builders expose missing source evidence explicitly. They do not turn
+    diagnostic/proxy artifacts into physical CMB predictions.
+    """
+
+    run_dir = Path(run_dir)
+    summary: dict[str, Any] = {
+        "finite_repair_transition_clock_written": False,
+        "finite_certificate_report_written": False,
+        "B_A_kernel_report_written": False,
+        "compressed_likelihood_reference_written": False,
+        "official_planck_likelihood_readiness_written": False,
+        "physical_cmb_source_artifact_errors": [],
+    }
+
+    def record_error(name: str, exc: Exception) -> None:
+        summary["physical_cmb_source_artifact_errors"].append(f"{name}: {type(exc).__name__}: {exc}")
+
+    if not (run_dir / "finite_repair_transition_matrix_report.json").exists():
+        try:
+            write_finite_repair_transition_clock_report(run_dir, run_dir)
+            summary["finite_repair_transition_clock_written"] = True
+        except Exception as exc:  # pragma: no cover - defensive pipeline audit path
+            record_error("finite_repair_transition_clock", exc)
+    else:
+        summary["finite_repair_transition_clock_written"] = True
+
+    if not (run_dir / "finite_certificate_report.json").exists():
+        try:
+            write_run_proxy_finite_certificate_bundle(run_dir, run_dir)
+            summary["finite_certificate_report_written"] = True
+        except Exception as exc:  # pragma: no cover - defensive pipeline audit path
+            record_error("finite_certificate", exc)
+    else:
+        summary["finite_certificate_report_written"] = True
+
+    if not (run_dir / "B_A_kernel_report.json").exists() and (run_dir / "b_a_parent_report.json").exists():
+        try:
+            ba_kernel_report_from_parent_report(run_dir / "b_a_parent_report.json", run_dir)
+            summary["B_A_kernel_report_written"] = True
+        except Exception as exc:  # pragma: no cover - defensive pipeline audit path
+            record_error("B_A_kernel", exc)
+    elif (run_dir / "B_A_kernel_report.json").exists():
+        summary["B_A_kernel_report_written"] = True
+
+    if not (run_dir / "oph_compressed_likelihood_report.json").exists():
+        try:
+            write_compressed_likelihood_reference_report(run_dir)
+            summary["compressed_likelihood_reference_written"] = True
+        except Exception as exc:  # pragma: no cover - defensive pipeline audit path
+            record_error("compressed_likelihood_reference", exc)
+    else:
+        summary["compressed_likelihood_reference_written"] = True
+
+    if not (run_dir / "official_planck_likelihood_readiness_report.json").exists():
+        try:
+            write_official_planck_readiness_report(run_dir)
+            summary["official_planck_likelihood_readiness_written"] = True
+        except Exception as exc:  # pragma: no cover - defensive pipeline audit path
+            record_error("official_planck_likelihood_readiness", exc)
+    else:
+        summary["official_planck_likelihood_readiness_written"] = True
+
+    return summary
+
+
+def _write_physical_cmb_transfer_artifacts(run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
+    """Emit physical-unit CAMB comparison rows when benchmark inputs exist.
+
+    These reports provide data for plots and residual tables. They do not
+    certify a physical OPH CMB prediction; promotion remains controlled by the
+    physical input/promotion gates.
+    """
+
+    run_dir = Path(run_dir)
+    cosmology_cfg = dict(config.get("cosmology", {}) or {})
+    lite_cfg = dict(cosmology_cfg.get("cmb_lite", {}) or {})
+    transfer_cfg = dict(cosmology_cfg.get("physical_cmb_transfer", {}) or {})
+    benchmark = Path(
+        transfer_cfg.get("benchmark_path")
+        or lite_cfg.get("benchmark_path")
+        or "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt"
+    )
+    label = str(transfer_cfg.get("benchmark_label") or lite_cfg.get("benchmark_label") or "Planck2018_TT_binned")
+    lmax = int(transfer_cfg.get("lmax", 2600) or 2600)
+    summary: dict[str, Any] = {
+        "physical_cmb_transfer_benchmark_path": str(benchmark),
+        "physical_cmb_transfer_benchmark_found": benchmark.exists(),
+        "camb_lcdm_baseline_written": False,
+        "scale_compressed_cmb_camb_written": False,
+        "finite_repair_clock_cmb_camb_written": False,
+        "physical_cmb_transfer_errors": [],
+    }
+    if not benchmark.exists():
+        summary["physical_cmb_transfer_errors"].append(f"benchmark_missing:{benchmark}")
+        return summary
+
+    def record_error(name: str, exc: Exception) -> None:
+        summary["physical_cmb_transfer_errors"].append(f"{name}: {type(exc).__name__}: {exc}")
+
+    if not (run_dir / "camb_lcdm_baseline_report.json").exists():
+        try:
+            write_camb_lcdm_baseline_report(
+                benchmark,
+                run_dir,
+                lmax=lmax,
+                benchmark_label=label,
+            )
+            summary["camb_lcdm_baseline_written"] = True
+        except Exception as exc:  # pragma: no cover - depends on optional CAMB runtime
+            record_error("camb_lcdm_baseline", exc)
+    else:
+        summary["camb_lcdm_baseline_written"] = True
+
+    scale_report = run_dir / "scale_compressed_repair_report.json"
+    if scale_report.exists():
+        if not (run_dir / "scale_compressed_cmb_camb_report.json").exists():
+            try:
+                write_scale_compressed_cmb_camb_report(
+                    scale_report,
+                    benchmark,
+                    run_dir,
+                    lmax=lmax,
+                    benchmark_label=label,
+                )
+                summary["scale_compressed_cmb_camb_written"] = True
+            except Exception as exc:  # pragma: no cover - depends on optional CAMB runtime
+                record_error("scale_compressed_cmb_camb", exc)
+        else:
+            summary["scale_compressed_cmb_camb_written"] = True
+
+    finite_clock_report = run_dir / "finite_repair_transition_matrix_report.json"
+    if finite_clock_report.exists():
+        if not (run_dir / "finite_repair_clock_cmb_camb_report.json").exists():
+            try:
+                write_finite_repair_clock_cmb_camb_report(
+                    finite_clock_report,
+                    benchmark,
+                    run_dir,
+                    source_dir=run_dir,
+                    lmax=lmax,
+                    benchmark_label=label,
+                )
+                summary["finite_repair_clock_cmb_camb_written"] = True
+            except Exception as exc:  # pragma: no cover - depends on optional CAMB runtime
+                record_error("finite_repair_clock_cmb_camb", exc)
+        else:
+            summary["finite_repair_clock_cmb_camb_written"] = True
+
+    return summary
+
+
+def _write_visualization_diagnostic_artifacts(run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
+    cfg = dict(config.get("visualization_diagnostics", {}) or {})
+    vacuum_cfg = dict(cfg.get("reference_vacuum", {}) or {})
+    gravity_cfg = dict(cfg.get("two_defect_gravity_assay", {}) or {})
+
+    write_vacuum = bool(vacuum_cfg.get("enabled", True))
+    write_gravity = bool(gravity_cfg.get("enabled", True))
+    summary: dict[str, Any] = {
+        "reference_vacuum_baseline_written": False,
+        "two_defect_stress_contraction_assay_written": False,
+    }
+    if write_vacuum:
+        vacuum_report = write_reference_vacuum_baseline_report(
+            run_dir / "reference_vacuum_baseline",
+            ell_max=_positive_int(vacuum_cfg.get("ell_max"), 16),
+            sample_count=_positive_int(vacuum_cfg.get("sample_count"), 256),
+            amplitude=_positive_float(vacuum_cfg.get("amplitude"), 1.0),
+            theta=float(vacuum_cfg.get("theta", 0.0) or 0.0),
+            seed_key=str(vacuum_cfg.get("seed_key", "oph-universe-reference-vacuum")),
+            smoothing_sigma=_optional_float(vacuum_cfg.get("smoothing_sigma")),
+            coarse_ell_max=_optional_int(vacuum_cfg.get("coarse_ell_max")),
+            u1_lattice_size=_positive_int(vacuum_cfg.get("u1_lattice_size"), 4),
+            u1_sweeps=_positive_int(vacuum_cfg.get("u1_sweeps"), 32),
+            u1_beta=_positive_float(vacuum_cfg.get("u1_beta"), 0.5),
+            u1_step_size=_positive_float(vacuum_cfg.get("u1_step_size"), math.pi / 2.0),
+        )
+        summary.update(
+            {
+                "reference_vacuum_baseline_written": True,
+                "reference_vacuum_baseline_path": vacuum_report.get("report_path"),
+                "reference_vacuum_regression_receipt": bool(
+                    (vacuum_report.get("receipt_contract") or {}).get("reference_theory_regression", False)
+                ),
+                "oph_native_vacuum_promotion_receipt": bool(
+                    vacuum_report.get("OPH_NATIVE_VACUUM_PROMOTION_RECEIPT", False)
+                ),
+                "oph_primordial_field_promotion_receipt": bool(
+                    vacuum_report.get("OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT", False)
+                ),
+            }
+        )
+    if write_gravity:
+        gravity_report = write_two_defect_stress_contraction_assay_report(
+            run_dir / "two_defect_stress_contraction_assay_report.json",
+            patch_count=_positive_int(gravity_cfg.get("patch_count"), 65_536),
+            steps=_positive_int(gravity_cfg.get("steps"), 16),
+            support_node_count=_positive_int(gravity_cfg.get("support_node_count"), 8),
+            holonomy=_positive_int(gravity_cfg.get("holonomy"), 1),
+            initial_separation=_positive_float(gravity_cfg.get("initial_separation"), 1.2),
+            stress_coupling=_positive_float(gravity_cfg.get("stress_coupling"), 0.04),
+            stress_radius=_positive_float(gravity_cfg.get("stress_radius"), 1.0),
+            curvature_radius=_positive_float(gravity_cfg.get("curvature_radius"), 1.0),
+            cycle_stride=_positive_int(gravity_cfg.get("cycle_stride"), 4),
+            min_approach_fraction=_positive_float(gravity_cfg.get("min_approach_fraction"), 0.25),
+            min_control_margin=_positive_float(gravity_cfg.get("min_control_margin"), 0.15),
+        )
+        summary.update(
+            {
+                "two_defect_stress_contraction_assay_written": True,
+                "two_defect_stress_contraction_assay_receipt": bool(
+                    gravity_report.get("two_defect_stress_contraction_assay_receipt", False)
+                ),
+                "gravity_like_attraction_diagnostic_receipt": bool(
+                    gravity_report.get("gravity_like_attraction_diagnostic_receipt", False)
+                ),
+                "production_gravity_receipt": bool(gravity_report.get("production_gravity_receipt", False)),
+                "physical_gravity_prediction": bool(gravity_report.get("physical_gravity_prediction", False)),
+            }
+        )
+    return summary
+
+
 def _neutral_frontier_settings(config: dict[str, Any]) -> dict[str, Any]:
     cfg = dict(config.get("neutral_frontier", {}) or {})
     observer_cfg = dict(config.get("observers", {}) or {})
@@ -597,10 +1016,18 @@ def _neutral_frontier_settings(config: dict[str, Any]) -> dict[str, Any]:
         )
     )
     graph_max = tuple(value for value in graph_max if value > 0)
+    requested_workers = cfg.get("graph_workers")
+    if requested_workers is None:
+        requested_workers = os.environ.get("OPH_FPE_GRAPH_SWEEP_WORKERS") or os.environ.get("OPH_FPE_CPUS")
+    try:
+        graph_workers = int(requested_workers) if requested_workers is not None else 1
+    except (TypeError, ValueError):
+        graph_workers = 1
     return {
         "seed": int(cfg.get("seed", 11) or 11),
         "sample_count": max(8, sample_count),
         "max_model_points": max(8, max_model_points),
+        "graph_workers": max(1, graph_workers),
         "overlap_control_max_model_points": max(
             8,
             int(cfg.get("overlap_control_max_model_points", max(max_model_points, 384)) or max(max_model_points, 384)),
@@ -619,6 +1046,42 @@ def _neutral_frontier_settings(config: dict[str, Any]) -> dict[str, Any]:
             int(value) for value in cfg.get("residual_remove_mode_values", (1, 2, 3)) if int(value) > 0
         ),
     }
+
+
+def _positive_int(value: Any, default: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = int(default)
+    return max(1, parsed)
+
+
+def _optional_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
+def _positive_float(value: Any, default: float) -> float:
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        parsed = float(default)
+    return parsed if math.isfinite(parsed) and parsed > 0.0 else float(default)
+
+
+def _optional_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if math.isfinite(parsed) else None
 
 
 def _cmb_diagnostic_summary(run_dir: Path) -> dict[str, Any]:

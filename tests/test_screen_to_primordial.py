@@ -3,7 +3,9 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import pytest
 
+from oph_fpe.cosmology.spatial_curvature import PhysicalPromotionBlocked
 from oph_fpe.cosmology.screen_to_primordial import (
     ThinShellLift,
     A_zeta_from_shell_action_amplitude,
@@ -67,11 +69,11 @@ def test_lift_receipt_derives_a_zeta_only_for_exact_kernel():
         theta=0.02,
         k_pivot=0.05,
         D_star=13_800.0,
-        W_star_hash="sha256:window",
+        W_star_hash="sha256:" + "0" * 64,
         Z_star=1.0,
         Z_star_source="finite_freezeout",
         D_star_source="finite_distance_certificate",
-        bessel_kernel_hash="sha256:bessel",
+        bessel_kernel_hash="sha256:" + "1" * 64,
         kernel_rank=32,
         kernel_condition_number=4.0,
         nullspace_dimension=0,
@@ -102,8 +104,9 @@ def test_source_only_screen_scalar_removes_background_and_dipole():
 
     report = source_only_quotient_screen_scalar(values, axes)
 
-    assert report["field_type"] == "SCREEN_CURVATURE_CANDIDATE"
+    assert report["field_type"] == "DIAGNOSTIC_LOW_MODE_REMOVED_SCREEN_SCALAR"
     assert report["source_only"] is True
+    assert report["SCREEN_SCALAR_QUOTIENT_RECEIPT"] is False
     assert report["background_removed"] is True
     assert report["dipole_removed"] is True
     assert abs(np.mean(report["values"])) < 1.0e-12
@@ -114,16 +117,18 @@ def test_exact_bessel_projection_round_trips_declared_prior():
     ell = np.arange(2, 10, dtype=float)
     k = np.geomspace(1.0e-4, 1.0e-1, 48)
     prior = 2.0e-9 * (k / 0.05) ** -0.035
-    screen = project_primordial_to_screen(k, prior, ell, radius=13_800.0)
+    screen = project_primordial_to_screen(k, prior, ell, geometry_branch="FLAT_EXACT", radius=13_800.0)
 
     report = screen_to_radial_lift_report(
         ell=ell,
         screen_cl=screen,
         k=k,
         radial_prior_delta_zeta2=prior,
+        background_geometry_branch="FLAT_EXACT",
         radius=13_800.0,
         radial_prior_declared=True,
         source_only_screen_scalar=True,
+        geometric_screen_scalar_receipt=True,
         theorem_gate=True,
         source_stress_eigenclock_receipt=True,
         time_orientation_holonomy_receipt=True,
@@ -153,6 +158,7 @@ def test_exact_bessel_projection_round_trips_declared_prior():
     assert report["TOTAL_STRESS_CLOSURE_RECEIPT"] is True
     assert report["SCALAR_EIGENVALUE_ISOLATION_RECEIPT"] is True
     assert report["SPATIAL_CURVATURE_BRANCH_RECEIPT"] is True
+    assert report["RADIAL_KERNEL_GEOMETRY_COMPATIBILITY_RECEIPT"] is True
     assert report["forward_projection_residual"]["l2_relative"] < 1.0e-12
     assert report["source_only_primordial_parameters"]["A_s"] > 0.0
     assert abs(report["source_only_primordial_parameters"]["n_s"] - 0.965) < 1.0e-12
@@ -161,7 +167,7 @@ def test_exact_bessel_projection_round_trips_declared_prior():
 def test_radial_null_space_injection_is_projection_invisible():
     ell = np.arange(2, 6, dtype=float)
     k = np.geomspace(1.0e-4, 2.0e-1, 12)
-    matrix = bessel_projection_matrix(ell, k, radius=13_800.0)
+    matrix = bessel_projection_matrix(ell, k, geometry_branch="FLAT_EXACT", radius=13_800.0)
     _, _, vh = np.linalg.svd(matrix)
     null_vector = vh[-1]
     assert np.linalg.norm(matrix @ null_vector) < 1.0e-14
@@ -192,13 +198,14 @@ def test_screen_to_radial_lift_reports_round1_block_status_names():
     ell = np.arange(2, 6, dtype=float)
     k = np.geomspace(1.0e-4, 1.0e-1, 8)
     prior = np.full_like(k, 1.0e-9)
-    screen = project_primordial_to_screen(k, prior, ell, radius=13_800.0)
+    screen = project_primordial_to_screen(k, prior, ell, geometry_branch="FLAT_ASSUMED", radius=13_800.0)
 
     report = screen_to_radial_lift_report(
         ell=ell,
         screen_cl=screen,
         k=k,
         radial_prior_delta_zeta2=prior,
+        background_geometry_branch="FLAT_ASSUMED",
         radius=13_800.0,
         radial_prior_declared=False,
         source_only_screen_scalar=False,
@@ -208,8 +215,17 @@ def test_screen_to_radial_lift_reports_round1_block_status_names():
     assert report["SCREEN_TO_RADIAL_LIFT_RECEIPT"] is False
     assert report["PRIMORDIAL_SPECTRUM_SOURCE_ONLY_RECEIPT"] is False
     assert report["RADIAL_NULL_SPACE_REPORT_RECEIPT"] is True
+    assert report["radial_null_space"]["null_basis_sha256"].startswith("sha256:")
     assert report["UNRESTRICTED_RADIAL_NULL_SPACE"] == "INFINITE_DIMENSIONAL"
     assert "SOURCE_CLOCK_UNPROVEN" in report["hard_block_statuses"]
     assert "SCALAR_RG_EIGENMODE_DEGENERATE" in report["hard_block_statuses"]
     assert "RADIAL_PRIOR_UNDECLARED" in report["hard_block_statuses"]
     assert "PRIMORDIAL_PROMOTION_BLOCKED" in report["hard_block_statuses"]
+
+
+def test_unresolved_curvature_branch_blocks_flat_bessel_kernel():
+    ell = np.arange(2, 5, dtype=float)
+    k = np.geomspace(1.0e-4, 1.0e-1, 8)
+
+    with pytest.raises(PhysicalPromotionBlocked):
+        project_primordial_to_screen(k, np.full_like(k, 1.0e-9), ell, radius=13_800.0)

@@ -250,6 +250,18 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     paper_faithful_consensus_bulk = bool(
         finite_contract_report.get("paper_faithful_consensus_bulk_emergence_receipt", False)
     )
+    paper_geometric_branch_contract = bool(
+        finite_contract_report.get("paper_geometric_branch_lorentz_contract_receipt", False)
+    )
+    paper_geometric_branch_observer_spacetime = bool(
+        finite_contract_report.get("paper_geometric_branch_observer_spacetime_emergence_receipt", False)
+    )
+    paper_geometric_branch_populated_h3 = bool(
+        finite_contract_report.get("paper_geometric_branch_populated_h3_observer_experience_receipt", False)
+    )
+    paper_geometric_branch_consensus_bulk = bool(
+        finite_contract_report.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
+    )
 
     tiers = {
         "C0a_finite_settle_diagnostic": _tier(
@@ -367,11 +379,23 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "Finite Lorentz theorem contract through support-visible BW covariance and Lorentz closure is audited from finite observer-record receipts.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
+        "L_branch_paper_geometric_lorentz_contract": _tier(
+            "PAPER_GEOMETRIC_BRANCH_LORENTZ_CONTRACT_RECEIPT",
+            paper_geometric_branch_contract,
+            "Paper-geometric branch contract uses the declared KMS collar/cap 2*pi normalization from the theorem chart, without promoting the endogenous finite clock diagnostic.",
+            blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
+        ),
         "B_full_paper_faithful_observer_spacetime": _tier(
             "PAPER_FAITHFUL_OBSERVER_SPACETIME_EMERGENCE_RECEIPT",
             paper_faithful_observer_spacetime,
             "Observer-local modular time plus H3 spatial chart and H3 response, gated by the finite theorem contract.",
             blockers=finite_contract_report.get("primary_blockers", []),
+        ),
+        "B_branch_paper_geometric_observer_spacetime": _tier(
+            "PAPER_GEOMETRIC_BRANCH_OBSERVER_SPACETIME_EMERGENCE_RECEIPT",
+            paper_geometric_branch_observer_spacetime,
+            "Observer-local modular time plus H3 spatial chart and H3 response, gated by the paper-geometric KMS branch contract.",
+            blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
         ),
         "B_populated_h3_observer_experience": _tier(
             "PAPER_FAITHFUL_POPULATED_H3_OBSERVER_EXPERIENCE_RECEIPT",
@@ -379,11 +403,23 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "Observer-facing H3 spacetime plus controlled object population in that chart.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
+        "B_branch_paper_geometric_populated_h3": _tier(
+            "PAPER_GEOMETRIC_BRANCH_POPULATED_H3_OBSERVER_EXPERIENCE_RECEIPT",
+            paper_geometric_branch_populated_h3,
+            "Observer-facing H3 spacetime plus controlled object population, using the paper-geometric KMS branch contract.",
+            blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
+        ),
         "B_full_paper_faithful_consensus_bulk": _tier(
             "PAPER_FAITHFUL_CONSENSUS_BULK_EMERGENCE_RECEIPT",
             paper_faithful_consensus_bulk,
             "Paper-faithful observer-facing consensus 3D bulk: observer spacetime emergence plus populated H3 object records.",
             blockers=finite_contract_report.get("primary_blockers", []),
+        ),
+        "B_branch_paper_geometric_consensus_bulk": _tier(
+            "PAPER_GEOMETRIC_BRANCH_CONSENSUS_BULK_EMERGENCE_RECEIPT",
+            paper_geometric_branch_consensus_bulk,
+            "Paper-geometric observer-facing consensus 3D bulk: observer spacetime plus populated H3 object records under the declared KMS branch.",
+            blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
         ),
     }
 
@@ -403,12 +439,28 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "paper_faithful_populated_h3_observer_experience_receipt": paper_faithful_populated_h3,
         "observer_facing_consensus_3d_bulk_emergence_receipt": paper_faithful_consensus_bulk,
         "paper_faithful_consensus_bulk_emergence_receipt": paper_faithful_consensus_bulk,
-        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
+        "paper_geometric_branch_lorentz_contract_receipt": paper_geometric_branch_contract,
+        "paper_geometric_branch_observer_spacetime_emergence_receipt": (
+            paper_geometric_branch_observer_spacetime
+        ),
+        "paper_geometric_branch_populated_h3_observer_experience_receipt": (
+            paper_geometric_branch_populated_h3
+        ),
+        "paper_geometric_branch_consensus_bulk_emergence_receipt": paper_geometric_branch_consensus_bulk,
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": (
+            paper_geometric_branch_consensus_bulk
+        ),
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
         "finite_theorem_contract_summary": {
             "written": bool(finite_contract_report),
             "blockers": finite_contract_report.get("blockers", []),
             "primary_blockers": finite_contract_report.get("primary_blockers", []),
+            "paper_geometric_branch_blockers": finite_contract_report.get(
+                "paper_geometric_branch_blockers", []
+            ),
+            "paper_geometric_branch_primary_blockers": finite_contract_report.get(
+                "paper_geometric_branch_primary_blockers", []
+            ),
             "chart_blind_strict_neutral_blockers": finite_contract_report.get(
                 "chart_blind_strict_neutral_blockers", []
             ),
@@ -448,6 +500,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "prime_geometric_rank3_refinement_strict_neutral": prime_geometric_strict_refinement,
         "bulk_3d_established_theorem_assisted": theorem_assisted_nonboundary_population,
         "bulk_3d_established_observer_facing_consensus": paper_faithful_consensus_bulk,
+        "bulk_3d_established_paper_geometric_branch_observer_facing_consensus": (
+            paper_geometric_branch_consensus_bulk
+        ),
         "bulk_3d_established_strict": strict_neutral_bulk,
         "bulk_3d_established_chart_blind_strict_neutral": strict_neutral_bulk,
         "screen_cmb_proxy_available": screen_cmb,
@@ -774,6 +829,10 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"`{str(report['paper_faithful_observer_spacetime_emergence_receipt']).lower()}`",
         "- paper-faithful observer-facing consensus bulk emergence: "
         f"`{str(report['paper_faithful_consensus_bulk_emergence_receipt']).lower()}`",
+        "- paper-geometric branch observer spacetime emergence: "
+        f"`{str(report['paper_geometric_branch_observer_spacetime_emergence_receipt']).lower()}`",
+        "- paper-geometric branch observer-facing consensus bulk emergence: "
+        f"`{str(report['paper_geometric_branch_consensus_bulk_emergence_receipt']).lower()}`",
         f"- observer modular time: `{str(report['observer_modular_time_receipt']).lower()}`",
         f"- observer-facing 3+1D/H3 experience: `{str(report['observer_facing_3p1d_h3_experience_receipt']).lower()}`",
         f"- theorem-assisted H3 object preview: `{str(report['theorem_assisted_h3_object_preview_established']).lower()}`",
@@ -802,6 +861,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
                 "",
                 f"- written: `{str(bool(contract.get('written'))).lower()}`",
                 f"- primary blockers: `{contract.get('primary_blockers')}`",
+                f"- paper-geometric branch blockers: `{contract.get('paper_geometric_branch_primary_blockers')}`",
                 f"- chart-blind neutral blockers: `{contract.get('chart_blind_strict_neutral_blockers')}`",
             ]
         )

@@ -5,11 +5,14 @@ import math
 import hashlib
 import copy
 import csv
+import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+from scipy.linalg import eigh as dense_eigh
 from scipy.sparse.csgraph import shortest_path
 from scipy.spatial.distance import pdist, squareform
 
@@ -2635,6 +2638,7 @@ def overlap_native_graph_geometry_sweep_report(
     seeds: tuple[int, ...] = (1,),
     max_model_points_values: tuple[int, ...] = (256,),
     k_neighbor_values: tuple[int, ...] = (12,),
+    workers: int | None = None,
 ) -> dict[str, Any]:
     """Sweep observer-overlap graph geometry parameters over saved runs.
 
@@ -2648,6 +2652,7 @@ def overlap_native_graph_geometry_sweep_report(
     case_reports: list[dict[str, Any]] = []
     rows: list[dict[str, Any]] = []
     roots = [Path(path) for path in run_dirs]
+    cases: list[tuple[Path, Path, list[dict[str, Any]], int, int, int]] = []
     for run in roots:
         observer_path = run / "observer_views.jsonl"
         if not observer_path.exists():
@@ -2666,16 +2671,32 @@ def overlap_native_graph_geometry_sweep_report(
         for seed in seeds:
             for max_points in max_model_points_values:
                 for k_neighbors in k_neighbor_values:
-                    report = overlap_native_graph_geometry_report(
-                        observer_views,
-                        seed=int(seed),
-                        max_model_points=int(max_points),
-                        k_neighbors=int(k_neighbors),
+                    cases.append(
+                        (
+                            run,
+                            observer_path,
+                            observer_views,
+                            int(seed),
+                            int(max_points),
+                            int(k_neighbors),
+                        )
                     )
-                    report["source_run_dir"] = str(run)
-                    report["observer_views_path"] = str(observer_path)
-                    case_reports.append(report)
-                    rows.append(_overlap_graph_sweep_row(report))
+
+    def run_case(case: tuple[Path, Path, list[dict[str, Any]], int, int, int]) -> dict[str, Any]:
+        run, observer_path, observer_views, seed, max_points, k_neighbors = case
+        report = overlap_native_graph_geometry_report(
+            observer_views,
+            seed=seed,
+            max_model_points=max_points,
+            k_neighbors=k_neighbors,
+        )
+        report["source_run_dir"] = str(run)
+        report["observer_views_path"] = str(observer_path)
+        return report
+
+    for report in _map_sweep_cases(run_case, cases, workers=workers):
+        case_reports.append(report)
+        rows.append(_overlap_graph_sweep_row(report))
 
     valid_rows = [row for row in rows if not row.get("error")]
     receipt_count = int(sum(1 for row in valid_rows if row.get("graph_geometry_receipt")))
@@ -2735,12 +2756,14 @@ def write_overlap_native_graph_geometry_sweep_report(
     seeds: tuple[int, ...] = (1,),
     max_model_points_values: tuple[int, ...] = (256,),
     k_neighbor_values: tuple[int, ...] = (12,),
+    workers: int | None = None,
 ) -> dict[str, Any]:
     report = overlap_native_graph_geometry_sweep_report(
         run_dirs,
         seeds=seeds,
         max_model_points_values=max_model_points_values,
         k_neighbor_values=k_neighbor_values,
+        workers=workers,
     )
     case_reports = list(report.pop("_case_reports", []))
     destination = Path(out)
@@ -2780,12 +2803,14 @@ def overlap_residualized_graph_geometry_sweep_report(
     max_model_points_values: tuple[int, ...] = (256,),
     k_neighbor_values: tuple[int, ...] = (12,),
     remove_mode_values: tuple[int, ...] = (1,),
+    workers: int | None = None,
 ) -> dict[str, Any]:
     """Sweep residualized observer-overlap graph geometry parameters."""
 
     case_reports: list[dict[str, Any]] = []
     rows: list[dict[str, Any]] = []
     roots = [Path(path) for path in run_dirs]
+    cases: list[tuple[Path, Path, list[dict[str, Any]], int, int, int, int]] = []
     for run in roots:
         observer_path = run / "observer_views.jsonl"
         if not observer_path.exists():
@@ -2805,17 +2830,34 @@ def overlap_residualized_graph_geometry_sweep_report(
             for max_points in max_model_points_values:
                 for k_neighbors in k_neighbor_values:
                     for remove_modes in remove_mode_values:
-                        report = overlap_residualized_graph_geometry_report(
-                            observer_views,
-                            seed=int(seed),
-                            max_model_points=int(max_points),
-                            k_neighbors=int(k_neighbors),
-                            remove_modes=int(remove_modes),
+                        cases.append(
+                            (
+                                run,
+                                observer_path,
+                                observer_views,
+                                int(seed),
+                                int(max_points),
+                                int(k_neighbors),
+                                int(remove_modes),
+                            )
                         )
-                        report["source_run_dir"] = str(run)
-                        report["observer_views_path"] = str(observer_path)
-                        case_reports.append(report)
-                        rows.append(_overlap_residual_graph_sweep_row(report))
+
+    def run_case(case: tuple[Path, Path, list[dict[str, Any]], int, int, int, int]) -> dict[str, Any]:
+        run, observer_path, observer_views, seed, max_points, k_neighbors, remove_modes = case
+        report = overlap_residualized_graph_geometry_report(
+            observer_views,
+            seed=seed,
+            max_model_points=max_points,
+            k_neighbors=k_neighbors,
+            remove_modes=remove_modes,
+        )
+        report["source_run_dir"] = str(run)
+        report["observer_views_path"] = str(observer_path)
+        return report
+
+    for report in _map_sweep_cases(run_case, cases, workers=workers):
+        case_reports.append(report)
+        rows.append(_overlap_residual_graph_sweep_row(report))
 
     valid_rows = [row for row in rows if not row.get("error")]
     receipt_count = int(sum(1 for row in valid_rows if row.get("residual_graph_receipt")))
@@ -2880,6 +2922,7 @@ def write_overlap_residualized_graph_geometry_sweep_report(
     max_model_points_values: tuple[int, ...] = (256,),
     k_neighbor_values: tuple[int, ...] = (12,),
     remove_mode_values: tuple[int, ...] = (1,),
+    workers: int | None = None,
 ) -> dict[str, Any]:
     report = overlap_residualized_graph_geometry_sweep_report(
         run_dirs,
@@ -2887,6 +2930,7 @@ def write_overlap_residualized_graph_geometry_sweep_report(
         max_model_points_values=max_model_points_values,
         k_neighbor_values=k_neighbor_values,
         remove_mode_values=remove_mode_values,
+        workers=workers,
     )
     case_reports = list(report.pop("_case_reports", []))
     destination = Path(out)
@@ -2917,6 +2961,28 @@ def write_overlap_residualized_graph_geometry_sweep_report(
         report.get("rows") if isinstance(report.get("rows"), list) else [],
     )
     return report
+
+
+def _map_sweep_cases(fn: Any, cases: list[Any], *, workers: int | None) -> list[dict[str, Any]]:
+    if not cases:
+        return []
+    worker_count = _sweep_worker_count(workers, len(cases))
+    if worker_count <= 1:
+        return [fn(case) for case in cases]
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        return list(executor.map(fn, cases))
+
+
+def _sweep_worker_count(requested: int | None, case_count: int) -> int:
+    raw = requested
+    if raw is None:
+        env = os.environ.get("OPH_FPE_GRAPH_SWEEP_WORKERS")
+        raw = int(env) if env and env.strip() else 1
+    try:
+        count = int(raw)
+    except (TypeError, ValueError):
+        count = 1
+    return max(1, min(count, max(1, int(case_count))))
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -4478,15 +4544,29 @@ def _overlap_feature_distance_matrix(features: np.ndarray, eps: float = 1.0e-12)
         return np.zeros((0, 0), dtype=float)
     features = np.where(features > 0.0, features, 0.0)
     n = features.shape[0]
-    distance = np.zeros((n, n), dtype=float)
+    d = features.shape[1]
+    if d == 0:
+        return np.zeros((n, n), dtype=float)
     masses = np.sum(features, axis=1)
-    for i in range(n):
-        for j in range(i + 1, n):
-            denom = max(0.5 * (float(masses[i]) + float(masses[j])), eps)
-            similarity = float(np.sum(np.minimum(features[i], features[j])) / denom)
-            value = 1.0 - max(0.0, min(1.0, similarity))
-            distance[i, j] = distance[j, i] = value
+    distance = np.zeros((n, n), dtype=float)
+    block = _overlap_distance_block_size(n=n, feature_width=d, dtype=features.dtype)
+    for start in range(0, n, block):
+        stop = min(n, start + block)
+        shared_mass = np.minimum(features[start:stop, None, :], features[None, :, :]).sum(axis=2)
+        denom = np.maximum(0.5 * (masses[start:stop, None] + masses[None, :]), eps)
+        similarity = np.divide(shared_mass, denom, out=np.zeros_like(shared_mass), where=denom > eps)
+        distance[start:stop, :] = 1.0 - np.clip(similarity, 0.0, 1.0)
+    distance = 0.5 * (distance + distance.T)
+    distance = np.where(np.isfinite(distance), np.maximum(distance, 0.0), 0.0)
+    np.fill_diagonal(distance, 0.0)
     return distance
+
+
+def _overlap_distance_block_size(*, n: int, feature_width: int, dtype: np.dtype[Any]) -> int:
+    bytes_per_value = np.dtype(dtype).itemsize
+    target_bytes = 96 * 1024 * 1024
+    denom = max(1, int(n) * max(1, int(feature_width)) * max(1, bytes_per_value))
+    return max(1, min(int(n), target_bytes // denom))
 
 
 def _overlap_graph_distance_from_features(
@@ -5758,23 +5838,24 @@ def _classical_mds(distance: np.ndarray, dim: int) -> np.ndarray | None:
     if n <= dim:
         return None
     squared = distance**2
-    centered = np.eye(n) - np.ones((n, n), dtype=float) / n
-    gram = -0.5 * centered @ squared @ centered
-    values, vectors = np.linalg.eigh((gram + gram.T) * 0.5)
-    order = np.argsort(values)[::-1]
-    values = values[order]
-    vectors = vectors[:, order]
+    gram = _double_center_squared_distance(squared)
+    values, vectors = _symmetric_top_eigenpairs(gram, dim)
     positive = values[:dim]
     if positive.size < dim or np.any(positive <= 1e-12):
         positive = np.maximum(positive, 1e-12)
     return vectors[:, :dim] * np.sqrt(positive)[None, :]
 
 
+def _double_center_squared_distance(squared: np.ndarray) -> np.ndarray:
+    squared = np.asarray(squared, dtype=float)
+    row_mean = np.mean(squared, axis=1, keepdims=True)
+    col_mean = np.mean(squared, axis=0, keepdims=True)
+    total_mean = float(np.mean(squared))
+    return -0.5 * (squared - row_mean - col_mean + total_mean)
+
+
 def _positive_spectral_coords(gram: np.ndarray, dim: int) -> np.ndarray | None:
-    values, vectors = np.linalg.eigh((gram + gram.T) * 0.5)
-    order = np.argsort(values)[::-1]
-    values = values[order]
-    vectors = vectors[:, order]
+    values, vectors = _symmetric_top_eigenpairs(gram, dim)
     if values.size < dim:
         return None
     values = np.maximum(values[:dim], 1e-12)
@@ -5783,19 +5864,55 @@ def _positive_spectral_coords(gram: np.ndarray, dim: int) -> np.ndarray | None:
 
 def _hyperbolic_indefinite_reconstruction(distance: np.ndarray, *, dim: int, radius: float) -> np.ndarray | None:
     lorentz_gram = -np.cosh(np.minimum(distance / max(radius, 1e-12), 20.0))
-    values, vectors = np.linalg.eigh((lorentz_gram + lorentz_gram.T) * 0.5)
-    neg_idx = int(np.argmin(values))
-    pos_order = [idx for idx in np.argsort(values)[::-1] if values[idx] > 1e-12 and idx != neg_idx]
-    if len(pos_order) < dim or values[neg_idx] >= -1e-12:
+    bottom_values, bottom_vectors = _symmetric_bottom_eigenpairs(lorentz_gram, 1)
+    top_values, top_vectors = _symmetric_top_eigenpairs(lorentz_gram, dim)
+    if bottom_values.size < 1 or top_values.size < dim or bottom_values[0] >= -1e-12:
         return None
-    time = np.sqrt(-values[neg_idx]) * vectors[:, neg_idx]
-    space = np.column_stack([np.sqrt(values[idx]) * vectors[:, idx] for idx in pos_order[:dim]])
+    positive = top_values[:dim]
+    if np.any(positive <= 1e-12):
+        return None
+    time = np.sqrt(-bottom_values[0]) * bottom_vectors[:, 0]
+    space = top_vectors[:, :dim] * np.sqrt(positive)[None, :]
     time = np.abs(time) + 1e-9
     inner = -np.outer(time, time) + space @ space.T
     cosh_arg = np.maximum(-inner, 1.0)
     predicted = radius * np.arccosh(cosh_arg)
     np.fill_diagonal(predicted, 0.0)
     return predicted
+
+
+def _symmetric_top_eigenpairs(matrix: np.ndarray, count: int) -> tuple[np.ndarray, np.ndarray]:
+    sym = _symmetrized_matrix(matrix)
+    n = sym.shape[0]
+    k = max(0, min(int(count), n))
+    if k <= 0:
+        return np.zeros(0, dtype=float), np.zeros((n, 0), dtype=float)
+    try:
+        values, vectors = dense_eigh(sym, subset_by_index=[n - k, n - 1], check_finite=False)
+    except Exception:
+        values, vectors = np.linalg.eigh(sym)
+    order = np.argsort(values)[::-1]
+    order = order[:k]
+    return np.asarray(values[order], dtype=float), np.asarray(vectors[:, order], dtype=float)
+
+
+def _symmetric_bottom_eigenpairs(matrix: np.ndarray, count: int) -> tuple[np.ndarray, np.ndarray]:
+    sym = _symmetrized_matrix(matrix)
+    n = sym.shape[0]
+    k = max(0, min(int(count), n))
+    if k <= 0:
+        return np.zeros(0, dtype=float), np.zeros((n, 0), dtype=float)
+    try:
+        values, vectors = dense_eigh(sym, subset_by_index=[0, k - 1], check_finite=False)
+    except Exception:
+        values, vectors = np.linalg.eigh(sym)
+    order = np.argsort(values)[:k]
+    return np.asarray(values[order], dtype=float), np.asarray(vectors[:, order], dtype=float)
+
+
+def _symmetrized_matrix(matrix: np.ndarray) -> np.ndarray:
+    matrix = np.asarray(matrix, dtype=float)
+    return np.ascontiguousarray((matrix + matrix.T) * 0.5)
 
 
 def _stress_report(

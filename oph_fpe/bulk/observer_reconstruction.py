@@ -812,29 +812,81 @@ def _counterfactual_similarity(
     if not families:
         return None
     matrix = np.zeros((len(patch_views), len(families)), dtype=float)
+    mass_cache: dict[tuple[str, int], np.ndarray] = {}
+    descriptor_score_cache: dict[tuple[tuple[str, int], ...], np.ndarray] = {}
+    support_sets: list[set[int]] | None = None
     for family_index, family in enumerate(families):
         stability = float(family.get("counterfactual_stability", 0.0))
         if stability <= 0.0:
             continue
-        transition_column = False
-        for view_index, view in enumerate(patch_views):
-            score = _transition_affinity_view_score(family, view)
-            if score > 0.0:
-                matrix[view_index, family_index] = float(stability) * float(score)
-                transition_column = True
-        if transition_column:
-            continue
-        supports = [set(int(node) for node in view.get("support_nodes", [])) for view in patch_views]
+        descriptor = family.get("transition_affinity") if isinstance(family.get("transition_affinity"), dict) else {}
+        if descriptor:
+            descriptor_key = tuple(sorted((str(name), int(value)) for name, value in descriptor.items()))
+            view_scores = descriptor_score_cache.get(descriptor_key)
+            if view_scores is None:
+                view_scores = _transition_descriptor_view_scores(descriptor_key, patch_views, mass_cache)
+                descriptor_score_cache[descriptor_key] = view_scores
+            if np.any(view_scores > 0.0):
+                matrix[:, family_index] = float(stability) * view_scores
+                continue
+        if support_sets is None:
+            support_sets = [set(int(node) for node in view.get("support_nodes", [])) for view in patch_views]
         family_support = set(int(node) for node in family.get("support_nodes", []))
         if not family_support:
             continue
-        for view_index, support in enumerate(supports):
+        for view_index, support in enumerate(support_sets):
             overlap = len(support & family_support)
             if overlap:
                 matrix[view_index, family_index] = stability * overlap / len(family_support)
     if not np.any(matrix):
         return None
     return _cosine_similarity_matrix(matrix)
+
+
+def _transition_descriptor_view_scores(
+    descriptor_key: tuple[tuple[str, int], ...],
+    patch_views: list[dict[str, Any]],
+    mass_cache: dict[tuple[str, int], np.ndarray],
+) -> np.ndarray:
+    if not descriptor_key or not patch_views:
+        return np.zeros(len(patch_views), dtype=float)
+    term_arrays = [_view_histogram_mass_array(patch_views, field, value, mass_cache) for field, value in descriptor_key]
+    if not term_arrays:
+        return np.zeros(len(patch_views), dtype=float)
+    masses = np.vstack(term_arrays)
+    positive = masses > 0.0
+    positive_counts = np.sum(positive, axis=0)
+    scores = np.zeros(len(patch_views), dtype=float)
+    valid = positive_counts > 0
+    if np.any(valid):
+        log_sum = np.sum(np.where(positive, np.log(np.maximum(masses, 1e-12)), 0.0), axis=0)
+        scores[valid] = np.exp(log_sum[valid] / positive_counts[valid])
+    return np.clip(scores, 0.0, 1.0)
+
+
+def _view_histogram_mass_array(
+    patch_views: list[dict[str, Any]],
+    field: str,
+    value: int,
+    mass_cache: dict[tuple[str, int], np.ndarray],
+) -> np.ndarray:
+    key = (str(field), int(value))
+    cached = mass_cache.get(key)
+    if cached is not None:
+        return cached
+    masses = np.zeros(len(patch_views), dtype=float)
+    for index, view in enumerate(patch_views):
+        if field == "object_packet":
+            masses[index] = _histogram_value(view.get("object_packet_histogram", {}), value)
+            continue
+        histograms = view.get("transition_affinity_histograms", {})
+        mass = _histogram_value(histograms.get(field, {}) if isinstance(histograms, dict) else {}, value)
+        if mass <= 0.0:
+            history = view.get("transition_history_histograms", {})
+            mass = _histogram_value(history.get(field, {}) if isinstance(history, dict) else {}, value)
+        masses[index] = mass
+    mass_cache[key] = masses
+    return masses
 
 
 def _transition_affinity_view_score(family: dict[str, Any], view: dict[str, Any]) -> float:

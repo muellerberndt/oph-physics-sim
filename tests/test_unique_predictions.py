@@ -24,10 +24,10 @@ def test_unique_prediction_gate_computes_alpha_linked_targets(tmp_path: Path):
     assert report["cmb_ir_kernel"]["q_IR"] == 0.25
     assert report["cmb_ir_kernel"]["ell_IR"] == 32.0
     assert report["cmb_ir_kernel"]["N_frz_proxy"] == 1089
-    assert report["selector_elimination_v1_5"]["q_IR_selector_removed"] is True
-    assert report["selector_elimination_v1_5"]["ell_IR_selector_removed"] is True
+    assert report["selector_elimination_v1_5"]["q_IR_selector_removed"] is False
+    assert report["selector_elimination_v1_5"]["ell_IR_selector_removed"] is False
     assert report["selector_elimination_v1_5"]["eta_R_reduced_to_repair_clock_certificate"] is True
-    assert report["selector_elimination_v1_5"]["theorem_side_receipt"] is True
+    assert report["selector_elimination_v1_5"]["theorem_side_receipt"] is False
     assert report["scalar_tilt"]["canonical_kappa_rep_status"] == "certificate_pending"
     assert abs(report["parity_envelope"]["predicted_R_OE_TT_2_29"] - 1.2160638411338078) < 1e-12
     assert abs(report["parity_envelope"]["unweighted_envelope_R_OE_2_29_debug"] - parity_odd_even_ratio(range(2, 30))) < 1e-12
@@ -171,7 +171,9 @@ def test_cmb_derivation_audit_includes_scalar_quotient_lane(tmp_path: Path):
     (run / "scalar_quotient_report.json").write_text(
         json.dumps(
             {
-                "SCALAR_QUOTIENT_RECEIPT": True,
+                "SCALAR_QUOTIENT_RECEIPT": False,
+                "SCREEN_SCALAR_QUOTIENT_RECEIPT": False,
+                "DIAGNOSTIC_SCALAR_FEATURE_PROXY_RECEIPT": True,
                 "observer_count": 1089,
                 "patch_count": 262144,
                 "scalar_packet_alphabet_size": 199,
@@ -200,11 +202,11 @@ def test_cmb_derivation_audit_includes_scalar_quotient_lane(tmp_path: Path):
     row = report["rows"][0]
 
     assert report["run_count"] == 1
-    assert row["scalar_quotient_receipt"] is True
+    assert row["scalar_quotient_receipt"] is False
     assert row["scalar_quotient_observer_count"] == 1089
     assert row["scalar_quotient_active_33_level_freezeout_clause"] is True
     assert row["scalar_quotient_theorem_grade_release_code"] is False
-    assert row["gates"]["scalar_quotient_receipt"] is True
+    assert row["gates"]["scalar_quotient_receipt"] is False
     assert row["gates"]["scalar_quotient_active_33_level_freezeout_clause"] is True
     assert row["gates"]["scalar_quotient_finite_ready"] is False
     assert report["aggregate"]["mean_scalar_quotient_n_s"] == 0.9660214956374176
