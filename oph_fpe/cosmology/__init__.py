@@ -117,6 +117,18 @@ _EXPORTS = {
         "oph_fpe.cosmology.physical_cmb_sources",
         "write_physical_cmb_source_readiness_report",
     ),
+    "FrozenTransferConfig": (
+        "oph_fpe.cosmology.frozen_transfer_likelihood",
+        "FrozenTransferConfig",
+    ),
+    "frozen_transfer_likelihood_report": (
+        "oph_fpe.cosmology.frozen_transfer_likelihood",
+        "frozen_transfer_likelihood_report",
+    ),
+    "write_frozen_transfer_likelihood_report": (
+        "oph_fpe.cosmology.frozen_transfer_likelihood",
+        "write_frozen_transfer_likelihood_report",
+    ),
     "finite_collar_boltzmann_bundle_report": (
         "oph_fpe.cosmology.finite_collar_boltzmann_bundle",
         "finite_collar_boltzmann_bundle_report",

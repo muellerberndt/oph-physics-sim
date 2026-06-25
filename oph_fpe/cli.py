@@ -894,6 +894,28 @@ def main(argv: list[str] | None = None) -> int:
         choices=("pi_over_theta", "one_over_theta"),
     )
 
+    frozen_transfer_parser = subparsers.add_parser(
+        "frozen-transfer-likelihood",
+        help="validate the frozen CMB1 Boltzmann-transfer and likelihood closure lane",
+    )
+    frozen_transfer_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    frozen_transfer_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    frozen_transfer_parser.add_argument("--out", required=True, type=Path)
+    frozen_transfer_parser.add_argument("--solver", default="CAMB", choices=("CAMB", "CLASS"))
+    frozen_transfer_parser.add_argument("--solver-version-pin", default=None)
+    frozen_transfer_parser.add_argument("--class-version-pin", default=None)
+    frozen_transfer_parser.add_argument(
+        "--recombination-assumption",
+        default="Recfast/CAMB-default unless explicitly pinned by run report",
+    )
+    frozen_transfer_parser.add_argument(
+        "--neutrino-assumption",
+        default="sum_mnu_0.06eV_one_massive_two_massless",
+    )
+    frozen_transfer_parser.add_argument("--tolerance", default=1.0e-5, type=float)
+    frozen_transfer_parser.add_argument("--source-plugin-hash", default=None)
+    frozen_transfer_parser.add_argument("--blinded-comparison-id", default=None)
+
     scalar_quotient_parser = subparsers.add_parser(
         "scalar-quotient-report",
         help="write the finite observer-visible scalar/geometric quotient report for CMB input gating",
@@ -2167,6 +2189,28 @@ def main(argv: list[str] | None = None) -> int:
             chi_star_mpc=args.chi_star_mpc,
             h=args.h,
             ell_mapping=args.ell_mapping,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "frozen-transfer-likelihood":
+        from oph_fpe.cosmology.frozen_transfer_likelihood import (
+            FrozenTransferConfig,
+            write_frozen_transfer_likelihood_report,
+        )
+
+        result = write_frozen_transfer_likelihood_report(
+            [*args.run_dir, *args.include],
+            args.out,
+            config=FrozenTransferConfig(
+                solver=args.solver,
+                solver_version_pin=args.solver_version_pin,
+                class_version_pin=args.class_version_pin,
+                recombination_assumption=args.recombination_assumption,
+                neutrino_assumption=args.neutrino_assumption,
+                tolerance=args.tolerance,
+                source_plugin_hash=args.source_plugin_hash,
+                blinded_comparison_id=args.blinded_comparison_id,
+            ),
         )
         print(json.dumps(result, indent=2, default=str))
         return 0

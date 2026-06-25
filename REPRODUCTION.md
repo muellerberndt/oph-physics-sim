@@ -1,8 +1,8 @@
 # OPH-FPE Reproduction Notes
 
-This repository currently emits finite OPH screen diagnostics, CDM-limit CAMB
-regression readouts, and gated Boltzmann-input scaffolding. The current reports
-are not physical OPH CMB predictions and do not establish a populated 3D bulk.
+This repository emits finite OPH screen diagnostics, CDM-limit CAMB
+regression readouts, and gated Boltzmann-input scaffolding. These reports are
+not physical OPH CMB predictions and do not establish a populated 3D bulk.
 
 ## Clean Environment
 
@@ -26,7 +26,7 @@ python -m oph_fpe.cli --help
 The CLI and `oph_fpe.cosmology` package use lazy imports so a missing optional
 Boltzmann dependency does not break unrelated diagnostics.
 
-## Current Measurement-Facing Reports
+## Measurement-Facing Reports
 
 Regenerate the standard LambdaCDM/CAMB benchmark receipt:
 
@@ -59,6 +59,17 @@ python -m oph_fpe.cli oph-boltzmann-inputs \
   --out runs/oph_boltzmann_inputs_cmb_adapter_64k_256k_20260606
 ```
 
+Regenerate the frozen transfer/likelihood closure audit from a run bundle:
+
+```bash
+python -m oph_fpe.cli frozen-transfer-likelihood \
+  --run-dir runs/<run_id> \
+  --out runs/<run_id>/frozen_transfer_likelihood \
+  --solver CAMB \
+  --solver-version-pin <camb-version> \
+  --source-plugin-hash sha256:<source-plugin-hash>
+```
+
 Regenerate the comparable-data snapshot:
 
 ```bash
@@ -73,7 +84,7 @@ python -m oph_fpe.cli comparable-data \
 
 ## Claim Boundary
 
-The current CAMB lane is a standard external LambdaCDM regression target. The
+The CAMB lane is a standard external LambdaCDM regression target. The
 screen `C_l` lane is a normalized-axis diagnostic unless the real-ell coverage
 gate passes. The OPH repair-exchange rows are finite-collar diagnostics; they
 are not physical `rho_A(a)`, `rho_A_eq(a)`, `Gamma_rec(k,a)`, or `B_A(k,a)`

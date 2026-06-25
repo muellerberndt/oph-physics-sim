@@ -48,6 +48,7 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     scalar_quotient = _first_json(roots, "scalar_quotient_report.json")
     compressed_likelihood = _first_json(roots, "oph_compressed_likelihood_report.json")
     official_likelihood = _first_json(roots, "official_planck_likelihood_readiness_report.json")
+    frozen_transfer = _first_json(roots, "frozen_transfer_likelihood_report.json")
     camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
     physical_scale_bridge = (
         _first_json(roots, "physical_scale_bridge_report.json")
@@ -67,11 +68,13 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     official_likelihood_ready = bool(
         compressed_likelihood.get("official_likelihood_ready", False)
         or official_likelihood.get("official_likelihood_execution_ready", False)
+        or frozen_transfer.get("official_likelihood_execution_ready", False)
     )
     cdm_limit_regression_passed = bool(
         compressed_likelihood.get("cdm_limit_regression_passed", False)
         or _truthy_any(_first_json(roots, "oph_boltzmann_input_report.json"), "cdm_limit_regression_passed")
         or camb_baseline.get("CDM_LIMIT_BOLTZMANN_RECEIPT", False)
+        or frozen_transfer.get("CDM_LIMIT_REGRESSION_RECEIPT", False)
     )
     contract = PhysicalCMBInputContract(
         no_data_use_receipt=bool(no_data.get("no_data_use_receipt", False) or no_data.get("NO_DATA_USE_RECEIPT", False)),
@@ -128,10 +131,40 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         frozen_likelihood_protocol_receipt=bool(
             finite_parent.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
             or official_likelihood.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
+            or frozen_transfer.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
         ),
-        frozen_source_hash=finite_parent.get("source_hash"),
-        frozen_solver_hash=official_likelihood.get("solver_hash") or finite_parent.get("solver_hash"),
-        frozen_likelihood_hash=official_likelihood.get("likelihood_hash") or finite_parent.get("likelihood_hash"),
+        source_freeze_manifest_receipt=bool(frozen_transfer.get("FROZEN_SOURCE_MANIFEST_RECEIPT", False)),
+        solver_assumption_pin_receipt=bool(frozen_transfer.get("SOLVER_ASSUMPTION_PIN_RECEIPT", False)),
+        custom_parent_cdm_limit_regression_receipt=bool(
+            frozen_transfer.get("CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT", False)
+        ),
+        standard_model_off_regression_receipt=bool(
+            frozen_transfer.get("STANDARD_MODEL_OFF_REGRESSION_RECEIPT", False)
+        ),
+        blinded_comparison_setup_receipt=bool(frozen_transfer.get("BLINDED_COMPARISON_SETUP_RECEIPT", False)),
+        full_observable_likelihood_receipt=bool(
+            frozen_transfer.get("FULL_OBSERVABLE_LIKELIHOOD_RECEIPT", False)
+        ),
+        frozen_transfer_likelihood_receipt=bool(
+            frozen_transfer.get("FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT", False)
+        ),
+        frozen_source_hash=(
+            frozen_transfer.get("frozen_source_hash")
+            or frozen_transfer.get("source_hash")
+            or finite_parent.get("source_hash")
+        ),
+        frozen_solver_hash=(
+            frozen_transfer.get("frozen_solver_hash")
+            or frozen_transfer.get("solver_hash")
+            or official_likelihood.get("solver_hash")
+            or finite_parent.get("solver_hash")
+        ),
+        frozen_likelihood_hash=(
+            frozen_transfer.get("frozen_likelihood_hash")
+            or frozen_transfer.get("likelihood_hash")
+            or official_likelihood.get("likelihood_hash")
+            or finite_parent.get("likelihood_hash")
+        ),
         physical_scale_bridge_receipts=physical_scale_bridge,
     )
     sources = {
@@ -150,6 +183,7 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         "scalar_quotient_report": scalar_quotient,
         "oph_compressed_likelihood_report": compressed_likelihood,
         "official_planck_likelihood_readiness_report": official_likelihood,
+        "frozen_transfer_likelihood_report": frozen_transfer,
         "camb_lcdm_baseline_report": camb_baseline,
         "physical_scale_bridge_report": physical_scale_bridge,
     }
@@ -904,6 +938,36 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     "blockers": report.get("blockers") or [],
                 }
             )
+        if name == "frozen_transfer_likelihood_report":
+            row.update(
+                {
+                    "FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT": report.get(
+                        "FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT"
+                    ),
+                    "FROZEN_SOURCE_MANIFEST_RECEIPT": report.get("FROZEN_SOURCE_MANIFEST_RECEIPT"),
+                    "SOLVER_ASSUMPTION_PIN_RECEIPT": report.get("SOLVER_ASSUMPTION_PIN_RECEIPT"),
+                    "CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT": report.get(
+                        "CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT"
+                    ),
+                    "STANDARD_MODEL_OFF_REGRESSION_RECEIPT": report.get(
+                        "STANDARD_MODEL_OFF_REGRESSION_RECEIPT"
+                    ),
+                    "BLINDED_COMPARISON_SETUP_RECEIPT": report.get("BLINDED_COMPARISON_SETUP_RECEIPT"),
+                    "FULL_OBSERVABLE_LIKELIHOOD_RECEIPT": report.get(
+                        "FULL_OBSERVABLE_LIKELIHOOD_RECEIPT"
+                    ),
+                    "source_hash_present": _nonempty_string(
+                        report.get("frozen_source_hash") or report.get("source_hash")
+                    ),
+                    "solver_hash_present": _nonempty_string(
+                        report.get("frozen_solver_hash") or report.get("solver_hash")
+                    ),
+                    "likelihood_hash_present": _nonempty_string(
+                        report.get("frozen_likelihood_hash") or report.get("likelihood_hash")
+                    ),
+                    "blockers": report.get("blockers") or [],
+                }
+            )
         if name == "finite_covariant_collar_packet_parent_report":
             row.update(
                 {
@@ -1081,11 +1145,27 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
         },
         "frozen_likelihood_protocol": {
             "receipt": bool(contract.frozen_likelihood_protocol_receipt),
+            "source_freeze_manifest_receipt": bool(contract.source_freeze_manifest_receipt),
+            "solver_assumption_pin_receipt": bool(contract.solver_assumption_pin_receipt),
+            "custom_parent_cdm_limit_regression_receipt": bool(
+                contract.custom_parent_cdm_limit_regression_receipt
+            ),
+            "standard_model_off_regression_receipt": bool(contract.standard_model_off_regression_receipt),
+            "blinded_comparison_setup_receipt": bool(contract.blinded_comparison_setup_receipt),
+            "full_observable_likelihood_receipt": bool(contract.full_observable_likelihood_receipt),
+            "frozen_transfer_likelihood_receipt": bool(contract.frozen_transfer_likelihood_receipt),
             "source_hash_present": _nonempty_string(contract.frozen_source_hash),
             "solver_hash_present": _nonempty_string(contract.frozen_solver_hash),
             "likelihood_hash_present": _nonempty_string(contract.frozen_likelihood_hash),
             "physical_gate_passed": bool(
                 contract.frozen_likelihood_protocol_receipt
+                and contract.source_freeze_manifest_receipt
+                and contract.solver_assumption_pin_receipt
+                and contract.custom_parent_cdm_limit_regression_receipt
+                and contract.standard_model_off_regression_receipt
+                and contract.blinded_comparison_setup_receipt
+                and contract.full_observable_likelihood_receipt
+                and contract.frozen_transfer_likelihood_receipt
                 and _nonempty_string(contract.frozen_source_hash)
                 and _nonempty_string(contract.frozen_solver_hash)
                 and _nonempty_string(contract.frozen_likelihood_hash)
@@ -1347,6 +1427,27 @@ def _physical_cmb_next_steps(blockers: list[str]) -> list[dict[str, str]]:
         "frozen_likelihood_protocol_not_certified": (
             "Freeze immutable source, solver, and likelihood hashes before running physical likelihood comparisons."
         ),
+        "source_freeze_manifest_not_certified": (
+            "Emit the frozen source allowlist manifest from source-side OPH reports only."
+        ),
+        "solver_assumption_pin_not_certified": (
+            "Pin the Boltzmann solver version, recombination assumptions, neutrino assumptions, tolerances, and source-plugin hash."
+        ),
+        "custom_parent_cdm_limit_regression_not_passed": (
+            "Run CMB1 custom-parent CDM-limit regression against the solver-native CDM baseline."
+        ),
+        "standard_model_off_regression_not_passed": (
+            "Run the Standard-Model-off control transfer and verify the expected null/delta tolerance."
+        ),
+        "blinded_comparison_setup_not_certified": (
+            "Freeze the blinded comparison setup before opening TT/TE/EE/lensing/BAO/growth/weak-lensing/RSD/S8 comparisons."
+        ),
+        "full_observable_likelihood_not_executed": (
+            "Execute the full official likelihood/readout suite after source freeze and blinded setup."
+        ),
+        "frozen_transfer_likelihood_closure_not_certified": (
+            "Pass the frozen transfer/likelihood closure report before promoting CMB outputs."
+        ),
         "finite_certificate_proxy_not_theorem_grade": (
             "Replace proxy finite-certificate inputs with theorem-grade finite A_zeta/rho_A receipts."
         ),
@@ -1545,8 +1646,16 @@ def _physical_cmb_frontier_gate_rows(
         },
         {
             "gate": "cdm_limit_regression",
-            "passed": bool(contract.cdm_limit_regression_passed),
-            "detail": "Boltzmann plumbing/CDM-limit regression gate",
+            "passed": bool(contract.cdm_limit_regression_passed and contract.custom_parent_cdm_limit_regression_receipt),
+            "detail": (
+                "Boltzmann plumbing/CDM-limit regression gate; requires CMB1 custom-parent CDM "
+                "match against solver-native CDM"
+            ),
+        },
+        {
+            "gate": "standard_model_off_regression",
+            "passed": bool(contract.standard_model_off_regression_receipt),
+            "detail": "control transfer with Standard Model/anomaly sources off",
         },
         {
             "gate": "official_planck_likelihood_ready",
@@ -1554,9 +1663,17 @@ def _physical_cmb_frontier_gate_rows(
             "detail": "requires local official clik/Cobaya path and Planck likelihood data",
         },
         {
+            "gate": "blinded_full_observable_likelihood",
+            "passed": bool(contract.blinded_comparison_setup_receipt and contract.full_observable_likelihood_receipt),
+            "detail": "requires blinded TT/TE/EE/lensing/BAO/growth/weak-lensing/RSD/S8 execution",
+        },
+        {
             "gate": "frozen_likelihood_protocol",
             "passed": bool(
                 contract.frozen_likelihood_protocol_receipt
+                and contract.source_freeze_manifest_receipt
+                and contract.solver_assumption_pin_receipt
+                and contract.frozen_transfer_likelihood_receipt
                 and _nonempty_string(contract.frozen_source_hash)
                 and _nonempty_string(contract.frozen_solver_hash)
                 and _nonempty_string(contract.frozen_likelihood_hash)
@@ -1564,7 +1681,10 @@ def _physical_cmb_frontier_gate_rows(
             "detail": (
                 f"source_hash={_nonempty_string(contract.frozen_source_hash)}; "
                 f"solver_hash={_nonempty_string(contract.frozen_solver_hash)}; "
-                f"likelihood_hash={_nonempty_string(contract.frozen_likelihood_hash)}"
+                f"likelihood_hash={_nonempty_string(contract.frozen_likelihood_hash)}; "
+                f"source_freeze={contract.source_freeze_manifest_receipt}; "
+                f"solver_pins={contract.solver_assumption_pin_receipt}; "
+                f"closure={contract.frozen_transfer_likelihood_receipt}"
             ),
         },
         {
@@ -1723,6 +1843,13 @@ def _physical_cmb_frontier_gap_rows(
                 if blocker
                 in {
                     "frozen_likelihood_protocol_not_certified",
+                    "source_freeze_manifest_not_certified",
+                    "solver_assumption_pin_not_certified",
+                    "custom_parent_cdm_limit_regression_not_passed",
+                    "standard_model_off_regression_not_passed",
+                    "blinded_comparison_setup_not_certified",
+                    "full_observable_likelihood_not_executed",
+                    "frozen_transfer_likelihood_closure_not_certified",
                     "frozen_source_hash_missing",
                     "frozen_solver_hash_missing",
                     "frozen_likelihood_hash_missing",

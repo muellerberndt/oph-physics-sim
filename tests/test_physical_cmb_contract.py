@@ -129,6 +129,28 @@ def test_physical_cmb_contract_requires_finite_covariant_parent_and_frozen_hashe
     assert "frozen_source_hash_missing" in validation["blockers"]
 
 
+def test_physical_cmb_contract_requires_frozen_transfer_likelihood_lane():
+    contract = _valid_contract()
+    contract.source_freeze_manifest_receipt = False
+    contract.solver_assumption_pin_receipt = False
+    contract.custom_parent_cdm_limit_regression_receipt = False
+    contract.standard_model_off_regression_receipt = False
+    contract.blinded_comparison_setup_receipt = False
+    contract.full_observable_likelihood_receipt = False
+    contract.frozen_transfer_likelihood_receipt = False
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "source_freeze_manifest_not_certified" in validation["blockers"]
+    assert "solver_assumption_pin_not_certified" in validation["blockers"]
+    assert "custom_parent_cdm_limit_regression_not_passed" in validation["blockers"]
+    assert "standard_model_off_regression_not_passed" in validation["blockers"]
+    assert "blinded_comparison_setup_not_certified" in validation["blockers"]
+    assert "full_observable_likelihood_not_executed" in validation["blockers"]
+    assert "frozen_transfer_likelihood_closure_not_certified" in validation["blockers"]
+
+
 def test_physical_cmb_contract_requires_recipient_stress_for_nonzero_Gamma_rec():
     contract = _valid_contract()
     contract.explicit_recipient_stress_receipt = False
@@ -242,6 +264,13 @@ def _valid_contract() -> PhysicalCMBInputContract:
         N_CRC_consensus_invariant_receipt=True,
         global_likelihood_reduction_receipt=True,
         frozen_likelihood_protocol_receipt=True,
+        source_freeze_manifest_receipt=True,
+        solver_assumption_pin_receipt=True,
+        custom_parent_cdm_limit_regression_receipt=True,
+        standard_model_off_regression_receipt=True,
+        blinded_comparison_setup_receipt=True,
+        full_observable_likelihood_receipt=True,
+        frozen_transfer_likelihood_receipt=True,
         frozen_source_hash="sha256:" + "0" * 64,
         frozen_solver_hash="sha256:" + "1" * 64,
         frozen_likelihood_hash="sha256:" + "2" * 64,

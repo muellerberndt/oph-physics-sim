@@ -76,6 +76,13 @@ class PhysicalCMBInputContract:
     N_CRC_consensus_invariant_receipt: bool = False
     global_likelihood_reduction_receipt: bool = False
     frozen_likelihood_protocol_receipt: bool = False
+    source_freeze_manifest_receipt: bool = False
+    solver_assumption_pin_receipt: bool = False
+    custom_parent_cdm_limit_regression_receipt: bool = False
+    standard_model_off_regression_receipt: bool = False
+    blinded_comparison_setup_receipt: bool = False
+    full_observable_likelihood_receipt: bool = False
+    frozen_transfer_likelihood_receipt: bool = False
     frozen_source_hash: str | None = None
     frozen_solver_hash: str | None = None
     frozen_likelihood_hash: str | None = None
@@ -203,6 +210,27 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
     if not bool(contract.frozen_likelihood_protocol_receipt):
         blockers.append("frozen_likelihood_protocol_not_certified")
 
+    if not bool(contract.source_freeze_manifest_receipt):
+        blockers.append("source_freeze_manifest_not_certified")
+
+    if not bool(contract.solver_assumption_pin_receipt):
+        blockers.append("solver_assumption_pin_not_certified")
+
+    if not bool(contract.custom_parent_cdm_limit_regression_receipt):
+        blockers.append("custom_parent_cdm_limit_regression_not_passed")
+
+    if not bool(contract.standard_model_off_regression_receipt):
+        blockers.append("standard_model_off_regression_not_passed")
+
+    if not bool(contract.blinded_comparison_setup_receipt):
+        blockers.append("blinded_comparison_setup_not_certified")
+
+    if not bool(contract.full_observable_likelihood_receipt):
+        blockers.append("full_observable_likelihood_not_executed")
+
+    if not bool(contract.frozen_transfer_likelihood_receipt):
+        blockers.append("frozen_transfer_likelihood_closure_not_certified")
+
     if not _valid_sha256_hash(contract.frozen_source_hash):
         blockers.append("frozen_source_hash_missing")
 
@@ -225,7 +253,9 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
             "diagnostics until every blocker is cleared by finite-derived inputs, a finite covariant "
             "stress parent, recipient stress and exchange-current closure for nonzero exchange, "
             "active-fiber/physical-clock/common-parent Gamma_rec receipts, source-only provenance, "
-            "pooled reducers, physical scale-bridge receipts, frozen hashes, and likelihood plumbing."
+            "pooled reducers, physical scale-bridge receipts, CMB1 custom-parent CDM regression, "
+            "Standard-Model-off regression, blinded full-observable likelihood execution, solver pins, "
+            "and frozen source/solver/likelihood hashes."
         ),
     }
 
@@ -323,6 +353,25 @@ def contract_from_reports(
         frozen_likelihood_protocol_receipt=bool(
             likelihood_report.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
             or background_report.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
+        ),
+        source_freeze_manifest_receipt=bool(likelihood_report.get("FROZEN_SOURCE_MANIFEST_RECEIPT", False)),
+        solver_assumption_pin_receipt=bool(likelihood_report.get("SOLVER_ASSUMPTION_PIN_RECEIPT", False)),
+        custom_parent_cdm_limit_regression_receipt=bool(
+            likelihood_report.get("CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT", False)
+            or likelihood_report.get("custom_parent_cdm_limit_regression_receipt", False)
+        ),
+        standard_model_off_regression_receipt=bool(
+            likelihood_report.get("STANDARD_MODEL_OFF_REGRESSION_RECEIPT", False)
+        ),
+        blinded_comparison_setup_receipt=bool(
+            likelihood_report.get("BLINDED_COMPARISON_SETUP_RECEIPT", False)
+            or likelihood_report.get("blinded_comparison_setup_receipt", False)
+        ),
+        full_observable_likelihood_receipt=bool(
+            likelihood_report.get("FULL_OBSERVABLE_LIKELIHOOD_RECEIPT", False)
+        ),
+        frozen_transfer_likelihood_receipt=bool(
+            likelihood_report.get("FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT", False)
         ),
         frozen_source_hash=background_report.get("source_hash"),
         frozen_solver_hash=likelihood_report.get("solver_hash") or background_report.get("solver_hash"),

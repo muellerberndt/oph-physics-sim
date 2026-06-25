@@ -157,6 +157,7 @@ def test_physical_cmb_source_readiness_uses_explicit_parent_report(tmp_path: Pat
     _write_json(run / "finite_covariant_collar_packet_parent_artifact.json", _parent_artifact())
     _write_clean_source_provenance(run)
     _write_physical_scale_bridge(run)
+    _write_frozen_transfer(run)
 
     report = write_physical_cmb_source_readiness_report([run], run)
     input_report = write_physical_cmb_input_report([run], tmp_path / "input")
@@ -204,6 +205,28 @@ def _write_json(path: Path, data: dict) -> None:
 
 def _write_physical_scale_bridge(run: Path) -> None:
     _write_json(run / "physical_scale_bridge_report.json", imported_flrw_reference_receipts())
+
+
+def _write_frozen_transfer(run: Path) -> None:
+    _write_json(
+        run / "frozen_transfer_likelihood_report.json",
+        {
+            "FROZEN_SOURCE_MANIFEST_RECEIPT": True,
+            "SOLVER_ASSUMPTION_PIN_RECEIPT": True,
+            "CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT": True,
+            "CDM_LIMIT_REGRESSION_RECEIPT": True,
+            "STANDARD_MODEL_OFF_REGRESSION_RECEIPT": True,
+            "BLINDED_COMPARISON_SETUP_RECEIPT": True,
+            "FULL_OBSERVABLE_LIKELIHOOD_RECEIPT": True,
+            "FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT": True,
+            "FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT": True,
+            "official_likelihood_execution_ready": True,
+            "frozen_source_hash": _hash("0"),
+            "frozen_solver_hash": _hash("1"),
+            "frozen_likelihood_hash": _hash("2"),
+            "blockers": [],
+        },
+    )
 
 
 def _hash(char: str) -> str:

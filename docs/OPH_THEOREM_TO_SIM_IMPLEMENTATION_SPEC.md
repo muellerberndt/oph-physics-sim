@@ -182,8 +182,12 @@ comparable-observation tables. It is measurement-facing but not physical predict
 
 `CMB2` requires finite OPH source arrays, no-data-use dependency graph, finite covariant
 collar-packet parent, stress closure, gauge-independent source fields, screen-to-radial or
-bulk-to-sky handoff, Boltzmann/CLASS/CAMB transfer, CDM-limit regression, official likelihood
-execution, and frozen source/solver/likelihood hashes.
+bulk-to-sky handoff, Boltzmann/CLASS/CAMB transfer, CMB1 custom-parent CDM-limit regression,
+Standard-Model-off control regression, solver/recombination/neutrino/tolerance pins,
+source-plugin hashes, blinded full-observable likelihood execution, and frozen
+source/solver/likelihood hashes. The simulator emits these checks in
+`frozen_transfer_likelihood_report.json`; physical prediction receipts remain false unless
+that closure report and the physical CMB input contract both pass.
 
 The quantum-vacuum visualization view uses finite screen/readback fluctuations, repair traces,
 holonomy residues, and optional reference-vacuum baselines. It must keep

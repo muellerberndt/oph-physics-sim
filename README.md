@@ -164,6 +164,12 @@ python3 -m oph_fpe.cli finite-certificates --out runs/finite_certificates
 python3 -m oph_fpe.cli finite-covariant-collar-parent \
   --source runs/<run_id>/finite_covariant_parent_source.json \
   --out runs/<run_id>/finite_covariant_collar_packet_parent_report.json
+python3 -m oph_fpe.cli frozen-transfer-likelihood \
+  --run-dir runs/<run_id> \
+  --out runs/<run_id>/frozen_transfer_likelihood \
+  --solver CAMB \
+  --solver-version-pin <camb-version> \
+  --source-plugin-hash sha256:<source-plugin-hash>
 python3 -m oph_fpe.cli physical-cmb-promotion-audit --run-dir runs/<run_id> --out runs/cmb_promotion_audit
 python3 -m oph_fpe.cli official-planck-readiness --out runs/official_planck_readiness
 ```
@@ -171,8 +177,10 @@ python3 -m oph_fpe.cli official-planck-readiness --out runs/official_planck_read
 The physical CMB gate remains closed unless finite source arrays are backed by a
 finite covariant collar-packet parent with stress closure, recipient stress for
 nonzero repair exchange, gauge-independent \(B_A\), convergence/CDM-limit
-receipts, and frozen source/solver/likelihood hashes. CAMB/CLASS-compatible
-curves without that report are diagnostic plumbing.
+receipts, CMB1 custom-parent CDM-limit regression, Standard-Model-off control
+regression, blinded full-observable likelihood execution, and frozen
+source/solver/likelihood hashes. CAMB/CLASS-compatible curves without those
+reports are diagnostic plumbing.
 
 Viewer exports:
 
@@ -214,7 +222,7 @@ object population, and neutral-bulk gates.
 
 Screen-level angular spectra are measurement-facing diagnostics. They are useful for seed/control studies and viewer payloads.
 
-Physical CMB prediction has a stricter contract: finite OPH sources for amplitude, scalar quotient, IR selectors, finite-collar kernels, recovery rates, Boltzmann handoff, CDM-limit regression, and official likelihood execution. Those gates are reported by the physical CMB frontier and promotion-audit outputs for each concrete run.
+Physical CMB prediction has a stricter contract: finite OPH sources for amplitude, scalar quotient, IR selectors, finite-collar kernels, recovery rates, Boltzmann handoff, CMB1 custom-parent CDM-limit regression, Standard-Model-off control regression, frozen solver assumptions, blinded comparison setup, and official full-observable likelihood execution. Those gates are reported by the frozen transfer/likelihood closure, physical CMB frontier, and promotion-audit outputs for each concrete run.
 
 Related commands include:
 
