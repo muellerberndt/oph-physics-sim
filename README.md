@@ -158,6 +158,7 @@ Selected cosmology and scale gates:
 ```bash
 python3 -m oph_fpe.cli screen-capacity-report --out runs/screen_capacity_closure
 python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
+python3 -m oph_fpe.cli leech-endpoint-bridge --out runs/leech_endpoint_bridge
 python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
 python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
 python3 -m oph_fpe.cli finite-certificates --out runs/finite_certificates
@@ -173,6 +174,10 @@ python3 -m oph_fpe.cli frozen-transfer-likelihood \
 python3 -m oph_fpe.cli physical-cmb-promotion-audit --run-dir runs/<run_id> --out runs/cmb_promotion_audit
 python3 -m oph_fpe.cli official-planck-readiness --out runs/official_planck_readiness
 ```
+
+`leech-endpoint-bridge` audits a candidate Leech/moonshine same-scheme hadronic endpoint artifact.
+It keeps the fine-structure endpoint prediction receipt false unless a separate paper-side
+promotion gate is supplied.
 
 The physical CMB gate remains closed unless finite source arrays are backed by a
 finite covariant collar-packet parent with stress closure, recipient stress for

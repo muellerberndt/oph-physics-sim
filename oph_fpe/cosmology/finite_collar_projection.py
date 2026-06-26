@@ -82,7 +82,9 @@ def finite_collar_cmb_projection_report(
             readiness["finite_collar_source_bundle_receipt"] and readiness["ell_k_axes_emitted"]
         ),
         "PHYSICAL_K_CALIBRATION_RECEIPT": False,
+        "PHYSICAL_SPATIAL_K_RECEIPT": False,
         "PHYSICAL_K_RECEIPT": False,
+        "SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT": False,
         "FIDUCIAL_CMB_AXIS_PROJECTION_DIAGNOSTIC": True,
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,

@@ -94,10 +94,16 @@ def frozen_transfer_likelihood_report(
     )
     blinded_receipt = bool(likelihood["BLINDED_COMPARISON_SETUP_RECEIPT"])
     full_observable_receipt = bool(likelihood["FULL_OBSERVABLE_LIKELIHOOD_RECEIPT"])
+    physical_boltzmann_export_receipt = bool(finite_collar.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False))
+    physical_input_contract_receipt = bool(
+        physical_input_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+    )
     blockers = _unique_strings(
         [
             *([] if source_freeze_receipt else ["source_freeze_manifest_not_certified"]),
             *([] if solver_pin_receipt else ["solver_assumption_pin_not_certified"]),
+            *([] if physical_boltzmann_export_receipt else ["physical_boltzmann_export_not_certified"]),
+            *([] if physical_input_contract_receipt else ["physical_cmb_input_contract_not_certified"]),
             *([] if cdm["CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT"] else ["custom_parent_cdm_limit_regression_not_passed"]),
             *([] if sm_off["STANDARD_MODEL_OFF_REGRESSION_RECEIPT"] else ["standard_model_off_regression_not_passed"]),
             *([] if blinded_receipt else ["blinded_comparison_setup_not_certified"]),
@@ -113,8 +119,24 @@ def frozen_transfer_likelihood_report(
         not blockers
         and source_freeze_receipt
         and solver_pin_receipt
+        and physical_boltzmann_export_receipt
+        and physical_input_contract_receipt
         and cdm["CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT"]
         and sm_off["STANDARD_MODEL_OFF_REGRESSION_RECEIPT"]
+        and blinded_receipt
+        and full_observable_receipt
+        and likelihood_protocol_receipt
+    )
+    frozen_physical_spectrum_receipt = bool(
+        source_freeze_receipt
+        and solver_pin_receipt
+        and cdm["CMB1_CUSTOM_PARENT_CDM_LIMIT_REGRESSION_RECEIPT"]
+        and sm_off["STANDARD_MODEL_OFF_REGRESSION_RECEIPT"]
+        and physical_boltzmann_export_receipt
+        and physical_input_contract_receipt
+    )
+    likelihood_evaluated_prediction_receipt = bool(
+        frozen_physical_spectrum_receipt
         and blinded_receipt
         and full_observable_receipt
         and likelihood_protocol_receipt
@@ -129,12 +151,8 @@ def frozen_transfer_likelihood_report(
         "standard_model_off_regression": sm_off,
         "official_likelihood_execution": likelihood,
         "upstream_gate_summary": {
-            "finite_collar_physical_certificate": bool(
-                finite_collar.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False)
-            ),
-            "physical_cmb_input_contract_receipt": bool(
-                physical_input_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
-            ),
+            "finite_collar_physical_certificate": physical_boltzmann_export_receipt,
+            "physical_cmb_input_contract_receipt": physical_input_contract_receipt,
         },
         "FROZEN_SOURCE_MANIFEST_RECEIPT": source_freeze_receipt,
         "SOLVER_ASSUMPTION_PIN_RECEIPT": solver_pin_receipt,
@@ -146,7 +164,18 @@ def frozen_transfer_likelihood_report(
         "BLINDED_COMPARISON_SETUP_RECEIPT": blinded_receipt,
         "FULL_OBSERVABLE_LIKELIHOOD_RECEIPT": full_observable_receipt,
         "FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT": likelihood_protocol_receipt,
+        "FROZEN_PHYSICAL_SPECTRUM_RECEIPT": frozen_physical_spectrum_receipt,
+        "LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT": likelihood_evaluated_prediction_receipt,
         "FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT": closure_receipt,
+        "prediction_class": (
+            "LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION"
+            if likelihood_evaluated_prediction_receipt
+            else (
+                "FROZEN_PHYSICAL_SPECTRUM"
+                if frozen_physical_spectrum_receipt
+                else "DIAGNOSTIC_OR_CONDITIONAL"
+            )
+        ),
         "frozen_source_hash": source_manifest["manifest_hash"],
         "frozen_solver_hash": solver["solver_hash"],
         "frozen_likelihood_hash": likelihood["likelihood_hash"],

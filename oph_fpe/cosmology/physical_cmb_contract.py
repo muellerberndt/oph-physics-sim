@@ -106,14 +106,22 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
     scale_bridge_validation = validate_physical_scale_bridge_receipts(contract.physical_scale_bridge_receipts)
     if not bool(scale_bridge_validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT", False)):
         blockers.append("physical_scale_bridge_receipt_missing")
-    if not bool(scale_bridge_validation.get("PHYSICAL_K_RECEIPT", False)):
-        blockers.append("physical_k_receipt_missing")
-    if not bool(scale_bridge_validation.get("SOURCE_ANGULAR_MODE_RECEIPT", False)):
-        blockers.append("source_angular_mode_receipt_missing")
+    if not bool(scale_bridge_validation.get("PHYSICAL_SPATIAL_K_RECEIPT", False)):
+        blockers.append("physical_spatial_k_receipt_missing")
+    if not bool(scale_bridge_validation.get("SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT", False)):
+        blockers.append("screen_to_physical_k_association_receipt_missing")
+    if not bool(scale_bridge_validation.get("SOURCE_ANGULAR_SECTOR_RECEIPT", False)):
+        blockers.append("source_angular_sector_receipt_missing")
     if not bool(scale_bridge_validation.get("CALIBRATED_A_EVOLUTION_RECEIPT", False)):
         blockers.append("calibrated_a_evolution_receipt_missing")
+    if not bool(scale_bridge_validation.get("PHYSICAL_MODE_FREEZEOUT_MAP_RECEIPT", False)):
+        blockers.append("physical_mode_freezeout_map_receipt_missing")
     if not bool(scale_bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False)):
         blockers.append("physical_freezeout_surface_receipt_missing")
+    if not bool(scale_bridge_validation.get("COMMON_PRIMORDIAL_ANOMALY_MODE_BASIS_RECEIPT", False)):
+        blockers.append("common_primordial_anomaly_mode_basis_receipt_missing")
+    if not bool(scale_bridge_validation.get("CROSS_RECEIPT_CONSISTENCY_RECEIPT", False)):
+        blockers.append("cross_receipt_consistency_receipt_missing")
     if not bool(scale_bridge_validation.get("NO_POSTHOC_CALIBRATION_RECEIPT", False)):
         blockers.append("no_posthoc_calibration_receipt_missing")
 
@@ -453,7 +461,7 @@ def _valid_freezeout_surface(value: dict[str, Any] | None) -> bool:
         return False
     if not bool(value.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT")):
         return False
-    return bool(value.get("common_surface_passed") or value.get("mode_dependent_freezeout_map"))
+    return bool(value.get("common_surface_passed"))
 
 
 def _valid_sha256_hash(value: str | None) -> bool:

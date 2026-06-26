@@ -16,9 +16,13 @@ def test_frozen_transfer_likelihood_fails_closed_without_sources_or_pins(tmp_pat
     report = frozen_transfer_likelihood_report([tmp_path])
 
     assert report["FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT"] is False
+    assert report["FROZEN_PHYSICAL_SPECTRUM_RECEIPT"] is False
+    assert report["LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT"] is False
     assert report["physical_cmb_prediction"] is False
     assert "source_freeze_manifest_not_certified" in report["blockers"]
     assert "solver_assumption_pin_not_certified" in report["blockers"]
+    assert "physical_boltzmann_export_not_certified" in report["blockers"]
+    assert "physical_cmb_input_contract_not_certified" in report["blockers"]
     assert "custom_parent_cdm_limit_regression_not_passed" in report["blockers"]
     assert "standard_model_off_regression_not_passed" in report["blockers"]
     assert "full_observable_likelihood_not_executed" in report["blockers"]
@@ -54,6 +58,14 @@ def test_frozen_transfer_likelihood_closure_passes_with_complete_frozen_lane(tmp
             "no_particle_sector_sources": True,
             "max_relative_tt_delta": 1.0e-8,
         },
+    )
+    _write_json(
+        run / "finite_collar_boltzmann_bundle_report.json",
+        {"PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": True},
+    )
+    _write_json(
+        run / "physical_cmb_input_validation.json",
+        {"PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": True},
     )
     _write_json(
         run / "official_planck_likelihood_readiness_report.json",
@@ -92,7 +104,10 @@ def test_frozen_transfer_likelihood_closure_passes_with_complete_frozen_lane(tmp
     assert report["BLINDED_COMPARISON_SETUP_RECEIPT"] is True
     assert report["FULL_OBSERVABLE_LIKELIHOOD_RECEIPT"] is True
     assert report["FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT"] is True
+    assert report["FROZEN_PHYSICAL_SPECTRUM_RECEIPT"] is True
+    assert report["LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT"] is True
     assert report["FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT"] is True
+    assert report["prediction_class"] == "LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION"
     assert report["blockers"] == []
     assert report["frozen_source_hash"].startswith("sha256:")
     assert (out / "frozen_transfer_likelihood_report.json").exists()

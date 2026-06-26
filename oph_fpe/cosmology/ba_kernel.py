@@ -85,17 +85,22 @@ def B_A_kernel_receipt(rows: list[BAKernelRow], *, min_good_rows: int = 3, min_s
         and (row.z_score is None or abs(float(row.z_score)) >= 3.0)
     ]
     required = max(int(min_good_rows), len(rows) // 2)
-    passed = bool(len(good) >= required and rows)
+    diagnostic_candidate = bool(len(good) >= required and rows)
+    physical_passed = False
     return {
-        "B_A_KERNEL_RECEIPT": passed,
-        "B_A_k_a_physical_emitted": passed,
+        "B_A_DIAGNOSTIC_CANDIDATE_RECEIPT": diagnostic_candidate,
+        "B_A_KERNEL_CANDIDATE_RECEIPT": diagnostic_candidate,
+        "B_A_KERNEL_RECEIPT": physical_passed,
+        "B_A_k_a_physical_emitted": physical_passed,
         "row_count": int(len(rows)),
         "good_row_count": int(len(good)),
         "required_good_row_count": int(required),
         "min_sample_count": int(min_sample_count),
+        "promotion_blockers": _physical_source_promotion_blockers(diagnostic_candidate),
         "claim_boundary": (
-            "Paired finite-difference B_A(k,a) receipt. It is physical only for real paired OPH runs with "
-            "predeclared baryon perturbations and controls; report-backed surrogate rows must not pass this gate."
+            "Paired finite-difference B_A(k,a) diagnostic candidate. Significance and sample-count checks "
+            "do not satisfy the physical kernel receipt until the source-functional, tangent-space, "
+            "source-vector, lift-independence, gauge, and refinement receipts pass."
         ),
     }
 
@@ -169,17 +174,18 @@ def ba_kernel_report_from_parent_report(parent_report_path: Path, out_dir: Path)
         "gauge_consistency_audited": bool(checks.get("gauge_consistency_audited", False)),
         "refinement_convergence_passed": bool(checks.get("refinement_convergence_passed", False)),
     }
-    candidate_receipt = bool(
+    diagnostic_candidate = bool(
         rows
         and all(value for key, value in candidate_checks.items() if key != "report_backed_surrogate_parent")
         and not candidate_checks["report_backed_surrogate_parent"]
     )
-    physical_receipt = bool(candidate_receipt and all(physical_checks.values()))
+    physical_receipt = False
     report = {
         "mode": "parent_collar_B_A_kernel_promotion_v0",
         "parent_report": str(parent_path),
         "B_A_source": "parent_collar_finite_difference",
-        "B_A_KERNEL_CANDIDATE_RECEIPT": candidate_receipt,
+        "B_A_DIAGNOSTIC_CANDIDATE_RECEIPT": diagnostic_candidate,
+        "B_A_KERNEL_CANDIDATE_RECEIPT": diagnostic_candidate,
         "B_A_KERNEL_RECEIPT": physical_receipt,
         "B_A_k_a_physical_emitted": physical_receipt,
         "physical_cmb_prediction": False,
@@ -193,9 +199,9 @@ def ba_kernel_report_from_parent_report(parent_report_path: Path, out_dir: Path)
         "control_failures": readiness.get("control_failures", {}),
         "claim_boundary": (
             "Parent-collar B_A kernel promotion audit. Candidate rows come from paired finite perturbation "
-            "reruns and controls, but the physical B_A kernel receipt remains false until the parent report "
-            "closes physical k/a calibration, observer-view parent variation, exchange/gauge audits, and "
-            "refinement convergence."
+            "reruns and controls, but the physical B_A kernel receipt remains false until a source functional, "
+            "admissible tangent, source-vector response, lift-independence, physical k/a calibration, "
+            "exchange/gauge audits, and derivative-level refinement receipts pass."
         ),
     }
     out = Path(out_dir)
@@ -569,6 +575,25 @@ def _parent_kernel_promotion_blockers(
     for key, value in physical_checks.items():
         if not value:
             blockers.append(f"physical_check_failed_{key}")
+    blockers.extend(_physical_source_promotion_blockers(bool(rows)))
+    return blockers
+
+
+def _physical_source_promotion_blockers(candidate_present: bool) -> list[str]:
+    blockers = [
+        "common_source_functional_receipt_missing",
+        "admissible_source_tangent_receipt_missing",
+        "constraint_preserving_retraction_receipt_missing",
+        "B_A_source_lift_independence_receipt_missing",
+        "source_vector_sufficiency_receipt_missing",
+        "fixed_geometry_partial_response_receipt_missing",
+        "source_design_identifiability_receipt_missing",
+        "finite_difference_order_receipt_missing",
+        "C1_refinement_receipt_missing",
+        "order_of_limits_receipt_missing",
+    ]
+    if candidate_present:
+        blockers.insert(0, "B_A_diagnostic_candidate_not_physical_kernel")
     return blockers
 
 

@@ -164,7 +164,13 @@ def finite_covariant_collar_packet_parent_report(
     if not stress_closed:
         blockers.append("stress_energy_closure_not_certified")
 
-    gamma_rec = _float(repair.get("Gamma_rec", repair.get("gamma_rec", repair.get("spectral_gap"))))
+    gamma_rec = _float(repair.get("Gamma_rec"))
+    repair_step_gamma = _float(
+        repair.get(
+            "gamma_repair_step",
+            repair.get("gamma_rec", repair.get("spectral_gap")),
+        )
+    )
     gamma_nonzero = bool(gamma_rec is not None and gamma_rec > float(tolerance))
     recipient_states = [row for row in packet_rows if str(row.get("label")) in RECIPIENT_PACKET_LABELS]
     exchange_off_receipt = bool(
@@ -388,8 +394,18 @@ def finite_covariant_collar_packet_parent_report(
         FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT: frozen_receipt,
         "Gamma_rec_nonzero": gamma_nonzero,
         "Gamma_rec_status": "PHYSICAL_KERNEL" if gamma_promotion_receipt and gamma_nonzero else (
-            "REPAIR_EXCHANGE_OFF" if not gamma_nonzero else "UNPROMOTED_REPAIR_STEP_DIAGNOSTIC"
+            "UNPROMOTED_REPAIR_STEP_DIAGNOSTIC" if repair_step_gamma is not None else (
+                "REPAIR_EXCHANGE_OFF" if not gamma_nonzero else "UNPROMOTED_REPAIR_STEP_DIAGNOSTIC"
+            )
         ),
+        "repair_step_gamma_diagnostic": repair_step_gamma,
+        "relaxation_rate_artifact_types": {
+            "DISCRETE_STEP_EIGENVALUE": repair.get("discrete_step_eigenvalue"),
+            "DISCRETE_STEP_GAP": repair.get("discrete_step_gap"),
+            "LOGARITHMIC_STEP_DECAY": repair.get("logarithmic_step_decay", repair_step_gamma),
+            "CONTINUOUS_GENERATOR_EIGENVALUE": repair.get("continuous_generator_eigenvalue"),
+            "PHYSICAL_RELAXATION_RATE": gamma_rec,
+        },
         "source_hash": source_hash or None,
         "solver_hash": None,
         "likelihood_hash": None,

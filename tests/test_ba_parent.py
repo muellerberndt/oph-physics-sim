@@ -45,8 +45,9 @@ def test_estimate_b_a_grid_uses_symmetric_finite_difference_without_cmb_fit():
     )
 
     row = report["rows"][0]
-    # derivative = k, B_A = derivative / rho_A = 0.25 / (2 * 0.5^-3)
-    assert row["B_A_mean"] == pytest.approx(0.015625)
+    # derivative = k, B_A = derivative / rho_A_eq = 0.25 / 0.5^-3
+    assert row["B_A_mean"] == pytest.approx(0.03125)
+    assert row["denominator"] == "RHO_A_EQ_BACKGROUND"
     assert row["sign_stable"] is True
     assert report["readiness"]["checks"]["no_cmb_data_used"] is True
     assert report["physical_prediction_ready"] is False

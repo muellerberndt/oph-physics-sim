@@ -640,6 +640,34 @@ def main(argv: list[str] | None = None) -> int:
     pn_resonance_parser.add_argument("--run-dir", nargs="*", default=None, type=Path)
     pn_resonance_parser.add_argument("--source", default="cli_pn_resonance_report")
 
+    leech_parser = subparsers.add_parser(
+        "leech-endpoint-bridge",
+        help="audit a quarantined Leech/moonshine same-scheme hadronic endpoint bridge candidate",
+    )
+    leech_parser.add_argument("--out", required=True, type=Path)
+    leech_parser.add_argument(
+        "--source-artifact",
+        default=None,
+        type=Path,
+        help="optional JSON artifact emitted by a source-only Leech/moonshine endpoint candidate",
+    )
+    leech_parser.add_argument("--delta-tolerance", default=None, type=float)
+    leech_parser.add_argument("--c-q-tolerance", default=None, type=float)
+    leech_parser.add_argument("--source", default="cli_leech_endpoint_bridge")
+
+    black_hole_parser = subparsers.add_parser(
+        "black-hole-bridge-status",
+        help="write the fail-closed black-hole finite/physical bridge status report",
+    )
+    black_hole_parser.add_argument("--out", required=True, type=Path)
+    black_hole_parser.add_argument(
+        "--source-artifact",
+        default=None,
+        type=Path,
+        help="optional JSON artifact with black-hole finite and physical bridge gates",
+    )
+    black_hole_parser.add_argument("--source", default="cli_black_hole_bridge_status")
+
     silence_parser = subparsers.add_parser(
         "silence-to-observation-report",
         help="write the finite scale-compressed P/N silence-to-observation witness for a run",
@@ -1959,6 +1987,44 @@ def main(argv: list[str] | None = None) -> int:
                 source=args.source,
             ),
             run_dirs=args.run_dir,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "leech-endpoint-bridge":
+        from oph_fpe.cosmology.leech_endpoint_bridge import (
+            C_Q_TOLERANCE,
+            DELTA_H_FP_CALIBRATED_SIGMA,
+            LeechEndpointBridgeInputs,
+            write_leech_endpoint_bridge_report,
+        )
+
+        result = write_leech_endpoint_bridge_report(
+            args.out,
+            LeechEndpointBridgeInputs(
+                source_artifact=args.source_artifact,
+                delta_tolerance=(
+                    DELTA_H_FP_CALIBRATED_SIGMA
+                    if args.delta_tolerance is None
+                    else args.delta_tolerance
+                ),
+                c_q_tolerance=C_Q_TOLERANCE if args.c_q_tolerance is None else args.c_q_tolerance,
+                source=args.source,
+            ),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "black-hole-bridge-status":
+        from oph_fpe.black_hole_bridge import (
+            BlackHoleBridgeInputs,
+            write_black_hole_bridge_status_report,
+        )
+
+        result = write_black_hole_bridge_status_report(
+            args.out,
+            BlackHoleBridgeInputs(
+                source_artifact=args.source_artifact,
+                source=args.source,
+            ),
         )
         print(json.dumps(result, indent=2, default=str))
         return 0

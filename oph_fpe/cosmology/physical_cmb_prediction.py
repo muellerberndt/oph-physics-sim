@@ -604,7 +604,7 @@ def _scalar_value_from_reports(
 def _B_A_from_reports(ba_kernel: dict[str, Any], ba_parent: dict[str, Any]) -> tuple[str, np.ndarray | None]:
     if ba_kernel.get("B_A_KERNEL_RECEIPT", False):
         return "parent_collar_finite_difference", _array(ba_kernel.get("B_A_k_a"))
-    if ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False):
+    if _ba_diagnostic_candidate(ba_kernel):
         candidate = _array(ba_kernel.get("B_A_k_a"))
         if candidate is not None:
             return "diagnostic_proxy", candidate[:, :3] if candidate.ndim == 2 and candidate.shape[1] >= 3 else candidate
@@ -1022,11 +1022,23 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
             row.update(
                 {
                     "PHYSICAL_SCALE_BRIDGE_RECEIPT": validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT"),
+                    "PHYSICAL_SPATIAL_K_RECEIPT": validation.get("PHYSICAL_SPATIAL_K_RECEIPT"),
                     "PHYSICAL_K_RECEIPT": validation.get("PHYSICAL_K_RECEIPT"),
+                    "SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT": validation.get(
+                        "SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT"
+                    ),
+                    "SOURCE_ANGULAR_SECTOR_RECEIPT": validation.get("SOURCE_ANGULAR_SECTOR_RECEIPT"),
                     "SOURCE_ANGULAR_MODE_RECEIPT": validation.get("SOURCE_ANGULAR_MODE_RECEIPT"),
                     "CALIBRATED_A_EVOLUTION_RECEIPT": validation.get("CALIBRATED_A_EVOLUTION_RECEIPT"),
+                    "PHYSICAL_MODE_FREEZEOUT_MAP_RECEIPT": validation.get(
+                        "PHYSICAL_MODE_FREEZEOUT_MAP_RECEIPT"
+                    ),
                     "PHYSICAL_FREEZEOUT_SURFACE_RECEIPT": validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT"),
+                    "COMMON_PRIMORDIAL_ANOMALY_MODE_BASIS_RECEIPT": validation.get(
+                        "COMMON_PRIMORDIAL_ANOMALY_MODE_BASIS_RECEIPT"
+                    ),
                     "SCALE_BRIDGE_REFINEMENT_RECEIPT": validation.get("SCALE_BRIDGE_REFINEMENT_RECEIPT"),
+                    "CROSS_RECEIPT_CONSISTENCY_RECEIPT": validation.get("CROSS_RECEIPT_CONSISTENCY_RECEIPT"),
                     "NO_POSTHOC_CALIBRATION_RECEIPT": validation.get("NO_POSTHOC_CALIBRATION_RECEIPT"),
                     "claim_tier": validation.get("claim_tier"),
                     "geometry_origin": validation.get("geometry_origin"),
@@ -1066,18 +1078,36 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
             "PHYSICAL_SCALE_BRIDGE_RECEIPT": bool(
                 scale_bridge_validation.get("PHYSICAL_SCALE_BRIDGE_RECEIPT", False)
             ),
+            "PHYSICAL_SPATIAL_K_RECEIPT": bool(
+                scale_bridge_validation.get("PHYSICAL_SPATIAL_K_RECEIPT", False)
+            ),
             "PHYSICAL_K_RECEIPT": bool(scale_bridge_validation.get("PHYSICAL_K_RECEIPT", False)),
+            "SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT": bool(
+                scale_bridge_validation.get("SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT", False)
+            ),
+            "SOURCE_ANGULAR_SECTOR_RECEIPT": bool(
+                scale_bridge_validation.get("SOURCE_ANGULAR_SECTOR_RECEIPT", False)
+            ),
             "SOURCE_ANGULAR_MODE_RECEIPT": bool(
                 scale_bridge_validation.get("SOURCE_ANGULAR_MODE_RECEIPT", False)
             ),
             "CALIBRATED_A_EVOLUTION_RECEIPT": bool(
                 scale_bridge_validation.get("CALIBRATED_A_EVOLUTION_RECEIPT", False)
             ),
+            "PHYSICAL_MODE_FREEZEOUT_MAP_RECEIPT": bool(
+                scale_bridge_validation.get("PHYSICAL_MODE_FREEZEOUT_MAP_RECEIPT", False)
+            ),
             "PHYSICAL_FREEZEOUT_SURFACE_RECEIPT": bool(
                 scale_bridge_validation.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False)
             ),
+            "COMMON_PRIMORDIAL_ANOMALY_MODE_BASIS_RECEIPT": bool(
+                scale_bridge_validation.get("COMMON_PRIMORDIAL_ANOMALY_MODE_BASIS_RECEIPT", False)
+            ),
             "SCALE_BRIDGE_REFINEMENT_RECEIPT": bool(
                 scale_bridge_validation.get("SCALE_BRIDGE_REFINEMENT_RECEIPT", False)
+            ),
+            "CROSS_RECEIPT_CONSISTENCY_RECEIPT": bool(
+                scale_bridge_validation.get("CROSS_RECEIPT_CONSISTENCY_RECEIPT", False)
             ),
             "NO_POSTHOC_CALIBRATION_RECEIPT": bool(
                 scale_bridge_validation.get("NO_POSTHOC_CALIBRATION_RECEIPT", False)
@@ -1246,7 +1276,7 @@ def _physical_cmb_promotion_blockers(
         blockers.append("finite_certificate_theorem_grade_inputs_missing")
     if not bool(ba_kernel.get("B_A_KERNEL_RECEIPT", False)):
         blockers.append("B_A_kernel_receipt_missing")
-    if ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False) and not ba_kernel.get("B_A_KERNEL_RECEIPT", False):
+    if _ba_diagnostic_candidate(ba_kernel) and not ba_kernel.get("B_A_KERNEL_RECEIPT", False):
         blockers.append("B_A_kernel_candidate_not_physical")
         for blocker in ba_kernel.get("promotion_blockers") or []:
             blockers.append(f"B_A_kernel_{blocker}")
@@ -1262,6 +1292,9 @@ def _physical_cmb_promotion_blockers(
         blockers.append("B_A_diagnostic_rows_not_physical_kernel")
     if _diagnostic_present_not_physical(input_status, "rho_A_a"):
         blockers.append("rho_A_diagnostic_rows_not_physical_source")
+        blockers.append("rho_A_eq_diagnostic_rows_not_physical_source")
+    if _diagnostic_present_not_physical(input_status, "Gamma_rec_k_a"):
+        blockers.append("Gamma_rec_diagnostic_rows_not_physical_source")
     rho_status = input_status.get("rho_A_a") or {}
     if rho_status.get("positive_values") is False:
         blockers.append("rho_A_nonpositive_source_values")
@@ -1346,6 +1379,9 @@ def _physical_cmb_source_readiness(
         "B_A_kernel": {
             "present": bool(ba_kernel),
             "B_A_KERNEL_RECEIPT": bool(ba_kernel.get("B_A_KERNEL_RECEIPT", False)),
+            "B_A_DIAGNOSTIC_CANDIDATE_RECEIPT": bool(
+                ba_kernel.get("B_A_DIAGNOSTIC_CANDIDATE_RECEIPT", False)
+            ),
             "B_A_KERNEL_CANDIDATE_RECEIPT": bool(ba_kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT", False)),
             "row_count": int(ba_kernel.get("row_count") or 0),
             "promotion_blockers": ba_kernel.get("promotion_blockers") or [],
@@ -1625,7 +1661,7 @@ def _physical_cmb_frontier_gate_rows(
             "gate": "B_A_kernel_physical_receipt",
             "passed": bool(b_a_kernel.get("B_A_KERNEL_RECEIPT", False)),
             "detail": (
-                f"candidate={b_a_kernel.get('B_A_KERNEL_CANDIDATE_RECEIPT')}; "
+                f"diagnostic_candidate={_ba_diagnostic_candidate(b_a_kernel)}; "
                 f"rows={b_a_kernel.get('row_count', 0)}"
             ),
         },
@@ -1914,6 +1950,13 @@ def _physical_cmb_frontier_gap_rows(
 def _diagnostic_present_not_physical(input_status: dict[str, Any], key: str) -> bool:
     status = input_status.get(key) if isinstance(input_status.get(key), dict) else {}
     return bool(status.get("diagnostic_value_present", False) and not status.get("physical_gate_passed", False))
+
+
+def _ba_diagnostic_candidate(report: dict[str, Any]) -> bool:
+    return bool(
+        report.get("B_A_DIAGNOSTIC_CANDIDATE_RECEIPT", False)
+        or report.get("B_A_KERNEL_CANDIDATE_RECEIPT", False)
+    )
 
 
 def _false_readiness_checks(readiness: dict[str, Any], *, nested_key: str | None = None) -> list[str]:

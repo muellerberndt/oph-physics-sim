@@ -75,6 +75,11 @@ def test_paired_perturb_resettle_b_a_emits_real_rerun_rows_but_keeps_gate_closed
     assert report["readiness"]["checks"]["report_backed_surrogate_parent"] is False
     assert report["B_A_PARENT_RECEIPT"] is False
     assert report["physical_cmb_prediction"] is False
+    assert report["source_intervention_schema"]
+    assert report["rows"][0]["physical_source_intervention"] is False
+    assert report["rows"][0]["source_intervention"]["source_vector_id"] == "ANOMALY_FRAME_BARYON_CONTRAST_PROXY"
+    assert report["rows"][0]["delivered_source_difference"] == 2.0 * report["rows"][0]["delivered_source_half_step"]
+    assert "common_source_functional_receipt" in report["readiness"]["missing_gates"]
     assert {row["control"] for row in report["control_rows"]} == {"no_perturbation", "no_repair_load_channel"}
     assert all(row["B_A_mean"] == 0.0 for row in report["control_rows"])
 

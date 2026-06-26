@@ -46,10 +46,19 @@ def anomaly_perturbation_rhs(
     rho_A_eq: ScalarFn,
     Gamma: Callable[[float, float], float] | float,
     B_A: Callable[[float, float], float] | float,
+    delta_Gamma: ScalarFn = 0.0,
+    branch: str = "GENERAL_PARALLEL_EXCHANGE",
+    tracking_tolerance: float = 1.0e-9,
 ) -> tuple[float, float]:
     """Conformal Newtonian gauge perturbation RHS for the anomaly scaffold.
 
-    delta_A' = -theta_A + 3 Phi' - a Gamma q_A (delta_A - B_A delta_b)
+    GENERAL_PARALLEL_EXCHANGE:
+    delta_A' = -theta_A + 3 Phi' - a Gamma [q_A (delta_A - B_A delta_b)
+      + (1 - q_A)(Psi + delta_Gamma)]
+
+    TRACKING_BACKGROUND_PARALLEL_EXCHANGE:
+    the same equation with an enforced q_A = 1 background.
+
     theta_A' = -H theta_A + k^2 Psi
 
     This is not a physical prediction until Gamma/B_A/rho_A/rho_A_eq are supplied
@@ -67,15 +76,23 @@ def anomaly_perturbation_rhs(
     gamma_value = _eval_k_a(Gamma, k_value, a_value)
     b_value = _eval_k_a(B_A, k_value, a_value)
     q_A = rho_eq_value / rho_value
+    branch_name = str(branch).upper()
+    if branch_name in {"TRACKING_BACKGROUND_PARALLEL_EXCHANGE", "TRACKING_BACKGROUND_PRESSURELESS_PARALLEL_EXCHANGE"}:
+        if abs(1.0 - q_A) > float(tracking_tolerance):
+            raise ValueError("tracking background branch requires rho_A_eq / rho_A close to one")
+    elif branch_name != "GENERAL_PARALLEL_EXCHANGE":
+        raise ValueError(f"unknown anomaly perturbation branch: {branch}")
+    delta_gamma_value = _eval(delta_Gamma, eta_value, k_value)
+    psi_value = _eval(Psi, eta_value, k_value)
+    exchange_term = q_A * (delta_A - b_value * _eval(delta_b, eta_value, k_value))
+    if branch_name == "GENERAL_PARALLEL_EXCHANGE":
+        exchange_term += (1.0 - q_A) * (psi_value + delta_gamma_value)
     delta_prime = (
         -theta_A
         + 3.0 * _eval(Phi_prime, eta_value, k_value)
-        - a_value
-        * gamma_value
-        * q_A
-        * (delta_A - b_value * _eval(delta_b, eta_value, k_value))
+        - a_value * gamma_value * exchange_term
     )
-    theta_prime = -_eval(Hconf, eta_value, k_value) * theta_A + k_value * k_value * _eval(Psi, eta_value, k_value)
+    theta_prime = -_eval(Hconf, eta_value, k_value) * theta_A + k_value * k_value * psi_value
     return float(delta_prime), float(theta_prime)
 
 

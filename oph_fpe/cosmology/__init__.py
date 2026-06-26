@@ -300,6 +300,18 @@ _EXPORTS = {
         "oph_fpe.cosmology.pn_resonance",
         "write_pn_resonance_report",
     ),
+    "LeechEndpointBridgeInputs": (
+        "oph_fpe.cosmology.leech_endpoint_bridge",
+        "LeechEndpointBridgeInputs",
+    ),
+    "leech_endpoint_bridge_report": (
+        "oph_fpe.cosmology.leech_endpoint_bridge",
+        "leech_endpoint_bridge_report",
+    ),
+    "write_leech_endpoint_bridge_report": (
+        "oph_fpe.cosmology.leech_endpoint_bridge",
+        "write_leech_endpoint_bridge_report",
+    ),
     "SilenceToObservationInputs": (
         "oph_fpe.cosmology.silence_to_observation",
         "SilenceToObservationInputs",

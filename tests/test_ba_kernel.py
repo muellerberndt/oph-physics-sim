@@ -35,7 +35,27 @@ def test_B_A_kernel_receipt_requires_enough_samples():
     report = B_A_kernel_receipt(rows, min_good_rows=1, min_sample_count=16)
 
     assert report["B_A_KERNEL_RECEIPT"] is False
+    assert report["B_A_DIAGNOSTIC_CANDIDATE_RECEIPT"] is False
     assert report["B_A_k_a_physical_emitted"] is False
+
+
+def test_B_A_kernel_receipt_candidate_does_not_promote_to_physical():
+    base = [
+        {"k_bin": 0.1, "a_bin": 0.5, "repair_anomaly": 1.0, "baryon_source": 1.0}
+        for _ in range(16)
+    ]
+    perturbed = [
+        {"k_bin": 0.1, "a_bin": 0.5, "repair_anomaly": 2.0, "baryon_source": 2.0}
+        for _ in range(16)
+    ]
+    rows = estimate_B_A_from_paired_runs(base, perturbed)
+
+    report = B_A_kernel_receipt(rows, min_good_rows=1, min_sample_count=16)
+
+    assert report["B_A_DIAGNOSTIC_CANDIDATE_RECEIPT"] is True
+    assert report["B_A_KERNEL_CANDIDATE_RECEIPT"] is True
+    assert report["B_A_KERNEL_RECEIPT"] is False
+    assert "common_source_functional_receipt_missing" in report["promotion_blockers"]
 
 
 def test_ba_kernel_from_parent_report_keeps_candidate_separate_from_physical_receipt(tmp_path: Path):
@@ -87,10 +107,12 @@ def test_ba_kernel_from_parent_report_keeps_candidate_separate_from_physical_rec
     report = ba_kernel_report_from_parent_report(parent, tmp_path / "out")
 
     assert report["B_A_KERNEL_CANDIDATE_RECEIPT"] is True
+    assert report["B_A_DIAGNOSTIC_CANDIDATE_RECEIPT"] is True
     assert report["B_A_KERNEL_RECEIPT"] is False
     assert report["row_count"] == 1
     assert report["B_A_k_a"][0][2] == 0.30000000000000004
     assert "physical_check_failed_scale_calibrated_k_h_mpc" in report["promotion_blockers"]
+    assert "B_A_source_lift_independence_receipt_missing" in report["promotion_blockers"]
     assert (tmp_path / "out" / "B_A_kernel_report.json").exists()
 
 

@@ -64,6 +64,47 @@ def test_anomaly_perturbation_rhs_repair_exchange_term():
     assert delta_prime == pytest.approx(0.01)
 
 
+def test_anomaly_perturbation_rhs_general_parallel_exchange_includes_lapse_and_rate_term():
+    delta_prime, _ = anomaly_perturbation_rhs(
+        1.0,
+        (0.2, 0.0),
+        k=1.0,
+        a=0.5,
+        Hconf=0.0,
+        Phi=0.0,
+        Phi_prime=0.0,
+        Psi=0.2,
+        delta_b=0.1,
+        rho_A=2.0,
+        rho_A_eq=1.0,
+        Gamma=0.4,
+        B_A=3.0,
+        delta_Gamma=0.1,
+    )
+
+    assert delta_prime == pytest.approx(-0.02)
+
+
+def test_anomaly_perturbation_rhs_tracking_branch_requires_tracking_background():
+    with pytest.raises(ValueError, match="tracking background branch"):
+        anomaly_perturbation_rhs(
+            1.0,
+            (0.2, 0.0),
+            k=1.0,
+            a=0.5,
+            Hconf=0.0,
+            Phi=0.0,
+            Phi_prime=0.0,
+            Psi=0.0,
+            delta_b=0.1,
+            rho_A=2.0,
+            rho_A_eq=1.0,
+            Gamma=0.4,
+            B_A=3.0,
+            branch="TRACKING_BACKGROUND_PARALLEL_EXCHANGE",
+        )
+
+
 def test_anomaly_perturbation_rhs_rejects_nonpositive_physical_density():
     with pytest.raises(ValueError, match="rho_A must be positive"):
         anomaly_perturbation_rhs(

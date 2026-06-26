@@ -56,7 +56,12 @@ def test_finite_collar_boltzmann_bundle_collects_source_tables_but_blocks_physic
     assert report["B_A_k_a_diagnostic"]["row_count"] == 1
     assert report["rho_A_a_diagnostic"]["row_count"] == 1
     assert report["Gamma_rec_k_a_diagnostic"]["row_count"] == 1
+    assert report["B_A_k_a_diagnostic"]["diagnostic_blocker"] == "B_A_diagnostic_rows_not_physical_kernel"
+    assert "rho_A_eq_diagnostic_rows_not_physical_source" in report["rho_A_a_diagnostic"]["diagnostic_blockers"]
+    assert report["Gamma_rec_k_a_diagnostic"]["diagnostic_blocker"] == "Gamma_rec_diagnostic_rows_not_physical_source"
     assert "physical_k_units_calibrated" in report["readiness"]["physical_missing_gates"]
+    assert "common_source_functional_receipt" in report["readiness"]["physical_missing_gates"]
+    assert "Gamma_rec_diagnostic_rows_not_physical_source" in report["physical_blockers"]
     assert "official_likelihood_not_ready" in report["physical_cmb_input_validation"]["blockers"]
 
 

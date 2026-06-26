@@ -225,6 +225,10 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "capacity_readback_proxy_rows.csv", exported, "capacity_readback_proxy_rows.csv")
     _copy_first(roots, out / "pn_resonance_report.json", exported, "pn_resonance_report.json")
     _copy_first(roots, out / "pn_resonance_report.md", exported, "pn_resonance_report.md")
+    _copy_first(roots, out / "leech_endpoint_bridge_report.json", exported, "leech_endpoint_bridge_report.json")
+    _copy_first(roots, out / "leech_endpoint_bridge_report.md", exported, "leech_endpoint_bridge_report.md")
+    _copy_first(roots, out / "black_hole_bridge_status_report.json", exported, "black_hole_bridge_status_report.json")
+    _copy_first(roots, out / "black_hole_bridge_status_report.md", exported, "black_hole_bridge_status_report.md")
     _copy_first(
         roots,
         out / "silence_to_observation_report.json",
@@ -788,6 +792,8 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     capacity_proxy = _first_json(roots, "capacity_readback_proxy_report.json")
     repair_scale = _first_json(roots, "repair_scale_closure_report.json")
     pn_resonance = _first_json(roots, "pn_resonance_report.json")
+    leech_endpoint_bridge = _first_json(roots, "leech_endpoint_bridge_report.json")
+    black_hole_bridge = _first_json(roots, "black_hole_bridge_status_report.json")
     silence_to_observation = _first_json(roots, "silence_to_observation_report.json")
     kernel_dispatch = _first_json(roots, "kernel_dispatch_report.json")
     positive_geometry_kernel = _first_json(roots, "positive_geometry_kernel_report.json")
@@ -844,6 +850,7 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     capacity_proxy_gates = capacity_proxy.get("readiness_gates") or {}
     repair_scale_gates = repair_scale.get("readiness_gates") or {}
     pn_resonance_gates = pn_resonance.get("readiness_gates") or {}
+    leech_endpoint_bridge_gates = leech_endpoint_bridge.get("readiness_gates") or {}
     silence_gates = silence_to_observation.get("readiness_gates") or {}
     kernel_dispatch_positive_geometry = (kernel_dispatch.get("kernels") or {}).get("positive_geometry") or {}
     positive_geometry_kernel_gates = positive_geometry_kernel.get("readiness_gates") or {}
@@ -1335,6 +1342,52 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "pn_resonance_scale_compressed_replay_eligible": bool(
             pn_resonance_gates.get("scale_compressed_pn_resonance_replay_eligible", False)
         ),
+        "leech_endpoint_bridge_written": bool(leech_endpoint_bridge),
+        "leech_endpoint_bridge_candidate_receipt": bool(
+            leech_endpoint_bridge.get("LEECH_ENDPOINT_BRIDGE_CANDIDATE_RECEIPT", False)
+        ),
+        "leech_same_scheme_hadronic_endpoint_functional_receipt": bool(
+            leech_endpoint_bridge.get("SAME_SCHEME_HADRONIC_ENDPOINT_FUNCTIONAL_RECEIPT", False)
+        ),
+        "leech_alpha_endpoint_promotion_receipt": bool(
+            leech_endpoint_bridge.get("FINE_STRUCTURE_ALPHA_ENDPOINT_PROMOTION_RECEIPT", False)
+        ),
+        "leech_physical_alpha_prediction_receipt": bool(
+            leech_endpoint_bridge.get("PHYSICAL_ALPHA_PREDICTION_RECEIPT", False)
+        ),
+        "leech_endpoint_delta_target_match": bool(
+            leech_endpoint_bridge_gates.get("delta_H_fp_target_match", False)
+        ),
+        "leech_endpoint_c_q_target_match": bool(
+            leech_endpoint_bridge_gates.get("c_Q_target_match", False)
+        ),
+        "leech_endpoint_target_leakage_free": bool(
+            leech_endpoint_bridge_gates.get("target_leakage_free", False)
+        ),
+        "leech_endpoint_string_branch_descends": bool(
+            leech_endpoint_bridge_gates.get("oph_string_branch_descent_receipt", False)
+        ),
+        "leech_endpoint_fixed_point_interval": bool(
+            leech_endpoint_bridge_gates.get("fixed_point_interval_receipt", False)
+        ),
+        "leech_endpoint_blocker_count": int(len(leech_endpoint_bridge.get("blockers") or [])),
+        "black_hole_bridge_status_written": bool(black_hole_bridge),
+        "black_hole_finite_horizon_record_receipt": bool(
+            black_hole_bridge.get("FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT", False)
+        ),
+        "black_hole_physical_evaporation_bridge_receipt": bool(
+            black_hole_bridge.get("BLACK_HOLE_PHYSICAL_EVAPORATION_BRIDGE_RECEIPT", False)
+        ),
+        "black_hole_physical_page_curve_receipt": bool(
+            black_hole_bridge.get("BLACK_HOLE_PHYSICAL_PAGE_CURVE_RECEIPT", False)
+        ),
+        "black_hole_qnm_radiative_bridge_receipt": bool(
+            black_hole_bridge.get("BLACK_HOLE_QNM_RADIATIVE_BRIDGE_RECEIPT", False)
+        ),
+        "black_hole_physical_simulation_receipt": bool(
+            black_hole_bridge.get("BLACK_HOLE_PHYSICAL_SIMULATION_RECEIPT", False)
+        ),
+        "black_hole_bridge_blocker_count": int(len(black_hole_bridge.get("blockers") or [])),
         "pn_silence_to_observation_written": bool(silence_to_observation),
         "pn_silence_to_observation_scale_compressed_receipt": bool(
             silence_to_observation.get("scale_compressed_pn_silence_to_observation_receipt", False)
@@ -2426,6 +2479,17 @@ def _readme(report: dict[str, Any]) -> str:
         f"- P/N resonance branch status: {claims.get('pn_resonance_branch_status')}\n"
         f"- P/N resonance numeric replay: {claims.get('pn_resonance_numeric_replay')}\n"
         f"- P/N resonance theorem-grade receipt: {claims.get('pn_resonance_receipt')}\n\n"
+        f"- Leech endpoint bridge written: {claims.get('leech_endpoint_bridge_written')}\n"
+        f"- Leech endpoint bridge candidate receipt: {claims.get('leech_endpoint_bridge_candidate_receipt')}\n"
+        f"- Leech same-scheme hadronic endpoint receipt: {claims.get('leech_same_scheme_hadronic_endpoint_functional_receipt')}\n"
+        f"- Leech alpha endpoint promotion receipt: {claims.get('leech_alpha_endpoint_promotion_receipt')}\n"
+        f"- Leech endpoint blockers: {claims.get('leech_endpoint_blocker_count')}\n\n"
+        f"- black-hole bridge status written: {claims.get('black_hole_bridge_status_written')}\n"
+        f"- black-hole finite horizon record receipt: {claims.get('black_hole_finite_horizon_record_receipt')}\n"
+        f"- black-hole physical evaporation bridge receipt: {claims.get('black_hole_physical_evaporation_bridge_receipt')}\n"
+        f"- black-hole physical Page-curve receipt: {claims.get('black_hole_physical_page_curve_receipt')}\n"
+        f"- black-hole QNM radiative bridge receipt: {claims.get('black_hole_qnm_radiative_bridge_receipt')}\n"
+        f"- black-hole bridge blockers: {claims.get('black_hole_bridge_blocker_count')}\n\n"
         f"- P/N silence-to-observation report written: {claims.get('pn_silence_to_observation_written')}\n"
         f"- P/N silence-to-observation scale-compressed receipt: {claims.get('pn_silence_to_observation_scale_compressed_receipt')}\n"
         f"- P/N silence-to-observation literal global N: {claims.get('pn_silence_to_observation_literal_global_N')}\n"

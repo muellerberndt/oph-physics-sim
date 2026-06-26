@@ -89,6 +89,10 @@ def estimate_b_a_grid(
     readiness = _readiness(rows, control_rows)
     return {
         "mode": "finite_difference_baryon_response_B_A_parent_v0",
+        "normalization": "EQUILIBRIUM_CONTRAST",
+        "response_numerator": "delta_rho_A_eq",
+        "source_variable": "ANOMALY_FRAME_BARYON_CONTRAST",
+        "denominator": "RHO_A_EQ_BACKGROUND",
         "a_grid": a_values,
         "k_grid_h_mpc": k_values,
         "eps": float(eps),
@@ -665,6 +669,7 @@ def _estimate_row(
 ) -> dict[str, Any]:
     background = parent.make_background(float(a))
     rho_a = max(float(parent.rho_A(background)), 1.0e-300)
+    rho_a_eq = max(float(parent.rho_A_eq(background)), 1.0e-300)
     rho_b = max(float(parent.baryon_density(float(a))), 1.0e-300)
     estimates: list[float] = []
     for seed in seeds:
@@ -674,7 +679,7 @@ def _estimate_row(
             minus = _apply_delta(parent, background, -float(eps), mode)
             derivative = (float(parent.rho_A_eq(plus)) - float(parent.rho_A_eq(minus))) / (2.0 * float(eps))
             k_parent = derivative / rho_b
-            estimates.append(float((rho_b / rho_a) * k_parent))
+            estimates.append(float((rho_b / rho_a_eq) * k_parent))
     values = np.asarray(estimates, dtype=float)
     mean = float(np.mean(values)) if values.size else None
     std = float(np.std(values, ddof=1)) if values.size > 1 else 0.0
@@ -683,6 +688,12 @@ def _estimate_row(
         "a": float(a),
         "k_h_mpc": float(k_h_mpc),
         "control": control,
+        "normalization": "EQUILIBRIUM_CONTRAST",
+        "response_numerator": "delta_rho_A_eq",
+        "source_variable": "ANOMALY_FRAME_BARYON_CONTRAST",
+        "denominator": "RHO_A_EQ_BACKGROUND",
+        "rho_A": float(rho_a),
+        "rho_A_eq": float(rho_a_eq),
         "B_A_mean": mean,
         "B_A_std": std,
         "B_A_sem": float(std / np.sqrt(values.size)) if values.size else None,

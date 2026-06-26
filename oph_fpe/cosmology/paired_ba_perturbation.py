@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Iterable
@@ -21,6 +23,18 @@ DEFAULT_PAIRED_B_A_CONTROLS = (
     "random_collar_labels",
     "wrong_k_label",
 )
+
+
+@dataclass(frozen=True)
+class PhysicalSourceIntervention:
+    background_hash: str
+    source_vector_id: str
+    tangent_vector: list[float]
+    constraint_matrix_hash: str
+    retraction_id: str
+    delivered_source_vector: list[float]
+    constraint_residuals: dict[str, float]
+    physical_source_intervention: bool = False
 
 
 def paired_perturb_resettle_b_a_report(
@@ -133,6 +147,10 @@ def paired_perturb_resettle_b_a_report(
     return {
         "mode": "paired_cap_collar_perturb_resettle_B_A_parent_v0",
         "primary_parent_source": "paired_cap_collar_perturb_resettle_rerun",
+        "normalization": "EQUILIBRIUM_CONTRAST_DIAGNOSTIC",
+        "response_numerator": "paired_delta_response_field",
+        "source_variable": "ANOMALY_FRAME_BARYON_CONTRAST_PROXY",
+        "denominator": "RHO_A_EQ_BACKGROUND_DIAGNOSTIC",
         "source_report_count": 0,
         "observer_view_source_count": 0,
         "paired_perturbation_source_count": int(bool(rows)),
@@ -152,6 +170,7 @@ def paired_perturb_resettle_b_a_report(
         "control_rows": control_rows,
         "paired_perturbation_rows": rows,
         "paired_perturbation_control_rows": control_rows,
+        "source_intervention_schema": list(PhysicalSourceIntervention.__dataclass_fields__),
         "observer_view_rows": [],
         "observer_view_control_rows": [],
         "stress_report_surrogate_rows": [],
@@ -165,9 +184,9 @@ def paired_perturb_resettle_b_a_report(
         "claim_boundary": (
             "Actual paired finite cap/collar perturb-resettle B_A parent diagnostic. "
             "No CMB data are used. Rows exercise finite screen repair dynamics, but "
-            "they are not physical Boltzmann kernels until controls fail, k/a units "
-            "are calibrated, repair-energy exchange is closed, and refinement "
-            "convergence passes."
+            "they are not physical Boltzmann kernels until a common source functional, "
+            "admissible tangent, lift-independent source vector, calibrated k/a units, "
+            "exchange and gauge closure, and derivative-level refinement pass."
         ),
     }
 
@@ -240,7 +259,9 @@ def _paired_row(
         estimates = np.zeros(max(1, int(modes_per_cap_time)), dtype=float)
         plus_values = np.full(estimates.size, base_value, dtype=float)
         minus_values = np.full(estimates.size, base_value, dtype=float)
-        deltas = np.full(estimates.size, _delta_baryon(time_value, perturb_strength, transition_scale), dtype=float)
+        requested_delta = _delta_baryon(time_value, perturb_strength, transition_scale)
+        delivered_delta = 0.0 if control == "no_perturbation" else requested_delta
+        deltas = np.full(estimates.size, delivered_delta, dtype=float)
         effective_k_proxy = float(k_proxy)
         cap_used = cap
         sim_scale = float(transition_scale)
@@ -294,7 +315,7 @@ def _paired_row(
             minus = _weighted_mean(post_minus.get(response_field), readout_weights)
             delta = _delta_baryon(time_value, perturb_strength, transition_scale)
             derivative = (plus - minus) / (2.0 * max(delta, 1.0e-12))
-            estimates.append(float(derivative / max(abs(float(rho_a)), 1.0e-12)))
+            estimates.append(float(derivative / max(abs(float(base_value)), 1.0e-12)))
             plus_values.append(float(plus))
             minus_values.append(float(minus))
             deltas.append(float(delta))
@@ -302,6 +323,18 @@ def _paired_row(
         plus_values = np.asarray(plus_values, dtype=float)
         minus_values = np.asarray(minus_values, dtype=float)
         deltas = np.asarray(deltas, dtype=float)
+    requested_delta_baryon = _delta_baryon(time_value, perturb_strength, transition_scale)
+    delivered_half_step = float(np.mean(deltas)) if deltas.size else 0.0
+    source_intervention = _source_intervention(
+        cap=cap,
+        a_value=a_value,
+        cap_index=cap_index,
+        time_index=time_index,
+        requested_half_step=requested_delta_baryon,
+        delivered_half_step=delivered_half_step,
+        control=control,
+        graph=graph,
+    )
 
     return {
         "a": float(a_value),
@@ -318,13 +351,25 @@ def _paired_row(
         "readout_collar_width": float(readout_cap.collar_width),
         "sim_transition_scale": float(sim_scale),
         "response_field": str(response_field),
+        "normalization": "EQUILIBRIUM_CONTRAST_DIAGNOSTIC",
+        "response_numerator": "paired_delta_response_field",
+        "source_variable": "ANOMALY_FRAME_BARYON_CONTRAST_PROXY",
+        "denominator": "RHO_A_EQ_BACKGROUND_DIAGNOSTIC",
         "rho_A": float(rho_a),
         "rho_A_base": float(base_value),
+        "rho_A_eq": float(base_value),
+        "rho_A_eq_background": float(base_value),
         "rho_A_eq_plus_mean": float(np.mean(plus_values)) if plus_values.size else None,
         "rho_A_eq_minus_mean": float(np.mean(minus_values)) if minus_values.size else None,
         "repair_anomaly_plus_mean": float(np.mean(plus_values - base_value)) if plus_values.size else None,
         "repair_anomaly_minus_mean": float(np.mean(minus_values - base_value)) if minus_values.size else None,
-        "delta_baryon": float(np.mean(deltas)) if deltas.size else None,
+        "requested_delta_baryon": float(requested_delta_baryon),
+        "delivered_source_half_step": delivered_half_step,
+        "delivered_source_difference": 2.0 * delivered_half_step,
+        "delta_baryon": delivered_half_step,
+        "source_intervention": asdict(source_intervention),
+        "physical_source_intervention": False,
+        "source_intervention_type": "CAP_COLLAR_PROXY_NOT_PHYSICAL_SOURCE_INTERVENTION",
         "B_A_mean": float(np.mean(estimates)) if estimates.size else None,
         "B_A_std": float(np.std(estimates, ddof=1)) if estimates.size > 1 else 0.0,
         "B_A_sem": float(np.std(estimates, ddof=1) / math.sqrt(estimates.size)) if estimates.size > 1 else 0.0,
@@ -396,6 +441,50 @@ def _response_scale(raw_fields: dict[str, np.ndarray], response_field: str, weig
 def _delta_baryon(time_value: float, perturb_strength: float, transition_scale: float) -> float:
     amount = abs(float(transition_scale) * float(time_value)) / (2.0 * math.pi)
     return max(abs(float(perturb_strength)) * amount, 1.0e-6)
+
+
+def _source_intervention(
+    *,
+    cap: RoundCap,
+    a_value: float,
+    cap_index: int,
+    time_index: int,
+    requested_half_step: float,
+    delivered_half_step: float,
+    control: str | None,
+    graph: dict[str, Any],
+) -> PhysicalSourceIntervention:
+    background_payload = {
+        "patch_count": int(graph.get("patch_count", 0)),
+        "group_order": int(graph.get("group_order", 0)),
+        "a": round(float(a_value), 12),
+    }
+    constraint_payload = {
+        "constraint_family": "cap_collar_proxy",
+        "cap_theta0": round(float(cap.theta0), 12),
+        "collar_width": round(float(cap.collar_width), 12),
+    }
+    delivered = float(delivered_half_step)
+    requested = float(requested_half_step)
+    return PhysicalSourceIntervention(
+        background_hash=_hash_payload(background_payload),
+        source_vector_id="ANOMALY_FRAME_BARYON_CONTRAST_PROXY",
+        tangent_vector=[float(cap.axis[0]), float(cap.axis[1]), float(cap.axis[2]), requested],
+        constraint_matrix_hash=_hash_payload(constraint_payload),
+        retraction_id="cap_collar_proxy_centered_screen_perturb_resettle",
+        delivered_source_vector=[delivered],
+        constraint_residuals={
+            "delivered_minus_requested_abs": abs(delivered - requested) if control != "no_perturbation" else 0.0,
+            "admissible_source_tangent_residual": 1.0,
+            "physical_source_vector_residual": 1.0,
+        },
+        physical_source_intervention=False,
+    )
+
+
+def _hash_payload(payload: dict[str, Any]) -> str:
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
 def _randomized_cap(cap: RoundCap, seed: int) -> RoundCap:
@@ -501,6 +590,14 @@ def _readiness(rows: list[dict[str, Any]], control_rows: list[dict[str, Any]]) -
         "energy_momentum_exchange_closed": False,
         "gauge_consistency_audited": False,
         "refinement_convergence_passed": False,
+        "common_source_functional_receipt": False,
+        "admissible_source_tangent_receipt": False,
+        "constraint_preserving_retraction_receipt": False,
+        "B_A_source_lift_independence_receipt": False,
+        "source_vector_sufficiency_receipt": False,
+        "finite_difference_order_receipt": False,
+        "C1_refinement_receipt": False,
+        "order_of_limits_receipt": False,
     }
     checks["paired_B_A_diagnostic_receipt"] = bool(
         checks["paired_perturb_resettle_rows_emitted"]
@@ -528,6 +625,14 @@ def _readiness(rows: list[dict[str, Any]], control_rows: list[dict[str, Any]]) -
         "energy_momentum_exchange_closed",
         "gauge_consistency_audited",
         "refinement_convergence_passed",
+        "common_source_functional_receipt",
+        "admissible_source_tangent_receipt",
+        "constraint_preserving_retraction_receipt",
+        "B_A_source_lift_independence_receipt",
+        "source_vector_sufficiency_receipt",
+        "finite_difference_order_receipt",
+        "C1_refinement_receipt",
+        "order_of_limits_receipt",
     )
     return {
         "checks": checks,

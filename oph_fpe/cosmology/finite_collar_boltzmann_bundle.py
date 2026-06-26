@@ -65,18 +65,24 @@ def finite_collar_boltzmann_bundle_report(run_dirs: list[Path]) -> dict[str, Any
             "rows": b_a_rows,
             "source": "finite_collar_parent_diagnostic",
             "physical_kernel": False,
+            "diagnostic_blocker": "B_A_diagnostic_rows_not_physical_kernel",
         },
         "rho_A_a_diagnostic": {
             "row_count": len(rho_rows),
             "rows": rho_rows,
             "source": "finite_collar_parent_diagnostic",
             "physical_background": False,
+            "diagnostic_blockers": [
+                "rho_A_diagnostic_rows_not_physical_source",
+                "rho_A_eq_diagnostic_rows_not_physical_source",
+            ],
         },
         "Gamma_rec_k_a_diagnostic": {
             "row_count": len(gamma_rows),
             "rows": gamma_rows,
             "source": "finite_repair_transition_matrix_diagnostic",
             "physical_clock": False,
+            "diagnostic_blocker": "Gamma_rec_diagnostic_rows_not_physical_source",
         },
         "physical_cmb_input_contract": _contract_to_jsonable(contract),
         "physical_cmb_input_validation": validation,
@@ -85,6 +91,7 @@ def finite_collar_boltzmann_bundle_report(run_dirs: list[Path]) -> dict[str, Any
             "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT"
         ],
         "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": readiness["PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE"],
+        "physical_blockers": readiness["physical_blockers"],
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
         "contract_source_summary": {
@@ -208,6 +215,7 @@ def _gamma_rows(reports: list[dict[str, Any]], a_grid: list[float]) -> list[dict
                     "k": None,
                     "k_units": "scale_independent_transition_matrix_diagnostic",
                     "Gamma_rec_over_H": gamma,
+                    "Gamma_rec_status": "EQUILIBRIUM_SAMPLER_DIAGNOSTIC_NOT_NATIVE_GENERATOR",
                     "lambda_2": _float(primary.get("lambda_2")),
                     "eta_R_estimate": _float(primary.get("eta_R_estimate")),
                     "n_s_estimate": _float(primary.get("n_s_estimate")),
@@ -253,6 +261,15 @@ def _readiness(
         "Gamma_rec_rows_emitted": bool(gamma_rows),
         "paired_B_A_diagnostic_receipt": bool(b_a_diagnostic),
         "B_A_controls_fail": bool(controls_fail),
+        "B_A_physical_kernel_receipt": contract_passed,
+        "rho_A_physical_source_receipt": contract_passed,
+        "rho_A_eq_physical_source_receipt": contract_passed,
+        "Gamma_rec_physical_source_receipt": contract_passed,
+        "common_source_functional_receipt": contract_passed,
+        "admissible_source_tangent_receipt": contract_passed,
+        "source_vector_sufficiency_receipt": contract_passed,
+        "native_repair_generator_receipt": contract_passed,
+        "static_dynamic_response_consistency_receipt": contract_passed,
         "finite_transition_matrix_ready": any(
             bool(report.get("finite_transition_matrix_ready", False)) for report in transition_reports
         ),
@@ -262,8 +279,11 @@ def _readiness(
             and row.get("k_comoving_Mpc_inverse") is not None
             for row in b_a_rows
         )
-        if b_a_rows and bridge.get("PHYSICAL_K_RECEIPT", False)
+        if b_a_rows and bridge.get("PHYSICAL_SPATIAL_K_RECEIPT", bridge.get("PHYSICAL_K_RECEIPT", False))
         else False,
+        "screen_to_physical_k_association_calibrated": bool(
+            bridge.get("SCREEN_TO_PHYSICAL_K_ASSOCIATION_RECEIPT", False)
+        ),
         "calibrated_a_evolution": bool(bridge.get("CALIBRATED_A_EVOLUTION_RECEIPT", False)),
         "energy_momentum_exchange_closed": "stress_energy_closure_not_certified" not in blockers
         and "recipient_stress_missing_for_nonzero_Gamma_rec" not in blockers,
@@ -271,6 +291,10 @@ def _readiness(
         "refinement_convergence_passed": bool(bridge.get("SCALE_BRIDGE_REFINEMENT_RECEIPT", False))
         and "refinement_convergence_not_certified" not in blockers,
         "physical_freezeout_surface": bool(bridge.get("PHYSICAL_FREEZEOUT_SURFACE_RECEIPT", False)),
+        "common_primordial_anomaly_mode_basis": bool(
+            bridge.get("COMMON_PRIMORDIAL_ANOMALY_MODE_BASIS_RECEIPT", False)
+        ),
+        "cross_receipt_consistency": bool(bridge.get("CROSS_RECEIPT_CONSISTENCY_RECEIPT", False)),
         "no_posthoc_calibration_receipt": bool(bridge.get("NO_POSTHOC_CALIBRATION_RECEIPT", False)),
         "physical_cmb_input_contract_passed": contract_passed,
     }
@@ -284,22 +308,44 @@ def _readiness(
     physical_required = (
         "no_data_use_receipt",
         "physical_k_units_calibrated",
+        "screen_to_physical_k_association_calibrated",
         "calibrated_a_evolution",
         "energy_momentum_exchange_closed",
         "gauge_consistency_audited",
         "refinement_convergence_passed",
         "physical_freezeout_surface",
+        "common_primordial_anomaly_mode_basis",
+        "cross_receipt_consistency",
         "no_posthoc_calibration_receipt",
         "physical_cmb_input_contract_passed",
+        "B_A_physical_kernel_receipt",
+        "rho_A_physical_source_receipt",
+        "rho_A_eq_physical_source_receipt",
+        "Gamma_rec_physical_source_receipt",
+        "common_source_functional_receipt",
+        "admissible_source_tangent_receipt",
+        "source_vector_sufficiency_receipt",
+        "native_repair_generator_receipt",
+        "static_dynamic_response_consistency_receipt",
     )
     physical_missing_gates = [name for name in physical_required if not checks.get(name, False)]
     physical_export_certificate = all(checks[name] for name in physical_required)
+    physical_blockers = list(physical_missing_gates)
+    if b_a_rows and not contract_passed:
+        physical_blockers.append("B_A_diagnostic_rows_not_physical_kernel")
+    if any(row.get("rho_A") is not None for row in rho_rows) and not contract_passed:
+        physical_blockers.append("rho_A_diagnostic_rows_not_physical_source")
+    if any(row.get("rho_A_eq") is not None for row in rho_rows) and not contract_passed:
+        physical_blockers.append("rho_A_eq_diagnostic_rows_not_physical_source")
+    if gamma_rows and not contract_passed:
+        physical_blockers.append("Gamma_rec_diagnostic_rows_not_physical_source")
     return {
         "checks": checks,
         "FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT": all(checks[name] for name in diagnostic_required),
         "PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE": physical_export_certificate,
         "diagnostic_missing_gates": [name for name in diagnostic_required if not checks.get(name, False)],
         "physical_missing_gates": physical_missing_gates,
+        "physical_blockers": _unique_strings(physical_blockers),
         "mean_abs_B_A": _mean_abs(row.get("B_A") for row in b_a_rows),
         "mean_Gamma_rec_over_H": _mean_abs(row.get("Gamma_rec_over_H") for row in gamma_rows),
         "claim_boundary": (
@@ -421,6 +467,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- physical CMB prediction: `{str(report['physical_cmb_prediction']).lower()}`",
         f"- diagnostic missing gates: {', '.join(readiness['diagnostic_missing_gates']) or 'none'}",
         f"- physical missing gates: {', '.join(readiness['physical_missing_gates']) or 'none'}",
+        f"- physical blockers: {', '.join(readiness['physical_blockers']) or 'none'}",
         "",
         "## Source Tables",
         "",
@@ -477,6 +524,18 @@ def _counts(values: Any) -> dict[str, int]:
             continue
         label = str(value)
         out[label] = out.get(label, 0) + 1
+    return out
+
+
+def _unique_strings(values: Any) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value)
+        if text in seen:
+            continue
+        seen.add(text)
+        out.append(text)
     return out
 
 

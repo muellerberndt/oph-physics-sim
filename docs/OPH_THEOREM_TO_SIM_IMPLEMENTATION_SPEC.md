@@ -47,6 +47,9 @@ CMB1 finite_primordial_source_kernel_receipt
 CMB2 physical_cmb_prediction_receipt
 G0   finite_gauge_candidate_sieve
 G1   four_dimensional_os_gauge_certificate
+BH0  finite_horizon_record_repair_diagnostic_receipt
+BH1  black_hole_physical_evaporation_bridge_receipt
+BH2  black_hole_qnm_radiative_bridge_receipt
 D0   distributed_artifact_packaging_smoke_receipt
 D1   distributed_kernel_scaling_readiness_receipt
 ```
@@ -73,6 +76,8 @@ The current simulator has these stable surfaces:
   particle-likeness diagnostics.
 - Screen-level CMB and comparable-observation diagnostics, with physical-CMB promotion gates
   closed unless finite source, transfer, and likelihood receipts pass.
+- Leech/moonshine endpoint bridge audits for the fine-structure hadronic endpoint gap, with
+  source-only same-scheme functional gates separated from endpoint promotion.
 - Reference vacuum baselines and compact lattice-gauge baselines, with OPH-native promotion
   receipts false unless paper-side transfer/lift conditions are supplied.
 - Shape-substrate and positive-geometry diagnostics, treated as declared substrate or accelerator
@@ -100,6 +105,17 @@ These are hard boundaries:
   not a critical string CFT, heterotic worldsheet derivation, or production-particle proof.
 - H3 proto-worldlines and screen holonomy defects are not matter particles until `P1` passes.
 - Screen `C_l` and CMB-lite curves are `CMB0` diagnostics, not `CMB2`.
+- A Leech, c=24, or moonshine artifact is not a fine-structure prediction unless it emits the
+  OPH same-scheme hadronic endpoint functional from source data, excludes endpoint-target leakage,
+  descends to the OPH edge carrier, and carries fixed-point interval receipts. A decimal near
+  `alpha^{-1}=137.036` is not a promotion receipt.
+- A finite black-hole archive, finite reconstruction threshold, island-gain score, or repair
+  spectrum is not a physical Page curve, geometric island, evaporation channel, or QNM/ringdown
+  prediction. `BH0` records horizon/collar record-repair diagnostics only. `BH1` requires exterior
+  time, radiation entropy, physical microstate coverage, flux closure, no-leakage and no-remnant
+  controls, and refinement stability. `BH2` requires an exterior background bridge, radiative
+  quotient, continuum operator convergence, future-horizon and future-null-infinity boundary rows,
+  Bondi/asymptotic readout, and frozen detector comparison gates.
 - Reference Gaussian/free-field or compact-`U(1)` baselines do not become OPH-native vacuum or
   primordial-field claims without explicit promotion receipts.
 - Shape-substrate and positive-geometry reports do not alter trusted OPH repair/readout outcomes

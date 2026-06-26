@@ -106,6 +106,24 @@ def test_finite_covariant_parent_requires_Gamma_rec_promotion_receipts():
     assert "Gamma_rec_promotion_not_certified" in report["blockers"]
 
 
+def test_finite_covariant_parent_does_not_promote_repair_step_aliases():
+    artifact = _artifact()
+    artifact["repair"]["gamma_rec"] = artifact["repair"].pop("Gamma_rec")
+    artifact["repair"].pop("PHYSICAL_CLOCK_RECEIPT")
+    artifact["repair"].pop("ACTIVE_FIBER_RECEIPT")
+    artifact["repair"].pop("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT")
+    artifact["stress"].pop("recipient_stress_residual")
+    artifact["stress"].pop("recipient_exchange_residual")
+
+    report = finite_covariant_collar_packet_parent_report(artifact)
+
+    assert report["Gamma_rec_nonzero"] is False
+    assert report["Gamma_rec_status"] == "UNPROMOTED_REPAIR_STEP_DIAGNOSTIC"
+    assert report["repair_step_gamma_diagnostic"] == 0.05
+    assert "explicit_recipient_stress_missing_for_nonzero_Gamma_rec" not in report["blockers"]
+    assert report["relaxation_rate_artifact_types"]["PHYSICAL_RELAXATION_RATE"] is None
+
+
 def test_finite_covariant_parent_rejects_recipient_label_without_stress_residuals():
     artifact = _artifact()
     artifact["stress"].pop("recipient_stress_residual")
