@@ -120,6 +120,28 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     (timeline / "universe_timeline_summary.json").write_text(json.dumps({"ok": True}), encoding="utf-8")
     (timeline / "VISUALIZATION_INSTRUCTIONS.md").write_text("# instructions\n", encoding="utf-8")
     (timeline / "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md").write_text("# brief\n", encoding="utf-8")
+    (timeline / "screen_full_16.bin").write_bytes(b"screen")
+    (timeline / "observers_full_4.json").write_text("[]\n", encoding="utf-8")
+    (timeline / "visualization_export_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "oph_universe_visualization_sidecars_v1",
+                "files": {
+                    "screen_full_bin": {
+                        "path": str(timeline / "screen_full_16.bin"),
+                        "row_count": 16,
+                        "written": True,
+                    },
+                    "observers_full_json": {
+                        "path": str(timeline / "observers_full_4.json"),
+                        "row_count": 4,
+                        "written": True,
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
 
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
@@ -147,6 +169,12 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     assert "visualization_payload.json" in report["files"]
     assert "oph_universe_timeline_viewer.html" in report["files"]
     assert "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md" in report["files"]
+    assert "visualization_export_manifest.json" in report["files"]
+    assert "screen_full_16.bin" in report["files"]
+    assert "observers_full_4.json" in report["files"]
+    manifest = json.loads((out / "visualization_export_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["files"]["screen_full_bin"]["path"] == "screen_full_16.bin"
+    assert manifest["files"]["observers_full_json"]["path"] == "observers_full_4.json"
 
 
 def test_export_measurement_pack_regenerates_combined_bulk_certificate(tmp_path: Path) -> None:

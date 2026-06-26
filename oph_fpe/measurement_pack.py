@@ -639,6 +639,7 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
         "universe_timeline/WEB_CODING_AGENT_VISUALIZATION_BRIEF.md",
         "WEB_CODING_AGENT_VISUALIZATION_BRIEF.md",
     )
+    _copy_visualization_sidecars(roots, out, exported)
     _copy_first(roots, out / "cmb_static_plots_summary.json", exported, "cmb_static_plots_summary.json")
     _copy_first(roots, out / "physical_cmb_tt_comparison.png", exported, "physical_cmb_tt_comparison.png")
     _copy_first(
@@ -1864,6 +1865,56 @@ def _copy_path(roots: list[Path], target: Path, exported: dict[str, str], *relat
                 exported[target.name] = str(path)
                 return
     _write_missing_placeholder(target)
+
+
+def _copy_visualization_sidecars(roots: list[Path], out: Path, exported: dict[str, str]) -> None:
+    for root in roots:
+        manifest_path = _first_existing(
+            Path(root) / "universe_timeline" / "visualization_export_manifest.json",
+            Path(root) / "visualization_export_manifest.json",
+        )
+        if manifest_path is None:
+            continue
+        manifest = _read_json(manifest_path)
+        copied = json.loads(json.dumps(manifest, default=str)) if manifest else {}
+        files = copied.get("files") if isinstance(copied.get("files"), dict) else {}
+        for name, meta in files.items():
+            if not isinstance(meta, dict):
+                continue
+            source = _resolve_visualization_sidecar_path(manifest_path, meta.get("path"))
+            if source is None or not source.exists() or not source.is_file():
+                continue
+            target = out / source.name
+            _copy_export_file(source, target)
+            meta["path"] = source.name
+            exported[source.name] = str(source)
+            if isinstance(name, str):
+                exported.setdefault(name, str(source))
+        target_manifest = out / "visualization_export_manifest.json"
+        target_manifest.write_text(json.dumps(copied, indent=2, default=str), encoding="utf-8")
+        exported[target_manifest.name] = str(manifest_path)
+        return
+
+
+def _resolve_visualization_sidecar_path(manifest_path: Path, value: Any) -> Path | None:
+    if not value:
+        return None
+    raw = Path(str(value))
+    candidates = [raw]
+    if not raw.is_absolute():
+        candidates.append(manifest_path.parent / raw)
+        candidates.append(manifest_path.parent / raw.name)
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[-1] if candidates else None
+
+
+def _first_existing(*paths: Path) -> Path | None:
+    for path in paths:
+        if path.exists():
+            return path
+    return None
 
 
 def _copy_export_file(path: Path, target: Path) -> None:

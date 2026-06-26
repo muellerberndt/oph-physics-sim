@@ -313,6 +313,7 @@ def run_oph_universe_pipeline(
         frontier_artifacts=frontier_artifacts,
         cmb_diagnostics=cmb_diagnostics,
     )
+    _write_json(run_dir / "large_run_readiness_report.json", post_theorem_readiness)
     object_viewer: dict[str, Any] = {}
     run_viewer: dict[str, Any] = {}
     timeline: dict[str, Any] = {}
@@ -651,6 +652,29 @@ def _post_theorem_large_run_readiness(
             "CMB, strict-neutral bulk, OPH-native vacuum, and production-gravity lanes remain closed."
         ),
     }
+
+
+def refresh_post_theorem_large_run_readiness_report(run_dir: Path) -> dict[str, Any]:
+    """Rewrite the public readiness report from the final OPH-universe summary."""
+
+    run_path = Path(run_dir)
+    summary = _read_json(run_path / "AUTO_THEOREM_UNIVERSE_SUMMARY.json")
+    report = summary.get("post_theorem_large_run_readiness") if isinstance(summary, dict) else None
+    if not isinstance(report, dict) or not report:
+        theorem_contract = _read_json(run_path / "finite_oph_theorem_contract_report.json")
+        proof = _read_json(run_path / "bulk_proof_certificate_report.json")
+        readout = _read_json(run_path / "observer_consensus_bulk" / "observer_consensus_bulk_readout_report.json")
+        frontier_artifacts = summary.get("frontier_artifacts", {}) if isinstance(summary, dict) else {}
+        cmb_diagnostics = summary.get("cmb_diagnostic_summary", {}) if isinstance(summary, dict) else {}
+        report = _post_theorem_large_run_readiness(
+            theorem_contract=theorem_contract,
+            proof=proof,
+            readout=readout,
+            frontier_artifacts=frontier_artifacts if isinstance(frontier_artifacts, dict) else {},
+            cmb_diagnostics=cmb_diagnostics if isinstance(cmb_diagnostics, dict) else {},
+        )
+    _write_json(run_path / "large_run_readiness_report.json", report)
+    return report
 
 
 def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = None) -> dict[str, Any]:

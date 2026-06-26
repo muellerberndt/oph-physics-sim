@@ -51,6 +51,12 @@ def main(argv: list[str] | None = None) -> int:
     universe_sweep_parser.add_argument("--max-h3-objects", default=512, type=int)
     universe_sweep_parser.add_argument("--skip-visualizations", action="store_true")
 
+    refresh_readiness_parser = subparsers.add_parser(
+        "refresh-large-run-readiness",
+        help="rewrite large_run_readiness_report.json from final OPH-universe theorem receipts",
+    )
+    refresh_readiness_parser.add_argument("--run-dir", required=True, type=Path)
+
     distributed_prepare_parser = subparsers.add_parser(
         "prepare-distributed-oph-universe",
         help="prepare portable shard configs and worker scripts for a distributed OPH universe run",
@@ -1389,6 +1395,12 @@ def main(argv: list[str] | None = None) -> int:
             max_h3_objects=args.max_h3_objects,
             emit_visualizations=not args.skip_visualizations,
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "refresh-large-run-readiness":
+        from oph_fpe.pipelines.oph_universe import refresh_post_theorem_large_run_readiness_report
+
+        result = refresh_post_theorem_large_run_readiness_report(args.run_dir)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "prepare-distributed-oph-universe":

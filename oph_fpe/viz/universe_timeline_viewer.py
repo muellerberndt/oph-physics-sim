@@ -173,7 +173,7 @@ def _write_visualization_sidecars(
         screen_rows,
     )
     observer_run_dir = _payload_source_dir(payload, "observerRunDir")
-    files["screen_full_bin"] = _write_full_screen_field_bin(output_path, observer_run_dir)
+    files["screen_full_bin"] = _write_full_screen_field_bin(output_path, observer_run_dir, payload)
 
     cameras = payload.get("subjectiveObserverCameras", [])
     if not isinstance(cameras, list):
@@ -771,53 +771,107 @@ def _payload_source_dir(payload: dict[str, Any], key: str) -> Path | None:
     return path if path.exists() else None
 
 
-def _write_full_screen_field_bin(output_path: Path, run_dir: Path | None) -> dict[str, Any]:
+def _write_full_screen_field_bin(
+    output_path: Path,
+    run_dir: Path | None,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     if run_dir is None:
         return {"path": None, "row_count": 0, "written": False, "reason": "observer_run_dir_missing"}
     npz_path = Path(run_dir) / "freezeout_fields.npz"
-    if not npz_path.exists():
-        return {"path": None, "row_count": 0, "written": False, "reason": "freezeout_fields_npz_missing"}
-    try:
-        with np.load(npz_path) as data:
-            points = np.asarray(data["points"], dtype=float)
-            field_name = "record_signature" if "record_signature" in data.files else next(
-                (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
-                "uniform",
-            )
-            values = (
-                np.asarray(data[field_name], dtype=float)
-                if field_name in data.files
-                else np.zeros(points.shape[0], dtype=float)
-            )
-    except Exception as exc:  # pragma: no cover - corrupted run artifact path.
-        return {
-            "path": None,
-            "row_count": 0,
-            "written": False,
-            "reason": f"freezeout_fields_npz_unreadable:{type(exc).__name__}",
-        }
+    source = str(npz_path)
+    exact_values = True
+    fallback_reason: str | None = None
+    field_name = "record_signature"
+    if npz_path.exists():
+        try:
+            with np.load(npz_path) as data:
+                points = np.asarray(data["points"], dtype=float)
+                field_name = "record_signature" if "record_signature" in data.files else next(
+                    (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
+                    "uniform",
+                )
+                values = (
+                    np.asarray(data[field_name], dtype=float)
+                    if field_name in data.files
+                    else np.zeros(points.shape[0], dtype=float)
+                )
+        except Exception as exc:  # pragma: no cover - corrupted run artifact path.
+            return {
+                "path": None,
+                "row_count": 0,
+                "written": False,
+                "reason": f"freezeout_fields_npz_unreadable:{type(exc).__name__}",
+            }
+    else:
+        points, field_name, values, fallback_reason = _fallback_full_screen_field(Path(run_dir), payload or {})
+        source = str(Path(run_dir) / "manifest.json")
+        exact_values = False
     if points.ndim != 2 or points.shape[1] < 3 or values.ndim != 1 or values.shape[0] != points.shape[0]:
         return {
             "path": None,
             "row_count": 0,
             "written": False,
-            "reason": "freezeout_fields_shape_mismatch",
-            "source": str(npz_path),
+            "reason": "full_screen_field_shape_mismatch",
+            "source": source,
         }
     row_count = int(points.shape[0])
     path = output_path / f"screen_full_{row_count}.bin"
     packed = np.column_stack([points[:, :3], _normalize(values)]).astype("<f4", copy=False)
     packed.tofile(path)
-    return {
+    result = {
         "path": str(path),
         "row_count": row_count,
         "byte_count": int(path.stat().st_size),
         "dtype": "float32-le",
         "layout": "x,y,z,value",
         "field_name": field_name,
-        "source": str(npz_path),
+        "source": source,
+        "exact_freezeout_values": exact_values,
         "written": True,
     }
+    if fallback_reason:
+        result["reason"] = fallback_reason
+        result["claim_boundary"] = (
+            "Full S2 regulator coordinates are exact for the run patch count. Per-patch freezeout "
+            "field values were not persisted by this compact run, so the value channel is a neutral "
+            "support field rather than the raw record-signature foam."
+        )
+    return result
+
+
+def _fallback_full_screen_field(
+    run_dir: Path,
+    payload: dict[str, Any],
+) -> tuple[np.ndarray, str, np.ndarray, str]:
+    screen = payload.get("screen") if isinstance(payload.get("screen"), dict) else {}
+    points_payload = screen.get("points") if isinstance(screen, dict) else None
+    values_payload = screen.get("values") if isinstance(screen, dict) else None
+    if isinstance(points_payload, list) and isinstance(values_payload, list) and len(points_payload) == len(values_payload):
+        points = np.asarray(points_payload, dtype=float)
+        values = np.asarray(values_payload, dtype=float)
+        manifest_count = _screen_patch_count_from_run(run_dir, default=points.shape[0])
+        if points.ndim == 2 and points.shape[1] >= 3 and points.shape[0] == manifest_count:
+            return points, str(screen.get("fieldName") or "payload_screen_field"), values, "freezeout_fields_npz_missing_payload_full_field_used"
+
+    count = _screen_patch_count_from_run(run_dir, default=0)
+    if count <= 0:
+        count = 512
+    points = fibonacci_sphere_points(count)
+    values = np.zeros(count, dtype=float)
+    return points, "screen_position_support", values, "freezeout_fields_npz_missing_full_s2_support_only"
+
+
+def _screen_patch_count_from_run(run_dir: Path, *, default: int) -> int:
+    freezeout = _read_json(run_dir / "freezeout_map_summary.json")
+    count = _safe_int(freezeout.get("point_count"))
+    if count > 0:
+        return count
+    manifest = _read_json(run_dir / "manifest.json")
+    count = _safe_int(manifest.get("patch_count"))
+    if count > 0:
+        return count
+    return int(default)
 
 
 def _write_full_observers_json(output_path: Path, run_dir: Path | None) -> dict[str, Any]:
@@ -1494,9 +1548,9 @@ def _screen_points_and_field(run_dir: Path, *, max_points: int) -> tuple[np.ndar
             )
             values = np.asarray(data[field_name], dtype=float) if field_name in data.files else np.zeros(points.shape[0])
     else:
-        count = 512
+        count = _screen_patch_count_from_run(run_dir, default=512)
         points = fibonacci_sphere_points(count)
-        field_name = "uniform"
+        field_name = "screen_position_support"
         values = np.zeros(count, dtype=float)
     if points.shape[0] > max_points:
         rng = np.random.default_rng(17)
@@ -3722,6 +3776,13 @@ def _optional_float(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return int(default)
 
 
 def _normalize(values: np.ndarray) -> np.ndarray:

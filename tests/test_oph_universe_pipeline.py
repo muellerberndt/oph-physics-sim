@@ -9,6 +9,7 @@ from oph_fpe.pipelines.oph_universe import (
     _cmb_diagnostic_summary,
     _postprocess_observer_experience,
     _post_theorem_large_run_readiness,
+    refresh_post_theorem_large_run_readiness_report,
     _write_physical_cmb_source_artifacts,
     _write_physical_cmb_transfer_artifacts,
     _write_visualizer_csv_aliases,
@@ -70,6 +71,28 @@ def test_post_theorem_large_run_readiness_routes_visualization_without_physical_
     assert report["lanes"]["screen_cmb_proxy"]["scale_candidate"] is True
     assert "finite_covariant_parent_receipt_missing" in report["blockers"]
     assert "production_gravity_receipt_false" in report["blockers"]
+
+
+def test_refresh_large_run_readiness_uses_post_theorem_summary(tmp_path: Path):
+    expected = {
+        "mode": "post_theorem_large_run_readiness_v0",
+        "recommended_large_run_lane": "observer_facing_visualization_large_run_with_diagnostic_cmb_vacuum",
+        "cloud_run_safe_for_visualization_data": True,
+    }
+    (tmp_path / "AUTO_THEOREM_UNIVERSE_SUMMARY.json").write_text(
+        json.dumps({"post_theorem_large_run_readiness": expected}),
+        encoding="utf-8",
+    )
+    (tmp_path / "large_run_readiness_report.json").write_text(
+        json.dumps({"mode": "legacy_base_preflight"}),
+        encoding="utf-8",
+    )
+
+    report = refresh_post_theorem_large_run_readiness_report(tmp_path)
+
+    assert report == expected
+    written = json.loads((tmp_path / "large_run_readiness_report.json").read_text(encoding="utf-8"))
+    assert written == expected
 
 
 def test_oph_universe_h3_score_uses_material_gate_value_before_raw_count():

@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from oph_fpe.viz import write_universe_timeline_bundle
-from oph_fpe.viz.universe_timeline_viewer import _small_universe_payload
+from oph_fpe.viz.universe_timeline_viewer import _small_universe_payload, _write_full_screen_field_bin
 
 
 def test_small_universe_payload_uses_theorem_core_receipt_fallback(tmp_path: Path):
@@ -29,6 +29,29 @@ def test_small_universe_payload_uses_theorem_core_receipt_fallback(tmp_path: Pat
     assert payload["receipts"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
     assert payload["receipts"]["bundle_receipt"] is True
     assert payload["claimBoundary"] == "large run theorem core"
+
+
+def test_full_screen_sidecar_falls_back_to_manifest_patch_count(tmp_path: Path):
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    out.mkdir()
+    (run / "manifest.json").write_text(json.dumps({"patch_count": 6}), encoding="utf-8")
+
+    report = _write_full_screen_field_bin(out, run, {"screen": {}})
+
+    assert report["written"] is True
+    assert report["row_count"] == 6
+    assert report["dtype"] == "float32-le"
+    assert report["layout"] == "x,y,z,value"
+    assert report["field_name"] == "screen_position_support"
+    assert report["exact_freezeout_values"] is False
+    assert report["reason"] == "freezeout_fields_npz_missing_full_s2_support_only"
+    path = Path(report["path"])
+    assert path.stat().st_size == 6 * 4 * 4
+    packed = np.fromfile(path, dtype="<f4").reshape((-1, 4))
+    assert packed.shape == (6, 4)
+    assert np.allclose(np.linalg.norm(packed[:, :3], axis=1), 1.0)
 
 
 def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path):

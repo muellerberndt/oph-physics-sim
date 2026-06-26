@@ -314,6 +314,7 @@ theorem_core:
 
 cosmology:
   output_profile: compact
+  write_freezeout_npz: true
   freezeout:
     enabled: true
     require_kms_bw_pass: true
