@@ -906,6 +906,14 @@ def main(argv: list[str] | None = None) -> int:
     finite_collar_boltzmann_parser.add_argument("--include", nargs="*", default=[], type=Path)
     finite_collar_boltzmann_parser.add_argument("--out", required=True, type=Path)
 
+    dark_sector_plan_parser = subparsers.add_parser(
+        "dark-sector-simulation-plan",
+        help="summarize dark-sector galaxy, finite-parent, Boltzmann, and likelihood promotion gates",
+    )
+    dark_sector_plan_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    dark_sector_plan_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    dark_sector_plan_parser.add_argument("--out", required=True, type=Path)
+
     finite_covariant_parent_parser = subparsers.add_parser(
         "finite-covariant-collar-parent",
         help="validate a frozen finite covariant collar-packet parent artifact for physical Boltzmann handoff",
@@ -2248,6 +2256,12 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         result = write_finite_collar_boltzmann_bundle_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "dark-sector-simulation-plan":
+        from oph_fpe.cosmology.dark_sector_simulation import write_dark_sector_simulation_plan
+
+        result = write_dark_sector_simulation_plan([*args.run_dir, *args.include], args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "finite-covariant-collar-parent":

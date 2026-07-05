@@ -6,6 +6,10 @@ from typing import Any
 
 import numpy as np
 
+from oph_fpe.cosmology.anomaly_abundance_selector import (
+    PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE,
+    SOURCE_ONLY_ANOMALY_ABUNDANCE,
+)
 from oph_fpe.cosmology.cosmological_scale_bridge import validate_physical_scale_bridge_receipts
 
 
@@ -58,6 +62,10 @@ class PhysicalCMBInputContract:
 
     official_likelihood_ready: bool
     cdm_limit_regression_passed: bool
+    rho_A_transport_receipt: bool = False
+    anomaly_abundance_source_receipt: bool = False
+    rho_A_source_receipt: bool = False
+    rho_A_claim_label: str = PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE
     screen_to_primordial_lift_receipt: bool = False
     finite_covariant_parent_receipt: bool = False
     stress_energy_closure_receipt: bool = False
@@ -174,12 +182,36 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
         if not bool(contract.common_parent_response_pole_receipt):
             blockers.append("common_parent_response_pole_missing_for_promoted_Gamma_rec")
 
-    if (
-        str(contract.rho_A_source) not in FINITE_CMB_SOURCES
-        or not _finite_table(contract.rho_A_a, min_cols=2)
-        or not _table_column_positive(contract.rho_A_a, column=1)
-    ):
+    rho_A_table_ready = bool(
+        str(contract.rho_A_source) in FINITE_CMB_SOURCES
+        and _finite_table(contract.rho_A_a, min_cols=2)
+        and _table_column_positive(contract.rho_A_a, column=1)
+    )
+    if not rho_A_table_ready:
         blockers.append("rho_A_missing_or_not_finite")
+    else:
+        if not bool(contract.rho_A_transport_receipt):
+            blockers.append("rho_A_transport_receipt_missing")
+        if not bool(contract.anomaly_abundance_source_receipt):
+            blockers.append("anomaly_abundance_source_receipt_missing")
+        if not bool(contract.rho_A_source_receipt):
+            blockers.append("rho_A_source_receipt_missing")
+        if bool(contract.rho_A_source_receipt) and not (
+            bool(contract.rho_A_transport_receipt)
+            and bool(contract.anomaly_abundance_source_receipt)
+        ):
+            blockers.append("rho_A_source_receipt_not_decomposed")
+        if (
+            str(contract.rho_A_claim_label) == SOURCE_ONLY_ANOMALY_ABUNDANCE
+            and not bool(contract.rho_A_source_receipt)
+        ):
+            blockers.append("rho_A_source_label_without_receipt")
+        if (
+            bool(contract.rho_A_transport_receipt)
+            and not bool(contract.anomaly_abundance_source_receipt)
+            and str(contract.rho_A_claim_label) != PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE
+        ):
+            blockers.append("rho_A_transport_without_selector_label_invalid")
 
     if not bool(contract.finite_covariant_parent_receipt):
         blockers.append("finite_covariant_parent_receipt_missing")
@@ -261,7 +293,8 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
             "diagnostics until every blocker is cleared by finite-derived inputs, a finite covariant "
             "stress parent, recipient stress and exchange-current closure for nonzero exchange, "
             "active-fiber/physical-clock/common-parent Gamma_rec receipts, source-only provenance, "
-            "pooled reducers, physical scale-bridge receipts, CMB1 custom-parent CDM regression, "
+            "pooled reducers, source-only rho_A selector receipt, physical scale-bridge receipts, "
+            "CMB1 custom-parent CDM regression, "
             "Standard-Model-off regression, blinded full-observable likelihood execution, solver pins, "
             "and frozen source/solver/likelihood hashes."
         ),
@@ -304,6 +337,21 @@ def contract_from_reports(
         Gamma_rec_k_a=_optional_array(repair_clock_report.get("Gamma_rec_k_a", repair_clock_report.get("Gamma_rec_grid"))),
         rho_A_source=str(background_report.get("rho_A_source", background_report.get("source", "unknown"))),
         rho_A_a=_optional_array(background_report.get("rho_A_a", background_report.get("rho_A_grid"))),
+        rho_A_transport_receipt=bool(
+            background_report.get("RHO_A_TRANSPORT_RECEIPT", False)
+            or background_report.get("rho_A_transport_receipt", False)
+        ),
+        anomaly_abundance_source_receipt=bool(
+            background_report.get("ANOMALY_ABUNDANCE_SOURCE_RECEIPT", False)
+            or background_report.get("anomaly_abundance_source_receipt", False)
+        ),
+        rho_A_source_receipt=bool(
+            background_report.get("RHO_A_SOURCE_RECEIPT", False)
+            or background_report.get("rho_A_source_receipt", False)
+        ),
+        rho_A_claim_label=str(
+            background_report.get("rho_A_claim_label", PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE)
+        ),
         freezeout_source=str(freezeout_report.get("freezeout_source", freezeout_report.get("source", "unknown"))),
         freezeout_surface=freezeout_report.get("freezeout_surface"),
         official_likelihood_ready=bool(likelihood_report.get("official_likelihood_ready", False)),

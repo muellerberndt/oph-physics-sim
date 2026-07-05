@@ -8,6 +8,10 @@ from typing import Any
 
 import numpy as np
 
+from oph_fpe.cosmology.anomaly_abundance_selector import (
+    PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE,
+    SOURCE_ONLY_ANOMALY_ABUNDANCE,
+)
 from oph_fpe.cosmology.physical_cmb_contract import (
     FINITE_CMB_SOURCES,
     PhysicalCMBInputContract,
@@ -64,6 +68,34 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
     ell_source, ell_value = _scalar_value_from_reports(scale, scalar_quotient, "ell_IR")
     b_source, b_grid = _B_A_from_reports(ba_kernel, ba_parent)
     rho_source, rho_grid = _rho_A_from_reports(finite_cert, ba_parent)
+    rho_transport_receipt = bool(
+        finite_parent.get("RHO_A_TRANSPORT_RECEIPT", False)
+        or finite_parent.get("rho_A_transport_receipt", False)
+        or finite_cert.get("RHO_A_TRANSPORT_RECEIPT", False)
+        or finite_cert.get("rho_A_transport_receipt", False)
+    )
+    anomaly_abundance_receipt = bool(
+        finite_parent.get("ANOMALY_ABUNDANCE_SOURCE_RECEIPT", False)
+        or finite_parent.get("anomaly_abundance_source_receipt", False)
+        or finite_cert.get("ANOMALY_ABUNDANCE_SOURCE_RECEIPT", False)
+        or finite_cert.get("anomaly_abundance_source_receipt", False)
+    )
+    rho_source_receipt = bool(
+        finite_parent.get("RHO_A_SOURCE_RECEIPT", False)
+        or finite_parent.get("rho_A_source_receipt", False)
+        or finite_cert.get("RHO_A_SOURCE_RECEIPT", False)
+        or finite_cert.get("rho_A_source_receipt", False)
+        or (rho_transport_receipt and anomaly_abundance_receipt)
+    )
+    rho_claim_label = str(
+        finite_parent.get("rho_A_claim_label")
+        or finite_cert.get("rho_A_claim_label")
+        or (
+            SOURCE_ONLY_ANOMALY_ABUNDANCE
+            if rho_source_receipt
+            else PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE
+        )
+    )
     freezeout_source, freezeout_surface = _freezeout_from_reports(strict_neutral, scale, physical_scale_bridge)
     official_likelihood_ready = bool(
         compressed_likelihood.get("official_likelihood_ready", False)
@@ -94,6 +126,10 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         Gamma_rec_k_a=gamma_grid,
         rho_A_source=rho_source,
         rho_A_a=rho_grid,
+        rho_A_transport_receipt=rho_transport_receipt,
+        anomaly_abundance_source_receipt=anomaly_abundance_receipt,
+        rho_A_source_receipt=rho_source_receipt,
+        rho_A_claim_label=rho_claim_label,
         freezeout_source=freezeout_source,
         freezeout_surface=freezeout_surface,
         official_likelihood_ready=official_likelihood_ready,
@@ -364,7 +400,7 @@ def write_physical_cmb_input_no_data_use_receipt(run_dirs: list[Path], out_dir: 
 
 
 def physical_cmb_promotion_audit_report(run_dirs: list[Path]) -> dict[str, Any]:
-    """Summarize what still blocks current CMB diagnostics from prediction status."""
+    """Summarize blockers between CMB diagnostics and prediction status."""
 
     roots = [Path(path) for path in run_dirs]
     contract, sources = build_physical_cmb_input_contract(roots)
@@ -1051,6 +1087,19 @@ def _source_summary(sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
 
 def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
     scale_bridge_validation = validate_physical_scale_bridge_receipts(contract.physical_scale_bridge_receipts)
+    rho_A_status = _array_status(contract.rho_A_source, contract.rho_A_a, positive_column=1)
+    rho_A_status.update(
+        {
+            "rho_A_transport_receipt": bool(contract.rho_A_transport_receipt),
+            "anomaly_abundance_source_receipt": bool(contract.anomaly_abundance_source_receipt),
+            "rho_A_source_receipt": bool(contract.rho_A_source_receipt),
+            "claim_label": contract.rho_A_claim_label,
+        }
+    )
+    rho_A_status["physical_gate_passed"] = bool(
+        rho_A_status.get("physical_gate_passed", False)
+        and contract.rho_A_source_receipt
+    )
     return {
         "P_source": _theorem_constant_status(contract.P_source),
         "N_source": _theorem_constant_status(contract.N_source),
@@ -1060,7 +1109,7 @@ def _input_status(contract: PhysicalCMBInputContract) -> dict[str, Any]:
         "ell_IR": _scalar_status(contract.ell_IR_source, contract.ell_IR_value, positive=True),
         "B_A_k_a": _array_status(contract.B_A_source, contract.B_A_k_a),
         "Gamma_rec_k_a": _array_status(contract.Gamma_rec_source, contract.Gamma_rec_k_a),
-        "rho_A_a": _array_status(contract.rho_A_source, contract.rho_A_a, positive_column=1),
+        "rho_A_a": rho_A_status,
         "freezeout_surface": {
             "source": contract.freezeout_source,
             "source_is_finite_cmb_source": contract.freezeout_source in FINITE_CMB_SOURCES,

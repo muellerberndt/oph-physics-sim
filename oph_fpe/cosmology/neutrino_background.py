@@ -55,14 +55,14 @@ def oph_cnb_background_report(
     omega_nu_h2 = float(background["Omega_nu_h2"])
     omega_nu = float(background["Omega_nu"])
     f_nu = float(background["f_nu"])
-    eta_a = 1.0 - math.exp(-float(p_value) / 24.0)
-    epsilon_required = 1.0 - float(WEAK_LENSING_S8_TARGET) / float(S8_CDM_BRANCH)
-    pi_wl_required = epsilon_required / eta_a if eta_a > 0.0 else math.nan
     oph_constants = OPHConstants(
         P=float(p_value),
         S8_oph_compressed=float(S8_CDM_BRANCH),
         S8_wl_target_reference=float(WEAK_LENSING_S8_TARGET),
     )
+    eta_a = oph_constants.reserve
+    epsilon_required = 1.0 - float(WEAK_LENSING_S8_TARGET) / float(S8_CDM_BRANCH)
+    pi_wl_required = epsilon_required / eta_a if eta_a > 0.0 else math.nan
     s8_five_of_seven = apply_projected_wl_selector(S8_CDM_BRANCH, constants=oph_constants)
     s8_five_of_seven_pull = (s8_five_of_seven - WEAK_LENSING_S8_TARGET) / oph_constants.S8_wl_sigma_reference
     pi_wl_projected = compressed_projection_fraction(
@@ -114,17 +114,27 @@ def oph_cnb_background_report(
         "late_repair_projection_target": {
             "theorem_form": "L_OPH/L_0 = 1 - eta_A * Pi_L",
             "eta_A": eta_a,
-            "eta_A_formula": "1 - exp(-P/24)",
+            "eta_A_formula": "1 - lambda_collar",
+            "lambda_collar_exact_uniform_product_thickening": (
+                oph_constants.lambda_collar_exact_uniform_product_thickening
+            ),
+            "lambda_collar_exact_gate": oph_constants.lambda_collar_exact_gate,
+            "lambda_collar_exact_gate_pass": False,
+            "lambda_collar_profile_default": oph_constants.lambda_collar_profile_default,
+            "finite_thickness_jensen_band": oph_constants.finite_thickness_jensen_band,
+            "z6_normalized_trace_mean": oph_constants.z6_normalized_trace_mean,
+            "z6_reciprocal_trace": oph_constants.z6_reciprocal_trace,
             "epsilon_required_to_map_cdm_S8_to_WL_target": epsilon_required,
             "Pi_WL_compressed_required": pi_wl_projected,
             "Pi_WL_is_universal_microphysical_constant": False,
             "projected_amplitude_theorem": {
                 "formula": "L_OPH/L_0 = 1 - eta_A Pi_L",
                 "Pi_L_definition": "Pi_L = integral K_L(k,a) W(k,a) dlnk dlna",
-                "minimal_kernel": "B_A(k,a)=1-(1-exp(-P/24)) W_k(k) W_a(a)",
+                "minimal_kernel": "B_A(k,a)=1-(1-lambda_collar) W_k(k) W_a(a)",
                 "W_k": "k^2/(k^2+k_A^2)",
                 "W_a": "Xi_A/(Xi_A+H_conformal)",
                 "compressed_target_not_microphysical_constant": True,
+                "exact_uniform_target_requires": oph_constants.lambda_collar_exact_gate,
                 "required_Pi_WL_from_compressed_rows": pi_wl_projected,
                 "reconstructed_S8_from_required_Pi_WL": projected_amplitude(
                     S8_CDM_BRANCH,
@@ -138,8 +148,11 @@ def oph_cnb_background_report(
             },
             "z6_poisson_five_of_seven": {
                 "branch": "z6_poisson_five_of_seven",
-                "kernel_formula": "B_A(k,a)=1-(5/7)(1-exp(-P/24)) W_k(k) W_a(a)",
+                "kernel_formula": "B_A(k,a)=1-(5/7)(1-lambda_collar) W_k(k) W_a(a)",
                 "lambda_collar": oph_constants.lambda_collar,
+                "lambda_collar_status": oph_constants.lambda_collar_claim_status,
+                "lambda_collar_exact_gate": oph_constants.lambda_collar_exact_gate,
+                "lambda_collar_exact_gate_pass": False,
                 "reserve": oph_constants.reserve,
                 "pi_wl": oph_constants.pi_wl,
                 "epsilon_A_wl": oph_constants.epsilon_A_wl,
@@ -173,7 +186,10 @@ def oph_cnb_background_report(
             "static_to_linear_separation_declared": True,
             "parent_finite_collar_response_functional_target": True,
             "linear_repair_transfer_equation_available": True,
-            "collar_reserve_amplitude_normalization_available": True,
+            "collar_reserve_diagnostic_target_available": True,
+            "collar_reserve_amplitude_normalization_available": False,
+            "uniform_product_thickening_exact_gate": False,
+            "scalar_weighted_z6_mean_gate": False,
             "minimal_one_pole_kernel_callable": True,
             "projected_amplitude_theorem_available": True,
             "compressed_weak_lensing_target_available": True,
@@ -202,6 +218,8 @@ def oph_cnb_background_report(
             "Delta_N_eff_coh_channel_declared": bool(float(delta_neff_coh) != 0.0),
             "z6_poisson_five_of_seven_kernel_callable": True,
             "z6_poisson_five_of_seven_compressed_projection": True,
+            "uniform_product_thickening_exact_gate": False,
+            "scalar_weighted_z6_mean_gate": False,
             "B_A_k_a_from_finite_collar_parent": False,
             "survey_projection_kernel_declared": False,
             "full_boltzmann_likelihood_run": False,

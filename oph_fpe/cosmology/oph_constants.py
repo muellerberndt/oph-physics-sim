@@ -8,6 +8,7 @@ from oph_fpe.constants.oph_pixel import P_STAR
 DEFAULT_R_DS_M = 1.66e26
 DEFAULT_L_PLANCK_M = 1.616e-35
 DEFAULT_N_CRC = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M) ** 2
+LAMBDA_COLLAR_EXACT_GATE = "UNIFORM_PRODUCT_THICKENING_EXACT"
 
 
 @dataclass(frozen=True)
@@ -33,8 +34,43 @@ class OPHConstants:
     S8_wl_sigma_reference: float = 0.016
 
     @property
-    def lambda_collar(self) -> float:
+    def z6_normalized_trace_mean(self) -> float:
+        return float(self.P) / 24.0
+
+    @property
+    def z6_reciprocal_trace(self) -> float:
+        return 24.0 / float(self.P)
+
+    @property
+    def lambda_collar_exact_uniform_product_thickening(self) -> float:
+        """Exact-uniform/product-thickening diagnostic target.
+
+        Finite-thickness runs must promote this through the
+        UNIFORM_PRODUCT_THICKENING_EXACT gate before using it as a physical
+        local coefficient.
+        """
+
         return math.exp(-float(self.P) / 24.0)
+
+    @property
+    def lambda_collar(self) -> float:
+        return self.lambda_collar_exact_uniform_product_thickening
+
+    @property
+    def lambda_collar_exact_gate(self) -> str:
+        return LAMBDA_COLLAR_EXACT_GATE
+
+    @property
+    def lambda_collar_claim_status(self) -> str:
+        return "diagnostic_exact_uniform_product_thickening_target_not_unconditional"
+
+    @property
+    def lambda_collar_profile_default(self) -> str:
+        return "lambda_collar = integral dy w(y) exp[-epsilon_Z6(y)]"
+
+    @property
+    def finite_thickness_jensen_band(self) -> list[float]:
+        return [self.lambda_collar_exact_uniform_product_thickening, 1.0]
 
     @property
     def reserve(self) -> float:
@@ -64,14 +100,23 @@ class OPHConstants:
     def P_cell_count_for_N_CRC(self) -> float:
         return 4.0 * float(self.N_CRC) / float(self.P)
 
-    def as_jsonable(self) -> dict[str, float | list[float]]:
+    def as_jsonable(self) -> dict[str, object]:
         return {
             "P": float(self.P),
             "N_CRC": float(self.N_CRC),
             "N_patch_bare_ratio": self.N_patch_bare_ratio,
             "Lambda_lP2": self.Lambda_lP2,
             "P_cell_count_for_N_CRC": self.P_cell_count_for_N_CRC,
+            "z6_normalized_trace_mean": self.z6_normalized_trace_mean,
+            "z6_reciprocal_trace": self.z6_reciprocal_trace,
             "lambda_collar": self.lambda_collar,
+            "lambda_collar_exact_uniform_product_thickening": (
+                self.lambda_collar_exact_uniform_product_thickening
+            ),
+            "lambda_collar_exact_gate": self.lambda_collar_exact_gate,
+            "lambda_collar_claim_status": self.lambda_collar_claim_status,
+            "lambda_collar_profile_default": self.lambda_collar_profile_default,
+            "finite_thickness_jensen_band": self.finite_thickness_jensen_band,
             "reserve": self.reserve,
             "pi_wl": float(self.pi_wl),
             "epsilon_A_wl": self.epsilon_A_wl,

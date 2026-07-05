@@ -236,8 +236,18 @@ python3 -m oph_fpe.cli cmb-lite-compare --run-dir runs/<run_id> --benchmark runs
 python3 -m oph_fpe.cli cl-from-freezeout-npz --run-dir runs/<run_id> --out runs/<run_id>/cl_recomputed
 python3 -m oph_fpe.cli oph-screen-power --run-dir runs/<run_id> --out runs/screen_power
 python3 -m oph_fpe.cli cmb-anomaly-report --run-dir runs/<run_id> --source-dir runs/<run_id> --out runs/cmb_anomaly
+python3 -m oph_fpe.cli dark-sector-simulation-plan --run-dir runs/<run_id> --out runs/<run_id>/dark_sector_simulation_plan
 python3 -m oph_fpe.cli physical-cmb-output-comparison --run-dir runs/<run_id> --out runs/physical_cmb_output_comparison
 ```
+
+The dark-sector simulation plan is an integration receipt. It reads the static
+galaxy, finite covariant parent, finite-collar Boltzmann bundle, Boltzmann-input,
+CMB anomaly, and frozen likelihood reports, then names the first blocked
+promotion gate and the next simulator command to run. It is not a dark-matter
+prediction or likelihood by itself. Exact `exp(-P/24)` collar-coefficient
+promotion is tracked separately through local-reserve, scalar-weighted z6-mean,
+and uniform product-thickening gates; finite-thickness profile coefficients
+remain the default unless those receipts close.
 
 ## Defects And Particles
 

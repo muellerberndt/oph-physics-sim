@@ -8,6 +8,7 @@ from typing import Any
 
 from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_claim_metadata
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.h0s8_certificates import h0s8_lane8_certificate_report
 
 
@@ -55,7 +56,8 @@ def h0s8_branch_report(
     omega_a = float(q_a) * omega_b
     omega_m = omega_b + omega_nu + omega_a
     omega_lambda = (float(h_ds) / h0_blind) ** 2
-    lambda_collar = math.exp(-float(p_value) / 24.0)
+    constants = OPHConstants(P=float(p_value))
+    lambda_collar = constants.lambda_collar_exact_uniform_product_thickening
     f_a = omega_a / omega_m if omega_m > 0.0 else 0.0
     mu_eff = (1.0 - f_a) + f_a * lambda_collar
     required_growth_factor = float(WEAK_LENSING_S8_TARGET) / float(s8_cdm)
@@ -89,6 +91,14 @@ def h0s8_branch_report(
         },
         "collar_tracking": {
             "lambda_collar": lambda_collar,
+            "lambda_collar_exact_uniform_product_thickening": lambda_collar,
+            "lambda_collar_status": constants.lambda_collar_claim_status,
+            "lambda_collar_exact_gate": constants.lambda_collar_exact_gate,
+            "lambda_collar_exact_gate_pass": False,
+            "finite_thickness_profile_default": constants.lambda_collar_profile_default,
+            "finite_thickness_jensen_band": constants.finite_thickness_jensen_band,
+            "z6_normalized_trace_mean": constants.z6_normalized_trace_mean,
+            "z6_reciprocal_trace": constants.z6_reciprocal_trace,
             "B_A_track": lambda_collar,
             "f_A": f_a,
             "mu_eff_source_suppression": mu_eff,
@@ -129,7 +139,10 @@ def h0s8_branch_report(
         "theorem_gates": {
             "Q_A_from_finite_collar_selector": False,
             "B_A_from_parent_collar_kernel": False,
-            "lambda_collar_from_P_survival": True,
+            "LOCAL_POISSON_RESERVE_SURVIVAL": True,
+            "SCALAR_WEIGHTED_Z6_MEAN": False,
+            "UNIFORM_PRODUCT_THICKENING_EXACT": False,
+            "lambda_collar_from_P_survival": False,
             "Gamma_rec_equals_Jacobi_clock": False,
             "full_CAMB_CLASS_anomaly_module": False,
             "full_likelihood_contract": False,
@@ -144,7 +157,10 @@ def h0s8_branch_report(
         "claim_boundary": (
             "H0/S8 branch diagnostic from OPH cosmology notes. It computes consequences of declared "
             "branch assumptions but does not prove that finite lattice runs derive Q_A, B_A(k,a), or "
-            "Gamma_rec=Gamma_J. Treat as measurement-facing continuation data until those gates close."
+            "Gamma_rec=Gamma_J. The exp(-P/24) collar value is reported as an exact-uniform "
+            "product-thickening diagnostic target only; finite-thickness/local-coefficient promotion "
+            "requires the UNIFORM_PRODUCT_THICKENING_EXACT gate. Treat as measurement-facing continuation "
+            "data until those gates close."
         ),
     }
     return with_claim_metadata(
@@ -206,7 +222,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "",
             f"- Flat q_A closure H0: `{flat['H0_km_s_Mpc']:.6f}` km/s/Mpc",
             f"- Omega_m: `{flat['Omega_m']:.9f}`",
-            f"- Collar lambda / B_A_track: `{report['collar_tracking']['lambda_collar']:.12f}`",
+            f"- Collar lambda exact-uniform target / B_A_track: `{report['collar_tracking']['lambda_collar']:.12f}`",
             f"- Effective source suppression: `{report['collar_tracking']['source_suppression_fraction']:.6f}`",
             "",
             "## Branches",

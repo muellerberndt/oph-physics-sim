@@ -15,8 +15,14 @@ def test_h0s8_branch_report_keeps_theorem_gates_closed():
     report = h0s8_branch_report()
     assert report["flat_q_a_closure"]["H0_km_s_Mpc"] == np.float64(h0_from_flat_q_a(q_a=5.363470441))
     assert report["collar_tracking"]["lambda_collar"] == np.float64(np.exp(-report["inputs"]["P"] / 24.0))
+    assert report["collar_tracking"]["lambda_collar_exact_gate"] == "UNIFORM_PRODUCT_THICKENING_EXACT"
+    assert report["collar_tracking"]["lambda_collar_exact_gate_pass"] is False
     assert report["branches"]["B_direct_jacobi_repair"]["S8"] == np.float64(0.790)
     assert report["theorem_gates"]["Q_A_from_finite_collar_selector"] is False
+    assert report["theorem_gates"]["LOCAL_POISSON_RESERVE_SURVIVAL"] is True
+    assert report["theorem_gates"]["SCALAR_WEIGHTED_Z6_MEAN"] is False
+    assert report["theorem_gates"]["UNIFORM_PRODUCT_THICKENING_EXACT"] is False
+    assert report["theorem_gates"]["lambda_collar_from_P_survival"] is False
     assert report["lane8_certificate_stack"]["mode"] == "oph_h0_s8_lane8_certificate_stack_v0"
     assert report["theorem_gates"]["lane8_low_entropy_certificate_ready"] is False
     assert report["physical_cmb_prediction"] is False

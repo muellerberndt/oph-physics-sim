@@ -3058,6 +3058,15 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "h0s8_Q_A_gate": bool(_nested(h0s8, "theorem_gates", "Q_A_from_finite_collar_selector")),
         "h0s8_B_A_gate": bool(_nested(h0s8, "theorem_gates", "B_A_from_parent_collar_kernel")),
         "h0s8_lambda_P_gate": bool(_nested(h0s8, "theorem_gates", "lambda_collar_from_P_survival")),
+        "h0s8_local_poisson_reserve_survival_gate": bool(
+            _nested(h0s8, "theorem_gates", "LOCAL_POISSON_RESERVE_SURVIVAL")
+        ),
+        "h0s8_scalar_weighted_z6_mean_gate": bool(
+            _nested(h0s8, "theorem_gates", "SCALAR_WEIGHTED_Z6_MEAN")
+        ),
+        "h0s8_uniform_product_thickening_exact_gate": bool(
+            _nested(h0s8, "theorem_gates", "UNIFORM_PRODUCT_THICKENING_EXACT")
+        ),
         "h0s8_Gamma_J_gate": bool(_nested(h0s8, "theorem_gates", "Gamma_rec_equals_Jacobi_clock")),
         "h0s8_camb_class_gate": bool(_nested(h0s8, "theorem_gates", "full_CAMB_CLASS_anomaly_module")),
         "h0s8_likelihood_gate": bool(_nested(h0s8, "theorem_gates", "full_likelihood_contract")),
@@ -5735,6 +5744,15 @@ def _h0s8_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "Q_A_gate_count": sum(1 for row in usable if row.get("h0s8_Q_A_gate")),
         "B_A_gate_count": sum(1 for row in usable if row.get("h0s8_B_A_gate")),
         "lambda_P_gate_count": sum(1 for row in usable if row.get("h0s8_lambda_P_gate")),
+        "local_poisson_reserve_survival_gate_count": sum(
+            1 for row in usable if row.get("h0s8_local_poisson_reserve_survival_gate")
+        ),
+        "scalar_weighted_z6_mean_gate_count": sum(
+            1 for row in usable if row.get("h0s8_scalar_weighted_z6_mean_gate")
+        ),
+        "uniform_product_thickening_exact_gate_count": sum(
+            1 for row in usable if row.get("h0s8_uniform_product_thickening_exact_gate")
+        ),
         "Gamma_J_gate_count": sum(1 for row in usable if row.get("h0s8_Gamma_J_gate")),
         "CAMB_CLASS_gate_count": sum(1 for row in usable if row.get("h0s8_camb_class_gate")),
         "likelihood_gate_count": sum(1 for row in usable if row.get("h0s8_likelihood_gate")),
@@ -5789,7 +5807,8 @@ def _h0s8_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "H0/S8 branch diagnostic from the OPH cosmology notes. The numbers are measurement-facing "
             "branch consequences. Lane-8 certificate fields expose record/provenance closure gates, but "
             "they become finite-lattice predictions only when Q_A, B_A(k,a), the repair clock, "
-            "CAMB/CLASS anomaly module, likelihood gates, and run-derived Lane-8 certificate values are closed."
+            "the uniform product-thickening exact-value gate, CAMB/CLASS anomaly module, likelihood gates, "
+            "and run-derived Lane-8 certificate values are closed."
         ),
     }
 
@@ -7546,7 +7565,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- H0/S8 reports: {h0s8['run_count']}",
         f"- physical-prediction-ready reports: {h0s8['physical_prediction_ready_count']}",
         f"- Q_A/B_A/Gamma_J gate counts: {h0s8['Q_A_gate_count']} / {h0s8['B_A_gate_count']} / {h0s8['Gamma_J_gate_count']}",
-        f"- lambda(P) gate count: {h0s8['lambda_P_gate_count']}",
+        f"- lambda(P) compatibility / exact-thickening gate counts: {h0s8['lambda_P_gate_count']} / {h0s8['uniform_product_thickening_exact_gate_count']}",
+        f"- local reserve / scalar-weighted z6 mean gate counts: {h0s8['local_poisson_reserve_survival_gate_count']} / {h0s8['scalar_weighted_z6_mean_gate_count']}",
         f"- CAMB/CLASS and likelihood gate counts: {h0s8['CAMB_CLASS_gate_count']} / {h0s8['likelihood_gate_count']}",
         f"- Lane-8 certificate / run-derived / ready counts: {h0s8['lane8_certificate_count']} / {h0s8['lane8_run_derived_count']} / {h0s8['lane8_certificate_ready_count']}",
         f"- Lane-8 payload/fake/selector/refinement gate counts: {h0s8['lane8_payload_gate_count']} / {h0s8['lane8_fake_suppression_gate_count']} / {h0s8['lane8_selector_gate_count']} / {h0s8['lane8_refinement_gate_count']}",

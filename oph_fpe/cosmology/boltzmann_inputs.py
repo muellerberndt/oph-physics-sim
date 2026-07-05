@@ -6,6 +6,8 @@ from pathlib import Path
 from statistics import fmean
 from typing import Any
 
+from oph_fpe.cosmology.anomaly_abundance_selector import CONDITIONAL_SOURCE_STATE
+
 
 def oph_boltzmann_input_report(
     oph_cmb_reports: list[dict[str, Any]],
@@ -54,7 +56,7 @@ def oph_boltzmann_input_report(
             "rows": cdm_table,
             "claim_boundary": (
                 "Pressureless conserved anomaly-stress limit. This is CAMB/LambdaCDM plumbing unless OPH "
-                "independently supplies rho_A0."
+                "supplies RHO_A_SOURCE_RECEIPT."
             ),
         },
         "diagnostic_repair_exchange": {
@@ -207,6 +209,9 @@ def _readiness(
         "finite_repair_clock_diagnostic_rows_emitted": bool(finite_repair_clock_rows),
         "finite_transition_clock_certified": clock_certified,
         "finite_collar_parent_theorem_grade": False,
+        "rho_A_transport_receipt": False,
+        "anomaly_abundance_source_receipt": False,
+        "rho_A_source_receipt": False,
         "rho_A_a_physical_emitted": False,
         "rho_A_eq_a_physical_emitted": False,
         "Gamma_rec_k_a_physical_emitted": False,
@@ -220,6 +225,7 @@ def _readiness(
         "B_A_parent_diagnostic_table_ready": bool(b_a_parent_rows),
         "finite_repair_clock_diagnostic_table_ready": bool(finite_repair_clock_rows),
         "physical_prediction_ready": False,
+        "rho_A_claim_label": CONDITIONAL_SOURCE_STATE,
         "checks": checks,
         "missing_gates": [name for name, passed in checks.items() if not passed],
     }

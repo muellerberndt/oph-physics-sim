@@ -60,6 +60,10 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
         run / "finite_certificate_report.json",
         {
             "theorem_grade_finite_inputs": True,
+            "RHO_A_TRANSPORT_RECEIPT": True,
+            "ANOMALY_ABUNDANCE_SOURCE_RECEIPT": True,
+            "RHO_A_SOURCE_RECEIPT": True,
+            "rho_A_claim_label": "SOURCE_ONLY_ANOMALY_ABUNDANCE",
             "derived_outputs": {
                 "A_zeta": 2.1e-9,
                 "rho_A_a": [[0.5, 0.2]],
@@ -213,6 +217,10 @@ def test_generated_pooled_reducer_metadata_fails_closed_when_fields_absent(tmp_p
             "theorem_grade_finite_inputs": True,
             "no_cmb_data_used": True,
             "pooled_sufficient_statistics_receipt": True,
+            "RHO_A_TRANSPORT_RECEIPT": True,
+            "ANOMALY_ABUNDANCE_SOURCE_RECEIPT": True,
+            "RHO_A_SOURCE_RECEIPT": True,
+            "rho_A_claim_label": "SOURCE_ONLY_ANOMALY_ABUNDANCE",
             "derived_outputs": {"A_zeta": 2.1e-9, "rho_A_a": [[0.5, 0.2]]},
         },
     )
@@ -524,6 +532,10 @@ def _finite_parent_report() -> dict:
         "CAUSAL_RESPONSE_RECEIPT": True,
         "REFINEMENT_CONVERGENCE_RECEIPT": True,
         "CDM_LIMIT_RECOVERY_RECEIPT": True,
+        "RHO_A_TRANSPORT_RECEIPT": True,
+        "ANOMALY_ABUNDANCE_SOURCE_RECEIPT": True,
+        "RHO_A_SOURCE_RECEIPT": True,
+        "rho_A_claim_label": "SOURCE_ONLY_ANOMALY_ABUNDANCE",
         "FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT": True,
         "Gamma_rec_nonzero": True,
         "source_hash": _hash("0"),

@@ -83,6 +83,10 @@ def test_physical_cmb_source_readiness_uses_explicit_parent_report(tmp_path: Pat
         run / "finite_certificate_report.json",
         {
             "theorem_grade_finite_inputs": True,
+            "RHO_A_TRANSPORT_RECEIPT": True,
+            "ANOMALY_ABUNDANCE_SOURCE_RECEIPT": True,
+            "RHO_A_SOURCE_RECEIPT": True,
+            "rho_A_claim_label": "SOURCE_ONLY_ANOMALY_ABUNDANCE",
             "derived_outputs": {
                 "A_zeta": 2.1e-9,
                 "rho_A_a": [[0.5, 0.2]],

@@ -1345,7 +1345,10 @@ def test_comparable_data_collects_gap_release_adiabaticity_and_h0s8(tmp_path: Pa
             "theorem_gates": {
                 "Q_A_from_finite_collar_selector": False,
                 "B_A_from_parent_collar_kernel": False,
-                "lambda_collar_from_P_survival": True,
+                "LOCAL_POISSON_RESERVE_SURVIVAL": True,
+                "SCALAR_WEIGHTED_Z6_MEAN": False,
+                "UNIFORM_PRODUCT_THICKENING_EXACT": False,
+                "lambda_collar_from_P_survival": False,
                 "Gamma_rec_equals_Jacobi_clock": False,
                 "full_CAMB_CLASS_anomaly_module": False,
                 "full_likelihood_contract": False,
@@ -1371,7 +1374,10 @@ def test_comparable_data_collects_gap_release_adiabaticity_and_h0s8(tmp_path: Pa
     h0s8 = report["measurement_lanes"]["h0_s8_branch_diagnostic"]
     assert h0s8["mean_H0_km_s_Mpc"] == 67.40002854274209
     assert h0s8["mean_direct_jacobi_S8"] == 0.79
-    assert h0s8["lambda_P_gate_count"] == 1
+    assert h0s8["lambda_P_gate_count"] == 0
+    assert h0s8["local_poisson_reserve_survival_gate_count"] == 1
+    assert h0s8["scalar_weighted_z6_mean_gate_count"] == 0
+    assert h0s8["uniform_product_thickening_exact_gate_count"] == 0
     assert h0s8["Q_A_gate_count"] == 0
 
 

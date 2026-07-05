@@ -3,6 +3,10 @@ from __future__ import annotations
 import numpy as np
 
 from oph_fpe.cosmology.cosmological_scale_bridge import imported_flrw_reference_receipts
+from oph_fpe.cosmology.anomaly_abundance_selector import (
+    PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE,
+    SOURCE_ONLY_ANOMALY_ABUNDANCE,
+)
 from oph_fpe.cosmology.physical_cmb_contract import (
     PhysicalCMBInputContract,
     contract_from_reports,
@@ -61,6 +65,44 @@ def test_physical_cmb_contract_rejects_nonpositive_rho_A_column():
 
     assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
     assert "rho_A_missing_or_not_finite" in validation["blockers"]
+
+
+def test_physical_cmb_contract_requires_source_rho_A_selector_receipt():
+    contract = _valid_contract()
+    contract.anomaly_abundance_source_receipt = False
+    contract.rho_A_source_receipt = False
+    contract.rho_A_claim_label = PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "anomaly_abundance_source_receipt_missing" in validation["blockers"]
+    assert "rho_A_source_receipt_missing" in validation["blockers"]
+
+
+def test_physical_cmb_contract_rejects_undecomposed_rho_A_source_receipt():
+    contract = _valid_contract()
+    contract.rho_A_transport_receipt = False
+    contract.anomaly_abundance_source_receipt = True
+    contract.rho_A_source_receipt = True
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "rho_A_transport_receipt_missing" in validation["blockers"]
+    assert "rho_A_source_receipt_not_decomposed" in validation["blockers"]
+
+
+def test_physical_cmb_contract_rejects_source_label_without_selector_receipt():
+    contract = _valid_contract()
+    contract.anomaly_abundance_source_receipt = False
+    contract.rho_A_source_receipt = False
+    contract.rho_A_claim_label = SOURCE_ONLY_ANOMALY_ABUNDANCE
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "rho_A_source_label_without_receipt" in validation["blockers"]
 
 
 def test_physical_cmb_contract_rejects_adversarial_stub_values():
@@ -242,6 +284,10 @@ def _valid_contract() -> PhysicalCMBInputContract:
         Gamma_rec_k_a=np.ones((3, 3)),
         rho_A_source=finite,
         rho_A_a=np.ones((3, 2)),
+        rho_A_transport_receipt=True,
+        anomaly_abundance_source_receipt=True,
+        rho_A_source_receipt=True,
+        rho_A_claim_label=SOURCE_ONLY_ANOMALY_ABUNDANCE,
         freezeout_source="neutral_bulk_freezeout",
         freezeout_surface=_freezeout_surface(scale_bridge),
         official_likelihood_ready=True,

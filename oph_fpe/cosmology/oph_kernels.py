@@ -71,7 +71,11 @@ def B_A_z6_poisson_five_of_seven(
 ) -> float | np.ndarray:
     """OPH z6/Poisson five-of-seven weak-lensing response kernel.
 
-    B_A(k,a) = 1 - (5/7)(1 - exp(-P/24)) W_k(k) W_a(a).
+    B_A(k,a) = 1 - (5/7)(1 - lambda_collar) W_k(k) W_a(a).
+    The exp(-P/24) value is the exact-uniform/product-thickening diagnostic
+    target; finite-thickness runs must promote it through
+    UNIFORM_PRODUCT_THICKENING_EXACT before treating it as a physical local
+    coefficient.
     """
 
     return 1.0 - constants.epsilon_A_wl * W_k(k_hMpc, kA_hMpc) * W_a(
@@ -100,7 +104,10 @@ def B_A_minimal_one_pole(
 ) -> float | np.ndarray:
     """Minimal OPH finite-collar response before survey projection.
 
-    B_A(k,a) = 1 - eta_A W_k(k) W_a(a), with eta_A = 1 - exp(-P/24).
+    B_A(k,a) = 1 - eta_A W_k(k) W_a(a), with eta_A = 1 - lambda_collar.
+    The exact-uniform target uses lambda_collar = exp(-P/24); generic
+    finite-thickness lanes should read lambda_collar from a scalar profile
+    integral until the exact-value gate closes.
     This is the microphysics-side kernel target. A weak-lensing scalar number
     is obtained only after projecting this window through a survey response.
     """
@@ -159,6 +166,6 @@ def normalized_projection_average(window: np.ndarray, response_weight: np.ndarra
 
 
 def apply_projected_wl_selector(S8: float, constants: OPHConstants = OPHConstants()) -> float:
-    """Compressed-scorecard projection S8 -> S8 * [1 - (5/7)(1 - exp(-P/24))]."""
+    """Compressed-scorecard projection with the exact-uniform collar target."""
 
     return float(S8) * constants.R_wl

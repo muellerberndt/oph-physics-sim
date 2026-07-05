@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.oph_screen_power import DEFAULT_D_STAR_MPC, DEFAULT_K0_MPC
 from oph_fpe.cosmology.selector_elimination import selector_elimination_report
 
@@ -40,6 +41,7 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
 
     selector_report = selector_elimination_report(source_dir, P=float(P))
     pixel = OPHPixelConstants(P=float(P))
+    oph_constants = OPHConstants(P=float(P))
     eta_r = float(selector_report["scalar_tilt"]["eta_R"])
     n_s = float(selector_report["scalar_tilt"]["n_s"])
     q_ir = float(selector_report["cmb_ir_kernel"]["q_IR"])
@@ -47,7 +49,7 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
     theta_ir_deg = 180.0 / ell_ir
     k_ir_mpc = ell_ir / DEFAULT_D_STAR_MPC
     n_frz_proxy = int((ell_ir + 1.0) ** 2)
-    chi_nu = math.exp(-float(P) / 24.0)
+    chi_nu = oph_constants.lambda_collar_exact_uniform_product_thickening
     ranking_rows: list[dict[str, Any]] = []
     assessment_rows: list[dict[str, Any]] = []
     files: dict[str, Any] = {}
@@ -149,9 +151,19 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
         },
         "coherent_matter_susceptibility": {
             "chi_nu_can": chi_nu,
-            "formula": "exp(-P/24)",
+            "formula": "lambda_profile; exact-uniform target exp(-P/24) only after gate closure",
+            "lambda_collar_exact_gate": oph_constants.lambda_collar_exact_gate,
+            "lambda_collar_exact_gate_pass": False,
+            "lambda_collar_profile_default": oph_constants.lambda_collar_profile_default,
+            "finite_thickness_jensen_band": oph_constants.finite_thickness_jensen_band,
+            "z6_normalized_trace_mean": oph_constants.z6_normalized_trace_mean,
+            "z6_reciprocal_trace": oph_constants.z6_reciprocal_trace,
             "public_cosmology_data_value": False,
-            "claim_boundary": "near-future laboratory target, not a CMB/public-data pass-fail value",
+            "claim_boundary": (
+                "near-future laboratory target, not a CMB/public-data pass-fail value; the exact "
+                "exp(-P/24) number is an exact-uniform/product-thickening target, not an unconditional "
+                "finite-thickness scalar coefficient"
+            ),
         },
         "ranking_rows": ranking_rows,
         "assessment_rows": assessment_rows,

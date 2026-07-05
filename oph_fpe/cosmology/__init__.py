@@ -19,6 +19,51 @@ _EXPORTS = {
         "covariant_exchange_closure_report",
     ),
     "exchange_closure_report": ("oph_fpe.cosmology.anomaly_fluid", "exchange_closure_report"),
+    "AnomalyReleaseStateArtifact": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "AnomalyReleaseStateArtifact",
+    ),
+    "AnomalyLoadObservableArtifact": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "AnomalyLoadObservableArtifact",
+    ),
+    "SourceMaxEntReleaseLawArtifact": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "SourceMaxEntReleaseLawArtifact",
+    ),
+    "AnomalyAbundanceSelectorArtifact": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "AnomalyAbundanceSelectorArtifact",
+    ),
+    "LoadRefinementCompatibilityArtifact": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "LoadRefinementCompatibilityArtifact",
+    ),
+    "verify_anomaly_abundance_source_receipt": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "verify_anomaly_abundance_source_receipt",
+    ),
+    "verify_anomaly_release_state": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "verify_anomaly_release_state",
+    ),
+    "verify_anomaly_load_observable": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "verify_anomaly_load_observable",
+    ),
+    "verify_source_maxent_release_law": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "verify_source_maxent_release_law",
+    ),
+    "verify_load_refinement_compatibility": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "verify_load_refinement_compatibility",
+    ),
+    "compute_anomaly_load": (
+        "oph_fpe.cosmology.anomaly_abundance_selector",
+        "compute_anomaly_load",
+    ),
+    "compute_selector": ("oph_fpe.cosmology.anomaly_abundance_selector", "compute_selector"),
     "angular_power_report": ("oph_fpe.cosmology.angular_power", "angular_power_report"),
     "background_adapter_status": ("oph_fpe.cosmology.background_adapter", "background_adapter_status"),
     "estimate_b_a_grid": ("oph_fpe.cosmology.ba_parent", "estimate_b_a_grid"),

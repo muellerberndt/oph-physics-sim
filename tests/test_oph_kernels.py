@@ -26,7 +26,12 @@ def test_oph_constants_five_of_seven_values():
     assert constants.N_patch_bare_ratio == constants.N_CRC / math.pi
     assert constants.Lambda_lP2 == 3.0 * math.pi / constants.N_CRC
     assert constants.P_cell_count_for_N_CRC == 4.0 * constants.N_CRC / constants.P
+    assert constants.z6_normalized_trace_mean == P_STAR / 24.0
+    assert constants.z6_reciprocal_trace == 24.0 / P_STAR
+    assert constants.lambda_collar_exact_gate == "UNIFORM_PRODUCT_THICKENING_EXACT"
     assert constants.lambda_collar == math.exp(-P_STAR / 24.0)
+    assert constants.lambda_collar == constants.lambda_collar_exact_uniform_product_thickening
+    assert constants.finite_thickness_jensen_band == [constants.lambda_collar, 1.0]
     assert constants.pi_wl == 5.0 / 7.0
     assert constants.epsilon_A_wl == constants.pi_wl * (1.0 - constants.lambda_collar)
     assert constants.R_wl == 1.0 - constants.epsilon_A_wl

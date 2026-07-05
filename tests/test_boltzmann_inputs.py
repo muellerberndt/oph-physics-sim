@@ -45,6 +45,8 @@ def test_oph_boltzmann_input_report_separates_cdm_limit_and_diagnostic_proxy():
     assert report["readiness"]["B_A_parent_diagnostic_table_ready"] is False
     assert report["readiness"]["finite_repair_clock_diagnostic_table_ready"] is False
     assert report["readiness"]["physical_prediction_ready"] is False
+    assert report["readiness"]["rho_A_claim_label"] == "CONDITIONAL_SOURCE_STATE"
+    assert report["readiness"]["checks"]["rho_A_source_receipt"] is False
     assert report["cdm_limit"]["row_count"] == 2
     assert report["diagnostic_repair_exchange"]["row_count"] == 4
     assert report["b_a_parent_diagnostic"]["row_count"] == 0
@@ -114,6 +116,7 @@ def test_write_oph_boltzmann_input_report_scans_run_dirs(tmp_path: Path):
     assert report["readiness"]["B_A_parent_diagnostic_table_ready"] is True
     assert report["readiness"]["finite_repair_clock_diagnostic_table_ready"] is True
     assert report["readiness"]["checks"]["finite_transition_clock_certified"] is False
+    assert report["readiness"]["checks"]["anomaly_abundance_source_receipt"] is False
     assert report["finite_repair_clock_diagnostic"]["rows"][0]["Gamma_rec_over_H_diagnostic"] == 0.032
     assert (tmp_path / "out" / "oph_boltzmann_input_report.json").exists()
     assert (tmp_path / "out" / "oph_boltzmann_input_report.md").exists()
