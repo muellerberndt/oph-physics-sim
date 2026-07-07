@@ -6,6 +6,15 @@ from typing import Any
 
 from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
+    EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT,
+    EINSTEIN_BRANCH_ENTRY_RECEIPT,
+    EINSTEIN_BRANCH_ISSUE_503_RECEIPT,
+    EINSTEIN_FIXED_CAP_ENTROPY_STATIONARITY_RECEIPT,
+    EINSTEIN_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT,
+    EINSTEIN_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT,
+    EINSTEIN_NULL_STRESS_CHARGE_RECEIPT,
+    EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT,
+    OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     with_claim_metadata,
 )
@@ -31,6 +40,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     neutral = _read_json(root / "bulk_reconstruction_report.json")
     neutral_audit = _read_json(root / "neutral_3d_bulk_audit_report.json")
     refinement = _read_json(root / "strict_neutral_bulk_frontier_report.json")
+    einstein = _read_json(root / "einstein_branch_entry_report.json")
     refinement_summary = (
         refinement.get("refinement_summary")
         if isinstance(refinement.get("refinement_summary"), dict)
@@ -123,6 +133,60 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         or emergence.get("strict_blind_observer_bulk_receipt", False)
         or emergence.get("neutral_bulk_3d_established", False)
     )
+    einstein_issue_503 = bool(
+        _truthy_any(
+            einstein,
+            EINSTEIN_BRANCH_ISSUE_503_RECEIPT,
+            "issue_503_closed_receipt",
+            "issue_503_branch_entry_closed_receipt",
+        )
+        or str(einstein.get("issue_503_status", "")).lower() in {"closed", "complete", "passed"}
+    )
+    einstein_e1_null_stress = _truthy_any(
+        einstein,
+        EINSTEIN_NULL_STRESS_CHARGE_RECEIPT,
+        "E1_NULL_STRESS_CHARGE_RECEIPT",
+        "null_generator_stress_charge_receipt",
+    )
+    einstein_e2_entropy = _truthy_any(
+        einstein,
+        EINSTEIN_FIXED_CAP_ENTROPY_STATIONARITY_RECEIPT,
+        "E2_FIXED_CAP_ENTROPY_STATIONARITY_RECEIPT",
+        "fixed_cap_entropy_stationarity_receipt",
+    )
+    einstein_e3_small_ball = _truthy_any(
+        einstein,
+        EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT,
+        "E3_SMALL_BALL_AREA_BRIDGE_RECEIPT",
+        "small_ball_area_bridge_receipt",
+    )
+    einstein_e4_tensor = _truthy_any(
+        einstein,
+        EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT,
+        "E4_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT",
+        "all_timelike_tensor_upgrade_receipt",
+    )
+    einstein_e5_lambda = _truthy_any(
+        einstein,
+        EINSTEIN_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT,
+        "E5_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT",
+        "lambda_constancy_conservation_receipt",
+    )
+    einstein_e6_newton = _truthy_any(
+        einstein,
+        EINSTEIN_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT,
+        "E6_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT",
+        "newton_coupling_forbidden_input_audit_receipt",
+    )
+    einstein_child_gates = {
+        "E1_null_generator_stress_charge": einstein_e1_null_stress,
+        "E2_fixed_cap_entropy_stationarity": einstein_e2_entropy,
+        "E3_small_ball_area_bridge": einstein_e3_small_ball,
+        "E4_all_timelike_tensor_upgrade": einstein_e4_tensor,
+        "E5_lambda_constancy_conservation": einstein_e5_lambda,
+        "E6_newton_coupling_forbidden_input_audit": einstein_e6_newton,
+    }
+    einstein_branch_entry = bool(einstein_issue_503 and all(einstein_child_gates.values()))
 
     stages = {
         "C0_finite_consensus_theorem": _stage(
@@ -258,6 +322,56 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
                 or neutral_audit.get("strict_neutral_bulk_ready"),
             },
         ),
+        "E0_einstein_branch_entry_umbrella": _stage(
+            einstein_branch_entry,
+            "issue #503 umbrella is closed and all Einstein branch-entry child gates E1-E6 pass",
+            missing=[
+                name
+                for name, passed in {
+                    "issue_503_closed_receipt": einstein_issue_503,
+                    **einstein_child_gates,
+                }.items()
+                if not passed
+            ],
+            details={
+                "issue": 503,
+                "issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
+                "issue_503_status": einstein.get("issue_503_status", "open_or_unreported"),
+                "source_report_written": bool(einstein),
+                "child_gate_issue_map": {
+                    "E1_null_generator_stress_charge": "#19",
+                    "E2_fixed_cap_entropy_stationarity": "#20",
+                    "E3_small_ball_area_bridge": "#21",
+                    "E4_all_timelike_tensor_upgrade": "chi_nu_test/EinsteinBranch Lean core plus #21",
+                    "E5_lambda_constancy_conservation": "chi_nu_test/LambdaConstancy Lean core plus #22",
+                    "E6_newton_coupling_forbidden_input_audit": "#345",
+                },
+            },
+        ),
+        "E1_null_generator_stress_charge": _stage(
+            einstein_e1_null_stress,
+            "OPH null generator is identified with the local null-stress charge inside the branch",
+        ),
+        "E2_fixed_cap_entropy_stationarity": _stage(
+            einstein_e2_entropy,
+            "fixed-cap generalized-entropy stationarity is derived for the realized MaxEnt family",
+        ),
+        "E3_small_ball_area_bridge": _stage(
+            einstein_e3_small_ball,
+            "small-ball entropy/area bridge and fixed-volume area response are internally certified",
+        ),
+        "E4_all_timelike_tensor_upgrade": _stage(
+            einstein_e4_tensor,
+            "all-observer/all-timelike rest-frame coverage upgrades scalar data to the tensor equation",
+        ),
+        "E5_lambda_constancy_conservation": _stage(
+            einstein_e5_lambda,
+            "Bianchi identity, stress conservation, metric compatibility, and connectedness fix one Lambda",
+        ),
+        "E6_newton_coupling_forbidden_input_audit": _stage(
+            einstein_e6_newton,
+            "Einstein/Newton coupling is audited without measured G, Planck area, Lambda, or gravity-calibrated endpoints",
+        ),
     }
     finite_contract = all(stages[name]["passed"] for name in (
         "C0_finite_consensus_theorem",
@@ -328,12 +442,24 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "L7_refinement_naturality",
         "B4_strict_neutral_bulk_audit",
     )
+    einstein_branch_stage_names = (
+        "E0_einstein_branch_entry_umbrella",
+        "E1_null_generator_stress_charge",
+        "E2_fixed_cap_entropy_stationarity",
+        "E3_small_ball_area_bridge",
+        "E4_all_timelike_tensor_upgrade",
+        "E5_lambda_constancy_conservation",
+        "E6_newton_coupling_forbidden_input_audit",
+    )
     blockers = [name for name in observer_consensus_stage_names if not stages[name]["passed"]]
     paper_geometric_branch_blockers = [
         name for name in paper_geometric_branch_consensus_stage_names if not stages[name]["passed"]
     ]
     chart_blind_neutral_blockers = [
         name for name in chart_blind_neutral_stage_names if not stages[name]["passed"]
+    ]
+    einstein_branch_blockers = [
+        name for name in einstein_branch_stage_names if not stages[name]["passed"]
     ]
     all_stage_blockers = [name for name, row in stages.items() if not row["passed"]]
     report = {
@@ -362,12 +488,21 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": observer_facing_consensus_bulk,
         "chart_blind_strict_neutral_quotient_bulk_receipt": chart_blind_strict_neutral,
         "strict_neutral_bulk_contract_receipt": chart_blind_strict_neutral,
+        OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT: einstein_branch_entry,
+        EINSTEIN_BRANCH_ENTRY_RECEIPT: einstein_branch_entry,
+        "einstein_branch_entry_contract_receipt": einstein_branch_entry,
+        "issue_503_einstein_branch_entry_status": einstein.get(
+            "issue_503_status", "open_or_unreported"
+        ),
         "blockers": blockers,
         "primary_blockers": blockers[:6],
         "paper_geometric_branch_blockers": paper_geometric_branch_blockers,
         "paper_geometric_branch_primary_blockers": paper_geometric_branch_blockers[:6],
         "chart_blind_strict_neutral_blockers": chart_blind_neutral_blockers,
         "strict_neutral_blockers": chart_blind_neutral_blockers,
+        "einstein_branch_entry_blockers": einstein_branch_blockers,
+        "einstein_branch_entry_primary_blockers": einstein_branch_blockers[:6],
+        "einstein_branch_entry_child_gates": einstein_child_gates,
         "all_stage_blockers": all_stage_blockers,
         "observer_like_self_reading_system_receipt": bool(observer_rows["patch_observer_count"] > 0),
         "observer_row_summary": observer_rows,
@@ -383,7 +518,9 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "3+1D experience. The observer-facing consensus 3D bulk receipt adds shared object "
             "population in that H3 chart. The chart-blind strict neutral quotient audit is a separate "
             "stronger certificate and is reported without being required for the observer-facing 3D "
-            "theorem receipt."
+            "theorem receipt. The Einstein branch-entry receipt is separate again: no finite run promotes "
+            "production gravity unless issue #503 and the E1-E6 stress/entropy/small-ball/tensor/Lambda/"
+            "Newton gates are explicitly closed."
         ),
     }
     return with_claim_metadata(
@@ -529,6 +666,8 @@ def _markdown(report: dict[str, Any]) -> str:
         f"`{str(report['paper_geometric_branch_consensus_bulk_emergence_receipt']).lower()}`",
         "- chart-blind strict neutral quotient bulk: "
         f"`{str(report['chart_blind_strict_neutral_quotient_bulk_receipt']).lower()}`",
+        "- Einstein branch-entry contract: "
+        f"`{str(report['einstein_branch_entry_contract_receipt']).lower()}`",
         "",
         "## Stages",
         "",
@@ -541,6 +680,10 @@ def _markdown(report: dict[str, Any]) -> str:
     if report.get("paper_geometric_branch_blockers"):
         lines.extend(["", "## Paper-Geometric Branch Blockers", ""])
         for blocker in report["paper_geometric_branch_blockers"]:
+            lines.append(f"- `{blocker}`")
+    if report.get("einstein_branch_entry_blockers"):
+        lines.extend(["", "## Einstein Branch-Entry Blockers", ""])
+        for blocker in report["einstein_branch_entry_blockers"]:
             lines.append(f"- `{blocker}`")
     lines.extend(["", "## Claim Boundary", "", report["claim_boundary"], ""])
     return "\n".join(lines)

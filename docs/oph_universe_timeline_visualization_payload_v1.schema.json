@@ -21,7 +21,13 @@
     "cmbComparison",
     "comparableObservations",
     "geometriesAndSymmetries",
-    "visualizationViews"
+    "visualizationViews",
+    "effectiveStringTheory",
+    "emergentCurvedSpacetime",
+    "observerCinema",
+    "hilbertSpaceObserverAlgebra",
+    "observerAnatomy",
+    "paperAccuracy"
   ],
   "properties": {
     "schemaVersion": {
@@ -77,6 +83,27 @@
     },
     "visualizationViews": {
       "$ref": "#/$defs/visualizationViews"
+    },
+    "visualizationRenderData": {
+      "$ref": "#/$defs/visualizationRenderData"
+    },
+    "effectiveStringTheory": {
+      "$ref": "#/$defs/openObject"
+    },
+    "emergentCurvedSpacetime": {
+      "$ref": "#/$defs/openObject"
+    },
+    "observerCinema": {
+      "$ref": "#/$defs/openObject"
+    },
+    "hilbertSpaceObserverAlgebra": {
+      "$ref": "#/$defs/openObject"
+    },
+    "observerAnatomy": {
+      "$ref": "#/$defs/openObject"
+    },
+    "paperAccuracy": {
+      "$ref": "#/$defs/openObject"
     }
   },
   "$defs": {
@@ -94,6 +121,87 @@
       "type": "object",
       "additionalProperties": true
     },
+    "visualizationRenderData": {
+      "type": "object",
+      "description": "Renderer-ready convenience data derived from the authoritative payload: availability counts, camera presets, scene graph, animation timeline, plot series, legends, and claim badges.",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "availability",
+        "rendererHints",
+        "cameraPresets",
+        "sceneGraph",
+        "animationTimeline",
+        "plotSeries",
+        "legend",
+        "claimBadges",
+        "viewContracts",
+        "claimBoundary"
+      ],
+      "properties": {
+        "schema": {
+          "const": "oph_visualization_render_data_v1"
+        },
+        "description": {
+          "type": "string"
+        },
+        "availability": {
+          "type": "object",
+          "additionalProperties": {
+            "type": ["integer", "number", "boolean", "string", "null"]
+          }
+        },
+        "rendererHints": {
+          "$ref": "#/$defs/openObject"
+        },
+        "cameraPresets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
+        "repairPlayback": {
+          "type": "object",
+          "description": "Renderer timing policy for gradual repair animation. Use playbackRelativeTime for UI playback and rawRelativeTime/cycle for auditable simulation timing.",
+          "additionalProperties": true
+        },
+        "sceneGraph": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["screen", "observerGraph", "bulk", "finiteRepairGraph"]
+        },
+        "animationTimeline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
+        "plotSeries": {
+          "$ref": "#/$defs/openObject"
+        },
+        "legend": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
+        "claimBadges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
+        "viewContracts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
     "visualizationViews": {
       "type": "object",
       "description": "First-class view contracts for web visualizers. These views name the intended panels and the payload fields that support them without promoting closed receipts.",
@@ -103,6 +211,7 @@
       "required": [
         "fluctuatingQuantumVacuum",
         "observerCamera",
+        "emergentCurvedSpacetime",
         "effectiveStringTheory"
       ],
       "properties": {
@@ -110,6 +219,9 @@
           "$ref": "#/$defs/visualizationView"
         },
         "observerCamera": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "emergentCurvedSpacetime": {
           "$ref": "#/$defs/visualizationView"
         },
         "effectiveStringTheory": {
@@ -885,6 +997,17 @@
             "$ref": "#/$defs/packetWeight"
           }
         },
+        "visibleProtoWorldlines": {
+          "type": "array",
+          "description": "Observer-camera projection sightings of proto-worldline events at this frame. These are diagnostic renderer/readout sightings and do not promote particle-matter receipts.",
+          "items": {
+            "$ref": "#/$defs/observerProtoWorldlineSighting"
+          }
+        },
+        "visibleProtoWorldlineCount": {
+          "type": "integer",
+          "minimum": 0
+        },
         "polarFieldReadout": {
           "type": "array",
           "items": {
@@ -893,6 +1016,74 @@
         },
         "framePacketSource": {
           "type": "string"
+        }
+      }
+    },
+    "observerProtoWorldlineSighting": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "worldlineId",
+        "cycle",
+        "observerLocalReadout",
+        "screenX",
+        "screenY",
+        "visibilityScore",
+        "particleLike",
+        "diagnosticOnly",
+        "claimBoundary"
+      ],
+      "properties": {
+        "worldlineId": {
+          "type": ["string", "integer", "number", "null"]
+        },
+        "cycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "nearestEventCycle": {
+          "type": ["integer", "number", "null"]
+        },
+        "cycleDistance": {
+          "type": ["number", "null"]
+        },
+        "interpolated": {
+          "type": "boolean"
+        },
+        "observerLocalReadout": {
+          "$ref": "#/$defs/observerLocalProtoWorldlineReadout"
+        },
+        "screenX": {
+          "type": "number"
+        },
+        "screenY": {
+          "type": "number"
+        },
+        "cameraDistance": {
+          "type": "number"
+        },
+        "angularSeparationDegrees": {
+          "type": "number"
+        },
+        "visibilityScore": {
+          "type": "number"
+        },
+        "event": {
+          "type": ["string", "null"]
+        },
+        "class": {
+          "type": ["string", "null"]
+        },
+        "holonomyMode": {
+          "$ref": "#/$defs/scalar"
+        },
+        "particleLike": {
+          "type": "boolean"
+        },
+        "diagnosticOnly": {
+          "type": "boolean"
+        },
+        "claimBoundary": {
+          "type": ["string", "null"]
         }
       }
     },
@@ -1025,6 +1216,28 @@
             "$ref": "#/$defs/h3ObjectPacket"
           }
         },
+        "neutralObjectCandidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/neutralObjectCandidate"
+          }
+        },
+        "neutralObjectSummary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "h3ChartStatus": {
+          "type": "object",
+          "description": "Renderer-facing H3 chart status. False promotion receipts with displayStatus=not_promoted or blocked should not be rendered as chart errors.",
+          "additionalProperties": true
+        },
+        "receiptDisplay": {
+          "type": "object",
+          "description": "Per-receipt display semantics for UI badges, including severity and whether a false receipt should render as an error.",
+          "additionalProperties": {
+            "$ref": "#/$defs/openObject"
+          }
+        },
         "protoParticleCandidates": {
           "$ref": "#/$defs/protoParticleCandidates"
         },
@@ -1036,6 +1249,46 @@
           "$ref": "#/$defs/receiptMap"
         },
         "strictNeutralBlockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claimBoundary": {
+          "type": "string"
+        }
+      }
+    },
+    "neutralObjectCandidate": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["objectId", "observerCount", "spatialEmbeddingAvailable"],
+      "properties": {
+        "objectId": {
+          "type": ["string", "null"]
+        },
+        "observerIds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "observerCount": {
+          "type": "integer"
+        },
+        "visibleSignatureKey": {
+          "type": ["string", "null"]
+        },
+        "persistence": {
+          "type": ["number", "null"]
+        },
+        "overlapAgreement": {
+          "type": ["number", "null"]
+        },
+        "spatialEmbeddingAvailable": {
+          "type": "boolean"
+        },
+        "primaryFeatures": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1172,6 +1425,47 @@
         }
       }
     },
+    "observerLocalProtoWorldlineReadout": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "u",
+        "v",
+        "range",
+        "rangeBucket",
+        "coordinateSystem",
+        "hiddenGlobalH3Suppressed"
+      ],
+      "properties": {
+        "u": {
+          "type": "number"
+        },
+        "v": {
+          "type": "number"
+        },
+        "range": {
+          "type": "number"
+        },
+        "rangeBucket": {
+          "type": "string"
+        },
+        "angularSeparationDegrees": {
+          "type": "number"
+        },
+        "visibilityScore": {
+          "type": "number"
+        },
+        "coordinateSystem": {
+          "type": "string"
+        },
+        "sourceCoordinateSuppressed": {
+          "type": "string"
+        },
+        "hiddenGlobalH3Suppressed": {
+          "type": "boolean"
+        }
+      }
+    },
     "h3ProtoParticleEvent": {
       "type": "object",
       "additionalProperties": true,
@@ -1259,6 +1553,20 @@
             "$ref": "#/$defs/cmbResidualRow"
           }
         },
+        "observedRows": {
+          "type": "array",
+          "description": "Observed CMB TT rows derived from residualRows for renderers that want separate observed/model series.",
+          "items": {
+            "$ref": "#/$defs/cmbSeriesRow"
+          }
+        },
+        "modelRows": {
+          "type": "array",
+          "description": "Best OPH diagnostic model TT rows derived from residualRows for renderers that want separate observed/model series.",
+          "items": {
+            "$ref": "#/$defs/cmbSeriesRow"
+          }
+        },
         "bestOphDiagnosticModel": {
           "type": "object",
           "additionalProperties": true
@@ -1272,6 +1580,19 @@
         },
         "claimBoundary": {
           "type": "string"
+        }
+      }
+    },
+    "cmbSeriesRow": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ell", "D_ell"],
+      "properties": {
+        "ell": {
+          "type": ["integer", "number"]
+        },
+        "D_ell": {
+          "type": ["number", "null"]
         }
       }
     },

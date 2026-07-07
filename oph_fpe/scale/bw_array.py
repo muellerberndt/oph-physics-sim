@@ -185,7 +185,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
 
     dyn = config.get("dynamics", {})
     cycles = int(dyn.get("cycles", 64))
-    repairs_per_cycle = int(dyn.get("repairs_per_cycle", edge_count // 4))
+    repairs_per_cycle = _repairs_per_cycle_from_config(dyn, patch_count=patch_count, edge_count=edge_count)
     commit_cycles = int(dyn.get("record_commit_cycles", 8))
     beta_schedule = dyn.get("beta_schedule", {})
     readback_drive_cfg = dyn.get("observer_readback_drive", {}) or {}
@@ -2001,6 +2001,15 @@ def _should_write_base_progress(cycle: int, cycles: int, interval: int) -> bool:
     if cycle == 0 or cycle == cycles - 1:
         return True
     return interval > 0 and (cycle + 1) % interval == 0
+
+
+def _repairs_per_cycle_from_config(dyn: dict[str, Any], *, patch_count: int, edge_count: int) -> int:
+    if dyn.get("repair_fraction_per_cycle") is not None:
+        fraction = max(0.0, float(dyn.get("repair_fraction_per_cycle", 0.0)))
+        if fraction <= 0.0:
+            return 0
+        return int(min(max(1, math.ceil(float(patch_count) * fraction)), max(0, int(edge_count))))
+    return int(max(0, min(int(dyn.get("repairs_per_cycle", edge_count // 4)), max(0, int(edge_count)))))
 
 
 def _base_repair_progress_report(

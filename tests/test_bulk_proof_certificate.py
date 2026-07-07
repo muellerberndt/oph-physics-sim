@@ -50,7 +50,9 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     assert report["theorem_assisted_h3_populated_chart_established"] is True
     assert report["theorem_assisted_observer_facing_h3_population"] is True
     assert report["observer_facing_h3_object_population_receipt"] is True
-    assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is True
+    assert report["OBSERVER_FACING_H3_CHART_RECEIPT"] is True
+    assert report["OBSERVER_EXPERIENCED_3P1D_HISTORY_RECEIPT"] is False
+    assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
     assert report["THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT"] is True
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
     assert report["strict_neutral_third_person_bulk_established"] is False
@@ -58,6 +60,12 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     assert report["bulk_3d_established_strict"] is False
     assert report["screen_cmb_proxy_available"] is True
     assert report["physical_cmb_prediction"] is False
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert report["production_gravity_receipt"] is False
+    assert report["physical_gravity_prediction"] is False
+    assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is False
+    assert report["proof_tiers"]["G2_production_gravity"]["passed"] is False
 
 
 def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path: Path):
@@ -81,6 +89,67 @@ def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path:
     assert report["theorem_assisted_h3_populated_chart_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is False
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+
+
+def test_missing_observer_history_blocks_experienced_3p1d_history(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "emergence_status_report.json",
+        {
+            "BW_KMS_BRANCH_REPLAY_RECEIPT": True,
+            "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": True,
+            "CHART_LORENTZ_H3_RECEIPT": True,
+            "H3_RESPONSE_CANDIDATE_RECEIPT": True,
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["OBSERVER_FACING_H3_CHART_RECEIPT"] is True
+    assert report["OBSERVER_EXPERIENCED_3P1D_HISTORY_RECEIPT"] is False
+    assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
+    assert report["observer_modular_experience_summary"]["written"] is False
+    assert "observer_modular_experience_written" in report["observer_modular_experience_summary"]["blockers"]
+
+
+def test_strict_neutral_object_candidate_does_not_promote_full_neutral_bulk(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "strict_neutral_object_bulk_report.json",
+        {
+            "STRICT_NEUTRAL_OBJECT_BULK_RECEIPT": True,
+            "strict_neutral_object_bulk": True,
+            "object_count": 24,
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["STRICT_NEUTRAL_OBJECT_BULK_CANDIDATE_RECEIPT"] is True
+    assert report["STRICT_NEUTRAL_OBJECT_BULK_RECEIPT"] is True
+    assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+    assert report["STRICT_NEUTRAL_THIRD_PERSON_BULK_RECEIPT"] is False
+    assert report["strict_neutral_third_person_bulk_established"] is False
+
+
+def test_physical_cmb_prediction_requires_staged_contracts_not_output_booleans(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(run / "emergence_status_report.json", {"physical_cmb_prediction": True})
+    _write_json(run / "cmb_lite_comparison_report.json", {"physical_cmb_prediction": True})
+    _write_json(run / "cl_comparison_report.json", {"physical_cmb_prediction": True})
+    _write_json(run / "physical_cmb_frontier_report.json", {"physical_cmb_prediction_receipt": True})
+    _write_json(run / "physical_cmb_output_comparison_report.json", {"PHYSICAL_CMB_PREDICTION_RECEIPT": True})
+
+    report = bulk_proof_certificate(run)
+
+    assert report["physical_cmb_staged_contract"]["CMB2_OUTPUT_ARTIFACT_PRESENT"] is True
+    assert report["CMB1_SOURCE_INPUT_CONTRACT"] is False
+    assert report["CMB1_FROZEN_TRANSFER_LIKELIHOOD_CLOSURE"] is False
+    assert report["CMB2_PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+    assert report["physical_cmb_prediction"] is False
 
 
 def test_bulk_proof_certificate_keeps_observer_consensus_separate_from_neutral_quotient(tmp_path: Path):
@@ -107,6 +176,34 @@ def test_bulk_proof_certificate_keeps_observer_consensus_separate_from_neutral_q
     assert report["bulk_3d_established_chart_blind_strict_neutral"] is False
     assert report["finite_theorem_contract_summary"]["strict_neutral_blockers"] == [
         "B4_strict_neutral_bulk_audit"
+    ]
+    assert report["finite_theorem_contract_summary"]["einstein_branch_entry_contract_receipt"] is False
+
+
+def test_bulk_proof_certificate_keeps_gravity_closed_after_branch_entry_without_source_bridge(
+    tmp_path: Path,
+):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "finite_oph_theorem_contract_report.json",
+        {
+            "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": True,
+            "EINSTEIN_BRANCH_ENTRY_RECEIPT": True,
+            "einstein_branch_entry_contract_receipt": True,
+            "einstein_branch_entry_blockers": [],
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["einstein_branch_entry_contract_receipt"] is True
+    assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is True
+    assert report["production_gravity_receipt"] is False
+    assert report["physical_gravity_prediction"] is False
+    assert report["proof_tiers"]["G2_production_gravity"]["passed"] is False
+    assert "production_source_stress_bridge_missing" in report["proof_tiers"]["G2_production_gravity"][
+        "blockers"
     ]
 
 
@@ -147,6 +244,11 @@ def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path
         run / "observer_modular_experience_report.json",
         {
             "observer_modular_time_receipt": True,
+            "semantic_history_receipt": True,
+            "observer_clock_naturality_receipt": True,
+            "observer_registry_descent_receipt": True,
+            "state_preserving_observer_algebra_receipt": True,
+            "support_cap_chart_naturality_receipt": True,
             "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True,
             "observer_facing_3p1d_h3_experience_receipt": True,
             "observer_facing_populated_h3_experience_receipt": False,
@@ -160,6 +262,11 @@ def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path
                 "bw_kms_branch_replay_receipt": True,
                 "conformal_h3_chart_receipt": True,
                 "h3_modular_response_receipt": True,
+                "semantic_history_receipt": True,
+                "observer_clock_naturality_receipt": True,
+                "observer_registry_descent_receipt": True,
+                "state_preserving_observer_algebra_receipt": True,
+                "support_cap_chart_naturality_receipt": True,
             },
         },
     )
@@ -167,6 +274,8 @@ def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path
     report = bulk_proof_certificate(run)
 
     assert report["observer_modular_time_receipt"] is True
+    assert report["observer_facing_h3_chart_receipt"] is True
+    assert report["observer_experienced_3p1d_history_receipt"] is True
     assert report["observer_facing_3p1d_h3_experience_receipt"] is True
     assert report["observer_facing_populated_h3_experience_receipt"] is False
     assert report["observer_modular_experience_summary"]["observer_count"] == 16

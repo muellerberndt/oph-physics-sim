@@ -1,0 +1,13 @@
+id,dVp_obs_mm_s,sigma_dVp_mm_s,dVinf_obs_mm_s,sigma_dVinf_mm_s,Vinf_km_s,delta_in_deg,delta_out_deg,notes
+Galileo I,2.56,0.02,3.92,0.03,8.949,-12.52,-34.15,historical positive
+Galileo II,-2.90,0.70,-4.60,1.00,8.877,-34.26,-4.87,low altitude
+NEAR,7.21,0.006,13.46,0.01,6.851,-20.76,-71.96,strongest historical positive
+Cassini,-0.42,0.42,-0.50,0.50,16.010,-12.92,-4.99,weak row
+Rosetta I,0.66,0.011,1.80,0.03,3.863,-2.81,-34.29,historical positive
+MESSENGER,0.0071,0.004,0.02,0.01,4.056,31.44,-31.92,tiny row
+Rosetta II,0.0,0.1,0.0,0.1,9.36,-10.80,18.60,null control
+EPOXI I,0.0,0.1,0.0,0.1,3.45,-5.18,16.90,null control
+EPOXI II,0.0,0.1,0.0,0.1,3.46,17.03,64.12,null control
+Rosetta III,0.0,0.1,0.0,0.1,9.38,18.49,24.37,null control
+EPOXI III,0.0,0.1,0.0,0.1,3.34,-63.88,-8.04,null control
+Juno,0.0,,0.0,,10.474,14.17,39.50,near-continuous tracking null

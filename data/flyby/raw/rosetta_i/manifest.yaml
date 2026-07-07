@@ -1,0 +1,16 @@
+flyby_id: Rosetta I
+priority: 3
+public_target:
+  dVinf_obs_mm_s: 1.80
+  sigma_dVinf_mm_s: 0.03
+required_files:
+  tracking: [ODF, TNF_or_equivalent, reconstructed_doppler_range]
+  geometry: [SPICE, EOP]
+missing_or_to_locate:
+  - exact_navigation_OD_setup
+  - attitude_history
+  - SRP_reflectivity_model
+  - covariance
+  - solve_for_list
+  - design_matrices
+status: RAW_RSI_DATA_AVAILABLE_REPLAY_PENDING

@@ -13,8 +13,23 @@ from oph_fpe.scale.bw_array import (
     _collar_width_from_config,
     _drop_source_snapshot_from_history,
     _lorentz_branch_receipts,
+    _repairs_per_cycle_from_config,
     run_bw_array_config,
 )
+
+
+def test_repair_fraction_per_cycle_scales_with_patch_count():
+    assert _repairs_per_cycle_from_config(
+        {"repair_fraction_per_cycle": 0.0625, "repairs_per_cycle": 65_536},
+        patch_count=4096,
+        edge_count=49_152,
+    ) == 256
+    assert _repairs_per_cycle_from_config(
+        {"repair_fraction_per_cycle": 0.0625, "repairs_per_cycle": 65_536},
+        patch_count=65_536,
+        edge_count=786_432,
+    ) == 4096
+    assert _repairs_per_cycle_from_config({"repairs_per_cycle": 512}, patch_count=4096, edge_count=49_152) == 512
 
 
 def test_bw_array_writes_bw_report(tmp_path: Path):

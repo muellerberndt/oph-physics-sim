@@ -10,15 +10,19 @@ from oph_fpe.claims import (
     BW_KMS_BRANCH_REPLAY_RECEIPT,
     CHART_LORENTZ_H3_RECEIPT,
     CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
+    EINSTEIN_BRANCH_ENTRY_RECEIPT,
     FINITE_CONSENSUS_THEOREM_RECEIPT,
     FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
+    OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     PHYSICAL_CMB_RECEIPT,
+    PHYSICAL_GRAVITY_PREDICTION_RECEIPT,
     PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT,
     PROTO_PARTICLE_RECEIPT,
+    PRODUCTION_GRAVITY_RECEIPT,
     RECORD_COMMIT_RECEIPT,
     REPAIR_CORE_RECEIPT,
     SCREEN_PROXY_CMB_RECEIPT,
@@ -49,6 +53,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     neutral_frontier = _read_json(root / "strict_neutral_bulk_frontier_report.json")
     cmb_lite = _read_json(root / "cmb_lite_comparison_report.json")
     cl = _read_json(root / "cl_comparison_report.json")
+    physical_cmb_input = _read_json(root / "physical_cmb_input_report.json")
+    physical_cmb_input_validation = _read_json(root / "physical_cmb_input_validation.json")
+    frozen_transfer_likelihood = _read_json(root / "frozen_transfer_likelihood_report.json")
     physical_cmb_frontier = _read_json(root / "physical_cmb_frontier_report.json")
     physical_cmb_output = _read_json(root / "physical_cmb_output_comparison_report.json")
     scale_compressed = _read_json(root / "scale_compressed_repair_report.json")
@@ -61,6 +68,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     strict_neutral_object = _read_json(root / "strict_neutral_object_bulk_report.json")
     theorem_core = _read_json(root / "theorem_core_receipts.json")
     finite_contract_report = _read_json(root / "finite_oph_theorem_contract_report.json")
+    einstein_branch_report = _read_json(root / "einstein_branch_entry_report.json")
     observer_modular_experience = _read_json(root / "observer_modular_experience_report.json")
     object_chart_name, object_chart = _best_object_chart_report(root)
 
@@ -138,24 +146,42 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     )
     observer_modular_experience_written = bool(observer_modular_experience)
     observer_modular_time = bool(observer_modular_experience.get("observer_modular_time_receipt", False))
-    observer_facing_3p1d_experience = bool(
-        observer_modular_experience.get(OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT, False)
-        or observer_modular_experience.get("observer_facing_3p1d_h3_experience_receipt", False)
-        or (
-            chart
-            and bw_kms
-            and h3_response
-            and (observer_modular_time or not observer_modular_experience_written)
-        )
-    )
+    observer_facing_h3_chart = bool(chart and bw_kms and h3_response)
+    observer_history_component_gates = {
+        "observer_modular_experience_written": observer_modular_experience_written,
+        "observer_modular_time_receipt": observer_modular_time,
+        "semantic_history_receipt": _observer_report_gate(
+            observer_modular_experience,
+            "semantic_history_receipt",
+        ),
+        "observer_clock_naturality_receipt": _observer_report_gate(
+            observer_modular_experience,
+            "observer_clock_naturality_receipt",
+        ),
+        "observer_registry_descent_receipt": _observer_report_gate(
+            observer_modular_experience,
+            "observer_registry_descent_receipt",
+        ),
+        "state_preserving_observer_algebra_receipt": _observer_report_gate(
+            observer_modular_experience,
+            "state_preserving_observer_algebra_receipt",
+        ),
+        "support_cap_chart_naturality_receipt": _observer_report_gate(
+            observer_modular_experience,
+            "support_cap_chart_naturality_receipt",
+        ),
+        "observer_facing_h3_chart_receipt": observer_facing_h3_chart,
+    }
+    observer_experienced_3p1d_history = all(observer_history_component_gates.values())
+    observer_facing_3p1d_experience = observer_experienced_3p1d_history
     observer_facing_populated_h3_experience = bool(
         observer_modular_experience.get("observer_facing_populated_h3_experience_receipt", False)
-        or (observer_facing_3p1d_experience and object_nonboundary_population)
+        and observer_experienced_3p1d_history
+        and object_nonboundary_population
     )
     observer_component_gates = {
-        "observer_modular_time_receipt": bool(
-            observer_modular_time or not observer_modular_experience_written
-        ),
+        "observer_modular_experience_written": observer_modular_experience_written,
+        "observer_modular_time_receipt": observer_modular_time,
         "bw_kms_branch_replay_receipt": bw_kms,
         "conformal_h3_chart_receipt": chart,
         "h3_modular_response_receipt": h3_response,
@@ -174,12 +200,20 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         strict_neutral_object.get(STRICT_NEUTRAL_OBJECT_BULK_RECEIPT, False)
         or strict_neutral_object.get("strict_neutral_object_bulk", False)
     )
+    strict_neutral_quotient_metric = bool(
+        neutral.get("STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT", False)
+        or neutral.get("strict_neutral_quotient_metric_receipt", False)
+        or _as_dict(neutral.get("receipt")).get("STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT", False)
+        or neutral_frontier.get("STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT", False)
+        or finite_contract_report.get("strict_neutral_quotient_metric_receipt", False)
+    )
     strict_neutral_bulk = bool(
         neutral.get("bulk_3d_established", False)
+        or neutral.get("strict_neutral_bulk", False)
+        or neutral.get(STRICT_NEUTRAL_BULK_RECEIPT, False)
         or neutral_frontier.get("strict_neutral_bulk", False)
         or emergence.get("strict_blind_observer_bulk_receipt", False)
         or emergence.get("neutral_bulk_3d_established", False)
-        or strict_neutral_object_bulk
     )
     prime_geometric_quotient_3d = bool(
         prime_rank_sweep.get("PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT", False)
@@ -201,12 +235,26 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         or cmb_lite
         or physical_cmb_output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
     )
-    physical_cmb = bool(
+    physical_cmb_stage1_input = bool(
+        physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+        or physical_cmb_input_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+    )
+    physical_cmb_stage2_frozen_likelihood = bool(
+        frozen_transfer_likelihood.get("FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT", False)
+        and frozen_transfer_likelihood.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
+        and frozen_transfer_likelihood.get("FROZEN_PHYSICAL_SPECTRUM_RECEIPT", False)
+    )
+    physical_cmb_stage3_output = bool(
         emergence.get("physical_cmb_prediction", False)
         or cmb_lite.get("physical_cmb_prediction", False)
         or cl.get("physical_cmb_prediction", False)
         or physical_cmb_frontier.get("physical_cmb_prediction_receipt", False)
         or physical_cmb_output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+    )
+    physical_cmb = bool(
+        physical_cmb_stage1_input
+        and physical_cmb_stage2_frozen_likelihood
+        and physical_cmb_stage3_output
     )
     production_particle = bool(
         emergence.get("particle_matter_receipt", False)
@@ -215,8 +263,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     )
     scale_operator = bool(scale_compressed.get("scale_compressed_operator_receipt", False))
     scale_round_trace = bool(scale_compressed.get("repair_round_trace_receipt", False))
-    scale_h3 = scale_compressed.get("h3_preview") or {}
-    scale_cmb_params = scale_compressed.get("cmb_parameter_readouts") or {}
+    scale_h3 = _as_dict(scale_compressed.get("h3_preview"))
+    scale_cmb_params = _as_dict(scale_compressed.get("cmb_parameter_readouts"))
     scale_h3_preview = bool(
         scale_operator
         and scale_h3.get("populated_h3_preview_receipt", False)
@@ -224,7 +272,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     )
     scale_particle_preview = bool(
         scale_compressed_particle.get("particle_preview_receipt", False)
-        or ((scale_compressed.get("particle_preview") or {}).get("particle_preview_receipt", False))
+        or _as_dict(scale_compressed.get("particle_preview")).get("particle_preview_receipt", False)
     )
     scale_compressed_measurement_cmb = bool(
         scale_compressed_cmb.get("measurement_comparable_cmb_curve", False)
@@ -235,7 +283,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         or scale_compressed_cmb.get("physical_cmb_prediction", False)
     )
     screen_cmb = bool(screen_cmb or scale_compressed_measurement_cmb)
-    physical_cmb = bool(physical_cmb or scale_physical_cmb)
+    physical_cmb = bool(physical_cmb or (scale_physical_cmb and physical_cmb_stage1_input and physical_cmb_stage2_frozen_likelihood))
 
     finite_lorentz_contract = bool(
         finite_contract_report.get(OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT, False)
@@ -262,6 +310,26 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     paper_geometric_branch_consensus_bulk = bool(
         finite_contract_report.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
     )
+    einstein_branch_entry = bool(
+        finite_contract_report.get(OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT, False)
+        or finite_contract_report.get(EINSTEIN_BRANCH_ENTRY_RECEIPT, False)
+        or finite_contract_report.get("einstein_branch_entry_contract_receipt", False)
+    )
+    einstein_branch_blockers = list(
+        finite_contract_report.get("einstein_branch_entry_blockers")
+        or einstein_branch_report.get("blockers")
+        or [
+            "E0_einstein_branch_entry_umbrella",
+            "E1_null_generator_stress_charge",
+            "E2_fixed_cap_entropy_stationarity",
+            "E3_small_ball_area_bridge",
+            "E4_all_timelike_tensor_upgrade",
+            "E5_lambda_constancy_conservation",
+            "E6_newton_coupling_forbidden_input_audit",
+        ]
+    )
+    production_gravity = False
+    physical_gravity_prediction = False
 
     tiers = {
         "C0a_finite_settle_diagnostic": _tier(
@@ -326,6 +394,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             STRICT_NEUTRAL_BULK_RECEIPT,
             strict_neutral_bulk,
             "Chart-blind neutral quotient reconstruction establishes a third-person 3D bulk without S2/H3 chart prior.",
+            required_receipts=[
+                "STRICT_NEUTRAL_OBJECT_BULK_CANDIDATE_RECEIPT",
+                "STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT",
+                "STRICT_NEUTRAL_THIRD_PERSON_BULK_RECEIPT",
+            ],
         ),
         "T6_strict_neutral_third_person_bulk": _tier(
             STRICT_NEUTRAL_BULK_RECEIPT,
@@ -334,9 +407,10 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             canonical_tier="T6_chart_blind_strict_neutral_quotient_bulk",
         ),
         "T6_object_strict_neutral_bulk": _tier(
-            STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+            "STRICT_NEUTRAL_OBJECT_BULK_CANDIDATE_RECEIPT",
             strict_neutral_object_bulk,
-            "Neutral object extraction and held-out latent geometry selection establish a strict third-person object bulk.",
+            "Neutral object extraction and held-out latent geometry selection establish an object-bulk candidate only; it does not promote full strict neutral third-person bulk.",
+            legacy_receipt_name=STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
         ),
         "T6a_prime_geometric_quotient_3d_diagnostic": _tier(
             PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT,
@@ -421,6 +495,26 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "Paper-geometric observer-facing consensus 3D bulk: observer spacetime plus populated H3 object records under the declared KMS branch.",
             blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
         ),
+        "E0_einstein_branch_entry_contract": _tier(
+            OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+            einstein_branch_entry,
+            "End-to-end Einstein branch-entry contract: finite consensus has produced the geometric-modular, stress, entropy, small-ball, Lambda, and Newton-coupling gates tracked by #503.",
+            blockers=einstein_branch_blockers,
+            issue_url="https://github.com/FloatingPragma/observer-patch-holography/issues/503",
+        ),
+        "G2_production_gravity": _tier(
+            PRODUCTION_GRAVITY_RECEIPT,
+            production_gravity,
+            "Production gravity remains closed unless the Einstein branch-entry contract and a production source/stress bridge both pass.",
+            blockers=einstein_branch_blockers
+            if not einstein_branch_entry
+            else ["production_source_stress_bridge_missing"],
+            required_receipts=[
+                OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+                "production_source_stress_bridge_receipt",
+                "particle_matter_receipt",
+            ],
+        ),
     }
 
     report = {
@@ -447,6 +541,14 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             paper_geometric_branch_populated_h3
         ),
         "paper_geometric_branch_consensus_bulk_emergence_receipt": paper_geometric_branch_consensus_bulk,
+        OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT: einstein_branch_entry,
+        EINSTEIN_BRANCH_ENTRY_RECEIPT: einstein_branch_entry,
+        "einstein_branch_entry_contract_receipt": einstein_branch_entry,
+        "einstein_branch_entry_blockers": einstein_branch_blockers,
+        PRODUCTION_GRAVITY_RECEIPT: production_gravity,
+        "production_gravity_receipt": production_gravity,
+        PHYSICAL_GRAVITY_PREDICTION_RECEIPT: physical_gravity_prediction,
+        "physical_gravity_prediction": physical_gravity_prediction,
         "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": (
             paper_geometric_branch_consensus_bulk
         ),
@@ -465,6 +567,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "chart_blind_strict_neutral_blockers", []
             ),
             "strict_neutral_blockers": finite_contract_report.get("strict_neutral_blockers", []),
+            "einstein_branch_entry_contract_receipt": einstein_branch_entry,
+            "einstein_branch_entry_blockers": einstein_branch_blockers,
             "all_stage_blockers": finite_contract_report.get("all_stage_blockers", []),
             "stages": finite_contract_report.get("stages", {}),
             "claim_boundary": finite_contract_report.get("claim_boundary"),
@@ -476,6 +580,10 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT: theorem_assisted_nonboundary_population,
         "observer_facing_h3_object_population_receipt": theorem_assisted_nonboundary_population,
         "observer_modular_time_receipt": observer_modular_time,
+        "OBSERVER_FACING_H3_CHART_RECEIPT": observer_facing_h3_chart,
+        "observer_facing_h3_chart_receipt": observer_facing_h3_chart,
+        "OBSERVER_EXPERIENCED_3P1D_HISTORY_RECEIPT": observer_experienced_3p1d_history,
+        "observer_experienced_3p1d_history_receipt": observer_experienced_3p1d_history,
         OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_facing_3p1d_experience,
         "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_experience,
         "observer_facing_populated_h3_experience_receipt": observer_facing_populated_h3_experience,
@@ -488,6 +596,12 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "strict_neutral_third_person_bulk_established": strict_neutral_bulk,
         "chart_blind_strict_neutral_quotient_bulk_established": strict_neutral_bulk,
         "chart_blind_strict_neutral_quotient_bulk_receipt": strict_neutral_bulk,
+        "strict_neutral_object_bulk_candidate_receipt": strict_neutral_object_bulk,
+        "STRICT_NEUTRAL_OBJECT_BULK_CANDIDATE_RECEIPT": strict_neutral_object_bulk,
+        "STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT": strict_neutral_quotient_metric,
+        "strict_neutral_quotient_metric_receipt": strict_neutral_quotient_metric,
+        "STRICT_NEUTRAL_THIRD_PERSON_BULK_RECEIPT": strict_neutral_bulk,
+        "strict_neutral_third_person_bulk_receipt": strict_neutral_bulk,
         "strict_neutral_bulk_contract_receipt": bool(
             finite_contract_report.get("chart_blind_strict_neutral_quotient_bulk_receipt", strict_neutral_bulk)
         ),
@@ -507,6 +621,28 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "bulk_3d_established_chart_blind_strict_neutral": strict_neutral_bulk,
         "screen_cmb_proxy_available": screen_cmb,
         "physical_cmb_prediction": physical_cmb,
+        "CMB1_SOURCE_INPUT_CONTRACT": physical_cmb_stage1_input,
+        "CMB1_FROZEN_TRANSFER_LIKELIHOOD_CLOSURE": physical_cmb_stage2_frozen_likelihood,
+        "CMB2_PHYSICAL_CMB_PREDICTION_RECEIPT": physical_cmb,
+        "physical_cmb_staged_contract": {
+            "CMB1_SOURCE_INPUT_CONTRACT": physical_cmb_stage1_input,
+            "CMB1_FROZEN_TRANSFER_LIKELIHOOD_CLOSURE": physical_cmb_stage2_frozen_likelihood,
+            "CMB2_OUTPUT_ARTIFACT_PRESENT": physical_cmb_stage3_output,
+            "CMB2_PHYSICAL_CMB_PREDICTION_RECEIPT": physical_cmb,
+            "blockers": (
+                ([] if physical_cmb_stage1_input else ["CMB1_SOURCE_INPUT_CONTRACT_missing"])
+                + (
+                    []
+                    if physical_cmb_stage2_frozen_likelihood
+                    else ["CMB1_FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_missing"]
+                )
+                + ([] if physical_cmb_stage3_output else ["CMB2_OUTPUT_ARTIFACT_missing"])
+            ),
+            "claim_boundary": (
+                "Physical CMB promotion is staged: source input contract first, frozen transfer/"
+                "likelihood closure second, final output artifact last. Caller booleans alone do not promote."
+            ),
+        },
         "production_particle_matter_receipt": production_particle,
         "selected_object_chart_report": object_chart_name,
         "selected_object_chart_incidence_mode": object_chart.get("postprocess_incidence_mode")
@@ -532,6 +668,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "observer_modular_experience_summary": {
             "written": observer_modular_experience_written,
             "observer_modular_time_receipt": observer_modular_time,
+            "observer_facing_h3_chart_receipt": observer_facing_h3_chart,
+            "observer_experienced_3p1d_history_receipt": observer_experienced_3p1d_history,
             "observer_facing_3p1d_h3_experience_receipt": observer_facing_3p1d_experience,
             "observer_facing_populated_h3_experience_receipt": observer_facing_populated_h3_experience,
             "observer_h3_object_population_receipt": object_nonboundary_population,
@@ -540,6 +678,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "blockers": observer_blockers,
             "populated_h3_experience_blockers": observer_populated_h3_blockers,
             "component_gates": observer_component_gates,
+            "history_component_gates": observer_history_component_gates,
             "populated_h3_component_gates": observer_populated_h3_component_gates,
             "source_report_blockers": observer_modular_experience.get("blockers", []),
             "source_report_populated_h3_blockers": observer_modular_experience.get(
@@ -571,20 +710,20 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "h3_cap_count": scale_h3.get("cap_count"),
             "particle_worldline_count": (
                 scale_compressed_particle.get("worldline_count")
-                or ((scale_compressed.get("particle_preview") or {}).get("particle_worldline_count"))
+                or _as_dict(scale_compressed.get("particle_preview")).get("particle_worldline_count")
             ),
             "camb_ir_shape_correlation": (
-                ((scale_compressed_cmb.get("comparison") or {}).get("scale_compressed_ir_kernel") or {}).get(
+                _as_dict(_as_dict(scale_compressed_cmb.get("comparison")).get("scale_compressed_ir_kernel")).get(
                     "shape_correlation"
                 )
             ),
             "camb_ir_normalized_rmse": (
-                ((scale_compressed_cmb.get("comparison") or {}).get("scale_compressed_ir_kernel") or {}).get(
+                _as_dict(_as_dict(scale_compressed_cmb.get("comparison")).get("scale_compressed_ir_kernel")).get(
                     "normalized_rmse"
                 )
             ),
             "camb_ir_chi2_per_bin": (
-                ((scale_compressed_cmb.get("comparison") or {}).get("scale_compressed_ir_kernel") or {}).get(
+                _as_dict(_as_dict(scale_compressed_cmb.get("comparison")).get("scale_compressed_ir_kernel")).get(
                     "best_fit_column_chi2_per_bin"
                 )
             ),
@@ -604,9 +743,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "lorentz_group": paper_chart.get("lorentz_group"),
             "spatial_homogeneous_space": paper_chart.get("spatial_homogeneous_space"),
             "h3_spatial_dimension_from_boost_orbit": paper_chart.get("h3_spatial_dimension_from_boost_orbit")
-            or ((conformal_chart.get("lorentz_algebra_report") or {}).get("h3_spatial_dimension_from_boost_orbit")),
+            or _as_dict(conformal_chart.get("lorentz_algebra_report")).get("h3_spatial_dimension_from_boost_orbit"),
             "h3_chart_spatial_dimension": paper_chart.get("h3_chart_spatial_dimension")
-            or ((conformal_chart.get("h3_chart_report") or {}).get("spatial_dimension")),
+            or _as_dict(conformal_chart.get("h3_chart_report")).get("spatial_dimension"),
             "finite_point_cloud_dimension_estimator_used": paper_chart.get(
                 "finite_point_cloud_dimension_estimator_used", False
             ),
@@ -622,12 +761,12 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "coordinate_dimension_3d_window_count": prime_rank_sweep.get(
                 "coordinate_dimension_3d_window_count"
             ),
-            "best_3d_rank": ((prime_rank_sweep.get("best_3d_dimension_row") or {}).get("rank")),
+            "best_3d_rank": _as_dict(prime_rank_sweep.get("best_3d_dimension_row")).get("rank"),
             "coordinate_best_3d_rank": (
-                (prime_rank_sweep.get("coordinate_best_3d_dimension_row") or {}).get("rank")
+                _as_dict(prime_rank_sweep.get("coordinate_best_3d_dimension_row")).get("rank")
             ),
             "regulator_control_quotient_is_negative_control": (
-                (prime_rank_sweep.get("regulator_control_quotient_lane") or {}).get(
+                _as_dict(prime_rank_sweep.get("regulator_control_quotient_lane")).get(
                     "is_negative_control"
                 )
             ),
@@ -655,13 +794,27 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "written": bool(strict_neutral_object),
             "receipt": strict_neutral_object_bulk,
             "object_count": strict_neutral_object.get("object_count"),
-            "selected_model": ((strict_neutral_object.get("latent_geometry_selection") or {}).get("selected_model")),
-            "h3_selected": ((strict_neutral_object.get("latent_geometry_selection") or {}).get("h3_selected")),
-            "median_dimension_estimate": ((strict_neutral_object.get("dimension") or {}).get("median_dimension_estimate")),
+            "selected_model": _as_dict(strict_neutral_object.get("latent_geometry_selection")).get("selected_model"),
+            "h3_selected": _as_dict(strict_neutral_object.get("latent_geometry_selection")).get("h3_selected"),
+            "median_dimension_estimate": _as_dict(strict_neutral_object.get("dimension")).get("median_dimension_estimate"),
             "blockers": strict_neutral_object.get("blockers", []),
             "claim_boundary": (
                 "Strict neutral object-bulk report uses observer-visible object histories only; it is separate "
                 "from theorem-assisted H3 chart population."
+            ),
+        },
+        "einstein_branch_entry_summary": {
+            "written": bool(finite_contract_report) or bool(einstein_branch_report),
+            "receipt": einstein_branch_entry,
+            "issue": 503,
+            "issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
+            "source_report_written": bool(einstein_branch_report),
+            "blockers": einstein_branch_blockers,
+            "child_gates": finite_contract_report.get("einstein_branch_entry_child_gates", {}),
+            "claim_boundary": (
+                "This gate tracks the post-Lean-audit requirement that finite consensus must produce "
+                "the geometric-modular/stress/entropy inputs for the Einstein branch. Without it, "
+                "curved-spacetime and two-defect displays remain diagnostics, not gravity."
             ),
         },
         "paper_alignment": {
@@ -677,6 +830,10 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "Logical scale compression can expose OPH repair-round/CMB readouts and H3 previews, but it "
                 "does not replace strict neutral observer-record reconstruction."
             ),
+            "einstein_branch_entry": (
+                "The algebraic Einstein core is Lean-supported, but the simulator must keep production gravity "
+                "closed until #503 and the E1-E6 branch-entry gates pass."
+            ),
         },
         "claim_boundary": (
             "Tiered OPH proof/readout certificate. C0a/T0 is only finite settling; C0b finite "
@@ -690,7 +847,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "the observer-facing H3 consensus-bulk receipt passes. "
             "T6a/T6b are intermediate residualized prime-geometric quotient diagnostics and are not promoted to T6. "
             "T8/T8b are measurement-facing screen/CAMB-transfer data only. T9 is a physical CMB prediction and remains false "
-            "until finite OPH kernels feed a Boltzmann/likelihood-ready pipeline."
+            "until finite OPH kernels feed a Boltzmann/likelihood-ready pipeline. E0/G2 are separate "
+            "Einstein/gravity promotion gates: visual curvature, apparent attraction, or H3 object motion "
+            "does not become production gravity without the #503 branch-entry contract."
         ),
     }
     return with_claim_metadata(
@@ -731,8 +890,12 @@ def _read_json(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
 def _ladder_passed(ladder: dict[str, Any], key: str) -> bool:
-    return bool(((ladder.get("receipts", {}) or {}).get(key, {}) or {}).get("passed", False))
+    return bool(_as_dict(_as_dict(ladder.get("receipts")).get(key)).get("passed", False))
 
 
 def _ladder_receipt_passed(ladder: dict[str, Any], receipt_name: str) -> bool:
@@ -750,6 +913,20 @@ def _truthy(data: dict[str, Any], key: str) -> bool:
 
 def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
     return any(_truthy(data, key) for key in keys)
+
+
+def _observer_report_gate(report: dict[str, Any], key: str) -> bool:
+    component_gates = report.get("component_gates") if isinstance(report.get("component_gates"), dict) else {}
+    history_gates = (
+        report.get("history_component_gates")
+        if isinstance(report.get("history_component_gates"), dict)
+        else {}
+    )
+    return bool(
+        report.get(key, False)
+        or component_gates.get(key, False)
+        or history_gates.get(key, False)
+    )
 
 
 def _best_object_chart_report(root: Path) -> tuple[str | None, dict[str, Any]]:

@@ -1,0 +1,37 @@
+schema: oph_closeflyby_source_manifest_v1
+claim_boundary: >
+  Public-row source manifest for CloseFlyBy(F). These entries support public
+  certificate creation and comparator computation only. Historical rows remain
+  OD_REPLAY_PENDING until real tracking-data replay artifacts are attached.
+sources:
+  - id: Anderson_2008_public_table
+    kind: public_comparator_table
+    note: Public flyby anomaly rows and empirical Anderson comparator inputs.
+  - id: PDS_NEAR_radio_science
+    kind: raw_tracking_availability
+    flyby_ids: [NEAR]
+    note: Raw/reduced radio-science bundle availability; replay files are not bundled here.
+  - id: PDS_Galileo_Earth_flybys
+    kind: raw_tracking_availability
+    flyby_ids: [Galileo I, Galileo II]
+    note: Raw tracking/ancillary availability; replay files are not bundled here.
+  - id: Rosetta_RSI_Earth_swingby
+    kind: raw_tracking_availability
+    flyby_ids: [Rosetta I]
+    note: Raw/partially processed radio-science availability; replay files are not bundled here.
+  - id: Cassini_Earth_flyby_navigation_archive
+    kind: raw_tracking_to_locate
+    flyby_ids: [Cassini]
+    note: Public row is retained for comparison; a replay-grade tracking bundle is not bundled here.
+  - id: MESSENGER_Earth_flyby_navigation_archive
+    kind: raw_tracking_to_locate
+    flyby_ids: [MESSENGER]
+    note: Tiny public row is retained for comparison; replay-grade tracking files are not bundled here.
+  - id: Null_control_navigation_reconstructions
+    kind: null_control_replay_targets
+    flyby_ids: [Rosetta II, EPOXI I, EPOXI II, Rosetta III, EPOXI III, Juno]
+    note: Null-control rows reject a universal Anderson law but still require replay receipts before solved-null status.
+nonclaims:
+  - no historical flyby is solved by this public manifest
+  - no synthetic test can close a historical certificate
+  - no OPH new-physics claim follows from an OD_REPLAY_PENDING row

@@ -33,6 +33,31 @@ sidecars:
 - `screen_full_<N>.bin`: little-endian `Float32Array` rows `[x,y,z,value]` for the full S2 field.
 - `observers_full_<N>.json`: all observer axes and summary readout fields.
 - `cameras_full_<N>.json`: full objective observer views plus subjective camera transforms.
+- `observer_proto_worldline_sightings.csv`: flattened observer-frame sightings of diagnostic
+  proto-worldline events, suitable for streaming moving markers in observer-local 3D views. Use
+  `observer_local_u`, `observer_local_v`, and `observer_local_range`; this sidecar deliberately
+  does not expose raw global H3 `x/y/z` sighting coordinates. `projection_mode` distinguishes
+  nominal camera-cone hits from wide-angle directional fallback sightings; style
+  `outside_nominal_fov=true` rows as peripheral/diagnostic rather than direct cone hits.
+- `neutral_object_candidates.csv`: neutral object candidates extracted from observer-visible
+  record/transition histories. These rows have no neutral 3D coordinates unless strict neutral
+  receipts pass; render them as an audit/network layer, not as a neutral bulk point cloud.
+- `emergent_curved_spacetime_curvature_proxy.csv` and
+  `emergent_curved_spacetime_time_slices.csv`: renderer-ready source/curvature/compaction proxy rows
+  derived from consensus H3 objects and proto-worldline events. Use these for warped-grid,
+  compactification, or curvature-field visuals, but keep `production_gravity_receipt` and
+  `physical_gravity_prediction` gated behind `einstein_branch_entry_receipt`.
+- `paper_accuracy.json`: fail-closed guard table mapping each major visualization lane to its paper
+  status, allowed claim, blocked promotion claim, and receipt.
+- `free_two_defect_dynamics_*.csv`: randomized diagnostic two-defect dynamics with transverse
+  motion, support-overlap bookkeeping, conserved inverse holonomy/charge metadata, and explicit
+  contact outcomes. Keep this separate from the planted `two_defect_stress_*` control assay.
+- `string_vacuum_selector_*.csv`: gate/sieve tables for the OPH string-vacuum selector view,
+  including encoded candidate scores, open critical-edge certificate gates, operator safety, and
+  quantitative targets.
+- `finite_edge_string_vibration_samples.csv`: exact finite repair/cycle edge-pulse samples for the
+  effective string view. Animate `loop_phase` and `normalized_amplitude`; do not replace these with
+  generic sine-wave string modes.
 - CSV sidecars mirror compact JSON arrays for renderer throughput.
 
 The compact JSON remains the receipt and view-contract authority. The sidecars provide scale, not
@@ -42,12 +67,18 @@ The app must read these top-level fields:
 
 - `schemaVersion` and `schema`: reject or warn on unknown versions.
 - `title`, `claimBoundary`, and `ophDifferentiator`: show near the top-level app frame.
+- `paperAccuracy`: fail-closed paper-accuracy guard. Use it for claim badges and blocked-promotion
+  explanations.
 - `sourcePaths`: show as provenance, not as data to scrape.
 - `smallUniverse`: finite overlap-repair graph, cycles, repair frames, and consensus receipts.
 - `screen`: finite observer boundary/readback points, field values, clusters, and repair trace.
 - `subjectiveObserverCameras`: observer-local cameras derived from visible readout.
 - `observerModularTime`: observer-local modular-time frames, overlap links, and objective readouts.
-- `consensusBulk`: theorem-assisted H3 chart objects and proto-particle candidate worldlines.
+- `consensusBulk`: theorem-assisted H3 chart objects, neutral object candidates, and
+  proto-particle candidate worldlines.
+- `emergentCurvedSpacetime`: diagnostic quotient-visible source/curvature/compaction proxy over
+  observer-facing H3 objects and proto-worldline events. This is not a solved metric or physical
+  gravity prediction.
 - `pnSilenceToObservation`: scale-compressed silence-to-observation witness.
 - `cmbComparison` and `comparableObservations`: diagnostic measurement-facing overlays.
 - `geometriesAndSymmetries`: explanatory summaries and receipt context.
@@ -64,6 +95,7 @@ or a left rail for the core views:
 
 - Quantum vacuum / finite readback field
 - Observer camera / modular time
+- Emergent curved-spacetime proxy
 - Effective string-theory edge/worldsheet
 - Overlap repair
 - Silence to observation
@@ -82,7 +114,9 @@ Every view should include:
 Every gate badge must be data-driven:
 
 - `true`: passed receipt.
-- `false`: closed gate.
+- `false`: closed gate. If `receiptDisplay` or `claimBadges[*].displayStatus` says
+  `not_promoted` or `blocked`, render it as a neutral/amber blocked promotion gate, not a red
+  simulation error.
 - missing: absent evidence, not a pass.
 - numeric/string receipts: show as measured evidence, not as Boolean promotion.
 
@@ -155,6 +189,7 @@ Primary fields:
 - `subjectiveObserverCameras[*].fovDegrees`
 - `subjectiveObserverCameras[*].supportSamples`
 - `subjectiveObserverCameras[*].timeFrames`
+- `subjectiveObserverCameras[*].timeFrames[*].visibleProtoWorldlines`
 - `observerModularTime.objectiveObserverViews`
 - `observerModularTime.overlapLinks`
 - `observerModularTime.timeFrames`
@@ -166,6 +201,9 @@ Recommended rendering:
 - Animate local modular time from that camera's `timeFrames`.
 - Show visible support samples, visible record packets, visible object packets, readout hash, local
   transition step, and packet histograms.
+- Animate `visibleProtoWorldlines` as moving dashed/candidate markers in the observer-local H3 view.
+  Prefer `observer_proto_worldline_sightings.csv` for streaming large runs, using its
+  observer-local readout fields rather than hidden global coordinates.
 - Draw `observerModularTime.overlapLinks` as readback-overlap arcs or support links. They are not
   decorative graph edges; they are the shared-support substrate for objectivity.
 - Include a small third-person orientation inset if useful, but clearly mark the selected camera as
@@ -191,7 +229,87 @@ Promotion gates to display:
 - `observer_facing_3p1d_h3_experience_receipt`
 - `observer_facing_populated_h3_experience_receipt`
 
-## View 3: Effective String-Theory Edge/Worldsheet
+For H3 chart panels, use `consensusBulk.h3ChartStatus` and `consensusBulk.receiptDisplay` when
+available. `observer_h3_object_population_receipt=true` means the H3 object chart is renderable.
+`strict_neutral_third_person_bulk_receipt=false`, `strict_neutral_object_bulk_receipt=false`, or
+`particle_matter_receipt=false` are promotion blockers unless their display entry says
+`renderAsError=true`.
+
+## View 3: Emergent Curved-Spacetime Proxy
+
+Use `visualizationViews.emergentCurvedSpacetime` and `emergentCurvedSpacetime`.
+
+Required meaning:
+
+This is a diagnostic quotient-visible source/curvature/compaction proxy over the observer-facing H3
+chart. It shows where consensus object packets and proto-worldline events contribute source density
+to the H3 Green-potential and compactification display field in the current run. It is not an
+Einstein-equation solution, not production gravity, not a physical metric, and not a strict neutral
+third-person bulk. Post-Lean-audit gravity promotion requires the explicit
+`einstein_branch_entry_receipt` / `EINSTEIN_BRANCH_ENTRY_RECEIPT` gate. If this gate is false, render
+issue #503 and the `E1-E6` child blockers as a closed promotion gate.
+
+Primary fields:
+
+- `emergentCurvedSpacetime.sourceMath`
+- `emergentCurvedSpacetime.curvatureProxyPoints`
+- `emergentCurvedSpacetime.spacetimeCompactionField`
+- `emergentCurvedSpacetime.timeSlices`
+- `emergentCurvedSpacetime.receipts`
+- `emergentCurvedSpacetime.einsteinBranchEntry`
+- `visualizationViews.emergentCurvedSpacetime.einsteinBranchEntry`
+- `visualizationRenderData.sceneGraph.curvedSpacetime`
+- `consensusBulk.objects`
+- `consensusBulk.protoParticleCandidates.worldlines`
+
+Recommended rendering:
+
+- Render `curvatureProxyPoints` as stress-source glyphs in the observer-facing H3 chart.
+- Size source glyphs by `sourceDensity`; drive grid bend, surface displacement, or contours by
+  `curvaturePotential`.
+- Drive local spatial contraction by `compactificationFactor`; use `emergentSpatialScaleFactor` as
+  the local grid/cell-size multiplier.
+- Show `sourceMath.sourceDefinition` and per-point `gravitySourceInterpretation`; the source is
+  quotient-visible OPH stress/readout, not raw rest mass.
+- Animate `timeSlices` and proto-worldline event cycles for moving curvature-source visuals.
+- Render consensus H3 object sources and proto-worldline event sources with distinct styling.
+- Display `einstein_branch_entry_receipt`, `production_gravity_receipt`,
+  `physical_gravity_prediction`, and `einstein_equation_solution_receipt` as blocked promotion gates
+  unless they are true.
+- Show `raw_production_gravity_requested` only as a diagnostic signal. It is not a promotion
+  receipt and must not override the Einstein branch-entry gate.
+
+Required labels:
+
+- "curvature proxy"
+- "quotient-visible source proxy"
+- "compactification proxy"
+- "observer-facing H3 chart"
+- "diagnostic gravity/curvature layer"
+- "Einstein branch-entry gate closed" when `einstein_branch_entry_receipt=false`
+
+Forbidden labels unless receipts pass:
+
+- "Einstein-equation solution"
+- "physical gravity prediction"
+- "production gravity model"
+- "matter stress tensor"
+- "gravitational merger"
+- "strict neutral third-person bulk"
+
+Promotion gates to display:
+
+- `observer_facing_consensus_3d_bulk_readout_receipt`
+- `strict_neutral_third_person_bulk_receipt`
+- `particle_matter_receipt`
+- `einstein_branch_entry_receipt`
+- `EINSTEIN_BRANCH_ENTRY_RECEIPT`
+- `OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1`
+- `production_gravity_receipt`
+- `physical_gravity_prediction`
+- `einstein_equation_solution_receipt`
+
+## View 4: Effective String-Theory Edge/Worldsheet
 
 Use `visualizationViews.effectiveStringTheory`.
 
@@ -207,20 +325,36 @@ Primary fields:
 - `smallUniverse.cycles`
 - `smallUniverse.edges`
 - `smallUniverse.repairFrames`
+- `effectiveStringTheory.finiteEdgeStringVibrationSamples`
 - `screen.clusters.snapshots`
 - `consensusBulk.objects`
 - `consensusBulk.protoParticleCandidates.worldlines`
 - `consensusBulk.protoParticleCandidates.worldlines[*].events`
+- `visualizationViews.effectiveStringTheory.stringVacuumSelector`
 
 Recommended rendering:
 
 - Render `smallUniverse.cycles` as closed finite edge loops.
 - Animate `smallUniverse.repairFrames` as swept ribbons over repair time.
+- Render `effectiveStringTheory.finiteEdgeStringVibrationSamples` or
+  `finite_edge_string_vibration_samples.csv` as the exact finite edge-pulse/vibration layer. Use
+  `frameStep`/`frame_step` for time, `loopPhase`/`loop_phase` for position along the finite loop,
+  and `normalizedAmplitude`/`normalized_amplitude` for pulse height or glow.
 - Draw screen clusters as moving collar or defect string segments.
 - Render `consensusBulk.objects` as the H3 object packet cloud when available.
 - Render `consensusBulk.protoParticleCandidates.worldlines[*].events` as dashed H3 tracks.
+- Render `visualizationViews.effectiveStringTheory.freeTwoDefectDynamics` as the free diagnostic
+  two-defect lane. Animate the exported velocity, support-overlap, and `contactOutcome` fields;
+  do not interpret bind/annihilate/scatter/pass-through as production gravity or physical particle
+  merger receipts.
+- Render `visualizationViews.effectiveStringTheory.stringVacuumSelector` as a gate/sieve panel:
+  OPH target gates, encoded candidate scores, critical-edge certificate gates, operator-safety
+  table, quantitative targets, and falsifiers. Treat the selected BD row as an encoded structural
+  audit result, not as a completed critical-string or global-landscape proof.
 - Keep proto-worldlines visually distinct from confirmed particles. Use dashed, translucent, or
   "candidate" styling until `particle_matter_receipt` passes.
+- Treat `visibleProtoWorldlines` as observer-camera projections of these same diagnostic H3
+  worldline events. They add motion/readout ergonomics, not a stronger particle claim.
 - Let users toggle layers: edge cycles, repair ribbons, defect tracks, H3 object packets, H3
   proto-worldlines.
 
@@ -232,11 +366,18 @@ Required labels:
 - "collar/defect track"
 - "H3 proto-worldline"
 - "consensus object packet"
+- "string-vacuum selector gate"
+- "open critical-edge certificate"
+- "finite repair edge-pulse vibration"
 
 Forbidden labels unless receipts pass:
 
 - "critical string CFT"
 - "heterotic worldsheet derivation"
+- "completed BD compactification certificate"
+- "global string landscape singleton"
+- "physical string normal mode"
+- "generic sine-wave vibration"
 - "production matter particles"
 - "strict neutral third-person bulk"
 
@@ -249,8 +390,13 @@ Promotion gates to display:
 - `virasoro_receipt` when present
 - `sugawara_receipt` when present
 - `spin_structure_receipt` when present
+- `bd_full_cohomology_certificate_receipt`
+- `bd_z4r_compactification_realization_receipt`
+- `bd_threshold_spectrum_certificate_receipt`
+- `bd_moduli_locking_certificate_receipt`
+- `global_singleton_string_vacuum_receipt`
 
-## View 4: Overlap Repair
+## View 5: Overlap Repair
 
 Use `smallUniverse`.
 
@@ -281,7 +427,7 @@ Required gates:
 - strict descent and confluence receipts when present
 - frustrated-control obstruction receipt when present
 
-## View 5: Silence To Observation
+## View 6: Silence To Observation
 
 Use `visualizationViews.silenceToObservation` and `pnSilenceToObservation`.
 
@@ -383,6 +529,7 @@ Minimum gate table:
 | quantum vacuum | `fluctuating_quantum_vacuum_diagnostic_view` or view receipts | `OPH_NATIVE_VACUUM_PROMOTION_RECEIPT` plus dedicated QFT-vacuum receipt |
 | string view | `effective_edge_string_diagnostic_view` or view receipts | `critical_edge_cft_receipt` plus Virasoro/Sugawara/spin/anomaly receipts |
 | particles | `bulk_worldline_precursor_receipt` | `particle_matter_receipt` / `P1` |
+| gravity/curvature | `emergent_curved_spacetime_visualization_receipt` | `einstein_branch_entry_receipt` plus `production_gravity_receipt` / `G2` |
 | gauge/SM | `finite_gauge_candidate_sieve` | `four_dimensional_os_gauge_certificate` / `G1` |
 | CMB | `screen_cmb_diagnostic_receipt` | `PHYSICAL_CMB_PREDICTION_RECEIPT` / `CMB2` |
 
@@ -394,6 +541,8 @@ False receipts are useful evidence and must remain visible.
 Implement these controls:
 
 - global time scrubber for repair/modular-time animation;
+- for repair charts, prefer `visualizationRenderData.animationTimeline[*].playbackRelativeTime`
+  for gradual playback and keep `rawRelativeTime`/`cycle` visible for auditable timing;
 - view-specific layer toggles derived from `renderLayers`;
 - observer selector for camera views;
 - receipt drawer with raw receipt values;
@@ -407,6 +556,8 @@ Missing optional fields should degrade gracefully:
   receipts are present.
 - If `consensusBulk.protoParticleCandidates.worldlines` is empty, show no string/H3 tracks and keep
   `particle_matter_receipt` closed or absent.
+- If `emergentCurvedSpacetime.curvatureProxyPoints` is empty, show the curved-spacetime gate panel
+  without drawing a warped grid. Do not synthesize gravity sources.
 - If `subjectiveObserverCameras` is empty, keep the observer-modular-time table visible and show that
   subjective camera export is unavailable.
 - If a `visualizationViews` entry is missing, show a schema warning and do not invent the view.
@@ -420,6 +571,7 @@ Use direct OPH geometry:
 - observer-local camera frustum;
 - overlap support links;
 - H3 object chart;
+- curvature proxy grid;
 - repair-history ribbons;
 - receipt badges.
 
@@ -435,11 +587,13 @@ data, gates, and view contracts.
 Before the app is considered ready:
 
 - Validate the payload schema version.
-- Render the quantum-vacuum, observer-camera, and effective-string views from `visualizationViews`.
+- Render the quantum-vacuum, observer-camera, curved-spacetime, and effective-string views from
+  `visualizationViews`.
 - Show `claimBoundary`, `ophDifferentiator`, and per-view `nonClaims`.
 - Show all view receipts from the payload and distinguish false from missing.
 - Confirm that quantum-vacuum labels do not claim literal QFT vacuum.
 - Confirm that string labels do not claim critical string CFT or matter particles.
+- Confirm that curved-spacetime labels do not claim physical gravity or a solved metric.
 - Confirm that observer cameras are labeled as observer-local readouts.
 - Confirm that CMB diagnostics do not claim physical prediction unless the receipt is true.
 - Confirm that no view scrapes run folders directly after loading `visualization_payload.json`;

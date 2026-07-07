@@ -4,7 +4,12 @@ from pathlib import Path
 import numpy as np
 
 from oph_fpe.viz import write_universe_timeline_bundle
-from oph_fpe.viz.universe_timeline_viewer import _small_universe_payload, _write_full_screen_field_bin
+from oph_fpe.viz.universe_timeline_viewer import (
+    _observer_modular_time_payload,
+    _read_proto_particle_candidates,
+    _small_universe_payload,
+    _write_full_screen_field_bin,
+)
 
 
 def test_small_universe_payload_uses_theorem_core_receipt_fallback(tmp_path: Path):
@@ -52,6 +57,200 @@ def test_full_screen_sidecar_falls_back_to_manifest_patch_count(tmp_path: Path):
     packed = np.fromfile(path, dtype="<f4").reshape((-1, 4))
     assert packed.shape == (6, 4)
     assert np.allclose(np.linalg.norm(packed[:, :3], axis=1), 1.0)
+
+
+def test_observer_payload_synthesizes_compact_run_views(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "manifest.json").write_text(json.dumps({"patch_count": 16}), encoding="utf-8")
+    (run / "observer_modular_experience_report.json").write_text(
+        json.dumps({"observer_count": 4, "observer_modular_time_receipt": True}),
+        encoding="utf-8",
+    )
+    (run / "mismatch_trace.csv").write_text(
+        "cycle,phi,mismatch_edges,committed_fraction\n0,1.0,4,0.0\n1,0.0,0,1.0\n",
+        encoding="utf-8",
+    )
+
+    payload = _observer_modular_time_payload(
+        run,
+        max_observers=4,
+        max_objective_observer_views=None,
+    )
+
+    assert len(payload["observers"]) == 4
+    assert len(payload["objectiveObserverViews"]) == 4
+    assert payload["objectiveObserverViews"][0]["timeFrames"]
+    assert payload["objectiveObserverViews"][0]["visibleObjectPackets"]
+    assert payload["overlapLinks"]
+    assert payload["receipts"]["observer_modular_time_receipt"] is True
+
+
+def test_proto_particle_candidates_fall_back_to_two_defect_assay(tmp_path: Path):
+    (tmp_path / "two_defect_stress_contraction_assay_report.json").write_text(
+        json.dumps(
+            {
+                "controlled_planted_assay": True,
+                "two_defect_stress_contraction_assay_receipt": True,
+                "worldlines": [
+                    {
+                        "worldline_id": "stress_pair_left",
+                        "observation_count": 2,
+                        "events": [
+                            {"cycle": 0, "h3_spatial_point": [-0.6, 0.0, 0.0], "class": "transposition"},
+                            {"cycle": 1, "h3_spatial_point": [-0.4, 0.0, 0.0], "class": "transposition"},
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = _read_proto_particle_candidates(tmp_path, max_worldlines=8)
+
+    assert payload["worldlineSource"] == "two_defect_stress_contraction_assay_report"
+    assert payload["receipts"]["bulk_worldline_precursor_receipt"] is False
+    assert payload["receipts"]["controlled_two_defect_worldline_count"] == 1
+    assert payload["worldlines"][0]["diagnosticOnly"] is True
+    assert payload["worldlines"][0]["particleLike"] is False
+    assert len(payload["worldlines"][0]["events"]) == 2
+
+
+def test_proto_particle_candidates_prefer_free_two_defect_dynamics_before_controlled_assay(tmp_path: Path):
+    (tmp_path / "free_two_defect_dynamics_report.json").write_text(
+        json.dumps(
+            {
+                "free_dynamics_diagnostic": True,
+                "free_two_defect_dynamics_receipt": True,
+                "free_dynamics_summary": {"contact_outcome": "scatter"},
+                "worldlines": [
+                    {
+                        "worldline_id": "free_pair_left",
+                        "observation_count": 2,
+                        "persistent": True,
+                        "contact_outcome": "scatter",
+                        "events": [
+                            {
+                                "cycle": 0,
+                                "h3_spatial_point": [-0.45, 0.11, -0.08],
+                                "velocity": [0.03, 0.01, 0.0],
+                                "class": "transposition",
+                                "support_overlap_fraction": 0.0,
+                                "contact_outcome": None,
+                                "charge_conservation_pass": True,
+                            },
+                            {
+                                "cycle": 1,
+                                "h3_spatial_point": [-0.40, 0.13, -0.06],
+                                "velocity": [0.02, 0.02, 0.01],
+                                "class": "transposition",
+                                "support_overlap_fraction": 0.5,
+                                "contact_outcome": "scatter",
+                                "charge_conservation_pass": True,
+                            },
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "two_defect_stress_contraction_assay_report.json").write_text(
+        json.dumps(
+            {
+                "controlled_planted_assay": True,
+                "two_defect_stress_contraction_assay_receipt": True,
+                "worldlines": [
+                    {
+                        "worldline_id": "stress_pair_left",
+                        "observation_count": 1,
+                        "events": [{"cycle": 0, "h3_spatial_point": [-0.6, 0.0, 0.0]}],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = _read_proto_particle_candidates(tmp_path, max_worldlines=8)
+
+    assert payload["worldlineSource"] == "free_two_defect_dynamics_report"
+    assert payload["receipts"]["free_two_defect_worldline_count"] == 1
+    assert payload["receipts"]["controlled_two_defect_worldline_count"] == 0
+    assert payload["receipts"]["free_two_defect_dynamics_receipt"] is True
+    assert payload["worldlines"][0]["worldlineId"] == "free_pair_left"
+    assert payload["worldlines"][0]["freeDynamicsDiagnostic"] is True
+    assert payload["worldlines"][0]["controlledPlantedAssay"] is False
+    assert payload["worldlines"][0]["contactOutcome"] == "scatter"
+    assert payload["worldlines"][0]["events"][1]["supportOverlapFraction"] == 0.5
+
+
+def test_proto_particle_candidates_prefer_organic_defect_population_before_free_pair(tmp_path: Path):
+    (tmp_path / "organic_defect_population_report.json").write_text(
+        json.dumps(
+            {
+                "organic_defect_population_diagnostic": True,
+                "organic_defect_population_receipt": True,
+                "organic_population_summary": {"worldline_count": 2},
+                "worldlines": [
+                    {
+                        "worldline_id": "organic_defect_00",
+                        "observation_count": 2,
+                        "persistent": True,
+                        "class_mode": "transposition",
+                        "events": [
+                            {
+                                "cycle": 0,
+                                "h3_spatial_point": [0.1, 0.2, 0.3],
+                                "velocity": [0.01, 0.02, 0.03],
+                                "class": "transposition",
+                                "holonomy_mode": 1,
+                                "local_stress_density": 0.4,
+                                "nearest_defect_id": "organic_defect_01",
+                            },
+                            {
+                                "cycle": 1,
+                                "h3_spatial_point": [0.2, 0.25, 0.32],
+                                "velocity": [0.02, 0.01, 0.01],
+                                "class": "transposition",
+                                "holonomy_mode": 1,
+                                "local_stress_density": 0.5,
+                                "nearest_defect_id": "organic_defect_01",
+                            },
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "free_two_defect_dynamics_report.json").write_text(
+        json.dumps(
+            {
+                "free_dynamics_diagnostic": True,
+                "free_two_defect_dynamics_receipt": True,
+                "worldlines": [
+                    {
+                        "worldline_id": "free_pair_left",
+                        "observation_count": 1,
+                        "events": [{"cycle": 0, "h3_spatial_point": [-0.45, 0.11, -0.08]}],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = _read_proto_particle_candidates(tmp_path, max_worldlines=8)
+
+    assert payload["worldlineSource"] == "organic_defect_population_report"
+    assert payload["receipts"]["organic_defect_worldline_count"] == 1
+    assert payload["receipts"]["free_two_defect_worldline_count"] == 0
+    assert payload["receipts"]["organic_defect_population_receipt"] is True
+    assert payload["worldlines"][0]["worldlineId"] == "organic_defect_00"
+    assert payload["worldlines"][0]["organicDefectPopulationDiagnostic"] is True
+    assert payload["worldlines"][0]["events"][0]["localStressDensity"] == 0.4
 
 
 def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path):
@@ -224,6 +423,34 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
         ),
         encoding="utf-8",
     )
+    (pack / "strict_neutral_object_bulk_report.json").write_text(
+        json.dumps(
+            {
+                "mode": "strict_neutral_object_bulk_v0",
+                "object_count": 1,
+                "strict_neutral_object_bulk": False,
+                "STRICT_NEUTRAL_OBJECT_BULK_RECEIPT": False,
+                "dimension": {"median_dimension_estimate": 7.5},
+                "latent_geometry_selection": {"selected_model": "E4", "h3_selected": False},
+                "blockers": ["object_dimension_estimators_do_not_agree_3d"],
+                "claim_boundary": "neutral candidates only",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pack / "neutral_objects.jsonl").write_text(
+        json.dumps(
+            {
+                "object_id": "neutral_1",
+                "observer_ids": [0, 1, 2],
+                "visible_signature_key": "3:7:2",
+                "persistence": 4.0,
+                "overlap_agreement": 0.75,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     (pack / "physical_cmb_output_comparison_report.json").write_text(
         json.dumps(
             {
@@ -231,7 +458,9 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
                 "USABLE_PHYSICAL_CMB_DATA_RECEIPT": True,
                 "PHYSICAL_CMB_PREDICTION_RECEIPT": False,
                 "best_oph_residual_summary": {"rms_sigma_residual": 0.9},
-                "best_oph_residual_rows": [{"ell": 2, "observed": 1000, "model": 990, "residual_sigma": -0.1}],
+                "best_oph_residual_rows": [
+                    {"ell": 2, "observed_D_ell": 1000, "model_D_ell": 990, "residual_sigma": -0.1}
+                ],
             }
         ),
         encoding="utf-8",
@@ -339,6 +568,112 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
         ),
         encoding="utf-8",
     )
+    (pack / "yang_mills_gap_certificate_report.json").write_text(
+        json.dumps(
+            {
+                "schema": "oph_yang_mills_gap_certificate_v0",
+                "paper_source": "markdown/yang_mills_gap_clay_problem.md",
+                "gauge_group": {"name": "SU(2)", "compact": True, "simple": True, "nonabelian": True},
+                "regulator": {
+                    "dimension": 4,
+                    "lattice_size": 2,
+                    "site_count": 16,
+                    "link_count": 64,
+                    "plaquette_count": 96,
+                    "boundary": "periodic_hypercubic",
+                    "beta": 2.2,
+                    "sweeps": 2,
+                    "proposal_width": 0.35,
+                    "seed": 7,
+                    "transition_bins": 4,
+                },
+                "lattice_gauge_stage": {
+                    "compact_simple_nonabelian_reference": True,
+                    "su2_reference": True,
+                    "su3_reference": False,
+                    "u1_reference": False,
+                    "four_dimensional_wilson_lattice": True,
+                    "continuum_yang_mills_theory_constructed": False,
+                },
+                "finite_lattice_diagnostics": {
+                    "mean_plaquette": 0.12,
+                    "plaquette_variance": 0.01,
+                    "acceptance_rate": 0.9,
+                    "finite_nontriviality_proxy_receipt": True,
+                    "canonical_serial_chain_replay_receipt": True,
+                },
+                "finite_transfer_gap_diagnostic": {
+                    "spectral_gap_estimate": 0.2,
+                    "finite_transfer_gap_proxy_receipt": True,
+                },
+                "reflection_positivity_proxy": {
+                    "reflection_gram_lower_bound": 0.0,
+                    "finite_reflection_gram_proxy_receipt": True,
+                },
+                "continuum_certificate": {
+                    "candidate_complete": False,
+                    "continuum_certificate_receipt": False,
+                    "missing": ["support_visible_extraction_receipt"],
+                },
+                "promotion_status": {
+                    "finite_nonabelian_regulator": "pass",
+                    "finite_positive_gap_floor": "pass",
+                    "continuum_certificate": "pending",
+                    "os_reconstruction": "pending",
+                    "yang_mills_identification": "conditional",
+                    "yang_mills_mass_gap": "not_promoted",
+                    "reasons": ["missing continuum certificate field: support_visible_extraction_receipt"],
+                },
+                "plaquette_trace": [
+                    {
+                        "sweep": 0,
+                        "mean_plaquette": 0.1,
+                        "plaquette_variance": 0.01,
+                        "action_density": 0.2,
+                        "acceptance_rate": 0.9,
+                    },
+                    {
+                        "sweep": 1,
+                        "mean_plaquette": 0.2,
+                        "plaquette_variance": 0.02,
+                        "action_density": 0.4,
+                        "acceptance_rate": 0.88,
+                    },
+                ],
+                "wilson_loop_trace": [
+                    {"sweep": 0, "loop": "plaquette_1x1", "mean_normalized_trace": 0.1, "variance": 0.01}
+                ],
+                "polyakov_loop_trace": [
+                    {"sweep": 0, "loop": "time_polyakov_abs", "mean_abs_normalized_trace": 0.3}
+                ],
+                "orientation_plaquette_rows": [
+                    {"sweep": 0, "orientation": "01", "mean_plaquette": 0.1}
+                ],
+                "refinement_gap_rows": [
+                    {
+                        "lattice_size": 2,
+                        "site_count": 16,
+                        "sweeps": 2,
+                        "mean_plaquette": 0.12,
+                        "plaquette_variance": 0.01,
+                        "acceptance_rate": 0.9,
+                        "finite_transfer_gap_estimate": 0.2,
+                        "lambda2_abs": 0.8,
+                        "screening_mass_proxy": 0.1,
+                        "finite_transfer_gap_proxy_receipt": True,
+                    }
+                ],
+                "finite_nonabelian_gauge_gap_diagnostic_receipt": True,
+                "finite_repair_gap_proxy_receipt": True,
+                "continuum_yang_mills_mass_gap_receipt": False,
+                "YANG_MILLS_GAP_REPRODUCED_RECEIPT": False,
+                "CLAY_YANG_MILLS_GAP_RECEIPT": False,
+                "explicit_nonclaims": ["reproduced Yang-Mills mass gap"],
+                "claim_boundary": "Finite SU(2) diagnostic only.",
+            }
+        ),
+        encoding="utf-8",
+    )
     (pack / "two_defect_stress_contraction_assay_report.json").write_text(
         json.dumps(
             {
@@ -427,6 +762,16 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert len(parsed["screen"]["clusters"]["snapshots"]) >= 2
     assert parsed["subjectiveObserverCameras"][0]["kind"] == "observer_local_subjective_camera"
     assert parsed["subjectiveObserverCameras"][0]["timeFrames"][0]["visibleReadoutHash"] == "abc"
+    assert parsed["subjectiveObserverCameras"][0]["visibleProtoWorldlineIds"] == ["w0"]
+    assert parsed["subjectiveObserverCameras"][0]["visibleProtoWorldlineSightingCount"] > 0
+    first_sighting = parsed["subjectiveObserverCameras"][0]["timeFrames"][0]["visibleProtoWorldlines"][0]
+    assert first_sighting["worldlineId"] == "w0"
+    assert first_sighting["particleLike"] is False
+    assert first_sighting["diagnosticOnly"] is True
+    assert "h3SpatialPoint" not in first_sighting
+    assert first_sighting["observerLocalReadout"]["coordinateSystem"] == "observer_local_tangent_screen_readout"
+    assert first_sighting["observerLocalReadout"]["hiddenGlobalH3Suppressed"] is True
+    assert 0.0 <= first_sighting["visibilityScore"] <= 1.0
     assert parsed["observerModularTime"]["receipts"]["observer_modular_time_receipt"] is True
     assert parsed["observerModularTime"]["receipts"]["observer_facing_3p1d_h3_experience_receipt"] is True
     assert parsed["observerModularTime"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is False
@@ -439,10 +784,23 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["visibleObjectPackets"]
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["polarFieldReadout"]
     assert parsed["consensusBulk"]["receipts"]["theorem_assisted_consensus_3d_bulk_readout_receipt"] is True
-    assert parsed["consensusBulk"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is False
+    assert parsed["consensusBulk"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is True
+    assert parsed["consensusBulk"]["receipts"]["observer_h3_object_population_receipt"] is True
+    assert parsed["consensusBulk"]["receipts"]["strict_neutral_object_bulk_receipt"] is False
+    assert parsed["consensusBulk"]["neutralObjectCandidates"][0]["objectId"] == "neutral_1"
+    assert parsed["consensusBulk"]["neutralObjectCandidates"][0]["spatialEmbeddingAvailable"] is False
+    assert parsed["consensusBulk"]["neutralObjectSummary"]["objectCount"] == 1
+    assert parsed["consensusBulk"]["neutralObjectSummary"]["receipt"] is False
+    assert parsed["consensusBulk"]["h3ChartStatus"]["renderable"] is True
+    assert parsed["consensusBulk"]["h3ChartStatus"]["displayStatus"] == "available"
+    strict_display = parsed["consensusBulk"]["receiptDisplay"]["strict_neutral_third_person_bulk_receipt"]
+    assert strict_display["displayStatus"] == "not_promoted"
+    assert strict_display["renderAsError"] is False
     assert parsed["consensusBulk"]["protoParticleCandidates"]["worldlines"][0]["worldlineId"] == "w0"
     assert parsed["consensusBulk"]["protoParticleCandidates"]["receipts"]["particle_matter_receipt"] is False
     assert parsed["cmbComparison"]["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+    assert len(parsed["cmbComparison"]["observedRows"]) == 1
+    assert len(parsed["cmbComparison"]["modelRows"]) == 1
     assert parsed["cmbComparison"]["screenDiagnosticModel"]["field"] == "record_signature"
     assert len(parsed["cmbComparison"]["screenDiagnosticSpectrumRows"]) == 3
     assert parsed["comparableObservations"]["datasets"][0]["id"] == "cmb_tt_residual_rows"
@@ -463,6 +821,18 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["referenceVacuumBaseline"][
         "claimTier"
     ] == "E1"
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["yangMillsGapCertificate"][
+        "written"
+    ] is True
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["yangMillsGapCertificate"][
+        "gaugeGroup"
+    ]["name"] == "SU(2)"
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["receipts"][
+        "finite_nonabelian_gauge_gap_diagnostic_receipt"
+    ] is True
+    assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["receipts"][
+        "YANG_MILLS_GAP_REPRODUCED_RECEIPT"
+    ] is False
     assert parsed["visualizationViews"]["fluctuatingQuantumVacuum"]["receipts"][
         "reference_vacuum_regression_receipt"
     ] is True
@@ -473,6 +843,21 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
         "sufficient_for_observer_local_camera_visualization"
     )
     assert "subjectiveObserverCameras" in parsed["visualizationViews"]["observerCamera"]["dataSources"]
+    assert parsed["visualizationViews"]["emergentCurvedSpacetime"]["viewId"] == "emergentCurvedSpacetime"
+    branch_gate = parsed["visualizationViews"]["emergentCurvedSpacetime"]["einsteinBranchEntry"]
+    assert branch_gate["issue"] == 503
+    assert branch_gate["receipts"]["einstein_branch_entry_receipt"] is False
+    assert "E0_einstein_branch_entry_umbrella" in branch_gate["blockers"]
+    assert parsed["visualizationViews"]["emergentCurvedSpacetime"]["receipts"][
+        "einstein_branch_entry_receipt"
+    ] is False
+    assert parsed["visualizationViews"]["emergentCurvedSpacetime"]["receipts"][
+        "raw_production_gravity_requested"
+    ] is False
+    assert parsed["visualizationViews"]["emergentCurvedSpacetime"]["receipts"][
+        "production_gravity_receipt"
+    ] is False
+    assert "physical gravity prediction" in parsed["visualizationViews"]["emergentCurvedSpacetime"]["nonClaims"]
     assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"]["critical_edge_cft_receipt"] is False
     assert parsed["visualizationViews"]["effectiveStringTheory"]["sectionKind"] == (
         "effective_string_theory_edge_worldsheet"
@@ -483,14 +868,124 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["visualizationViews"]["effectiveStringTheory"]["twoDefectStressContractionAssay"][
         "written"
     ] is True
+    selector = parsed["visualizationViews"]["effectiveStringTheory"]["stringVacuumSelector"]
+    assert selector["schema"] == "oph_string_vacuum_selector_visualization_v1"
+    assert selector["receipts"]["string_vacuum_selector_visualization_receipt"] is True
+    assert selector["receipts"]["critical_edge_cft_receipt"] is False
+    assert selector["receipts"]["global_singleton_string_vacuum_receipt"] is False
+    selected_candidate = next(row for row in selector["encodedCandidateSieve"] if row["selected"])
+    assert selected_candidate["candidate"] == "BD_{n=1,+}^{SU(5),Z2}"
+    assert selected_candidate["scoreNumerator"] == 9
+    assert len(selector["criticalEdgeCertificateGates"]) == 9
+    assert len(selector["operatorSafetyTable"]) == 10
     assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"][
         "two_defect_stress_contraction_assay_receipt"
     ] is True
+    assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"][
+        "string_vacuum_selector_visualization_receipt"
+    ] is True
+    assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"][
+        "global_singleton_string_vacuum_receipt"
+    ] is False
     assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"][
         "physical_gravity_prediction"
     ] is False
     assert "critical string CFT" in parsed["visualizationViews"]["effectiveStringTheory"]["nonClaims"]
     assert "smallUniverse.cycles" in parsed["visualizationViews"]["effectiveStringTheory"]["dataSources"]
+    assert parsed["effectiveStringTheory"]["schema"] == "oph_effective_string_theory_visualization_v1"
+    assert parsed["effectiveStringTheory"]["contentAvailable"] is True
+    assert parsed["effectiveStringTheory"]["h3ProtoParticleWorldlines"]
+    assert parsed["effectiveStringTheory"]["finiteEdgeStringVibrationReceipt"] is True
+    assert parsed["effectiveStringTheory"]["finiteEdgeStringVibrationSamples"]
+    assert parsed["effectiveStringTheory"]["finiteEdgeStringVibrationSamples"][0]["sampleKind"] == (
+        "exact_finite_repair_edge_pulse"
+    )
+    assert parsed["effectiveStringTheory"]["stringVacuumSelector"]["candidateNamedWitness"] == "BD_{n=1,+}^{OPH}"
+    assert parsed["emergentCurvedSpacetime"]["schema"] == "oph_emergent_curved_spacetime_visualization_v1"
+    assert parsed["emergentCurvedSpacetime"]["contentAvailable"] is True
+    assert parsed["emergentCurvedSpacetime"]["curvatureProxyPoints"]
+    assert parsed["emergentCurvedSpacetime"]["spacetimeCompactionField"]
+    assert parsed["emergentCurvedSpacetime"]["sourceMath"]["model"] == (
+        "oph_quotient_visible_source_to_h3_compaction_v1"
+    )
+    curved_point = parsed["emergentCurvedSpacetime"]["curvatureProxyPoints"][0]
+    assert curved_point["sourceDensity"] > 0.0
+    assert curved_point["h3GreenPotential"] > 0.0
+    assert 0.0 <= curved_point["compactificationFactor"] <= 0.5
+    assert 0.5 <= curved_point["emergentSpatialScaleFactor"] <= 1.0
+    assert curved_point["gravitySourceInterpretation"] == "quotient_visible_stress_readout_not_rest_mass"
+    assert parsed["emergentCurvedSpacetime"]["einsteinBranchEntry"]["issue"] == 503
+    assert parsed["emergentCurvedSpacetime"]["receipts"]["einstein_branch_entry_receipt"] is False
+    assert parsed["emergentCurvedSpacetime"]["receipts"]["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert parsed["emergentCurvedSpacetime"]["receipts"]["production_gravity_receipt"] is False
+    assert parsed["emergentCurvedSpacetime"]["receipts"]["physical_gravity_prediction"] is False
+    assert parsed["observerCinema"]["schema"] == "oph_observer_cinema_v1"
+    assert parsed["observerCinema"]["observerViews"]
+    assert parsed["observerCinema"]["subjectiveCameras"]
+    assert parsed["observerCinema"]["availability"]["observerViewCount"] == 1
+    assert parsed["observerCinema"]["availability"]["protoWorldlineSightingCount"] > 0
+    assert parsed["hilbertSpaceObserverAlgebra"]["schema"] == "oph_hilbert_observer_algebra_summary_v1"
+    assert parsed["hilbertSpaceObserverAlgebra"]["finiteSupportAlgebraPopulated"] is True
+    assert parsed["hilbertSpaceObserverAlgebra"]["visibleObjectPacketCount"] > 0
+    assert parsed["hilbertSpaceObserverAlgebra"]["representativeObservers"]
+    assert parsed["observerAnatomy"]["schema"] == "oph_observer_anatomy_v1"
+    assert parsed["observerAnatomy"]["observers"]
+    assert parsed["observerAnatomy"]["populationSummary"]["finiteSupportAlgebraPopulated"] is True
+    assert parsed["paperAccuracy"]["schema"] == "oph_paper_accuracy_guard_v1"
+    assert parsed["paperAccuracy"]["receipts"]["paper_accuracy_guard_receipt"] is True
+    assert parsed["paperAccuracy"]["receipts"]["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert parsed["paperAccuracy"]["receipts"]["OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1"] is False
+    assert parsed["paperAccuracy"]["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+    assert parsed["paperAccuracy"]["receipts"]["production_gravity_receipt"] is False
+    assert next(row for row in parsed["paperAccuracy"]["checks"] if row["id"] == "curved_spacetime_compaction")[
+        "paperStatus"
+    ] == "Einstein-branch visualization diagnostic"
+    einstein_check = next(row for row in parsed["paperAccuracy"]["checks"] if row["id"] == "einstein_branch_entry")
+    assert einstein_check["passed"] is False
+    assert einstein_check["issue"] == 503
+    render_data = parsed["visualizationRenderData"]
+    assert render_data["schema"] == "oph_visualization_render_data_v1"
+    assert render_data["availability"]["subjectiveCameraCount"] == 1
+    assert render_data["availability"]["h3ObjectCount"] == 1
+    assert render_data["availability"]["neutralObjectCandidateCount"] == 1
+    assert render_data["availability"]["protoWorldlineCount"] == 1
+    assert render_data["availability"]["observerProtoWorldlineSightingCount"] > 0
+    assert render_data["availability"]["curvatureProxyPointCount"] >= 1
+    assert render_data["availability"]["cmbResidualPointCount"] == 1
+    assert render_data["cameraPresets"]
+    assert render_data["sceneGraph"]["screen"]["points"]
+    assert render_data["sceneGraph"]["observerGraph"]["nodes"]
+    assert render_data["sceneGraph"]["bulk"]["h3Objects"][0]["id"] == "obj0"
+    assert render_data["sceneGraph"]["bulk"]["h3ChartStatus"]["renderable"] is True
+    assert render_data["sceneGraph"]["bulk"]["receiptDisplay"]["strict_neutral_third_person_bulk_receipt"][
+        "displayStatus"
+    ] == "not_promoted"
+    assert render_data["sceneGraph"]["bulk"]["protoWorldlines"][0]["polyline"]
+    assert render_data["sceneGraph"]["curvedSpacetime"]["proxyPoints"]
+    assert render_data["sceneGraph"]["curvedSpacetime"]["sourceMath"]["model"] == (
+        "oph_quotient_visible_source_to_h3_compaction_v1"
+    )
+    assert render_data["sceneGraph"]["curvedSpacetime"]["proxyPoints"][0]["compactificationFactor"] is not None
+    assert render_data["sceneGraph"]["curvedSpacetime"]["proxyPoints"][0]["emergentSpatialScaleFactor"] is not None
+    assert render_data["plotSeries"]["curvatureProxyBySource"]
+    assert render_data["animationTimeline"]
+    assert render_data["rendererHints"]["recommendedRepairTimeField"] == "playbackRelativeTime"
+    assert render_data["repairPlayback"]["rawTimeField"] == "rawRelativeTime"
+    assert "rawRelativeTime" in render_data["animationTimeline"][0]
+    assert "playbackRelativeTime" in render_data["animationTimeline"][0]
+    assert render_data["plotSeries"]["cmbResidualSigma"][0]["x"] == 2
+    assert render_data["legend"]
+    assert any(row["id"] == "physical_cmb_prediction" for row in render_data["claimBadges"])
+    assert next(row for row in render_data["claimBadges"] if row["id"] == "observer_h3_object_population")[
+        "passed"
+    ] is True
+    strict_badge = next(row for row in render_data["claimBadges"] if row["id"] == "strict_neutral_bulk")
+    assert strict_badge["displayStatus"] == "not_promoted"
+    assert strict_badge["severity"] == "blocked"
+    assert strict_badge["renderAsError"] is False
+    assert next(row for row in render_data["claimBadges"] if row["id"] == "view:observerCamera")[
+        "style"
+    ] == "view_contract_info"
     sidecars = summary["sidecar_exports"]
     assert Path(sidecars["manifest_path"]).exists()
     assert sidecars["files"]["screen_points_csv"]["row_count"] == 2
@@ -498,32 +993,89 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert sidecars["files"]["screen_full_bin"]["dtype"] == "float32-le"
     assert sidecars["files"]["screen_full_bin"]["layout"] == "x,y,z,value"
     assert Path(sidecars["files"]["screen_full_bin"]["path"]).stat().st_size == 2 * 4 * 4
+    assert sidecars["files"]["visualization_render_data_json"]["written"] is True
+    assert sidecars["files"]["visualization_render_data_json"]["schema"] == "oph_visualization_render_data_v1"
+    assert sidecars["files"]["effective_string_theory_json"]["schema"] == (
+        "oph_effective_string_theory_visualization_v1"
+    )
+    assert sidecars["files"]["emergent_curved_spacetime_json"]["schema"] == (
+        "oph_emergent_curved_spacetime_visualization_v1"
+    )
+    assert sidecars["files"]["observer_cinema_json"]["schema"] == "oph_observer_cinema_v1"
+    assert sidecars["files"]["hilbert_space_observer_algebra_json"]["schema"] == (
+        "oph_hilbert_observer_algebra_summary_v1"
+    )
+    assert sidecars["files"]["observer_anatomy_json"]["schema"] == "oph_observer_anatomy_v1"
+    assert sidecars["files"]["paper_accuracy_json"]["schema"] == "oph_paper_accuracy_guard_v1"
     assert sidecars["files"]["observers_full_json"]["row_count"] == 1
     assert sidecars["files"]["cameras_full_json"]["row_count"] == 1
     assert sidecars["files"]["subjective_observer_cameras_csv"]["row_count"] == 1
     assert sidecars["files"]["subjective_observer_camera_frames_csv"]["row_count"] >= 32
+    assert sidecars["files"]["observer_proto_worldline_sightings_csv"]["row_count"] > 0
     assert sidecars["files"]["consensus_h3_objects_csv"]["row_count"] == 1
+    assert sidecars["files"]["neutral_object_candidates_csv"]["row_count"] == 1
     assert sidecars["files"]["cmb_residual_rows_csv"]["row_count"] == 1
     assert sidecars["files"]["cmb_screen_spectrum_rows_csv"]["row_count"] == 3
     assert sidecars["files"]["reference_vacuum_scalar_spectrum_csv"]["row_count"] == 2
     assert sidecars["files"]["reference_vacuum_u1_plaquette_trace_csv"]["row_count"] == 2
+    assert sidecars["files"]["yang_mills_su2_plaquette_trace_csv"]["row_count"] == 2
+    assert sidecars["files"]["yang_mills_su2_wilson_loop_trace_csv"]["row_count"] == 1
+    assert sidecars["files"]["yang_mills_su2_polyakov_loop_trace_csv"]["row_count"] == 1
+    assert sidecars["files"]["yang_mills_su2_orientation_plaquettes_csv"]["row_count"] == 1
+    assert sidecars["files"]["yang_mills_su2_refinement_gap_csv"]["row_count"] == 1
+    assert sidecars["files"]["yang_mills_gap_promotion_gates_csv"]["row_count"] >= 1
     assert sidecars["files"]["finite_repair_frames_csv"]["row_count"] == 2
     assert sidecars["files"]["finite_cycle_rows_csv"]["row_count"] == 2
+    assert sidecars["files"]["finite_edge_string_vibration_samples_csv"]["row_count"] >= 1
     assert sidecars["files"]["screen_cluster_tracks_csv"]["row_count"] >= 1
     assert sidecars["files"]["proto_particle_worldlines_csv"]["row_count"] == 1
     assert sidecars["files"]["proto_particle_worldline_events_csv"]["row_count"] == 2
+    assert sidecars["files"]["emergent_curved_spacetime_curvature_proxy_csv"]["row_count"] >= 1
+    assert sidecars["files"]["emergent_curved_spacetime_time_slices_csv"]["row_count"] >= 1
+    curvature_header = Path(sidecars["files"]["emergent_curved_spacetime_curvature_proxy_csv"]["path"]).read_text(
+        encoding="utf-8"
+    ).splitlines()[0]
+    assert "compactification_factor" in curvature_header
+    assert "emergent_spatial_scale_factor" in curvature_header
+    time_slice_header = Path(sidecars["files"]["emergent_curved_spacetime_time_slices_csv"]["path"]).read_text(
+        encoding="utf-8"
+    ).splitlines()[0]
+    assert "max_compactification_factor" in time_slice_header
     assert sidecars["files"]["two_defect_stress_trajectory_csv"]["row_count"] == 1
     assert sidecars["files"]["two_defect_stress_worldlines_csv"]["row_count"] == 1
     assert sidecars["files"]["two_defect_stress_worldline_events_csv"]["row_count"] == 1
+    assert sidecars["files"]["free_two_defect_dynamics_trajectory_csv"]["row_count"] == 0
+    assert sidecars["files"]["string_vacuum_selector_candidates_csv"]["row_count"] == 6
+    assert sidecars["files"]["string_vacuum_selector_gates_csv"]["row_count"] == 9
+    assert sidecars["files"]["string_vacuum_selector_critical_edge_gates_csv"]["row_count"] == 9
+    assert sidecars["files"]["string_vacuum_selector_operator_safety_csv"]["row_count"] == 10
+    assert sidecars["files"]["string_vacuum_selector_quantitative_targets_csv"]["row_count"] == 9
     assert Path(sidecars["files"]["subjective_observer_cameras_csv"]["path"]).exists()
     manifest = json.loads(Path(sidecars["manifest_path"]).read_text(encoding="utf-8"))
     assert manifest["schema"] == "oph_universe_visualization_sidecars_v1"
     assert manifest["files"]["screen_full_bin"]["written"] is True
+    assert manifest["files"]["visualization_render_data_json"]["written"] is True
+    render_sidecar = json.loads(
+        Path(manifest["files"]["visualization_render_data_json"]["path"]).read_text(encoding="utf-8")
+    )
+    assert render_sidecar["availability"]["protoWorldlineEventCount"] == 2
     assert manifest["receipts"]["observer_facing_consensus_3d_bulk_readout_receipt"] is True
     assert manifest["receipts"]["physical_cmb_prediction_receipt"] is False
     assert manifest["receipts"]["reference_vacuum_regression_receipt"] is True
+    assert manifest["receipts"]["finite_nonabelian_gauge_gap_diagnostic_receipt"] is True
+    assert manifest["receipts"]["yang_mills_gap_reproduced_receipt"] is False
+    assert manifest["receipts"]["clay_yang_mills_gap_receipt"] is False
     assert manifest["receipts"]["oph_native_vacuum_promotion_receipt"] is False
     assert manifest["receipts"]["particle_matter_receipt"] is False
+    assert manifest["receipts"]["emergent_curved_spacetime_visualization_receipt"] is True
     assert manifest["receipts"]["two_defect_stress_contraction_assay_receipt"] is True
+    assert manifest["receipts"]["string_vacuum_selector_visualization_receipt"] is True
+    assert manifest["receipts"]["critical_edge_cft_receipt"] is False
+    assert manifest["receipts"]["einstein_branch_entry_receipt"] is False
+    assert manifest["receipts"]["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert manifest["receipts"]["OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1"] is False
+    assert manifest["receipts"]["raw_production_gravity_requested"] is False
     assert manifest["receipts"]["production_gravity_receipt"] is False
+    assert manifest["receipts"]["paper_accuracy_guard_receipt"] is True
+    assert manifest["receipts"]["no_semantic_promotion_by_relabeling_receipt"] is True
     assert Path(summary["web_coding_agent_brief_path"]).exists()

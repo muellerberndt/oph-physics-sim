@@ -1,0 +1,142 @@
+{
+  "schema": "oph_ga71_td_source_manifest_v1",
+  "claim_boundary": "Template manifest for source-side Ga-71 transition-density certificate generation. It is not promotion-valid until all source artifacts are replaced by hashed real outputs.",
+  "protected_outputs": [
+    "rho_TD_71",
+    "S_TD_71",
+    "sigma_gs_51Cr",
+    "sigma_gs_37Ar"
+  ],
+  "nodes": [
+    {
+      "id": "ga71_source_config",
+      "type": "source",
+      "path_or_reference": "configs/ga71_source_only.yaml",
+      "sha256": null,
+      "parents": [],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "nuclear_source_action",
+      "type": "source",
+      "path_or_reference": "A=71 source-side nuclear backend or OPH nuclear source action",
+      "sha256": null,
+      "parents": ["ga71_source_config"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "basis_truncation",
+      "type": "source",
+      "path_or_reference": "single-particle basis and truncation",
+      "sha256": null,
+      "parents": ["ga71_source_config"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "atomic_conventions",
+      "type": "external_fixed",
+      "path_or_reference": "Dirac-Coulomb bound/continuum electron wave-function conventions",
+      "sha256": null,
+      "parents": ["ga71_source_config"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "independent_spectroscopy",
+      "type": "external_fixed",
+      "path_or_reference": "Q_EC, 71Ge half-life, charge/radius and independent GT/sum-rule constraints",
+      "sha256": null,
+      "parents": [],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "rho_TD_71",
+      "type": "derived",
+      "path_or_reference": "evidence/ga71_td/nuclear/rho_TD_71.npz",
+      "sha256": null,
+      "parents": ["nuclear_source_action", "basis_truncation", "independent_spectroscopy"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "S_TD_71",
+      "type": "derived",
+      "path_or_reference": "evidence/ga71_td/nuclear/S_TD_71.json",
+      "sha256": null,
+      "parents": ["rho_TD_71"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "sigma_gs_51Cr",
+      "type": "derived",
+      "path_or_reference": "evidence/ga71_td/cross_sections/ibd_result.json#51Cr",
+      "sha256": null,
+      "parents": ["rho_TD_71", "atomic_conventions"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "sigma_gs_37Ar",
+      "type": "derived",
+      "path_or_reference": "evidence/ga71_td/cross_sections/ibd_result.json#37Ar",
+      "sha256": null,
+      "parents": ["rho_TD_71", "atomic_conventions"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "T_half_71Ge",
+      "type": "derived",
+      "path_or_reference": "evidence/ga71_td/atomic/ec_result.json",
+      "sha256": null,
+      "parents": ["rho_TD_71", "atomic_conventions"],
+      "measurement_use_flag": "NONE",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "GALLEX_SAGE_BEST_ratios",
+      "type": "comparison_only",
+      "path_or_reference": "data/gallium/public/ground_state_ratios.json",
+      "sha256": null,
+      "parents": [],
+      "measurement_use_flag": "COMPARISON_ONLY",
+      "forbidden_target_ancestor": false
+    },
+    {
+      "id": "forward_comparison",
+      "type": "derived",
+      "path_or_reference": "evidence/ga71_td/forward_compare/results.json",
+      "sha256": null,
+      "parents": ["sigma_gs_51Cr", "sigma_gs_37Ar", "GALLEX_SAGE_BEST_ratios"],
+      "measurement_use_flag": "COMPARISON_ONLY",
+      "forbidden_target_ancestor": false
+    }
+  ],
+  "forbidden_upstream_inputs": [
+    "GALLEX_R",
+    "SAGE_R",
+    "BEST_R",
+    "inferred_gallium_source_cross_sections",
+    "sterile_fit_residuals",
+    "posterior_gallium_anomaly_residuals",
+    "any fit target derived from gallium source-rate deficits"
+  ],
+  "allowed_source_inputs": [
+    "A=71 shell-model / ab-initio / OPH nuclear source action",
+    "single-particle basis and truncation",
+    "effective axial current / GT operator prescription",
+    "independent spectroscopy",
+    "Q_EC",
+    "71Ge half-life",
+    "71Ge charge radius and charge/radius systematics",
+    "GT/sum-rule constraints independent of source-rate deficits",
+    "Dirac-Coulomb bound and continuum electron wave-function conventions",
+    "51Cr and 37Ar source line energies and branching fractions",
+    "radiative and weak-magnetism conventions"
+  ]
+}

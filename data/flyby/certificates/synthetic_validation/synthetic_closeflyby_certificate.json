@@ -1,0 +1,111 @@
+{
+  "anderson_comparator": {
+    "K": 3.099,
+    "formula": "not used for synthetic projection fixture",
+    "prediction_mm_s": 0.0,
+    "residual_mm_s": 0.20267256736776748
+  },
+  "certificate_id": "CloseFlyBy:synthetic_projection_fixture",
+  "flyby_id": "SYNTHETIC_PROJECTION_FIXTURE",
+  "hashes": {
+    "certificate_payload_sha256": "4b201a300b29a188b6e9f545e58e8ccfe0a4e8184284dafe947c21d18df8be89",
+    "fixture_sha256": "9274e6cf2da9cb8c36a0c61aaba5660047712c028a69c0398c641bda6fb5958f"
+  },
+  "models": {
+    "M_full": {
+      "status": "synthetic_full_model_includes_nuisance"
+    },
+    "M_hist": {
+      "status": "synthetic_reduced_model_omits_nuisance"
+    }
+  },
+  "nonclaims": [
+    "Synthetic simulation validates code only.",
+    "This certificate cannot close any historical flyby row."
+  ],
+  "public_row": {
+    "Vinf_km_s": 1.0,
+    "dVinf_obs_mm_s": 0.20267256736776748,
+    "dVp_obs_mm_s": 0.20267256736776748,
+    "delta_in_deg": 0.0,
+    "delta_out_deg": 0.0,
+    "notes": "Synthetic fixture validates projection machinery only.",
+    "sigma_dVinf_mm_s": 1e-09,
+    "sigma_dVp_mm_s": 1e-09,
+    "source_refs": [
+      "synthetic_unit_test_fixture"
+    ]
+  },
+  "raw_od_receipt": {
+    "attitude_files": [],
+    "clock_ramp_time_files": [],
+    "covariance_file": "inline_synthetic_covariance",
+    "design_matrix_files": [],
+    "eop_files": [],
+    "ion_files": [],
+    "maneuver_files": [],
+    "od_code_hash": null,
+    "receipt_status": "SYNTHETIC_ONLY_NOT_HISTORICAL_EVIDENCE",
+    "solve_for_list": [
+      "asymptotic_speed_bias",
+      "slope"
+    ],
+    "spice_files": [],
+    "station_files": [],
+    "thermal_srp_optical_files": [],
+    "tracking_files": [
+      {
+        "kind": "synthetic_observations",
+        "status": "generated"
+      }
+    ],
+    "tro_files": [],
+    "weather_files": []
+  },
+  "results": {
+    "A_full_mm_s": 0.0,
+    "A_hist_mm_s": 0.20267256736776748,
+    "A_proj_mm_s": 0.20267256736776748,
+    "projection_decomposition": {
+      "closure_error_mm_s": 0.0,
+      "component_sum_mm_s": 0.20267256736776756,
+      "components": [
+        {
+          "A_proj_component_mm_s": 0.676351536622934,
+          "delta_n": 0.42,
+          "nuisance": "SRP_Cr"
+        },
+        {
+          "A_proj_component_mm_s": -0.47367896925516645,
+          "delta_n": -0.31,
+          "nuisance": "station_bias"
+        }
+      ]
+    },
+    "sigma_A_full_mm_s": 0.0,
+    "sigma_A_hist_mm_s": 0.0
+  },
+  "schema_version": "oph_closeflyby_certificate_v1",
+  "status": "SYNTHETIC_PIPELINE_VALIDATED",
+  "synthetic_validation": true,
+  "tests": {
+    "arc_holdout_pass": null,
+    "bias_by_observable_type_pass": null,
+    "bias_by_station_pass": null,
+    "chi2_reduced": null,
+    "covariance_condition_number": null,
+    "doppler_rms_mm_s": null,
+    "full_replay_pass": true,
+    "historical_replay_pass": true,
+    "leave_one_pass_out_pass": null,
+    "parameter_correlation_report": null,
+    "post_perigee_holdout_pass": null,
+    "pre_perigee_holdout_pass": null,
+    "projection_pass": true,
+    "range_rms_m": null,
+    "station_holdout_pass": null,
+    "weighted_chi2": null,
+    "whiteness_p_value": null
+  },
+  "tier": "Tier 1 synthetic validation only"
+}

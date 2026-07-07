@@ -1,0 +1,16 @@
+flyby_id: Galileo I
+priority: 2
+public_target:
+  dVinf_obs_mm_s: 3.92
+  sigma_dVinf_mm_s: 0.03
+required_files:
+  tracking: [TDF_or_ATDF]
+  calibration: [media, station, time]
+missing_or_to_locate:
+  - exact_attitude_history
+  - spacecraft_SRP_geometry
+  - optical_coefficients
+  - covariance
+  - historical_solve_for_list
+  - design_matrices
+status: RAW_TRACKING_PARTIAL_REPLAY_PENDING

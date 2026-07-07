@@ -17,8 +17,10 @@ from oph_fpe.bulk.neutral_bulk import (
     write_overlap_residualized_graph_geometry_sweep_report,
     write_prime_geometric_rank_refinement_report,
     write_prime_geometric_rank_sweep_report,
+    write_strict_neutral_bulk_report,
     write_strict_neutral_bulk_frontier_report,
 )
+from oph_fpe.bulk.neutral_object_bulk import write_strict_neutral_object_bulk_report
 from oph_fpe.bulk.observer_consensus_bulk import write_observer_consensus_bulk_readout_report
 from oph_fpe.bulk.proof_certificate import write_bulk_proof_certificate
 from oph_fpe.bulk.record_to_h3 import recompute_object_chart_from_saved_run
@@ -48,9 +50,14 @@ from oph_fpe.cosmology.camb_adapter import (
     write_scale_compressed_cmb_camb_report,
 )
 from oph_fpe.cosmology.silence_to_observation import write_silence_to_observation_report
-from oph_fpe.defects.gravity_assay import write_two_defect_stress_contraction_assay_report
+from oph_fpe.defects.gravity_assay import (
+    write_free_two_defect_dynamics_report,
+    write_organic_defect_population_report,
+    write_two_defect_stress_contraction_assay_report,
+)
 from oph_fpe.ensembles.reference_vacuum import write_reference_vacuum_baseline_report
 from oph_fpe.experiments import load_config
+from oph_fpe.gauge.yang_mills_gap import write_yang_mills_gap_certificate_report
 from oph_fpe.scale.bw_array import run_bw_array_config
 from oph_fpe.viz import (
     write_cmb_neutral_frontier_viewer,
@@ -218,6 +225,15 @@ def run_oph_universe_pipeline(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     base_config = dict(load_config(config_path))
+    export_settings = _visualization_export_settings(
+        base_config,
+        max_screen_points=max_screen_points,
+        max_observers=max_observers,
+        max_h3_objects=max_h3_objects,
+    )
+    max_screen_points = export_settings["max_screen_points"]
+    max_observers = export_settings["max_observers"]
+    max_h3_objects = export_settings["max_h3_objects"]
     if skip_base_run:
         if source_run_dir is None:
             raise ValueError("skip_base_run requires source_run_dir")
@@ -300,8 +316,8 @@ def run_oph_universe_pipeline(
     readout = write_observer_consensus_bulk_readout_report(
         [run_dir],
         readout_dir,
-        observer_sample_count=max(12, min(int(max_observers), 512)),
-        object_sample_count=max(24, min(int(max_h3_objects), 1024)),
+        observer_sample_count=export_settings["readout_observer_sample_count"],
+        object_sample_count=export_settings["readout_object_sample_count"],
     )
     visualizer_csv_aliases = _write_visualizer_csv_aliases(run_dir, readout_dir)
     silence_to_observation = write_silence_to_observation_report(run_dir, run_dir)
@@ -345,6 +361,7 @@ def run_oph_universe_pipeline(
         "run_dir": str(run_dir),
         "config_path": str(config_path),
         "base_result": base_result,
+        "visualization_export_settings": export_settings,
         "selected_h3_refit": selected_h3,
         "selected_object_chart": selected_object,
         "h3_refit_candidates": _strip_scores(h3_candidates),
@@ -419,6 +436,10 @@ def run_oph_universe_pipeline(
             "strict_neutral_bulk_contract_receipt": bool(
                 theorem_contract.get("strict_neutral_bulk_contract_receipt", False)
             ),
+            "einstein_branch_entry_contract_receipt": bool(
+                theorem_contract.get("einstein_branch_entry_contract_receipt", False)
+                or theorem_contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+            ),
             "scale_compressed_pn_silence_to_observation_receipt": bool(
                 silence_to_observation.get("scale_compressed_pn_silence_to_observation_receipt", False)
             ),
@@ -449,6 +470,13 @@ def run_oph_universe_pipeline(
                 "paper_geometric_branch_consensus_bulk_emergence_receipt"
             ),
             "strict_neutral_bulk_contract_receipt": theorem_contract.get("strict_neutral_bulk_contract_receipt"),
+            "einstein_branch_entry_contract_receipt": theorem_contract.get(
+                "einstein_branch_entry_contract_receipt"
+            ),
+            "einstein_branch_entry_primary_blockers": theorem_contract.get(
+                "einstein_branch_entry_primary_blockers", []
+            ),
+            "einstein_branch_entry_blockers": theorem_contract.get("einstein_branch_entry_blockers", []),
             "chart_blind_strict_neutral_blockers": theorem_contract.get(
                 "chart_blind_strict_neutral_blockers", []
             ),
@@ -570,8 +598,20 @@ def _post_theorem_large_run_readiness(
     screen_cmb = bool(cmb_diagnostics.get("screen_proxy_cmb_receipt", False))
     vacuum_reference = bool(frontier_artifacts.get("reference_vacuum_regression_receipt", False))
     vacuum_native = bool(frontier_artifacts.get("oph_native_vacuum_promotion_receipt", False))
-    gravity_diagnostic = bool(frontier_artifacts.get("two_defect_stress_contraction_assay_receipt", False))
-    production_gravity = bool(frontier_artifacts.get("production_gravity_receipt", False))
+    controlled_gravity_diagnostic = bool(frontier_artifacts.get("two_defect_stress_contraction_assay_receipt", False))
+    free_gravity_diagnostic = bool(frontier_artifacts.get("free_two_defect_dynamics_receipt", False))
+    gravity_diagnostic = bool(controlled_gravity_diagnostic or free_gravity_diagnostic)
+    einstein_branch_entry = bool(
+        theorem_contract.get("einstein_branch_entry_contract_receipt", False)
+        or theorem_contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+        or proof.get("einstein_branch_entry_contract_receipt", False)
+        or proof.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+    )
+    raw_production_gravity = bool(
+        frontier_artifacts.get("raw_production_gravity_receipt", False)
+        or frontier_artifacts.get("production_gravity_receipt", False)
+    )
+    production_gravity = bool(raw_production_gravity and einstein_branch_entry)
 
     if physical_cmb and strict_neutral and observer_facing_bulk:
         recommended = "physical_cmb_and_strict_bulk_large_run"
@@ -598,6 +638,9 @@ def _post_theorem_large_run_readiness(
         blockers.append("oph_native_vacuum_promotion_receipt_false")
     if not production_gravity:
         blockers.append("production_gravity_receipt_false")
+    if raw_production_gravity and not einstein_branch_entry:
+        blockers.append("einstein_branch_entry_contract_receipt_false")
+        blockers.extend(theorem_contract.get("einstein_branch_entry_primary_blockers") or [])
 
     return {
         "mode": "post_theorem_large_run_readiness_v0",
@@ -642,7 +685,20 @@ def _post_theorem_large_run_readiness(
             "two_defect_gravity": {
                 "status": "diagnostic_ready" if gravity_diagnostic else "blocked",
                 "scale_candidate": gravity_diagnostic,
+                "controlled_stress_contraction": controlled_gravity_diagnostic,
+                "free_two_defect_dynamics": free_gravity_diagnostic,
+                "free_contact_outcome": frontier_artifacts.get("free_two_defect_contact_outcome"),
+                "einstein_branch_entry_contract": einstein_branch_entry,
+                "raw_production_gravity_requested": raw_production_gravity,
                 "production_gravity": production_gravity,
+                "production_gravity_blockers": (
+                    []
+                    if production_gravity
+                    else (
+                        theorem_contract.get("einstein_branch_entry_primary_blockers")
+                        or ["einstein_branch_entry_contract_receipt_false"]
+                    )
+                ),
             },
         },
         "blockers": sorted({str(blocker) for blocker in blockers if str(blocker)}),
@@ -691,6 +747,23 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
         selector_dir = run_dir / "neutral_rank_selector_audit"
         graph_dir = run_dir / "neutral_overlap_graph_sweep"
         residual_graph_dir = run_dir / "neutral_overlap_residual_graph_sweep"
+        strict_neutral_record = write_strict_neutral_bulk_report(
+            run_dir,
+            out=run_dir / "strict_neutral_bulk_report.json",
+            seed=neutral_cfg["seed"],
+            max_model_points=neutral_cfg["strict_bulk_max_model_points"],
+            planted_control_points=neutral_cfg["planted_control_points"],
+        )
+        strict_neutral_object = write_strict_neutral_object_bulk_report(
+            run_dir,
+            out=run_dir / "strict_neutral_object_bulk_report.json",
+            seed=neutral_cfg["seed"],
+            min_objects=neutral_cfg["object_min_objects"],
+            min_observers_per_object=neutral_cfg["object_min_observers_per_object"],
+            max_observer_fraction_per_object=neutral_cfg["object_max_observer_fraction_per_object"],
+            max_model_points=neutral_cfg["object_max_model_points"],
+            heldout_fraction=neutral_cfg["object_heldout_fraction"],
+        )
         write_overlap_native_neutral_control_report(
             run_dir,
             overlap_dir,
@@ -728,6 +801,8 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
             workers=neutral_cfg["graph_workers"],
         )
         neutral_paths = [
+            run_dir / "strict_neutral_bulk_report.json",
+            run_dir / "strict_neutral_object_bulk_report.json",
             overlap_dir,
             sweep_dir,
             refinement_dir,
@@ -744,6 +819,13 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
             "neutral_frontier_written": True,
             "strict_neutral_bulk": bool(neutral_frontier.get("strict_neutral_bulk", False)),
             "strict_neutral_bulk_ready": bool(neutral_frontier.get("strict_neutral_bulk_ready", False)),
+            "strict_neutral_record_report_written": True,
+            "strict_neutral_record_bulk": bool(strict_neutral_record.get("strict_neutral_bulk", False)),
+            "strict_neutral_record_blockers": list(strict_neutral_record.get("blockers") or [])[:16],
+            "strict_neutral_object_report_written": True,
+            "strict_neutral_object_bulk": bool(strict_neutral_object.get("strict_neutral_object_bulk", False)),
+            "strict_neutral_object_count": int(strict_neutral_object.get("object_count") or 0),
+            "strict_neutral_object_blockers": list(strict_neutral_object.get("blockers") or [])[:16],
             "neutral_blockers": list(neutral_frontier.get("blockers") or [])[:16],
             "neutral_audit_blockers": list(neutral_audit.get("blockers") or [])[:16],
             "neutral_report_dirs": [str(path) for path in neutral_paths],
@@ -958,12 +1040,24 @@ def _write_visualization_diagnostic_artifacts(run_dir: Path, config: dict[str, A
     cfg = dict(config.get("visualization_diagnostics", {}) or {})
     vacuum_cfg = dict(cfg.get("reference_vacuum", {}) or {})
     gravity_cfg = dict(cfg.get("two_defect_gravity_assay", {}) or {})
+    organic_cfg = dict(cfg.get("organic_defect_population", {}) or {})
+    ym_cfg = dict(cfg.get("yang_mills_gap_certificate", {}) or {})
 
     write_vacuum = bool(vacuum_cfg.get("enabled", True))
     write_gravity = bool(gravity_cfg.get("enabled", True))
+    write_organic = bool(organic_cfg.get("enabled", True))
+    write_ym = bool(ym_cfg.get("enabled", True))
     summary: dict[str, Any] = {
         "reference_vacuum_baseline_written": False,
+        "yang_mills_gap_certificate_written": False,
+        "organic_defect_population_written": False,
         "two_defect_stress_contraction_assay_written": False,
+        "free_two_defect_dynamics_written": False,
+        "raw_production_gravity_receipt": False,
+        "production_gravity_receipt": False,
+        "physical_gravity_prediction": False,
+        "einstein_branch_entry_contract_receipt": False,
+        "einstein_branch_entry_issue": 503,
     }
     if write_vacuum:
         vacuum_report = write_reference_vacuum_baseline_report(
@@ -995,18 +1089,140 @@ def _write_visualization_diagnostic_artifacts(run_dir: Path, config: dict[str, A
                 ),
             }
         )
+    if write_ym:
+        ym_report = write_yang_mills_gap_certificate_report(
+            run_dir / "yang_mills_gap_certificate_report.json",
+            lattice_size=_positive_int(ym_cfg.get("lattice_size"), 2),
+            sweeps=_positive_int(ym_cfg.get("sweeps"), 16),
+            beta=_positive_float(ym_cfg.get("beta"), 2.2),
+            proposal_width=_positive_float(ym_cfg.get("proposal_width"), 0.35),
+            seed=_positive_int(ym_cfg.get("seed"), 20260706),
+            transition_bins=_positive_int(ym_cfg.get("transition_bins"), 8),
+            refinement_lattice_sizes=_positive_int_tuple(
+                ym_cfg.get("refinement_lattice_sizes"),
+                (2, 3),
+            ),
+            refinement_sweeps=_optional_int(ym_cfg.get("refinement_sweeps")),
+            continuum_certificate=(
+                ym_cfg.get("continuum_certificate")
+                if isinstance(ym_cfg.get("continuum_certificate"), dict)
+                else None
+            ),
+        )
+        summary.update(
+            {
+                "yang_mills_gap_certificate_written": True,
+                "finite_nonabelian_gauge_gap_diagnostic_receipt": bool(
+                    ym_report.get("finite_nonabelian_gauge_gap_diagnostic_receipt", False)
+                ),
+                "finite_repair_gap_proxy_receipt": bool(
+                    ym_report.get("finite_repair_gap_proxy_receipt", False)
+                ),
+                "yang_mills_gap_reproduced_receipt": bool(
+                    ym_report.get("YANG_MILLS_GAP_REPRODUCED_RECEIPT", False)
+                ),
+                "clay_yang_mills_gap_receipt": bool(
+                    ym_report.get("CLAY_YANG_MILLS_GAP_RECEIPT", False)
+                ),
+                "yang_mills_identification": ym_report.get("yang_mills_identification"),
+            }
+        )
+    if write_organic:
+        organic_report = write_organic_defect_population_report(
+            run_dir / "organic_defect_population_report.json",
+            patch_count=_positive_int(
+                organic_cfg.get("patch_count"),
+                _positive_int(gravity_cfg.get("patch_count"), 65_536),
+            ),
+            steps=_positive_int(
+                organic_cfg.get("steps"),
+                _positive_int(gravity_cfg.get("free_steps", gravity_cfg.get("steps")), 128),
+            ),
+            defect_count=_positive_int(organic_cfg.get("defect_count"), 16),
+            min_defects=_positive_int(organic_cfg.get("min_defects"), 10),
+            max_defects=_positive_int(organic_cfg.get("max_defects"), 20),
+            support_node_count=_positive_int(
+                organic_cfg.get("support_node_count"),
+                _positive_int(gravity_cfg.get("support_node_count"), 8),
+            ),
+            seed=_positive_int(
+                organic_cfg.get("seed"),
+                _positive_int(gravity_cfg.get("free_seed", gravity_cfg.get("seed")), 2039),
+            ),
+            initial_speed=_positive_float(
+                organic_cfg.get("initial_speed"),
+                _positive_float(gravity_cfg.get("initial_speed"), 0.028),
+            ),
+            stress_coupling=_positive_float(
+                organic_cfg.get("stress_coupling"),
+                _positive_float(gravity_cfg.get("free_stress_coupling"), 0.018),
+            ),
+            transverse_kick=_positive_float(
+                organic_cfg.get("transverse_kick"),
+                _positive_float(gravity_cfg.get("transverse_kick"), 0.010),
+            ),
+            stress_radius=_positive_float(
+                organic_cfg.get("stress_radius"),
+                _positive_float(gravity_cfg.get("stress_radius"), 0.9),
+            ),
+            curvature_radius=_positive_float(
+                organic_cfg.get("curvature_radius"),
+                _positive_float(gravity_cfg.get("curvature_radius"), 1.0),
+            ),
+            cycle_stride=_positive_int(
+                organic_cfg.get("cycle_stride"),
+                _positive_int(gravity_cfg.get("cycle_stride"), 1),
+            ),
+            contact_radius=_positive_float(
+                organic_cfg.get("contact_radius"),
+                _positive_float(gravity_cfg.get("contact_radius"), 0.12),
+            ),
+            overlap_radius=_positive_float(
+                organic_cfg.get("overlap_radius"),
+                _positive_float(gravity_cfg.get("overlap_radius"), 0.28),
+            ),
+            spawn_radius=_positive_float(organic_cfg.get("spawn_radius"), 1.25),
+        )
+        organic_summary = (
+            organic_report.get("organic_population_summary")
+            if isinstance(organic_report.get("organic_population_summary"), dict)
+            else {}
+        )
+        summary.update(
+            {
+                "organic_defect_population_written": True,
+                "organic_defect_population_receipt": bool(
+                    organic_report.get("organic_defect_population_receipt", False)
+                ),
+                "organic_proto_worldline_visualization_receipt": bool(
+                    organic_report.get("organic_proto_worldline_visualization_receipt", False)
+                ),
+                "organic_defect_worldline_count": organic_summary.get("worldline_count"),
+                "organic_defect_near_contact_event_count": organic_summary.get("near_contact_event_count"),
+                "raw_production_gravity_receipt": bool(
+                    summary.get("raw_production_gravity_receipt", False)
+                    or organic_report.get("production_gravity_receipt", False)
+                ),
+                "raw_physical_gravity_prediction": bool(
+                    summary.get("raw_physical_gravity_prediction", False)
+                    or organic_report.get("physical_gravity_prediction", False)
+                ),
+                "production_gravity_receipt": False,
+                "physical_gravity_prediction": False,
+            }
+        )
     if write_gravity:
         gravity_report = write_two_defect_stress_contraction_assay_report(
             run_dir / "two_defect_stress_contraction_assay_report.json",
             patch_count=_positive_int(gravity_cfg.get("patch_count"), 65_536),
-            steps=_positive_int(gravity_cfg.get("steps"), 16),
+            steps=_positive_int(gravity_cfg.get("steps"), 64),
             support_node_count=_positive_int(gravity_cfg.get("support_node_count"), 8),
             holonomy=_positive_int(gravity_cfg.get("holonomy"), 1),
             initial_separation=_positive_float(gravity_cfg.get("initial_separation"), 1.2),
             stress_coupling=_positive_float(gravity_cfg.get("stress_coupling"), 0.04),
             stress_radius=_positive_float(gravity_cfg.get("stress_radius"), 1.0),
             curvature_radius=_positive_float(gravity_cfg.get("curvature_radius"), 1.0),
-            cycle_stride=_positive_int(gravity_cfg.get("cycle_stride"), 4),
+            cycle_stride=_positive_int(gravity_cfg.get("cycle_stride"), 1),
             min_approach_fraction=_positive_float(gravity_cfg.get("min_approach_fraction"), 0.25),
             min_control_margin=_positive_float(gravity_cfg.get("min_control_margin"), 0.15),
         )
@@ -1019,10 +1235,67 @@ def _write_visualization_diagnostic_artifacts(run_dir: Path, config: dict[str, A
                 "gravity_like_attraction_diagnostic_receipt": bool(
                     gravity_report.get("gravity_like_attraction_diagnostic_receipt", False)
                 ),
-                "production_gravity_receipt": bool(gravity_report.get("production_gravity_receipt", False)),
-                "physical_gravity_prediction": bool(gravity_report.get("physical_gravity_prediction", False)),
+                "raw_production_gravity_receipt": bool(
+                    summary.get("raw_production_gravity_receipt", False)
+                    or gravity_report.get("production_gravity_receipt", False)
+                ),
+                "raw_physical_gravity_prediction": bool(
+                    summary.get("raw_physical_gravity_prediction", False)
+                    or gravity_report.get("physical_gravity_prediction", False)
+                ),
+                "production_gravity_receipt": False,
+                "physical_gravity_prediction": False,
             }
         )
+        if bool(gravity_cfg.get("free_dynamics_enabled", True)):
+            free_report = write_free_two_defect_dynamics_report(
+                run_dir / "free_two_defect_dynamics_report.json",
+                patch_count=_positive_int(gravity_cfg.get("patch_count"), 65_536),
+                steps=_positive_int(gravity_cfg.get("free_steps", gravity_cfg.get("steps")), 96),
+                support_node_count=_positive_int(gravity_cfg.get("support_node_count"), 8),
+                holonomy=_positive_int(gravity_cfg.get("holonomy"), 1),
+                seed=_positive_int(gravity_cfg.get("free_seed", gravity_cfg.get("seed")), 1729),
+                initial_separation=_positive_float(gravity_cfg.get("initial_separation"), 1.2),
+                initial_speed=_positive_float(gravity_cfg.get("initial_speed"), 0.035),
+                stress_coupling=_positive_float(gravity_cfg.get("free_stress_coupling"), 0.03),
+                transverse_kick=_positive_float(gravity_cfg.get("transverse_kick"), 0.008),
+                stress_radius=_positive_float(gravity_cfg.get("stress_radius"), 1.0),
+                curvature_radius=_positive_float(gravity_cfg.get("curvature_radius"), 1.0),
+                cycle_stride=_positive_int(gravity_cfg.get("cycle_stride"), 1),
+                contact_radius=_positive_float(gravity_cfg.get("contact_radius"), 0.10),
+                overlap_radius=_positive_float(gravity_cfg.get("overlap_radius"), 0.22),
+                bind_speed_threshold=_positive_float(gravity_cfg.get("bind_speed_threshold"), 0.055),
+                annihilation_overlap_threshold=_positive_float(
+                    gravity_cfg.get("annihilation_overlap_threshold"), 0.85
+                ),
+            )
+            free_summary = (
+                free_report.get("free_dynamics_summary")
+                if isinstance(free_report.get("free_dynamics_summary"), dict)
+                else {}
+            )
+            summary.update(
+                {
+                    "free_two_defect_dynamics_written": True,
+                    "free_two_defect_dynamics_receipt": bool(
+                        free_report.get("free_two_defect_dynamics_receipt", False)
+                    ),
+                    "gravity_like_free_dynamics_diagnostic_receipt": bool(
+                        free_report.get("gravity_like_free_dynamics_diagnostic_receipt", False)
+                    ),
+                    "free_two_defect_contact_outcome": free_summary.get("contact_outcome"),
+                    "raw_production_gravity_receipt": bool(
+                        summary.get("raw_production_gravity_receipt", False)
+                        or free_report.get("production_gravity_receipt", False)
+                    ),
+                    "raw_physical_gravity_prediction": bool(
+                        summary.get("raw_physical_gravity_prediction", False)
+                        or free_report.get("physical_gravity_prediction", False)
+                    ),
+                    "production_gravity_receipt": False,
+                    "physical_gravity_prediction": False,
+                }
+            )
     return summary
 
 
@@ -1051,6 +1324,28 @@ def _neutral_frontier_settings(config: dict[str, Any]) -> dict[str, Any]:
         "seed": int(cfg.get("seed", 11) or 11),
         "sample_count": max(8, sample_count),
         "max_model_points": max(8, max_model_points),
+        "strict_bulk_max_model_points": max(
+            8,
+            int(cfg.get("strict_bulk_max_model_points", max_model_points) or max_model_points),
+        ),
+        "planted_control_points": max(16, int(cfg.get("planted_control_points", 160) or 160)),
+        "object_min_objects": max(1, int(cfg.get("object_min_objects", 16) or 16)),
+        "object_min_observers_per_object": max(
+            1,
+            int(cfg.get("object_min_observers_per_object", 3) or 3),
+        ),
+        "object_max_observer_fraction_per_object": max(
+            0.01,
+            min(1.0, float(cfg.get("object_max_observer_fraction_per_object", 0.65) or 0.65)),
+        ),
+        "object_max_model_points": max(
+            8,
+            int(cfg.get("object_max_model_points", min(max_model_points, 192)) or min(max_model_points, 192)),
+        ),
+        "object_heldout_fraction": max(
+            0.01,
+            min(0.95, float(cfg.get("object_heldout_fraction", 0.25) or 0.25)),
+        ),
         "graph_workers": max(1, graph_workers),
         "overlap_control_max_model_points": max(
             8,
@@ -1072,12 +1367,61 @@ def _neutral_frontier_settings(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _visualization_export_settings(
+    config: dict[str, Any],
+    *,
+    max_screen_points: int,
+    max_observers: int,
+    max_h3_objects: int,
+) -> dict[str, int]:
+    export_cfg = dict(config.get("visualization_export", {}) or {})
+    readout_cfg = dict(config.get("observer_consensus_readout", {}) or {})
+    observer_cfg = dict(config.get("observers", {}) or {})
+
+    observer_sample_count = _positive_int(observer_cfg.get("sample_count"), max_observers)
+    effective_max_screen_points = _positive_int(export_cfg.get("max_screen_points"), max_screen_points)
+    effective_max_observers = min(
+        observer_sample_count,
+        _positive_int(export_cfg.get("max_observers"), max_observers),
+    )
+    effective_max_h3_objects = _positive_int(export_cfg.get("max_h3_objects"), max_h3_objects)
+
+    readout_observers_default = min(observer_sample_count, max(12, effective_max_observers))
+    readout_objects_default = max(24, effective_max_h3_objects)
+    readout_observers = min(
+        observer_sample_count,
+        _positive_int(readout_cfg.get("observer_sample_count"), readout_observers_default),
+    )
+    readout_objects = _positive_int(readout_cfg.get("object_sample_count"), readout_objects_default)
+    return {
+        "max_screen_points": effective_max_screen_points,
+        "max_observers": effective_max_observers,
+        "max_h3_objects": effective_max_h3_objects,
+        "readout_observer_sample_count": readout_observers,
+        "readout_object_sample_count": readout_objects,
+    }
+
+
 def _positive_int(value: Any, default: int) -> int:
     try:
         parsed = int(value)
     except (TypeError, ValueError):
         parsed = int(default)
     return max(1, parsed)
+
+
+def _positive_int_tuple(value: Any, default: tuple[int, ...]) -> tuple[int, ...]:
+    if value is None:
+        return tuple(max(1, int(item)) for item in default)
+    if isinstance(value, str):
+        items: list[Any] = [item.strip() for item in value.split(",") if item.strip()]
+    else:
+        try:
+            items = list(value)
+        except TypeError:
+            items = [value]
+    parsed = tuple(_positive_int(item, default[0] if default else 1) for item in items)
+    return parsed or tuple(max(1, int(item)) for item in default)
 
 
 def _optional_int(value: Any) -> int | None:

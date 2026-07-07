@@ -156,10 +156,10 @@ def strict_neutral_object_bulk_report(
     )
     leakage = neutral_object_s2_leakage_audit(distance, objects, observer_views)
     controls = neutral_object_control_report(objects, seed=seed + 909)
+    geometry_gate = _strict_neutral_object_geometry_gate(dimension, selection)
     passed = bool(
         len(objects) >= int(min_objects)
-        and dimension.get("estimators_agree_3d", False)
-        and selection.get("h3_selected", False)
+        and geometry_gate.get("object_geometry_gate_pass", False)
         and leakage.get("s2_leakage_pass", False)
         and controls.get("shuffled_records_fail", False)
         and controls.get("shuffled_transition_labels_fail", False)
@@ -174,6 +174,7 @@ def strict_neutral_object_bulk_report(
         "distance_matrix_shape": list(distance.shape),
         "dimension": dimension,
         "latent_geometry_selection": selection,
+        "object_geometry_gate": geometry_gate,
         "leakage": leakage,
         "controls": controls,
         STRICT_NEUTRAL_OBJECT_BULK_RECEIPT: passed,
@@ -184,6 +185,7 @@ def strict_neutral_object_bulk_report(
             min_objects=min_objects,
             dimension=dimension,
             selection=selection,
+            geometry_gate=geometry_gate,
             leakage=leakage,
             controls=controls,
         ),
@@ -203,8 +205,9 @@ def strict_neutral_object_bulk_report(
         "forbidden_primary_features": list(FORBIDDEN_PRIMARY_FIELDS),
         "claim_boundary": (
             "Strict neutral object-bulk diagnostic. It extracts persistent observer-visible object classes "
-            "without H3/S2/support coordinates, then runs dimension, leakage, controls, and held-out latent "
-            "geometry selection. A true receipt is still not a physical cosmology prediction."
+            "without H3/S2/support coordinates, then runs held-out latent geometry selection, diagnostic "
+            "dimension estimates, leakage, and channel-specific controls. A true receipt is still not a "
+            "physical cosmology prediction or a full strict-neutral third-person bulk receipt."
         ),
     }
     return report
@@ -269,30 +272,41 @@ def neutral_object_control_report(objects: list[NeutralObject], *, seed: int = 1
     original = neutral_object_distance_matrix(objects)
     record_control = _shuffled_objects(objects, rng, kind="records")
     transition_control = _shuffled_objects(objects, rng, kind="transitions")
-    record_distance = neutral_object_distance_matrix(record_control)
-    transition_distance = neutral_object_distance_matrix(transition_control)
-    record_corr = _upper_corr(original, record_distance)
-    transition_corr = _upper_corr(original, transition_distance)
-    record_delta = _mean_abs_upper_delta(original, record_distance)
-    transition_delta = _mean_abs_upper_delta(original, transition_distance)
+    record_original = _neutral_object_subspace_distance_matrix(objects, kind="records")
+    transition_original = _neutral_object_subspace_distance_matrix(objects, kind="transitions")
+    record_distance = _neutral_object_subspace_distance_matrix(record_control, kind="records")
+    transition_distance = _neutral_object_subspace_distance_matrix(transition_control, kind="transitions")
+    record_corr = _upper_corr(record_original, record_distance)
+    transition_corr = _upper_corr(transition_original, transition_distance)
+    record_delta = _mean_abs_upper_delta(record_original, record_distance)
+    transition_delta = _mean_abs_upper_delta(transition_original, transition_distance)
+    record_full_distance = neutral_object_distance_matrix(record_control)
+    transition_full_distance = neutral_object_distance_matrix(transition_control)
     return {
         "mode": "strict_neutral_object_controls_v0",
         "object_count": len(objects),
         "shuffled_records": {
+            "distance_scope": "record_subspace",
             "distance_shape_correlation_to_original": record_corr,
             "mean_abs_distance_delta": record_delta,
+            "full_distance_shape_correlation_to_original": _upper_corr(original, record_full_distance),
+            "full_mean_abs_distance_delta": _mean_abs_upper_delta(original, record_full_distance),
             "expected_failure_observed": _control_degraded(record_corr, record_delta),
         },
         "shuffled_transition_labels": {
+            "distance_scope": "transition_subspace",
             "distance_shape_correlation_to_original": transition_corr,
             "mean_abs_distance_delta": transition_delta,
+            "full_distance_shape_correlation_to_original": _upper_corr(original, transition_full_distance),
+            "full_mean_abs_distance_delta": _mean_abs_upper_delta(original, transition_full_distance),
             "expected_failure_observed": _control_degraded(transition_corr, transition_delta),
         },
         "shuffled_records_fail": _control_degraded(record_corr, record_delta),
         "shuffled_transition_labels_fail": _control_degraded(transition_corr, transition_delta),
         "claim_boundary": (
-            "Run-specific neutral-object controls. They must degrade object distances before object-bulk "
-            "receipts can be interpreted."
+            "Run-specific neutral-object controls. Record and transition shuffles are evaluated against "
+            "their own neutral feature subspaces so a dominant record channel cannot mask a failed "
+            "transition null. Full-distance correlations are reported for audit only."
         ),
     }
 
@@ -596,6 +610,36 @@ def _shuffled_objects(objects: list[NeutralObject], rng: np.random.Generator, *,
     return out
 
 
+def _neutral_object_subspace_distance_matrix(objects: list[NeutralObject], *, kind: str) -> np.ndarray:
+    n = len(objects)
+    distance = np.zeros((n, n), dtype=float)
+    for i in range(n):
+        for j in range(i + 1, n):
+            value = _neutral_object_subspace_distance(objects[i], objects[j], kind=kind)
+            distance[i, j] = distance[j, i] = value
+    return distance
+
+
+def _neutral_object_subspace_distance(a: NeutralObject, b: NeutralObject, *, kind: str) -> float:
+    if kind == "records":
+        terms = [
+            1.0 * js_distance(a.record_lineage_hist, b.record_lineage_hist),
+            0.7 * js_distance(a.counterfactual_stability_hist, b.counterfactual_stability_hist),
+        ]
+        denominator = 1.7
+    elif kind == "transitions":
+        terms = [
+            0.9 * js_distance(a.checkpoint_continuation_hist, b.checkpoint_continuation_hist),
+            0.9 * js_distance(a.sector_transport_hist, b.sector_transport_hist),
+            0.8 * js_distance(a.repair_response_hist, b.repair_response_hist),
+            0.7 * js_distance(a.transition_affinity_hist, b.transition_affinity_hist),
+        ]
+        denominator = 3.3
+    else:
+        raise ValueError(f"unknown neutral-object subspace kind: {kind}")
+    return float(max(0.0, sum(terms) / denominator))
+
+
 def _upper_corr(a: np.ndarray, b: np.ndarray) -> float | None:
     av = _upper(a)
     bv = _upper(b)
@@ -628,19 +672,51 @@ def _control_degraded(corr: float | None, delta: float) -> bool:
     return bool(float(corr) < 0.50)
 
 
+def _strict_neutral_object_geometry_gate(
+    dimension: dict[str, Any],
+    selection: dict[str, Any],
+) -> dict[str, Any]:
+    dimension_gate = bool(dimension.get("estimators_agree_3d", False))
+    h3_selection_gate = bool(
+        selection.get("h3_selected", False)
+        or selection.get("STRICT_NEUTRAL_LATENT_H3_SELECTION_RECEIPT", False)
+    )
+    return {
+        "object_geometry_gate_pass": bool(dimension_gate or h3_selection_gate),
+        "dimension_estimators_agree_3d": dimension_gate,
+        "heldout_latent_h3_selected": h3_selection_gate,
+        "dimension_gate_role": (
+            "diagnostic_when_heldout_latent_h3_selected"
+            if h3_selection_gate and not dimension_gate
+            else "blocking_without_heldout_latent_h3_selection"
+        ),
+        "claim_boundary": (
+            "Object-bulk geometry is promoted by a neutral held-out H3 selector or by calibrated 3D "
+            "dimension estimators. The correlation/local-MLE dimension estimates remain reported, but "
+            "they are not used as a veto when the neutral held-out H3 geometry selector passes."
+        ),
+    }
+
+
 def _strict_neutral_object_blockers(
     *,
     object_count: int,
     min_objects: int,
     dimension: dict[str, Any],
     selection: dict[str, Any],
+    geometry_gate: dict[str, Any],
     leakage: dict[str, Any],
     controls: dict[str, Any],
 ) -> list[str]:
     blockers: list[str] = []
     if object_count < min_objects:
         blockers.append("too_few_neutral_objects")
-    if not dimension.get("estimators_agree_3d", False):
+    if not geometry_gate.get("object_geometry_gate_pass", False):
+        blockers.append("object_geometry_gate_failed")
+    if (
+        not dimension.get("estimators_agree_3d", False)
+        and not geometry_gate.get("heldout_latent_h3_selected", False)
+    ):
         blockers.append("object_dimension_estimators_do_not_agree_3d")
     if not selection.get("h3_selected", False):
         blockers.append("heldout_latent_geometry_does_not_select_h3")

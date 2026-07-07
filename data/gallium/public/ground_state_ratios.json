@@ -1,0 +1,56 @@
+{
+  "schema": "oph_ga71_ground_state_ratios_v1",
+  "claim_boundary": "Comparison-only gallium source ratios. These rows must not be upstream parents of rho_TD_71, S_TD_71, sigma_gs_51Cr, or sigma_gs_37Ar.",
+  "rows": [
+    {
+      "run_id": "GALLEX_Cr1",
+      "experiment": "GALLEX",
+      "source": "51Cr",
+      "R_gs": 1.049,
+      "sigma_R_gs": 0.121,
+      "measurement_use_flag": "COMPARISON_ONLY"
+    },
+    {
+      "run_id": "GALLEX_Cr2",
+      "experiment": "GALLEX",
+      "source": "51Cr",
+      "R_gs": 0.894,
+      "sigma_R_gs": 0.121,
+      "measurement_use_flag": "COMPARISON_ONLY"
+    },
+    {
+      "run_id": "SAGE_Cr",
+      "experiment": "SAGE",
+      "source": "51Cr",
+      "R_gs": 1.045,
+      "sigma_R_gs": 0.132,
+      "measurement_use_flag": "COMPARISON_ONLY"
+    },
+    {
+      "run_id": "SAGE_Ar",
+      "experiment": "SAGE",
+      "source": "37Ar",
+      "R_gs": 0.875,
+      "sigma_R_gs": 0.105,
+      "measurement_use_flag": "COMPARISON_ONLY"
+    },
+    {
+      "run_id": "BEST_Cr_R1",
+      "experiment": "BEST",
+      "source": "51Cr",
+      "R_gs": 0.87,
+      "sigma_R_gs": 0.039,
+      "measurement_use_flag": "COMPARISON_ONLY",
+      "uncertainty_note": "diagonal diagnostic uncertainty; full published covariance is a future comparison mode"
+    },
+    {
+      "run_id": "BEST_Cr_R2",
+      "experiment": "BEST",
+      "source": "51Cr",
+      "R_gs": 0.843,
+      "sigma_R_gs": 0.041,
+      "measurement_use_flag": "COMPARISON_ONLY",
+      "uncertainty_note": "diagonal diagnostic uncertainty; full published covariance is a future comparison mode"
+    }
+  ]
+}

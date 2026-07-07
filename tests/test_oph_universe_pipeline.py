@@ -10,10 +10,12 @@ from oph_fpe.pipelines.oph_universe import (
     _postprocess_observer_experience,
     _post_theorem_large_run_readiness,
     refresh_post_theorem_large_run_readiness_report,
+    _write_frontier_artifacts,
     _write_physical_cmb_source_artifacts,
     _write_physical_cmb_transfer_artifacts,
     _write_visualizer_csv_aliases,
     _write_visualization_diagnostic_artifacts,
+    _visualization_export_settings,
 )
 
 
@@ -69,8 +71,61 @@ def test_post_theorem_large_run_readiness_routes_visualization_without_physical_
     assert report["cloud_run_safe_for_physical_cmb_prediction"] is False
     assert report["cloud_run_safe_for_strict_neutral_bulk_claim"] is False
     assert report["lanes"]["screen_cmb_proxy"]["scale_candidate"] is True
+    assert report["lanes"]["two_defect_gravity"]["einstein_branch_entry_contract"] is False
+    assert report["lanes"]["two_defect_gravity"]["raw_production_gravity_requested"] is False
+    assert report["lanes"]["two_defect_gravity"]["production_gravity"] is False
     assert "finite_covariant_parent_receipt_missing" in report["blockers"]
     assert "production_gravity_receipt_false" in report["blockers"]
+
+
+def test_post_theorem_large_run_readiness_blocks_raw_gravity_without_einstein_branch_entry():
+    report = _post_theorem_large_run_readiness(
+        theorem_contract={
+            "paper_geometric_branch_consensus_bulk_emergence_receipt": True,
+            "strict_neutral_blockers": [],
+            "einstein_branch_entry_primary_blockers": ["E0_einstein_branch_entry_umbrella"],
+        },
+        proof={"physical_cmb_prediction": False, "bulk_3d_established_chart_blind_strict_neutral": False},
+        readout={"observer_facing_consensus_3d_bulk_readout_receipt": True},
+        frontier_artifacts={
+            "physical_cmb_prediction_receipt": False,
+            "raw_production_gravity_receipt": True,
+            "two_defect_stress_contraction_assay_receipt": True,
+        },
+        cmb_diagnostics={"screen_proxy_cmb_receipt": True},
+    )
+
+    gravity = report["lanes"]["two_defect_gravity"]
+    assert gravity["status"] == "diagnostic_ready"
+    assert gravity["raw_production_gravity_requested"] is True
+    assert gravity["einstein_branch_entry_contract"] is False
+    assert gravity["production_gravity"] is False
+    assert "einstein_branch_entry_contract_receipt_false" in report["blockers"]
+    assert "E0_einstein_branch_entry_umbrella" in report["blockers"]
+
+
+def test_post_theorem_large_run_readiness_allows_production_gravity_only_after_einstein_gate():
+    report = _post_theorem_large_run_readiness(
+        theorem_contract={
+            "paper_geometric_branch_consensus_bulk_emergence_receipt": True,
+            "strict_neutral_blockers": [],
+            "einstein_branch_entry_contract_receipt": True,
+        },
+        proof={"physical_cmb_prediction": False, "bulk_3d_established_chart_blind_strict_neutral": False},
+        readout={"observer_facing_consensus_3d_bulk_readout_receipt": True},
+        frontier_artifacts={
+            "physical_cmb_prediction_receipt": False,
+            "raw_production_gravity_receipt": True,
+            "two_defect_stress_contraction_assay_receipt": True,
+        },
+        cmb_diagnostics={"screen_proxy_cmb_receipt": True},
+    )
+
+    gravity = report["lanes"]["two_defect_gravity"]
+    assert gravity["raw_production_gravity_requested"] is True
+    assert gravity["einstein_branch_entry_contract"] is True
+    assert gravity["production_gravity"] is True
+    assert "einstein_branch_entry_contract_receipt_false" not in report["blockers"]
 
 
 def test_refresh_large_run_readiness_uses_post_theorem_summary(tmp_path: Path):
@@ -177,6 +232,32 @@ def test_oph_universe_object_chart_config_excludes_auxiliary_h3_response_labels(
     assert cosmology["b_a_paired_perturbation"]["source_state"] == "theorem_observer"
 
 
+def test_oph_universe_uses_configured_visualization_export_observer_caps():
+    settings = _visualization_export_settings(
+        {
+            "observers": {"sample_count": 32768},
+            "observer_consensus_readout": {
+                "observer_sample_count": 4096,
+                "object_sample_count": 8192,
+            },
+            "visualization_export": {
+                "max_screen_points": 12000,
+                "max_observers": 4096,
+                "max_h3_objects": 8192,
+            },
+        },
+        max_screen_points=5000,
+        max_observers=128,
+        max_h3_objects=512,
+    )
+
+    assert settings["max_screen_points"] == 12000
+    assert settings["max_observers"] == 4096
+    assert settings["max_h3_objects"] == 8192
+    assert settings["readout_observer_sample_count"] == 4096
+    assert settings["readout_object_sample_count"] == 8192
+
+
 def test_oph_universe_cmb_diagnostic_summary_splits_screen_from_physical(tmp_path):
     (tmp_path / "cl_comparison_report.json").write_text(
         json.dumps(
@@ -247,6 +328,11 @@ def test_oph_universe_writes_visualization_diagnostic_artifacts(tmp_path):
                     "u1_lattice_size": 3,
                     "u1_sweeps": 8,
                 },
+                "yang_mills_gap_certificate": {
+                    "lattice_size": 2,
+                    "sweeps": 6,
+                    "refinement_lattice_sizes": [2],
+                },
                 "two_defect_gravity_assay": {
                     "patch_count": 512,
                     "steps": 12,
@@ -260,12 +346,118 @@ def test_oph_universe_writes_visualization_diagnostic_artifacts(tmp_path):
     assert (tmp_path / "reference_vacuum_baseline" / "reference_vacuum_baseline_report.json").exists()
     assert report["oph_native_vacuum_promotion_receipt"] is False
     assert report["oph_primordial_field_promotion_receipt"] is False
+    assert report["yang_mills_gap_certificate_written"] is True
+    assert (tmp_path / "yang_mills_gap_certificate_report.json").exists()
+    assert report["finite_nonabelian_gauge_gap_diagnostic_receipt"] is True
+    assert report["yang_mills_gap_reproduced_receipt"] is False
+    assert report["clay_yang_mills_gap_receipt"] is False
     assert report["two_defect_stress_contraction_assay_written"] is True
     assert (tmp_path / "two_defect_stress_contraction_assay_report.json").exists()
     assert report["two_defect_stress_contraction_assay_receipt"] is True
     assert report["gravity_like_attraction_diagnostic_receipt"] is True
     assert report["production_gravity_receipt"] is False
     assert report["physical_gravity_prediction"] is False
+
+
+def test_oph_universe_frontier_writes_strict_neutral_record_and_object_reports(tmp_path, monkeypatch):
+    (tmp_path / "observer_views.jsonl").write_text(
+        json.dumps({"view_type": "patch_observer", "observer_id": 1}) + "\n",
+        encoding="utf-8",
+    )
+    calls = []
+
+    def record(name, payload):
+        def _write(*args, **kwargs):
+            calls.append((name, args, kwargs))
+            return dict(payload)
+
+        return _write
+
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_strict_neutral_bulk_report",
+        record("strict_neutral_bulk", {"strict_neutral_bulk": False, "blockers": ["dimension_not_3d"]}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_strict_neutral_object_bulk_report",
+        record(
+            "strict_neutral_object",
+            {"strict_neutral_object_bulk": False, "object_count": 12, "blockers": ["controls_not_degraded"]},
+        ),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_overlap_native_neutral_control_report",
+        record("overlap", {"overlap_native_negative_control_receipt": False}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_prime_geometric_rank_sweep_report",
+        record("rank_sweep", {}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_prime_geometric_rank_refinement_report",
+        record("rank_refinement", {}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_neutral_independent_rank_selector_audit_report",
+        record("rank_selector", {}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_overlap_native_graph_geometry_sweep_report",
+        record("graph", {}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_overlap_residualized_graph_geometry_sweep_report",
+        record("residual_graph", {}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_neutral_3d_bulk_audit_report",
+        record("neutral_audit", {"blockers": ["audit_blocked"]}),
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_strict_neutral_bulk_frontier_report",
+        record("neutral_frontier", {"strict_neutral_bulk": False, "strict_neutral_bulk_ready": False, "blockers": ["frontier_blocked"]}),
+    )
+    monkeypatch.setattr("oph_fpe.pipelines.oph_universe._write_visualization_diagnostic_artifacts", lambda *args: {})
+    monkeypatch.setattr("oph_fpe.pipelines.oph_universe._write_physical_cmb_source_artifacts", lambda *args: {})
+    monkeypatch.setattr("oph_fpe.pipelines.oph_universe._write_physical_cmb_transfer_artifacts", lambda *args: {})
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_physical_cmb_input_no_data_use_receipt",
+        lambda *args: {"NO_DATA_USE_RECEIPT": True},
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_physical_cmb_source_readiness_report",
+        lambda *args: {},
+    )
+    monkeypatch.setattr("oph_fpe.pipelines.oph_universe.write_physical_cmb_input_report", lambda *args: {})
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_physical_cmb_promotion_audit_report",
+        lambda *args: {},
+    )
+    monkeypatch.setattr(
+        "oph_fpe.pipelines.oph_universe.write_physical_cmb_output_comparison_report",
+        lambda *args: {},
+    )
+    monkeypatch.setattr("oph_fpe.pipelines.oph_universe.write_physical_cmb_frontier_report", lambda *args: {})
+
+    report = _write_frontier_artifacts(
+        tmp_path,
+        {
+            "neutral_frontier": {
+                "seed": 5,
+                "strict_bulk_max_model_points": 64,
+                "object_min_observers_per_object": 2,
+                "object_max_model_points": 32,
+            }
+        },
+    )
+
+    assert report["strict_neutral_record_report_written"] is True
+    assert report["strict_neutral_object_report_written"] is True
+    assert report["strict_neutral_object_count"] == 12
+    assert "controls_not_degraded" in report["strict_neutral_object_blockers"]
+    assert [name for name, _, _ in calls][:2] == ["strict_neutral_bulk", "strict_neutral_object"]
+    object_call = calls[1]
+    assert object_call[2]["min_observers_per_object"] == 2
+    assert object_call[2]["max_model_points"] == 32
 
 
 def test_oph_universe_writes_fail_closed_physical_cmb_source_artifacts(tmp_path, monkeypatch):

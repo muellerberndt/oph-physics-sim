@@ -1,0 +1,180 @@
+{
+  "anderson_comparator": {
+    "K": 3.099,
+    "formula": "K*Vinf_km_s*(cos(delta_in_deg)-cos(delta_out_deg))",
+    "prediction_mm_s": 13.277863428950576,
+    "residual_mm_s": 0.1821365710494245
+  },
+  "certificate_id": "CloseFlyBy:near",
+  "flyby_id": "NEAR",
+  "hashes": {
+    "certificate_payload_sha256": "d8ea1d56243d11f366c07442565a630f612c321ac9a224f1e0433fca4d6f31d6",
+    "public_row_sha256": "235545ead700fd929eb0c1042960eb22228908e6734d4921cef4bc3d90197b72",
+    "raw_manifest_sha256": "5219391b051fb7f9c0210b67e1d79b71607e07065d951a5583ee048738f3f2d0",
+    "source_manifest_sha256": "a7102c222c38af5d2243c5dd8162a925a159b0b6464454fc44f162d40fc86715"
+  },
+  "models": {
+    "M_full": {
+      "forbidden_closure_modes": [
+        "explicit velocity impulse fitted only to erase the anomaly"
+      ],
+      "purpose": "Replay the full conventional tracking record without target leakage.",
+      "required_model_terms": [
+        "Earth gravity",
+        "Sun/Moon/planet perturbations",
+        "tides",
+        "relativity",
+        "station clocks and ramps",
+        "EOP",
+        "troposphere",
+        "ionosphere",
+        "spacecraft attitude",
+        "maneuvers",
+        "SRP/reflectivity/thermal recoil where available"
+      ],
+      "required_outputs": [
+        "A_full_mm_s",
+        "sigma_A_full_mm_s",
+        "full_replay_pass"
+      ],
+      "status": "not_run"
+    },
+    "M_hist": {
+      "accepted_readout": "signed inbound/outbound asymptotic speed mismatch in mm/s",
+      "purpose": "Reproduce the historical reduced orbit-determination residual.",
+      "required_outputs": [
+        "A_hist_mm_s",
+        "sigma_A_hist_mm_s",
+        "historical_replay_pass"
+      ],
+      "status": "not_run"
+    }
+  },
+  "next_required_artifacts": [
+    "raw/reduced tracking files",
+    "station, clock, EOP, troposphere, ionosphere, and weather calibration files",
+    "SPICE/geometry and attitude products",
+    "maneuver and non-gravitational force ledgers",
+    "solve-for list, covariance, normal/design matrices, and OD code hash",
+    "historical reduced replay, full conventional replay, projection artifact, and residual tests"
+  ],
+  "nonclaims": [
+    "No historical flyby anomaly is solved by this public certificate layer.",
+    "The Anderson comparator is recorded as a public empirical comparator, not as an OPH law.",
+    "Synthetic projection tests validate code paths only and cannot close this historical row.",
+    "No OPH new-force branch is promoted from an OD_REPLAY_PENDING row."
+  ],
+  "public_row": {
+    "Vinf_km_s": 6.851,
+    "dVinf_obs_mm_s": 13.46,
+    "dVp_obs_mm_s": 7.21,
+    "delta_in_deg": -20.76,
+    "delta_out_deg": -71.96,
+    "notes": "strongest historical positive",
+    "sigma_dVinf_mm_s": 0.01,
+    "sigma_dVp_mm_s": 0.006,
+    "source_refs": [
+      "Anderson_2008_public_table",
+      "PDS_NEAR_radio_science"
+    ]
+  },
+  "raw_od_receipt": {
+    "attitude_files": [],
+    "clock_ramp_time_files": [],
+    "covariance_file": null,
+    "design_matrix_files": [],
+    "eop_files": [
+      {
+        "required_type": "EOP",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "ion_files": [
+      {
+        "required_type": "ION",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "maneuver_files": [],
+    "missing_receipts": [
+      "attitude_history",
+      "spacecraft_shape_area_mass_epoch",
+      "optical_reflectivity_coefficients",
+      "thermal_srp_model",
+      "exact_historical_solve_for_list",
+      "covariance",
+      "design_matrices",
+      "historical_residual_plots"
+    ],
+    "od_code_hash": null,
+    "raw_manifest_path": "data/flyby/raw/near/manifest.yaml",
+    "raw_manifest_sha256": "5219391b051fb7f9c0210b67e1d79b71607e07065d951a5583ee048738f3f2d0",
+    "receipt_status": "RAW_TRACKING_AVAILABLE_REPLAY_PENDING",
+    "solve_for_list": null,
+    "spice_files": [
+      {
+        "required_type": "nmlmodl",
+        "status": "manifest_only_not_bundled"
+      },
+      {
+        "required_type": "Paramsum",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "station_files": [],
+    "thermal_srp_optical_files": [],
+    "tracking_files": [
+      {
+        "required_type": "ODF",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "tro_files": [
+      {
+        "required_type": "TRO",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "weather_files": []
+  },
+  "results": {
+    "A_full_mm_s": null,
+    "A_hist_mm_s": null,
+    "A_proj_mm_s": null,
+    "projection_decomposition": null,
+    "sigma_A_full_mm_s": null,
+    "sigma_A_hist_mm_s": null
+  },
+  "schema_version": "oph_closeflyby_certificate_v1",
+  "status": "OD_REPLAY_PENDING",
+  "tests": {
+    "arc_holdout_pass": null,
+    "bias_by_observable_type_pass": null,
+    "bias_by_station_pass": null,
+    "chi2_reduced": null,
+    "covariance_condition_number": null,
+    "doppler_rms_mm_s": null,
+    "full_replay_pass": null,
+    "historical_replay_pass": null,
+    "leave_one_pass_out_pass": null,
+    "parameter_correlation_report": null,
+    "post_perigee_holdout_pass": null,
+    "pre_perigee_holdout_pass": null,
+    "projection_pass": null,
+    "range_rms_m": null,
+    "station_holdout_pass": null,
+    "weighted_chi2": null,
+    "whiteness_p_value": null
+  },
+  "theorem_contract": {
+    "closure_condition": [
+      "A_hist approximates the public historical residual",
+      "A_full is zero within the replay floor",
+      "A_proj = A_hist - A_full approximates the public residual",
+      "residual, covariance, station-holdout, and arc-holdout tests pass"
+    ],
+    "object": "CloseFlyBy(F)",
+    "public_layer_claim": "certificate object and comparator are created; historical closure is not claimed"
+  },
+  "tier": "Tier 1: CloseFlyByPublic(F)"
+}

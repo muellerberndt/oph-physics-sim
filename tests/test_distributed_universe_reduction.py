@@ -54,8 +54,23 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert summary["strict_single_global_neutral_bulk_receipt"] is False
 
     payload = json.loads((tmp_path / "reduced" / "distributed_visualization_payload.json").read_text())
+    assert payload["schemaVersion"] == "oph_universe_timeline_visualization_payload_v1"
+    assert payload["distributedSchema"] == "oph_distributed_universe_visualization_payload_v1"
     assert payload["physicalCMB"]["globalReduction"]["physical_cmb_prediction_receipt"] is False
+    assert payload["cmbComparison"]["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
     assert payload["observerModularTime"]["globalExport"]["objectiveObserverViewCount"] == 2
+    assert payload["observerModularTime"]["observers"]
+    assert payload["observerModularTime"]["timeFrames"]
+    assert payload["subjectiveObserverCameras"]
+    assert payload["hilbertSpaceObserverAlgebra"]["finiteSupportAlgebraPopulated"] is True
+    assert payload["consensusBulk"]["objects"]
+    assert payload["visualizationViews"]["effectiveStringTheory"]["viewId"] == "effectiveStringTheory"
+    assert payload["visualizationRenderData"]["schema"] == "oph_visualization_render_data_v1"
+    assert payload["visualizationRenderData"]["availability"]["subjectiveCameraCount"] >= 1
+    assert payload["visualizationRenderData"]["availability"]["h3ObjectCount"] >= 1
+    assert payload["visualizationRenderData"]["availability"]["protoWorldlineCount"] >= 1
+    assert payload["visualizationRenderData"]["cameraPresets"]
+    assert payload["visualizationRenderData"]["sceneGraph"]["bulk"]["protoWorldlines"][0]["polyline"]
     observer_sidecar = json.loads(
         (tmp_path / "reduced" / "observer_modular_time_global" / "observer_modular_time_global_payload.json").read_text()
     )
@@ -326,6 +341,8 @@ def _write_shard(run_dir: Path) -> None:
                 "objectiveObserverViews": [
                     {
                         "observerId": "o0",
+                        "axis": [1.0, 0.0, 0.0],
+                        "supportPatchCount": 4,
                         "timeFrames": [
                             {
                                 "cycle": cycle,
@@ -346,7 +363,24 @@ def _write_shard(run_dir: Path) -> None:
                 ],
             },
             "screen": {"clusters": {"snapshots": []}},
-            "consensusBulk": {"protoParticleCandidates": {"worldlines": []}},
+            "consensusBulk": {
+                "objects": [
+                    {
+                        "objectId": "obj0",
+                        "x": 0.1,
+                        "y": 0.2,
+                        "z": 0.3,
+                        "observerCount": 2,
+                        "supportSize": 4,
+                    }
+                ],
+                "receipts": {
+                    "observer_modular_time_receipt": True,
+                    "observer_h3_object_population_receipt": True,
+                    "theorem_assisted_consensus_3d_bulk_readout_receipt": True,
+                },
+                "protoParticleCandidates": {"worldlines": []},
+            },
         },
     )
 

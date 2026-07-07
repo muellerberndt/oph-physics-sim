@@ -227,6 +227,10 @@ def test_primary_neutral_distance_uses_fixed_embedding_metric_without_rank_prefi
     assert features.shape[0] == 4
     assert distance.shape == (4, 4)
     assert np.allclose(distance, distance.T)
+    assert "modular_response" not in DEFAULT_NEUTRAL_WEIGHTS
+    assert "prime_geometric_modular" not in DEFAULT_NEUTRAL_WEIGHTS
+    assert "prime_geometric_control_quotient" not in DEFAULT_NEUTRAL_WEIGHTS
+    assert "repair_modular" not in DEFAULT_NEUTRAL_WEIGHTS
     assert "prime_geometric_rank3" not in DEFAULT_NEUTRAL_WEIGHTS
     assert "transition_token" not in DEFAULT_NEUTRAL_WEIGHTS
     assert "support_visible_modular" not in DEFAULT_NEUTRAL_WEIGHTS
@@ -250,7 +254,7 @@ def test_duplicate_primary_channel_audit_blocks_identical_weighted_channels():
         observer_views.append(row)
     views = build_neutral_observer_views(observer_views)
 
-    default_audit = neutral_channel_duplicate_audit(
+    forbidden_prime_audit = neutral_channel_duplicate_audit(
         views,
         weights={"prime_geometric_modular": 1.0, "prime_geometric_control_quotient": 1.0},
     )
@@ -259,9 +263,31 @@ def test_duplicate_primary_channel_audit_blocks_identical_weighted_channels():
         weights={"prime_geometric_modular": 1.0, "support_visible_modular": 1.0},
     )
 
-    assert default_audit["duplicate_channel_gate_pass"] is True
+    assert forbidden_prime_audit["feature_ancestry_gate_pass"] is False
+    assert forbidden_prime_audit["duplicate_channel_gate_pass"] is False
     assert diagnostic_audit["duplicate_channel_gate_pass"] is False
     assert diagnostic_audit["duplicate_pairs"]
+
+
+def test_strict_neutral_feature_ancestry_blocks_support_visible_weights():
+    observer_views = [
+        _observer_view(1, records=[1, 1, 2], checkpoints=[1], sectors=[0, 1], repairs=[1]),
+        _observer_view(2, records=[2, 3, 3], checkpoints=[2], sectors=[1, 1], repairs=[2]),
+        _observer_view(3, records=[7, 8, 9], checkpoints=[3], sectors=[2, 2], repairs=[3]),
+        _observer_view(4, records=[4, 5, 6], checkpoints=[4], sectors=[3, 3], repairs=[4]),
+    ]
+    views = build_neutral_observer_views(observer_views)
+
+    audit = neutral_channel_duplicate_audit(
+        views,
+        weights={"record": 1.0, "prime_geometric_modular": 1.0},
+    )
+
+    assert audit["feature_ancestry_gate_pass"] is False
+    assert audit["duplicate_channel_gate_pass"] is False
+    assert audit["feature_ancestry_blockers"] == [
+        "forbidden_strict_neutral_feature_ancestry:prime_geometric_modular:prime_geometric_response"
+    ]
 
 
 def test_primary_neutral_distance_is_invariant_under_transition_token_relabeling():
@@ -742,6 +768,9 @@ def test_neutral_profile_audit_is_diagnostic_not_bulk_claim():
     assert report["physical_claim"] is False
     assert {row["profile"] for row in report["profile_rows"]} == {
         "all_observer_visible",
+        "strict_record_repair_only",
+        "overlap_record_repair_only",
+        "support_visible_prime_geometric_diagnostic",
         "scalar_only",
         "transition_core",
         "scalar_response",
@@ -1280,7 +1309,7 @@ def test_neutral_profile_audit_appears_in_comparable_snapshot(tmp_path: Path):
     lane = report["measurement_lanes"]["neutral_distance_profile_audit"]
 
     assert lane["run_count"] == 1
-    assert lane["mean_profile_count"] == 21
+    assert lane["mean_profile_count"] == 24
     assert lane["strict_3d_ready_count"] == 0
 
 

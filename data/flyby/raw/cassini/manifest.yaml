@@ -1,0 +1,19 @@
+flyby_id: Cassini
+priority: 4
+public_target:
+  dVinf_obs_mm_s: -0.50
+  sigma_dVinf_mm_s: 0.50
+required_files:
+  tracking: [DSN_doppler_range_or_navigation_reconstruction]
+  calibration: [station, clock, EOP, media]
+  geometry: [SPICE]
+missing_or_to_locate:
+  - exact_navigation_OD_setup
+  - spacecraft_attitude_history
+  - spacecraft_SRP_geometry
+  - optical_coefficients
+  - maneuver_ledger
+  - covariance
+  - solve_for_list
+  - design_matrices
+status: RAW_TRACKING_TO_LOCATE_REPLAY_PENDING

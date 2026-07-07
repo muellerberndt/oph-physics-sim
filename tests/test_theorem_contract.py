@@ -145,6 +145,8 @@ def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_
     assert report["paper_geometric_branch_blockers"] == []
     assert "L2_endogenous_modular_generator" in report["blockers"]
     assert "L3_kms_modular_clock_fit" in report["blockers"]
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
 
 
 def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp_path: Path) -> None:
@@ -214,6 +216,58 @@ def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp
     assert report["paper_faithful_observer_spacetime_emergence_receipt"] is True
     assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
     assert report["blockers"] == []
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
+
+
+def test_einstein_branch_entry_contract_requires_issue_503_and_child_gates(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "einstein_branch_entry_report.json",
+        {
+            "issue_503_status": "closed",
+            "EINSTEIN_NULL_STRESS_CHARGE_RECEIPT": True,
+            "EINSTEIN_FIXED_CAP_ENTROPY_STATIONARITY_RECEIPT": True,
+            "EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT": True,
+            "EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT": True,
+            "EINSTEIN_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT": True,
+            "EINSTEIN_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT": True,
+        },
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["einstein_branch_entry_contract_receipt"] is True
+    assert report["OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1"] is True
+    assert report["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is True
+    assert report["einstein_branch_entry_blockers"] == []
+    assert all(report["einstein_branch_entry_child_gates"].values())
+
+
+def test_einstein_branch_entry_child_gate_blocks_even_when_issue_closed(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "einstein_branch_entry_report.json",
+        {
+            "issue_503_status": "closed",
+            "EINSTEIN_NULL_STRESS_CHARGE_RECEIPT": True,
+            "EINSTEIN_FIXED_CAP_ENTROPY_STATIONARITY_RECEIPT": True,
+            "EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT": True,
+            "EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT": True,
+            "EINSTEIN_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT": True,
+            "EINSTEIN_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT": False,
+        },
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["einstein_branch_entry_child_gates"][
+        "E6_newton_coupling_forbidden_input_audit"
+    ] is False
+    assert "E6_newton_coupling_forbidden_input_audit" in report["einstein_branch_entry_blockers"]
 
 
 def test_finite_theorem_contract_splits_observer_h3_from_populated_and_neutral(tmp_path: Path) -> None:

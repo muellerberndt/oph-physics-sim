@@ -422,7 +422,7 @@ def _likelihood_contract(official_execution: dict[str, Any], official_readiness:
         "FULL_OBSERVABLE_LIKELIHOOD_RECEIPT": full,
         "observable_receipts": observable_receipts,
         "missing_observables": [name for name, passed in observable_receipts.items() if not passed],
-        "likelihood_hash": likelihood_hash if _valid_sha256_hash(likelihood_hash) else "sha256:" + "0" * 64,
+        "likelihood_hash": likelihood_hash if _valid_sha256_hash(likelihood_hash) else None,
         "blockers": blockers,
     }
 

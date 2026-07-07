@@ -11,6 +11,7 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["properties"]["schemaVersion"]["const"] == "oph_universe_timeline_visualization_payload_v1"
     assert schema["properties"]["schema"]["const"] == "oph_universe_timeline_visualization_payload_v1"
+    assert schema["properties"]["visualizationRenderData"]["$ref"] == "#/$defs/visualizationRenderData"
     assert set(schema["required"]) == {
         "schemaVersion",
         "schema",
@@ -28,11 +29,18 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
         "comparableObservations",
         "geometriesAndSymmetries",
         "visualizationViews",
+        "effectiveStringTheory",
+        "emergentCurvedSpacetime",
+        "observerCinema",
+        "hilbertSpaceObserverAlgebra",
+        "observerAnatomy",
+        "paperAccuracy",
     }
 
 
 def test_universe_timeline_visualization_schema_preserves_required_viewer_fields():
-    defs = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))["$defs"]
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    defs = schema["$defs"]
 
     observer_frame_required = set(defs["objectiveObserverFrame"]["required"])
     assert {
@@ -70,6 +78,12 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
         "claimBoundary",
     } <= camera_required
 
+    subjective_sighting_required = set(defs["observerProtoWorldlineSighting"]["required"])
+    assert "observerLocalReadout" in subjective_sighting_required
+    assert "h3SpatialPoint" not in subjective_sighting_required
+    local_readout_required = set(defs["observerLocalProtoWorldlineReadout"]["required"])
+    assert {"u", "v", "range", "coordinateSystem", "hiddenGlobalH3Suppressed"} <= local_readout_required
+
     comparable_required = set(defs["comparableObservations"]["required"])
     assert {"measurementLanes", "datasets", "receipts", "claimBoundary"} <= comparable_required
 
@@ -83,8 +97,35 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
     assert {
         "fluctuatingQuantumVacuum",
         "observerCamera",
+        "emergentCurvedSpacetime",
         "effectiveStringTheory",
     } <= view_set_required
+    top_level_required = set(schema["required"])
+    assert {
+        "effectiveStringTheory",
+        "emergentCurvedSpacetime",
+        "observerCinema",
+        "hilbertSpaceObserverAlgebra",
+        "observerAnatomy",
+        "paperAccuracy",
+    } <= top_level_required
+
+    render_data_required = set(defs["visualizationRenderData"]["required"])
+    assert {
+        "schema",
+        "availability",
+        "cameraPresets",
+        "sceneGraph",
+        "animationTimeline",
+        "plotSeries",
+        "legend",
+        "claimBadges",
+        "viewContracts",
+        "claimBoundary",
+    } <= render_data_required
+
+    scene_graph_required = set(defs["visualizationRenderData"]["properties"]["sceneGraph"]["required"])
+    assert {"screen", "observerGraph", "bulk", "finiteRepairGraph"} <= scene_graph_required
 
     view_required = set(defs["visualizationView"]["required"])
     assert {

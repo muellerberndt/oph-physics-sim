@@ -1,0 +1,23 @@
+flyby_ids:
+  - Rosetta II
+  - EPOXI I
+  - EPOXI II
+  - Rosetta III
+  - EPOXI III
+  - Juno
+priority: 5
+public_target_class:
+  dVinf_obs_mm_s: 0.0
+  role: null_control
+required_files:
+  tracking: [tracking_or_navigation_reconstruction_for_each_null_control]
+  calibration: [station, clock, EOP, media]
+  geometry: [SPICE]
+missing_or_to_locate:
+  - exact_per_flyby_tracking_archives
+  - exact_navigation_OD_setup
+  - covariance
+  - solve_for_list
+  - design_matrices
+  - residual_tests
+status: NULL_CONTROL_ARCHIVE_REPLAY_PENDING

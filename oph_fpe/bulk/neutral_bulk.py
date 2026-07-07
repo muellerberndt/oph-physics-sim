@@ -32,15 +32,24 @@ DEFAULT_NEUTRAL_WEIGHTS = {
     "sector": 0.75,
     "repair": 0.75,
     "repair_spectrum": 0.65,
-    "modular_response": 0.75,
-    "prime_geometric_modular": 0.9,
-    "prime_geometric_control_quotient": 0.9,
-    "repair_modular": 0.35,
     "persistence": 0.25,
     "scalar_readout": 0.35,
 }
 
+STRICT_NEUTRAL_RECORD_REPAIR_ONLY_WEIGHTS = dict(DEFAULT_NEUTRAL_WEIGHTS)
+
+SUPPORT_VISIBLE_PRIME_GEOMETRIC_DIAGNOSTIC_WEIGHTS = {
+    "modular_response": 0.75,
+    "prime_geometric_modular": 0.9,
+    "prime_geometric_control_quotient": 0.9,
+    "support_visible_modular": 0.9,
+    "repair_modular": 0.35,
+}
+
 DIAGNOSTIC_ONLY_NEUTRAL_CHANNELS = (
+    "modular_response",
+    "prime_geometric_modular",
+    "prime_geometric_control_quotient",
     "prime_geometric_rank3",
     "prime_geometric_rank4",
     "prime_geometric_rank8",
@@ -52,9 +61,24 @@ DIAGNOSTIC_ONLY_NEUTRAL_CHANNELS = (
     "prime_geometric_control_quotient_rank16",
     "prime_geometric_control_quotient_rank32",
     "support_visible_modular",
+    "repair_modular",
     "transition_token",
     "transition_token_persistent",
     "transition_affinity",
+)
+
+STRICT_NEUTRAL_FORBIDDEN_FEATURE_ANCESTORS = (
+    "h3_coordinate",
+    "s2_cap_axis",
+    "support_node_id",
+    "radial_depth",
+    "modular_depth",
+    "screen_pixel_coordinate",
+    "prime_geometric_response",
+    "support_visible_modular_response",
+    "cmb_residual",
+    "visual_overlay",
+    "likelihood_output",
 )
 
 MODEL_SELECTION_ABS_TOLERANCE = 0.01
@@ -63,6 +87,9 @@ DUPLICATE_CHANNEL_CORRELATION_THRESHOLD = 0.995
 
 NEUTRAL_PROFILE_WEIGHTS: dict[str, dict[str, float] | None] = {
     "all_observer_visible": None,
+    "strict_record_repair_only": STRICT_NEUTRAL_RECORD_REPAIR_ONLY_WEIGHTS,
+    "overlap_record_repair_only": STRICT_NEUTRAL_RECORD_REPAIR_ONLY_WEIGHTS,
+    "support_visible_prime_geometric_diagnostic": SUPPORT_VISIBLE_PRIME_GEOMETRIC_DIAGNOSTIC_WEIGHTS,
     "scalar_only": {"scalar_readout": 1.0},
     "transition_core": {
         "record": 1.0,
@@ -319,6 +346,8 @@ def neutral_channel_duplicate_audit(
 ) -> dict[str, Any]:
     weights = weights or DEFAULT_NEUTRAL_WEIGHTS
     active = [str(key) for key, value in weights.items() if float(value) > 0.0]
+    ancestry_manifest = neutral_feature_ancestry_manifest(weights)
+    ancestry_blockers = _strict_neutral_feature_ancestry_blockers(ancestry_manifest)
     channel_distances: dict[str, np.ndarray] = {}
     degenerate_channels: list[str] = []
     for key in active:
@@ -349,16 +378,70 @@ def neutral_channel_duplicate_audit(
         "mode": "neutral_primary_channel_duplicate_audit_v0",
         "active_primary_channels": active,
         "diagnostic_only_channels": list(DIAGNOSTIC_ONLY_NEUTRAL_CHANNELS),
+        "feature_ancestry_manifest": ancestry_manifest,
+        "feature_ancestry_gate_pass": not ancestry_blockers,
+        "feature_ancestry_blockers": ancestry_blockers,
         "correlation_threshold": float(threshold),
         "duplicate_pairs": duplicate_pairs,
         "degenerate_channels": degenerate_channels,
-        "duplicate_channel_gate_pass": not duplicate_pairs,
+        "duplicate_channel_gate_pass": not duplicate_pairs and not ancestry_blockers,
         "claim_boundary": (
             "Primary-channel audit for strict neutral distance. Rank prefixes, support-visible "
-            "duplicates, and hash/token channels are kept diagnostic-only by default; any remaining "
-            "near-duplicate primary channels block strict neutral promotion."
+            "duplicates, prime-geometric/support-visible modular channels, and hash/token channels are "
+            "kept diagnostic-only by default; any remaining near-duplicate or forbidden-ancestry primary "
+            "channels block strict neutral promotion."
         ),
     }
+
+
+def neutral_feature_ancestry_manifest(weights: dict[str, float] | None = None) -> list[dict[str, Any]]:
+    weights = weights or DEFAULT_NEUTRAL_WEIGHTS
+    rows = []
+    for name, weight in sorted(weights.items()):
+        active = float(weight) > 0.0
+        ancestors = _neutral_channel_ancestors(str(name))
+        forbidden = [ancestor for ancestor in ancestors if ancestor in STRICT_NEUTRAL_FORBIDDEN_FEATURE_ANCESTORS]
+        rows.append(
+            {
+                "featureId": str(name),
+                "featureName": str(name),
+                "weight": float(weight),
+                "active": active,
+                "parentFeatures": [],
+                "forbiddenAncestors": forbidden,
+                "allowedForStrictNeutral": active and not forbidden,
+                "quotientVisible": active and not forbidden,
+                "presentationInvariant": active and not forbidden,
+                "claimBoundary": (
+                    "Strict-neutral feature ancestry row. A nonempty forbiddenAncestors list blocks "
+                    "strict neutral promotion even if the channel is later renamed."
+                ),
+            }
+        )
+    return rows
+
+
+def _neutral_channel_ancestors(channel: str) -> list[str]:
+    if channel.startswith("prime_geometric"):
+        return ["prime_geometric_response"]
+    if channel == "support_visible_modular":
+        return ["support_visible_modular_response"]
+    if channel == "repair_modular":
+        return ["modular_depth"]
+    if channel == "modular_response":
+        return ["modular_depth"]
+    return []
+
+
+def _strict_neutral_feature_ancestry_blockers(manifest: list[dict[str, Any]]) -> list[str]:
+    blockers = []
+    for row in manifest:
+        if not row.get("active"):
+            continue
+        forbidden = row.get("forbiddenAncestors") if isinstance(row.get("forbiddenAncestors"), list) else []
+        if forbidden:
+            blockers.append(f"forbidden_strict_neutral_feature_ancestry:{row.get('featureId')}:{','.join(map(str, forbidden))}")
+    return blockers
 
 
 def _neutral_channel_matrix(views: list[NeutralObserverView], key: str) -> np.ndarray:
@@ -566,6 +649,7 @@ def strict_neutral_bulk_receipt(
     quotient_contract = quotient_geometry or {}
     quotient_contract_passed = bool(quotient_contract.get(GEOMETRY_CONTRACT_RECEIPT, False))
     channel_audit_passed = bool((channel_audit or {}).get("duplicate_channel_gate_pass", True))
+    feature_ancestry_passed = bool((channel_audit or {}).get("feature_ancestry_gate_pass", True))
     passed = bool(
         dimension.get("estimators_agree_3d", False)
         and model_selection.get("best_model") == "H3"
@@ -589,6 +673,8 @@ def strict_neutral_bulk_receipt(
         "quotient_geometry_blockers": list(quotient_contract.get("blockers", [])),
         "duplicate_channel_gate_pass": channel_audit_passed,
         "duplicate_channel_blockers": list((channel_audit or {}).get("duplicate_pairs", [])),
+        "feature_ancestry_gate_pass": feature_ancestry_passed,
+        "feature_ancestry_blockers": list((channel_audit or {}).get("feature_ancestry_blockers", [])),
         "claim_boundary": (
             "Neutral third-person bulk reconstructed from observer-visible records without H3/cap-normal "
             "target features. It is intentionally stricter than, and does not negate, the support-visible "
@@ -784,17 +870,17 @@ def strict_neutral_bulk_report(
             "sector_transition_hist",
             "repair_response_hist",
             "repair_response_spectrum",
-            "modular_response_hist",
-            "prime_geometric_modular_spectrum",
-            "prime_geometric_control_quotient_spectrum",
-            "repair_modular_spectrum",
             "persistence_features",
             "scalar_readout_features",
         ],
         "diagnostic_only_features": [
+            "modular_response_hist",
+            "prime_geometric_modular_spectrum",
+            "prime_geometric_control_quotient_spectrum",
             "prime_geometric_rank_prefixes",
             "prime_geometric_control_quotient_rank_prefixes",
             "support_visible_modular_spectrum",
+            "repair_modular_spectrum",
             "transition_token_hist",
             "transition_token_persistent_hist",
             "transition_affinity_hist",

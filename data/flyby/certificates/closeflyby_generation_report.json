@@ -1,0 +1,28 @@
+{
+  "certificate_count": 12,
+  "certificates": [
+    "data/flyby/certificates/Galileo_I.closeflyby.json",
+    "data/flyby/certificates/Galileo_II.closeflyby.json",
+    "data/flyby/certificates/NEAR.closeflyby.json",
+    "data/flyby/certificates/Cassini.closeflyby.json",
+    "data/flyby/certificates/Rosetta_I.closeflyby.json",
+    "data/flyby/certificates/MESSENGER.closeflyby.json",
+    "data/flyby/certificates/Rosetta_II.closeflyby.json",
+    "data/flyby/certificates/EPOXI_I.closeflyby.json",
+    "data/flyby/certificates/EPOXI_II.closeflyby.json",
+    "data/flyby/certificates/Rosetta_III.closeflyby.json",
+    "data/flyby/certificates/EPOXI_III.closeflyby.json",
+    "data/flyby/certificates/Juno.closeflyby.json"
+  ],
+  "markdown": "data/flyby/certificates/closeflyby_summary.md",
+  "nonclaims": [
+    "Generated certificates are not historical solutions.",
+    "All non-synthetic historical rows remain pending until OD replay artifacts are attached."
+  ],
+  "public_rows": "data/flyby/public/flyby_public_rows.csv",
+  "raw_root": "data/flyby/raw",
+  "schema": "oph_closeflyby_public_generation_report_v1",
+  "source_manifest": "data/flyby/public/flyby_source_manifest.yaml",
+  "status": "PUBLIC_CERTIFICATES_WRITTEN",
+  "summary": "data/flyby/certificates/summary.csv"
+}

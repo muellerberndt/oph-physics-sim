@@ -10,7 +10,7 @@ The working surface includes finite consensus receipts, observer record algebra,
 
 The README describes the simulator surface. Pass/fail receipt labels belong in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles. Mutable project progress belongs in GitHub issues.
 
-The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, and production particle route are separate claim paths. A diagnostic chart or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output.
+The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / issue #503).
 
 Every ensemble-facing output must name its claim tier:
 
@@ -75,6 +75,19 @@ python3 -m oph_fpe.cli reference-vacuum-baseline \
 ```
 
 This writes a direct-sampled free-scalar harmonic Gaussian baseline, a compact-`U(1)` lattice-gauge reference sampler, deterministic replay receipts, smoothing provenance, finite-mode refinement diagnostics, and false OPH-native promotion receipts. Semantic-stream replay and canonical serial-chain replay are reported separately from pathwise partition invariance, which remains false unless a concrete commuting-event or transaction-serialization receipt passes.
+
+Lean-mirrored consensus fixture:
+
+```bash
+python3 -m oph_fpe.cli rule90-consensus-fixture \
+  --out runs/rule90_consensus_fixture_report.json
+```
+
+This writes an exact finite Rule-90 carrier receipt mirroring the Lean consensus
+fixtures: good boundary-fiber uniqueness, bad-boundary failure, nontrivial
+gauge equivalence, and the local H1-H2-H3 repair no-go witness. It is a
+regression contract for simulator receipt logic, not a physical prediction and
+not a runtime dependency on Lean.
 
 Parallel BW sweeps:
 

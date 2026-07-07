@@ -1,0 +1,25 @@
+{
+  "schema": "oph_ga71_mdg_witness_v1",
+  "claim_boundary": "mDG/mTG witness benchmark only. These values are not a source-side nuclear selector and must not be copied into a promotion-valid GA71_TD_SOURCE_CERTIFICATE.",
+  "status": "COMPARISON_BENCHMARK_NOT_SOURCE_CERTIFICATE",
+  "detailed_balance_reference": {
+    "sigma_gs_51Cr_1e-45_cm2": 5.28,
+    "sigma_gs_37Ar_1e-45_cm2": 6.32
+  },
+  "mdg_witness": {
+    "sigma_gs_51Cr_1e-45_cm2": 4.5,
+    "sigma_gs_37Ar_1e-45_cm2": 5.24,
+    "T_half_71Ge_days": 11.465,
+    "radial_structure": "compact_sign_changing"
+  },
+  "target_bands": {
+    "sigma_gs_51Cr_1e-45_cm2": [4.39, 4.5],
+    "sigma_gs_37Ar_1e-45_cm2": [5.1, 5.25],
+    "T_half_71Ge_days": [11.462, 11.468]
+  },
+  "nonclaims": [
+    "mDG/mTG is a witness and benchmark, not a microscopic source-side transition density certificate.",
+    "The benchmark cannot be used as an upstream parent of rho_TD_71 or sigma_gs outputs.",
+    "A promotion-valid certificate requires a frozen source-side nuclear calculation with no gallium-rate target leakage."
+  ]
+}

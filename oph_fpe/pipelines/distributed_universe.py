@@ -20,6 +20,18 @@ from oph_fpe.observers.semantic_clock import (
     observer_registry_audit,
     semantic_history_digest,
 )
+from oph_fpe.viz.universe_timeline_viewer import (
+    _geometry_and_symmetry_payload,
+    _subjective_observer_cameras,
+    _visualization_render_data_payload,
+    _visualization_views_payload,
+    _cmb_payload,
+    _effective_string_theory_payload,
+    _emergent_curved_spacetime_payload,
+    _hilbert_space_observer_algebra_payload,
+    _observer_anatomy_payload,
+    _observer_cinema_payload,
+)
 
 
 DISTRIBUTED_KERNEL_VERSION = "distributed_observer_patch_kernel_v1"
@@ -2671,17 +2683,24 @@ def _distributed_visualization_payload(
     pn_global: dict[str, Any],
 ) -> dict[str, Any]:
     sampled_payloads = _sample_shard_timeline_payloads(shard_rows, max_payloads=8)
-    observers = []
+    objective_views = []
     overlap_links = []
     screen_snapshots = []
     worldlines = []
+    h3_objects = []
+    screen_points = []
+    screen_values = []
     for item in sampled_payloads:
         shard = item["shard"]
         payload = item["payload"]
-        observers.extend(_globalized_observers(shard, payload, limit=max(1, 128 // max(1, len(sampled_payloads)))))
+        objective_views.extend(_globalized_observers(shard, payload, limit=max(1, 128 // max(1, len(sampled_payloads)))))
         overlap_links.extend(_globalized_overlap_links(shard, payload, limit=max(1, 2000 // max(1, len(sampled_payloads)))))
         screen_snapshots.extend(_globalized_screen_snapshots(shard, payload, limit=max(1, 64 // max(1, len(sampled_payloads)))))
         worldlines.extend(_globalized_worldlines(shard, payload, limit=max(1, 128 // max(1, len(sampled_payloads)))))
+        h3_objects.extend(_globalized_h3_objects(shard, payload, limit=max(1, 256 // max(1, len(sampled_payloads)))))
+        points, values = _globalized_screen_points(shard, payload, limit=max(1, 512 // max(1, len(sampled_payloads))))
+        screen_points.extend(points)
+        screen_values.extend(values)
     seam_links = seam_readout.get("links") or []
     for link in seam_links[:20000]:
         overlap_links.append(
@@ -2697,16 +2716,222 @@ def _distributed_visualization_payload(
             }
         )
     if observer_time_global.get("objectiveObserverViews"):
-        observers = list(observer_time_global.get("objectiveObserverViews") or [])
+        objective_views = list(observer_time_global.get("objectiveObserverViews") or [])
     if observer_time_global.get("overlapLinks"):
         overlap_links = list(observer_time_global.get("overlapLinks") or [])[:100000] + overlap_links
     if proto_particle_global.get("worldlines"):
         worldlines = list(proto_particle_global.get("worldlines") or [])
+    objective_views = _objective_views_with_axes(objective_views, manifest)
+    observer_rows = _observer_rows_from_objective_views(objective_views, manifest)
+    time_frames = _observer_time_frames_from_views(objective_views, halo_exchange, seam_readout)
+    observer_payload = {
+        "description": (
+            "Distributed observer-local modular-time export. Objective views are globalized from shard "
+            "observer readouts and seam metadata; execution fields remain provenance, not observer time."
+        ),
+        "source": "distributed_global_observer_modular_time_export",
+        "observers": observer_rows,
+        "objectiveObserverViews": objective_views,
+        "overlapLinks": overlap_links[:100000],
+        "timeFrames": time_frames,
+        "totalAvailableObserverCapacity": manifest.get("total_observer_capacity"),
+        "receipts": {
+            "observer_modular_time_receipt": bool(
+                observer_time_global.get("global_observer_modular_time_export_receipt", False)
+            ),
+            "global_observer_modular_time_export_receipt": bool(
+                observer_time_global.get("global_observer_modular_time_export_receipt", False)
+            ),
+            "execution_clock_fields_separated_receipt": bool(
+                observer_time_global.get("execution_clock_fields_separated_receipt", False)
+            ),
+            "observer_clock_naturality_receipt": bool(
+                observer_time_global.get("observer_clock_naturality_receipt", False)
+            ),
+            "observer_facing_3p1d_h3_experience_receipt": False,
+            "observer_facing_populated_h3_experience_receipt": False,
+            "observer_h3_object_population_receipt": bool(h3_objects),
+            "support_visible_lorentz_3p1_kinematics_receipt": False,
+            "conformal_h3_spatial_chart_receipt": False,
+            "bulk_3d_established": bool(h3_objects),
+        },
+        "overlapSummary": {
+            "observerCount": len(observer_rows),
+            "pairCount": len(overlap_links),
+            "exportedPairCount": len(overlap_links[:100000]),
+            "exportedObserverCount": len(observer_rows),
+            "exportedObjectiveObserverViewCount": len(objective_views),
+            "overlapLinkSource": (
+                "global_observer_modular_time_export_plus_cross_shard_carrier_cut_metadata"
+            ),
+            "claimBoundary": (
+                "Reducer-level observer overlaps are visualization metadata unless live cross-shard "
+                "overlap repair receipts pass."
+            ),
+        },
+        "globalExport": {
+            "reportPath": "observer_modular_time_global/observer_modular_time_global_payload.json",
+            "objectiveObserverViewCount": observer_time_global.get("objectiveObserverViewCount"),
+            "minTimeFrameCount": observer_time_global.get("minTimeFrameCount"),
+            "largeVisualizationObserverContractReceipt": observer_time_global.get(
+                "large_visualization_observer_contract_receipt"
+            ),
+        },
+        "observerViewSource": (
+            "global_observer_modular_time_export"
+            if observer_time_global.get("objectiveObserverViews")
+            else "sampled_per_shard_payloads_with_global_ids"
+        ),
+        "blockers": list(observer_time_global.get("blockers") or []),
+        "claimBoundary": observer_time_global.get(
+            "claim_boundary",
+            "Distributed observer modular-time visualization export; not chart-blind neutral bulk.",
+        ),
+    }
+    subjective_cameras = _subjective_observer_cameras(observer_payload)
+    observer_payload["subjectiveObserverCameras"] = subjective_cameras
+    if not screen_points:
+        screen_points, screen_values = _atlas_screen_points(manifest)
+    screen_payload = {
+        "description": "Distributed global carrier atlas with sampled shard screen and cluster readouts.",
+        "source": "distributed_visualization_payload",
+        "fieldName": "distributed_screen_support",
+        "points": screen_points[:4096],
+        "values": screen_values[:4096],
+        "repairTrace": _distributed_repair_trace(halo_exchange, seam_readout),
+        "shards": (manifest.get("unified_universe_atlas") or {}).get("shards") or [],
+        "crossShardOverlapLinks": seam_links,
+        "clusters": {
+            "snapshots": screen_snapshots,
+            "snapshotSource": "sampled_per_shard_timeline_payloads_plus_global_shard_prefix",
+        },
+        "claimBoundary": (
+            "Screen data are sampled/globalized visualization coordinates for the distributed atlas. "
+            "They are not a hidden monolithic bulk state."
+        ),
+    }
+    cmb_payload = _distributed_cmb_comparison_payload(physical_cmb_global)
+    pn_payload = _distributed_pn_payload(pn_global)
+    bulk_payload = {
+        "description": (
+            "Distributed theorem-assisted H3 object/worldline readout plus strict-neutral global reduction status."
+        ),
+        "source": "distributed_visualization_payload",
+        "objects": h3_objects,
+        "protoParticleCandidates": {
+            "description": "Globalized H3 defect/worldline candidates. Diagnostic unless particle receipts pass.",
+            "worldlines": worldlines,
+            "worldlineSource": (
+                "global_proto_particle_worldline_stitch"
+                if proto_particle_global.get("worldlines")
+                else "sampled_per_shard_payloads_with_atlas_shard_context"
+            ),
+            "globalStitchReport": {
+                "reportPath": "proto_particles_global/global_proto_particle_worldlines_report.json",
+                "worldlineCount": proto_particle_global.get("worldlineCount"),
+                "movingWorldlineCount": proto_particle_global.get("movingWorldlineCount"),
+                "crossShardWorldlineStitchingReceipt": proto_particle_global.get(
+                    "cross_shard_worldline_stitching_receipt"
+                ),
+            },
+            "receipts": {
+                "bulk_worldline_precursor_receipt": bool(
+                    proto_particle_global.get("global_proto_particle_worldline_export_receipt", False)
+                    or proto_particle_global.get("bulk_worldline_precursor_receipt", False)
+                ),
+                "particle_matter_receipt": bool(proto_particle_global.get("particle_matter_receipt", False)),
+                "diagnostic_edge_worldline_count": len(worldlines),
+            },
+            "claimBoundary": (
+                "Globalized proto-worldlines remain diagnostics unless particle-matter and strict-neutral "
+                "receipts pass."
+            ),
+        },
+        "strictNeutralGlobalReduction": neutral_global,
+        "receipts": _distributed_bulk_receipts(sampled_payloads, neutral_global, h3_objects),
+        "strictNeutralBlockers": list(neutral_global.get("blockers") or []),
+        "claimBoundary": (
+            "Distributed H3 objects are observer-facing chart data. Strict neutral third-person bulk "
+            "requires the strict_single_global_neutral_bulk_receipt."
+        ),
+    }
+    small_payload = _distributed_small_universe_payload(manifest, seam_readout)
+    comparable_payload = _distributed_comparable_observations_payload(cmb_payload, physical_cmb_global, neutral_global)
+    geometry_payload = _geometry_and_symmetry_payload(
+        small_payload,
+        observer_payload,
+        bulk_payload,
+        pn_payload,
+    )
+    visualization_views = _visualization_views_payload(
+        small_payload=small_payload,
+        screen_payload=screen_payload,
+        observer_payload=observer_payload,
+        bulk_payload=bulk_payload,
+        cmb_payload=cmb_payload,
+        pn_silence_payload=pn_payload,
+        diagnostic_run_dir=_distributed_diagnostic_dir(physical_cmb_global, sampled_payloads),
+    )
+    emergent_curved_spacetime_payload = _emergent_curved_spacetime_payload(
+        visualization_views=visualization_views,
+        bulk_payload=bulk_payload,
+        screen_payload=screen_payload,
+    )
+    visualization_render_data = _visualization_render_data_payload(
+        small_payload=small_payload,
+        screen_payload=screen_payload,
+        observer_payload=observer_payload,
+        bulk_payload=bulk_payload,
+        cmb_payload=cmb_payload,
+        pn_silence_payload=pn_payload,
+        subjective_cameras=subjective_cameras,
+        visualization_views=visualization_views,
+        curved_spacetime_payload=emergent_curved_spacetime_payload,
+    )
+    hilbert_algebra_payload = _hilbert_space_observer_algebra_payload(observer_payload)
     return {
-        "schema": "oph_distributed_universe_visualization_payload_v1",
+        "schemaVersion": "oph_universe_timeline_visualization_payload_v1",
+        "schema": "oph_universe_timeline_visualization_payload_v1",
+        "distributedSchema": "oph_distributed_universe_visualization_payload_v1",
+        "title": "Distributed OPH Universe Timeline Visualization",
         "kernel": DISTRIBUTED_KERNEL_VERSION,
         "runId": manifest.get("run_id"),
         "claimBoundary": manifest.get("claim_boundary"),
+        "ophDifferentiator": (
+            "OPH technology instantiates observer-like self-reading systems: bounded patches with local "
+            "state, ports or boundaries, readback, records, feedback/repair moves, and public receipts."
+        ),
+        "sourcePaths": {
+            "distributedManifest": str(manifest.get("manifest_path") or ""),
+            "physicalCmbGlobalDir": physical_cmb_global.get("report_dir"),
+        },
+        "smallUniverse": small_payload,
+        "screen": screen_payload,
+        "subjectiveObserverCameras": subjective_cameras,
+        "observerModularTime": observer_payload,
+        "consensusBulk": bulk_payload,
+        "pnSilenceToObservation": pn_payload,
+        "cmbComparison": cmb_payload,
+        "comparableObservations": comparable_payload,
+        "geometriesAndSymmetries": geometry_payload,
+        "visualizationViews": visualization_views,
+        "visualizationRenderData": visualization_render_data,
+        "effectiveStringTheory": _effective_string_theory_payload(
+            visualization_views=visualization_views,
+            small_payload=small_payload,
+            bulk_payload=bulk_payload,
+        ),
+        "emergentCurvedSpacetime": emergent_curved_spacetime_payload,
+        "observerCinema": _observer_cinema_payload(
+            observer_payload=observer_payload,
+            subjective_cameras=subjective_cameras,
+        ),
+        "hilbertSpaceObserverAlgebra": hilbert_algebra_payload,
+        "observerAnatomy": _observer_anatomy_payload(
+            observer_payload=observer_payload,
+            subjective_cameras=subjective_cameras,
+            hilbert_algebra_payload=hilbert_algebra_payload,
+        ),
         "unifiedUniverse": {
             "atlas": manifest.get("unified_universe_atlas") or {},
             "globalCarrier": global_carrier,
@@ -2728,58 +2953,6 @@ def _distributed_visualization_payload(
                 "atlas and render declared carrier-cut links as overlapping observer supports across partitions."
             ),
         },
-        "screen": {
-            "shards": (manifest.get("unified_universe_atlas") or {}).get("shards") or [],
-            "crossShardOverlapLinks": seam_links,
-            "clusters": {
-                "snapshots": screen_snapshots,
-                "snapshotSource": "sampled_per_shard_timeline_payloads_plus_global_shard_prefix",
-            },
-        },
-        "observerModularTime": {
-            "objectiveObserverViews": observers,
-            "overlapLinks": overlap_links[:100000],
-            "totalAvailableObserverCapacity": manifest.get("total_observer_capacity"),
-            "globalExport": {
-                "reportPath": "observer_modular_time_global/observer_modular_time_global_payload.json",
-                "objectiveObserverViewCount": observer_time_global.get("objectiveObserverViewCount"),
-                "minTimeFrameCount": observer_time_global.get("minTimeFrameCount"),
-                "largeVisualizationObserverContractReceipt": observer_time_global.get(
-                    "large_visualization_observer_contract_receipt"
-                ),
-            },
-            "observerViewSource": (
-                "global_observer_modular_time_export"
-                if observer_time_global.get("objectiveObserverViews")
-                else "sampled_per_shard_payloads_with_global_ids"
-            ),
-        },
-        "consensusBulk": {
-            "strictNeutralGlobalReduction": neutral_global,
-            "protoParticleCandidates": {
-                "worldlines": worldlines,
-                "globalStitchReport": {
-                    "reportPath": "proto_particles_global/global_proto_particle_worldlines_report.json",
-                    "worldlineCount": proto_particle_global.get("worldlineCount"),
-                    "movingWorldlineCount": proto_particle_global.get("movingWorldlineCount"),
-                    "crossShardWorldlineStitchingReceipt": proto_particle_global.get(
-                        "cross_shard_worldline_stitching_receipt"
-                    ),
-                },
-                "worldlineSource": (
-                    "global_proto_particle_worldline_stitch"
-                    if proto_particle_global.get("worldlines")
-                    else "sampled_per_shard_payloads_with_atlas_shard_context"
-                ),
-            }
-        },
-        "pnSilenceToObservation": {
-            "globalReduction": pn_global,
-            "claimBoundary": (
-                "Shows the scale-compressed P/N silence-to-observation lane across shards. It is not a full "
-                "finite-capacity N proof unless the global P/N receipt and capacity gates pass."
-            ),
-        },
         "physicalCMB": {
             "globalReduction": physical_cmb_global,
             "claimBoundary": (
@@ -2793,6 +2966,419 @@ def _distributed_visualization_payload(
             "Use per-shard timelinePayloadPath values for drill-down into high-detail shard videos.",
             "Do not label chart-blind strict neutral quotient bulk unless strict_single_global_neutral_bulk_receipt passes.",
         ],
+    }
+
+
+def _objective_views_with_axes(views: list[dict[str, Any]], manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    result = []
+    total = max(len(views), int(manifest.get("total_observer_capacity", 0) or 0), 1)
+    for index, view in enumerate(views):
+        if not isinstance(view, dict):
+            continue
+        item = dict(view)
+        axis = item.get("axis")
+        if not isinstance(axis, list) or len(axis) < 3:
+            item["axis"] = _observer_axis(index, total)
+        result.append(item)
+    return result
+
+
+def _observer_rows_from_objective_views(
+    views: list[dict[str, Any]],
+    manifest: dict[str, Any],
+) -> list[dict[str, Any]]:
+    rows = []
+    total = max(len(views), int(manifest.get("total_observer_capacity", 0) or 0), 1)
+    for index, view in enumerate(views):
+        if not isinstance(view, dict):
+            continue
+        axis = view.get("axis") if isinstance(view.get("axis"), list) and len(view.get("axis")) >= 3 else _observer_axis(index, total)
+        frames = view.get("timeFrames") if isinstance(view.get("timeFrames"), list) else []
+        rows.append(
+            {
+                "observerId": view.get("observerId", index),
+                "axis": [float(axis[0]), float(axis[1]), float(axis[2])],
+                "supportPatchCount": view.get("supportPatchCount"),
+                "visibleSignatureEntropy": _last_frame_value(frames, "visibleSignatureEntropy"),
+                "modularDepthMean": _last_frame_value(frames, "modularDepthMean"),
+                "dominantRecordSignature": _last_frame_value(frames, "dominantRecordSignature"),
+                "dominantObjectPacket": _last_frame_value(frames, "dominantObjectPacket"),
+                "visibleReadoutHash": _last_frame_value(frames, "visibleReadoutHash"),
+                "shardIndex": view.get("shardIndex"),
+                "claimBoundary": view.get("claimBoundary"),
+            }
+        )
+    return rows
+
+
+def _observer_axis(index: int, total: int) -> list[float]:
+    count = max(1, int(total))
+    z = 1.0 - 2.0 * ((float(index) + 0.5) / float(count))
+    radius = math.sqrt(max(0.0, 1.0 - z * z))
+    theta = math.pi * (3.0 - math.sqrt(5.0)) * float(index)
+    return [float(radius * math.cos(theta)), float(radius * math.sin(theta)), float(z)]
+
+
+def _last_frame_value(frames: list[Any], key: str) -> Any:
+    for frame in reversed(frames):
+        if isinstance(frame, dict) and frame.get(key) is not None:
+            return frame.get(key)
+    return None
+
+
+def _observer_time_frames_from_views(
+    views: list[dict[str, Any]],
+    halo_exchange: dict[str, Any],
+    seam_readout: dict[str, Any],
+) -> list[dict[str, Any]]:
+    for view in views:
+        frames = view.get("timeFrames") if isinstance(view, dict) and isinstance(view.get("timeFrames"), list) else []
+        if frames:
+            return [frame for frame in frames[:128] if isinstance(frame, dict)]
+    repair_frames = _distributed_repair_trace(halo_exchange, seam_readout)
+    if repair_frames:
+        return [
+            {
+                "relativeTime": float(index / max(len(repair_frames) - 1, 1)),
+                "cycle": row.get("cycle"),
+                "committedFraction": row.get("meanRepairLoad"),
+                "mismatchEdges": row.get("seamEdgeCount"),
+            }
+            for index, row in enumerate(repair_frames[:128])
+        ]
+    return [{"relativeTime": 0.0, "cycle": None}]
+
+
+def _globalized_h3_objects(shard: dict[str, Any], payload: dict[str, Any], *, limit: int) -> list[dict[str, Any]]:
+    rows = ((payload.get("consensusBulk") or {}).get("objects") or [])[: int(limit)]
+    result = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            continue
+        item = dict(row)
+        local_id = item.get("objectId", item.get("object_id", index))
+        item["objectId"] = _global_id(shard, local_id, "h3object")
+        item["localObjectId"] = local_id
+        item["shardIndex"] = shard.get("shard_index")
+        item["shardId"] = shard.get("shard_id")
+        item["atlasCenter"] = shard.get("atlas_center")
+        result.append(item)
+    return result
+
+
+def _globalized_screen_points(
+    shard: dict[str, Any],
+    payload: dict[str, Any],
+    *,
+    limit: int,
+) -> tuple[list[list[float]], list[float]]:
+    screen = payload.get("screen") if isinstance(payload.get("screen"), dict) else {}
+    points = screen.get("points") if isinstance(screen.get("points"), list) else []
+    values = screen.get("values") if isinstance(screen.get("values"), list) else []
+    out_points: list[list[float]] = []
+    out_values: list[float] = []
+    for index, point in enumerate(points[: int(limit)]):
+        if not isinstance(point, list) or len(point) < 3:
+            continue
+        try:
+            out_points.append([float(point[0]), float(point[1]), float(point[2])])
+        except (TypeError, ValueError):
+            continue
+        value = values[index] if index < len(values) else shard.get("shard_index", 0)
+        number = _float_or_none(value)
+        out_values.append(float(number if number is not None else 0.0))
+    return out_points, out_values
+
+
+def _atlas_screen_points(manifest: dict[str, Any]) -> tuple[list[list[float]], list[float]]:
+    points = []
+    values = []
+    shards = (manifest.get("unified_universe_atlas") or {}).get("shards") or []
+    for index, shard in enumerate(shards):
+        center = shard.get("atlas_center") if isinstance(shard, dict) else None
+        if isinstance(center, list) and len(center) >= 3:
+            try:
+                points.append([float(center[0]), float(center[1]), float(center[2])])
+                values.append(float(index / max(len(shards) - 1, 1)))
+            except (TypeError, ValueError):
+                continue
+    if points:
+        return points, values
+    return [[0.0, 0.0, 1.0]], [0.0]
+
+
+def _distributed_repair_trace(halo_exchange: dict[str, Any], seam_readout: dict[str, Any]) -> list[dict[str, Any]]:
+    frames = halo_exchange.get("replay_frames") if isinstance(halo_exchange.get("replay_frames"), list) else []
+    if frames:
+        return list(frames[:128])
+    rows = []
+    for link in list(seam_readout.get("links") or [])[:256]:
+        for frame in list(link.get("overlapRepairTrajectory") or [])[:64]:
+            if isinstance(frame, dict):
+                rows.append(frame)
+                if len(rows) >= 128:
+                    return rows
+    return rows
+
+
+def _distributed_cmb_comparison_payload(physical_cmb_global: dict[str, Any]) -> dict[str, Any]:
+    report_dir = physical_cmb_global.get("report_dir")
+    payload = _cmb_payload(Path(report_dir)) if report_dir and Path(str(report_dir)).exists() else {}
+    if not payload:
+        payload = {
+            "description": "No distributed CMB comparison rows were available.",
+            "source": report_dir,
+            "receipts": {},
+            "residualRows": [],
+            "observedRows": [],
+            "modelRows": [],
+            "screenDiagnosticSpectrumRows": [],
+        }
+    receipts = dict(payload.get("receipts") or {})
+    receipts.update(
+        {
+            "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT": bool(
+                physical_cmb_global.get("physical_cmb_output_comparison_receipt", False)
+            ),
+            "PHYSICAL_CMB_PREDICTION_RECEIPT": bool(
+                physical_cmb_global.get("physical_cmb_prediction_receipt", False)
+            ),
+            "physical_cmb_prediction": bool(physical_cmb_global.get("physical_cmb_prediction_receipt", False)),
+            "finite_source_global_reduction_receipt": bool(
+                physical_cmb_global.get("finite_source_global_reduction_receipt", False)
+            ),
+            "physical_cmb_input_contract_receipt": bool(
+                physical_cmb_global.get("physical_cmb_input_contract_receipt", False)
+            ),
+        }
+    )
+    payload["receipts"] = receipts
+    payload["globalReduction"] = physical_cmb_global
+    payload["claimBoundary"] = physical_cmb_global.get(
+        "claim_boundary",
+        payload.get("claimBoundary", "Distributed CMB diagnostic; not a physical prediction unless receipts pass."),
+    )
+    return payload
+
+
+def _distributed_pn_payload(pn_global: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "description": "Distributed P/N silence-to-observation global reduction.",
+        "source": "pn_resonance_global/global_pn_resonance_report.json",
+        "globalReduction": pn_global,
+        "closureCoordinates": {},
+        "finiteRegulatorDepth": {},
+        "silenceInitialState": {},
+        "observationEmergence": {},
+        "detuningControls": {},
+        "receipts": {
+            "scale_compressed_pn_silence_to_observation_receipt": bool(
+                pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt", False)
+            ),
+            "literal_global_N_capacity_simulated_receipt": bool(
+                pn_global.get("finite_capacity_fixed_point_receipt", False)
+            ),
+            "global_pn_resonance_receipt": bool(pn_global.get("global_pn_resonance_receipt", False)),
+        },
+        "blockers": list(pn_global.get("blockers") or []),
+        "claimBoundary": pn_global.get(
+            "claim_boundary",
+            "Distributed P/N lane; not a full finite-capacity proof unless global gates pass.",
+        ),
+    }
+
+
+def _distributed_bulk_receipts(
+    sampled_payloads: list[dict[str, Any]],
+    neutral_global: dict[str, Any],
+    h3_objects: list[dict[str, Any]],
+) -> dict[str, Any]:
+    source_receipts = []
+    for item in sampled_payloads:
+        payload = item.get("payload") if isinstance(item, dict) else {}
+        receipts = ((payload.get("consensusBulk") or {}).get("receipts") or {}) if isinstance(payload, dict) else {}
+        if isinstance(receipts, dict):
+            source_receipts.append(receipts)
+    def any_receipt(key: str) -> bool:
+        return any(bool(row.get(key, False)) for row in source_receipts)
+
+    strict = bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False))
+    return {
+        "observer_like_self_reading_system_receipt": bool(h3_objects) or any_receipt("observer_like_self_reading_system_receipt"),
+        "observer_modular_time_receipt": any_receipt("observer_modular_time_receipt"),
+        "observer_facing_3p1d_h3_experience_receipt": any_receipt("observer_facing_3p1d_h3_experience_receipt"),
+        "observer_facing_populated_h3_experience_receipt": bool(h3_objects)
+        or any_receipt("observer_facing_populated_h3_experience_receipt"),
+        "observer_h3_object_population_receipt": bool(h3_objects)
+        or any_receipt("observer_h3_object_population_receipt"),
+        "theorem_assisted_consensus_3d_bulk_readout_receipt": bool(h3_objects)
+        or any_receipt("theorem_assisted_consensus_3d_bulk_readout_receipt"),
+        "observer_facing_consensus_3d_bulk_readout_receipt": bool(h3_objects)
+        or any_receipt("observer_facing_consensus_3d_bulk_readout_receipt"),
+        "chart_blind_strict_neutral_quotient_bulk_receipt": strict,
+        "strict_neutral_third_person_bulk_receipt": strict,
+        "strict_single_global_neutral_bulk_receipt": strict,
+        "physical_cmb_output_comparison_receipt": False,
+        "physical_cmb_prediction_receipt": False,
+    }
+
+
+def _distributed_small_universe_payload(manifest: dict[str, Any], seam_readout: dict[str, Any]) -> dict[str, Any]:
+    seam_links = seam_readout.get("links") or []
+    edges = [
+        {
+            "source": link.get("source_shard_index"),
+            "target": link.get("target_shard_index"),
+            "kind": "carrier_cut",
+        }
+        for link in seam_links[:512]
+        if isinstance(link, dict)
+    ]
+    return {
+        "description": "Distributed carrier-cut repair graph summary for visualization.",
+        "source": "distributed_global_carrier_cut_metadata_replay",
+        "nodeCount": int(manifest.get("shard_count", len((manifest.get("shards") or []))) or 0),
+        "nodes": [],
+        "edges": edges,
+        "repairFrames": _seam_repair_frames(seam_links),
+        "cycles": {"exactConsensus": [], "frustratedControl": []},
+        "receipts": {
+            "FINITE_CONSENSUS_THEOREM_RECEIPT": False,
+            "seam_metadata_replay_receipt": bool(seam_readout.get("seam_metadata_replay_receipt", False)),
+            "cross_shard_overlap_repair_receipt": bool(
+                seam_readout.get("cross_shard_overlap_repair_receipt", False)
+            ),
+        },
+        "claimBoundary": (
+            "Distributed seam metadata replay for visualization. This is not an exact finite consensus "
+            "mini-universe proof."
+        ),
+    }
+
+
+def _seam_repair_frames(seam_links: list[Any]) -> list[dict[str, Any]]:
+    frames = []
+    for index, link in enumerate(seam_links[:64]):
+        if not isinstance(link, dict):
+            continue
+        frames.append(
+            {
+                "step": index,
+                "stateId": link.get("link_id"),
+                "phi": link.get("final_committed_fraction_gap"),
+                "action": "distributed_seam_metadata_replay",
+                "node": link.get("source_shard_index"),
+                "parent": link.get("target_shard_index"),
+                "strictDescent": False,
+            }
+        )
+    return frames
+
+
+def _distributed_comparable_observations_payload(
+    cmb_payload: dict[str, Any],
+    physical_cmb_global: dict[str, Any],
+    neutral_global: dict[str, Any],
+) -> dict[str, Any]:
+    datasets = []
+    residual_rows = cmb_payload.get("residualRows") if isinstance(cmb_payload.get("residualRows"), list) else []
+    if residual_rows:
+        datasets.append(
+            {
+                "id": "distributed_cmb_tt_residual_rows",
+                "datasetId": "distributed_cmb_tt_residual_rows",
+                "kind": "cmb_tt_comparison",
+                "rowCount": len(residual_rows),
+                "rows": residual_rows[:240],
+                "receipts": cmb_payload.get("receipts") or {},
+            }
+        )
+    return {
+        "description": "Distributed measurement-comparable diagnostics, fail-closed by source receipts.",
+        "source": physical_cmb_global.get("report_dir"),
+        "measurementLanes": [
+            {
+                "id": "distributed_physical_cmb_global",
+                "lane": "distributed_physical_cmb_global",
+                "runCount": int(physical_cmb_global.get("completed_shard_count", 0) or 0),
+                "metrics": {
+                    "measurement_comparable_model_count": physical_cmb_global.get("measurement_comparable_model_count"),
+                    "oph_diagnostic_model_count": physical_cmb_global.get("oph_diagnostic_model_count"),
+                },
+            },
+            {
+                "id": "distributed_strict_neutral_global",
+                "lane": "distributed_strict_neutral_global",
+                "runCount": int(neutral_global.get("completed_shard_count", 0) or 0),
+                "metrics": {
+                    "strict_single_global_neutral_bulk_receipt": neutral_global.get(
+                        "strict_single_global_neutral_bulk_receipt"
+                    )
+                },
+            },
+        ],
+        "datasets": datasets,
+        "receipts": {
+            "physical_cmb_prediction": bool(physical_cmb_global.get("physical_cmb_prediction_receipt", False)),
+            "bulk_3d_established_any": bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False)),
+            "strict_neutral_3d_bulk_any": bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False)),
+        },
+        "claimBoundary": (
+            "Distributed comparable diagnostics only; prediction and strict-neutral receipts remain "
+            "controlled by source reductions."
+        ),
+    }
+
+
+def _distributed_diagnostic_dir(
+    physical_cmb_global: dict[str, Any],
+    sampled_payloads: list[dict[str, Any]],
+) -> Path | None:
+    report_dir = physical_cmb_global.get("report_dir")
+    if report_dir and Path(str(report_dir)).exists():
+        return Path(str(report_dir))
+    for item in sampled_payloads:
+        payload = item.get("payload") if isinstance(item, dict) else {}
+        source_paths = payload.get("sourcePaths") if isinstance(payload, dict) else {}
+        for key in ("consensusPackDir", "observerRunDir"):
+            value = source_paths.get(key) if isinstance(source_paths, dict) else None
+            if value and Path(str(value)).exists():
+                return Path(str(value))
+    return None
+
+
+def _hilbert_observer_algebra_summary(observer_payload: dict[str, Any]) -> dict[str, Any]:
+    views = observer_payload.get("objectiveObserverViews") if isinstance(observer_payload.get("objectiveObserverViews"), list) else []
+    links = observer_payload.get("overlapLinks") if isinstance(observer_payload.get("overlapLinks"), list) else []
+    visible_object_packets = 0
+    visible_record_packets = 0
+    time_frame_count = 0
+    for view in views:
+        frames = view.get("timeFrames") if isinstance(view, dict) and isinstance(view.get("timeFrames"), list) else []
+        time_frame_count += len(frames)
+        for frame in frames:
+            if isinstance(frame, dict):
+                visible_object_packets += len(frame.get("visibleObjectPackets") or [])
+                visible_record_packets += len(frame.get("visibleRecordPackets") or [])
+    support_counts = [
+        int(row.get("supportPatchCount"))
+        for row in observer_payload.get("observers", [])
+        if isinstance(row, dict) and _int_or_none(row.get("supportPatchCount")) is not None
+    ]
+    return {
+        "schema": "oph_hilbert_observer_algebra_summary_v1",
+        "observerCount": len(observer_payload.get("observers") or []),
+        "objectiveObserverViewCount": len(views),
+        "overlapLinkCount": len(links),
+        "timeFrameCount": time_frame_count,
+        "visibleObjectPacketCount": visible_object_packets,
+        "visibleRecordPacketCount": visible_record_packets,
+        "meanSupportPatchCount": _mean_or_none([float(value) for value in support_counts]),
+        "finiteSupportAlgebraPopulated": bool(views and (visible_object_packets or visible_record_packets)),
+        "claimBoundary": (
+            "Visualization summary of finite observer-accessible records and overlap links. It is not a "
+            "derivation of continuum Hilbert space or observer algebra without the dedicated receipts."
+        ),
     }
 
 

@@ -1,7 +1,9 @@
-name: e4_shared_observer_bulk_256k_observers4096_theorem
+name: e4_shared_observer_bulk_256k_observers32768_theorem
 run_mode: observer_shared_bulk_candidate_compact
 seed: 20260752
-claim_boundary: 'Large 256k observer-chart object-population and proto-particle candidate diagnostic. This tests
+claim_boundary: 'Large 256k observer-chart object-population and proto-particle candidate diagnostic with
+  32,768 materialized observer-local readout neighborhoods sampled from 262,144 observer-candidate
+  patches. This tests
   whether persistent observer-facing record objects populate the modular-response
   H3 chart under shuffled-incidence controls, and exports H3-fitted holonomy/defect
   worldlines for proto-particle visualization. It instantiates OPH observer-like
@@ -42,16 +44,17 @@ oph_constants:
 screen_units:
   mode: numerical_regulator
 dynamics:
-  cycles: 64
-  repairs_per_cycle: 262144
-  record_commit_cycles: 8
+  cycles: 128
+  repair_fraction_per_cycle: 0.0625
+  repairs_per_cycle: 16384
+  record_commit_cycles: 12
   observer_readback_drive:
     enabled: true
     mode: support_visible_boundary_refresh
-    edge_fraction: 0.03
-    max_edges_per_cycle: 64000
+    edge_fraction: 0.003
+    max_edges_per_cycle: 8192
     start_cycle: 0
-    stop_cycle: 48
+    stop_cycle: 72
     endpoint_noise_probability: 0.03
     phase_advance_per_cycle: 0
   beta_schedule:
@@ -150,13 +153,27 @@ collar_markov:
   sector_conditioned: true
   write_recovery_bound: true
 observers:
-  sample_count: 4096
+  sample_count: 32768
   neighborhood_size: 160
   time_sample_count: 32
+observer_consensus_readout:
+  observer_sample_count: 4096
+  object_sample_count: 8192
+visualization_export:
+  max_screen_points: 12000
+  max_observers: 4096
+  max_h3_objects: 8192
 neutral_frontier:
   seed: 11
   sample_count: 2048
   max_model_points: 1024
+  strict_bulk_max_model_points: 1024
+  planted_control_points: 256
+  object_min_objects: 16
+  object_min_observers_per_object: 3
+  object_max_observer_fraction_per_object: 0.65
+  object_max_model_points: 384
+  object_heldout_fraction: 0.25
   graph_workers: 32
   overlap_control_max_model_points: 1024
   ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -238,6 +255,61 @@ neutral_reconstruction:
   forbid_radial_depth_evidence: true
 h3_population:
   enabled: false
+visualization_diagnostics:
+  reference_vacuum:
+    enabled: true
+    ell_max: 16
+    sample_count: 256
+    coarse_ell_max: 8
+    u1_lattice_size: 4
+    u1_sweeps: 32
+  yang_mills_gap_certificate:
+    enabled: true
+    lattice_size: 2
+    sweeps: 16
+    beta: 2.2
+    proposal_width: 0.35
+    transition_bins: 8
+    refinement_lattice_sizes: [2, 3]
+    refinement_sweeps: 8
+  organic_defect_population:
+    enabled: true
+    patch_count: 262144
+    steps: 192
+    defect_count: 18
+    min_defects: 10
+    max_defects: 20
+    support_node_count: 8
+    seed: 2039
+    cycle_stride: 1
+    initial_speed: 0.028
+    stress_coupling: 0.018
+    transverse_kick: 0.014
+    stress_radius: 0.9
+    curvature_radius: 1.0
+    contact_radius: 0.12
+    overlap_radius: 0.28
+    spawn_radius: 1.25
+  two_defect_gravity_assay:
+    enabled: true
+    free_dynamics_enabled: true
+    patch_count: 262144
+    steps: 128
+    free_steps: 160
+    support_node_count: 8
+    free_seed: 1729
+    cycle_stride: 1
+    initial_separation: 1.2
+    initial_speed: 0.035
+    stress_coupling: 0.04
+    free_stress_coupling: 0.03
+    transverse_kick: 0.012
+    stress_radius: 1.0
+    curvature_radius: 1.0
+    contact_radius: 0.10
+    overlap_radius: 0.22
+    bind_speed_threshold: 0.055
+    annihilation_overlap_threshold: 0.85
 h3_support_profiles:
   enabled: true
   dedicated_cap_net: true

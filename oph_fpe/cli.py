@@ -13,6 +13,65 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--config", required=True, type=Path)
     run_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
 
+    physics_problem_outputs_parser = subparsers.add_parser(
+        "physics-problem-outputs",
+        help="emit theorem-bounded outputs for adjacent OPH physics problem notes",
+    )
+    physics_problem_outputs_parser.add_argument("--out-dir", required=True, type=Path)
+    physics_problem_outputs_parser.add_argument(
+        "--hall-k-matrix-json",
+        default=None,
+        help="optional Abelian FQH K matrix as JSON or @path JSON",
+    )
+    physics_problem_outputs_parser.add_argument(
+        "--hall-charge-vector-json",
+        default=None,
+        help="optional Abelian FQH charge vector t as JSON or @path JSON",
+    )
+    physics_problem_outputs_parser.add_argument(
+        "--high-tc-thresholds-json",
+        default=None,
+        help="optional high-Tc thresholds/penalties as JSON or @path JSON",
+    )
+    physics_problem_outputs_parser.add_argument(
+        "--fusion-ledger-json",
+        default=None,
+        help="optional fusion plant/plasma ledger as JSON or @path JSON",
+    )
+
+    closeflyby_parser = subparsers.add_parser(
+        "closeflyby-certificates",
+        help="emit fail-closed CloseFlyBy(F) public certificates and comparator tables",
+    )
+    closeflyby_parser.add_argument("--out-dir", default=Path("data/flyby/certificates"), type=Path)
+    closeflyby_parser.add_argument(
+        "--public-rows",
+        default=Path("data/flyby/public/flyby_public_rows.csv"),
+        type=Path,
+    )
+    closeflyby_parser.add_argument(
+        "--source-manifest",
+        default=Path("data/flyby/public/flyby_source_manifest.yaml"),
+        type=Path,
+    )
+    closeflyby_parser.add_argument("--raw-root", default=Path("data/flyby/raw"), type=Path)
+
+    closeflyby_synth_parser = subparsers.add_parser(
+        "closeflyby-synthetic-validation",
+        help="emit the synthetic projection validation fixture for CloseFlyBy(F)",
+    )
+    closeflyby_synth_parser.add_argument(
+        "--out-dir",
+        default=Path("data/flyby/certificates/synthetic_validation"),
+        type=Path,
+    )
+
+    ga71_td_parser = subparsers.add_parser(
+        "ga71-td-template",
+        help="emit fail-closed Ga-71 transition-density source certificate templates",
+    )
+    ga71_td_parser.add_argument("--out-dir", default=Path("data/gallium/receipts"), type=Path)
+
     array_parser = subparsers.add_parser("run-array", help="run vectorized large-screen OPH-FPE config")
     array_parser.add_argument("--config", required=True, type=Path)
     array_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
@@ -397,6 +456,25 @@ def main(argv: list[str] | None = None) -> int:
     reference_vacuum_parser.add_argument("--u1-sweeps", default=32, type=int)
     reference_vacuum_parser.add_argument("--u1-beta", default=0.5, type=float)
     reference_vacuum_parser.add_argument("--u1-step-size", default=1.5707963267948966, type=float)
+
+    ym_gap_parser = subparsers.add_parser(
+        "yang-mills-gap-certificate",
+        help="write the fail-closed finite SU(2) Yang-Mills gap diagnostic/certificate lane",
+    )
+    ym_gap_parser.add_argument("--out", required=True, type=Path)
+    ym_gap_parser.add_argument("--lattice-size", default=2, type=int)
+    ym_gap_parser.add_argument("--sweeps", default=16, type=int)
+    ym_gap_parser.add_argument("--beta", default=2.2, type=float)
+    ym_gap_parser.add_argument("--proposal-width", default=0.35, type=float)
+    ym_gap_parser.add_argument("--seed", default=20260706, type=int)
+    ym_gap_parser.add_argument("--transition-bins", default=8, type=int)
+    ym_gap_parser.add_argument("--refinement-lattice-sizes", default="2,3")
+    ym_gap_parser.add_argument("--refinement-sweeps", default=None, type=int)
+    ym_gap_parser.add_argument(
+        "--continuum-certificate-json",
+        default=None,
+        help="optional continuum certificate fields as JSON or @path JSON; recorded but not promoted by this lane",
+    )
 
     repair_clock_parser = subparsers.add_parser(
         "repair-clock-report",
@@ -1334,6 +1412,50 @@ def main(argv: list[str] | None = None) -> int:
     gravity_assay_parser.add_argument("--min-approach-fraction", default=0.25, type=float)
     gravity_assay_parser.add_argument("--min-control-margin", default=0.15, type=float)
 
+    free_gravity_parser = subparsers.add_parser(
+        "free-two-defect-dynamics-assay",
+        help="write a randomized two-defect dynamics diagnostic assay report",
+    )
+    free_gravity_parser.add_argument("--out", required=True, type=Path)
+    free_gravity_parser.add_argument("--patch-count", default=65_536, type=int)
+    free_gravity_parser.add_argument("--steps", default=96, type=int)
+    free_gravity_parser.add_argument("--support-node-count", default=8, type=int)
+    free_gravity_parser.add_argument("--holonomy", default=1, type=int)
+    free_gravity_parser.add_argument("--seed", default=1729, type=int)
+    free_gravity_parser.add_argument("--initial-separation", default=1.2, type=float)
+    free_gravity_parser.add_argument("--initial-speed", default=0.035, type=float)
+    free_gravity_parser.add_argument("--stress-coupling", default=0.03, type=float)
+    free_gravity_parser.add_argument("--transverse-kick", default=0.008, type=float)
+    free_gravity_parser.add_argument("--stress-radius", default=1.0, type=float)
+    free_gravity_parser.add_argument("--curvature-radius", default=1.0, type=float)
+    free_gravity_parser.add_argument("--cycle-stride", default=1, type=int)
+    free_gravity_parser.add_argument("--contact-radius", default=0.10, type=float)
+    free_gravity_parser.add_argument("--overlap-radius", default=0.22, type=float)
+    free_gravity_parser.add_argument("--bind-speed-threshold", default=0.055, type=float)
+    free_gravity_parser.add_argument("--annihilation-overlap-threshold", default=0.85, type=float)
+
+    organic_defects_parser = subparsers.add_parser(
+        "organic-defect-population-assay",
+        help="write a seeded 10-20 defect organic proto-worldline visualization report",
+    )
+    organic_defects_parser.add_argument("--out", required=True, type=Path)
+    organic_defects_parser.add_argument("--patch-count", default=65_536, type=int)
+    organic_defects_parser.add_argument("--steps", default=128, type=int)
+    organic_defects_parser.add_argument("--defect-count", default=16, type=int)
+    organic_defects_parser.add_argument("--min-defects", default=10, type=int)
+    organic_defects_parser.add_argument("--max-defects", default=20, type=int)
+    organic_defects_parser.add_argument("--support-node-count", default=8, type=int)
+    organic_defects_parser.add_argument("--seed", default=2039, type=int)
+    organic_defects_parser.add_argument("--initial-speed", default=0.028, type=float)
+    organic_defects_parser.add_argument("--stress-coupling", default=0.018, type=float)
+    organic_defects_parser.add_argument("--transverse-kick", default=0.010, type=float)
+    organic_defects_parser.add_argument("--stress-radius", default=0.9, type=float)
+    organic_defects_parser.add_argument("--curvature-radius", default=1.0, type=float)
+    organic_defects_parser.add_argument("--cycle-stride", default=1, type=int)
+    organic_defects_parser.add_argument("--contact-radius", default=0.12, type=float)
+    organic_defects_parser.add_argument("--overlap-radius", default=0.28, type=float)
+    organic_defects_parser.add_argument("--spawn-radius", default=1.25, type=float)
+
     caps_to_h3_parser = subparsers.add_parser(
         "caps-to-h3-minimal",
         help="run the minimal S2 cap-response profile -> H3 reconstruction receipt",
@@ -1349,11 +1471,56 @@ def main(argv: list[str] | None = None) -> int:
     caps_to_h3_parser.add_argument("--seed", default=1, type=int)
     caps_to_h3_parser.add_argument("--max-median-error", default=0.02, type=float)
 
+    rule90_parser = subparsers.add_parser(
+        "rule90-consensus-fixture",
+        help="write the exact Lean-mirrored Rule-90 consensus fixture receipt",
+    )
+    rule90_parser.add_argument("--out", default=None, type=Path)
+
     args = parser.parse_args(argv)
     if args.command == "run":
         from oph_fpe.experiments import load_config, run_config
 
         result = run_config(load_config(args.config), args.out_dir)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "physics-problem-outputs":
+        from oph_fpe.physics_problem_outputs import write_physics_problem_outputs_report
+
+        hall_k_matrix = _json_arg(args.hall_k_matrix_json)
+        hall_charge_vector = _json_arg(args.hall_charge_vector_json)
+        if (hall_k_matrix is None) != (hall_charge_vector is None):
+            parser.error("--hall-k-matrix-json and --hall-charge-vector-json must be supplied together")
+        result = write_physics_problem_outputs_report(
+            args.out_dir,
+            hall_k_matrix=hall_k_matrix,
+            hall_charge_vector=hall_charge_vector,
+            high_tc_thresholds=_json_arg(args.high_tc_thresholds_json),
+            fusion_ledger=_json_arg(args.fusion_ledger_json),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "closeflyby-certificates":
+        from oph_fpe.flyby import write_closeflyby_public_certificates
+
+        result = write_closeflyby_public_certificates(
+            args.out_dir,
+            public_rows_path=args.public_rows,
+            source_manifest_path=args.source_manifest,
+            raw_root=args.raw_root,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "closeflyby-synthetic-validation":
+        from oph_fpe.flyby import write_synthetic_closeflyby_validation
+
+        result = write_synthetic_closeflyby_validation(args.out_dir)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "ga71-td-template":
+        from oph_fpe.gallium import write_ga71_template_bundle
+
+        result = write_ga71_template_bundle(args.out_dir)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "run-array":
@@ -1788,6 +1955,23 @@ def main(argv: list[str] | None = None) -> int:
             u1_sweeps=args.u1_sweeps,
             u1_beta=args.u1_beta,
             u1_step_size=args.u1_step_size,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "yang-mills-gap-certificate":
+        from oph_fpe.gauge import write_yang_mills_gap_certificate_report
+
+        result = write_yang_mills_gap_certificate_report(
+            args.out,
+            lattice_size=args.lattice_size,
+            sweeps=args.sweeps,
+            beta=args.beta,
+            proposal_width=args.proposal_width,
+            seed=args.seed,
+            transition_bins=args.transition_bins,
+            refinement_lattice_sizes=tuple(int(value) for value in _csv_values(args.refinement_lattice_sizes)),
+            refinement_sweeps=args.refinement_sweeps,
+            continuum_certificate=_json_arg(args.continuum_certificate_json),
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
@@ -2696,6 +2880,54 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "free-two-defect-dynamics-assay":
+        from oph_fpe.defects.gravity_assay import write_free_two_defect_dynamics_report
+
+        result = write_free_two_defect_dynamics_report(
+            args.out,
+            patch_count=args.patch_count,
+            steps=args.steps,
+            support_node_count=args.support_node_count,
+            holonomy=args.holonomy,
+            seed=args.seed,
+            initial_separation=args.initial_separation,
+            initial_speed=args.initial_speed,
+            stress_coupling=args.stress_coupling,
+            transverse_kick=args.transverse_kick,
+            stress_radius=args.stress_radius,
+            curvature_radius=args.curvature_radius,
+            cycle_stride=args.cycle_stride,
+            contact_radius=args.contact_radius,
+            overlap_radius=args.overlap_radius,
+            bind_speed_threshold=args.bind_speed_threshold,
+            annihilation_overlap_threshold=args.annihilation_overlap_threshold,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "organic-defect-population-assay":
+        from oph_fpe.defects.gravity_assay import write_organic_defect_population_report
+
+        result = write_organic_defect_population_report(
+            args.out,
+            patch_count=args.patch_count,
+            steps=args.steps,
+            defect_count=args.defect_count,
+            min_defects=args.min_defects,
+            max_defects=args.max_defects,
+            support_node_count=args.support_node_count,
+            seed=args.seed,
+            initial_speed=args.initial_speed,
+            stress_coupling=args.stress_coupling,
+            transverse_kick=args.transverse_kick,
+            stress_radius=args.stress_radius,
+            curvature_radius=args.curvature_radius,
+            cycle_stride=args.cycle_stride,
+            contact_radius=args.contact_radius,
+            overlap_radius=args.overlap_radius,
+            spawn_radius=args.spawn_radius,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "caps-to-h3-minimal":
         from oph_fpe.bulk.cap_profile_geometry import caps_to_h3_minimal_receipt
 
@@ -2716,6 +2948,15 @@ def main(argv: list[str] | None = None) -> int:
             args.out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "rule90-consensus-fixture":
+        from oph_fpe.consensus import rule90_lean_consensus_fixture_report
+
+        result = rule90_lean_consensus_fixture_report()
+        if args.out is not None:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     raise AssertionError(args.command)
 
 
@@ -2723,6 +2964,18 @@ def _csv_values(value: str | None) -> tuple[str, ...]:
     if not value:
         return ()
     return tuple(part.strip() for part in str(value).split(",") if part.strip())
+
+
+def _json_arg(value: str | None):
+    if value is None:
+        return None
+    text = str(value)
+    if text.startswith("@"):
+        return json.loads(Path(text[1:]).read_text(encoding="utf-8"))
+    path = Path(text)
+    if path.exists():
+        return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(text)
 
 
 if __name__ == "__main__":

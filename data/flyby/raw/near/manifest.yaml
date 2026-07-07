@@ -1,0 +1,19 @@
+flyby_id: NEAR
+priority: 1
+public_target:
+  dVinf_obs_mm_s: 13.46
+  sigma_dVinf_mm_s: 0.01
+required_files:
+  tracking: [ODF]
+  calibration: [EOP, TRO, ION]
+  model: [nmlmodl, Paramsum]
+missing_or_to_locate:
+  - attitude_history
+  - spacecraft_shape_area_mass_epoch
+  - optical_reflectivity_coefficients
+  - thermal_srp_model
+  - exact_historical_solve_for_list
+  - covariance
+  - design_matrices
+  - historical_residual_plots
+status: RAW_TRACKING_AVAILABLE_REPLAY_PENDING

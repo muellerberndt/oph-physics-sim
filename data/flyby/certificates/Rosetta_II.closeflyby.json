@@ -1,0 +1,188 @@
+{
+  "anderson_comparator": {
+    "K": 3.099,
+    "formula": "K*Vinf_km_s*(cos(delta_in_deg)-cos(delta_out_deg))",
+    "prediction_mm_s": 1.0012755859563633,
+    "residual_mm_s": -1.0012755859563633
+  },
+  "certificate_id": "CloseFlyBy:rosetta_ii",
+  "flyby_id": "Rosetta II",
+  "hashes": {
+    "certificate_payload_sha256": "cdab437f8a7642788a2e6a631c95d3bfbe8805e7c5e82dddce943edf0efe49c0",
+    "public_row_sha256": "513bf3a8aede321fdec29629b036e866da704d2dd90b2ed42ccf0babca871449",
+    "raw_manifest_sha256": "1418e554225bd4299528b5fe6965ccaa2077db84c99a7153339b25b47bb7b328",
+    "source_manifest_sha256": "a7102c222c38af5d2243c5dd8162a925a159b0b6464454fc44f162d40fc86715"
+  },
+  "models": {
+    "M_full": {
+      "forbidden_closure_modes": [
+        "explicit velocity impulse fitted only to erase the anomaly"
+      ],
+      "purpose": "Replay the full conventional tracking record without target leakage.",
+      "required_model_terms": [
+        "Earth gravity",
+        "Sun/Moon/planet perturbations",
+        "tides",
+        "relativity",
+        "station clocks and ramps",
+        "EOP",
+        "troposphere",
+        "ionosphere",
+        "spacecraft attitude",
+        "maneuvers",
+        "SRP/reflectivity/thermal recoil where available"
+      ],
+      "required_outputs": [
+        "A_full_mm_s",
+        "sigma_A_full_mm_s",
+        "full_replay_pass"
+      ],
+      "status": "not_run"
+    },
+    "M_hist": {
+      "accepted_readout": "signed inbound/outbound asymptotic speed mismatch in mm/s",
+      "purpose": "Reproduce the historical reduced orbit-determination residual.",
+      "required_outputs": [
+        "A_hist_mm_s",
+        "sigma_A_hist_mm_s",
+        "historical_replay_pass"
+      ],
+      "status": "not_run"
+    }
+  },
+  "next_required_artifacts": [
+    "raw/reduced tracking files",
+    "station, clock, EOP, troposphere, ionosphere, and weather calibration files",
+    "SPICE/geometry and attitude products",
+    "maneuver and non-gravitational force ledgers",
+    "solve-for list, covariance, normal/design matrices, and OD code hash",
+    "historical reduced replay, full conventional replay, projection artifact, and residual tests"
+  ],
+  "nonclaims": [
+    "No historical flyby anomaly is solved by this public certificate layer.",
+    "The Anderson comparator is recorded as a public empirical comparator, not as an OPH law.",
+    "Synthetic projection tests validate code paths only and cannot close this historical row.",
+    "No OPH new-force branch is promoted from an OD_REPLAY_PENDING row."
+  ],
+  "public_row": {
+    "Vinf_km_s": 9.36,
+    "dVinf_obs_mm_s": 0.0,
+    "dVp_obs_mm_s": 0.0,
+    "delta_in_deg": -10.8,
+    "delta_out_deg": 18.6,
+    "notes": "null control",
+    "sigma_dVinf_mm_s": 0.1,
+    "sigma_dVp_mm_s": 0.1,
+    "source_refs": [
+      "Anderson_2008_public_table",
+      "Null_control_navigation_reconstructions"
+    ]
+  },
+  "raw_od_receipt": {
+    "attitude_files": [],
+    "clock_ramp_time_files": [
+      {
+        "required_type": "clock",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "covariance_file": null,
+    "design_matrix_files": [],
+    "eop_files": [
+      {
+        "required_type": "EOP",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "ion_files": [
+      {
+        "required_type": "station",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "maneuver_files": [],
+    "missing_receipts": [
+      "exact_per_flyby_tracking_archives",
+      "exact_navigation_OD_setup",
+      "covariance",
+      "solve_for_list",
+      "design_matrices",
+      "residual_tests"
+    ],
+    "od_code_hash": null,
+    "raw_manifest_path": "data/flyby/raw/null_controls/manifest.yaml",
+    "raw_manifest_sha256": "1418e554225bd4299528b5fe6965ccaa2077db84c99a7153339b25b47bb7b328",
+    "receipt_status": "NULL_CONTROL_ARCHIVE_REPLAY_PENDING",
+    "solve_for_list": null,
+    "spice_files": [
+      {
+        "required_type": "SPICE",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "station_files": [
+      {
+        "required_type": "station",
+        "status": "manifest_only_not_bundled"
+      },
+      {
+        "required_type": "media",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "thermal_srp_optical_files": [],
+    "tracking_files": [
+      {
+        "required_type": "tracking_or_navigation_reconstruction_for_each_null_control",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "tro_files": [
+      {
+        "required_type": "media",
+        "status": "manifest_only_not_bundled"
+      }
+    ],
+    "weather_files": []
+  },
+  "results": {
+    "A_full_mm_s": null,
+    "A_hist_mm_s": null,
+    "A_proj_mm_s": null,
+    "projection_decomposition": null,
+    "sigma_A_full_mm_s": null,
+    "sigma_A_hist_mm_s": null
+  },
+  "schema_version": "oph_closeflyby_certificate_v1",
+  "status": "OD_REPLAY_PENDING",
+  "tests": {
+    "arc_holdout_pass": null,
+    "bias_by_observable_type_pass": null,
+    "bias_by_station_pass": null,
+    "chi2_reduced": null,
+    "covariance_condition_number": null,
+    "doppler_rms_mm_s": null,
+    "full_replay_pass": null,
+    "historical_replay_pass": null,
+    "leave_one_pass_out_pass": null,
+    "parameter_correlation_report": null,
+    "post_perigee_holdout_pass": null,
+    "pre_perigee_holdout_pass": null,
+    "projection_pass": null,
+    "range_rms_m": null,
+    "station_holdout_pass": null,
+    "weighted_chi2": null,
+    "whiteness_p_value": null
+  },
+  "theorem_contract": {
+    "closure_condition": [
+      "A_hist approximates the public historical residual",
+      "A_full is zero within the replay floor",
+      "A_proj = A_hist - A_full approximates the public residual",
+      "residual, covariance, station-holdout, and arc-holdout tests pass"
+    ],
+    "object": "CloseFlyBy(F)",
+    "public_layer_claim": "certificate object and comparator are created; historical closure is not claimed"
+  },
+  "tier": "Tier 1: CloseFlyByPublic(F)"
+}

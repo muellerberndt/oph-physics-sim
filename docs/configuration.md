@@ -69,7 +69,10 @@ screen_units:
 
 dynamics:
   cycles: 64
-  repairs_per_cycle: 65536
+  # Optional. When present, this scales repair throughput with patch_count and
+  # overrides repairs_per_cycle. Use this for comparable 4k/64k/256k runs.
+  repair_fraction_per_cycle: 0.0625
+  repairs_per_cycle: 4096
   beta_schedule:
     kind: geometric
     beta_start: 0.05

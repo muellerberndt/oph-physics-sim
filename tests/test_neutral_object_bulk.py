@@ -5,9 +5,11 @@ from pathlib import Path
 
 import numpy as np
 
+import oph_fpe.bulk.neutral_object_bulk as neutral_object_bulk_module
 from oph_fpe.bulk.neutral_object_bulk import (
     extract_neutral_objects,
     neutral_object_distance_matrix,
+    neutral_object_control_report,
     strict_neutral_object_bulk_report,
     write_strict_neutral_object_bulk_report,
 )
@@ -52,6 +54,20 @@ def test_neutral_object_distance_matrix_is_symmetric():
     assert np.all(distance[np.triu_indices(len(objects), k=1)] >= 0.0)
 
 
+def test_neutral_object_controls_are_channel_specific():
+    rows = [_observer_view(i, group=i // 4) for i in range(64)]
+    objects = extract_neutral_objects(rows, min_observers_per_object=3)
+
+    report = neutral_object_control_report(objects, seed=11)
+
+    assert report["shuffled_records"]["distance_scope"] == "record_subspace"
+    assert report["shuffled_transition_labels"]["distance_scope"] == "transition_subspace"
+    assert "full_distance_shape_correlation_to_original" in report["shuffled_records"]
+    assert "full_distance_shape_correlation_to_original" in report["shuffled_transition_labels"]
+    assert report["shuffled_records_fail"] is True
+    assert report["shuffled_transition_labels_fail"] is True
+
+
 def test_vector_sector_signatures_do_not_collapse_to_zero_bucket():
     rows = []
     for i in range(18):
@@ -82,6 +98,45 @@ def test_strict_neutral_object_bulk_blocks_too_few_objects():
     assert "too_few_neutral_objects" in report["blockers"]
     assert "axis" in report["forbidden_primary_features"]
     assert report["dimension"]["reason"] == "too_few_neutral_objects"
+
+
+def test_heldout_h3_selection_promotes_object_geometry_gate(monkeypatch):
+    rows = [_observer_view(i, group=i // 4) for i in range(64)]
+
+    monkeypatch.setattr(
+        neutral_object_bulk_module,
+        "strict_neutral_dimension_report",
+        lambda distance: {
+            "not_the_support_visible_chart_dimension": True,
+            "estimators_agree_3d": False,
+            "median_dimension_estimate": 11.0,
+        },
+    )
+    monkeypatch.setattr(
+        neutral_object_bulk_module,
+        "select_latent_geometry",
+        lambda distance, **kwargs: {
+            "h3_selected": True,
+            "STRICT_NEUTRAL_LATENT_H3_SELECTION_RECEIPT": True,
+            "selected_model": "H3",
+            "selected_family": "H",
+            "selected_dimension": 3,
+        },
+    )
+
+    report = neutral_object_bulk_module.strict_neutral_object_bulk_report(
+        rows,
+        seed=1,
+        min_objects=4,
+        min_observers_per_object=3,
+        max_model_points=16,
+    )
+
+    assert report["object_geometry_gate"]["object_geometry_gate_pass"] is True
+    assert report["object_geometry_gate"]["dimension_estimators_agree_3d"] is False
+    assert report["object_geometry_gate"]["heldout_latent_h3_selected"] is True
+    assert "object_dimension_estimators_do_not_agree_3d" not in report["blockers"]
+    assert report["STRICT_NEUTRAL_OBJECT_BULK_RECEIPT"] is True
 
 
 def test_strict_neutral_object_bulk_writer_outputs_report_and_objects(tmp_path: Path):

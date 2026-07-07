@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/closeflyby_certificate_v1.json",
+  "title": "CloseFlyBy Certificate",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "certificate_id",
+    "flyby_id",
+    "public_row",
+    "anderson_comparator",
+    "raw_od_receipt",
+    "models",
+    "results",
+    "tests",
+    "status",
+    "hashes"
+  ],
+  "properties": {
+    "certificate_id": {"type": "string"},
+    "flyby_id": {"type": "string"},
+    "public_row": {
+      "type": "object",
+      "required": [
+        "Vinf_km_s",
+        "delta_in_deg",
+        "delta_out_deg",
+        "dVinf_obs_mm_s",
+        "sigma_dVinf_mm_s",
+        "dVp_obs_mm_s",
+        "sigma_dVp_mm_s"
+      ],
+      "properties": {
+        "Vinf_km_s": {"type": "number"},
+        "delta_in_deg": {"type": "number"},
+        "delta_out_deg": {"type": "number"},
+        "dVinf_obs_mm_s": {"type": "number"},
+        "sigma_dVinf_mm_s": {"type": ["number", "null"]},
+        "dVp_obs_mm_s": {"type": ["number", "null"]},
+        "sigma_dVp_mm_s": {"type": ["number", "null"]},
+        "source_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "anderson_comparator": {
+      "type": "object",
+      "required": ["K", "prediction_mm_s", "residual_mm_s"],
+      "properties": {
+        "K": {"type": "number"},
+        "prediction_mm_s": {"type": "number"},
+        "residual_mm_s": {"type": "number"}
+      }
+    },
+    "raw_od_receipt": {
+      "type": "object",
+      "properties": {
+        "tracking_files": {"type": "array"},
+        "station_files": {"type": "array"},
+        "clock_ramp_time_files": {"type": "array"},
+        "eop_files": {"type": "array"},
+        "tro_files": {"type": "array"},
+        "ion_files": {"type": "array"},
+        "weather_files": {"type": "array"},
+        "spice_files": {"type": "array"},
+        "attitude_files": {"type": "array"},
+        "maneuver_files": {"type": "array"},
+        "thermal_srp_optical_files": {"type": "array"},
+        "solve_for_list": {"type": ["array", "null"]},
+        "covariance_file": {"type": ["string", "null"]},
+        "design_matrix_files": {"type": "array"},
+        "od_code_hash": {"type": ["string", "null"]},
+        "receipt_status": {"type": "string"}
+      }
+    },
+    "models": {
+      "type": "object",
+      "properties": {
+        "M_hist": {"type": "object"},
+        "M_full": {"type": "object"}
+      }
+    },
+    "results": {
+      "type": "object",
+      "properties": {
+        "A_hist_mm_s": {"type": ["number", "null"]},
+        "sigma_A_hist_mm_s": {"type": ["number", "null"]},
+        "A_full_mm_s": {"type": ["number", "null"]},
+        "sigma_A_full_mm_s": {"type": ["number", "null"]},
+        "A_proj_mm_s": {"type": ["number", "null"]},
+        "projection_decomposition": {"type": ["object", "null"]}
+      }
+    },
+    "tests": {
+      "type": "object",
+      "properties": {
+        "historical_replay_pass": {"type": ["boolean", "null"]},
+        "full_replay_pass": {"type": ["boolean", "null"]},
+        "projection_pass": {"type": ["boolean", "null"]},
+        "chi2_reduced": {"type": ["number", "null"]},
+        "doppler_rms_mm_s": {"type": ["number", "null"]},
+        "range_rms_m": {"type": ["number", "null"]},
+        "whiteness_p_value": {"type": ["number", "null"]},
+        "station_holdout_pass": {"type": ["boolean", "null"]},
+        "arc_holdout_pass": {"type": ["boolean", "null"]}
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "SPEC_ONLY",
+        "PUBLIC_EVIDENCE_ATTACHED",
+        "OD_REPLAY_PENDING",
+        "SYNTHETIC_PIPELINE_VALIDATED",
+        "HISTORICAL_REPLAY_PASS",
+        "HISTORICAL_REPLAY_FAILED",
+        "FULL_REPLAY_PASS",
+        "FULL_REPLAY_PASS_PROJECTION_UNRESOLVED",
+        "SOLVED_PROJECTION_ARTIFACT",
+        "SOLVED_NULL",
+        "CONVENTIONAL_REPAIR_CANDIDATE",
+        "DATA_INCOMPLETE_NOT_SOLVED",
+        "NOT_SOLVED_RESIDUAL",
+        "REJECTED_LAW"
+      ]
+    },
+    "hashes": {"type": "object"}
+  }
+}

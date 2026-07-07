@@ -1,6 +1,23 @@
 from oph_fpe.consensus.boundary_fiber import boundary_conditioned_uniqueness_receipt
 from oph_fpe.consensus.fair_block import fair_block_consensus_certificate
 from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
+from oph_fpe.consensus.rule90_contract import (
+    RULE90_LEAN_CONSENSUS_FIXTURE_RECEIPT,
+    rule90_boundary_bad,
+    rule90_boundary_good,
+    rule90_consistent,
+    rule90_consistent_records,
+    rule90_gauge_equiv,
+    rule90_gauge_nontrivial_witness,
+    rule90_hfib_failure_witness,
+    rule90_hfib_holds,
+    rule90_lean_consensus_fixture_report,
+    rule90_no_frustration_free_local_repair_witness,
+    rule90_obs_map,
+    rule90_phi,
+    rule90_records,
+    rule90t,
+)
 from oph_fpe.consensus.transactional_repair import (
     aggregate_component,
     atomic_diamond_report,
@@ -18,6 +35,7 @@ from oph_fpe.consensus.transactional_repair import (
 )
 
 __all__ = [
+    "RULE90_LEAN_CONSENSUS_FIXTURE_RECEIPT",
     "aggregate_component",
     "atomic_diamond_report",
     "boundary_conditioned_uniqueness_receipt",
@@ -30,6 +48,20 @@ __all__ = [
     "gauge_relabeling_invariance_report",
     "lyapunov_descent_receipt",
     "prepare_transaction",
+    "rule90_boundary_bad",
+    "rule90_boundary_good",
+    "rule90_consistent",
+    "rule90_consistent_records",
+    "rule90_gauge_equiv",
+    "rule90_gauge_nontrivial_witness",
+    "rule90_hfib_failure_witness",
+    "rule90_hfib_holds",
+    "rule90_lean_consensus_fixture_report",
+    "rule90_no_frustration_free_local_repair_witness",
+    "rule90_obs_map",
+    "rule90_phi",
+    "rule90_records",
+    "rule90t",
     "selected_fiber_branch_elimination_report",
     "transactional_repair_receipt",
     "transactions_conflict",

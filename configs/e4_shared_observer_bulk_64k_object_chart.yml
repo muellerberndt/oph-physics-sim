@@ -40,16 +40,17 @@ screen_units:
   mode: numerical_regulator
 
 dynamics:
-  cycles: 64
-  repairs_per_cycle: 65536
-  record_commit_cycles: 8
+  cycles: 128
+  repair_fraction_per_cycle: 0.0625
+  repairs_per_cycle: 4096
+  record_commit_cycles: 12
   observer_readback_drive:
     enabled: true
     mode: support_visible_boundary_refresh
-    edge_fraction: 0.03
-    max_edges_per_cycle: 32000
+    edge_fraction: 0.003
+    max_edges_per_cycle: 2048
     start_cycle: 0
-    stop_cycle: 48
+    stop_cycle: 72
     endpoint_noise_probability: 0.03
     phase_advance_per_cycle: 0
   beta_schedule:
@@ -154,6 +155,13 @@ neutral_frontier:
   seed: 11
   sample_count: 512
   max_model_points: 384
+  strict_bulk_max_model_points: 384
+  planted_control_points: 192
+  object_min_objects: 16
+  object_min_observers_per_object: 3
+  object_max_observer_fraction_per_object: 0.65
+  object_max_model_points: 192
+  object_heldout_fraction: 0.25
   graph_workers: 4
   overlap_control_max_model_points: 384
   ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -234,13 +242,80 @@ neutral_reconstruction:
 h3_population:
   enabled: false
 
+visualization_diagnostics:
+  reference_vacuum:
+    enabled: true
+    ell_max: 16
+    sample_count: 256
+    coarse_ell_max: 8
+    u1_lattice_size: 4
+    u1_sweeps: 32
+  yang_mills_gap_certificate:
+    enabled: true
+    lattice_size: 2
+    sweeps: 16
+    beta: 2.2
+    proposal_width: 0.35
+    transition_bins: 8
+    refinement_lattice_sizes: [2, 3]
+    refinement_sweeps: 8
+  organic_defect_population:
+    enabled: true
+    patch_count: 65536
+    steps: 160
+    defect_count: 16
+    min_defects: 10
+    max_defects: 20
+    support_node_count: 8
+    seed: 2039
+    cycle_stride: 1
+    initial_speed: 0.028
+    stress_coupling: 0.018
+    transverse_kick: 0.014
+    stress_radius: 0.9
+    curvature_radius: 1.0
+    contact_radius: 0.12
+    overlap_radius: 0.28
+    spawn_radius: 1.25
+  two_defect_gravity_assay:
+    enabled: true
+    free_dynamics_enabled: true
+    patch_count: 65536
+    steps: 96
+    free_steps: 128
+    support_node_count: 8
+    free_seed: 1729
+    cycle_stride: 1
+    initial_separation: 1.2
+    initial_speed: 0.035
+    stress_coupling: 0.04
+    free_stress_coupling: 0.03
+    transverse_kick: 0.012
+    stress_radius: 1.0
+    curvature_radius: 1.0
+    contact_radius: 0.10
+    overlap_radius: 0.22
+    bind_speed_threshold: 0.055
+    annihilation_overlap_threshold: 0.85
+
 h3_support_profiles:
-  enabled: false
+  enabled: true
   dedicated_cap_net: true
-  cap_count: 24
+  cap_count: 32
   theta0: [0.35, 0.55, 0.75, 1.0, 1.25]
   collar_width_mode: cell_scaled
   collar_k: 1.0
+  candidate_count: 4096
+  timeline_candidate_count: 8192
+  timeline_response_mode: support_transport_similarity
+  timeline_transport_time: 0.10
+  timeline_transport_scale: 6.283185307179586
+  candidate_radius: 2.0
+  softness: 0.25
+  pass_ratio: 0.85
+  min_support_count: 8
+  min_cap_count: 6
+  timeline_max_events: 1536
 
 h3_modular_response:
   enabled: true
@@ -408,7 +483,14 @@ defects:
     mode: repair_coupled_group_compose
     probability: 0.08
   timeline:
-    enabled: false
+    enabled: true
+    sample_count: 12
+    max_triangles: 8000
+    persistence_cycles: 3
+    particle_min_observations: 3
+    particle_min_class_stability: 0.75
+    interaction_min_transport_distance: 1.0e-9
+    interaction_min_scattering_transitions: 2
 
 controls:
 - wrong_1x_normalization

@@ -18,6 +18,8 @@ def test_frozen_transfer_likelihood_fails_closed_without_sources_or_pins(tmp_pat
     assert report["FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT"] is False
     assert report["FROZEN_PHYSICAL_SPECTRUM_RECEIPT"] is False
     assert report["LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT"] is False
+    assert report["likelihood_hash"] is None
+    assert report["official_likelihood_execution"]["likelihood_hash"] is None
     assert report["physical_cmb_prediction"] is False
     assert "source_freeze_manifest_not_certified" in report["blockers"]
     assert "solver_assumption_pin_not_certified" in report["blockers"]

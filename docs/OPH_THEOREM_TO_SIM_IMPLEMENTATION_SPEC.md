@@ -42,6 +42,14 @@ S0   effective_edge_string_diagnostic_view
 S1   critical_edge_cft_receipt
 P0   bulk_worldline_precursor_receipt
 P1   production_particle_matter_receipt
+E0   einstein_branch_entry_receipt
+E1   null_generator_stress_charge_receipt
+E2   fixed_cap_entropy_stationarity_receipt
+E3   small_ball_area_bridge_receipt
+E4   all_timelike_tensor_upgrade_receipt
+E5   lambda_constancy_conservation_receipt
+E6   newton_coupling_forbidden_input_audit_receipt
+G2   production_gravity_receipt
 CMB0 screen_cmb_diagnostic_receipt
 CMB1 finite_primordial_source_kernel_receipt
 CMB2 physical_cmb_prediction_receipt
@@ -104,6 +112,9 @@ These are hard boundaries:
 - `visualizationViews.effectiveStringTheory` is a schematic edge-cycle/worldsheet diagnostic view,
   not a critical string CFT, heterotic worldsheet derivation, or production-particle proof.
 - H3 proto-worldlines and screen holonomy defects are not matter particles until `P1` passes.
+- `visualizationViews.emergentCurvedSpacetime` is a quotient-visible H3 source/compaction
+  diagnostic, not production gravity. `G2` requires `E0`, and `E0` requires issue #503 plus the
+  `E1-E6` branch-entry gates.
 - Screen `C_l` and CMB-lite curves are `CMB0` diagnostics, not `CMB2`.
 - A Leech, c=24, or moonshine artifact is not a fine-structure prediction unless it emits the
   OPH same-scheme hadronic endpoint functional from source data, excludes endpoint-target leakage,
@@ -190,6 +201,32 @@ Effective string visualization starts at `S0`: finite edge cycles, repair-histor
 collar/defect tracks, and H3 proto-worldlines may be rendered as an edge-string/worldsheet
 diagnostic. `S1` requires a critical-edge receipt suite, including finite current algebra,
 Virasoro/Sugawara, supercurrent, spin-structure, anomaly, and modular-invariance checks.
+
+## Einstein Branch-Entry And Gravity Contract
+
+The simulator must not treat curved-spacetime visuals, stress-pair contraction, organic defect
+motion, or apparent attraction as a proof of gravity. Those lanes may emit diagnostic source,
+compaction, and curvature fields for rendering, but production-gravity wording is closed unless the
+post-Lean-audit branch-entry contract passes.
+
+`E0` is the umbrella receipt for GitHub issue #503: finite OPH consensus must supply the branch
+inputs used by the conditional Einstein derivation, rather than assuming them. `E0` is true only
+when all child gates pass:
+
+- `E1`: null-generator stress/charge rows are derived from OPH records.
+- `E2`: fixed-cap entropy stationarity is supplied without target leakage.
+- `E3`: the small-ball area bridge is finite, local, and quotient-safe.
+- `E4`: all-timelike tensor upgrade is certified, not fitted post hoc.
+- `E5`: lambda constancy and conservation are derived in the branch.
+- `E6`: Newton-coupling inputs are audited against forbidden insertion.
+
+`G2` production gravity requires `E0` plus the relevant matter/source and metric-solution receipts.
+Until then:
+
+- `raw_production_gravity_requested` may be true only as a diagnostic lane signal;
+- `production_gravity_receipt`, `physical_gravity_prediction`, and
+  `einstein_equation_solution_receipt` must remain false;
+- visualizer gates should show closed/blocked promotion, not red simulation errors.
 
 ## CMB And Vacuum Contract
 
