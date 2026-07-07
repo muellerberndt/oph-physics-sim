@@ -3,11 +3,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from oph_fpe.bulk.einstein_bridge import RECEIPT_SPECS, write_einstein_bridge_manifest
 from oph_fpe.bulk.theorem_contract import finite_oph_theorem_contract_report
 
 
 def _write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _write_all_einstein_bridge_sidecars(run: Path) -> None:
+    for spec in RECEIPT_SPECS:
+        _write_json(run / spec.file_name, {spec.keys[0]: True})
 
 
 def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contract(tmp_path: Path) -> None:
@@ -147,6 +153,47 @@ def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_
     assert "L3_kms_modular_clock_fit" in report["blockers"]
     assert report["einstein_branch_entry_contract_receipt"] is False
     assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
+
+
+def test_einstein_bridge_manifest_promotes_branch_entry_when_all_sidecars_pass(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_all_einstein_bridge_sidecars(run)
+
+    manifest = write_einstein_bridge_manifest(run)
+    report = finite_oph_theorem_contract_report(run)
+
+    assert manifest["EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT"] is True
+    assert manifest["EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT"] is True
+    assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is True
+    assert manifest["provenanceTags"]["BoundedInterval"] == "LEMMA_E0_5"
+    assert report["einstein_bridge_manifest_written"] is True
+    assert report["einstein_branch_entry_contract_receipt"] is True
+    assert report["einstein_branch_entry_blockers"] == []
+    assert all(report["einstein_branch_entry_child_gates"].values())
+
+
+def test_einstein_bridge_manifest_is_fail_closed_when_sidecars_are_missing(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+
+    manifest = write_einstein_bridge_manifest(run)
+    report = finite_oph_theorem_contract_report(run)
+
+    assert manifest["EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT"] is True
+    assert manifest["EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT"] is False
+    assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert "bounded_interval" in manifest["blockers"]
+    assert "einstein_residual" in manifest["blockers"]
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
+    assert "bounded_interval" in report["stages"]["E0_einstein_branch_entry_umbrella"][
+        "missing_or_blocking_evidence"
+    ]
 
 
 def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp_path: Path) -> None:

@@ -113,8 +113,8 @@ These are hard boundaries:
   not a critical string CFT, heterotic worldsheet derivation, or production-particle proof.
 - H3 proto-worldlines and screen holonomy defects are not matter particles until `P1` passes.
 - `visualizationViews.emergentCurvedSpacetime` is a quotient-visible H3 source/compaction
-  diagnostic, not production gravity. `G2` requires `E0`, and `E0` requires issue #503 plus the
-  `E1-E6` branch-entry gates.
+  diagnostic, not production gravity. `G2` requires `E0`, and `E0` requires
+  `einstein_bridge_manifest.json` plus all theorem-tagged bridge sidecar receipts.
 - Screen `C_l` and CMB-lite curves are `CMB0` diagnostics, not `CMB2`.
 - A Leech, c=24, or moonshine artifact is not a fine-structure prediction unless it emits the
   OPH same-scheme hadronic endpoint functional from source data, excludes endpoint-target leakage,
@@ -207,18 +207,30 @@ Virasoro/Sugawara, supercurrent, spin-structure, anomaly, and modular-invariance
 The simulator must not treat curved-spacetime visuals, stress-pair contraction, organic defect
 motion, or apparent attraction as a proof of gravity. Those lanes may emit diagnostic source,
 compaction, and curvature fields for rendering, but production-gravity wording is closed unless the
-post-Lean-audit branch-entry contract passes.
+E0 bridge manifest passes.
 
-`E0` is the umbrella receipt for GitHub issue #503: finite OPH consensus must supply the branch
-inputs used by the conditional Einstein derivation, rather than assuming them. `E0` is true only
-when all child gates pass:
+`E0` is now the OPH5 recovered-core Einstein bridge manifest, not a generic finite-consensus
+promotion. The paper-side theorem discharge is recorded in `einstein_bridge_manifest.json` via
+`EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT=true` and provenance tags such as
+`S2_screen=AXIOM_1`, `BW_2pi=THEOREM_4_2`, `BoundedInterval=LEMMA_E0_5`,
+`RemainderControl=LEMMA_E0_6`, `AllTimelikeCoverage=LEMMA_E0_7`,
+`StressClosure=PROPOSITION_E2`, and `Lambda=D6_NCRC_CLOSURE`.
 
-- `E1`: null-generator stress/charge rows are derived from OPH records.
-- `E2`: fixed-cap entropy stationarity is supplied without target leakage.
-- `E3`: the small-ball area bridge is finite, local, and quotient-safe.
-- `E4`: all-timelike tensor upgrade is certified, not fitted post hoc.
-- `E5`: lambda constancy and conservation are derived in the branch.
-- `E6`: Newton-coupling inputs are audited against forbidden insertion.
+The run-specific branch-entry receipt remains fail-closed. `EINSTEIN_BRANCH_ENTRY_RECEIPT` is true
+only when the manifest has all required theorem-tagged sidecars:
+
+- `sphere_fold_receipt.json`
+- `bw_receipt.json`
+- `null_stress_receipt.json`
+- `bounded_interval_receipt.json`
+- `fixed_cap_entropy_receipt.json`
+- `small_ball_area_receipt.json`
+- `remainder_receipt.json`
+- `timelike_coverage_receipt.json`
+- `stress_closure_receipt.json`
+- `lambda_closure_receipt.json`
+- `newton_forbidden_input_receipt.json`
+- `einstein_residual_receipt.json`
 
 `G2` production gravity requires `E0` plus the relevant matter/source and metric-solution receipts.
 Until then:

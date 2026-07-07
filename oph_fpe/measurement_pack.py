@@ -186,6 +186,22 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
         "observer_modular_experience_report.json",
     )
     _copy_first(roots, out / "observer_views.jsonl", exported, "observer_views.jsonl")
+    _copy_first(roots, out / "einstein_bridge_manifest.json", exported, "einstein_bridge_manifest.json")
+    for name in (
+        "sphere_fold_receipt.json",
+        "bw_receipt.json",
+        "null_stress_receipt.json",
+        "bounded_interval_receipt.json",
+        "fixed_cap_entropy_receipt.json",
+        "small_ball_area_receipt.json",
+        "remainder_receipt.json",
+        "timelike_coverage_receipt.json",
+        "stress_closure_receipt.json",
+        "lambda_closure_receipt.json",
+        "newton_forbidden_input_receipt.json",
+        "einstein_residual_receipt.json",
+    ):
+        _copy_first(roots, out / name, exported, name)
     _copy_first(roots, out / "bulk_proof_certificate_report.json", exported, "bulk_proof_certificate_report.json")
     _copy_first(roots, out / "bulk_proof_certificate_report.md", exported, "bulk_proof_certificate_report.md")
     _copy_first(roots, out / "paper_3d_bulk_chart_report.json", exported, "paper_3d_bulk_chart_report.json")
@@ -766,6 +782,16 @@ def _refresh_visualization_artifacts(out: Path, roots: list[Path], exported: dic
 
 
 def _refresh_bulk_proof_certificate(out: Path, exported: dict[str, str]) -> None:
+    try:
+        from oph_fpe.bulk.einstein_bridge import write_einstein_bridge_manifest
+    except Exception:
+        write_einstein_bridge_manifest = None
+    if write_einstein_bridge_manifest is not None:
+        try:
+            write_einstein_bridge_manifest(out, out / "einstein_bridge_manifest.json")
+            exported["einstein_bridge_manifest.json"] = "generated from exported receipt bundle"
+        except Exception:
+            pass
     try:
         from oph_fpe.bulk.proof_certificate import write_bulk_proof_certificate
     except Exception:

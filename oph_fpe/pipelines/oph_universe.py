@@ -24,6 +24,7 @@ from oph_fpe.bulk.neutral_object_bulk import write_strict_neutral_object_bulk_re
 from oph_fpe.bulk.observer_consensus_bulk import write_observer_consensus_bulk_readout_report
 from oph_fpe.bulk.proof_certificate import write_bulk_proof_certificate
 from oph_fpe.bulk.record_to_h3 import recompute_object_chart_from_saved_run
+from oph_fpe.bulk.einstein_bridge import write_einstein_bridge_manifest
 from oph_fpe.bulk.theorem_contract import write_finite_oph_theorem_contract_report
 from oph_fpe.claims import (
     H3_RESPONSE_CANDIDATE_RECEIPT,
@@ -307,6 +308,10 @@ def run_oph_universe_pipeline(
     )
     frontier_artifacts = _write_frontier_artifacts(run_dir, base_config)
 
+    write_einstein_bridge_manifest(
+        run_dir,
+        run_dir / "einstein_bridge_manifest.json",
+    )
     theorem_contract = write_finite_oph_theorem_contract_report(
         run_dir,
         run_dir / "finite_oph_theorem_contract_report.json",

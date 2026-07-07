@@ -17,6 +17,7 @@ from oph_fpe.bulk.modular_probe import state_derived_bw_report
 from oph_fpe.bulk.conformal_spatial_chart import conformal_h3_spatial_chart_report
 from oph_fpe.bulk.record_to_h3 import record_populated_h3_report, support_profiles_to_h3_report
 from oph_fpe.bulk.transition_selection import transition_scale_selection_report
+from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report, write_einstein_bridge_manifest
 from oph_fpe.bulk.theorem_contract import (
     finite_oph_theorem_contract_report,
     write_finite_oph_theorem_contract_report,
@@ -162,6 +163,8 @@ __all__ = [
     "write_prime_geometric_response_attachment",
     "support_profiles_to_h3_report",
     "transition_scale_selection_report",
+    "einstein_bridge_manifest_report",
     "write_h3_ensemble_report",
+    "write_einstein_bridge_manifest",
     "write_finite_oph_theorem_contract_report",
 ]

@@ -2296,7 +2296,7 @@ def _paper_accuracy_payload(
         {
             "id": "einstein_branch_entry",
             "payloadPath": "emergentCurvedSpacetime.einsteinBranchEntry",
-            "paperStatus": "post-Lean-audit promotion gate / GitHub issue #503",
+            "paperStatus": "E0 OPH5 recovered-core bridge manifest and theorem-tagged sidecar receipts",
             "receipt": "EINSTEIN_BRANCH_ENTRY_RECEIPT",
             "passed": bool(
                 curved_receipts.get(
@@ -2305,7 +2305,7 @@ def _paper_accuracy_payload(
                 )
             ),
             "allowedClaim": (
-                "Einstein-branch assumptions have been supplied by finite-consensus receipts only if true"
+                "E0 branch-entry sidecar receipts have supplied the required OPH5 bridge data only if true"
             ),
             "notAllowedClaim": (
                 "Einstein equations or production gravity as an unconditional consequence of finite consensus"
@@ -3715,7 +3715,7 @@ def _attach_oph_curvature_compaction_fields(points: list[dict[str, Any]]) -> dic
         "claimBoundary": (
             "Renderer-ready OPH branch diagnostic. It couples exported observer-visible source rows to "
             "a hyperbolic compactification field, but it is not a solved Einstein metric or physical "
-            "gravity prediction unless the issue #503 Einstein branch-entry and gravity promotion receipts pass."
+            "gravity prediction unless the E0 Einstein bridge manifest and gravity promotion receipts pass."
         ),
     }
 
@@ -6517,16 +6517,34 @@ def _organic_defect_population_visualization_payload(run_dir: Path | None) -> di
 def _einstein_branch_entry_visualization_payload(run_dir: Path | None) -> dict[str, Any]:
     contract_path = Path(run_dir) / "finite_oph_theorem_contract_report.json" if run_dir is not None else None
     branch_path = Path(run_dir) / "einstein_branch_entry_report.json" if run_dir is not None else None
+    manifest_path = Path(run_dir) / "einstein_bridge_manifest.json" if run_dir is not None else None
     contract = _read_json(contract_path) if contract_path is not None else {}
     branch = _read_json(branch_path) if branch_path is not None else {}
-    receipt = bool(
-        contract.get("einstein_branch_entry_contract_receipt", False)
-        or contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
-        or branch.get("einstein_branch_entry_contract_receipt", False)
-        or branch.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
+    manifest = _read_json(manifest_path) if manifest_path is not None else {}
+    use_manifest = bool(manifest)
+    receipt = (
+        bool(
+            manifest.get("einstein_branch_entry_contract_receipt", False)
+            or manifest.get("einstein_branch_entry_receipt", False)
+            or manifest.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+            or manifest.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
+        )
+        if use_manifest
+        else bool(
+            contract.get("einstein_branch_entry_contract_receipt", False)
+            or contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+            or branch.get("einstein_branch_entry_contract_receipt", False)
+            or branch.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
+        )
     )
     blockers = list(
-        contract.get("einstein_branch_entry_blockers")
+        (
+            manifest.get("einstein_branch_entry_blockers")
+            or manifest.get("blockers")
+            or []
+        )
+        if use_manifest
+        else contract.get("einstein_branch_entry_blockers")
         or branch.get("blockers")
         or [
             "E0_einstein_branch_entry_umbrella",
@@ -6538,19 +6556,34 @@ def _einstein_branch_entry_visualization_payload(run_dir: Path | None) -> dict[s
             "E6_newton_coupling_forbidden_input_audit",
         ]
     )
-    child_gates = contract.get("einstein_branch_entry_child_gates")
+    child_gates = manifest.get("einstein_branch_entry_child_gates") if use_manifest else contract.get(
+        "einstein_branch_entry_child_gates"
+    )
     if not isinstance(child_gates, dict):
         child_gates = branch.get("child_gates") if isinstance(branch.get("child_gates"), dict) else {}
     return {
         "schema": "oph_einstein_branch_entry_visualization_gate_v1",
-        "written": bool(contract) or bool(branch),
+        "written": bool(contract) or bool(branch) or bool(manifest),
         "source": str(contract_path) if contract_path is not None else None,
         "branchEntryReportSource": str(branch_path) if branch_path is not None else None,
+        "einsteinBridgeManifestSource": str(manifest_path) if manifest_path is not None else None,
+        "manifestWritten": use_manifest,
         "issue": 503,
-        "issueUrl": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
-        "issueStatus": contract.get(
+        "legacyIssue": 503,
+        "legacyIssueUrl": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
+        "legacyIssueStatus": contract.get(
             "issue_503_einstein_branch_entry_status",
             branch.get("issue_503_status", "open_or_unreported"),
+        ),
+        "claimTier": manifest.get("claim_tier", contract.get("einstein_bridge_manifest", {}).get("claim_tier")),
+        "provenanceTags": manifest.get(
+            "provenanceTags",
+            (contract.get("einstein_bridge_manifest") or {}).get("provenance_tags", {}),
+        ),
+        "receiptRows": manifest.get("receiptRows", []),
+        "requiredReceiptFiles": manifest.get(
+            "requiredReceiptFiles",
+            (contract.get("einstein_bridge_manifest") or {}).get("required_receipt_files", []),
         ),
         "childGates": child_gates,
         "blockers": [] if receipt else blockers,
@@ -6558,10 +6591,25 @@ def _einstein_branch_entry_visualization_payload(run_dir: Path | None) -> dict[s
             "einstein_branch_entry_receipt": receipt,
             "EINSTEIN_BRANCH_ENTRY_RECEIPT": receipt,
             "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": receipt,
+            "OPH_EINSTEIN_BRIDGE_MANIFEST_V1": bool(
+                manifest.get("OPH_EINSTEIN_BRIDGE_MANIFEST_V1", False)
+                or (contract.get("einstein_bridge_manifest") or {}).get("receipt", False)
+            ),
+            "EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT": bool(
+                manifest.get("EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT", False)
+                or (contract.get("einstein_bridge_manifest") or {}).get(
+                    "dependency_discharge_receipt", False
+                )
+            ),
+            "EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT": bool(
+                manifest.get("EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT", False)
+                or (contract.get("einstein_bridge_manifest") or {}).get("run_receipts_receipt", False)
+            ),
         },
         "claimBoundary": (
-            "Post-Lean-audit gravity promotion gate. Curved-spacetime, H3 object, and two-defect "
-            "visuals remain diagnostics unless issue #503 and the E1-E6 branch-entry gates pass."
+            "E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. Curved-spacetime, "
+            "H3 object, and defect visuals remain diagnostics unless the run emits every theorem-tagged "
+            "Einstein bridge sidecar receipt."
         ),
     }
 
@@ -7495,7 +7543,7 @@ def _visualization_views_payload(
                 {
                     "field": "einstein_branch_entry_receipt",
                     "source": "emergentCurvedSpacetime.receipts",
-                    "encoding": "closed branch-entry gate unless issue #503 and E1-E6 pass",
+                    "encoding": "closed branch-entry gate unless E0 manifest sidecar receipts pass",
                     "palette": "receipt_gate",
                 },
             ],
@@ -7557,7 +7605,7 @@ def _visualization_views_payload(
                 "Curved-spacetime data here are normalized stress/curvature proxies over the observer-facing "
                 "H3 chart. Render as an explanatory diagnostic of where gravity would be expected to appear "
                 "if the stronger OPH matter/gravity gates pass. Production gravity remains blocked unless "
-                "the issue #503 Einstein branch-entry contract and E1-E6 gates pass."
+                "the E0 Einstein bridge manifest sidecar receipts and gravity promotion gates pass."
             ),
         },
         "effectiveStringTheory": {
@@ -8163,7 +8211,7 @@ Paper-accuracy requirement:
 
 - Read `paperAccuracy.checks` and render blocked promotions as closed gates, not errors.
 - Do not promote visual similarity, apparent attraction, CMB-shape resemblance, or finite lattice gaps beyond the exact receipts in `paperAccuracy.receipts`.
-- Treat `EINSTEIN_BRANCH_ENTRY_RECEIPT` / `OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1` as the mandatory gate for any production-gravity wording. If false, show issue #503 and the E1-E6 blockers as a closed promotion gate, not a simulation error.
+- Treat `EINSTEIN_BRANCH_ENTRY_RECEIPT` / `OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1` as the mandatory gate for any production-gravity wording. If false, show the E0 manifest's missing sidecar receipts as a closed promotion gate, not a simulation error.
 
 Required views:
 
@@ -8218,7 +8266,7 @@ Required views:
    - Show `sourceMath.sourceDefinition` and `gravitySourceInterpretation` so users see that the source is quotient-visible OPH stress/readout, not raw rest mass.
    - Animate `emergentCurvedSpacetime.timeSlices` and proto-worldline event cycles when available.
    - Display `einstein_branch_entry_receipt`, `production_gravity_receipt`, `physical_gravity_prediction`, and `einstein_equation_solution_receipt` separately.
-   - Use `emergentCurvedSpacetime.einsteinBranchEntry` and `visualizationViews.emergentCurvedSpacetime.einsteinBranchEntry` for the issue #503 gate, child gates, blockers, and claim boundary.
+   - Use `emergentCurvedSpacetime.einsteinBranchEntry` and `visualizationViews.emergentCurvedSpacetime.einsteinBranchEntry` for the E0 manifest, provenance tags, receipt rows, blockers, and claim boundary.
    - Never label this view as physical gravity, a solved metric, or a matter stress tensor unless the Einstein branch-entry and gravity receipts are true.
 
 7. **CMB diagnostics view**

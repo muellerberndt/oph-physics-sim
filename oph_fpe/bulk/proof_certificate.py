@@ -11,12 +11,15 @@ from oph_fpe.claims import (
     CHART_LORENTZ_H3_RECEIPT,
     CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
     EINSTEIN_BRANCH_ENTRY_RECEIPT,
+    EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT,
+    EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT,
     FINITE_CONSENSUS_THEOREM_RECEIPT,
     FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+    OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     PHYSICAL_CMB_RECEIPT,
     PHYSICAL_GRAVITY_PREDICTION_RECEIPT,
@@ -31,6 +34,7 @@ from oph_fpe.claims import (
     THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT,
     with_claim_metadata,
 )
+from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report
 
 
 def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
@@ -69,6 +73,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     theorem_core = _read_json(root / "theorem_core_receipts.json")
     finite_contract_report = _read_json(root / "finite_oph_theorem_contract_report.json")
     einstein_branch_report = _read_json(root / "einstein_branch_entry_report.json")
+    explicit_einstein_bridge_manifest = _read_json(root / "einstein_bridge_manifest.json")
+    einstein_bridge_manifest = explicit_einstein_bridge_manifest or einstein_bridge_manifest_report(root)
+    use_einstein_bridge_manifest = bool(explicit_einstein_bridge_manifest)
     observer_modular_experience = _read_json(root / "observer_modular_experience_report.json")
     object_chart_name, object_chart = _best_object_chart_report(root)
 
@@ -310,13 +317,40 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     paper_geometric_branch_consensus_bulk = bool(
         finite_contract_report.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
     )
-    einstein_branch_entry = bool(
+    einstein_bridge_dependency_discharge = _truthy_any(
+        einstein_bridge_manifest,
+        EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT,
+        "theorem_e0_dependency_discharge_receipt",
+    )
+    einstein_bridge_run_receipts = _truthy_any(
+        einstein_bridge_manifest,
+        EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT,
+        "einstein_bridge_run_receipts_receipt",
+        "all_required_receipts_theorem_tagged",
+    )
+    manifest_einstein_branch_entry = _truthy_any(
+        einstein_bridge_manifest,
+        OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+        EINSTEIN_BRANCH_ENTRY_RECEIPT,
+        "einstein_branch_entry_contract_receipt",
+        "einstein_branch_entry_receipt",
+    )
+    legacy_einstein_branch_entry = bool(
         finite_contract_report.get(OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT, False)
         or finite_contract_report.get(EINSTEIN_BRANCH_ENTRY_RECEIPT, False)
         or finite_contract_report.get("einstein_branch_entry_contract_receipt", False)
     )
+    einstein_branch_entry = (
+        manifest_einstein_branch_entry if use_einstein_bridge_manifest else legacy_einstein_branch_entry
+    )
     einstein_branch_blockers = list(
-        finite_contract_report.get("einstein_branch_entry_blockers")
+        (
+            einstein_bridge_manifest.get("einstein_branch_entry_blockers")
+            or einstein_bridge_manifest.get("blockers")
+            or []
+        )
+        if use_einstein_bridge_manifest
+        else finite_contract_report.get("einstein_branch_entry_blockers")
         or einstein_branch_report.get("blockers")
         or [
             "E0_einstein_branch_entry_umbrella",
@@ -498,9 +532,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "E0_einstein_branch_entry_contract": _tier(
             OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
             einstein_branch_entry,
-            "End-to-end Einstein branch-entry contract: finite consensus has produced the geometric-modular, stress, entropy, small-ball, Lambda, and Newton-coupling gates tracked by #503.",
+            "E0 Einstein bridge manifest: OPH5 theorem provenance plus theorem-tagged run sidecar receipts for geometry, stress, entropy, bounded interval, small ball, remainder, timelike coverage, Lambda, Newton audit, and residual checks.",
             blockers=einstein_branch_blockers,
-            issue_url="https://github.com/FloatingPragma/observer-patch-holography/issues/503",
         ),
         "G2_production_gravity": _tier(
             PRODUCTION_GRAVITY_RECEIPT,
@@ -804,17 +837,30 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             ),
         },
         "einstein_branch_entry_summary": {
-            "written": bool(finite_contract_report) or bool(einstein_branch_report),
+            "written": bool(finite_contract_report) or bool(einstein_branch_report) or use_einstein_bridge_manifest,
             "receipt": einstein_branch_entry,
-            "issue": 503,
-            "issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
-            "source_report_written": bool(einstein_branch_report),
+            "manifest_written": use_einstein_bridge_manifest,
+            "manifest_receipt": bool(
+                einstein_bridge_manifest.get(OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT, False)
+            ),
+            "theorem_e0_dependency_discharge_receipt": einstein_bridge_dependency_discharge,
+            "einstein_bridge_run_receipts_receipt": einstein_bridge_run_receipts,
+            "claim_tier": einstein_bridge_manifest.get("claim_tier"),
+            "legacy_issue": 503,
+            "legacy_issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
+            "legacy_source_report_written": bool(einstein_branch_report),
             "blockers": einstein_branch_blockers,
-            "child_gates": finite_contract_report.get("einstein_branch_entry_child_gates", {}),
+            "child_gates": (
+                einstein_bridge_manifest.get("einstein_branch_entry_child_gates", {})
+                if use_einstein_bridge_manifest
+                else finite_contract_report.get("einstein_branch_entry_child_gates", {})
+            ),
+            "provenance_tags": dict(einstein_bridge_manifest.get("provenanceTags") or {}),
+            "required_receipt_files": list(einstein_bridge_manifest.get("requiredReceiptFiles") or []),
             "claim_boundary": (
-                "This gate tracks the post-Lean-audit requirement that finite consensus must produce "
-                "the geometric-modular/stress/entropy inputs for the Einstein branch. Without it, "
-                "curved-spacetime and two-defect displays remain diagnostics, not gravity."
+                "The E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. A concrete "
+                "run still needs the theorem-tagged sidecar receipts in the Einstein bridge manifest. Without "
+                "them, curved-spacetime and defect displays remain diagnostics, not production gravity."
             ),
         },
         "paper_alignment": {
@@ -831,8 +877,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "does not replace strict neutral observer-record reconstruction."
             ),
             "einstein_branch_entry": (
-                "The algebraic Einstein core is Lean-supported, but the simulator must keep production gravity "
-                "closed until #503 and the E1-E6 branch-entry gates pass."
+                "The OPH5 Einstein bridge is paper-discharged by E0; the simulator keeps production gravity "
+                "closed until the run emits all theorem-tagged bridge sidecar receipts."
             ),
         },
         "claim_boundary": (

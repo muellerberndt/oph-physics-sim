@@ -245,9 +245,10 @@ This is a diagnostic quotient-visible source/curvature/compaction proxy over the
 chart. It shows where consensus object packets and proto-worldline events contribute source density
 to the H3 Green-potential and compactification display field in the current run. It is not an
 Einstein-equation solution, not production gravity, not a physical metric, and not a strict neutral
-third-person bulk. Post-Lean-audit gravity promotion requires the explicit
+third-person bulk. Gravity promotion requires the explicit
+`einstein_bridge_manifest.json` lane and the
 `einstein_branch_entry_receipt` / `EINSTEIN_BRANCH_ENTRY_RECEIPT` gate. If this gate is false, render
-issue #503 and the `E1-E6` child blockers as a closed promotion gate.
+the manifest's missing sidecar receipts and provenance rows as a closed promotion gate.
 
 Primary fields:
 
@@ -286,7 +287,7 @@ Required labels:
 - "compactification proxy"
 - "observer-facing H3 chart"
 - "diagnostic gravity/curvature layer"
-- "Einstein branch-entry gate closed" when `einstein_branch_entry_receipt=false`
+- "Einstein bridge sidecar receipts open" when `einstein_branch_entry_receipt=false`
 
 Forbidden labels unless receipts pass:
 
@@ -305,6 +306,9 @@ Promotion gates to display:
 - `einstein_branch_entry_receipt`
 - `EINSTEIN_BRANCH_ENTRY_RECEIPT`
 - `OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1`
+- `OPH_EINSTEIN_BRIDGE_MANIFEST_V1`
+- `EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT`
+- `EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT`
 - `production_gravity_receipt`
 - `physical_gravity_prediction`
 - `einstein_equation_solution_receipt`
