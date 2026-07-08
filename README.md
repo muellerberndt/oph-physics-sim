@@ -42,6 +42,7 @@ Main run families:
 - strict neutral frontiers with overlap-native controls, graph sweeps, residualized graph sweeps, independent rank-selector audits, and closed promotion gates;
 - freezeout-screen angular spectra, CMB frontier reports, no-data-use receipts, finite certificate schemas, and Boltzmann/likelihood gate reports;
 - screen holonomy clusters, defect timelines, H3 worldline fits, interaction proxies, particle-likeness reports, and controlled planted-defect assays;
+- fractional Hall and fractional Chern sandbox receipts through `oph_fractional`: material quotient presentations, source-freeze gates, Hamiltonian promotion certificates, topological ledgers, optical modules, line-fan identifiability, binding-drift bounds, no-target-leak audits, quotient-correctness checks, and generated `fractional_quotient_report` bundles;
 - H3 record-worldline stitch certificates that require a declared hyperboloid atlas, real cut interface, observer-time adjacency, sector/gauge transport, ID-independent assignment gap, and coarse/fine contraction before emitting a cross-boundary continuation receipt;
 - static galaxy, neutrino, H0/S8, dark-response, CMB anomaly, and compressed-likelihood diagnostics with physical-prediction gates separated from diagnostics;
 - viewer bundles for screen/repair playback, object-H3 displays, universe timelines, CMB/neutral frontiers, and scale-compressed outputs.
@@ -172,6 +173,11 @@ Selected cosmology and scale gates:
 python3 -m oph_fpe.cli screen-capacity-report --out runs/screen_capacity_closure
 python3 -m oph_fpe.cli pn-resonance-report --out runs/pn_resonance
 python3 -m oph_fpe.cli leech-endpoint-bridge --out runs/leech_endpoint_bridge
+python3 -m oph_fpe.cli fractional-quotient-report --out runs/fractional/quotient_sector_sandbox
+python3 -m oph_fpe.cli jwst-object-source-artifact --out runs/jwst_compact_object/source
+python3 -m oph_fpe.cli jwst-compact-object-simulation-plan \
+  --run-dir runs/jwst_compact_object \
+  --out runs/jwst_compact_object/plan
 python3 -m oph_fpe.cli scale-bridge-report --out runs/pn_scale_bridge_no_bridge
 python3 -m oph_fpe.cli repair-scale-closure --out runs/repair_scale_closure
 python3 -m oph_fpe.cli finite-certificates --out runs/finite_certificates
@@ -191,6 +197,10 @@ python3 -m oph_fpe.cli official-planck-readiness --out runs/official_planck_read
 `leech-endpoint-bridge` audits a candidate Leech/moonshine same-scheme hadronic endpoint artifact.
 It keeps the fine-structure endpoint prediction receipt false unless a separate paper-side
 promotion gate is supplied.
+
+The JWST compact-object commands are mirrored on the paper-stack side by
+`reverse-engineering-reality/code/particles/jwst/build_compact_object_source_release_receipts.py`;
+both surfaces keep the default claim at `J0_DIAGNOSTIC_PROXY`.
 
 The physical CMB gate remains closed unless finite source arrays are backed by a
 finite covariant collar-packet parent with stress closure, recipient stress for

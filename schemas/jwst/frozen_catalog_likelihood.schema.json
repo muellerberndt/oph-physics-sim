@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Frozen Catalog Likelihood",
+  "type": "object",
+  "required": [
+    "source_hash",
+    "forward_operator_hash",
+    "catalog_data_hash",
+    "likelihood_hash",
+    "threshold_hash",
+    "frozen_catalog_likelihood_receipt"
+  ],
+  "properties": {
+    "source_hash": {"type": "string"},
+    "forward_operator_hash": {"type": "string"},
+    "catalog_data_hash": {"type": "string"},
+    "likelihood_hash": {"type": "string"},
+    "threshold_hash": {"type": "string"},
+    "frozen_catalog_likelihood_receipt": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

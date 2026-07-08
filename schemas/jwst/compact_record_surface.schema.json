@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Compact Record Surface",
+  "type": "object",
+  "required": ["object_id", "record_surface_hash", "compactness", "sync_residual"],
+  "properties": {
+    "object_id": {"type": "string"},
+    "record_surface_hash": {"type": "string"},
+    "compactness": {"type": "object"},
+    "record_density": {"type": "number"},
+    "sync_residual": {"type": "number"},
+    "nonclaims": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

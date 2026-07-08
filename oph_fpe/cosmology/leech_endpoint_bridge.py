@@ -58,6 +58,64 @@ TARGET_FIELD_TOKENS = (
     "fit_to_target",
 )
 
+HADRONIC_BACKEND_RECEIPT_KEYS = {
+    "qcd_quotient_ensemble_receipt": (
+        "qcd_quotient_ensemble_receipt",
+        "oph_qcd_quotient_ensemble_receipt",
+        "QCD_QUOTIENT_ENSEMBLE_RECEIPT",
+    ),
+    "source_qcd_parameter_map_receipt": (
+        "source_qcd_parameter_map_receipt",
+        "qcd_source_parameter_map_receipt",
+        "QCD_SOURCE_PARAMETER_MAP_RECEIPT",
+    ),
+    "euclidean_qcd_slab_receipt": (
+        "euclidean_qcd_slab_receipt",
+        "qcd_euclidean_slab_receipt",
+        "EUCLIDEAN_QCD_SLAB_RECEIPT",
+    ),
+    "hadronic_hilbert_quotient_receipt": (
+        "hadronic_hilbert_quotient_receipt",
+        "HADRONIC_HILBERT_QUOTIENT_RECEIPT",
+    ),
+    "ward_current_normalization_receipt": (
+        "ward_current_normalization_receipt",
+        "ward_normalized_current_ledger_receipt",
+        "WARD_CURRENT_NORMALIZATION_RECEIPT",
+    ),
+    "two_current_spectral_export_receipt": (
+        "two_current_spectral_export_receipt",
+        "d_rho_q_2_spectral_export_receipt",
+        "WARD_Q_SPECTRAL_MEASURE_RECEIPT",
+    ),
+    "higher_point_spectral_exports_receipt": (
+        "higher_point_spectral_exports_receipt",
+        "four_current_spectral_export_receipt",
+        "hlbl_four_point_receipt",
+        "HLBL_FOUR_POINT_RECEIPT",
+    ),
+    "transition_spectral_exports_receipt": (
+        "transition_spectral_exports_receipt",
+        "rare_decay_transition_spectral_receipt",
+        "RARE_DECAY_TRANSITION_SPECTRAL_RECEIPT",
+    ),
+    "same_scheme_remainder_receipt": (
+        "same_scheme_remainder_receipt",
+        "xi_same_scheme_remainder_receipt",
+        "XI_SAME_SCHEME_REMAINDER_RECEIPT",
+    ),
+    "qcd_systematics_ledger_receipt": (
+        "qcd_systematics_ledger_receipt",
+        "hadronic_systematics_ledger_receipt",
+        "QCD_SYSTEMATICS_LEDGER_RECEIPT",
+    ),
+    "qcd_no_target_leak_dag_receipt": (
+        "qcd_no_target_leak_dag_receipt",
+        "hadronic_no_target_leak_dag_receipt",
+        "NO_THOMSON_TARGET_LEAK_DAG",
+    ),
+}
+
 
 @dataclass(frozen=True)
 class LeechEndpointBridgeInputs:
@@ -190,6 +248,29 @@ def leech_endpoint_bridge_report(
         ),
     )
     fixed_point_interval = bool(fixed_point_loop and interval_uniqueness)
+    hadronic_backend_gates = {
+        key: _candidate_bool(artifact, aliases)
+        for key, aliases in HADRONIC_BACKEND_RECEIPT_KEYS.items()
+    }
+    two_current_backend_receipt = all(
+        hadronic_backend_gates[key]
+        for key in (
+            "qcd_quotient_ensemble_receipt",
+            "source_qcd_parameter_map_receipt",
+            "euclidean_qcd_slab_receipt",
+            "hadronic_hilbert_quotient_receipt",
+            "ward_current_normalization_receipt",
+            "two_current_spectral_export_receipt",
+            "same_scheme_remainder_receipt",
+            "qcd_systematics_ledger_receipt",
+            "qcd_no_target_leak_dag_receipt",
+        )
+    )
+    full_hadronic_precision_backend_receipt = bool(
+        two_current_backend_receipt
+        and hadronic_backend_gates["higher_point_spectral_exports_receipt"]
+        and hadronic_backend_gates["transition_spectral_exports_receipt"]
+    )
 
     gates = {
         "source_artifact_loaded": artifact is not None,
@@ -208,6 +289,9 @@ def leech_endpoint_bridge_report(
         "fixed_point_loop_reproduced": bool(fixed_point_loop),
         "interval_uniqueness_receipt": bool(interval_uniqueness),
         "fixed_point_interval_receipt": bool(fixed_point_interval),
+        **hadronic_backend_gates,
+        "two_current_hadronic_backend_receipt": bool(two_current_backend_receipt),
+        "full_hadronic_precision_backend_receipt": bool(full_hadronic_precision_backend_receipt),
         "standard_hadronic_running_used_as_inverse_alpha_correction": False,
         "fine_structure_alpha_endpoint_promotion": False,
     }
@@ -221,6 +305,8 @@ def leech_endpoint_bridge_report(
         and gates["hadronic_em_spectral_transport_object"]
         and gates["source_only_map_receipt"]
         and gates["full_endpoint_map_receipt"]
+        and gates["two_current_hadronic_backend_receipt"]
+        and gates["full_hadronic_precision_backend_receipt"]
         and gates["oph_string_branch_descent_receipt"]
         and gates["fixed_point_interval_receipt"]
         and not gates["alternative_branch_declared"]
@@ -240,7 +326,10 @@ def leech_endpoint_bridge_report(
     return {
         "mode": "leech_endpoint_bridge_quarantine_v0",
         "source": bridge_inputs.source,
-        "question": "Can Leech/moonshine data derive the OPH same-scheme hadronic endpoint functional?",
+        "question": (
+            "Can Leech/moonshine data derive the OPH-QCD hadronic backend needed for the "
+            "same-scheme fine-structure endpoint?"
+        ),
         "LEECH_ENDPOINT_BRIDGE_QUARANTINE_RECEIPT": True,
         "LEECH_ENDPOINT_BRIDGE_CANDIDATE_RECEIPT": bool(bridge_candidate_receipt),
         "SAME_SCHEME_HADRONIC_ENDPOINT_FUNCTIONAL_RECEIPT": bool(same_scheme_functional_receipt),
@@ -284,6 +373,14 @@ def leech_endpoint_bridge_report(
             "target_leakage_flags": leakage_flags,
             "targetish_input_fields": targetish_fields,
         },
+        "hadronic_backend_audit": {
+            "required_backend": "OPH_QCD_HADRONIC_PRECISION_BACKEND",
+            "two_current_scope": "running-alpha and HVP marginal only",
+            "full_scope": "HLbL and rare-decay long-distance amplitudes require higher-point and transition sectors",
+            "receipts": hadronic_backend_gates,
+            "two_current_hadronic_backend_receipt": bool(two_current_backend_receipt),
+            "full_hadronic_precision_backend_receipt": bool(full_hadronic_precision_backend_receipt),
+        },
         "string_branch_audit": {
             "policy": (
                 "A Leech or c=24 object must descend to the OPH edge carrier. If the candidate is "
@@ -318,8 +415,9 @@ def leech_endpoint_bridge_report(
         "promotion_blockers": promotion_blockers,
         "claim_boundary": (
             "Quarantined Leech/moonshine endpoint-bridge audit. A passing bridge candidate would "
-            "mean that the supplied artifact emitted a source-only same-scheme OPH hadronic endpoint "
-            "functional with string-branch descent and fixed-point interval receipts. The simulator "
+            "mean that the supplied artifact emitted the source-only OPH-QCD hadronic backend, "
+            "including the two-current endpoint/HVP marginal and the higher-point/transition "
+            "sectors, with string-branch descent and fixed-point interval receipts. The simulator "
             "does not promote the fine-structure endpoint prediction from this audit."
         ),
         "artifact_schema_hint": {
@@ -329,6 +427,7 @@ def leech_endpoint_bridge_report(
                 "hadronic_em_spectral_transport",
                 "source_only_map_receipt",
                 "full_endpoint_map_receipt",
+                *HADRONIC_BACKEND_RECEIPT_KEYS.keys(),
                 "oph_string_branch_descent_receipt",
                 "fixed_point_loop_reproduced",
                 "interval_uniqueness_receipt",
@@ -493,6 +592,16 @@ def _blockers(
         blockers.append("source_only_map_receipt_missing")
     if not gates["full_endpoint_map_receipt"]:
         blockers.append("full_endpoint_map_receipt_missing")
+    missing_backend_gates = [
+        key for key in HADRONIC_BACKEND_RECEIPT_KEYS if not gates.get(key, False)
+    ]
+    if missing_backend_gates:
+        blockers.append("oph_qcd_hadronic_backend_receipts_missing")
+        blockers.extend(f"{key}_missing" for key in missing_backend_gates)
+    if not gates.get("two_current_hadronic_backend_receipt", False):
+        blockers.append("two_current_hadronic_backend_receipt_missing")
+    if not gates.get("full_hadronic_precision_backend_receipt", False):
+        blockers.append("full_hadronic_precision_backend_receipt_missing")
     if not gates["oph_string_branch_descent_receipt"]:
         blockers.append("leech_object_does_not_descend_to_oph_edge_carrier")
     if gates["alternative_branch_declared"]:

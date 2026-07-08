@@ -421,6 +421,69 @@ Promotion gates to display:
 - `bd_moduli_locking_certificate_receipt`
 - `global_singleton_string_vacuum_receipt`
 
+## View 4b: Fractional Quotient-Sector Line Fan
+
+Use `visualizationViews.fractionalQuotientSectors`.
+
+Required meaning:
+
+This view is a fractional Hall or fractional Chern sandbox. It renders a quotient-visible
+topological sector ledger and the optical line fan that sits over that ledger. It is not a
+material-specific fractional Chern proof. It is not an assignment of an optical peak to fractional
+charge unless the binding-drift receipt is visible and passing.
+
+Primary fields:
+
+- `visualizationViews.fractionalQuotientSectors.fractionalReport.topological_ledger`
+- `visualizationViews.fractionalQuotientSectors.fractionalReport.optical_module`
+- `visualizationViews.fractionalQuotientSectors.fractionalReport.line_fan.peaks`
+- `visualizationViews.fractionalQuotientSectors.fractionalReport.slope_certificate`
+- `visualizationViews.fractionalQuotientSectors.receipts`
+
+Recommended rendering:
+
+- Draw the topological ledger as a Hall-collar sector ring. Label sectors by public sector name,
+  charge, and topological shadow when present.
+- Draw `line_fan.peaks` as an energy-line panel. Use color for `tau`, line tilt or side marker for
+  `gate_slope`, and a separate badge for `total_charge`.
+- For peaks with `total_charge == 0` and `tau != "1"`, use a neutral fractional styling. Do not
+  call the line electrically charged.
+- Display the binding-drift gate next to every slope interpretation. A charge-slope reading is
+  blocked when `binding_drift_bounded` is false.
+- Display source, quotient, ledger, optical, refinement, and no-target-leak receipt badges in the
+  same panel. Failed gates should mute the material-claim styling but keep the diagnostic geometry.
+
+Required labels:
+
+- "fractional quotient-sector sandbox"
+- "topological ledger"
+- "optical line fan"
+- "neutral fractional exciton"
+- "binding-drift gate"
+- "source frozen"
+- "no-target-leak audit"
+
+Forbidden labels unless receipts pass:
+
+- "material proof"
+- "measured fractional Chern phase"
+- "charge identified by slope alone"
+- "normal form selected the phase"
+- "posterior-fitted Hamiltonian"
+
+Promotion gates to display:
+
+- `source_hamiltonian_frozen`
+- `phase_certificate_injective`
+- `topological_sector_ledger`
+- `line_fan_decomposition`
+- `binding_drift_bounded`
+- `no_target_leak`
+- `refinement_compatibility`
+- `canonicalizer_idempotence`
+- `representative_invariance`
+- `quotient_lumpability`
+
 ## View 5: Overlap Repair
 
 Use `smallUniverse`.

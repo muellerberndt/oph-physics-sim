@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Degeneracy Audit",
+  "type": "object",
+  "required": ["object_id", "receipts", "recommended_label", "blocking_receipts"],
+  "properties": {
+    "object_id": {"type": "string"},
+    "receipts": {"type": "object"},
+    "recommended_label": {"type": "string"},
+    "blocking_receipts": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Object Quotient Ensemble",
+  "type": "object",
+  "required": [
+    "regulator_id",
+    "presentation_schema_hash",
+    "groupoid_hash",
+    "quotient_map_hash",
+    "normal_form_map_hash",
+    "base_measure",
+    "action",
+    "constraints",
+    "coarse_maps_hash",
+    "sampler_target_hash"
+  ],
+  "properties": {
+    "regulator_id": {"type": "string"},
+    "presentation_schema_hash": {"type": "string"},
+    "groupoid_hash": {"type": "string"},
+    "quotient_map_hash": {"type": "string"},
+    "normal_form_map_hash": {"type": "string"},
+    "base_measure": {"type": "object"},
+    "action": {"type": "object"},
+    "constraints": {"type": "array", "items": {"type": "object"}},
+    "coarse_maps_hash": {"type": "string"},
+    "sampler_target_hash": {"type": "string"}
+  },
+  "additionalProperties": true
+}

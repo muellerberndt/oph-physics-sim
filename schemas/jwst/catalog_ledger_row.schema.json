@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Catalog Ledger Row",
+  "type": "object",
+  "required": [
+    "object_id",
+    "survey",
+    "coordinates",
+    "aperture_definition_hash",
+    "photometry_hash",
+    "morphology_hash",
+    "psf_model_hash",
+    "selection_function_hash",
+    "p_z_hash",
+    "claim_tier",
+    "blocking_receipts",
+    "nonclaims"
+  ],
+  "properties": {
+    "object_id": {"type": "string"},
+    "claim_tier": {
+      "type": "string",
+      "enum": [
+        "J0",
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J7",
+        "J8"
+      ]
+    },
+    "blocking_receipts": {"type": "array", "items": {"type": "string"}},
+    "nonclaims": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

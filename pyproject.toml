@@ -25,7 +25,7 @@ viz = ["plotly>=5.0"]
 oph-fpe = "oph_fpe.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["oph_fpe*", "oph_universe*"]
+include = ["oph_fpe*", "oph_universe*", "oph_fractional*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

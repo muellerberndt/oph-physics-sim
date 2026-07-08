@@ -227,6 +227,9 @@
         "effectiveStringTheory": {
           "$ref": "#/$defs/visualizationView"
         },
+        "fractionalQuotientSectors": {
+          "$ref": "#/$defs/visualizationView"
+        },
         "silenceToObservation": {
           "$ref": "#/$defs/visualizationView"
         }

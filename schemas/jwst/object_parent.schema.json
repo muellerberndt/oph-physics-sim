@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Finite Object Parent",
+  "type": "object",
+  "required": [
+    "cell_complex_hash",
+    "metric_hash",
+    "tetrad_hash",
+    "parallel_transport_hash",
+    "packet_sectors",
+    "packet_kinematics_hash",
+    "mass_shell_residual_hash",
+    "stress_readout_hash",
+    "exchange_channel_hash",
+    "total_stress_closure_hash",
+    "radiative_transfer_hash",
+    "lensing_hash",
+    "sfh_chemical_hash",
+    "refinement_map_hash",
+    "readout_hash"
+  ],
+  "properties": {
+    "packet_sectors": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

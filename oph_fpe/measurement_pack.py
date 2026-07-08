@@ -243,6 +243,30 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "pn_resonance_report.md", exported, "pn_resonance_report.md")
     _copy_first(roots, out / "leech_endpoint_bridge_report.json", exported, "leech_endpoint_bridge_report.json")
     _copy_first(roots, out / "leech_endpoint_bridge_report.md", exported, "leech_endpoint_bridge_report.md")
+    _copy_first(roots, out / "hadron_source_backend_report.json", exported, "hadron_source_backend_report.json")
+    _copy_first(roots, out / "hadron_source_backend_report.md", exported, "hadron_source_backend_report.md")
+    _copy_first(roots, out / "gamma_morphology_report.json", exported, "gamma_morphology_report.json")
+    _copy_first(roots, out / "gamma_morphology_report.md", exported, "gamma_morphology_report.md")
+    _copy_first(roots, out / "fractional_quotient_report.json", exported, "fractional_quotient_report.json")
+    _copy_first(roots, out / "fractional_quotient_report.md", exported, "fractional_quotient_report.md")
+    _copy_first(roots, out / "jwst_object_source_artifact_report.json", exported, "jwst_object_source_artifact_report.json")
+    _copy_first(roots, out / "jwst_object_source_artifact_report.md", exported, "jwst_object_source_artifact_report.md")
+    _copy_first(roots, out / "jwst_source_sample_report.json", exported, "jwst_source_sample_report.json")
+    _copy_first(roots, out / "jwst_source_sample_report.md", exported, "jwst_source_sample_report.md")
+    _copy_first(roots, out / "jwst_compact_record_surface_report.json", exported, "jwst_compact_record_surface_report.json")
+    _copy_first(roots, out / "jwst_compact_record_surface_report.md", exported, "jwst_compact_record_surface_report.md")
+    _copy_first(roots, out / "jwst_object_parent_report.json", exported, "jwst_object_parent_report.json")
+    _copy_first(roots, out / "jwst_object_parent_report.md", exported, "jwst_object_parent_report.md")
+    _copy_first(roots, out / "jwst_forward_mock_report.json", exported, "jwst_forward_mock_report.json")
+    _copy_first(roots, out / "jwst_forward_mock_report.md", exported, "jwst_forward_mock_report.md")
+    _copy_first(roots, out / "jwst_degeneracy_audit_report.json", exported, "jwst_degeneracy_audit_report.json")
+    _copy_first(roots, out / "jwst_degeneracy_audit_report.md", exported, "jwst_degeneracy_audit_report.md")
+    _copy_first(roots, out / "jwst_object_abundance_selector_report.json", exported, "jwst_object_abundance_selector_report.json")
+    _copy_first(roots, out / "jwst_object_abundance_selector_report.md", exported, "jwst_object_abundance_selector_report.md")
+    _copy_first(roots, out / "jwst_frozen_catalog_likelihood_report.json", exported, "jwst_frozen_catalog_likelihood_report.json")
+    _copy_first(roots, out / "jwst_frozen_catalog_likelihood_report.md", exported, "jwst_frozen_catalog_likelihood_report.md")
+    _copy_first(roots, out / "jwst_compact_object_simulation_plan.json", exported, "jwst_compact_object_simulation_plan.json")
+    _copy_first(roots, out / "jwst_compact_object_simulation_plan.md", exported, "jwst_compact_object_simulation_plan.md")
     _copy_first(roots, out / "black_hole_bridge_status_report.json", exported, "black_hole_bridge_status_report.json")
     _copy_first(roots, out / "black_hole_bridge_status_report.md", exported, "black_hole_bridge_status_report.md")
     _copy_first(
@@ -820,6 +844,14 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     repair_scale = _first_json(roots, "repair_scale_closure_report.json")
     pn_resonance = _first_json(roots, "pn_resonance_report.json")
     leech_endpoint_bridge = _first_json(roots, "leech_endpoint_bridge_report.json")
+    hadron_source_backend = _first_json(roots, "hadron_source_backend_report.json")
+    gamma_morphology = _first_json(roots, "gamma_morphology_report.json")
+    fractional_quotient = _first_json(roots, "fractional_quotient_report.json")
+    jwst_source_artifact = _first_json(roots, "jwst_object_source_artifact_report.json")
+    jwst_degeneracy_audit = _first_json(roots, "jwst_degeneracy_audit_report.json")
+    jwst_abundance = _first_json(roots, "jwst_object_abundance_selector_report.json")
+    jwst_likelihood = _first_json(roots, "jwst_frozen_catalog_likelihood_report.json")
+    jwst_plan = _first_json(roots, "jwst_compact_object_simulation_plan.json")
     black_hole_bridge = _first_json(roots, "black_hole_bridge_status_report.json")
     silence_to_observation = _first_json(roots, "silence_to_observation_report.json")
     kernel_dispatch = _first_json(roots, "kernel_dispatch_report.json")
@@ -878,6 +910,13 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     repair_scale_gates = repair_scale.get("readiness_gates") or {}
     pn_resonance_gates = pn_resonance.get("readiness_gates") or {}
     leech_endpoint_bridge_gates = leech_endpoint_bridge.get("readiness_gates") or {}
+    hadron_source_backend_gates = hadron_source_backend.get("readiness_gates") or {}
+    gamma_morphology_gates = gamma_morphology.get("readiness_gates") or {}
+    fractional_quotient_gates = fractional_quotient.get("readiness_gates") or {}
+    jwst_source_gates = jwst_source_artifact.get("readiness_gates") or {}
+    jwst_degeneracy_gates = jwst_degeneracy_audit.get("readiness_gates") or {}
+    jwst_abundance_gates = jwst_abundance.get("readiness_gates") or {}
+    jwst_likelihood_gates = jwst_likelihood.get("readiness_gates") or {}
     silence_gates = silence_to_observation.get("readiness_gates") or {}
     kernel_dispatch_positive_geometry = (kernel_dispatch.get("kernels") or {}).get("positive_geometry") or {}
     positive_geometry_kernel_gates = positive_geometry_kernel.get("readiness_gates") or {}
@@ -1376,6 +1415,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "leech_same_scheme_hadronic_endpoint_functional_receipt": bool(
             leech_endpoint_bridge.get("SAME_SCHEME_HADRONIC_ENDPOINT_FUNCTIONAL_RECEIPT", False)
         ),
+        "leech_two_current_hadronic_backend_receipt": bool(
+            leech_endpoint_bridge_gates.get("two_current_hadronic_backend_receipt", False)
+        ),
+        "leech_full_hadronic_precision_backend_receipt": bool(
+            leech_endpoint_bridge_gates.get("full_hadronic_precision_backend_receipt", False)
+        ),
         "leech_alpha_endpoint_promotion_receipt": bool(
             leech_endpoint_bridge.get("FINE_STRUCTURE_ALPHA_ENDPOINT_PROMOTION_RECEIPT", False)
         ),
@@ -1398,6 +1443,72 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             leech_endpoint_bridge_gates.get("fixed_point_interval_receipt", False)
         ),
         "leech_endpoint_blocker_count": int(len(leech_endpoint_bridge.get("blockers") or [])),
+        "hadron_source_backend_written": bool(hadron_source_backend),
+        "hadron_source_backend_claim": hadron_source_backend.get("claim"),
+        "hadron_source_backend_claim_tier": hadron_source_backend.get("claim_tier"),
+        "hadron_source_backend_two_current_receipt": bool(
+            hadron_source_backend_gates.get("two_current_hadronic_backend_receipt", False)
+        ),
+        "hadron_source_backend_full_precision_receipt": bool(
+            hadron_source_backend_gates.get("full_hadronic_precision_backend_receipt", False)
+        ),
+        "hadron_source_backend_forbidden_inputs_excluded": bool(
+            hadron_source_backend_gates.get("forbidden_source_inputs_excluded", False)
+        ),
+        "hadron_source_backend_blocker_count": int(len(hadron_source_backend.get("blockers") or [])),
+        "gamma_morphology_written": bool(gamma_morphology),
+        "gamma_morphology_route": gamma_morphology.get("route"),
+        "gamma_morphology_strongest_allowed_claim": gamma_morphology.get("strongest_allowed_claim"),
+        "gamma_morphology_first_blocked_gate": gamma_morphology.get("first_blocked_gate"),
+        "gamma_morphology_no_data_use_receipt": bool(
+            gamma_morphology_gates.get("GAMMA_NO_DATA_USE_RECEIPT", False)
+        ),
+        "gamma_morphology_identifiability_receipt": bool(
+            gamma_morphology_gates.get("GAMMA_IDENTIFIABILITY_RECEIPT", False)
+        ),
+        "gamma_morphology_prediction_receipt": bool(
+            gamma_morphology_gates.get("OPH_GAMMA_MORPHOLOGY_PREDICTION_RECEIPT", False)
+        ),
+        "gamma_morphology_blocker_count": int(len(gamma_morphology.get("blockers") or [])),
+        "fractional_quotient_report_written": bool(fractional_quotient),
+        "fractional_quotient_claim": fractional_quotient.get("claim"),
+        "fractional_quotient_strongest_allowed_claim": fractional_quotient.get("strongest_allowed_claim"),
+        "fractional_quotient_first_blocked_gate": fractional_quotient.get("first_blocked_gate"),
+        "fractional_quotient_material_claim": bool(fractional_quotient.get("material_claim", False)),
+        "fractional_quotient_promotion_allowed": bool(fractional_quotient.get("promotion_allowed", False)),
+        "fractional_quotient_simulator_correctness_receipt": bool(
+            fractional_quotient_gates.get("SIMULATOR_QUOTIENT_CORRECTNESS", False)
+        ),
+        "fractional_quotient_no_target_leak_receipt": bool(
+            fractional_quotient_gates.get("NO_TARGET_LEAK_DAG", False)
+        ),
+        "fractional_quotient_line_fan_receipt": bool(
+            fractional_quotient_gates.get("LINE_FAN_DECOMPOSITION", False)
+        ),
+        "fractional_quotient_identifiability_receipt": bool(
+            fractional_quotient_gates.get("OPTICAL_LINE_FAN_INJECTIVE", False)
+        ),
+        "fractional_quotient_blocker_count": int(len(fractional_quotient.get("blockers") or [])),
+        "jwst_compact_object_plan_written": bool(jwst_plan),
+        "jwst_compact_object_strongest_allowed_claim": jwst_plan.get("strongest_allowed_claim"),
+        "jwst_compact_object_first_blocked_gate": jwst_plan.get("first_blocked_gate"),
+        "jwst_source_artifact_written": bool(jwst_source_artifact),
+        "jwst_object_source_law_receipt": bool(jwst_source_gates.get("OBJECT_SOURCE_LAW_RECEIPT", False)),
+        "jwst_no_target_leakage_receipt": bool(jwst_source_gates.get("NO_TARGET_LEAKAGE_RECEIPT", False)),
+        "jwst_degeneracy_audit_written": bool(jwst_degeneracy_audit),
+        "jwst_degeneracy_audit_receipt": bool(jwst_degeneracy_gates.get("DEGENERACY_AUDIT_RECEIPT", False)),
+        "jwst_mass_age_tension_promotion_receipt": bool(
+            jwst_degeneracy_gates.get("MASS_AGE_TENSION_PROMOTION_RECEIPT", False)
+        ),
+        "jwst_object_abundance_source_receipt": bool(
+            jwst_abundance_gates.get("OBJECT_ABUNDANCE_SOURCE_RECEIPT", False)
+        ),
+        "jwst_frozen_catalog_likelihood_receipt": bool(
+            jwst_likelihood_gates.get("FROZEN_CATALOG_LIKELIHOOD_RECEIPT", False)
+        ),
+        "jwst_physical_prediction_receipt": bool(
+            jwst_likelihood_gates.get("JWST_LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT", False)
+        ),
         "black_hole_bridge_status_written": bool(black_hole_bridge),
         "black_hole_finite_horizon_record_receipt": bool(
             black_hole_bridge.get("FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT", False)
@@ -2559,8 +2670,44 @@ def _readme(report: dict[str, Any]) -> str:
         f"- Leech endpoint bridge written: {claims.get('leech_endpoint_bridge_written')}\n"
         f"- Leech endpoint bridge candidate receipt: {claims.get('leech_endpoint_bridge_candidate_receipt')}\n"
         f"- Leech same-scheme hadronic endpoint receipt: {claims.get('leech_same_scheme_hadronic_endpoint_functional_receipt')}\n"
+        f"- Leech two-current hadronic backend receipt: {claims.get('leech_two_current_hadronic_backend_receipt')}\n"
+        f"- Leech full hadronic precision backend receipt: {claims.get('leech_full_hadronic_precision_backend_receipt')}\n"
         f"- Leech alpha endpoint promotion receipt: {claims.get('leech_alpha_endpoint_promotion_receipt')}\n"
         f"- Leech endpoint blockers: {claims.get('leech_endpoint_blocker_count')}\n\n"
+        f"- Hadron source backend written: {claims.get('hadron_source_backend_written')}\n"
+        f"- Hadron source backend claim: {claims.get('hadron_source_backend_claim')}\n"
+        f"- Hadron source backend tier: {claims.get('hadron_source_backend_claim_tier')}\n"
+        f"- Hadron two-current backend receipt: {claims.get('hadron_source_backend_two_current_receipt')}\n"
+        f"- Hadron full precision backend receipt: {claims.get('hadron_source_backend_full_precision_receipt')}\n"
+        f"- Hadron source backend blockers: {claims.get('hadron_source_backend_blocker_count')}\n\n"
+        f"- Gamma morphology report written: {claims.get('gamma_morphology_written')}\n"
+        f"- Gamma morphology route: {claims.get('gamma_morphology_route')}\n"
+        f"- Gamma morphology strongest claim: {claims.get('gamma_morphology_strongest_allowed_claim')}\n"
+        f"- Gamma morphology first blocked gate: {claims.get('gamma_morphology_first_blocked_gate')}\n"
+        f"- Gamma no-data-use receipt: {claims.get('gamma_morphology_no_data_use_receipt')}\n"
+        f"- Gamma identifiability receipt: {claims.get('gamma_morphology_identifiability_receipt')}\n"
+        f"- Gamma morphology prediction receipt: {claims.get('gamma_morphology_prediction_receipt')}\n"
+        f"- Gamma morphology blockers: {claims.get('gamma_morphology_blocker_count')}\n\n"
+        f"- Fractional quotient report written: {claims.get('fractional_quotient_report_written')}\n"
+        f"- Fractional quotient claim: {claims.get('fractional_quotient_claim')}\n"
+        f"- Fractional quotient strongest claim: {claims.get('fractional_quotient_strongest_allowed_claim')}\n"
+        f"- Fractional quotient first blocked gate: {claims.get('fractional_quotient_first_blocked_gate')}\n"
+        f"- Fractional quotient material claim: {claims.get('fractional_quotient_material_claim')}\n"
+        f"- Fractional quotient simulator correctness receipt: {claims.get('fractional_quotient_simulator_correctness_receipt')}\n"
+        f"- Fractional quotient line-fan receipt: {claims.get('fractional_quotient_line_fan_receipt')}\n"
+        f"- Fractional quotient identifiability receipt: {claims.get('fractional_quotient_identifiability_receipt')}\n"
+        f"- Fractional quotient blockers: {claims.get('fractional_quotient_blocker_count')}\n\n"
+        f"- JWST compact-object plan written: {claims.get('jwst_compact_object_plan_written')}\n"
+        f"- JWST compact-object strongest claim: {claims.get('jwst_compact_object_strongest_allowed_claim')}\n"
+        f"- JWST compact-object first blocked gate: {claims.get('jwst_compact_object_first_blocked_gate')}\n"
+        f"- JWST source artifact written: {claims.get('jwst_source_artifact_written')}\n"
+        f"- JWST source-law receipt: {claims.get('jwst_object_source_law_receipt')}\n"
+        f"- JWST no-target-leak receipt: {claims.get('jwst_no_target_leakage_receipt')}\n"
+        f"- JWST degeneracy audit receipt: {claims.get('jwst_degeneracy_audit_receipt')}\n"
+        f"- JWST mass/age promotion receipt: {claims.get('jwst_mass_age_tension_promotion_receipt')}\n"
+        f"- JWST source-abundance receipt: {claims.get('jwst_object_abundance_source_receipt')}\n"
+        f"- JWST frozen likelihood receipt: {claims.get('jwst_frozen_catalog_likelihood_receipt')}\n"
+        f"- JWST physical-prediction receipt: {claims.get('jwst_physical_prediction_receipt')}\n\n"
         f"- black-hole bridge status written: {claims.get('black_hole_bridge_status_written')}\n"
         f"- black-hole finite horizon record receipt: {claims.get('black_hole_finite_horizon_record_receipt')}\n"
         f"- black-hole physical evaporation bridge receipt: {claims.get('black_hole_physical_evaporation_bridge_receipt')}\n"

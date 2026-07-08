@@ -7106,6 +7106,98 @@ def _string_vacuum_selector_visualization_payload(
     }
 
 
+def _fractional_quotient_visualization_payload(run_dir: Path | None) -> dict[str, Any]:
+    report_path = run_dir / "fractional_quotient_report.json" if run_dir is not None else None
+    if report_path is not None and report_path.exists():
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            report = {
+                "schema": "oph_fractional_quotient_sim_report_v1",
+                "status": "fail",
+                "fail_closed_state": "DIAGNOSTIC_ONLY",
+                "error": f"could not parse fractional_quotient_report.json: {exc}",
+            }
+    else:
+        try:
+            from oph_fractional.compare import demo_fractional_report
+
+            report = demo_fractional_report()
+        except Exception as exc:  # pragma: no cover - defensive for standalone viewer export
+            report = {
+                "schema": "oph_fractional_quotient_sim_report_v1",
+                "status": "fail",
+                "fail_closed_state": "DIAGNOSTIC_ONLY",
+                "error": str(exc),
+            }
+
+    phase = report.get("phase_promotion", {}) if isinstance(report.get("phase_promotion"), dict) else {}
+    phase_receipts = phase.get("receipts", {}) if isinstance(phase.get("receipts"), dict) else {}
+    quotient = report.get("quotient", {}) if isinstance(report.get("quotient"), dict) else {}
+    source = report.get("source", {}) if isinstance(report.get("source"), dict) else {}
+    line_fan = report.get("line_fan", {}) if isinstance(report.get("line_fan"), dict) else {}
+    slope = report.get("slope_certificate", {}) if isinstance(report.get("slope_certificate"), dict) else {}
+    no_leak = report.get("no_target_leak", {}) if isinstance(report.get("no_target_leak"), dict) else {}
+    refinement = report.get("refinement", {}) if isinstance(report.get("refinement"), dict) else {}
+    return {
+        "schema": "oph_fractional_quotient_visualization_v1",
+        "written": True,
+        "sourceReportPath": str(report_path) if report_path is not None and report_path.exists() else None,
+        "fractionalReport": report,
+        "receipts": {
+            "source_hamiltonian_frozen": bool(source.get("receipts", {}).get("SOURCE_HAMILTONIAN_FROZEN", False)),
+            "topological_sector_ledger": bool(phase_receipts.get("TOPOLOGICAL_SECTOR_LEDGER", False)),
+            "phase_certificate_injective": bool(phase_receipts.get("PHASE_CERTIFICATE_INJECTIVE", False)),
+            "line_fan_decomposition": bool(line_fan.get("LINE_FAN_DECOMPOSITION", False)),
+            "binding_drift_bounded": bool(slope.get("receipts", {}).get("BINDING_DRIFT_BOUNDED", False)),
+            "no_target_leak": bool(no_leak.get("receipts", {}).get("NO_TARGET_LEAK", False)),
+            "refinement_compatibility": bool(
+                refinement.get("receipts", {}).get("REFINEMENT_COMPATIBILITY", False)
+            ),
+            "canonicalizer_idempotence": bool(
+                ((quotient.get("canonicalizer") or {}).get("receipts") or {}).get(
+                    "CANONICALIZER_IDEMPOTENCE",
+                    False,
+                )
+            ),
+            "representative_invariance": bool(
+                ((quotient.get("representative_invariance") or {}).get("receipts") or {}).get(
+                    "REPRESENTATIVE_INVARIANCE",
+                    False,
+                )
+            ),
+            "quotient_lumpability": bool(
+                ((quotient.get("lumpability") or {}).get("receipts") or {}).get(
+                    "QUOTIENT_LUMPABILITY",
+                    False,
+                )
+            ),
+        },
+        "renderHints": [
+            {
+                "layer": "quotient_sector_ring",
+                "source": "fractionalReport.topological_ledger.sectors",
+                "encoding": "sector nodes arranged around the Hall collar",
+            },
+            {
+                "layer": "optical_line_fan",
+                "source": "fractionalReport.line_fan.peaks",
+                "encoding": "energy lines with color by tau and slope by total_charge",
+            },
+            {
+                "layer": "receipt_gate_strip",
+                "source": "receipts",
+                "encoding": "fail-closed badges for source, quotient, ledger, optical, refinement, and leak gates",
+            },
+        ],
+        "claimBoundary": (
+            "Fractional quotient-sector visualization contract. It displays the material-source, "
+            "topological-ledger, optical-module, line-fan, no-target-leak, and refinement gates. "
+            "The built-in demo is diagnostic only and is not a proof for a real material sample."
+        ),
+    }
+
+
 def _string_selector_acceptance_gates() -> list[dict[str, Any]]:
     return [
         {
@@ -7598,6 +7690,7 @@ def _visualization_views_payload(
     organic_defects = _organic_defect_population_visualization_payload(diagnostic_run_dir)
     free_dynamics = _free_two_defect_dynamics_visualization_payload(diagnostic_run_dir)
     einstein_branch = _einstein_branch_entry_visualization_payload(diagnostic_run_dir)
+    fractional_quotient = _fractional_quotient_visualization_payload(diagnostic_run_dir)
     einstein_branch_receipts = (
         einstein_branch.get("receipts", {}) if isinstance(einstein_branch.get("receipts"), dict) else {}
     )
@@ -8285,6 +8378,95 @@ def _visualization_views_payload(
                 "This is an effective edge-string diagnostic view. It must not be labeled a proven critical "
                 "heterotic worldsheet until the finite-carrier critical-edge receipt suite passes."
             ),
+        },
+        "fractionalQuotientSectors": {
+            "viewId": "fractionalQuotientSectors",
+            "sectionKind": "fractional_quotient_sector_line_fan",
+            "label": "Fractional quotient-sector line fan",
+            "visualMetaphor": "fractional_hall_collar_sector_ledger_with_optical_lines",
+            "description": (
+                "Render fractional Hall or fractional Chern sectors as quotient-visible ledger nodes, "
+                "then show optical fractional-exciton peaks as a line fan over the same ledger. The view "
+                "is receipt-gated: source freezing, topological promotion, quotient correctness, binding "
+                "drift, line-fan injectivity, refinement, and no-target-leak gates must remain visible."
+            ),
+            "dataSources": [
+                "visualizationViews.fractionalQuotientSectors.fractionalReport",
+                "visualizationViews.fractionalQuotientSectors.fractionalReport.topological_ledger",
+                "visualizationViews.fractionalQuotientSectors.fractionalReport.line_fan.peaks",
+                "visualizationViews.fractionalQuotientSectors.receipts",
+            ],
+            "primaryFields": [
+                "fractionalReport.topological_ledger.sectors",
+                "fractionalReport.topological_ledger.charges",
+                "fractionalReport.line_fan.peaks[*].energy",
+                "fractionalReport.line_fan.peaks[*].gate_slope",
+                "fractionalReport.line_fan.peaks[*].tau",
+                "fractionalReport.line_fan.peaks[*].total_charge",
+            ],
+            "renderLayers": [
+                {"layer": "hall_collar_sector_ledger", "source": "fractionalReport.topological_ledger"},
+                {"layer": "optical_line_fan", "source": "fractionalReport.line_fan.peaks"},
+                {"layer": "neutral_fractional_exciton_badge", "source": "fractionalReport.slope_certificate"},
+                {"layer": "fractional_receipt_gates", "source": "receipts"},
+            ],
+            "visualEncodings": [
+                {
+                    "field": "tau",
+                    "source": "fractionalReport.line_fan.peaks",
+                    "encoding": "line color and sector-node link",
+                    "palette": "fractional_sector",
+                },
+                {
+                    "field": "total_charge",
+                    "source": "fractionalReport.line_fan.peaks",
+                    "encoding": "line slope marker; zero charge with tau != 1 gets neutral fractional styling",
+                    "palette": "charge_slope",
+                },
+                {
+                    "field": "binding_drift_bounded",
+                    "source": "receipts.binding_drift_bounded",
+                    "encoding": "charge-slope interpretation gate",
+                    "palette": "receipt_gate",
+                },
+            ],
+            "animationChannels": [
+                {
+                    "channel": "gate_slope_sweep",
+                    "source": "fractionalReport.line_fan.peaks",
+                    "timeSource": None,
+                    "encoding": "tilt line fan by gate_slope and show binding-drift uncertainty band",
+                },
+                {
+                    "channel": "sector_to_peak_highlight",
+                    "source": "fractionalReport.optical_module.sectors",
+                    "timeSource": None,
+                    "encoding": "hover or scrub from topological sector ledger to optical peak",
+                },
+            ],
+            "fractionalReport": fractional_quotient.get("fractionalReport", {}),
+            "receipts": fractional_quotient.get("receipts", {}),
+            "renderHints": fractional_quotient.get("renderHints", []),
+            "exportSufficiency": "sufficient_for_fractional_quotient_sandbox_visualization_not_material_proof",
+            "promotionReceiptsRequired": [
+                "source_hamiltonian_frozen",
+                "phase_certificate_injective",
+                "topological_sector_ledger",
+                "line_fan_decomposition",
+                "binding_drift_bounded",
+                "no_target_leak",
+                "refinement_compatibility",
+                "canonicalizer_idempotence",
+                "representative_invariance",
+                "quotient_lumpability",
+            ],
+            "nonClaims": [
+                "material-specific fractional Chern proof",
+                "optical peak assignment without binding-drift bound",
+                "sector selection by normal form alone",
+                "posterior-fitted material Hamiltonian",
+            ],
+            "claimBoundary": fractional_quotient.get("claimBoundary"),
         },
         "silenceToObservation": {
             "viewId": "silenceToObservation",

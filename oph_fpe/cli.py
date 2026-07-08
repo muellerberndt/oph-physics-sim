@@ -739,6 +739,108 @@ def main(argv: list[str] | None = None) -> int:
     leech_parser.add_argument("--c-q-tolerance", default=None, type=float)
     leech_parser.add_argument("--source", default="cli_leech_endpoint_bridge")
 
+    hadron_parser = subparsers.add_parser(
+        "hadron-source-backend",
+        help="write the fail-closed OPH-QCD hadronic precision backend receipt bundle",
+    )
+    hadron_parser.add_argument("--out", required=True, type=Path)
+    hadron_parser.add_argument(
+        "--claim",
+        default="SOURCE_PROTOTYPE_NOT_PROMOTED",
+        choices=(
+            "CONVENTIONAL_QCD_REFERENCE",
+            "SOURCE_PROTOTYPE_NOT_PROMOTED",
+            "SOURCE_INTERVAL_PROMOTED",
+            "EMPIRICAL_CLOSURE_ONLY",
+            "COMPARISON_ONLY",
+        ),
+    )
+    hadron_parser.add_argument(
+        "--tier",
+        default="H2",
+        choices=("H0", "H1", "H2", "H3", "H4", "H5", "H6", "H7"),
+    )
+    hadron_parser.add_argument("--lambda-msbar-descendant", default=None, type=Path)
+    hadron_parser.add_argument("--source", default="cli_hadron_source_backend")
+
+    fractional_parser = subparsers.add_parser(
+        "fractional-quotient-report",
+        help="write the fail-closed fractional exciton/FQAH quotient-sector sandbox report",
+    )
+    fractional_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_source_parser = subparsers.add_parser(
+        "jwst-object-source-artifact",
+        help="write the fail-closed JWST compact-object quotient/source/release artifact",
+    )
+    jwst_source_parser.add_argument("--config", default=None, type=Path)
+    jwst_source_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_sample_parser = subparsers.add_parser(
+        "jwst-source-sample",
+        help="write the fail-closed JWST compact-object source-sampler receipt",
+    )
+    jwst_sample_parser.add_argument("--source", required=True, type=Path)
+    jwst_sample_parser.add_argument("--n-samples", required=True, type=int)
+    jwst_sample_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_surface_parser = subparsers.add_parser(
+        "jwst-compact-record-surfaces",
+        help="write compact-record-surface, sync, and record-density receipts",
+    )
+    jwst_surface_parser.add_argument("--samples", required=True, type=Path)
+    jwst_surface_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_parent_parser = subparsers.add_parser(
+        "jwst-object-parent",
+        help="write finite object-parent and stress-closure receipts",
+    )
+    jwst_parent_parser.add_argument("--samples", required=True, type=Path)
+    jwst_parent_parser.add_argument("--parent-config", default=None, type=Path)
+    jwst_parent_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_forward_parser = subparsers.add_parser(
+        "jwst-forward-mock",
+        help="write JWST forward-operator, selection, and catalog-extraction receipts",
+    )
+    jwst_forward_parser.add_argument("--parent", required=True, type=Path)
+    jwst_forward_parser.add_argument("--instrument", default=None, type=Path)
+    jwst_forward_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_degeneracy_parser = subparsers.add_parser(
+        "jwst-degeneracy-audit",
+        help="audit JWST compact-object dust/AGN/lensing/population degeneracies",
+    )
+    jwst_degeneracy_parser.add_argument("--catalog", required=True, type=Path)
+    jwst_degeneracy_parser.add_argument("--models", default=None, type=Path)
+    jwst_degeneracy_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_abundance_parser = subparsers.add_parser(
+        "jwst-object-abundance-selector",
+        help="write source-abundance and load-refinement receipts for JWST object bins",
+    )
+    jwst_abundance_parser.add_argument("--source", required=True, type=Path)
+    jwst_abundance_parser.add_argument("--samples", required=True, type=Path)
+    jwst_abundance_parser.add_argument("--bins", default=None, type=Path)
+    jwst_abundance_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_likelihood_parser = subparsers.add_parser(
+        "jwst-frozen-catalog-likelihood",
+        help="write frozen JWST catalog likelihood and physical-prediction receipts",
+    )
+    jwst_likelihood_parser.add_argument("--source", required=True, type=Path)
+    jwst_likelihood_parser.add_argument("--forward", required=True, type=Path)
+    jwst_likelihood_parser.add_argument("--catalog-data", required=True, type=Path)
+    jwst_likelihood_parser.add_argument("--likelihood", required=True, type=Path)
+    jwst_likelihood_parser.add_argument("--out", required=True, type=Path)
+
+    jwst_plan_parser = subparsers.add_parser(
+        "jwst-compact-object-simulation-plan",
+        help="report strongest allowed JWST compact-object claim and next blocked gate",
+    )
+    jwst_plan_parser.add_argument("--run-dir", required=True, type=Path)
+    jwst_plan_parser.add_argument("--out", required=True, type=Path)
+
     black_hole_parser = subparsers.add_parser(
         "black-hole-bridge-status",
         help="write the fail-closed black-hole finite/physical bridge status report",
@@ -2215,6 +2317,106 @@ def main(argv: list[str] | None = None) -> int:
                 source=args.source,
             ),
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "hadron-source-backend":
+        from oph_fpe.cosmology.hadron_source_backend import (
+            HadronSourceBackendInputs,
+            write_hadron_source_backend_bundle,
+        )
+
+        result = write_hadron_source_backend_bundle(
+            args.out,
+            HadronSourceBackendInputs(
+                claim=args.claim,
+                tier=args.tier,
+                source=args.source,
+                lambda_msbar_descendant=args.lambda_msbar_descendant,
+            ),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "fractional-quotient-report":
+        from oph_fractional.report import write_fractional_quotient_bundle
+
+        result = write_fractional_quotient_bundle(args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-object-source-artifact":
+        from oph_fpe.jwst import write_source_artifact_report
+
+        result = write_source_artifact_report(args.out, config=args.config)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-source-sample":
+        from oph_fpe.jwst import write_source_sample_report
+
+        result = write_source_sample_report(args.out, source=args.source, n_samples=args.n_samples)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-compact-record-surfaces":
+        from oph_fpe.jwst import write_compact_record_surface_report
+
+        result = write_compact_record_surface_report(args.out, samples=args.samples)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-object-parent":
+        from oph_fpe.jwst import write_object_parent_report
+
+        result = write_object_parent_report(
+            args.out,
+            samples=args.samples,
+            parent_config=args.parent_config,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-forward-mock":
+        from oph_fpe.jwst import write_forward_mock_report
+
+        result = write_forward_mock_report(
+            args.out,
+            parent=args.parent,
+            instrument=args.instrument,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-degeneracy-audit":
+        from oph_fpe.jwst import write_degeneracy_audit_report
+
+        result = write_degeneracy_audit_report(
+            args.out,
+            catalog=args.catalog,
+            models=args.models,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-object-abundance-selector":
+        from oph_fpe.jwst import write_abundance_selector_report
+
+        result = write_abundance_selector_report(
+            args.out,
+            source=args.source,
+            samples=args.samples,
+            bins=args.bins,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-frozen-catalog-likelihood":
+        from oph_fpe.jwst import write_frozen_likelihood_report
+
+        result = write_frozen_likelihood_report(
+            args.out,
+            source=args.source,
+            forward=args.forward,
+            catalog_data=args.catalog_data,
+            likelihood=args.likelihood,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "jwst-compact-object-simulation-plan":
+        from oph_fpe.jwst import write_simulation_plan_report
+
+        result = write_simulation_plan_report(args.out, run_dir=args.run_dir)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "black-hole-bridge-status":

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Forward Operator",
+  "type": "object",
+  "required": [
+    "lightcone_hash",
+    "lensing_hash",
+    "radiative_transfer_hash",
+    "detector_hash",
+    "filter_hash",
+    "psf_hash",
+    "noise_hash",
+    "selection_function_hash",
+    "catalog_extraction_hash"
+  ],
+  "properties": {
+    "frozen": {"type": "boolean"},
+    "operator_hash": {"type": "string"}
+  },
+  "additionalProperties": true
+}

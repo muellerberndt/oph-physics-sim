@@ -84,8 +84,14 @@ The current simulator has these stable surfaces:
   particle-likeness diagnostics.
 - Screen-level CMB and comparable-observation diagnostics, with physical-CMB promotion gates
   closed unless finite source, transfer, and likelihood receipts pass.
-- Leech/moonshine endpoint bridge audits for the fine-structure hadronic endpoint gap, with
-  source-only same-scheme functional gates separated from endpoint promotion.
+- Leech/moonshine endpoint bridge audits for the fine-structure hadronic endpoint gap, with the
+  OPH-QCD hadronic backend gates separated from endpoint promotion. The two-current spectral
+  export is only the running-alpha/HVP marginal; HLbL and rare-decay rows require higher-point and
+  transition spectral exports from the same backend.
+- JWST compact-object source-release workbench reports for high-redshift compact objects, early
+  massive-galaxy candidates, little red dots, and apparently mature black-hole candidates. The
+  workbench separates quotient/source/release, compact record surfaces, finite object parents,
+  forward mocks, degeneracy audits, abundance selectors, and frozen catalog likelihoods.
 - Reference vacuum baselines and compact lattice-gauge baselines, with OPH-native promotion
   receipts false unless paper-side transfer/lift conditions are supplied.
 - Shape-substrate and positive-geometry diagnostics, treated as declared substrate or accelerator
@@ -117,9 +123,22 @@ These are hard boundaries:
   `einstein_bridge_manifest.json` plus all theorem-tagged bridge sidecar receipts.
 - Screen `C_l` and CMB-lite curves are `CMB0` diagnostics, not `CMB2`.
 - A Leech, c=24, or moonshine artifact is not a fine-structure prediction unless it emits the
-  OPH same-scheme hadronic endpoint functional from source data, excludes endpoint-target leakage,
-  descends to the OPH edge carrier, and carries fixed-point interval receipts. A decimal near
-  `alpha^{-1}=137.036` is not a promotion receipt.
+  OPH-QCD hadronic backend from source data: QCD quotient ensemble, source QCD parameter map,
+  Euclidean slab/vacuum transfer, hadronic Hilbert quotient, Ward-normalized current ledger,
+  two-current spectral export, same-scheme remainder, systematics ledger, and no-target-leak DAG.
+  Full hadronic precision also requires higher-point and transition spectral exports. A decimal
+  near `alpha^{-1}=137.036` is not a promotion receipt.
+- The Q4 hadronic backend scaffold is emitted with
+  `oph-fpe hadron-source-backend --out <run>/hadron_source_backend`. Its default claim is
+  `SOURCE_PROTOTYPE_NOT_PROMOTED` at tier `H2`; this is the correct state until a source QCD law,
+  Ward current ledger, spectral exports, and no-target-leak certificates are actually populated.
+- The Q3 JWST compact-object workbench is emitted with commands such as
+  `oph-fpe jwst-object-source-artifact --out <run>/jwst/source` and
+  `oph-fpe jwst-compact-object-simulation-plan --run-dir <run> --out <run>/jwst/plan`.
+  Its default claim is `J0_DIAGNOSTIC_PROXY`. Compactness, red color, luminosity, broad lines,
+  source release, and catalog counts do not become mass, age, assembly, black-hole mass,
+  physical abundance, or OPH confirmation unless the required degeneracy, parent, source,
+  forward-operator, and frozen-likelihood receipts pass.
 - A finite black-hole archive, finite reconstruction threshold, island-gain score, or repair
   spectrum is not a physical Page curve, geometric island, evaporation channel, or QNM/ringdown
   prediction. `BH0` records horizon/collar record-repair diagnostics only. `BH1` requires exterior

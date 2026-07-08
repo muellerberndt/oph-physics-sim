@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Object Abundance Receipt",
+  "type": "object",
+  "required": [
+    "bin_id",
+    "source_hash",
+    "load_hash",
+    "no_target_leakage_receipt",
+    "load_refinement_compatibility_receipt"
+  ],
+  "properties": {
+    "bin_id": {"type": "string"},
+    "source_hash": {"type": "string"},
+    "load_hash": {"type": "string"},
+    "no_target_leakage_receipt": {"type": "boolean"},
+    "load_refinement_compatibility_receipt": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

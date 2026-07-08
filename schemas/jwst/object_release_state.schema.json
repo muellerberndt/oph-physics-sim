@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Object Release State",
+  "type": "object",
+  "required": [
+    "regulator_id",
+    "release_surface_hash",
+    "normal_tetrad_hash",
+    "a_rel",
+    "t_rel",
+    "comoving_volume",
+    "object_projector_hash",
+    "branch_data",
+    "generation_hash",
+    "no_data_ledger_hash",
+    "coordinate_chart_hash",
+    "lightcone_map_hash"
+  ],
+  "properties": {
+    "regulator_id": {"type": "string"},
+    "release_surface_hash": {"type": "string"},
+    "normal_tetrad_hash": {"type": "string"},
+    "a_rel": {"type": "number"},
+    "t_rel": {"type": "string"},
+    "comoving_volume": {"type": "number"},
+    "object_projector_hash": {"type": "string"},
+    "branch_data": {"type": "object"},
+    "generation_hash": {"type": "string"},
+    "no_data_ledger_hash": {"type": "string"},
+    "coordinate_chart_hash": {"type": "string"},
+    "lightcone_map_hash": {"type": "string"}
+  },
+  "additionalProperties": true
+}

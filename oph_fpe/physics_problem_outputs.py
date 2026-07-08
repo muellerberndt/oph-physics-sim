@@ -32,6 +32,8 @@ def physics_problem_outputs_report(
         "mode": "adjacent_physics_problem_output_contracts",
         "source_documents": [
             "reverse-engineering-reality/physics-problems/fractional_quantum_hall.md",
+            "reverse-engineering-reality/physics-problems/fractional_excitons_as_oph_quotient_sector_readouts.md",
+            "reverse-engineering-reality/physics-problems/hadronic_precision_endpoint.md",
             "reverse-engineering-reality/physics-problems/high_temperature_superconductivity.md",
             "reverse-engineering-reality/physics-problems/low_temperature_amorphous_universality.md",
             "reverse-engineering-reality/physics-problems/plasma_fusion.md",
@@ -39,6 +41,8 @@ def physics_problem_outputs_report(
         "outputs": {
             "low_temperature_amorphous_universality": ltas_source_only_readout(),
             "fractional_quantum_hall": hall,
+            "fractional_exciton_quotient_sector": fractional_exciton_quotient_contract(),
+            "hadronic_precision_endpoint": hadronic_precision_endpoint_contract(),
             "high_temperature_superconductivity": high_tc_gate_readout(high_tc_thresholds),
             "plasma_fusion": fusion_ledger_readout(fusion_ledger),
         },
@@ -171,6 +175,96 @@ def fractional_quantum_hall_contract() -> dict[str, Any]:
             "The universe simulator does not currently instantiate a Hall collar source branch. "
             "It can compute exact Abelian K-matrix readouts when K,t are supplied, but it must not "
             "select a nu=5/2 material sector without source-side selector data."
+        ),
+    }
+
+
+def fractional_exciton_quotient_contract() -> dict[str, Any]:
+    try:
+        from oph_fractional.report import fractional_quotient_report
+    except Exception as exc:
+        return {
+            "schema": "oph_fractional_exciton_quotient_contract_v1",
+            "status": "report_unavailable",
+            "computed": False,
+            "error": str(exc),
+            "receipts": {
+                "FRACTIONAL_QUOTIENT_REPORT_WRITTEN": False,
+                "SIMULATOR_QUOTIENT_CORRECTNESS_RECEIPT": False,
+                "OPTICAL_LINE_FAN_RECEIPT": False,
+                "MATERIAL_SPECIFIC_HAMILTONIAN_PROOF_RECEIPT": False,
+            },
+            "claimBoundary": "The fractional quotient-sector report could not be imported in this environment.",
+        }
+
+    report = fractional_quotient_report()
+    gates = report.get("readiness_gates") or {}
+    return {
+        "schema": "oph_fractional_exciton_quotient_contract_v1",
+        "status": "sandbox_report_available",
+        "computed": True,
+        "claim": report.get("claim"),
+        "strongestAllowedClaim": report.get("strongest_allowed_claim"),
+        "firstBlockedGate": report.get("first_blocked_gate"),
+        "promotionAllowed": bool(report.get("promotion_allowed", False)),
+        "materialClaim": bool(report.get("material_claim", False)),
+        "receipts": {
+            "FRACTIONAL_QUOTIENT_REPORT_WRITTEN": True,
+            "SIMULATOR_QUOTIENT_CORRECTNESS_RECEIPT": bool(
+                gates.get("SIMULATOR_QUOTIENT_CORRECTNESS", False)
+            ),
+            "OPTICAL_LINE_FAN_RECEIPT": bool(gates.get("LINE_FAN_DECOMPOSITION", False)),
+            "OPTICAL_SECTOR_IDENTIFIABILITY_RECEIPT": bool(
+                gates.get("OPTICAL_LINE_FAN_INJECTIVE", False)
+            ),
+            "NO_TARGET_LEAK_DAG": bool(gates.get("NO_TARGET_LEAK_DAG", False)),
+            "MATERIAL_SPECIFIC_HAMILTONIAN_PROOF_RECEIPT": False,
+        },
+        "blockers": list(report.get("blockers") or []),
+        "claimBoundary": report.get("claim_boundary"),
+    }
+
+
+def hadronic_precision_endpoint_contract() -> dict[str, Any]:
+    return {
+        "schema": "oph_hadronic_precision_endpoint_contract_v1",
+        "status": "source_open_receipt_contract",
+        "computed": False,
+        "milestone": "HVP_ALPHA_SOURCE_PROTOTYPE",
+        "requiredSourceObject": [
+            "OPH-QCD quotient ensemble",
+            "source QCD parameter map",
+            "Euclidean QCD slab/vacuum transfer",
+            "hadronic Hilbert quotient",
+            "Ward-normalized electromagnetic current ledger",
+            "two-current spectral export d rho_Q^(2)",
+            "four-current spectral export d rho_QQQQ^(4)",
+            "B/Sigma transition spectral exports",
+            "same-scheme endpoint remainder Xi_Q",
+            "systematics ledger",
+            "no-target-leak DAG",
+        ],
+        "forbiddenSourceInputs": [
+            "CODATA_ALPHA",
+            "MUON_G_MINUS_2",
+            "EE_TO_HADRONS",
+            "RARE_DECAY_DATA",
+            "HADRON_MASS_TARGETS",
+            "PDG_QCD_FITS",
+        ],
+        "receipts": {
+            "HADRON_SOURCE_BACKEND_REPORT_WRITTEN": False,
+            "TWO_CURRENT_HADRONIC_BACKEND_RECEIPT": False,
+            "FULL_HADRONIC_PRECISION_BACKEND_RECEIPT": False,
+            "FINE_STRUCTURE_ENDPOINT_PROMOTION_RECEIPT": False,
+            "HVP_G_MINUS_2_PROMOTION_RECEIPT": False,
+            "HLBL_G_MINUS_2_PROMOTION_RECEIPT": False,
+            "RARE_DECAY_LONG_DISTANCE_PROMOTION_RECEIPT": False,
+        },
+        "claimBoundary": (
+            "The simulator can emit and validate the OPH-QCD hadron-source receipt bundle. "
+            "It must not fit alpha(0), g-2, e+e- hadronic spectra, rare decays, hadron masses, "
+            "or PDG QCD fits and call that a source-only OPH derivation."
         ),
     }
 

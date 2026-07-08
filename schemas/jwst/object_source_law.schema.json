@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OPH JWST Object Source Law",
+  "type": "object",
+  "required": ["regulator_id", "base_measure", "action", "no_data_ledger_hash"],
+  "properties": {
+    "regulator_id": {"type": "string"},
+    "base_measure": {"type": "object"},
+    "action": {"type": "object"},
+    "constraints": {"type": "array", "items": {"type": "object"}},
+    "no_data_ledger_hash": {"type": "string"},
+    "source_derivation_hash": {"type": "string"}
+  },
+  "additionalProperties": true
+}

@@ -17,6 +17,22 @@ from oph_fpe.cosmology.leech_endpoint_bridge import (
 )
 
 
+def _qcd_backend_receipts() -> dict[str, bool]:
+    return {
+        "qcd_quotient_ensemble_receipt": True,
+        "source_qcd_parameter_map_receipt": True,
+        "euclidean_qcd_slab_receipt": True,
+        "hadronic_hilbert_quotient_receipt": True,
+        "ward_current_normalization_receipt": True,
+        "two_current_spectral_export_receipt": True,
+        "higher_point_spectral_exports_receipt": True,
+        "transition_spectral_exports_receipt": True,
+        "same_scheme_remainder_receipt": True,
+        "qcd_systematics_ledger_receipt": True,
+        "qcd_no_target_leak_dag_receipt": True,
+    }
+
+
 def test_default_leech_endpoint_bridge_is_quarantined_without_artifact():
     report = leech_endpoint_bridge_report()
 
@@ -49,6 +65,7 @@ def test_source_only_same_scheme_candidate_passes_bridge_but_not_endpoint_promot
                 "oph_string_branch_descent_receipt": True,
                 "fixed_point_loop_reproduced": True,
                 "interval_uniqueness_receipt": True,
+                **_qcd_backend_receipts(),
             }
         ),
         encoding="utf-8",
@@ -63,9 +80,40 @@ def test_source_only_same_scheme_candidate_passes_bridge_but_not_endpoint_promot
     assert report["SAME_SCHEME_HADRONIC_ENDPOINT_FUNCTIONAL_RECEIPT"] is True
     assert report["FINE_STRUCTURE_ALPHA_ENDPOINT_PROMOTION_RECEIPT"] is False
     assert report["readiness_gates"]["target_leakage_free"] is True
+    assert report["readiness_gates"]["two_current_hadronic_backend_receipt"] is True
+    assert report["readiness_gates"]["full_hadronic_precision_backend_receipt"] is True
+    assert report["hadronic_backend_audit"]["two_current_scope"] == "running-alpha and HVP marginal only"
     assert report["blockers"] == ["paper_review_promotion_gate_closed"]
     assert (tmp_path / "out" / "leech_endpoint_bridge_report.json").exists()
     assert (tmp_path / "out" / "leech_endpoint_bridge_report.md").exists()
+
+
+def test_scalar_same_scheme_candidate_without_qcd_backend_is_not_a_bridge_receipt(tmp_path: Path):
+    artifact = tmp_path / "scalar_candidate.json"
+    artifact.write_text(
+        json.dumps(
+            {
+                "delta_H_fp": DELTA_H_FP_CALIBRATED,
+                "endpoint_convention": "oph_same_scheme_hadronic_endpoint",
+                "same_scheme_endpoint_transport": True,
+                "hadronic_em_spectral_transport": True,
+                "source_only_map_receipt": True,
+                "full_endpoint_map_receipt": True,
+                "oph_string_branch_descent_receipt": True,
+                "fixed_point_loop_reproduced": True,
+                "interval_uniqueness_receipt": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = leech_endpoint_bridge_report(LeechEndpointBridgeInputs(source_artifact=artifact))
+
+    assert report["LEECH_ENDPOINT_BRIDGE_CANDIDATE_RECEIPT"] is False
+    assert report["SAME_SCHEME_HADRONIC_ENDPOINT_FUNCTIONAL_RECEIPT"] is False
+    assert report["readiness_gates"]["two_current_hadronic_backend_receipt"] is False
+    assert report["readiness_gates"]["full_hadronic_precision_backend_receipt"] is False
+    assert "oph_qcd_hadronic_backend_receipts_missing" in report["blockers"]
 
 
 def test_endpoint_decimal_only_candidate_is_rejected(tmp_path: Path):
@@ -81,6 +129,7 @@ def test_endpoint_decimal_only_candidate_is_rejected(tmp_path: Path):
                 "oph_string_branch_descent_receipt": True,
                 "fixed_point_loop_reproduced": True,
                 "interval_uniqueness_receipt": True,
+                **_qcd_backend_receipts(),
             }
         ),
         encoding="utf-8",
@@ -107,6 +156,7 @@ def test_target_leakage_fails_even_when_delta_matches(tmp_path: Path):
                 "oph_string_branch_descent_receipt": True,
                 "fixed_point_loop_reproduced": True,
                 "interval_uniqueness_receipt": True,
+                **_qcd_backend_receipts(),
                 "uses_codata_alpha": True,
             }
         ),
@@ -134,6 +184,7 @@ def test_false_leakage_receipt_does_not_count_as_target_use(tmp_path: Path):
                 "oph_string_branch_descent_receipt": True,
                 "fixed_point_loop_reproduced": True,
                 "interval_uniqueness_receipt": True,
+                **_qcd_backend_receipts(),
                 "uses_codata_alpha": False,
                 "uses_calibrated_gap": False,
             }
@@ -179,4 +230,6 @@ def test_measurement_pack_copies_leech_endpoint_bridge_report(tmp_path: Path):
     assert (out / "leech_endpoint_bridge_report.md").exists()
     assert pack["claims"]["leech_endpoint_bridge_written"] is True
     assert pack["claims"]["leech_endpoint_bridge_candidate_receipt"] is False
+    assert pack["claims"]["leech_two_current_hadronic_backend_receipt"] is False
+    assert pack["claims"]["leech_full_hadronic_precision_backend_receipt"] is False
     assert pack["claims"]["leech_alpha_endpoint_promotion_receipt"] is False

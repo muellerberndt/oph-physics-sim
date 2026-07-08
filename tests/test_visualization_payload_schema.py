@@ -100,6 +100,7 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
         "emergentCurvedSpacetime",
         "effectiveStringTheory",
     } <= view_set_required
+    assert "fractionalQuotientSectors" in defs["visualizationViews"]["properties"]
     top_level_required = set(schema["required"])
     assert {
         "effectiveStringTheory",

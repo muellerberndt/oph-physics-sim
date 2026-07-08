@@ -357,6 +357,34 @@ _EXPORTS = {
         "oph_fpe.cosmology.leech_endpoint_bridge",
         "write_leech_endpoint_bridge_report",
     ),
+    "HadronSourceBackendInputs": (
+        "oph_fpe.cosmology.hadron_source_backend",
+        "HadronSourceBackendInputs",
+    ),
+    "hadron_source_backend_report": (
+        "oph_fpe.cosmology.hadron_source_backend",
+        "hadron_source_backend_report",
+    ),
+    "write_hadron_source_backend_bundle": (
+        "oph_fpe.cosmology.hadron_source_backend",
+        "write_hadron_source_backend_bundle",
+    ),
+    "GammaMorphologyInputs": (
+        "oph_fpe.cosmology.gamma_morphology",
+        "GammaMorphologyInputs",
+    ),
+    "gamma_morphology_report": (
+        "oph_fpe.cosmology.gamma_morphology",
+        "gamma_morphology_report",
+    ),
+    "write_gamma_morphology_bundle": (
+        "oph_fpe.cosmology.gamma_morphology",
+        "write_gamma_morphology_bundle",
+    ),
+    "signed_template_amplitude_interval": (
+        "oph_fpe.cosmology.gamma_morphology",
+        "signed_template_amplitude_interval",
+    ),
     "SilenceToObservationInputs": (
         "oph_fpe.cosmology.silence_to_observation",
         "SilenceToObservationInputs",
