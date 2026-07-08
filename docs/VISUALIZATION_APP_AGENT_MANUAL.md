@@ -42,11 +42,19 @@ sidecars:
 - `neutral_object_candidates.csv`: neutral object candidates extracted from observer-visible
   record/transition histories. These rows have no neutral 3D coordinates unless strict neutral
   receipts pass; render them as an audit/network layer, not as a neutral bulk point cloud.
-- `emergent_curved_spacetime_curvature_proxy.csv` and
-  `emergent_curved_spacetime_time_slices.csv`: renderer-ready source/curvature/compaction proxy rows
-  derived from consensus H3 objects and proto-worldline events. Use these for warped-grid,
-  compactification, or curvature-field visuals, but keep `production_gravity_receipt` and
-  `physical_gravity_prediction` gated behind `einstein_branch_entry_receipt`.
+- `emergent_curved_spacetime_curvature_proxy.csv`,
+  `emergent_curved_spacetime_time_slices.csv`, and
+  `emergent_curved_spacetime_continuous_field.csv`: renderer-ready source, curvature,
+  compaction, volume, and slice-field rows derived from consensus H3 objects and proto-worldline
+  events. Use `continuousBulkField` and the continuous-field CSV for fog, isosurfaces, or warped
+  mesh slices so the H3 chart reads as one observer-facing space rather than isolated balls. Keep
+  `production_gravity_receipt` and `physical_gravity_prediction` gated behind
+  `einstein_branch_entry_receipt`.
+- `organic_defect_population_*.csv`: seeded multi-defect diagnostic population with 10-20
+  proto-worldline tracks, staggered births, transverse motion, holonomy labels, local stress
+  density, and near-contact bookkeeping. Prefer this over legacy `proto_particle_worldlines.csv`
+  sidecars when `consensusBulk.protoParticleCandidates.worldlineSource` reports
+  `organic_defect_population_report`.
 - `paper_accuracy.json`: fail-closed guard table mapping each major visualization lane to its paper
   status, allowed claim, blocked promotion claim, and receipt.
 - `free_two_defect_dynamics_*.csv`: randomized diagnostic two-defect dynamics with transverse
@@ -59,6 +67,14 @@ sidecars:
   effective string view. Animate `loop_phase` and `normalized_amplitude`; do not replace these with
   generic sine-wave string modes.
 - CSV sidecars mirror compact JSON arrays for renderer throughput.
+
+When a full simulator run directory is available, `observer_views.jsonl` contains additional
+chart-blind H2 audit evidence on patch-observer rows:
+`local_boundary_packet_hash_histogram`, `overlap_correspondence_histogram`,
+`port_pair_lag_histogram`, `repair_current_tensor`, `perturbation_response_tensor`, and
+`first_passage_time_histogram`. Use these in audit/provenance panels for strict-neutral-bulk
+readiness. Do not render them as neutral coordinates, and do not promote `H2` unless the strict
+neutral quotient, control, ancestry, and refinement receipts pass.
 
 The compact JSON remains the receipt and view-contract authority. The sidecars provide scale, not
 stronger claims.
@@ -255,6 +271,7 @@ Primary fields:
 - `emergentCurvedSpacetime.sourceMath`
 - `emergentCurvedSpacetime.curvatureProxyPoints`
 - `emergentCurvedSpacetime.spacetimeCompactionField`
+- `emergentCurvedSpacetime.continuousBulkField`
 - `emergentCurvedSpacetime.timeSlices`
 - `emergentCurvedSpacetime.receipts`
 - `emergentCurvedSpacetime.einsteinBranchEntry`
@@ -266,6 +283,10 @@ Primary fields:
 Recommended rendering:
 
 - Render `curvatureProxyPoints` as stress-source glyphs in the observer-facing H3 chart.
+- Render `continuousBulkField.volumeSamples` as the bulk field: fog, isosurface, density points,
+  or a warped mesh. Do not use only source glyphs for the main bulk view when this field is present.
+- Render `continuousBulkField.sliceSamples` and `temporalSliceSamples` as warped grid slices for
+  curvature/compaction animation.
 - Size source glyphs by `sourceDensity`; drive grid bend, surface displacement, or contours by
   `curvaturePotential`.
 - Drive local spatial contraction by `compactificationFactor`; use `emergentSpatialScaleFactor` as
@@ -476,6 +497,11 @@ Primary fields:
 
 Recommended rendering:
 
+- Use `consensusBulk.protoParticleCandidates.worldlineSource` to label the selected worldline lane.
+  The source priority is primary H3 defect report, organic multi-defect report, free two-defect
+  diagnostic, controlled two-defect assay, array-holonomy clusters, and legacy CSV sidecars.
+- Treat `proto_particle_worldlines.csv` as a legacy fallback only. It must not override an available
+  organic or free dynamics JSON report.
 - Render object packets in the H3 chart as points or compact glyphs.
 - Size by observer support or packet support when available.
 - Color by compactness, sector, packet family, or receipt-safe diagnostic metrics.
@@ -562,6 +588,8 @@ Missing optional fields should degrade gracefully:
   `particle_matter_receipt` closed or absent.
 - If `emergentCurvedSpacetime.curvatureProxyPoints` is empty, show the curved-spacetime gate panel
   without drawing a warped grid. Do not synthesize gravity sources.
+- If `emergentCurvedSpacetime.continuousBulkField.contentAvailable` is false, fall back to source
+  glyphs and clearly label the view as point-source only.
 - If `subjectiveObserverCameras` is empty, keep the observer-modular-time table visible and show that
   subjective camera export is unavailable.
 - If a `visualizationViews` entry is missing, show a schema warning and do not invent the view.

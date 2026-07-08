@@ -177,7 +177,7 @@ def test_proto_particle_candidates_prefer_free_two_defect_dynamics_before_contro
 
     assert payload["worldlineSource"] == "free_two_defect_dynamics_report"
     assert payload["receipts"]["free_two_defect_worldline_count"] == 1
-    assert payload["receipts"]["controlled_two_defect_worldline_count"] == 0
+    assert payload["receipts"]["controlled_two_defect_worldline_count"] == 1
     assert payload["receipts"]["free_two_defect_dynamics_receipt"] is True
     assert payload["worldlines"][0]["worldlineId"] == "free_pair_left"
     assert payload["worldlines"][0]["freeDynamicsDiagnostic"] is True
@@ -246,11 +246,56 @@ def test_proto_particle_candidates_prefer_organic_defect_population_before_free_
 
     assert payload["worldlineSource"] == "organic_defect_population_report"
     assert payload["receipts"]["organic_defect_worldline_count"] == 1
-    assert payload["receipts"]["free_two_defect_worldline_count"] == 0
+    assert payload["receipts"]["free_two_defect_worldline_count"] == 1
     assert payload["receipts"]["organic_defect_population_receipt"] is True
     assert payload["worldlines"][0]["worldlineId"] == "organic_defect_00"
     assert payload["worldlines"][0]["organicDefectPopulationDiagnostic"] is True
     assert payload["worldlines"][0]["events"][0]["localStressDensity"] == 0.4
+
+
+def test_proto_particle_candidates_prefer_organic_json_over_legacy_csv_sidecars(tmp_path: Path):
+    (tmp_path / "proto_particle_worldlines.csv").write_text(
+        "worldline_id,observation_count,birth_cycle,death_cycle,particle_like\n"
+        "stress_pair_left,1,0,0,false\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "proto_particle_worldline_events.csv").write_text(
+        "worldline_id,event_index,cycle,x,y,z,fit_residual,support_node_count,particle_like\n"
+        "stress_pair_left,0,0,-0.6,0.0,0.0,0.0,8,false\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "organic_defect_population_report.json").write_text(
+        json.dumps(
+            {
+                "organic_defect_population_diagnostic": True,
+                "organic_defect_population_receipt": True,
+                "organic_population_summary": {"worldline_count": 1},
+                "worldlines": [
+                    {
+                        "worldline_id": "organic_defect_00",
+                        "observation_count": 1,
+                        "persistent": True,
+                        "events": [
+                            {
+                                "cycle": 0,
+                                "h3_spatial_point": [0.1, 0.2, 0.3],
+                                "class": "transposition",
+                                "local_stress_density": 0.4,
+                            }
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = _read_proto_particle_candidates(tmp_path, max_worldlines=8)
+
+    assert payload["worldlineSource"] == "organic_defect_population_report"
+    assert payload["worldlines"][0]["worldlineId"] == "organic_defect_00"
+    assert payload["receipts"]["csv_proto_worldline_count"] == 1
+    assert payload["receipts"]["legacy_csv_sidecar_used"] is False
 
 
 def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path):
@@ -905,6 +950,9 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["emergentCurvedSpacetime"]["contentAvailable"] is True
     assert parsed["emergentCurvedSpacetime"]["curvatureProxyPoints"]
     assert parsed["emergentCurvedSpacetime"]["spacetimeCompactionField"]
+    assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["contentAvailable"] is True
+    assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["volumeSamples"]
+    assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["sliceSamples"]
     assert parsed["emergentCurvedSpacetime"]["sourceMath"]["model"] == (
         "oph_quotient_visible_source_to_h3_compaction_v1"
     )
@@ -951,12 +999,14 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert render_data["availability"]["protoWorldlineCount"] == 1
     assert render_data["availability"]["observerProtoWorldlineSightingCount"] > 0
     assert render_data["availability"]["curvatureProxyPointCount"] >= 1
+    assert render_data["availability"]["continuousBulkFieldVolumeSampleCount"] > 0
     assert render_data["availability"]["cmbResidualPointCount"] == 1
     assert render_data["cameraPresets"]
     assert render_data["sceneGraph"]["screen"]["points"]
     assert render_data["sceneGraph"]["observerGraph"]["nodes"]
     assert render_data["sceneGraph"]["bulk"]["h3Objects"][0]["id"] == "obj0"
     assert render_data["sceneGraph"]["bulk"]["h3ChartStatus"]["renderable"] is True
+    assert render_data["sceneGraph"]["curvedSpacetime"]["continuousBulkField"]["contentAvailable"] is True
     assert render_data["sceneGraph"]["bulk"]["receiptDisplay"]["strict_neutral_third_person_bulk_receipt"][
         "displayStatus"
     ] == "not_promoted"

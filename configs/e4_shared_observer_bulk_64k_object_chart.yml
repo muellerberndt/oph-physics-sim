@@ -43,6 +43,17 @@ dynamics:
   cycles: 128
   repair_fraction_per_cycle: 0.0625
   repairs_per_cycle: 4096
+  repair_budget_schedule:
+    enabled: true
+    kind: smooth_hotspot
+    floor_fraction: 0.24
+    warmup_fraction: 0.28
+    peak_fraction: 0.54
+    peak_width_fraction: 0.24
+    taper_start_fraction: 0.72
+    taper_strength: 0.32
+    jitter_fraction: 0.10
+    jitter_period_cycles: 13
   record_commit_cycles: 12
   observer_readback_drive:
     enabled: true

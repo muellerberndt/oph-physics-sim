@@ -89,6 +89,11 @@ from oph_fpe.defects.array_s3_holonomy import (
     s3_class_counts,
     s3_edge_class_density,
 )
+from oph_fpe.defects.gravity_assay import (
+    write_free_two_defect_dynamics_report,
+    write_organic_defect_population_report,
+    write_two_defect_stress_contraction_assay_report,
+)
 from oph_fpe.dynamics import (
     dispatch_configured_kernels,
     finite_consensus_theorem_certificate,
@@ -308,8 +313,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         active = np.flatnonzero(mismatches)
         chosen = np.zeros(0, dtype=np.int64)
         chosen_delta = np.zeros(0, dtype=np.int16)
+        repair_budget = _repair_budget_for_cycle(
+            repairs_per_cycle,
+            dyn,
+            cycle=cycle,
+            cycles=cycles,
+            patch_count=patch_count,
+            edge_count=edge_count,
+        )
         if active.size:
-            chosen_count = min(repairs_per_cycle, active.size)
+            chosen_count = min(repair_budget, active.size)
             chosen = rng.choice(active, size=chosen_count, replace=False)
             chosen_delta = ((port_left[chosen].astype(np.int64) - port_right[chosen].astype(np.int64)) % group_order).astype(
                 np.int16
@@ -401,6 +414,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 "phi": phi_after,
                 "delta_phi": phi_after - phi_before,
                 "mismatch_edges": phi_after,
+                "active_edges_before_repair": int(active.size),
+                "repair_budget": int(repair_budget),
+                "chosen_edges": int(chosen.size),
                 "committed_records": int(np.sum(committed)),
                 "committed_fraction": committed_fraction,
                 "record_entropy": _entropy(signature[committed]) if np.any(committed) else 0.0,
@@ -1046,6 +1062,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         object_packets = visible_object_packets(raw_observer_fields, object_cfg)
         _attach_object_packet_histograms(observer_rows, object_packets)
         _attach_transition_affinity_histograms(observer_rows, raw_observer_fields, object_cfg)
+        history_raw_fields: list[dict[str, np.ndarray]] = []
         if history_enabled:
             history_source_states = freezeout_history_states or recent_history_states
             history_raw_fields = [
@@ -1053,6 +1070,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 for snapshot in history_source_states[-max(1, int(history_window)) :]
             ]
             _attach_transition_history_histograms(observer_rows, history_raw_fields, object_cfg)
+        _attach_h2_neutral_evidence_channels(
+            observer_rows,
+            history_raw_fields=history_raw_fields,
+            current_raw_fields=raw_observer_fields,
+            object_cfg=object_cfg,
+        )
         assign_counterfactual_stability_from_records(
             record_families,
             raw_observer_fields,
@@ -1726,6 +1749,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("paired_b_a_perturbation_report.json", paired_ba_report)
         bundle.write_json("b_a_parent_report.json", paired_ba_report)
 
+    visualization_defect_diagnostics = _write_bw_visualization_defect_artifacts(bundle.path, config)
+    if visualization_defect_diagnostics.get("written_any", False):
+        bundle.write_json("visualization_defect_diagnostics_summary.json", visualization_defect_diagnostics)
+
     _write_csv(bundle.path / "mismatch_trace.csv", trace)
     bundle.write_json("bw_report.json", bw_report)
     bundle.write_json("bw_controls.json", bw_report["controls"])
@@ -1905,6 +1932,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             if paired_ba_report
             else {},
             "harmonic_time_trace": harmonic_time_trace_report,
+            "visualization_defect_diagnostics": visualization_defect_diagnostics,
             "cosmology_gate": cosmology_gate_report if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False) else {},
             "screen_holonomy": {
                 "mode": s3_holonomy_report.get("mode"),
@@ -1986,6 +2014,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         if s3_holonomy_report
         else {},
         "large_run_readiness": large_run_readiness,
+        "visualization_defect_diagnostics": visualization_defect_diagnostics,
     }
     if kernel_dispatch:
         summary = kernel_dispatch_manifest_summary(kernel_dispatch)
@@ -1993,6 +2022,190 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         result["kernel_dispatch"] = summary
     bundle.write_manifest(manifest)
     return result
+
+
+def _write_bw_visualization_defect_artifacts(run_dir: Path, config: dict[str, Any]) -> dict[str, Any]:
+    cfg = dict(config.get("visualization_diagnostics", {}) or {})
+    organic_cfg = dict(cfg.get("organic_defect_population", {}) or {})
+    gravity_cfg = dict(cfg.get("two_defect_gravity_assay", {}) or {})
+    write_organic = bool(organic_cfg.get("enabled", False))
+    write_gravity = bool(gravity_cfg.get("enabled", False))
+    summary: dict[str, Any] = {
+        "mode": "bw_array_visualization_defect_artifacts_v0",
+        "written_any": False,
+        "organic_defect_population_written": False,
+        "free_two_defect_dynamics_written": False,
+        "two_defect_stress_contraction_assay_written": False,
+        "selected_proto_worldline_preference": "organic_defect_population_report"
+        if write_organic
+        else "free_two_defect_dynamics_report"
+        if write_gravity and bool(gravity_cfg.get("free_dynamics_enabled", True))
+        else "two_defect_stress_contraction_assay_report"
+        if write_gravity
+        else "none",
+        "claim_boundary": (
+            "BW-array visualization defect sidecars. Organic multi-defect diagnostics are preferred "
+            "for natural proto-worldline rendering; two-defect reports are controls/fallbacks. These "
+            "sidecars do not promote particle matter or production gravity."
+        ),
+    }
+    if write_organic:
+        organic_report = write_organic_defect_population_report(
+            run_dir / "organic_defect_population_report.json",
+            patch_count=_bw_positive_int(
+                organic_cfg.get("patch_count"),
+                _bw_positive_int(gravity_cfg.get("patch_count"), 65_536),
+            ),
+            steps=_bw_positive_int(
+                organic_cfg.get("steps"),
+                _bw_positive_int(gravity_cfg.get("free_steps", gravity_cfg.get("steps")), 128),
+            ),
+            defect_count=_bw_positive_int(organic_cfg.get("defect_count"), 16),
+            min_defects=_bw_positive_int(organic_cfg.get("min_defects"), 10),
+            max_defects=_bw_positive_int(organic_cfg.get("max_defects"), 20),
+            support_node_count=_bw_positive_int(
+                organic_cfg.get("support_node_count"),
+                _bw_positive_int(gravity_cfg.get("support_node_count"), 8),
+            ),
+            seed=_bw_positive_int(
+                organic_cfg.get("seed"),
+                _bw_positive_int(gravity_cfg.get("free_seed", gravity_cfg.get("seed")), 2039),
+            ),
+            initial_speed=_bw_positive_float(
+                organic_cfg.get("initial_speed"),
+                _bw_positive_float(gravity_cfg.get("initial_speed"), 0.028),
+            ),
+            stress_coupling=_bw_positive_float(
+                organic_cfg.get("stress_coupling"),
+                _bw_positive_float(gravity_cfg.get("free_stress_coupling"), 0.018),
+            ),
+            transverse_kick=_bw_positive_float(
+                organic_cfg.get("transverse_kick"),
+                _bw_positive_float(gravity_cfg.get("transverse_kick"), 0.010),
+            ),
+            stress_radius=_bw_positive_float(
+                organic_cfg.get("stress_radius"),
+                _bw_positive_float(gravity_cfg.get("stress_radius"), 0.9),
+            ),
+            curvature_radius=_bw_positive_float(
+                organic_cfg.get("curvature_radius"),
+                _bw_positive_float(gravity_cfg.get("curvature_radius"), 1.0),
+            ),
+            cycle_stride=_bw_positive_int(
+                organic_cfg.get("cycle_stride"),
+                _bw_positive_int(gravity_cfg.get("cycle_stride"), 1),
+            ),
+            contact_radius=_bw_positive_float(
+                organic_cfg.get("contact_radius"),
+                _bw_positive_float(gravity_cfg.get("contact_radius"), 0.12),
+            ),
+            overlap_radius=_bw_positive_float(
+                organic_cfg.get("overlap_radius"),
+                _bw_positive_float(gravity_cfg.get("overlap_radius"), 0.28),
+            ),
+            spawn_radius=_bw_positive_float(organic_cfg.get("spawn_radius"), 1.25),
+        )
+        organic_summary = (
+            organic_report.get("organic_population_summary")
+            if isinstance(organic_report.get("organic_population_summary"), dict)
+            else {}
+        )
+        summary.update(
+            {
+                "written_any": True,
+                "organic_defect_population_written": True,
+                "organic_defect_population_receipt": bool(
+                    organic_report.get("organic_defect_population_receipt", False)
+                ),
+                "organic_proto_worldline_visualization_receipt": bool(
+                    organic_report.get("organic_proto_worldline_visualization_receipt", False)
+                ),
+                "organic_defect_worldline_count": organic_summary.get("worldline_count"),
+                "organic_defect_near_contact_event_count": organic_summary.get("near_contact_event_count"),
+                "organic_fixed_left_right_pair": organic_summary.get("fixed_left_right_pair"),
+                "organic_transverse_motion_present": organic_summary.get("transverse_motion_present"),
+            }
+        )
+    if write_gravity:
+        gravity_report = write_two_defect_stress_contraction_assay_report(
+            run_dir / "two_defect_stress_contraction_assay_report.json",
+            patch_count=_bw_positive_int(gravity_cfg.get("patch_count"), 65_536),
+            steps=_bw_positive_int(gravity_cfg.get("steps"), 64),
+            support_node_count=_bw_positive_int(gravity_cfg.get("support_node_count"), 8),
+            holonomy=_bw_positive_int(gravity_cfg.get("holonomy"), 1),
+            initial_separation=_bw_positive_float(gravity_cfg.get("initial_separation"), 1.2),
+            stress_coupling=_bw_positive_float(gravity_cfg.get("stress_coupling"), 0.04),
+            stress_radius=_bw_positive_float(gravity_cfg.get("stress_radius"), 1.0),
+            curvature_radius=_bw_positive_float(gravity_cfg.get("curvature_radius"), 1.0),
+            cycle_stride=_bw_positive_int(gravity_cfg.get("cycle_stride"), 1),
+            min_approach_fraction=_bw_positive_float(gravity_cfg.get("min_approach_fraction"), 0.25),
+            min_control_margin=_bw_positive_float(gravity_cfg.get("min_control_margin"), 0.15),
+        )
+        summary.update(
+            {
+                "written_any": True,
+                "two_defect_stress_contraction_assay_written": True,
+                "two_defect_stress_contraction_assay_receipt": bool(
+                    gravity_report.get("two_defect_stress_contraction_assay_receipt", False)
+                ),
+                "controlled_two_defect_is_fallback_only": True,
+            }
+        )
+        if bool(gravity_cfg.get("free_dynamics_enabled", True)):
+            free_report = write_free_two_defect_dynamics_report(
+                run_dir / "free_two_defect_dynamics_report.json",
+                patch_count=_bw_positive_int(gravity_cfg.get("patch_count"), 65_536),
+                steps=_bw_positive_int(gravity_cfg.get("free_steps", gravity_cfg.get("steps")), 96),
+                support_node_count=_bw_positive_int(gravity_cfg.get("support_node_count"), 8),
+                holonomy=_bw_positive_int(gravity_cfg.get("holonomy"), 1),
+                seed=_bw_positive_int(gravity_cfg.get("free_seed", gravity_cfg.get("seed")), 1729),
+                initial_separation=_bw_positive_float(gravity_cfg.get("initial_separation"), 1.2),
+                initial_speed=_bw_positive_float(gravity_cfg.get("initial_speed"), 0.035),
+                stress_coupling=_bw_positive_float(gravity_cfg.get("free_stress_coupling"), 0.03),
+                transverse_kick=_bw_positive_float(gravity_cfg.get("transverse_kick"), 0.008),
+                stress_radius=_bw_positive_float(gravity_cfg.get("stress_radius"), 1.0),
+                curvature_radius=_bw_positive_float(gravity_cfg.get("curvature_radius"), 1.0),
+                cycle_stride=_bw_positive_int(gravity_cfg.get("cycle_stride"), 1),
+                contact_radius=_bw_positive_float(gravity_cfg.get("contact_radius"), 0.10),
+                overlap_radius=_bw_positive_float(gravity_cfg.get("overlap_radius"), 0.22),
+                bind_speed_threshold=_bw_positive_float(gravity_cfg.get("bind_speed_threshold"), 0.055),
+                annihilation_overlap_threshold=_bw_positive_float(
+                    gravity_cfg.get("annihilation_overlap_threshold"), 0.85
+                ),
+            )
+            free_summary = (
+                free_report.get("free_dynamics_summary")
+                if isinstance(free_report.get("free_dynamics_summary"), dict)
+                else {}
+            )
+            summary.update(
+                {
+                    "free_two_defect_dynamics_written": True,
+                    "free_two_defect_dynamics_receipt": bool(
+                        free_report.get("free_two_defect_dynamics_receipt", False)
+                    ),
+                    "free_two_defect_contact_outcome": free_summary.get("contact_outcome"),
+                    "free_two_defect_straight_x_axis_control": free_summary.get("straight_x_axis_control"),
+                }
+            )
+    return summary
+
+
+def _bw_positive_int(value: Any, default: int) -> int:
+    try:
+        return max(1, int(value))
+    except (TypeError, ValueError):
+        return max(1, int(default))
+
+
+def _bw_positive_float(value: Any, default: float) -> float:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        numeric = float(default)
+    if not np.isfinite(numeric) or numeric <= 0.0:
+        return float(default)
+    return float(numeric)
 
 
 def _should_write_base_progress(cycle: int, cycles: int, interval: int) -> bool:
@@ -2010,6 +2223,53 @@ def _repairs_per_cycle_from_config(dyn: dict[str, Any], *, patch_count: int, edg
             return 0
         return int(min(max(1, math.ceil(float(patch_count) * fraction)), max(0, int(edge_count))))
     return int(max(0, min(int(dyn.get("repairs_per_cycle", edge_count // 4)), max(0, int(edge_count)))))
+
+
+def _repair_budget_for_cycle(
+    base_repairs_per_cycle: int,
+    dyn: dict[str, Any],
+    *,
+    cycle: int,
+    cycles: int,
+    patch_count: int,
+    edge_count: int,
+) -> int:
+    schedule = dyn.get("repair_budget_schedule", {}) or {}
+    if not isinstance(schedule, dict) or not bool(schedule.get("enabled", False)):
+        return int(max(0, min(int(base_repairs_per_cycle), max(0, int(edge_count)))))
+    kind = str(schedule.get("kind", "smooth_hotspot"))
+    if kind in {"fixed", "none"}:
+        return int(max(0, min(int(base_repairs_per_cycle), max(0, int(edge_count)))))
+    phase = float(cycle / max(1, int(cycles) - 1))
+    floor_fraction = max(0.0, min(1.0, float(schedule.get("floor_fraction", 0.22))))
+    peak_fraction = max(0.0, min(1.0, float(schedule.get("peak_fraction", 0.52))))
+    warmup_fraction = max(1.0e-6, min(1.0, float(schedule.get("warmup_fraction", 0.22))))
+    taper_start = max(0.0, min(1.0, float(schedule.get("taper_start_fraction", 0.70))))
+    taper_strength = max(0.0, min(0.95, float(schedule.get("taper_strength", 0.35))))
+    jitter_fraction = max(0.0, min(0.95, float(schedule.get("jitter_fraction", 0.0))))
+    jitter_period = max(2.0, float(schedule.get("jitter_period_cycles", 11.0)))
+    growth = _smoothstep(max(0.0, min(1.0, phase / warmup_fraction)))
+    peak_width = max(1.0e-6, float(schedule.get("peak_width_fraction", 0.28)))
+    peak = math.exp(-0.5 * ((phase - peak_fraction) / peak_width) ** 2)
+    envelope = floor_fraction + (1.0 - floor_fraction) * max(growth, peak)
+    if phase > taper_start:
+        taper_phase = (phase - taper_start) / max(1.0e-6, 1.0 - taper_start)
+        envelope *= 1.0 - taper_strength * _smoothstep(max(0.0, min(1.0, taper_phase)))
+    if jitter_fraction > 0.0:
+        seed_phase = float(schedule.get("jitter_phase", 0.38196601125))
+        ripple = math.sin(2.0 * math.pi * (float(cycle) / jitter_period + seed_phase))
+        envelope *= 1.0 + jitter_fraction * ripple
+    min_budget = int(schedule.get("min_budget", 1 if base_repairs_per_cycle > 0 else 0))
+    max_budget = int(schedule.get("max_budget", edge_count))
+    budget = int(round(float(base_repairs_per_cycle) * max(0.0, envelope)))
+    if base_repairs_per_cycle > 0:
+        budget = max(min_budget, budget)
+    return int(max(0, min(budget, max(0, int(max_budget)), max(0, int(edge_count)))))
+
+
+def _smoothstep(value: float) -> float:
+    x = max(0.0, min(1.0, float(value)))
+    return float(x * x * (3.0 - 2.0 * x))
 
 
 def _base_repair_progress_report(
@@ -3841,6 +4101,407 @@ def _attach_transition_history_histograms(
             float(row["transition_history_mean_modal_mass"]),
         ]
         row["counterfactual_stability"] = float(row["transition_history_mean_modal_mass"])
+
+
+def _attach_h2_neutral_evidence_channels(
+    observer_rows: list[dict[str, Any]],
+    *,
+    history_raw_fields: list[dict[str, np.ndarray]],
+    current_raw_fields: dict[str, np.ndarray],
+    object_cfg: dict[str, Any],
+) -> None:
+    """Attach chart-blind local H2 evidence summaries to observer rows.
+
+    These fields are producer-side inputs for the strict neutral-bulk audit.
+    They are derived from local packet/readback histories and local response
+    tensors. They intentionally do not encode support-node IDs, cap axes, S2
+    positions, H3 chart coordinates, or observer IDs.
+    """
+
+    raw_history = [fields for fields in history_raw_fields if fields]
+    if not raw_history:
+        raw_history = [current_raw_fields]
+    history_fields = [transition_affinity_packet_fields(raw_fields, object_cfg) for raw_fields in raw_history]
+    history_fields = [fields for fields in history_fields if fields]
+    current_fields = transition_affinity_packet_fields(current_raw_fields, object_cfg)
+    if not current_fields and history_fields:
+        current_fields = history_fields[-1]
+    for row in observer_rows:
+        if row.get("view_type") != "patch_observer":
+            continue
+        support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
+        if support.size == 0:
+            continue
+        boundary_histogram = _h2_boundary_packet_hash_histogram(support, current_fields)
+        overlap_histogram = _h2_overlap_correspondence_histogram(row, boundary_histogram)
+        port_pair_lag_histogram = _h2_port_pair_lag_histogram(
+            support,
+            history_fields,
+            object_cfg=object_cfg,
+        )
+        repair_current_tensor = _h2_repair_current_tensor(
+            support,
+            raw_history=raw_history,
+            current_raw_fields=current_raw_fields,
+            width=128,
+        )
+        perturbation_response_tensor = _h2_perturbation_response_tensor(
+            row,
+            support,
+            current_raw_fields=current_raw_fields,
+            width=128,
+        )
+        first_passage_histogram = _h2_first_passage_time_histogram(
+            row,
+            support,
+            history_fields,
+        )
+        row["h2_neutral_evidence_schema"] = "observer_local_h2_neutral_evidence_v1"
+        row["h2_neutral_evidence_claim_boundary"] = (
+            "chart-blind local packet, response, and first-passage summaries; "
+            "no support-node IDs, cap axes, S2 positions, H3 coordinates, or observer IDs"
+        )
+        row["local_boundary_packet_hash_histogram"] = boundary_histogram
+        row["boundary_packet_hash_histogram"] = boundary_histogram
+        row["local_overlap_correspondence_histogram"] = overlap_histogram
+        row["overlap_correspondence_histogram"] = overlap_histogram
+        row["port_pair_lag_histogram"] = port_pair_lag_histogram
+        row["transition_port_pair_lag_histogram"] = port_pair_lag_histogram
+        row["local_repair_current_tensor"] = repair_current_tensor
+        row["repair_current_tensor"] = repair_current_tensor
+        row["local_perturbation_response_tensor"] = perturbation_response_tensor
+        row["counterfactual_perturbation_response_tensor"] = perturbation_response_tensor
+        row["perturbation_response_tensor"] = perturbation_response_tensor
+        row["local_first_passage_histogram"] = first_passage_histogram
+        row["first_passage_time_histogram"] = first_passage_histogram
+        row["response_time_histogram"] = first_passage_histogram
+
+
+def _h2_boundary_packet_hash_histogram(
+    support: np.ndarray,
+    fields: dict[str, np.ndarray],
+    *,
+    max_fields: int = 8,
+) -> dict[str, float]:
+    support = np.asarray(support, dtype=np.int64)
+    names = sorted(str(name) for name in fields.keys())[: max(1, int(max_fields))]
+    if support.size == 0 or not names:
+        return {}
+    counts: dict[int, int] = {}
+    for node in support:
+        packet = _h2_packet_for_node(int(node), fields, names)
+        if not packet:
+            continue
+        token = _stable_hash_to_int(stable_json_hash({"boundary_packet": packet}))
+        counts[token] = counts.get(token, 0) + 1
+    return _normalize_int_counts(counts)
+
+
+def _h2_overlap_correspondence_histogram(
+    row: dict[str, Any],
+    boundary_histogram: dict[str, float],
+    *,
+    max_items: int = 12,
+) -> dict[str, float]:
+    source_histograms: list[tuple[str, dict[str, float]]] = []
+    object_histogram = _h2_coerce_histogram(row.get("object_packet_histogram", {}))
+    if object_histogram:
+        source_histograms.append(("object_packet", object_histogram))
+    transition_histograms = row.get("transition_history_histograms", {})
+    if isinstance(transition_histograms, dict):
+        for name in (
+            "local_transition_token_persistent",
+            "local_transition_token",
+            "transition_history_key",
+        ):
+            histogram = _h2_coerce_histogram(transition_histograms.get(name, {}))
+            if histogram:
+                source_histograms.append((str(name), histogram))
+    affinity_histograms = row.get("transition_affinity_histograms", {})
+    if isinstance(affinity_histograms, dict):
+        for name in sorted(str(key) for key in affinity_histograms.keys())[:4]:
+            histogram = _h2_coerce_histogram(affinity_histograms.get(name, {}))
+            if histogram:
+                source_histograms.append((f"affinity:{name}", histogram))
+    boundary_items = _h2_top_histogram_items(boundary_histogram, max_items=max_items)
+    counts: dict[int, int] = {}
+    if boundary_items and source_histograms:
+        for boundary_key, boundary_weight in boundary_items:
+            for source_name, source_histogram in source_histograms[:6]:
+                for source_key, source_weight in _h2_top_histogram_items(source_histogram, max_items=4):
+                    payload = {
+                        "boundary_packet": str(boundary_key),
+                        "correspondence_source": str(source_name),
+                        "local_packet": str(source_key),
+                    }
+                    token = _stable_hash_to_int(stable_json_hash(payload))
+                    mass = max(1, int(round(float(boundary_weight) * float(source_weight) * 1_000_000.0)))
+                    counts[token] = counts.get(token, 0) + mass
+    elif boundary_items:
+        for boundary_key, boundary_weight in boundary_items:
+            token = _stable_hash_to_int(
+                stable_json_hash({"boundary_packet": str(boundary_key), "correspondence_source": "boundary_only"})
+            )
+            mass = max(1, int(round(float(boundary_weight) * 1_000_000.0)))
+            counts[token] = counts.get(token, 0) + mass
+    else:
+        for source_name, source_histogram in source_histograms[:6]:
+            for source_key, source_weight in _h2_top_histogram_items(source_histogram, max_items=4):
+                token = _stable_hash_to_int(
+                    stable_json_hash({"correspondence_source": str(source_name), "local_packet": str(source_key)})
+                )
+                mass = max(1, int(round(float(source_weight) * 1_000_000.0)))
+                counts[token] = counts.get(token, 0) + mass
+    return _normalize_int_counts(counts)
+
+
+def _h2_port_pair_lag_histogram(
+    support: np.ndarray,
+    history_fields: list[dict[str, np.ndarray]],
+    *,
+    object_cfg: dict[str, Any],
+    max_fields: int = 5,
+) -> dict[str, float]:
+    support = np.asarray(support, dtype=np.int64)
+    if support.size == 0 or len(history_fields) < 2:
+        return {}
+    configured_names = [
+        str(name)
+        for name in object_cfg.get(
+            "transition_history_key_fields",
+            object_cfg.get("transition_affinity_fields", []),
+        )
+    ]
+    if configured_names:
+        names = configured_names[: max(1, int(max_fields))]
+    else:
+        names = sorted({str(name) for fields in history_fields for name in fields.keys()})[: max(1, int(max_fields))]
+    counts: dict[int, int] = {}
+    for node in support:
+        node_index = int(node)
+        for lag, (before_fields, after_fields) in enumerate(zip(history_fields, history_fields[1:], strict=False), start=1):
+            before_packet = _h2_packet_for_node(node_index, before_fields, names)
+            after_packet = _h2_packet_for_node(node_index, after_fields, names)
+            if not before_packet or not after_packet:
+                continue
+            before_port = _stable_hash_to_int(stable_json_hash(before_packet), hex_digits=8) % 64
+            after_port = _stable_hash_to_int(stable_json_hash(after_packet), hex_digits=8) % 64
+            payload = {
+                "lag": int(lag),
+                "local_port_pair": [int(before_port), int(after_port)],
+                "before": before_packet,
+                "after": after_packet,
+            }
+            token = _stable_hash_to_int(stable_json_hash(payload))
+            counts[token] = counts.get(token, 0) + 1
+    return _normalize_int_counts(counts)
+
+
+def _h2_repair_current_tensor(
+    support: np.ndarray,
+    *,
+    raw_history: list[dict[str, np.ndarray]],
+    current_raw_fields: dict[str, np.ndarray],
+    width: int,
+) -> list[float]:
+    field_names = [
+        "repair_load",
+        "cumulative_repair_load",
+        "local_mismatch_density",
+        "modular_depth",
+        "modular_time",
+        "stable_count",
+        "committed_mask",
+        "s3_class_density",
+    ]
+    values: list[float] = []
+    for name in field_names:
+        values.extend(_h2_support_value_summary(current_raw_fields.get(name), support))
+    if len(raw_history) >= 2:
+        before_fields = raw_history[0]
+        after_fields = raw_history[-1]
+        for name in ("repair_load", "cumulative_repair_load", "local_mismatch_density", "record_signature"):
+            before = before_fields.get(name)
+            after = after_fields.get(name)
+            if before is None or after is None:
+                continue
+            values.extend(_h2_support_delta_summary(before, after, support))
+    return _h2_pad_signed_vector(values, width=width)
+
+
+def _h2_perturbation_response_tensor(
+    row: dict[str, Any],
+    support: np.ndarray,
+    *,
+    current_raw_fields: dict[str, np.ndarray],
+    width: int,
+) -> list[float]:
+    values: list[float] = []
+    for key in (
+        "repair_response_spectrum",
+        "perturb_resettle_signature",
+        "sector_change_signature",
+        "record_transition_histogram",
+        "checkpoint_class_transition",
+    ):
+        value = row.get(key, [])
+        if isinstance(value, dict):
+            value = list(_h2_coerce_histogram(value).values())
+        if isinstance(value, (list, tuple, np.ndarray)):
+            for item in value:
+                try:
+                    numeric = float(item)
+                except (TypeError, ValueError):
+                    continue
+                if np.isfinite(numeric):
+                    values.append(float(numeric))
+    for key in ("counterfactual_stability", "transition_history_mean_modal_mass"):
+        try:
+            numeric = float(row.get(key, 0.0))
+        except (TypeError, ValueError):
+            numeric = 0.0
+        if np.isfinite(numeric):
+            values.append(float(numeric))
+    for name in ("repair_load", "local_mismatch_density", "cumulative_repair_load", "s3_class_density"):
+        values.extend(_h2_support_value_summary(current_raw_fields.get(name), support))
+    return _h2_pad_signed_vector(values, width=width)
+
+
+def _h2_first_passage_time_histogram(
+    row: dict[str, Any],
+    support: np.ndarray,
+    history_fields: list[dict[str, np.ndarray]],
+) -> dict[str, float]:
+    counts: dict[int, int] = {}
+    descriptor = row.get("transition_history_descriptor", {})
+    steps = descriptor.get("steps", []) if isinstance(descriptor, dict) else []
+    if isinstance(steps, list) and steps:
+        final_step = steps[-1] if isinstance(steps[-1], dict) else {}
+        for field_name in sorted(str(key) for key in final_step.keys()):
+            final_value = final_step.get(field_name)
+            for index, step in enumerate(steps):
+                if isinstance(step, dict) and step.get(field_name) == final_value:
+                    counts[int(index)] = counts.get(int(index), 0) + 1
+                    break
+        try:
+            persistence = int(row.get("transition_history_persistence", 0))
+        except (TypeError, ValueError):
+            persistence = 0
+        if persistence > 0:
+            onset = max(0, len(steps) - persistence)
+            counts[int(onset)] = counts.get(int(onset), 0) + 1
+    support = np.asarray(support, dtype=np.int64)
+    if support.size and len(history_fields) >= 2:
+        names = sorted({str(name) for fields in history_fields for name in fields.keys()})[:5]
+        final_fields = history_fields[-1]
+        for node in support:
+            node_index = int(node)
+            for name in names:
+                final_array = final_fields.get(name)
+                if final_array is None:
+                    continue
+                final_array = np.asarray(final_array)
+                if node_index < 0 or node_index >= final_array.size:
+                    continue
+                final_value = int(final_array[node_index])
+                for index, fields in enumerate(history_fields):
+                    values = fields.get(name)
+                    if values is None:
+                        continue
+                    values = np.asarray(values)
+                    if node_index < 0 or node_index >= values.size:
+                        continue
+                    if int(values[node_index]) == final_value:
+                        counts[int(index)] = counts.get(int(index), 0) + 1
+                        break
+    return _normalize_int_counts(counts)
+
+
+def _h2_packet_for_node(
+    node_index: int,
+    fields: dict[str, np.ndarray],
+    names: list[str],
+) -> dict[str, int]:
+    packet: dict[str, int] = {}
+    for name in names:
+        values = fields.get(name)
+        if values is None:
+            continue
+        array = np.asarray(values).reshape(-1)
+        if node_index < 0 or node_index >= array.size:
+            continue
+        try:
+            packet[str(name)] = int(array[node_index])
+        except (TypeError, ValueError, OverflowError):
+            continue
+    return packet
+
+
+def _h2_coerce_histogram(value: Any) -> dict[str, float]:
+    if not isinstance(value, dict):
+        return {}
+    histogram: dict[str, float] = {}
+    for key, raw_weight in value.items():
+        try:
+            weight = float(raw_weight)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(weight) and weight > 0.0:
+            histogram[str(key)] = float(weight)
+    return histogram
+
+
+def _h2_top_histogram_items(histogram: dict[str, float], *, max_items: int) -> list[tuple[str, float]]:
+    clean = _h2_coerce_histogram(histogram)
+    return sorted(clean.items(), key=lambda item: (-float(item[1]), str(item[0])))[: max(0, int(max_items))]
+
+
+def _h2_support_value_summary(values: Any, support: np.ndarray) -> list[float]:
+    if values is None:
+        return [0.0] * 8
+    array = np.asarray(values, dtype=float).reshape(-1)
+    support = np.asarray(support, dtype=np.int64)
+    valid = support[(support >= 0) & (support < array.size)]
+    if valid.size == 0:
+        return [0.0] * 8
+    local = array[valid]
+    local = np.where(np.isfinite(local), local, 0.0)
+    return [
+        float(np.mean(local)),
+        float(np.std(local)),
+        float(np.min(local)),
+        float(np.max(local)),
+        float(np.quantile(local, 0.25)),
+        float(np.quantile(local, 0.5)),
+        float(np.quantile(local, 0.75)),
+        float(np.mean(local > 0.0)),
+    ]
+
+
+def _h2_support_delta_summary(before: Any, after: Any, support: np.ndarray) -> list[float]:
+    before_array = np.asarray(before, dtype=float).reshape(-1)
+    after_array = np.asarray(after, dtype=float).reshape(-1)
+    size = min(before_array.size, after_array.size)
+    if size <= 0:
+        return [0.0] * 8
+    support = np.asarray(support, dtype=np.int64)
+    valid = support[(support >= 0) & (support < size)]
+    if valid.size == 0:
+        return [0.0] * 8
+    delta = after_array[valid] - before_array[valid]
+    return _h2_support_value_summary(delta, np.arange(delta.size, dtype=np.int64))
+
+
+def _h2_pad_signed_vector(values: list[float], *, width: int) -> list[float]:
+    width = max(0, int(width))
+    if width <= 0:
+        return []
+    output = np.zeros(width, dtype=float)
+    if values:
+        array = np.asarray(values[:width], dtype=float)
+        array = np.where(np.isfinite(array), array, 0.0)
+        output[: array.size] = array
+    return [float(value) for value in output]
 
 
 def _transition_history_persistence(steps: list[dict[str, int]], *, fields: list[str]) -> int:

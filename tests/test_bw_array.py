@@ -16,6 +16,7 @@ from oph_fpe.scale.bw_array import (
     _repairs_per_cycle_from_config,
     run_bw_array_config,
 )
+from oph_fpe.viz.universe_timeline_viewer import _read_proto_particle_candidates
 
 
 def test_repair_fraction_per_cycle_scales_with_patch_count():
@@ -184,6 +185,60 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert cl_report["claim_boundary"].startswith("screen-only")
     assert cl_report["ell_max"] == 12
     assert "record_signature" in cl_report["fields"]
+
+
+def test_bw_array_writes_organic_defect_population_before_two_defect_fallback(tmp_path: Path):
+    config = load_config(Path("configs/e1_s3_bw_screen_64k.yml"))
+    config = dict(config)
+    config["run_id"] = "bw_array_organic_defect_smoke"
+    config["graph"] = dict(config["graph"], patch_count=256, neighbors=6)
+    config["dynamics"] = dict(config["dynamics"], cycles=6, repairs_per_cycle=256)
+    config["bw"] = dict(config["bw"], cap_count=2, times=[0.025], n_jobs=1)
+    config["observers"] = dict(config.get("observers", {}), sample_count=8, neighborhood_size=16)
+    config["cosmology"] = {"freezeout": {"enabled": False}, "oph_cmb": {"enabled": False}}
+    config["visualization_diagnostics"] = {
+        "organic_defect_population": {
+            "enabled": True,
+            "patch_count": 256,
+            "steps": 18,
+            "defect_count": 12,
+            "min_defects": 10,
+            "max_defects": 14,
+            "support_node_count": 4,
+            "seed": 20260708,
+        },
+        "two_defect_gravity_assay": {
+            "enabled": True,
+            "free_dynamics_enabled": True,
+            "patch_count": 256,
+            "steps": 12,
+            "free_steps": 16,
+            "support_node_count": 4,
+            "free_seed": 1729,
+        },
+    }
+
+    result = run_bw_array_config(config, tmp_path)
+    run_path = Path(result["path"])
+
+    summary = json.loads((run_path / "visualization_defect_diagnostics_summary.json").read_text(encoding="utf-8"))
+    organic = json.loads((run_path / "organic_defect_population_report.json").read_text(encoding="utf-8"))
+    proto = _read_proto_particle_candidates(run_path, max_worldlines=24)
+
+    assert summary["organic_defect_population_written"] is True
+    assert summary["free_two_defect_dynamics_written"] is True
+    assert summary["two_defect_stress_contraction_assay_written"] is True
+    assert summary["selected_proto_worldline_preference"] == "organic_defect_population_report"
+    assert result["visualization_defect_diagnostics"]["organic_defect_population_written"] is True
+    assert organic["organic_defect_population_receipt"] is True
+    assert organic["organic_population_summary"]["fixed_left_right_pair"] is False
+    assert proto["worldlineSource"] == "organic_defect_population_report"
+    assert proto["receipts"]["controlled_two_defect_worldline_count"] == 2
+    assert proto["receipts"]["organic_defect_worldline_count"] >= 10
+    assert all(
+        not str(row["worldlineId"]).startswith(("stress_pair", "free_pair"))
+        for row in proto["worldlines"]
+    )
 
 
 def test_transition_history_key_can_include_observer_visible_readout_hash():

@@ -72,10 +72,16 @@ def test_build_neutral_observer_views_ignores_forbidden_geometry_fields():
     assert view.record_transition_hist.shape == (32,)
     assert view.record_signature_hist.shape == (64,)
     assert view.object_packet_hist.shape == (64,)
+    assert view.boundary_packet_hash_hist.shape == (128,)
+    assert view.overlap_correspondence_hist.shape == (256,)
     assert view.checkpoint_transition_hist.shape == (32,)
     assert view.sector_transition_hist.shape == (6,)
+    assert view.port_pair_lag_hist.shape == (512,)
     assert view.repair_response_hist.shape == (16,)
     assert view.repair_response_spectrum.shape == (32,)
+    assert view.repair_current_tensor.shape == (128,)
+    assert view.perturbation_response_tensor.shape == (128,)
+    assert view.first_passage_response_hist.shape == (64,)
     assert view.modular_response_hist.shape == (64,)
     assert view.prime_geometric_modular_spectrum.shape == (64,)
     assert view.prime_geometric_control_quotient_spectrum.shape == (64,)
@@ -108,6 +114,12 @@ def test_build_neutral_observer_views_ignores_forbidden_geometry_fields():
     assert np.allclose(view.repair_response_hist, changed_views[0].repair_response_hist)
     assert np.allclose(view.record_signature_hist, changed_views[0].record_signature_hist)
     assert np.allclose(view.object_packet_hist, changed_views[0].object_packet_hist)
+    assert np.allclose(view.boundary_packet_hash_hist, changed_views[0].boundary_packet_hash_hist)
+    assert np.allclose(view.overlap_correspondence_hist, changed_views[0].overlap_correspondence_hist)
+    assert np.allclose(view.port_pair_lag_hist, changed_views[0].port_pair_lag_hist)
+    assert np.allclose(view.repair_current_tensor, changed_views[0].repair_current_tensor)
+    assert np.allclose(view.perturbation_response_tensor, changed_views[0].perturbation_response_tensor)
+    assert np.allclose(view.first_passage_response_hist, changed_views[0].first_passage_response_hist)
     assert np.allclose(view.modular_response_hist, changed_views[0].modular_response_hist)
     assert np.allclose(view.prime_geometric_modular_spectrum, changed_views[0].prime_geometric_modular_spectrum)
     assert np.allclose(
@@ -117,6 +129,103 @@ def test_build_neutral_observer_views_ignores_forbidden_geometry_fields():
     assert np.allclose(view.support_visible_modular_spectrum, changed_views[0].support_visible_modular_spectrum)
     assert np.allclose(view.repair_modular_spectrum, changed_views[0].repair_modular_spectrum)
     assert np.allclose(view.transition_affinity_hist, changed_views[0].transition_affinity_hist)
+
+
+def test_theory_required_neutral_channels_are_extracted_without_geometry():
+    base = _observer_view(
+        7,
+        records=[1, 2, 3],
+        checkpoints=[1, 2],
+        sectors=[0, 1],
+        repairs=[2, 3],
+        axis=[1.0, 0.0, 0.0],
+        support_nodes=[10, 11],
+        h3_point=[0.1, 0.2, 0.3],
+        cap_axis=[0.0, 1.0, 0.0],
+        radial_depth=3.0,
+        modular_depth=5.0,
+    )
+    base.update(
+        {
+            "local_boundary_packet_hash_histogram": {"packet-A": 2.0, "packet-B": 1.0},
+            "overlap_correspondence_histogram": {"observer-7:observer-8": 3.0},
+            "port_pair_lag_histogram": {"north:east:2": 4.0},
+            "repair_current_tensor": [0.0, 1.5, -0.5],
+            "perturbation_response_tensor": {"delta-local-port-0": 2.0, "delta-local-port-1": -1.0},
+            "first_passage_time_histogram": {"3": 1.0, "5": 2.0},
+        }
+    )
+    changed_geometry = {
+        **base,
+        "axis": [0.0, 0.0, 1.0],
+        "support_nodes": [999],
+        "h3_point": [9.0, 9.0, 9.0],
+        "cap_axis": [1.0, 0.0, 0.0],
+        "radial_depth": 999.0,
+        "modular_depth": 999.0,
+    }
+
+    view, changed = build_neutral_observer_views([base, changed_geometry])
+
+    assert np.isclose(view.boundary_packet_hash_hist.sum(), 1.0)
+    assert np.isclose(view.overlap_correspondence_hist.sum(), 1.0)
+    assert np.isclose(view.port_pair_lag_hist.sum(), 1.0)
+    assert np.linalg.norm(view.repair_current_tensor) > 0.0
+    assert np.linalg.norm(view.perturbation_response_tensor) > 0.0
+    assert np.isclose(view.first_passage_response_hist.sum(), 1.0)
+    assert np.allclose(view.boundary_packet_hash_hist, changed.boundary_packet_hash_hist)
+    assert np.allclose(view.overlap_correspondence_hist, changed.overlap_correspondence_hist)
+    assert np.allclose(view.port_pair_lag_hist, changed.port_pair_lag_hist)
+    assert np.allclose(view.repair_current_tensor, changed.repair_current_tensor)
+    assert np.allclose(view.perturbation_response_tensor, changed.perturbation_response_tensor)
+    assert np.allclose(view.first_passage_response_hist, changed.first_passage_response_hist)
+
+
+def test_missing_theory_channels_do_not_dilute_available_neutral_distance():
+    observer_views = [
+        _observer_view(i, records=[i, i + 1, i + 2], checkpoints=[i % 4], sectors=[i % 3], repairs=[i % 5])
+        for i in range(8)
+    ]
+    views = build_neutral_observer_views(observer_views)
+
+    record_only = neutral_distance_matrix(views, weights={"record": 1.0})
+    record_plus_missing = neutral_distance_matrix(
+        views,
+        weights={"record": 1.0, "boundary_packet": 1.0, "repair_current_tensor": 1.0},
+    )
+
+    assert np.allclose(record_only, record_plus_missing)
+
+
+def test_custom_strict_neutral_weights_reach_quotient_manifest_and_evidence_gaps():
+    observer_views = [
+        _observer_view(i, records=[i, i + 1], checkpoints=[i % 4], sectors=[i % 3], repairs=[i % 5])
+        for i in range(8)
+    ]
+
+    report = strict_neutral_bulk_report(
+        observer_views,
+        weights={"record": 1.0},
+        model_selection={"best_model": "H3", "h3_beats_s2": True, "h3_beats_h2_h4": True},
+        controls={
+            "shuffled_records_fail": True,
+            "shuffled_transition_labels_fail": True,
+            "planted_2d_returns_2d": True,
+            "planted_3d_returns_3d": True,
+            "planted_h3_returns_h3": True,
+        },
+        refinement={"stable_across_64k_256k_1m": True},
+    )
+
+    manifest = report["quotient_geometry_contract"]["channel_manifest"]
+    assert [row["name"] for row in manifest] == ["record"]
+    assert report["strict_neutral_theory_alignment"]["theory_required_channels_present"] is False
+    assert any(
+        "inactive_required_neutral_channel:boundary_packet" in gap
+        for gap in report["strict_neutral_theory_evidence_gaps"]
+    )
+    assert report["receipt"]["theory_required_channels_present"] is False
+    assert report["strict_neutral_bulk"] is False
 
 
 def test_rich_observer_visible_packets_affect_neutral_distance_without_geometry():

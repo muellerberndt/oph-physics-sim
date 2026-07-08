@@ -27,11 +27,17 @@ DEFAULT_NEUTRAL_WEIGHTS = {
     "record": 1.0,
     "record_signature": 0.9,
     "object_packet": 0.9,
+    "boundary_packet": 1.0,
+    "overlap_correspondence": 1.0,
     "counterfactual": 1.0,
     "checkpoint": 0.75,
     "sector": 0.75,
+    "port_pair_lag": 1.0,
     "repair": 0.75,
     "repair_spectrum": 0.65,
+    "repair_current_tensor": 0.9,
+    "perturbation_response_tensor": 0.9,
+    "first_passage_response": 0.75,
     "persistence": 0.25,
     "scalar_readout": 0.35,
 }
@@ -44,6 +50,17 @@ SUPPORT_VISIBLE_PRIME_GEOMETRIC_DIAGNOSTIC_WEIGHTS = {
     "prime_geometric_control_quotient": 0.9,
     "support_visible_modular": 0.9,
     "repair_modular": 0.35,
+}
+
+STRICT_NEUTRAL_THEORY_REQUIRED_CHANNELS: dict[str, str] = {
+    "record": "record/checkpoint order visible in each local observer transcript",
+    "checkpoint": "checkpoint order and record ancestry visible without a chart",
+    "boundary_packet": "local port or boundary packet hashes, not support-node IDs",
+    "overlap_correspondence": "observer-overlap correspondences or local agreement packets",
+    "port_pair_lag": "transition counts by local port pair and lag",
+    "repair_current_tensor": "repair-current response tensor in local-port coordinates",
+    "perturbation_response_tensor": "counterfactual perturbation-response tensor",
+    "first_passage_response": "first-passage or response-time observable histogram",
 }
 
 DIAGNOSTIC_ONLY_NEUTRAL_CHANNELS = (
@@ -143,11 +160,17 @@ class NeutralObserverView:
     record_transition_hist: np.ndarray
     record_signature_hist: np.ndarray
     object_packet_hist: np.ndarray
+    boundary_packet_hash_hist: np.ndarray
+    overlap_correspondence_hist: np.ndarray
     counterfactual_hist: np.ndarray
     checkpoint_transition_hist: np.ndarray
     sector_transition_hist: np.ndarray
+    port_pair_lag_hist: np.ndarray
     repair_response_hist: np.ndarray
     repair_response_spectrum: np.ndarray
+    repair_current_tensor: np.ndarray
+    perturbation_response_tensor: np.ndarray
+    first_passage_response_hist: np.ndarray
     modular_response_hist: np.ndarray
     prime_geometric_modular_spectrum: np.ndarray
     prime_geometric_control_quotient_spectrum: np.ndarray
@@ -181,11 +204,63 @@ def build_neutral_observer_views(observer_views: list[dict[str, Any]]) -> list[N
                 record_transition_hist=_hist_or_steps(view, steps, "record_family", 32),
                 record_signature_hist=_histogram_dict_to_vector(view.get("record_signature_histogram", {}), 64),
                 object_packet_hist=_histogram_dict_to_vector(view.get("object_packet_histogram", {}), 64),
+                boundary_packet_hash_hist=_first_histogram_vector(
+                    view,
+                    (
+                        "local_boundary_packet_hash_histogram",
+                        "boundary_packet_hash_histogram",
+                        "visible_boundary_packet_hash_histogram",
+                        "local_port_packet_hash_histogram",
+                        "boundary_packet_histogram",
+                    ),
+                    128,
+                ),
+                overlap_correspondence_hist=_first_histogram_vector(
+                    view,
+                    (
+                        "overlap_correspondence_histogram",
+                        "observer_overlap_histogram",
+                        "local_overlap_correspondence_histogram",
+                        "overlap_packet_histogram",
+                    ),
+                    256,
+                ),
                 counterfactual_hist=_normalize_or_zero(view.get("counterfactual_continuation_hist", []), width=16),
                 checkpoint_transition_hist=_hist_or_steps(view, steps, "checkpoint_class", 32),
                 sector_transition_hist=_hist_or_steps(view, steps, "s3_sector_class", 6),
+                port_pair_lag_hist=_port_pair_lag_vector(view, steps, width=512),
                 repair_response_hist=_hist_or_steps(view, steps, "repair_load_bucket", 16),
                 repair_response_spectrum=_signed_vector_or_zero(view.get("repair_response_spectrum", []), width=32),
+                repair_current_tensor=_first_signed_vector(
+                    view,
+                    (
+                        "repair_current_tensor",
+                        "repair_current_histogram",
+                        "local_repair_current_tensor",
+                        "repair_current_response_tensor",
+                    ),
+                    128,
+                ),
+                perturbation_response_tensor=_first_signed_vector(
+                    view,
+                    (
+                        "perturbation_response_tensor",
+                        "perturbation_response_histogram",
+                        "counterfactual_perturbation_response_tensor",
+                        "local_perturbation_response_tensor",
+                    ),
+                    128,
+                ),
+                first_passage_response_hist=_first_histogram_vector(
+                    view,
+                    (
+                        "first_passage_time_histogram",
+                        "response_time_histogram",
+                        "first_passage_response_histogram",
+                        "local_first_passage_histogram",
+                    ),
+                    64,
+                ),
                 modular_response_hist=_nested_histogram_to_vector(view.get("modular_response_histograms", {}), 64),
                 prime_geometric_modular_spectrum=_signed_vector_or_zero(
                     view.get("prime_geometric_modular_spectrum", []),
@@ -323,18 +398,19 @@ def neutral_feature_matrix(
     if n <= 0:
         return np.zeros((0, 0), dtype=float)
     active = [(str(key), float(value)) for key, value in weights.items() if float(value) > 0.0]
-    total_weight = float(sum(value for _, value in active))
-    if total_weight <= 1e-12:
-        return np.zeros((n, 0), dtype=float)
-    blocks: list[np.ndarray] = []
+    signal_blocks: list[tuple[str, float, np.ndarray]] = []
     for key, weight in active:
         raw = _neutral_channel_matrix(views, key)
         if raw.shape[0] != n or raw.shape[1] == 0:
             continue
         embedded = _neutral_channel_embedding(raw, key)
-        if embedded.shape[1] == 0:
+        if embedded.shape[1] == 0 or not _neutral_embedding_has_pairwise_signal(embedded):
             continue
-        blocks.append(math.sqrt(weight / total_weight) * embedded)
+        signal_blocks.append((key, weight, embedded))
+    total_weight = float(sum(weight for _, weight, _ in signal_blocks))
+    if total_weight <= 1e-12:
+        return np.zeros((n, 0), dtype=float)
+    blocks = [math.sqrt(weight / total_weight) * embedded for _, weight, embedded in signal_blocks]
     return np.hstack(blocks) if blocks else np.zeros((n, 0), dtype=float)
 
 
@@ -453,16 +529,28 @@ def _neutral_channel_matrix(views: list[NeutralObserverView], key: str) -> np.nd
         return _stack_channel(views, "record_signature_hist")
     if key == "object_packet":
         return _stack_channel(views, "object_packet_hist")
+    if key == "boundary_packet":
+        return _stack_channel(views, "boundary_packet_hash_hist")
+    if key == "overlap_correspondence":
+        return _stack_channel(views, "overlap_correspondence_hist")
     if key == "counterfactual":
         return _stack_channel(views, "counterfactual_hist")
     if key == "checkpoint":
         return _stack_channel(views, "checkpoint_transition_hist")
     if key == "sector":
         return _stack_channel(views, "sector_transition_hist")
+    if key == "port_pair_lag":
+        return _stack_channel(views, "port_pair_lag_hist")
     if key == "repair":
         return _stack_channel(views, "repair_response_hist")
     if key == "repair_spectrum":
         return _stack_channel(views, "repair_response_spectrum")
+    if key == "repair_current_tensor":
+        return _stack_channel(views, "repair_current_tensor")
+    if key == "perturbation_response_tensor":
+        return _stack_channel(views, "perturbation_response_tensor")
+    if key == "first_passage_response":
+        return _stack_channel(views, "first_passage_response_hist")
     if key == "modular_response":
         return _stack_channel(views, "modular_response_hist")
     if key == "prime_geometric_modular":
@@ -531,9 +619,23 @@ def _neutral_channel_embedding(matrix: np.ndarray, key: str) -> np.ndarray:
     return np.hstack([standardized, row_observed])
 
 
+def _neutral_embedding_has_pairwise_signal(embedded: np.ndarray) -> bool:
+    embedded = np.asarray(embedded, dtype=float)
+    if embedded.ndim != 2 or embedded.shape[0] == 0 or embedded.shape[1] == 0:
+        return False
+    embedded = np.where(np.isfinite(embedded), embedded, 0.0)
+    if not np.any(np.linalg.norm(embedded, axis=1) > 1e-12):
+        return False
+    if embedded.shape[0] <= 1:
+        return True
+    return bool(np.any(np.std(embedded, axis=0) > 1e-12))
+
+
 def _neutral_channel_kind(key: str) -> str:
     if key in {
         "repair_spectrum",
+        "repair_current_tensor",
+        "perturbation_response_tensor",
         "prime_geometric_modular",
         "prime_geometric_control_quotient",
         "prime_geometric_rank3",
@@ -645,11 +747,13 @@ def strict_neutral_bulk_receipt(
     refinement: dict[str, Any],
     quotient_geometry: dict[str, Any] | None = None,
     channel_audit: dict[str, Any] | None = None,
+    theory_alignment: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     quotient_contract = quotient_geometry or {}
     quotient_contract_passed = bool(quotient_contract.get(GEOMETRY_CONTRACT_RECEIPT, False))
     channel_audit_passed = bool((channel_audit or {}).get("duplicate_channel_gate_pass", True))
     feature_ancestry_passed = bool((channel_audit or {}).get("feature_ancestry_gate_pass", True))
+    theory_alignment_passed = bool((theory_alignment or {}).get("theory_required_channels_present", True))
     passed = bool(
         dimension.get("estimators_agree_3d", False)
         and model_selection.get("best_model") == "H3"
@@ -657,6 +761,7 @@ def strict_neutral_bulk_receipt(
         and model_selection.get("h3_beats_h2_h4", False)
         and leakage.get("s2_leakage_pass", False)
         and channel_audit_passed
+        and theory_alignment_passed
         and controls.get("shuffled_records_fail", False)
         and controls.get("shuffled_transition_labels_fail", False)
         and controls.get("planted_2d_returns_2d", False)
@@ -675,6 +780,8 @@ def strict_neutral_bulk_receipt(
         "duplicate_channel_blockers": list((channel_audit or {}).get("duplicate_pairs", [])),
         "feature_ancestry_gate_pass": feature_ancestry_passed,
         "feature_ancestry_blockers": list((channel_audit or {}).get("feature_ancestry_blockers", [])),
+        "theory_required_channels_present": theory_alignment_passed,
+        "theory_evidence_blockers": list((theory_alignment or {}).get("evidence_gaps", [])),
         "claim_boundary": (
             "Neutral third-person bulk reconstructed from observer-visible records without H3/cap-normal "
             "target features. It is intentionally stricter than, and does not negate, the support-visible "
@@ -826,10 +933,12 @@ def strict_neutral_bulk_report(
     neutral_views = build_neutral_observer_views(observer_views)
     distance = neutral_distance_matrix(neutral_views, weights)
     channel_audit = neutral_channel_duplicate_audit(neutral_views, weights)
+    theory_alignment = _strict_neutral_theory_alignment_report(neutral_views, weights)
     quotient_contract = _neutral_quotient_geometry_contract(
         distance,
         neutral_views,
         refinement=refinement or {},
+        weights=weights,
     )
     dimension = strict_neutral_dimension_report(distance)
     leakage = neutral_leakage_audit(distance, observer_views)
@@ -846,6 +955,7 @@ def strict_neutral_bulk_report(
         refinement or {},
         quotient_contract,
         channel_audit,
+        theory_alignment,
     )
     return {
         "mode": "strict_neutral_bulk_record_transition_audit",
@@ -853,6 +963,8 @@ def strict_neutral_bulk_report(
         "distance_matrix_shape": list(distance.shape),
         "neutral_metric_construction": "fixed_weighted_euclidean_feature_embedding_v1",
         "channel_audit": channel_audit,
+        "strict_neutral_theory_alignment": theory_alignment,
+        "strict_neutral_theory_evidence_gaps": list(theory_alignment.get("evidence_gaps", [])),
         "quotient_geometry_contract": quotient_contract,
         "dimension": dimension,
         "model_selection": model_selection,
@@ -865,11 +977,17 @@ def strict_neutral_bulk_report(
             "record_transition_hist",
             "record_signature_hist",
             "object_packet_hist",
+            "boundary_packet_hash_hist",
+            "overlap_correspondence_hist",
             "counterfactual_hist",
             "checkpoint_transition_hist",
             "sector_transition_hist",
+            "port_pair_lag_hist",
             "repair_response_hist",
             "repair_response_spectrum",
+            "repair_current_tensor",
+            "perturbation_response_tensor",
+            "first_passage_response_hist",
             "persistence_features",
             "scalar_readout_features",
         ],
@@ -908,10 +1026,12 @@ def _neutral_quotient_geometry_contract(
     neutral_views: list[NeutralObserverView],
     *,
     refinement: dict[str, Any],
+    weights: dict[str, float] | None = None,
 ) -> dict[str, Any]:
+    active_weights = weights or DEFAULT_NEUTRAL_WEIGHTS
     channel_manifest = [
         ChannelMetricSpec(name=name, weight=weight, missingness="fixed_missing_symbol")
-        for name, weight in DEFAULT_NEUTRAL_WEIGHTS.items()
+        for name, weight in active_weights.items()
         if float(weight) > 0.0
     ]
     # The neutral report only knows the record-space distance. Atlas, feature
@@ -4450,6 +4570,10 @@ def _strict_neutral_blockers(report: dict[str, Any]) -> list[str]:
         blockers.append("s2_leakage_audit_failed")
     if not report.get("channel_audit", {}).get("duplicate_channel_gate_pass", True):
         blockers.append("duplicate_primary_neutral_channels")
+    for gap in report.get("strict_neutral_theory_evidence_gaps", []):
+        blockers.append(str(gap))
+    for blocker in report.get("quotient_geometry_contract", {}).get("blockers", []):
+        blockers.append(f"quotient_geometry:{blocker}")
     receipt = report.get("receipt", {})
     if not receipt.get("strict_neutral_bulk", False):
         blockers.append("strict_neutral_receipt_false_pending_controls_or_refinement")
@@ -6061,6 +6185,202 @@ def _dimension_in_range(report: dict[str, Any], low: float, high: float) -> bool
     ]
     finite = [float(value) for value in candidates if value is not None and np.isfinite(float(value))]
     return bool(finite and low <= float(np.median(finite)) <= high)
+
+
+def _strict_neutral_theory_alignment_report(
+    neutral_views: list[NeutralObserverView],
+    weights: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    active_weights = weights or DEFAULT_NEUTRAL_WEIGHTS
+    rows: list[dict[str, Any]] = []
+    gaps: list[str] = []
+    observer_count = len(neutral_views)
+    for channel, evidence in STRICT_NEUTRAL_THEORY_REQUIRED_CHANNELS.items():
+        matrix = _neutral_channel_matrix(neutral_views, channel)
+        if matrix.ndim != 2 or matrix.shape[0] != observer_count:
+            matrix = np.zeros((observer_count, 0), dtype=float)
+        if matrix.shape[1]:
+            finite_matrix = np.where(np.isfinite(matrix), matrix, 0.0)
+            row_observed = np.linalg.norm(finite_matrix, axis=1) > 1e-12
+        else:
+            row_observed = np.zeros(observer_count, dtype=bool)
+        observed_count = int(np.sum(row_observed))
+        active = float(active_weights.get(channel, 0.0) or 0.0) > 0.0
+        present = bool(observer_count > 0 and observed_count == observer_count and active)
+        if not present:
+            reason = "inactive_required_neutral_channel" if not active else "missing_or_partial_required_neutral_channel"
+            gaps.append(f"{reason}:{channel}:{observed_count}/{observer_count}")
+        rows.append(
+            {
+                "channel": channel,
+                "evidence_requirement": evidence,
+                "active_weight": float(active_weights.get(channel, 0.0) or 0.0),
+                "observer_rows_with_signal": observed_count,
+                "observer_count": observer_count,
+                "present_for_all_observers": present,
+            }
+        )
+    return {
+        "mode": "strict_neutral_theory_required_channel_alignment_v0",
+        "theory_required_channels_present": not gaps,
+        "required_channels": rows,
+        "evidence_gaps": gaps,
+        "claim_boundary": (
+            "H2 strict-neutral bulk needs chart-blind local observer evidence: local boundary/port packet "
+            "hashes, overlap correspondences, record/checkpoint order, transition counts by port pair and "
+            "lag, perturbation/repair response tensors, first-passage observables, and quotient-safe controls. "
+            "A geometric fit is diagnostic until these channels and the quotient geometry contract are present."
+        ),
+    }
+
+
+def _first_histogram_vector(view: dict[str, Any], keys: tuple[str, ...], width: int) -> np.ndarray:
+    for key in keys:
+        vector = _histogram_like_to_vector(view.get(key), width)
+        if float(np.sum(vector)) > 1e-12:
+            return vector
+    histograms = view.get("transition_history_histograms")
+    if isinstance(histograms, dict):
+        for key in keys:
+            vector = _histogram_like_to_vector(histograms.get(key), width)
+            if float(np.sum(vector)) > 1e-12:
+                return vector
+    descriptor = view.get("transition_history_descriptor")
+    if isinstance(descriptor, dict):
+        for key in keys:
+            vector = _histogram_like_to_vector(descriptor.get(key), width)
+            if float(np.sum(vector)) > 1e-12:
+                return vector
+    return np.zeros(max(1, int(width)), dtype=float)
+
+
+def _first_signed_vector(view: dict[str, Any], keys: tuple[str, ...], width: int) -> np.ndarray:
+    for key in keys:
+        vector = _signed_observable_vector(view.get(key), width)
+        if float(np.linalg.norm(vector)) > 1e-12:
+            return vector
+    tensors = view.get("transition_history_tensors")
+    if isinstance(tensors, dict):
+        for key in keys:
+            vector = _signed_observable_vector(tensors.get(key), width)
+            if float(np.linalg.norm(vector)) > 1e-12:
+                return vector
+    descriptor = view.get("transition_history_descriptor")
+    if isinstance(descriptor, dict):
+        for key in keys:
+            vector = _signed_observable_vector(descriptor.get(key), width)
+            if float(np.linalg.norm(vector)) > 1e-12:
+                return vector
+    return np.zeros(max(1, int(width)), dtype=float)
+
+
+def _port_pair_lag_vector(view: dict[str, Any], steps: list[Any], *, width: int) -> np.ndarray:
+    explicit = _first_histogram_vector(
+        view,
+        (
+            "port_pair_lag_histogram",
+            "transition_port_pair_lag_histogram",
+            "local_port_pair_lag_histogram",
+            "port_pair_lag_events",
+        ),
+        width,
+    )
+    if float(np.sum(explicit)) > 1e-12:
+        return explicit
+    vector = np.zeros(max(1, int(width)), dtype=float)
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        token = _port_pair_lag_token(step)
+        if token is not None:
+            vector[_stable_bucket(token, vector.size)] += 1.0
+    return _normalize_or_zero(vector, width=vector.size)
+
+
+def _port_pair_lag_token(step: dict[str, Any]) -> str | None:
+    pair = step.get("port_pair") or step.get("local_port_pair") or step.get("transition_port_pair")
+    if pair is None:
+        left = step.get("port_left", step.get("source_port", step.get("port_i")))
+        right = step.get("port_right", step.get("target_port", step.get("port_j")))
+        if left is not None and right is not None:
+            pair = (left, right)
+    lag = step.get("lag", step.get("transition_lag", step.get("record_lag", step.get("response_lag"))))
+    if pair is None and lag is None:
+        return None
+    return f"pair={_canonical_observable_token(pair)}|lag={_canonical_observable_token(lag)}"
+
+
+def _histogram_like_to_vector(value: Any, width: int) -> np.ndarray:
+    vector = np.zeros(max(1, int(width)), dtype=float)
+    if value is None:
+        return vector
+    if isinstance(value, dict):
+        for token, mass in _iter_observable_histogram_items(value):
+            bucket = _safe_int(token)
+            index = int(bucket) % vector.size if bucket is not None else _stable_bucket(str(token), vector.size)
+            if np.isfinite(mass):
+                vector[index] += max(float(mass), 0.0)
+        return _normalize_or_zero(vector, width=vector.size)
+    if isinstance(value, (list, tuple)):
+        try:
+            numeric = np.asarray(value, dtype=float).reshape(-1)
+        except (TypeError, ValueError):
+            numeric = np.zeros(0, dtype=float)
+        if numeric.size and np.all(np.isfinite(numeric)):
+            return _normalize_or_zero(numeric, width=vector.size)
+        for item in value:
+            vector[_stable_bucket(_canonical_observable_token(item), vector.size)] += 1.0
+        return _normalize_or_zero(vector, width=vector.size)
+    vector[_stable_bucket(_canonical_observable_token(value), vector.size)] += 1.0
+    return _normalize_or_zero(vector, width=vector.size)
+
+
+def _signed_observable_vector(value: Any, width: int) -> np.ndarray:
+    vector = np.zeros(max(1, int(width)), dtype=float)
+    if value is None:
+        return vector
+    if isinstance(value, (list, tuple)):
+        try:
+            array = np.asarray(value, dtype=float).reshape(-1)
+        except (TypeError, ValueError):
+            array = np.zeros(0, dtype=float)
+        if array.size:
+            padded = _pad(array, vector.size)[: vector.size]
+            return np.where(np.isfinite(padded), padded, 0.0)
+    if isinstance(value, dict):
+        for token, mass in _iter_observable_histogram_items(value):
+            if np.isfinite(mass):
+                vector[_stable_bucket(str(token), vector.size)] += float(mass)
+        return np.where(np.isfinite(vector), vector, 0.0)
+    try:
+        scalar = float(value)
+    except (TypeError, ValueError):
+        vector[_stable_bucket(_canonical_observable_token(value), vector.size)] += 1.0
+        return vector
+    if np.isfinite(scalar):
+        vector[0] = scalar
+    return vector
+
+
+def _iter_observable_histogram_items(value: dict[str, Any], prefix: str = ""):
+    for key, mass in value.items():
+        token = f"{prefix}:{key}" if prefix else str(key)
+        if isinstance(mass, dict):
+            yield from _iter_observable_histogram_items(mass, token)
+            continue
+        try:
+            numeric_mass = float(mass)
+        except (TypeError, ValueError):
+            numeric_mass = 1.0
+            token = f"{token}:{_canonical_observable_token(mass)}"
+        yield token, numeric_mass
+
+
+def _canonical_observable_token(value: Any) -> str:
+    try:
+        return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+    except (TypeError, ValueError):
+        return str(value)
 
 
 def _hist_or_steps(view: dict[str, Any], steps: list[Any], field: str, modulus: int) -> np.ndarray:

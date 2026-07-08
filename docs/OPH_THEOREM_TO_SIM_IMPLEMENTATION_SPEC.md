@@ -182,6 +182,18 @@ An `H2` candidate must use visible local observer data:
 - first-passage or response-time observables;
 - local-port permutation controls.
 
+Producer-side observer rows emit the local evidence fields consumed by the strict neutral extractor:
+
+- `local_boundary_packet_hash_histogram` / `boundary_packet_hash_histogram`
+- `local_overlap_correspondence_histogram` / `overlap_correspondence_histogram`
+- `port_pair_lag_histogram` / `transition_port_pair_lag_histogram`
+- `local_repair_current_tensor` / `repair_current_tensor`
+- `local_perturbation_response_tensor` / `perturbation_response_tensor`
+- `local_first_passage_histogram` / `first_passage_time_histogram` / `response_time_histogram`
+
+These are chart-blind local summaries. They do not make `H2` pass by themselves because the
+quotient-geometry, control, ancestry, and refinement gates remain separate closed receipts.
+
 The receipt requires quotient-safe geometry, held-out predictive reconstruction, planted controls,
 shuffled/random controls, metric-safe missingness, partition/presentation distortion bounds,
 refinement tail modulus, and train/validation/test ancestry separation.

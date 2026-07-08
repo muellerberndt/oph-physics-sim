@@ -1083,6 +1083,68 @@ def _write_visualization_sidecars(
         ),
         curvature_time_rows,
     )
+    continuous_field = (
+        curved_spacetime.get("continuousBulkField", {})
+        if isinstance(curved_spacetime.get("continuousBulkField"), dict)
+        else {}
+    )
+    field_columns = (
+        "sample_id",
+        "sample_kind",
+        "slice_index",
+        "cycle",
+        "relative_time",
+        "slice_axis",
+        "slice_value",
+        "x",
+        "y",
+        "z",
+        "density",
+        "normalized_density",
+        "h3_green_potential",
+        "normalized_curvature_potential",
+        "curvature_potential",
+        "compactification_factor",
+        "emergent_spatial_scale_factor",
+        "local_metric_conformal_factor",
+    )
+    field_rows = []
+    for sample_kind, key in (
+        ("volume", "volumeSamples"),
+        ("z_slice", "sliceSamples"),
+        ("temporal_z_slice", "temporalSliceSamples"),
+    ):
+        rows = continuous_field.get(key, []) if isinstance(continuous_field.get(key), list) else []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            field_rows.append(
+                {
+                    "sample_id": row.get("sampleId"),
+                    "sample_kind": sample_kind,
+                    "slice_index": row.get("sliceIndex"),
+                    "cycle": row.get("cycle"),
+                    "relative_time": row.get("relativeTime"),
+                    "slice_axis": row.get("sliceAxis"),
+                    "slice_value": row.get("sliceValue"),
+                    "x": row.get("x"),
+                    "y": row.get("y"),
+                    "z": row.get("z"),
+                    "density": row.get("density"),
+                    "normalized_density": row.get("normalizedDensity"),
+                    "h3_green_potential": row.get("h3GreenPotential"),
+                    "normalized_curvature_potential": row.get("normalizedCurvaturePotential"),
+                    "curvature_potential": row.get("curvaturePotential"),
+                    "compactification_factor": row.get("compactificationFactor"),
+                    "emergent_spatial_scale_factor": row.get("emergentSpatialScaleFactor"),
+                    "local_metric_conformal_factor": row.get("localMetricConformalFactor"),
+                }
+            )
+    files["emergent_curved_spacetime_continuous_field_csv"] = _write_sidecar_csv(
+        output_path / "emergent_curved_spacetime_continuous_field.csv",
+        field_columns,
+        field_rows,
+    )
 
     effective_string = (
         (payload.get("visualizationViews") or {}).get("effectiveStringTheory", {})
@@ -2920,7 +2982,7 @@ def _visible_proto_worldline_sightings(
     right: list[float],
     up: list[float],
     fov_degrees: float,
-    max_sightings: int = 8,
+    max_sightings: int = 16,
 ) -> list[dict[str, Any]]:
     if not proto_worldlines:
         return []
@@ -3552,6 +3614,7 @@ def _emergent_curved_spacetime_payload(
         "min": [min(values) for values in zip(*positions, strict=False)] if positions else None,
         "max": [max(values) for values in zip(*positions, strict=False)] if positions else None,
     }
+    continuous_field = _continuous_observer_facing_bulk_field(points, spatial_extent=spatial_extent)
     receipts = {
         "emergent_curved_spacetime_visualization_receipt": bool(points),
         "observer_facing_consensus_3d_bulk_readout_receipt": bool(
@@ -3610,6 +3673,9 @@ def _emergent_curved_spacetime_payload(
         "stressEnergySources": points,
         "spacetimeCompactionField": points,
         "fieldSamples": points,
+        "continuousBulkField": continuous_field,
+        "densityFieldSamples": continuous_field.get("volumeSamples", []),
+        "curvatureFieldSlices": continuous_field.get("sliceSamples", []),
         "timeSlices": time_slices,
         "spatialExtent": spatial_extent,
         "renderLayers": view.get("renderLayers", []),
@@ -3632,6 +3698,326 @@ def _emergent_curved_spacetime_payload(
             ),
         ),
     }
+
+
+def _continuous_observer_facing_bulk_field(
+    points: list[dict[str, Any]],
+    *,
+    spatial_extent: dict[str, Any],
+    max_sources: int = 2048,
+    volume_resolution: int = 11,
+    slice_resolution: int = 25,
+    time_slice_resolution: int = 17,
+    max_time_slices: int = 12,
+) -> dict[str, Any]:
+    """Sample a continuous renderer field over the observer-facing H3 chart."""
+
+    source_positions, source_weights = _curvature_source_arrays(points, max_sources=max_sources)
+    if source_positions.size == 0 or source_weights.size == 0:
+        return {
+            "schema": "oph_continuous_observer_facing_h3_bulk_field_v1",
+            "contentAvailable": False,
+            "claimBoundary": "No source points were available for a continuous bulk-field visualization.",
+        }
+    extent = _field_extent_from_sources(source_positions, spatial_extent)
+    axis_values = [
+        np.linspace(float(extent["min"][axis]), float(extent["max"][axis]), int(volume_resolution)).tolist()
+        for axis in range(3)
+    ]
+    volume_positions = np.asarray(
+        [[x, y, z] for x in axis_values[0] for y in axis_values[1] for z in axis_values[2]],
+        dtype=float,
+    )
+    volume_rows = _curvature_field_sample_rows(
+        volume_positions,
+        source_positions=source_positions,
+        source_weights=source_weights,
+        prefix="volume",
+        sigma=_field_sigma(extent, volume_resolution),
+        limit=None,
+    )
+    z_levels = [
+        float(extent["min"][2]),
+        float(0.5 * (extent["min"][2] + extent["max"][2])),
+        float(extent["max"][2]),
+    ]
+    slice_rows: list[dict[str, Any]] = []
+    x_slice = np.linspace(float(extent["min"][0]), float(extent["max"][0]), int(slice_resolution))
+    y_slice = np.linspace(float(extent["min"][1]), float(extent["max"][1]), int(slice_resolution))
+    for slice_index, z_value in enumerate(z_levels):
+        sample_positions = np.asarray([[x, y, z_value] for x in x_slice for y in y_slice], dtype=float)
+        rows = _curvature_field_sample_rows(
+            sample_positions,
+            source_positions=source_positions,
+            source_weights=source_weights,
+            prefix=f"z_slice_{slice_index}",
+            sigma=_field_sigma(extent, slice_resolution),
+            limit=None,
+        )
+        for row in rows:
+            row["sliceIndex"] = slice_index
+            row["sliceAxis"] = "z"
+            row["sliceValue"] = z_value
+        slice_rows.extend(rows)
+    temporal_rows = _temporal_curvature_field_slices(
+        points,
+        extent=extent,
+        max_sources=max_sources,
+        resolution=time_slice_resolution,
+        max_time_slices=max_time_slices,
+    )
+    return {
+        "schema": "oph_continuous_observer_facing_h3_bulk_field_v1",
+        "contentAvailable": True,
+        "fieldKind": "interpolated_consensus_density_and_curvature_proxy",
+        "coordinateSystem": "observer_facing_h3_chart",
+        "grid": {
+            "volumeResolution": [int(volume_resolution), int(volume_resolution), int(volume_resolution)],
+            "sliceResolution": [int(slice_resolution), int(slice_resolution)],
+            "timeSliceResolution": [int(time_slice_resolution), int(time_slice_resolution)],
+            "extent": extent,
+            "axisValues": {"x": axis_values[0], "y": axis_values[1], "z": axis_values[2]},
+        },
+        "sourceCount": int(source_positions.shape[0]),
+        "sourceCountBeforeCap": int(len(points)),
+        "sourceCap": int(max_sources),
+        "volumeSamples": volume_rows,
+        "sliceSamples": slice_rows,
+        "temporalSliceSamples": temporal_rows,
+        "recommendedRenderings": [
+            "volume fog from normalizedDensity or normalizedCurvaturePotential",
+            "isosurface from compactificationFactor",
+            "warped z-slice grid from emergentSpatialScaleFactor",
+            "animated z=mid temporal slices from temporalSliceSamples",
+        ],
+        "claimBoundary": (
+            "Continuous field sampled from observer-facing H3 object/worldline source rows. This is a "
+            "renderer interpolation of exported readout sources, not a chart-blind neutral bulk or an "
+            "Einstein-equation solution."
+        ),
+    }
+
+
+def _curvature_source_arrays(
+    points: list[dict[str, Any]], *, max_sources: int
+) -> tuple[np.ndarray, np.ndarray]:
+    positions: list[list[float]] = []
+    weights: list[float] = []
+    for row in points:
+        if not isinstance(row, dict):
+            continue
+        point = _coord3(row.get("position"))
+        if point is None:
+            continue
+        weight = max(
+            0.0,
+            float(
+                _optional_float(row.get("sourceDensity"))
+                or _optional_float(row.get("quotientVisibleSourceDensity"))
+                or _optional_float(row.get("stressEnergyProxy"))
+                or _optional_float(row.get("massProxy"))
+                or 0.0
+            ),
+        )
+        if weight <= 0.0:
+            continue
+        positions.append(point)
+        weights.append(weight)
+    if not positions:
+        return np.zeros((0, 3), dtype=float), np.zeros(0, dtype=float)
+    pos = np.asarray(positions, dtype=float)
+    weight_arr = np.asarray(weights, dtype=float)
+    if pos.shape[0] > max_sources:
+        order = np.argsort(-weight_arr)[:max_sources]
+        pos = pos[order]
+        weight_arr = weight_arr[order]
+    return pos, weight_arr
+
+
+def _field_extent_from_sources(source_positions: np.ndarray, spatial_extent: dict[str, Any]) -> dict[str, Any]:
+    raw_min = _coord3(spatial_extent.get("min")) if isinstance(spatial_extent, dict) else None
+    raw_max = _coord3(spatial_extent.get("max")) if isinstance(spatial_extent, dict) else None
+    if raw_min is None or raw_max is None:
+        raw_min = np.min(source_positions, axis=0).astype(float).tolist()
+        raw_max = np.max(source_positions, axis=0).astype(float).tolist()
+    spans = [max(0.25, float(raw_max[index]) - float(raw_min[index])) for index in range(3)]
+    pad = [max(0.2, 0.18 * span) for span in spans]
+    return {
+        "min": [float(raw_min[index] - pad[index]) for index in range(3)],
+        "max": [float(raw_max[index] + pad[index]) for index in range(3)],
+    }
+
+
+def _field_sigma(extent: dict[str, Any], resolution: int) -> float:
+    minimum = _coord3(extent.get("min")) or [-1.0, -1.0, -1.0]
+    maximum = _coord3(extent.get("max")) or [1.0, 1.0, 1.0]
+    spans = [max(1.0e-6, float(maximum[index]) - float(minimum[index])) for index in range(3)]
+    return float(max(spans) / max(3.0, float(resolution - 1)) * 1.2)
+
+
+def _curvature_field_sample_rows(
+    sample_positions: np.ndarray,
+    *,
+    source_positions: np.ndarray,
+    source_weights: np.ndarray,
+    prefix: str,
+    sigma: float,
+    limit: int | None,
+) -> list[dict[str, Any]]:
+    if sample_positions.size == 0:
+        return []
+    sample_positions = np.asarray(sample_positions, dtype=float)
+    source_positions = np.asarray(source_positions, dtype=float)
+    source_weights = np.asarray(source_weights, dtype=float)
+    density = _gaussian_density_samples(sample_positions, source_positions, source_weights, sigma=sigma)
+    potential = _h3_green_potentials_from_sources(sample_positions, source_positions, source_weights)
+    max_density = float(np.max(density)) if density.size else 0.0
+    max_potential = float(np.max(potential)) if potential.size else 0.0
+    rows = []
+    row_count = sample_positions.shape[0] if limit is None else min(sample_positions.shape[0], int(limit))
+    for index in range(row_count):
+        density_norm = float(density[index] / max_density) if max_density > 0.0 else 0.0
+        potential_norm = float(potential[index] / max_potential) if max_potential > 0.0 else 0.0
+        compactification = float(potential_norm / (1.0 + potential_norm))
+        scale_factor = float(1.0 / (1.0 + potential_norm))
+        point = sample_positions[index]
+        rows.append(
+            {
+                "sampleId": f"{prefix}_{index:05d}",
+                "x": float(point[0]),
+                "y": float(point[1]),
+                "z": float(point[2]),
+                "position": [float(point[0]), float(point[1]), float(point[2])],
+                "density": float(density[index]),
+                "normalizedDensity": density_norm,
+                "h3GreenPotential": float(potential[index]),
+                "normalizedCurvaturePotential": potential_norm,
+                "curvaturePotential": potential_norm,
+                "compactificationFactor": compactification,
+                "emergentSpatialScaleFactor": scale_factor,
+                "localMetricConformalFactor": float(scale_factor * scale_factor),
+            }
+        )
+    return rows
+
+
+def _gaussian_density_samples(
+    sample_positions: np.ndarray,
+    source_positions: np.ndarray,
+    source_weights: np.ndarray,
+    *,
+    sigma: float,
+    batch_size: int = 512,
+) -> np.ndarray:
+    sigma = max(float(sigma), 1.0e-6)
+    density = np.zeros(sample_positions.shape[0], dtype=float)
+    for start in range(0, sample_positions.shape[0], batch_size):
+        stop = min(start + batch_size, sample_positions.shape[0])
+        diff = sample_positions[start:stop, None, :] - source_positions[None, :, :]
+        euclidean_squared = np.sum(diff * diff, axis=2)
+        kernel = np.exp(-0.5 * euclidean_squared / (sigma * sigma))
+        density[start:stop] = np.matmul(kernel, source_weights).reshape(-1)
+    return density
+
+
+def _h3_green_potentials_from_sources(
+    sample_positions: np.ndarray,
+    source_positions: np.ndarray,
+    source_weights: np.ndarray,
+    *,
+    softening: float = 0.15,
+    chunk_size: int = 256,
+) -> np.ndarray:
+    if sample_positions.size == 0 or source_positions.size == 0:
+        return np.zeros(sample_positions.shape[0], dtype=float)
+    samples = np.asarray(sample_positions, dtype=float)
+    sources = np.asarray(source_positions, dtype=float)
+    weights = np.asarray(source_weights, dtype=float).reshape(-1, 1)
+    potentials = np.zeros(samples.shape[0], dtype=float)
+    source_norms = np.linalg.norm(sources, axis=1)
+    source_inside = source_norms < 0.999
+    for start in range(0, samples.shape[0], max(1, int(chunk_size))):
+        stop = min(start + max(1, int(chunk_size)), samples.shape[0])
+        left = samples[start:stop]
+        diff = left[:, None, :] - sources[None, :, :]
+        euclidean_squared = np.sum(diff * diff, axis=2)
+        euclidean = np.sqrt(np.maximum(euclidean_squared, 0.0))
+        left_norms = np.linalg.norm(left, axis=1)
+        left_inside = left_norms < 0.999
+        denom = np.maximum(
+            (1.0 - left_norms[:, None] * left_norms[:, None])
+            * (1.0 - source_norms[None, :] * source_norms[None, :]),
+            1.0e-12,
+        )
+        poincare_arg = np.maximum(1.0, 1.0 + 2.0 * euclidean_squared / denom)
+        h3_distance = np.arccosh(poincare_arg)
+        fallback_distance = 2.0 * np.arcsinh(0.5 * euclidean)
+        use_poincare = left_inside[:, None] & source_inside[None, :]
+        h3_distance = np.where(use_poincare, h3_distance, fallback_distance)
+        kernel_denom = 4.0 * math.pi * np.maximum(np.sinh(h3_distance + softening), softening)
+        kernel = np.exp(-h3_distance) / kernel_denom
+        potentials[start:stop] = np.matmul(kernel, weights).reshape(-1)
+    return potentials
+
+
+def _temporal_curvature_field_slices(
+    points: list[dict[str, Any]],
+    *,
+    extent: dict[str, Any],
+    max_sources: int,
+    resolution: int,
+    max_time_slices: int,
+) -> list[dict[str, Any]]:
+    static_points = [row for row in points if _optional_float(row.get("cycle")) is None]
+    dynamic_cycles = sorted(
+        {
+            float(cycle)
+            for row in points
+            for cycle in [_optional_float(row.get("cycle"))]
+            if cycle is not None
+        }
+    )
+    if not dynamic_cycles:
+        return []
+    if len(dynamic_cycles) > max_time_slices:
+        indices = np.linspace(0, len(dynamic_cycles) - 1, int(max_time_slices), dtype=int)
+        cycles = [dynamic_cycles[int(index)] for index in indices]
+    else:
+        cycles = dynamic_cycles
+    z_mid = float(0.5 * (extent["min"][2] + extent["max"][2]))
+    x_values = np.linspace(float(extent["min"][0]), float(extent["max"][0]), int(resolution))
+    y_values = np.linspace(float(extent["min"][1]), float(extent["max"][1]), int(resolution))
+    sample_positions = np.asarray([[x, y, z_mid] for x in x_values for y in y_values], dtype=float)
+    rows: list[dict[str, Any]] = []
+    cycle_min = cycles[0]
+    cycle_span = max(cycles[-1] - cycle_min, 1.0)
+    for slice_index, cycle in enumerate(cycles):
+        cycle_points = [
+            row
+            for row in points
+            if _optional_float(row.get("cycle")) is not None and float(_optional_float(row.get("cycle")) or 0.0) == cycle
+        ]
+        source_positions, source_weights = _curvature_source_arrays(
+            [*static_points, *cycle_points], max_sources=max_sources
+        )
+        if source_positions.size == 0:
+            continue
+        slice_rows = _curvature_field_sample_rows(
+            sample_positions,
+            source_positions=source_positions,
+            source_weights=source_weights,
+            prefix=f"time_slice_{slice_index}",
+            sigma=_field_sigma(extent, resolution),
+            limit=None,
+        )
+        for row in slice_rows:
+            row["sliceIndex"] = slice_index
+            row["cycle"] = cycle
+            row["relativeTime"] = float((cycle - cycle_min) / cycle_span)
+            row["sliceAxis"] = "z"
+            row["sliceValue"] = z_mid
+        rows.extend(slice_rows)
+    return rows
 
 
 def _attach_oph_curvature_compaction_fields(points: list[dict[str, Any]]) -> dict[str, Any]:
@@ -4761,38 +5147,34 @@ def _read_proto_particle_candidates(consensus_pack_dir: Path, *, max_worldlines:
     }
     worldlines = _worldlines_from_defect_report(worldline_report, particle_rows, max_worldlines=max_worldlines)
     source = "defect_h3_worldlines_report"
-    csv_worldlines: list[dict[str, Any]] = []
-    organic_worldlines: list[dict[str, Any]] = []
-    free_worldlines: list[dict[str, Any]] = []
-    stress_worldlines: list[dict[str, Any]] = []
-    holonomy_worldlines: list[dict[str, Any]] = []
+    organic_worldlines = _worldlines_from_organic_defect_population(
+        consensus_pack_dir, max_worldlines=max_worldlines
+    )
+    free_worldlines = _worldlines_from_free_two_defect_dynamics(consensus_pack_dir, max_worldlines=max_worldlines)
+    stress_worldlines = _worldlines_from_two_defect_assay(consensus_pack_dir, max_worldlines=max_worldlines)
+    holonomy_worldlines = _worldlines_from_array_holonomy(consensus_pack_dir, max_worldlines=max_worldlines)
+    csv_worldlines = _worldlines_from_proto_particle_csv(consensus_pack_dir, max_worldlines=max_worldlines)
     if not worldlines:
-        csv_worldlines = _worldlines_from_proto_particle_csv(consensus_pack_dir, max_worldlines=max_worldlines)
-        if csv_worldlines:
-            worldlines = csv_worldlines
-            source = "proto_particle_worldline_csv_sidecars"
-    if not worldlines:
-        organic_worldlines = _worldlines_from_organic_defect_population(
-            consensus_pack_dir, max_worldlines=max_worldlines
-        )
         if organic_worldlines:
             worldlines = organic_worldlines
             source = "organic_defect_population_report"
     if not worldlines:
-        free_worldlines = _worldlines_from_free_two_defect_dynamics(consensus_pack_dir, max_worldlines=max_worldlines)
         if free_worldlines:
             worldlines = free_worldlines
             source = "free_two_defect_dynamics_report"
     if not worldlines:
-        stress_worldlines = _worldlines_from_two_defect_assay(consensus_pack_dir, max_worldlines=max_worldlines)
         if stress_worldlines:
             worldlines = stress_worldlines
             source = "two_defect_stress_contraction_assay_report"
     if not worldlines:
-        holonomy_worldlines = _worldlines_from_array_holonomy(consensus_pack_dir, max_worldlines=max_worldlines)
         if holonomy_worldlines:
             worldlines = holonomy_worldlines
             source = "array_holonomy_report_cluster_births"
+    if not worldlines and csv_worldlines:
+        worldlines = csv_worldlines
+        source = "proto_particle_worldline_csv_sidecars_legacy_fallback"
+    organic_report = _read_json(consensus_pack_dir / "organic_defect_population_report.json")
+    free_report = _read_json(consensus_pack_dir / "free_two_defect_dynamics_report.json")
     return {
         "description": (
             "Holonomy/defect worldlines fitted into the same derived H3 chart. These are the right "
@@ -4801,6 +5183,14 @@ def _read_proto_particle_candidates(consensus_pack_dir: Path, *, max_worldlines:
         ),
         "worldlines": worldlines,
         "worldlineSource": source if worldlines else "none",
+        "sourcePriority": [
+            "defect_h3_worldlines_report",
+            "organic_defect_population_report",
+            "free_two_defect_dynamics_report",
+            "two_defect_stress_contraction_assay_report",
+            "array_holonomy_report_cluster_births",
+            "proto_particle_worldline_csv_sidecars_legacy_fallback",
+        ],
         "receipts": {
             "bulk_worldline_precursor_receipt": bool(
                 worldline_report.get("bulk_worldline_precursor_receipt", False)
@@ -4821,19 +5211,16 @@ def _read_proto_particle_candidates(consensus_pack_dir: Path, *, max_worldlines:
             "csv_proto_worldline_count": len(csv_worldlines),
             "organic_defect_worldline_count": len(organic_worldlines),
             "organic_defect_population_receipt": bool(
-                _read_json(consensus_pack_dir / "organic_defect_population_report.json").get(
-                    "organic_defect_population_receipt", False
-                )
+                organic_report.get("organic_defect_population_receipt", False)
             ),
             "free_two_defect_worldline_count": len(free_worldlines),
             "free_two_defect_dynamics_receipt": bool(
-                _read_json(consensus_pack_dir / "free_two_defect_dynamics_report.json").get(
-                    "free_two_defect_dynamics_receipt", False
-                )
+                free_report.get("free_two_defect_dynamics_receipt", False)
             ),
             "controlled_two_defect_worldline_count": len(stress_worldlines),
             "screen_holonomy_cluster_worldline_count": len(holonomy_worldlines),
             "worldline_report_supplied": bool(worldline_report),
+            "legacy_csv_sidecar_used": bool(source == "proto_particle_worldline_csv_sidecars_legacy_fallback"),
         },
         "claimBoundary": worldline_report.get(
             "claim_boundary",
@@ -5550,6 +5937,22 @@ def _visualization_render_data_payload(
         "protoWorldlineEventCount": sum(len(row.get("events", [])) for row in bulk_scene["protoWorldlines"]),
         "curvatureProxyPointCount": len(curved_spacetime_payload.get("curvatureProxyPoints", []) or []),
         "curvatureProxyTimeSliceCount": len(curved_spacetime_payload.get("timeSlices", []) or []),
+        "continuousBulkFieldVolumeSampleCount": len(
+            (
+                curved_spacetime_payload.get("continuousBulkField", {})
+                if isinstance(curved_spacetime_payload.get("continuousBulkField"), dict)
+                else {}
+            ).get("volumeSamples", [])
+            or []
+        ),
+        "continuousBulkFieldSliceSampleCount": len(
+            (
+                curved_spacetime_payload.get("continuousBulkField", {})
+                if isinstance(curved_spacetime_payload.get("continuousBulkField"), dict)
+                else {}
+            ).get("sliceSamples", [])
+            or []
+        ),
         "observerProtoWorldlineSightingCount": sum(
             len(frame.get("visibleProtoWorldlines", []))
             for camera in subjective_cameras
@@ -5603,7 +6006,10 @@ def _visualization_render_data_payload(
                 {
                     "id": "curvature_proxy_h3_chart",
                     "kind": "diagnostic_curvature_stress_proxy",
-                    "source": "emergentCurvedSpacetime.curvatureProxyPoints",
+                    "source": (
+                        "emergentCurvedSpacetime.curvatureProxyPoints + "
+                        "emergentCurvedSpacetime.continuousBulkField"
+                    ),
                     "claimBoundary": "diagnostic proxy over the observer-facing H3 chart, not an Einstein metric",
                 },
                 {
@@ -5843,6 +6249,7 @@ def _render_curved_spacetime_scene(curved_spacetime_payload: dict[str, Any], *, 
         )
     return {
         "proxyPoints": proxy_points,
+        "continuousBulkField": curved_spacetime_payload.get("continuousBulkField", {}),
         "timeSlices": list(curved_spacetime_payload.get("timeSlices", []) or [])[:256],
         "spatialExtent": curved_spacetime_payload.get("spatialExtent", {}),
         "sourceMath": curved_spacetime_payload.get("sourceMath", {}),
@@ -7464,13 +7871,14 @@ def _visualization_views_payload(
                 "Render consensus H3 object packets and proto-worldline events as quotient-visible "
                 "source-density rows over the observer-facing H3 chart. Surface displacement, grid "
                 "bending, or lensing should be driven by compactificationFactor, "
-                "emergentSpatialScaleFactor, curvatureProxyPoints, and timeSlices. This is a diagnostic "
-                "curvature/compaction visualization, not a promoted gravity prediction."
+                "emergentSpatialScaleFactor, curvatureProxyPoints, continuousBulkField, and timeSlices. "
+                "This is a diagnostic curvature/compaction visualization, not a promoted gravity prediction."
             ),
             "dataSources": [
                 "emergentCurvedSpacetime.sourceMath",
                 "emergentCurvedSpacetime.curvatureProxyPoints",
                 "emergentCurvedSpacetime.spacetimeCompactionField",
+                "emergentCurvedSpacetime.continuousBulkField",
                 "emergentCurvedSpacetime.timeSlices",
                 "visualizationViews.emergentCurvedSpacetime.einsteinBranchEntry",
                 "consensusBulk.objects",
@@ -7485,6 +7893,9 @@ def _visualization_views_payload(
                 "emergentCurvedSpacetime.curvatureProxyPoints[*].compactificationFactor",
                 "emergentCurvedSpacetime.curvatureProxyPoints[*].emergentSpatialScaleFactor",
                 "emergentCurvedSpacetime.curvatureProxyPoints[*].sourceDensityAncestry",
+                "emergentCurvedSpacetime.continuousBulkField.volumeSamples[*].normalizedDensity",
+                "emergentCurvedSpacetime.continuousBulkField.volumeSamples[*].compactificationFactor",
+                "emergentCurvedSpacetime.continuousBulkField.temporalSliceSamples[*].cycle",
                 "emergentCurvedSpacetime.timeSlices[*].totalCurvaturePotential",
             ],
             "renderLayers": [
@@ -7499,6 +7910,16 @@ def _visualization_views_payload(
                 {
                     "layer": "curvature_proxy_surface",
                     "source": "emergentCurvedSpacetime.fieldSamples",
+                },
+                {
+                    "layer": "continuous_h3_bulk_density",
+                    "source": "emergentCurvedSpacetime.continuousBulkField.volumeSamples",
+                    "encoding": "volume fog or isosurface from normalizedDensity and compactificationFactor",
+                },
+                {
+                    "layer": "continuous_h3_bulk_slices",
+                    "source": "emergentCurvedSpacetime.continuousBulkField.sliceSamples",
+                    "encoding": "warped grid slices from emergentSpatialScaleFactor",
                 },
                 {
                     "layer": "gravity_receipt_badges",
@@ -7535,6 +7956,12 @@ def _visualization_views_payload(
                     "palette": "quotient_visible_source",
                 },
                 {
+                    "field": "normalizedDensity",
+                    "source": "emergentCurvedSpacetime.continuousBulkField.volumeSamples",
+                    "encoding": "continuous volume opacity or isosurface threshold",
+                    "palette": "bulk_density",
+                },
+                {
                     "field": "production_gravity_receipt",
                     "source": "emergentCurvedSpacetime.receipts",
                     "encoding": "blocked promotion badge unless true",
@@ -7553,6 +7980,12 @@ def _visualization_views_payload(
                     "source": "emergentCurvedSpacetime.timeSlices",
                     "timeSource": "emergentCurvedSpacetime.timeSlices[*].relativeTime",
                     "encoding": "animate local curvature/stress proxy as proto-worldline events move",
+                },
+                {
+                    "channel": "continuous_curvature_field_slices",
+                    "source": "emergentCurvedSpacetime.continuousBulkField.temporalSliceSamples",
+                    "timeSource": "emergentCurvedSpacetime.continuousBulkField.temporalSliceSamples[*].relativeTime",
+                    "encoding": "animate the continuous z-slice field through observer modular cycles",
                 },
                 {
                     "channel": "worldline_source_motion",
@@ -8180,7 +8613,7 @@ What to inspect:
 - Panel 2 shows one deterministic repair path through the exact 12-patch mini-universe certificate. The full certificate checks all finite states/schedules; the slider is a readable path through that certified graph.
 - Panel 3 shows the observer-camera view and observer-local modular time. Each dot is an observer-like self-reading row with local support, records, readback hash, and modular-depth readout. Use the observer selector to inspect one observer's objective readout across its modular-time frames: record packet, object packet, transition step, local packet histograms, and the global trace cycle used only for synchronization.
 - The payload also exports `subjectiveObserverCameras`: first-person rendering cameras derived from visible observer-local readouts. These are the right inputs for a subjective observer camera map.
-- Panel 4 shows the emergent curved-spacetime proxy view. It uses `emergentCurvedSpacetime.sourceMath`, `curvatureProxyPoints`, `spacetimeCompactionField`, and `timeSlices` to render quotient-visible source density, H3 Green potential, curvature, and compactification over the observer-facing H3 chart. It is a diagnostic warped-grid/field layer, not production gravity or a physical metric unless `einstein_branch_entry_receipt`, `production_gravity_receipt`, and related promotion receipts are true.
+- Panel 4 shows the emergent curved-spacetime proxy view. It uses `emergentCurvedSpacetime.sourceMath`, `curvatureProxyPoints`, `spacetimeCompactionField`, `continuousBulkField`, and `timeSlices` to render quotient-visible source density, H3 Green potential, curvature, compactification, continuous volume samples, and warped slices over the observer-facing H3 chart. It is a diagnostic warped-grid/field layer, not production gravity or a physical metric unless `einstein_branch_entry_receipt`, `production_gravity_receipt`, and related promotion receipts are true.
 - Panel 5 shows the effective string-theory diagnostic view. Consensus object packets are shared readback/object packets from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates and edge-worldline/collar diagnostics, not matter particles or a critical worldsheet unless the corresponding receipts pass.
 - For the string view, `effectiveStringTheory.finiteEdgeStringVibrationSamples` is the exact finite repair/cycle edge-pulse layer. Animate `frameStep`, `loopPhase`, and `normalizedAmplitude`; do not substitute generic sine-wave string modes.
 - Panel 6 shows the scale-compressed P/N silence-to-observation witness: initial record silence, P detuning, finite regulator depth, and observer/H3 readout emergence. This is not a literal brute-force simulation of astronomical N_CRC.
@@ -8254,12 +8687,20 @@ Required views:
    - Render `consensusBulk.objects` as a 3D scatter/cloud.
    - Size by `observerCount`; color by `h3CompactnessNormalized`.
    - Render `consensusBulk.protoParticleCandidates.worldlines[*].events` as H3 tracks.
+   - Label the selected track source with `consensusBulk.protoParticleCandidates.worldlineSource`.
+   - Treat `proto_particle_worldlines.csv` as a legacy fallback only; do not let stale sidecars
+     override organic or free dynamics JSON reports.
    - Use neutral wording: "edge-worldline diagnostic", "consensus object packet", and "holonomy/proto-particle candidate" unless the stronger receipts pass.
    - Do not label it a critical string CFT unless a future critical-edge receipt is true.
    - Gate labels must show observer-facing H3 consensus bulk and chart-blind neutral quotient bulk separately.
 
 6. **Emergent curved-spacetime proxy view**
    - Use `visualizationViews.emergentCurvedSpacetime` for the canonical layer list and claim boundary.
+   - Use `emergentCurvedSpacetime.continuousBulkField.volumeSamples` for the main continuous
+     bulk-field rendering when it is available. Render it as fog, density points, an isosurface, or
+     a warped volume, not just as isolated source balls.
+   - Use `emergentCurvedSpacetime.continuousBulkField.sliceSamples` and `temporalSliceSamples` for
+     warped grid slices and animated field slices.
    - Render `emergentCurvedSpacetime.curvatureProxyPoints` as stress-source glyphs in the observer-facing H3 chart.
    - Size glyphs by `sourceDensity`; drive grid bend, contour strength, or surface displacement by `curvaturePotential`.
    - Drive local spatial contraction by `compactificationFactor`; use `emergentSpatialScaleFactor` as the local grid/cell-size multiplier.
