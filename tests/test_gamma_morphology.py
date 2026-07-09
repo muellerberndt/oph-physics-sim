@@ -16,7 +16,7 @@ def test_default_gamma_morphology_is_fail_closed(tmp_path: Path) -> None:
     report = write_gamma_morphology_bundle(tmp_path)
 
     assert report["mode"] == "oph_gamma_morphology_v1"
-    assert report["milestone"] == "Q8_GAMMA_MORPHOLOGY_AUDIT"
+    assert report["milestone"] == "GAMMA_MORPHOLOGY_AUDIT"
     assert report["strongest_allowed_claim"] == "DIAGNOSTIC_GAMMA_MAP"
     assert report["first_blocked_gate"] == "GAMMA_SOURCE_ARTIFACT_RECEIPT"
     assert report["promotion_allowed"] is False

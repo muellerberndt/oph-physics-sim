@@ -5,10 +5,16 @@ import math
 from pathlib import Path
 
 from oph_fpe.physics_problem_outputs import (
+    cmb_simulation_promotion_contract,
+    compact_transient_contract,
+    e8_triality_certificate_contract,
     fractional_quantum_hall_k_matrix_readout,
     fusion_ledger_readout,
+    gamma_morphology_contract,
     high_tc_gate_readout,
+    jwst_compact_object_contract,
     ltas_source_only_readout,
+    uhe_coefficient_emission_contract,
     write_physics_problem_outputs_report,
 )
 
@@ -67,6 +73,45 @@ def test_high_tc_gate_readout_uses_weakest_gate_and_penalties():
     assert report["receipts"]["HIGH_TC_MATERIAL_RECEIPT"] is False
 
 
+def test_compact_transient_contract_is_conditional_cr2():
+    report = compact_transient_contract()
+
+    assert report["computed"] is True
+    assert report["claim"] == "CR2_CONDITIONAL_PHENOMENOLOGY"
+    assert report["promotionAllowed"] is False
+    assert report["firstBlockedGate"] == "CONTROLS"
+    assert report["receipts"]["DETECTION_THINNING_RECEIPT"] is True
+    assert report["receipts"]["CONTROL_MODEL_RECEIPT"] is False
+
+
+def test_jwst_gamma_cmb_and_e8_contracts_are_registered():
+    jwst = jwst_compact_object_contract()
+    gamma = gamma_morphology_contract()
+    cmb = cmb_simulation_promotion_contract()
+    e8 = e8_triality_certificate_contract()
+
+    assert jwst["strongestAllowedClaim"] == "J0_DIAGNOSTIC_PROXY"
+    assert jwst["firstBlockedGate"] == "CATALOG_INGESTION_RECEIPT"
+    assert gamma["strongestAllowedClaim"] == "DIAGNOSTIC_GAMMA_MAP"
+    assert gamma["milestone"] == "GAMMA_MORPHOLOGY_AUDIT"
+    assert gamma["receipts"]["OPH_GAMMA_MORPHOLOGY_PREDICTION_RECEIPT"] is False
+    assert cmb["currentClaimTier"] == "UNSTARTED_OR_INVALIDATED"
+    assert cmb["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+    assert e8["receipts"]["E8_TRIALITY_CERTIFICATE_STATEMENT_RECEIPT"] is True
+    assert e8["receipts"]["E8_TRIALITY_PUBLIC_RAW_BUNDLE_RECEIPT"] is False
+
+
+def test_uhe_coefficient_emission_contract_is_source_only_fixture():
+    report = uhe_coefficient_emission_contract()
+
+    assert report["computed"] is True
+    assert report["claimTier"] == "SOURCE_ONLY"
+    assert report["strongestAllowedClaim"] == "SOURCE_ONLY_COEFFICIENT_EMITTED"
+    assert report["physicalClaim"] is False
+    assert report["receipts"]["NO_UHE_DATA_USE"] is True
+    assert report["receipts"]["COMMON_SOURCE_LOCK"] is True
+
+
 def test_fusion_ledger_separates_plasma_gain_from_net_plant_promotion():
     report = fusion_ledger_readout(
         {
@@ -114,3 +159,9 @@ def test_physics_problem_outputs_writer_emits_json_and_markdown(tmp_path: Path):
     assert parsed["outputs"]["fractional_quantum_hall"]["canonicalFormulaExamples"]["jain_2_5"][
         "fillingFractionNu"
     ]["text"] == "2/5"
+    assert parsed["outputs"]["compact_record_transients"]["claim"] == "CR2_CONDITIONAL_PHENOMENOLOGY"
+    assert parsed["outputs"]["jwst_compact_object_source_release"]["strongestAllowedClaim"] == "J0_DIAGNOSTIC_PROXY"
+    assert parsed["outputs"]["gamma_ray_morphology_claims"]["strongestAllowedClaim"] == "DIAGNOSTIC_GAMMA_MAP"
+    assert parsed["outputs"]["high_energy_messenger_coefficients"]["claimTier"] == "SOURCE_ONLY"
+    assert parsed["outputs"]["cmb_simulation_promotion"]["currentClaimTier"] == "UNSTARTED_OR_INVALIDATED"
+    assert parsed["outputs"]["e8_spin8_triality_alt9_certificate"]["repositoryReceiptStatus"] == "pending_raw_bundle"

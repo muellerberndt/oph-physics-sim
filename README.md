@@ -37,12 +37,15 @@ Main run families:
 - finite patch graphs and vectorized screens with `Z2`, `S3`, and clock groups;
 - explicit screen ports, local pixel closure, screen-capacity readouts, and scale-bridge reports;
 - finite overlap mismatch, annealed repair, stability-window records, readback hashes, and replayable verifier receipts;
+- Borel-Weil one-Higgs carrier receipts for `H_OPH = H^0(CP1,O(1)) ~= C^2`, with Higgs mass, quartic, weak scale, and Coleman-Weinberg claims explicitly out of scope;
 - support-visible cap/collar states, collar Markov reports, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
 - observer objects, observer-local modular time, H3 object-population reports, and theorem-assisted consensus readouts;
 - strict neutral frontiers with overlap-native controls, graph sweeps, residualized graph sweeps, independent rank-selector audits, and closed promotion gates;
 - freezeout-screen angular spectra, CMB frontier reports, no-data-use receipts, finite certificate schemas, and Boltzmann/likelihood gate reports;
 - screen holonomy clusters, defect timelines, H3 worldline fits, interaction proxies, particle-likeness reports, and controlled planted-defect assays;
 - fractional Hall and fractional Chern sandbox receipts through `oph_fractional`: material quotient presentations, source-freeze gates, Hamiltonian promotion certificates, topological ledgers, optical modules, line-fan identifiability, binding-drift bounds, no-target-leak audits, quotient-correctness checks, and generated `fractional_quotient_report` bundles;
+- high-energy messenger coefficient-emission receipts: finite MaxEnt source coefficients for shared hidden compact-engine source laws, no-UHE-data-use dependency scans, moment-polytope and feature-minimality gates, and common-source locks across neutrino, cosmic-ray, and gamma forward channels;
+- compact-transient receipt ladders for FRBs, old-host compact sources, and black-hole recycling, with detector thinning, censoring, marked-catalog likelihood, repeater-history, control-model, refinement, simulator-accuracy, promotion, and no-generation-leakage gates separated from physical claims;
 - H3 record-worldline stitch certificates that require a declared hyperboloid atlas, real cut interface, observer-time adjacency, sector/gauge transport, ID-independent assignment gap, and coarse/fine contraction before emitting a cross-boundary continuation receipt;
 - static galaxy, neutrino, H0/S8, dark-response, CMB anomaly, and compressed-likelihood diagnostics with physical-prediction gates separated from diagnostics;
 - viewer bundles for screen/repair playback, object-H3 displays, universe timelines, CMB/neutral frontiers, and scale-compressed outputs.
@@ -63,6 +66,9 @@ python3 -m oph_fpe.cli run-oph-universe \
   --config configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml \
   --out-dir runs \
   --run-id oph_universe_256k_observers4096_theorem_local
+
+python3 -m oph_fpe.cli physics-problem-outputs \
+  --out-dir runs/physics_problem_outputs_<date_or_run_id>
 ```
 
 Reference vacuum baselines:
@@ -158,13 +164,30 @@ python3 -m oph_fpe.cli physical-cmb-frontier \
   --run-dir runs/<run_id> \
   --out runs/<run_id>/physical_cmb_frontier
 
+python3 -m oph_fpe.cli cmb-promotion-ledger \
+  --run-dir runs/<run_id> \
+  --out runs/<run_id>/cmb_promotion_ledger
+
+python3 -m oph_fpe.cli compact-transient-audit \
+  --out runs/<run_id>/compact_transient_audit
+
+python3 -m oph_fpe.cli uhe-emit-coefficients \
+  --out runs/<run_id>/uhe_coefficient_emission
+
+python3 -m oph_fpe.cli borel-weil-higgs-carrier \
+  --out runs/<run_id>/borel_weil_higgs_carrier
+
 python3 -m oph_fpe.cli h3-worldline-stitch-certificate \
   --source runs/<run_id>/h3_worldline_stitch_source.json \
   --out runs/<run_id>/h3_worldline_stitch_certificate_report.json
 
 python3 -m oph_fpe.cli export-measurement-pack \
   --run-dir runs/<run_id> \
+  --include runs/physics_problem_outputs_<date_or_run_id> \
   --out runs/<run_id>/measurement_pack
+
+jq '{neutral_3d_bulk_data_bundle_written,physical_cmb_data_bundle_written,physical_cmb_output_tables_written,physical_cmb_source_arrays_written,physics_problem_outputs_all_notes_registered}' \
+  runs/<run_id>/measurement_pack/claims.json
 ```
 
 Selected cosmology and scale gates:
@@ -201,6 +224,10 @@ promotion gate is supplied.
 The JWST compact-object commands are mirrored on the paper-stack side by
 `reverse-engineering-reality/code/particles/jwst/build_compact_object_source_release_receipts.py`;
 both surfaces keep the default claim at `J0_DIAGNOSTIC_PROXY`.
+
+The compact-transient audit is mirrored on the paper-stack side by
+`reverse-engineering-reality/code/particles/compact_transients/build_compact_transient_receipts.py`;
+both surfaces keep the default claim at `CR2_CONDITIONAL_PHENOMENOLOGY`.
 
 The physical CMB gate remains closed unless finite source arrays are backed by a
 finite covariant collar-packet parent with stress closure, recipient stress for

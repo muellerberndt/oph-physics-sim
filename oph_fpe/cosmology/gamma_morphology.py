@@ -217,7 +217,7 @@ def gamma_morphology_report(
 
     return {
         "mode": "oph_gamma_morphology_v1",
-        "milestone": "Q8_GAMMA_MORPHOLOGY_AUDIT",
+        "milestone": "GAMMA_MORPHOLOGY_AUDIT",
         "source": config.source,
         "route": config.route,
         "claim": config.claim,

@@ -34,23 +34,38 @@ def physics_problem_outputs_report(
             "reverse-engineering-reality/physics-problems/fractional_quantum_hall.md",
             "reverse-engineering-reality/physics-problems/fractional_excitons_as_oph_quotient_sector_readouts.md",
             "reverse-engineering-reality/physics-problems/hadronic_precision_endpoint.md",
+            "reverse-engineering-reality/physics-problems/jwst_compact_object_source_release.md",
+            "reverse-engineering-reality/physics-problems/compact_record_transients.md",
+            "reverse-engineering-reality/physics-problems/gamma_ray_morphology_claims_in_oph.md",
+            "reverse-engineering-reality/physics-problems/high_energy_messenger_coefficients.md",
+            "reverse-engineering-reality/physics-problems/cmb_simulation_promotion_to_physical_prediction.md",
             "reverse-engineering-reality/physics-problems/high_temperature_superconductivity.md",
             "reverse-engineering-reality/physics-problems/low_temperature_amorphous_universality.md",
             "reverse-engineering-reality/physics-problems/plasma_fusion.md",
+            "reverse-engineering-reality/physics-problems/e8_spin8_triality_alt9_certificate.md",
         ],
         "outputs": {
             "low_temperature_amorphous_universality": ltas_source_only_readout(),
             "fractional_quantum_hall": hall,
             "fractional_exciton_quotient_sector": fractional_exciton_quotient_contract(),
             "hadronic_precision_endpoint": hadronic_precision_endpoint_contract(),
+            "jwst_compact_object_source_release": jwst_compact_object_contract(),
+            "compact_record_transients": compact_transient_contract(),
+            "gamma_ray_morphology_claims": gamma_morphology_contract(),
+            "high_energy_messenger_coefficients": uhe_coefficient_emission_contract(),
+            "cmb_simulation_promotion": cmb_simulation_promotion_contract(),
             "high_temperature_superconductivity": high_tc_gate_readout(high_tc_thresholds),
             "plasma_fusion": fusion_ledger_readout(fusion_ledger),
+            "e8_spin8_triality_alt9_certificate": e8_triality_certificate_contract(),
         },
         "claim_boundary": (
             "This report computes only output values licensed by the supplied source contracts. "
             "LTAS source-only constants are frozen without measured attenuation data. FQH K-matrix "
             "readouts require an explicit Abelian K,t input. High-Tc and fusion values require "
-            "candidate material or plant-ledger inputs and otherwise remain fail-closed contracts."
+            "candidate material or plant-ledger inputs and otherwise remain fail-closed contracts. "
+            "JWST, gamma, compact-transient, CMB, and UHE outputs are receipt ladders, not "
+            "confirmation claims. E8/Spin8 triality is a paper-stack finite certificate skeleton, "
+            "not a simulator physics prediction."
         ),
     }
 
@@ -269,6 +284,211 @@ def hadronic_precision_endpoint_contract() -> dict[str, Any]:
     }
 
 
+def jwst_compact_object_contract() -> dict[str, Any]:
+    try:
+        from oph_fpe.jwst import strongest_allowed_claim
+    except Exception as exc:
+        return {
+            "schema": "oph_jwst_compact_object_contract_v1",
+            "status": "report_unavailable",
+            "computed": False,
+            "error": str(exc),
+            "receipts": {"JWST_COMPACT_OBJECT_PLAN_WRITTEN": False},
+            "claimBoundary": "The JWST compact-object planner could not be imported in this environment.",
+        }
+
+    claim, first_blocked, missing = strongest_allowed_claim({})
+    return {
+        "schema": "oph_jwst_compact_object_contract_v1",
+        "status": "source_release_receipt_ladder_available",
+        "computed": True,
+        "strongestAllowedClaim": claim,
+        "firstBlockedGate": first_blocked,
+        "missingReceipts": missing,
+        "receipts": {
+            "JWST_COMPACT_OBJECT_PLAN_WRITTEN": True,
+            "CATALOG_INGESTION_RECEIPT": False,
+            "OBJECT_SOURCE_LAW_RECEIPT": False,
+            "NO_TARGET_LEAKAGE_RECEIPT": False,
+            "DEGENERACY_AUDIT_RECEIPT": False,
+            "FROZEN_CATALOG_LIKELIHOOD_RECEIPT": False,
+            "JWST_LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT": False,
+        },
+        "claimBoundary": (
+            "JWST compact-object artifacts are source-release and degeneracy-audit receipts. "
+            "Catalog rows, compactness, redness, or luminosity do not by themselves promote "
+            "mass-age tension or OPH confirmation claims."
+        ),
+    }
+
+
+def compact_transient_contract() -> dict[str, Any]:
+    try:
+        from oph_fpe.compact_transients import compact_transient_audit_report
+    except Exception as exc:
+        return {
+            "schema": "oph_compact_transient_contract_v1",
+            "status": "report_unavailable",
+            "computed": False,
+            "error": str(exc),
+            "receipts": {
+                "COMPACT_TRANSIENT_AUDIT_REPORT_WRITTEN": False,
+                "PROMOTION_AUDIT_RECEIPT": False,
+            },
+            "claimBoundary": "The compact-transient audit report could not be imported in this environment.",
+        }
+
+    report = compact_transient_audit_report()
+    gates = report.get("readiness_gates") or {}
+    return {
+        "schema": "oph_compact_transient_contract_v1",
+        "status": "conditional_receipt_ladder_available",
+        "computed": True,
+        "claim": report.get("claim"),
+        "strongestAllowedClaim": report.get("strongest_allowed_claim"),
+        "firstBlockedGate": report.get("first_blocked_gate"),
+        "promotionAllowed": bool(report.get("promotion_allowed", False)),
+        "physicalClaim": bool(report.get("physical_claim", False)),
+        "receipts": {
+            "COMPACT_TRANSIENT_AUDIT_REPORT_WRITTEN": True,
+            "COMPACT_QUOTIENT_RECEIPT": bool(gates.get("COMPACT_QUOTIENT_RECEIPT", False)),
+            "COMPACT_SOURCE_LAW_RECEIPT": bool(gates.get("COMPACT_SOURCE_LAW_RECEIPT", False)),
+            "DETECTION_THINNING_RECEIPT": bool(gates.get("DETECTION_THINNING_RECEIPT", False)),
+            "CENSORING_AND_UPPER_LIMIT_RECEIPT": bool(
+                gates.get("CENSORING_AND_UPPER_LIMIT_RECEIPT", False)
+            ),
+            "CONTROL_MODEL_RECEIPT": bool(gates.get("CONTROL_MODEL_RECEIPT", False)),
+            "REFINEMENT_STABILITY_RECEIPT": bool(gates.get("REFINEMENT_STABILITY_RECEIPT", False)),
+            "HELDOUT_LIKELIHOOD_RECEIPT": bool(gates.get("HELDOUT_LIKELIHOOD_RECEIPT", False)),
+            "PROMOTION_AUDIT_RECEIPT": bool(gates.get("PROMOTION_AUDIT_RECEIPT", False)),
+        },
+        "claimBoundary": report.get("claim_boundary"),
+    }
+
+
+def gamma_morphology_contract() -> dict[str, Any]:
+    try:
+        from oph_fpe.cosmology.gamma_morphology import gamma_morphology_report
+    except Exception as exc:
+        return {
+            "schema": "oph_gamma_morphology_contract_v1",
+            "status": "report_unavailable",
+            "computed": False,
+            "error": str(exc),
+            "receipts": {"GAMMA_MORPHOLOGY_REPORT_WRITTEN": False},
+            "claimBoundary": "The gamma morphology report could not be imported in this environment.",
+        }
+
+    report = gamma_morphology_report()
+    gates = report.get("readiness_gates") or {}
+    return {
+        "schema": "oph_gamma_morphology_contract_v1",
+        "status": "diagnostic_gamma_morphology_ladder_available",
+        "computed": True,
+        "milestone": report.get("milestone"),
+        "strongestAllowedClaim": report.get("strongest_allowed_claim"),
+        "firstBlockedGate": report.get("first_blocked_gate"),
+        "promotionAllowed": bool(report.get("promotion_allowed", False)),
+        "receipts": {
+            "GAMMA_MORPHOLOGY_REPORT_WRITTEN": True,
+            "GAMMA_SOURCE_ARTIFACT_RECEIPT": bool(gates.get("GAMMA_SOURCE_ARTIFACT_RECEIPT", False)),
+            "GAMMA_ROUTE_DECLARATION_RECEIPT": bool(gates.get("GAMMA_ROUTE_DECLARATION_RECEIPT", False)),
+            "GAMMA_NO_DATA_USE_RECEIPT": bool(gates.get("GAMMA_NO_DATA_USE_RECEIPT", False)),
+            "PHOTON_RESPONSE_KERNEL_RECEIPT": bool(gates.get("PHOTON_RESPONSE_KERNEL_RECEIPT", False)),
+            "GAMMA_IDENTIFIABILITY_RECEIPT": bool(gates.get("GAMMA_IDENTIFIABILITY_RECEIPT", False)),
+            "FROZEN_GAMMA_LIKELIHOOD_RECEIPT": bool(gates.get("FROZEN_GAMMA_LIKELIHOOD_RECEIPT", False)),
+            "OPH_GAMMA_MORPHOLOGY_PREDICTION_RECEIPT": bool(
+                gates.get("OPH_GAMMA_MORPHOLOGY_PREDICTION_RECEIPT", False)
+            ),
+        },
+        "claimBoundary": report.get("claim_boundary"),
+    }
+
+
+def uhe_coefficient_emission_contract() -> dict[str, Any]:
+    try:
+        from oph_fpe.uhe_coefficients import coefficient_emission_report
+    except Exception as exc:
+        return {
+            "schema": "oph_uhe_coefficient_emission_contract_v1",
+            "status": "report_unavailable",
+            "computed": False,
+            "error": str(exc),
+            "receipts": {
+                "UHE_COEFFICIENT_EMISSION_REPORT_WRITTEN": False,
+                "NO_UHE_DATA_USE": False,
+                "COMMON_SOURCE_LOCK": False,
+            },
+            "claimBoundary": "The UHE coefficient-emission report could not be imported in this environment.",
+        }
+
+    report = coefficient_emission_report()
+    gates = report.get("readiness_gates") or {}
+    return {
+        "schema": "oph_uhe_coefficient_emission_contract_v1",
+        "status": "source_only_coefficient_emitter_available",
+        "computed": True,
+        "claimTier": report.get("claim_tier"),
+        "strongestAllowedClaim": report.get("strongest_allowed_claim"),
+        "sourceOnly": bool(report.get("source_only", False)),
+        "physicalClaim": bool(report.get("physical_claim", False)),
+        "coefficients": list(report.get("coefficients") or []),
+        "receipts": {
+            "UHE_COEFFICIENT_EMISSION_REPORT_WRITTEN": True,
+            "BASELINE_FULL_SUPPORT": bool(gates.get("BASELINE_FULL_SUPPORT", False)),
+            "FEATURE_MINIMALITY": bool(gates.get("FEATURE_MINIMALITY", False)),
+            "MOMENT_INTERIOR": bool(gates.get("MOMENT_INTERIOR", False)),
+            "SOURCE_LOAD_QUOTIENT_VISIBLE": bool(gates.get("SOURCE_LOAD_QUOTIENT_VISIBLE", False)),
+            "NO_UHE_DATA_USE": bool(gates.get("NO_UHE_DATA_USE", False)),
+            "REFINEMENT_COMPATIBILITY": bool(gates.get("REFINEMENT_COMPATIBILITY", False)),
+            "COEFFICIENT_SOLVE_CONVERGED": bool(gates.get("COEFFICIENT_SOLVE_CONVERGED", False)),
+            "COMMON_SOURCE_LOCK": bool(gates.get("COMMON_SOURCE_LOCK", False)),
+        },
+        "claimBoundary": report.get("claim_boundary"),
+    }
+
+
+def cmb_simulation_promotion_contract() -> dict[str, Any]:
+    try:
+        from oph_fpe.cosmology.cmb_promotion_ledger import cmb_promotion_ledger_report
+    except Exception as exc:
+        return {
+            "schema": "oph_cmb_simulation_promotion_contract_v1",
+            "status": "report_unavailable",
+            "computed": False,
+            "error": str(exc),
+            "receipts": {"CMB_PROMOTION_LEDGER_WRITTEN": False},
+            "claimBoundary": "The CMB promotion ledger could not be imported in this environment.",
+        }
+
+    report = cmb_promotion_ledger_report([])
+    gates = report.get("readiness_gates") or {}
+    return {
+        "schema": "oph_cmb_simulation_promotion_contract_v1",
+        "status": "promotion_ledger_available",
+        "computed": True,
+        "currentClaimTier": report.get("current_claim_tier"),
+        "firstBlockedGate": report.get("first_blocked_gate"),
+        "likelihoodEvaluatedPhysicalPrediction": bool(
+            report.get("likelihood_evaluated_physical_cmb_prediction", False)
+        ),
+        "receipts": {
+            "CMB_PROMOTION_LEDGER_WRITTEN": True,
+            "VISUAL_DIAGNOSTIC_RECEIPT": bool(gates.get("VISUAL_DIAGNOSTIC_RECEIPT", False)),
+            "SPECTRUM_DIAGNOSTIC_RECEIPT": bool(gates.get("SPECTRUM_DIAGNOSTIC_RECEIPT", False)),
+            "SOURCE_ONLY_FINITE_ARTIFACT_RECEIPT": bool(
+                gates.get("SOURCE_ONLY_FINITE_ARTIFACT_RECEIPT", False)
+            ),
+            "OPH_NATIVE_COSMO_GEOM_READ_RECEIPT": bool(
+                gates.get("OPH_NATIVE_COSMO_GEOM_READ_RECEIPT", False)
+            ),
+            "FROZEN_LIKELIHOOD_RECEIPT": bool(gates.get("FROZEN_LIKELIHOOD_RECEIPT", False)),
+            "PHYSICAL_CMB_PREDICTION_RECEIPT": bool(gates.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)),
+        },
+        "claimBoundary": report.get("claim_boundary"),
+    }
+
+
 def fractional_quantum_hall_k_matrix_readout(
     k_matrix: list[list[int]],
     charge_vector: list[int],
@@ -453,6 +673,42 @@ def fusion_ledger_readout(ledger: dict[str, float] | None = None) -> dict[str, A
     }
 
 
+def e8_triality_certificate_contract() -> dict[str, Any]:
+    return {
+        "schema": "oph_e8_spin8_triality_certificate_contract_v1",
+        "status": "paper_stack_receipt_skeleton",
+        "computed": False,
+        "certificateId": "E8_SPIN8_TRIALITY_ALT9_DOUBLE_COVER_CERTIFICATE",
+        "repositoryReceiptStatus": "pending_raw_bundle",
+        "mathematicalContent": {
+            "rootSubsystem": "A8 inside E8",
+            "finiteGroup": "Alt(9)",
+            "spinLift": "nonsplit 2.Alt(9) in Spin(8)",
+            "vectorMod2Orbits": [9, 36, 84, 126],
+            "spinMod2Orbits": [120, 135],
+        },
+        "requiredPublicBundle": [
+            "Sage source",
+            "exact matrix data",
+            "lattice bases",
+            "mod-2 orbit computation",
+            "stdout or machine-readable checks",
+            "stable hashes under reverse-engineering-reality/code/e8_triality",
+        ],
+        "receipts": {
+            "E8_TRIALITY_CERTIFICATE_STATEMENT_RECEIPT": True,
+            "E8_TRIALITY_PUBLIC_RAW_BUNDLE_RECEIPT": False,
+            "E8_TRIALITY_STANDARD_MODEL_SELECTOR_RECEIPT": False,
+            "E8_TRIALITY_HARDWARE_RECEIPT": False,
+        },
+        "claimBoundary": (
+            "Finite exceptional representation-closure support only. This certificate does not "
+            "prove OPH, select the Standard Model quotient, close the heterotic critical-edge "
+            "gate, or count as hardware evidence."
+        ),
+    }
+
+
 def _high_tc_penalty(values: dict[str, float]) -> dict[str, Any]:
     terms = {}
     total = 0.0
@@ -598,8 +854,14 @@ def _physics_problem_outputs_markdown(report: dict[str, Any]) -> str:
     outputs = report["outputs"]
     ltas = outputs["low_temperature_amorphous_universality"]
     fq_hall = outputs["fractional_quantum_hall"]
+    jwst = outputs["jwst_compact_object_source_release"]
+    compact_transients = outputs["compact_record_transients"]
+    gamma = outputs["gamma_ray_morphology_claims"]
+    uhe_coefficients = outputs["high_energy_messenger_coefficients"]
+    cmb = outputs["cmb_simulation_promotion"]
     high_tc = outputs["high_temperature_superconductivity"]
     fusion = outputs["plasma_fusion"]
+    e8 = outputs["e8_spin8_triality_alt9_certificate"]
     lines = [
         "# OPH Physics Problem Outputs",
         "",
@@ -620,6 +882,39 @@ def _physics_problem_outputs_markdown(report: dict[str, Any]) -> str:
         f"- Abelian K-matrix readout receipt: `{fq_hall['receipts']['FQH_ABELIAN_K_MATRIX_READOUT_RECEIPT']}`",
         f"- 5/2 noncentral selector receipt: `{fq_hall['receipts']['FQH_NONCENTRAL_5_2_SELECTOR_RECEIPT']}`",
         "",
+        "## JWST Compact Objects",
+        "",
+        f"- status: `{jwst['status']}`",
+        f"- strongest allowed claim: `{jwst.get('strongestAllowedClaim')}`",
+        f"- first blocked gate: `{jwst.get('firstBlockedGate')}`",
+        "",
+        "## Compact Record Transients",
+        "",
+        f"- status: `{compact_transients['status']}`",
+        f"- claim: `{compact_transients.get('claim')}`",
+        f"- first blocked gate: `{compact_transients.get('firstBlockedGate')}`",
+        f"- promotion allowed: `{compact_transients.get('promotionAllowed')}`",
+        "",
+        "## Gamma-Ray Morphology",
+        "",
+        f"- status: `{gamma['status']}`",
+        f"- strongest allowed claim: `{gamma.get('strongestAllowedClaim')}`",
+        f"- first blocked gate: `{gamma.get('firstBlockedGate')}`",
+        "",
+        "## High-Energy Messenger Coefficients",
+        "",
+        f"- status: `{uhe_coefficients['status']}`",
+        f"- claim tier: `{uhe_coefficients.get('claimTier')}`",
+        f"- strongest allowed claim: `{uhe_coefficients.get('strongestAllowedClaim')}`",
+        f"- no-UHE-data-use receipt: `{uhe_coefficients['receipts']['NO_UHE_DATA_USE']}`",
+        f"- common-source lock: `{uhe_coefficients['receipts']['COMMON_SOURCE_LOCK']}`",
+        "",
+        "## CMB Simulation Promotion",
+        "",
+        f"- status: `{cmb['status']}`",
+        f"- current claim tier: `{cmb.get('currentClaimTier')}`",
+        f"- physical prediction receipt: `{cmb['receipts']['PHYSICAL_CMB_PREDICTION_RECEIPT']}`",
+        "",
         "## High-Temperature Superconductivity",
         "",
         f"- status: `{high_tc['status']}`",
@@ -630,6 +925,12 @@ def _physics_problem_outputs_markdown(report: dict[str, Any]) -> str:
         f"- status: `{fusion['status']}`",
         f"- ledger output receipt: `{fusion['receipts']['FUSION_LEDGER_OUTPUT_RECEIPT']}`",
         f"- net plant promotion receipt: `{fusion['receipts']['FUSION_NET_PLANT_PROMOTION_RECEIPT']}`",
+        "",
+        "## E8/Spin8 Triality Certificate",
+        "",
+        f"- status: `{e8['status']}`",
+        f"- certificate statement receipt: `{e8['receipts']['E8_TRIALITY_CERTIFICATE_STATEMENT_RECEIPT']}`",
+        f"- public raw bundle receipt: `{e8['receipts']['E8_TRIALITY_PUBLIC_RAW_BUNDLE_RECEIPT']}`",
         "",
         "## Claim Boundary",
         "",

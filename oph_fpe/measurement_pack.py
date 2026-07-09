@@ -245,8 +245,22 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "leech_endpoint_bridge_report.md", exported, "leech_endpoint_bridge_report.md")
     _copy_first(roots, out / "hadron_source_backend_report.json", exported, "hadron_source_backend_report.json")
     _copy_first(roots, out / "hadron_source_backend_report.md", exported, "hadron_source_backend_report.md")
+    _copy_first(roots, out / "borel_weil_higgs_carrier_report.json", exported, "borel_weil_higgs_carrier_report.json")
+    _copy_first(roots, out / "borel_weil_higgs_carrier_report.md", exported, "borel_weil_higgs_carrier_report.md")
     _copy_first(roots, out / "gamma_morphology_report.json", exported, "gamma_morphology_report.json")
     _copy_first(roots, out / "gamma_morphology_report.md", exported, "gamma_morphology_report.md")
+    _copy_first(
+        roots,
+        out / "uhe_coefficient_emission_report.json",
+        exported,
+        "uhe_coefficient_emission_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "uhe_coefficient_emission_report.md",
+        exported,
+        "uhe_coefficient_emission_report.md",
+    )
     _copy_first(roots, out / "fractional_quotient_report.json", exported, "fractional_quotient_report.json")
     _copy_first(roots, out / "fractional_quotient_report.md", exported, "fractional_quotient_report.md")
     _copy_first(roots, out / "jwst_object_source_artifact_report.json", exported, "jwst_object_source_artifact_report.json")
@@ -267,6 +281,8 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "jwst_frozen_catalog_likelihood_report.md", exported, "jwst_frozen_catalog_likelihood_report.md")
     _copy_first(roots, out / "jwst_compact_object_simulation_plan.json", exported, "jwst_compact_object_simulation_plan.json")
     _copy_first(roots, out / "jwst_compact_object_simulation_plan.md", exported, "jwst_compact_object_simulation_plan.md")
+    _copy_first(roots, out / "compact_transient_audit_report.json", exported, "compact_transient_audit_report.json")
+    _copy_first(roots, out / "compact_transient_audit_report.md", exported, "compact_transient_audit_report.md")
     _copy_first(roots, out / "black_hole_bridge_status_report.json", exported, "black_hole_bridge_status_report.json")
     _copy_first(roots, out / "black_hole_bridge_status_report.md", exported, "black_hole_bridge_status_report.md")
     _copy_first(
@@ -426,6 +442,18 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
         out / "physical_cmb_peak_features.csv",
         exported,
         "physical_cmb_peak_features.csv",
+    )
+    _copy_first(
+        roots,
+        out / "cmb_promotion_ledger_report.json",
+        exported,
+        "cmb_promotion_ledger_report.json",
+    )
+    _copy_first(
+        roots,
+        out / "cmb_promotion_ledger_report.md",
+        exported,
+        "cmb_promotion_ledger_report.md",
     )
     _copy_first(
         roots,
@@ -723,6 +751,8 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "repair_matrix_certificate.json", exported, "repair_matrix_certificate.json")
     _copy_first(roots, out / "boltzmann_export_certificate.json", exported, "boltzmann_export_certificate.json")
     _copy_first(roots, out / "no_data_use_receipt.json", exported, "no_data_use_receipt.json")
+    _copy_first(roots, out / "physics_problem_outputs_report.json", exported, "physics_problem_outputs_report.json")
+    _copy_first(roots, out / "physics_problem_outputs_report.md", exported, "physics_problem_outputs_report.md")
     _write_finite_certificate_outputs(roots, out / "finite_certificate_outputs.csv")
     _refresh_bulk_proof_certificate(out, exported)
     _refresh_visualization_artifacts(out, roots, exported)
@@ -830,6 +860,7 @@ def _refresh_bulk_proof_certificate(out: Path, exported: dict[str, str]) -> None
 
 def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     static_galaxy = _first_json(roots, "static_galaxy_measurement_report.json")
+    physics_problem_outputs = _first_json(roots, "physics_problem_outputs_report.json")
     comparable = _first_json(roots, "comparable_data_snapshot.json")
     bulk = _first_json(roots, "bulk_proof_certificate_report.json")
     exact_cmb = _first_json(roots, "oph_exact_cmb_camb_report.json")
@@ -845,13 +876,16 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     pn_resonance = _first_json(roots, "pn_resonance_report.json")
     leech_endpoint_bridge = _first_json(roots, "leech_endpoint_bridge_report.json")
     hadron_source_backend = _first_json(roots, "hadron_source_backend_report.json")
+    borel_weil_higgs = _first_json(roots, "borel_weil_higgs_carrier_report.json")
     gamma_morphology = _first_json(roots, "gamma_morphology_report.json")
+    uhe_coefficients = _first_json(roots, "uhe_coefficient_emission_report.json")
     fractional_quotient = _first_json(roots, "fractional_quotient_report.json")
     jwst_source_artifact = _first_json(roots, "jwst_object_source_artifact_report.json")
     jwst_degeneracy_audit = _first_json(roots, "jwst_degeneracy_audit_report.json")
     jwst_abundance = _first_json(roots, "jwst_object_abundance_selector_report.json")
     jwst_likelihood = _first_json(roots, "jwst_frozen_catalog_likelihood_report.json")
     jwst_plan = _first_json(roots, "jwst_compact_object_simulation_plan.json")
+    compact_transient = _first_json(roots, "compact_transient_audit_report.json")
     black_hole_bridge = _first_json(roots, "black_hole_bridge_status_report.json")
     silence_to_observation = _first_json(roots, "silence_to_observation_report.json")
     kernel_dispatch = _first_json(roots, "kernel_dispatch_report.json")
@@ -868,6 +902,7 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     physical_cmb_promotion = _first_json(roots, "physical_cmb_promotion_audit_report.json")
     physical_cmb_frontier = _first_json(roots, "physical_cmb_frontier_report.json")
     physical_cmb_output = _first_json(roots, "physical_cmb_output_comparison_report.json")
+    cmb_promotion_ledger = _first_json(roots, "cmb_promotion_ledger_report.json")
     official_likelihood_readiness = _first_json(roots, "official_planck_likelihood_readiness_report.json")
     neutral_profile = _first_json(roots, "neutral_profile_audit_report.json")
     prime_rank_refinement = _first_json(roots, "prime_geometric_rank_refinement_report.json")
@@ -884,6 +919,8 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         overlap_residual_graph_sweep.get("gate_coincidence_summary") or {}
     )
     neutral_rank_selector_audit = _first_json(roots, "neutral_independent_rank_selector_audit_report.json")
+    strict_neutral_record = _first_json(roots, "strict_neutral_bulk_report.json")
+    strict_neutral_object = _first_json(roots, "strict_neutral_object_bulk_report.json")
     strict_neutral_frontier = _first_json(roots, "strict_neutral_bulk_frontier_report.json")
     observer_modular_experience = _first_json(roots, "observer_modular_experience_report.json")
     h3_worldline_stitch = _first_json(roots, "h3_worldline_stitch_certificate_report.json")
@@ -903,6 +940,60 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     object_h3_viewer = _first_json(roots, "object_h3_bulk_viewer_summary.json")
     cmb_neutral_viewer = _first_json(roots, "cmb_neutral_frontier_viewer_summary.json")
     cmb_static_plots = _first_json(roots, "cmb_static_plots_summary.json")
+    physics_problem_output_sources = physics_problem_outputs.get("source_documents") or []
+    if not isinstance(physics_problem_output_sources, list):
+        physics_problem_output_sources = []
+    physics_problem_output_contracts = physics_problem_outputs.get("outputs") or {}
+    if not isinstance(physics_problem_output_contracts, dict):
+        physics_problem_output_contracts = {}
+    physics_problem_low_temp = (
+        physics_problem_output_contracts.get("low_temperature_amorphous_universality") or {}
+    )
+    physics_problem_fractional_hall = physics_problem_output_contracts.get("fractional_quantum_hall") or {}
+    physics_problem_fractional_exciton = (
+        physics_problem_output_contracts.get("fractional_exciton_quotient_sector") or {}
+    )
+    physics_problem_jwst = physics_problem_output_contracts.get("jwst_compact_object_source_release") or {}
+    physics_problem_gamma = physics_problem_output_contracts.get("gamma_ray_morphology_claims") or {}
+    physics_problem_uhe = physics_problem_output_contracts.get("high_energy_messenger_coefficients") or {}
+    physics_problem_cmb = physics_problem_output_contracts.get("cmb_simulation_promotion") or {}
+    physics_problem_high_tc = physics_problem_output_contracts.get("high_temperature_superconductivity") or {}
+    physics_problem_fusion = physics_problem_output_contracts.get("plasma_fusion") or {}
+    physics_problem_e8 = physics_problem_output_contracts.get("e8_spin8_triality_alt9_certificate") or {}
+    physical_cmb_table_files = [
+        "physical_cmb_output_comparison_rows.csv",
+        "physical_cmb_best_oph_residuals.csv",
+        "physical_cmb_peak_features.csv",
+    ]
+    physical_cmb_source_array_files = [
+        "physical_cmb_B_A_k_a.csv",
+        "physical_cmb_Gamma_rec_k_a.csv",
+        "physical_cmb_rho_A_a.csv",
+    ]
+    neutral_3d_bulk_data_bundle_written = all(
+        bool(report)
+        for report in (
+            neutral_3d_bulk_audit,
+            strict_neutral_record,
+            strict_neutral_object,
+            strict_neutral_frontier,
+        )
+    )
+    physical_cmb_reports_written = all(
+        bool(report)
+        for report in (
+            physical_cmb_input,
+            physical_cmb_promotion,
+            physical_cmb_output,
+            physical_cmb_frontier,
+        )
+    )
+    physical_cmb_tables_written = all(
+        _has_nonempty_artifact(roots, name) for name in physical_cmb_table_files
+    )
+    physical_cmb_source_arrays_written = all(
+        _has_nonempty_artifact(roots, name) for name in physical_cmb_source_array_files
+    )
     comparable_lorentz = comparable.get("measurement_lanes", {}).get("support_visible_lorentz_branch", {})
     comparable_neutral = comparable.get("measurement_lanes", {}).get("neutral_observer_reconstruction", {})
     screen_capacity_gates = screen_capacity.get("readiness_gates") or {}
@@ -911,7 +1002,9 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     pn_resonance_gates = pn_resonance.get("readiness_gates") or {}
     leech_endpoint_bridge_gates = leech_endpoint_bridge.get("readiness_gates") or {}
     hadron_source_backend_gates = hadron_source_backend.get("readiness_gates") or {}
+    borel_weil_higgs_checks = borel_weil_higgs.get("checks") or {}
     gamma_morphology_gates = gamma_morphology.get("readiness_gates") or {}
+    uhe_coefficient_gates = uhe_coefficients.get("readiness_gates") or {}
     fractional_quotient_gates = fractional_quotient.get("readiness_gates") or {}
     jwst_source_gates = jwst_source_artifact.get("readiness_gates") or {}
     jwst_degeneracy_gates = jwst_degeneracy_audit.get("readiness_gates") or {}
@@ -958,6 +1051,7 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         for row in (physical_cmb_frontier.get("gate_rows") or [])
         if isinstance(row, dict) and row.get("gate") is not None
     }
+    cmb_promotion_gates = cmb_promotion_ledger.get("readiness_gates") or {}
     best_oph_cmb_output = physical_cmb_output.get("best_oph_diagnostic_model") or {}
     best_oph_cmb_residuals = physical_cmb_output.get("best_oph_residual_summary") or {}
     best_oph_cmb_peaks = physical_cmb_output.get("best_oph_peak_feature_summary") or {}
@@ -1297,6 +1391,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             neutral_rank_selector_audit.get("control_quotient_median_rank3_cumulative_explained_variance")
         ),
         "strict_neutral_bulk_frontier_written": bool(strict_neutral_frontier),
+        "neutral_3d_bulk_data_bundle_written": bool(neutral_3d_bulk_data_bundle_written),
+        "strict_neutral_record_report_written": bool(strict_neutral_record),
+        "strict_neutral_object_report_written": bool(strict_neutral_object),
+        "strict_neutral_record_bulk": bool(strict_neutral_record.get("strict_neutral_bulk", False)),
+        "strict_neutral_object_bulk": bool(strict_neutral_object.get("strict_neutral_object_bulk", False)),
+        "strict_neutral_object_count": int(strict_neutral_object.get("object_count") or 0),
         "strict_neutral_bulk_frontier_ready": bool(
             strict_neutral_frontier.get("strict_neutral_bulk_ready", False)
         ),
@@ -1386,6 +1486,22 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "screen_capacity_finite_fixed_point_solved": bool(
             screen_capacity_gates.get("N_CRC_fixed_point_solved_from_finite_simulator", False)
         ),
+        "physics_problem_outputs_written": bool(physics_problem_outputs),
+        "physics_problem_outputs_source_document_count": int(len(physics_problem_output_sources)),
+        "physics_problem_outputs_output_count": int(len(physics_problem_output_contracts)),
+        "physics_problem_outputs_all_notes_registered": bool(
+            len(physics_problem_output_sources) >= 12 and len(physics_problem_output_contracts) >= 12
+        ),
+        "physics_problem_outputs_low_temperature_status": physics_problem_low_temp.get("status"),
+        "physics_problem_outputs_fractional_hall_status": physics_problem_fractional_hall.get("status"),
+        "physics_problem_outputs_fractional_exciton_claim": physics_problem_fractional_exciton.get("claim"),
+        "physics_problem_outputs_jwst_claim": physics_problem_jwst.get("strongestAllowedClaim"),
+        "physics_problem_outputs_gamma_claim": physics_problem_gamma.get("strongestAllowedClaim"),
+        "physics_problem_outputs_uhe_claim": physics_problem_uhe.get("strongestAllowedClaim"),
+        "physics_problem_outputs_cmb_claim_tier": physics_problem_cmb.get("currentClaimTier"),
+        "physics_problem_outputs_high_tc_status": physics_problem_high_tc.get("status"),
+        "physics_problem_outputs_fusion_status": physics_problem_fusion.get("status"),
+        "physics_problem_outputs_e8_receipt_status": physics_problem_e8.get("repositoryReceiptStatus"),
         "capacity_readback_proxy_written": bool(capacity_proxy),
         "capacity_readback_proxy_row_count": int(capacity_proxy.get("row_count") or 0),
         "capacity_readback_proxy_max_observer_count": int(capacity_proxy.get("max_observer_count") or 0),
@@ -1456,6 +1572,17 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             hadron_source_backend_gates.get("forbidden_source_inputs_excluded", False)
         ),
         "hadron_source_backend_blocker_count": int(len(hadron_source_backend.get("blockers") or [])),
+        "borel_weil_higgs_carrier_written": bool(borel_weil_higgs),
+        "borel_weil_higgs_carrier_receipt": bool(
+            borel_weil_higgs.get("BOREL_WEIL_HIGGS_CARRIER_RECEIPT", False)
+        ),
+        "borel_weil_higgs_physical_claim": bool(borel_weil_higgs.get("physical_claim", False)),
+        "borel_weil_higgs_forbidden_promotions_absent": bool(
+            borel_weil_higgs_checks.get("forbidden_quantitative_promotions_absent", False)
+        ),
+        "borel_weil_higgs_promoted_forbidden_claims": list(
+            borel_weil_higgs.get("promoted_forbidden_claims") or []
+        ),
         "gamma_morphology_written": bool(gamma_morphology),
         "gamma_morphology_route": gamma_morphology.get("route"),
         "gamma_morphology_strongest_allowed_claim": gamma_morphology.get("strongest_allowed_claim"),
@@ -1470,6 +1597,15 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             gamma_morphology_gates.get("OPH_GAMMA_MORPHOLOGY_PREDICTION_RECEIPT", False)
         ),
         "gamma_morphology_blocker_count": int(len(gamma_morphology.get("blockers") or [])),
+        "uhe_coefficient_emission_written": bool(uhe_coefficients),
+        "uhe_coefficient_claim_tier": uhe_coefficients.get("claim_tier"),
+        "uhe_coefficient_strongest_allowed_claim": uhe_coefficients.get("strongest_allowed_claim"),
+        "uhe_coefficient_no_data_use_receipt": bool(uhe_coefficient_gates.get("NO_UHE_DATA_USE", False)),
+        "uhe_coefficient_common_source_lock": bool(uhe_coefficient_gates.get("COMMON_SOURCE_LOCK", False)),
+        "uhe_coefficient_solve_converged": bool(
+            uhe_coefficient_gates.get("COEFFICIENT_SOLVE_CONVERGED", False)
+        ),
+        "uhe_coefficient_blocker_count": int(len(uhe_coefficients.get("blockers") or [])),
         "fractional_quotient_report_written": bool(fractional_quotient),
         "fractional_quotient_claim": fractional_quotient.get("claim"),
         "fractional_quotient_strongest_allowed_claim": fractional_quotient.get("strongest_allowed_claim"),
@@ -1509,6 +1645,10 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "jwst_physical_prediction_receipt": bool(
             jwst_likelihood_gates.get("JWST_LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT", False)
         ),
+        "compact_transient_audit_written": bool(compact_transient),
+        "compact_transient_claim": compact_transient.get("claim"),
+        "compact_transient_first_blocked_gate": compact_transient.get("first_blocked_gate"),
+        "compact_transient_promotion_allowed": bool(compact_transient.get("promotion_allowed", False)),
         "black_hole_bridge_status_written": bool(black_hole_bridge),
         "black_hole_finite_horizon_record_receipt": bool(
             black_hole_bridge.get("FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT", False)
@@ -1673,6 +1813,24 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "finite_covariant_parent_frozen_likelihood": bool(
             finite_covariant_parent.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
         ),
+        "physical_cmb_data_bundle_written": bool(
+            physical_cmb_reports_written and physical_cmb_tables_written
+        ),
+        "physical_cmb_reports_written": bool(physical_cmb_reports_written),
+        "physical_cmb_output_tables_written": bool(physical_cmb_tables_written),
+        "physical_cmb_source_arrays_written": bool(physical_cmb_source_arrays_written),
+        "physical_cmb_output_rows_written": _has_nonempty_artifact(
+            roots,
+            "physical_cmb_output_comparison_rows.csv",
+        ),
+        "physical_cmb_best_residuals_written": _has_nonempty_artifact(
+            roots,
+            "physical_cmb_best_oph_residuals.csv",
+        ),
+        "physical_cmb_peak_features_written": _has_nonempty_artifact(
+            roots,
+            "physical_cmb_peak_features.csv",
+        ),
         "physical_cmb_input_contract_receipt": bool(
             physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
         ),
@@ -1824,6 +1982,39 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "physical_cmb_output_best_oph_max_abs_peak_height_fractional_delta": (
             best_oph_cmb_peaks.get("max_abs_peak_height_fractional_delta")
         ),
+        "cmb_promotion_ledger_written": bool(cmb_promotion_ledger),
+        "cmb_promotion_current_claim_tier": cmb_promotion_ledger.get("current_claim_tier"),
+        "cmb_promotion_fail_closed_state": cmb_promotion_ledger.get("fail_closed_state"),
+        "cmb_promotion_claim_tier": cmb_promotion_ledger.get("claim_tier"),
+        "cmb_promotion_geometry_origin": cmb_promotion_ledger.get("geometry_origin"),
+        "cmb_promotion_conditional_scale_bridge_ready": bool(
+            cmb_promotion_ledger.get("conditional_physical_scale_bridge_ready", False)
+        ),
+        "cmb_promotion_conditional_source_ready": bool(
+            cmb_promotion_ledger.get("conditional_physical_cmb_source_ready", False)
+        ),
+        "cmb_promotion_oph_native_source_ready": bool(
+            cmb_promotion_ledger.get("oph_native_physical_cmb_source_ready", False)
+        ),
+        "cmb_promotion_oph_native_geometry_ready": bool(
+            cmb_promotion_ledger.get("oph_native_geometry_ready", False)
+        ),
+        "cmb_promotion_source_only_finite_artifact_receipt": bool(
+            cmb_promotion_gates.get("SOURCE_ONLY_FINITE_ARTIFACT_RECEIPT", False)
+        ),
+        "cmb_promotion_geometric_screen_scalar_receipt": bool(
+            cmb_promotion_gates.get("GEOMETRIC_SCREEN_SCALAR_RECEIPT", False)
+        ),
+        "cmb_promotion_no_data_use_receipt": bool(
+            cmb_promotion_gates.get("NO_DATA_USE_RECEIPT", False)
+        ),
+        "cmb_promotion_frozen_likelihood_receipt": bool(
+            cmb_promotion_gates.get("FROZEN_LIKELIHOOD_RECEIPT", False)
+        ),
+        "cmb_promotion_physical_prediction_receipt": bool(
+            cmb_promotion_gates.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+        ),
+        "cmb_promotion_blocker_count": int(len(cmb_promotion_ledger.get("blockers") or [])),
         "b_a_parent_rows_emitted": bool(
             ((ba_parent.get("readiness") or {}).get("checks") or {}).get("finite_difference_rows_emitted", False)
         ),
@@ -2552,6 +2743,16 @@ def _find_all(roots: list[Path], name: str) -> list[Path]:
     return matches
 
 
+def _has_nonempty_artifact(roots: list[Path], name: str) -> bool:
+    for path in _find_all(roots, name):
+        try:
+            if path.is_file() and path.stat().st_size > 0:
+                return True
+        except OSError:
+            continue
+    return False
+
+
 def _readme(report: dict[str, Any]) -> str:
     claims = report.get("claims", {})
     files = "\n".join(f"- `{name}`" for name in report.get("files", []))
@@ -2572,6 +2773,12 @@ def _readme(report: dict[str, Any]) -> str:
         f"- physical CMB output best OPH peak count: {claims.get('physical_cmb_output_best_oph_peak_count')}\n"
         f"- physical CMB output best OPH mean abs peak ell delta: {claims.get('physical_cmb_output_best_oph_mean_abs_peak_ell_delta')}\n"
         f"- physical CMB output best OPH mean abs peak-height fractional delta: {claims.get('physical_cmb_output_best_oph_mean_abs_peak_height_fractional_delta')}\n"
+        f"- CMB promotion ledger written: {claims.get('cmb_promotion_ledger_written')}\n"
+        f"- CMB promotion current claim tier: {claims.get('cmb_promotion_current_claim_tier')}\n"
+        f"- CMB promotion geometry origin: {claims.get('cmb_promotion_geometry_origin')}\n"
+        f"- CMB promotion conditional scale bridge ready: {claims.get('cmb_promotion_conditional_scale_bridge_ready')}\n"
+        f"- CMB promotion OPH-native geometry ready: {claims.get('cmb_promotion_oph_native_geometry_ready')}\n"
+        f"- CMB promotion physical prediction receipt: {claims.get('cmb_promotion_physical_prediction_receipt')}\n"
         f"- exact target CMB curve comparable: {claims.get('exact_cmb_curve_comparable')}\n"
         f"- finite repair-clock CMB curve comparable: {claims.get('finite_repair_clock_cmb_curve_comparable')}\n"
         f"- finite repair-clock CMB uses finite-lattice clock: {claims.get('finite_repair_clock_cmb_finite_lattice_clock')}\n"
@@ -2650,6 +2857,10 @@ def _readme(report: dict[str, Any]) -> str:
         f"- strict neutral frontier residual graph rank-3 selectors: {claims.get('strict_neutral_bulk_frontier_overlap_residual_graph_rank3_selectors')}\n"
         f"- strict neutral frontier residual graph model-order rank-3 selectors: {claims.get('strict_neutral_bulk_frontier_overlap_residual_graph_model_order_rank3_selectors')}\n"
         f"- strict neutral frontier independent selector: {claims.get('strict_neutral_bulk_frontier_independent_selector')}\n"
+        f"- neutral 3D bulk data bundle written: {claims.get('neutral_3d_bulk_data_bundle_written')}\n"
+        f"- strict neutral record report written: {claims.get('strict_neutral_record_report_written')}\n"
+        f"- strict neutral object report written: {claims.get('strict_neutral_object_report_written')}\n"
+        f"- strict neutral object count: {claims.get('strict_neutral_object_count')}\n"
         f"- strict blind record-transition 3D candidate: {claims.get('strict_blind_record_transition_3d_candidate')}\n"
         f"- production particles: {claims.get('production_particles')}\n\n"
         f"- finite certificate stack ready: {claims.get('finite_certificate_stack_ready')}\n"
@@ -2660,6 +2871,14 @@ def _readme(report: dict[str, Any]) -> str:
         f"- finite transition eta_R finite-derived: {claims.get('finite_transition_eta_R_finite_lattice_derived')}\n\n"
         f"- screen-capacity observed branch: {claims.get('screen_capacity_observed_branch_available')}\n"
         f"- screen-capacity finite fixed point solved: {claims.get('screen_capacity_finite_fixed_point_solved')}\n\n"
+        f"- physics problem outputs written: {claims.get('physics_problem_outputs_written')}\n"
+        f"- physics problem outputs source documents: {claims.get('physics_problem_outputs_source_document_count')}\n"
+        f"- physics problem outputs contracts: {claims.get('physics_problem_outputs_output_count')}\n"
+        f"- physics problem outputs all notes registered: {claims.get('physics_problem_outputs_all_notes_registered')}\n"
+        f"- physics problem JWST claim: {claims.get('physics_problem_outputs_jwst_claim')}\n"
+        f"- physics problem gamma claim: {claims.get('physics_problem_outputs_gamma_claim')}\n"
+        f"- physics problem CMB claim tier: {claims.get('physics_problem_outputs_cmb_claim_tier')}\n"
+        f"- physics problem E8 receipt status: {claims.get('physics_problem_outputs_e8_receipt_status')}\n\n"
         f"- capacity-readback proxy written: {claims.get('capacity_readback_proxy_written')}\n"
         f"- capacity-readback proxy row count: {claims.get('capacity_readback_proxy_row_count')}\n"
         f"- capacity-readback fixed point solved: {claims.get('capacity_readback_proxy_fixed_point_solved')}\n\n"
@@ -2680,6 +2899,11 @@ def _readme(report: dict[str, Any]) -> str:
         f"- Hadron two-current backend receipt: {claims.get('hadron_source_backend_two_current_receipt')}\n"
         f"- Hadron full precision backend receipt: {claims.get('hadron_source_backend_full_precision_receipt')}\n"
         f"- Hadron source backend blockers: {claims.get('hadron_source_backend_blocker_count')}\n\n"
+        f"- Borel-Weil Higgs carrier report written: {claims.get('borel_weil_higgs_carrier_written')}\n"
+        f"- Borel-Weil Higgs carrier receipt: {claims.get('borel_weil_higgs_carrier_receipt')}\n"
+        f"- Borel-Weil Higgs physical claim: {claims.get('borel_weil_higgs_physical_claim')}\n"
+        f"- Borel-Weil Higgs forbidden promotions absent: {claims.get('borel_weil_higgs_forbidden_promotions_absent')}\n"
+        f"- Borel-Weil Higgs promoted forbidden claims: {claims.get('borel_weil_higgs_promoted_forbidden_claims')}\n\n"
         f"- Gamma morphology report written: {claims.get('gamma_morphology_written')}\n"
         f"- Gamma morphology route: {claims.get('gamma_morphology_route')}\n"
         f"- Gamma morphology strongest claim: {claims.get('gamma_morphology_strongest_allowed_claim')}\n"
@@ -2688,6 +2912,13 @@ def _readme(report: dict[str, Any]) -> str:
         f"- Gamma identifiability receipt: {claims.get('gamma_morphology_identifiability_receipt')}\n"
         f"- Gamma morphology prediction receipt: {claims.get('gamma_morphology_prediction_receipt')}\n"
         f"- Gamma morphology blockers: {claims.get('gamma_morphology_blocker_count')}\n\n"
+        f"- UHE coefficient emission written: {claims.get('uhe_coefficient_emission_written')}\n"
+        f"- UHE coefficient claim tier: {claims.get('uhe_coefficient_claim_tier')}\n"
+        f"- UHE coefficient strongest claim: {claims.get('uhe_coefficient_strongest_allowed_claim')}\n"
+        f"- UHE coefficient no-data-use receipt: {claims.get('uhe_coefficient_no_data_use_receipt')}\n"
+        f"- UHE coefficient common-source lock: {claims.get('uhe_coefficient_common_source_lock')}\n"
+        f"- UHE coefficient solve converged: {claims.get('uhe_coefficient_solve_converged')}\n"
+        f"- UHE coefficient blockers: {claims.get('uhe_coefficient_blocker_count')}\n\n"
         f"- Fractional quotient report written: {claims.get('fractional_quotient_report_written')}\n"
         f"- Fractional quotient claim: {claims.get('fractional_quotient_claim')}\n"
         f"- Fractional quotient strongest claim: {claims.get('fractional_quotient_strongest_allowed_claim')}\n"
@@ -2708,6 +2939,10 @@ def _readme(report: dict[str, Any]) -> str:
         f"- JWST source-abundance receipt: {claims.get('jwst_object_abundance_source_receipt')}\n"
         f"- JWST frozen likelihood receipt: {claims.get('jwst_frozen_catalog_likelihood_receipt')}\n"
         f"- JWST physical-prediction receipt: {claims.get('jwst_physical_prediction_receipt')}\n\n"
+        f"- Compact transient audit written: {claims.get('compact_transient_audit_written')}\n"
+        f"- Compact transient claim: {claims.get('compact_transient_claim')}\n"
+        f"- Compact transient first blocked gate: {claims.get('compact_transient_first_blocked_gate')}\n"
+        f"- Compact transient promotion allowed: {claims.get('compact_transient_promotion_allowed')}\n\n"
         f"- black-hole bridge status written: {claims.get('black_hole_bridge_status_written')}\n"
         f"- black-hole finite horizon record receipt: {claims.get('black_hole_finite_horizon_record_receipt')}\n"
         f"- black-hole physical evaporation bridge receipt: {claims.get('black_hole_physical_evaporation_bridge_receipt')}\n"
@@ -2750,12 +2985,19 @@ def _readme(report: dict[str, Any]) -> str:
         f"- physical CMB promotion audit written: {claims.get('physical_cmb_promotion_audit_written')}\n"
         f"- physical CMB promotion ready: {claims.get('physical_cmb_promotion_ready')}\n"
         f"- physical CMB promotion blocker count: {claims.get('physical_cmb_promotion_blocker_count')}\n"
+        f"- physical CMB data bundle written: {claims.get('physical_cmb_data_bundle_written')}\n"
+        f"- physical CMB reports written: {claims.get('physical_cmb_reports_written')}\n"
+        f"- physical CMB output tables written: {claims.get('physical_cmb_output_tables_written')}\n"
+        f"- physical CMB source arrays written: {claims.get('physical_cmb_source_arrays_written')}\n"
         f"- physical CMB frontier written: {claims.get('physical_cmb_frontier_written')}\n"
         f"- physical CMB frontier ready: {claims.get('physical_cmb_frontier_ready')}\n"
         f"- physical CMB frontier gate count: {claims.get('physical_cmb_frontier_gate_count')}\n"
         f"- physical CMB frontier hard-gate gaps: {claims.get('physical_cmb_frontier_gap_count')}\n"
         f"- physical CMB frontier blocker count: {claims.get('physical_cmb_frontier_blocker_count')}\n"
         f"- physical CMB output comparison written: {claims.get('physical_cmb_output_comparison_written')}\n"
+        f"- CMB promotion ledger written: {claims.get('cmb_promotion_ledger_written')}\n"
+        f"- CMB promotion current claim tier: {claims.get('cmb_promotion_current_claim_tier')}\n"
+        f"- CMB promotion blocker count: {claims.get('cmb_promotion_blocker_count')}\n"
         f"- screen-power primordial reference ready: {claims.get('screen_power_simulator_primordial_ready')}\n"
         f"- MaxEnt Green source receipt: {claims.get('maxent_green_source_receipt')}\n"
         f"- selector-elimination theorem-side receipt: {claims.get('selector_elimination_theorem_side_receipt')}\n"

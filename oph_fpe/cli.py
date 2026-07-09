@@ -39,6 +39,53 @@ def main(argv: list[str] | None = None) -> int:
         help="optional fusion plant/plasma ledger as JSON or @path JSON",
     )
 
+    compact_transient_parser = subparsers.add_parser(
+        "compact-transient-audit",
+        help="write the fail-closed compact-record transient CR0-CR4 audit report",
+    )
+    compact_transient_parser.add_argument("--out", required=True, type=Path)
+    compact_transient_parser.add_argument(
+        "--receipts-json",
+        default=None,
+        help="optional receipt overrides as JSON or @path JSON",
+    )
+
+    uhe_coeff_parser = subparsers.add_parser(
+        "uhe-emit-coefficients",
+        help="write the source-only high-energy messenger coefficient-emission receipt",
+    )
+    uhe_coeff_parser.add_argument("--out", required=True, type=Path)
+    uhe_coeff_parser.add_argument(
+        "--features-json",
+        default=None,
+        help="optional finite feature matrix as JSON or @path JSON",
+    )
+    uhe_coeff_parser.add_argument(
+        "--baseline-json",
+        default=None,
+        help="optional baseline weights as JSON or @path JSON",
+    )
+    uhe_coeff_parser.add_argument(
+        "--target-json",
+        default=None,
+        help="optional target moment vector as JSON or @path JSON",
+    )
+    uhe_coeff_parser.add_argument(
+        "--source-dag-json",
+        default=None,
+        help="optional source dependency DAG as JSON or @path JSON",
+    )
+    uhe_coeff_parser.add_argument(
+        "--receipts-json",
+        default=None,
+        help="optional receipt overrides as JSON or @path JSON",
+    )
+    uhe_coeff_parser.add_argument(
+        "--species-coefficients-json",
+        default=None,
+        help="optional per-messenger coefficient maps as JSON or @path JSON",
+    )
+
     closeflyby_parser = subparsers.add_parser(
         "closeflyby-certificates",
         help="emit fail-closed CloseFlyBy(F) public certificates and comparator tables",
@@ -474,6 +521,17 @@ def main(argv: list[str] | None = None) -> int:
         "--continuum-certificate-json",
         default=None,
         help="optional continuum certificate fields as JSON or @path JSON; recorded but not promoted by this lane",
+    )
+
+    bw_higgs_parser = subparsers.add_parser(
+        "borel-weil-higgs-carrier",
+        help="write the Borel-Weil one-Higgs carrier receipt with quantitative Higgs claims blocked",
+    )
+    bw_higgs_parser.add_argument("--out", required=True, type=Path)
+    bw_higgs_parser.add_argument(
+        "--candidate-json",
+        default=None,
+        help="optional carrier candidate fields as JSON or @path JSON",
     )
 
     repair_clock_parser = subparsers.add_parser(
@@ -1062,6 +1120,14 @@ def main(argv: list[str] | None = None) -> int:
     physical_cmb_output_parser.add_argument("--include", nargs="*", default=[], type=Path)
     physical_cmb_output_parser.add_argument("--out", required=True, type=Path)
 
+    cmb_promotion_ledger_parser = subparsers.add_parser(
+        "cmb-promotion-ledger",
+        help="write the CMB visual-to-physical promotion ledger and claim ladder",
+    )
+    cmb_promotion_ledger_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
+    cmb_promotion_ledger_parser.add_argument("--include", nargs="*", default=[], type=Path)
+    cmb_promotion_ledger_parser.add_argument("--out", required=True, type=Path)
+
     observer_consensus_bulk_parser = subparsers.add_parser(
         "observer-consensus-bulk-readout",
         help="write observer-local self-reading and theorem-assisted consensus 3D bulk readouts",
@@ -1602,6 +1668,26 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "compact-transient-audit":
+        from oph_fpe.compact_transients import write_compact_transient_audit_report
+
+        result = write_compact_transient_audit_report(args.out, receipts=_json_arg(args.receipts_json))
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "uhe-emit-coefficients":
+        from oph_fpe.uhe_coefficients import write_uhe_coefficient_emission_report
+
+        result = write_uhe_coefficient_emission_report(
+            args.out,
+            features=_json_arg(args.features_json),
+            baseline_weights=_json_arg(args.baseline_json),
+            target_moments=_json_arg(args.target_json),
+            source_dag=_json_arg(args.source_dag_json),
+            receipt_overrides=_json_arg(args.receipts_json),
+            species_coefficients=_json_arg(args.species_coefficients_json),
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "closeflyby-certificates":
         from oph_fpe.flyby import write_closeflyby_public_certificates
 
@@ -2075,6 +2161,12 @@ def main(argv: list[str] | None = None) -> int:
             refinement_sweeps=args.refinement_sweeps,
             continuum_certificate=_json_arg(args.continuum_certificate_json),
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "borel-weil-higgs-carrier":
+        from oph_fpe.gauge import write_borel_weil_higgs_carrier_report
+
+        result = write_borel_weil_higgs_carrier_report(args.out, candidate=_json_arg(args.candidate_json))
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "repair-clock-report":
@@ -2617,6 +2709,12 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.cosmology.physical_cmb_output import write_physical_cmb_output_comparison_report
 
         result = write_physical_cmb_output_comparison_report([*args.run_dir, *args.include], args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "cmb-promotion-ledger":
+        from oph_fpe.cosmology.cmb_promotion_ledger import write_cmb_promotion_ledger_report
+
+        result = write_cmb_promotion_ledger_report([*args.run_dir, *args.include], args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "observer-consensus-bulk-readout":

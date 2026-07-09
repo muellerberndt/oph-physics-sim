@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from oph_fpe.measurement_pack import export_measurement_pack
+from oph_fpe.physics_problem_outputs import write_physics_problem_outputs_report
 
 
 def test_export_measurement_pack_copies_static_galaxy_tables(tmp_path: Path) -> None:
@@ -35,6 +36,214 @@ def test_export_measurement_pack_copies_static_galaxy_tables(tmp_path: Path) -> 
     assert (out / "galaxy_rar_fit.csv").read_text(encoding="utf-8").startswith("row,g_baryon")
     assert (out / "galaxy_btfr_fit.csv").exists()
     assert (out / "galaxy_rotation_residuals.csv").exists()
+
+
+def test_export_measurement_pack_copies_physics_problem_outputs(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "pack"
+    write_physics_problem_outputs_report(run)
+
+    report = export_measurement_pack([run], out)
+    claims = report["claims"]
+
+    assert (out / "physics_problem_outputs_report.json").exists()
+    assert (out / "physics_problem_outputs_report.md").exists()
+    assert "physics_problem_outputs_report.json" in report["files"]
+    assert "physics_problem_outputs_report.md" in report["files"]
+    assert claims["physics_problem_outputs_written"] is True
+    assert claims["physics_problem_outputs_source_document_count"] == 12
+    assert claims["physics_problem_outputs_output_count"] == 12
+    assert claims["physics_problem_outputs_all_notes_registered"] is True
+    assert claims["physics_problem_outputs_jwst_claim"] == "J0_DIAGNOSTIC_PROXY"
+    assert claims["physics_problem_outputs_gamma_claim"] == "DIAGNOSTIC_GAMMA_MAP"
+    assert claims["physics_problem_outputs_cmb_claim_tier"] == "UNSTARTED_OR_INVALIDATED"
+    assert claims["physics_problem_outputs_e8_receipt_status"] == "pending_raw_bundle"
+    readme = (out / "README.md").read_text(encoding="utf-8")
+    assert "physics problem outputs written: True" in readme
+
+
+def test_export_measurement_pack_copies_neutral_3d_and_physical_cmb_data(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "pack"
+    run.mkdir()
+    _write_json(run / "neutral_3d_bulk_audit_report.json", {"strict_neutral_bulk_ready": False})
+    (run / "neutral_3d_bulk_audit_report.md").write_text("# neutral audit\n", encoding="utf-8")
+    _write_json(run / "strict_neutral_bulk_report.json", {"strict_neutral_bulk": False})
+    _write_json(
+        run / "strict_neutral_object_bulk_report.json",
+        {"strict_neutral_object_bulk": True, "object_count": 18},
+    )
+    _write_json(
+        run / "strict_neutral_bulk_frontier_report.json",
+        {
+            "strict_neutral_bulk_ready": False,
+            "gate_gap_rows": [],
+            "overlap_native_negative_control_receipt_all": True,
+        },
+    )
+    (run / "strict_neutral_bulk_frontier_report.md").write_text("# neutral frontier\n", encoding="utf-8")
+    _write_json(
+        run / "physical_cmb_input_report.json",
+        {
+            "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": True,
+            "input_status": {
+                "B_A_k_a": {"row_count": 2},
+                "rho_A_a": {"row_count": 2},
+            },
+        },
+    )
+    (run / "physical_cmb_input_report.md").write_text("# physical CMB input\n", encoding="utf-8")
+    _write_json(run / "physical_cmb_promotion_audit_report.json", {"physical_cmb_promotion_ready": False})
+    (run / "physical_cmb_promotion_audit_report.md").write_text("# CMB promotion\n", encoding="utf-8")
+    _write_json(
+        run / "physical_cmb_output_comparison_report.json",
+        {
+            "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT": True,
+            "USABLE_PHYSICAL_CMB_DATA_RECEIPT": True,
+            "measurement_comparable_model_count": 1,
+            "oph_diagnostic_model_count": 1,
+            "best_oph_diagnostic_model": {
+                "model_id": "finite_repair_clock_plus_selector_ir",
+                "amplitude_fit_chi2_per_bin": 1.5,
+            },
+            "best_oph_residual_summary": {
+                "available": True,
+                "bin_count": 2,
+                "rms_sigma_residual": 0.5,
+            },
+            "best_oph_peak_feature_summary": {"peak_count": 1},
+        },
+    )
+    (run / "physical_cmb_output_comparison_report.md").write_text("# CMB output\n", encoding="utf-8")
+    _write_json(
+        run / "physical_cmb_frontier_report.json",
+        {"physical_cmb_prediction_ready": False, "gate_rows": [], "gate_gap_rows": []},
+    )
+    (run / "physical_cmb_frontier_report.md").write_text("# CMB frontier\n", encoding="utf-8")
+    (run / "physical_cmb_output_comparison_rows.csv").write_text("ell,model\n2,x\n", encoding="utf-8")
+    (run / "physical_cmb_best_oph_residuals.csv").write_text("ell,residual\n2,0.1\n", encoding="utf-8")
+    (run / "physical_cmb_peak_features.csv").write_text("ell,height\n200,1.0\n", encoding="utf-8")
+    (run / "B_A_k_a.csv").write_text("k,value\n1,0.1\n", encoding="utf-8")
+    (run / "Gamma_rec_k_a.csv").write_text("k,value\n1,0.2\n", encoding="utf-8")
+    (run / "rho_A_a.csv").write_text("k,value\n1,0.3\n", encoding="utf-8")
+
+    report = export_measurement_pack([run], out)
+    claims = report["claims"]
+
+    assert claims["neutral_3d_bulk_data_bundle_written"] is True
+    assert claims["strict_neutral_record_report_written"] is True
+    assert claims["strict_neutral_object_report_written"] is True
+    assert claims["strict_neutral_object_bulk"] is True
+    assert claims["strict_neutral_object_count"] == 18
+    assert claims["physical_cmb_data_bundle_written"] is True
+    assert claims["physical_cmb_reports_written"] is True
+    assert claims["physical_cmb_output_tables_written"] is True
+    assert claims["physical_cmb_source_arrays_written"] is True
+    assert claims["physical_cmb_output_rows_written"] is True
+    assert claims["physical_cmb_best_residuals_written"] is True
+    assert claims["physical_cmb_peak_features_written"] is True
+    for name in (
+        "neutral_3d_bulk_audit_report.json",
+        "strict_neutral_bulk_report.json",
+        "strict_neutral_object_bulk_report.json",
+        "strict_neutral_bulk_frontier_report.json",
+        "physical_cmb_output_comparison_rows.csv",
+        "physical_cmb_best_oph_residuals.csv",
+        "physical_cmb_peak_features.csv",
+        "physical_cmb_B_A_k_a.csv",
+        "physical_cmb_Gamma_rec_k_a.csv",
+        "physical_cmb_rho_A_a.csv",
+    ):
+        assert name in report["files"]
+    readme = (out / "README.md").read_text(encoding="utf-8")
+    assert "neutral 3D bulk data bundle written: True" in readme
+    assert "physical CMB data bundle written: True" in readme
+
+
+def test_export_measurement_pack_copies_borel_weil_higgs_receipt(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "borel_weil_higgs_carrier_report.json").write_text(
+        json.dumps(
+            {
+                "BOREL_WEIL_HIGGS_CARRIER_RECEIPT": True,
+                "physical_claim": False,
+                "checks": {"forbidden_quantitative_promotions_absent": True},
+                "promoted_forbidden_claims": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "borel_weil_higgs_carrier_report.md").write_text("# Higgs carrier\n", encoding="utf-8")
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([run], out)
+
+    assert report["claims"]["borel_weil_higgs_carrier_written"] is True
+    assert report["claims"]["borel_weil_higgs_carrier_receipt"] is True
+    assert report["claims"]["borel_weil_higgs_physical_claim"] is False
+    assert report["claims"]["borel_weil_higgs_forbidden_promotions_absent"] is True
+    assert "borel_weil_higgs_carrier_report.json" in report["files"]
+    assert "borel_weil_higgs_carrier_report.md" in report["files"]
+
+
+def test_export_measurement_pack_copies_compact_transient_audit(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "compact_transient_audit_report.json").write_text(
+        json.dumps(
+            {
+                "claim": "CR2_CONDITIONAL_PHENOMENOLOGY",
+                "first_blocked_gate": "CONTROLS",
+                "promotion_allowed": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "compact_transient_audit_report.md").write_text("# Compact transient\n", encoding="utf-8")
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([run], out)
+
+    assert report["claims"]["compact_transient_audit_written"] is True
+    assert report["claims"]["compact_transient_claim"] == "CR2_CONDITIONAL_PHENOMENOLOGY"
+    assert report["claims"]["compact_transient_first_blocked_gate"] == "CONTROLS"
+    assert report["claims"]["compact_transient_promotion_allowed"] is False
+    assert "compact_transient_audit_report.json" in report["files"]
+    assert "compact_transient_audit_report.md" in report["files"]
+
+
+def test_export_measurement_pack_copies_uhe_coefficient_emission(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "uhe_coefficient_emission_report.json").write_text(
+        json.dumps(
+            {
+                "claim_tier": "SOURCE_ONLY",
+                "strongest_allowed_claim": "SOURCE_ONLY_COEFFICIENT_EMITTED",
+                "readiness_gates": {
+                    "NO_UHE_DATA_USE": True,
+                    "COMMON_SOURCE_LOCK": True,
+                    "COEFFICIENT_SOLVE_CONVERGED": True,
+                },
+                "blockers": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    (run / "uhe_coefficient_emission_report.md").write_text("# UHE coefficient\n", encoding="utf-8")
+
+    out = tmp_path / "pack"
+    report = export_measurement_pack([run], out)
+
+    assert report["claims"]["uhe_coefficient_emission_written"] is True
+    assert report["claims"]["uhe_coefficient_claim_tier"] == "SOURCE_ONLY"
+    assert report["claims"]["uhe_coefficient_strongest_allowed_claim"] == "SOURCE_ONLY_COEFFICIENT_EMITTED"
+    assert report["claims"]["uhe_coefficient_no_data_use_receipt"] is True
+    assert report["claims"]["uhe_coefficient_common_source_lock"] is True
+    assert report["claims"]["uhe_coefficient_solve_converged"] is True
+    assert "uhe_coefficient_emission_report.json" in report["files"]
+    assert "uhe_coefficient_emission_report.md" in report["files"]
 
 
 def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: Path) -> None:
@@ -1521,6 +1730,41 @@ def test_export_measurement_pack_prefers_stronger_cmb_json_reports(tmp_path: Pat
     assert report["claims"]["finite_collar_boltzmann_source_bundle"] is True
     assert copied_bundle["physical_cmb_input_validation"]["blockers"] == ["B_A_k_a_missing_or_not_finite"]
     assert copied_receipt["NO_DATA_USE_RECEIPT"] is True
+
+
+def test_export_measurement_pack_copies_cmb_promotion_ledger(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "pack"
+    run.mkdir()
+    _write_json(
+        run / "cmb_promotion_ledger_report.json",
+        {
+            "current_claim_tier": "SPECTRUM_DIAGNOSTIC",
+            "fail_closed_state": "NUMERICALLY_INCONCLUSIVE",
+            "claim_tier": "conditional_physical",
+            "geometry_origin": "IMPORTED_FLRW",
+            "conditional_physical_scale_bridge_ready": True,
+            "oph_native_geometry_ready": False,
+            "readiness_gates": {
+                "NO_DATA_USE_RECEIPT": True,
+                "SOURCE_ONLY_FINITE_ARTIFACT_RECEIPT": False,
+                "GEOMETRIC_SCREEN_SCALAR_RECEIPT": False,
+                "FROZEN_LIKELIHOOD_RECEIPT": False,
+                "PHYSICAL_CMB_PREDICTION_RECEIPT": False,
+            },
+            "blockers": ["source_only_finite_artifact_receipt_missing"],
+        },
+    )
+    (run / "cmb_promotion_ledger_report.md").write_text("# CMB Promotion Ledger\n", encoding="utf-8")
+
+    report = export_measurement_pack([run], out)
+
+    assert (out / "cmb_promotion_ledger_report.json").exists()
+    assert (out / "cmb_promotion_ledger_report.md").exists()
+    assert report["claims"]["cmb_promotion_ledger_written"] is True
+    assert report["claims"]["cmb_promotion_current_claim_tier"] == "SPECTRUM_DIAGNOSTIC"
+    assert report["claims"]["cmb_promotion_conditional_scale_bridge_ready"] is True
+    assert report["claims"]["cmb_promotion_physical_prediction_receipt"] is False
 
 
 def _write_json(path: Path, data: dict) -> None:

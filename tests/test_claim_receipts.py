@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 from oph_fpe.claims import (
@@ -10,6 +12,7 @@ from oph_fpe.claims import (
 from oph_fpe.consensus.boundary_fiber import boundary_conditioned_uniqueness_receipt
 from oph_fpe.consensus.fair_block import fair_block_consensus_certificate
 from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
+from oph_fpe.gauge.higgs_carrier import borel_weil_higgs_carrier_receipt, write_borel_weil_higgs_carrier_report
 from oph_fpe.gauge.mar_sieve import standard_model_candidate_sieve
 from oph_fpe.gauge.repair_projection import exact_repair_projection_receipt
 
@@ -81,6 +84,36 @@ def test_sm_candidate_sieve_checks_visible_low_energy_gates():
 
     assert report["SM_QUOTIENT_GATE_RECEIPT"] is True
     assert report["claim_level"] == "continuation"
+
+
+def test_borel_weil_higgs_carrier_receipt_is_carrier_only():
+    report = borel_weil_higgs_carrier_receipt()
+
+    assert report["BOREL_WEIL_HIGGS_CARRIER_RECEIPT"] is True
+    assert report["checks"]["section_degree_is_minimal_nontrivial"] is True
+    assert report["checks"]["neutral_lower_component"] is True
+    assert "higgs_mass" in report["explicit_nonclaims"]
+    assert report["physical_claim"] is False
+
+
+def test_borel_weil_higgs_carrier_blocks_quantitative_promotion():
+    report = borel_weil_higgs_carrier_receipt({"derived_quantitative_claims": ["higgs_mass", "v"]})
+
+    assert report["BOREL_WEIL_HIGGS_CARRIER_RECEIPT"] is False
+    assert report["checks"]["forbidden_quantitative_promotions_absent"] is False
+    assert report["promoted_forbidden_claims"] == ["higgs_mass", "v"]
+
+
+def test_borel_weil_higgs_carrier_report_writer(tmp_path):
+    report = write_borel_weil_higgs_carrier_report(tmp_path)
+    payload_path = tmp_path / "borel_weil_higgs_carrier_report.json"
+    markdown_path = tmp_path / "borel_weil_higgs_carrier_report.md"
+    payload = json.loads(payload_path.read_text(encoding="utf-8"))
+
+    assert report["BOREL_WEIL_HIGGS_CARRIER_RECEIPT"] is True
+    assert payload["carrier_identification"] == "H_OPH = H^0(CP1, O(1)) ~= C^2"
+    assert markdown_path.exists()
+    assert "does not derive m_H" in markdown_path.read_text(encoding="utf-8")
 
 
 def test_fair_block_certificate_is_conditional_continuation():
