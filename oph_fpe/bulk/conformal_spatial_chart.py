@@ -49,8 +49,10 @@ def conformal_h3_spatial_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
         "defect_localized_in_h3_receipt": False,
         "claim_boundary": (
             "constructs the canonical 3D H3 spatial chart from the S2 cap/conformal Lorentz branch. "
-            "The receipt tier is chart-level; populated spatial-bulk, particle, and CMB prediction "
-            "claims require separate gates."
+            "The receipt tier is legacy chart-level; the issue #309 theorem-aligned receipt is "
+            "CAP_NORMAL_H3_CHART_RECEIPT, recomputed from primitive null-section, cap-normal, "
+            "Lorentz-equivariance, and H3-sheet fields. Populated spatial-bulk, neutral bulk, "
+            "particle, and CMB prediction claims require separate gates."
         ),
     }
 
@@ -173,11 +175,16 @@ def paper_theorem_3d_bulk_chart_report(
         "source_alignment": {
             "screen_net": "Axiom Screen Net: physical data is organized on a horizon screen S2 carrying local algebras.",
             "bw_normalization": (
-                "The BW branch fixes sigma_t = alpha_{lambda_C(2*pi*t)} on the support-visible cap pair; "
-                "finite simulations may establish the same normalization via the endogenous L2/L3 modular-clock receipt."
+                "The issue #308 theorem target is sigma_t = alpha_{lambda_C_hat(2*pi*t)} on a "
+                "BW-framed support-visible cap pair. This chart report records the paper route; BW3 "
+                "requires the separate finite cap-normal BWRec audit."
             ),
             "lorentz_group": "Conf+(S2) ~= PSL(2,C) ~= SO+(3,1).",
             "spatial_chart": "The 3D spatial chart is H3 = SO+(3,1)/SO(3), with dimension 6-3=3.",
+            "cap_normal_h3_chart": (
+                "Issue #309 chart certification requires CAP_NORMAL_H3_CHART_RECEIPT: q(Omega)=(1,Omega), "
+                "n_C=(cot(alpha),csc(alpha)c), signed cap incidence, n_gC=Lambda_g n_C, and H3 future-sheet checks."
+            ),
             "finite_regulator_boundary": (
                 "The finite cellulated carrier is the regulator side; the theorem concerns the "
                 "support-visible scaling-limit spherical cap chart."
@@ -185,10 +192,11 @@ def paper_theorem_3d_bulk_chart_report(
         },
         "claim_boundary": (
             "This is the paper-side 3D spatial chart receipt: S2 cap/conformal geometry plus "
-            "BW-normalized 2*pi cap flow yields the SO+(3,1) Lorentz branch and the H3 spatial "
-            "chart of dimension 3. The receipt tier is chart-level; finite neutral point-cloud "
-            "dimension, populated third-person bulk, particle, and physical CMB claims require "
-            "separate gates."
+            "the theorem-side BW-framed cap automorphism yields the SO+(3,1) Lorentz branch and "
+            "the H3 spatial chart of dimension 3. The receipt tier is chart-level; issue #309 "
+            "primitive-field chart certification uses CAP_NORMAL_H3_CHART_RECEIPT. BW3 finite "
+            "cap-net evidence, populated third-person bulk, particle, "
+            "and physical CMB claims require separate gates."
         ),
     }
 

@@ -30,6 +30,27 @@ unitarity, and Yang-Mills identification remain closed or conditional until the 
 certificate includes Cauchy envelopes, transported-state/cutoff bounds, positive-transfer plus
 transfer-tower convergence, and the four-dimensional OS/gauge certificate.
 
+Issue #308 is represented by the finite cap-normal BW certificate audit:
+
+```text
+BWRec_r = (
+  CapNormal_r,
+  Frame_r,
+  Order_r,
+  Support_r,
+  CrossRatio_r,
+  Matrix_r,
+  KMS_r,
+  Error_r
+)
+```
+
+Use `python3 -m oph_fpe.cli issue-308-bw-certificate --source <BWRec_r.json> --out <report.json>`
+to recompute BW0-BW3 from primitive fields. A renderer cap, fitted boost, finite cap-ID
+permutation, or numerical coefficient near `2*pi` is not a BW theorem receipt. BW3 requires the
+primitive fields and a passing refinement error envelope; the audit ignores producer-supplied
+`bw_passed` or `tier` booleans.
+
 ## What The Simulator Emits
 
 Main run families:
@@ -95,6 +116,22 @@ fixtures: good boundary-fiber uniqueness, bad-boundary failure, nontrivial
 gauge equivalence, and the local H1-H2-H3 repair no-go witness. It is a
 regression contract for simulator receipt logic, not a physical prediction and
 not a runtime dependency on Lean.
+
+Matscheko proof-chain import gate:
+
+```bash
+python3 -m oph_fpe.cli matscheko-proof-chain-import \
+  --out runs/matscheko_proof_chain_import_report.json
+```
+
+This writes a compact receipt for the additional finite audit imports: finite
+modular flow/KMS, the scalar channel bridge, twelve-port surface bookkeeping,
+the QBFT quorum caveat, the two-P provenance, the chi-nu G9/G10 gates, and the
+v10 Rule-90 theorems T38--T41 (parity splitting, power-of-two adjacent-pair
+universality, and sharp lightlike-diagonal screens). The Rule-90 entries remain
+finite binary audit-fixture status imports, not microscopic physics or
+spacetime-causality claims. G9 is false when no record-DeltaS to gravity-DeltaS
+calibration is supplied.
 
 Parallel BW sweeps:
 
@@ -260,18 +297,56 @@ The simulator separates these layers:
 ```text
 finite settling and finite consensus: receipt-gated
 BW/KMS 2*pi branch replay: receipt-gated
+cap-normal H3 chart theorem: primitive-field receipt-gated
 conformal Lorentz/H3 chart: receipt-gated
 observer-facing H3 object population: receipt-gated
 finite Lorentz theorem contract: receipt-gated proof contract
 strict neutral third-person bulk: receipt-gated frontier
 ```
 
-The chart receipt records the theorem-level dimension count
+Issue #309 is represented by `CAP_NORMAL_H3_CHART_RECEIPT`. It recomputes
+`q(Omega)=(1,Omega)`, `n_C=(cot(alpha), csc(alpha) c)`, boundary incidence,
+Lorentz equivariance `n_{gC}=Lambda_g n_C`, and the future-sheet `H3` checks
+from primitive chart fields. A sampled/fitted display without a global
+round-cap certificate is `CAP_NORMAL_H3_CHART_APPROXIMATE`, not theorem
+evidence.
+
+```bash
+python3 -m oph_fpe.cli cap-normal-h3-chart \
+  --source runs/<run_id>/cap_normal_h3_chart_source.json \
+  --out runs/<run_id>/cap_normal_h3_chart_report.json
+```
+
+Issue #310 is represented by `MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT`. The
+allowed path is:
+
+```text
+record projector
+-> R_i(C,t,O)
+-> calibrated response vector
+-> conditioned residual inverse
+-> H3 localization ball
+```
+
+The audit recomputes cap-frame rank and singular values, compact-domain/net
+metadata, total error, the residual minimizer, the localization radius, and
+`Delta_loc`. A unique finite point requires `Delta_loc > 0`; otherwise the
+state is `H3_LOCALIZATION_AMBIGUOUS`. Existing H3 point fields, viewer
+coordinates, or object packets may be injected controls or ground truth for a
+self-consistency test, but they cannot set `H3LOC=true` by themselves.
+
+```bash
+python3 -m oph_fpe.cli modular-response-h3-localization \
+  --source runs/<run_id>/modular_response_h3_localization_source.json \
+  --out runs/<run_id>/modular_response_h3_localization_report.json
+```
+
+The older chart receipt records the theorem-level dimension count
 `H3 = SO+(3,1)/SO(3)`, hence `6-3=3`, before any finite neutral point-cloud
 estimator is consulted. The old graph-distance and modular-lift dimension
 estimates are debug diagnostics. Bulk claims flow through BW/KMS,
-support-visible cap/collar data, the conformal H3 chart, observer records,
-object population, and neutral-bulk gates.
+support-visible cap/collar data, the cap-normal/conformal H3 chart receipts,
+observer records, object population, and neutral-bulk gates.
 
 ## CMB And Cosmology
 

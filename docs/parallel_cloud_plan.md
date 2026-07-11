@@ -11,18 +11,18 @@ The current OPH-FPE BW path is CPU-bound:
 - cap/time BW residual tasks using `cKDTree` queries and NumPy interpolation;
 - direct spherical-harmonic freezeout `C_l` receipts, when enabled.
 
-There is no useful GPU or TPU acceleration yet because the hot path is SciPy/NumPy/KD-tree and
-graph-array work, not CUDA/JAX matrix kernels. GPUs become useful only after we port the array engine
-to CuPy/JAX or add dense cap-state matrix evolution, persistent homology at large scale, or neural
-repair policies.
+The simulator has no useful GPU or TPU acceleration path because the hot path is
+SciPy/NumPy/KD-tree and graph-array work. GPU use belongs to CUDA/JAX matrix
+kernels, dense cap-state matrix evolution, persistent homology at large scale,
+or neural repair policies.
 
-The direct `spherical_harmonic` `C_l` estimator is intentionally used for reported single receipts
-because it gives nonnegative auto-power. It is CPU-bound, and now parallelizes independent
-target/control spectra with `angular_power.n_jobs`. Use it for final screen-spectrum receipts; use
-the sampled pair proxy or lower `ell_max` for broad seed/config sweeps if harmonic receipts dominate
-runtime.
+The direct `spherical_harmonic` `C_l` estimator is used for reported single
+receipts because it gives nonnegative auto-power. It is CPU-bound and
+parallelizes independent target/control spectra with `angular_power.n_jobs`.
+Use it for final screen-spectrum receipts; use the sampled pair proxy or lower
+`ell_max` for broad seed/config sweeps if harmonic receipts dominate runtime.
 
-## Parallelism Now
+## Parallelism
 
 Two levels are available:
 
@@ -114,19 +114,19 @@ inner_jobs: 16-32
 
 ## Provider Pick
 
-Best immediate fit for the current simulator: a CPU cloud VM with dedicated CPU resources. If
+Best fit for the simulator: a CPU cloud VM with dedicated CPU resources. If
 Hetzner Cloud is unavailable, use one of these fallbacks:
 
-1. DigitalOcean: simplest single-account fallback for ordinary CPU Droplets now and GPU Droplets
-   later. Use CPU Droplets for BW sweeps; do not rent GPU Droplets until a GPU-native engine path
-   exists.
+1. DigitalOcean: simplest single-account fallback for ordinary CPU Droplets and
+   GPU Droplets. Use CPU Droplets for BW sweeps. GPU Droplets belong to
+   GPU-native engine paths.
 2. Vultr: also a reasonable single-account fallback because it offers Cloud Compute, Optimized Cloud
-   Compute, Cloud GPU, and Bare Metal. Use CPU/optimized compute for the current engine.
-3. CoreWeave: good when the project is ready for larger GPU-backed or mixed CPU/GPU workloads, but
-   it is less necessary for the current CPU-bound BW sweeps.
-4. RunPod or Vast.ai: best for fast GPU experiments or opportunistic marketplace capacity. They are
-   not the first choice for pure CPU sweeps, but they are useful once the code has a CUDA/JAX/CuPy
-   path.
+   Compute, Cloud GPU, and Bare Metal. Use CPU/optimized compute for the
+   CPU-bound engine.
+3. CoreWeave: suitable for larger GPU-backed or mixed CPU/GPU workloads. It is
+   less necessary for CPU-bound BW sweeps.
+4. RunPod or Vast.ai: best for fast GPU experiments or opportunistic marketplace
+   capacity. Pure CPU sweeps fit better on CPU VMs.
 
 AWS/GCP/Azure are fine technically, but quota friction is more likely for large CPU and especially
 GPU counts.

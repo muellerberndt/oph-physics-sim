@@ -8,6 +8,7 @@ from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
     BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
     BW_KMS_BRANCH_REPLAY_RECEIPT,
+    CAP_NORMAL_H3_CHART_RECEIPT,
     CHART_LORENTZ_H3_RECEIPT,
     CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
     EINSTEIN_BRANCH_ENTRY_RECEIPT,
@@ -16,6 +17,7 @@ from oph_fpe.claims import (
     FINITE_CONSENSUS_THEOREM_RECEIPT,
     FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
+    MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
@@ -52,6 +54,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     ladder = _read_json(root / "receipt_ladder_report.json")
     paper_chart = _read_json(root / "paper_3d_bulk_chart_report.json")
     conformal_chart = _read_json(root / "conformal_h3_spatial_chart_report.json")
+    cap_normal_h3_chart = _read_json(root / "cap_normal_h3_chart_report.json")
+    modular_response_h3_localization = _read_json(root / "modular_response_h3_localization_report.json")
     transition_selection = _read_json(root / "transition_selection_report.json")
     neutral = _read_json(root / "bulk_reconstruction_report.json")
     neutral_frontier = _read_json(root / "strict_neutral_bulk_frontier_report.json")
@@ -111,10 +115,12 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "PAPER_THEOREM_3D_BULK_CHART_RECEIPT",
         "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT",
         "CHART_LORENTZ_H3_RECEIPT",
+        CAP_NORMAL_H3_CHART_RECEIPT,
     ) or _ladder_passed(ladder, "R3") or bool(
         paper_chart.get("PAPER_THEOREM_3D_BULK_CHART_RECEIPT", False)
         or paper_chart.get("paper_theorem_3d_bulk_chart_receipt", False)
         or conformal_chart.get("conformal_h3_spatial_chart_receipt", False)
+        or cap_normal_h3_chart.get(CAP_NORMAL_H3_CHART_RECEIPT, False)
     )
     h3_response = _truthy_any(
         emergence,
@@ -144,6 +150,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "OBJECT_BULK_POPULATION_RECEIPT",
         "observer_chart_bulk_population_receipt",
         "localized_nonboundary_bulk_population_receipt",
+    ) or _truthy_any(
+        modular_response_h3_localization,
+        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
+        "h3_modular_response_localization_receipt",
+        "H3LOC",
     )
     theorem_assisted_chart_preview = bool(
         chart and bw_kms and h3_response and (h3_object_preview or object_nonboundary_population)
@@ -402,7 +413,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "T3_chart_lorentz_h3": _tier(
             CHART_LORENTZ_H3_RECEIPT,
             chart,
-            "Paper-side conformal route Conf+(S2) -> SO+(3,1) -> H3 spatial chart is instantiated.",
+            "Paper-side conformal/cap-normal route Conf+(S2) -> SO+(3,1) -> H3 spatial chart is instantiated.",
         ),
         "T4_h3_response_controls": _tier(
             H3_RESPONSE_CANDIDATE_RECEIPT,
@@ -484,13 +495,13 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "L_full_oph_lorentz_finite_contract": _tier(
             OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
             finite_lorentz_contract,
-            "Finite Lorentz theorem contract through support-visible BW covariance and Lorentz closure is audited from finite observer-record receipts.",
+            "Legacy finite Lorentz contract audits observer-record modular diagnostics; issue #308 BW3 is the stricter finite cap-normal certificate receipt.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
         "L_branch_paper_geometric_lorentz_contract": _tier(
             "PAPER_GEOMETRIC_BRANCH_LORENTZ_CONTRACT_RECEIPT",
             paper_geometric_branch_contract,
-            "Paper-geometric branch contract uses the declared KMS collar/cap 2*pi normalization from the theorem chart, without promoting the endogenous finite clock diagnostic.",
+            "Paper-geometric branch contract uses the declared BW-framed theorem chart, without promoting the endogenous finite clock diagnostic or a BW3 finite certificate.",
             blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
         ),
         "B_full_paper_faithful_observer_spacetime": _tier(
@@ -559,6 +570,18 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "finite_settle_diagnostic_receipt": finite_settle_diagnostic,
         "finite_consensus_theorem_receipt": finite_consensus_theorem,
         "chart_level_3p1_lorentz_kinematics_established": bool(chart and bw_kms),
+        CAP_NORMAL_H3_CHART_RECEIPT: bool(cap_normal_h3_chart.get(CAP_NORMAL_H3_CHART_RECEIPT, False)),
+        "cap_normal_h3_chart_receipt": bool(cap_normal_h3_chart.get("cap_normal_h3_chart_receipt", False)),
+        "cap_normal_h3_chart_terminal_status": cap_normal_h3_chart.get("terminal_status"),
+        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: bool(
+            modular_response_h3_localization.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)
+        ),
+        "h3_modular_response_localization_receipt": bool(
+            modular_response_h3_localization.get("h3_modular_response_localization_receipt", False)
+        ),
+        "h3_modular_response_localization_terminal_status": modular_response_h3_localization.get(
+            "terminal_status"
+        ),
         "paper_route_lorentz_h3_chart_established": bool(chart and bw_kms),
         OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: finite_lorentz_contract,
         "finite_lorentz_theorem_contract_receipt": finite_lorentz_contract,
@@ -865,8 +888,20 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         },
         "paper_alignment": {
             "screen_role": "S2 is the observer-facing cap/symmetry chart, not a raw point-cloud proof of dimension.",
-            "lorentz_route": "support-visible BW/KMS cap flow with s=2*pi*t gives Conf+(S2) ~= SO+(3,1).",
-            "spatial_chart": "H3 is the spatial homogeneous chart SO+(3,1)/SO(3).",
+            "lorentz_route": (
+                "support-visible BW-framed cap automorphism with s=2*pi*t gives "
+                "Conf+(S2) ~= SO+(3,1); finite BW3 evidence is the separate issue #308 BWRec audit, "
+                "issue #309 cap-normal H3 chart evidence is CAP_NORMAL_H3_CHART_RECEIPT, and "
+                "issue #310 record-populated H3 localization evidence is "
+                "MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT."
+            ),
+            "spatial_chart": (
+                "H3 is the observer-frame homogeneous chart SO+(3,1)/SO(3). The issue #309 receipt "
+                "checks q(Omega), n_C, signed incidence, n_gC=Lambda_g n_C, and H3 future-sheet fields. "
+                "The issue #310 receipt can populate observer-facing H3 only with certified "
+                "localization balls from record-conditioned cap responses, compact-domain, alpha>0, "
+                "bounded-error, and Delta_loc controls."
+            ),
             "finite_gate": "finite runs must separately show observer records/objects/defects populate that chart under controls.",
             "strict_neutral_route": (
                 "chart-blind strict neutral quotient bulk must be reconstructed from neutral observer/object "
@@ -885,7 +920,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "Tiered OPH proof/readout certificate. C0a/T0 is only finite settling; C0b finite "
             "consensus requires strict theorem-phase replay and may remain false even when final_phi is zero. "
             "L0/T2 is branch replay: the declared BW/KMS 2pi route executes under current controls, "
-            "but the full L1-L7 finite Lorentz theorem contract remains false. T3 is the conformal H3 chart route for this run. "
+            "but the full L1-L7 finite Lorentz theorem contract remains false. T3 is the conformal/cap-normal H3 chart route for this run. "
             "T5a is theorem-assisted H3 preview evidence from observer objects. "
             "T5b is stricter non-boundary H3 object population evidence. T5c is a scale-compressed "
             "logical repair-round H3 preview and is intentionally not promoted to T5b/T6. "

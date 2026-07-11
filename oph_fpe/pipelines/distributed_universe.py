@@ -69,7 +69,7 @@ def prepare_distributed_oph_universe(
     seed_stride: int = 1009,
     seam_halo_width: int = 2048,
 ) -> dict[str, Any]:
-    """Prepare a theorem-honest distributed OPH universe run.
+    """Prepare a theorem-aligned distributed OPH universe run.
 
     Each shard is a bounded observer-like self-reading screen patch. The reducer
     may certify a federated witness, but it must not promote the run to a single

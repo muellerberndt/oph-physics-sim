@@ -171,6 +171,25 @@ Exploration runs may emit `C0a` and still keep `C0b` false.
 
 The paper-route Lorentz/H3 claim is layered:
 
+- `BWRec_r`: the issue #308 finite cap-normal BW receipt object
+  `(CapNormal_r, Frame_r, Order_r, Support_r, CrossRatio_r, Matrix_r, KMS_r, Error_r)`.
+  It is audited by `issue-308-bw-certificate` and emits exactly one of `BW0`, `BW1`, `BW2`, or
+  `BW3`. The BW3 tier is recomputed from primitive fields and a passing refinement envelope; it
+  must not trust caller-provided `bw_passed` or `tier` booleans.
+- `CAP_NORMAL_H3_CHART_RECEIPT`: the issue #309 cap-normal H3 chart receipt. It recomputes
+  `q(Omega)=(1,Omega)`, analytic or globally certified round-cap normals
+  `n_C=(cot(alpha),csc(alpha)c)`, the signed boundary incidence rule,
+  Lorentz residuals, `n_{gC}=Lambda_g n_C`, H3 future-sheet residuals, and distance invariance
+  from primitive fields. Fitted caps without a global round-cap certificate are approximate and
+  cannot emit theorem-certified chart status.
+- `MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT`: the issue #310 record-populated H3 localization
+  receipt. It recomputes the record-conditioned response inverse from primitive response fields:
+  cap normals, `B`, `W`, frame rank, `sigma_min(W^1/2 B)`, compact source domain, net radius,
+  calibrated responses, total error, residual minimizer, localization radius
+  `R_H[(L/alpha)epsilon+(2/alpha)sigma+(1/alpha)tau]`, and `Delta_loc`. It may emit a unique
+  finite point only when `Delta_loc > 0`; otherwise the output is `H3_LOCALIZATION_AMBIGUOUS`.
+  Pre-existing H3 point clouds, object packets, or viewer coordinates are controls or diagnostics,
+  not independent localization receipts.
 - `L0`: the simulator replayed a declared BW/KMS branch and controls did not trivially reproduce it.
 - `L1-L2`: the cap state and modular generator were built from observer-visible finite record data
   without using hidden geometry or the target flow.
@@ -183,8 +202,14 @@ The paper-route Lorentz/H3 claim is layered:
 - `H1`: observer-local readouts experience the H3 chart through visible records and modular time.
 - `H1b`: persistent observer objects populate the H3 chart under controls.
 
-Only the conjunction of the relevant `L` receipts should be presented as a finite Lorentz theorem
-contract. `H0/H1` alone are useful paper-route diagnostics and visualizations.
+Only the conjunction of the relevant `L` receipts plus a BW3 issue #308 certificate should be
+presented as a theorem-aligned finite cap-net BW receipt. Only a passing
+`CAP_NORMAL_H3_CHART_RECEIPT` should be presented as the issue #309 chart theorem receipt. Only a
+passing `MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT` should be presented as the issue #310
+record-populated observer-facing H3 localization receipt. `H0/H1` alone are useful paper-route
+diagnostics and visualizations. A renderer cap, fitted boost, finite cap-ID permutation, dimension
+estimate, coefficient near `2pi`, or existing H3 coordinate file is not a theorem receipt without
+the primitive `BWRec_r`, cap-normal H3 chart fields, and modular-response localization fields.
 
 ## Strict Neutral Bulk Contract
 
@@ -240,8 +265,9 @@ motion, or apparent attraction as a proof of gravity. Those lanes may emit diagn
 compaction, and curvature fields for rendering, but production-gravity wording is closed unless the
 E0 bridge manifest passes.
 
-`E0` is now the OPH5 recovered-core Einstein bridge manifest, not a generic finite-consensus
-promotion. The paper-side theorem discharge is recorded in `einstein_bridge_manifest.json` via
+`E0` names the OPH5 recovered-core Einstein bridge manifest. Generic
+finite-consensus promotion is outside this receipt. The paper-side theorem
+discharge is recorded in `einstein_bridge_manifest.json` via
 `EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT=true` and provenance tags such as
 `S2_screen=AXIOM_1`, `BW_2pi=THEOREM_4_2`, `BoundedInterval=LEMMA_E0_5`,
 `RemainderControl=LEMMA_E0_6`, `AllTimelikeCoverage=LEMMA_E0_7`,

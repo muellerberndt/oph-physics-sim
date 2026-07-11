@@ -1441,6 +1441,27 @@ def main(argv: list[str] | None = None) -> int:
     overlap_residual_graph_sweep_parser.add_argument("--k-neighbor-values", default="12")
     overlap_residual_graph_sweep_parser.add_argument("--remove-mode-values", default="1")
 
+    issue308_bw_parser = subparsers.add_parser(
+        "issue-308-bw-certificate",
+        help="write the issue #308 finite cap-normal BW certificate audit from primitive BWRec fields",
+    )
+    issue308_bw_parser.add_argument("--source", required=True, type=Path)
+    issue308_bw_parser.add_argument("--out", required=True, type=Path)
+
+    issue309_h3_parser = subparsers.add_parser(
+        "cap-normal-h3-chart",
+        help="write the issue #309 CAP_NORMAL_H3_CHART_RECEIPT audit from primitive chart fields",
+    )
+    issue309_h3_parser.add_argument("--source", required=True, type=Path)
+    issue309_h3_parser.add_argument("--out", required=True, type=Path)
+
+    issue310_localization_parser = subparsers.add_parser(
+        "modular-response-h3-localization",
+        help="write the issue #310 MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT audit from response fields",
+    )
+    issue310_localization_parser.add_argument("--source", required=True, type=Path)
+    issue310_localization_parser.add_argument("--out", required=True, type=Path)
+
     paper_chart_parser = subparsers.add_parser(
         "paper-chart-receipts",
         help="write paper-side S2 conformal/Lorentz/H3 chart receipts into a run folder",
@@ -1644,6 +1665,12 @@ def main(argv: list[str] | None = None) -> int:
         help="write the exact Lean-mirrored Rule-90 consensus fixture receipt",
     )
     rule90_parser.add_argument("--out", default=None, type=Path)
+
+    proof_chain_parser = subparsers.add_parser(
+        "matscheko-proof-chain-import",
+        help="write the Matscheko proof-chain import and gate-status receipt",
+    )
+    proof_chain_parser.add_argument("--out", default=None, type=Path)
 
     args = parser.parse_args(argv)
     if args.command == "run":
@@ -3043,6 +3070,24 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "issue-308-bw-certificate":
+        from oph_fpe.bulk.bw_certificate_308 import write_issue308_bw_certificate_report
+
+        result = write_issue308_bw_certificate_report(args.source, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "cap-normal-h3-chart":
+        from oph_fpe.bulk.cap_normal_h3_chart import write_cap_normal_h3_chart_report
+
+        result = write_cap_normal_h3_chart_report(args.source, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "modular-response-h3-localization":
+        from oph_fpe.bulk.modular_response_h3_localization import write_modular_response_h3_localization_report
+
+        result = write_modular_response_h3_localization_report(args.source, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "paper-chart-receipts":
         from oph_fpe.bulk.conformal_spatial_chart import write_paper_chart_receipts
 
@@ -3252,6 +3297,15 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.consensus import rule90_lean_consensus_fixture_report
 
         result = rule90_lean_consensus_fixture_report()
+        if args.out is not None:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "matscheko-proof-chain-import":
+        from oph_fpe.consensus import matscheko_proof_chain_import_report
+
+        result = matscheko_proof_chain_import_report()
         if args.out is not None:
             args.out.parent.mkdir(parents=True, exist_ok=True)
             args.out.write_text(json.dumps(result, indent=2, default=str), encoding="utf-8")

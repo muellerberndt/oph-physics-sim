@@ -6,6 +6,7 @@ from typing import Any
 
 from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
+    CAP_NORMAL_H3_CHART_RECEIPT,
     EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT,
     EINSTEIN_BRANCH_ENTRY_RECEIPT,
     EINSTEIN_BRANCH_ISSUE_503_RECEIPT,
@@ -16,12 +17,17 @@ from oph_fpe.claims import (
     EINSTEIN_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT,
     EINSTEIN_NULL_STRESS_CHARGE_RECEIPT,
     EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT,
+    ISSUE_308_BW_CERTIFICATE_RECEIPT,
+    MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
     OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     with_claim_metadata,
 )
+from oph_fpe.bulk.bw_certificate_308 import issue308_bw_certificate_report
+from oph_fpe.bulk.cap_normal_h3_chart import cap_normal_h3_chart_report
 from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report
+from oph_fpe.bulk.modular_response_h3_localization import modular_response_h3_localization_report
 
 
 def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
@@ -47,6 +53,9 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     einstein = _read_json(root / "einstein_branch_entry_report.json")
     explicit_einstein_bridge_manifest = _read_json(root / "einstein_bridge_manifest.json")
     einstein_bridge = explicit_einstein_bridge_manifest or einstein_bridge_manifest_report(root)
+    issue308_bw = _read_issue308_bw_certificate(root)
+    issue309_h3 = _read_issue309_cap_normal_h3_chart(root)
+    issue310_h3loc = _read_issue310_modular_response_h3_localization(root)
     use_einstein_bridge_manifest = bool(explicit_einstein_bridge_manifest)
     refinement_summary = (
         refinement.get("refinement_summary")
@@ -128,6 +137,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     object_population = bool(
         object_chart.get("OBJECT_BULK_POPULATION_RECEIPT", False)
         or object_chart.get("observer_chart_bulk_population_receipt", False)
+        or issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)
     )
     observer_3p1d = bool(
         observer.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
@@ -342,8 +352,17 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "B2_observer_object_population": _stage(
             object_population,
-            "observer-visible objects populate the H3 chart away from boundary/leakage controls",
+            "observer-visible records populate the H3 chart through the issue #310 cap-response localization receipt or the older object-population gate",
             missing=object_blockers,
+            details={
+                "object_chart_population_receipt": object_chart.get("OBJECT_BULK_POPULATION_RECEIPT")
+                or object_chart.get("observer_chart_bulk_population_receipt"),
+                "issue_310_modular_response_h3_localization_receipt": issue310_h3loc.get(
+                    MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT
+                ),
+                "issue_310_terminal_status": issue310_h3loc.get("terminal_status"),
+                "issue_310_blockers": issue310_h3loc.get("blockers", []),
+            },
         ),
         "B3_observer_facing_3p1d_experience": _stage(
             observer_3p1d,
@@ -560,6 +579,43 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "required_receipt_files": list(einstein_bridge.get("requiredReceiptFiles") or []),
             "provenance_tags": dict(einstein_bridge.get("provenanceTags") or {}),
         },
+        "issue_308_bw_certificate": {
+            "receipt": bool(issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT, False)),
+            "tier": issue308_bw.get("tier", "BW0"),
+            "report_written": bool(issue308_bw),
+            "nonclaims": dict(issue308_bw.get("nonclaims") or {}),
+            "primary_blockers": [
+                name
+                for name, row in (issue308_bw.get("clauses") or {}).items()
+                if isinstance(row, dict) and not row.get("passed", False)
+            ][:6],
+        },
+        ISSUE_308_BW_CERTIFICATE_RECEIPT: bool(issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT, False)),
+        "issue_308_finite_cap_bw_certificate_receipt": bool(
+            issue308_bw.get("issue_308_finite_cap_bw_certificate_receipt", False)
+        ),
+        "issue_309_cap_normal_h3_chart": {
+            "receipt": bool(issue309_h3.get(CAP_NORMAL_H3_CHART_RECEIPT, False)),
+            "terminal_status": issue309_h3.get("terminal_status"),
+            "report_written": bool(issue309_h3),
+            "mandatory_nonclaims": dict(issue309_h3.get("mandatory_nonclaims") or {}),
+            "primary_blockers": list(issue309_h3.get("blockers") or [])[:6],
+        },
+        CAP_NORMAL_H3_CHART_RECEIPT: bool(issue309_h3.get(CAP_NORMAL_H3_CHART_RECEIPT, False)),
+        "cap_normal_h3_chart_receipt": bool(issue309_h3.get("cap_normal_h3_chart_receipt", False)),
+        "issue_310_modular_response_h3_localization": {
+            "receipt": bool(issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)),
+            "terminal_status": issue310_h3loc.get("terminal_status"),
+            "report_written": bool(issue310_h3loc),
+            "component_receipts": dict(issue310_h3loc.get("component_receipts") or {}),
+            "primary_blockers": list(issue310_h3loc.get("blockers") or [])[:6],
+        },
+        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: bool(
+            issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)
+        ),
+        "h3_modular_response_localization_receipt": bool(
+            issue310_h3loc.get("h3_modular_response_localization_receipt", False)
+        ),
         "blockers": blockers,
         "primary_blockers": blockers[:6],
         "paper_geometric_branch_blockers": paper_geometric_branch_blockers,
@@ -576,13 +632,18 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "Paper-faithful finite OPH spacetime/bulk emergence audit. This is stricter than branch "
             "replay: OPH tech must instantiate observer-like self-reading systems with local state, "
             "boundaries, readback, records, feedback/repair moves, and public evidence bundles. The "
-            "finite Lorentz/modular contract stops at support-visible BW covariance, ordered cut-pair "
-            "rigidity, Lorentz algebra closure, and an endogenous finite KMS clock fit. Separately, "
-            "the paper-geometric branch receipt uses the declared KMS collar/cap 2*pi normalization "
-            "from the theorem chart instead of claiming the finite run rediscovered that normalization "
-            "endogenously. The observer spacetime receipt adds the H3 response and observer-local "
-            "3+1D experience. The observer-facing consensus 3D bulk receipt adds shared object "
-            "population in that H3 chart. The chart-blind strict neutral quotient audit is a separate "
+            "legacy finite Lorentz/modular L-lane stops at support-visible BW covariance, cut-pair "
+            "rigidity diagnostics, Lorentz algebra closure, and an endogenous finite KMS clock fit. "
+            "The issue #308 BW3 theorem receipt is stricter: it requires primitive cap-normal, frame, "
+            "support-order, held-out cross-ratio, mixed-GNS, geometric KMS, wrong-scale, and envelope "
+            "fields. Separately, the paper-geometric branch receipt uses the declared theorem chart "
+            "instead of claiming the finite run rediscovered that normalization endogenously. The "
+            "issue #309 chart receipt proves the cap-normal H3 chart; the issue #310 localization "
+            "receipt is the stricter route for record-populated observer-facing H3, requiring "
+            "record-conditioned responses, a compact domain, alpha>0, bounded error, and positive "
+            "Delta_loc for unique finite points. The observer spacetime receipt adds the H3 response "
+            "and observer-local 3+1D experience. The observer-facing consensus 3D bulk receipt adds "
+            "shared record/object population in that H3 chart. The chart-blind strict neutral quotient audit is a separate "
             "stronger certificate and is reported without being required for the observer-facing 3D "
             "theorem receipt. The Einstein branch-entry receipt is separate again: the E0 paper theorem "
             "discharges the OPH5 bridge dependencies, but no run promotes production gravity unless the "
@@ -712,6 +773,62 @@ def _read_json(path: Path) -> dict[str, Any]:
     except json.JSONDecodeError:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def _read_issue308_bw_certificate(root: Path) -> dict[str, Any]:
+    for name in (
+        "issue_308_bw_certificate_report.json",
+        "bw_issue308_certificate_report.json",
+        "finite_cap_bw_certificate_report.json",
+    ):
+        report = _read_json(root / name)
+        if report:
+            return report
+    for name in ("bw_rec_308.json", "BWRec_r.json", "issue_308_primitive_fields.json"):
+        payload = _read_json(root / name)
+        if payload:
+            return issue308_bw_certificate_report(payload)
+    return {}
+
+
+def _read_issue309_cap_normal_h3_chart(root: Path) -> dict[str, Any]:
+    for name in (
+        "cap_normal_h3_chart_report.json",
+        "issue_309_cap_normal_h3_chart_report.json",
+        "cap_normal_h3_chart_receipt.json",
+    ):
+        report = _read_json(root / name)
+        if report:
+            return report
+    for name in (
+        "cap_normal_h3_chart_source.json",
+        "issue_309_cap_normal_h3_chart_source.json",
+        "cap_normal_h3_primitive_fields.json",
+    ):
+        payload = _read_json(root / name)
+        if payload:
+            return cap_normal_h3_chart_report(payload)
+    return {}
+
+
+def _read_issue310_modular_response_h3_localization(root: Path) -> dict[str, Any]:
+    for name in (
+        "modular_response_h3_localization_report.json",
+        "issue_310_modular_response_h3_localization_report.json",
+        "h3_localization_receipt.json",
+    ):
+        report = _read_json(root / name)
+        if report:
+            return report
+    for name in (
+        "modular_response_h3_localization_source.json",
+        "issue_310_modular_response_h3_localization_source.json",
+        "h3_localization_primitive_fields.json",
+    ):
+        payload = _read_json(root / name)
+        if payload:
+            return modular_response_h3_localization_report(payload)
+    return {}
 
 
 def _markdown(report: dict[str, Any]) -> str:

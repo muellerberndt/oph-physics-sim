@@ -52,8 +52,8 @@ AWS CPU: c7i/c7a/c8g high-core instances for parallel seed batches
 RunPod/Lambda/Modal GPU: defer until dense eigensolvers, persistent homology, learned repair, or CAMB sweeps dominate
 ```
 
-Use a dedicated simulation project for artifacts and coordination. Renting GPU pods now would
-mostly accelerate the wrong layer unless we first add GPU-native kernels.
+Use a dedicated simulation project for artifacts and coordination. GPU pods
+mostly accelerate the wrong layer while the simulator lacks GPU-native kernels.
 
 ## Local Secrets
 

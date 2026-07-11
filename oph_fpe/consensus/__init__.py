@@ -1,6 +1,13 @@
 from oph_fpe.consensus.boundary_fiber import boundary_conditioned_uniqueness_receipt
 from oph_fpe.consensus.fair_block import fair_block_consensus_certificate
 from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
+from oph_fpe.consensus.proof_chain_imports import (
+    chi_nu_g10_energy_ledger_report,
+    chi_nu_g9_bridge_gate_report,
+    finite_audit_import_report,
+    matscheko_proof_chain_import_report,
+    p_branch_provenance_report,
+)
 from oph_fpe.consensus.rule90_contract import (
     RULE90_LEAN_CONSENSUS_FIXTURE_RECEIPT,
     rule90_boundary_bad,
@@ -40,13 +47,18 @@ __all__ = [
     "atomic_diamond_report",
     "boundary_conditioned_uniqueness_receipt",
     "canonical_state_hash",
+    "chi_nu_g10_energy_ledger_report",
+    "chi_nu_g9_bridge_gate_report",
     "classify_union_repair",
     "commit_transaction",
     "conflict_components",
     "exhaustive_transition_graph_report",
     "fair_block_consensus_certificate",
+    "finite_audit_import_report",
     "gauge_relabeling_invariance_report",
     "lyapunov_descent_receipt",
+    "matscheko_proof_chain_import_report",
+    "p_branch_provenance_report",
     "prepare_transaction",
     "rule90_boundary_bad",
     "rule90_boundary_good",

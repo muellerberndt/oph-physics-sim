@@ -95,6 +95,7 @@ rsync -az oph@DROPLET_IP:/opt/oph-fpe/oph-physics-sim/runs/ runs/digitalocean/DR
 
 ## Why Tags Matter
 
-Tag the pool Droplets with `oph-fpe-worker` and `oph-fpe`. DigitalOcean recommends tagging autoscale
-pool Droplets so load balancers and cloud firewalls can target the whole pool automatically. We do
-not need a load balancer for batch simulation, but tags make firewalling and discovery cleaner.
+Tag the pool Droplets with `oph-fpe-worker` and `oph-fpe`. DigitalOcean
+recommends tagging autoscale pool Droplets so load balancers and cloud firewalls
+can target the whole pool automatically. Batch simulation does not need a load
+balancer. Tags keep firewalling and discovery cleaner.
