@@ -88,12 +88,47 @@ def test_sm_candidate_sieve_checks_visible_low_energy_gates():
 
 def test_borel_weil_higgs_carrier_receipt_is_carrier_only():
     report = borel_weil_higgs_carrier_receipt()
+    geometry = report["symmetry_breaking_geometry"]
+    action = report["group_action_acceptance"]
 
     assert report["BOREL_WEIL_HIGGS_CARRIER_RECEIPT"] is True
+    assert report["schema"] == "oph_borel_weil_higgs_carrier_bridge_v1"
+    assert report["mode"] == "borel_weil_higgs_carrier_bridge_v1"
     assert report["checks"]["section_degree_is_minimal_nontrivial"] is True
     assert report["checks"]["neutral_lower_component"] is True
+    assert report["checks"]["projective_ray_stabilizer_is_two_torus"] is True
+    assert report["checks"]["vector_stabilizer_is_u1_q"] is True
+    assert geometry["cover_action"] == "(g,z).phi = z^3 g phi"
+    assert geometry["projective_ray_stabilizer_on_cover"] == "{(diag(a,a^-1),z): a,z in U(1)}"
+    assert geometry["projective_ray_stabilizer"] == "(U(1)_T3 x U(1)_Y)/finite_center"
+    assert geometry["projective_stabilizer_dimension"] == 2
+    assert geometry["projective_orbit_dimension"] == 2
+    assert geometry["vector_stabilizer"] == "U(1)_Q"
+    assert geometry["vector_stabilizer_on_cover"] == "{(diag(z^3,z^-3),z): z in U(1)}"
+    assert geometry["vector_stabilizer_dimension"] == 1
+    assert geometry["goldstone_count"] == 3
+    assert geometry["goldstone_count"] == geometry["broken_generator_count"]
+    assert action["hypercharge_fixes_projective_ray"] is True
+    assert action["t3_fixes_projective_ray"] is True
+    assert action["hypercharge_fixes_vector"] is False
+    assert action["t3_fixes_vector"] is False
+    assert action["diagonal_q_fixes_vector"] is True
     assert "higgs_mass" in report["explicit_nonclaims"]
     assert report["physical_claim"] is False
+
+
+def test_borel_weil_higgs_stabilizers_pass_arbitrary_nontrivial_phase_checks():
+    for phase in (0.173, 0.731, 1.417):
+        report = borel_weil_higgs_carrier_receipt({"stabilizer_test_phase_radians": phase})
+        action = report["group_action_acceptance"]
+
+        assert report["BOREL_WEIL_HIGGS_CARRIER_RECEIPT"] is True
+        assert action["test_phase_radians"] == phase
+        assert action["hypercharge_fixes_projective_ray"] is True
+        assert action["t3_fixes_projective_ray"] is True
+        assert action["hypercharge_fixes_vector"] is False
+        assert action["t3_fixes_vector"] is False
+        assert action["diagonal_q_fixes_vector"] is True
 
 
 def test_borel_weil_higgs_carrier_blocks_quantitative_promotion():
@@ -112,7 +147,12 @@ def test_borel_weil_higgs_carrier_report_writer(tmp_path):
 
     assert report["BOREL_WEIL_HIGGS_CARRIER_RECEIPT"] is True
     assert payload["carrier_identification"] == "H_OPH = H^0(CP1, O(1)) ~= C^2"
+    assert payload["symmetry_breaking_geometry"]["projective_stabilizer_dimension"] == 2
+    assert payload["symmetry_breaking_geometry"]["vector_stabilizer_dimension"] == 1
     assert markdown_path.exists()
+    assert "Projective-ray stabilizer: (U(1)_T3 x U(1)_Y)/finite_center" in markdown_path.read_text(
+        encoding="utf-8"
+    )
     assert "does not derive m_H" in markdown_path.read_text(encoding="utf-8")
 
 
