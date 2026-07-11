@@ -61,8 +61,14 @@ def regularized_modular_generator(rho: np.ndarray, a: float) -> np.ndarray:
 
 
 def modular_unitary(K: np.ndarray, t: float) -> np.ndarray:
+    """Return the paper-convention modular unitary ``exp(-i t K)``.
+
+    The compact paper defines ``K=-log(rho)`` and transports observables as
+    ``exp(-i t K) A exp(+i t K)``.  Keeping that sign here avoids silently
+    reversing the oriented cap flow in every state-derived probe.
+    """
     eigvals, eigvecs = np.linalg.eigh(_hermitian(K))
-    phases = np.exp(1j * float(t) * eigvals)
+    phases = np.exp(-1j * float(t) * eigvals)
     return (eigvecs * phases) @ eigvecs.conj().T
 
 
@@ -745,11 +751,12 @@ def transition_response_modular_generator(
 
 
 def modular_generator_from_unitary_transition(transition: np.ndarray, response_time: float) -> np.ndarray:
-    values, vectors = np.linalg.eig(np.asarray(transition, dtype=complex))
-    phases = np.angle(values) / max(float(response_time), 1e-12)
-    inverse = np.linalg.inv(vectors)
-    generator = vectors @ np.diag(phases) @ inverse
-    return _hermitian(generator)
+    unitary = np.asarray(transition, dtype=complex)
+    lag = max(float(response_time), 1.0e-12)
+    # U=exp(-i dt K), so on the principal logarithm branch K=(+i/dt)log(U).
+    # The previous Koopman path used -i/dt and therefore reconstructed U^*,
+    # reversing the inferred modular-time orientation.
+    return _hermitian((1j / lag) * logm(unitary))
 
 
 def history_koopman_modular_generator(
@@ -808,14 +815,17 @@ def history_koopman_modular_generator(
     transition = C00_inv @ C01 @ C11_inv
     try:
         unitary, _positive = polar(transition)
-        log_unitary = logm(unitary)
-        generator = _hermitian((-1j / max(float(effective_response_lag), 1.0e-12)) * log_unitary)
+        generator = modular_generator_from_unitary_transition(unitary, effective_response_lag)
     except Exception:
         generator = np.zeros((basis.size, basis.size), dtype=complex)
         unitary = np.eye(basis.size, dtype=complex)
     if not np.all(np.isfinite(generator)):
         generator = np.zeros((basis.size, basis.size), dtype=complex)
     nonunitary_defect = _relative_frobenius(transition - unitary, transition)
+    generator_reconstruction_error = _relative_frobenius(
+        modular_unitary(generator, effective_response_lag) - unitary,
+        unitary,
+    )
     generator_norm = float(np.linalg.norm(generator, ord="fro"))
     return generator, {
         "usable": True,
@@ -830,6 +840,7 @@ def history_koopman_modular_generator(
         "effective_response_lag": float(effective_response_lag),
         "response_lag_source": response_lag_source,
         "nonunitary_defect": float(nonunitary_defect),
+        "generator_reconstruction_error": float(generator_reconstruction_error),
         "generator_frobenius_norm": generator_norm,
         "geometry_dependency_count": 0,
         "claim_boundary": (
@@ -1698,13 +1709,17 @@ def _inferred_modular_clock_fit(
         known=known,
         fit_label="informative_nonstatic_clock_carrier_rows",
     )
-    selected_fit = (
-        all_row_fit
-        if all_row_fit.get("receipt", False)
-        else clock_carrier_fit
-        if clock_carrier_fit.get("receipt", False)
-        else informative_clock_carrier_fit
+    # This selection rule is fixed before looking at which fit passes.  The old
+    # implementation tried several overlapping subsets and selected the first
+    # passing one, which made the receipt vulnerable to subset shopping.
+    # Prefer genuinely scale-informative carriers; if there are too few of
+    # those, report the non-static carrier fit as a diagnostic.  ``all_rows``
+    # remains visible below but can no longer rescue the receipt.
+    informative_ready = bool(
+        informative_clock_carrier_fit.get("valid_row_count", 0) > 0
+        and informative_clock_carrier_fit.get("distinct_time_count", 0) >= 3
     )
+    selected_fit = informative_clock_carrier_fit if informative_ready else clock_carrier_fit
     receipt = bool(selected_fit.get("receipt", False))
     blockers: list[str] = []
     if not receipt:
@@ -1726,6 +1741,9 @@ def _inferred_modular_clock_fit(
         "kms_geometric_clock_fit_receipt": receipt,
         "mode": "inferred_modular_clock_fit",
         "selected_clock_fit": selected_fit.get("fit_label"),
+        "clock_fit_selection_policy": (
+            "predeclared_informative_nonstatic_carriers_else_nonstatic_carriers_no_pass_shopping"
+        ),
         "row_count": int(len(rows)),
         "valid_row_count": int(len(valid)),
         "clock_carrier_row_count": int(len(clock_carrier_rows)),
@@ -1890,6 +1908,16 @@ def _clock_fit_from_rows(
             blockers.append(f"{label}_not_excluded_by_kappa_confidence_interval")
     if nearest_known != "2pi":
         blockers.append(f"nearest_known_scale_is_{nearest_known}")
+    if two_pi_residual is None:
+        blockers.append("two_pi_residual_missing")
+    else:
+        competing = {
+            label: value
+            for label, value in median_known_residuals.items()
+            if label in {"0", "1x", "pi", "4pi"}
+        }
+        if competing and not all(float(two_pi_residual) < float(value) for value in competing.values()):
+            blockers.append("two_pi_does_not_strictly_beat_all_declared_scale_controls")
     if response_degenerate:
         blockers.append("inferred_clock_response_degenerate_or_wrong_scale")
     return {

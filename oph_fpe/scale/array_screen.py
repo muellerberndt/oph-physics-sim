@@ -37,7 +37,10 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     gauge = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
     modular_depth = rng.random(patch_count, dtype=np.float64)
     modular_time = np.zeros(patch_count, dtype=np.float64)
-    stable_count = np.zeros(patch_count, dtype=np.int16)
+    # Record stability can legitimately outlive an int16 counter in long
+    # campaigns.  Keep it wide and update it through the saturating helper
+    # below so a settled record can never wrap back to a small/negative age.
+    stable_count = np.zeros(patch_count, dtype=np.uint32)
     committed = np.zeros(patch_count, dtype=bool)
     prev_signature = np.full(patch_count, -1, dtype=np.int64)
     degree = np.bincount(np.concatenate([left, right]), minlength=patch_count).astype(np.float64)
@@ -103,10 +106,14 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
             cap_drive=modular_cap_drive,
         )
         signature = _node_signature(port_left, port_right, left, right, patch_count)
-        stable_count = np.where(signature == prev_signature, stable_count + 1, 1)
+        stable_count, committed = _advance_record_commit_state(
+            signature,
+            prev_signature,
+            stable_count,
+            incident_mismatch,
+            commit_cycles=commit_cycles,
+        )
         prev_signature = signature
-        newly_committed = (~committed) & (stable_count >= commit_cycles)
-        committed |= newly_committed
         if cycle % trace_interval == 0 or cycle == cycles - 1:
             depth_samples.append(modular_depth.copy())
         trace.append(
@@ -261,10 +268,76 @@ def _node_signature(
     right: np.ndarray,
     patch_count: int,
 ) -> np.ndarray:
-    return (
-        np.bincount(left, weights=(port_left + 1), minlength=patch_count)
-        + np.bincount(right, weights=(port_right + 1), minlength=patch_count)
-    ).astype(np.int64)
+    """Return a deterministic hash of every oriented incident port packet.
+
+    The former signature was just a sum, so records such as ``[0, 2]`` and
+    ``[1, 1]`` were indistinguishable.  This vectorized multiset hash keys each
+    packet by its edge slot, endpoint orientation, and exact label.  It keeps
+    the O(E) memory/time profile needed by the large array runs while reducing
+    accidental record collisions to a 64-bit hash collision.
+    """
+
+    port_left = np.asarray(port_left, dtype=np.uint64)
+    port_right = np.asarray(port_right, dtype=np.uint64)
+    left = np.asarray(left, dtype=np.int64)
+    right = np.asarray(right, dtype=np.int64)
+    if port_left.shape != port_right.shape or port_left.shape != left.shape or left.shape != right.shape:
+        raise ValueError("port packets and edge endpoint arrays must have matching shapes")
+
+    edge_slot = np.arange(port_left.size, dtype=np.uint64)
+    # The constants are independent odd 64-bit salts.  SplitMix64 then
+    # avalanches every input bit before endpoint contributions are combined.
+    left_tokens = edge_slot ^ ((port_left + np.uint64(1)) * np.uint64(0xD6E8FEB86659FD93))
+    right_tokens = edge_slot ^ ((port_right + np.uint64(1)) * np.uint64(0xA5A3564E27F8862D))
+    signatures = np.zeros(int(patch_count), dtype=np.uint64)
+    np.bitwise_xor.at(signatures, left, _splitmix64(left_tokens))
+    np.bitwise_xor.at(signatures, right, _splitmix64(right_tokens))
+    return signatures.view(np.int64)
+
+
+def _splitmix64(values: np.ndarray) -> np.ndarray:
+    """Vectorized SplitMix64 finalizer with intentional uint64 wraparound."""
+
+    with np.errstate(over="ignore"):
+        mixed = np.asarray(values, dtype=np.uint64) + np.uint64(0x9E3779B97F4A7C15)
+        mixed = (mixed ^ (mixed >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
+        mixed = (mixed ^ (mixed >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
+        return mixed ^ (mixed >> np.uint64(31))
+
+
+def _advance_record_commit_state(
+    signature: np.ndarray,
+    previous_signature: np.ndarray,
+    previous_stable_count: np.ndarray,
+    incident_mismatch: np.ndarray,
+    *,
+    commit_cycles: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Advance record age and derive *current*, revocable commit status.
+
+    A commit denotes a presently stable and overlap-consistent readback.  It is
+    therefore revoked as soon as the local record changes or an incident
+    mismatch appears; commits are not sticky historical flags.
+    """
+
+    signature = np.asarray(signature, dtype=np.int64)
+    previous_signature = np.asarray(previous_signature, dtype=np.int64)
+    previous_stable_count = np.asarray(previous_stable_count, dtype=np.uint32)
+    incident_mismatch = np.asarray(incident_mismatch)
+    if not (
+        signature.shape
+        == previous_signature.shape
+        == previous_stable_count.shape
+        == incident_mismatch.shape
+    ):
+        raise ValueError("record commit arrays must have matching shapes")
+
+    maximum = np.uint64(np.iinfo(np.uint32).max)
+    incremented = np.minimum(previous_stable_count.astype(np.uint64) + np.uint64(1), maximum).astype(np.uint32)
+    stable_count = np.where(signature == previous_signature, incremented, np.uint32(1)).astype(np.uint32)
+    threshold = np.uint32(max(1, int(commit_cycles)))
+    committed = (stable_count >= threshold) & (incident_mismatch <= 0)
+    return stable_count, committed
 
 
 def _entropy(values: np.ndarray) -> float:

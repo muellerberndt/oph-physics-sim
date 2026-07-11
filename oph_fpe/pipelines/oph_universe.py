@@ -60,6 +60,7 @@ from oph_fpe.ensembles.reference_vacuum import write_reference_vacuum_baseline_r
 from oph_fpe.experiments import load_config
 from oph_fpe.gauge.yang_mills_gap import write_yang_mills_gap_certificate_report
 from oph_fpe.scale.bw_array import run_bw_array_config
+from oph_fpe.simulation_assumptions import simulation_assumption_manifest
 from oph_fpe.viz import (
     write_cmb_neutral_frontier_viewer,
     write_object_h3_bulk_viewer,
@@ -99,6 +100,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "profile_mode": "static_halfspace",
             "profile_time_scale": 2.0 * math.pi,
             "control_fit_mode": "same_h3_model_not_affine_target_fit",
+            "blind_feature_selection": True,
         },
     ),
     H3RefitRecipe(
@@ -122,6 +124,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "profile_mode": "static_halfspace",
             "profile_time_scale": 2.0 * math.pi,
             "control_fit_mode": "same_h3_model_not_affine_target_fit",
+            "blind_feature_selection": True,
         },
     ),
     H3RefitRecipe(
@@ -145,6 +148,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "profile_mode": "static_halfspace",
             "profile_time_scale": 2.0 * math.pi,
             "control_fit_mode": "same_h3_model_not_affine_target_fit",
+            "blind_feature_selection": True,
         },
     ),
     H3RefitRecipe(
@@ -168,6 +172,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "profile_mode": "static_halfspace",
             "profile_time_scale": 2.0 * math.pi,
             "control_fit_mode": "same_h3_model_not_affine_target_fit",
+            "blind_feature_selection": True,
         },
     ),
     H3RefitRecipe(
@@ -191,6 +196,7 @@ REFIT_RECIPES: tuple[H3RefitRecipe, ...] = (
             "profile_mode": "static_halfspace",
             "profile_time_scale": 2.0 * math.pi,
             "control_fit_mode": "same_h3_model_not_affine_target_fit",
+            "blind_feature_selection": True,
         },
     ),
 )
@@ -263,6 +269,8 @@ def run_oph_universe_pipeline(
             config["cosmology"] = cosmology_cfg
         base_result = run_bw_array_config(config, out_dir)
         run_dir = Path(base_result["path"])
+    assumption_manifest = simulation_assumption_manifest(base_config)
+    _write_json(run_dir / "simulation_assumption_manifest.json", assumption_manifest)
     refinement_dir = run_dir / "auto_theorem_refinement"
     refinement_dir.mkdir(parents=True, exist_ok=True)
 
@@ -274,7 +282,11 @@ def run_oph_universe_pipeline(
     _backup_original(run_dir / "observer_modular_experience_report.json", refinement_dir)
 
     h3_candidates = _run_h3_refinement_sweep(run_dir, refinement_dir, original_h3)
-    selected_h3 = max(h3_candidates, key=lambda row: row["score"]) if h3_candidates else None
+    h3_selection_cfg = dict(base_config.get("h3_modular_response", {}) or {})
+    selected_h3 = _select_predeclared_h3_candidate(
+        h3_candidates,
+        preferred_label=str(h3_selection_cfg.get("refit_recipe", REFIT_RECIPES[0].label)),
+    )
     if selected_h3 is not None:
         selected_h3_report = _read_json(Path(selected_h3["path"]))
         selected_h3_report["selected_by_oph_universe_pipeline"] = True
@@ -283,9 +295,19 @@ def run_oph_universe_pipeline(
     else:
         selected_h3_report = original_h3
 
-    object_candidates = _run_object_chart_sweep(run_dir, refinement_dir, h3_candidates)
+    object_candidates = _run_object_chart_sweep(
+        run_dir,
+        refinement_dir,
+        [selected_h3] if selected_h3 is not None else [],
+    )
     if object_candidates:
-        selected_object = max(object_candidates, key=lambda row: row["score"])
+        object_selection_cfg = dict(base_config.get("observer_chart_population", {}) or {})
+        selected_object = _select_predeclared_object_candidate(
+            object_candidates,
+            preferred_mode=str(
+                object_selection_cfg.get("refit_incidence_mode", OBJECT_INCIDENCE_MODES[0])
+            ),
+        )
         selected_object_report = _read_json(Path(selected_object["path"]))
         selected_object_report["selected_by_oph_universe_pipeline"] = True
         selected_object_report["selected_object_chart_label"] = selected_object["label"]
@@ -360,6 +382,18 @@ def run_oph_universe_pipeline(
             run_dir,
             run_dir / "cmb_neutral_frontier_viewer.html",
         )
+        post_theorem_readiness = _post_theorem_large_run_readiness(
+            theorem_contract=theorem_contract,
+            proof=proof,
+            readout=readout,
+            frontier_artifacts=frontier_artifacts,
+            cmb_diagnostics=cmb_diagnostics,
+            visualization_data_completeness=timeline.get(
+                "visual_universe_render_completeness",
+                {},
+            ),
+        )
+        _write_json(run_dir / "large_run_readiness_report.json", post_theorem_readiness)
 
     summary = {
         "mode": "oph_universe_theorem_following_pipeline_v1",
@@ -367,6 +401,7 @@ def run_oph_universe_pipeline(
         "config_path": str(config_path),
         "base_result": base_result,
         "visualization_export_settings": export_settings,
+        "simulation_assumptions": assumption_manifest,
         "selected_h3_refit": selected_h3,
         "selected_object_chart": selected_object,
         "h3_refit_candidates": _strip_scores(h3_candidates),
@@ -438,6 +473,9 @@ def run_oph_universe_pipeline(
                     theorem_contract.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False),
                 )
             ),
+            "simulation_assumed_visual_universe_receipt": bool(
+                theorem_contract.get("SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT", False)
+            ),
             "strict_neutral_bulk_contract_receipt": bool(
                 theorem_contract.get("strict_neutral_bulk_contract_receipt", False)
             ),
@@ -473,6 +511,9 @@ def run_oph_universe_pipeline(
             ),
             "paper_geometric_branch_consensus_bulk_emergence_receipt": theorem_contract.get(
                 "paper_geometric_branch_consensus_bulk_emergence_receipt"
+            ),
+            "simulation_assumed_visual_universe_receipt": theorem_contract.get(
+                "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"
             ),
             "strict_neutral_bulk_contract_receipt": theorem_contract.get("strict_neutral_bulk_contract_receipt"),
             "einstein_branch_entry_contract_receipt": theorem_contract.get(
@@ -531,6 +572,11 @@ def run_oph_universe_pipeline(
             "object_h3_viewer": object_viewer.get("viewer_path"),
             "timeline_viewer": timeline.get("viewer_path"),
             "timeline_payload": timeline.get("payload_path"),
+            "timeline_visualizer_pack": (timeline.get("visualizer_pack") or {}).get("path"),
+            "timeline_visualizer_pack_bytes": (timeline.get("visualizer_pack") or {}).get("byte_count"),
+            "timeline_visualizer_pack_under_256m": bool(
+                (timeline.get("visualizer_pack") or {}).get("under_hard_limit", False)
+            ),
             "timeline_sidecar_exports": timeline.get("sidecar_exports"),
             "timeline_instructions": timeline.get("instructions_path"),
             "web_agent_brief": timeline.get("web_coding_agent_brief_path"),
@@ -541,8 +587,9 @@ def run_oph_universe_pipeline(
             "Canonical theorem-following OPH universe run. The pipeline instantiates observer-like "
             "self-reading systems, runs a finite overlap-repair simulation, refits the cached modular "
             "response through controlled H3 candidates, recomputes observer-object chart population, "
-            "and emits proof/readout/viewer artifacts. It does not lower receipt thresholds. Failed "
-            "receipts are blockers, not bugs hidden by configuration choice."
+            "and emits proof/readout/viewer artifacts. It does not lower computed receipt thresholds. "
+            "A separately labeled simulation-assumption manifest may complete the explanatory S2/BW/H3/"
+            "dS4/topological-matter scene without changing any proof or physical-measurement receipt."
         ),
     }
     _write_json(run_dir / "AUTO_THEOREM_UNIVERSE_SUMMARY.json", summary)
@@ -584,6 +631,7 @@ def _post_theorem_large_run_readiness(
     readout: dict[str, Any],
     frontier_artifacts: dict[str, Any],
     cmb_diagnostics: dict[str, Any],
+    visualization_data_completeness: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     observer_facing_bulk = bool(
         readout.get("observer_facing_consensus_3d_bulk_readout_receipt", False)
@@ -592,6 +640,25 @@ def _post_theorem_large_run_readiness(
             or theorem_contract.get("paper_faithful_consensus_bulk_emergence_receipt", False)
         )
     )
+    assumed_visual_universe = bool(
+        theorem_contract.get("SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT", False)
+        or theorem_contract.get("simulation_assumed_visual_universe_receipt", False)
+    )
+    visualization_data_completeness = (
+        visualization_data_completeness
+        if isinstance(visualization_data_completeness, dict)
+        else {}
+    )
+    completeness_receipts = (
+        visualization_data_completeness.get("receipts", {})
+        if isinstance(visualization_data_completeness.get("receipts"), dict)
+        else {}
+    )
+    render_data_complete = bool(
+        completeness_receipts.get("VISUAL_UNIVERSE_RENDER_DATA_COMPLETE_RECEIPT", False)
+    )
+    render_ready = bool(assumed_visual_universe and render_data_complete)
+    visualization_ready = bool(observer_facing_bulk or assumed_visual_universe)
     strict_neutral = bool(
         theorem_contract.get("strict_neutral_bulk_contract_receipt", False)
         or proof.get("bulk_3d_established_chart_blind_strict_neutral", False)
@@ -622,6 +689,8 @@ def _post_theorem_large_run_readiness(
         recommended = "physical_cmb_and_strict_bulk_large_run"
     elif observer_facing_bulk:
         recommended = "observer_facing_visualization_large_run_with_diagnostic_cmb_vacuum"
+    elif assumed_visual_universe:
+        recommended = "assumption_completed_observer_universe_visualization_large_run"
     elif screen_cmb:
         recommended = "screen_cmb_proxy_refinement"
     else:
@@ -650,10 +719,38 @@ def _post_theorem_large_run_readiness(
     return {
         "mode": "post_theorem_large_run_readiness_v0",
         "recommended_large_run_lane": recommended,
-        "cloud_run_safe_for_visualization_data": observer_facing_bulk,
+        "cloud_run_safe_for_visualization_data": visualization_ready,
+        "simulation_assumptions_complete_receipt": assumed_visual_universe,
+        "visual_universe_render_data_complete_receipt": render_data_complete,
+        "visual_universe_render_ready_receipt": render_ready,
+        "visual_universe_render_data_blockers": list(
+            visualization_data_completeness.get("blockers") or []
+        ),
+        "visualization_completion_basis": (
+            "computed_observer_facing_bulk"
+            if observer_facing_bulk
+            else "explicit_visualization_assumptions"
+            if assumed_visual_universe
+            else "none"
+        ),
         "cloud_run_safe_for_physical_cmb_prediction": physical_cmb,
         "cloud_run_safe_for_strict_neutral_bulk_claim": strict_neutral,
         "lanes": {
+            "assumption_completed_visual_universe": {
+                "status": (
+                    "render_ready"
+                    if render_ready
+                    else "scale_candidate_data_pending"
+                    if assumed_visual_universe
+                    else "blocked"
+                ),
+                "scale_candidate": assumed_visual_universe,
+                "render_data_complete": render_data_complete,
+                "render_ready": render_ready,
+                "proof_receipt": False,
+                "physical_measurement_receipt": False,
+                "source_receipt": "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT",
+            },
             "observer_facing_3p1d_h3_bulk_visualization": {
                 "status": "scale_candidate" if observer_facing_bulk else "blocked",
                 "scale_candidate": observer_facing_bulk,
@@ -709,8 +806,10 @@ def _post_theorem_large_run_readiness(
         "blockers": sorted({str(blocker) for blocker in blockers if str(blocker)}),
         "claim_boundary": (
             "Post-theorem routing after H3/object refinement, finite theorem contract audit, proof "
-            "certificate, and observer readout. A visualization-safe lane can be true while physical "
-            "CMB, strict-neutral bulk, OPH-native vacuum, and production-gravity lanes remain closed."
+            "certificate, and observer readout. Visualization data may be scale-safe either from the "
+            "computed observer-facing lane or from the separately labeled explicit-assumption lane. "
+            "The latter is never a proof or measurement receipt; physical CMB, strict-neutral bulk, "
+            "OPH-native vacuum, and production-gravity lanes remain independently gated."
         ),
     }
 
@@ -1764,6 +1863,38 @@ def _object_candidate_row(label: str, path: Path, report: dict[str, Any]) -> dic
     return row
 
 
+def _select_predeclared_h3_candidate(
+    rows: list[dict[str, Any]],
+    *,
+    preferred_label: str,
+) -> dict[str, Any] | None:
+    """Select a refit by a predeclared label, never by its test score."""
+
+    if not rows:
+        return None
+    for row in rows:
+        if str(row.get("label")) == str(preferred_label):
+            return row
+    for row in rows:
+        if str(row.get("label")) == "baseline_original":
+            return row
+    return rows[0]
+
+
+def _select_predeclared_object_candidate(
+    rows: list[dict[str, Any]],
+    *,
+    preferred_mode: str,
+) -> dict[str, Any]:
+    """Select the declared incidence recipe without held-out score shopping."""
+
+    suffix = f"__{preferred_mode}"
+    for row in rows:
+        if str(row.get("label", "")).endswith(suffix):
+            return row
+    return rows[0]
+
+
 def _h3_score(row: dict[str, Any]) -> tuple[Any, ...]:
     ev = row.get("heldout_explained_variance")
     rmse = row.get("heldout_normalized_rmse")
@@ -1841,6 +1972,8 @@ def _write_readme(path: Path, summary: dict[str, Any]) -> None:
             f"- Object H3 viewer: `{viewers.get('object_h3_viewer')}`",
             f"- Universe timeline viewer: `{viewers.get('timeline_viewer')}`",
             f"- Visualization payload: `{viewers.get('timeline_payload')}`",
+            f"- Sub-256M visualizer pack: `{viewers.get('timeline_visualizer_pack')}` "
+            f"(`{viewers.get('timeline_visualizer_pack_bytes')}` bytes)",
             f"- Visualization instructions: `{viewers.get('timeline_instructions')}`",
             f"- Web coding agent brief: `{viewers.get('web_agent_brief')}`",
             "",

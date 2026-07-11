@@ -51,6 +51,8 @@ NONCLAIMS = (
     "target-data leakage invalidates a source-only label",
 )
 
+DEFAULT_UHE_PLANTED_COEFFICIENTS = (0.25, 0.35, -0.20, 0.10, 0.05)
+
 
 def binary_logit_coefficient(p_oph: float, p0: float) -> float:
     """Return logit(p_oph) - logit(p0) for a binary source gate."""
@@ -83,7 +85,7 @@ def small_signal_coefficient(covariance: list[list[float]] | np.ndarray, delta_c
 
 
 def default_uhe_inputs() -> dict[str, Any]:
-    """Return a small source-only fixture with five compact-engine features."""
+    """Return a synthetic solver fixture with five compact-engine features."""
 
     rows: list[list[float]] = []
     for a in (0.0, 1.0):
@@ -92,7 +94,7 @@ def default_uhe_inputs() -> dict[str, Any]:
                 rows.append([a, c, h, a * c, a * h])
     features = np.asarray(rows, dtype=float)
     baseline = np.ones(features.shape[0], dtype=float)
-    emitted = np.asarray([0.25, 0.35, -0.20, 0.10, 0.05], dtype=float)
+    emitted = np.asarray(DEFAULT_UHE_PLANTED_COEFFICIENTS, dtype=float)
     target = _moments_for_eta(features, baseline, emitted)
     return {
         "features": features.tolist(),
@@ -268,6 +270,13 @@ def coefficient_emission_report(
     receipt_overrides: dict[str, Any] | None = None,
     species_coefficients: dict[str, list[float]] | None = None,
 ) -> dict[str, Any]:
+    supplied_inputs = {
+        "features": features is not None,
+        "baseline_weights": baseline_weights is not None,
+        "target_moments": target_moments is not None,
+        "source_dag": source_dag is not None,
+    }
+    evidence = _evidence_classification(supplied_inputs)
     defaults = default_uhe_inputs()
     if features is None:
         features = defaults["features"]
@@ -325,16 +334,25 @@ def coefficient_emission_report(
         receipts.update({str(key): bool(value) for key, value in receipt_overrides.items()})
 
     blockers = _blockers(receipts, classifier, minimality, polytope, common_source, solver_error)
-    claim_tier, strongest = _claim_tier(receipts, classifier)
+    claim_tier, strongest = _claim_tier(receipts, classifier, evidence)
+    finite_support = {
+        "kind": "finite_enumerated_support",
+        "notation": f"U_finite = {{u_0, ..., u_{matrix.shape[0] - 1}}}",
+        "cardinality": int(matrix.shape[0]),
+        "feature_dimension": int(matrix.shape[1]),
+        "baseline_full_support": bool(receipts["BASELINE_FULL_SUPPORT"]),
+    }
 
     return {
-        "schema": "oph_uhe_coefficient_emission_v1",
+        "schema": "oph_uhe_coefficient_emission_v2",
         "artifact_type": "UHE_COEFFICIENT_EMISSION_RECEIPT",
         "problem": "high_energy_messenger_coefficients",
+        "status": _report_status(evidence),
+        "evidence_classification": evidence,
         "claim_tier": claim_tier,
         "strongest_allowed_claim": strongest,
         "physical_claim": False,
-        "source_only": claim_tier == "SOURCE_ONLY",
+        "source_only": classifier["label"] == "SOURCE_ONLY_OPH_COEFFICIENT",
         "input_hashes": {
             "features": stable_hash(matrix.astype(float).tolist()),
             "baseline": stable_hash(baseline.astype(float).tolist()),
@@ -349,21 +367,18 @@ def coefficient_emission_report(
         "solver": solver,
         "coefficients": solver.get("coefficients", []),
         "source_law": {
+            "finite_support": finite_support,
             "baseline_weights": baseline.astype(float).tolist(),
             "probabilities": solver.get("probabilities", []),
-            "weight_formula": "exp(eta.F(u)-A(eta))",
+            "weight_formula": "p_eta(u) = m_0(u) exp(eta^T F(u) - A(eta)), u in U_finite",
+            "normalizer_formula": "A(eta) = log sum_{u in U_finite} m_0(u) exp(eta^T F(u))",
         },
         "readiness_gates": receipts,
         "required_receipts": list(REQUIRED_RECEIPTS),
         "forbidden_source_tokens": list(FORBIDDEN_UHE_SOURCE_TOKENS),
         "nonclaims": list(NONCLAIMS),
         "blockers": blockers,
-        "claim_boundary": (
-            "Finite source-only coefficient emission for high-energy messenger source ledgers. "
-            "The emitted coefficients may feed neutrino, cosmic-ray, and gamma forward models "
-            "only through a shared source density and only after no-target-leak receipts pass. "
-            "This report is not a detected-source claim."
-        ),
+        "claim_boundary": _claim_boundary(evidence),
     }
 
 
@@ -473,6 +488,82 @@ def _common_source_lock(species_coefficients: dict[str, list[float]] | None) -> 
     }
 
 
+def _evidence_classification(supplied_inputs: dict[str, bool]) -> dict[str, Any]:
+    model_input_names = ("features", "baseline_weights", "target_moments")
+    supplied_model_inputs = [name for name in model_input_names if supplied_inputs[name]]
+    defaulted_inputs = [name for name, supplied in supplied_inputs.items() if not supplied]
+    explicit_inputs = [name for name, supplied in supplied_inputs.items() if supplied]
+
+    if not supplied_model_inputs:
+        return {
+            "label": "SYNTHETIC_DEMO_FIXTURE",
+            "synthetic_demo": True,
+            "default_fixture": True,
+            "coefficient_evidence": "PLANTED_COEFFICIENT_RECOVERY_ONLY",
+            "target_moment_origin": "SYNTHETIC_MOMENTS_FROM_PLANTED_COEFFICIENTS",
+            "planted_coefficients": list(DEFAULT_UHE_PLANTED_COEFFICIENTS),
+            "explicit_inputs": explicit_inputs,
+            "defaulted_inputs": defaulted_inputs,
+        }
+    if len(supplied_model_inputs) != len(model_input_names):
+        return {
+            "label": "MIXED_DEFAULT_DEMO_INPUTS",
+            "synthetic_demo": True,
+            "default_fixture": False,
+            "coefficient_evidence": "MIXED_INPUT_PIPELINE_EXERCISE",
+            "target_moment_origin": (
+                "CALLER_SUPPLIED" if supplied_inputs["target_moments"] else "DEFAULT_SYNTHETIC_TARGET_MOMENTS"
+            ),
+            "planted_coefficients": None,
+            "explicit_inputs": explicit_inputs,
+            "defaulted_inputs": defaulted_inputs,
+        }
+    return {
+        "label": "DECLARED_SOURCE_INPUTS",
+        "synthetic_demo": False,
+        "default_fixture": False,
+        "coefficient_evidence": "DECLARED_INPUT_MAXENT_SOLUTION",
+        "target_moment_origin": "CALLER_SUPPLIED",
+        "planted_coefficients": None,
+        "explicit_inputs": explicit_inputs,
+        "defaulted_inputs": defaulted_inputs,
+    }
+
+
+def _report_status(evidence: dict[str, Any]) -> str:
+    label = evidence["label"]
+    if label == "SYNTHETIC_DEMO_FIXTURE":
+        return "synthetic_demo_fixture"
+    if label == "MIXED_DEFAULT_DEMO_INPUTS":
+        return "mixed_default_demo_inputs"
+    return "declared_source_inputs"
+
+
+def _claim_boundary(evidence: dict[str, Any]) -> str:
+    label = evidence["label"]
+    if label == "SYNTHETIC_DEMO_FIXTURE":
+        return (
+            "Synthetic finite-support MaxEnt demo fixture. Its target moments are generated from planted "
+            "coefficients, so recovering those coefficients validates the numerical emission pipeline only; "
+            "it is not evidence for a physical high-energy-messenger source coefficient. Source-only here "
+            "means only that no UHE target data enter the fixture. Physical forward use still requires a "
+            "declared source law, shared source density, and passing no-target-leak receipts."
+        )
+    if label == "MIXED_DEFAULT_DEMO_INPUTS":
+        return (
+            "Mixed-input finite-support MaxEnt demo. At least one model input came from the synthetic default "
+            "fixture, so the emitted coefficient is a pipeline exercise rather than physical source evidence. "
+            "Supply features, baseline weights, and target moments explicitly before treating the report as a "
+            "declared source-input calculation."
+        )
+    return (
+        "Finite MaxEnt coefficient emission from explicitly declared model inputs for high-energy-messenger "
+        "source ledgers. The emitted coefficients may feed neutrino, cosmic-ray, and gamma forward models only "
+        "through a shared source density and only after no-target-leak receipts pass. This report remains a "
+        "source-model calculation, not a detected-source or physical-source-validation claim."
+    )
+
+
 def _blockers(
     receipts: dict[str, bool],
     classifier: dict[str, Any],
@@ -497,13 +588,23 @@ def _blockers(
     return sorted(set(blockers))
 
 
-def _claim_tier(receipts: dict[str, bool], classifier: dict[str, Any]) -> tuple[str, str]:
+def _claim_tier(
+    receipts: dict[str, bool],
+    classifier: dict[str, Any],
+    evidence: dict[str, Any],
+) -> tuple[str, str]:
     if classifier["label"] == "INVALIDATED_COEFFICIENT_DAG":
         return "INVALIDATED", "INVALIDATED_COEFFICIENT_DAG"
     if classifier["label"] == "FITTED_OPH_COEFFICIENT":
         return "FITTED", "FITTED_OPH_COEFFICIENT"
     if all(receipts.get(name, False) for name in REQUIRED_RECEIPTS):
+        if evidence["label"] == "SYNTHETIC_DEMO_FIXTURE":
+            return "DEMO", "SYNTHETIC_DEMO_FIXTURE_RECOVERED"
+        if evidence["label"] == "MIXED_DEFAULT_DEMO_INPUTS":
+            return "DEMO", "MIXED_INPUT_DEMO_COEFFICIENT_EMITTED"
         return "SOURCE_ONLY", "SOURCE_ONLY_COEFFICIENT_EMITTED"
+    if evidence["synthetic_demo"]:
+        return "CONDITIONAL", "CONDITIONAL_SYNTHETIC_DEMO"
     return "CONDITIONAL", "CONDITIONAL_SOURCE_MODEL"
 
 
@@ -512,14 +613,22 @@ def _markdown_report(report: dict[str, Any]) -> str:
     gate_lines = "\n".join(f"- {name}: {value}" for name, value in sorted(gates.items()))
     coeffs = report.get("coefficients") or []
     blockers = report.get("blockers") or []
+    evidence = report.get("evidence_classification") or {}
+    finite_support = (report.get("source_law") or {}).get("finite_support") or {}
     blocker_lines = "\n".join(f"- {item}" for item in blockers) if blockers else "- none"
     return (
         "# UHE Coefficient Emission Report\n\n"
+        f"- Status: {report.get('status')}\n"
+        f"- Evidence classification: {evidence.get('label')}\n"
+        f"- Coefficient evidence: {evidence.get('coefficient_evidence')}\n"
+        f"- Target-moment origin: {evidence.get('target_moment_origin')}\n"
         f"- Claim tier: {report.get('claim_tier')}\n"
         f"- Strongest allowed claim: {report.get('strongest_allowed_claim')}\n"
         f"- Source-only: {report.get('source_only')}\n"
         f"- Physical claim: {report.get('physical_claim')}\n"
-        f"- Coefficients: {json.dumps(coeffs)}\n\n"
+        f"- Coefficients: {json.dumps(coeffs)}\n"
+        f"- Finite support: {finite_support.get('notation')}\n"
+        f"- Support cardinality: {finite_support.get('cardinality')}\n\n"
         "## Readiness Gates\n\n"
         f"{gate_lines}\n\n"
         "## Blockers\n\n"

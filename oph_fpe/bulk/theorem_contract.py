@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import json
+import math
+import re
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
@@ -27,7 +31,13 @@ from oph_fpe.claims import (
 from oph_fpe.bulk.bw_certificate_308 import issue308_bw_certificate_report
 from oph_fpe.bulk.cap_normal_h3_chart import cap_normal_h3_chart_report
 from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report
+from oph_fpe.bulk.lorentz_algebra import lorentz_algebra_report
 from oph_fpe.bulk.modular_response_h3_localization import modular_response_h3_localization_report
+from oph_fpe.simulation_assumptions import (
+    manifest_assumptions_pass,
+    revalidate_simulation_assumption_manifest,
+    simulation_assumption_manifest,
+)
 
 
 def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
@@ -56,6 +66,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     issue308_bw = _read_issue308_bw_certificate(root)
     issue309_h3 = _read_issue309_cap_normal_h3_chart(root)
     issue310_h3loc = _read_issue310_modular_response_h3_localization(root)
+    assumption_manifest, assumption_source = _read_simulation_assumption_manifest(root)
     use_einstein_bridge_manifest = bool(explicit_einstein_bridge_manifest)
     refinement_summary = (
         refinement.get("refinement_summary")
@@ -69,86 +80,69 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     h3_gates = h3.get("h3_response_stage_gates") or {}
     wrong_scale = h3.get("wrong_scale_feature_audit") or {}
     object_blockers = list(object_chart.get("blockers") or [])
+    issue308_receipt = _literal_true(issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT))
+    issue309_receipt = _literal_true(issue309_h3.get(CAP_NORMAL_H3_CHART_RECEIPT))
+    issue310_receipt = _literal_true(issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT))
 
-    finite_consensus = _truthy_any(
+    finite_consensus, finite_consensus_validation = _validated_finite_consensus_replay(
+        root,
         theorem_core,
-        "FINITE_CONSENSUS_THEOREM_RECEIPT",
-        "finite_consensus_theorem_receipt",
-    ) or _truthy_any(emergence, "FINITE_CONSENSUS_THEOREM_RECEIPT", "finite_consensus_theorem_receipt")
+    )
     record_algebra = bool(
         observer_rows["patch_observer_count"] > 0
         and observer_rows["rows_with_support_nodes"] > 0
         and observer_rows["rows_with_readout_hash"] > 0
         and observer_rows["rows_with_transition_histories"] > 0
     )
-    endogenous_generator = _truthy_any(
-        emergence,
-        "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT",
-        "endogenous_modular_generator_receipt",
-    )
     state_bw = _read_json(root / "bw_state_derived_report.json")
     inferred_clock = state_bw.get("inferred_modular_clock_fit") or {}
-    kms_clock_fit = _truthy_any(
-        emergence,
-        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT",
-        "kms_geometric_clock_fit_receipt",
-    ) or _truthy_any(
-        state_bw,
-        "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT",
-        "kms_geometric_clock_fit_receipt",
-    )
+    endogenous_generator = _validated_endogenous_modular_generator(state_bw)
+    kms_clock_fit = _validated_kms_clock_fit(state_bw)
     declared_geometric_kms_branch = _declared_geometric_kms_branch_receipt(
         paper_chart=paper_chart,
         emergence=emergence,
         chart=chart,
     )
     support_visible_bw_covariance = bool(
-        h3_gates.get("signal_gate", False)
-        and h3_gates.get("geometry_gate", False)
-        and h3_gates.get("aggregate_wrong_scale_gate", False)
-        and h3_gates.get("material_feature_gate", False)
+        issue308_receipt
+        and _literal_true(h3_gates.get("signal_gate"))
+        and _literal_true(h3_gates.get("geometry_gate"))
+        and _literal_true(h3_gates.get("aggregate_wrong_scale_gate"))
+        and _literal_true(h3_gates.get("material_feature_gate"))
     )
     ordered_cut_pair_rigidity = bool(
-        _truthy_any(emergence, "ordered_cut_pair_rigidity_receipt")
-        or _truthy_any(chart, "ordered_cut_pair_rigidity_receipt")
-        or _truthy_any(paper_chart, "ordered_cut_pair_rigidity_receipt")
-        or (
-            _truthy_any(paper_chart, "PAPER_THEOREM_3D_BULK_CHART_RECEIPT", "paper_theorem_3d_bulk_chart_receipt")
-            and bool(paper_chart.get("bw_2pi_cap_flow_receipt", False))
-            and bool(paper_chart.get("lorentz_algebra_receipt", False))
-        )
-        or (
-            bool(chart.get("conformal_h3_spatial_chart_receipt", False))
-            and bool(chart.get("lorentz_algebra_receipt", False))
-            and bool((chart.get("cap_normal_report") or {}).get("unit_normal_receipt", False))
-        )
+        issue308_receipt
+        and issue309_receipt
+        and _issue308_clause_passed(issue308_bw, "C2_bw_frame")
+        and _issue308_clause_passed(issue308_bw, "C3_prime_support_visible_cap_net")
+        and _issue308_clause_passed(issue308_bw, "C6_geometric_rigidity")
     )
+    local_lorentz_algebra = lorentz_algebra_report()
     lorentz_algebra_closure = bool(
-        chart.get("lorentz_algebra_receipt", False)
-        or paper_chart.get("lorentz_algebra_receipt", False)
+        issue309_receipt
+        and _literal_true(local_lorentz_algebra.get("lorentz_algebra_receipt"))
     )
-    refinement_naturality = bool(
-        _truthy_any(refinement, "strict_neutral_bulk_refinement_receipt")
-        or _truthy_any(refinement_summary, "strict_neutral_bulk_refinement_receipt")
-        or _truthy_any(neutral_audit, "strict_neutral_bulk_refinement_receipt")
-        or _truthy_any(emergence, "refinement_naturality_receipt")
+    refinement_naturality = _validated_refinement_naturality(
+        refinement,
+        refinement_summary,
+        neutral_audit,
     )
-    h3_candidate = bool(h3.get("H3_RESPONSE_CANDIDATE_RECEIPT", False))
+    h3_candidate = _literal_true(h3.get("H3_RESPONSE_CANDIDATE_RECEIPT"))
     object_population = bool(
-        object_chart.get("OBJECT_BULK_POPULATION_RECEIPT", False)
-        or object_chart.get("observer_chart_bulk_population_receipt", False)
-        or issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)
+        _literal_true(object_chart.get("OBJECT_BULK_POPULATION_RECEIPT"))
+        or _literal_true(object_chart.get("observer_chart_bulk_population_receipt"))
+        or _literal_true(issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT))
     )
     observer_3p1d = bool(
-        observer.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
-        or observer.get("observer_facing_3p1d_h3_experience_receipt", False)
+        _literal_true(observer.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"))
+        or _literal_true(observer.get("observer_facing_3p1d_h3_experience_receipt"))
     )
     neutral_bulk = bool(
-        neutral.get("bulk_3d_established", False)
-        or neutral_audit.get("strict_neutral_bulk", False)
-        or refinement.get("strict_neutral_bulk", False)
-        or emergence.get("strict_blind_observer_bulk_receipt", False)
-        or emergence.get("neutral_bulk_3d_established", False)
+        _literal_true(neutral.get("bulk_3d_established"))
+        or _literal_true(neutral_audit.get("strict_neutral_bulk"))
+        or _literal_true(refinement.get("strict_neutral_bulk"))
+        or _literal_true(emergence.get("strict_blind_observer_bulk_receipt"))
+        or _literal_true(emergence.get("neutral_bulk_3d_established"))
     )
     einstein_issue_503 = bool(
         _truthy_any(
@@ -206,7 +200,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     legacy_einstein_branch_entry = bool(einstein_issue_503 and all(einstein_child_gates.values()))
     manifest_child_gates = einstein_bridge.get("einstein_branch_entry_child_gates")
     if use_einstein_bridge_manifest and isinstance(manifest_child_gates, dict):
-        einstein_child_gates = {name: bool(value) for name, value in manifest_child_gates.items()}
+        einstein_child_gates = {name: _literal_true(value) for name, value in manifest_child_gates.items()}
         einstein_e1_null_stress = bool(einstein_child_gates.get("E1_null_generator_stress_charge", False))
         einstein_e2_entropy = bool(einstein_child_gates.get("E2_fixed_cap_entropy_stationarity", False))
         einstein_e3_small_ball = bool(einstein_child_gates.get("E3_small_ball_area_bridge", False))
@@ -242,9 +236,8 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "C0_finite_consensus_theorem": _stage(
             finite_consensus,
             "finite overlap repair is replayed as a theorem-phase consensus certificate",
-            missing=theorem_core.get("finite_consensus_missing_evidence")
-            or (theorem_core.get("finite_consensus_theorem") or {}).get("missing_evidence")
-            or emergence.get("finite_consensus_missing_evidence"),
+            missing=finite_consensus_validation.get("blockers", []),
+            details=finite_consensus_validation,
         ),
         "L1_observer_record_algebra": _stage(
             record_algebra,
@@ -255,11 +248,13 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             endogenous_generator,
             "modular generator is recovered from observer-record/cap state rather than supplied by branch replay",
             details={
-                "state_derived_endogenous_modular_generator": emergence.get(
-                    "state_derived_endogenous_modular_generator"
+                "source_mode": state_bw.get("mode"),
+                "state_mode": state_bw.get("state_mode"),
+                "row_count": state_bw.get("row_count"),
+                "endogenous_modular_generator": state_bw.get("endogenous_modular_generator"),
+                "endogenous_generator_non_degenerate": state_bw.get(
+                    "endogenous_generator_non_degenerate"
                 ),
-                "state_derived_selected_2pi": emergence.get("state_derived_selected_2pi"),
-                "state_derived_correct_beats_controls": emergence.get("state_derived_correct_beats_controls"),
             },
         ),
         "L3_kms_modular_clock_fit": _stage(
@@ -329,7 +324,14 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "L6_lorentz_algebra_closure": _stage(
             lorentz_algebra_closure,
-            "the conformal chart closes the finite Lorentz algebra diagnostics",
+            "the issue #309 chart is paired with a locally recomputed Lorentz algebra closure",
+            details={
+                "locally_recomputed": True,
+                "max_commutator_error": local_lorentz_algebra.get("max_commutator_error"),
+                "max_null_cone_preservation_error": local_lorentz_algebra.get(
+                    "max_null_cone_preservation_error"
+                ),
+            },
         ),
         "L7_refinement_naturality": _stage(
             refinement_naturality,
@@ -344,6 +346,37 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
                 "candidate_dimension_stable": refinement_summary.get("candidate_dimension_stable"),
                 "multi_scale": refinement_summary.get("multi_scale"),
                 "proof_blockers": refinement_summary.get("proof_blockers", []),
+            },
+        ),
+        "T308_finite_cap_bw_certificate": _stage(
+            issue308_receipt,
+            "issue #308 BW3 is recomputed from primitive finite cap-net certificate fields",
+            missing=[
+                name
+                for name, row in (issue308_bw.get("clauses") or {}).items()
+                if isinstance(row, dict) and not row.get("passed", False)
+            ],
+            details={
+                "tier": issue308_bw.get("tier", "BW0"),
+                "source_report_written": bool(issue308_bw),
+            },
+        ),
+        "T309_cap_normal_h3_chart": _stage(
+            issue309_receipt,
+            "issue #309 cap-normal H3 chart is recomputed from unit centers, Lorentz maps, and H3 points",
+            missing=issue309_h3.get("blockers", []),
+            details={
+                "terminal_status": issue309_h3.get("terminal_status"),
+                "source_report_written": bool(issue309_h3),
+            },
+        ),
+        "T310_modular_response_h3_localization": _stage(
+            issue310_receipt,
+            "issue #310 record-conditioned H3 localization passes frame, domain, net, interval, and uniqueness checks",
+            missing=issue310_h3loc.get("blockers", []),
+            details={
+                "terminal_status": issue310_h3loc.get("terminal_status"),
+                "source_report_written": bool(issue310_h3loc),
             },
         ),
         "B1_h3_response_candidate": _stage(
@@ -448,7 +481,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "Einstein/Newton coupling is audited without measured G, Planck area, Lambda, or gravity-calibrated endpoints",
         ),
     }
-    finite_contract = all(stages[name]["passed"] for name in (
+    finite_contract_stage_names = (
         "C0_finite_consensus_theorem",
         "L1_observer_record_algebra",
         "L2_endogenous_modular_generator",
@@ -456,7 +489,10 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "L4_support_visible_bw_covariance",
         "L5_ordered_cut_pair_rigidity",
         "L6_lorentz_algebra_closure",
-    ))
+        "L7_refinement_naturality",
+        "T308_finite_cap_bw_certificate",
+    )
+    finite_contract = all(stages[name]["passed"] for name in finite_contract_stage_names)
     paper_geometric_branch_contract_stage_names = (
         "C0_finite_consensus_theorem",
         "L1_observer_record_algebra",
@@ -464,17 +500,22 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "L4_support_visible_bw_covariance",
         "L5_ordered_cut_pair_rigidity",
         "L6_lorentz_algebra_closure",
+        "L7_refinement_naturality",
+        "T308_finite_cap_bw_certificate",
+        "T309_cap_normal_h3_chart",
     )
     paper_geometric_branch_contract = all(
         stages[name]["passed"] for name in paper_geometric_branch_contract_stage_names
     )
     observer_spacetime = bool(
         finite_contract
+        and stages["T309_cap_normal_h3_chart"]["passed"]
         and stages["B1_h3_response_candidate"]["passed"]
         and stages["B3_observer_facing_3p1d_experience"]["passed"]
     )
     populated_h3 = bool(
         observer_spacetime
+        and stages["T310_modular_response_h3_localization"]["passed"]
         and stages["B2_observer_object_population"]["passed"]
     )
     observer_facing_consensus_bulk = populated_h3
@@ -485,6 +526,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     )
     paper_geometric_branch_populated_h3 = bool(
         paper_geometric_branch_observer_spacetime
+        and stages["T310_modular_response_h3_localization"]["passed"]
         and stages["B2_observer_object_population"]["passed"]
     )
     paper_geometric_branch_consensus_bulk = paper_geometric_branch_populated_h3
@@ -492,26 +534,20 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         stages["L7_refinement_naturality"]["passed"]
         and stages["B4_strict_neutral_bulk_audit"]["passed"]
     )
-    finite_contract_stage_names = (
-        "C0_finite_consensus_theorem",
-        "L1_observer_record_algebra",
-        "L2_endogenous_modular_generator",
-        "L3_kms_modular_clock_fit",
-        "L4_support_visible_bw_covariance",
-        "L5_ordered_cut_pair_rigidity",
-        "L6_lorentz_algebra_closure",
-    )
     observer_consensus_stage_names = (
         *finite_contract_stage_names,
+        "T309_cap_normal_h3_chart",
         "B1_h3_response_candidate",
-        "B2_observer_object_population",
         "B3_observer_facing_3p1d_experience",
+        "T310_modular_response_h3_localization",
+        "B2_observer_object_population",
     )
     paper_geometric_branch_consensus_stage_names = (
         *paper_geometric_branch_contract_stage_names,
         "B1_h3_response_candidate",
-        "B2_observer_object_population",
         "B3_observer_facing_3p1d_experience",
+        "T310_modular_response_h3_localization",
+        "B2_observer_object_population",
     )
     chart_blind_neutral_stage_names = (
         "L7_refinement_naturality",
@@ -537,6 +573,32 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         name for name in einstein_branch_stage_names if not stages[name]["passed"]
     ]
     all_stage_blockers = [name for name, row in stages.items() if not row["passed"]]
+    assumed_lorentz_h3 = _all_manifest_assumptions(
+        assumption_manifest,
+        "bw_2pi_geometric_branch",
+        "h3_observer_chart",
+    )
+    assumed_observer_spacetime = _all_manifest_assumptions(
+        assumption_manifest,
+        "screen_s2",
+        "bw_2pi_geometric_branch",
+        "h3_observer_chart",
+        "ds4_open_slicing_background",
+        "positive_cosmological_constant",
+        "observer_tetrad_visualization",
+    )
+    assumed_populated_h3 = bool(
+        assumed_observer_spacetime
+        and _all_manifest_assumptions(assumption_manifest, "record_population_on_h3")
+    )
+    assumed_topological_matter = bool(
+        assumed_populated_h3
+        and _all_manifest_assumptions(assumption_manifest, "topological_defects_render_as_matter")
+    )
+    assumed_visual_universe = bool(
+        _literal_true(assumption_manifest.get("SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"))
+        and assumed_topological_matter
+    )
     report = {
         "mode": "finite_oph_theorem_contract_audit_v1",
         "run_path": str(root),
@@ -561,6 +623,28 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             paper_geometric_branch_consensus_bulk
         ),
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": observer_facing_consensus_bulk,
+        "SIMULATION_ASSUMED_LORENTZ_H3_BRIDGE_RECEIPT": assumed_lorentz_h3,
+        "simulation_assumed_lorentz_h3_bridge_receipt": assumed_lorentz_h3,
+        "SIMULATION_ASSUMED_OBSERVER_SPACETIME_VISUALIZATION_RECEIPT": assumed_observer_spacetime,
+        "simulation_assumed_observer_spacetime_visualization_receipt": assumed_observer_spacetime,
+        "SIMULATION_ASSUMED_POPULATED_H3_VISUALIZATION_RECEIPT": assumed_populated_h3,
+        "simulation_assumed_populated_h3_visualization_receipt": assumed_populated_h3,
+        "SIMULATION_ASSUMED_TOPOLOGICAL_MATTER_VISUALIZATION_RECEIPT": assumed_topological_matter,
+        "simulation_assumed_topological_matter_visualization_receipt": assumed_topological_matter,
+        "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": assumed_visual_universe,
+        "simulation_assumed_visual_universe_receipt": assumed_visual_universe,
+        "simulation_assumption_tier": {
+            "enabled": _literal_true(assumption_manifest.get("enabled")),
+            "profile": assumption_manifest.get("profile", "none"),
+            "source": assumption_source,
+            "schema": assumption_manifest.get("schema"),
+            "assumptions": dict(assumption_manifest.get("assumptions") or {}),
+            "missing_assumptions": list(assumption_manifest.get("missing_assumptions") or []),
+            "ds4_visualization_parameters": dict(
+                assumption_manifest.get("ds4_visualization_parameters") or {}
+            ),
+            "computed_theorem_receipts_unchanged": True,
+        },
         "chart_blind_strict_neutral_quotient_bulk_receipt": chart_blind_strict_neutral,
         "strict_neutral_bulk_contract_receipt": chart_blind_strict_neutral,
         OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT: einstein_branch_entry,
@@ -571,7 +655,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "einstein_bridge_manifest_written": use_einstein_bridge_manifest,
         "einstein_bridge_manifest": {
-            "receipt": bool(einstein_bridge.get(OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT, False)),
+            "receipt": _literal_true(einstein_bridge.get(OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT)),
             "dependency_discharge_receipt": einstein_bridge_dependency_discharge,
             "run_receipts_receipt": einstein_bridge_run_receipts,
             "claim_tier": einstein_bridge.get("claim_tier"),
@@ -580,7 +664,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "provenance_tags": dict(einstein_bridge.get("provenanceTags") or {}),
         },
         "issue_308_bw_certificate": {
-            "receipt": bool(issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT, False)),
+            "receipt": issue308_receipt,
             "tier": issue308_bw.get("tier", "BW0"),
             "report_written": bool(issue308_bw),
             "nonclaims": dict(issue308_bw.get("nonclaims") or {}),
@@ -590,31 +674,29 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
                 if isinstance(row, dict) and not row.get("passed", False)
             ][:6],
         },
-        ISSUE_308_BW_CERTIFICATE_RECEIPT: bool(issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT, False)),
-        "issue_308_finite_cap_bw_certificate_receipt": bool(
-            issue308_bw.get("issue_308_finite_cap_bw_certificate_receipt", False)
+        ISSUE_308_BW_CERTIFICATE_RECEIPT: issue308_receipt,
+        "issue_308_finite_cap_bw_certificate_receipt": _literal_true(
+            issue308_bw.get("issue_308_finite_cap_bw_certificate_receipt")
         ),
         "issue_309_cap_normal_h3_chart": {
-            "receipt": bool(issue309_h3.get(CAP_NORMAL_H3_CHART_RECEIPT, False)),
+            "receipt": issue309_receipt,
             "terminal_status": issue309_h3.get("terminal_status"),
             "report_written": bool(issue309_h3),
             "mandatory_nonclaims": dict(issue309_h3.get("mandatory_nonclaims") or {}),
             "primary_blockers": list(issue309_h3.get("blockers") or [])[:6],
         },
-        CAP_NORMAL_H3_CHART_RECEIPT: bool(issue309_h3.get(CAP_NORMAL_H3_CHART_RECEIPT, False)),
-        "cap_normal_h3_chart_receipt": bool(issue309_h3.get("cap_normal_h3_chart_receipt", False)),
+        CAP_NORMAL_H3_CHART_RECEIPT: issue309_receipt,
+        "cap_normal_h3_chart_receipt": _literal_true(issue309_h3.get("cap_normal_h3_chart_receipt")),
         "issue_310_modular_response_h3_localization": {
-            "receipt": bool(issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)),
+            "receipt": issue310_receipt,
             "terminal_status": issue310_h3loc.get("terminal_status"),
             "report_written": bool(issue310_h3loc),
             "component_receipts": dict(issue310_h3loc.get("component_receipts") or {}),
             "primary_blockers": list(issue310_h3loc.get("blockers") or [])[:6],
         },
-        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: bool(
-            issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)
-        ),
-        "h3_modular_response_localization_receipt": bool(
-            issue310_h3loc.get("h3_modular_response_localization_receipt", False)
+        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: issue310_receipt,
+        "h3_modular_response_localization_receipt": _literal_true(
+            issue310_h3loc.get("h3_modular_response_localization_receipt")
         ),
         "blockers": blockers,
         "primary_blockers": blockers[:6],
@@ -629,18 +711,20 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "observer_like_self_reading_system_receipt": bool(observer_rows["patch_observer_count"] > 0),
         "observer_row_summary": observer_rows,
         "claim_boundary": (
-            "Paper-faithful finite OPH spacetime/bulk emergence audit. This is stricter than branch "
+            "Computed finite OPH spacetime/bulk emergence audit. This is stricter than branch "
             "replay: OPH tech must instantiate observer-like self-reading systems with local state, "
             "boundaries, readback, records, feedback/repair moves, and public evidence bundles. The "
             "legacy finite Lorentz/modular L-lane stops at support-visible BW covariance, cut-pair "
             "rigidity diagnostics, Lorentz algebra closure, and an endogenous finite KMS clock fit. "
             "The issue #308 BW3 theorem receipt is stricter: it requires primitive cap-normal, frame, "
             "support-order, held-out cross-ratio, mixed-GNS, geometric KMS, wrong-scale, and envelope "
-            "fields. Separately, the paper-geometric branch receipt uses the declared theorem chart "
-            "instead of claiming the finite run rediscovered that normalization endogenously. The "
+            "fields. The paper-geometric diagnostic may use the declared theorem chart, but its "
+            "computed contract still requires issue #308/#309 and L7 refinement receipts. The "
+            "separate SIMULATION_ASSUMED_* tier may complete a renderer scene from an explicit "
+            "assumption manifest; it never changes these computed receipts. The "
             "issue #309 chart receipt proves the cap-normal H3 chart; the issue #310 localization "
             "receipt is the stricter route for record-populated observer-facing H3, requiring "
-            "record-conditioned responses, a compact domain, alpha>0, bounded error, and positive "
+            "record-conditioned responses, a compact domain, verified epsilon-net metadata, alpha>0, bounded error, and positive "
             "Delta_loc for unique finite points. The observer spacetime receipt adds the H3 response "
             "and observer-local 3+1D experience. The observer-facing consensus 3D bulk receipt adds "
             "shared record/object population in that H3 chart. The chart-blind strict neutral quotient audit is a separate "
@@ -722,7 +806,17 @@ def _stage(
 
 
 def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
-    return any(bool(data.get(key, False)) for key in keys)
+    return any(_literal_true(data.get(key)) for key in keys)
+
+
+def _literal_true(value: Any) -> bool:
+    """Accept only the JSON/YAML boolean true as theorem evidence.
+
+    Numeric one and strings such as ``"true"`` are deliberately rejected.
+    Receipts are proof-carrying data, not command-line truthiness flags.
+    """
+
+    return type(value) is bool and value is True
 
 
 def _declared_geometric_kms_branch_receipt(
@@ -755,14 +849,52 @@ def _declared_geometric_kms_branch_receipt(
     declared_or_kms_source = bool(
         {"declared_kms_collar_transport_response", "kms_collar_transport_response"}
         & source_values
-    ) or bool(paper_chart.get("declared_bw_2pi_cap_flow_receipt", False))
+    ) or _literal_true(paper_chart.get("declared_bw_2pi_cap_flow_receipt"))
     selected_2pi = bool(
-        paper_chart.get("bw_2pi_cap_flow_receipt", False)
-        or paper_chart.get("declared_bw_2pi_cap_flow_receipt", False)
-        or emergence.get("transition_two_pi_selected_by_primary", False)
+        _literal_true(paper_chart.get("bw_2pi_cap_flow_receipt"))
+        or _literal_true(paper_chart.get("declared_bw_2pi_cap_flow_receipt"))
+        or _literal_true(emergence.get("transition_two_pi_selected_by_primary"))
         or str(emergence.get("transition_selected_label", "")) == "2pi"
     )
     return bool(chart_receipt and branch_receipt and declared_or_kms_source and selected_2pi)
+
+
+def _all_manifest_assumptions(manifest: dict[str, Any], *names: str) -> bool:
+    return manifest_assumptions_pass(manifest, *names)
+
+
+def _read_simulation_assumption_manifest(root: Path) -> tuple[dict[str, Any], str | None]:
+    explicit_path = root / "simulation_assumption_manifest.json"
+    explicit = _read_json(explicit_path)
+    if explicit:
+        return revalidate_simulation_assumption_manifest(explicit), str(explicit_path)
+    for name in ("config.yml", "config.yaml", "config.json"):
+        path = root / name
+        if not path.exists():
+            continue
+        try:
+            if path.suffix == ".json":
+                parsed = json.loads(path.read_text(encoding="utf-8"))
+            else:
+                parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, yaml.YAMLError, OSError):
+            continue
+        if not isinstance(parsed, dict):
+            continue
+        section = parsed.get("simulation_assumptions")
+        if not isinstance(section, dict):
+            continue
+        normalized = dict(parsed)
+        if not section.get("assumed") and isinstance(section.get("assumed_bridges"), list):
+            bridge_names = {str(value) for value in section["assumed_bridges"]}
+            assumed = {
+                "bw_2pi_geometric_branch": "BW3_FINITE_CAP_CERTIFICATE" in bridge_names,
+                "h3_observer_chart": "CAP_NORMAL_H3_CHART" in bridge_names,
+                "record_population_on_h3": "MODULAR_RESPONSE_H3_LOCALIZATION" in bridge_names,
+            }
+            normalized["simulation_assumptions"] = {**section, "assumed": assumed}
+        return simulation_assumption_manifest(normalized), str(path)
+    return simulation_assumption_manifest({}), None
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -776,30 +908,23 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _read_issue308_bw_certificate(root: Path) -> dict[str, Any]:
-    for name in (
-        "issue_308_bw_certificate_report.json",
-        "bw_issue308_certificate_report.json",
-        "finite_cap_bw_certificate_report.json",
-    ):
-        report = _read_json(root / name)
-        if report:
-            return report
     for name in ("bw_rec_308.json", "BWRec_r.json", "issue_308_primitive_fields.json"):
         payload = _read_json(root / name)
         if payload:
             return issue308_bw_certificate_report(payload)
-    return {}
+    return _ignored_precomputed_receipt(
+        root,
+        (
+            "issue_308_bw_certificate_report.json",
+            "bw_issue308_certificate_report.json",
+            "finite_cap_bw_certificate_report.json",
+        ),
+        ISSUE_308_BW_CERTIFICATE_RECEIPT,
+        "issue_308_requires_primitive_fields_for_local_recomputation",
+    )
 
 
 def _read_issue309_cap_normal_h3_chart(root: Path) -> dict[str, Any]:
-    for name in (
-        "cap_normal_h3_chart_report.json",
-        "issue_309_cap_normal_h3_chart_report.json",
-        "cap_normal_h3_chart_receipt.json",
-    ):
-        report = _read_json(root / name)
-        if report:
-            return report
     for name in (
         "cap_normal_h3_chart_source.json",
         "issue_309_cap_normal_h3_chart_source.json",
@@ -808,18 +933,19 @@ def _read_issue309_cap_normal_h3_chart(root: Path) -> dict[str, Any]:
         payload = _read_json(root / name)
         if payload:
             return cap_normal_h3_chart_report(payload)
-    return {}
+    return _ignored_precomputed_receipt(
+        root,
+        (
+            "cap_normal_h3_chart_report.json",
+            "issue_309_cap_normal_h3_chart_report.json",
+            "cap_normal_h3_chart_receipt.json",
+        ),
+        CAP_NORMAL_H3_CHART_RECEIPT,
+        "issue_309_requires_primitive_fields_for_local_recomputation",
+    )
 
 
 def _read_issue310_modular_response_h3_localization(root: Path) -> dict[str, Any]:
-    for name in (
-        "modular_response_h3_localization_report.json",
-        "issue_310_modular_response_h3_localization_report.json",
-        "h3_localization_receipt.json",
-    ):
-        report = _read_json(root / name)
-        if report:
-            return report
     for name in (
         "modular_response_h3_localization_source.json",
         "issue_310_modular_response_h3_localization_source.json",
@@ -828,6 +954,41 @@ def _read_issue310_modular_response_h3_localization(root: Path) -> dict[str, Any
         payload = _read_json(root / name)
         if payload:
             return modular_response_h3_localization_report(payload)
+    return _ignored_precomputed_receipt(
+        root,
+        (
+            "modular_response_h3_localization_report.json",
+            "issue_310_modular_response_h3_localization_report.json",
+            "h3_localization_receipt.json",
+        ),
+        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
+        "issue_310_requires_primitive_fields_for_local_recomputation",
+    )
+
+
+def _ignored_precomputed_receipt(
+    root: Path,
+    names: tuple[str, ...],
+    receipt_key: str,
+    blocker: str,
+) -> dict[str, Any]:
+    """Fail closed when only a mutable derived report is present.
+
+    A result JSON is not its own proof.  The theorem contract independently
+    reruns each verifier from primitive fields; report-only inputs are retained
+    solely as diagnostics and can never raise a theorem receipt.
+    """
+
+    for name in names:
+        if _read_json(root / name):
+            return {
+                "mode": "unverified_precomputed_report_ignored",
+                receipt_key: False,
+                "receipt": False,
+                "terminal_status": "UNVERIFIED_PRECOMPUTED_REPORT",
+                "ignored_precomputed_report": name,
+                "blockers": [blocker],
+            }
     return {}
 
 
@@ -848,6 +1009,8 @@ def _markdown(report: dict[str, Any]) -> str:
         f"`{str(report['paper_geometric_branch_observer_spacetime_emergence_receipt']).lower()}`",
         "- paper-geometric branch consensus bulk: "
         f"`{str(report['paper_geometric_branch_consensus_bulk_emergence_receipt']).lower()}`",
+        "- explicitly assumed visual universe: "
+        f"`{str(report['SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT']).lower()}`",
         "- chart-blind strict neutral quotient bulk: "
         f"`{str(report['chart_blind_strict_neutral_quotient_bulk_receipt']).lower()}`",
         "- Einstein branch-entry contract: "

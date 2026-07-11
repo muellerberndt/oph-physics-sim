@@ -12,6 +12,8 @@
     "claimBoundary",
     "ophDifferentiator",
     "sourcePaths",
+    "coordinateSystems",
+    "simulationAssumptions",
     "smallUniverse",
     "screen",
     "subjectiveObserverCameras",
@@ -22,8 +24,10 @@
     "comparableObservations",
     "geometriesAndSymmetries",
     "visualizationViews",
+    "visualizationRenderData",
     "effectiveStringTheory",
     "emergentCurvedSpacetime",
+    "assumedDs4Spacetime",
     "observerCinema",
     "hilbertSpaceObserverAlgebra",
     "observerAnatomy",
@@ -47,6 +51,14 @@
     },
     "sourcePaths": {
       "$ref": "#/$defs/sourcePaths"
+    },
+    "coordinateSystems": {
+      "type": "object",
+      "required": ["h3_hyperboloid_spatial_components_v1", "ds4_open_h3_slicing_v1"],
+      "additionalProperties": {"type": "object"}
+    },
+    "simulationAssumptions": {
+      "$ref": "#/$defs/simulationAssumptions"
     },
     "smallUniverse": {
       "$ref": "#/$defs/smallUniverse"
@@ -88,10 +100,123 @@
       "$ref": "#/$defs/visualizationRenderData"
     },
     "effectiveStringTheory": {
-      "$ref": "#/$defs/openObject"
+      "$ref": "#/$defs/effectiveStringTheory"
     },
     "emergentCurvedSpacetime": {
       "$ref": "#/$defs/openObject"
+    },
+    "simulationAssumptions": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "manifestSchema",
+        "scope",
+        "scopeValid",
+        "enabled",
+        "manifestIntegrityValid",
+        "assumptions",
+        "missingAssumptions",
+        "parameterSets",
+        "receipts",
+        "computedTheoremReceiptsUnchanged",
+        "claimBoundary"
+      ],
+      "properties": {
+        "schema": {"const": "oph_visualization_assumption_payload_v1"},
+        "manifestSchema": {"const": "oph_simulation_assumption_manifest_v1"},
+        "scope": {"const": "visualization_only"},
+        "scopeValid": {"type": "boolean"},
+        "enabled": {"type": "boolean"},
+        "manifestIntegrityValid": {"type": "boolean"},
+        "assumptions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "screen_s2",
+            "bw_2pi_geometric_branch",
+            "observer_modular_time_interpretation",
+            "h3_observer_chart",
+            "screen_observer_to_h3_camera_embedding",
+            "record_population_on_h3",
+            "refinement_naturality_visualization",
+            "ds4_open_slicing_background",
+            "positive_cosmological_constant",
+            "observer_tetrad_visualization",
+            "topological_defects_render_as_matter",
+            "cmb_screen_to_temperature_transfer_visualization",
+            "cmb_tt_reference_shape_visualization"
+          ],
+          "properties": {
+            "screen_s2": {"$ref": "#/$defs/assumptionRow"},
+            "bw_2pi_geometric_branch": {"$ref": "#/$defs/assumptionRow"},
+            "observer_modular_time_interpretation": {"$ref": "#/$defs/assumptionRow"},
+            "h3_observer_chart": {"$ref": "#/$defs/assumptionRow"},
+            "screen_observer_to_h3_camera_embedding": {"$ref": "#/$defs/assumptionRow"},
+            "record_population_on_h3": {"$ref": "#/$defs/assumptionRow"},
+            "refinement_naturality_visualization": {"$ref": "#/$defs/assumptionRow"},
+            "ds4_open_slicing_background": {"$ref": "#/$defs/assumptionRow"},
+            "positive_cosmological_constant": {"$ref": "#/$defs/assumptionRow"},
+            "observer_tetrad_visualization": {"$ref": "#/$defs/assumptionRow"},
+            "topological_defects_render_as_matter": {"$ref": "#/$defs/assumptionRow"},
+            "cmb_screen_to_temperature_transfer_visualization": {"$ref": "#/$defs/assumptionRow"},
+            "cmb_tt_reference_shape_visualization": {"$ref": "#/$defs/assumptionRow"}
+          }
+        },
+        "missingAssumptions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "parameterSets": {
+          "type": "object",
+          "required": ["ds4", "observerCamera", "cmbVisualization"],
+          "properties": {
+            "ds4": {"type": "object"},
+            "observerCamera": {"type": "object"},
+            "cmbVisualization": {"type": "object"}
+          },
+          "additionalProperties": false
+        },
+        "receipts": {
+          "type": "object",
+          "required": [
+            "SIMULATION_ASSUMPTIONS_COMPLETE_RECEIPT",
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT",
+            "proof_receipt",
+            "physical_measurement_receipt"
+          ],
+          "properties": {
+            "SIMULATION_ASSUMPTIONS_COMPLETE_RECEIPT": {"type": "boolean"},
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": {"type": "boolean"},
+            "proof_receipt": {"const": false},
+            "physical_measurement_receipt": {"const": false}
+          },
+          "additionalProperties": true
+        },
+        "computedTheoremReceiptsUnchanged": {"const": true},
+        "claimBoundary": {"type": ["string", "null"]}
+      }
+    },
+    "assumptionRow": {
+      "type": "object",
+      "required": [
+        "label",
+        "applies_to",
+        "status",
+        "assumed",
+        "proof_receipt",
+        "physical_measurement_receipt"
+      ],
+      "properties": {
+        "label": {"type": "string"},
+        "applies_to": {"type": "array", "items": {"type": "string"}},
+        "status": {"enum": ["assumed_for_visualization", "blocked"]},
+        "assumed": {"type": "boolean"},
+        "provenance": {"type": ["string", "null"]},
+        "proof_receipt": {"const": false},
+        "physical_measurement_receipt": {"const": false}
+      },
+      "additionalProperties": true
+    },
+    "assumedDs4Spacetime": {
+      "$ref": "#/$defs/assumedDs4Spacetime"
     },
     "observerCinema": {
       "$ref": "#/$defs/openObject"
@@ -113,13 +238,146 @@
     "receiptMap": {
       "type": "object",
       "description": "Receipt entries are strict gates. Missing keys must be rendered as absent, never as passing.",
-      "additionalProperties": {
-        "$ref": "#/$defs/scalar"
-      }
+      "additionalProperties": true
     },
     "openObject": {
       "type": "object",
       "additionalProperties": true
+    },
+    "effectiveStringTheory": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "contentAvailable",
+        "finiteEdgeStringVibrationSamples",
+        "finiteEdgeStringVibrationReceipt",
+        "finiteEdgeStringVibrationBlockers",
+        "layerAvailability",
+        "hiddenLayers",
+        "emptyLayerPolicy"
+      ],
+      "properties": {
+        "contentAvailable": {"type": "boolean"},
+        "finiteEdgeStringVibrationSamples": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/openObject"}
+        },
+        "finiteEdgeStringVibrationReceipt": {"type": "boolean"},
+        "finiteEdgeStringVibrationBlockers": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "layerAvailability": {
+          "type": "object",
+          "required": ["finite_edge_string_vibration_pulses"],
+          "properties": {
+            "finite_edge_string_vibration_pulses": {"type": "boolean"}
+          },
+          "additionalProperties": {"type": "boolean"}
+        },
+        "hiddenLayers": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "emptyLayerPolicy": {"type": "string"}
+      }
+    },
+    "assumedDs4Spacetime": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "enabled",
+        "provenance",
+        "assumptionLedger",
+        "geometry",
+        "scaleFactorSamples",
+        "observerReferenceFrames",
+        "defectMatterRendering",
+        "rendererContract",
+        "receipts",
+        "claimBoundary"
+      ],
+      "properties": {
+        "schema": {"const": "oph_assumed_ds4_visualization_v1"},
+        "enabled": {"type": "boolean"},
+        "provenance": {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {"kind": {"const": "simulation_assumption"}},
+          "additionalProperties": true
+        },
+        "assumptionLedger": {
+          "type": "object",
+          "required": [
+            "scope",
+            "enabled",
+            "assumptions",
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT",
+            "computedTheoremReceiptsUnchanged",
+            "manifestIntegrityValid"
+          ],
+          "properties": {
+            "scope": {"type": ["string", "null"]},
+            "enabled": {"type": "boolean"},
+            "assumptions": {"type": "object"},
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": {"type": "boolean"},
+            "computedTheoremReceiptsUnchanged": {"const": true},
+            "manifestIntegrityValid": {"type": "boolean"}
+          },
+          "additionalProperties": true
+        },
+        "geometry": {
+          "type": "object",
+          "required": [
+            "coordinateSystem",
+            "dimension",
+            "signature",
+            "metric",
+            "curvatureRadius",
+            "hubbleParameter",
+            "spatialCoordinateContract"
+          ],
+          "properties": {
+            "coordinateSystem": {"const": "ds4_open_h3_slicing_v1"},
+            "dimension": {"const": 4},
+            "signature": {"const": "(-,+,+,+)"},
+            "metric": {"type": "string"},
+            "curvatureRadius": {"type": "number", "exclusiveMinimum": 0},
+            "hubbleParameter": {"type": "number", "exclusiveMinimum": 0},
+            "spatialCoordinateContract": {"$ref": "#/$defs/openObject"}
+          },
+          "additionalProperties": true
+        },
+        "scaleFactorSamples": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/openObject"}},
+        "observerReferenceFrames": {"type": "array", "items": {"$ref": "#/$defs/openObject"}},
+        "defectMatterRendering": {"$ref": "#/$defs/openObject"},
+        "rendererContract": {"$ref": "#/$defs/openObject"},
+        "receipts": {
+          "type": "object",
+          "required": [
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT",
+            "assumed_ds4_visualization_layer_receipt",
+            "assumed_topological_defects_render_as_matter_receipt",
+            "declared_ds4_parameter_consistency_receipt",
+            "derived_physical_ds4_receipt",
+            "einstein_equation_solution_receipt",
+            "physical_particle_matter_receipt"
+          ],
+          "properties": {
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": {"type": "boolean"},
+            "assumed_ds4_visualization_layer_receipt": {"type": "boolean"},
+            "assumed_topological_defects_render_as_matter_receipt": {"type": "boolean"},
+            "declared_ds4_parameter_consistency_receipt": {"type": "boolean"},
+            "derived_physical_ds4_receipt": {"const": false},
+            "einstein_equation_solution_receipt": {"const": false},
+            "physical_particle_matter_receipt": {"const": false}
+          },
+          "additionalProperties": true
+        },
+        "claimBoundary": {"type": "string"}
+      }
     },
     "visualizationRenderData": {
       "type": "object",
@@ -417,6 +675,12 @@
       "required": [
         "description",
         "source",
+        "contentAvailable",
+        "dataMode",
+        "receiptSource",
+        "bundleReceiptKind",
+        "renderableExactMiniUniverseReceipt",
+        "contentBlockers",
         "nodeCount",
         "nodes",
         "edges",
@@ -431,6 +695,25 @@
         },
         "source": {
           "type": "string"
+        },
+        "contentAvailable": {
+          "type": "boolean"
+        },
+        "dataMode": {
+          "enum": ["exact_mini_universe", "theorem_receipt_summary_only"]
+        },
+        "receiptSource": {
+          "type": ["string", "null"]
+        },
+        "bundleReceiptKind": {
+          "type": ["string", "null"]
+        },
+        "renderableExactMiniUniverseReceipt": {
+          "type": "boolean"
+        },
+        "contentBlockers": {
+          "type": "array",
+          "items": {"type": "string"}
         },
         "nodeCount": {
           "type": "integer",
@@ -774,6 +1057,8 @@
         "up",
         "right",
         "forward",
+        "h3TangentFrame",
+        "coordinateContract",
         "fovDegrees",
         "screenProjection",
         "timeFrames",
@@ -803,6 +1088,12 @@
         },
         "forward": {
           "$ref": "#/$defs/vec3"
+        },
+        "h3TangentFrame": {
+          "$ref": "#/$defs/openObject"
+        },
+        "coordinateContract": {
+          "$ref": "#/$defs/openObject"
         },
         "fovDegrees": {
           "type": "number"
@@ -834,12 +1125,42 @@
         "timeFrames": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/objectiveObserverFrame"
+            "$ref": "#/$defs/subjectiveObserverCameraFrame"
           }
         },
         "claimBoundary": {
           "type": "string"
         }
+      }
+    },
+    "subjectiveObserverCameraFrame": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "relativeTime",
+        "cycle",
+        "visibleReadoutHash",
+        "objectiveFrameRef",
+        "visibleProtoWorldlines",
+        "visibleProtoWorldlineCount",
+        "peripheralDiagnosticProtoWorldlineIds",
+        "peripheralDiagnosticProtoWorldlineCount"
+      ],
+      "properties": {
+        "relativeTime": {"type": ["number", "null"]},
+        "cycle": {"type": ["integer", "number", "null"]},
+        "visibleReadoutHash": {"type": ["string", "null"]},
+        "objectiveFrameRef": {"type": "string"},
+        "visibleProtoWorldlines": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/observerProtoWorldlineSighting"}
+        },
+        "visibleProtoWorldlineCount": {"type": "integer", "minimum": 0},
+        "peripheralDiagnosticProtoWorldlineIds": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "peripheralDiagnosticProtoWorldlineCount": {"type": "integer", "minimum": 0}
       }
     },
     "observerRow": {
@@ -1011,6 +1332,15 @@
           "type": "integer",
           "minimum": 0
         },
+        "peripheralDiagnosticProtoWorldlines": {
+          "type": "array",
+          "description": "Out-of-nominal-FOV full-sky diagnostics; never count these rows as directly visible.",
+          "items": {"$ref": "#/$defs/observerProtoWorldlineSighting"}
+        },
+        "peripheralDiagnosticProtoWorldlineCount": {
+          "type": "integer",
+          "minimum": 0
+        },
         "polarFieldReadout": {
           "type": "array",
           "items": {
@@ -1027,18 +1357,19 @@
       "additionalProperties": true,
       "required": [
         "worldlineId",
+        "worldlineRef",
         "cycle",
         "observerLocalReadout",
-        "screenX",
-        "screenY",
-        "visibilityScore",
         "particleLike",
         "diagnosticOnly",
-        "claimBoundary"
+        "claimBoundaryRef"
       ],
       "properties": {
         "worldlineId": {
           "type": ["string", "integer", "number", "null"]
+        },
+        "worldlineRef": {
+          "type": "string"
         },
         "cycle": {
           "type": ["integer", "number", "null"]
@@ -1087,6 +1418,9 @@
         },
         "claimBoundary": {
           "type": ["string", "null"]
+        },
+        "claimBoundaryRef": {
+          "type": "string"
         }
       }
     },

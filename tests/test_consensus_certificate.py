@@ -15,7 +15,7 @@ def test_finite_consensus_certificate_fails_closed_without_theorem_replay():
     assert "schedule_replay_count" in report["missing_evidence"]
 
 
-def test_finite_consensus_certificate_accepts_strict_theorem_evidence():
+def test_finite_consensus_certificate_keeps_count_only_replay_evidence_diagnostic():
     report = finite_consensus_theorem_certificate(
         [
             {
@@ -45,12 +45,13 @@ def test_finite_consensus_certificate_accepts_strict_theorem_evidence():
         },
     )
 
-    assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
+    assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert report["imported_summary_checks_pass"] is True
+    assert "computed_replay_artifact" in report["missing_evidence"]
     assert report["strict_descent_violation_count"] == 0
-    assert report["missing_evidence"] == []
 
 
-def test_finite_consensus_certificate_accepts_counted_replay_evidence_without_full_trace():
+def test_finite_consensus_certificate_rejects_counted_replay_evidence_without_full_trace():
     report = finite_consensus_theorem_certificate(
         [],
         evidence={
@@ -67,9 +68,11 @@ def test_finite_consensus_certificate_accepts_counted_replay_evidence_without_fu
         },
     )
 
-    assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
-    assert report["theorem_phase_event_count"] == 12
-    assert report["missing_evidence"] == []
+    assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert report["theorem_phase_event_count"] == 0
+    assert "theorem_phase_repair_events" in report["missing_evidence"]
+    assert "computed_replay_artifact" in report["missing_evidence"]
+    assert "theorem_phase_event_count" in report["declared_summary_mismatches"]
 
 
 def test_finite_consensus_certificate_rejects_equal_score_theorem_acceptance():
@@ -96,3 +99,31 @@ def test_finite_consensus_certificate_rejects_equal_score_theorem_acceptance():
 
     assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
     assert report["strict_descent_violation_count"] == 1
+
+
+def test_finite_consensus_certificate_rejects_nonfinite_delta_and_truthy_counts():
+    report = finite_consensus_theorem_certificate(
+        [
+            {
+                "cycle": 0,
+                "phase": "theorem",
+                "accepted": True,
+                "delta_touched_phi": float("nan"),
+                "delta_global_phi": float("nan"),
+            }
+        ],
+        evidence={
+            "disjoint_commutation_violation_count": "0",
+            "local_diamond_violation_count": 0,
+            "repair_completeness_violation_count": 0,
+            "unique_terminal_quotient_hash_count": 1,
+            "schedule_replay_count": True,
+            "requested_schedule_replays": 1,
+        },
+    )
+
+    assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert report["strict_descent_violation_count"] == 1
+    assert report["accepted_phi_increase_violation_count"] == 1
+    assert "disjoint_commutation_violation_count" in report["invalid_evidence"]
+    assert "schedule_replay_count" in report["invalid_evidence"]

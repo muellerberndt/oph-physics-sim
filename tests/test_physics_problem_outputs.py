@@ -105,9 +105,15 @@ def test_uhe_coefficient_emission_contract_is_source_only_fixture():
     report = uhe_coefficient_emission_contract()
 
     assert report["computed"] is True
-    assert report["claimTier"] == "SOURCE_ONLY"
-    assert report["strongestAllowedClaim"] == "SOURCE_ONLY_COEFFICIENT_EMITTED"
+    assert report["schema"] == "oph_uhe_coefficient_emission_contract_v2"
+    assert report["status"] == "synthetic_demo_fixture"
+    assert report["evidenceClassification"]["label"] == "SYNTHETIC_DEMO_FIXTURE"
+    assert report["evidenceClassification"]["coefficient_evidence"] == "PLANTED_COEFFICIENT_RECOVERY_ONLY"
+    assert report["claimTier"] == "DEMO"
+    assert report["strongestAllowedClaim"] == "SYNTHETIC_DEMO_FIXTURE_RECOVERED"
+    assert report["sourceOnly"] is True
     assert report["physicalClaim"] is False
+    assert report["finiteSupport"]["notation"] == "U_finite = {u_0, ..., u_7}"
     assert report["receipts"]["NO_UHE_DATA_USE"] is True
     assert report["receipts"]["COMMON_SOURCE_LOCK"] is True
 
@@ -162,6 +168,9 @@ def test_physics_problem_outputs_writer_emits_json_and_markdown(tmp_path: Path):
     assert parsed["outputs"]["compact_record_transients"]["claim"] == "CR2_CONDITIONAL_PHENOMENOLOGY"
     assert parsed["outputs"]["jwst_compact_object_source_release"]["strongestAllowedClaim"] == "J0_DIAGNOSTIC_PROXY"
     assert parsed["outputs"]["gamma_ray_morphology_claims"]["strongestAllowedClaim"] == "DIAGNOSTIC_GAMMA_MAP"
-    assert parsed["outputs"]["high_energy_messenger_coefficients"]["claimTier"] == "SOURCE_ONLY"
+    assert parsed["outputs"]["high_energy_messenger_coefficients"]["claimTier"] == "DEMO"
+    assert parsed["outputs"]["high_energy_messenger_coefficients"]["evidenceClassification"]["label"] == (
+        "SYNTHETIC_DEMO_FIXTURE"
+    )
     assert parsed["outputs"]["cmb_simulation_promotion"]["currentClaimTier"] == "UNSTARTED_OR_INVALIDATED"
     assert parsed["outputs"]["e8_spin8_triality_alt9_certificate"]["repositoryReceiptStatus"] == "pending_raw_bundle"

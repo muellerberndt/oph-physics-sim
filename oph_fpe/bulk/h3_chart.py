@@ -70,6 +70,12 @@ def h3_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
     origin_norm = float(minkowski_dot(origin, origin))
     normal_norms = minkowski_dot(normals, normals) if normals.size else np.zeros(0, dtype=float)
     max_normal_error = float(np.max(np.abs(normal_norms - 1.0))) if normal_norms.size else 0.0
+    receipt = bool(
+        len(caps) > 0
+        and normals.shape == (len(caps), 4)
+        and abs(origin_norm + 1.0) < 1e-12
+        and max_normal_error < 1e-10
+    )
     return {
         "mode": "canonical_conformal_h3_spatial_chart",
         "homogeneous_space": "SO+(3,1)/SO(3)",
@@ -83,7 +89,8 @@ def h3_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
         "origin_norm": origin_norm,
         "cap_count": len(caps),
         "max_cap_normal_unit_error": max_normal_error,
-        "conformal_h3_spatial_chart_receipt": bool(abs(origin_norm + 1.0) < 1e-12 and max_normal_error < 1e-10),
+        "conformal_h3_spatial_chart_receipt": receipt,
+        "blockers": [] if receipt else (["missing_caps"] if not caps else ["invalid_cap_normals"]),
         "record_population_receipt": False,
         "claim_boundary": (
             "canonical 3D spatial chart implied by the conformal/Lorentz cap branch; "

@@ -8,6 +8,7 @@ from oph_fpe.bulk.conformal_spatial_chart import (
     write_paper_chart_receipts,
 )
 from oph_fpe.bulk.h3_chart import h3_distance_matrix, h3_origin, h3_point_from_tangent, h3_tangent_from_point, random_h3_points
+from oph_fpe.bulk.h3_chart import h3_chart_report
 from oph_fpe.bulk.lorentz_algebra import lorentz_algebra_report
 from oph_fpe.core.graph import fibonacci_sphere_points
 
@@ -59,14 +60,22 @@ def test_conformal_h3_spatial_chart_receipt_from_caps():
     assert normal_report["unit_normal_receipt"] is True
 
 
+def test_h3_chart_rejects_empty_cap_family() -> None:
+    report = h3_chart_report([])
+
+    assert report["conformal_h3_spatial_chart_receipt"] is False
+    assert report["blockers"] == ["missing_caps"]
+
+
 def test_paper_theorem_3d_bulk_chart_receipt_is_separate_from_neutral_bulk():
     points = fibonacci_sphere_points(128)
     caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=51)
     chart = conformal_h3_spatial_chart_report(caps)
     transition = {
-        "primary_source": "kms_collar_transport_response",
-        "two_pi_selected": True,
-        "response_degenerate": False,
+        "primary_source": "explicit_visualization_assumption",
+        "scope": "visualization_only",
+        "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": True,
+        "computed_theorem_receipts_unchanged": True,
     }
     objects = {
         "observer_chart_object_h3_receipt": True,
@@ -77,8 +86,10 @@ def test_paper_theorem_3d_bulk_chart_receipt_is_separate_from_neutral_bulk():
 
     report = paper_theorem_3d_bulk_chart_report(chart, transition, objects, neutral)
 
-    assert report["PAPER_THEOREM_3D_BULK_CHART_RECEIPT"] is True
-    assert report["paper_theorem_object_populated_chart_precursor_receipt"] is True
+    assert report["PAPER_THEOREM_3D_BULK_CHART_RECEIPT"] is False
+    assert report["SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT"] is True
+    assert report["SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT"] is True
+    assert report["paper_theorem_object_populated_chart_precursor_receipt"] is False
     assert report["paper_theorem_neutral_populated_bulk_receipt"] is False
     assert report["h3_spatial_dimension_from_boost_orbit"] == 3
     assert report["spatial_dimension_derivation"] == "dim SO+(3,1)-dim SO(3)=6-3=3"
@@ -90,9 +101,10 @@ def test_paper_theorem_object_precursor_accepts_control_separation_without_stric
     caps = sample_caps(points, count=8, theta_values=[0.55, 0.75, 1.0], seed=52)
     chart = conformal_h3_spatial_chart_report(caps)
     transition = {
-        "primary_source": "kms_collar_transport_response",
-        "two_pi_selected": True,
-        "response_degenerate": False,
+        "primary_source": "explicit_visualization_assumption",
+        "scope": "visualization_only",
+        "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": True,
+        "computed_theorem_receipts_unchanged": True,
     }
     objects = {
         "observer_chart_object_h3_receipt": False,
@@ -104,8 +116,9 @@ def test_paper_theorem_object_precursor_accepts_control_separation_without_stric
 
     report = paper_theorem_3d_bulk_chart_report(chart, transition, objects, neutral)
 
-    assert report["paper_theorem_3d_bulk_chart_receipt"] is True
-    assert report["paper_theorem_object_populated_chart_precursor_receipt"] is True
+    assert report["paper_theorem_3d_bulk_chart_receipt"] is False
+    assert report["SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT"] is True
+    assert report["paper_theorem_object_populated_chart_precursor_receipt"] is False
     assert report["paper_theorem_neutral_populated_bulk_receipt"] is False
     assert report["observer_object_precursor_components"]["strict_object_h3_receipt"] is False
     assert report["observer_object_precursor_components"]["h3_control_separation_receipt"] is True
@@ -156,8 +169,29 @@ def test_lorentz_algebra_report_verifies_so_3_1_relations():
 def test_write_paper_chart_receipts_writes_run_folder_reports(tmp_path):
     report = write_paper_chart_receipts(tmp_path, point_count=128, cap_count=8, seed=4)
 
-    assert report["paper_theorem_3d_bulk_chart_receipt"] is True
+    assert report["paper_theorem_3d_bulk_chart_receipt"] is False
+    assert report["simulation_assumed_bw_2pi_geometric_branch_receipt"] is True
+    assert report["simulation_assumed_3d_h3_chart_receipt"] is True
     assert (tmp_path / "conformal_h3_spatial_chart_report.json").exists()
     assert (tmp_path / "transition_selection_report.json").exists()
     assert (tmp_path / "paper_3d_bulk_chart_report.json").exists()
     assert (tmp_path / "emergence_status_report.json").exists()
+
+
+def test_declared_two_pi_string_cannot_raise_assumption_or_computed_receipt() -> None:
+    points = fibonacci_sphere_points(128)
+    chart = conformal_h3_spatial_chart_report(
+        sample_caps(points, count=8, theta_values=[0.55, 0.75], seed=54)
+    )
+
+    report = paper_theorem_3d_bulk_chart_report(
+        chart,
+        {
+            "scope": "visualization_only",
+            "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": "true",
+            "computed_theorem_receipts_unchanged": True,
+        },
+    )
+
+    assert report["PAPER_THEOREM_3D_BULK_CHART_RECEIPT"] is False
+    assert report["SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT"] is False

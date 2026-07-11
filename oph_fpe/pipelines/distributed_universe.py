@@ -11,7 +11,6 @@ from typing import Any
 import numpy as np
 import yaml
 
-from oph_fpe.bulk.h3_worldline_stitch import h3_distance
 from oph_fpe.experiments import load_config
 from oph_fpe.observers.semantic_clock import (
     OBSERVER_KINDS,
@@ -21,8 +20,13 @@ from oph_fpe.observers.semantic_clock import (
     semantic_history_digest,
 )
 from oph_fpe.viz.universe_timeline_viewer import (
+    H3_COORDINATE_SYSTEM,
+    _assumed_ds4_visualization_payload,
     _geometry_and_symmetry_payload,
+    _h3_distance,
+    _h3_coordinate_contract,
     _subjective_observer_cameras,
+    _simulation_assumption_payload,
     _visualization_render_data_payload,
     _visualization_views_payload,
     _cmb_payload,
@@ -32,6 +36,12 @@ from oph_fpe.viz.universe_timeline_viewer import (
     _observer_anatomy_payload,
     _observer_cinema_payload,
 )
+from oph_fpe.simulation_assumptions import (
+    manifest_assumptions_pass,
+    revalidate_simulation_assumption_manifest,
+    simulation_assumption_manifest,
+)
+from oph_fpe.viz.visualizer_pack import build_visualizer_pack
 
 
 DISTRIBUTED_KERNEL_VERSION = "distributed_observer_patch_kernel_v1"
@@ -270,6 +280,13 @@ def reduce_distributed_oph_universe(
             }
         )
 
+    distributed_assumptions = _distributed_simulation_assumption_manifest(
+        manifest_path=Path(manifest_path),
+        manifest=manifest,
+        shard_rows=shard_rows,
+    )
+    _write_json(out_dir / "simulation_assumption_manifest.json", distributed_assumptions)
+
     completed = [row for row in shard_rows if row["completed"]]
     receipt_summary = _receipt_summary(completed)
     total_patches = sum(int(row.get("patch_count") or 0) for row in completed)
@@ -343,6 +360,8 @@ def reduce_distributed_oph_universe(
         observer_time_global=observer_time_global,
         proto_particle_global=proto_particle_global,
         pn_global=pn_global,
+        assumption_manifest=distributed_assumptions,
+        assumption_manifest_source="simulation_assumption_manifest.json",
     )
     run_pack_contract = _distributed_run_pack_contract(
         manifest=manifest,
@@ -358,6 +377,14 @@ def reduce_distributed_oph_universe(
         physical_cmb_global=physical_cmb_global,
         visualization_payload_path=out_dir / "distributed_visualization_payload.json",
         out_dir=out_dir,
+    )
+
+    visualization_payload_path = out_dir / "distributed_visualization_payload.json"
+    _write_json(visualization_payload_path, visualization_payload)
+    visualizer_pack = build_visualizer_pack(
+        bundle_dir=out_dir,
+        out_path=out_dir / "oph_visualizer_pack_v2.tar.zst",
+        payload=visualization_payload,
     )
 
     summary = {
@@ -432,7 +459,9 @@ def reduce_distributed_oph_universe(
         "distributed_run_pack_contract": run_pack_contract,
         "unified_universe_atlas": manifest.get("unified_universe_atlas", {}),
         "cross_shard_seam_readout": seam_readout,
-        "visualization_payload": str(out_dir / "distributed_visualization_payload.json"),
+        "simulation_assumptions": distributed_assumptions,
+        "visualization_payload": str(visualization_payload_path),
+        "visualizer_pack": visualizer_pack,
         "run_pack_contract_path": str(out_dir / "DISTRIBUTED_RUN_PACK_CONTRACT.json"),
         "observer_like_self_reading_system_note": (
             "The distributed unit is still an OPH observer-like self-reading system: each shard has local "
@@ -440,10 +469,75 @@ def reduce_distributed_oph_universe(
         ),
         "shards": shard_rows,
     }
-    _write_json(out_dir / "distributed_visualization_payload.json", visualization_payload)
     _write_json(out_dir / "distributed_universe_summary.json", summary)
     _write_markdown(out_dir / "DISTRIBUTED_UNIVERSE_SUMMARY.md", summary)
     return summary
+
+
+def _distributed_simulation_assumption_manifest(
+    *,
+    manifest_path: Path,
+    manifest: dict[str, Any],
+    shard_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Recover one explicit visual-assumption ledger for the reduced universe."""
+
+    shard_manifests: list[dict[str, Any]] = []
+    for row in shard_rows:
+        run_dir = row.get("run_dir")
+        if not run_dir:
+            continue
+        candidate = Path(str(run_dir)) / "simulation_assumption_manifest.json"
+        parsed = _read_json(candidate)
+        if parsed:
+            shard_manifests.append(revalidate_simulation_assumption_manifest(parsed))
+
+    expected_manifest_count = len([row for row in shard_rows if row.get("run_dir")])
+    if shard_manifests and len(shard_manifests) == expected_manifest_count:
+        comparison_keys = (
+            "schema",
+            "profile",
+            "scope",
+            "policy_id",
+            "assumptions",
+            "ds4_visualization_parameters",
+            "observer_camera_visualization_parameters",
+            "cmb_visualization_parameters",
+        )
+        fingerprints = {
+            json.dumps(
+                {key: manifest.get(key) for key in comparison_keys},
+                sort_keys=True,
+                separators=(",", ":"),
+                default=str,
+            )
+            for manifest in shard_manifests
+        }
+        if len(fingerprints) == 1 and all(
+            manifest.get("manifest_integrity_valid") is True for manifest in shard_manifests
+        ):
+            return shard_manifests[0]
+
+    raw_config_path = manifest.get("config_path")
+    if raw_config_path:
+        configured = Path(str(raw_config_path))
+        candidates = [configured] if configured.is_absolute() else [
+            Path.cwd() / configured,
+            Path(manifest_path).parent / configured,
+        ]
+        for candidate in candidates:
+            if not candidate.exists():
+                continue
+            try:
+                return simulation_assumption_manifest(load_config(candidate))
+            except (OSError, TypeError, ValueError, yaml.YAMLError):
+                continue
+    fallback = simulation_assumption_manifest({})
+    if shard_manifests:
+        fallback["distributed_assumption_reduction_blockers"] = [
+            "shard_assumption_manifests_missing_or_not_identical"
+        ]
+    return fallback
 
 
 def _global_halo_exchange_reduction(
@@ -2681,6 +2775,8 @@ def _distributed_visualization_payload(
     observer_time_global: dict[str, Any],
     proto_particle_global: dict[str, Any],
     pn_global: dict[str, Any],
+    assumption_manifest: dict[str, Any],
+    assumption_manifest_source: str,
 ) -> dict[str, Any]:
     sampled_payloads = _sample_shard_timeline_payloads(shard_rows, max_payloads=8)
     objective_views = []
@@ -2738,6 +2834,7 @@ def _distributed_visualization_payload(
         "receipts": {
             "observer_modular_time_receipt": bool(
                 observer_time_global.get("global_observer_modular_time_export_receipt", False)
+                and observer_time_global.get("observer_clock_naturality_receipt", False)
             ),
             "global_observer_modular_time_export_receipt": bool(
                 observer_time_global.get("global_observer_modular_time_export_receipt", False)
@@ -2750,10 +2847,16 @@ def _distributed_visualization_payload(
             ),
             "observer_facing_3p1d_h3_experience_receipt": False,
             "observer_facing_populated_h3_experience_receipt": False,
-            "observer_h3_object_population_receipt": bool(h3_objects),
+            "observer_h3_object_population_receipt": False,
             "support_visible_lorentz_3p1_kinematics_receipt": False,
             "conformal_h3_spatial_chart_receipt": False,
-            "bulk_3d_established": bool(h3_objects),
+            "bulk_3d_established": False,
+        },
+        "dataAvailability": {
+            "objectiveObserverViewDataAvailable": bool(objective_views),
+            "observerTimeFrameDataAvailable": bool(time_frames),
+            "h3ObjectDataAvailable": bool(h3_objects),
+            "computedReceiptsUnaffectedByAvailability": True,
         },
         "overlapSummary": {
             "observerCount": len(observer_rows),
@@ -2788,8 +2891,6 @@ def _distributed_visualization_payload(
             "Distributed observer modular-time visualization export; not chart-blind neutral bulk.",
         ),
     }
-    subjective_cameras = _subjective_observer_cameras(observer_payload)
-    observer_payload["subjectiveObserverCameras"] = subjective_cameras
     if not screen_points:
         screen_points, screen_values = _atlas_screen_points(manifest)
     screen_payload = {
@@ -2810,7 +2911,15 @@ def _distributed_visualization_payload(
             "They are not a hidden monolithic bulk state."
         ),
     }
-    cmb_payload = _distributed_cmb_comparison_payload(physical_cmb_global)
+    simulation_assumption_payload = _simulation_assumption_payload(
+        assumption_manifest,
+        source=assumption_manifest_source,
+    )
+    cmb_payload = _distributed_cmb_comparison_payload(
+        physical_cmb_global,
+        assumption_manifest=assumption_manifest,
+        assumption_manifest_source=assumption_manifest_source,
+    )
     pn_payload = _distributed_pn_payload(pn_global)
     bulk_payload = {
         "description": (
@@ -2818,6 +2927,13 @@ def _distributed_visualization_payload(
         ),
         "source": "distributed_visualization_payload",
         "objects": h3_objects,
+        "dataAvailability": {
+            "h3ObjectDataAvailable": bool(h3_objects),
+            "h3ObjectCount": len(h3_objects),
+            "protoWorldlineDataAvailable": bool(worldlines),
+            "protoWorldlineCount": len(worldlines),
+            "computedReceiptsUnaffectedByAvailability": True,
+        },
         "protoParticleCandidates": {
             "description": "Globalized H3 defect/worldline candidates. Diagnostic unless particle receipts pass.",
             "worldlines": worldlines,
@@ -2855,6 +2971,31 @@ def _distributed_visualization_payload(
             "requires the strict_single_global_neutral_bulk_receipt."
         ),
     }
+    subjective_cameras = _subjective_observer_cameras(
+        observer_payload,
+        bulk_payload=bulk_payload,
+        camera_parameters=assumption_manifest.get("observer_camera_visualization_parameters"),
+        camera_assumption_receipt=manifest_assumptions_pass(
+            assumption_manifest,
+            "screen_observer_to_h3_camera_embedding",
+        ),
+    )
+    observer_payload["subjectiveObserverCameraRefs"] = [
+        {
+            "cameraId": camera.get("cameraId"),
+            "observerId": camera.get("observerId"),
+            "sourcePath": f"subjectiveObserverCameras[{index}]",
+        }
+        for index, camera in enumerate(subjective_cameras)
+        if isinstance(camera, dict)
+    ]
+    assumed_ds4_payload = _assumed_ds4_visualization_payload(
+        observer_payload=observer_payload,
+        subjective_cameras=subjective_cameras,
+        bulk_payload=bulk_payload,
+        assumption_manifest=assumption_manifest,
+        assumption_manifest_source=assumption_manifest_source,
+    )
     small_payload = _distributed_small_universe_payload(manifest, seam_readout)
     comparable_payload = _distributed_comparable_observations_payload(cmb_payload, physical_cmb_global, neutral_global)
     geometry_payload = _geometry_and_symmetry_payload(
@@ -2887,7 +3028,20 @@ def _distributed_visualization_payload(
         subjective_cameras=subjective_cameras,
         visualization_views=visualization_views,
         curved_spacetime_payload=emergent_curved_spacetime_payload,
+        simulation_assumption_payload=simulation_assumption_payload,
+        assumed_ds4_payload=assumed_ds4_payload,
     )
+    visualization_render_data["sceneGraph"]["assumedDs4Spacetime"] = {
+        "sourcePath": "assumedDs4Spacetime",
+        "geometrySource": "assumedDs4Spacetime.geometry",
+        "scaleFactorSamplesSource": "assumedDs4Spacetime.scaleFactorSamples",
+        "observerReferenceFramesSource": "assumedDs4Spacetime.observerReferenceFrames",
+        "defectMatterRenderingSource": "assumedDs4Spacetime.defectMatterRendering",
+        "scaleFactorSampleCount": len(assumed_ds4_payload.get("scaleFactorSamples", [])),
+        "observerReferenceFrameCount": len(assumed_ds4_payload.get("observerReferenceFrames", [])),
+        "receipts": assumed_ds4_payload.get("receipts", {}),
+        "claimBoundary": assumed_ds4_payload.get("claimBoundary"),
+    }
     hilbert_algebra_payload = _hilbert_space_observer_algebra_payload(observer_payload)
     return {
         "schemaVersion": "oph_universe_timeline_visualization_payload_v1",
@@ -2905,6 +3059,11 @@ def _distributed_visualization_payload(
             "distributedManifest": str(manifest.get("manifest_path") or ""),
             "physicalCmbGlobalDir": physical_cmb_global.get("report_dir"),
         },
+        "coordinateSystems": {
+            H3_COORDINATE_SYSTEM: _h3_coordinate_contract(),
+            "ds4_open_h3_slicing_v1": assumed_ds4_payload.get("geometry", {}),
+        },
+        "simulationAssumptions": simulation_assumption_payload,
         "smallUniverse": small_payload,
         "screen": screen_payload,
         "subjectiveObserverCameras": subjective_cameras,
@@ -2922,6 +3081,7 @@ def _distributed_visualization_payload(
             bulk_payload=bulk_payload,
         ),
         "emergentCurvedSpacetime": emergent_curved_spacetime_payload,
+        "assumedDs4Spacetime": assumed_ds4_payload,
         "observerCinema": _observer_cinema_payload(
             observer_payload=observer_payload,
             subjective_cameras=subjective_cameras,
@@ -3121,9 +3281,26 @@ def _distributed_repair_trace(halo_exchange: dict[str, Any], seam_readout: dict[
     return rows
 
 
-def _distributed_cmb_comparison_payload(physical_cmb_global: dict[str, Any]) -> dict[str, Any]:
+def _distributed_cmb_comparison_payload(
+    physical_cmb_global: dict[str, Any],
+    *,
+    assumption_manifest: dict[str, Any] | None = None,
+    assumption_manifest_source: str | None = None,
+) -> dict[str, Any]:
     report_dir = physical_cmb_global.get("report_dir")
-    payload = _cmb_payload(Path(report_dir)) if report_dir and Path(str(report_dir)).exists() else {}
+    payload = (
+        _cmb_payload(
+            Path(report_dir),
+            assumption_manifest=assumption_manifest,
+            assumption_manifest_source=assumption_manifest_source,
+        )
+        if report_dir and Path(str(report_dir)).exists()
+        else _cmb_payload(
+            None,
+            assumption_manifest=assumption_manifest,
+            assumption_manifest_source=assumption_manifest_source,
+        )
+    )
     if not payload:
         payload = {
             "description": "No distributed CMB comparison rows were available.",
@@ -3199,22 +3376,30 @@ def _distributed_bulk_receipts(
         receipts = ((payload.get("consensusBulk") or {}).get("receipts") or {}) if isinstance(payload, dict) else {}
         if isinstance(receipts, dict):
             source_receipts.append(receipts)
-    def any_receipt(key: str) -> bool:
-        return any(bool(row.get(key, False)) for row in source_receipts)
+    def all_receipt(key: str) -> bool:
+        return bool(source_receipts) and all(row.get(key) is True for row in source_receipts)
 
     strict = bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False))
     return {
-        "observer_like_self_reading_system_receipt": bool(h3_objects) or any_receipt("observer_like_self_reading_system_receipt"),
-        "observer_modular_time_receipt": any_receipt("observer_modular_time_receipt"),
-        "observer_facing_3p1d_h3_experience_receipt": any_receipt("observer_facing_3p1d_h3_experience_receipt"),
-        "observer_facing_populated_h3_experience_receipt": bool(h3_objects)
-        or any_receipt("observer_facing_populated_h3_experience_receipt"),
-        "observer_h3_object_population_receipt": bool(h3_objects)
-        or any_receipt("observer_h3_object_population_receipt"),
-        "theorem_assisted_consensus_3d_bulk_readout_receipt": bool(h3_objects)
-        or any_receipt("theorem_assisted_consensus_3d_bulk_readout_receipt"),
-        "observer_facing_consensus_3d_bulk_readout_receipt": bool(h3_objects)
-        or any_receipt("observer_facing_consensus_3d_bulk_readout_receipt"),
+        "observer_like_self_reading_system_receipt": all_receipt(
+            "observer_like_self_reading_system_receipt"
+        ),
+        "observer_modular_time_receipt": False,
+        "observer_facing_3p1d_h3_experience_receipt": False,
+        "observer_facing_populated_h3_experience_receipt": False,
+        "observer_h3_object_population_receipt": False,
+        "theorem_assisted_consensus_3d_bulk_readout_receipt": False,
+        "observer_facing_consensus_3d_bulk_readout_receipt": False,
+        "all_sampled_shards_observer_modular_time_receipt": all_receipt(
+            "observer_modular_time_receipt"
+        ),
+        "all_sampled_shards_observer_h3_object_population_receipt": all_receipt(
+            "observer_h3_object_population_receipt"
+        ),
+        "all_sampled_shards_theorem_assisted_consensus_readout_receipt": all_receipt(
+            "theorem_assisted_consensus_3d_bulk_readout_receipt"
+        ),
+        "global_semantic_receipts_require_naturality_and_cross_shard_theorem_contract": True,
         "chart_blind_strict_neutral_quotient_bulk_receipt": strict,
         "strict_neutral_third_person_bulk_receipt": strict,
         "strict_single_global_neutral_bulk_receipt": strict,
@@ -3459,6 +3644,17 @@ def _globalized_worldlines(shard: dict[str, Any], payload: dict[str, Any], *, li
     result = []
     for line in lines:
         item = dict(line)
+        normalized_events = []
+        for event in item.get("events", []) if isinstance(item.get("events"), list) else []:
+            if not isinstance(event, dict):
+                continue
+            point = _canonical_visual_h3_spatial_point(
+                event.get("h3SpatialPoint", event.get("h3_spatial_point"))
+            )
+            if point is None:
+                continue
+            normalized_events.append({**event, "h3SpatialPoint": point})
+        item["events"] = normalized_events
         item["worldlineId"] = _global_id(shard, item.get("worldlineId", len(result)), "worldline")
         item["shardIndex"] = shard.get("shard_index")
         item["atlasCenter"] = shard.get("atlas_center")
@@ -3553,9 +3749,9 @@ def _globalized_worldline_row(shard: dict[str, Any], row: dict[str, Any], *, fal
         if not isinstance(event, dict):
             continue
         point = event.get("h3_spatial_point") or event.get("h3SpatialPoint")
-        if not isinstance(point, list) or len(point) < 3:
+        normalized_point = _canonical_visual_h3_spatial_point(point)
+        if normalized_point is None:
             continue
-        normalized_point = [float(value) for value in point[:4]] if len(point) >= 4 else [float(value) for value in point[:3]]
         events.append(
             {
                 "cycle": event.get("cycle"),
@@ -3606,8 +3802,27 @@ def _worldline_path_metrics(events: list[dict[str, Any]]) -> tuple[float, float]
     for left, right in zip(points, points[1:], strict=False):
         if len(left) < 3 or len(right) < 3:
             continue
-        length += h3_distance(left[:4] if len(left) >= 4 else left[:3], right[:4] if len(right) >= 4 else right[:3])
+        length += _h3_distance(left[:3], right[:3])
     return float(length), float(length / max(len(points) - 1, 1))
+
+
+def _canonical_visual_h3_spatial_point(value: Any) -> list[float] | None:
+    if not isinstance(value, list) or len(value) not in (3, 4):
+        return None
+    try:
+        parsed = [float(item) for item in value]
+    except (TypeError, ValueError):
+        return None
+    if not all(math.isfinite(item) for item in parsed):
+        return None
+    if len(parsed) == 3:
+        return parsed
+    time_component = parsed[0]
+    spatial = parsed[1:]
+    shell_residual = abs(-time_component * time_component + sum(item * item for item in spatial) + 1.0)
+    if time_component <= 0.0 or shell_residual > 1.0e-7:
+        return None
+    return spatial
 
 
 def _write_global_no_data_use_receipt(roots: list[Path], out_dir: Path) -> dict[str, Any]:

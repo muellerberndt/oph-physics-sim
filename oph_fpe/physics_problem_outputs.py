@@ -410,10 +410,11 @@ def uhe_coefficient_emission_contract() -> dict[str, Any]:
         from oph_fpe.uhe_coefficients import coefficient_emission_report
     except Exception as exc:
         return {
-            "schema": "oph_uhe_coefficient_emission_contract_v1",
+            "schema": "oph_uhe_coefficient_emission_contract_v2",
             "status": "report_unavailable",
             "computed": False,
             "error": str(exc),
+            "evidenceClassification": {"label": "UNAVAILABLE"},
             "receipts": {
                 "UHE_COEFFICIENT_EMISSION_REPORT_WRITTEN": False,
                 "NO_UHE_DATA_USE": False,
@@ -424,15 +425,19 @@ def uhe_coefficient_emission_contract() -> dict[str, Any]:
 
     report = coefficient_emission_report()
     gates = report.get("readiness_gates") or {}
+    evidence = report.get("evidence_classification") or {}
+    finite_support = (report.get("source_law") or {}).get("finite_support") or {}
     return {
-        "schema": "oph_uhe_coefficient_emission_contract_v1",
-        "status": "source_only_coefficient_emitter_available",
+        "schema": "oph_uhe_coefficient_emission_contract_v2",
+        "status": report.get("status"),
         "computed": True,
+        "evidenceClassification": evidence,
         "claimTier": report.get("claim_tier"),
         "strongestAllowedClaim": report.get("strongest_allowed_claim"),
         "sourceOnly": bool(report.get("source_only", False)),
         "physicalClaim": bool(report.get("physical_claim", False)),
         "coefficients": list(report.get("coefficients") or []),
+        "finiteSupport": finite_support,
         "receipts": {
             "UHE_COEFFICIENT_EMISSION_REPORT_WRITTEN": True,
             "BASELINE_FULL_SUPPORT": bool(gates.get("BASELINE_FULL_SUPPORT", False)),
@@ -904,8 +909,12 @@ def _physics_problem_outputs_markdown(report: dict[str, Any]) -> str:
         "## High-Energy Messenger Coefficients",
         "",
         f"- status: `{uhe_coefficients['status']}`",
+        f"- evidence classification: `{uhe_coefficients.get('evidenceClassification', {}).get('label')}`",
+        f"- coefficient evidence: `{uhe_coefficients.get('evidenceClassification', {}).get('coefficient_evidence')}`",
         f"- claim tier: `{uhe_coefficients.get('claimTier')}`",
         f"- strongest allowed claim: `{uhe_coefficients.get('strongestAllowedClaim')}`",
+        f"- physical claim: `{uhe_coefficients.get('physicalClaim')}`",
+        f"- finite support: `{uhe_coefficients.get('finiteSupport', {}).get('notation')}`",
         f"- no-UHE-data-use receipt: `{uhe_coefficients['receipts']['NO_UHE_DATA_USE']}`",
         f"- common-source lock: `{uhe_coefficients['receipts']['COMMON_SOURCE_LOCK']}`",
         "",

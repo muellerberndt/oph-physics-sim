@@ -731,11 +731,16 @@ def neutral_leakage_audit(distance: np.ndarray, observer_views: list[dict[str, A
         s2_corr = _upper_triangle_corr(distance, s2_distance)
     return {
         "s2_distance_correlation": s2_corr,
-        "s2_leakage_pass": bool(s2_corr is None or abs(float(s2_corr)) < 0.05),
+        "s2_leakage_pass": bool(s2_corr is not None and abs(float(s2_corr)) < 0.05),
+        "s2_leakage_audit_available": bool(s2_corr is not None),
         "h3_coordinates_used": False,
         "cap_normals_used": False,
         "screen_axes_used_in_primary_distance": False,
-        "claim_boundary": "Leakage audit compares primary neutral distance to S2 axes post hoc; axes are not used to build the primary distance.",
+        "claim_boundary": (
+            "Leakage audit compares primary neutral distance to S2 axes post hoc; axes are not used to "
+            "build the primary distance. Missing or malformed axes fail the audit instead of being treated "
+            "as evidence of no leakage."
+        ),
     }
 
 

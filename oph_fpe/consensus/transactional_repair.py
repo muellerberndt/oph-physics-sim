@@ -215,7 +215,19 @@ def aggregate_component(
     payload: dict[str, Any] = {}
     for tx in ordered:
         read_set.update(tx.read_set)
-        payload.update(tx.payload_dict)
+        for key, value in tx.payload_dict.items():
+            if key in payload and canonical_state_hash({"value": payload[key]}) != canonical_state_hash(
+                {"value": value}
+            ):
+                writers = [
+                    candidate.tx_id
+                    for candidate in ordered
+                    if key in candidate.write_set
+                ]
+                raise ValueError(
+                    f"incompatible aggregate writes for register {key!r} from transactions {writers}"
+                )
+            payload[key] = value
     return prepare_transaction(
         state,
         tx_id=tx_id or "+".join(tx.tx_id for tx in ordered),
@@ -396,7 +408,21 @@ def transactional_repair_receipt(
     aggregate_results = []
     current = dict(state)
     for index, component in enumerate(components):
-        aggregate = aggregate_component(current, component, tx_id=f"component_{index}")
+        try:
+            aggregate = aggregate_component(current, component, tx_id=f"component_{index}")
+        except ValueError as exc:
+            aggregate_results.append(
+                {
+                    "component_index": index,
+                    "primitive_transaction_ids": [tx.tx_id for tx in component],
+                    "status": "INCOMPATIBLE_OVERLAPPING_WRITES",
+                    "committed": False,
+                    "before_measure": measure(current),
+                    "after_measure": measure(current),
+                    "reason": str(exc),
+                }
+            )
+            continue
         result = commit_transaction(current, aggregate, measure=measure, boundary=boundary)
         aggregate_results.append(
             {
@@ -422,7 +448,8 @@ def transactional_repair_receipt(
         "normal_form_hash": canonical_state_hash(current),
         "claim_boundary": (
             "Exact finite transaction receipt for quotient repair. It validates descent and atomic "
-            "component commits, but repair completeness and selected-fiber uniqueness require their own checks."
+            "component commits. Overlapping writes must agree exactly or the component is rejected; "
+            "repair completeness and selected-fiber uniqueness require their own checks."
         ),
     }
     return with_claim_metadata(report, claim_level=RECOVERED_CORE, receipt="SEAM_ATOMIC_COMMIT_RECEIPT")
@@ -437,14 +464,20 @@ def exhaustive_transition_graph_report(
 ) -> dict[str, Any]:
     rows = [dict(state) for state in states]
     by_hash = {canonical_state_hash(state): state for state in rows}
+    declared_hashes = set(by_hash)
     adjacency: dict[str, list[str]] = {}
     edge_rows: list[dict[str, Any]] = []
+    carrier_closure_violations: list[dict[str, Any]] = []
     for state in rows:
         state_hash = canonical_state_hash(state)
         adjacency[state_hash] = []
         for target in transition_fn(state):
             target_state = dict(target)
             target_hash = canonical_state_hash(target_state)
+            if target_hash not in declared_hashes:
+                carrier_closure_violations.append(
+                    {"source": state_hash, "undeclared_target": target_hash, "target": target_state}
+                )
             by_hash.setdefault(target_hash, target_state)
             adjacency[state_hash].append(target_hash)
             before_measure = measure(state)
@@ -472,6 +505,7 @@ def exhaustive_transition_graph_report(
 
     terminal_violations: list[dict[str, Any]] = []
     terminal_consistency_violations: list[dict[str, Any]] = []
+    consistent_nonterminal_violations: list[dict[str, Any]] = []
     for state_hash in sorted(by_hash):
         reachable = _reachable_hashes(state_hash, adjacency)
         terminals = sorted(node for node in reachable if not adjacency.get(node))
@@ -481,6 +515,12 @@ def exhaustive_transition_graph_report(
             for terminal in terminals:
                 if not bool(consistency_check(by_hash[terminal])):
                     terminal_consistency_violations.append({"source": state_hash, "terminal": terminal})
+            state_is_consistent = bool(consistency_check(by_hash[state_hash]))
+            state_is_terminal = not adjacency.get(state_hash)
+            if state_is_consistent and not state_is_terminal:
+                consistent_nonterminal_violations.append(
+                    {"state": state_hash, "successors": sorted(set(adjacency.get(state_hash, [])))}
+                )
 
     nontrivial_sccs = [
         component
@@ -488,32 +528,58 @@ def exhaustive_transition_graph_report(
         if len(component) > 1 or any(node in adjacency.get(node, []) for node in component)
     ]
     receipt = bool(
-        not strict_descent_violations
+        declared_hashes
+        and consistency_check is not None
+        and not carrier_closure_violations
+        and not strict_descent_violations
         and not local_diamond_violations
         and not terminal_violations
         and not terminal_consistency_violations
+        and not consistent_nonterminal_violations
         and not nontrivial_sccs
+    )
+    repair_completeness_receipt = bool(
+        declared_hashes
+        and consistency_check is not None
+        and not carrier_closure_violations
+        and not terminal_violations
+        and not terminal_consistency_violations
+        and not consistent_nonterminal_violations
     )
     report = {
         "mode": "exhaustive_transaction_graph_report_v1",
         "EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT": receipt,
-        "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT": not local_diamond_violations,
-        "DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT": not terminal_consistency_violations and not terminal_violations,
-        "SEAM_REPAIR_DESCENT_RECEIPT": not strict_descent_violations,
+        "DECLARED_CARRIER_CLOSURE_RECEIPT": bool(declared_hashes and not carrier_closure_violations),
+        "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT": bool(
+            declared_hashes and not carrier_closure_violations and not local_diamond_violations
+        ),
+        "DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT": repair_completeness_receipt,
+        "SEAM_REPAIR_DESCENT_RECEIPT": bool(
+            declared_hashes and not carrier_closure_violations and not strict_descent_violations
+        ),
         "receipt": receipt,
         "state_count": len(by_hash),
+        "declared_state_count": len(declared_hashes),
+        "discovered_undeclared_target_count": len(set(by_hash) - declared_hashes),
         "edge_count": len(edge_rows),
+        "carrier_closure_violation_count": len(carrier_closure_violations),
         "strict_descent_violation_count": len(strict_descent_violations),
         "local_diamond_violation_count": len(local_diamond_violations),
         "nontrivial_scc_count": len(nontrivial_sccs),
         "unique_terminal_violation_count": len(terminal_violations),
         "terminal_consistency_violation_count": len(terminal_consistency_violations),
+        "consistent_nonterminal_violation_count": len(consistent_nonterminal_violations),
+        "consistency_check_supplied": consistency_check is not None,
         "strict_descent_violations": strict_descent_violations[:4],
         "local_diamond_violations": local_diamond_violations[:4],
         "terminal_violations": terminal_violations[:4],
+        "carrier_closure_violations": carrier_closure_violations[:4],
+        "terminal_consistency_violations": terminal_consistency_violations[:4],
+        "consistent_nonterminal_violations": consistent_nonterminal_violations[:4],
         "claim_boundary": (
             "Exhaustive finite quotient-state transition graph check for small exported nets. It rejects "
-            "terminating forks, non-descending edges, nontrivial SCCs, and inconsistent terminal states."
+            "undeclared transition targets, terminating forks, non-descending edges, nontrivial SCCs, "
+            "and either direction of the exact normal-form iff consistency condition."
         ),
     }
     return with_claim_metadata(report, claim_level=RECOVERED_CORE, receipt="EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT")

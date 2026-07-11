@@ -44,13 +44,33 @@ def collar_mask(points: np.ndarray, cap: RoundCap) -> np.ndarray:
     return np.abs(points @ cap.axis - threshold) <= max(cap.collar_width, 1e-6)
 
 
+def cap_ordered_frame_points(cap: RoundCap) -> tuple[np.ndarray, np.ndarray]:
+    """Return the ordered BW boundary frame selected by ``cap.tangent``.
+
+    With the stereographic/Mobius convention used by :func:`lambda_cap`,
+    ``p_minus`` is the attracting fixed point for positive ``s`` and is sent
+    to zero by the paper's frame map; ``p_plus`` is the repelling point sent to
+    infinity.  Making this pair explicit prevents a tangent direction from
+    being mistaken for an unordered numerical convenience.
+    """
+
+    normalized = cap.normalized()
+    boundary_center = np.cos(normalized.theta0) * normalized.axis
+    boundary_offset = np.sin(normalized.theta0) * normalized.tangent
+    p_minus = _unit(boundary_center + boundary_offset)
+    p_plus = _unit(boundary_center - boundary_offset)
+    return p_minus, p_plus
+
+
 def lambda_cap(points: np.ndarray, cap: RoundCap, s: float) -> np.ndarray:
     """Apply the cap-preserving conformal flow lambda_C(s) on S2.
 
     The implementation uses a cap-local stereographic disk coordinate. The cap
     axis is the local north pole, the cap boundary is normalized to |w|=1, and
     w -> (w+a)/(a*w+1), a=tanh(s/2), preserves the disk and the ordered
-    boundary pair.
+    boundary pair returned by :func:`cap_ordered_frame_points`.  For positive
+    ``s``, ``p_minus`` is attracting and ``p_plus`` is repelling, matching
+    ``h(p_minus)=0``, ``h(p_plus)=infinity``, and ``h -> exp(-s) h``.
     """
 
     cap = cap.normalized()
@@ -151,6 +171,7 @@ def cap_geometry_report(
 ) -> dict[str, object]:
     rows = []
     for index, cap in enumerate(caps):
+        p_minus, p_plus = cap_ordered_frame_points(cap)
         hard_weights = cap_weights(points, cap, soft=False)
         soft_weights = cap_weights(points, cap, soft=True)
         collar = collar_mask(points, cap)
@@ -158,6 +179,9 @@ def cap_geometry_report(
             {
                 "cap_index": index,
                 "theta0": cap.theta0,
+                "frame_p_minus": p_minus.tolist(),
+                "frame_p_plus": p_plus.tolist(),
+                "frame_ordering": "p_minus_attracting_for_positive_s",
                 "hard_count": int(np.sum(hard_weights)),
                 "hard_fraction": float(np.mean(hard_weights)),
                 "collar_count": int(np.sum(collar)),

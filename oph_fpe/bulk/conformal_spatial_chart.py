@@ -76,11 +76,13 @@ def paper_theorem_3d_bulk_chart_report(
     algebra = conformal_chart_report.get("lorentz_algebra_report", {})
     chart_receipt = bool(conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False))
     lorentz_receipt = bool(algebra.get("lorentz_algebra_receipt", False))
-    declared_bw_2pi_receipt = bool(
-        transition_selection_report.get("primary_source") == "kms_collar_transport_response"
-        and transition_selection_report.get("two_pi_selected", False)
-        and not transition_selection_report.get("response_degenerate", False)
+    assumed_bw_2pi_receipt = bool(
+        transition_selection_report.get("scope") == "visualization_only"
+        and transition_selection_report.get("SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT") is True
+        and transition_selection_report.get("computed_theorem_receipts_unchanged") is True
     )
+    # A declared 2pi target is an assumption, never a computed theorem receipt.
+    declared_bw_2pi_receipt = False
     state_bw = state_bw_report or {}
     inferred_clock = state_bw.get("inferred_modular_clock_fit") or {}
     finite_lorentz_modular_clock_receipt = bool(
@@ -94,7 +96,7 @@ def paper_theorem_3d_bulk_chart_report(
             or inferred_clock.get("receipt", False)
         )
     )
-    bw_2pi_receipt = bool(declared_bw_2pi_receipt or finite_lorentz_modular_clock_receipt)
+    bw_2pi_receipt = finite_lorentz_modular_clock_receipt
     spatial_dimension = int(algebra.get("h3_spatial_dimension_from_boost_orbit", 0) or 0)
     chart_dimension = int(h3_chart.get("spatial_dimension", 0) or 0)
     group_dimension = int(algebra.get("group_dimension", 0) or 0)
@@ -134,6 +136,14 @@ def paper_theorem_3d_bulk_chart_report(
         and spatial_dimension == 3
         and chart_dimension == 3
     )
+    assumed_chart_receipt = bool(
+        chart_receipt
+        and lorentz_receipt
+        and assumed_bw_2pi_receipt
+        and group_dimension == 6
+        and spatial_dimension == 3
+        and chart_dimension == 3
+    )
     return {
         "mode": "paper_theorem_3d_bulk_chart",
         PAPER_THEOREM_3D_BULK_CHART_RECEIPT: chart_receipt_pass,
@@ -143,11 +153,13 @@ def paper_theorem_3d_bulk_chart_report(
         "chart_level_conformal_lorentz_receipt": chart_receipt,
         "bw_2pi_cap_flow_receipt": bw_2pi_receipt,
         "declared_bw_2pi_cap_flow_receipt": declared_bw_2pi_receipt,
+        "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": assumed_bw_2pi_receipt,
+        "simulation_assumed_bw_2pi_geometric_branch_receipt": assumed_bw_2pi_receipt,
+        "SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT": assumed_chart_receipt,
+        "simulation_assumed_3d_h3_chart_receipt": assumed_chart_receipt,
         "finite_lorentz_modular_clock_receipt": finite_lorentz_modular_clock_receipt,
         "bw_2pi_cap_flow_source": (
-            "declared_kms_collar_transport_response"
-            if declared_bw_2pi_receipt
-            else "finite_endogenous_l2_l3_modular_clock"
+            "finite_endogenous_l2_l3_modular_clock"
             if finite_lorentz_modular_clock_receipt
             else None
         ),
@@ -192,9 +204,10 @@ def paper_theorem_3d_bulk_chart_report(
         },
         "claim_boundary": (
             "This is the paper-side 3D spatial chart receipt: S2 cap/conformal geometry plus "
-            "the theorem-side BW-framed cap automorphism yields the SO+(3,1) Lorentz branch and "
+            "a computed finite modular-clock receipt yields the SO+(3,1) Lorentz branch and "
             "the H3 spatial chart of dimension 3. The receipt tier is chart-level; issue #309 "
-            "primitive-field chart certification uses CAP_NORMAL_H3_CHART_RECEIPT. BW3 finite "
+            "primitive-field chart certification uses CAP_NORMAL_H3_CHART_RECEIPT. A declared "
+            "2pi target is reported only as SIMULATION_ASSUMED_* visualization data. BW3 finite "
             "cap-net evidence, populated third-person bulk, particle, "
             "and physical CMB claims require separate gates."
         ),
@@ -222,15 +235,18 @@ def write_paper_chart_receipts(
     caps = sample_caps(points, count=int(cap_count), theta_values=theta_values, seed=int(seed))
     chart = conformal_h3_spatial_chart_report(caps)
     transition = {
-        "mode": "paper_chart_declared_2pi_cap_flow_receipt",
-        "primary_source": "kms_collar_transport_response",
-        "two_pi_selected": True,
-        "response_degenerate": False,
+        "mode": "paper_chart_explicit_2pi_visualization_assumption",
+        "primary_source": "explicit_visualization_assumption",
+        "scope": "visualization_only",
+        "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": True,
+        "computed_theorem_receipts_unchanged": True,
+        "two_pi_selected": False,
+        "response_degenerate": None,
         "state_derived_finite_modular_probe": False,
         "claim_boundary": (
-            "Paper-side chart certificate for the BW-normalized cap-flow branch. "
-            "This records the theorem target sigma_t = alpha_{lambda_C(2*pi*t)}; "
-            "fresh finite state-derived modular matrix-element runs use their own gate."
+            "Explicit visualization-only assumption of the BW-normalized cap-flow branch. "
+            "This records the target sigma_t = alpha_{lambda_C(2*pi*t)} without changing any "
+            "computed theorem receipt; finite state-derived modular runs use their own gate."
         ),
     }
     object_report = _read_json(root / "observer_chart_object_h3_scale_compressed_report.json") or _read_json(
@@ -249,6 +265,12 @@ def write_paper_chart_receipts(
                 paper.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
             ),
             "BW_KMS_DIRECT_2PI_RECEIPT": bool(paper.get("bw_2pi_cap_flow_receipt", False)),
+            "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": bool(
+                paper.get("SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT", False)
+            ),
+            "SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT": bool(
+                paper.get("SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT", False)
+            ),
             "physical_cmb_prediction": bool(emergence.get("physical_cmb_prediction", False)),
             "bulk_3d_established": bool(emergence.get("bulk_3d_established", False)),
             "chart_receipt_source": "paper_chart_certificate",
@@ -282,6 +304,12 @@ def write_paper_chart_receipts(
         "paper_theorem_3d_bulk_chart_receipt": bool(paper.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)),
         "chart_level_conformal_lorentz_receipt": bool(paper.get("chart_level_conformal_lorentz_receipt", False)),
         "bw_2pi_cap_flow_receipt": bool(paper.get("bw_2pi_cap_flow_receipt", False)),
+        "simulation_assumed_bw_2pi_geometric_branch_receipt": bool(
+            paper.get("SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT", False)
+        ),
+        "simulation_assumed_3d_h3_chart_receipt": bool(
+            paper.get("SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT", False)
+        ),
         "strict_neutral_third_person_bulk": bool(neutral.get("bulk_3d_established", False)),
         "claim_boundary": (
             "Co-located paper-chart receipt writer. It records the exact chart-level 3+1D Lorentz/H3 "

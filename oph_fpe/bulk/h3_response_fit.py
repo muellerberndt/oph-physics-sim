@@ -55,6 +55,7 @@ def modular_response_h3_report(
     profile_mode: str = "static_halfspace",
     profile_time_scale: float = 2.0 * np.pi,
     control_fit_mode: str = "same_h3_model_not_affine_target_fit",
+    blind_feature_selection: bool = False,
 ) -> dict[str, Any]:
     matrix = np.asarray(kernel.get("matrix", np.zeros((0, 0))), dtype=float)
     feature_rows = list(kernel.get("feature_rows", []))
@@ -91,6 +92,7 @@ def modular_response_h3_report(
             if max_features_per_cap_time_observable is not None
             else None
         ),
+        blind=bool(blind_feature_selection),
     )
     expanded_caps = [caps[int(row["cap_index"])] for row in feature_rows]
     if str(fit_mode) == "joint_global":
@@ -120,6 +122,15 @@ def modular_response_h3_report(
             control_fit_mode=str(control_fit_mode),
         )
         report["feature_selection"] = feature_selection_report
+        report["inference_protocol"] = {
+            "blind_feature_selection": bool(blind_feature_selection),
+            "equal_target_control_candidate_capacity": True,
+            "claim_boundary": (
+                "When blind_feature_selection is true, response values and wrong-scale outcomes do not "
+                "choose the fitted feature columns. Assumption-driven visualization may still use a "
+                "predeclared H3 branch without promoting this diagnostic to a theorem proof."
+            ),
+        }
         return report
     h3_fit = fit_response_profiles_to_h3(
         matrix,
@@ -133,7 +144,7 @@ def modular_response_h3_report(
     shuffled_fit = fit_response_profiles_to_h3(
         np.asarray(kernel.get("shuffled_control", np.zeros_like(matrix)), dtype=float),
         expanded_caps,
-        candidate_count=max(128, min(int(candidate_count), 1024)),
+        candidate_count=int(candidate_count),
         candidate_radius=float(candidate_radius),
         softness=float(softness),
         seed=int(seed) + 101,
@@ -218,6 +229,7 @@ def _select_fit_features(
     exclude_feature_types: tuple[str, ...],
     min_features: int,
     max_features_per_cap_time_observable: int | None,
+    blind: bool = False,
 ) -> tuple[dict[str, Any], np.ndarray, list[dict[str, Any]], dict[str, Any]]:
     matrix = np.asarray(matrix, dtype=float)
     original_count = int(matrix.shape[1]) if matrix.ndim == 2 else 0
@@ -393,17 +405,28 @@ def _select_fit_features(
         if exclusion_mask.size == original_count:
             metadata_mask = metadata_mask & exclusion_mask
     scale_delta = _wrong_scale_feature_delta(matrix, kernel.get("wrong_scale_controls", {}) or {})
-    scale_filter_applied = bool(float(min_wrong_scale_delta) > 0.0 and scale_delta.size == original_count)
+    scale_filter_applied = bool(
+        not blind and float(min_wrong_scale_delta) > 0.0 and scale_delta.size == original_count
+    )
     scale_mask = np.ones(original_count, dtype=bool)
     if scale_filter_applied:
         scale_mask = scale_delta >= float(min_wrong_scale_delta)
     rank_score = std.copy()
-    if rank_strategy == "wrong_scale_delta" and scale_delta.size == original_count:
+    if blind:
+        # Predeclared metadata and stable source order are allowed to select
+        # columns. Target/control residuals and feature amplitudes are not.
+        rank_strategy = "stable_source_order_blind"
+        rank_score = -np.arange(original_count, dtype=float)
+    elif rank_strategy == "wrong_scale_delta" and scale_delta.size == original_count:
         rank_score = scale_delta.copy()
     elif rank_strategy == "feature_std_times_wrong_scale_delta" and scale_delta.size == original_count:
         rank_score = std * scale_delta
     rank_score = np.where(np.isfinite(rank_score), rank_score, -np.inf)
-    eligible = finite & metadata_mask & (std >= float(min_std)) & scale_mask
+    eligible = (
+        np.all(np.isfinite(matrix), axis=0) & metadata_mask
+        if blind
+        else finite & metadata_mask & (std >= float(min_std)) & scale_mask
+    )
     if not np.any(eligible):
         eligible = finite & metadata_mask & scale_mask
     if not np.any(eligible) and scale_filter_applied:
@@ -488,6 +511,8 @@ def _select_fit_features(
         "metadata_filter": metadata_filter,
         "filter_mode": filter_mode,
         "rank_strategy": rank_strategy,
+        "blind_feature_selection": bool(blind),
+        "response_values_used_for_selection": bool(not blind),
         "aggregation_mode": aggregation_mode,
         "aggregation": aggregation_report,
         "min_feature_std": float(min_std),
@@ -519,8 +544,9 @@ def _select_fit_features(
         "selected_rank_score_median": float(np.median(rank_score[indices])) if indices.size else None,
         "selected_rank_score_max": float(np.max(rank_score[indices])) if indices.size else None,
         "claim_boundary": (
-            "fit-layer feature selection only; raw modular-response kernel is unchanged. Controls are "
-            "filtered and, when requested, grouped with the same selected column groups."
+            "Fit-layer feature selection only; raw modular-response kernel is unchanged. Controls are "
+            "filtered and, when requested, grouped with the same selected column groups. In blind mode "
+            "only predeclared metadata, finite-value integrity, and stable source order select columns."
         ),
     }
 
@@ -858,7 +884,7 @@ def _modular_response_joint_h3_report(
         feature_rows,
         train_mask=train_mask,
         observer_axes=observer_axes,
-        candidate_count=max(128, min(int(candidate_count), 1024)),
+        candidate_count=int(candidate_count),
         candidate_radius=candidate_radius,
         softness=softness,
         seed=seed + 101,
@@ -879,7 +905,7 @@ def _modular_response_joint_h3_report(
             feature_rows,
             train_mask=train_mask,
             observer_axes=observer_axes,
-            candidate_count=max(128, min(int(candidate_count), 1024)),
+            candidate_count=int(candidate_count),
             candidate_radius=candidate_radius,
             softness=softness,
             seed=seed + 102,
@@ -910,7 +936,7 @@ def _modular_response_joint_h3_report(
                 feature_rows,
                 train_mask=train_mask,
                 observer_axes=observer_axes,
-                candidate_count=max(128, min(int(candidate_count), 1024)),
+                candidate_count=int(candidate_count),
                 candidate_radius=candidate_radius,
                 softness=softness,
                 seed=seed + 1009 + index,

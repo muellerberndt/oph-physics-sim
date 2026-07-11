@@ -12,6 +12,7 @@ from oph_fpe.scale.bw_array import (
     _collar_report,
     _collar_width_from_config,
     _drop_source_snapshot_from_history,
+    _interface_quotient,
     _lorentz_branch_receipts,
     _repairs_per_cycle_from_config,
     run_bw_array_config,
@@ -412,6 +413,67 @@ def test_array_port_pair_consensus_replay_emits_c0b_evidence():
     assert report["evidence"]["unique_terminal_quotient_hash_count"] == 1
     assert len(report["sample_events"]) == 2
     assert all(event["phase"] == "theorem" for event in report["sample_events"])
+
+
+def test_s3_interface_quotient_uses_group_product_not_index_subtraction():
+    quotient = _interface_quotient(
+        np.asarray([1], dtype=np.int16),
+        np.asarray([4], dtype=np.int16),
+        group_name="S3",
+        group_order=6,
+    )
+
+    assert int(quotient[0]) == 5
+    assert int(quotient[0]) != (1 - 4) % 6
+
+
+def test_consensus_replay_executes_shared_node_ab_ba_diamonds():
+    port_left = np.asarray([5, 4, 3, 2], dtype=np.int16)
+    port_right = np.asarray([0, 1, 0, 1], dtype=np.int16)
+    edge_left = np.asarray([0, 0, 1, 2], dtype=np.int64)
+    edge_right = np.asarray([1, 2, 2, 3], dtype=np.int64)
+
+    report = _array_port_pair_consensus_replay_report(
+        port_left,
+        port_right,
+        edge_left=edge_left,
+        edge_right=edge_right,
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 3,
+            "requested_schedule_replays": 3,
+            "disjoint_checks": 4,
+            "local_diamond_checks": 4,
+        },
+        seed=91,
+    )
+
+    assert report["receipt"] is True
+    assert report["local_diamond_status"] == "computed_ab_ba_edge_slot_diamonds"
+    assert report["local_diamond_checked_pair_count"] > 0
+    assert report["shared_node_diamond_checked_pair_count"] > 0
+    assert report["evidence"]["local_diamond_violation_count"] == 0
+    assert "edge-slot quotient" in report["claim_boundary"]
+
+
+def test_consensus_replay_cannot_disable_required_ab_ba_coverage():
+    report = _array_port_pair_consensus_replay_report(
+        np.asarray([2, 1, 4], dtype=np.int16),
+        np.asarray([1, 0, 3], dtype=np.int16),
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 2,
+            "requested_schedule_replays": 2,
+            "disjoint_checks": 0,
+            "local_diamond_checks": 0,
+        },
+        seed=19,
+    )
+
+    assert report["receipt"] is False
+    assert report["local_diamond_status"] == "required_ab_ba_checks_not_requested"
 
 
 def test_state_modular_array_writes_gated_receipts(tmp_path: Path):

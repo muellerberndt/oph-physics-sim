@@ -1,4 +1,54 @@
 name: e4_shared_observer_bulk_256k_observers32768_theorem
+simulation_assumptions:
+  enabled: true
+  scope: visualization_only
+  profile: known_observer_universe_v1
+  policy_id: oph-visual-bridges-v1
+  assumed_bridges:
+  - BW3_FINITE_CAP_CERTIFICATE
+  - CAP_NORMAL_H3_CHART
+  - MODULAR_RESPONSE_H3_LOCALIZATION
+  - OBSERVER_MODULAR_TIME_INTERPRETATION
+  - SCREEN_OBSERVER_TO_H3_CAMERA_EMBEDDING
+  - REFINEMENT_NATURALITY_VISUALIZATION
+  - DS4_OPEN_SLICING_BACKGROUND
+  - TOPOLOGICAL_DEFECT_MATTER_RENDERING
+  - CMB_SCREEN_TO_TEMPERATURE_TRANSFER_VISUALIZATION
+  - CMB_TT_REFERENCE_SHAPE_VISUALIZATION
+  assumed:
+    screen_s2: true
+    bw_2pi_geometric_branch: true
+    observer_modular_time_interpretation: true
+    h3_observer_chart: true
+    screen_observer_to_h3_camera_embedding: true
+    record_population_on_h3: true
+    refinement_naturality_visualization: true
+    ds4_open_slicing_background: true
+    positive_cosmological_constant: true
+    observer_tetrad_visualization: true
+    topological_defects_render_as_matter: true
+    cmb_screen_to_temperature_transfer_visualization: true
+    cmb_tt_reference_shape_visualization: true
+  ds4:
+    curvature_radius: 1.0
+    hubble_parameter: 1.0
+    proper_time_min_over_h: 0.05
+    proper_time_max_over_h: 3.0
+    time_sample_count: 96
+    units: simulation_units
+  observer_camera:
+    coordinate_system: h3_hyperboloid_spatial_components_v1
+    h3_radial_coordinate: 1.18
+    look_at: [0.0, 0.0, 0.0]
+    orientation: inward_radial
+    fov_degrees: 72.0
+  cmb_visualization:
+    reference_label: Planck2018_TT_binned
+    reference_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    reference_source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    reference_sha256: sha256:ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd
+    transfer_model: pinned_tt_reference_best_fit_visualization
+    sky_realization_seed: 20260752
 run_mode: observer_shared_bulk_candidate_compact
 seed: 20260752
 claim_boundary: 'Large 256k observer-chart object-population and proto-particle candidate diagnostic with
@@ -232,6 +282,7 @@ observer_objects:
   transition_history_local_min_persistence: 2
 observer_chart_population:
   enabled: true
+  refit_incidence_mode: transition_history_mixture_cluster
   incidence_mode: transition_affinity_modular_response_mixture
   history_window: 32
   min_persistence: 3
@@ -342,6 +393,8 @@ h3_support_profiles:
   defect_min_support_count: 8
 h3_modular_response:
   enabled: true
+  blind_feature_selection: true
+  refit_recipe: scale_rank_512
   observable_mode: collar_operator_transition
   times:
   - 0.125

@@ -98,6 +98,28 @@ def test_conflicting_repairs_are_aggregated_before_commit():
     assert receipt["component_count"] == 1
 
 
+def test_aggregate_rejects_incompatible_overlapping_writes() -> None:
+    state = {"root": 0, "a": 2}
+    left = prepare_transaction(state, tx_id="left", read_set={"a"}, payload={"a": 1})
+    right = prepare_transaction(state, tx_id="right", read_set={"a"}, payload={"a": 0})
+
+    try:
+        aggregate_component(state, [left, right])
+    except ValueError as exc:
+        assert "incompatible aggregate writes" in str(exc)
+    else:
+        raise AssertionError("incompatible overlapping writes must be rejected")
+
+    receipt = transactional_repair_receipt(
+        state,
+        [left, right],
+        measure=_measure,
+        boundary=_boundary,
+    )
+    assert receipt["SEAM_ATOMIC_COMMIT_RECEIPT"] is False
+    assert receipt["aggregate_results"][0]["status"] == "INCOMPATIBLE_OVERLAPPING_WRITES"
+
+
 def test_validation_support_includes_every_changed_mismatch_endpoint():
     supports = [{"a", "b"}, {"b", "c"}, {"d", "e"}]
 
@@ -208,6 +230,62 @@ def test_exhaustive_graph_rejects_non_descending_residual_step():
 
     assert report["EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT"] is False
     assert report["strict_descent_violation_count"] == 1
+
+
+def test_exhaustive_graph_requires_declared_carrier_closure():
+    report = exhaustive_transition_graph_report(
+        [{"x": 1}],
+        lambda state: [{"x": 0}] if state["x"] == 1 else [],
+        measure=lambda state: state["x"],
+        consistency_check=lambda state: state["x"] == 0,
+    )
+
+    assert report["EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT"] is False
+    assert report["DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT"] is False
+    assert report["carrier_closure_violation_count"] == 1
+    assert report["discovered_undeclared_target_count"] == 1
+
+
+def test_exhaustive_graph_checks_consistency_implies_terminal():
+    states = [{"x": 1}, {"x": 0}]
+    report = exhaustive_transition_graph_report(
+        states,
+        lambda state: [{"x": 0}] if state["x"] == 1 else [],
+        measure=lambda state: state["x"],
+        consistency_check=lambda _state: True,
+    )
+
+    assert report["EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT"] is False
+    assert report["consistent_nonterminal_violation_count"] == 1
+
+
+def test_exhaustive_graph_accepts_closed_exact_normal_form_carrier():
+    states = [{"x": 1}, {"x": 0}]
+    report = exhaustive_transition_graph_report(
+        states,
+        lambda state: [{"x": 0}] if state["x"] == 1 else [],
+        measure=lambda state: state["x"],
+        consistency_check=lambda state: state["x"] == 0,
+    )
+
+    assert report["EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT"] is True
+    assert report["DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT"] is True
+    assert report["carrier_closure_violation_count"] == 0
+    assert report["consistent_nonterminal_violation_count"] == 0
+
+
+def test_exhaustive_graph_rejects_empty_declared_carrier():
+    report = exhaustive_transition_graph_report(
+        [],
+        lambda _state: [],
+        measure=lambda _state: 0,
+        consistency_check=lambda _state: True,
+    )
+
+    assert report["EXHAUSTIVE_TRANSACTION_GRAPH_RECEIPT"] is False
+    assert report["DECLARED_CARRIER_CLOSURE_RECEIPT"] is False
+    assert report["DISTRIBUTED_LOCAL_DIAMOND_RECEIPT"] is False
+    assert report["DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT"] is False
 
 
 def test_gauge_duplicates_have_identical_quotient_transitions():

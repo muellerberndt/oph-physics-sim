@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph_visualizer_pack_v2.schema.json",
+  "title": "OPH Visualizer Pack v2 Manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "payloadSchema",
+    "validation",
+    "payloadIndex",
+    "canonicalPayloadSha256",
+    "files",
+    "chunking",
+    "archiveBudget",
+    "claimBoundary"
+  ],
+  "properties": {
+    "schema": {"const": "oph_visualizer_pack_v2"},
+    "payloadSchema": {"const": "oph_universe_timeline_visualization_payload_v1"},
+    "validation": {
+      "type": "object",
+      "required": ["valid"],
+      "properties": {"valid": {"const": true}},
+      "additionalProperties": true
+    },
+    "payloadIndex": {"const": "payload_index.json"},
+    "canonicalPayloadSha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "byteCount", "sha256"],
+        "properties": {
+          "path": {"type": "string"},
+          "byteCount": {"type": "integer", "minimum": 0},
+          "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "chunking": {"type": "object"},
+    "archiveBudget": {
+      "type": "object",
+      "required": ["targetBytes", "hardMaximumBytesExclusive"],
+      "properties": {
+        "targetBytes": {"type": "integer", "maximum": 128000000},
+        "hardMaximumBytesExclusive": {"type": "integer", "maximum": 256000000}
+      }
+    },
+    "claimBoundary": {"type": "string"}
+  }
+}

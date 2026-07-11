@@ -146,6 +146,7 @@ def write_h3_refit_report(
     profile_mode: str = "static_halfspace",
     profile_time_scale: float = 2.0 * np.pi,
     control_fit_mode: str = "same_h3_model_not_affine_target_fit",
+    blind_feature_selection: bool = False,
 ) -> dict[str, Any]:
     kernel, caps, metadata = load_modular_response_kernel_cache(run_dir)
     report = modular_response_h3_report(
@@ -181,6 +182,7 @@ def write_h3_refit_report(
         profile_mode=str(profile_mode),
         profile_time_scale=float(profile_time_scale),
         control_fit_mode=str(control_fit_mode),
+        blind_feature_selection=bool(blind_feature_selection),
     )
     report["kernel_cache"] = {
         "mode": metadata.get("mode"),

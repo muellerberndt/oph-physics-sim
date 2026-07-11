@@ -8,6 +8,7 @@ from oph_fpe.bulk.modular_probe import (
     collar_operator_system_density,
     geometric_permutation_operator,
     history_koopman_modular_generator,
+    modular_generator_from_unitary_transition,
     modular_unitary,
     perturb_remeasure_response_density,
     perturb_remeasure_response_kernel_density,
@@ -39,6 +40,27 @@ def test_modular_transport_identity_at_t0_and_unitary_norm():
 
     assert np.allclose(state_derived_modular_transport(O, rho, 0.0, 1e-3), O)
     assert np.allclose(U.conj().T @ U, np.eye(2), atol=1e-10)
+
+
+def test_modular_unitary_uses_paper_negative_time_generator_convention():
+    K = np.diag([1.0, 2.0])
+    t = 0.25
+
+    U = modular_unitary(K, t)
+
+    assert np.allclose(U, np.diag(np.exp(-1j * t * np.asarray([1.0, 2.0]))))
+
+
+def test_koopman_log_generator_reconstructs_negative_time_unitary() -> None:
+    expected_generator = np.diag([-0.4, 0.2, 0.7])
+    response_lag = 0.3
+    unitary = modular_unitary(expected_generator, response_lag)
+
+    recovered_generator = modular_generator_from_unitary_transition(unitary, response_lag)
+    reconstructed_unitary = modular_unitary(recovered_generator, response_lag)
+
+    assert np.allclose(recovered_generator, expected_generator, atol=1.0e-10)
+    assert np.allclose(reconstructed_unitary, unitary, atol=1.0e-10)
 
 
 def test_inferred_clock_fit_uses_nonstatic_clock_carrier_rows():
@@ -215,6 +237,7 @@ def test_history_koopman_generator_uses_visible_modular_time_lag():
     assert meta["response_lag_source"] == "observer_visible_modular_time_median_increment"
     assert meta["effective_response_lag"] == 0.03
     assert meta["configured_response_lag"] == 0.25
+    assert meta["generator_reconstruction_error"] < 1.0e-10
 
 
 def test_endogenous_generator_receipt_is_separate_from_2pi_clock():

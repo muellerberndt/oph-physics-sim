@@ -32,16 +32,21 @@ def cap_normal_h3_chart_report(payload: dict[str, Any], *, tol: float = 1.0e-8) 
     """
 
     source = dict(payload or {})
-    sky = _points3(source.get("sky_points") or source.get("omegas") or [])
+    sky, sky_input_valid = _points3_checked(source.get("sky_points") or source.get("omegas") or [])
     caps = list(source.get("caps") or [])
     transitions = list(source.get("transitions") or [])
-    h3_points = _points4(source.get("h3_points") or source.get("observer_frames") or [])
+    h3_points, h3_input_valid = _points4_checked(
+        source.get("h3_points") or source.get("observer_frames") or []
+    )
     radius_provenance = str(source.get("radius_provenance", "UNIT_CONVENTION"))
-    curvature_radius = float(source.get("curvature_radius", 1.0) or 1.0)
+    radius_declared = "curvature_radius" in source
+    parsed_radius = _positive_number(source.get("curvature_radius"))
+    curvature_radius_valid = bool(not radius_declared or parsed_radius is not None)
+    curvature_radius = float(parsed_radius if parsed_radius is not None else 1.0)
     declared_exact = _declared_exact(source, caps)
 
     q = np.asarray([_q(row) for row in sky], dtype=float) if sky.size else np.zeros((0, 4), dtype=float)
-    normals: list[np.ndarray] = []
+    normals_by_cap_index: dict[int, np.ndarray] = {}
     cap_rows: list[dict[str, Any]] = []
     boundary_values: list[float] = []
     interior_values: list[float] = []
@@ -53,7 +58,7 @@ def cap_normal_h3_chart_report(payload: dict[str, Any], *, tol: float = 1.0e-8) 
         cap_rows.append(row)
         if row["normal"] is not None:
             n = np.asarray(row["normal"], dtype=float)
-            normals.append(n)
+            normals_by_cap_index[index] = n
             boundary_values.extend(_incidences(n, _points3(cap.get("boundary_points") or [])))
             interior_values.extend(_incidences(n, _points3(cap.get("interior_points") or cap.get("inside_points") or [])))
             exterior_values.extend(_incidences(n, _points3(cap.get("exterior_points") or cap.get("outside_points") or [])))
@@ -63,13 +68,25 @@ def cap_normal_h3_chart_report(payload: dict[str, Any], *, tol: float = 1.0e-8) 
     omega_residual = _max_abs(np.sum(sky * sky, axis=1) - 1.0) if sky.size else None
     null_residual = _max_abs(np.asarray([_eta(row, row) for row in q], dtype=float)) if q.size else None
     normal_residual = (
-        _max_abs(np.asarray([_eta(row, row) - 1.0 for row in normals], dtype=float)) if normals else None
+        _max_abs(np.asarray([_eta(row, row) - 1.0 for row in normals_by_cap_index.values()], dtype=float))
+        if normals_by_cap_index
+        else None
     )
     boundary_residual = _max_abs(np.asarray(boundary_values, dtype=float)) if boundary_values else None
     interior_margin = float(np.min(interior_values)) if interior_values else None
     exterior_margin = float(-np.max(exterior_values)) if exterior_values else None
 
-    transition_rows = [_transition_row(row, sky=sky, q=q, caps=caps, normals=normals, tol=tol) for row in transitions]
+    transition_rows = [
+        _transition_row(
+            row,
+            sky=sky,
+            q=q,
+            caps=caps,
+            normals_by_cap_index=normals_by_cap_index,
+            tol=tol,
+        )
+        for row in transitions
+    ]
     lorentz_residual = _max_optional(row.get("lorentz_residual") for row in transition_rows)
     ray_residual = _max_optional(row.get("ray_residual") for row in transition_rows)
     cap_equivariance_residual = _max_optional(row.get("cap_equivariance_residual") for row in transition_rows)
@@ -99,6 +116,9 @@ def cap_normal_h3_chart_report(payload: dict[str, Any], *, tol: float = 1.0e-8) 
         declared_exact=declared_exact,
         radius_provenance=radius_provenance,
         source=source,
+        sky_input_valid=sky_input_valid,
+        h3_input_valid=h3_input_valid,
+        curvature_radius_valid=curvature_radius_valid,
         tol=tol,
     )
     status = _status(blockers, declared_exact)
@@ -120,6 +140,7 @@ def cap_normal_h3_chart_report(payload: dict[str, Any], *, tol: float = 1.0e-8) 
             "future_sheet": "q0>0 and u0>0",
             "orientation": source.get("orientation", "declared"),
             "radius_provenance": radius_provenance,
+            "curvature_radius_input_valid": curvature_radius_valid,
         },
         "celestial_section": {
             "q_formula": "q(Omega)=(1,Omega)",
@@ -136,7 +157,9 @@ def cap_normal_h3_chart_report(payload: dict[str, Any], *, tol: float = 1.0e-8) 
             "POPULATED_BULK": False,
             "NEUTRAL_CHART_BLIND_BULK": False,
             "PHYSICAL_CURVATURE_RADIUS_DERIVED": bool(
-                radius_provenance == "OPH_DERIVED_SCALE" and source.get("derived_scale_receipt")
+                radius_provenance == "OPH_DERIVED_SCALE"
+                and type(source.get("derived_scale_receipt")) is bool
+                and source.get("derived_scale_receipt") is True
             ),
             "PHYSICAL_STRESS_TENSOR": False,
             "EINSTEIN_METRIC": False,
@@ -162,7 +185,15 @@ def write_cap_normal_h3_chart_report(source: Path, out: Path) -> dict[str, Any]:
     return report
 
 
-def _cap_row(index: int, cap: dict[str, Any], *, tol: float) -> dict[str, Any]:
+def _cap_row(
+    index: int,
+    cap: dict[str, Any],
+    *,
+    tol: float,
+    require_samples: bool = True,
+) -> dict[str, Any]:
+    if not isinstance(cap, dict):
+        return {"index": index, "status": "malformed_cap", "normal": None}
     center = _vec3(cap.get("center") or cap.get("c"))
     alpha = _number(cap.get("alpha") if cap.get("alpha") is not None else cap.get("angular_radius"))
     if center is None or alpha is None:
@@ -170,19 +201,66 @@ def _cap_row(index: int, cap: dict[str, Any], *, tol: float) -> dict[str, Any]:
     center_norm = float(np.linalg.norm(center))
     if center_norm <= 0.0:
         return {"index": index, "status": "zero_center", "normal": None}
+    center_norm_residual = abs(center_norm - 1.0)
+    if center_norm_residual > max(tol, 1.0e-12):
+        return {
+            "index": index,
+            "source_type": str(cap.get("source_type", "unspecified")),
+            "status": "nonunit_center",
+            "normal": None,
+            "center_norm_residual": float(center_norm_residual),
+        }
     c = center / center_norm
     if not (0.0 < float(alpha) < np.pi):
         return {"index": index, "status": CAP_NOT_ROUND, "normal": None}
+    sample_groups = {
+        "boundary": cap.get("boundary_points") or [],
+        "interior": cap.get("interior_points") or cap.get("inside_points") or [],
+        "exterior": cap.get("exterior_points") or cap.get("outside_points") or [],
+    }
+    sample_validity: dict[str, bool] = {}
+    sample_unit_residuals: dict[str, float | None] = {}
+    sample_counts: dict[str, int] = {}
+    for name, value in sample_groups.items():
+        points, valid = _points3_checked(value)
+        sample_validity[name] = valid
+        sample_counts[name] = int(len(points))
+        sample_unit_residuals[name] = (
+            _max_abs(np.sum(points * points, axis=1) - 1.0) if len(points) else None
+        )
+    sample_points_valid = bool(all(sample_validity.values()))
+    sample_points_unit = bool(
+        all(
+            residual is None or residual <= max(tol, 1.0e-12)
+            for residual in sample_unit_residuals.values()
+        )
+    )
+    required_samples_present = bool(
+        not require_samples
+        or all(sample_counts[name] > 0 for name in ("boundary", "interior", "exterior"))
+    )
     n = np.concatenate([[1.0 / np.tan(alpha)], (1.0 / np.sin(alpha)) * c])
     normal_residual = abs(_eta(n, n) - 1.0)
+    if not sample_points_valid:
+        status = "malformed_cap_sample_points"
+    elif not sample_points_unit:
+        status = "cap_sample_not_unit_s2"
+    elif not required_samples_present:
+        status = "missing_cap_orientation_samples"
+    else:
+        status = "ok" if normal_residual <= max(tol, 1.0e-12) else CAP_NOT_ROUND
     return {
         "index": index,
-        "source_type": str(cap.get("source_type", "analytic_round_cap")),
-        "status": "ok" if normal_residual <= max(tol, 1.0e-12) else CAP_NOT_ROUND,
-        "center_norm_residual": abs(center_norm - 1.0),
+        "source_type": str(cap.get("source_type", "unspecified")),
+        "status": status,
+        "center_norm_residual": float(center_norm_residual),
         "alpha": float(alpha),
         "normal": [float(value) for value in n],
         "normal_norm_residual": float(normal_residual),
+        "sample_points_valid": sample_points_valid,
+        "sample_unit_residuals": sample_unit_residuals,
+        "sample_counts": sample_counts,
+        "required_samples_present": required_samples_present,
         "incidence_formula": "(c dot Omega - cos(alpha))/sin(alpha)",
     }
 
@@ -193,9 +271,11 @@ def _transition_row(
     sky: np.ndarray,
     q: np.ndarray,
     caps: list[dict[str, Any]],
-    normals: list[np.ndarray],
+    normals_by_cap_index: dict[int, np.ndarray],
     tol: float,
 ) -> dict[str, Any]:
+    if not isinstance(row, dict):
+        return {"status": LORENTZ_TRANSITION_INVALID, "blocker": "malformed_transition"}
     matrix = _matrix4(row.get("lambda") or row.get("Lambda") or row.get("lorentz_matrix"))
     if matrix is None:
         return {"status": "missing_lorentz_matrix"}
@@ -213,17 +293,33 @@ def _transition_row(
     image_caps = list(row.get("cap_images") or row.get("transformed_caps") or [])
     cap_equivariance = []
     for image in image_caps:
-        cap_index = int(image.get("cap_index", image.get("source_index", 0)))
-        if 0 <= cap_index < len(normals):
-            image_row = _cap_row(cap_index, image, tol=tol)
+        if not isinstance(image, dict):
+            continue
+        try:
+            cap_index = int(image.get("cap_index", image.get("source_index", 0)))
+        except (TypeError, ValueError):
+            continue
+        source_normal = normals_by_cap_index.get(cap_index)
+        if source_normal is not None:
+            image_row = _cap_row(cap_index, image, tol=tol, require_samples=False)
             if image_row.get("normal") is not None:
                 image_normal = np.asarray(image_row["normal"], dtype=float)
-                cap_equivariance.append(float(np.max(np.abs(image_normal - matrix @ normals[cap_index]))))
+                cap_equivariance.append(float(np.max(np.abs(image_normal - matrix @ source_normal))))
     cap_equivariance_residual = max(cap_equivariance) if cap_equivariance else None
     proper = bool(det > 0.0 and abs(det - 1.0) <= 1.0e-6)
     orthochronous = bool(future_u0 > 0.0 and (omega_min is None or omega_min > 0.0))
+    cap_equivariance_complete = bool(cap_equivariance)
     return {
-        "status": "ok" if lorentz_residual <= tol and proper and orthochronous else LORENTZ_TRANSITION_INVALID,
+        "status": (
+            "ok"
+            if lorentz_residual <= tol
+            and proper
+            and orthochronous
+            and cap_equivariance_complete
+            and cap_equivariance_residual is not None
+            and cap_equivariance_residual <= tol
+            else LORENTZ_TRANSITION_INVALID
+        ),
         "lorentz_residual": lorentz_residual,
         "det": det,
         "proper": proper,
@@ -233,6 +329,7 @@ def _transition_row(
         "ray_residual": ray_residual,
         "cap_equivariance_residual": cap_equivariance_residual,
         "cap_equivariance_samples": len(cap_equivariance),
+        "cap_equivariance_complete": cap_equivariance_complete,
     }
 
 
@@ -244,6 +341,8 @@ def _h3_row(points: np.ndarray, transitions: list[dict[str, Any]], *, curvature_
     future_min = float(np.min(points[:, 0]))
     distances = []
     for transition in transitions:
+        if not isinstance(transition, dict):
+            continue
         matrix = _matrix4(transition.get("lambda") or transition.get("Lambda") or transition.get("lorentz_matrix"))
         if matrix is None:
             continue
@@ -272,9 +371,18 @@ def _blockers(
     declared_exact: bool,
     radius_provenance: str,
     source: dict[str, Any],
+    sky_input_valid: bool,
+    h3_input_valid: bool,
+    curvature_radius_valid: bool,
     tol: float,
 ) -> list[str]:
     blockers: list[str] = []
+    if not sky_input_valid:
+        blockers.append("malformed_or_nonfinite_sky_points")
+    if not h3_input_valid:
+        blockers.append("malformed_or_nonfinite_h3_points")
+    if not curvature_radius_valid:
+        blockers.append("invalid_curvature_radius")
     if len(sky) == 0:
         blockers.append("missing_sky_points")
     if not caps:
@@ -287,12 +395,16 @@ def _blockers(
         blockers.append(CAP_NOT_ROUND)
     for key in ("r_omega", "r_null", "r_cap_normal", "r_boundary_C", "r_lorentz", "r_ray", "r_h3", "r_distance"):
         value = residuals.get(key)
-        if value is not None and float(value) > tol:
+        if value is not None and not np.isfinite(float(value)):
+            blockers.append(f"{key}_nonfinite")
+        elif value is not None and float(value) > tol:
             blockers.append(f"{key}_above_tol")
     if residuals.get("m_in") is None or residuals.get("m_out") is None:
         blockers.append(CAP_ORIENTATION_AMBIGUOUS)
     elif float(residuals["m_in"]) <= tol or float(residuals["m_out"]) <= tol:
         blockers.append(CAP_ORIENTATION_AMBIGUOUS)
+    if any(int(row.get("cap_equivariance_samples", 0)) < 1 for row in transition_rows):
+        blockers.append("missing_cap_equivariance_samples_per_transition")
     if residuals.get("r_cap_equivariance") is None:
         blockers.append("missing_cap_equivariance_samples")
     elif float(residuals["r_cap_equivariance"]) > tol:
@@ -303,7 +415,10 @@ def _blockers(
         blockers.append(LORENTZ_TRANSITION_INVALID)
     if h3_points.size and np.min(h3_points[:, 0]) <= 0.0:
         blockers.append(H3_CHART_INVALID)
-    if radius_provenance == "OPH_DERIVED_SCALE" and not source.get("derived_scale_receipt"):
+    if radius_provenance == "OPH_DERIVED_SCALE" and not (
+        type(source.get("derived_scale_receipt")) is bool
+        and source.get("derived_scale_receipt") is True
+    ):
         blockers.append(H3_RADIUS_UNSOURCED)
     if not declared_exact:
         blockers.append(APPROXIMATE)
@@ -331,11 +446,25 @@ def _status(blockers: list[str], declared_exact: bool) -> str:
 
 
 def _declared_exact(source: dict[str, Any], caps: list[dict[str, Any]]) -> bool:
-    if source.get("global_roundness_certificate") or source.get("round_cap_theorem_certificate"):
-        return True
+    for key in ("global_roundness_certificate", "round_cap_theorem_certificate"):
+        certificate = source.get(key)
+        if type(certificate) is bool and certificate is True:
+            return True
+        if isinstance(certificate, dict) and (
+            certificate.get("schema") == "oph_global_round_cap_certificate_v1"
+            and certificate.get("scope") == "all_caps"
+            and type(certificate.get("passed")) is bool
+            and certificate.get("passed") is True
+            and type(certificate.get("cap_count")) is int
+            and certificate.get("cap_count") == len(caps)
+        ):
+            return True
     if not caps:
         return False
-    return all(str(cap.get("source_type", "analytic_round_cap")) == "analytic_round_cap" for cap in caps)
+    return all(
+        isinstance(cap, dict) and str(cap.get("source_type", "")) == "analytic_round_cap"
+        for cap in caps
+    )
 
 
 def _q(omega: np.ndarray) -> np.ndarray:
@@ -370,38 +499,72 @@ def _number(value: Any) -> float | None:
     if value is None:
         return None
     try:
-        return float(value)
+        parsed = float(value)
     except (TypeError, ValueError):
         return None
+    return parsed if np.isfinite(parsed) else None
+
+
+def _positive_number(value: Any) -> float | None:
+    parsed = _number(value)
+    return parsed if parsed is not None and parsed > 0.0 else None
 
 
 def _vec3(value: Any) -> np.ndarray | None:
     if value is None:
         return None
-    array = np.asarray(value, dtype=float)
-    if array.shape != (3,):
+    try:
+        array = np.asarray(value, dtype=float)
+    except (TypeError, ValueError):
+        return None
+    if array.shape != (3,) or not np.all(np.isfinite(array)):
         return None
     return array
 
 
 def _points3(value: Any) -> np.ndarray:
-    array = np.asarray(value, dtype=float)
+    return _points3_checked(value)[0]
+
+
+def _points3_checked(value: Any) -> tuple[np.ndarray, bool]:
+    try:
+        array = np.asarray(value, dtype=float)
+    except (TypeError, ValueError):
+        return np.zeros((0, 3), dtype=float), False
     if array.size == 0:
-        return np.zeros((0, 3), dtype=float)
-    return array.reshape((-1, 3))
+        return np.zeros((0, 3), dtype=float), True
+    if array.shape == (3,):
+        array = array.reshape((1, 3))
+    if array.ndim != 2 or array.shape[1] != 3 or not np.all(np.isfinite(array)):
+        return np.zeros((0, 3), dtype=float), False
+    return array, True
 
 
 def _points4(value: Any) -> np.ndarray:
-    array = np.asarray(value, dtype=float)
+    return _points4_checked(value)[0]
+
+
+def _points4_checked(value: Any) -> tuple[np.ndarray, bool]:
+    try:
+        array = np.asarray(value, dtype=float)
+    except (TypeError, ValueError):
+        return np.zeros((0, 4), dtype=float), False
     if array.size == 0:
-        return np.zeros((0, 4), dtype=float)
-    return array.reshape((-1, 4))
+        return np.zeros((0, 4), dtype=float), True
+    if array.shape == (4,):
+        array = array.reshape((1, 4))
+    if array.ndim != 2 or array.shape[1] != 4 or not np.all(np.isfinite(array)):
+        return np.zeros((0, 4), dtype=float), False
+    return array, True
 
 
 def _matrix4(value: Any) -> np.ndarray | None:
     if value is None:
         return None
-    array = np.asarray(value, dtype=float)
-    if array.shape != (4, 4):
+    try:
+        array = np.asarray(value, dtype=float)
+    except (TypeError, ValueError):
+        return None
+    if array.shape != (4, 4) or not np.all(np.isfinite(array)):
         return None
     return array

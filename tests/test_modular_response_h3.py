@@ -1203,7 +1203,7 @@ def test_joint_h3_fit_can_use_deterministic_candidate_ball():
     report = modular_response_h3_report(
         kernel,
         caps,
-        candidate_count=1024,
+        candidate_count=1025,
         candidate_radius=1.2,
         softness=0.2,
         seed=62,
@@ -1217,5 +1217,63 @@ def test_joint_h3_fit_can_use_deterministic_candidate_ball():
     )
 
     assert report["h3_fit"]["candidate_mode"] == "fibonacci_ball"
+    assert report["h3_fit"]["candidate_count"] == 1025
+    assert report["control_fits"]["shuffled_response"]["candidate_count"] == 1025
     assert report["h3_fit"]["assignment_unique_count"] > 0
     assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
+
+
+def test_blind_feature_selection_uses_metadata_and_source_order_only():
+    matrix = np.asarray(
+        [
+            [1000.0, 1.0, 50.0, 2.0, 25.0, 3.0],
+            [0.0, 2.0, 0.0, 3.0, 0.0, 4.0],
+        ]
+    )
+    rows = [
+        {
+            "cap_index": index // 2,
+            "time_index": 0,
+            "observable": "checkpoint_class",
+            "feature_type": "class_distribution_delta",
+        }
+        for index in range(matrix.shape[1])
+    ]
+    kernel = {
+        "matrix": matrix,
+        "feature_rows": rows,
+        "wrong_scale_controls": {"1x": np.zeros_like(matrix)},
+    }
+
+    _, _, _, first = _select_fit_features(
+        kernel,
+        matrix,
+        rows,
+        mode="class_distribution_and_change_scale_rank",
+        max_features=3,
+        min_std=999.0,
+        min_wrong_scale_delta=999.0,
+        exclude_observables=(),
+        exclude_feature_types=(),
+        min_features=1,
+        max_features_per_cap_time_observable=None,
+        blind=True,
+    )
+    _, _, _, rescaled = _select_fit_features(
+        {**kernel, "matrix": matrix * np.asarray([1, 100, 1, 100, 1, 100])},
+        matrix * np.asarray([1, 100, 1, 100, 1, 100]),
+        rows,
+        mode="class_distribution_and_change_scale_rank",
+        max_features=3,
+        min_std=999.0,
+        min_wrong_scale_delta=999.0,
+        exclude_observables=(),
+        exclude_feature_types=(),
+        min_features=1,
+        max_features_per_cap_time_observable=None,
+        blind=True,
+    )
+
+    assert first["selected_feature_indices_sample"] == [0, 1, 2]
+    assert rescaled["selected_feature_indices_sample"] == [0, 1, 2]
+    assert first["response_values_used_for_selection"] is False

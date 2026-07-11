@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 SCHEMA_PATH = Path("docs/oph_universe_timeline_visualization_payload_v1.schema.json")
+MANUAL_PATH = Path("docs/VISUALIZATION_APP_AGENT_MANUAL.md")
 
 
 def test_universe_timeline_visualization_schema_is_standalone_json():
@@ -19,6 +20,7 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
         "claimBoundary",
         "ophDifferentiator",
         "sourcePaths",
+        "coordinateSystems",
         "smallUniverse",
         "screen",
         "subjectiveObserverCameras",
@@ -29,13 +31,36 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
         "comparableObservations",
         "geometriesAndSymmetries",
         "visualizationViews",
+        "visualizationRenderData",
         "effectiveStringTheory",
         "emergentCurvedSpacetime",
+        "assumedDs4Spacetime",
         "observerCinema",
         "hilbertSpaceObserverAlgebra",
         "observerAnatomy",
         "paperAccuracy",
     }
+
+
+def test_visualization_agent_manual_specifies_cinematic_accessible_story() -> None:
+    manual = MANUAL_PATH.read_text(encoding="utf-8")
+
+    for marker in (
+        "Canonical Pedagogical Storyboard",
+        "Bounded self-reading patches",
+        "Overlap repair",
+        "Shared records and consensus",
+        "Enter one observer's 3+1D view",
+        "Populate the observer-facing H3 bulk",
+        "Defect worldlines styled as matter",
+        "CMB-shaped sky and comparison",
+        "explanatory overview (not observer-visible)",
+        "ASSUMED VISUAL LAYER",
+        "prefers-reduced-motion",
+        "Performance And Streaming Budget",
+        "256,000,000-byte ceiling",
+    ):
+        assert marker in manual
 
 
 def test_universe_timeline_visualization_schema_preserves_required_viewer_fields():
@@ -74,9 +99,14 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
         "up",
         "right",
         "forward",
+        "h3TangentFrame",
+        "coordinateContract",
         "timeFrames",
         "claimBoundary",
     } <= camera_required
+
+    ds4_required = set(defs["assumedDs4Spacetime"]["required"])
+    assert {"provenance", "geometry", "scaleFactorSamples", "observerReferenceFrames", "receipts"} <= ds4_required
 
     subjective_sighting_required = set(defs["observerProtoWorldlineSighting"]["required"])
     assert "observerLocalReadout" in subjective_sighting_required
@@ -110,6 +140,34 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
         "observerAnatomy",
         "paperAccuracy",
     } <= top_level_required
+
+    small_universe_required = set(defs["smallUniverse"]["required"])
+    assert {
+        "contentAvailable",
+        "dataMode",
+        "receiptSource",
+        "bundleReceiptKind",
+        "renderableExactMiniUniverseReceipt",
+        "contentBlockers",
+    } <= small_universe_required
+    small_universe_properties = defs["smallUniverse"]["properties"]
+    assert set(small_universe_properties["dataMode"]["enum"]) == {
+        "exact_mini_universe",
+        "theorem_receipt_summary_only",
+    }
+    assert set(small_universe_properties["receiptSource"]["type"]) == {"string", "null"}
+
+    effective_string_required = set(defs["effectiveStringTheory"]["required"])
+    assert {
+        "finiteEdgeStringVibrationReceipt",
+        "finiteEdgeStringVibrationBlockers",
+        "layerAvailability",
+        "hiddenLayers",
+        "emptyLayerPolicy",
+    } <= effective_string_required
+    assert "finite_edge_string_vibration_pulses" in defs["effectiveStringTheory"]["properties"][
+        "layerAvailability"
+    ]["required"]
 
     render_data_required = set(defs["visualizationRenderData"]["required"])
     assert {

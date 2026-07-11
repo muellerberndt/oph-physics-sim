@@ -3,7 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oph_fpe.cosmology.cmb_promotion_ledger import write_cmb_promotion_ledger_report
+from oph_fpe.cosmology.cmb_promotion_ledger import (
+    PHYSICAL_PREDICTION_PARENT_GATES,
+    _frozen_parent_hashes_receipt,
+    _physical_prediction_receipt,
+    write_cmb_promotion_ledger_report,
+)
 from oph_fpe.cosmology.cosmological_scale_bridge import imported_flrw_reference_receipts
 from oph_fpe.cli import main
 
@@ -47,6 +52,60 @@ def test_cmb_promotion_ledger_keeps_imported_flrw_diagnostic_bounded(tmp_path: P
     assert report["current_claim_tier"] == "SPECTRUM_DIAGNOSTIC"
     assert report["likelihood_evaluated_physical_cmb_prediction"] is False
     assert report["readiness_gates"]["SOURCE_ONLY_FINITE_ARTIFACT_RECEIPT"] is False
+
+
+def test_cmb_promotion_ledger_rejects_untrusted_terminal_prediction_boolean(tmp_path: Path):
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_json(
+        run / "physical_cmb_output_comparison_report.json",
+        {
+            "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT": True,
+            "PHYSICAL_CMB_PREDICTION_RECEIPT": True,
+            "physical_cmb_prediction": True,
+        },
+    )
+
+    report = write_cmb_promotion_ledger_report([run], out)
+
+    assert report["terminal_prediction_asserted_by_output"] is True
+    assert report["current_claim_tier"] == "SPECTRUM_DIAGNOSTIC"
+    assert report["likelihood_evaluated_physical_cmb_prediction"] is False
+    assert report["readiness_gates"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+    assert report["readiness_gates"]["FROZEN_PARENT_HASHES_RECEIPT"] is False
+    assert "untrusted_terminal_prediction_assertion_rejected" in report["blockers"]
+
+
+def test_physical_prediction_receipt_is_derived_from_all_parent_gates():
+    gates = {gate: True for gate in PHYSICAL_PREDICTION_PARENT_GATES}
+
+    assert _physical_prediction_receipt(
+        gates,
+        conditional_physical_source=True,
+        native_physical_source=False,
+    ) is True
+
+    gates["FROZEN_PARENT_HASHES_RECEIPT"] = False
+    assert _physical_prediction_receipt(
+        gates,
+        conditional_physical_source=True,
+        native_physical_source=False,
+    ) is False
+
+
+def test_frozen_parent_hashes_must_be_valid_and_match_input_contract():
+    frozen = {
+        "frozen_source_hash": "0" * 64,
+        "frozen_solver_hash": "1" * 64,
+        "frozen_likelihood_hash": "2" * 64,
+    }
+    physical_input = {"contract": dict(frozen)}
+
+    assert _frozen_parent_hashes_receipt(frozen, physical_input) is True
+
+    physical_input["contract"]["frozen_solver_hash"] = "3" * 64
+    assert _frozen_parent_hashes_receipt(frozen, physical_input) is False
 
 
 def test_cmb_promotion_ledger_cli(tmp_path: Path):

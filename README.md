@@ -12,6 +12,15 @@ The README describes the simulator surface. Pass/fail receipt labels belong in r
 
 The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / issue #503).
 
+For explanatory universe rendering, the simulator also supports an explicit
+`simulation_assumptions` lane. It can supply paper bridges such as the BW `2*pi`
+branch, H3 record population, an open-slicing dS4 background, and the visual
+interpretation of stable defect candidates as matter. These inputs are written
+to `simulation_assumption_manifest.json` and use separately named
+`SIMULATION_ASSUMED_*` statuses; they never turn computed theorem, neutral-bulk,
+particle, Einstein, gravity, or physical-CMB receipts true. See
+`docs/SIMULATION_ASSUMPTION_POLICY.md`.
+
 Every ensemble-facing output must name its claim tier:
 
 - `E0`: seed noise, proposal noise, or repair jitter.
@@ -178,7 +187,16 @@ python3 -m oph_fpe.cli reduce-distributed-oph-universe \
   --out-dir runs/<run_id>/reduced
 ```
 
-The reducer emits a distributed summary, carrier-contract report, cut-link metadata replay, visualization payload, `DISTRIBUTED_RUN_PACK_CONTRACT.json`, and sidecar report directories for `global_carrier_contract/`, `halo_exchange_global/`, `strict_neutral_global/`, `observer_modular_time_global/`, `proto_particles_global/`, `pn_resonance_global/`, and `physical_cmb_global/`. The cut-link replay is endpoint-interpolated metadata for audit and visualization; it is not live cross-shard repair and is marked `physics_receipt_eligible: false`.
+The reducer emits a distributed summary, carrier-contract report, cut-link metadata replay,
+schema-valid visualization payload, `simulation_assumption_manifest.json`, a hash-verified
+`oph_visualizer_pack_v2.tar.zst` under the same strict sub-256M gate, and
+`DISTRIBUTED_RUN_PACK_CONTRACT.json`, plus sidecar report directories for
+`global_carrier_contract/`, `halo_exchange_global/`, `strict_neutral_global/`,
+`observer_modular_time_global/`, `proto_particles_global/`, `pn_resonance_global/`, and
+`physical_cmb_global/`. The distributed payload carries the same H3 coordinate contract and
+explicit assumed-dS4/observer-frame/defect-matter renderer lane as a monolithic export. The cut-link
+replay is endpoint-interpolated metadata for audit and visualization; it is not live cross-shard
+repair and is marked `physics_receipt_eligible: false`.
 
 Use the run-pack contract as the small-scale-first gate before launching cloud jobs. `distributed_artifact_packaging_smoke_receipt` checks packaging/export health plus the exact global-carrier manifest, path, run/config/code-hash, partition, cut-interface, stable-initial-state, and observer-registry receipts. `distributed_kernel_scaling_readiness_receipt` and the legacy `large_scale_cloud_run_ready_receipt` remain false until the online distributed kernel emits a linearized committed-event log, restart/rollback roots, final monolithic normal-form/readout certificates, seam packet reciprocity, visible restriction, repair descent, atomic commit, local diamond, repair completeness, selected-fiber nontrivial elimination, same-boundary multistart confluence, quotient normal-form canonical hash, holonomy, fair-block contraction, schedule independence, and partition naturality receipts. The hash is an equality receipt after quotienting, not a selector among distinct physical endpoints.
 

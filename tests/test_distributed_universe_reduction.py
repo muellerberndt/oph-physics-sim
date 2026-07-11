@@ -9,6 +9,7 @@ from oph_fpe.pipelines.distributed_universe import (
     prepare_distributed_oph_universe,
     reduce_distributed_oph_universe,
 )
+from oph_fpe.viz.visualization_schema import validate_visualization_payload
 
 
 def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path) -> None:
@@ -54,8 +55,13 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert summary["strict_single_global_neutral_bulk_receipt"] is False
 
     payload = json.loads((tmp_path / "reduced" / "distributed_visualization_payload.json").read_text())
+    assert validate_visualization_payload(payload)["variant"] == "distributed"
     assert payload["schemaVersion"] == "oph_universe_timeline_visualization_payload_v1"
     assert payload["distributedSchema"] == "oph_distributed_universe_visualization_payload_v1"
+    assert payload["coordinateSystems"]["h3_hyperboloid_spatial_components_v1"]["model"] == (
+        "future_unit_hyperboloid_spatial_components"
+    )
+    assert payload["assumedDs4Spacetime"]["enabled"] is False
     assert payload["physicalCMB"]["globalReduction"]["physical_cmb_prediction_receipt"] is False
     assert payload["cmbComparison"]["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
     assert payload["observerModularTime"]["globalExport"]["objectiveObserverViewCount"] == 2
@@ -71,6 +77,12 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert payload["visualizationRenderData"]["availability"]["protoWorldlineCount"] >= 1
     assert payload["visualizationRenderData"]["cameraPresets"]
     assert payload["visualizationRenderData"]["sceneGraph"]["bulk"]["protoWorldlines"][0]["polyline"]
+    assert payload["visualizationRenderData"]["sceneGraph"]["assumedDs4Spacetime"]["sourcePath"] == (
+        "assumedDs4Spacetime"
+    )
+    assert summary["visualizer_pack"]["under_hard_limit"] is True
+    assert summary["visualizer_pack"]["byte_count"] < 256_000_000
+    assert Path(summary["visualizer_pack"]["path"]).exists()
     observer_sidecar = json.loads(
         (tmp_path / "reduced" / "observer_modular_time_global" / "observer_modular_time_global_payload.json").read_text()
     )
@@ -89,6 +101,66 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert contract["distributed_kernel_scaling_readiness_receipt"] is False
     assert "distributed_realization_event_certificate_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
     assert "online_cross_shard_overlap_repair_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
+
+
+def test_distributed_reducer_carries_explicit_visual_universe_assumptions(tmp_path: Path) -> None:
+    manifest_path = _write_manifest(tmp_path, shard_count=2)
+    manifest = json.loads(manifest_path.read_text())
+    config_path = Path(manifest["config_path"])
+    config_path.write_text(
+        config_path.read_text()
+        + """
+simulation_assumptions:
+  enabled: true
+  scope: visualization_only
+  profile: known_observer_universe_v1
+  assumed:
+    screen_s2: true
+    bw_2pi_geometric_branch: true
+    h3_observer_chart: true
+    record_population_on_h3: true
+    ds4_open_slicing_background: true
+    positive_cosmological_constant: true
+    observer_tetrad_visualization: true
+    topological_defects_render_as_matter: true
+  ds4:
+    curvature_radius: 2.0
+    hubble_parameter: 0.5
+    time_sample_count: 8
+""",
+        encoding="utf-8",
+    )
+    shard_root = tmp_path / "shards"
+    _write_shard(shard_root / "u_shard0000")
+    _write_shard(shard_root / "u_shard0001")
+
+    summary = reduce_distributed_oph_universe(
+        manifest_path=manifest_path,
+        shard_root=shard_root,
+        out_dir=tmp_path / "reduced",
+    )
+
+    payload = json.loads((tmp_path / "reduced" / "distributed_visualization_payload.json").read_text())
+    ds4 = payload["assumedDs4Spacetime"]
+    assert summary["simulation_assumptions"]["SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"] is True
+    assert ds4["receipts"]["SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"] is True
+    assert ds4["receipts"]["assumed_topological_defects_render_as_matter_receipt"] is True
+    assert ds4["receipts"]["derived_physical_ds4_receipt"] is False
+    assert ds4["receipts"]["physical_particle_matter_receipt"] is False
+    assert all(
+        row["assumed"] is True
+        for row in ds4["assumptionLedger"]["assumptions"].values()
+    )
+    assert ds4["assumptionLedger"]["computedTheoremReceiptsUnchanged"] is True
+    assert ds4["geometry"]["curvatureRadius"] == 2.0
+    assert ds4["geometry"]["hubbleParameter"] == 0.5
+    assert ds4["observerReferenceFrames"]
+    assert ds4["defectMatterRendering"]["worldlineRefs"]
+    assert all(
+        row["renderAs"] == "matter_worldline_visual"
+        for row in ds4["defectMatterRendering"]["worldlineRefs"]
+    )
+    assert validate_visualization_payload(payload)["variant"] == "distributed"
 
 
 def test_distributed_reducer_reduces_finite_cmb_inputs_across_shards(tmp_path: Path) -> None:

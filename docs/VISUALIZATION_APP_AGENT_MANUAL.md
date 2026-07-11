@@ -27,18 +27,42 @@ python3 -m oph_fpe.cli run-universe-timeline-viewer \
 The theorem-following universe pipeline also writes `universe_timeline/visualization_payload.json`
 when visualization output is enabled.
 
+Every normal export validates the payload instance against the canonical schema. Validate an
+existing canonical, compact-fallback, or distributed payload with:
+
+```bash
+python3 -m oph_fpe.cli validate-visualization-payload --payload <payload.json>
+```
+
+The exporter also emits `oph_visualizer_pack_v2.tar.zst`. It is a deterministic,
+content-addressed package with a preferred target of 128 MB and a hard exclusive ceiling of
+256,000,000 bytes. A build at or above the ceiling is deleted and fails. Rebuild an existing bundle
+with `python3 -m oph_fpe.cli build-visualizer-pack --bundle-dir <bundle-dir>`. Large arrays are JSON
+chunks referenced from `payload_index.json`; reconstruct a `$chunkList` by concatenating its chunk
+arrays in order. The pack deliberately excludes the giant monolithic JSON and embedded-data HTML.
+For payloads above 8 MB the normal HTML output is a small external loader rather than a second copy
+of the payload.
+
+The offline exporter still materializes the canonical JSON before chunking. Budget RAM at several
+times the compact JSON size; use at least 2 GB for large camera exports. The default detailed-camera
+cap is `min(max_observers, 256)`, while lightweight observer summaries can remain larger. Override
+the detailed cap only on a build host with enough memory. Browser clients should load pack chunks
+on demand and must not reconstruct the whole payload merely to render one observer.
+
 The same directory contains `visualization_export_manifest.json`. Use that manifest for large
 sidecars:
 
 - `screen_full_<N>.bin`: little-endian `Float32Array` rows `[x,y,z,value]` for the full S2 field.
 - `observers_full_<N>.json`: all observer axes and summary readout fields.
-- `cameras_full_<N>.json`: full objective observer views plus subjective camera transforms.
+- `cameras_full_<N>.json`: capped subjective camera transforms and canonical frame references. The
+  configured observer cap is enforced; objective views and frame arrays are not duplicated here.
 - `observer_proto_worldline_sightings.csv`: flattened observer-frame sightings of diagnostic
   proto-worldline events, suitable for streaming moving markers in observer-local 3D views. Use
   `observer_local_u`, `observer_local_v`, and `observer_local_range`; this sidecar deliberately
-  does not expose raw global H3 `x/y/z` sighting coordinates. `projection_mode` distinguishes
-  nominal camera-cone hits from wide-angle directional fallback sightings; style
-  `outside_nominal_fov=true` rows as peripheral/diagnostic rather than direct cone hits.
+  does not expose raw global H3 `x/y/z` sighting coordinates. This CSV contains nominal-FOV hits.
+  Out-of-cone directions are represented by each frame's compact
+  `peripheralDiagnosticProtoWorldlineIds` and projection contract; derive that optional full-sky
+  overlay on demand and never count it as directly visible.
 - `neutral_object_candidates.csv`: neutral object candidates extracted from observer-visible
   record/transition histories. These rows have no neutral 3D coordinates unless strict neutral
   receipts pass; render them as an audit/network layer, not as a neutral bulk point cloud.
@@ -86,9 +110,17 @@ The app must read these top-level fields:
 - `paperAccuracy`: fail-closed paper-accuracy guard. Use it for claim badges and blocked-promotion
   explanations.
 - `sourcePaths`: show as provenance, not as data to scrape.
-- `smallUniverse`: finite overlap-repair graph, cycles, repair frames, and consensus receipts.
+- `smallUniverse`: exact finite overlap-repair graph/cycles/frames when `contentAvailable=true`, or a
+  provenance-labelled finite-consensus receipt summary when the exact visual fixture was not exported.
 - `screen`: finite observer boundary/readback points, field values, clusters, and repair trace.
 - `subjectiveObserverCameras`: observer-local cameras derived from visible readout.
+- `coordinateSystems`: authoritative coordinate contracts. H3 vec3 values are hyperboloid spatial
+  components, never Poincare-ball coordinates.
+- `assumedDs4Spacetime`: renderer-completion layer sourced from
+  `simulation_assumption_manifest.json`. It supplies an assumed open-H3 de Sitter metric, scale
+  factor, observer reference frames/tetrads, and defect-as-matter rendering links while explicitly
+  keeping computed Einstein and particle receipts false. Its `assumptionLedger` preserves every
+  explicit S2/BW/H3/population/dS4/matter bridge and the `computedTheoremReceiptsUnchanged` guard.
 - `observerModularTime`: observer-local modular-time frames, overlap links, and objective readouts.
 - `consensusBulk`: theorem-assisted H3 chart objects, neutral object candidates, and
   proto-particle candidate worldlines.
@@ -135,6 +167,66 @@ Every gate badge must be data-driven:
   simulation error.
 - missing: absent evidence, not a pass.
 - numeric/string receipts: show as measured evidence, not as Boolean promotion.
+
+## Canonical Pedagogical Storyboard
+
+Ship two entry points: a guided **Story mode** and a freely navigable **Explore mode**. Story mode is
+a progressive reveal of the OPH argument, with a persistent chapter rail and shared time/observer
+selection. It must tell this sequence:
+
+1. **Bounded self-reading patches.** Begin close on one patch against a quiet dark field. Reveal its
+   boundary/ports, local state, readback pulse, record write, and feedback move. Pull back to many
+   patches on the finite S2 screen. Caption: "Observers begin as bounded systems that read and update
+   local records." Do not show an H3 bulk yet.
+2. **Overlap repair.** Illuminate shared boundaries in amber, show a mismatch and the selected local
+   repair, then cool repaired relations to teal as `phi` descends. Use the exact path only when
+   `smallUniverse.contentAvailable=true`; otherwise show the theorem receipt and separately labelled
+   `screen.repairTrace` without fabricating a mini-universe path.
+3. **Shared records and consensus.** Keep the patch network visible. Show equal readout hashes and
+   record/object packets synchronizing across overlap links, then coalescing into stable consensus
+   glyphs. Caption: "Objectivity is the agreement carried by shared records." Do not imply that a
+   neutral bulk existed before this agreement.
+4. **Enter one observer's 3+1D view.** Select one patch and move the main camera into its
+   `subjectiveObserverCameras[*]` frame while retaining a small labelled overview inset. Reveal only
+   its visible records, object packets, nominal-FOV sightings, and modular time. Grow the declared
+   open-H3 dS4 grid only when `assumedDs4Spacetime.enabled`,
+   `assumed_ds4_visualization_layer_receipt`, and `SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT` pass.
+   Keep a persistent **ASSUMED VISUAL LAYER — NOT DERIVED** badge; never promote the physical
+   dS4/Einstein receipts.
+5. **Populate the observer-facing H3 bulk.** Match consensus glyphs to `consensusBulk.objects`, reveal
+   them along intrinsic H3 geodesics, and temporarily retain faint provenance tethers to contributing
+   patch records. Caption: "observer-facing H3 consensus chart." Do not call this a strict neutral
+   third-person bulk unless that separate receipt passes.
+6. **Defect worldlines styled as matter.** Draw exported holonomy/defect tracks in magenta with
+   distinct birth/contact markers. Matter-like glow and silhouettes are allowed only when
+   `assumedDs4Spacetime.defectMatterRendering.enabled` and
+   `assumed_topological_defects_render_as_matter_receipt` pass, and must carry an
+   **ASSUMED DEFECT-AS-MATTER STYLING** badge.
+   Keep "proto-particle/defect candidate" wording while `particle_matter_receipt=false`.
+7. **CMB-shaped sky and comparison.** Widen the selected observer camera into its finite readback sky
+   using exported screen/CMB data only. Label it "diagnostic CMB-shaped sky," then finish on a split
+   sky plus `cmbComparison.residualRows`/measurement-lane comparison. Show usable-data and physical-
+   prediction gates separately; visual resemblance is not a prediction receipt.
+
+Each chapter needs a one-sentence "what you see" caption, a one-sentence epistemic-status caption,
+a compact legend, active gate badges, and a provenance affordance. The badges and captions must be
+included in exported screenshots.
+
+## Camera And Transition Grammar
+
+- Label every outside camera **explanatory overview (not observer-visible)**. It can show topology,
+  overlap links, and provenance but cannot stand in for an observer's experience.
+- First-person rendering may use only the selected observer's local readout and tangent-frame
+  projection. Never expose hidden global H3 positions. Render peripheral diagnostic IDs in a
+  separately styled orientation overlay, not as nominal-FOV sightings.
+- Transition into first person by highlighting the source patch, shrinking the overview to a labelled
+  inset, revealing local records, and only then revealing H3 objects. Reverse that mapping on exit so
+  the relationship between patch and observer view stays teachable.
+- Use the declared hyperboloid distance/geodesic/interpolation contract for H3 motion. Camera easing
+  is presentation only; do not interpolate missing measurements or invent repair states.
+- Prefer calm 0.6-1.2 second focus transitions and readable caption holds. Avoid flashing, rapid
+  parallax, and perpetual camera drift. Under `prefers-reduced-motion`, use cuts/fades and static
+  chapter states.
 
 ## View 1: Quantum Vacuum / Finite Readback Field
 
@@ -195,6 +287,12 @@ Subjective observer cameras are visible-readout cameras. They are built from one
 support, records, packet histograms, axes, and modular-time frames. They are not hidden global
 cameras and do not expose objective global time.
 
+All exported H3 vec3 coordinates use `h3_hyperboloid_spatial_components_v1`: a stored `x` is lifted
+to `X=(sqrt(1+|x|^2),x)` with ambient signature `(-,+,+,+)`. Use
+`d(x,y)=acosh(X0*Y0-x·y)`, hyperboloid geodesic interpolation, and the logarithm map at the observer
+for camera projection. Do not infer a Poincare model from `|x|<1`, use Euclidean distance, or linearly
+interpolate the vec3 values.
+
 Primary fields:
 
 - `subjectiveObserverCameras[*].eye`
@@ -202,10 +300,13 @@ Primary fields:
 - `subjectiveObserverCameras[*].up`
 - `subjectiveObserverCameras[*].right`
 - `subjectiveObserverCameras[*].forward`
+- `subjectiveObserverCameras[*].h3TangentFrame`
+- `subjectiveObserverCameras[*].coordinateContract`
 - `subjectiveObserverCameras[*].fovDegrees`
 - `subjectiveObserverCameras[*].supportSamples`
 - `subjectiveObserverCameras[*].timeFrames`
 - `subjectiveObserverCameras[*].timeFrames[*].visibleProtoWorldlines`
+- `subjectiveObserverCameras[*].timeFrames[*].peripheralDiagnosticProtoWorldlineIds`
 - `observerModularTime.objectiveObserverViews`
 - `observerModularTime.overlapLinks`
 - `observerModularTime.timeFrames`
@@ -220,6 +321,9 @@ Recommended rendering:
 - Animate `visibleProtoWorldlines` as moving dashed/candidate markers in the observer-local H3 view.
   Prefer `observer_proto_worldline_sightings.csv` for streaming large runs, using its
   observer-local readout fields rather than hidden global coordinates.
+- Treat `visibleProtoWorldlines` as the only nominal-FOV visibility lane. Offer
+  `peripheralDiagnosticProtoWorldlineIds` as an optional on-demand full-sky orientation overlay
+  with visibly different styling; it must not create a duplicate nominal sighting or visibility count.
 - Draw `observerModularTime.overlapLinks` as readback-overlap arcs or support links. They are not
   decorative graph edges; they are the shared-support substrate for objectivity.
 - Include a small third-person orientation inset if useful, but clearly mark the selected camera as
@@ -255,6 +359,13 @@ available. `observer_h3_object_population_receipt=true` means the H3 object char
 
 Use `visualizationViews.emergentCurvedSpacetime` and `emergentCurvedSpacetime`.
 
+For the complete narrative renderer, also use `assumedDs4Spacetime`. Its open-slicing metric
+`ds^2=-d_tau^2+H^-2 sinh(H tau)^2 dH3^2`, scale samples, comoving observer frames, tetrads, and
+defect-matter links are explicit simulation assumptions. Display the visual-assumption badge from
+`SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT`; do not turn
+`derived_physical_ds4_receipt`, `einstein_equation_solution_receipt`, or
+`physical_particle_matter_receipt` true.
+
 Required meaning:
 
 This is a diagnostic quotient-visible source/curvature/compaction proxy over the observer-facing H3
@@ -270,7 +381,8 @@ Primary fields:
 
 - `emergentCurvedSpacetime.sourceMath`
 - `emergentCurvedSpacetime.curvatureProxyPoints`
-- `emergentCurvedSpacetime.spacetimeCompactionField`
+- `emergentCurvedSpacetime.curvatureProxyPoints` (compatibility aliases are paths under
+  `emergentCurvedSpacetime.dataRefs`, not repeated arrays)
 - `emergentCurvedSpacetime.continuousBulkField`
 - `emergentCurvedSpacetime.timeSlices`
 - `emergentCurvedSpacetime.receipts`
@@ -359,9 +471,12 @@ Primary fields:
 
 Recommended rendering:
 
-- Render `smallUniverse.cycles` as closed finite edge loops.
-- Animate `smallUniverse.repairFrames` as swept ribbons over repair time.
-- Render `effectiveStringTheory.finiteEdgeStringVibrationSamples` or
+- Read `effectiveStringTheory.layerAvailability` before drawing each sublayer. Hide entries listed
+  in `hiddenLayers`; a missing finite-edge vibration layer must not hide populated H3/worldline layers.
+- When the corresponding `layerAvailability` entry is true, render `smallUniverse.cycles` as closed
+  finite edge loops and animate `smallUniverse.repairFrames` as swept ribbons over repair time.
+- When `finite_edge_string_vibration_pulses=true`, render
+  `effectiveStringTheory.finiteEdgeStringVibrationSamples` or
   `finite_edge_string_vibration_samples.csv` as the exact finite edge-pulse/vibration layer. Use
   `frameStep`/`frame_step` for time, `loopPhase`/`loop_phase` for position along the finite loop,
   and `normalizedAmplitude`/`normalized_amplitude` for pulse height or glow.
@@ -490,8 +605,9 @@ Use `smallUniverse`.
 
 Required meaning:
 
-This is the exact finite overlap-repair witness. It shows bounded observer-interface patches,
-boundary/readback bits, local repair moves, and the mismatch descent trace.
+This is the exact finite overlap-repair witness only when `smallUniverse.contentAvailable=true`.
+When false, it is a receipt-only theorem summary: keep the finite-consensus badge and provenance
+visible, but do not draw or imply an exact graph, path, terminal state, or holonomy measurement.
 
 Primary fields:
 
@@ -500,14 +616,18 @@ Primary fields:
 - `smallUniverse.repairFrames`
 - `smallUniverse.cycles`
 - `smallUniverse.receipts`
+- `smallUniverse.contentAvailable`, `dataMode`, `receiptSource`, and `contentBlockers`
 
 Recommended rendering:
 
-- Draw the finite graph.
-- Animate `repairFrames` with a scrubber.
-- Highlight the active repair relation for each frame.
-- Show `phi`, `deltaPhi`, strict descent, terminal state, and cycle holonomy summaries where present.
-- Compare exact consensus against frustrated-control holonomy counts.
+- If `contentAvailable=false`, hide/disable the finite graph and scrubber. Show
+  `FINITE_CONSENSUS_THEOREM_RECEIPT`, `receiptSource`, `bundleReceiptKind`, and `contentBlockers` as a
+  receipt-only card. The separately labelled `screen.repairTrace` may provide a large-run repair
+  animation, but it is not the missing exact mini-universe path.
+- If `contentAvailable=true`, draw the finite graph, animate `repairFrames`, highlight the active
+  repair relation, and show `phi`, `deltaPhi`, strict descent, terminal state, and cycle holonomy.
+- Compare exact consensus against frustrated-control holonomy counts only when those exact rows exist;
+  `null` means unavailable, not zero.
 
 Required gates:
 
@@ -633,6 +753,8 @@ False receipts are useful evidence and must remain visible.
 
 Implement these controls:
 
+- Story/Explore mode toggle plus previous chapter, next chapter, Play/Pause, replay, playback speed,
+  captions, and a persistent chapter scrubber;
 - global time scrubber for repair/modular-time animation;
 - for repair charts, prefer `visualizationRenderData.animationTimeline[*].playbackRelativeTime`
   for gradual playback and keep `rawRelativeTime`/`cycle` visible for auditable timing;
@@ -643,8 +765,17 @@ Implement these controls:
 - provenance drawer listing `dataSources` and `primaryFields`;
 - export button for a snapshot image and a JSON summary of visible gates.
 
+Preserve the active observer, time, layer selection, and gate state when moving between chapters.
+All controls need visible keyboard focus and ARIA labels. Provide a text/table alternative for every
+plot or animated state, never autoplay audio, pause animation when the app is offscreen, and offer
+reduced-motion and high-contrast modes.
+
 Missing optional fields should degrade gracefully:
 
+- If `smallUniverse.contentAvailable` is false, render only its theorem receipt/provenance card and
+  use `screen.repairTrace` as a separately labelled large-run trace. Never synthesize an exact graph.
+- If `effectiveStringTheory.layerAvailability.finite_edge_string_vibration_pulses` is false, hide
+  that sublayer and continue with available defect/H3/worldline layers.
 - If `cmbComparison.residualRows` is absent, hide the CMB overlay but keep the CMB gate visible if
   receipts are present.
 - If `consensusBulk.protoParticleCandidates.worldlines` is empty, show no string/H3 tracks and keep
@@ -655,11 +786,34 @@ Missing optional fields should degrade gracefully:
   glyphs and clearly label the view as point-source only.
 - If `subjectiveObserverCameras` is empty, keep the observer-modular-time table visible and show that
   subjective camera export is unavailable.
+- If H3 objects are absent, stop the narrative at consensus records instead of manufacturing a bulk.
+  If worldlines are absent, retain the populated H3 scene without tracks.
 - If a `visualizationViews` entry is missing, show a schema warning and do not invent the view.
+
+Resolve availability before Story mode begins. Keep unavailable chapters in the chapter rail as
+honest status cards, then advance without presenting a blank canvas. A missing sibling layer must
+not disable independent populated layers.
+
+## Performance And Streaming Budget
+
+The complete visualizer package must remain below the hard exclusive 256,000,000-byte ceiling.
+Treat `oph_visualizer_pack_v2.tar.zst`, `manifest.json`, and `payload_index.json` as a streaming scene
+source:
+
+- Lazy-load only the active and next storyboard chapters. Do not reconstruct the full payload in the
+  browser to draw one observer.
+- Parse/decompress large chunks in a worker. Use typed arrays for geometry, instanced rendering for
+  repeated patches/points, LOD and frustum culling for H3 objects, and bounded ring buffers for trails.
+- Cap device pixel ratio on dense scenes, release previous-chapter GPU resources, cancel stale loads,
+  and pause `requestAnimationFrame` when hidden.
+- Target smooth 60 fps on a desktop and a stable 30 fps reduced/low-power mode. Degrade glow, trail
+  length, field resolution, and object detail before dropping semantic labels or gate badges.
+- Show deterministic skeleton/loading states and byte/chunk progress. Never replace late or missing
+  data with invented geometry.
 
 ## Visual Language
 
-Use direct OPH geometry:
+Aim for a precise scientific observatory, not decorative science fiction. Use direct OPH geometry:
 
 - finite S2 screen;
 - finite repair graph;
@@ -670,12 +824,37 @@ Use direct OPH geometry:
 - repair-history ribbons;
 - receipt badges.
 
-Avoid decorative sci-fi tropes that obscure the claim boundary. The quantum-vacuum view should look
-like a finite readback surface. The string view should look like edge cycles and swept repair ribbons,
-not a stock cosmic string illustration.
+Use this stable accessible palette:
 
-Use concise labels. Do not add in-app tutorials or long explanatory panels. Let the app expose the
-data, gates, and view contracts.
+| Role | Color | Redundant encoding |
+| --- | --- | --- |
+| background / primary text | `#07111F` / `#E8F1FA` | high-contrast field and typography |
+| patch boundary/readback | cyan `#38BDF8` | solid line / square port |
+| mismatch and active repair | amber `#F59E0B` | pulsing dashed line / wrench marker |
+| shared consensus | teal `#2DD4BF` | double line / linked-circle glyph |
+| selected observer | lavender `#C4B5FD` | camera-frame corners / eye glyph |
+| H3 and dS4 geometry | blue `#60A5FA` | fine geodesic grid |
+| defect candidate | magenta `#F472B6` | braided/dashed track / diamond event |
+| assumed layer | gold `#FDE68A` | dashed hexagonal outline and explicit label |
+
+Use a colorblind-safe blue-to-orange diverging scale for signed CMB residuals. Maintain WCAG AA text
+contrast and never encode a class or gate with color alone.
+
+Use one badge grammar in every view, legend, caption, drawer, and screenshot:
+
+- **COMPUTED / PASSED:** green check-circle, only when the corresponding receipt is true.
+- **DIAGNOSTIC DATA:** cyan diamond, exported/computed visual data without physical promotion.
+- **ASSUMED VISUAL LAYER:** gold dashed hexagon, sourced only from the assumption manifest. It can
+  never satisfy a computed or physical receipt.
+- **CLOSED PROMOTION GATE:** amber outlined lock, a false receipt that is not a runtime error.
+- **UNAVAILABLE IN THIS EXPORT:** gray slashed circle for missing/empty data.
+
+Reserve red for actual load, schema-validation, or falsification errors. Avoid decorative tropes that
+obscure the claim boundary. The quantum-vacuum view should look like a finite readback surface. The
+string view should look like edge cycles and swept repair ribbons, not a stock cosmic-string image.
+
+Use concise captions and progressive reveals rather than long explanatory panels. The geometry,
+captions, legends, gates, and view contracts should teach the argument together.
 
 ## Build Checklist
 
@@ -690,7 +869,12 @@ Before the app is considered ready:
 - Confirm that string labels do not claim critical string CFT or matter particles.
 - Confirm that curved-spacetime labels do not claim physical gravity or a solved metric.
 - Confirm that observer cameras are labeled as observer-local readouts.
+- Confirm that overview cameras are labelled as explanatory and not observer-visible.
+- Confirm that assumed dS4 and defect-as-matter styling retain their assumption badges through every
+  transition and export, without altering computed receipts.
 - Confirm that CMB diagnostics do not claim physical prediction unless the receipt is true.
+- Confirm keyboard navigation, non-color encodings, reduced-motion behavior, and readable captions.
+- Confirm active/next-chapter lazy loading and that the final package remains below 256,000,000 bytes.
 - Confirm that no view scrapes run folders directly after loading `visualization_payload.json`;
   load large arrays only through `visualization_export_manifest.json` sidecars.
 - Confirm that exported screenshots or summaries include the active claim gates.

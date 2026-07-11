@@ -437,6 +437,13 @@ def test_neutral_leakage_audit_is_posthoc_and_flags_primary_no_geometry_use():
     assert audit["h3_coordinates_used"] is False
     assert audit["cap_normals_used"] is False
     assert audit["screen_axes_used_in_primary_distance"] is False
+
+
+def test_neutral_leakage_audit_fails_closed_when_axes_are_missing():
+    audit = neutral_leakage_audit(np.zeros((2, 2)), [{"view_type": "patch_observer"}] * 2)
+
+    assert audit["s2_leakage_audit_available"] is False
+    assert audit["s2_leakage_pass"] is False
     assert "s2_distance_correlation" in audit
 
 

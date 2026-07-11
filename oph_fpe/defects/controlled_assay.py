@@ -73,7 +73,9 @@ def controlled_s3_particle_assay_report(
         "s3_inverse_identity_pass": identity_product,
         "interaction_proxy_receipt": bool(interaction.get("interaction_proxy_receipt", False)),
         "fusion_conservation_proxy_pass": bool(interaction.get("fusion_conservation_proxy_pass", False)),
-        "particle_detector_positive_receipt": bool(particle.get("particle_matter_receipt", False)),
+        "particle_detector_positive_receipt": bool(
+            particle.get("particle_detector_positive_receipt", False)
+        ),
         "particle_like_count": int(particle.get("particle_like_count", 0)),
         "physical_particle_emergence": False,
         "timeline_report": timeline,

@@ -131,10 +131,18 @@ def _primitive_fields(payload: Mapping[str, Any]) -> dict[str, Any]:
 def _cap_normal_refinement(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
     cap_normal = fields.get("cap_normal")
-    if not (isinstance(cap_normal, list) and len(cap_normal) == 4):
+    computed_norm_residual = _cap_normal_norm_residual(cap_normal)
+    if computed_norm_residual is None:
         missing.append("cap_normal")
+    supplied_norm_residual = _number(fields.get("cap_normal_norm_residual"))
     checks = {
-        "cap_normal_norm_residual": _le_abs(fields, "cap_normal_norm_residual", limits["residual_tol"], missing),
+        "cap_normal_norm_residual": bool(
+            computed_norm_residual is not None
+            and computed_norm_residual <= limits["residual_tol"]
+            and supplied_norm_residual is not None
+            and abs(supplied_norm_residual) <= limits["residual_tol"]
+            and abs(supplied_norm_residual - computed_norm_residual) <= limits["residual_tol"]
+        ),
         "cap_boundary_incidence_residual": _le_abs(
             fields, "cap_boundary_incidence_residual", limits["residual_tol"], missing
         ),
@@ -144,23 +152,37 @@ def _cap_normal_refinement(fields: Mapping[str, Any], limits: Mapping[str, float
         "refinement_normal_error": _le_abs(fields, "refinement_normal_error", limits["residual_tol"], missing),
         "cap_radius_margin": _ge(fields, "cap_radius_margin", limits["frame_separation_min"], missing),
     }
-    checks["cap_orientation"] = _present(fields, "cap_orientation", missing)
-    return _stage(
+    if not checks["cap_normal_norm_residual"]:
+        missing.append("cap_normal_minkowski_norm_recomputation")
+    checks["cap_orientation"] = _enum_string(
+        fields,
+        "cap_orientation",
+        {"interior_positive", "interior_negative"},
+        missing,
+    )
+    stage = _stage(
         all(checks.values()) and not missing,
         "cap-normal density, nondegeneracy, boundary incidence, and refinement compatibility",
         missing,
         checks,
     )
+    stage["details"].update(
+        {
+            "cap_normal_computed_norm_residual": computed_norm_residual,
+            "cap_normal_supplied_norm_residual": supplied_norm_residual,
+        }
+    )
+    return stage
 
 
 def _bw_frame(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
     checks = {
-        "frame_p_minus": _present(fields, "frame_p_minus", missing),
-        "frame_p_plus": _present(fields, "frame_p_plus", missing),
+        "frame_p_minus": _finite_vector(fields, "frame_p_minus", 3, missing),
+        "frame_p_plus": _finite_vector(fields, "frame_p_plus", 3, missing),
         "frame_boundary_residual": _le_abs(fields, "frame_boundary_residual", limits["residual_tol"], missing),
         "frame_separation": _ge(fields, "frame_separation", limits["frame_separation_min"], missing),
-        "frame_orientation_witness": _truthy(fields, "frame_orientation_witness", missing),
+        "frame_orientation_witness": _literal_true(fields, "frame_orientation_witness", missing),
     }
     return _stage(all(checks.values()) and not missing, "ordered nondegenerate BW boundary frame", missing, checks)
 
@@ -168,8 +190,10 @@ def _bw_frame(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[st
 def _prime_support_visible_cap_net(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
     checks = {
-        "cap_inclusion_matrix": _present(fields, "cap_inclusion_matrix", missing),
-        "strict_inclusion_margin": _present(fields, "strict_inclusion_margin", missing),
+        "cap_inclusion_matrix": _finite_nonempty_matrix(fields, "cap_inclusion_matrix", missing),
+        "strict_inclusion_margin": _ge(
+            fields, "strict_inclusion_margin", limits["support_margin_min"], missing
+        ),
         "order_refinement_error": _le_abs(fields, "order_refinement_error", limits["residual_tol"], missing),
         "support_isotony_failures": _le_abs(fields, "support_isotony_failures", limits["residual_tol"], missing),
         "support_separation_margin": _ge(fields, "support_separation_margin", limits["support_margin_min"], missing),
@@ -192,10 +216,10 @@ def _prime_support_visible_cap_net(fields: Mapping[str, Any], limits: Mapping[st
 def _modular_reference_tower(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
     checks = {
-        "test_tower_id": _present(fields, "test_tower_id", missing),
-        "test_tower_hash": _present(fields, "test_tower_hash", missing),
+        "test_tower_id": _nonempty_string(fields, "test_tower_id", missing),
+        "test_tower_hash": _nonempty_string(fields, "test_tower_hash", missing),
         "state_embedding_residual": _le_abs(fields, "state_embedding_residual", limits["residual_tol"], missing),
-        "regularizer_eta": _present(fields, "regularizer_eta", missing),
+        "regularizer_eta": _positive(fields, "regularizer_eta", missing),
         "physical_reference_trace_distance": _le_abs(
             fields, "physical_reference_trace_distance", limits["residual_tol"], missing
         ),
@@ -232,15 +256,15 @@ def _geometric_rigidity(fields: Mapping[str, Any], limits: Mapping[str, float]) 
         "flow_identity_residual": _le_abs(fields, "flow_identity_residual", limits["residual_tol"], missing),
         "flow_group_residual_T": _le_abs(fields, "flow_group_residual_T", limits["residual_tol"], missing),
         "flow_inverse_residual_T": _le_abs(fields, "flow_inverse_residual_T", limits["residual_tol"], missing),
-        "flow_equi_continuity_bound": _finite(fields, "flow_equi_continuity_bound", missing),
+        "flow_equi_continuity_bound": _nonnegative(fields, "flow_equi_continuity_bound", missing),
         "cap_anchor_residual": _le_abs(fields, "cap_anchor_residual", limits["residual_tol"], missing),
         "frame_fixed_point_residual": _le_abs(
             fields, "frame_fixed_point_residual", limits["residual_tol"], missing
         ),
         "cross_ratio_holdout_max": _le_abs(fields, "cross_ratio_holdout_max", limits["residual_tol"], missing),
         "quartet_separation_min": _ge(fields, "quartet_separation_min", limits["quartet_separation_min"], missing),
-        "cross_ratio_anchor_condition": _finite(fields, "cross_ratio_anchor_condition", missing),
-        "orientation_witness": _truthy(fields, "orientation_witness", missing),
+        "cross_ratio_anchor_condition": _positive(fields, "cross_ratio_anchor_condition", missing),
+        "orientation_witness": _literal_true(fields, "orientation_witness", missing),
     }
     return _stage(
         all(checks.values()) and not missing,
@@ -252,8 +276,12 @@ def _geometric_rigidity(fields: Mapping[str, Any], limits: Mapping[str, float]) 
 
 def _geometric_2pi_kms(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
-    convention = str(fields.get("geometric_parameter_convention", ""))
-    convention_ok = any(token in convention for token in ("e^{-s}", "e^-s", "exp(-s)", "geometric"))
+    raw_convention = fields.get("geometric_parameter_convention")
+    convention = raw_convention if isinstance(raw_convention, str) else ""
+    convention_ok = bool(
+        convention.strip()
+        and any(token in convention for token in ("e^{-s}", "e^-s", "exp(-s)", "geometric"))
+    )
     if not convention_ok:
         missing.append("geometric_parameter_convention")
     checks = {
@@ -271,8 +299,10 @@ def _geometric_2pi_kms(fields: Mapping[str, Any], limits: Mapping[str, float]) -
 
 def _wrong_normalization(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
-    nontrivial = _truthy(fields, "geometric_flow_nontrivial", missing)
-    interval = _present(fields, "wrong_beta_interval", missing)
+    nontrivial = _literal_true(fields, "geometric_flow_nontrivial", missing)
+    interval = _valid_interval(fields.get("wrong_beta_interval"))
+    if not interval:
+        missing.append("wrong_beta_interval_finite_ordered_pair")
     gap = _ge(fields, "wrong_beta_gap_delta", limits["wrong_beta_gap_min"], [])
     generator = (
         _ge(fields, "geometric_generator_noncentrality", limits["support_margin_min"], [])
@@ -297,24 +327,89 @@ def _error_envelope(fields: Mapping[str, Any], limits: Mapping[str, float]) -> d
     missing = []
     envelope = _number(fields.get("total_308_error_envelope"))
     samples = fields.get("error_envelope_samples")
+    levels = fields.get("error_envelope_refinement_levels")
+    refinement_witness = _literal_true(
+        fields,
+        "error_envelope_refinement_witness",
+        missing,
+    )
     if envelope is None:
         missing.append("total_308_error_envelope")
-    sample_ok = True
-    if samples is not None:
-        values = [_number(value) for value in samples if _number(value) is not None]
-        sample_ok = bool(values) and all(values[i + 1] <= values[i] for i in range(len(values) - 1))
-    passed = envelope is not None and abs(envelope) <= limits["error_envelope_tol"] and sample_ok
+    sample_ok = False
+    levels_ok = False
+    values: list[float] = []
+    refinement_levels: list[int] = []
+    if not isinstance(samples, (list, tuple)) or len(samples) < 2:
+        missing.append("error_envelope_samples_at_least_two_levels")
+    else:
+        parsed = [_number(value) for value in samples]
+        values = [float(value) for value in parsed if value is not None]
+        sample_ok = bool(
+            len(values) == len(parsed)
+            and all(value >= 0.0 for value in values)
+            and all(values[index + 1] <= values[index] for index in range(len(values) - 1))
+            and any(values[index + 1] < values[index] for index in range(len(values) - 1))
+            and values[-1] <= limits["error_envelope_tol"]
+            and envelope is not None
+            and values[-1] <= envelope + 1.0e-15
+        )
+        if not sample_ok:
+            missing.append("validated_nonincreasing_error_envelope_refinement")
+    if not isinstance(levels, (list, tuple)) or len(levels) != len(values):
+        missing.append("error_envelope_refinement_levels")
+    else:
+        levels_ok = bool(
+            len(levels) >= 2
+            and all(isinstance(value, int) and not isinstance(value, bool) and value > 0 for value in levels)
+            and all(levels[index + 1] > levels[index] for index in range(len(levels) - 1))
+        )
+        if levels_ok:
+            refinement_levels = [int(value) for value in levels]
+        else:
+            missing.append("strictly_increasing_positive_integer_refinement_levels")
+    refinement_validated = bool(refinement_witness and sample_ok and levels_ok)
+    passed = bool(
+        envelope is not None
+        and envelope >= 0.0
+        and envelope <= limits["error_envelope_tol"]
+        and refinement_validated
+    )
     return {
         "passed": bool(passed),
         "evidence_present": envelope is not None or samples is not None,
-        "meaning": "combined issue-308 error envelope is below threshold and samples are nonincreasing if supplied",
-        "missing_or_blocking_evidence": missing,
+        "meaning": (
+            "combined issue-308 error envelope is below threshold and is backed by a literal, "
+            "typed, strictly refined multi-level error-envelope witness"
+        ),
+        "missing_or_blocking_evidence": sorted(set(missing)),
         "details": {
             "total_308_error_envelope": envelope,
             "error_envelope_samples_nonincreasing": sample_ok,
+            "error_envelope_samples": values,
+            "error_envelope_refinement_levels": refinement_levels,
+            "error_envelope_refinement_witness": refinement_witness,
+            "error_envelope_refinement_validated": refinement_validated,
             "threshold": limits["error_envelope_tol"],
         },
     }
+
+
+def _cap_normal_norm_residual(value: Any) -> float | None:
+    if not isinstance(value, (list, tuple)) or len(value) != 4:
+        return None
+    components = [_number(component) for component in value]
+    if any(component is None for component in components):
+        return None
+    t, x, y, z = (float(component) for component in components)
+    return abs((-t * t + x * x + y * y + z * z) - 1.0)
+
+
+def _valid_interval(value: Any) -> bool:
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        return False
+    lower = _number(value[0])
+    upper = _number(value[1])
+    return bool(lower is not None and upper is not None and lower < upper)
 
 
 def _stage(passed: bool, meaning: str, missing: list[str], details: dict[str, Any]) -> dict[str, Any]:
@@ -327,24 +422,71 @@ def _stage(passed: bool, meaning: str, missing: list[str], details: dict[str, An
     }
 
 
-def _present(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
-    if key not in fields or fields.get(key) in (None, ""):
+def _nonempty_string(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
+    value = fields.get(key)
+    if not isinstance(value, str) or not value.strip():
         missing.append(key)
         return False
     return True
 
 
-def _truthy(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
-    if key not in fields:
+def _enum_string(fields: Mapping[str, Any], key: str, allowed: set[str], missing: list[str]) -> bool:
+    value = fields.get(key)
+    if not isinstance(value, str) or value not in allowed:
         missing.append(key)
         return False
+    return True
+
+
+def _finite_vector(fields: Mapping[str, Any], key: str, size: int, missing: list[str]) -> bool:
     value = fields.get(key)
-    return bool(value) and str(value).lower() not in {"false", "0", "no", "none"}
+    valid = bool(
+        isinstance(value, (list, tuple))
+        and len(value) == size
+        and all(_number(component) is not None for component in value)
+    )
+    if not valid:
+        missing.append(key)
+    return valid
 
 
-def _finite(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
+def _finite_nonempty_matrix(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
+    value = fields.get(key)
+    valid = False
+    if isinstance(value, (list, tuple)) and value:
+        rows = list(value)
+        widths = [len(row) for row in rows if isinstance(row, (list, tuple))]
+        valid = bool(
+            len(widths) == len(rows)
+            and widths
+            and widths[0] > 0
+            and all(width == widths[0] for width in widths)
+            and all(_number(component) is not None for row in rows for component in row)
+        )
+    if not valid:
+        missing.append(key)
+    return valid
+
+
+def _literal_true(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
+    value = fields.get(key)
+    valid = isinstance(value, bool) and value is True
+    if not valid:
+        missing.append(key)
+    return valid
+
+
+def _nonnegative(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
     value = _number(fields.get(key))
-    if value is None:
+    if value is None or value < 0.0:
+        missing.append(key)
+        return False
+    return True
+
+
+def _positive(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:
+    value = _number(fields.get(key))
+    if value is None or value <= 0.0:
         missing.append(key)
         return False
     return True
@@ -367,6 +509,8 @@ def _ge(fields: Mapping[str, Any], key: str, limit: float, missing: list[str]) -
 
 
 def _number(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
     try:
         number = float(value)
     except (TypeError, ValueError):

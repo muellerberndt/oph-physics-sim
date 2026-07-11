@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
 
     uhe_coeff_parser = subparsers.add_parser(
         "uhe-emit-coefficients",
-        help="write the source-only high-energy messenger coefficient-emission receipt",
+        help="write the UHE coefficient report (synthetic demo unless model inputs are supplied)",
     )
     uhe_coeff_parser.add_argument("--out", required=True, type=Path)
     uhe_coeff_parser.add_argument(
@@ -1537,7 +1537,7 @@ def main(argv: list[str] | None = None) -> int:
         "--max-objective-observer-views",
         default=None,
         type=int,
-        help="cap detailed observer-local camera/readout payloads; default exports every observer row",
+        help="cap detailed observer-local camera/readout payloads; default min(max-observers, 256)",
     )
     universe_timeline_viewer_parser.add_argument("--max-h3-objects", default=512, type=int)
     universe_timeline_viewer_parser.add_argument(
@@ -1547,9 +1547,57 @@ def main(argv: list[str] | None = None) -> int:
     )
     universe_timeline_viewer_parser.add_argument(
         "--compact-json",
+        dest="compact_json",
         action="store_true",
+        default=True,
         help="write compact JSON for large full-data exports",
     )
+    universe_timeline_viewer_parser.add_argument(
+        "--pretty-json",
+        dest="compact_json",
+        action="store_false",
+        help="write indented JSON for small/debug exports",
+    )
+    universe_timeline_viewer_parser.add_argument(
+        "--skip-pack",
+        action="store_true",
+        help="skip the deterministic sub-256 MB visualizer tar.zst pack",
+    )
+    universe_timeline_viewer_parser.add_argument(
+        "--pack-max-bytes",
+        default=256_000_000,
+        type=int,
+        help="exclusive hard size gate for the visualizer pack (cannot exceed 256000000)",
+    )
+    universe_timeline_viewer_parser.add_argument("--pack-target-bytes", default=128_000_000, type=int)
+    universe_timeline_viewer_parser.add_argument(
+        "--embedded-viewer-max-bytes",
+        default=8_000_000,
+        type=int,
+        help="embed JSON in HTML only below this payload size; larger exports use a small external loader",
+    )
+    universe_timeline_viewer_parser.add_argument(
+        "--skip-payload-validation",
+        action="store_true",
+        help="diagnostic escape hatch; normal exports validate against the JSON schema",
+    )
+
+    visualizer_pack_parser = subparsers.add_parser(
+        "build-visualizer-pack",
+        help="build a deterministic chunked oph_visualizer_pack_v2 tar.zst under a hard byte limit",
+    )
+    visualizer_pack_parser.add_argument("--bundle-dir", required=True, type=Path)
+    visualizer_pack_parser.add_argument("--out", default=None, type=Path)
+    visualizer_pack_parser.add_argument("--max-bytes", default=256_000_000, type=int)
+    visualizer_pack_parser.add_argument("--target-bytes", default=128_000_000, type=int)
+    visualizer_pack_parser.add_argument("--chunk-bytes", default=4_000_000, type=int)
+    visualizer_pack_parser.add_argument("--compression-level", default=10, type=int)
+
+    validate_visualizer_parser = subparsers.add_parser(
+        "validate-visualization-payload",
+        help="validate a canonical/fallback or distributed visualization payload instance",
+    )
+    validate_visualizer_parser.add_argument("--payload", required=True, type=Path)
 
     scale_viewer_parser = subparsers.add_parser(
         "run-scale-compressed-viewer",
@@ -3171,7 +3219,32 @@ def main(argv: list[str] | None = None) -> int:
             max_h3_objects=args.max_h3_objects,
             write_viewer=not args.skip_viewer,
             compact_json=args.compact_json,
+            validate_payload=not args.skip_payload_validation,
+            embedded_viewer_max_bytes=args.embedded_viewer_max_bytes,
+            write_pack=not args.skip_pack,
+            pack_max_bytes=args.pack_max_bytes,
+            pack_target_bytes=args.pack_target_bytes,
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "build-visualizer-pack":
+        from oph_fpe.viz.visualizer_pack import build_visualizer_pack
+
+        out = args.out or (args.bundle_dir / "oph_visualizer_pack_v2.tar.zst")
+        result = build_visualizer_pack(
+            bundle_dir=args.bundle_dir,
+            out_path=out,
+            max_bytes=args.max_bytes,
+            target_bytes=args.target_bytes,
+            chunk_bytes=args.chunk_bytes,
+            compression_level=args.compression_level,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "validate-visualization-payload":
+        from oph_fpe.viz.visualization_schema import validate_visualization_payload_file
+
+        result = validate_visualization_payload_file(args.payload)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "run-scale-compressed-viewer":

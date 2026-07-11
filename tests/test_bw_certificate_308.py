@@ -60,6 +60,8 @@ def _primitive_bwrec() -> dict:
         "generator_distance_beta_2pi": 1.0e-7,
         "total_308_error_envelope": 5.0e-7,
         "error_envelope_samples": [1.0e-5, 5.0e-7],
+        "error_envelope_refinement_levels": [64, 128],
+        "error_envelope_refinement_witness": True,
     }
 
 
@@ -102,3 +104,92 @@ def test_theorem_contract_surfaces_issue308_bw_certificate_from_primitive_file(t
     assert report["issue_308_bw_certificate"]["receipt"] is True
     assert report["issue_308_bw_certificate"]["tier"] == "BW3"
     assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is True
+
+
+def test_issue308_rejects_supplied_zero_residual_for_invalid_cap_normal() -> None:
+    fields = _primitive_bwrec()
+    fields["cap_normal"] = [100.0, 0.0, 0.0, 0.0]
+    fields["cap_normal_norm_residual"] = 0.0
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    clause = report["clauses"]["C1_cap_normal_refinement"]
+    assert clause["passed"] is False
+    assert clause["details"]["cap_normal_computed_norm_residual"] == 10001.0
+
+
+def test_issue308_rejects_negative_inclusion_margin_and_malformed_interval() -> None:
+    fields = _primitive_bwrec()
+    fields["strict_inclusion_margin"] = -999.0
+    fields["wrong_beta_interval"] = [10.0, 1.0]
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["clauses"]["C3_prime_support_visible_cap_net"]["passed"] is False
+    assert report["clauses"]["C8_wrong_normalization_and_nontriviality"]["passed"] is False
+
+
+def test_issue308_rejects_negative_or_nonfinite_error_envelope_samples() -> None:
+    fields = _primitive_bwrec()
+    fields["error_envelope_samples"] = [1.0e-5, -5.0e-7]
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["error_envelope"]["passed"] is False
+
+
+def test_issue308_downgrades_without_validated_error_envelope_refinement() -> None:
+    fields = _primitive_bwrec()
+    fields.pop("error_envelope_refinement_levels")
+    fields.pop("error_envelope_refinement_witness")
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["tier"] == "BW2"
+    assert report["error_envelope"]["passed"] is False
+    assert report["error_envelope"]["details"]["error_envelope_refinement_validated"] is False
+
+
+def test_issue308_rejects_truthy_nonliteral_and_empty_witnesses() -> None:
+    fields = _primitive_bwrec()
+    fields["frame_orientation_witness"] = "true"
+    fields["orientation_witness"] = {"passed": True}
+    fields["geometric_flow_nontrivial"] = 1
+    fields["test_tower_id"] = []
+    fields["test_tower_hash"] = "   "
+    fields["cap_inclusion_matrix"] = []
+    fields["error_envelope_refinement_witness"] = "true"
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["clauses"]["C2_bw_frame"]["passed"] is False
+    assert report["clauses"]["C3_prime_support_visible_cap_net"]["passed"] is False
+    assert report["clauses"]["C4_modular_reference_tower"]["passed"] is False
+    assert report["clauses"]["C6_geometric_rigidity"]["passed"] is False
+    assert report["clauses"]["C8_wrong_normalization_and_nontriviality"]["passed"] is False
+    assert report["error_envelope"]["passed"] is False
+
+
+def test_issue308_rejects_malformed_typed_primitive_witnesses() -> None:
+    fields = _primitive_bwrec()
+    fields["frame_p_minus"] = [1.0, 0.0]
+    fields["frame_p_plus"] = [1.0, 0.0, float("nan")]
+    fields["cap_orientation"] = ["interior_positive"]
+    fields["regularizer_eta"] = True
+    fields["flow_equi_continuity_bound"] = -1.0
+    fields["cross_ratio_anchor_condition"] = 0.0
+    fields["wrong_beta_interval"] = [True, 10.0]
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["clauses"]["C1_cap_normal_refinement"]["passed"] is False
+    assert report["clauses"]["C2_bw_frame"]["passed"] is False
+    assert report["clauses"]["C4_modular_reference_tower"]["passed"] is False
+    assert report["clauses"]["C6_geometric_rigidity"]["passed"] is False
+    assert report["clauses"]["C8_wrong_normalization_and_nontriviality"]["passed"] is False

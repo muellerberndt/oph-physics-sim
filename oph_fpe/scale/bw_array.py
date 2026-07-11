@@ -81,6 +81,7 @@ from oph_fpe.core.screen_microphysics import ports_per_patch_from_config, screen
 from oph_fpe.core.screen_ports import assign_echosahedral_ports
 from oph_fpe.defects.array_s3_holonomy import (
     S3_CLASS,
+    S3_INV,
     S3_MUL,
     array_holonomy_report,
     defect_interaction_report,
@@ -115,6 +116,7 @@ from oph_fpe.observers import (
 )
 from oph_fpe.scale.array_screen import (
     _beta_at,
+    _advance_record_commit_state,
     _entropy,
     _group_order,
     _knn_edges,
@@ -173,7 +175,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     gauge = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
     modular_depth = rng.random(patch_count, dtype=np.float64)
     modular_time = np.zeros(patch_count, dtype=np.float64)
-    stable_count = np.zeros(patch_count, dtype=np.int16)
+    stable_count = np.zeros(patch_count, dtype=np.uint32)
     committed = np.zeros(patch_count, dtype=bool)
     prev_signature = np.full(patch_count, -1, dtype=np.int64)
     degree = np.bincount(np.concatenate([left, right]), minlength=patch_count).astype(np.float64)
@@ -324,14 +326,25 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         if active.size:
             chosen_count = min(repair_budget, active.size)
             chosen = rng.choice(active, size=chosen_count, replace=False)
-            chosen_delta = ((port_left[chosen].astype(np.int64) - port_right[chosen].astype(np.int64)) % group_order).astype(
-                np.int16
+            chosen_delta = _interface_quotient(
+                port_left[chosen],
+                port_right[chosen],
+                group_name=group_name,
+                group_order=group_order,
             )
             direction = rng.random(chosen_count) < 0.5
             port_left[chosen[direction]] = port_right[chosen[direction]]
             port_right[chosen[~direction]] = port_left[chosen[~direction]]
         if chosen.size:
-            _repair_sector_labels(gauge, chosen, chosen_delta, group_order=group_order, rng=rng, config=sector_repair_cfg)
+            _repair_sector_labels(
+                gauge,
+                chosen,
+                chosen_delta,
+                group_name=group_name,
+                group_order=group_order,
+                rng=rng,
+                config=sector_repair_cfg,
+            )
         if chosen.size:
             cumulative_repair_load += (
                 np.bincount(left[chosen], minlength=patch_count)
@@ -357,9 +370,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             cap_drive=modular_cap_drive,
         )
         signature = _node_signature(port_left, port_right, left, right, patch_count)
-        stable_count = np.where(signature == prev_signature, stable_count + 1, 1)
+        stable_count, committed = _advance_record_commit_state(
+            signature,
+            prev_signature,
+            stable_count,
+            incident_mismatch,
+            commit_cycles=commit_cycles,
+        )
         prev_signature = signature
-        committed |= stable_count >= commit_cycles
         committed_fraction = float(np.mean(committed))
         repair_peak_candidate = _state_snapshot(
             cycle=cycle,
@@ -1002,6 +1020,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             anchor_weight=float(h3_modular_response_cfg.get("anchor_weight", 0.05)),
             max_iterations=int(h3_modular_response_cfg.get("max_iterations", 4)),
             feature_selection=str(h3_modular_response_cfg.get("feature_selection", "none")),
+            blind_feature_selection=bool(h3_modular_response_cfg.get("blind_feature_selection", False)),
             max_fit_features=(
                 int(h3_modular_response_cfg["max_fit_features"])
                 if h3_modular_response_cfg.get("max_fit_features") is not None
@@ -1294,6 +1313,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         config,
         initial_port_left=initial_port_left,
         initial_port_right=initial_port_right,
+        edge_left=left,
+        edge_right=right,
         group_order=group_order,
         seed=seed,
     )
@@ -3333,6 +3354,7 @@ def _repair_sector_labels(
     chosen_edges: np.ndarray,
     chosen_delta: np.ndarray,
     *,
+    group_name: str,
     group_order: int,
     rng: np.random.Generator,
     config: dict[str, Any],
@@ -3344,7 +3366,7 @@ def _repair_sector_labels(
     pre-repair interface delta that the overlap repair just removed.
     """
 
-    if group_order != 6 or not config.get("enabled", False) or chosen_edges.size == 0:
+    if str(group_name).upper() != "S3" or group_order != 6 or not config.get("enabled", False) or chosen_edges.size == 0:
         return
     probability = float(config.get("probability", 0.0))
     if probability <= 0.0:
@@ -3364,6 +3386,33 @@ def _repair_sector_labels(
         gauge[edges] = 0
     else:
         gauge[edges] = S3_MUL[gauge[edges].astype(np.int64), proposals].astype(gauge.dtype)
+
+
+def _interface_quotient(
+    port_left: np.ndarray,
+    port_right: np.ndarray,
+    *,
+    group_name: str,
+    group_order: int,
+) -> np.ndarray:
+    """Return the oriented mismatch removed by an interface repair.
+
+    Clock groups use their additive quotient.  S3 is non-Abelian, so integer
+    index subtraction is meaningless: its discrepancy is ``left * right^-1``
+    in the actual multiplication table.
+    """
+
+    left_values = np.asarray(port_left, dtype=np.int64)
+    right_values = np.asarray(port_right, dtype=np.int64)
+    if left_values.shape != right_values.shape:
+        raise ValueError("interface port arrays must have matching shapes")
+    if str(group_name).upper() == "S3":
+        if int(group_order) != int(S3_MUL.shape[0]):
+            raise ValueError("S3 interface quotient requires the six-element S3 table")
+        if np.any((left_values < 0) | (left_values >= 6) | (right_values < 0) | (right_values >= 6)):
+            raise ValueError("S3 interface labels must be valid S3 element indices")
+        return S3_MUL[left_values, S3_INV[right_values]].astype(np.int16)
+    return ((left_values - right_values) % max(1, int(group_order))).astype(np.int16)
 
 
 def _node_sector_class(left: np.ndarray, right: np.ndarray, gauge: np.ndarray, patch_count: int) -> np.ndarray:
@@ -4308,8 +4357,6 @@ def _h2_repair_current_tensor(
         "repair_load",
         "cumulative_repair_load",
         "local_mismatch_density",
-        "modular_depth",
-        "modular_time",
         "stable_count",
         "committed_mask",
         "s3_class_density",
@@ -4701,6 +4748,8 @@ def _theorem_core_receipts(
     *,
     initial_port_left: np.ndarray | None = None,
     initial_port_right: np.ndarray | None = None,
+    edge_left: np.ndarray | None = None,
+    edge_right: np.ndarray | None = None,
     group_order: int = 1,
     seed: int = 1,
 ) -> dict[str, Any]:
@@ -4731,6 +4780,8 @@ def _theorem_core_receipts(
     replay_report = _array_port_pair_consensus_replay_report(
         initial_port_left,
         initial_port_right,
+        edge_left=edge_left,
+        edge_right=edge_right,
         group_order=group_order,
         config=theorem_cfg.get("consensus_replay", {}),
         seed=seed + 31_337,
@@ -4741,11 +4792,14 @@ def _theorem_core_receipts(
         else theorem_cfg.get("finite_consensus_evidence") or theorem_cfg.get("consensus_evidence") or {}
     )
     consensus_trace = replay_report.get("sample_events", []) if replay_report.get("enabled", False) else trace
-    finite_consensus = finite_consensus_theorem_certificate(
-        consensus_trace,
-        evidence=consensus_evidence,
-        strict_tol=float(theorem_cfg.get("strict_descent_tolerance", 1.0e-12)),
-    )
+    if replay_report.get("enabled") is True:
+        finite_consensus = _computed_array_replay_consensus_certificate(replay_report)
+    else:
+        finite_consensus = finite_consensus_theorem_certificate(
+            consensus_trace,
+            evidence=consensus_evidence,
+            strict_tol=float(theorem_cfg.get("strict_descent_tolerance", 1.0e-12)),
+        )
     sample_count = min(int(theorem_cfg.get("projection_sample", 256)), int(committed.shape[0]))
     if sample_count <= 0:
         projection = np.zeros((1, 1), dtype=float)
@@ -4814,6 +4868,8 @@ def _array_port_pair_consensus_replay_report(
     initial_port_left: np.ndarray | None,
     initial_port_right: np.ndarray | None,
     *,
+    edge_left: np.ndarray | None = None,
+    edge_right: np.ndarray | None = None,
     group_order: int,
     config: dict[str, Any],
     seed: int,
@@ -4848,6 +4904,7 @@ def _array_port_pair_consensus_replay_report(
     requested_schedule_replays = int(cfg.get("requested_schedule_replays", schedule_replays))
     max_event_rows = int(cfg.get("max_event_rows", 256))
     disjoint_checks = int(cfg.get("disjoint_checks", 256))
+    local_diamond_checks = int(cfg.get("local_diamond_checks", disjoint_checks))
     terminal_hashes: list[str] = []
     first_sample_events: list[dict[str, Any]] = []
     strict_descent_violations = 0
@@ -4866,10 +4923,7 @@ def _array_port_pair_consensus_replay_report(
                 continue
             capture_event = replay_index == 0 and len(replay_events) < max_event_rows
             quotient_hash_before = _array_port_pair_hash(left, right, group_order) if capture_event else None
-            canonical = min(int(left[edge]), int(right[edge]))
-            left[edge] = canonical
-            right[edge] = canonical
-            after = int(left[edge] != right[edge])
+            before, after = _apply_array_port_pair_rewrite(left, right, int(edge))
             delta_touched = after - before
             phi_after = phi + delta_touched
             delta_global = phi_after - phi
@@ -4905,22 +4959,25 @@ def _array_port_pair_consensus_replay_report(
         if replay_index == 0:
             first_sample_events = replay_events
 
-    disjoint_violation_count = _array_port_pair_disjoint_commutation_violations(
+    pair_checks = _array_port_pair_commutation_checks(
         left0,
         right0,
         active,
-        group_order=group_order,
-        checks=disjoint_checks,
+        edge_left=edge_left,
+        edge_right=edge_right,
+        disjoint_checks=disjoint_checks,
+        local_diamond_checks=local_diamond_checks,
         rng=rng,
     )
     unique_terminal_hashes = sorted(set(terminal_hashes))
     evidence = {
+        "evidence_kind": "computed_array_port_pair_replay_v1",
         "theorem_phase_event_count": initial_phi,
         "accepted_theorem_move_count": initial_phi,
         "strict_descent_violation_count": strict_descent_violations,
         "accepted_phi_increase_violation_count": phi_increase_violations,
-        "disjoint_commutation_violation_count": disjoint_violation_count,
-        "local_diamond_violation_count": 0,
+        "disjoint_commutation_violation_count": pair_checks["disjoint_violation_count"],
+        "local_diamond_violation_count": pair_checks["local_diamond_violation_count"],
         "repair_completeness_violation_count": terminal_phi_violations,
         "unique_terminal_quotient_hash_count": len(unique_terminal_hashes),
         "schedule_replay_count": schedule_replays,
@@ -4930,7 +4987,9 @@ def _array_port_pair_consensus_replay_report(
         initial_phi > 0
         and strict_descent_violations == 0
         and phi_increase_violations == 0
-        and disjoint_violation_count == 0
+        and pair_checks["disjoint_violation_count"] == 0
+        and pair_checks["local_diamond_violation_count"] == 0
+        and pair_checks["coverage_pass"]
         and terminal_phi_violations == 0
         and len(unique_terminal_hashes) == 1
         and schedule_replays >= requested_schedule_replays
@@ -4939,6 +4998,10 @@ def _array_port_pair_consensus_replay_report(
         "mode": "array_port_pair_strict_consensus_replay",
         "enabled": True,
         "receipt": receipt,
+        FINITE_CONSENSUS_THEOREM_RECEIPT: receipt,
+        "finite_consensus_theorem_receipt": receipt,
+        "computed_from_port_pair_arrays": True,
+        "source_state_sha256": _array_port_pair_hash(left0, right0, group_order),
         "evidence": evidence,
         "sample_events": first_sample_events,
         "initial_phi": initial_phi,
@@ -4946,39 +5009,305 @@ def _array_port_pair_consensus_replay_report(
         "terminal_hash": unique_terminal_hashes[0] if unique_terminal_hashes else None,
         "unique_terminal_hash_count": len(unique_terminal_hashes),
         "sample_event_count": len(first_sample_events),
-        "local_diamond_checked_pair_count": 0,
-        "local_diamond_status": "vacuous_for_single_edge_canonical_rewrite",
+        "disjoint_commutation_checked_pair_count": pair_checks["disjoint_checked_pair_count"],
+        "local_diamond_checked_pair_count": pair_checks["local_diamond_checked_pair_count"],
+        "shared_node_diamond_checked_pair_count": pair_checks["shared_node_checked_pair_count"],
+        "local_diamond_status": pair_checks["status"],
         "claim_boundary": (
-            "C0b replay evidence for the finite array port-pair quotient only. The theorem-phase "
-            "normalizer is strict and deterministic; it does not certify OPH record algebra C1 or "
-            "Lorentz L1-L7 receipts."
+            "C0b replay evidence for the finite array edge-slot quotient only. AB/BA diamonds are "
+            "executed on the represented port slots, including sampled pairs whose graph edges share "
+            "a patch. The state model still has no coupled patch-local repair variable, so this receipt "
+            "does not certify a coupled OPH patch algebra, record algebra C1, or Lorentz L1-L7 receipts."
         ),
     }
 
 
-def _array_port_pair_disjoint_commutation_violations(
+def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) -> dict[str, Any]:
+    """Promote only the in-memory array replay verifier, never count-only summaries."""
+
+    report = dict(replay_report or {})
+    evidence = report.get("evidence") if isinstance(report.get("evidence"), dict) else {}
+    required_exact = {
+        "strict_descent_violation_count": 0,
+        "accepted_phi_increase_violation_count": 0,
+        "disjoint_commutation_violation_count": 0,
+        "local_diamond_violation_count": 0,
+        "repair_completeness_violation_count": 0,
+        "unique_terminal_quotient_hash_count": 1,
+    }
+    invalid: list[str] = []
+    for key, expected in required_exact.items():
+        value = evidence.get(key)
+        if isinstance(value, bool) or not isinstance(value, int) or value != expected:
+            invalid.append(key)
+    event_count = evidence.get("theorem_phase_event_count")
+    accepted_count = evidence.get("accepted_theorem_move_count")
+    replay_count = evidence.get("schedule_replay_count")
+    requested_replays = evidence.get("requested_schedule_replays")
+    for key, value in (
+        ("theorem_phase_event_count", event_count),
+        ("accepted_theorem_move_count", accepted_count),
+        ("schedule_replay_count", replay_count),
+        ("requested_schedule_replays", requested_replays),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            invalid.append(key)
+    if (
+        isinstance(replay_count, int)
+        and not isinstance(replay_count, bool)
+        and isinstance(requested_replays, int)
+        and not isinstance(requested_replays, bool)
+        and replay_count < requested_replays
+    ):
+        invalid.append("sufficient_schedule_replays")
+    sample_events = report.get("sample_events") if isinstance(report.get("sample_events"), list) else []
+    for index, row in enumerate(sample_events):
+        if not isinstance(row, dict) or row.get("accepted") is not True:
+            invalid.append(f"sample_events[{index}].accepted")
+            continue
+        try:
+            touched = float(row.get("delta_touched_phi"))
+            global_delta = float(row.get("delta_global_phi"))
+        except (TypeError, ValueError, OverflowError):
+            invalid.append(f"sample_events[{index}].delta")
+            continue
+        if not (np.isfinite(touched) and np.isfinite(global_delta) and touched < 0.0 and global_delta <= 0.0):
+            invalid.append(f"sample_events[{index}].delta")
+    passed = bool(
+        report.get("mode") == "array_port_pair_strict_consensus_replay"
+        and report.get("enabled") is True
+        and report.get("receipt") is True
+        and report.get("computed_from_port_pair_arrays") is True
+        and isinstance(report.get("source_state_sha256"), str)
+        and str(report.get("source_state_sha256")).startswith("sha256:")
+        and len(str(report.get("source_state_sha256")).removeprefix("sha256:")) == 64
+        and evidence.get("evidence_kind") == "computed_array_port_pair_replay_v1"
+        and not invalid
+    )
+    certificate = {
+        "mode": "finite_consensus_theorem_certificate_v2_computed_array_replay",
+        FINITE_CONSENSUS_THEOREM_RECEIPT: passed,
+        "finite_consensus_theorem_receipt": passed,
+        "receipt": passed,
+        "computed_replay_artifact_present": True,
+        "computed_from_port_pair_arrays": report.get("computed_from_port_pair_arrays") is True,
+        "source_state_sha256": report.get("source_state_sha256"),
+        **{key: evidence.get(key) for key in (
+            "theorem_phase_event_count",
+            "accepted_theorem_move_count",
+            "strict_descent_violation_count",
+            "accepted_phi_increase_violation_count",
+            "disjoint_commutation_violation_count",
+            "local_diamond_violation_count",
+            "repair_completeness_violation_count",
+            "unique_terminal_quotient_hash_count",
+            "schedule_replay_count",
+            "requested_schedule_replays",
+        )},
+        "invalid_evidence": sorted(set(invalid)),
+        "sample_event_count": len(sample_events),
+        "claim_boundary": (
+            "Computed C0b receipt for the finite array edge-slot quotient only. Every schedule, descent, "
+            "terminal-hash, and sampled AB/BA count is produced from the in-memory initial port arrays; "
+            "caller-declared count summaries cannot enter this receipt. This does not certify coupled "
+            "patch-local OPH algebras or continuum Lorentz/H3 claims."
+        ),
+    }
+    return with_claim_metadata(
+        certificate,
+        claim_level=RECOVERED_CORE,
+        receipt=FINITE_CONSENSUS_THEOREM_RECEIPT,
+        physical_claim=False,
+        observable_id="computed_array_port_pair_replay",
+        fit_objective="strict_descent_confluence_and_repair_completeness",
+    )
+
+
+def _apply_array_port_pair_rewrite(left: np.ndarray, right: np.ndarray, edge: int) -> tuple[int, int]:
+    """Apply one canonical edge-slot rewrite and return mismatch before/after."""
+
+    edge = int(edge)
+    before = int(left[edge] != right[edge])
+    if before:
+        canonical = min(int(left[edge]), int(right[edge]))
+        left[edge] = canonical
+        right[edge] = canonical
+    return before, int(left[edge] != right[edge])
+
+
+def _array_port_pair_commutation_checks(
     left0: np.ndarray,
     right0: np.ndarray,
     active: np.ndarray,
     *,
-    group_order: int,
+    edge_left: np.ndarray | None,
+    edge_right: np.ndarray | None,
+    disjoint_checks: int,
+    local_diamond_checks: int,
+    rng: np.random.Generator,
+) -> dict[str, Any]:
+    """Execute sampled AB/BA rewrites instead of asserting confluence.
+
+    The optional graph endpoints let the report distinguish disjoint edge
+    pairs from pairs incident on a common patch.  Even the latter still share
+    only incidence in the current edge-slot state model; the report states that
+    limitation explicitly rather than calling the diamond proof global.
+    """
+
+    active = np.asarray(active, dtype=np.int64)
+    if active.size < 2:
+        requested_both = int(disjoint_checks) > 0 and int(local_diamond_checks) > 0
+        return {
+            "disjoint_violation_count": 0,
+            "local_diamond_violation_count": 0,
+            "disjoint_checked_pair_count": 0,
+            "local_diamond_checked_pair_count": 0,
+            "shared_node_checked_pair_count": 0,
+            "coverage_pass": requested_both,
+            "required_check_budgets_positive": requested_both,
+            "shared_node_pair_available_and_checked": False,
+            "status": (
+                "vacuous_fewer_than_two_enabled_rewrites"
+                if requested_both
+                else "required_ab_ba_checks_not_requested"
+            ),
+        }
+
+    graph_available = edge_left is not None and edge_right is not None
+    graph_l = np.asarray(edge_left, dtype=np.int64) if graph_available else None
+    graph_r = np.asarray(edge_right, dtype=np.int64) if graph_available else None
+    if graph_available and (graph_l.shape != left0.shape or graph_r.shape != left0.shape):
+        raise ValueError("graph endpoint arrays must match theorem replay edge slots")
+
+    disjoint_pairs = _sample_rewrite_pairs(
+        active,
+        max(0, int(disjoint_checks)),
+        rng,
+        graph_l=graph_l,
+        graph_r=graph_r,
+        require_shared=False if graph_available else None,
+    )
+    shared_pairs = (
+        _shared_node_rewrite_pairs(active, graph_l, graph_r, max(0, int(local_diamond_checks)))
+        if graph_available
+        else []
+    )
+    generic_pairs = [] if graph_available else _sample_rewrite_pairs(
+        active,
+        max(0, int(local_diamond_checks)),
+        rng,
+        graph_l=None,
+        graph_r=None,
+        require_shared=None,
+    )
+    local_pairs = list(dict.fromkeys([*disjoint_pairs, *shared_pairs, *generic_pairs]))
+
+    disjoint_violations = sum(
+        not _array_port_pair_rewrites_commute(left0, right0, first, second)
+        for first, second in disjoint_pairs
+    )
+    local_violations = sum(
+        not _array_port_pair_rewrites_commute(left0, right0, first, second)
+        for first, second in local_pairs
+    )
+    requested_both = int(disjoint_checks) > 0 and int(local_diamond_checks) > 0
+    # For graph-aware replays, _shared_node_rewrite_pairs scans the full active
+    # list.  Thus a nonempty result is included whenever an enabled shared-node
+    # pair exists; an empty result means that branch is genuinely vacuous.
+    shared_pair_available = bool(shared_pairs) if graph_available else False
+    coverage_pass = bool(requested_both and local_pairs)
+    if not requested_both:
+        status = "required_ab_ba_checks_not_requested"
+    elif local_pairs:
+        status = "computed_ab_ba_edge_slot_diamonds"
+    else:
+        status = "requested_but_no_pair_sampled"
+    return {
+        "disjoint_violation_count": int(disjoint_violations),
+        "local_diamond_violation_count": int(local_violations),
+        "disjoint_checked_pair_count": len(disjoint_pairs),
+        "local_diamond_checked_pair_count": len(local_pairs),
+        "shared_node_checked_pair_count": len(shared_pairs),
+        "coverage_pass": coverage_pass,
+        "required_check_budgets_positive": requested_both,
+        "shared_node_pair_available_and_checked": shared_pair_available,
+        "status": status,
+    }
+
+
+def _array_port_pair_rewrites_commute(
+    left0: np.ndarray,
+    right0: np.ndarray,
+    first: int,
+    second: int,
+) -> bool:
+    """Run the two local rewrite orders and compare their terminal states."""
+
+    slots = np.asarray([int(first), int(second)], dtype=np.int64)
+    left_ab = np.asarray(left0[slots], dtype=np.int16).copy()
+    right_ab = np.asarray(right0[slots], dtype=np.int16).copy()
+    left_ba = left_ab.copy()
+    right_ba = right_ab.copy()
+    _apply_array_port_pair_rewrite(left_ab, right_ab, 0)
+    _apply_array_port_pair_rewrite(left_ab, right_ab, 1)
+    _apply_array_port_pair_rewrite(left_ba, right_ba, 1)
+    _apply_array_port_pair_rewrite(left_ba, right_ba, 0)
+    return bool(np.array_equal(left_ab, left_ba) and np.array_equal(right_ab, right_ba))
+
+
+def _sample_rewrite_pairs(
+    active: np.ndarray,
     checks: int,
     rng: np.random.Generator,
-) -> int:
-    if active.size < 2 or checks <= 0:
-        return 0
-    violation_count = 0
-    for _ in range(min(checks, int(active.size * (active.size - 1) // 2))):
-        first, second = rng.choice(active, size=2, replace=False)
-        first = int(first)
-        second = int(second)
-        first_value_ab = min(int(left0[first]), int(right0[first]))
-        second_value_ab = min(int(left0[second]), int(right0[second]))
-        first_value_ba = min(int(left0[first]), int(right0[first]))
-        second_value_ba = min(int(left0[second]), int(right0[second]))
-        if (first_value_ab, second_value_ab) != (first_value_ba, second_value_ba):
-            violation_count += 1
-    return violation_count
+    *,
+    graph_l: np.ndarray | None,
+    graph_r: np.ndarray | None,
+    require_shared: bool | None,
+) -> list[tuple[int, int]]:
+    if checks <= 0 or active.size < 2:
+        return []
+    target = min(int(checks), int(active.size * (active.size - 1) // 2))
+    pairs: set[tuple[int, int]] = set()
+    attempts = 0
+    max_attempts = max(64, target * 32)
+    while len(pairs) < target and attempts < max_attempts:
+        first, second = (int(value) for value in rng.choice(active, size=2, replace=False))
+        pair = (min(first, second), max(first, second))
+        attempts += 1
+        if pair in pairs:
+            continue
+        if require_shared is not None and graph_l is not None and graph_r is not None:
+            endpoints_first = {int(graph_l[first]), int(graph_r[first])}
+            endpoints_second = {int(graph_l[second]), int(graph_r[second])}
+            shares_node = bool(endpoints_first & endpoints_second)
+            if shares_node != require_shared:
+                continue
+        pairs.add(pair)
+    return sorted(pairs)
+
+
+def _shared_node_rewrite_pairs(
+    active: np.ndarray,
+    graph_l: np.ndarray,
+    graph_r: np.ndarray,
+    checks: int,
+) -> list[tuple[int, int]]:
+    if checks <= 0:
+        return []
+    first_edge_by_node: dict[int, int] = {}
+    pairs: set[tuple[int, int]] = set()
+    for edge_raw in active:
+        edge = int(edge_raw)
+        for node_raw in (graph_l[edge], graph_r[edge]):
+            node = int(node_raw)
+            previous = first_edge_by_node.get(node)
+            if previous is None:
+                first_edge_by_node[node] = edge
+            elif previous != edge:
+                pairs.add((min(previous, edge), max(previous, edge)))
+                if len(pairs) >= int(checks):
+                    return sorted(pairs)
+    return sorted(pairs)
 
 
 def _array_port_pair_hash(left: np.ndarray, right: np.ndarray, group_order: int) -> str:

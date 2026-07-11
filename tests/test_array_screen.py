@@ -5,7 +5,12 @@ import numpy as np
 from oph_fpe.experiments import load_config
 from oph_fpe.bulk.neutral_bulk import build_neutral_observer_views
 from oph_fpe.scale import run_array_screen_config
-from oph_fpe.scale.bw_array import _attach_h2_neutral_evidence_channels, _repair_budget_for_cycle
+from oph_fpe.scale.array_screen import _advance_record_commit_state, _node_signature
+from oph_fpe.scale.bw_array import (
+    _attach_h2_neutral_evidence_channels,
+    _h2_repair_current_tensor,
+    _repair_budget_for_cycle,
+)
 
 
 def test_array_screen_smoke_writes_dimension_report(tmp_path: Path):
@@ -47,6 +52,69 @@ def test_repair_budget_schedule_is_gradual_and_traceable():
     assert budgets[-1] < budgets[8]
     assert min(budgets) > 0
     assert max(budgets) <= 1000
+
+
+def test_node_signature_distinguishes_equal_sum_port_records():
+    left = np.asarray([0, 0], dtype=np.int64)
+    right = np.asarray([1, 2], dtype=np.int64)
+    remote = np.asarray([0, 0], dtype=np.int16)
+
+    signature_02 = _node_signature(np.asarray([0, 2]), remote, left, right, 3)
+    signature_11 = _node_signature(np.asarray([1, 1]), remote, left, right, 3)
+
+    assert int(signature_02[0]) != int(signature_11[0])
+    assert np.array_equal(signature_02, _node_signature(np.asarray([0, 2]), remote, left, right, 3))
+
+
+def test_record_commit_is_revocable_consistent_and_saturating():
+    maximum = np.iinfo(np.uint32).max
+    previous_signature = np.asarray([10, 20], dtype=np.int64)
+    previous_age = np.asarray([maximum, 7], dtype=np.uint32)
+
+    stable, committed = _advance_record_commit_state(
+        np.asarray([10, 20]),
+        previous_signature,
+        previous_age,
+        np.asarray([0, 1]),
+        commit_cycles=4,
+    )
+
+    assert int(stable[0]) == maximum
+    assert committed.tolist() == [True, False]
+
+    stable, committed = _advance_record_commit_state(
+        np.asarray([11, 20]),
+        previous_signature,
+        stable,
+        np.asarray([0, 0]),
+        commit_cycles=4,
+    )
+    assert int(stable[0]) == 1
+    assert committed.tolist() == [False, True]
+
+
+def test_strict_neutral_repair_tensor_ignores_cap_driven_modular_fields():
+    support = np.asarray([0, 1, 2], dtype=np.int64)
+    base = {
+        "repair_load": np.asarray([0.1, 0.2, 0.3]),
+        "cumulative_repair_load": np.asarray([1.0, 2.0, 3.0]),
+        "local_mismatch_density": np.asarray([0.3, 0.2, 0.1]),
+        "stable_count": np.asarray([3.0, 4.0, 5.0]),
+        "committed_mask": np.asarray([1.0, 1.0, 0.0]),
+        "s3_class_density": np.asarray([0.0, 0.5, 1.0]),
+        "modular_depth": np.asarray([1.0, 2.0, 3.0]),
+        "modular_time": np.asarray([0.1, 0.2, 0.3]),
+    }
+    cap_mutated = {
+        **base,
+        "modular_depth": np.asarray([1.0e9, -1.0e9, 7.0e8]),
+        "modular_time": np.asarray([-8.0e8, 6.0e8, 4.0e8]),
+    }
+
+    baseline = _h2_repair_current_tensor(support, raw_history=[], current_raw_fields=base, width=64)
+    mutated = _h2_repair_current_tensor(support, raw_history=[], current_raw_fields=cap_mutated, width=64)
+
+    assert np.array_equal(baseline, mutated)
 
 
 def test_h2_neutral_evidence_channels_are_emitted_without_chart_ids():

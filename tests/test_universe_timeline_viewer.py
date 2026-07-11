@@ -5,9 +5,11 @@ import numpy as np
 
 from oph_fpe.viz import write_universe_timeline_bundle
 from oph_fpe.viz.universe_timeline_viewer import (
+    _effective_string_theory_payload,
     _observer_modular_time_payload,
     _read_proto_particle_candidates,
     _small_universe_payload,
+    _visualization_instructions,
     _write_full_screen_field_bin,
 )
 
@@ -33,7 +35,66 @@ def test_small_universe_payload_uses_theorem_core_receipt_fallback(tmp_path: Pat
 
     assert payload["receipts"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
     assert payload["receipts"]["bundle_receipt"] is True
+    assert payload["contentAvailable"] is False
+    assert payload["dataMode"] == "theorem_receipt_summary_only"
+    assert payload["receiptSource"] == "theorem_core_receipts"
+    assert payload["bundleReceiptKind"] == "theorem_core_receipt_bundle"
+    assert payload["renderableExactMiniUniverseReceipt"] is False
+    assert payload["receipts"]["renderable_exact_mini_universe_receipt"] is False
+    assert payload["receipts"]["exact_nonzero_holonomy_cycle_count"] is None
+    assert payload["receipts"]["strict_descent_violation_count"] is None
+    assert payload["receipts"]["unique_terminal_normal_form_count"] is None
+    assert "exact_mini_universe_nodes_missing" in payload["contentBlockers"]
+    assert "receipt summary" in payload["description"]
     assert payload["claimBoundary"] == "large run theorem core"
+
+    effective = _effective_string_theory_payload(
+        visualization_views={
+            "effectiveStringTheory": {
+                "renderLayers": [
+                    {"layer": "finite_edge_string_vibration_pulses"},
+                    {"layer": "h3_worldline_overlay"},
+                ]
+            }
+        },
+        small_payload=payload,
+        bulk_payload={"protoParticleCandidates": {"worldlines": [{"worldlineId": "w0"}]}},
+    )
+    assert effective["contentAvailable"] is True
+    assert effective["finiteEdgeStringVibrationReceipt"] is False
+    assert effective["finiteEdgeStringVibrationSamples"] == []
+    assert effective["layerAvailability"]["finite_edge_string_vibration_pulses"] is False
+    assert effective["layerAvailability"]["h3_worldline_overlay"] is True
+    assert "finite_edge_string_vibration_pulses" in effective["hiddenLayers"]
+    assert "h3_worldline_overlay" not in effective["hiddenLayers"]
+    assert next(
+        row
+        for row in effective["renderLayers"]
+        if row["layer"] == "finite_edge_string_vibration_pulses"
+    )["hideWhenEmpty"] is True
+
+    instructions = _visualization_instructions(
+        None,
+        tmp_path / "visualization_payload.json",
+        {
+            "smallUniverse": payload,
+            "effectiveStringTheory": effective,
+            "claimBoundary": "test boundary",
+        },
+    )
+    assert "Panel 2 is receipt-only" in instructions
+    assert "no exact mini-universe graph/path may be drawn" in instructions
+    assert "finite-edge vibration sublayer is unavailable and must be hidden" in instructions
+    assert "Canonical pedagogical cinematic storyboard" in instructions
+    assert "Bounded self-reading patches" in instructions
+    assert "Shared records and consensus" in instructions
+    assert "Enter one observer's 3+1D view" in instructions
+    assert "ASSUMED VISUAL LAYER — NOT DERIVED" in instructions
+    assert "Defect worldlines styled as matter" in instructions
+    assert "diagnostic CMB-shaped sky" in instructions
+    assert "explanatory overview (not observer-visible)" in instructions
+    assert "prefers-reduced-motion" in instructions
+    assert "256,000,000-byte hard package ceiling" in instructions
 
 
 def test_full_screen_sidecar_falls_back_to_manifest_patch_count(tmp_path: Path):
@@ -799,10 +860,21 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     payload = Path(summary["payload_path"])
     assert viewer.exists()
     assert payload.exists()
-    assert "OPH Universe Timeline Visualization" in viewer.read_text(encoding="utf-8")
+    viewer_text = viewer.read_text(encoding="utf-8")
+    assert "OPH Universe Timeline Visualization" in viewer_text
+    assert "Exact mini-universe graph not exported" in viewer_text
+    assert "repair.disabled=!DATA.smallUniverse.contentAvailable" in viewer_text
     parsed = json.loads(payload.read_text(encoding="utf-8"))
     assert parsed["schemaVersion"] == "oph_universe_timeline_visualization_payload_v1"
     assert parsed["smallUniverse"]["receipts"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
+    assert parsed["smallUniverse"]["contentAvailable"] is True
+    assert parsed["smallUniverse"]["dataMode"] == "exact_mini_universe"
+    assert parsed["smallUniverse"]["receiptSource"] == "exact_consensus_receipt"
+    assert parsed["smallUniverse"]["bundleReceiptKind"] == "exact_mini_universe_evidence_bundle"
+    assert parsed["smallUniverse"]["renderableExactMiniUniverseReceipt"] is True
+    assert parsed["smallUniverse"]["receipts"]["renderable_exact_mini_universe_receipt"] is True
+    assert parsed["smallUniverse"]["contentBlockers"] == []
+    assert parsed["smallUniverse"]["receipts"]["exact_nonzero_holonomy_cycle_count"] == 0
     assert "pnSilenceToObservation" in parsed
     assert len(parsed["screen"]["clusters"]["snapshots"]) >= 2
     assert parsed["subjectiveObserverCameras"][0]["kind"] == "observer_local_subjective_camera"
@@ -816,12 +888,13 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert "h3SpatialPoint" not in first_sighting
     assert first_sighting["observerLocalReadout"]["coordinateSystem"] == "observer_local_tangent_screen_readout"
     assert first_sighting["observerLocalReadout"]["hiddenGlobalH3Suppressed"] is True
-    assert 0.0 <= first_sighting["visibilityScore"] <= 1.0
+    assert 0.0 <= first_sighting["observerLocalReadout"]["visibilityScore"] <= 1.0
+    assert first_sighting["worldlineRef"].startswith("consensusBulk.protoParticleCandidates.worldlines[")
     assert parsed["observerModularTime"]["receipts"]["observer_modular_time_receipt"] is True
     assert parsed["observerModularTime"]["receipts"]["observer_facing_3p1d_h3_experience_receipt"] is True
     assert parsed["observerModularTime"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is False
     assert parsed["observerModularTime"]["receipts"]["observer_h3_object_population_receipt"] is False
-    assert parsed["observerModularTime"]["subjectiveObserverCameras"][0]["cameraId"].startswith(
+    assert parsed["observerModularTime"]["subjectiveObserverCameraRefs"][0]["cameraId"].startswith(
         "subjective_observer_"
     )
     assert len(parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"]) >= 32
@@ -945,11 +1018,17 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["effectiveStringTheory"]["finiteEdgeStringVibrationSamples"][0]["sampleKind"] == (
         "exact_finite_repair_edge_pulse"
     )
+    assert parsed["effectiveStringTheory"]["layerAvailability"][
+        "finite_edge_string_vibration_pulses"
+    ] is True
+    assert "finite_edge_string_vibration_pulses" not in parsed["effectiveStringTheory"]["hiddenLayers"]
     assert parsed["effectiveStringTheory"]["stringVacuumSelector"]["candidateNamedWitness"] == "BD_{n=1,+}^{OPH}"
     assert parsed["emergentCurvedSpacetime"]["schema"] == "oph_emergent_curved_spacetime_visualization_v1"
     assert parsed["emergentCurvedSpacetime"]["contentAvailable"] is True
     assert parsed["emergentCurvedSpacetime"]["curvatureProxyPoints"]
-    assert parsed["emergentCurvedSpacetime"]["spacetimeCompactionField"]
+    assert parsed["emergentCurvedSpacetime"]["dataRefs"]["spacetimeCompactionField"] == (
+        "emergentCurvedSpacetime.curvatureProxyPoints"
+    )
     assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["contentAvailable"] is True
     assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["volumeSamples"]
     assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["sliceSamples"]
@@ -968,10 +1047,19 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["emergentCurvedSpacetime"]["receipts"]["production_gravity_receipt"] is False
     assert parsed["emergentCurvedSpacetime"]["receipts"]["physical_gravity_prediction"] is False
     assert parsed["observerCinema"]["schema"] == "oph_observer_cinema_v1"
-    assert parsed["observerCinema"]["observerViews"]
-    assert parsed["observerCinema"]["subjectiveCameras"]
+    assert parsed["observerCinema"]["observerViewRefs"]
+    assert parsed["observerCinema"]["subjectiveCameraRefs"]
     assert parsed["observerCinema"]["availability"]["observerViewCount"] == 1
     assert parsed["observerCinema"]["availability"]["protoWorldlineSightingCount"] > 0
+    assert parsed["coordinateSystems"]["h3_hyperboloid_spatial_components_v1"]["model"] == (
+        "future_unit_hyperboloid_spatial_components"
+    )
+    assert parsed["assumedDs4Spacetime"]["provenance"]["kind"] == "simulation_assumption"
+    assert parsed["assumedDs4Spacetime"]["receipts"]["derived_physical_ds4_receipt"] is False
+    assert parsed["assumedDs4Spacetime"]["receipts"]["physical_particle_matter_receipt"] is False
+    assert parsed["assumedDs4Spacetime"]["assumptionLedger"][
+        "computedTheoremReceiptsUnchanged"
+    ] is True
     assert parsed["hilbertSpaceObserverAlgebra"]["schema"] == "oph_hilbert_observer_algebra_summary_v1"
     assert parsed["hilbertSpaceObserverAlgebra"]["finiteSupportAlgebraPopulated"] is True
     assert parsed["hilbertSpaceObserverAlgebra"]["visibleObjectPacketCount"] > 0
@@ -993,6 +1081,11 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert einstein_check["issue"] == 503
     render_data = parsed["visualizationRenderData"]
     assert render_data["schema"] == "oph_visualization_render_data_v1"
+    assert render_data["availability"]["finiteRepairGraphContentAvailable"] is True
+    assert render_data["availability"]["finiteRepairGraphNodeCount"] == 3
+    assert render_data["availability"]["finiteRepairGraphEdgeCount"] == 3
+    assert render_data["availability"]["finiteRepairGraphFrameCount"] == 2
+    assert render_data["availability"]["finiteEdgeStringVibrationContentAvailable"] is True
     assert render_data["availability"]["subjectiveCameraCount"] == 1
     assert render_data["availability"]["h3ObjectCount"] == 1
     assert render_data["availability"]["neutralObjectCandidateCount"] == 1
@@ -1011,6 +1104,8 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
         "displayStatus"
     ] == "not_promoted"
     assert render_data["sceneGraph"]["bulk"]["protoWorldlines"][0]["polyline"]
+    assert render_data["sceneGraph"]["finiteRepairGraph"]["contentAvailable"] is True
+    assert render_data["sceneGraph"]["finiteRepairGraph"]["renderableExactMiniUniverseReceipt"] is True
     assert render_data["sceneGraph"]["curvedSpacetime"]["proxyPoints"]
     assert render_data["sceneGraph"]["curvedSpacetime"]["sourceMath"]["model"] == (
         "oph_quotient_visible_source_to_h3_compaction_v1"
@@ -1036,7 +1131,15 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert next(row for row in render_data["claimBadges"] if row["id"] == "view:observerCamera")[
         "style"
     ] == "view_contract_info"
+    instructions = Path(summary["instructions_path"]).read_text(encoding="utf-8")
+    assert "Panel 2 shows one deterministic repair path through the exact finite mini-universe" in instructions
+    assert "finiteEdgeStringVibrationSamples` is available" in instructions
+    assert "Objectivity is the agreement carried by shared records" in instructions
+    assert "ASSUMED DEFECT-AS-MATTER STYLING" in instructions
     sidecars = summary["sidecar_exports"]
+    assert summary["visualizer_pack"]["under_hard_limit"] is True
+    assert summary["visualizer_pack"]["byte_count"] < 256_000_000
+    assert Path(summary["visualizer_pack"]["path"]).exists()
     assert Path(sidecars["manifest_path"]).exists()
     assert sidecars["files"]["screen_points_csv"]["row_count"] == 2
     assert sidecars["files"]["screen_full_bin"]["row_count"] == 2
@@ -1128,4 +1231,11 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert manifest["receipts"]["production_gravity_receipt"] is False
     assert manifest["receipts"]["paper_accuracy_guard_receipt"] is True
     assert manifest["receipts"]["no_semantic_promotion_by_relabeling_receipt"] is True
-    assert Path(summary["web_coding_agent_brief_path"]).exists()
+    web_brief_path = Path(summary["web_coding_agent_brief_path"])
+    assert web_brief_path.exists()
+    web_brief = web_brief_path.read_text(encoding="utf-8")
+    assert "Canonical pedagogical cinematic storyboard" in web_brief
+    assert "observer-facing H3 consensus chart" in web_brief
+    assert "COMPUTED / PASSED" in web_brief
+    assert "ASSUMED VISUAL LAYER" in web_brief
+    assert "Target smooth 60 fps" in web_brief

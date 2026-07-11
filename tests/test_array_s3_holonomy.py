@@ -58,6 +58,21 @@ def test_oriented_triangles_and_defect_clusters():
     assert worldlines[0]["event"] == "birth"
 
 
+def test_defect_clusters_have_disjoint_transitive_triangle_membership():
+    angles = np.asarray([0.0, 0.1, 0.2])
+    centers = np.stack([np.cos(angles), np.sin(angles), np.zeros_like(angles)], axis=1)
+    points = np.repeat(centers, 3, axis=0)
+    triangles = np.asarray([[0, 1, 2], [3, 4, 5], [6, 7, 8]], dtype=np.int64)
+    classes = np.ones(3, dtype=np.int64)
+
+    clusters = cluster_defects(triangles, classes, points)
+    memberships = [index for cluster in clusters for index in cluster["triangle_indices"]]
+
+    assert len(clusters) == 1
+    assert sorted(memberships) == [0, 1, 2]
+    assert len(memberships) == len(set(memberships))
+
+
 def test_triangle_holonomies_use_reverse_edge_inverse():
     points = np.array(
         [
@@ -159,6 +174,149 @@ def test_defect_interaction_reports_screen_transport_and_fusion_proxies():
     assert report["particle_matter_receipt"] is False
     assert particle["transportable_count"] == 1
     assert particle["particle_matter_receipt"] is False
+
+
+def test_fusion_conservation_gate_keeps_nonidentity_encounters():
+    timeline = {
+        "worldlines": [],
+        "snapshots": [
+            {
+                "cycle": 0,
+                "clusters": [
+                    {"cluster_id": "a", "holonomy_mode": 1},
+                    {"cluster_id": "b", "holonomy_mode": 1},
+                    {"cluster_id": "c", "holonomy_mode": 2},
+                ],
+            }
+        ],
+    }
+
+    report = defect_interaction_report(timeline)
+
+    assert report["fusion_candidate_count"] == 3
+    assert report["fusion_identity_candidate_count"] == 1
+    assert report["fusion_identity_fraction"] == 1.0 / 3.0
+    assert report["fusion_geometrically_verified_candidate_count"] == 0
+    assert report["fusion_legacy_unverified_candidate_count"] == 3
+    assert report["fusion_conservation_proxy_pass"] is False
+    assert any(not row["identity_product"] for row in report["fusion_candidates"])
+    assert all(not row["encounter_geometry_verified"] for row in report["fusion_candidates"])
+
+
+def test_fusion_gate_uses_only_intrinsic_near_encounters_with_provenance():
+    def point(angle: float) -> list[float]:
+        return [float(np.cos(angle)), float(np.sin(angle)), 0.0]
+
+    timeline = {
+        "worldlines": [],
+        "snapshots": [
+            {
+                "cycle": 4,
+                "clusters": [
+                    {"cluster_id": "near_a", "worldline_id": "wa", "holonomy_mode": 1, "centroid": point(0.0)},
+                    {"cluster_id": "near_b", "worldline_id": "wb", "holonomy_mode": 1, "centroid": point(0.1)},
+                    {"cluster_id": "far", "worldline_id": "wf", "holonomy_mode": 2, "centroid": point(1.2)},
+                ],
+            }
+        ],
+    }
+
+    report = defect_interaction_report(timeline, max_fusion_angular_distance=0.25)
+
+    assert report["fusion_candidate_count"] == 1
+    assert report["fusion_geometrically_verified_candidate_count"] == 1
+    assert report["fusion_legacy_unverified_candidate_count"] == 0
+    assert report["fusion_conservation_proxy_pass"] is True
+    assert report["fusion_common_basepoint_transport_receipt"] is False
+    assert report["fusion_gauge_covariant_receipt"] is False
+    assert report["fusion_theorem_receipt"] is False
+    candidate = report["fusion_candidates"][0]
+    assert {candidate["left_cluster_id"], candidate["right_cluster_id"]} == {"near_a", "near_b"}
+    assert np.isclose(candidate["centroid_angular_distance"], 0.1)
+    assert candidate["encounter_geometry_verified"] is True
+    assert candidate["candidate_basis"] == "intrinsic_s2_nearest_within_angular_cutoff"
+
+
+def test_legacy_fusion_pair_without_centroids_is_fail_closed():
+    timeline = {
+        "worldlines": [],
+        "snapshots": [
+            {
+                "cycle": 0,
+                "clusters": [
+                    {"cluster_id": "a", "holonomy_mode": 1},
+                    {"cluster_id": "b", "holonomy_mode": int(S3_INV[1])},
+                ],
+            }
+        ],
+    }
+
+    report = defect_interaction_report(timeline)
+
+    assert report["fusion_candidate_count"] == 1
+    assert report["fusion_identity_candidate_count"] == 1
+    assert report["fusion_geometrically_verified_candidate_count"] == 0
+    assert report["fusion_conservation_proxy_pass"] is False
+    assert report["fusion_candidates"][0]["candidate_basis"] == "legacy_missing_centroid_unverified_pair"
+
+
+def test_worldline_transport_uses_intrinsic_spherical_distance_and_cutoff():
+    angle = 0.5
+    previous = [
+        {
+            "cluster_id": "before",
+            "class": "transposition",
+            "centroid": [1.0, 0.0, 0.0],
+        }
+    ]
+    current = [
+        {
+            "cluster_id": "after",
+            "class": "transposition",
+            "centroid": [float(np.cos(angle)), float(np.sin(angle)), 0.0],
+        }
+    ]
+
+    tracked = track_defect_worldlines(previous, current)
+
+    assert tracked[0]["event"] == "continue"
+    assert np.isclose(tracked[0]["transport_distance"], angle, atol=1.0e-12)
+
+
+def test_public_worldline_matching_is_permutation_stable_and_inherits_ids():
+    def point(angle: float) -> list[float]:
+        return [float(np.cos(angle)), float(np.sin(angle)), 0.0]
+
+    previous = [
+        {
+            "cluster_id": "previous_a",
+            "worldline_id": "worldline_000010",
+            "class": "transposition",
+            "centroid": point(0.0),
+        },
+        {
+            "cluster_id": "previous_b",
+            "worldline_id": "worldline_000011",
+            "class": "transposition",
+            "centroid": point(1.0),
+        },
+    ]
+    current = [
+        {"cluster_id": "current_a", "class": "transposition", "centroid": point(0.08)},
+        {"cluster_id": "new_birth", "class": "threecycle", "centroid": point(2.8)},
+        {"cluster_id": "current_b", "class": "transposition", "centroid": point(0.92)},
+    ]
+
+    forward = track_defect_worldlines(previous, current)
+    permuted = track_defect_worldlines(previous[::-1], [current[2], current[0], current[1]])
+    by_cluster_forward = {row["current_cluster_id"]: row for row in forward}
+    by_cluster_permuted = {row["current_cluster_id"]: row for row in permuted}
+
+    assert by_cluster_forward == by_cluster_permuted
+    assert by_cluster_forward["current_a"]["worldline_id"] == "worldline_000010"
+    assert by_cluster_forward["current_b"]["worldline_id"] == "worldline_000011"
+    assert by_cluster_forward["new_birth"]["worldline_id"] == "worldline_000012"
+    assert by_cluster_forward["new_birth"]["event"] == "birth"
 
 
 def test_controlled_s3_particle_assay_validates_particle_gate_without_physical_claim():

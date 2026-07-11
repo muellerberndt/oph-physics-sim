@@ -25,5 +25,7 @@ and one-off closeout bundles do not belong here. Keep those under `runs/`, `repo
 - `digitalocean_pool_setup.md`
 - `oph_issue361_certificate_schema.json`
 - `oph_universe_timeline_visualization_payload_v1.schema.json`
+- `oph_distributed_universe_visualization_payload_v1.schema.json`
+- `oph_visualizer_pack_v2.schema.json`
 - `parallel_cloud_plan.md`
 - `small_oph_universe_v1.md`

@@ -5,6 +5,8 @@ from oph_fpe.experiments import load_config
 from oph_fpe.pipelines.oph_universe import (
     H3_RESPONSE_EXCLUDED_AUX_OBSERVABLES,
     REFIT_RECIPES,
+    _select_predeclared_h3_candidate,
+    _select_predeclared_object_candidate,
     _h3_score,
     _cmb_diagnostic_summary,
     _postprocess_observer_experience,
@@ -17,6 +19,31 @@ from oph_fpe.pipelines.oph_universe import (
     _write_visualization_diagnostic_artifacts,
     _visualization_export_settings,
 )
+
+
+def test_refit_selection_is_predeclared_not_best_score():
+    rows = [
+        {"label": "declared", "score": (0,)},
+        {"label": "test_set_winner", "score": (999,)},
+    ]
+
+    selected = _select_predeclared_h3_candidate(rows, preferred_label="declared")
+
+    assert selected["label"] == "declared"
+
+
+def test_object_refit_selection_uses_declared_incidence_mode():
+    rows = [
+        {"label": "h3__transition_history_mixture_cluster", "score": (0,)},
+        {"label": "h3__observer_transition_mixture_cluster", "score": (999,)},
+    ]
+
+    selected = _select_predeclared_object_candidate(
+        rows,
+        preferred_mode="transition_history_mixture_cluster",
+    )
+
+    assert selected["label"].endswith("__transition_history_mixture_cluster")
 
 
 def test_oph_universe_postprocess_splits_3p1d_from_populated_h3():
@@ -76,6 +103,35 @@ def test_post_theorem_large_run_readiness_routes_visualization_without_physical_
     assert report["lanes"]["two_defect_gravity"]["production_gravity"] is False
     assert "finite_covariant_parent_receipt_missing" in report["blockers"]
     assert "production_gravity_receipt_false" in report["blockers"]
+
+
+def test_post_theorem_readiness_scales_explicit_assumption_visuals_without_promoting_physics():
+    report = _post_theorem_large_run_readiness(
+        theorem_contract={
+            "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": True,
+            "paper_geometric_branch_consensus_bulk_emergence_receipt": False,
+            "strict_neutral_bulk_contract_receipt": False,
+        },
+        proof={"physical_cmb_prediction": False},
+        readout={"observer_facing_consensus_3d_bulk_readout_receipt": False},
+        frontier_artifacts={
+            "physical_cmb_prediction_receipt": False,
+            "production_gravity_receipt": False,
+        },
+        cmb_diagnostics={"screen_proxy_cmb_receipt": False},
+    )
+
+    assert report["cloud_run_safe_for_visualization_data"] is True
+    assert report["visualization_completion_basis"] == "explicit_visualization_assumptions"
+    assert report["recommended_large_run_lane"] == (
+        "assumption_completed_observer_universe_visualization_large_run"
+    )
+    assumed = report["lanes"]["assumption_completed_visual_universe"]
+    assert assumed["scale_candidate"] is True
+    assert assumed["proof_receipt"] is False
+    assert assumed["physical_measurement_receipt"] is False
+    assert report["cloud_run_safe_for_physical_cmb_prediction"] is False
+    assert report["cloud_run_safe_for_strict_neutral_bulk_claim"] is False
 
 
 def test_post_theorem_large_run_readiness_blocks_raw_gravity_without_einstein_branch_entry():

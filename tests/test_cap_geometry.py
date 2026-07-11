@@ -1,8 +1,15 @@
 import math
 
 import numpy as np
+import pytest
 
-from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap, pullback_field
+from oph_fpe.bulk.cap_geometry import (
+    RoundCap,
+    cap_ordered_frame_points,
+    cap_weights,
+    lambda_cap,
+    pullback_field,
+)
 
 
 def test_lambda_cap_identity_and_inverse():
@@ -44,6 +51,21 @@ def test_boundary_derivative_matches_exp_minus_s():
     derivative = abs(((1.0 - eps + a) / (a * (1.0 - eps) + 1.0) - 1.0) / (-eps))
 
     assert abs(derivative - math.exp(-s)) < 1e-5
+
+
+def test_lambda_cap_preserves_the_explicit_ordered_bw_frame():
+    cap = RoundCap(
+        axis=np.array([0.0, 0.0, 1.0]),
+        theta0=0.8,
+        tangent=np.array([1.0, 0.0, 0.0]),
+    )
+    p_minus, p_plus = cap_ordered_frame_points(cap)
+    mapped = lambda_cap(np.asarray([p_minus, p_plus]), cap, 0.7)
+
+    assert mapped[0] == pytest.approx(p_minus, abs=1.0e-12)
+    assert mapped[1] == pytest.approx(p_plus, abs=1.0e-12)
+    assert np.dot(p_minus, cap.axis) == pytest.approx(math.cos(cap.theta0), abs=1.0e-12)
+    assert np.dot(p_plus, cap.axis) == pytest.approx(math.cos(cap.theta0), abs=1.0e-12)
 
 
 def _sphere_points(count: int) -> np.ndarray:

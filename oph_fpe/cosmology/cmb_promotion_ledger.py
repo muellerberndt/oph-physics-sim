@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,27 @@ CLAIM_LADDER = (
     "CONDITIONAL_PHYSICAL_CMB_SOURCE",
     "OPH_NATIVE_PHYSICAL_CMB_SOURCE",
     "LIKELIHOOD_EVALUATED_PHYSICAL_CMB_PREDICTION",
+)
+
+PHYSICAL_PREDICTION_PARENT_GATES = (
+    "FINITE_QUOTIENT_SOURCE_LAW_RECEIPT",
+    "SOURCE_ONLY_FINITE_ARTIFACT_RECEIPT",
+    "NO_DATA_USE_RECEIPT",
+    "POOLED_SOURCE_REDUCER_RECEIPT",
+    "GEOMETRIC_SCREEN_SCALAR_RECEIPT",
+    "PHYSICAL_PRECISION_OPERATOR_RECEIPT",
+    "SOURCE_RELEASE_AMPLITUDE_RECEIPT",
+    "SCREEN_COVARIANCE_RECEIPT",
+    "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT",
+    "FINITE_PRIMORDIAL_SOURCE_RECEIPT",
+    "COMMON_FREEZEOUT_SURFACE_RECEIPT",
+    "DARK_CONTINUATION_OFF_OR_PARENT_RECEIPT",
+    "BOLTZMANN_TRANSFER_RECEIPT",
+    "FROZEN_LIKELIHOOD_RECEIPT",
+    "FROZEN_PARENT_HASHES_RECEIPT",
+    "LIKELIHOOD_EVALUATED_OUTPUT_RECEIPT",
+    "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT",
+    "PHYSICAL_CMB_PROMOTION_READY_RECEIPT",
 )
 
 FORBIDDEN_SOURCE_INPUTS = (
@@ -50,7 +72,6 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
     output = _first_json(roots, "physical_cmb_output_comparison_report.json")
     finite_collar_boltzmann = _first_json(roots, "finite_collar_boltzmann_bundle_report.json")
     frozen_transfer = _first_json(roots, "frozen_transfer_likelihood_report.json")
-    official_likelihood = _first_json(roots, "official_planck_likelihood_readiness_report.json")
     cmb_derivation = _first_json(roots, "cmb_derivation_report.json")
     cmb_static_plots = _first_json(roots, "cmb_static_plots_summary.json")
     cmb_frontier_viewer = _first_json(roots, "cmb_neutral_frontier_viewer_summary.json")
@@ -64,11 +85,8 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
     scale = validate_physical_scale_bridge_receipts(scale_payload)
 
     validation_payload = _validation_payload(physical_input, physical_validation)
-    input_contract_receipt = bool(
-        physical_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
-        or validation_payload.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
-    )
-    promotion_ready = bool(promotion.get("physical_cmb_promotion_ready", False))
+    input_contract_receipt = _validated_input_contract_receipt(physical_input, validation_payload)
+    promotion_ready = _validated_promotion_ready(promotion, input_contract_receipt=input_contract_receipt)
     source_gates = source_provenance or (physical_input.get("source_provenance") or {})
     finite_source_receipt = _source_only_finite_artifact_receipt(source_gates, no_data, finite_certificate)
     radial_lift_receipt = bool(
@@ -107,11 +125,9 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
         or _truthy_any(exact_cmb, "CMB_TRANSFER_RECEIPT", "transfer_receipt", "measurement_comparable_curve")
         or _truthy_any(finite_clock_cmb, "CMB_TRANSFER_RECEIPT", "transfer_receipt", "measurement_comparable_cmb_curve")
     )
-    frozen_likelihood_receipt = bool(
-        _truthy_any(frozen_transfer, "FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT")
-        or _truthy_any(frozen_transfer, "FULL_OBSERVABLE_LIKELIHOOD_RECEIPT")
-        or _truthy_any(official_likelihood, "official_likelihood_execution_ready")
-    )
+    frozen_likelihood_receipt = _validated_frozen_likelihood_receipt(frozen_transfer)
+    frozen_parent_hashes_receipt = _frozen_parent_hashes_receipt(frozen_transfer, physical_input)
+    likelihood_evaluated_output_receipt = _likelihood_evaluated_output_receipt(frozen_transfer)
     visual_diagnostic = bool(cmb_static_plots or cmb_frontier_viewer or cmb_lite or output or frontier)
     spectrum_diagnostic = bool(
         output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
@@ -121,7 +137,7 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
         or finite_clock_cmb.get("measurement_comparable_cmb_curve", False)
         or cmb_lite.get("comparison_receipt", False)
     )
-    prediction_receipt = bool(
+    terminal_prediction_asserted = bool(
         output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
         or output.get("physical_cmb_prediction", False)
     )
@@ -148,7 +164,7 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
         and scale.get("PHYSICAL_MODE_FREEZEOUT_MAP_RECEIPT", False)
     )
 
-    readiness_gates = {
+    readiness_gates: dict[str, bool] = {
         "VISUAL_DIAGNOSTIC_RECEIPT": visual_diagnostic,
         "SPECTRUM_DIAGNOSTIC_RECEIPT": spectrum_diagnostic,
         "FINITE_QUOTIENT_SOURCE_LAW_RECEIPT": _finite_quotient_source_law_receipt(quotient_ensemble),
@@ -167,10 +183,17 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
         "DARK_CONTINUATION_OFF_OR_PARENT_RECEIPT": dark_parent_or_off,
         "BOLTZMANN_TRANSFER_RECEIPT": boltzmann_transfer_receipt,
         "FROZEN_LIKELIHOOD_RECEIPT": frozen_likelihood_receipt,
+        "FROZEN_PARENT_HASHES_RECEIPT": frozen_parent_hashes_receipt,
+        "LIKELIHOOD_EVALUATED_OUTPUT_RECEIPT": likelihood_evaluated_output_receipt,
         "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": input_contract_receipt,
         "PHYSICAL_CMB_PROMOTION_READY_RECEIPT": promotion_ready,
-        "PHYSICAL_CMB_PREDICTION_RECEIPT": prediction_receipt,
     }
+    prediction_receipt = _physical_prediction_receipt(
+        readiness_gates,
+        conditional_physical_source=conditional_physical_source,
+        native_physical_source=native_physical_source,
+    )
+    readiness_gates["PHYSICAL_CMB_PREDICTION_RECEIPT"] = prediction_receipt
     current_claim_tier = _current_claim_tier(
         prediction_receipt=prediction_receipt,
         native_physical_source=native_physical_source,
@@ -180,6 +203,9 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
         visual_diagnostic=visual_diagnostic,
     )
     blockers = _blockers(readiness_gates, scale, validation_payload, promotion)
+    if terminal_prediction_asserted and not prediction_receipt:
+        blockers.append("untrusted_terminal_prediction_assertion_rejected")
+        blockers = sorted(set(blockers))
     fail_closed_state = _fail_closed_state(current_claim_tier, prediction_receipt, blockers)
     report = {
         "mode": "cmb_promotion_ledger_v1",
@@ -195,6 +221,8 @@ def cmb_promotion_ledger_report(run_dirs: list[Path]) -> dict[str, Any]:
         "likelihood_evaluated_physical_cmb_prediction": prediction_receipt,
         "hard_physical_cmb_input_contract_receipt": input_contract_receipt,
         "physical_cmb_promotion_ready": promotion_ready,
+        "terminal_prediction_asserted_by_output": terminal_prediction_asserted,
+        "prediction_parent_gates": list(PHYSICAL_PREDICTION_PARENT_GATES),
         "claim_tier": scale.get("claim_tier"),
         "geometry_origin": scale.get("geometry_origin"),
         "dark_continuation_mode": dark_mode,
@@ -270,6 +298,97 @@ def _norm(value: Any) -> str:
 def _validation_payload(physical_input: dict[str, Any], physical_validation: dict[str, Any]) -> dict[str, Any]:
     validation = physical_validation or physical_input.get("validation") or {}
     return validation if isinstance(validation, dict) else {}
+
+
+def _validated_input_contract_receipt(
+    physical_input: dict[str, Any],
+    validation: dict[str, Any],
+) -> bool:
+    return bool(
+        physical_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+        and validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+        and not (physical_input.get("blockers") or [])
+        and not (validation.get("blockers") or [])
+        and isinstance(physical_input.get("contract"), dict)
+    )
+
+
+def _validated_promotion_ready(
+    promotion: dict[str, Any],
+    *,
+    input_contract_receipt: bool,
+) -> bool:
+    return bool(
+        input_contract_receipt
+        and promotion.get("physical_cmb_promotion_ready", False)
+        and promotion.get("physical_cmb_input_contract_receipt", False)
+        and promotion.get("no_data_use_receipt", False)
+        and promotion.get("cdm_limit_regression_passed", False)
+        and promotion.get("official_likelihood_ready", False)
+        and not (promotion.get("contract_blockers") or [])
+        and not (promotion.get("promotion_blockers") or [])
+    )
+
+
+def _validated_frozen_likelihood_receipt(frozen_transfer: dict[str, Any]) -> bool:
+    return bool(
+        frozen_transfer.get("FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT", False)
+        and frozen_transfer.get("FROZEN_SOURCE_MANIFEST_RECEIPT", False)
+        and frozen_transfer.get("SOLVER_ASSUMPTION_PIN_RECEIPT", False)
+        and frozen_transfer.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
+        and frozen_transfer.get("FROZEN_PHYSICAL_SPECTRUM_RECEIPT", False)
+        and frozen_transfer.get("FULL_OBSERVABLE_LIKELIHOOD_RECEIPT", False)
+        and frozen_transfer.get("official_likelihood_execution_ready", False)
+        and not (frozen_transfer.get("blockers") or [])
+    )
+
+
+def _likelihood_evaluated_output_receipt(frozen_transfer: dict[str, Any]) -> bool:
+    return bool(
+        _validated_frozen_likelihood_receipt(frozen_transfer)
+        and frozen_transfer.get("LIKELIHOOD_EVALUATED_PHYSICAL_PREDICTION_RECEIPT", False)
+    )
+
+
+def _frozen_parent_hashes_receipt(
+    frozen_transfer: dict[str, Any],
+    physical_input: dict[str, Any],
+) -> bool:
+    input_contract = physical_input.get("contract")
+    if not isinstance(input_contract, dict):
+        return False
+    frozen_hashes = _frozen_hash_triplet(frozen_transfer)
+    contract_hashes = _frozen_hash_triplet(input_contract)
+    return bool(
+        all(_valid_sha256_hash(value) for value in frozen_hashes)
+        and all(_valid_sha256_hash(value) for value in contract_hashes)
+        and frozen_hashes == contract_hashes
+    )
+
+
+def _frozen_hash_triplet(payload: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(payload.get("frozen_source_hash") or payload.get("source_hash") or ""),
+        str(payload.get("frozen_solver_hash") or payload.get("solver_hash") or ""),
+        str(payload.get("frozen_likelihood_hash") or payload.get("likelihood_hash") or ""),
+    )
+
+
+def _valid_sha256_hash(value: Any) -> bool:
+    return bool(re.fullmatch(r"[0-9a-fA-F]{64}", str(value or "")))
+
+
+def _physical_prediction_receipt(
+    readiness_gates: dict[str, bool],
+    *,
+    conditional_physical_source: bool,
+    native_physical_source: bool,
+) -> bool:
+    physical_source_route = bool(conditional_physical_source or native_physical_source)
+    return bool(
+        physical_source_route
+        and all(readiness_gates.get(gate, False) for gate in PHYSICAL_PREDICTION_PARENT_GATES)
+    )
 
 
 def _no_data_use_receipt(no_data: dict[str, Any], source_gates: dict[str, Any]) -> bool:
