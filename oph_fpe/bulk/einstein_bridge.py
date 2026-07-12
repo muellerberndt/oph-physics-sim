@@ -149,6 +149,7 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
 
     root = Path(run_dir)
     legacy = _read_json(root / "einstein_branch_entry_report.json")
+    paper_side = _read_json(root / "realized_branch_receipt_report.json")
     receipt_rows = [_receipt_row(root, legacy, spec) for spec in RECEIPT_SPECS]
     required_rows = [row for row in receipt_rows if row["requiredForBranchEntry"]]
     run_receipts = bool(required_rows and all(row["receipt"] for row in required_rows))
@@ -195,6 +196,7 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
         "blockers": blockers,
         "einstein_branch_entry_blockers": blockers,
         "einstein_branch_entry_child_gates": child_gates,
+        "paperSideRealizedBranch": _paper_side_realized_branch_block(paper_side),
         "legacyIssue503": {
             "status": legacy.get("issue_503_status", "not_used_by_e0_manifest"),
             "sourceReportWritten": bool(legacy),
@@ -236,6 +238,35 @@ def _receipt_row(root: Path, legacy: dict[str, Any], spec: ReceiptSpec) -> dict[
 
 def _row_receipt(rows: list[dict[str, Any]], name: str) -> bool:
     return any(row["name"] == name and row["receipt"] for row in rows)
+
+
+def _paper_side_realized_branch_block(report: dict[str, Any]) -> dict[str, Any]:
+    """Summarize the paper-side realized-branch receipt state (issue #503).
+
+    The canonical evaluation lives in reverse-engineering-reality at
+    code/geometry/runs/realized_branch_receipt_report.json and can be imported
+    as a run sidecar with tools/import_realized_branch_receipts.py. The block
+    is informational: it never flips the run-receipt branch-entry gate, and an
+    absent sidecar reads as sidecar_absent.
+    """
+    if not report:
+        return {"status": "sidecar_absent"}
+    tier_keys = (
+        "topology_mesh_families_realized_with_branch_selection",
+        "boundary_collar_modular_families_witnessed",
+        "null_net_families_witnessed_one_particle",
+        "screen_event_families_witnessed",
+        "bulk_depth_channel_witnessed",
+        "realized_geometric_branch_certified_nonempty",
+    )
+    return {
+        "status": report.get("status", "unknown"),
+        "issue": report.get("issue", 503),
+        "tiers": {key: bool(report.get(key)) for key in tier_keys},
+        "certified_nonempty": bool(
+            report.get("realized_geometric_branch_certified_nonempty")
+        ),
+    }
 
 
 def _read_json(path: Path) -> dict[str, Any]:
