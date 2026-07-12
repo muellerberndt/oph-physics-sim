@@ -46,6 +46,12 @@ from oph_fpe.viz.visualizer_pack import build_visualizer_pack
 
 DISTRIBUTED_KERNEL_VERSION = "distributed_observer_patch_kernel_v1"
 
+
+def _literal_true(value: Any) -> bool:
+    """Return true only for a JSON boolean true, never a truthy string/number."""
+
+    return value is True
+
 RECEIPT_KEYS: tuple[str, ...] = (
     "observer_like_self_reading_system_receipt",
     "observer_modular_time_receipt",
@@ -274,8 +280,8 @@ def reduce_distributed_oph_universe(
                 "final_receipts": receipts,
                 "emergence_status": {
                     "bulk_population_source": emergence.get("bulk_population_source"),
-                    "bulk_3d_established": bool(emergence.get("bulk_3d_established", False)),
-                    "particle_matter_receipt": bool(emergence.get("particle_matter_receipt", False)),
+                    "bulk_3d_established": _literal_true(emergence.get("bulk_3d_established")),
+                    "particle_matter_receipt": _literal_true(emergence.get("particle_matter_receipt")),
                 },
             }
         )
@@ -317,8 +323,8 @@ def reduce_distributed_oph_universe(
         seam_readout=seam_readout,
         out_dir=out_dir / "halo_exchange_global",
     )
-    cross_shard_overlap_repair_receipt = bool(
-        halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
+    cross_shard_overlap_repair_receipt = _literal_true(
+        halo_exchange.get("online_cross_shard_overlap_repair_receipt")
     )
     neutral_global = _global_neutral_bulk_reduction(
         manifest=manifest,
@@ -401,53 +407,55 @@ def reduce_distributed_oph_universe(
         "total_object_candidates_completed": total_objects,
         "total_h3_worldlines_completed": total_worldlines,
         "receipt_summary": receipt_summary,
-        "global_carrier_contract_receipt": bool(
-            global_carrier.get("global_carrier_contract_receipt", False)
+        "global_carrier_contract_receipt": _literal_true(
+            global_carrier.get("global_carrier_contract_receipt")
         ),
-        "one_global_carrier_before_partition_receipt": bool(
-            global_carrier.get("one_global_carrier_before_partition_receipt", False)
+        "one_global_carrier_before_partition_receipt": _literal_true(
+            global_carrier.get("one_global_carrier_before_partition_receipt")
         ),
-        "stable_global_identity_initial_state_receipt": bool(
-            global_carrier.get("stable_global_identity_initial_state_receipt", False)
+        "stable_global_identity_initial_state_receipt": _literal_true(
+            global_carrier.get("stable_global_identity_initial_state_receipt")
         ),
-        "authoritative_owner_projection_receipt": bool(
-            global_carrier.get("authoritative_owner_projection_receipt", False)
+        "authoritative_owner_projection_receipt": _literal_true(
+            global_carrier.get("authoritative_owner_projection_receipt")
         ),
-        "distributed_realization_event_certificate_receipt": bool(
-            global_carrier.get("distributed_realization_event_certificate_receipt", False)
+        "distributed_realization_event_certificate_receipt": _literal_true(
+            global_carrier.get("distributed_realization_event_certificate_receipt")
         ),
         "federated_large_universe_witness_receipt": federated_receipt,
         "seam_metadata_replay_receipt": seam_metadata_replay_receipt,
         "cross_shard_overlap_repair_receipt": cross_shard_overlap_repair_receipt,
-        "online_cross_shard_overlap_repair_receipt": bool(
-            halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
+        "online_cross_shard_overlap_repair_receipt": _literal_true(
+            halo_exchange.get("online_cross_shard_overlap_repair_receipt")
         ),
-        "per_cycle_cross_shard_halo_exchange_receipt": bool(
-            halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt", False)
+        "per_cycle_cross_shard_halo_exchange_receipt": _literal_true(
+            halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt")
         ),
-        "reducer_halo_exchange_replay_receipt": bool(halo_exchange.get("reducer_halo_exchange_replay_receipt", False)),
-        "global_observer_modular_time_export_receipt": bool(
-            observer_time_global.get("global_observer_modular_time_export_receipt", False)
+        "reducer_halo_exchange_replay_receipt": _literal_true(
+            halo_exchange.get("reducer_halo_exchange_replay_receipt")
         ),
-        "global_proto_particle_worldline_export_receipt": bool(
-            proto_particle_global.get("global_proto_particle_worldline_export_receipt", False)
+        "global_observer_modular_time_export_receipt": _literal_true(
+            observer_time_global.get("global_observer_modular_time_export_receipt")
         ),
-        "global_pn_resonance_receipt": bool(pn_global.get("global_pn_resonance_receipt", False)),
-        "all_shards_local_scale_compressed_pn_witness_receipt": bool(
-            pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt", False)
+        "global_proto_particle_worldline_export_receipt": _literal_true(
+            proto_particle_global.get("global_proto_particle_worldline_export_receipt")
         ),
-        "global_physical_cmb_input_contract_receipt": bool(
-            physical_cmb_global.get("physical_cmb_input_contract_receipt", False)
+        "global_pn_resonance_receipt": _literal_true(pn_global.get("global_pn_resonance_receipt")),
+        "all_shards_local_scale_compressed_pn_witness_receipt": _literal_true(
+            pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt")
         ),
-        "global_physical_cmb_output_comparison_receipt": bool(
-            physical_cmb_global.get("physical_cmb_output_comparison_receipt", False)
+        "global_physical_cmb_input_contract_receipt": _literal_true(
+            physical_cmb_global.get("physical_cmb_input_contract_receipt")
         ),
-        "global_physical_cmb_prediction_receipt": bool(
-            physical_cmb_global.get("physical_cmb_prediction_receipt", False)
+        "global_physical_cmb_output_comparison_receipt": _literal_true(
+            physical_cmb_global.get("physical_cmb_output_comparison_receipt")
+        ),
+        "global_physical_cmb_prediction_receipt": _literal_true(
+            physical_cmb_global.get("physical_cmb_prediction_receipt")
         ),
         "physical_cmb_global_reduction": physical_cmb_global,
-        "strict_single_global_neutral_bulk_receipt": bool(
-            neutral_global.get("strict_single_global_neutral_bulk_receipt", False)
+        "strict_single_global_neutral_bulk_receipt": _literal_true(
+            neutral_global.get("strict_single_global_neutral_bulk_receipt")
         ),
         "strict_single_global_bulk_blockers": neutral_global.get("blockers") or [],
         "global_halo_exchange_reduction": halo_exchange,
@@ -554,15 +562,17 @@ def _global_halo_exchange_reduction(
         expected
         and len(reports) == expected
         and all(
-            bool(report.get("PER_CYCLE_HALO_EXCHANGE_RECEIPT", False))
-            or bool(report.get("per_cycle_halo_exchange_receipt", False))
+            _literal_true(report.get("PER_CYCLE_HALO_EXCHANGE_RECEIPT"))
+            or _literal_true(report.get("per_cycle_halo_exchange_receipt"))
             for report in reports
         )
     )
     seam_links = list(seam_readout.get("links") or [])
     frame_rows = _global_halo_replay_frames(seam_links)
     replay_receipt = bool(seam_links and frame_rows)
-    seam_metadata_replay_receipt = bool(seam_readout.get("seam_metadata_replay_receipt", replay_receipt))
+    seam_metadata_replay_receipt = bool(
+        _literal_true(seam_readout.get("seam_metadata_replay_receipt")) or replay_receipt
+    )
     online_receipt_keys = (
         "SEAM_PACKET_RECIPROCITY_RECEIPT",
         "SEAM_VISIBLE_RESTRICTION_RECEIPT",
@@ -678,7 +688,7 @@ def _report_truthy(report: dict[str, Any], receipt_key: str) -> bool:
         receipt_key.replace("_RECEIPT", "_receipt"),
         receipt_key.replace("_RECEIPT", "_receipt").lower(),
     }
-    return any(bool(report.get(key, False)) for key in candidates)
+    return any(report.get(key) is True for key in candidates)
 
 
 def _global_neutral_bulk_reduction(
@@ -731,9 +741,10 @@ def _global_neutral_bulk_reduction(
             "strict_neutral_bulk": False,
             "blockers": [f"global_neutral_bulk_reduction_failed:{type(exc).__name__}:{exc}"],
         }
-    online_halo = bool(halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt", False))
+    online_halo = _literal_true(halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt"))
     neutral_ready = bool(
-        neutral_report.get("strict_neutral_bulk", False) or frontier.get("strict_neutral_bulk_ready", False)
+        _literal_true(neutral_report.get("strict_neutral_bulk"))
+        or _literal_true(frontier.get("strict_neutral_bulk_ready"))
     )
     strict_receipt = bool(neutral_ready and cross_shard_overlap_repair_receipt and online_halo)
     blockers = _unique_texts(
@@ -754,15 +765,17 @@ def _global_neutral_bulk_reduction(
         "combined_observer_views_path": str(combined_path) if observer_views else None,
         "cross_shard_overlap_repair_receipt": bool(cross_shard_overlap_repair_receipt),
         "online_cross_shard_overlap_repair_receipt": bool(cross_shard_overlap_repair_receipt),
-        "seam_metadata_replay_receipt": bool(halo_exchange.get("seam_metadata_replay_receipt", False)),
+        "seam_metadata_replay_receipt": _literal_true(
+            halo_exchange.get("seam_metadata_replay_receipt")
+        ),
         "per_cycle_cross_shard_halo_exchange_receipt": online_halo,
         "global_strict_neutral_bulk_ready": neutral_ready,
         "strict_single_global_neutral_bulk_receipt": strict_receipt,
         "strict_neutral_bulk_report_path": str(out_dir / "strict_neutral_bulk_report.json"),
         "strict_neutral_bulk_frontier_path": str(out_dir / "strict_neutral_bulk_frontier_report.json"),
         "frontier": {
-            "strict_neutral_bulk": bool(frontier.get("strict_neutral_bulk", False)),
-            "strict_neutral_bulk_ready": bool(frontier.get("strict_neutral_bulk_ready", False)),
+            "strict_neutral_bulk": _literal_true(frontier.get("strict_neutral_bulk")),
+            "strict_neutral_bulk_ready": _literal_true(frontier.get("strict_neutral_bulk_ready")),
             "gate_rows": frontier.get("gate_rows") or [],
         },
         "blockers": blockers,
@@ -798,7 +811,7 @@ def _global_observer_modular_time_export(
         for view in _globalized_observers(shard, payload, limit=2048):
             frames = view.get("timeFrames") if isinstance(view.get("timeFrames"), list) else []
             time_frame_counts.append(len(frames))
-            if bool(view.get("execution_clock_fields_separated_receipt", False)):
+            if _literal_true(view.get("execution_clock_fields_separated_receipt")):
                 clock_field_separation_count += 1
             semantic_history_digests.append(str(view.get("semantic_history_digest", "")))
             for frame in frames:
@@ -927,8 +940,8 @@ def _global_pn_resonance_reduction(
     receipt_row = receipt_summary.get("scale_compressed_pn_silence_to_observation_receipt") or {}
     local_pass_all = bool(completed and receipt_row.get("passed_count") == len(completed))
     report_receipts = [
-        bool(report.get("scale_compressed_pn_silence_to_observation_receipt", False))
-        or bool(report.get("PN_RESONANCE_RECEIPT", False))
+        _literal_true(report.get("scale_compressed_pn_silence_to_observation_receipt"))
+        or _literal_true(report.get("PN_RESONANCE_RECEIPT"))
         for report in silence_reports + pn_reports
     ]
     report_pass = bool(report_receipts and all(report_receipts))
@@ -1149,14 +1162,14 @@ def _global_carrier_contract(
     total_nodes = int(manifest.get("total_patch_capacity", 0) or 0)
     total_observers = int(manifest.get("total_observer_capacity", 0) or 0)
     graph_receipt = bool(
-        graph_info.get("load_receipt")
+        _literal_true(graph_info.get("load_receipt"))
         and graph_info.get("node_count") == total_nodes
         and graph_info.get("edge_count", 0) >= max(total_nodes - 1, 0)
     )
     if not graph_receipt:
         blockers.append("global_graph_shape_invalid")
     state_receipt = bool(
-        state_info.get("load_receipt")
+        _literal_true(state_info.get("load_receipt"))
         and state_info.get("node_count") == total_nodes
         and state_info.get("stable_identity_rule") == "blake2b_run_patch_base_seed_uint63"
     )
@@ -1185,18 +1198,20 @@ def _global_carrier_contract(
         and registry.get("stable_identity_rule") == "blake2b_run_observer_kind_global_index_base_seed_uint63"
         and registry.get("observer_kinds") == list(OBSERVER_KINDS)
         and registry.get("registered_identity_count") == total_observers * len(OBSERVER_KINDS)
-        and bool(registry.get("global_observer_registry_namespace_receipt", False))
+        and _literal_true(registry.get("global_observer_registry_namespace_receipt"))
     )
     if not observer_registry_receipt:
         blockers.append("global_observer_registry_invalid")
 
-    artifact_receipt = all(bool((artifact_status.get(key) or {}).get("hash_receipt")) for key in required)
+    artifact_receipt = all(
+        _literal_true((artifact_status.get(key) or {}).get("hash_receipt")) for key in required
+    )
     owner_receipt = bool(partition_receipt and graph_receipt and cut_receipt)
     event_certificate = carrier.get("event_certificate") if isinstance(carrier.get("event_certificate"), dict) else {}
     event_receipt = bool(
-        event_certificate.get("linearized_committed_event_log_receipt", False)
-        and event_certificate.get("monolithic_normal_form_certificate_receipt", False)
-        and event_certificate.get("final_readout_recomputed_receipt", False)
+        _literal_true(event_certificate.get("linearized_committed_event_log_receipt"))
+        and _literal_true(event_certificate.get("monolithic_normal_form_certificate_receipt"))
+        and _literal_true(event_certificate.get("final_readout_recomputed_receipt"))
     )
     if not event_receipt:
         blockers.extend(
@@ -1208,7 +1223,7 @@ def _global_carrier_contract(
         )
 
     contract_receipt = bool(
-        carrier.get("one_global_carrier_before_partition", False)
+        _literal_true(carrier.get("one_global_carrier_before_partition"))
         and artifact_receipt
         and graph_receipt
         and state_receipt
@@ -1225,7 +1240,7 @@ def _global_carrier_contract(
         "run_id": manifest.get("run_id"),
         "global_carrier_contract_receipt": contract_receipt,
         "one_global_carrier_before_partition_receipt": bool(
-            carrier.get("one_global_carrier_before_partition", False) and artifact_receipt
+            _literal_true(carrier.get("one_global_carrier_before_partition")) and artifact_receipt
         ),
         "manifest_declared_global_artifacts_receipt": artifact_receipt,
         "global_graph_receipt": graph_receipt,
@@ -1238,11 +1253,11 @@ def _global_carrier_contract(
         "code_hash_receipt": code_hash_receipt,
         "run_id_receipt": run_id_receipt,
         "distributed_realization_event_certificate_receipt": event_receipt,
-        "monolithic_normal_form_certificate_receipt": bool(
-            event_certificate.get("monolithic_normal_form_certificate_receipt", False)
+        "monolithic_normal_form_certificate_receipt": _literal_true(
+            event_certificate.get("monolithic_normal_form_certificate_receipt")
         ),
-        "final_readout_recomputed_receipt": bool(
-            event_certificate.get("final_readout_recomputed_receipt", False)
+        "final_readout_recomputed_receipt": _literal_true(
+            event_certificate.get("final_readout_recomputed_receipt")
         ),
         "artifact_status": artifact_status,
         "graph_info": graph_info,
@@ -1536,91 +1551,103 @@ def _distributed_run_pack_contract(
     gates = {
         "all_expected_shards_completed": bool(all_expected_completed),
         "federated_large_universe_witness_receipt": bool(federated_receipt),
-        "global_carrier_contract_receipt": bool(
-            global_carrier.get("global_carrier_contract_receipt", False)
+        "global_carrier_contract_receipt": _literal_true(
+            global_carrier.get("global_carrier_contract_receipt")
         ),
-        "one_global_carrier_before_partition_receipt": bool(
-            global_carrier.get("one_global_carrier_before_partition_receipt", False)
+        "one_global_carrier_before_partition_receipt": _literal_true(
+            global_carrier.get("one_global_carrier_before_partition_receipt")
         ),
-        "manifest_declared_global_artifacts_receipt": bool(
-            global_carrier.get("manifest_declared_global_artifacts_receipt", False)
+        "manifest_declared_global_artifacts_receipt": _literal_true(
+            global_carrier.get("manifest_declared_global_artifacts_receipt")
         ),
-        "partition_map_receipt": bool(global_carrier.get("partition_map_receipt", False)),
-        "cut_interface_receipt": bool(global_carrier.get("cut_interface_receipt", False)),
-        "stable_global_identity_initial_state_receipt": bool(
-            global_carrier.get("stable_global_identity_initial_state_receipt", False)
+        "partition_map_receipt": _literal_true(global_carrier.get("partition_map_receipt")),
+        "cut_interface_receipt": _literal_true(global_carrier.get("cut_interface_receipt")),
+        "stable_global_identity_initial_state_receipt": _literal_true(
+            global_carrier.get("stable_global_identity_initial_state_receipt")
         ),
-        "global_observer_registry_receipt": bool(
-            global_carrier.get("global_observer_registry_receipt", False)
+        "global_observer_registry_receipt": _literal_true(
+            global_carrier.get("global_observer_registry_receipt")
         ),
-        "authoritative_owner_projection_receipt": bool(
-            global_carrier.get("authoritative_owner_projection_receipt", False)
+        "authoritative_owner_projection_receipt": _literal_true(
+            global_carrier.get("authoritative_owner_projection_receipt")
         ),
-        "distributed_realization_event_certificate_receipt": bool(
-            global_carrier.get("distributed_realization_event_certificate_receipt", False)
+        "distributed_realization_event_certificate_receipt": _literal_true(
+            global_carrier.get("distributed_realization_event_certificate_receipt")
         ),
         "seam_metadata_replay_receipt": bool(seam_metadata_replay_receipt),
-        "online_cross_shard_overlap_repair_receipt": bool(
-            halo_exchange.get("online_cross_shard_overlap_repair_receipt", False)
+        "online_cross_shard_overlap_repair_receipt": _literal_true(
+            halo_exchange.get("online_cross_shard_overlap_repair_receipt")
         ),
-        "per_cycle_cross_shard_halo_exchange_receipt": bool(
-            halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt", False)
+        "per_cycle_cross_shard_halo_exchange_receipt": _literal_true(
+            halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt")
         ),
-        "distributed_local_diamond_receipt": bool(online_receipts.get("DISTRIBUTED_LOCAL_DIAMOND_RECEIPT", False)),
-        "distributed_repair_completeness_receipt": bool(
-            online_receipts.get("DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT", False)
+        "distributed_local_diamond_receipt": _literal_true(
+            online_receipts.get("DISTRIBUTED_LOCAL_DIAMOND_RECEIPT")
         ),
-        "cycle_holonomy_zero_or_classified_receipt": bool(
-            online_receipts.get("CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT", False)
+        "distributed_repair_completeness_receipt": _literal_true(
+            online_receipts.get("DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT")
         ),
-        "selected_fiber_nontrivial_elimination_receipt": bool(
-            online_receipts.get("SELECTED_FIBER_NONTRIVIAL_ELIMINATION_RECEIPT", False)
+        "cycle_holonomy_zero_or_classified_receipt": _literal_true(
+            online_receipts.get("CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT")
         ),
-        "same_boundary_multistart_confluence_receipt": bool(
-            online_receipts.get("SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT", False)
+        "selected_fiber_nontrivial_elimination_receipt": _literal_true(
+            online_receipts.get("SELECTED_FIBER_NONTRIVIAL_ELIMINATION_RECEIPT")
         ),
-        "quotient_normal_form_canonical_hash_receipt": bool(
-            online_receipts.get("QUOTIENT_NORMAL_FORM_CANONICAL_HASH_RECEIPT", False)
+        "same_boundary_multistart_confluence_receipt": _literal_true(
+            online_receipts.get("SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT")
         ),
-        "fair_block_contraction_receipt": bool(online_receipts.get("FAIR_BLOCK_CONTRACTION_RECEIPT", False)),
-        "schedule_independent_normal_form_receipt": bool(
-            online_receipts.get("SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT", False)
+        "quotient_normal_form_canonical_hash_receipt": _literal_true(
+            online_receipts.get("QUOTIENT_NORMAL_FORM_CANONICAL_HASH_RECEIPT")
         ),
-        "partition_naturality_receipt": bool(online_receipts.get("PARTITION_NATURALITY_RECEIPT", False)),
-        "global_observer_modular_time_export_receipt": bool(
-            observer_time_global.get("global_observer_modular_time_export_receipt", False)
+        "fair_block_contraction_receipt": _literal_true(
+            online_receipts.get("FAIR_BLOCK_CONTRACTION_RECEIPT")
         ),
-        "large_visualization_observer_contract_receipt": bool(
-            observer_time_global.get("large_visualization_observer_contract_receipt", False)
+        "schedule_independent_normal_form_receipt": _literal_true(
+            online_receipts.get("SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT")
         ),
-        "global_proto_particle_worldline_export_receipt": bool(
-            proto_particle_global.get("global_proto_particle_worldline_export_receipt", False)
+        "partition_naturality_receipt": _literal_true(
+            online_receipts.get("PARTITION_NATURALITY_RECEIPT")
         ),
-        "moving_proto_particle_candidate_receipt": bool(
-            proto_particle_global.get("moving_proto_particle_candidate_receipt", False)
+        "global_observer_modular_time_export_receipt": _literal_true(
+            observer_time_global.get("global_observer_modular_time_export_receipt")
         ),
-        "cross_shard_worldline_stitching_receipt": bool(
-            proto_particle_global.get("cross_shard_worldline_stitching_receipt", False)
+        "large_visualization_observer_contract_receipt": _literal_true(
+            observer_time_global.get("large_visualization_observer_contract_receipt")
         ),
-        "all_shards_local_scale_compressed_pn_witness_receipt": bool(
-            pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt", False)
+        "global_proto_particle_worldline_export_receipt": _literal_true(
+            proto_particle_global.get("global_proto_particle_worldline_export_receipt")
         ),
-        "global_capacity_readback_map_receipt": bool(pn_global.get("global_capacity_readback_map_receipt", False)),
-        "finite_capacity_fixed_point_receipt": bool(pn_global.get("finite_capacity_fixed_point_receipt", False)),
-        "global_pn_resonance_receipt": bool(pn_global.get("global_pn_resonance_receipt", False)),
-        "strict_single_global_neutral_bulk_receipt": bool(
-            neutral_global.get("strict_single_global_neutral_bulk_receipt", False)
+        "moving_proto_particle_candidate_receipt": _literal_true(
+            proto_particle_global.get("moving_proto_particle_candidate_receipt")
         ),
-        "physical_cmb_input_contract_receipt": bool(
-            physical_cmb_global.get("physical_cmb_input_contract_receipt", False)
+        "cross_shard_worldline_stitching_receipt": _literal_true(
+            proto_particle_global.get("cross_shard_worldline_stitching_receipt")
         ),
-        "physical_cmb_prediction_receipt": bool(physical_cmb_global.get("physical_cmb_prediction_receipt", False)),
+        "all_shards_local_scale_compressed_pn_witness_receipt": _literal_true(
+            pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt")
+        ),
+        "global_capacity_readback_map_receipt": _literal_true(
+            pn_global.get("global_capacity_readback_map_receipt")
+        ),
+        "finite_capacity_fixed_point_receipt": _literal_true(
+            pn_global.get("finite_capacity_fixed_point_receipt")
+        ),
+        "global_pn_resonance_receipt": _literal_true(pn_global.get("global_pn_resonance_receipt")),
+        "strict_single_global_neutral_bulk_receipt": _literal_true(
+            neutral_global.get("strict_single_global_neutral_bulk_receipt")
+        ),
+        "physical_cmb_input_contract_receipt": _literal_true(
+            physical_cmb_global.get("physical_cmb_input_contract_receipt")
+        ),
+        "physical_cmb_prediction_receipt": _literal_true(
+            physical_cmb_global.get("physical_cmb_prediction_receipt")
+        ),
     }
     artifact_smoke = bool(
         gates["all_expected_shards_completed"]
         and gates["global_carrier_contract_receipt"]
         and gates["seam_metadata_replay_receipt"]
-        and bool(halo_exchange.get("reducer_halo_exchange_replay_receipt", False))
+        and _literal_true(halo_exchange.get("reducer_halo_exchange_replay_receipt"))
     )
     distributed_kernel_scaling_ready = bool(
         gates["all_expected_shards_completed"]
@@ -1824,35 +1851,41 @@ def _global_physical_cmb_reduction(
             "completed_shard_count": len(shard_roots),
             "expected_shard_count": int(manifest.get("shard_count", 0)),
             "source_run_dirs": [str(path) for path in shard_roots],
-            "finite_source_global_reduction_receipt": bool(
-                finite_reduction.get("FINITE_CMB_GLOBAL_REDUCTION_RECEIPT", False)
+            "finite_source_global_reduction_receipt": _literal_true(
+                finite_reduction.get("FINITE_CMB_GLOBAL_REDUCTION_RECEIPT")
             ),
-            "no_data_use_receipt": bool(no_data.get("NO_DATA_USE_RECEIPT", False)),
-            "physical_cmb_input_contract_receipt": bool(
-                input_report.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+            "no_data_use_receipt": _literal_true(no_data.get("NO_DATA_USE_RECEIPT")),
+            "physical_cmb_input_contract_receipt": _literal_true(
+                input_report.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT")
             ),
-            "physical_cmb_prediction_eligible": bool(input_report.get("physical_cmb_prediction_eligible", False)),
-            "physical_cmb_promotion_ready": bool(promotion.get("physical_cmb_promotion_ready", False)),
+            "physical_cmb_prediction_eligible": _literal_true(
+                input_report.get("physical_cmb_prediction_eligible")
+            ),
+            "physical_cmb_promotion_ready": _literal_true(
+                promotion.get("physical_cmb_promotion_ready")
+            ),
             "physical_cmb_source_readiness_written": True,
-            "finite_covariant_parent_receipt": bool(
-                (cmb_sources.get("finite_covariant_parent") or {}).get("parent_receipt", False)
+            "finite_covariant_parent_receipt": _literal_true(
+                (cmb_sources.get("finite_covariant_parent") or {}).get("parent_receipt")
             ),
-            "finite_collar_boltzmann_bundle_receipt": bool(
-                (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("source_bundle_receipt", False)
+            "finite_collar_boltzmann_bundle_receipt": _literal_true(
+                (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("source_bundle_receipt")
             ),
-            "finite_collar_boltzmann_physical_certificate": bool(
-                (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("physical_certificate", False)
+            "finite_collar_boltzmann_physical_certificate": _literal_true(
+                (cmb_sources.get("finite_collar_boltzmann_bundle") or {}).get("physical_certificate")
             ),
-            "physical_cmb_output_comparison_receipt": bool(
-                output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
+            "physical_cmb_output_comparison_receipt": _literal_true(
+                output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT")
             ),
-            "usable_physical_cmb_data_receipt": bool(output.get("USABLE_PHYSICAL_CMB_DATA_RECEIPT", False)),
+            "usable_physical_cmb_data_receipt": _literal_true(
+                output.get("USABLE_PHYSICAL_CMB_DATA_RECEIPT")
+            ),
             "physical_cmb_prediction_receipt": bool(
-                output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
-                and frontier.get("physical_cmb_prediction_receipt", False)
+                _literal_true(output.get("PHYSICAL_CMB_PREDICTION_RECEIPT"))
+                and _literal_true(frontier.get("physical_cmb_prediction_receipt"))
             ),
-            "official_likelihood_ready": bool(frontier.get("official_likelihood_ready", False)),
-            "cdm_limit_regression_passed": bool(frontier.get("cdm_limit_regression_passed", False)),
+            "official_likelihood_ready": _literal_true(frontier.get("official_likelihood_ready")),
+            "cdm_limit_regression_passed": _literal_true(frontier.get("cdm_limit_regression_passed")),
             "measurement_comparable_model_count": int(output.get("measurement_comparable_model_count") or 0),
             "oph_diagnostic_model_count": int(output.get("oph_diagnostic_model_count") or 0),
             "best_oph_diagnostic_model": output.get("best_oph_diagnostic_model") or {},
@@ -2833,17 +2866,17 @@ def _distributed_visualization_payload(
         "totalAvailableObserverCapacity": manifest.get("total_observer_capacity"),
         "receipts": {
             "observer_modular_time_receipt": bool(
-                observer_time_global.get("global_observer_modular_time_export_receipt", False)
-                and observer_time_global.get("observer_clock_naturality_receipt", False)
+                _literal_true(observer_time_global.get("global_observer_modular_time_export_receipt"))
+                and _literal_true(observer_time_global.get("observer_clock_naturality_receipt"))
             ),
-            "global_observer_modular_time_export_receipt": bool(
-                observer_time_global.get("global_observer_modular_time_export_receipt", False)
+            "global_observer_modular_time_export_receipt": _literal_true(
+                observer_time_global.get("global_observer_modular_time_export_receipt")
             ),
-            "execution_clock_fields_separated_receipt": bool(
-                observer_time_global.get("execution_clock_fields_separated_receipt", False)
+            "execution_clock_fields_separated_receipt": _literal_true(
+                observer_time_global.get("execution_clock_fields_separated_receipt")
             ),
-            "observer_clock_naturality_receipt": bool(
-                observer_time_global.get("observer_clock_naturality_receipt", False)
+            "observer_clock_naturality_receipt": _literal_true(
+                observer_time_global.get("observer_clock_naturality_receipt")
             ),
             "observer_facing_3p1d_h3_experience_receipt": False,
             "observer_facing_populated_h3_experience_receipt": False,
@@ -2952,10 +2985,12 @@ def _distributed_visualization_payload(
             },
             "receipts": {
                 "bulk_worldline_precursor_receipt": bool(
-                    proto_particle_global.get("global_proto_particle_worldline_export_receipt", False)
-                    or proto_particle_global.get("bulk_worldline_precursor_receipt", False)
+                    _literal_true(proto_particle_global.get("global_proto_particle_worldline_export_receipt"))
+                    or _literal_true(proto_particle_global.get("bulk_worldline_precursor_receipt"))
                 ),
-                "particle_matter_receipt": bool(proto_particle_global.get("particle_matter_receipt", False)),
+                "particle_matter_receipt": _literal_true(
+                    proto_particle_global.get("particle_matter_receipt")
+                ),
                 "diagnostic_edge_worldline_count": len(worldlines),
             },
             "claimBoundary": (
@@ -3314,18 +3349,20 @@ def _distributed_cmb_comparison_payload(
     receipts = dict(payload.get("receipts") or {})
     receipts.update(
         {
-            "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT": bool(
-                physical_cmb_global.get("physical_cmb_output_comparison_receipt", False)
+            "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT": _literal_true(
+                physical_cmb_global.get("physical_cmb_output_comparison_receipt")
             ),
-            "PHYSICAL_CMB_PREDICTION_RECEIPT": bool(
-                physical_cmb_global.get("physical_cmb_prediction_receipt", False)
+            "PHYSICAL_CMB_PREDICTION_RECEIPT": _literal_true(
+                physical_cmb_global.get("physical_cmb_prediction_receipt")
             ),
-            "physical_cmb_prediction": bool(physical_cmb_global.get("physical_cmb_prediction_receipt", False)),
-            "finite_source_global_reduction_receipt": bool(
-                physical_cmb_global.get("finite_source_global_reduction_receipt", False)
+            "physical_cmb_prediction": _literal_true(
+                physical_cmb_global.get("physical_cmb_prediction_receipt")
             ),
-            "physical_cmb_input_contract_receipt": bool(
-                physical_cmb_global.get("physical_cmb_input_contract_receipt", False)
+            "finite_source_global_reduction_receipt": _literal_true(
+                physical_cmb_global.get("finite_source_global_reduction_receipt")
+            ),
+            "physical_cmb_input_contract_receipt": _literal_true(
+                physical_cmb_global.get("physical_cmb_input_contract_receipt")
             ),
         }
     )
@@ -3349,13 +3386,15 @@ def _distributed_pn_payload(pn_global: dict[str, Any]) -> dict[str, Any]:
         "observationEmergence": {},
         "detuningControls": {},
         "receipts": {
-            "scale_compressed_pn_silence_to_observation_receipt": bool(
-                pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt", False)
+            "scale_compressed_pn_silence_to_observation_receipt": _literal_true(
+                pn_global.get("all_shards_local_scale_compressed_pn_witness_receipt")
             ),
-            "literal_global_N_capacity_simulated_receipt": bool(
-                pn_global.get("finite_capacity_fixed_point_receipt", False)
+            "literal_global_N_capacity_simulated_receipt": _literal_true(
+                pn_global.get("finite_capacity_fixed_point_receipt")
             ),
-            "global_pn_resonance_receipt": bool(pn_global.get("global_pn_resonance_receipt", False)),
+            "global_pn_resonance_receipt": _literal_true(
+                pn_global.get("global_pn_resonance_receipt")
+            ),
         },
         "blockers": list(pn_global.get("blockers") or []),
         "claimBoundary": pn_global.get(
@@ -3379,7 +3418,7 @@ def _distributed_bulk_receipts(
     def all_receipt(key: str) -> bool:
         return bool(source_receipts) and all(row.get(key) is True for row in source_receipts)
 
-    strict = bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False))
+    strict = neutral_global.get("strict_single_global_neutral_bulk_receipt") is True
     return {
         "observer_like_self_reading_system_receipt": all_receipt(
             "observer_like_self_reading_system_receipt"
@@ -3429,9 +3468,11 @@ def _distributed_small_universe_payload(manifest: dict[str, Any], seam_readout: 
         "cycles": {"exactConsensus": [], "frustratedControl": []},
         "receipts": {
             "FINITE_CONSENSUS_THEOREM_RECEIPT": False,
-            "seam_metadata_replay_receipt": bool(seam_readout.get("seam_metadata_replay_receipt", False)),
-            "cross_shard_overlap_repair_receipt": bool(
-                seam_readout.get("cross_shard_overlap_repair_receipt", False)
+            "seam_metadata_replay_receipt": _literal_true(
+                seam_readout.get("seam_metadata_replay_receipt")
+            ),
+            "cross_shard_overlap_repair_receipt": _literal_true(
+                seam_readout.get("cross_shard_overlap_repair_receipt")
             ),
         },
         "claimBoundary": (
@@ -3504,9 +3545,15 @@ def _distributed_comparable_observations_payload(
         ],
         "datasets": datasets,
         "receipts": {
-            "physical_cmb_prediction": bool(physical_cmb_global.get("physical_cmb_prediction_receipt", False)),
-            "bulk_3d_established_any": bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False)),
-            "strict_neutral_3d_bulk_any": bool(neutral_global.get("strict_single_global_neutral_bulk_receipt", False)),
+            "physical_cmb_prediction": _literal_true(
+                physical_cmb_global.get("physical_cmb_prediction_receipt")
+            ),
+            "bulk_3d_established_any": _literal_true(
+                neutral_global.get("strict_single_global_neutral_bulk_receipt")
+            ),
+            "strict_neutral_3d_bulk_any": _literal_true(
+                neutral_global.get("strict_single_global_neutral_bulk_receipt")
+            ),
         },
         "claimBoundary": (
             "Distributed comparable diagnostics only; prediction and strict-neutral receipts remain "

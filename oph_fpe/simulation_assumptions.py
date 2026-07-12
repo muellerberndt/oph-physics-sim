@@ -167,7 +167,7 @@ def revalidate_simulation_assumption_manifest(value: Mapping[str, Any] | None) -
             raw = {}
             row_structure_valid = False
         assumed = raw.get("assumed") is True
-        if raw.get("assumed") not in (True, False):
+        if type(raw.get("assumed")) is not bool:
             row_structure_valid = False
         if raw.get("proof_receipt", False) is not False:
             row_structure_valid = False
@@ -197,6 +197,8 @@ def revalidate_simulation_assumption_manifest(value: Mapping[str, Any] | None) -
         and manifest.get("enabled") is True
         and scope_valid
         and manifest.get("computed_theorem_receipts_unchanged") is True
+        and manifest.get("proof_receipt") is False
+        and manifest.get("physical_measurement_receipt") is False
         and row_structure_valid
         and ds4_valid
         and camera_valid
@@ -364,6 +366,8 @@ def _serialized_ds4_parameters_valid(value: Any) -> bool:
     hubble = _optional_positive_float(value.get("hubble_parameter"))
     tau_min = _optional_positive_float(value.get("proper_time_min_over_h"))
     tau_max = _optional_positive_float(value.get("proper_time_max_over_h"))
+    time_sample_count = value.get("time_sample_count")
+    units = value.get("units")
     return bool(
         value.get("parameter_inputs_valid") is True
         and value.get("de_sitter_radius_relation_valid") is True
@@ -376,6 +380,10 @@ def _serialized_ds4_parameters_valid(value: Any) -> bool:
         and tau_min is not None
         and tau_max is not None
         and tau_max > tau_min
+        and type(time_sample_count) is int
+        and 2 <= time_sample_count <= 4096
+        and isinstance(units, str)
+        and bool(units.strip())
     )
 
 
@@ -401,11 +409,11 @@ def _serialized_cmb_parameters_valid(value: Any) -> bool:
     return bool(
         value.get("parameter_inputs_valid") is True
         and isinstance(value.get("reference_label"), str)
-        and bool(value.get("reference_label"))
+        and bool(str(value.get("reference_label")).strip())
         and isinstance(value.get("reference_path"), str)
-        and bool(value.get("reference_path"))
+        and bool(str(value.get("reference_path")).strip())
         and isinstance(value.get("reference_source_url"), str)
-        and bool(value.get("reference_source_url"))
+        and bool(str(value.get("reference_source_url")).strip())
         and _SHA256_RE.fullmatch(str(value.get("reference_sha256") or "").lower())
         and value.get("transfer_model") == "pinned_tt_reference_best_fit_visualization"
         and type(value.get("sky_realization_seed")) is int
@@ -426,10 +434,9 @@ def _optional_int(value: Any) -> int | None:
 def _finite_vec3(value: Any) -> list[float] | None:
     if not isinstance(value, (list, tuple)) or len(value) != 3:
         return None
-    try:
-        parsed = [float(item) for item in value]
-    except (TypeError, ValueError):
+    if any(type(item) not in (int, float) for item in value):
         return None
+    parsed = [float(item) for item in value]
     return parsed if all(math.isfinite(item) for item in parsed) else None
 
 

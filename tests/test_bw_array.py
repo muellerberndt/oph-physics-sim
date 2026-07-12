@@ -90,6 +90,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "cl_comparison_report.json").exists()
     assert (run_path / "harmonic_time_trace.npz").exists()
     assert (run_path / "harmonic_time_trace_report.json").exists()
+    assert (run_path / "screen_evolution_frames.npz").exists()
 
     bw_report = json.loads((run_path / "bw_report.json").read_text(encoding="utf-8"))
     cap_report = json.loads((run_path / "cap_geometry_report.json").read_text(encoding="utf-8"))
@@ -171,6 +172,11 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert harmonic_trace["ell"].shape[0] == 5
     assert harmonic_trace["record_signature"].shape == (3, 5)
     assert harmonic_trace["stable_count"].shape == (3, 5)
+    evolution_frames = np.load(run_path / "screen_evolution_frames.npz")
+    assert evolution_frames["cycles"].shape[0] == 3
+    assert evolution_frames["field__record_signature"].shape == (3, 512)
+    assert evolution_frames["field__stable_count"].shape == (3, 512)
+    assert np.isfinite(evolution_frames["field__record_signature"]).all()
     assert manifest["screen_units"]["mode"] == "numerical_regulator"
     assert bw_report["support_visible_regularization"]["steps"] == 4
     assert ports_report["port_names"][0] == "P0"

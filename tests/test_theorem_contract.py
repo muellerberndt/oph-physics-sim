@@ -40,6 +40,117 @@ def _write_computed_bridge_reports(run: Path, *, include_localization: bool = Tr
         )
 
 
+def _write_computed_consensus_replay(run: Path) -> None:
+    source_hash = "sha256:" + "1" * 64
+    terminal_hash = "sha256:" + "2" * 64
+    evidence = {
+        "evidence_kind": "computed_array_port_pair_replay_v1",
+        "theorem_phase_event_count": 4,
+        "accepted_theorem_move_count": 4,
+        "strict_descent_violation_count": 0,
+        "accepted_phi_increase_violation_count": 0,
+        "disjoint_commutation_violation_count": 0,
+        "local_diamond_violation_count": 0,
+        "repair_completeness_violation_count": 0,
+        "unique_terminal_quotient_hash_count": 1,
+        "schedule_replay_count": 4,
+        "requested_schedule_replays": 4,
+    }
+    replay = {
+        "mode": "array_port_pair_strict_consensus_replay",
+        "enabled": True,
+        "receipt": True,
+        "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
+        "finite_consensus_theorem_receipt": True,
+        "computed_from_port_pair_arrays": True,
+        "source_state_sha256": source_hash,
+        "terminal_hash": terminal_hash,
+        "initial_phi": 4,
+        "evidence": evidence,
+        "sample_events": [
+            {
+                "accepted": True,
+                "delta_touched_phi": -1,
+                "delta_global_phi": -1,
+            }
+        ],
+    }
+    certificate = {
+        "mode": "finite_consensus_theorem_certificate_v2_computed_array_replay",
+        "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
+        "finite_consensus_theorem_receipt": True,
+        "receipt": True,
+        "computed_replay_artifact_present": True,
+        "computed_from_port_pair_arrays": True,
+        "source_state_sha256": source_hash,
+        **{key: value for key, value in evidence.items() if key != "evidence_kind"},
+        "invalid_evidence": [],
+        "sample_event_count": 1,
+    }
+    _write_json(run / "finite_consensus_replay_report.json", replay)
+    _write_json(
+        run / "theorem_core_receipts.json",
+        {
+            "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
+            "finite_consensus_theorem_receipt": True,
+            "finite_consensus_theorem": certificate,
+            "finite_consensus_replay": replay,
+        },
+    )
+
+
+def _write_valid_endogenous_clock(run: Path) -> None:
+    _write_json(
+        run / "bw_state_derived_report.json",
+        {
+            "mode": "state_derived_modular_probe",
+            "state_mode": "cooccurrence_kernel",
+            "row_count": 4,
+            "median": 0.01,
+            "endogenous_modular_generator": True,
+            "endogenous_generator_non_degenerate": True,
+            "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": True,
+            "endogenous_modular_generator_receipt": True,
+            "direct_transition_automorphism": False,
+            "declared_cap_flow_generator": False,
+            "declared_transition_response_density": False,
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+            "kms_geometric_clock_fit_receipt": True,
+            "inferred_modular_clock_fit": {
+                "mode": "inferred_modular_clock_fit",
+                "enabled": True,
+                "receipt": True,
+                "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
+                "clock_fit_selection_policy": (
+                    "predeclared_informative_nonstatic_carriers_else_nonstatic_carriers_no_pass_shopping"
+                ),
+                "valid_row_count": 4,
+                "distinct_time_count": 3,
+                "kappa_hat": 6.283185307179586,
+                "kappa_95ci": [6.1, 6.4],
+                "nearest_known_scale": "2pi",
+                "response_degenerate": False,
+                "blockers": [],
+            },
+        },
+    )
+
+
+def _write_valid_refinement_naturality(run: Path) -> None:
+    _write_json(
+        run / "strict_neutral_bulk_frontier_report.json",
+        {
+            "strict_neutral_bulk": False,
+            "strict_neutral_bulk_refinement_receipt": True,
+            "multi_scale": True,
+            "candidate_dimension_stable": True,
+            "run_count": 4,
+            "sizes": [{"patch_count": 65_536}, {"patch_count": 262_144}],
+            "proof_blockers": [],
+        },
+    )
+
+
 def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contract(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
@@ -94,7 +205,7 @@ def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contrac
     assert report["observer_like_self_reading_system_receipt"] is True
     assert report["stages"]["L1_observer_record_algebra"]["passed"] is True
     assert report["stages"]["L3_kms_modular_clock_fit"]["passed"] is False
-    assert report["stages"]["L6_lorentz_algebra_closure"]["passed"] is True
+    assert report["stages"]["L6_lorentz_algebra_closure"]["passed"] is False
     assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
     assert report["stages"]["L2_endogenous_modular_generator"]["passed"] is False
     assert report["stages"]["L4_support_visible_bw_covariance"]["passed"] is False
@@ -108,7 +219,8 @@ def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_
     run = tmp_path / "run"
     run.mkdir()
     _write_computed_bridge_reports(run)
-    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_computed_consensus_replay(run)
+    _write_valid_refinement_naturality(run)
     _write_json(
         run / "emergence_status_report.json",
         {
@@ -226,7 +338,9 @@ def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp
     run = tmp_path / "run"
     run.mkdir()
     _write_computed_bridge_reports(run)
-    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_computed_consensus_replay(run)
+    _write_valid_endogenous_clock(run)
+    _write_valid_refinement_naturality(run)
     _write_json(
         run / "emergence_status_report.json",
         {
@@ -236,18 +350,6 @@ def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp
             "ordered_cut_pair_rigidity_receipt": True,
             "refinement_naturality_receipt": True,
             "strict_blind_observer_bulk_receipt": True,
-        },
-    )
-    _write_json(
-        run / "bw_state_derived_report.json",
-        {
-            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
-            "inferred_modular_clock_fit": {
-                "kappa_hat": 6.283185307179586,
-                "kappa_95ci": [6.1, 6.4],
-                "nearest_known_scale": "2pi",
-                "blockers": [],
-            },
         },
     )
     _write_json(run / "conformal_h3_spatial_chart_report.json", {"lorentz_algebra_receipt": True})
@@ -348,7 +450,9 @@ def test_finite_theorem_contract_splits_observer_h3_from_populated_and_neutral(t
     run = tmp_path / "run"
     run.mkdir()
     _write_computed_bridge_reports(run, include_localization=False)
-    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_computed_consensus_replay(run)
+    _write_valid_endogenous_clock(run)
+    _write_valid_refinement_naturality(run)
     _write_json(
         run / "emergence_status_report.json",
         {
@@ -356,13 +460,6 @@ def test_finite_theorem_contract_splits_observer_h3_from_populated_and_neutral(t
             "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
             "ordered_cut_pair_rigidity_receipt": True,
             "refinement_naturality_receipt": True,
-        },
-    )
-    _write_json(
-        run / "bw_state_derived_report.json",
-        {
-            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
-            "inferred_modular_clock_fit": {"kappa_hat": 6.283185307179586, "blockers": []},
         },
     )
     _write_json(run / "conformal_h3_spatial_chart_report.json", {"lorentz_algebra_receipt": True})
@@ -417,7 +514,9 @@ def test_observer_facing_consensus_bulk_does_not_require_chart_blind_neutral(tmp
     run = tmp_path / "run"
     run.mkdir()
     _write_computed_bridge_reports(run)
-    _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": True})
+    _write_computed_consensus_replay(run)
+    _write_valid_endogenous_clock(run)
+    _write_valid_refinement_naturality(run)
     _write_json(
         run / "emergence_status_report.json",
         {
@@ -425,13 +524,6 @@ def test_observer_facing_consensus_bulk_does_not_require_chart_blind_neutral(tmp
             "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
             "ordered_cut_pair_rigidity_receipt": True,
             "refinement_naturality_receipt": True,
-        },
-    )
-    _write_json(
-        run / "bw_state_derived_report.json",
-        {
-            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": True,
-            "inferred_modular_clock_fit": {"kappa_hat": 6.283185307179586, "blockers": []},
         },
     )
     _write_json(run / "conformal_h3_spatial_chart_report.json", {"lorentz_algebra_receipt": True})
@@ -452,7 +544,6 @@ def test_observer_facing_consensus_bulk_does_not_require_chart_blind_neutral(tmp
         run / "observer_modular_experience_report.json",
         {"OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True},
     )
-    _write_json(run / "strict_neutral_bulk_frontier_report.json", {"strict_neutral_bulk": False})
     (run / "observer_views.jsonl").write_text(
         json.dumps(
             {
@@ -480,7 +571,7 @@ def test_observer_facing_consensus_bulk_does_not_require_chart_blind_neutral(tmp
     assert report["strict_neutral_blockers"] == ["B4_strict_neutral_bulk_audit"]
 
 
-def test_finite_theorem_contract_accepts_chart_verifier_as_cut_pair_rigidity(tmp_path: Path) -> None:
+def test_finite_theorem_contract_does_not_accept_chart_boolean_as_cut_pair_rigidity(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
     _write_json(run / "theorem_core_receipts.json", {"FINITE_CONSENSUS_THEOREM_RECEIPT": False})
@@ -495,7 +586,7 @@ def test_finite_theorem_contract_accepts_chart_verifier_as_cut_pair_rigidity(tmp
 
     report = finite_oph_theorem_contract_report(run)
 
-    assert report["stages"]["L5_ordered_cut_pair_rigidity"]["passed"] is True
+    assert report["stages"]["L5_ordered_cut_pair_rigidity"]["passed"] is False
     assert report["stages"]["L5_ordered_cut_pair_rigidity"]["details"][
         "paper_chart_receipt_inferred_from_cap_lorentz_verifier"
     ] is True
@@ -567,7 +658,9 @@ simulation_assumptions:
     proper_time_min_over_h: 0.05
     proper_time_max_over_h: 3.0
     time_sample_count: 64
+    units: simulation_units
   observer_camera:
+    coordinate_system: h3_hyperboloid_spatial_components_v1
     h3_radial_coordinate: 1.18
     look_at: [0.0, 0.0, 0.0]
     orientation: inward_radial
@@ -588,7 +681,14 @@ simulation_assumptions:
     assert report["SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"] is True
     assert report["SIMULATION_ASSUMED_LORENTZ_H3_BRIDGE_RECEIPT"] is True
     assert report["SIMULATION_ASSUMED_TOPOLOGICAL_MATTER_VISUALIZATION_RECEIPT"] is True
+    assert report["SIMULATION_ASSUMED_CMB_VISUALIZATION_RECEIPT"] is True
     assert report["simulation_assumption_tier"]["source"].endswith("config.yml")
+    assert report["simulation_assumption_tier"]["observer_camera_visualization_parameters"][
+        "orientation"
+    ] == "inward_radial"
+    assert report["simulation_assumption_tier"]["cmb_visualization_parameters"][
+        "reference_label"
+    ] == "pinned-test-reference"
     assert report["simulation_assumption_tier"]["computed_theorem_receipts_unchanged"] is True
     assert report["finite_lorentz_theorem_contract_receipt"] is False
     assert report["simulation_matches_full_oph_spacetime_bulk_prediction_receipt"] is False
@@ -650,12 +750,23 @@ def test_theorem_contract_ignores_forged_precomputed_bridge_reports(tmp_path: Pa
         run / "modular_response_h3_localization_report.json",
         {MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: True},
     )
+    _write_json(
+        run / "theorem_core_receipts.json",
+        {
+            "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
+            "finite_consensus_theorem_receipt": True,
+        },
+    )
 
     report = finite_oph_theorem_contract_report(run)
 
     assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
     assert report[CAP_NORMAL_H3_CHART_RECEIPT] is False
     assert report[MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT] is False
+    assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
+    assert "computed_v2_consensus_certificate_missing" in report["stages"][
+        "C0_finite_consensus_theorem"
+    ]["missing_or_blocking_evidence"]
     assert report["issue_308_bw_certificate"]["report_written"] is True
     assert "requires_primitive_fields" in report["issue_309_cap_normal_h3_chart"]["primary_blockers"][0]
 

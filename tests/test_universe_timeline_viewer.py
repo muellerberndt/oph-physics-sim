@@ -14,7 +14,7 @@ from oph_fpe.viz.universe_timeline_viewer import (
 )
 
 
-def test_small_universe_payload_uses_theorem_core_receipt_fallback(tmp_path: Path):
+def test_small_universe_payload_rejects_stale_unvalidated_receipt_fallback(tmp_path: Path):
     (tmp_path / "theorem_core_receipts.json").write_text(
         json.dumps(
             {
@@ -33,12 +33,13 @@ def test_small_universe_payload_uses_theorem_core_receipt_fallback(tmp_path: Pat
 
     payload = _small_universe_payload(tmp_path)
 
-    assert payload["receipts"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
-    assert payload["receipts"]["bundle_receipt"] is True
+    assert payload["receipts"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert payload["receipts"]["bundle_receipt"] is False
     assert payload["contentAvailable"] is False
     assert payload["dataMode"] == "theorem_receipt_summary_only"
-    assert payload["receiptSource"] == "theorem_core_receipts"
-    assert payload["bundleReceiptKind"] == "theorem_core_receipt_bundle"
+    assert payload["receiptSource"] is None
+    assert payload["bundleReceiptKind"] is None
+    assert "computed_v2_consensus_certificate_missing" in payload["theoremCoreConsensusValidation"]["blockers"]
     assert payload["renderableExactMiniUniverseReceipt"] is False
     assert payload["receipts"]["renderable_exact_mini_universe_receipt"] is False
     assert payload["receipts"]["exact_nonzero_holonomy_cycle_count"] is None
@@ -902,15 +903,16 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["visibleObjectPackets"]
     assert parsed["observerModularTime"]["objectiveObserverViews"][0]["timeFrames"][1]["polarFieldReadout"]
     assert parsed["consensusBulk"]["receipts"]["theorem_assisted_consensus_3d_bulk_readout_receipt"] is True
-    assert parsed["consensusBulk"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is True
-    assert parsed["consensusBulk"]["receipts"]["observer_h3_object_population_receipt"] is True
+    assert parsed["consensusBulk"]["receipts"]["observer_facing_populated_h3_experience_receipt"] is False
+    assert parsed["consensusBulk"]["receipts"]["observer_h3_object_population_receipt"] is False
+    assert parsed["consensusBulk"]["dataAvailability"]["h3ObjectDataAvailable"] is True
     assert parsed["consensusBulk"]["receipts"]["strict_neutral_object_bulk_receipt"] is False
     assert parsed["consensusBulk"]["neutralObjectCandidates"][0]["objectId"] == "neutral_1"
     assert parsed["consensusBulk"]["neutralObjectCandidates"][0]["spatialEmbeddingAvailable"] is False
     assert parsed["consensusBulk"]["neutralObjectSummary"]["objectCount"] == 1
     assert parsed["consensusBulk"]["neutralObjectSummary"]["receipt"] is False
     assert parsed["consensusBulk"]["h3ChartStatus"]["renderable"] is True
-    assert parsed["consensusBulk"]["h3ChartStatus"]["displayStatus"] == "available"
+    assert parsed["consensusBulk"]["h3ChartStatus"]["displayStatus"] == "diagnostic_only"
     strict_display = parsed["consensusBulk"]["receiptDisplay"]["strict_neutral_third_person_bulk_receipt"]
     assert strict_display["displayStatus"] == "not_promoted"
     assert strict_display["renderAsError"] is False
@@ -1099,7 +1101,10 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert render_data["sceneGraph"]["observerGraph"]["nodes"]
     assert render_data["sceneGraph"]["bulk"]["h3Objects"][0]["id"] == "obj0"
     assert render_data["sceneGraph"]["bulk"]["h3ChartStatus"]["renderable"] is True
-    assert render_data["sceneGraph"]["curvedSpacetime"]["continuousBulkField"]["contentAvailable"] is True
+    assert render_data["sceneGraph"]["curvedSpacetime"]["continuousBulkFieldRef"] == (
+        "emergentCurvedSpacetime.continuousBulkField"
+    )
+    assert parsed["emergentCurvedSpacetime"]["continuousBulkField"]["contentAvailable"] is True
     assert render_data["sceneGraph"]["bulk"]["receiptDisplay"]["strict_neutral_third_person_bulk_receipt"][
         "displayStatus"
     ] == "not_promoted"
@@ -1123,7 +1128,7 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert any(row["id"] == "physical_cmb_prediction" for row in render_data["claimBadges"])
     assert next(row for row in render_data["claimBadges"] if row["id"] == "observer_h3_object_population")[
         "passed"
-    ] is True
+    ] is False
     strict_badge = next(row for row in render_data["claimBadges"] if row["id"] == "strict_neutral_bulk")
     assert strict_badge["displayStatus"] == "not_promoted"
     assert strict_badge["severity"] == "blocked"
@@ -1212,7 +1217,7 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
         Path(manifest["files"]["visualization_render_data_json"]["path"]).read_text(encoding="utf-8")
     )
     assert render_sidecar["availability"]["protoWorldlineEventCount"] == 2
-    assert manifest["receipts"]["observer_facing_consensus_3d_bulk_readout_receipt"] is True
+    assert manifest["receipts"]["observer_facing_consensus_3d_bulk_readout_receipt"] is False
     assert manifest["receipts"]["physical_cmb_prediction_receipt"] is False
     assert manifest["receipts"]["reference_vacuum_regression_receipt"] is True
     assert manifest["receipts"]["finite_nonabelian_gauge_gap_diagnostic_receipt"] is True

@@ -1,0 +1,2 @@
+[console_scripts]
+oph-fpe = oph_fpe.cli:main

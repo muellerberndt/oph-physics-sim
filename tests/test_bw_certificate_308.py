@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import math
+
+import pytest
 
 from oph_fpe.bulk.bw_certificate_308 import issue308_bw_certificate_report
 from oph_fpe.bulk.theorem_contract import finite_oph_theorem_contract_report
@@ -8,8 +11,11 @@ from oph_fpe.claims import ISSUE_308_BW_CERTIFICATE_RECEIPT
 
 
 def _primitive_bwrec() -> dict:
+    spatial_normal = math.sqrt(1.0 + 0.1**2)
+    boundary_z = 0.1 / spatial_normal
+    boundary_x = math.sqrt(1.0 - boundary_z**2)
     return {
-        "cap_normal": [0.1, 0.0, 0.0, 1.004987562],
+        "cap_normal": [0.1, 0.0, 0.0, spatial_normal],
         "cap_normal_norm_residual": 0.0,
         "cap_orientation": "interior_positive",
         "cap_radius_margin": 0.25,
@@ -18,10 +24,11 @@ def _primitive_bwrec() -> dict:
         "cap_mesh_error": 1.0e-4,
         "point_mesh_error": 1.0e-4,
         "refinement_normal_error": 0.0,
-        "frame_p_minus": [1.0, 0.0, 0.0],
-        "frame_p_plus": [-1.0, 0.0, 0.0],
+        "frame_p_minus": [boundary_x, 0.0, boundary_z],
+        "frame_p_plus": [-boundary_x, 0.0, boundary_z],
         "frame_boundary_residual": 0.0,
-        "frame_separation": 1.5,
+        "frame_separation": 2.0 * boundary_x,
+        "frame_ordering": "p_minus_attracting_for_positive_s",
         "frame_orientation_witness": True,
         "cap_inclusion_matrix": [[1, 0], [0, 1]],
         "strict_inclusion_margin": 0.1,
@@ -193,3 +200,78 @@ def test_issue308_rejects_malformed_typed_primitive_witnesses() -> None:
     assert report["clauses"]["C4_modular_reference_tower"]["passed"] is False
     assert report["clauses"]["C6_geometric_rigidity"]["passed"] is False
     assert report["clauses"]["C8_wrong_normalization_and_nontriviality"]["passed"] is False
+
+
+def test_issue308_recomputes_frame_boundary_incidence_instead_of_trusting_zero_residual() -> None:
+    fields = _primitive_bwrec()
+    fields["frame_p_minus"] = [1.0, 0.0, 0.0]
+    fields["frame_p_plus"] = [-1.0, 0.0, 0.0]
+    fields["frame_boundary_residual"] = 0.0
+    fields["frame_separation"] = 2.0
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    clause = report["clauses"]["C2_bw_frame"]
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert clause["passed"] is False
+    assert clause["details"]["maximum_cap_boundary_incidence"] == pytest.approx(0.1)
+    assert clause["details"]["frame_points_on_cap_boundary"] is False
+
+
+def test_issue308_recomputes_frame_separation_instead_of_trusting_declared_margin() -> None:
+    fields = _primitive_bwrec()
+    fields["frame_p_plus"] = list(fields["frame_p_minus"])
+    fields["frame_boundary_residual"] = 0.0
+    fields["frame_separation"] = 999.0
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    clause = report["clauses"]["C2_bw_frame"]
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert clause["passed"] is False
+    assert clause["details"]["computed_separation"] == 0.0
+    assert clause["details"]["frame_points_distinct_nondegenerate"] is False
+    assert clause["details"]["frame_separation_recomputed"] is False
+
+
+def test_issue308_rejects_nonunit_or_unordered_frame_points() -> None:
+    fields = _primitive_bwrec()
+    fields["frame_p_minus"] = [2.0 * value for value in fields["frame_p_minus"]]
+    fields["frame_ordering"] = "unordered"
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    clause = report["clauses"]["C2_bw_frame"]
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert clause["passed"] is False
+    assert clause["details"]["frame_p_minus_finite_unit_s2"] is False
+    assert clause["details"]["frame_ordering"] is False
+
+
+def test_issue308_requires_paper_interior_positive_orientation() -> None:
+    fields = _primitive_bwrec()
+    fields["cap_orientation"] = "interior_negative"
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["clauses"]["C1_cap_normal_refinement"]["passed"] is False
+
+
+@pytest.mark.parametrize(
+    "convention",
+    [
+        "geometric",
+        "h_C(z) -> e^{+s} h_C(z)",
+        "h_C(z) -> exp(s) h_C(z)",
+        "exp(-s)",
+    ],
+)
+def test_issue308_rejects_nonpaper_geometric_flow_conventions(convention) -> None:
+    fields = _primitive_bwrec()
+    fields["geometric_parameter_convention"] = convention
+
+    report = issue308_bw_certificate_report({"BWRec_r": fields})
+
+    assert report[ISSUE_308_BW_CERTIFICATE_RECEIPT] is False
+    assert report["clauses"]["C7_geometric_2pi_kms"]["passed"] is False

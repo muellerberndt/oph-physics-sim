@@ -3178,11 +3178,10 @@ def _harmonic_time_trace_sample(
             for name, field_controls in report.get("controls", {}).items()
         },
     }
-    if fixed_time_controls:
-        payload["raw_fields"] = {
-            name: np.asarray(values, dtype=np.float32)
-            for name, values in selected.items()
-        }
+    payload["raw_fields"] = {
+        name: np.asarray(values, dtype=np.float32)
+        for name, values in selected.items()
+    }
     return payload
 
 
@@ -3247,6 +3246,28 @@ def _write_harmonic_time_trace(
             arrays[key] = np.vstack(rows).astype(np.float32)
             control_keys.append(key)
     np.savez_compressed(run_path / "harmonic_time_trace.npz", cycles=cycles, ell=ell, **arrays)
+    raw_frame_fields: list[str] = []
+    if bool(config.get("save_raw_frames", True)) and all(
+        isinstance(sample.get("raw_fields"), dict) for sample in usable
+    ):
+        frame_arrays: dict[str, np.ndarray] = {}
+        for name in field_names:
+            rows = []
+            for sample in usable:
+                values = np.asarray(
+                    sample["raw_fields"].get(name, np.zeros(0, dtype=np.float32)),
+                    dtype=np.float32,
+                )
+                rows.append(values)
+            if rows and all(row.shape == rows[0].shape and row.size for row in rows):
+                frame_arrays[f"field__{name}"] = np.vstack(rows)
+                raw_frame_fields.append(name)
+        if frame_arrays:
+            np.savez_compressed(
+                run_path / "screen_evolution_frames.npz",
+                cycles=cycles,
+                **frame_arrays,
+            )
     return {
         "mode": "screen_harmonic_time_trace_v0",
         "enabled": True,
@@ -3255,6 +3276,8 @@ def _write_harmonic_time_trace(
         "field_names": field_names,
         "control_keys": control_keys,
         "fixed_time_controls": bool(fixed_control_report),
+        "raw_frame_fields": raw_frame_fields,
+        "raw_frames_path": "screen_evolution_frames.npz" if raw_frame_fields else None,
         "ell_max": int(ell[-1]) if ell.size else None,
         "n_jobs": config.get("n_jobs", 1),
         "harmonic_batch_size": int(config.get("harmonic_batch_size", 4096)),

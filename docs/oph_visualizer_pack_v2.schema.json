@@ -11,6 +11,7 @@
     "payloadIndex",
     "canonicalPayloadSha256",
     "files",
+    "includedDocumentation",
     "chunking",
     "archiveBudget",
     "claimBoundary"
@@ -37,6 +38,18 @@
           "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
         }
       }
+    },
+    "includedDocumentation": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^docs/"},
+      "allOf": [
+        {"contains": {"const": "docs/oph_universe_timeline_visualization_payload_v1.schema.json"}},
+        {"contains": {"const": "docs/oph_distributed_universe_visualization_payload_v1.schema.json"}},
+        {"contains": {"const": "docs/oph_visualizer_pack_v2.schema.json"}},
+        {"contains": {"const": "docs/SIMULATION_ASSUMPTION_POLICY.md"}}
+      ]
     },
     "chunking": {"type": "object"},
     "archiveBudget": {

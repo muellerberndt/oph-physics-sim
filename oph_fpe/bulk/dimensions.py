@@ -28,7 +28,12 @@ def volume_growth_dimension(distances: np.ndarray) -> dict[str, Any]:
         counts = np.sum((rows > 0) & (rows <= radius), axis=1)
         values.append(float(np.mean(counts)))
     slope, intercept, used = _loglog_fit(radii, values)
-    return {"estimate": slope, "intercept": intercept, "points_used": used, "central_rows": int(rows.shape[0])}
+    return {
+        "estimate": _finite_or_none(slope),
+        "intercept": _finite_or_none(intercept),
+        "points_used": used,
+        "central_rows": int(rows.shape[0]),
+    }
 
 
 def correlation_dimension(distances: np.ndarray) -> dict[str, Any]:
@@ -45,7 +50,12 @@ def correlation_dimension(distances: np.ndarray) -> dict[str, Any]:
         for radius in radii
     ]
     slope, intercept, used = _loglog_fit(radii, values)
-    return {"estimate": slope, "intercept": intercept, "points_used": used, "central_rows": int(rows.shape[0])}
+    return {
+        "estimate": _finite_or_none(slope),
+        "intercept": _finite_or_none(intercept),
+        "points_used": used,
+        "central_rows": int(rows.shape[0]),
+    }
 
 
 def spectral_dimension(graph: nx.Graph, max_tau: int = 12) -> dict[str, Any]:
@@ -73,8 +83,8 @@ def spectral_dimension(graph: nx.Graph, max_tau: int = 12) -> dict[str, Any]:
             taus.append(float(tau))
             returns.append(value)
     slope, intercept, used = _loglog_fit(taus, returns)
-    estimate = -2.0 * slope if math.isfinite(slope) else float("nan")
-    return {"estimate": estimate, "intercept": intercept, "points_used": used}
+    estimate = -2.0 * slope if math.isfinite(slope) else None
+    return {"estimate": estimate, "intercept": _finite_or_none(intercept), "points_used": used}
 
 
 def _integer_radii(positive_distances: np.ndarray) -> list[float]:
@@ -108,4 +118,8 @@ def _loglog_fit(xs, ys) -> tuple[float, float, int]:
 
 
 def _empty_fit(reason: str) -> dict[str, Any]:
-    return {"estimate": float("nan"), "intercept": float("nan"), "points_used": 0, "reason": reason}
+    return {"estimate": None, "intercept": None, "points_used": 0, "reason": reason}
+
+
+def _finite_or_none(value: float) -> float | None:
+    return float(value) if math.isfinite(value) else None

@@ -573,7 +573,11 @@ def _token_report(
     if interval_fields_present and interval_receipt and sigma_input_valid and sigma is not None:
         best_upper = float(upper[best_index])
         competitor_lower = float(np.min(np.delete(lower, best_index))) if len(lower) > 1 else float("inf")
-        certified_gap = competitor_lower - best_upper - 2.0 * sigma
+        # The paper's finite uniqueness margin is the certified competitor
+        # lower bound minus the certified best upper bound.  The total response
+        # error sigma enters the localization-radius estimate below, not this
+        # interval separation margin.
+        certified_gap = competitor_lower - best_upper
     else:
         certified_gap = float("-inf")
     localization_radius = None

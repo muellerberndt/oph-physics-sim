@@ -13,6 +13,9 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
     assert schema["properties"]["schemaVersion"]["const"] == "oph_universe_timeline_visualization_payload_v1"
     assert schema["properties"]["schema"]["const"] == "oph_universe_timeline_visualization_payload_v1"
     assert schema["properties"]["visualizationRenderData"]["$ref"] == "#/$defs/visualizationRenderData"
+    assert schema["properties"]["simulationAssumptions"]["properties"]["schema"]["const"] == (
+        "oph_visualization_assumption_payload_v1"
+    )
     assert set(schema["required"]) == {
         "schemaVersion",
         "schema",
@@ -21,6 +24,7 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
         "ophDifferentiator",
         "sourcePaths",
         "coordinateSystems",
+        "simulationAssumptions",
         "smallUniverse",
         "screen",
         "subjectiveObserverCameras",
@@ -85,8 +89,12 @@ def test_universe_timeline_visualization_schema_preserves_required_viewer_fields
     } <= worldline_required
 
     overlap_link = defs["observerOverlapLink"]
-    assert "repairTrajectory" in overlap_link["required"]
-    assert "trajectorySource" in overlap_link["properties"]
+    # repairTrajectory is optional: only the strongest links carry a measured
+    # trajectory; every link must declare how to derive one via trajectorySource.
+    assert "trajectorySource" in overlap_link["required"]
+    assert "repairTrajectory" in overlap_link["properties"]
+    trajectory_frame = defs["overlapTrajectoryFrame"]
+    assert "overlapMismatchDensity" in trajectory_frame["properties"]
 
     screen_clusters_required = set(defs["screenClusters"]["required"])
     assert {"clusters", "snapshots", "rawSnapshotCount", "snapshotSource"} <= screen_clusters_required

@@ -6,10 +6,36 @@ from pathlib import Path
 import pytest
 
 from oph_fpe.pipelines.distributed_universe import (
+    _distributed_bulk_receipts,
     prepare_distributed_oph_universe,
     reduce_distributed_oph_universe,
 )
 from oph_fpe.viz.visualization_schema import validate_visualization_payload
+
+
+def test_distributed_bulk_receipts_reject_truthy_strings() -> None:
+    sampled = [
+        {
+            "payload": {
+                "consensusBulk": {
+                    "receipts": {
+                        "observer_like_self_reading_system_receipt": "true",
+                        "observer_modular_time_receipt": "false",
+                    }
+                }
+            }
+        }
+    ]
+
+    receipts = _distributed_bulk_receipts(
+        sampled,
+        {"strict_single_global_neutral_bulk_receipt": "false"},
+        h3_objects=[{"objectId": "available-data-only"}],
+    )
+
+    assert receipts["observer_like_self_reading_system_receipt"] is False
+    assert receipts["all_sampled_shards_observer_modular_time_receipt"] is False
+    assert receipts["strict_single_global_neutral_bulk_receipt"] is False
 
 
 def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path) -> None:
@@ -117,16 +143,37 @@ simulation_assumptions:
   assumed:
     screen_s2: true
     bw_2pi_geometric_branch: true
+    observer_modular_time_interpretation: true
     h3_observer_chart: true
+    screen_observer_to_h3_camera_embedding: true
     record_population_on_h3: true
+    refinement_naturality_visualization: true
     ds4_open_slicing_background: true
     positive_cosmological_constant: true
     observer_tetrad_visualization: true
     topological_defects_render_as_matter: true
+    cmb_screen_to_temperature_transfer_visualization: true
+    cmb_tt_reference_shape_visualization: true
   ds4:
     curvature_radius: 2.0
     hubble_parameter: 0.5
+    proper_time_min_over_h: 0.05
+    proper_time_max_over_h: 3.0
     time_sample_count: 8
+    units: simulation_units
+  observer_camera:
+    coordinate_system: h3_hyperboloid_spatial_components_v1
+    h3_radial_coordinate: 1.18
+    look_at: [0.0, 0.0, 0.0]
+    orientation: inward_radial
+    fov_degrees: 72.0
+  cmb_visualization:
+    reference_label: pinned-test-reference
+    reference_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    reference_source_url: https://example.invalid/pinned-test-reference
+    reference_sha256: sha256:ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd
+    transfer_model: pinned_tt_reference_best_fit_visualization
+    sky_realization_seed: 17
 """,
         encoding="utf-8",
     )

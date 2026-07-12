@@ -5,8 +5,12 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
+from oph_fpe.simulation_assumptions import simulation_assumption_manifest
 from oph_fpe.viz.universe_timeline_viewer import (
+    _assumed_cmb_visualization_payload,
+    _canonical_h3_spatial_components,
     _h3_distance,
     _h3_exp_map,
     _h3_geodesic_interpolate,
@@ -35,6 +39,37 @@ def test_h3_spatial_components_use_intrinsic_hyperboloid_geometry() -> None:
     assert _h3_distance(origin, midpoint) == pytest.approx(distance / 2.0, abs=1.0e-12)
     tangent = _h3_log_map(origin, target)
     assert _h3_exp_map(origin, tangent) == pytest.approx(target, abs=1.0e-12)
+
+
+def test_h3_vec4_ingress_accepts_only_future_unit_hyperboloid_ordering() -> None:
+    radial = 1.3
+    ambient = [math.cosh(radial), math.sinh(radial), 0.0, 0.0]
+
+    assert _canonical_h3_spatial_components(ambient) == pytest.approx(
+        [math.sinh(radial), 0.0, 0.0]
+    )
+    assert _canonical_h3_spatial_components([-ambient[0], *ambient[1:]]) is None
+    assert _canonical_h3_spatial_components([ambient[1], 0.0, 0.0, ambient[0]]) is None
+
+
+def test_configured_assumed_cmb_reference_is_byte_pinned_and_fails_closed_on_hash_drift() -> None:
+    config_path = Path("configs/e4_shared_observer_bulk_64k_object_chart.yml")
+    manifest = simulation_assumption_manifest(yaml.safe_load(config_path.read_text(encoding="utf-8")))
+
+    payload = _assumed_cmb_visualization_payload(
+        manifest,
+        manifest_source=str(config_path),
+    )
+    assert payload["dataAvailable"] is True
+    assert payload["provenance"]["sha256Matches"] is True
+    assert len(payload["referenceRows"]) == len(payload["assumedModelRows"]) > 0
+    assert payload["receipts"]["PHYSICAL_CMB_PREDICTION_RECEIPT"] is False
+
+    manifest["cmb_visualization_parameters"]["reference_sha256"] = "sha256:" + "0" * 64
+    drifted = _assumed_cmb_visualization_payload(manifest, manifest_source=str(config_path))
+    assert drifted["dataAvailable"] is False
+    assert drifted["provenance"]["sha256Matches"] is False
+    assert "pinned_cmb_reference_sha256_mismatch" in drifted["blockers"]
 
 
 def test_observer_projection_keeps_nominal_fov_and_peripheral_diagnostic_separate() -> None:

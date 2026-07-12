@@ -206,6 +206,18 @@ OBJECT_INCIDENCE_MODES: tuple[str, ...] = (
     "observer_transition_mixture_cluster",
 )
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _resolve_repo_relative_path(value: Any) -> Path:
+    """Resolve config paths against the repo root when a CWD-relative lookup misses."""
+
+    path = Path(str(value)).expanduser()
+    if path.is_absolute() or path.exists():
+        return path
+    fallback = PROJECT_ROOT / path
+    return fallback if fallback.exists() else path
+
 
 def run_oph_universe_pipeline(
     *,
@@ -274,12 +286,14 @@ def run_oph_universe_pipeline(
     refinement_dir = run_dir / "auto_theorem_refinement"
     refinement_dir.mkdir(parents=True, exist_ok=True)
 
-    original_h3 = _read_json(run_dir / "modular_response_h3_report.json")
-    original_object = _read_json(run_dir / "observer_chart_object_h3_report.json")
-    original_observer = _read_json(run_dir / "observer_modular_experience_report.json")
     _backup_original(run_dir / "modular_response_h3_report.json", refinement_dir)
     _backup_original(run_dir / "observer_chart_object_h3_report.json", refinement_dir)
     _backup_original(run_dir / "observer_modular_experience_report.json", refinement_dir)
+    original_h3 = _read_original_report(run_dir, refinement_dir, "modular_response_h3_report.json")
+    original_object = _read_original_report(run_dir, refinement_dir, "observer_chart_object_h3_report.json")
+    original_observer = _read_original_report(
+        run_dir, refinement_dir, "observer_modular_experience_report.json"
+    )
 
     h3_candidates = _run_h3_refinement_sweep(run_dir, refinement_dir, original_h3)
     h3_selection_cfg = dict(base_config.get("h3_modular_response", {}) or {})
@@ -1066,7 +1080,7 @@ def _write_physical_cmb_transfer_artifacts(run_dir: Path, config: dict[str, Any]
     cosmology_cfg = dict(config.get("cosmology", {}) or {})
     lite_cfg = dict(cosmology_cfg.get("cmb_lite", {}) or {})
     transfer_cfg = dict(cosmology_cfg.get("physical_cmb_transfer", {}) or {})
-    benchmark = Path(
+    benchmark = _resolve_repo_relative_path(
         transfer_cfg.get("benchmark_path")
         or lite_cfg.get("benchmark_path")
         or "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt"
@@ -1477,7 +1491,7 @@ def _visualization_export_settings(
     max_screen_points: int,
     max_observers: int,
     max_h3_objects: int,
-) -> dict[str, int]:
+) -> dict[str, Any]:
     export_cfg = dict(config.get("visualization_export", {}) or {})
     readout_cfg = dict(config.get("observer_consensus_readout", {}) or {})
     observer_cfg = dict(config.get("observers", {}) or {})
@@ -1497,12 +1511,18 @@ def _visualization_export_settings(
         _positive_int(readout_cfg.get("observer_sample_count"), readout_observers_default),
     )
     readout_objects = _positive_int(readout_cfg.get("object_sample_count"), readout_objects_default)
+    config_overrides = sorted(
+        name
+        for name in ("max_screen_points", "max_observers", "max_h3_objects")
+        if export_cfg.get(name) is not None
+    )
     return {
         "max_screen_points": effective_max_screen_points,
         "max_observers": effective_max_observers,
         "max_h3_objects": effective_max_h3_objects,
         "readout_observer_sample_count": readout_observers,
         "readout_object_sample_count": readout_objects,
+        "config_visualization_export_overrides": config_overrides,
     }
 
 
@@ -1991,6 +2011,20 @@ def _backup_original(path: Path, backup_dir: Path) -> None:
     destination = backup_dir / f"original_{path.name}"
     if not destination.exists():
         shutil.copy2(path, destination)
+
+
+def _read_original_report(run_dir: Path, refinement_dir: Path, name: str) -> dict[str, Any]:
+    """Read the true pre-refit report, preferring the immutable backup on rerun.
+
+    On a rerun over an already-processed run dir the report at the run root is
+    the previously selected refit (tagged ``selected_by_oph_universe_pipeline``),
+    so the backed-up original is the only faithful baseline.
+    """
+
+    backup = _read_json(refinement_dir / f"original_{name}")
+    if backup:
+        return backup
+    return _read_json(run_dir / name)
 
 
 def _safe_label(value: str) -> str:

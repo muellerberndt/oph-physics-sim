@@ -21,6 +21,7 @@ from oph_fpe.claims import (
     EINSTEIN_NEWTON_COUPLING_FORBIDDEN_INPUT_AUDIT_RECEIPT,
     EINSTEIN_NULL_STRESS_CHARGE_RECEIPT,
     EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT,
+    FINITE_CONSENSUS_THEOREM_RECEIPT,
     ISSUE_308_BW_CERTIFICATE_RECEIPT,
     MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
@@ -582,22 +583,37 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         assumption_manifest,
         "screen_s2",
         "bw_2pi_geometric_branch",
+        "observer_modular_time_interpretation",
         "h3_observer_chart",
+        "screen_observer_to_h3_camera_embedding",
         "ds4_open_slicing_background",
         "positive_cosmological_constant",
         "observer_tetrad_visualization",
     )
     assumed_populated_h3 = bool(
         assumed_observer_spacetime
-        and _all_manifest_assumptions(assumption_manifest, "record_population_on_h3")
+        and _all_manifest_assumptions(
+            assumption_manifest,
+            "record_population_on_h3",
+            "refinement_naturality_visualization",
+        )
     )
     assumed_topological_matter = bool(
         assumed_populated_h3
         and _all_manifest_assumptions(assumption_manifest, "topological_defects_render_as_matter")
     )
+    assumed_cmb_visualization = bool(
+        assumed_observer_spacetime
+        and _all_manifest_assumptions(
+            assumption_manifest,
+            "cmb_screen_to_temperature_transfer_visualization",
+            "cmb_tt_reference_shape_visualization",
+        )
+    )
     assumed_visual_universe = bool(
         _literal_true(assumption_manifest.get("SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"))
         and assumed_topological_matter
+        and assumed_cmb_visualization
     )
     report = {
         "mode": "finite_oph_theorem_contract_audit_v1",
@@ -631,6 +647,8 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "simulation_assumed_populated_h3_visualization_receipt": assumed_populated_h3,
         "SIMULATION_ASSUMED_TOPOLOGICAL_MATTER_VISUALIZATION_RECEIPT": assumed_topological_matter,
         "simulation_assumed_topological_matter_visualization_receipt": assumed_topological_matter,
+        "SIMULATION_ASSUMED_CMB_VISUALIZATION_RECEIPT": assumed_cmb_visualization,
+        "simulation_assumed_cmb_visualization_receipt": assumed_cmb_visualization,
         "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": assumed_visual_universe,
         "simulation_assumed_visual_universe_receipt": assumed_visual_universe,
         "simulation_assumption_tier": {
@@ -642,6 +660,12 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "missing_assumptions": list(assumption_manifest.get("missing_assumptions") or []),
             "ds4_visualization_parameters": dict(
                 assumption_manifest.get("ds4_visualization_parameters") or {}
+            ),
+            "observer_camera_visualization_parameters": dict(
+                assumption_manifest.get("observer_camera_visualization_parameters") or {}
+            ),
+            "cmb_visualization_parameters": dict(
+                assumption_manifest.get("cmb_visualization_parameters") or {}
             ),
             "computed_theorem_receipts_unchanged": True,
         },
@@ -803,6 +827,245 @@ def _stage(
     if details:
         row["details"] = details
     return row
+
+
+def _validated_finite_consensus_replay(
+    root: Path,
+    theorem_core: dict[str, Any],
+) -> tuple[bool, dict[str, Any]]:
+    """Cross-check the computed C0b certificate against its replay artifact.
+
+    A copied top-level boolean is never sufficient.  The v2 certificate and
+    independently written replay sidecar must agree on provenance hash and all
+    theorem-relevant counts, while sampled accepted events must still exhibit
+    strict touched descent and non-increasing global mismatch.
+    """
+
+    certificate = (
+        theorem_core.get("finite_consensus_theorem")
+        if isinstance(theorem_core.get("finite_consensus_theorem"), dict)
+        else {}
+    )
+    nested_replay = (
+        theorem_core.get("finite_consensus_replay")
+        if isinstance(theorem_core.get("finite_consensus_replay"), dict)
+        else {}
+    )
+    replay_path = root / "finite_consensus_replay_report.json"
+    replay = _read_json(replay_path)
+    evidence = replay.get("evidence") if isinstance(replay.get("evidence"), dict) else {}
+    blockers: list[str] = []
+
+    if certificate.get("mode") != "finite_consensus_theorem_certificate_v2_computed_array_replay":
+        blockers.append("computed_v2_consensus_certificate_missing")
+    for key in (
+        FINITE_CONSENSUS_THEOREM_RECEIPT,
+        "finite_consensus_theorem_receipt",
+        "receipt",
+        "computed_replay_artifact_present",
+        "computed_from_port_pair_arrays",
+    ):
+        if not _literal_true(certificate.get(key)):
+            blockers.append(f"certificate_{key}_not_literal_true")
+    if not (
+        _literal_true(theorem_core.get(FINITE_CONSENSUS_THEOREM_RECEIPT))
+        and _literal_true(theorem_core.get("finite_consensus_theorem_receipt"))
+    ):
+        blockers.append("theorem_core_consensus_receipt_mismatch")
+
+    if not replay_path.is_file() or not replay:
+        blockers.append("computed_replay_sidecar_missing")
+    if replay.get("mode") != "array_port_pair_strict_consensus_replay":
+        blockers.append("computed_replay_mode_invalid")
+    for key in (
+        "enabled",
+        "receipt",
+        FINITE_CONSENSUS_THEOREM_RECEIPT,
+        "finite_consensus_theorem_receipt",
+        "computed_from_port_pair_arrays",
+    ):
+        if not _literal_true(replay.get(key)):
+            blockers.append(f"replay_{key}_not_literal_true")
+    if nested_replay != replay:
+        blockers.append("nested_replay_does_not_match_sidecar")
+
+    source_hash = certificate.get("source_state_sha256")
+    if not _sha256_receipt(source_hash):
+        blockers.append("certificate_source_state_sha256_invalid")
+    if replay.get("source_state_sha256") != source_hash:
+        blockers.append("replay_source_state_sha256_mismatch")
+    if not _sha256_receipt(replay.get("terminal_hash")):
+        blockers.append("replay_terminal_hash_invalid")
+    if evidence.get("evidence_kind") != "computed_array_port_pair_replay_v1":
+        blockers.append("computed_replay_evidence_kind_invalid")
+
+    exact_counts = {
+        "strict_descent_violation_count": 0,
+        "accepted_phi_increase_violation_count": 0,
+        "disjoint_commutation_violation_count": 0,
+        "local_diamond_violation_count": 0,
+        "repair_completeness_violation_count": 0,
+        "unique_terminal_quotient_hash_count": 1,
+    }
+    for key, expected in exact_counts.items():
+        value = evidence.get(key)
+        if not _strict_int(value, minimum=0) or value != expected:
+            blockers.append(f"replay_{key}_invalid")
+        if certificate.get(key) != value:
+            blockers.append(f"certificate_{key}_mismatch")
+
+    positive_counts = (
+        "theorem_phase_event_count",
+        "accepted_theorem_move_count",
+        "schedule_replay_count",
+        "requested_schedule_replays",
+    )
+    for key in positive_counts:
+        value = evidence.get(key)
+        if not _strict_int(value, minimum=1):
+            blockers.append(f"replay_{key}_invalid")
+        if certificate.get(key) != value:
+            blockers.append(f"certificate_{key}_mismatch")
+    if (
+        _strict_int(evidence.get("schedule_replay_count"), minimum=1)
+        and _strict_int(evidence.get("requested_schedule_replays"), minimum=1)
+        and evidence["schedule_replay_count"] < evidence["requested_schedule_replays"]
+    ):
+        blockers.append("insufficient_schedule_replays")
+    if replay.get("initial_phi") != evidence.get("theorem_phase_event_count"):
+        blockers.append("replay_initial_phi_mismatch")
+
+    sample_events = replay.get("sample_events") if isinstance(replay.get("sample_events"), list) else []
+    if certificate.get("sample_event_count") != len(sample_events):
+        blockers.append("certificate_sample_event_count_mismatch")
+    for index, row in enumerate(sample_events):
+        if not isinstance(row, dict) or not _literal_true(row.get("accepted")):
+            blockers.append(f"sample_event_{index}_not_accepted")
+            continue
+        touched = _finite_number(row.get("delta_touched_phi"))
+        global_delta = _finite_number(row.get("delta_global_phi"))
+        if touched is None or touched >= 0.0:
+            blockers.append(f"sample_event_{index}_not_strictly_descending")
+        if global_delta is None or global_delta > 0.0:
+            blockers.append(f"sample_event_{index}_global_phi_increased")
+    if certificate.get("invalid_evidence") not in ([], ()):
+        blockers.append("certificate_invalid_evidence_nonempty")
+
+    details = {
+        "validation_mode": "local_v2_certificate_replay_crosscheck",
+        "certificate_mode": certificate.get("mode"),
+        "replay_mode": replay.get("mode"),
+        "source_state_sha256": source_hash,
+        "sidecar_path": str(replay_path),
+        "sample_event_count": len(sample_events),
+        "blockers": list(dict.fromkeys(blockers)),
+    }
+    return not details["blockers"], details
+
+
+def _validated_endogenous_modular_generator(state_bw: dict[str, Any]) -> bool:
+    row_count = state_bw.get("row_count")
+    median = _finite_number(state_bw.get("median"))
+    return bool(
+        state_bw.get("mode") == "state_derived_modular_probe"
+        and _strict_int(row_count, minimum=1)
+        and median is not None
+        and _literal_true(state_bw.get("endogenous_modular_generator"))
+        and _literal_true(state_bw.get("endogenous_generator_non_degenerate"))
+        and _literal_true(state_bw.get("ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"))
+        and _literal_true(state_bw.get("endogenous_modular_generator_receipt"))
+        and not _literal_true(state_bw.get("direct_transition_automorphism"))
+        and not _literal_true(state_bw.get("declared_cap_flow_generator"))
+        and not _literal_true(state_bw.get("declared_transition_response_density"))
+    )
+
+
+def _validated_kms_clock_fit(state_bw: dict[str, Any]) -> bool:
+    clock = (
+        state_bw.get("inferred_modular_clock_fit")
+        if isinstance(state_bw.get("inferred_modular_clock_fit"), dict)
+        else {}
+    )
+    kappa = _finite_number(clock.get("kappa_hat"))
+    interval = clock.get("kappa_95ci")
+    ci = (
+        [_finite_number(value) for value in interval]
+        if isinstance(interval, (list, tuple)) and len(interval) == 2
+        else [None, None]
+    )
+    return bool(
+        _validated_endogenous_modular_generator(state_bw)
+        and _literal_true(state_bw.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT"))
+        and _literal_true(state_bw.get("kms_geometric_clock_fit_receipt"))
+        and clock.get("mode") == "inferred_modular_clock_fit"
+        and _literal_true(clock.get("enabled"))
+        and _literal_true(clock.get("receipt"))
+        and _literal_true(clock.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT"))
+        and clock.get("clock_fit_selection_policy")
+        == "predeclared_informative_nonstatic_carriers_else_nonstatic_carriers_no_pass_shopping"
+        and _strict_int(clock.get("valid_row_count"), minimum=1)
+        and _strict_int(clock.get("distinct_time_count"), minimum=3)
+        and kappa is not None
+        and ci[0] is not None
+        and ci[1] is not None
+        and ci[0] <= 2.0 * math.pi <= ci[1]
+        and clock.get("nearest_known_scale") == "2pi"
+        and not _literal_true(clock.get("response_degenerate"))
+        and not list(clock.get("blockers") or [])
+    )
+
+
+def _validated_refinement_naturality(
+    refinement: dict[str, Any],
+    refinement_summary: dict[str, Any],
+    neutral_audit: dict[str, Any],
+) -> bool:
+    candidates = [refinement, refinement_summary]
+    if isinstance(neutral_audit.get("refinement_summary"), dict):
+        candidates.append(neutral_audit["refinement_summary"])
+    for row in candidates:
+        if not isinstance(row, dict):
+            continue
+        sizes = row.get("sizes") if isinstance(row.get("sizes"), list) else []
+        patch_counts = {
+            item.get("patch_count")
+            for item in sizes
+            if isinstance(item, dict)
+            and _strict_int(item.get("patch_count"), minimum=1)
+        }
+        if (
+            _literal_true(row.get("strict_neutral_bulk_refinement_receipt"))
+            and _literal_true(row.get("multi_scale"))
+            and _literal_true(row.get("candidate_dimension_stable"))
+            and _strict_int(row.get("run_count"), minimum=2)
+            and len(patch_counts) >= 2
+            and not list(row.get("proof_blockers") or [])
+        ):
+            return True
+    return False
+
+
+def _issue308_clause_passed(report: dict[str, Any], name: str) -> bool:
+    row = (report.get("clauses") or {}).get(name)
+    return isinstance(row, dict) and _literal_true(row.get("passed"))
+
+
+def _strict_int(value: Any, *, minimum: int) -> bool:
+    return type(value) is int and value >= minimum
+
+
+def _finite_number(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return parsed if math.isfinite(parsed) else None
+
+
+def _sha256_receipt(value: Any) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", value) is not None
 
 
 def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
@@ -1011,6 +1274,8 @@ def _markdown(report: dict[str, Any]) -> str:
         f"`{str(report['paper_geometric_branch_consensus_bulk_emergence_receipt']).lower()}`",
         "- explicitly assumed visual universe: "
         f"`{str(report['SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT']).lower()}`",
+        "- explicitly assumed CMB visualization: "
+        f"`{str(report['SIMULATION_ASSUMED_CMB_VISUALIZATION_RECEIPT']).lower()}`",
         "- chart-blind strict neutral quotient bulk: "
         f"`{str(report['chart_blind_strict_neutral_quotient_bulk_receipt']).lower()}`",
         "- Einstein branch-entry contract: "

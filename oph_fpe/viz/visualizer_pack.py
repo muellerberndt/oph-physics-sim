@@ -97,7 +97,15 @@ def build_visualizer_pack(
         _write_json_bytes(staging / "payload_index.json", payload_index)
 
         included_sidecars = []
-        for source in sorted(bundle_path.glob("screen_full_*.bin"), key=lambda item: item.name):
+        sidecar_sources = [
+            *bundle_path.glob("screen_full_*.bin"),
+            *bundle_path.glob("screen_frames_*.bin"),
+            *bundle_path.glob("observers_full_*.json"),
+            *bundle_path.glob("cameras_full_*.json"),
+            *bundle_path.glob("repair_trace_full.csv"),
+            *bundle_path.glob("visualization_export_manifest.json"),
+        ]
+        for source in sorted(sidecar_sources, key=lambda item: item.name):
             target = staging / "sidecars" / source.name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, target)

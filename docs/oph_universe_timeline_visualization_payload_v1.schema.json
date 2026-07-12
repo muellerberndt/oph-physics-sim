@@ -57,9 +57,6 @@
       "required": ["h3_hyperboloid_spatial_components_v1", "ds4_open_h3_slicing_v1"],
       "additionalProperties": {"type": "object"}
     },
-    "simulationAssumptions": {
-      "$ref": "#/$defs/simulationAssumptions"
-    },
     "smallUniverse": {
       "$ref": "#/$defs/smallUniverse"
     },
@@ -194,6 +191,26 @@
         "claimBoundary": {"type": ["string", "null"]}
       }
     },
+    "assumedDs4Spacetime": {
+      "$ref": "#/$defs/assumedDs4Spacetime"
+    },
+    "observerCinema": {
+      "$ref": "#/$defs/openObject"
+    },
+    "hilbertSpaceObserverAlgebra": {
+      "$ref": "#/$defs/openObject"
+    },
+    "observerAnatomy": {
+      "$ref": "#/$defs/openObject"
+    },
+    "paperAccuracy": {
+      "$ref": "#/$defs/openObject"
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "type": ["boolean", "integer", "number", "string", "null"]
+    },
     "assumptionRow": {
       "type": "object",
       "required": [
@@ -214,26 +231,6 @@
         "physical_measurement_receipt": {"const": false}
       },
       "additionalProperties": true
-    },
-    "assumedDs4Spacetime": {
-      "$ref": "#/$defs/assumedDs4Spacetime"
-    },
-    "observerCinema": {
-      "$ref": "#/$defs/openObject"
-    },
-    "hilbertSpaceObserverAlgebra": {
-      "$ref": "#/$defs/openObject"
-    },
-    "observerAnatomy": {
-      "$ref": "#/$defs/openObject"
-    },
-    "paperAccuracy": {
-      "$ref": "#/$defs/openObject"
-    }
-  },
-  "$defs": {
-    "scalar": {
-      "type": ["boolean", "integer", "number", "string", "null"]
     },
     "receiptMap": {
       "type": "object",
@@ -393,6 +390,7 @@
         "plotSeries",
         "legend",
         "claimBadges",
+        "visualUniverseCompleteness",
         "viewContracts",
         "claimBoundary"
       ],
@@ -448,6 +446,39 @@
           "items": {
             "$ref": "#/$defs/openObject"
           }
+        },
+        "visualUniverseCompleteness": {
+          "type": "object",
+          "required": ["schema", "requirements", "blockers", "receipts", "claimBoundary"],
+          "properties": {
+            "schema": {"const": "oph_visual_universe_render_completeness_v1"},
+            "requirements": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {"type": "boolean"}
+            },
+            "blockers": {"type": "array", "items": {"type": "string"}},
+            "receipts": {
+              "type": "object",
+              "required": [
+                "SIMULATION_ASSUMPTIONS_COMPLETE_RECEIPT",
+                "VISUAL_UNIVERSE_RENDER_DATA_COMPLETE_RECEIPT",
+                "VISUAL_UNIVERSE_RENDER_READY_RECEIPT",
+                "proof_receipt",
+                "physical_measurement_receipt"
+              ],
+              "properties": {
+                "SIMULATION_ASSUMPTIONS_COMPLETE_RECEIPT": {"type": "boolean"},
+                "VISUAL_UNIVERSE_RENDER_DATA_COMPLETE_RECEIPT": {"type": "boolean"},
+                "VISUAL_UNIVERSE_RENDER_READY_RECEIPT": {"type": "boolean"},
+                "proof_receipt": {"const": false},
+                "physical_measurement_receipt": {"const": false}
+              },
+              "additionalProperties": true
+            },
+            "claimBoundary": {"type": "string"}
+          },
+          "additionalProperties": true
         },
         "viewContracts": {
           "type": "object",
@@ -1440,7 +1471,7 @@
     "observerOverlapLink": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["repairTrajectory"],
+      "required": ["trajectorySource"],
       "properties": {
         "source": {
           "$ref": "#/$defs/scalar"
@@ -1497,6 +1528,9 @@
           "type": ["number", "null"]
         },
         "repairLoadMean": {
+          "type": ["number", "null"]
+        },
+        "overlapMismatchDensity": {
           "type": ["number", "null"]
         }
       }
@@ -1879,7 +1913,7 @@
     "cmbComparison": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["description", "residualRows", "receipts"],
+      "required": ["description", "residualRows", "receipts", "assumedVisualization"],
       "properties": {
         "description": {
           "type": "string"
@@ -1912,12 +1946,86 @@
           "type": "object",
           "additionalProperties": true
         },
+        "assumedVisualization": {
+          "$ref": "#/$defs/assumedCmbVisualization"
+        },
         "receipts": {
           "$ref": "#/$defs/receiptMap"
         },
         "claimBoundary": {
           "type": "string"
         }
+      }
+    },
+    "assumedCmbVisualization": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "enabled",
+        "dataAvailable",
+        "provenance",
+        "referenceRows",
+        "assumedModelRows",
+        "skyRealizationContract",
+        "blockers",
+        "receipts",
+        "claimBoundary"
+      ],
+      "properties": {
+        "schema": {"const": "oph_assumed_cmb_visualization_v1"},
+        "enabled": {"type": "boolean"},
+        "dataAvailable": {"type": "boolean"},
+        "provenance": {
+          "type": "object",
+          "required": [
+            "kind",
+            "expectedSha256",
+            "actualSha256",
+            "sha256Matches",
+            "transferModel",
+            "skyRealizationSeed"
+          ],
+          "properties": {
+            "kind": {"const": "simulation_assumption_plus_pinned_measurement_reference"},
+            "expectedSha256": {"type": ["string", "null"]},
+            "actualSha256": {"type": ["string", "null"]},
+            "sha256Matches": {"type": "boolean"},
+            "transferModel": {"type": ["string", "null"]},
+            "skyRealizationSeed": {"type": ["integer", "null"]}
+          },
+          "additionalProperties": true
+        },
+        "referenceRows": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/cmbSeriesRow"}
+        },
+        "assumedModelRows": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/cmbSeriesRow"}
+        },
+        "skyRealizationContract": {"$ref": "#/$defs/openObject"},
+        "blockers": {"type": "array", "items": {"type": "string"}},
+        "loadError": {"type": ["string", "null"]},
+        "receipts": {
+          "type": "object",
+          "required": [
+            "assumed_cmb_tt_reference_shape_visualization_receipt",
+            "assumed_cmb_screen_to_temperature_transfer_visualization_receipt",
+            "proof_receipt",
+            "physical_measurement_receipt",
+            "PHYSICAL_CMB_PREDICTION_RECEIPT"
+          ],
+          "properties": {
+            "assumed_cmb_tt_reference_shape_visualization_receipt": {"type": "boolean"},
+            "assumed_cmb_screen_to_temperature_transfer_visualization_receipt": {"type": "boolean"},
+            "proof_receipt": {"const": false},
+            "physical_measurement_receipt": {"const": false},
+            "PHYSICAL_CMB_PREDICTION_RECEIPT": {"const": false}
+          },
+          "additionalProperties": true
+        },
+        "claimBoundary": {"type": "string"}
       }
     },
     "cmbSeriesRow": {

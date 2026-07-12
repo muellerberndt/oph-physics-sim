@@ -157,7 +157,7 @@ def _cap_normal_refinement(fields: Mapping[str, Any], limits: Mapping[str, float
     checks["cap_orientation"] = _enum_string(
         fields,
         "cap_orientation",
-        {"interior_positive", "interior_negative"},
+        {"interior_positive"},
         missing,
     )
     stage = _stage(
@@ -177,14 +177,64 @@ def _cap_normal_refinement(fields: Mapping[str, Any], limits: Mapping[str, float
 
 def _bw_frame(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
     missing = []
+    geometry = _frame_geometry_report(fields)
+    supplied_boundary_residual = _number(fields.get("frame_boundary_residual"))
+    supplied_separation = _number(fields.get("frame_separation"))
+    boundary_residual_consistent = bool(
+        supplied_boundary_residual is not None
+        and supplied_boundary_residual >= 0.0
+        and geometry["computed_boundary_residual"] is not None
+        and abs(supplied_boundary_residual - geometry["computed_boundary_residual"])
+        <= limits["residual_tol"]
+    )
+    separation_consistent = bool(
+        supplied_separation is not None
+        and geometry["computed_separation"] is not None
+        and abs(supplied_separation - geometry["computed_separation"]) <= limits["residual_tol"]
+    )
     checks = {
-        "frame_p_minus": _finite_vector(fields, "frame_p_minus", 3, missing),
-        "frame_p_plus": _finite_vector(fields, "frame_p_plus", 3, missing),
-        "frame_boundary_residual": _le_abs(fields, "frame_boundary_residual", limits["residual_tol"], missing),
-        "frame_separation": _ge(fields, "frame_separation", limits["frame_separation_min"], missing),
+        "cap_normal_finite_unit_spacelike": bool(
+            geometry["cap_normal_norm_residual"] is not None
+            and geometry["cap_normal_norm_residual"] <= limits["residual_tol"]
+        ),
+        "frame_p_minus_finite_unit_s2": bool(
+            geometry["p_minus_unit_residual"] is not None
+            and geometry["p_minus_unit_residual"] <= limits["residual_tol"]
+        ),
+        "frame_p_plus_finite_unit_s2": bool(
+            geometry["p_plus_unit_residual"] is not None
+            and geometry["p_plus_unit_residual"] <= limits["residual_tol"]
+        ),
+        "frame_points_on_cap_boundary": bool(
+            geometry["maximum_cap_boundary_incidence"] is not None
+            and geometry["maximum_cap_boundary_incidence"] <= limits["residual_tol"]
+        ),
+        "frame_boundary_residual_recomputed": boundary_residual_consistent,
+        "frame_points_distinct_nondegenerate": bool(
+            geometry["computed_separation"] is not None
+            and geometry["computed_separation"] >= limits["frame_separation_min"]
+        ),
+        "frame_separation_recomputed": separation_consistent,
+        "frame_ordering": _enum_string(
+            fields,
+            "frame_ordering",
+            {"p_minus_attracting_for_positive_s"},
+            missing,
+        ),
         "frame_orientation_witness": _literal_true(fields, "frame_orientation_witness", missing),
     }
-    return _stage(all(checks.values()) and not missing, "ordered nondegenerate BW boundary frame", missing, checks)
+    for key, passed in checks.items():
+        if not passed:
+            missing.append(key)
+    stage = _stage(all(checks.values()) and not missing, "ordered nondegenerate BW boundary frame", missing, checks)
+    stage["details"].update(
+        {
+            **geometry,
+            "supplied_frame_boundary_residual": supplied_boundary_residual,
+            "supplied_frame_separation": supplied_separation,
+        }
+    )
+    return stage
 
 
 def _prime_support_visible_cap_net(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
@@ -278,10 +328,7 @@ def _geometric_2pi_kms(fields: Mapping[str, Any], limits: Mapping[str, float]) -
     missing = []
     raw_convention = fields.get("geometric_parameter_convention")
     convention = raw_convention if isinstance(raw_convention, str) else ""
-    convention_ok = bool(
-        convention.strip()
-        and any(token in convention for token in ("e^{-s}", "e^-s", "exp(-s)", "geometric"))
-    )
+    convention_ok = _negative_geometric_parameter_convention(convention)
     if not convention_ok:
         missing.append("geometric_parameter_convention")
     checks = {
@@ -404,6 +451,74 @@ def _cap_normal_norm_residual(value: Any) -> float | None:
     return abs((-t * t + x * x + y * y + z * z) - 1.0)
 
 
+def _frame_geometry_report(fields: Mapping[str, Any]) -> dict[str, float | None]:
+    normal = _finite_vector_values(fields.get("cap_normal"), 4)
+    p_minus = _finite_vector_values(fields.get("frame_p_minus"), 3)
+    p_plus = _finite_vector_values(fields.get("frame_p_plus"), 3)
+    normal_residual = _cap_normal_norm_residual(normal)
+    minus_unit_residual = _s2_unit_residual(p_minus)
+    plus_unit_residual = _s2_unit_residual(p_plus)
+    incidences: list[float] = []
+    if normal is not None:
+        for point in (p_minus, p_plus):
+            if point is not None:
+                incidences.append(
+                    abs(-normal[0] + sum(normal[index + 1] * point[index] for index in range(3)))
+                )
+    maximum_incidence = max(incidences) if len(incidences) == 2 else None
+    separation = None
+    if p_minus is not None and p_plus is not None:
+        separation = math.sqrt(sum((p_minus[index] - p_plus[index]) ** 2 for index in range(3)))
+    residual_components = [
+        value
+        for value in (minus_unit_residual, plus_unit_residual, maximum_incidence)
+        if value is not None
+    ]
+    computed_boundary_residual = max(residual_components) if len(residual_components) == 3 else None
+    return {
+        "cap_normal_norm_residual": normal_residual,
+        "p_minus_unit_residual": minus_unit_residual,
+        "p_plus_unit_residual": plus_unit_residual,
+        "maximum_cap_boundary_incidence": maximum_incidence,
+        "computed_boundary_residual": computed_boundary_residual,
+        "computed_separation": separation,
+    }
+
+
+def _finite_vector_values(value: Any, size: int) -> list[float] | None:
+    if not isinstance(value, (list, tuple)) or len(value) != size:
+        return None
+    parsed = [_number(component) for component in value]
+    if any(component is None for component in parsed):
+        return None
+    return [float(component) for component in parsed if component is not None]
+
+
+def _s2_unit_residual(point: list[float] | None) -> float | None:
+    if point is None:
+        return None
+    return abs(sum(component * component for component in point) - 1.0)
+
+
+def _negative_geometric_parameter_convention(value: str) -> bool:
+    compact = "".join(value.lower().split()).replace("→", "->").replace("↦", "->")
+    mapping_explicit = "->" in compact or "\\mapsto" in compact
+    negative_scale_explicit = any(
+        token in compact
+        for token in ("e^{-s}", "e^(-s)", "e^-s", "exp(-s)")
+    )
+    positive_scale_present = any(
+        token in compact
+        for token in ("e^{+s}", "e^{s}", "e^(+s)", "e^+s", "exp(+s)", "exp(s)")
+    )
+    return bool(
+        compact.count("h") >= 2
+        and mapping_explicit
+        and negative_scale_explicit
+        and not positive_scale_present
+    )
+
+
 def _valid_interval(value: Any) -> bool:
     if not isinstance(value, (list, tuple)) or len(value) != 2:
         return False
@@ -436,18 +551,6 @@ def _enum_string(fields: Mapping[str, Any], key: str, allowed: set[str], missing
         missing.append(key)
         return False
     return True
-
-
-def _finite_vector(fields: Mapping[str, Any], key: str, size: int, missing: list[str]) -> bool:
-    value = fields.get(key)
-    valid = bool(
-        isinstance(value, (list, tuple))
-        and len(value) == size
-        and all(_number(component) is not None for component in value)
-    )
-    if not valid:
-        missing.append(key)
-    return valid
 
 
 def _finite_nonempty_matrix(fields: Mapping[str, Any], key: str, missing: list[str]) -> bool:

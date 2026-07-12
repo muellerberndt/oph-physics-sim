@@ -14,6 +14,7 @@
     "ophDifferentiator",
     "sourcePaths",
     "coordinateSystems",
+    "simulationAssumptions",
     "smallUniverse",
     "screen",
     "subjectiveObserverCameras",
@@ -43,6 +44,39 @@
     "ophDifferentiator": {"type": "string"},
     "sourcePaths": {"type": "object"},
     "coordinateSystems": {"type": "object"},
+    "simulationAssumptions": {
+      "type": "object",
+      "required": [
+        "schema",
+        "manifestSchema",
+        "scope",
+        "manifestIntegrityValid",
+        "assumptions",
+        "parameterSets",
+        "receipts",
+        "computedTheoremReceiptsUnchanged",
+        "claimBoundary"
+      ],
+      "properties": {
+        "schema": {"const": "oph_visualization_assumption_payload_v1"},
+        "manifestSchema": {"const": "oph_simulation_assumption_manifest_v1"},
+        "scope": {"const": "visualization_only"},
+        "manifestIntegrityValid": {"type": "boolean"},
+        "assumptions": {"type": "object", "minProperties": 13},
+        "parameterSets": {"type": "object"},
+        "receipts": {
+          "type": "object",
+          "required": ["proof_receipt", "physical_measurement_receipt"],
+          "properties": {
+            "proof_receipt": {"const": false},
+            "physical_measurement_receipt": {"const": false}
+          }
+        },
+        "computedTheoremReceiptsUnchanged": {"const": true},
+        "claimBoundary": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
     "smallUniverse": {"type": "object"},
     "screen": {"type": "object"},
     "subjectiveObserverCameras": {"type": "array"},

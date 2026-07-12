@@ -53,6 +53,13 @@ The same directory contains `visualization_export_manifest.json`. Use that manif
 sidecars:
 
 - `screen_full_<N>.bin`: little-endian `Float32Array` rows `[x,y,z,value]` for the full S2 field.
+- `screen_frames_<field>_<rows>x<frames>.bin`: little-endian `Float32Array`, frame-major
+  `frames*rows` values of one screen field over the sampled cycles; rows use the same order as
+  `screen_full_<rows>.bin` and the frame cycle list is in `screen.evolution.cycles` and the export
+  manifest. Use these for full-resolution vacuum/repair animation; the payload's
+  `screen.evolution.fields` carries the same animation downsampled to `screen.points`.
+- `repair_trace_full.csv`: the complete per-cycle mismatch/repair trace (payload
+  `screen.repairTrace` is an even stride sample of this file).
 - `observers_full_<N>.json`: all observer axes and summary readout fields.
 - `cameras_full_<N>.json`: capped subjective camera transforms and canonical frame references. The
   configured observer cap is enforced; objective views and frame arrays are not duplicated here.
@@ -116,6 +123,9 @@ The app must read these top-level fields:
 - `subjectiveObserverCameras`: observer-local cameras derived from visible readout.
 - `coordinateSystems`: authoritative coordinate contracts. H3 vec3 values are hyperboloid spatial
   components, never Poincare-ball coordinates.
+- `simulationAssumptions`: the complete, revalidated thirteen-row visualization-only ledger and its
+  dS4, observer-camera, and pinned-CMB parameter sets. Use its gold assumption badges; never copy an
+  assumption status into a computed theorem or physical receipt.
 - `assumedDs4Spacetime`: renderer-completion layer sourced from
   `simulation_assumption_manifest.json`. It supplies an assumed open-H3 de Sitter metric, scale
   factor, observer reference frames/tetrads, and defect-as-matter rendering links while explicitly
@@ -129,9 +139,13 @@ The app must read these top-level fields:
   gravity prediction.
 - `pnSilenceToObservation`: scale-compressed silence-to-observation witness.
 - `cmbComparison` and `comparableObservations`: diagnostic measurement-facing overlays.
+  `cmbComparison.assumedVisualization.referenceRows` and `assumedModelRows` are a SHA-256-pinned
+  observed/published-best-fit reference lane, not an OPH model or prediction.
 - `geometriesAndSymmetries`: explanatory summaries and receipt context.
 - `visualizationViews`: the canonical panel contracts. Treat these as the source of truth for view
   names, data sources, render layers, animation channels, receipts, non-claims, and claim boundaries.
+- `visualizationRenderData.visualUniverseCompleteness`: separate assumption completeness, exported
+  data completeness, and visualization-only render readiness. Never interpret any of these as proof.
 
 Do not infer stronger claims from attractive geometry. A receipt that is false or missing is a closed
 gate.
@@ -243,15 +257,21 @@ Primary fields:
 - `screen.points`: S2 points or equirectangular source positions.
 - `screen.values`: readback amplitudes or scalar screen field.
 - `screen.fieldName`: label for the scalar field.
+- `screen.fields`: every other non-constant freezeout field at the same points, for a field selector.
+- `screen.evolution`: time-resolved field animation. `fields[<name>].frames[i][j]` colors
+  `screen.points[j]` at `cycles[i]`; full-resolution frames live in the
+  `screen_frames_<field>_<rows>x<frames>.bin` sidecars.
 - `screen.clusters.snapshots`: local residue, cluster, or defect snapshots.
-- `screen.repairTrace`: repair or mismatch descent timeline.
+- `screen.repairTrace`: repair or mismatch descent timeline (stride sample of `repair_trace_full.csv`).
 - `smallUniverse.repairFrames`: optional exact repair-time context.
 - `cmbComparison.residualRows`: optional static diagnostic overlay.
 
 Recommended rendering:
 
 - Render an S2 shell or equirectangular map with color from `screen.values`.
-- Add low-amplitude field shimmer keyed to `screen.repairTrace[*].cycle` when available.
+- When `screen.evolution.available=true`, drive the vacuum animation from the measured frames
+  instead of synthetic shimmer, bound to the global timeline slider.
+- Otherwise add low-amplitude field shimmer keyed to `screen.repairTrace[*].cycle` when available.
 - Draw residue clusters from `screen.clusters.snapshots[*].clusters` as local pulses, rings, sparks,
   or contour highlights.
 - Add a small spectrum/residual inset from `cmbComparison.residualRows` only as a diagnostic overlay.
@@ -307,8 +327,10 @@ Primary fields:
 - `subjectiveObserverCameras[*].timeFrames`
 - `subjectiveObserverCameras[*].timeFrames[*].visibleProtoWorldlines`
 - `subjectiveObserverCameras[*].timeFrames[*].peripheralDiagnosticProtoWorldlineIds`
+- `subjectiveObserverCameras[*].visibleConsensusObjects`
 - `observerModularTime.objectiveObserverViews`
 - `observerModularTime.overlapLinks`
+- `observerModularTime.overlapSummary.overlapRepairDynamics`
 - `observerModularTime.timeFrames`
 
 Recommended rendering:
@@ -326,6 +348,12 @@ Recommended rendering:
   with visibly different styling; it must not create a duplicate nominal sighting or visibility count.
 - Draw `observerModularTime.overlapLinks` as readback-overlap arcs or support links. They are not
   decorative graph edges; they are the shared-support substrate for objectivity.
+- Animate overlap repair: the strongest links carry `repairTrajectory`. When
+  `overlapSummary.overlapRepairDynamics.available=true` these are measured per-cycle
+  `overlapMismatchDensity` values on the pair's shared support; pulse or recolor each link by its
+  trajectory as the timeline plays. Links without a trajectory derive one per their `trajectorySource`.
+- Render `visibleConsensusObjects` as the static consensus-object field of the first-person view,
+  placed at `(observerLocalReadout.u, observerLocalReadout.v)` and depth-cued by `range`.
 - Include a small third-person orientation inset if useful, but clearly mark the selected camera as
   observer-local.
 
@@ -709,6 +737,9 @@ prediction receipts pass.
 Primary fields:
 
 - `cmbComparison.residualRows`
+- `cmbComparison.assumedVisualization.referenceRows`
+- `cmbComparison.assumedVisualization.assumedModelRows`
+- `cmbComparison.assumedVisualization.provenance.sha256Matches`
 - `cmbComparison.receipts`
 - `comparableObservations.measurementLanes`
 - `comparableObservations.datasets`
@@ -717,6 +748,11 @@ Primary fields:
 Recommended rendering:
 
 - Plot residual rows as a compact TT/residual chart when present.
+- When the physical/diagnostic residual lane is absent, use the pinned assumed-visualization rows only
+  if `dataAvailable=true` and `sha256Matches=true`. Render observed and published-best-fit reference
+  series distinctly with the gold assumption badge and an explicit "not an OPH prediction" caption.
+- If implementing the optional sky realization, use only `skyRealizationContract.seed` and
+  `sourceSpectrum`; expose the seed in provenance and never claim it came from a simulated OPH sky map.
 - Use measurement lanes for additional public-data-facing diagnostics.
 - Display usable-data receipts and prediction receipts separately.
 - Keep the CMB view secondary to the observer-readback explanation unless the app is specifically a
@@ -776,8 +812,11 @@ Missing optional fields should degrade gracefully:
   use `screen.repairTrace` as a separately labelled large-run trace. Never synthesize an exact graph.
 - If `effectiveStringTheory.layerAvailability.finite_edge_string_vibration_pulses` is false, hide
   that sublayer and continue with available defect/H3/worldline layers.
-- If `cmbComparison.residualRows` is absent, hide the CMB overlay but keep the CMB gate visible if
-  receipts are present.
+- If `cmbComparison.residualRows` is absent but
+  `cmbComparison.assumedVisualization.dataAvailable=true`, show the pinned reference TT shape under a
+  persistent **ASSUMED VISUAL LAYER — NOT DERIVED** badge. Plot `referenceRows` as the observed
+  reference and `assumedModelRows` as the source table's published best-fit reference; never label the
+  latter an OPH model. If both lanes are absent, hide the plot and keep the CMB gates visible.
 - If `consensusBulk.protoParticleCandidates.worldlines` is empty, show no string/H3 tracks and keep
   `particle_matter_receipt` closed or absent.
 - If `emergentCurvedSpacetime.curvatureProxyPoints` is empty, show the curved-spacetime gate panel

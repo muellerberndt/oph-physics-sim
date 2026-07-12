@@ -145,6 +145,10 @@ def _write_optional_cmb_lite(run_path: Path, config: dict[str, Any]) -> dict[str
     if not isinstance(cmb_cfg, dict) or not bool(cmb_cfg.get("enabled", False)):
         return {"enabled": False}
     benchmark = Path(str(cmb_cfg.get("benchmark_path", ""))).expanduser()
+    if not benchmark.is_absolute() and not benchmark.exists():
+        repo_relative = Path(__file__).resolve().parents[2] / benchmark
+        if repo_relative.exists():
+            benchmark = repo_relative
     if not benchmark.exists():
         report = {
             "enabled": True,

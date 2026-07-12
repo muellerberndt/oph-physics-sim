@@ -110,6 +110,7 @@ def test_issue310_modular_response_localization_certifies_gap_and_ball() -> None
     assert report["frame"]["rank"] == 4
     assert report["frame"]["sigma_min"] > 0
     assert report["tokens"][0]["Delta_loc"] > 0
+    assert report["tokens"][0]["Delta_loc"] == pytest.approx(0.93 - 0.001)
     assert report["tokens"][0]["localization_radius"] > 0
     assert report["mandatory_nonclaims"]["PARTICLE_SPECIES_DERIVED"] is False
     assert report["mandatory_nonclaims"]["NEUTRAL_CHART_BLIND_BULK"] is False

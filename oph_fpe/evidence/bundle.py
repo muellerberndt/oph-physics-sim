@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,18 @@ import yaml
 
 from oph_fpe.dynamics.repair import RepairEvent
 from oph_fpe.evidence.hashes import stable_json_hash
+
+
+def strict_jsonable(value: Any) -> Any:
+    """Replace non-finite floats with None so emitted JSON stays strict-parser safe."""
+
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {key: strict_jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [strict_jsonable(item) for item in value]
+    return value
 
 
 class RunBundle:
@@ -29,16 +42,20 @@ class RunBundle:
     def write_manifest(self, manifest: dict[str, Any]) -> None:
         manifest = dict(manifest)
         manifest["git_commit"] = _git_commit()
-        (self.path / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str), encoding="utf-8")
+        (self.path / "manifest.json").write_text(
+            json.dumps(strict_jsonable(manifest), indent=2, default=str), encoding="utf-8"
+        )
         (self.path / "git_commit.txt").write_text(str(manifest["git_commit"]) + "\n", encoding="utf-8")
 
     def write_json(self, name: str, data: Any) -> None:
-        (self.path / name).write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+        (self.path / name).write_text(
+            json.dumps(strict_jsonable(data), indent=2, default=str), encoding="utf-8"
+        )
 
     def write_jsonl(self, name: str, rows: list[dict[str, Any]]) -> None:
         with (self.path / name).open("w", encoding="utf-8") as handle:
             for row in rows:
-                handle.write(json.dumps(row, default=str) + "\n")
+                handle.write(json.dumps(strict_jsonable(row), default=str) + "\n")
 
     def write_mismatch_trace(self, rows: list[dict[str, Any]]) -> None:
         _write_csv(self.path / "mismatch_trace.csv", rows)
