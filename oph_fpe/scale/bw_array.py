@@ -1853,6 +1853,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("harmonic_time_trace_report.json", harmonic_time_trace_report)
     bundle.write_json("receipt_ladder_report.json", receipt_ladder_report)
     bundle.write_json("s3_class_counts.json", s3_class_counts(gauge) if group_name == "S3" else {})
+    if group_name == "S3":
+        np.savez_compressed(
+            bundle.path / "s3_gauge_state.npz",
+            left=np.asarray(left),
+            right=np.asarray(right),
+            gauge=np.asarray(gauge, dtype=np.int64),
+            points=np.asarray(points),
+        )
     if s3_holonomy_report:
         bundle.write_json("array_holonomy_report.json", s3_holonomy_report)
     if s3_defect_timeline_report:
