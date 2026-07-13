@@ -11,11 +11,37 @@ see `docs/RUN_OUTPUTS_AND_VISUALIZATION.md` and
 
 The working surface includes finite consensus receipts, observer record algebra, support-visible BW/KMS and H3 chart diagnostics, theorem-assisted H3 object population, strict neutral-bulk frontiers, screen-level CMB diagnostics, finite cosmology certificate gates, defect and proto-particle assays, scale/capacity audits, viewer exports, and handoff bundles.
 
+## Status (2026-07-14)
+
+Latest completed run ladder: 4k, 16k, 64k, 128k (32,000 observers), 256k,
+and 1,048,576 patches with 64,000 materialized observers
+(`runs/oph_universe_1m_night1`; earned-receipt reruns at 128k and 1M in
+flight on the covariant probe).
+
+- The observer 3+1D experience receipt is earned under the gauge-covariant
+  sector-replay contract: all four component gates pass at 4k with zero
+  overrides, and the 2 pi KMS clock gate passes genuinely at 4k, 16k, and
+  64k. Receipts certified before 2026-07-14 used the pre-covariant probe
+  and are superseded.
+- The observer mutual-agreement certificate is scale-stable from 4k to 1M:
+  every evaluated pair re-gauges at defect 0.0, every evaluated observer
+  triple closes the Cech cocycle, shuffled controls sit near 0.8.
+- Proto-particles are receipted (organic defect population, worldlines,
+  two-defect dynamics assays); particle promotion stays gated on
+  gauge-covariant fusion transport.
+- Strict neutral bulk and the Einstein branch-entry gates E1-E6 stay
+  false with executable blockers; the 4k/16k/64k/256k refinement ladder
+  and the bw_2pi blocker resolution feed the next audit pass.
+
+The living scoreboard, including public-measurement comparisons, is
+`docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md` (at-a-glance tables in
+section 0a).
+
 ## Receipt Boundaries
 
 The README describes the simulator surface. Pass/fail receipt labels belong in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles. Mutable project progress belongs in GitHub issues.
 
-The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / issue #503). `tools/import_oph_artifacts.py` hash-pins the current paper/particle/geometry status into a run or staging directory; imported status is always informational or diagnostic and never flips a run receipt. The current pinned snapshot is under `data/oph_cross_repo_current/`. See `docs/PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`.
+The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / [issue #503](https://github.com/FloatingPragma/observer-patch-holography/issues/503)). `tools/import_oph_artifacts.py` hash-pins the current paper/particle/geometry status into a run or staging directory; imported status is always informational or diagnostic and never flips a run receipt. The current pinned snapshot is under `data/oph_cross_repo_current/`. See `docs/PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`.
 
 For explanatory universe rendering, the simulator also supports an explicit
 `simulation_assumptions` lane. It can supply paper bridges such as the BW `2*pi`
@@ -44,14 +70,14 @@ Every ensemble-facing output must name its claim tier:
 
 Reference baselines are useful for distributed correctness, visualization calibration, and regression tests, but they do not become OPH-native vacuum or primordial-field claims. The explicit receipts `OPH_NATIVE_VACUUM_PROMOTION_RECEIPT` and `OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT` must stay false unless the corresponding paper-side transfer or lift theorem is supplied.
 
-The issue #361 continuum bridge is represented by `oph_fpe.scale.reference_tower` and
+The [issue #361](https://github.com/FloatingPragma/observer-patch-holography/issues/361) continuum bridge is represented by `oph_fpe.scale.reference_tower` and
 `docs/oph_issue361_certificate_schema.json`. A passing finite reference-tower identity check is
 only the finite-regulator gate. Continuum correlations, BW modular convergence, Lorentzian
 unitarity, and Yang-Mills identification remain closed or conditional until the emitted
 certificate includes Cauchy envelopes, transported-state/cutoff bounds, positive-transfer plus
 transfer-tower convergence, and the four-dimensional OS/gauge certificate.
 
-Issue #307 has a separate fail-closed collar-CMI audit. Run
+[Issue #307](https://github.com/FloatingPragma/observer-patch-holography/issues/307) has a separate fail-closed collar-CMI audit. Run
 `python3 -m oph_fpe.cli issue-307-collar-cmi-decay --source <primitive.json> --out <report.json>`.
 The audit recomputes five clauses: finite-range Gibbs evidence, uniform strong conditional matrix
 mixing, regional CMI in nats, the boundary-prefactored exponential bound, and the sharp scaling
@@ -66,7 +92,7 @@ pass flags are ignored. A passing `ISSUE_307_COLLAR_CMI_DECAY_FINITE_RECEIPT` is
 branch-instantiation sanity check. It does not certify the continuum limit, turn local packet CMI
 into regional quantum CMI, produce a stress tensor, or open the Einstein gate.
 
-Issue #308 is represented by the finite cap-normal BW certificate audit:
+[Issue #308](https://github.com/FloatingPragma/observer-patch-holography/issues/308) is represented by the finite cap-normal BW certificate audit:
 
 ```text
 BWRec_r = (
@@ -95,7 +121,7 @@ Main run families:
 - explicit screen ports, local pixel closure, screen-capacity readouts, and scale-bridge reports;
 - finite overlap mismatch, annealed repair, stability-window records, readback hashes, and replayable verifier receipts;
 - Borel-Weil one-Higgs carrier receipts for `H_OPH = H^0(CP1,O(1)) ~= C^2`, with Higgs mass, quartic, weak scale, and Coleman-Weinberg claims explicitly out of scope;
-- support-visible cap/collar states, diagnostic collar Markov reports, the fail-closed issue #307 regional CMI audit, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
+- support-visible cap/collar states, diagnostic collar Markov reports, the fail-closed [issue #307](https://github.com/FloatingPragma/observer-patch-holography/issues/307) regional CMI audit, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
 - fine-to-coarse MaxEnt I-projection reports with relative-entropy closure defect, moment residual, Hessian floor, trace residual, and Pinsker bound, plus a separate noncommutative central-interface MSA receipt with Bell/noncentral negative controls;
 - observer objects, observer-local modular time, H3 object-population reports, and theorem-assisted consensus readouts;
 - observer mutual-agreement certificates (`observer_agreement_report.json`): per-pair chart re-gauging recovery on support overlaps with section-uniqueness detection, Cech cocycle checks on observer triples, shuffled-view controls, and integer-only experienced-chart verdicts; `bulk_dimension_claim` is null by schema, and continuous dimension estimators carry `claim_level: internal_diagnostic_only`;
@@ -370,7 +396,7 @@ finite Lorentz theorem contract: receipt-gated proof contract
 strict neutral third-person bulk: receipt-gated frontier
 ```
 
-Issue #309 is represented by `CAP_NORMAL_H3_CHART_RECEIPT`. It recomputes
+[Issue #309](https://github.com/FloatingPragma/observer-patch-holography/issues/309) is represented by `CAP_NORMAL_H3_CHART_RECEIPT`. It recomputes
 `q(Omega)=(1,Omega)`, `n_C=(cot(alpha), csc(alpha) c)`, boundary incidence,
 Lorentz equivariance `n_{gC}=Lambda_g n_C`, and the future-sheet `H3` checks
 from primitive chart fields. A sampled/fitted display without a global
@@ -383,7 +409,7 @@ python3 -m oph_fpe.cli cap-normal-h3-chart \
   --out runs/<run_id>/cap_normal_h3_chart_report.json
 ```
 
-Issue #310 is represented by `MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT`. The
+[Issue #310](https://github.com/FloatingPragma/observer-patch-holography/issues/310) is represented by `MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT`. The
 allowed path is:
 
 ```text
