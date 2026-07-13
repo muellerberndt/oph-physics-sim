@@ -229,3 +229,109 @@ def write_screen_parity_report(run_dir: str | Path, **kwargs: Any) -> dict[str, 
     out_path = Path(run_dir) / "screen_parity_report.json"
     out_path.write_text(json.dumps(report, indent=2, sort_keys=True))
     return report
+
+
+TURNING_SCHEMA = "defect_worldline_turning_v1"
+
+
+def _signed_turning(points: np.ndarray) -> list[float]:
+    """Signed geodesic turning angles along a worldline on the unit sphere."""
+    base = points / np.linalg.norm(points, axis=1, keepdims=True)
+    angles: list[float] = []
+    for index in range(1, base.shape[0] - 1):
+        prev_point, here, next_point = base[index - 1], base[index], base[index + 1]
+        u = prev_point - (prev_point @ here) * here
+        v = next_point - (next_point @ here) * here
+        nu, nv = np.linalg.norm(u), np.linalg.norm(v)
+        if nu < 1e-12 or nv < 1e-12:
+            continue
+        u, v = u / nu, v / nv
+        incoming = -u  # direction of travel INTO the vertex
+        cross = np.cross(incoming, v)
+        angles.append(float(np.arctan2(cross @ here, incoming @ v)))
+    return angles
+
+
+def defect_worldline_turning_report(
+    run_dir: str | Path,
+    *,
+    min_events: int = 4,
+    seed: int = 1,
+    bootstrap_draws: int = 4000,
+) -> dict[str, Any]:
+    """Parity-odd defect-motion statistic: mean signed turning per step.
+
+    Unlike closed-surface pseudo-scalar integrals (which vanish identically
+    by Stokes), the handedness of defect trajectories is a genuine
+    dynamical parity observable. Controls: a spatial mirror flips every
+    turning angle exactly; the null band comes from worldline-level sign
+    flips (each worldline's mean turning is one exchangeable unit).
+    """
+
+    run = Path(run_dir)
+    path = run / "defect_timeline_report.json"
+    if not path.exists():
+        return {"schema": TURNING_SCHEMA, "status": "missing_defect_timeline"}
+    payload = json.loads(path.read_text())
+    worldlines = payload.get("cluster_analysis", {}).get("worldlines") or payload.get("worldlines") or []
+    per_worldline: list[tuple[float, int]] = []
+    mirror_check_ok = True
+    for worldline in worldlines:
+        events = worldline.get("events") or []
+        centroids = [event.get("centroid") for event in events if event.get("centroid")]
+        if len(centroids) < int(min_events):
+            continue
+        points = np.asarray(centroids, dtype=float)
+        if points.ndim != 2 or points.shape[1] != 3:
+            continue
+        angles = _signed_turning(points)
+        if not angles:
+            continue
+        mirrored = points.copy()
+        mirrored[:, 0] *= -1.0
+        mirror_angles = _signed_turning(mirrored)
+        if len(mirror_angles) == len(angles) and not np.allclose(
+            np.asarray(mirror_angles), -np.asarray(angles), atol=1e-9
+        ):
+            mirror_check_ok = False
+        per_worldline.append((float(np.mean(angles)), len(angles)))
+    if not per_worldline:
+        return {"schema": TURNING_SCHEMA, "status": "no_usable_worldlines"}
+    means = np.asarray([entry[0] for entry in per_worldline], dtype=float)
+    steps = np.asarray([entry[1] for entry in per_worldline], dtype=float)
+    weighted_mean = float(np.sum(means * steps) / np.sum(steps))
+    rng = np.random.default_rng(int(seed))
+    draws = np.asarray(
+        [
+            float(np.sum(means * steps * rng.choice((-1.0, 1.0), size=means.size)) / np.sum(steps))
+            for _ in range(int(bootstrap_draws))
+        ]
+    )
+    null_std = float(np.std(draws))
+    z_score = float(weighted_mean / null_std) if null_std > 0 else None
+    return {
+        "schema": TURNING_SCHEMA,
+        "status": "evaluated",
+        "worldlines_used": int(means.size),
+        "total_turning_steps": int(np.sum(steps)),
+        "mean_signed_turning_per_step_rad": weighted_mean,
+        "signflip_null_std": null_std,
+        "z_score": z_score,
+        "mirror_covariance_ok": bool(mirror_check_ok),
+        "chirality_detected": bool(z_score is not None and abs(z_score) >= 4.0),
+        "claim_boundary": (
+            "Dynamical parity observable on defect worldline centroids; the "
+            "closed-surface pseudo-scalar mean is excluded by construction "
+            "(it vanishes identically by Stokes). Sign reproducibility "
+            "across independent seeds is required before any chirality "
+            "claim."
+        ),
+    }
+
+
+def write_defect_worldline_turning_report(run_dir: str | Path, **kwargs: Any) -> dict[str, Any]:
+    report = defect_worldline_turning_report(run_dir, **kwargs)
+    (Path(run_dir) / "defect_worldline_turning_report.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True)
+    )
+    return report
