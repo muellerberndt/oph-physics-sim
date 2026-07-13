@@ -4,6 +4,11 @@ OPH-FPE is the finite simulator for Observer-Patch Holography physics experiment
 
 The package name is `OPH-FPE`: Observer-Patch Fundamental Physics Emergence.
 
+Live visualizations of simulator runs: <https://simulation.floatingpragma.io>
+(built by the web coding agent from the visualizer bundles this repo emits;
+see `docs/RUN_OUTPUTS_AND_VISUALIZATION.md` and
+`scripts/README_FOR_WEB_CODING_AGENT.md`).
+
 The working surface includes finite consensus receipts, observer record algebra, support-visible BW/KMS and H3 chart diagnostics, theorem-assisted H3 object population, strict neutral-bulk frontiers, screen-level CMB diagnostics, finite cosmology certificate gates, defect and proto-particle assays, scale/capacity audits, viewer exports, and handoff bundles.
 
 ## Receipt Boundaries
