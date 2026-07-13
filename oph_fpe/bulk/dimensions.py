@@ -1,3 +1,14 @@
+"""Continuous dimension estimators: internal diagnostics only.
+
+OPH claim-boundary policy: a fractional "bulk dimension" is a category
+error. Observers are primary and experience integer 3+1 charts; a bulk is
+their agreement (see ``oph_fpe.bulk.observer_agreement``). The estimators
+in this module exist to diagnose feature-locality and estimator health,
+never to state a physical dimensionality. Every report they emit carries
+``claim_level: internal_diagnostic_only`` and ``physical_claim: False``,
+and downstream surfaces must not promote their ``estimate`` fields.
+"""
+
 from __future__ import annotations
 
 import math
@@ -6,6 +17,16 @@ from typing import Any
 import networkx as nx
 import numpy as np
 
+DIMENSION_DIAGNOSTIC_POLICY = {
+    "claim_level": "internal_diagnostic_only",
+    "physical_claim": False,
+    "policy": (
+        "Continuous dimension estimates are estimator diagnostics. Physical "
+        "dimensionality statements are integer observer-chart verdicts plus "
+        "the observer mutual-agreement certificate."
+    ),
+}
+
 
 def dimension_report(graph: nx.Graph, distances: np.ndarray) -> dict[str, Any]:
     return {
@@ -13,6 +34,7 @@ def dimension_report(graph: nx.Graph, distances: np.ndarray) -> dict[str, Any]:
         "volume_growth_dimension": volume_growth_dimension(distances),
         "correlation_dimension": correlation_dimension(distances),
         "spectral_dimension": spectral_dimension(graph),
+        **DIMENSION_DIAGNOSTIC_POLICY,
     }
 
 

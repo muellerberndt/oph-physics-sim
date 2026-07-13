@@ -77,12 +77,20 @@ RUN_REPORTS = [
     "h3_objects.csv",
     "observer_perspective_rows.csv",
     "mismatch_trace.csv",
+    "observer_agreement_report.json",
+    "screen_parity_report.json",
+    "s3_class_counts.json",
 ]
 for name in RUN_REPORTS:
     add(RUN_DIR / name, f"run_reports/{name}", required=False)
 
 # --- raw arrays for advanced rendering --------------------------------------
-for name in ("freezeout_fields.npz", "screen_evolution_frames.npz", "harmonic_time_trace.npz"):
+for name in (
+    "freezeout_fields.npz",
+    "screen_evolution_frames.npz",
+    "harmonic_time_trace.npz",
+    "s3_gauge_state.npz",
+):
     add(RUN_DIR / name, f"data/{name}", required=False)
 
 # Full observer-view rows (all observers, spectra + histograms + repair tensors)
