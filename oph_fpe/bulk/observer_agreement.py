@@ -262,13 +262,62 @@ def observer_agreement_report(
         frame_values = observer_frame(seed, observer["observer_id"], nodes)
         frames.append({int(node): int(value) for node, value in zip(nodes, frame_values, strict=True)})
 
-    # Candidate pairs by support overlap.
-    pair_candidates: list[tuple[int, int]] = []
-    for a in range(len(observers)):
-        for b in range(a + 1, len(observers)):
-            if len(supports[a] & supports[b]) >= 3:
-                pair_candidates.append((a, b))
+    # Candidate pairs by support overlap, via an inverted patch -> observer
+    # index (the direct O(n^2) support-intersection scan is infeasible at
+    # tens of thousands of observers).
+    patch_to_observers: dict[int, list[int]] = {}
+    for index, support in enumerate(supports):
+        for node in support:
+            patch_to_observers.setdefault(node, []).append(index)
+    co_support: dict[tuple[int, int], int] = {}
+    for members in patch_to_observers.values():
+        if len(members) < 2:
+            continue
+        for position, a in enumerate(members):
+            for b in members[position + 1 :]:
+                key = (a, b) if a < b else (b, a)
+                co_support[key] = co_support.get(key, 0) + 1
+    pair_candidates = [key for key, count in co_support.items() if count >= 3]
     rng.shuffle(pair_candidates)
+
+    # Triangle-first ordering: the cocycle statistic needs closed triangles
+    # of evaluated pairs, which random pair sampling rarely produces. Build
+    # the overlap graph, enumerate a bounded set of triangles, and push
+    # their pairs to the front of the evaluation order.
+    candidate_set = set(pair_candidates)
+    adjacency: dict[int, set[int]] = {}
+    for a, b in pair_candidates:
+        adjacency.setdefault(a, set()).add(b)
+        adjacency.setdefault(b, set()).add(a)
+    triangle_pairs: list[tuple[int, int]] = []
+    triangles_found = 0
+    for a in sorted(adjacency, key=lambda index: -len(adjacency[index])):
+        if triangles_found >= int(max_triples) * 2:
+            break
+        neighbors = sorted(adjacency[a])
+        for i, b in enumerate(neighbors):
+            if b <= a:
+                continue
+            common = adjacency[a] & adjacency[b]
+            for c in sorted(common):
+                if c <= b:
+                    continue
+                triangles_found += 1
+                for pair in ((a, b), (b, c), (a, c)):
+                    key = (min(pair), max(pair))
+                    if key in candidate_set:
+                        triangle_pairs.append(key)
+                if triangles_found >= int(max_triples) * 2:
+                    break
+            if triangles_found >= int(max_triples) * 2:
+                break
+    seen_pairs: set[tuple[int, int]] = set()
+    ordered_candidates: list[tuple[int, int]] = []
+    for key in triangle_pairs + pair_candidates:
+        if key not in seen_pairs:
+            seen_pairs.add(key)
+            ordered_candidates.append(key)
+    pair_candidates = ordered_candidates
 
     pair_records: list[dict[str, Any]] = []
     control_defects: list[float] = []
