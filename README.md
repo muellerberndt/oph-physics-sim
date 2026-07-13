@@ -521,4 +521,7 @@ python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen
   transactional seam kernel).
 - `docs/KMS_PROBE_SECTOR_REPLAY_TODO.md`: record of the covariant-probe
   fail-closed episode and the sector-replay fix (implemented 2026-07-14).
+- `docs/RUN_OUTPUTS_AND_VISUALIZATION.md`: full inventory of run outputs for
+  postprocessing and visualization, grouped by lane, with the visualizer-bundle
+  selection marked.
 - `REPRODUCTION.md`: reproducibility notes.
