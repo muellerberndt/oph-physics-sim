@@ -1,4 +1,4 @@
-# oph-physics-sim
+# Observer-Patch Fundamental Physics Emergence
 
 OPH-FPE is the finite simulator for Observer-Patch Holography physics experiments. It models bounded software patches with local state, ports, readback, records, feedback and repair moves, then writes public evidence bundles that say which claims passed and which gates are closed.
 
