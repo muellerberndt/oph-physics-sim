@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -4874,6 +4875,37 @@ def _attach_transition_history_histograms(
     history_fields = [fields for fields in history_fields if fields]
     if not history_fields:
         return
+    patch_rows = [
+        row for row in observer_rows if row.get("view_type") == "patch_observer"
+    ]
+    local_token_cache = _precompute_local_transition_tokens(
+        history_fields,
+        key_field_names=key_field_names,
+        persistence_field_names=persistence_field_names,
+    )
+    requested_histogram_jobs = object_cfg.get(
+        "transition_history_histogram_n_jobs",
+        "auto",
+    )
+    histogram_jobs = min(
+        len(patch_rows),
+        jobs_from_config(requested_histogram_jobs, default=1),
+    ) if patch_rows else 1
+
+    def reduce_local_histograms(row: dict[str, Any]) -> tuple[dict[str, float], dict[str, float]]:
+        return _local_transition_token_histograms_from_precomputed(
+            np.asarray(row.get("support_nodes", []), dtype=np.int64),
+            local_token_cache,
+            min_persistence=int(object_cfg.get("transition_history_local_min_persistence", 1)),
+        )
+
+    if histogram_jobs > 1 and len(patch_rows) >= 64:
+        with ThreadPoolExecutor(max_workers=histogram_jobs) as executor:
+            local_histogram_rows = list(executor.map(reduce_local_histograms, patch_rows))
+    else:
+        histogram_jobs = 1
+        local_histogram_rows = [reduce_local_histograms(row) for row in patch_rows]
+    patch_row_index = 0
     for row in observer_rows:
         if row.get("view_type") != "patch_observer":
             continue
@@ -4940,13 +4972,13 @@ def _attach_transition_history_histograms(
         row["transition_history_persistence"] = int(persistence)
         row["transition_history_mean_modal_mass"] = float(np.mean(step_masses)) if step_masses else 0.0
         row["transition_history_histogram"] = {str(signature): 1.0}
-        local_token_histogram, local_token_persistent_histogram = _local_transition_token_histograms(
-            support,
-            history_fields,
-            key_field_names=key_field_names,
-            persistence_field_names=persistence_field_names,
-            min_persistence=int(object_cfg.get("transition_history_local_min_persistence", 1)),
-        )
+        local_token_histogram, local_token_persistent_histogram = local_histogram_rows[
+            patch_row_index
+        ]
+        patch_row_index += 1
+        row["local_transition_token_schema"] = local_token_cache["schema"]
+        row["local_transition_token_precomputed_per_patch"] = True
+        row["local_transition_histogram_n_jobs"] = int(histogram_jobs)
         row["transition_history_histograms"] = {
             "transition_history_key": {str(signature): 1.0},
             "local_transition_token": local_token_histogram,
@@ -4997,19 +5029,54 @@ def _attach_h2_neutral_evidence_channels(
     current_fields = transition_affinity_packet_fields(current_raw_fields, object_cfg)
     if not current_fields and history_fields:
         current_fields = history_fields[-1]
+    patch_rows = [
+        row for row in observer_rows if row.get("view_type") == "patch_observer"
+    ]
+    boundary_token_cache = _precompute_h2_boundary_packet_tokens(current_fields)
+    port_pair_token_cache = _precompute_h2_port_pair_lag_tokens(
+        history_fields,
+        object_cfg=object_cfg,
+    )
+    requested_histogram_jobs = object_cfg.get(
+        "h2_neutral_histogram_n_jobs",
+        object_cfg.get("transition_history_histogram_n_jobs", "auto"),
+    )
+    histogram_jobs = min(
+        len(patch_rows),
+        jobs_from_config(requested_histogram_jobs, default=1),
+    ) if patch_rows else 1
+
+    def reduce_h2_histograms(row: dict[str, Any]) -> tuple[dict[str, float], dict[str, float]]:
+        support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
+        return (
+            _h2_boundary_packet_histogram_from_precomputed(
+                support,
+                boundary_token_cache,
+            ),
+            _h2_port_pair_lag_histogram_from_precomputed(
+                support,
+                port_pair_token_cache,
+            ),
+        )
+
+    if histogram_jobs > 1 and len(patch_rows) >= 64:
+        with ThreadPoolExecutor(max_workers=histogram_jobs) as executor:
+            h2_histogram_rows = list(executor.map(reduce_h2_histograms, patch_rows))
+    else:
+        histogram_jobs = 1
+        h2_histogram_rows = [reduce_h2_histograms(row) for row in patch_rows]
+    patch_row_index = 0
     for row in observer_rows:
         if row.get("view_type") != "patch_observer":
             continue
         support = np.asarray(row.get("support_nodes", []), dtype=np.int64)
         if support.size == 0:
             continue
-        boundary_histogram = _h2_boundary_packet_hash_histogram(support, current_fields)
+        boundary_histogram, port_pair_lag_histogram = h2_histogram_rows[
+            patch_row_index
+        ]
+        patch_row_index += 1
         overlap_histogram = _h2_overlap_correspondence_histogram(row, boundary_histogram)
-        port_pair_lag_histogram = _h2_port_pair_lag_histogram(
-            support,
-            history_fields,
-            object_cfg=object_cfg,
-        )
         repair_current_tensor = _h2_repair_current_tensor(
             support,
             raw_history=raw_history,
@@ -5028,6 +5095,10 @@ def _attach_h2_neutral_evidence_channels(
             history_fields,
         )
         row["h2_neutral_evidence_schema"] = "observer_local_h2_neutral_evidence_v1"
+        row["h2_packet_token_schema"] = boundary_token_cache["schema"]
+        row["h2_port_pair_token_schema"] = port_pair_token_cache["schema"]
+        row["h2_histograms_precomputed_per_patch"] = True
+        row["h2_neutral_histogram_n_jobs"] = int(histogram_jobs)
         row["h2_neutral_evidence_claim_boundary"] = (
             "chart-blind local packet, response, and first-passage summaries; "
             "no support-node IDs, cap axes, S2 positions, H3 coordinates, or observer IDs"
@@ -5066,6 +5137,39 @@ def _h2_boundary_packet_hash_histogram(
         token = _stable_hash_to_int(stable_json_hash({"boundary_packet": packet}))
         counts[token] = counts.get(token, 0) + 1
     return _normalize_int_counts(counts)
+
+
+def _precompute_h2_boundary_packet_tokens(
+    fields: dict[str, np.ndarray],
+    *,
+    max_fields: int = 8,
+) -> dict[str, Any]:
+    names = sorted(str(name) for name in fields.keys())[: max(1, int(max_fields))]
+    token_matrix, valid_matrix = _precompute_fixed_packet_token_matrix(
+        [fields],
+        names=names,
+        domain="oph_h2_boundary_packet_fixed_width_v1",
+    )
+    return {
+        "schema": "oph_h2_boundary_packet_fixed_width_v1",
+        "tokens": token_matrix[0] if token_matrix.shape[0] else np.zeros(0, dtype=np.uint64),
+        "valid": valid_matrix[0] if valid_matrix.shape[0] else np.zeros(0, dtype=bool),
+        "fields": names,
+    }
+
+
+def _h2_boundary_packet_histogram_from_precomputed(
+    support: np.ndarray,
+    token_cache: dict[str, Any],
+) -> dict[str, float]:
+    support = np.asarray(support, dtype=np.int64).reshape(-1)
+    tokens = np.asarray(token_cache.get("tokens", []), dtype=np.uint64)
+    valid = np.asarray(token_cache.get("valid", []), dtype=bool)
+    support = support[(support >= 0) & (support < tokens.size)]
+    if support.size == 0:
+        return {}
+    support = support[valid[support]]
+    return _normalize_uint64_tokens(tokens[support])
 
 
 def _h2_overlap_correspondence_histogram(
@@ -5166,6 +5270,129 @@ def _h2_port_pair_lag_histogram(
             token = _stable_hash_to_int(stable_json_hash(payload))
             counts[token] = counts.get(token, 0) + 1
     return _normalize_int_counts(counts)
+
+
+def _precompute_h2_port_pair_lag_tokens(
+    history_fields: list[dict[str, np.ndarray]],
+    *,
+    object_cfg: dict[str, Any],
+    max_fields: int = 5,
+) -> dict[str, Any]:
+    configured_names = [
+        str(name)
+        for name in object_cfg.get(
+            "transition_history_key_fields",
+            object_cfg.get("transition_affinity_fields", []),
+        )
+    ]
+    names = (
+        configured_names[: max(1, int(max_fields))]
+        if configured_names
+        else sorted(
+            {str(name) for fields in history_fields for name in fields.keys()}
+        )[: max(1, int(max_fields))]
+    )
+    packet_tokens, packet_valid = _precompute_fixed_packet_token_matrix(
+        history_fields,
+        names=names,
+        domain="oph_h2_port_packet_fixed_width_v1",
+    )
+    if packet_tokens.shape[0] < 2:
+        pair_tokens = np.zeros((0, packet_tokens.shape[1]), dtype=np.uint64)
+        pair_valid = np.zeros((0, packet_tokens.shape[1]), dtype=bool)
+    else:
+        pair_tokens = np.zeros(
+            (packet_tokens.shape[0] - 1, packet_tokens.shape[1]),
+            dtype=np.uint64,
+        )
+        pair_valid = packet_valid[:-1] & packet_valid[1:]
+        for lag_index in range(pair_tokens.shape[0]):
+            salt = np.uint64(
+                _fixed_text_u64(f"oph_h2_port_pair_lag_fixed_width_v1:{lag_index + 1}")
+            )
+            pair_tokens[lag_index] = _splitmix64(
+                packet_tokens[lag_index]
+                ^ _splitmix64(packet_tokens[lag_index + 1] ^ salt)
+            )
+        pair_tokens &= np.uint64(0x7FFFFFFFFFFFFFFF)
+    return {
+        "schema": "oph_h2_port_pair_lag_fixed_width_v1",
+        "tokens": pair_tokens,
+        "valid": pair_valid,
+        "fields": names,
+        "lag_count": int(pair_tokens.shape[0]),
+    }
+
+
+def _h2_port_pair_lag_histogram_from_precomputed(
+    support: np.ndarray,
+    token_cache: dict[str, Any],
+) -> dict[str, float]:
+    support = np.asarray(support, dtype=np.int64).reshape(-1)
+    tokens = np.asarray(token_cache.get("tokens", []), dtype=np.uint64)
+    valid = np.asarray(token_cache.get("valid", []), dtype=bool)
+    if tokens.ndim != 2 or valid.shape != tokens.shape or tokens.shape[0] == 0:
+        return {}
+    support = support[(support >= 0) & (support < tokens.shape[1])]
+    if support.size == 0:
+        return {}
+    selected_tokens = tokens[:, support]
+    selected_valid = valid[:, support]
+    return _normalize_uint64_tokens(selected_tokens[selected_valid])
+
+
+def _precompute_fixed_packet_token_matrix(
+    field_steps: list[dict[str, np.ndarray]],
+    *,
+    names: list[str],
+    domain: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    patch_count = max(
+        (
+            int(np.asarray(values).size)
+            for fields in field_steps
+            for name, values in fields.items()
+            if str(name) in names
+        ),
+        default=0,
+    )
+    tokens = np.full(
+        (len(field_steps), patch_count),
+        np.uint64(_fixed_text_u64(domain)),
+        dtype=np.uint64,
+    )
+    valid = np.zeros((len(field_steps), patch_count), dtype=bool)
+    for step_index, fields in enumerate(field_steps):
+        for field_index, name in enumerate(names):
+            source = fields.get(name)
+            if source is None:
+                word = np.full(
+                    patch_count,
+                    np.uint64(0xFFFFFFFFFFFFFFFF),
+                    dtype=np.uint64,
+                )
+            else:
+                array = np.asarray(source, dtype=np.int64).reshape(-1)
+                present_count = min(patch_count, int(array.size))
+                if present_count == patch_count:
+                    values = array
+                else:
+                    values = np.zeros(patch_count, dtype=np.int64)
+                    if present_count:
+                        values[:present_count] = array[:present_count]
+                word = values.view(np.uint64)
+                if present_count < patch_count:
+                    word = word.copy()
+                    word[present_count:] = np.uint64(0xFFFFFFFFFFFFFFFF)
+                valid[step_index, :present_count] = True
+            salt = np.uint64(
+                _fixed_text_u64(f"{domain}:{step_index}:{field_index}:{name}")
+            )
+            tokens[step_index] = _splitmix64(
+                tokens[step_index] ^ _splitmix64(word ^ salt)
+            )
+        tokens[step_index] &= np.uint64(0x7FFFFFFFFFFFFFFF)
+    return tokens, valid
 
 
 def _h2_repair_current_tensor(
@@ -5387,7 +5614,153 @@ def _transition_history_persistence(steps: list[dict[str, int]], *, fields: list
     return int(count)
 
 
-def _local_transition_token_histograms(
+def _precompute_local_transition_tokens(
+    history_fields: list[dict[str, np.ndarray]],
+    *,
+    key_field_names: list[str],
+    persistence_field_names: list[str],
+) -> dict[str, Any]:
+    """Build one fixed-width transition token and persistence value per patch.
+
+    Token identity is only a categorical object-incidence label; it is not a
+    neutral geometry coordinate. The vectorized fold preserves equality of
+    identical fixed-width histories without rebuilding canonical JSON inside
+    every overlapping observer support.
+    """
+
+    names = [str(name) for name in key_field_names if str(name)]
+    if not names:
+        names = sorted(
+            {str(name) for fields in history_fields for name in fields.keys()}
+        )
+    patch_count = max(
+        (
+            int(np.asarray(values).size)
+            for fields in history_fields
+            for name, values in fields.items()
+            if str(name) in names
+        ),
+        default=0,
+    )
+    tokens = np.full(
+        patch_count,
+        np.uint64(_fixed_text_u64("oph_local_transition_token_fixed_width_v1")),
+        dtype=np.uint64,
+    )
+    valid = np.zeros(patch_count, dtype=bool)
+    path_values: dict[str, list[np.ndarray | None]] = {
+        name: [] for name in names
+    }
+    for step_index, fields in enumerate(history_fields):
+        for field_index, name in enumerate(names):
+            source = fields.get(name)
+            if source is None:
+                path_values[name].append(None)
+                word = np.full(
+                    patch_count,
+                    np.uint64(0xFFFFFFFFFFFFFFFF),
+                    dtype=np.uint64,
+                )
+            else:
+                array = np.asarray(source, dtype=np.int64).reshape(-1)
+                present_count = min(patch_count, int(array.size))
+                if present_count == patch_count:
+                    values = array
+                    valid[:present_count] = True
+                else:
+                    values = np.zeros(patch_count, dtype=np.int64)
+                    if present_count:
+                        values[:present_count] = array[:present_count]
+                        valid[:present_count] = True
+                path_values[name].append(values)
+                word = values.view(np.uint64)
+                if present_count < patch_count:
+                    word = word.copy()
+                    word[present_count:] = np.uint64(0xFFFFFFFFFFFFFFFF)
+            salt = np.uint64(
+                _fixed_text_u64(f"{step_index}:{field_index}:{name}")
+            )
+            tokens = _splitmix64(tokens ^ _splitmix64(word ^ salt))
+
+    persistence_names = [
+        name for name in persistence_field_names
+        if name in path_values and path_values[name][-1] is not None
+    ]
+    if not persistence_names:
+        persistence_names = [
+            name for name in names if path_values[name][-1] is not None
+        ]
+    persistence = np.zeros(patch_count, dtype=np.int32)
+    active = valid.copy()
+    for step_index in range(len(history_fields) - 1, -1, -1):
+        matches = active.copy()
+        for name in persistence_names:
+            current = path_values[name][step_index]
+            final = path_values[name][-1]
+            if current is None or final is None:
+                matches[:] = False
+                break
+            matches &= np.asarray(current) == np.asarray(final)
+        persistence[matches] += 1
+        active &= matches
+
+    tokens = _splitmix64(
+        tokens
+        ^ _splitmix64(persistence.astype(np.uint64) ^ np.uint64(0xA0761D6478BD642F))
+    )
+    tokens &= np.uint64(0x7FFFFFFFFFFFFFFF)
+    return {
+        "schema": "oph_local_transition_token_fixed_width_v1",
+        "tokens": tokens,
+        "persistence": persistence,
+        "valid": valid,
+        "key_fields": names,
+        "history_step_count": int(len(history_fields)),
+    }
+
+
+def _local_transition_token_histograms_from_precomputed(
+    support: np.ndarray,
+    token_cache: dict[str, Any],
+    *,
+    min_persistence: int,
+) -> tuple[dict[str, float], dict[str, float]]:
+    support = np.asarray(support, dtype=np.int64).reshape(-1)
+    tokens = np.asarray(token_cache.get("tokens", []), dtype=np.uint64)
+    persistence = np.asarray(token_cache.get("persistence", []), dtype=np.int32)
+    valid_mask = np.asarray(token_cache.get("valid", []), dtype=bool)
+    support = support[(support >= 0) & (support < tokens.size)]
+    if support.size == 0:
+        return {}, {}
+    support = support[valid_mask[support]]
+    if support.size == 0:
+        return {}, {}
+    counts = _normalize_uint64_tokens(tokens[support])
+    persistent_support = support[
+        persistence[support] >= int(min_persistence)
+    ]
+    persistent_counts = _normalize_uint64_tokens(tokens[persistent_support])
+    return counts, persistent_counts
+
+
+def _normalize_uint64_tokens(tokens: np.ndarray) -> dict[str, float]:
+    values = np.asarray(tokens, dtype=np.uint64).reshape(-1)
+    if values.size == 0:
+        return {}
+    unique, counts = np.unique(values, return_counts=True)
+    total = float(counts.sum())
+    return {
+        str(int(key)): float(count / total)
+        for key, count in zip(unique, counts, strict=True)
+    }
+
+
+def _fixed_text_u64(value: str) -> int:
+    digest = hashlib.sha256(str(value).encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], byteorder="little", signed=False)
+
+
+def _legacy_local_transition_token_histograms(
     support: np.ndarray,
     history_fields: list[dict[str, np.ndarray]],
     *,

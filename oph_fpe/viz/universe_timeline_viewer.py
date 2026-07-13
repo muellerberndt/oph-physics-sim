@@ -6109,10 +6109,74 @@ def _consensus_bulk_payload(
     max_objects: int,
 ) -> dict[str, Any]:
     if consensus_pack_dir is None:
+        receipts = {
+            "observer_like_self_reading_system_receipt": False,
+            "observer_modular_time_receipt": False,
+            "observer_facing_3p1d_h3_experience_receipt": False,
+            "observer_facing_populated_h3_experience_receipt": False,
+            "observer_h3_object_population_receipt": False,
+            "observer_facing_h3_object_population_receipt": False,
+            "theorem_assisted_consensus_3d_bulk_readout_receipt": False,
+            "observer_facing_consensus_3d_bulk_readout_receipt": False,
+            "chart_blind_strict_neutral_quotient_bulk_receipt": False,
+            "strict_neutral_third_person_bulk_receipt": False,
+            "strict_neutral_object_bulk_receipt": False,
+            "physical_cmb_output_comparison_receipt": False,
+            "physical_cmb_prediction_receipt": False,
+        }
+        h3_chart_status = _h3_chart_status(
+            object_count=0,
+            neutral_object_count=0,
+            proto_worldline_count=0,
+            receipts=receipts,
+        )
         return {
             "description": "No consensus pack supplied.",
+            "coordinateSystem": H3_COORDINATE_SYSTEM,
+            "coordinateContract": _h3_coordinate_contract(),
             "objects": [],
-            "receipts": {},
+            "neutralObjectCandidates": [],
+            "protoParticleCandidates": {
+                "description": "No consensus pack was supplied, so no proto-particle worldlines are available.",
+                "worldlines": [],
+                "worldlineSource": "none",
+                "receipts": {
+                    "bulk_worldline_precursor_receipt": False,
+                    "particle_matter_receipt": False,
+                    "worldline_report_supplied": False,
+                },
+                "claimBoundary": (
+                    "No proto-particle evidence is present without a supplied consensus pack and "
+                    "its measured worldline reports."
+                ),
+            },
+            "dataAvailability": {
+                "h3ObjectDataAvailable": False,
+                "h3ObjectCount": 0,
+                "neutralObjectCandidateDataAvailable": False,
+                "protoWorldlineDataAvailable": False,
+                "computedReceiptsUnaffectedByAvailability": True,
+            },
+            "objectViewerSummary": {
+                "objectCount": 0,
+                "theoremAssistedH3Bulk": False,
+                "observerChartBulkPopulationReceipt": False,
+                "observerOverlapLinkCount": 0,
+                "strictNeutralBulk": False,
+            },
+            "neutralObjectSummary": {
+                "written": False,
+                "objectCount": 0,
+                "receipt": False,
+                "selectedModel": None,
+                "medianDimensionEstimate": None,
+                "blockers": ["consensus_pack_missing"],
+                "claimBoundary": "No neutral-object candidates are available without a consensus pack.",
+            },
+            "h3ChartStatus": h3_chart_status,
+            "receiptDisplay": h3_chart_status["receiptDisplay"],
+            "receipts": receipts,
+            "strictNeutralBlockers": ["consensus_pack_missing"],
             "claimBoundary": "No H3 consensus bulk receipt supplied.",
         }
     readout_base = readout_dir or consensus_pack_dir

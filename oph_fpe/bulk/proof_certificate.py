@@ -1471,7 +1471,11 @@ def _independently_replayed_strict_neutral(
     source_blockers: list[str] = []
     if not manifest_path.is_file() or not manifest:
         source_blockers.append("strict_neutral_source_manifest_missing")
-    if manifest.get("schema") != "strict_neutral_bulk_source_v1":
+    source_schema = manifest.get("schema")
+    if source_schema not in {
+        "strict_neutral_bulk_source_v1",
+        "strict_neutral_bulk_source_v2",
+    }:
         source_blockers.append("strict_neutral_source_manifest_schema_invalid")
     if _as_dict(persisted_report.get("source_artifact")) != manifest:
         source_blockers.append("strict_neutral_nested_source_manifest_mismatch")
@@ -1492,12 +1496,19 @@ def _independently_replayed_strict_neutral(
     seed = parameters.get("seed")
     max_model_points = parameters.get("max_model_points")
     planted_control_points = parameters.get("planted_control_points")
+    max_observers = parameters.get("max_observers")
     if not _bounded_strict_int(seed, minimum=0, maximum=2**63 - 1):
         source_blockers.append("strict_neutral_seed_invalid")
     if not _bounded_strict_int(max_model_points, minimum=8, maximum=4_096):
         source_blockers.append("strict_neutral_max_model_points_invalid")
     if not _bounded_strict_int(planted_control_points, minimum=16, maximum=4_096):
         source_blockers.append("strict_neutral_planted_control_points_invalid")
+    if source_schema == "strict_neutral_bulk_source_v2" and not _bounded_strict_int(
+        max_observers,
+        minimum=8,
+        maximum=10_000_000,
+    ):
+        source_blockers.append("strict_neutral_max_observers_invalid")
 
     refinement_binding = _as_dict(manifest.get("refinement_input"))
     refinement_path = root / "prime_geometric_rank_refinement_report.json"
@@ -1560,6 +1571,21 @@ def _independently_replayed_strict_neutral(
     ):
         row_blockers.append("strict_neutral_observer_row_count_mismatch")
     recomputed: dict[str, Any] = {}
+    analysis_rows = observer_rows
+    if not row_blockers and source_schema == "strict_neutral_bulk_source_v2":
+        try:
+            analysis_rows, recomputed_population = (
+                neutral_kernel.bounded_strict_neutral_observer_views(
+                    observer_rows,
+                    max_observers=int(max_observers),
+                )
+            )
+            if _as_dict(manifest.get("analysis_population")) != recomputed_population:
+                row_blockers.append("strict_neutral_analysis_population_mismatch")
+        except Exception as exc:  # pragma: no cover - defensive proof boundary.
+            row_blockers.append(
+                f"strict_neutral_analysis_population_replay_failed:{type(exc).__name__}:{exc}"
+            )
     if not row_blockers:
         try:
             planted = neutral_kernel.planted_neutral_control_report(
@@ -1568,7 +1594,7 @@ def _independently_replayed_strict_neutral(
                 max_points=min(int(max_model_points), int(planted_control_points)),
             )
             shuffled = neutral_kernel.shuffled_neutral_control_report(
-                observer_rows,
+                analysis_rows,
                 seed=int(seed) + 303,
                 max_model_points=min(int(max_model_points), 96),
             )
@@ -1577,7 +1603,7 @@ def _independently_replayed_strict_neutral(
             # Deliberately omit the unverified derived refinement.  This keeps
             # the source replay useful for diagnostics while closing T6.
             recomputed = neutral_kernel.strict_neutral_bulk_report(
-                observer_rows,
+                analysis_rows,
                 controls=controls,
                 refinement={},
                 seed=int(seed),

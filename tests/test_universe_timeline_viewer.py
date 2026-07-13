@@ -5,6 +5,7 @@ import numpy as np
 
 from oph_fpe.viz import write_universe_timeline_bundle
 from oph_fpe.viz.universe_timeline_viewer import (
+    _consensus_bulk_payload,
     _effective_string_theory_payload,
     _observer_modular_time_payload,
     _read_proto_particle_candidates,
@@ -12,6 +13,20 @@ from oph_fpe.viz.universe_timeline_viewer import (
     _visualization_instructions,
     _write_full_screen_field_bin,
 )
+
+
+def test_consensus_bulk_payload_without_pack_is_schema_complete_and_fail_closed():
+    payload = _consensus_bulk_payload(None, None, max_objects=8)
+
+    assert payload["objects"] == []
+    assert payload["neutralObjectCandidates"] == []
+    assert payload["protoParticleCandidates"]["worldlines"] == []
+    assert payload["protoParticleCandidates"]["receipts"]["particle_matter_receipt"] is False
+    assert payload["objectViewerSummary"]["objectCount"] == 0
+    assert payload["h3ChartStatus"]["renderable"] is False
+    assert payload["receipts"]["theorem_assisted_consensus_3d_bulk_readout_receipt"] is False
+    assert payload["receipts"]["strict_neutral_third_person_bulk_receipt"] is False
+    assert payload["strictNeutralBlockers"] == ["consensus_pack_missing"]
 
 
 def test_small_universe_payload_rejects_stale_unvalidated_receipt_fallback(tmp_path: Path):

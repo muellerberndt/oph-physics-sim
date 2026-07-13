@@ -16,10 +16,19 @@ from oph_fpe.scale.bw_array import (
     _drop_source_snapshot_from_history,
     _gauge_coupled_node_signature,
     _interface_quotient,
+    _h2_boundary_packet_hash_histogram,
+    _h2_boundary_packet_histogram_from_precomputed,
+    _h2_port_pair_lag_histogram,
+    _h2_port_pair_lag_histogram_from_precomputed,
+    _legacy_local_transition_token_histograms,
+    _local_transition_token_histograms_from_precomputed,
     _lorentz_branch_receipts,
     _named_rng_streams,
     _observer_raw_fields,
     _observer_raw_fields_from_snapshot,
+    _precompute_h2_boundary_packet_tokens,
+    _precompute_h2_port_pair_lag_tokens,
+    _precompute_local_transition_tokens,
     _repairs_per_cycle_from_config,
     _write_compact_observer_population,
     run_bw_array_config,
@@ -357,6 +366,175 @@ def test_transition_history_key_can_include_observer_visible_readout_hash():
     )
     _attach_transition_history_histograms(split_rows, history, split_cfg)
     assert split_rows[0]["transition_history_key"] != split_rows[1]["transition_history_key"]
+
+
+def test_precomputed_fixed_width_transition_tokens_preserve_history_partition_and_mass():
+    history = [
+        {
+            "record_family": np.asarray([1, 1, 2, 3, 3, 3]),
+            "checkpoint_class": np.asarray([0, 0, 1, 1, 1, 1]),
+            "s3_sector_class": np.asarray([2, 2, 4, 5, 5, 5]),
+        },
+        {
+            "record_family": np.asarray([1, 1, 2, 3, 4, 3]),
+            "checkpoint_class": np.asarray([0, 0, 1, 1, 2, 1]),
+            "s3_sector_class": np.asarray([2, 2, 4, 5, 0, 5]),
+        },
+        {
+            "record_family": np.asarray([1, 1, 2, 3, 4, 3]),
+            "checkpoint_class": np.asarray([0, 0, 1, 1, 2, 1]),
+            "s3_sector_class": np.asarray([2, 2, 4, 5, 0, 5]),
+        },
+    ]
+    names = ["record_family", "checkpoint_class", "s3_sector_class"]
+    cache = _precompute_local_transition_tokens(
+        history,
+        key_field_names=names,
+        persistence_field_names=["record_family", "s3_sector_class"],
+    )
+
+    old_node_tokens = []
+    for node in range(6):
+        histogram, _persistent = _legacy_local_transition_token_histograms(
+            np.asarray([node]),
+            history,
+            key_field_names=names,
+            persistence_field_names=["record_family", "s3_sector_class"],
+            min_persistence=2,
+        )
+        old_node_tokens.append(next(iter(histogram)))
+    new_tokens = np.asarray(cache["tokens"])
+    assert [int(value) for value in new_tokens] == [
+        5712669374301203624,
+        5712669374301203624,
+        6651866495597887467,
+        6581440698139260193,
+        3693739952864620839,
+        6581440698139260193,
+    ]
+    assert np.asarray(cache["persistence"]).tolist() == [3, 3, 3, 3, 2, 3]
+    for left in range(6):
+        for right in range(6):
+            assert (old_node_tokens[left] == old_node_tokens[right]) == (
+                int(new_tokens[left]) == int(new_tokens[right])
+            )
+
+    support = np.asarray([0, 1, 2, 3, 4, 5])
+    old_histogram, old_persistent = _legacy_local_transition_token_histograms(
+        support,
+        history,
+        key_field_names=names,
+        persistence_field_names=["record_family", "s3_sector_class"],
+        min_persistence=2,
+    )
+    new_histogram, new_persistent = _local_transition_token_histograms_from_precomputed(
+        support,
+        cache,
+        min_persistence=2,
+    )
+    assert sorted(old_histogram.values()) == sorted(new_histogram.values())
+    assert sorted(old_persistent.values()) == sorted(new_persistent.values())
+    assert cache["schema"] == "oph_local_transition_token_fixed_width_v1"
+
+
+def test_transition_history_attachment_uses_ordered_parallel_precomputed_reduction(monkeypatch):
+    monkeypatch.setenv("OPH_FPE_CPUS", "4")
+    rows = [
+        {
+            "view_type": "patch_observer",
+            "observer_id": index,
+            "support_nodes": [index, (index + 1) % 96],
+            "visible_readout_hash": f"sha256:{index:08x}",
+        }
+        for index in range(96)
+    ]
+    history = [
+        {
+            "record_signature": np.arange(96, dtype=np.int64) % 7,
+            "stable_count": np.full(96, 8, dtype=np.int64),
+            "committed_mask": np.ones(96, dtype=np.int64),
+            "s3_sector_class": np.arange(96, dtype=np.int64) % 6,
+            "repair_load": np.arange(96, dtype=float),
+            "cumulative_repair_load": np.arange(96, dtype=float) * 2.0,
+        }
+    ] * 4
+    config = {
+        "transition_history_fields": ["record_family", "checkpoint_class", "s3_sector_class"],
+        "transition_history_key_fields": ["record_family", "checkpoint_class", "s3_sector_class"],
+        "transition_persistence_fields": ["record_family", "s3_sector_class"],
+        "transition_history_histogram_n_jobs": "auto",
+    }
+
+    _attach_transition_history_histograms(rows, history, config)
+
+    assert all(row["local_transition_token_precomputed_per_patch"] is True for row in rows)
+    assert all(row["local_transition_token_schema"] == "oph_local_transition_token_fixed_width_v1" for row in rows)
+    assert all(row["local_transition_histogram_n_jobs"] == 4 for row in rows)
+    assert all(row["transition_history_histograms"]["local_transition_token"] for row in rows)
+
+
+def test_precomputed_h2_packet_tokens_preserve_categorical_partitions_and_histogram_mass():
+    history = [
+        {
+            "record_family": np.asarray([1, 1, 2, 3, 3, 3]),
+            "checkpoint_class": np.asarray([0, 0, 1, 1, 1, 1]),
+            "s3_sector_class": np.asarray([2, 2, 4, 5, 5, 5]),
+        },
+        {
+            "record_family": np.asarray([1, 1, 2, 3, 4, 3]),
+            "checkpoint_class": np.asarray([0, 0, 1, 1, 2, 1]),
+            "s3_sector_class": np.asarray([2, 2, 4, 5, 0, 5]),
+        },
+        {
+            "record_family": np.asarray([1, 1, 2, 3, 4, 3]),
+            "checkpoint_class": np.asarray([0, 0, 1, 1, 2, 1]),
+            "s3_sector_class": np.asarray([2, 2, 4, 5, 0, 5]),
+        },
+    ]
+    config = {
+        "transition_history_key_fields": [
+            "record_family",
+            "checkpoint_class",
+            "s3_sector_class",
+        ]
+    }
+    boundary_cache = _precompute_h2_boundary_packet_tokens(history[-1])
+    pair_cache = _precompute_h2_port_pair_lag_tokens(history, object_cfg=config)
+    boundary_tokens = np.asarray(boundary_cache["tokens"])
+    pair_tokens = np.asarray(pair_cache["tokens"])
+
+    old_boundary_tokens = []
+    old_pair_tokens = []
+    for node in range(6):
+        old_boundary = _h2_boundary_packet_hash_histogram(
+            np.asarray([node]), history[-1]
+        )
+        old_pair = _h2_port_pair_lag_histogram(
+            np.asarray([node]), history, object_cfg=config
+        )
+        old_boundary_tokens.append(next(iter(old_boundary)))
+        old_pair_tokens.append(tuple(sorted(old_pair)))
+    for left in range(6):
+        for right in range(6):
+            assert (old_boundary_tokens[left] == old_boundary_tokens[right]) == (
+                int(boundary_tokens[left]) == int(boundary_tokens[right])
+            )
+            assert (old_pair_tokens[left] == old_pair_tokens[right]) == (
+                tuple(int(value) for value in pair_tokens[:, left])
+                == tuple(int(value) for value in pair_tokens[:, right])
+            )
+
+    support = np.arange(6, dtype=np.int64)
+    old_boundary = _h2_boundary_packet_hash_histogram(support, history[-1])
+    new_boundary = _h2_boundary_packet_histogram_from_precomputed(
+        support, boundary_cache
+    )
+    old_pair = _h2_port_pair_lag_histogram(support, history, object_cfg=config)
+    new_pair = _h2_port_pair_lag_histogram_from_precomputed(support, pair_cache)
+    assert sorted(old_boundary.values()) == sorted(new_boundary.values())
+    assert sorted(old_pair.values()) == sorted(new_pair.values())
+    assert boundary_cache["schema"] == "oph_h2_boundary_packet_fixed_width_v1"
+    assert pair_cache["schema"] == "oph_h2_port_pair_lag_fixed_width_v1"
 
 
 def test_modular_response_histograms_attach_by_observer_id():

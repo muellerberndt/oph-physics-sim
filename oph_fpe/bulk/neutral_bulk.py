@@ -21,9 +21,12 @@ from oph_fpe.bulk.quotient_geometry import (
     GEOMETRY_CONTRACT_RECEIPT,
     quotient_geometry_certificate,
 )
+from oph_fpe.evidence.hashes import stable_json_hash
+from oph_fpe.observers.subjective import deterministic_observer_analysis_indices
 
 
 STRICT_NEUTRAL_SOURCE_SCHEMA = "strict_neutral_bulk_source_v1"
+STRICT_NEUTRAL_SAMPLED_SOURCE_SCHEMA = "strict_neutral_bulk_source_v2"
 
 
 DEFAULT_NEUTRAL_WEIGHTS = {
@@ -1237,12 +1240,17 @@ def write_strict_neutral_bulk_report(
     seed: int = 1,
     max_model_points: int = 512,
     planted_control_points: int = 160,
+    max_observers: int | None = None,
 ) -> dict[str, Any]:
     run = Path(run_dir)
     observer_path = run / "observer_views.jsonl"
     if not observer_path.exists():
         raise FileNotFoundError(observer_path)
-    observer_views = _read_jsonl(observer_path)
+    source_observer_views = _read_jsonl(observer_path)
+    observer_views, analysis_population = bounded_strict_neutral_observer_views(
+        source_observer_views,
+        max_observers=max_observers,
+    )
     planted = planted_neutral_control_report(
         point_count=int(planted_control_points),
         seed=int(seed) + 101,
@@ -1257,17 +1265,25 @@ def write_strict_neutral_bulk_report(
     control_flags.update(run_controls["controls"])
     refinement_path = run / "prime_geometric_rank_refinement_report.json"
     refinement_report = _read_json(refinement_path) if refinement_path.exists() else {}
+    analysis_parameters = {
+        "seed": int(seed),
+        "max_model_points": int(max_model_points),
+        "planted_control_points": int(planted_control_points),
+    }
+    if max_observers is not None:
+        analysis_parameters["max_observers"] = int(max_observers)
     source_manifest = {
-        "schema": STRICT_NEUTRAL_SOURCE_SCHEMA,
+        "schema": (
+            STRICT_NEUTRAL_SAMPLED_SOURCE_SCHEMA
+            if max_observers is not None
+            else STRICT_NEUTRAL_SOURCE_SCHEMA
+        ),
         "observer_views_path": observer_path.name,
         "observer_views_sha256": _neutral_source_file_sha256(observer_path),
-        "observer_view_row_count": len(observer_views),
+        "observer_view_row_count": len(source_observer_views),
+        "analysis_population": analysis_population,
         "analysis_kernel_file_sha256": _neutral_source_file_sha256(Path(__file__)),
-        "analysis_parameters": {
-            "seed": int(seed),
-            "max_model_points": int(max_model_points),
-            "planted_control_points": int(planted_control_points),
-        },
+        "analysis_parameters": analysis_parameters,
         "refinement_input": {
             "path": refinement_path.name,
             "sha256": (
@@ -1309,6 +1325,60 @@ def write_strict_neutral_bulk_report(
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     return report
+
+
+def bounded_strict_neutral_observer_views(
+    observer_views: list[dict[str, Any]],
+    *,
+    max_observers: int | None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Return a deterministic, hash-bound patch-observer analysis cohort.
+
+    Strict-neutral feature and overlap distances are dense.  The pipeline's
+    declared analysis cohort must therefore bound the matrix before any
+    quadratic construction, rather than merely subsampling the later model
+    fit.  Ranking by observer ID matches the nested population policy used by
+    the production observer writer.
+    """
+
+    patch_views = [
+        view for view in observer_views if view.get("view_type") == "patch_observer"
+    ]
+    observer_ids = [
+        int(view.get("observer_id", index)) for index, view in enumerate(patch_views)
+    ]
+    indices = deterministic_observer_analysis_indices(
+        observer_ids,
+        max_observers=max_observers,
+    )
+    selected = [patch_views[int(index)] for index in indices]
+    selected_ids = [
+        int(view.get("observer_id", index)) for index, view in enumerate(selected)
+    ]
+    metadata = {
+        "schema": "strict_neutral_deterministic_observer_cohort_v1",
+        "source_row_count": int(len(observer_views)),
+        "source_patch_observer_count": int(len(patch_views)),
+        "requested_max_observers": (
+            int(max_observers) if max_observers is not None else None
+        ),
+        "analyzed_observer_count": int(len(selected)),
+        "sampling_policy": (
+            "all_materialized_patch_observers"
+            if len(selected) == len(patch_views)
+            else "deterministic_observer_id_hash_rank_v1"
+        ),
+        "observer_ids": selected_ids,
+        "observer_id_subset_hash": stable_json_hash(
+            {
+                "schema": "strict_neutral_deterministic_observer_cohort_v1",
+                "source_patch_observer_count": len(patch_views),
+                "requested_max_observers": max_observers,
+                "observer_ids": selected_ids,
+            }
+        ),
+    }
+    return selected, metadata
 
 
 def _neutral_source_file_sha256(path: Path) -> str:
@@ -2606,35 +2676,45 @@ def overlap_native_neutral_control_report(
         and original_leakage.get("s2_leakage_pass", False)
     )
 
-    control_rows = [
-        _overlap_native_control_row(
+    # Generate all stochastic control payloads in declared order on the caller
+    # thread.  Their expensive metric-family refits are independent and can be
+    # evaluated concurrently without sharing an RNG or mutable graph state.
+    control_specs = [
+        (
             "degree_preserving_overlap_graph_rewire",
-            original_distance,
             _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
-            sampled,
-            seed=int(seed) + 11,
-            max_model_points=max_model_points,
-            original_spatial_candidate=original_spatial_candidate,
+            int(seed) + 11,
         ),
-        _overlap_native_control_row(
+        (
             "overlap_edge_weight_permutation",
-            original_distance,
             _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
-            sampled,
-            seed=int(seed) + 17,
-            max_model_points=max_model_points,
-            original_spatial_candidate=original_spatial_candidate,
+            int(seed) + 17,
         ),
-        _overlap_native_control_row(
+        (
             "columnwise_histogram_null",
-            original_distance,
             _overlap_histogram_null_features(original_features, rng),
-            sampled,
-            seed=int(seed) + 23,
-            max_model_points=max_model_points,
-            original_spatial_candidate=original_spatial_candidate,
+            int(seed) + 23,
         ),
     ]
+
+    def evaluate_control(spec: tuple[str, np.ndarray, int]) -> dict[str, Any]:
+        name, features, control_seed = spec
+        return _overlap_native_control_row(
+            name,
+            original_distance,
+            features,
+            sampled,
+            seed=control_seed,
+            max_model_points=max_model_points,
+            original_spatial_candidate=original_spatial_candidate,
+        )
+
+    control_worker_count = _sweep_worker_count(None, len(control_specs))
+    if control_worker_count <= 1:
+        control_rows = [evaluate_control(spec) for spec in control_specs]
+    else:
+        with ThreadPoolExecutor(max_workers=control_worker_count) as executor:
+            control_rows = list(executor.map(evaluate_control, control_specs))
     all_controls_fail = bool(control_rows and all(row.get("expected_failure_observed", False) for row in control_rows))
     nondegenerate = bool(
         original_features.size
@@ -2682,6 +2762,14 @@ def overlap_native_neutral_control_report(
             "strict_h3_candidate": bool(original_strict_candidate),
         },
         "control_rows": control_rows,
+        "parallel_execution": {
+            "schema": "bounded_ordered_overlap_control_thread_execution_v1",
+            "requested_environment": "OPH_FPE_GRAPH_SWEEP_WORKERS",
+            "effective_n_jobs": int(control_worker_count),
+            "control_task_count": len(control_specs),
+            "ordered_result_assembly": True,
+            "independent_named_rng_streams": True,
+        },
         "all_expected_failures_observed": all_controls_fail,
         "overlap_feature_nondegenerate": nondegenerate,
         "OVERLAP_NATIVE_NEGATIVE_CONTROL_RECEIPT": receipt,

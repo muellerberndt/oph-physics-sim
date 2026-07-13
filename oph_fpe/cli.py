@@ -1338,6 +1338,27 @@ def main(argv: list[str] | None = None) -> int:
     strict_neutral_parser.add_argument("--seed", default=1, type=int)
     strict_neutral_parser.add_argument("--max-model-points", default=512, type=int)
     strict_neutral_parser.add_argument("--planted-control-points", default=160, type=int)
+    strict_neutral_parser.add_argument(
+        "--max-observers",
+        default=None,
+        type=int,
+        help="deterministically bound the dense strict-neutral observer cohort",
+    )
+
+    observer_agreement_parser = subparsers.add_parser(
+        "observer-agreement-report",
+        help=(
+            "write the observer mutual-agreement certificate (pair re-gauging, "
+            "cocycle, controls; integer chart verdicts only, no fractional "
+            "bulk dimension)"
+        ),
+    )
+    observer_agreement_parser.add_argument("--run-dir", required=True, type=Path)
+    observer_agreement_parser.add_argument("--seed", default=1, type=int)
+    observer_agreement_parser.add_argument("--max-pairs", default=512, type=int)
+    observer_agreement_parser.add_argument("--max-triples", default=128, type=int)
+    observer_agreement_parser.add_argument("--min-overlap-edges", default=8, type=int)
+    observer_agreement_parser.add_argument("--max-observers", default=None, type=int)
 
     strict_neutral_object_parser = subparsers.add_parser(
         "strict-neutral-object-bulk-report",
@@ -3017,6 +3038,20 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
             max_model_points=args.max_model_points,
             planted_control_points=args.planted_control_points,
+            max_observers=args.max_observers,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "observer-agreement-report":
+        from oph_fpe.bulk.observer_agreement import write_observer_agreement_report
+
+        result = write_observer_agreement_report(
+            args.run_dir,
+            seed=args.seed,
+            max_pairs=args.max_pairs,
+            max_triples=args.max_triples,
+            min_overlap_edges=args.min_overlap_edges,
+            max_observers=args.max_observers,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0

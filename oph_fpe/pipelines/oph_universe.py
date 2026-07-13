@@ -871,6 +871,7 @@ def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = Non
             seed=neutral_cfg["seed"],
             max_model_points=neutral_cfg["strict_bulk_max_model_points"],
             planted_control_points=neutral_cfg["planted_control_points"],
+            max_observers=neutral_cfg["sample_count"],
         )
         strict_neutral_object = write_strict_neutral_object_bulk_report(
             run_dir,

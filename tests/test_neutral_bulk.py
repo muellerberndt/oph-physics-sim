@@ -19,6 +19,7 @@ from oph_fpe.bulk.neutral_bulk import (
     _overlap_feature_distance_matrix,
     _overlap_graph_rank_selection,
     _prime_geometric_selected_rank_controls,
+    bounded_strict_neutral_observer_views,
     build_neutral_observer_views,
     neutral_channel_duplicate_audit,
     neutral_distance,
@@ -308,6 +309,50 @@ def test_strict_neutral_writer_hash_binds_primitive_observer_source(tmp_path: Pa
         "planted_control_points": 16,
     }
     assert manifest["refinement_input"]["primitive_replay_available"] is False
+
+
+def test_strict_neutral_writer_bounds_dense_cohort_before_geometry(tmp_path: Path):
+    observer_path = tmp_path / "observer_views.jsonl"
+    observer_rows = [
+        _observer_view(
+            index,
+            records=[index, index + 1, index + 2],
+            checkpoints=[index % 4],
+            sectors=[index % 3],
+            repairs=[index % 5],
+        )
+        for index in range(32)
+    ]
+    observer_path.write_text(
+        "\n".join(json.dumps(row) for row in observer_rows) + "\n",
+        encoding="utf-8",
+    )
+
+    expected_rows, expected_population = bounded_strict_neutral_observer_views(
+        observer_rows,
+        max_observers=8,
+    )
+    report = write_strict_neutral_bulk_report(
+        tmp_path,
+        seed=7,
+        max_model_points=16,
+        planted_control_points=16,
+        max_observers=8,
+    )
+    manifest = json.loads(
+        (tmp_path / "strict_neutral_source_manifest.json").read_text(encoding="utf-8")
+    )
+
+    assert len(expected_rows) == 8
+    assert report["observer_count"] == 8
+    assert report["distance_matrix_shape"] == [8, 8]
+    assert manifest["schema"] == "strict_neutral_bulk_source_v2"
+    assert manifest["observer_view_row_count"] == 32
+    assert manifest["analysis_parameters"]["max_observers"] == 8
+    assert manifest["analysis_population"] == expected_population
+    assert manifest["analysis_population"]["sampling_policy"] == (
+        "deterministic_observer_id_hash_rank_v1"
+    )
 
 
 def test_rich_observer_visible_packets_affect_neutral_distance_without_geometry():
@@ -778,6 +823,8 @@ def test_overlap_native_neutral_control_report_uses_observer_overlap_substrate(t
     }
     assert report["strict_neutral_bulk"] is False
     assert report["physical_claim"] is False
+    assert report["parallel_execution"]["effective_n_jobs"] == 1
+    assert report["parallel_execution"]["ordered_result_assembly"] is True
     for row in report["control_rows"]:
         assert "distance_shape_correlation_to_original" in row
         assert "expected_failure_observed" in row
@@ -792,6 +839,33 @@ def test_overlap_native_neutral_control_report_uses_observer_overlap_substrate(t
     assert written["mode"] == "overlap_native_neutral_control_v0"
     assert (tmp_path / "out" / "overlap_native_neutral_control_report.json").exists()
     assert (tmp_path / "out" / "overlap_native_neutral_control_report.md").exists()
+
+
+def test_overlap_native_controls_use_ordered_bounded_parallel_refits(monkeypatch):
+    observer_views = [
+        _observer_view(
+            i,
+            records=[i % 9, (i + 1) % 9, (i + 2) % 9, (i + 3) % 9],
+            checkpoints=[i % 5, (i + 1) % 5],
+            sectors=[i % 3, (i + 1) % 3],
+            repairs=[i % 7, (i + 2) % 7],
+        )
+        for i in range(12)
+    ]
+    monkeypatch.setenv("OPH_FPE_GRAPH_SWEEP_WORKERS", "3")
+
+    report = overlap_native_neutral_control_report(
+        observer_views,
+        seed=9,
+        max_model_points=12,
+    )
+
+    assert report["parallel_execution"]["effective_n_jobs"] == 3
+    assert [row["control"] for row in report["control_rows"]] == [
+        "degree_preserving_overlap_graph_rewire",
+        "overlap_edge_weight_permutation",
+        "columnwise_histogram_null",
+    ]
 
 
 def test_measured_overlap_presentation_invariance_ignores_external_cohort_peers():
