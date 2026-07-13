@@ -58,3 +58,35 @@ def test_parity_symmetric_fields_read_null():
 def test_screen_parity_report_missing_artifacts(tmp_path):
     report = screen_parity_report(tmp_path)
     assert report["status"] == "missing_freezeout_fields"
+
+
+def test_worldline_turning_detects_planted_spiral(tmp_path):
+    import json
+    from oph_fpe.cosmology.screen_parity import defect_worldline_turning_report
+
+    # Planted right-handed spirals around +z: constant positive turning.
+    worldlines = []
+    for w in range(24):
+        events = []
+        for step in range(12):
+            theta = 0.6 + 0.02 * w
+            phi = 0.4 * step
+            events.append(
+                {
+                    "cycle": step,
+                    "centroid": [
+                        float(np.sin(theta) * np.cos(phi)),
+                        float(np.sin(theta) * np.sin(phi)),
+                        float(np.cos(theta)),
+                    ],
+                }
+            )
+        worldlines.append({"worldline_id": w, "events": events})
+    (tmp_path / "defect_timeline_report.json").write_text(
+        json.dumps({"cluster_analysis": {"worldlines": worldlines}})
+    )
+    report = defect_worldline_turning_report(tmp_path, min_events=4)
+    assert report["status"] == "evaluated"
+    assert report["mirror_covariance_ok"] is True
+    assert abs(report["z_score"]) > 4.0
+    assert report["chirality_detected"] is True
