@@ -127,3 +127,17 @@ def test_observer_agreement_real_run_smoke():
     assert report["status"] == "evaluated"
     assert report["bulk_dimension_claim"] is None
     assert report["population"]["evaluated_pairs"] >= 1
+
+
+def test_agreement_bulk_field_synthetic(tmp_path):
+    from oph_fpe.bulk.observer_agreement import write_agreement_bulk_field
+
+    specs = [[(start + offset) % 30 for offset in range(12)] for start in range(0, 30, 2)]
+    run = _write_synthetic_run(tmp_path, specs)
+    summary = write_agreement_bulk_field(run, seed=2, max_pairs=64, max_triples=32, min_overlap_edges=4)
+    assert summary["status"] == "evaluated"
+    assert summary["certified_pairs_used"] > 0
+    assert summary["pair_certified_patch_fraction"] > 0.0
+    payload = np.load(tmp_path / "agreement_bulk_field.npz")
+    assert payload["coverage"].shape == (30,)
+    assert int(payload["pair_certified"].max()) >= 1

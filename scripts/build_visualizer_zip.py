@@ -78,6 +78,7 @@ RUN_REPORTS = [
     "observer_perspective_rows.csv",
     "mismatch_trace.csv",
     "observer_agreement_report.json",
+    "agreement_bulk_field_summary.json",
     "screen_parity_report.json",
     "defect_worldline_turning_report.json",
     "s3_class_counts.json",
@@ -97,6 +98,7 @@ for name in (
     "screen_evolution_frames.npz",
     "harmonic_time_trace.npz",
     "s3_gauge_state.npz",
+    "agreement_bulk_field.npz",
 ):
     add(RUN_DIR / name, f"data/{name}", required=False)
 

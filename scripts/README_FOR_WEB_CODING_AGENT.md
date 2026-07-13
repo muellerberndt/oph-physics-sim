@@ -238,3 +238,43 @@ with the claim-boundary strings rendered verbatim under each column.
 Availability note: scenes 1-5 are fully served by every 2026-07-14+
 bundle; 6 ships in all e4/e5 bundles; 7 needs the sibling ladder
 bundles; 8 depends on `save_raw_frames` in the source run config.
+
+## Flagship new scene: the emergent bulk (consensus solidification)
+
+OPH doctrine, rendered literally: a bulk does not exist as a container;
+it is what observers agree on. This scene builds the bulk on screen from
+nothing except agreement data.
+
+Data: `data/agreement_bulk_field.npz` with per-patch arrays over
+`points`:
+
+- `coverage`: how many cohort observers hold the patch in support
+  (subjective reach; render as a faint ghost layer);
+- `pair_certified`: how many evaluated zero-defect re-gauged observer
+  pairs contain the patch in their overlap (agreement solidity; render
+  as opacity/solidity);
+- `triple_certified`: cocycle-closed triple coverage (the strongest
+  agreement; render as a crystalline highlight).
+
+Plus `run_reports/agreement_bulk_field_summary.json` (fractions,
+multiplicity maxima, and the claim boundary: zero certified multiplicity
+means UNTESTED, never disagreement; disagreement would show as nonzero
+pair defects in `observer_agreement_report.json`).
+
+Interactions that carry the physics:
+
+- **Consensus slider**: threshold k sweeps 0 -> max multiplicity; the
+  rendered bulk is exactly the patch set with `pair_certified >= k`.
+  At k = 0 everything is ghost; raising k dissolves the subjective fringe
+  and leaves the agreed core. That sweep IS the OPH statement.
+- **Solidification play**: animate k downward from max to 0 so the bulk
+  crystallizes outward from the most-agreed regions.
+- **Subjectivity heatmap**: `(coverage - pair_certified) / max(coverage, 1)`
+  colors the untested-overlap fringe.
+- **Observer parliament** (companion panel): force-directed graph of the
+  cohort, edges = certified pairs, triangles = closed cocycles
+  (`observer_agreement_report.json` pair/triple records); clicking an
+  observer highlights its support patches in the main view.
+- H3 lift: reuse the existing camera/H3 contract to render the same
+  multiplicity field in the hyperboloid chart; the ghost-vs-solid story
+  is identical there.

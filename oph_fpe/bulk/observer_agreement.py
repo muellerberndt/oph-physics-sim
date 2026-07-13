@@ -238,6 +238,7 @@ def observer_agreement_report(
     max_triples: int = 128,
     min_overlap_edges: int = 8,
     max_observers: int | None = None,
+    full_records: bool = False,
 ) -> dict[str, Any]:
     run = Path(run_dir)
     gauge_path = run / "s3_gauge_state.npz"
@@ -528,8 +529,8 @@ def observer_agreement_report(
             "the follow-on gate is genuinely independent per-observer commit "
             "histories measured by this same certificate."
         ),
-        "pair_records": pair_records[:64],
-        "triple_records": triple_records[:32],
+        "pair_records": pair_records if full_records else pair_records[:64],
+        "triple_records": triple_records if full_records else triple_records[:32],
     }
 
 
@@ -553,3 +554,116 @@ def write_observer_agreement_report(
     out_path = Path(run_dir) / "observer_agreement_report.json"
     out_path.write_text(json.dumps(report, indent=2, sort_keys=True))
     return report
+
+
+AGREEMENT_BULK_FIELD_SCHEMA = "agreement_bulk_field_v1"
+
+
+def write_agreement_bulk_field(
+    run_dir: str | Path,
+    *,
+    seed: int = 1,
+    max_pairs: int = 800,
+    max_triples: int = 400,
+    min_overlap_edges: int = 8,
+    max_observers: int | None = 2048,
+) -> dict[str, Any]:
+    """Per-patch agreement-multiplicity field for the emergent-bulk scene.
+
+    OPH claim boundary rendered literally: a bulk region exists exactly to
+    the extent that observers agree on it. For every patch this field
+    counts (a) raw observer coverage (how many cohort observers hold the
+    patch in support), (b) certified pair coverage (how many evaluated
+    zero-defect re-gauged pairs contain it in their overlap), and (c)
+    certified triple coverage (cocycle-closed triples). Coverage without
+    certification is a subjective-overlap ghost layer; certified
+    multiplicity is the agreement solidity the visualizer should render
+    as bulk.
+    """
+
+    run = Path(run_dir)
+    gauge_path = run / "s3_gauge_state.npz"
+    if not gauge_path.exists():
+        return {"schema": AGREEMENT_BULK_FIELD_SCHEMA, "status": "missing_s3_gauge_state"}
+    points = np.asarray(np.load(gauge_path)["points"], dtype=float)
+    patch_count = int(points.shape[0])
+
+    report = observer_agreement_report(
+        run,
+        seed=seed,
+        max_pairs=max_pairs,
+        max_triples=max_triples,
+        min_overlap_edges=min_overlap_edges,
+        max_observers=max_observers,
+        full_records=True,
+    )
+    if report.get("status") != "evaluated":
+        return {"schema": AGREEMENT_BULK_FIELD_SCHEMA, "status": report.get("status")}
+
+    observers = _load_patch_observers(run, max_observers)
+    support_by_id = {
+        int(observer["observer_id"]): set(observer["support_nodes"]) for observer in observers
+    }
+    coverage = np.zeros(patch_count, dtype=np.int32)
+    for support in support_by_id.values():
+        for node in support:
+            if 0 <= node < patch_count:
+                coverage[node] += 1
+
+    pair_certified = np.zeros(patch_count, dtype=np.int32)
+    certified_pairs = 0
+    for record in report["pair_records"]:
+        if record.get("defect") != 0.0:
+            continue
+        certified_pairs += 1
+        overlap = support_by_id.get(int(record["observer_a"]), set()) & support_by_id.get(
+            int(record["observer_b"]), set()
+        )
+        for node in overlap:
+            if 0 <= node < patch_count:
+                pair_certified[node] += 1
+
+    triple_certified = np.zeros(patch_count, dtype=np.int32)
+    certified_triples = 0
+    for record in report["triple_records"]:
+        if record.get("cocycle_defect") != 0.0:
+            continue
+        certified_triples += 1
+        ids = [int(value) for value in record["observers"]]
+        common = (
+            support_by_id.get(ids[0], set())
+            & support_by_id.get(ids[1], set())
+            & support_by_id.get(ids[2], set())
+        )
+        for node in common:
+            if 0 <= node < patch_count:
+                triple_certified[node] += 1
+
+    np.savez_compressed(
+        run / "agreement_bulk_field.npz",
+        points=points,
+        coverage=coverage,
+        pair_certified=pair_certified,
+        triple_certified=triple_certified,
+    )
+    summary = {
+        "schema": AGREEMENT_BULK_FIELD_SCHEMA,
+        "status": "evaluated",
+        "patch_count": patch_count,
+        "cohort_observers": len(support_by_id),
+        "certified_pairs_used": certified_pairs,
+        "certified_triples_used": certified_triples,
+        "covered_patch_fraction": float(np.mean(coverage > 0)),
+        "pair_certified_patch_fraction": float(np.mean(pair_certified > 0)),
+        "triple_certified_patch_fraction": float(np.mean(triple_certified > 0)),
+        "max_pair_multiplicity": int(pair_certified.max()) if patch_count else 0,
+        "claim_boundary": (
+            "Sampled-certificate rendering field: certified multiplicities "
+            "reflect the evaluated pair/triple sample, never a complete "
+            "enumeration; zero certified multiplicity means untested, never "
+            "disagreement. Disagreement would appear as nonzero pair defects "
+            "in the agreement report itself."
+        ),
+    }
+    (run / "agreement_bulk_field_summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True))
+    return summary
