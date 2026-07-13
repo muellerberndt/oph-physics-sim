@@ -1,5 +1,10 @@
 # Best available public-data comparisons
 
+Status 2026-07-14: the cross-repo experiment scoreboard, including rows
+this suite feeds, lives in `OPH_SIGNATURE_EXPERIMENT_TRACKER.md`
+(section 0a). This document stays the contract for the generated
+comparison bundle itself.
+
 The comparison suite turns the strongest currently available OPH-FPE measurement surfaces into one provenance-bound scoreboard. It selects a primary run before looking at public metrics, binds every CMB report and sidecar to that exact run directory, and keeps evidence classes separate. It never emits a combined “OPH score.”
 
 The generated bundle contains:

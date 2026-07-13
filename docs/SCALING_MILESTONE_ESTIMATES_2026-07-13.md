@@ -111,3 +111,19 @@ Proceed to the next expensive scale only if the preceding run has:
 - explicit separation of observer-facing charts, neutral glued bulk, particles, and physical cosmology.
 
 If the 128k and 256k runs do not move the chart-blind neutral geometry toward a stable H3/3D result after ancestry and control issues are removed, increasing to 1M or 10^8 cells is not justified as a bulk-discovery strategy.
+
+
+## Measured actuals (2026-07-14)
+
+Single 10-core laptop (24 GB), monolithic runs on the covariant-probe
+tree:
+
+| Run | Patches / observers | Wall-clock | Artifacts |
+|---|---|---|---|
+| `oph_universe_64k_night1_20260713` | 65,536 / 1,024 | ~35 min | full viz |
+| `oph_universe_128k_obs32k_night1` | 131,072 / 32,000 | ~1.5-2 h | 1.4 GB |
+| `oph_universe_1m_night1` | 1,048,576 / 64,000 | ~2.5 h | 1.8 GB |
+
+The observer-report tail dominates above 64k. Receipt state per run sits
+in the tracker results log; the 3+1D receipts earned before the
+sector-replay fix are superseded per the hardened-contract rule above.

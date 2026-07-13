@@ -1,37 +1,50 @@
-# OPH-FPE Documentation
+# Simulator documentation
 
-This directory is for stable documentation about how the simulator works:
+Policy: stable documentation lives here; pass/fail receipt labels live in
+run artifacts under `runs/`; mutable progress lives in GitHub issues
+(linked as full URLs). Generated packs and local configs stay ignored.
 
-- one current theorem-to-code and claim-boundary contract;
-- payload and receipt schemas;
-- curated config format and claim-boundary rules;
-- cloud/runtime setup notes;
-- stable harness-specific run instructions.
+## Status and experiments
 
-Run-specific outputs, dated run reports, intermediate experiment notes, benchmark receipts,
-and one-off closeout bundles do not belong here. Keep those under `runs/`, `reports/`,
-`measurement_packs/`, `correspondence/`, or a task-specific handoff directory.
+- `OPH_SIGNATURE_EXPERIMENT_TRACKER.md`: living experiment tracker with
+  at-a-glance verdict tables and the results log.
+- `RUN_OUTPUTS_AND_VISUALIZATION.md`: run-output inventory; visualizer
+  bundle selection marked.
+- `BEST_OF_PUBLIC_DATA_COMPARISONS.md`: provenance-bound public-data
+  comparison suite.
+- `SCALING_MILESTONE_ESTIMATES_2026-07-13.md`: scale milestones,
+  empirical lower bounds, and measured actuals.
+- `KMS_PROBE_SECTOR_REPLAY_TODO.md`: covariant-probe episode record
+  (fix implemented 2026-07-14).
 
-## Stable Docs
+## Contracts and lanes
 
-- `OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: the single source of truth for simulator state,
-  paper-stack alignment, receipt lanes, CMB/bulk/particle/string/vacuum boundaries, and promotion
-  rules.
-- `PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`: hash-pinned cross-repo imports, particle-frontier
-  diagnostics, pixel-parameter provenance, non-circularity policy, and the hard boundary between
-  paper-side status and run-specific receipts.
-- `WZH_NUMERICAL_BACKEND.md`: source-clock, RG/matching, BRST-block, and
-  complex-pole backend, including the boundary between synthetic controls and
-  actual W/Z/H prediction receipts.
-- `VISUALIZATION_APP_AGENT_MANUAL.md`: implementation manual for visualization app agents building
-  quantum-vacuum, observer-camera, effective-string, repair, H3, and CMB diagnostic views from the
-  universe-timeline payload.
-- `cloud.md`
-- `configuration.md`
-- `digitalocean_pool_setup.md`
-- `oph_issue361_certificate_schema.json`
+- `OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: theorem-to-code and
+  claim-promotion contract.
+- `CLAIM_LANES.md`: lane-by-lane contracts.
+- `PROOF_PACKET_AUDITS.md`: fail-closed proof-packet audits and
+  Lean-mirrored fixtures.
+- `SIMULATION_ASSUMPTION_POLICY.md`: assumed-bridge visualization lane.
+- `PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`: cross-repo artifact import.
+- `WZH_NUMERICAL_BACKEND.md`: boson backend contract.
+- `neutrino_status.md`: neutrino lane status.
+- `small_oph_universe_v1.md`: exact finite-consensus calibration harness.
+
+## Schemas
+
 - `oph_universe_timeline_visualization_payload_v1.schema.json`
-- `oph_distributed_universe_visualization_payload_v1.schema.json`
 - `oph_visualizer_pack_v2.schema.json`
-- `parallel_cloud_plan.md`
-- `small_oph_universe_v1.md`
+- `oph_distributed_universe_visualization_payload_v1.schema.json`
+- `particle_promotion_evidence_v1.schema.json`
+- `hadron_source_promotion_evidence_v1.schema.json`
+- `oph_issue361_certificate_schema.json`
+
+## Configuration and operations
+
+- `configuration.md`: config format and claim-boundary rules.
+- `VISUALIZATION_APP_AGENT_MANUAL.md`: payload-driven visualization
+  manual (`../scripts/README_FOR_WEB_CODING_AGENT.md` for bundles).
+- `GCP_SCALING_PLAN.md`: Google Cloud fleet and monolithic scaling plan.
+- `parallel_cloud_plan.md`: code-level parallelism analysis.
+- `cloud.md`: provider-neutral credential and wiring policy.
+- `digitalocean_pool_setup.md`: DigitalOcean pool runbook.

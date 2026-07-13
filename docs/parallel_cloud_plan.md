@@ -1,5 +1,10 @@
 # Parallel Execution And Cloud Plan
 
+Status 2026-07-14: this document keeps the code-level bottleneck and
+parallelism analysis. Provider execution plans live in
+`GCP_SCALING_PLAN.md` (fleet ensembles, monolithic sizing) and
+`digitalocean_pool_setup.md`.
+
 ## Current Bottleneck
 
 The current OPH-FPE BW path is CPU-bound:
