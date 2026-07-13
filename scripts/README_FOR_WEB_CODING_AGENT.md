@@ -146,3 +146,37 @@ field summarizes.
 `run_reports/screen_parity_report.json` (if present) reports the
 parity-odd pseudo-scalar with mirror and shuffle controls; a small
 diagnostic card (chi, z-score, mirror flip check) is enough.
+
+## New in this bundle: effective-spacetime status lane (2026-07-14)
+
+This bundle adds the third-person "effective 4D spacetime" direction-check
+artifacts. The story for a status panel or dedicated scene:
+
+- `run_reports/observer_modular_experience_report.json`: the
+  first-person claim. `observer_facing_3p1d_h3_experience_receipt` with
+  its four component gates (modular time, 2 pi KMS clock, conformal H3
+  chart, H3 modular response). In bundles from 2026-07-14 onward this
+  receipt is earned under the gauge-covariant contract with production
+  sector-repair replay (`run_reports/transition_scale_selection_report.json`
+  carries `two_pi_selected`, `production_sector_repair_replayed`,
+  `probe_side_selection: production_coin`).
+- `run_reports/einstein_bridge_manifest.json`: the Einstein branch-entry
+  gates E1-E6 with named blockers. Render the gate ladder verbatim,
+  green/red per gate; the `blockers` list is the claim boundary.
+- `run_reports/neutral_3d_bulk_audit_report.md` (+ .json): the strict
+  third-person bulk audit: refinement-ladder status
+  (4k/16k/64k/256k), integer rank-3 candidate stability, leakage and
+  control gates. Dimensionality renders ONLY as integer rank candidates
+  plus stability verdicts; fractional dimension estimates in sweep rows
+  are estimator diagnostics and must never headline.
+- Sidecars `emergent_curved_spacetime.json` (+ `_curvature_proxy.csv`,
+  `_time_slices.csv`, `_continuous_field.csv`) and
+  `effective_string_theory.json`, `string_vacuum_selector_*.csv`: the
+  assumed-bridge visualization layers for the curved-spacetime and
+  string-side effective descriptions (their manifests carry
+  `simulation_assumptions` scope; keep that label visible).
+
+Suggested scene: a three-column "effective description status" board
+(SR/GR bridge, Standard-Model/string selector, first-person 3+1
+experience), each column listing its receipts as shipped in the JSON,
+with the claim-boundary strings rendered verbatim under each column.

@@ -79,7 +79,14 @@ RUN_REPORTS = [
     "mismatch_trace.csv",
     "observer_agreement_report.json",
     "screen_parity_report.json",
+    "defect_worldline_turning_report.json",
     "s3_class_counts.json",
+    "strict_neutral_bulk_report.json",
+    "neutral_3d_bulk_audit_report.json",
+    "neutral_3d_bulk_audit_report.md",
+    "einstein_bridge_manifest.json",
+    "strict_neutral_bulk_frontier_report.json",
+    "transition_scale_selection_report.json",
 ]
 for name in RUN_REPORTS:
     add(RUN_DIR / name, f"run_reports/{name}", required=False)
