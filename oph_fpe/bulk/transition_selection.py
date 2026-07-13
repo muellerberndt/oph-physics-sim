@@ -10,10 +10,12 @@ from scipy.spatial import cKDTree
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap
 from oph_fpe.bulk.modular_probe import geometric_permutation_operator
 from oph_fpe.gauge.covariant_overlap import (
+    covariant_discrepancy,
     covariant_mismatch_mask,
     gauge_invariant_edge_residual,
     group_multiply_indices,
     repair_covariant_port_pairs,
+    repair_production_sector_links,
 )
 
 
@@ -267,10 +269,12 @@ def _perturb_remeasure_pullback(
         if key not in graph_response
     ]
     sector_repair_enabled = bool(graph_response.get("production_sector_repair_enabled", False))
-    if missing_graph_fields or sector_repair_enabled:
+    sector_repair_config = dict(graph_response.get("production_sector_repair_config") or {})
+    sector_config_missing = sector_repair_enabled and not sector_repair_config
+    if missing_graph_fields or sector_config_missing:
         blockers = [f"gauge_coupled_graph_field_missing:{key}" for key in missing_graph_fields]
-        if sector_repair_enabled:
-            blockers.append("production_sector_repair_not_replayed_by_response_probe")
+        if sector_config_missing:
+            blockers.append("production_sector_repair_config_missing_for_replay")
         return np.eye(len(basis), dtype=complex), 0.0, {
             "response_source": f"{response_source}_fail_closed",
             "identity_fraction": 1.0,
@@ -308,6 +312,10 @@ def _perturb_remeasure_pullback(
     for row, node in enumerate(basis):
         pl = port_left.copy()
         pr = port_right.copy()
+        # Sector repair mutates edge links in production; replay against a
+        # per-source local gauge copy so the probe resettles under the
+        # identical production law (see repair_production_sector_links).
+        local_gauge = gauge.copy() if sector_repair_enabled else gauge
         incident = np.asarray(incident_edges[int(node)], dtype=np.int64)
         if incident.size > probe_max_incident_edges:
             incident = rng.choice(incident, size=probe_max_incident_edges, replace=False)
@@ -344,13 +352,32 @@ def _perturb_remeasure_pullback(
                 break
             if active.size > probe_repairs_per_source:
                 active = rng.choice(active, size=probe_repairs_per_source, replace=False)
-            left_score = node_score[left[active]]
-            right_score = node_score[right[active]]
-            repair_left = left_score >= right_score
+            if sector_repair_enabled:
+                chosen_delta = covariant_discrepancy(
+                    pl[active],
+                    pr[active],
+                    local_gauge[active],
+                    group_name=group_name,
+                    group_order=group_order,
+                )
+                repair_production_sector_links(
+                    local_gauge,
+                    active,
+                    chosen_delta,
+                    group_name=group_name,
+                    group_order=group_order,
+                    rng=rng,
+                    config=sector_repair_config,
+                )
+                repair_left = rng.random(active.size) < 0.5
+            else:
+                left_score = node_score[left[active]]
+                right_score = node_score[right[active]]
+                repair_left = left_score >= right_score
             repair_covariant_port_pairs(
                 pl,
                 pr,
-                gauge,
+                local_gauge,
                 active,
                 repair_left,
                 group_name=group_name,
@@ -362,7 +389,7 @@ def _perturb_remeasure_pullback(
         after_residual = gauge_invariant_edge_residual(
             pl,
             pr,
-            gauge,
+            local_gauge,
             group_name=group_name,
             group_order=group_order,
         )
@@ -432,6 +459,8 @@ def _perturb_remeasure_pullback(
         "probe_max_incident_edges": int(probe_max_incident_edges),
         "response_feature_count": 0,
         "gauge_covariant_probe_receipt": True,
+        "production_sector_repair_replayed": bool(sector_repair_enabled),
+        "probe_side_selection": "production_coin" if sector_repair_enabled else "affinity_score",
         "perturbation_action": "right_multiplication_in_source_endpoint_frame",
         **flow_meta,
     }
