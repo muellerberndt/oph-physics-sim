@@ -180,3 +180,61 @@ Suggested scene: a three-column "effective description status" board
 (SR/GR bridge, Standard-Model/string selector, first-person 3+1
 experience), each column listing its receipts as shipped in the JSON,
 with the claim-boundary strings rendered verbatim under each column.
+
+## New scene ideas for the 1M bundle (2026-07-14, in value order)
+
+1. **Proto-particle block universe.** Render defect worldlines as world-tubes
+   in (screen x cycle) 3D: tube color = S3 class (transposition vs
+   threecycle), radius = support size, glow at near-contact events.
+   Data: `run_reports/defect_timeline_report.json` (worldlines + events +
+   centroids per cycle), `defect_h3_worldlines_report.json`,
+   `defect_interaction_report.json` (900 verified encounter candidates at
+   64k; `fusion_identity_fraction` labels each encounter's composition
+   channel). This is the first spacetime diagram of OPH proto-matter.
+2. **Consensus crystallization graph.** Observers as nodes at support
+   centroids; edges appear as pair re-gauging defects hit 0; triangles
+   shade in as cocycles close. End state: one connected agreement web =
+   the operational meaning of a shared spacetime.
+   Data: `run_reports/observer_agreement_report.json` (pair_records,
+   triple_records, controls), `data/observer_views.jsonl`,
+   `data/s3_gauge_state.npz` points.
+3. **The emergence gate board.** An animated receipt ladder across the
+   scale ladder (4k, 16k, 64k, 128k, 256k, 1M): the four 3+1 experience
+   gates, the Einstein branch-entry gates E1-E6, the neutral-bulk
+   blockers, each lighting green as runs earn them (with the 2026-07-14
+   2 pi re-earn as a highlighted event). Honest storytelling: gates that
+   stay red render red, with their blocker strings.
+   Data: `run_reports/observer_modular_experience_report.json`,
+   `einstein_bridge_manifest.json`, `neutral_3d_bulk_audit_report.json`,
+   `transition_scale_selection_report.json` per bundle.
+4. **Gauge-relativity toggle.** A control that re-dresses the visible
+   sector labels into a chosen observer's chart frame and back,
+   with the recovered re-gauging map animating between charts: same
+   record, different descriptions, exact translation. Data:
+   `s3_gauge_state.npz` + `observer_agreement_report.json`
+   (`pair_records` carry the per-pair recovered maps for sampled pairs).
+5. **The 2 pi clock dial.** Radial dial of transition-scale selection
+   scores across candidate scales with the winner at 2 pi; a needle
+   animation landing on 2 pi = the universe selecting its clock.
+   Data: `run_reports/transition_scale_selection_report.json`
+   (per-scale scores, `two_pi_selected`, replay metadata).
+6. **Curvature weather.** Animated heatmap of the curvature proxy over
+   the H3 chart across time slices (assumed-bridge layer; keep the
+   simulation-assumption label visible).
+   Data: `sidecars/emergent_curved_spacetime_curvature_proxy.csv`,
+   `_time_slices.csv`, `emergent_curved_spacetime.json`.
+7. **Scale-ladder fly-through.** Nested spheres 4k -> 1M; zooming
+   crossfades the freezeout fields of each scale; a side meter shows
+   which statistics stay fixed across the zoom (the refinement story).
+   Data: per-bundle `data/freezeout_fields.npz` from the ladder runs
+   (this bundle carries its own scale; the ladder bundles ship
+   separately).
+8. **Repair lightning / healing front.** Transient arcs where mismatch
+   repairs fire per cycle, an advancing freezeout aurora behind them.
+   Data: `data/screen_evolution_frames.npz` WHERE PRESENT (raw frames
+   are config-gated; check availability before building the scene) plus
+   `run_reports/mismatch_trace.csv` for the global curve.
+
+Availability note: scenes 1-5 are fully served by every 2026-07-14+
+bundle; 6 ships in all e4/e5 bundles; 7 needs the sibling ladder
+bundles; 8 depends on `save_raw_frames` in the source run config.
