@@ -21,6 +21,13 @@ to `simulation_assumption_manifest.json` and use separately named
 particle, Einstein, gravity, or physical-CMB receipts true. See
 `docs/SIMULATION_ASSUMPTION_POLICY.md`.
 
+Since 2026-07-14 the perturb-remeasure response probes (BW/KMS branch replay
+and transition-scale selection) replay the production sector-repair law
+against a per-source local gauge (`repair_production_sector_links`), so the
+`2*pi` clock certification is gauge-covariant and production-faithful; the
+probes fail closed only when the replay config is absent. Receipts earned
+before that date by the pre-covariant probe are superseded.
+
 Every ensemble-facing output must name its claim tier:
 
 - `E0`: seed noise, proposal noise, or repair jitter.
@@ -86,6 +93,8 @@ Main run families:
 - support-visible cap/collar states, diagnostic collar Markov reports, the fail-closed issue #307 regional CMI audit, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
 - fine-to-coarse MaxEnt I-projection reports with relative-entropy closure defect, moment residual, Hessian floor, trace residual, and Pinsker bound, plus a separate noncommutative central-interface MSA receipt with Bell/noncentral negative controls;
 - observer objects, observer-local modular time, H3 object-population reports, and theorem-assisted consensus readouts;
+- observer mutual-agreement certificates (`observer_agreement_report.json`): per-pair chart re-gauging recovery on support overlaps with section-uniqueness detection, Cech cocycle checks on observer triples, shuffled-view controls, and integer-only experienced-chart verdicts; `bulk_dimension_claim` is null by schema, and continuous dimension estimators carry `claim_level: internal_diagnostic_only`;
+- screen parity diagnostics: the cross-gradient pseudo-scalar with mirror/shuffle controls (scoped by the Stokes identity: closed-screen means vanish identically) and the defect-worldline signed-turning statistic with sign-flip nulls (`screen_parity_report.json`, `defect_worldline_turning_report.json`);
 - strict neutral frontiers with overlap-native controls, graph sweeps, residualized graph sweeps, independent rank-selector audits, and closed promotion gates;
 - freezeout-screen angular spectra, CMB frontier reports, no-data-use receipts, finite certificate schemas, and Boltzmann/likelihood gate reports;
 - screen holonomy clusters, defect timelines, H3 worldline fits, interaction proxies, particle-likeness reports, and controlled planted-defect assays;
@@ -247,6 +256,9 @@ python3 -m oph_fpe.cli uhe-emit-coefficients \
 
 python3 -m oph_fpe.cli borel-weil-higgs-carrier \
   --out runs/<run_id>/borel_weil_higgs_carrier
+
+python3 -m oph_fpe.cli observer-agreement-report \
+  --run-dir runs/<run_id>
 
 python3 -m oph_fpe.cli h3-worldline-stitch-certificate \
   --source runs/<run_id>/h3_worldline_stitch_source.json \
@@ -501,4 +513,12 @@ python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen
 - `docs/VISUALIZATION_APP_AGENT_MANUAL.md`: app-agent manual for producing the quantum-vacuum,
   observer-camera, effective-string, repair, H3, and CMB diagnostic visualizations from the payload.
 - `docs/small_oph_universe_v1.md`: exact finite-consensus calibration harness.
+- `docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md`: the cross-repo experiment tracker
+  (at-a-glance verdict tables, anomaly docket, results log; relocated here from
+  `oph-meta/epic-wins/` 2026-07-14).
+- `docs/GCP_SCALING_PLAN.md`: fleet-ensemble and monolithic scaling plan for
+  1M-patch runs on Google Cloud (single-universe sharding stays blocked on the
+  transactional seam kernel).
+- `docs/KMS_PROBE_SECTOR_REPLAY_TODO.md`: record of the covariant-probe
+  fail-closed episode and the sector-replay fix (implemented 2026-07-14).
 - `REPRODUCTION.md`: reproducibility notes.

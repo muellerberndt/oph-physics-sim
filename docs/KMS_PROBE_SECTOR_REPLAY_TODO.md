@@ -1,6 +1,14 @@
-# KMS collar response probe: sector-repair replay (open task)
+# KMS collar response probe: sector-repair replay (IMPLEMENTED)
 
-Date filed: 2026-07-14 (night session). Bisect chain in
+Date filed: 2026-07-14 (night session). Implemented the same day: the
+replay runs inside BOTH probe copies (`oph_fpe/bulk/modular_probe.py` and
+`oph_fpe/bulk/transition_selection.py`) with a per-source local gauge,
+covariant discrepancy feeding `repair_production_sector_links`, production
+coin-side endpoint repair, and fail-closed retained for a missing replay
+config (`tests/test_modular_probe_sector_replay.py`). The 4k dense
+diagnostic re-earns `two_pi_selected` and the full 3+1D experience receipt
+under the stricter contract; the at-scale reruns carry it forward. This
+file stays as the episode record. Bisect chain in
 `runs/kms_diag_4k_*` run dirs.
 
 ## Finding
