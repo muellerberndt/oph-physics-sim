@@ -23,23 +23,30 @@ from oph_fpe.bulk.quotient_geometry import (
 )
 
 
+STRICT_NEUTRAL_SOURCE_SCHEMA = "strict_neutral_bulk_source_v1"
+
+
 DEFAULT_NEUTRAL_WEIGHTS = {
-    "record": 1.0,
-    "record_signature": 0.9,
-    "object_packet": 0.9,
-    "boundary_packet": 1.0,
+    "local_packet": 1.5,
+    # Legacy hash/categorical lanes remain exported for reproducibility, but
+    # are non-claim-bearing by default. Nearby physical packets need not land
+    # in nearby token bins, and open-link S3 classes are frame dependent.
+    "record": 0.0,
+    "record_signature": 0.0,
+    "object_packet": 0.0,
+    "boundary_packet": 0.0,
     "overlap_correspondence": 1.0,
-    "counterfactual": 1.0,
-    "checkpoint": 0.75,
-    "sector": 0.75,
-    "port_pair_lag": 1.0,
-    "repair": 0.75,
-    "repair_spectrum": 0.65,
-    "repair_current_tensor": 0.9,
+    "counterfactual": 0.0,
+    "checkpoint": 0.0,
+    "sector": 0.0,
+    "port_pair_lag": 0.0,
+    "repair": 0.0,
+    "repair_spectrum": 0.0,
+    "repair_current_tensor": 0.0,
     "perturbation_response_tensor": 0.9,
-    "first_passage_response": 0.75,
-    "persistence": 0.25,
-    "scalar_readout": 0.35,
+    "first_passage_response": 0.0,
+    "persistence": 0.0,
+    "scalar_readout": 0.0,
 }
 
 STRICT_NEUTRAL_RECORD_REPAIR_ONLY_WEIGHTS = dict(DEFAULT_NEUTRAL_WEIGHTS)
@@ -53,10 +60,16 @@ SUPPORT_VISIBLE_PRIME_GEOMETRIC_DIAGNOSTIC_WEIGHTS = {
 }
 
 STRICT_NEUTRAL_THEORY_REQUIRED_CHANNELS: dict[str, str] = {
+    "local_packet": (
+        "gauge-invariant repair readbacks over observer supports selected by an independently produced "
+        "chart-blind carrier"
+    ),
     "record": "record/checkpoint order visible in each local observer transcript",
     "checkpoint": "checkpoint order and record ancestry visible without a chart",
-    "boundary_packet": "local port or boundary packet hashes, not support-node IDs",
-    "overlap_correspondence": "observer-overlap correspondences or local agreement packets",
+    "boundary_packet": "local metric-bearing port or boundary packets, not hash-bin coordinates",
+    "overlap_correspondence": (
+        "measured observer-overlap correspondences on independently produced chart-blind supports"
+    ),
     "port_pair_lag": "transition counts by local port pair and lag",
     "repair_current_tensor": "repair-current response tensor in local-port coordinates",
     "perturbation_response_tensor": "counterfactual perturbation-response tensor",
@@ -157,6 +170,7 @@ NEUTRAL_PROFILE_WEIGHTS: dict[str, dict[str, float] | None] = {
 @dataclass(frozen=True)
 class NeutralObserverView:
     observer_id: int
+    locality_packet_features: np.ndarray
     record_transition_hist: np.ndarray
     record_signature_hist: np.ndarray
     object_packet_hist: np.ndarray
@@ -201,6 +215,10 @@ def build_neutral_observer_views(observer_views: list[dict[str, Any]]) -> list[N
         views.append(
             NeutralObserverView(
                 observer_id=int(view.get("observer_id", index)),
+                locality_packet_features=_signed_vector_or_zero(
+                    view.get("locality_preserving_packet_feature_vector", []),
+                    width=96,
+                ),
                 record_transition_hist=_hist_or_steps(view, steps, "record_family", 32),
                 record_signature_hist=_histogram_dict_to_vector(view.get("record_signature_histogram", {}), 64),
                 object_packet_hist=_histogram_dict_to_vector(view.get("object_packet_histogram", {}), 64),
@@ -215,16 +233,7 @@ def build_neutral_observer_views(observer_views: list[dict[str, Any]]) -> list[N
                     ),
                     128,
                 ),
-                overlap_correspondence_hist=_first_histogram_vector(
-                    view,
-                    (
-                        "overlap_correspondence_histogram",
-                        "observer_overlap_histogram",
-                        "local_overlap_correspondence_histogram",
-                        "overlap_packet_histogram",
-                    ),
-                    256,
-                ),
+                overlap_correspondence_hist=_measured_overlap_summary_vector(view, width=256),
                 counterfactual_hist=_normalize_or_zero(view.get("counterfactual_continuation_hist", []), width=16),
                 checkpoint_transition_hist=_hist_or_steps(view, steps, "checkpoint_class", 32),
                 sector_transition_hist=_hist_or_steps(view, steps, "s3_sector_class", 6),
@@ -241,16 +250,7 @@ def build_neutral_observer_views(observer_views: list[dict[str, Any]]) -> list[N
                     ),
                     128,
                 ),
-                perturbation_response_tensor=_first_signed_vector(
-                    view,
-                    (
-                        "perturbation_response_tensor",
-                        "perturbation_response_histogram",
-                        "counterfactual_perturbation_response_tensor",
-                        "local_perturbation_response_tensor",
-                    ),
-                    128,
-                ),
+                perturbation_response_tensor=_verified_perturbation_response_vector(view, width=128),
                 first_passage_response_hist=_first_histogram_vector(
                     view,
                     (
@@ -498,6 +498,11 @@ def neutral_feature_ancestry_manifest(weights: dict[str, float] | None = None) -
 
 
 def _neutral_channel_ancestors(channel: str) -> list[str]:
+    if channel in {"local_packet", "overlap_correspondence"}:
+        # The current production patch adjacency is generated from S2 screen
+        # points. The values are locality-preserving and gauge invariant, but
+        # that support-selection ancestry must remain visible to strict gates.
+        return ["screen_pixel_coordinate"]
     if channel.startswith("prime_geometric"):
         return ["prime_geometric_response"]
     if channel == "support_visible_modular":
@@ -506,6 +511,8 @@ def _neutral_channel_ancestors(channel: str) -> list[str]:
         return ["modular_depth"]
     if channel == "modular_response":
         return ["modular_depth"]
+    if channel == "perturbation_response_tensor":
+        return ["s2_cap_axis", "screen_pixel_coordinate"]
     return []
 
 
@@ -523,6 +530,8 @@ def _strict_neutral_feature_ancestry_blockers(manifest: list[dict[str, Any]]) ->
 def _neutral_channel_matrix(views: list[NeutralObserverView], key: str) -> np.ndarray:
     if not views:
         return np.zeros((0, 0), dtype=float)
+    if key == "local_packet":
+        return _stack_channel(views, "locality_packet_features")
     if key == "record":
         return _stack_channel(views, "record_transition_hist")
     if key == "record_signature":
@@ -634,6 +643,7 @@ def _neutral_embedding_has_pairwise_signal(embedded: np.ndarray) -> bool:
 def _neutral_channel_kind(key: str) -> str:
     if key in {
         "repair_spectrum",
+        "local_packet",
         "repair_current_tensor",
         "perturbation_response_tensor",
         "prime_geometric_modular",
@@ -755,24 +765,28 @@ def strict_neutral_bulk_receipt(
     theory_alignment: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     quotient_contract = quotient_geometry or {}
-    quotient_contract_passed = bool(quotient_contract.get(GEOMETRY_CONTRACT_RECEIPT, False))
-    channel_audit_passed = bool((channel_audit or {}).get("duplicate_channel_gate_pass", True))
-    feature_ancestry_passed = bool((channel_audit or {}).get("feature_ancestry_gate_pass", True))
-    theory_alignment_passed = bool((theory_alignment or {}).get("theory_required_channels_present", True))
-    passed = bool(
-        dimension.get("estimators_agree_3d", False)
+    quotient_contract_passed = quotient_contract.get(GEOMETRY_CONTRACT_RECEIPT) is True
+    channel_audit_passed = (channel_audit or {}).get("duplicate_channel_gate_pass") is True
+    feature_ancestry_passed = (channel_audit or {}).get("feature_ancestry_gate_pass") is True
+    theory_alignment_passed = (
+        (theory_alignment or {}).get("theory_required_channels_present") is True
+    )
+    refinement_passed = _canonical_strict_neutral_refinement_passed(refinement)
+    passed = (
+        dimension.get("estimators_agree_3d") is True
         and model_selection.get("best_model") == "H3"
-        and model_selection.get("h3_beats_s2", False)
-        and model_selection.get("h3_beats_h2_h4", False)
-        and leakage.get("s2_leakage_pass", False)
+        and model_selection.get("h3_beats_s2") is True
+        and model_selection.get("h3_beats_h2_h4") is True
+        and leakage.get("s2_leakage_pass") is True
         and channel_audit_passed
+        and feature_ancestry_passed
         and theory_alignment_passed
-        and controls.get("shuffled_records_fail", False)
-        and controls.get("shuffled_transition_labels_fail", False)
-        and controls.get("planted_2d_returns_2d", False)
-        and controls.get("planted_3d_returns_3d", False)
-        and controls.get("planted_h3_returns_h3", False)
-        and refinement.get("stable_across_64k_256k_1m", False)
+        and controls.get("shuffled_records_fail") is True
+        and controls.get("shuffled_transition_labels_fail") is True
+        and controls.get("planted_2d_returns_2d") is True
+        and controls.get("planted_3d_returns_3d") is True
+        and controls.get("planted_h3_returns_h3") is True
+        and refinement_passed
         and quotient_contract_passed
     )
     return {
@@ -787,6 +801,7 @@ def strict_neutral_bulk_receipt(
         "feature_ancestry_blockers": list((channel_audit or {}).get("feature_ancestry_blockers", [])),
         "theory_required_channels_present": theory_alignment_passed,
         "theory_evidence_blockers": list((theory_alignment or {}).get("evidence_gaps", [])),
+        "canonical_4k_16k_64k_256k_refinement_gate_pass": refinement_passed,
         "claim_boundary": (
             "Neutral third-person bulk reconstructed from observer-visible records without H3/cap-normal "
             "target features. It is intentionally stricter than, and does not negate, the support-visible "
@@ -795,6 +810,41 @@ def strict_neutral_bulk_receipt(
             "record-feature quotient dimension, model-selection, controls, and refinement gates all pass."
         ),
     }
+
+
+def _canonical_strict_neutral_refinement_passed(refinement: dict[str, Any]) -> bool:
+    required = [4_096, 16_384, 65_536, 262_144]
+    sizes = refinement.get("sizes")
+    if not isinstance(sizes, list) or len(sizes) != len(required):
+        return False
+    if any(
+        not isinstance(row, dict)
+        or type(row.get("patch_count")) is not int
+        for row in sizes
+    ):
+        return False
+    observed = sorted(row["patch_count"] for row in sizes)
+    exact_true_fields = (
+        "required_ladder_complete",
+        "multi_scale",
+        "all_control_quotient_spatial_3d_candidates",
+        "all_candidate_s2_leakage_pass",
+        "all_candidate_rank3_e3",
+        "candidate_dimension_stable",
+        "independent_rank3_selector_all",
+        "proper_negative_control_all",
+        "directional_h3_strict_all",
+        "measured_overlap_geometry_all",
+        "strict_neutral_bulk_refinement_receipt",
+    )
+    return bool(
+        refinement.get("mode") == "prime_geometric_rank_refinement_v0"
+        and refinement.get("required_patch_count_ladder") == required
+        and observed == required
+        and refinement.get("missing_required_patch_counts") == []
+        and all(refinement.get(field) is True for field in exact_true_fields)
+        and refinement.get("proof_blockers") == []
+    )
 
 
 def neutral_model_selection(
@@ -938,10 +988,16 @@ def strict_neutral_bulk_report(
     neutral_views = build_neutral_observer_views(observer_views)
     distance = neutral_distance_matrix(neutral_views, weights)
     channel_audit = neutral_channel_duplicate_audit(neutral_views, weights)
-    theory_alignment = _strict_neutral_theory_alignment_report(neutral_views, weights)
+    theory_alignment = _strict_neutral_theory_alignment_report(
+        neutral_views,
+        weights,
+        observer_views=observer_views,
+    )
     quotient_contract = _neutral_quotient_geometry_contract(
         distance,
         neutral_views,
+        observer_views=observer_views,
+        controls=controls or {},
         refinement=refinement or {},
         weights=weights,
     )
@@ -1030,6 +1086,8 @@ def _neutral_quotient_geometry_contract(
     distance: np.ndarray,
     neutral_views: list[NeutralObserverView],
     *,
+    observer_views: list[dict[str, Any]],
+    controls: dict[str, Any],
     refinement: dict[str, Any],
     weights: dict[str, float] | None = None,
 ) -> dict[str, Any]:
@@ -1039,9 +1097,12 @@ def _neutral_quotient_geometry_contract(
         for name, weight in active_weights.items()
         if float(weight) > 0.0
     ]
-    # The neutral report only knows the record-space distance. Atlas, feature
-    # transport, invariance, and statistical split receipts must come from the
-    # run pack before strict neutral bulk can promote.
+    quotient_inputs = _neutral_quotient_geometry_inputs(
+        observer_views,
+        active_weights=active_weights,
+        controls=controls,
+        refinement=refinement,
+    )
     return quotient_geometry_certificate(
         distance,
         quotient_ids=[str(view.observer_id) for view in neutral_views],
@@ -1049,14 +1110,124 @@ def _neutral_quotient_geometry_contract(
         metric_mode="complete_case",
         jointly_separating=False,
         missingness_quotient_visible=True,
-        atlas_receipt={},
-        feature_receipt={"quotient_visible_missingness": True, "max_transport_defect": 0.0},
-        invariance_receipt={},
+        atlas_receipt=quotient_inputs["atlas_receipt"],
+        feature_receipt=quotient_inputs["feature_receipt"],
+        invariance_receipt=quotient_inputs["invariance_receipt"],
         refinement_receipt=refinement,
-        statistics_receipt={},
+        statistics_receipt=quotient_inputs["statistics_receipt"],
         require_metric=True,
         require_euclidean=False,
     )
+
+
+def _neutral_quotient_geometry_inputs(
+    observer_views: list[dict[str, Any]],
+    *,
+    active_weights: dict[str, float],
+    controls: dict[str, Any],
+    refinement: dict[str, Any],
+) -> dict[str, Any]:
+    """Produce the contract inputs that are actually supported by a run.
+
+    Unknown schedule/partition and boundary-port transports are omitted rather
+    than filled with zeros. The quotient verifier therefore stays fail closed,
+    while the report now distinguishes produced evidence from missing evidence.
+    """
+
+    patch_rows = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    locality_schemas = [
+        row.get("locality_preserving_packet_feature_schema")
+        for row in patch_rows
+        if isinstance(row.get("locality_preserving_packet_feature_schema"), dict)
+    ]
+    shared_locality_frame = bool(
+        patch_rows
+        and len(locality_schemas) == len(patch_rows)
+        and all(schema == locality_schemas[0] for schema in locality_schemas[1:])
+    )
+    active_channels = {
+        str(name) for name, weight in active_weights.items() if float(weight) > 0.0
+    }
+    frame_proven_channels = {"local_packet"}
+    atlas_complete = bool(shared_locality_frame and active_channels <= frame_proven_channels)
+    atlas_receipt: dict[str, Any] = {
+        "producer": "neutral_global_shared_feature_frame_v1",
+        "shared_locality_frame": shared_locality_frame,
+        "active_channels": sorted(active_channels),
+        "unproven_transport_channels": sorted(active_channels - frame_proven_channels),
+    }
+    if atlas_complete:
+        atlas_receipt.update(
+            {
+                "identity_defect": 0.0,
+                "inverse_defect": 0.0,
+                "cocycle_defect": 0.0,
+                "cycle_holonomy_defect": 0.0,
+            }
+        )
+
+    overlap_evidence = _overlap_evidence_report(patch_rows)
+    feature_receipt: dict[str, Any] = {
+        "producer": "neutral_feature_descent_v1",
+        "quotient_visible_missingness": True,
+        "measured_overlap_evidence": overlap_evidence,
+    }
+    feature_transport_proven = bool(
+        active_channels <= frame_proven_channels and shared_locality_frame
+    )
+    if feature_transport_proven:
+        feature_receipt["max_transport_defect"] = 0.0
+
+    invariance_receipt: dict[str, Any] = {
+        "producer": "neutral_presentation_invariance_partial_v1",
+        "order_distortion": 0.0,
+        "known_exact_invariances": ["within_observer_packet_order"],
+        "unproven_invariances": [
+            "gauge",
+            "port_relabeling",
+            "repair_schedule",
+            "partition_or_shard_presentation",
+        ],
+    }
+    presentation = _measured_overlap_presentation_invariance_report(
+        patch_rows,
+        np.random.default_rng(0),
+    )
+    if presentation.get("receipt", False):
+        invariance_receipt["observer_relabel_distortion"] = float(
+            presentation.get("global_observer_relabel_distortion", 0.0)
+        )
+
+    positive_controls = all(
+        controls.get(name, False)
+        for name in (
+            "planted_2d_returns_2d",
+            "planted_3d_returns_3d",
+            "planted_h3_returns_h3",
+        )
+    )
+    negative_controls = all(
+        controls.get(name, False)
+        for name in (
+            "shuffled_records_fail",
+            "shuffled_transition_labels_fail",
+        )
+    )
+    statistics_receipt = {
+        "producer": "strict_neutral_control_suite_v1",
+        "ancestry_leakage_count": 0,
+        "test_used_once": False,
+        "positive_controls_passed": bool(positive_controls),
+        "negative_controls_passed": bool(negative_controls),
+        "split_assignment_producer_available": False,
+    }
+    return {
+        "atlas_receipt": atlas_receipt,
+        "feature_receipt": feature_receipt,
+        "invariance_receipt": invariance_receipt,
+        "statistics_receipt": statistics_receipt,
+        "refinement_receipt": refinement,
+    }
 
 
 def write_strict_neutral_bulk_report(
@@ -1084,10 +1255,45 @@ def write_strict_neutral_bulk_report(
     )
     control_flags = dict(planted["controls"])
     control_flags.update(run_controls["controls"])
+    refinement_path = run / "prime_geometric_rank_refinement_report.json"
+    refinement_report = _read_json(refinement_path) if refinement_path.exists() else {}
+    source_manifest = {
+        "schema": STRICT_NEUTRAL_SOURCE_SCHEMA,
+        "observer_views_path": observer_path.name,
+        "observer_views_sha256": _neutral_source_file_sha256(observer_path),
+        "observer_view_row_count": len(observer_views),
+        "analysis_kernel_file_sha256": _neutral_source_file_sha256(Path(__file__)),
+        "analysis_parameters": {
+            "seed": int(seed),
+            "max_model_points": int(max_model_points),
+            "planted_control_points": int(planted_control_points),
+        },
+        "refinement_input": {
+            "path": refinement_path.name,
+            "sha256": (
+                _neutral_source_file_sha256(refinement_path)
+                if refinement_path.is_file()
+                else None
+            ),
+            "provenance": "derived_report_hash_only",
+            "primitive_replay_available": False,
+        },
+        "claim_boundary": (
+            "The observer JSONL and deterministic neutral-analysis parameters are hash-bound and "
+            "can be replayed independently. The current rank-refinement report is only hash-bound "
+            "derived data; it cannot promote strict neutral bulk until its own primitive replay "
+            "chain is implemented."
+        ),
+    }
+    source_manifest_path = run / "strict_neutral_source_manifest.json"
+    source_manifest_path.write_text(
+        json.dumps(source_manifest, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
     report = strict_neutral_bulk_report(
         observer_views,
         controls=control_flags,
-        refinement={"stable_across_64k_256k_1m": False},
+        refinement=refinement_report,
         seed=seed,
         max_model_points=max_model_points,
     )
@@ -1095,11 +1301,22 @@ def write_strict_neutral_bulk_report(
     report["shuffled_controls"] = run_controls
     report["source_run_dir"] = str(run)
     report["observer_views_path"] = str(observer_path)
+    report["refinement_report_path"] = str(refinement_path)
+    report["source_artifact"] = source_manifest
+    report["source_manifest_path"] = str(source_manifest_path)
     report["blockers"] = _strict_neutral_blockers(report)
     destination = Path(out) if out is not None else run / "strict_neutral_bulk_report.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     return report
+
+
+def _neutral_source_file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
 
 
 def neutral_profile_audit_report(
@@ -1588,6 +1805,7 @@ def write_prime_geometric_rank_sweep_report(
 
 
 def prime_geometric_rank_refinement_report(report_paths: list[Path]) -> dict[str, Any]:
+    required_ladder = (4_096, 16_384, 65_536, 262_144)
     reports = [_read_json(path) for path in _find_prime_rank_sweep_reports(report_paths)]
     reports = [report for report in reports if report.get("mode") == "prime_geometric_rank_sweep_v0"]
     rows = [_prime_rank_refinement_row(report) for report in reports]
@@ -1619,7 +1837,8 @@ def prime_geometric_rank_refinement_report(report_paths: list[Path]) -> dict[str
     size_medians = [
         float(row["median_candidate_dimension"])
         for row in sizes
-        if row.get("median_candidate_dimension") is not None
+        if int(row.get("patch_count") or 0) in required_ladder
+        and row.get("median_candidate_dimension") is not None
     ]
     dimension_drift = float(max(size_medians) - min(size_medians)) if len(size_medians) >= 2 else None
     all_candidates = bool(rows and all(row.get("control_quotient_spatial_3d_candidate") for row in rows))
@@ -1629,8 +1848,16 @@ def prime_geometric_rank_refinement_report(report_paths: list[Path]) -> dict[str
         and all(row.get("candidate_rank") == 3 for row in rows)
         and all(row.get("candidate_model") == "E3" for row in rows)
     )
-    multi_scale = len([size for size in sizes if int(size.get("patch_count") or 0) > 0]) >= 2
-    stable_dimension = bool(dimension_drift is not None and dimension_drift <= 0.20)
+    available_patch_counts = {int(size.get("patch_count") or 0) for size in sizes}
+    missing_ladder_patch_counts = sorted(set(required_ladder) - available_patch_counts)
+    ladder_complete = not missing_ladder_patch_counts
+    multi_scale = ladder_complete
+    stable_dimension = bool(
+        ladder_complete
+        and len(size_medians) == len(required_ladder)
+        and dimension_drift is not None
+        and dimension_drift <= 0.10
+    )
     refinement_candidate = bool(
         multi_scale
         and all_candidates
@@ -1639,22 +1866,46 @@ def prime_geometric_rank_refinement_report(report_paths: list[Path]) -> dict[str
         and stable_dimension
     )
     independent_rank3_all = bool(rows and all(row.get("independent_rank3_selector") for row in rows))
+    proper_negative_control_all = bool(
+        rows and all(row.get("control_quotient_lane_is_negative_control") for row in rows)
+    )
+    directional_h3_strict_all = bool(
+        rows and all(int(row.get("directional_strict_3d_ready_count") or 0) > 0 for row in rows)
+    )
+    measured_overlap_all = bool(
+        rows and all(row.get("measured_overlap_geometry_receipt") for row in rows)
+    )
+    strict_refinement_receipt = bool(
+        refinement_candidate
+        and independent_rank3_all
+        and proper_negative_control_all
+        and directional_h3_strict_all
+        and measured_overlap_all
+    )
     blockers: list[str] = []
+    if not ladder_complete:
+        blockers.append(
+            "required_4k_16k_64k_256k_refinement_ladder_incomplete:"
+            + ",".join(str(value) for value in missing_ladder_patch_counts)
+        )
     if not refinement_candidate:
         blockers.append("control_quotient_rank3_candidate_not_stable_across_refinement")
     if not independent_rank3_all:
         blockers.append("independent_svd_rank3_selector_not_stable_or_false")
-    blockers.extend(
-        [
-            "control_quotient_lane_is_not_a_negative_control",
-            "directional_h3_strict_rank_gate_not_passed",
-        ]
-    )
+    if not proper_negative_control_all:
+        blockers.append("control_quotient_lane_is_not_a_negative_control")
+    if not directional_h3_strict_all:
+        blockers.append("directional_h3_strict_rank_gate_not_passed")
+    if not measured_overlap_all:
+        blockers.append("measured_cross_observer_overlap_refinement_gate_not_passed")
     return {
         "mode": "prime_geometric_rank_refinement_v0",
         "run_count": len(rows),
         "rows": rows,
         "sizes": sizes,
+        "required_patch_count_ladder": list(required_ladder),
+        "missing_required_patch_counts": missing_ladder_patch_counts,
+        "required_ladder_complete": ladder_complete,
         "multi_scale": multi_scale,
         "all_control_quotient_spatial_3d_candidates": all_candidates,
         "all_candidate_s2_leakage_pass": all_leakage,
@@ -1667,13 +1918,17 @@ def prime_geometric_rank_refinement_report(report_paths: list[Path]) -> dict[str
         "control_residualized_rank3_candidate_receipt": refinement_candidate,
         "control_residualized_rank3_diagnostic_receipt": refinement_candidate,
         "independent_rank3_selector_all": independent_rank3_all,
-        "strict_neutral_bulk_refinement_receipt": False,
+        "proper_negative_control_all": proper_negative_control_all,
+        "directional_h3_strict_all": directional_h3_strict_all,
+        "measured_overlap_geometry_all": measured_overlap_all,
+        "strict_neutral_bulk_refinement_receipt": strict_refinement_receipt,
         "proof_blockers": blockers,
         "physical_claim": False,
         "strict_neutral_bulk_participation": "diagnostic_only",
         "claim_boundary": (
             "Refinement diagnostic for the control-quotient coordinate rank-3 spatial window. Passing "
-            "this report means the finite-regulator candidate is stable across the supplied patch counts. "
+            "this report means the finite-regulator candidate is stable across the explicit "
+            "4k/16k/64k/256k ladder with dimension drift at most 0.10. "
             "It is not strict neutral bulk proof unless an independent rank selector passes, the quotient "
             "lane is replaced by a proper null/negative-control gate, and the directional H3 strict gate passes."
         ),
@@ -2331,6 +2586,8 @@ def overlap_native_neutral_control_report(
     else:
         sampled = patch_views
 
+    overlap_evidence = _overlap_evidence_report(sampled)
+    presentation_invariance = _measured_overlap_presentation_invariance_report(sampled, rng)
     original_features = _overlap_feature_matrix(sampled)
     original_distance = _overlap_feature_distance_matrix(original_features)
     original_dimension = strict_neutral_dimension_report(original_distance)
@@ -2351,7 +2608,7 @@ def overlap_native_neutral_control_report(
 
     control_rows = [
         _overlap_native_control_row(
-            "shuffled_observer_payloads",
+            "degree_preserving_overlap_graph_rewire",
             original_distance,
             _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
             sampled,
@@ -2360,7 +2617,7 @@ def overlap_native_neutral_control_report(
             original_spatial_candidate=original_spatial_candidate,
         ),
         _overlap_native_control_row(
-            "per_observer_packet_label_permutation",
+            "overlap_edge_weight_permutation",
             original_distance,
             _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
             sampled,
@@ -2385,6 +2642,10 @@ def overlap_native_neutral_control_report(
         and np.any(original_distance[np.triu_indices(original_distance.shape[0], k=1)] > 1.0e-12)
     )
     blockers: list[str] = []
+    if not overlap_evidence.get("available", False):
+        blockers.extend(str(value) for value in overlap_evidence.get("blockers", []))
+    if not presentation_invariance.get("receipt", False):
+        blockers.extend(str(value) for value in presentation_invariance.get("blockers", []))
     if not nondegenerate:
         blockers.append("overlap_feature_matrix_degenerate")
     if not all_controls_fail:
@@ -2394,13 +2655,20 @@ def overlap_native_neutral_control_report(
     if not original_strict_candidate:
         blockers.append("overlap_native_distance_not_strict_h3_candidate")
 
-    receipt = bool(nondegenerate and all_controls_fail)
+    receipt = bool(
+        overlap_evidence.get("available", False)
+        and presentation_invariance.get("receipt", False)
+        and nondegenerate
+        and all_controls_fail
+    )
     return {
         "mode": "overlap_native_neutral_control_v0",
         "observer_count": len(patch_views),
         "sampled_observer_count": len(sampled),
         "seed": int(seed),
         "max_model_points": int(max_model_points),
+        "overlap_evidence": overlap_evidence,
+        "presentation_invariance_control": presentation_invariance,
         "fundamental_operation": (
             "Overlapping observations by observers: neutral distances are computed from shared "
             "observer-visible record/object/transition packet content before any H3 chart is assigned."
@@ -2504,6 +2772,8 @@ def overlap_native_graph_geometry_report(
     else:
         sampled = patch_views
 
+    overlap_evidence = _overlap_evidence_report(sampled)
+    presentation_invariance = _measured_overlap_presentation_invariance_report(sampled, rng)
     features = _overlap_feature_matrix(sampled)
     graph = _overlap_graph_distance_from_features(features, k_neighbors=int(k_neighbors))
     dimension = strict_neutral_dimension_report(graph["distance"])
@@ -2524,7 +2794,7 @@ def overlap_native_graph_geometry_report(
     )
     control_rows = [
         _overlap_graph_control_row(
-            "shuffled_observer_payloads",
+            "degree_preserving_overlap_graph_rewire",
             graph["distance"],
             _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
             sampled,
@@ -2534,7 +2804,7 @@ def overlap_native_graph_geometry_report(
             original_spatial_candidate=spatial_candidate,
         ),
         _overlap_graph_control_row(
-            "per_observer_packet_label_permutation",
+            "overlap_edge_weight_permutation",
             graph["distance"],
             _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
             sampled,
@@ -2556,6 +2826,10 @@ def overlap_native_graph_geometry_report(
     ]
     controls_fail = bool(control_rows and all(row.get("expected_failure_observed", False) for row in control_rows))
     blockers: list[str] = []
+    if not overlap_evidence.get("available", False):
+        blockers.extend(str(value) for value in overlap_evidence.get("blockers", []))
+    if not presentation_invariance.get("receipt", False):
+        blockers.extend(str(value) for value in presentation_invariance.get("blockers", []))
     if not graph["nondegenerate"]:
         blockers.append("overlap_graph_degenerate_or_disconnected")
     if not controls_fail:
@@ -2567,7 +2841,12 @@ def overlap_native_graph_geometry_report(
     if not strict_candidate:
         blockers.append("overlap_graph_not_strict_h3_candidate")
 
-    receipt = bool(graph["nondegenerate"] and controls_fail)
+    receipt = bool(
+        overlap_evidence.get("available", False)
+        and presentation_invariance.get("receipt", False)
+        and graph["nondegenerate"]
+        and controls_fail
+    )
     return {
         "mode": "overlap_native_graph_geometry_v0",
         "observer_count": len(patch_views),
@@ -2575,6 +2854,8 @@ def overlap_native_graph_geometry_report(
         "seed": int(seed),
         "max_model_points": int(max_model_points),
         "k_neighbors": int(k_neighbors),
+        "overlap_evidence": overlap_evidence,
+        "presentation_invariance_control": presentation_invariance,
         "fundamental_operation": (
             "Overlapping observations by observers: graph edges are shared observer-visible "
             "record/object/transition packet mass before any H3 chart is assigned."
@@ -2650,6 +2931,8 @@ def overlap_residualized_graph_geometry_report(
     else:
         sampled = patch_views
 
+    overlap_evidence = _overlap_evidence_report(sampled)
+    presentation_invariance = _measured_overlap_presentation_invariance_report(sampled, rng)
     features = _overlap_feature_matrix(sampled)
     residual = _residualize_overlap_features(features, remove_modes=int(remove_modes))
     raw_graph = _overlap_graph_distance_from_features(features, k_neighbors=int(k_neighbors))
@@ -2672,7 +2955,7 @@ def overlap_residualized_graph_geometry_report(
     )
     control_rows = [
         _overlap_residual_graph_control_row(
-            "shuffled_observer_payloads",
+            "degree_preserving_overlap_graph_rewire",
             graph["distance"],
             _overlap_feature_matrix(_shuffle_overlap_payloads(sampled, rng)),
             sampled,
@@ -2683,7 +2966,7 @@ def overlap_residualized_graph_geometry_report(
             original_spatial_candidate=spatial_candidate,
         ),
         _overlap_residual_graph_control_row(
-            "per_observer_packet_label_permutation",
+            "overlap_edge_weight_permutation",
             graph["distance"],
             _overlap_feature_matrix(_permute_overlap_packet_labels(sampled, rng)),
             sampled,
@@ -2707,6 +2990,10 @@ def overlap_residualized_graph_geometry_report(
     ]
     controls_fail = bool(control_rows and all(row.get("expected_failure_observed", False) for row in control_rows))
     blockers: list[str] = []
+    if not overlap_evidence.get("available", False):
+        blockers.extend(str(value) for value in overlap_evidence.get("blockers", []))
+    if not presentation_invariance.get("receipt", False):
+        blockers.extend(str(value) for value in presentation_invariance.get("blockers", []))
     if not graph["nondegenerate"]:
         blockers.append("overlap_residual_graph_degenerate_or_disconnected")
     if not controls_fail:
@@ -2718,7 +3005,12 @@ def overlap_residualized_graph_geometry_report(
     if not strict_candidate:
         blockers.append("overlap_residual_graph_not_strict_h3_candidate")
 
-    receipt = bool(graph["nondegenerate"] and controls_fail)
+    receipt = bool(
+        overlap_evidence.get("available", False)
+        and presentation_invariance.get("receipt", False)
+        and graph["nondegenerate"]
+        and controls_fail
+    )
     return {
         "mode": "overlap_residualized_graph_geometry_v0",
         "observer_count": len(patch_views),
@@ -2727,6 +3019,8 @@ def overlap_residualized_graph_geometry_report(
         "max_model_points": int(max_model_points),
         "k_neighbors": int(k_neighbors),
         "remove_modes": int(remove_modes),
+        "overlap_evidence": overlap_evidence,
+        "presentation_invariance_control": presentation_invariance,
         "fundamental_operation": (
             "Overlapping observations by observers: the graph is built from observer-visible "
             "record/object/transition packet overlap after target-rank-free common-mode removal."
@@ -4505,6 +4799,9 @@ def _prime_rank_refinement_row(report: dict[str, Any]) -> dict[str, Any]:
     dimension = candidate.get("dimension") if isinstance(candidate.get("dimension"), dict) else {}
     model = candidate.get("model_selection") if isinstance(candidate.get("model_selection"), dict) else {}
     leakage = candidate.get("leakage") if isinstance(candidate.get("leakage"), dict) else {}
+    control_lane = report.get("regulator_control_quotient_lane")
+    if not isinstance(control_lane, dict):
+        control_lane = {}
     source_run_dir = str(report.get("source_run_dir") or "")
     return {
         "source_run_dir": source_run_dir,
@@ -4515,6 +4812,15 @@ def _prime_rank_refinement_row(report: dict[str, Any]) -> dict[str, Any]:
             report.get("prime_geometric_control_quotient_spatial_3d_candidate_receipt", False)
         ),
         "independent_rank3_selector": bool(report.get("independent_rank3_selector_receipt", False)),
+        "control_quotient_lane_is_negative_control": bool(
+            control_lane.get("is_negative_control", False)
+        ),
+        "directional_strict_3d_ready_count": int(report.get("strict_3d_ready_count") or 0),
+        "measured_overlap_geometry_receipt": bool(
+            report.get("measured_overlap_geometry_receipt", False)
+            or report.get("OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT", False)
+            or _source_overlap_geometry_receipt(source_run_dir)
+        ),
         "candidate_rank": candidate.get("rank"),
         "candidate_model": model.get("best_model"),
         "candidate_median_dimension": _to_float_or_none(dimension.get("median_dimension_estimate")),
@@ -4538,6 +4844,24 @@ def _patch_count_from_source(source_run_dir: str) -> int:
         return int(manifest.get("patch_count") or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def _source_overlap_geometry_receipt(source_run_dir: str) -> bool:
+    if not source_run_dir:
+        return False
+    source = Path(source_run_dir)
+    for name in (
+        "overlap_native_graph_geometry_report.json",
+        "overlap_residualized_graph_geometry_report.json",
+    ):
+        report = _read_json(source / name)
+        evidence = report.get("overlap_evidence") if isinstance(report.get("overlap_evidence"), dict) else {}
+        if evidence.get("available", False) and bool(
+            report.get("OVERLAP_NATIVE_GRAPH_GEOMETRY_RECEIPT", False)
+            or report.get("OVERLAP_RESIDUALIZED_GRAPH_GEOMETRY_RECEIPT", False)
+        ):
+            return True
+    return False
 
 
 def _to_float_or_none(value: Any) -> float | None:
@@ -4663,6 +4987,9 @@ def _shuffle_record_payloads(observer_views: list[dict[str, Any]], rng: np.rando
     shuffled = copy.deepcopy(observer_views)
     patch_indices = [index for index, view in enumerate(shuffled) if view.get("view_type") == "patch_observer"]
     keys = (
+        "locality_preserving_packet_feature_vector",
+        "paired_perturbation_response_tensor",
+        "paired_perturbation_control_tensors",
         "record_signature_histogram",
         "object_packet_histogram",
         "counterfactual_continuation_hist",
@@ -4686,6 +5013,8 @@ def _shuffle_record_payloads(observer_views: list[dict[str, Any]], rng: np.rando
 
 
 def _shuffle_transition_labels(observer_views: list[dict[str, Any]], rng: np.random.Generator) -> list[dict[str, Any]]:
+    if any("measured_overlap_correspondences" in row for row in observer_views):
+        return _measured_overlap_graph_null(observer_views, rng, mode="degree_preserving_rewire")
     shuffled = copy.deepcopy(observer_views)
     for view in shuffled:
         if view.get("view_type") != "patch_observer":
@@ -4729,6 +5058,9 @@ def _randomize_histogram_keys(value: Any, rng: np.random.Generator) -> Any:
 
 
 def _overlap_feature_matrix(observer_views: list[dict[str, Any]]) -> np.ndarray:
+    measured, evidence = _measured_overlap_feature_matrix(observer_views)
+    if evidence["declared"]:
+        return measured
     neutral_views = build_neutral_observer_views(observer_views)
     if not neutral_views:
         return np.zeros((0, 0), dtype=float)
@@ -4751,6 +5083,162 @@ def _overlap_feature_matrix(observer_views: list[dict[str, Any]]) -> np.ndarray:
         )
     matrix = np.vstack(rows)
     return np.where(np.isfinite(matrix), matrix, 0.0)
+
+
+def _measured_overlap_feature_matrix(
+    observer_views: list[dict[str, Any]],
+) -> tuple[np.ndarray, dict[str, Any]]:
+    patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    count = len(patch_views)
+    declared_rows = [
+        view
+        for view in patch_views
+        if "measured_overlap_correspondences" in view
+        or "measured_overlap_correspondence_schema" in view
+    ]
+    declared = bool(declared_rows)
+    if not declared:
+        return np.zeros((count, count), dtype=float), {
+            "declared": False,
+            "available": False,
+            "source": "legacy_self_histogram_payloads",
+            "blockers": ["measured_cross_observer_correspondence_producer_unavailable"],
+        }
+    ids: list[int] = []
+    for index, view in enumerate(patch_views):
+        try:
+            ids.append(int(view.get("observer_id", index)))
+        except (TypeError, ValueError):
+            ids.append(index)
+    if len(set(ids)) != len(ids):
+        return np.zeros((count, count), dtype=float), {
+            "declared": True,
+            "available": False,
+            "source": "literal_support_intersection_v1",
+            "blockers": ["duplicate_observer_ids_in_measured_correspondence_rows"],
+        }
+    by_id = {observer_id: index for index, observer_id in enumerate(ids)}
+    directed = np.zeros((count, count), dtype=float)
+    producer_rows = 0
+    for index, view in enumerate(patch_views):
+        provenance = view.get("overlap_correspondence_evidence_provenance")
+        correspondences = view.get("measured_overlap_correspondences")
+        valid_producer = bool(
+            isinstance(provenance, dict)
+            and (
+                (
+                    provenance.get("cross_observer_measurement") is True
+                    and provenance.get("self_histogram_synthesis") is False
+                )
+                or provenance.get("synthetic_negative_control") is True
+            )
+            and isinstance(correspondences, list)
+        )
+        if not valid_producer:
+            continue
+        producer_rows += 1
+        for correspondence in correspondences:
+            if not isinstance(correspondence, dict):
+                continue
+            try:
+                peer_id = int(correspondence.get("peer_observer_id"))
+                affinity = float(correspondence.get("measured_affinity", correspondence.get("jaccard", 0.0)))
+            except (TypeError, ValueError):
+                continue
+            peer_index = by_id.get(peer_id)
+            if peer_index is None or peer_index == index or not np.isfinite(affinity):
+                continue
+            directed[index, peer_index] = max(directed[index, peer_index], float(np.clip(affinity, 0.0, 1.0)))
+    reciprocal = (directed > 0.0) & (directed.T > 0.0)
+    matrix = np.sqrt(np.maximum(directed, 0.0) * np.maximum(directed.T, 0.0))
+    # Self-overlap is an indexing identity, not an exported feature. Including
+    # it makes the feature rows covariant under a global observer relabeling.
+    np.fill_diagonal(matrix, 1.0)
+    reciprocal_edge_count = int(np.count_nonzero(np.triu(reciprocal, k=1)))
+    blockers: list[str] = []
+    if producer_rows != count:
+        blockers.append(f"measured_correspondence_rows_partial:{producer_rows}/{count}")
+    if reciprocal_edge_count <= 0:
+        blockers.append("no_reciprocal_measured_overlap_edges")
+    return matrix, {
+        "declared": True,
+        "available": not blockers,
+        "source": "literal_support_intersection_v1",
+        "producer_row_count": producer_rows,
+        "observer_count": count,
+        "reciprocal_edge_count": reciprocal_edge_count,
+        "blockers": blockers,
+    }
+
+
+def _overlap_evidence_report(observer_views: list[dict[str, Any]]) -> dict[str, Any]:
+    _, evidence = _measured_overlap_feature_matrix(observer_views)
+    return evidence
+
+
+def _measured_overlap_presentation_invariance_report(
+    observer_views: list[dict[str, Any]],
+    rng: np.random.Generator,
+) -> dict[str, Any]:
+    original, evidence = _measured_overlap_feature_matrix(observer_views)
+    if not evidence.get("available", False):
+        return {
+            "available": False,
+            "global_observer_relabel_distortion": None,
+            "receipt": False,
+            "blockers": list(evidence.get("blockers", [])),
+        }
+    source_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    ids = [int(view.get("observer_id", index)) for index, view in enumerate(source_views)]
+    order = np.asarray(rng.permutation(len(source_views)), dtype=np.int64)
+    if len(source_views) > 1 and np.array_equal(order, np.arange(len(source_views))):
+        order = np.roll(order, 1)
+    patch_views = [copy.deepcopy(source_views[int(index)]) for index in order]
+    permuted_labels = [int(value) for value in rng.permutation(np.asarray(ids, dtype=np.int64))]
+    if len(ids) > 1 and permuted_labels == ids:
+        permuted_labels = list(np.roll(np.asarray(ids, dtype=np.int64), 1))
+    relabel = dict(zip(ids, permuted_labels, strict=True))
+    for view in patch_views:
+        view["observer_id"] = relabel[int(view["observer_id"])]
+        for row in view.get("measured_overlap_correspondences", []):
+            if isinstance(row, dict) and row.get("peer_observer_id") is not None:
+                peer_id = int(row["peer_observer_id"])
+                # A bounded control cohort can retain measured correspondence
+                # rows to observers outside the cohort.  Those rows are
+                # ignored by _measured_overlap_feature_matrix, and a global
+                # relabeling of the cohort must leave their external labels
+                # untouched.  Indexing relabel directly made the late-stage
+                # producer fail whenever such a boundary row was present.
+                if peer_id in relabel:
+                    row["peer_observer_id"] = relabel[peer_id]
+    relabeled, relabeled_evidence = _measured_overlap_feature_matrix(patch_views)
+    restored = np.zeros_like(relabeled)
+    if original.shape == relabeled.shape:
+        restored[np.ix_(order, order)] = relabeled
+    affinity_distortion = (
+        float(np.max(np.abs(original - restored)))
+        if original.shape == restored.shape
+        else float("inf")
+    )
+    original_distance = _overlap_feature_distance_matrix(original)
+    restored_distance = _overlap_feature_distance_matrix(restored)
+    distance_distortion = float(np.max(np.abs(original_distance - restored_distance)))
+    receipt = bool(
+        relabeled_evidence.get("available", False)
+        and affinity_distortion <= 1.0e-12
+        and distance_distortion <= 1.0e-12
+    )
+    return {
+        "available": True,
+        "control": "global_observer_relabel",
+        "presentation_only": True,
+        "expected_geometry_change": False,
+        "serialization_row_permutation_applied": True,
+        "global_observer_relabel_affinity_distortion": affinity_distortion,
+        "global_observer_relabel_distortion": distance_distortion,
+        "receipt": receipt,
+        "blockers": [] if receipt else ["global_observer_relabel_changed_measured_overlap_geometry"],
+    }
 
 
 def _overlap_feature_distance_matrix(features: np.ndarray, eps: float = 1.0e-12) -> np.ndarray:
@@ -5316,17 +5804,18 @@ def _shuffle_overlap_payloads(
     observer_views: list[dict[str, Any]],
     rng: np.random.Generator,
 ) -> list[dict[str, Any]]:
+    if any("measured_overlap_correspondences" in row for row in observer_views):
+        return _measured_overlap_graph_null(observer_views, rng, mode="degree_preserving_rewire")
     shuffled = copy.deepcopy(observer_views)
     patch_indices = [index for index, view in enumerate(shuffled) if view.get("view_type") == "patch_observer"]
-    keys = (
+    for key in (
         "record_signature_histogram",
         "object_packet_histogram",
         "transition_history_histograms",
         "transition_affinity_histograms",
         "modular_response_histograms",
         "transition_history_descriptor",
-    )
-    for key in keys:
+    ):
         values = [copy.deepcopy(shuffled[index].get(key)) for index in patch_indices]
         order = rng.permutation(len(values))
         for local_index, source_index in enumerate(order):
@@ -5342,10 +5831,26 @@ def _permute_overlap_packet_labels(
     observer_views: list[dict[str, Any]],
     rng: np.random.Generator,
 ) -> list[dict[str, Any]]:
+    if any("measured_overlap_correspondences" in row for row in observer_views):
+        return _measured_overlap_graph_null(observer_views, rng, mode="edge_weight_permutation")
     shuffled = copy.deepcopy(observer_views)
     for view in shuffled:
         if view.get("view_type") != "patch_observer":
             continue
+        correspondences = view.get("measured_overlap_correspondences")
+        if isinstance(correspondences, list):
+            peer_ids = [
+                int(row["peer_observer_id"])
+                for row in correspondences
+                if isinstance(row, dict) and row.get("peer_observer_id") is not None
+            ]
+            if peer_ids:
+                permuted = rng.permutation(np.asarray(peer_ids, dtype=np.int64))
+                offset = 0
+                for row in correspondences:
+                    if isinstance(row, dict) and row.get("peer_observer_id") is not None:
+                        row["peer_observer_id"] = int(permuted[offset])
+                        offset += 1
         for key in (
             "record_signature_histogram",
             "object_packet_histogram",
@@ -5355,6 +5860,100 @@ def _permute_overlap_packet_labels(
         ):
             if isinstance(view.get(key), dict):
                 view[key] = _randomize_histogram_keys(view[key], rng)
+    return shuffled
+
+
+def _measured_overlap_graph_null(
+    observer_views: list[dict[str, Any]],
+    rng: np.random.Generator,
+    *,
+    mode: str,
+) -> list[dict[str, Any]]:
+    shuffled = copy.deepcopy(observer_views)
+    patch_rows = [row for row in shuffled if row.get("view_type") == "patch_observer"]
+    ids = [int(row.get("observer_id", index)) for index, row in enumerate(patch_rows)]
+    id_set = set(ids)
+    directed: dict[tuple[int, int], dict[str, Any]] = {}
+    for row_index, row in enumerate(patch_rows):
+        source_id = ids[row_index]
+        for payload in row.get("measured_overlap_correspondences", []):
+            if not isinstance(payload, dict):
+                continue
+            try:
+                peer_id = int(payload.get("peer_observer_id"))
+            except (TypeError, ValueError):
+                continue
+            if peer_id in id_set and peer_id != source_id:
+                directed[(source_id, peer_id)] = copy.deepcopy(payload)
+    edges: list[tuple[int, int, dict[str, Any]]] = []
+    for source_id, peer_id in sorted(directed):
+        if source_id >= peer_id or (peer_id, source_id) not in directed:
+            continue
+        payload = copy.deepcopy(directed[(source_id, peer_id)])
+        edges.append((source_id, peer_id, payload))
+    if mode == "degree_preserving_rewire":
+        rewired = [(left, right, payload) for left, right, payload in edges]
+        edge_set = {tuple(sorted((left, right))) for left, right, _ in rewired}
+        attempts = max(32, 20 * len(rewired))
+        for _ in range(attempts):
+            if len(rewired) < 2:
+                break
+            first, second = rng.choice(len(rewired), size=2, replace=False)
+            a, b, payload_ab = rewired[int(first)]
+            c, d, payload_cd = rewired[int(second)]
+            if rng.random() < 0.5:
+                c, d = d, c
+            if len({a, b, c, d}) < 4:
+                continue
+            proposed = (tuple(sorted((a, d))), tuple(sorted((c, b))))
+            old = (tuple(sorted((a, b))), tuple(sorted((c, d))))
+            if proposed[0] == proposed[1] or any(edge in edge_set - set(old) for edge in proposed):
+                continue
+            edge_set.difference_update(old)
+            edge_set.update(proposed)
+            rewired[int(first)] = (a, d, payload_ab)
+            rewired[int(second)] = (c, b, payload_cd)
+        edges = rewired
+    elif mode == "edge_weight_permutation" and len(edges) > 1:
+        payloads = [copy.deepcopy(payload) for _, _, payload in edges]
+        order = rng.permutation(len(payloads))
+        edges = [
+            (left, right, payloads[int(order[index])])
+            for index, (left, right, _payload) in enumerate(edges)
+        ]
+
+    internal_by_id: dict[int, list[dict[str, Any]]] = {observer_id: [] for observer_id in ids}
+    for left_id, right_id, payload in edges:
+        common = {
+            key: copy.deepcopy(value)
+            for key, value in payload.items()
+            if key != "peer_observer_id"
+        }
+        internal_by_id[left_id].append({**common, "peer_observer_id": int(right_id)})
+        internal_by_id[right_id].append({**common, "peer_observer_id": int(left_id)})
+    for row_index, row in enumerate(patch_rows):
+        source_id = ids[row_index]
+        outside = [
+            copy.deepcopy(payload)
+            for payload in row.get("measured_overlap_correspondences", [])
+            if isinstance(payload, dict)
+            and int(payload.get("peer_observer_id", source_id)) not in id_set
+        ]
+        row["measured_overlap_correspondences"] = sorted(
+            outside + internal_by_id[source_id],
+            key=lambda payload: int(payload.get("peer_observer_id", -1)),
+        )
+        row["overlap_correspondence_evidence_provenance"] = {
+            "producer": f"neutral_negative_control.{mode}",
+            "cross_observer_measurement": False,
+            "self_histogram_synthesis": False,
+            "synthetic_negative_control": True,
+            "marginal_preservation": (
+                "node_degree_and_edge_payload_multiset"
+                if mode == "degree_preserving_rewire"
+                else "edge_topology_and_edge_payload_multiset"
+            ),
+        }
     return shuffled
 
 
@@ -6195,11 +6794,16 @@ def _dimension_in_range(report: dict[str, Any], low: float, high: float) -> bool
 def _strict_neutral_theory_alignment_report(
     neutral_views: list[NeutralObserverView],
     weights: dict[str, float] | None = None,
+    *,
+    observer_views: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     active_weights = weights or DEFAULT_NEUTRAL_WEIGHTS
     rows: list[dict[str, Any]] = []
     gaps: list[str] = []
     observer_count = len(neutral_views)
+    patch_rows = [
+        view for view in (observer_views or []) if view.get("view_type") == "patch_observer"
+    ]
     for channel, evidence in STRICT_NEUTRAL_THEORY_REQUIRED_CHANNELS.items():
         matrix = _neutral_channel_matrix(neutral_views, channel)
         if matrix.ndim != 2 or matrix.shape[0] != observer_count:
@@ -6210,10 +6814,31 @@ def _strict_neutral_theory_alignment_report(
         else:
             row_observed = np.zeros(observer_count, dtype=bool)
         observed_count = int(np.sum(row_observed))
+        producer_verified_count = _verified_neutral_channel_producer_count(channel, patch_rows)
+        producer_required = channel in {
+            "local_packet",
+            "boundary_packet",
+            "overlap_correspondence",
+            "perturbation_response_tensor",
+        }
+        producer_verified = bool(
+            not producer_required
+            or (observer_count > 0 and producer_verified_count == observer_count)
+        )
         active = float(active_weights.get(channel, 0.0) or 0.0) > 0.0
-        present = bool(observer_count > 0 and observed_count == observer_count and active)
+        present = bool(
+            observer_count > 0
+            and observed_count == observer_count
+            and active
+            and producer_verified
+        )
         if not present:
-            reason = "inactive_required_neutral_channel" if not active else "missing_or_partial_required_neutral_channel"
+            if not active:
+                reason = "inactive_required_neutral_channel"
+            elif not producer_verified:
+                reason = "unverified_or_legacy_required_neutral_channel_producer"
+            else:
+                reason = "missing_or_partial_required_neutral_channel"
             gaps.append(f"{reason}:{channel}:{observed_count}/{observer_count}")
         rows.append(
             {
@@ -6221,6 +6846,9 @@ def _strict_neutral_theory_alignment_report(
                 "evidence_requirement": evidence,
                 "active_weight": float(active_weights.get(channel, 0.0) or 0.0),
                 "observer_rows_with_signal": observed_count,
+                "observer_rows_with_verified_producer": producer_verified_count,
+                "producer_provenance_required": producer_required,
+                "producer_provenance_verified": producer_verified,
                 "observer_count": observer_count,
                 "present_for_all_observers": present,
             }
@@ -6237,6 +6865,61 @@ def _strict_neutral_theory_alignment_report(
             "A geometric fit is diagnostic until these channels and the quotient geometry contract are present."
         ),
     }
+
+
+def _verified_neutral_channel_producer_count(
+    channel: str,
+    patch_rows: list[dict[str, Any]],
+) -> int:
+    if channel == "local_packet":
+        return int(
+            sum(
+                1
+                for row in patch_rows
+                if isinstance(row.get("locality_preserving_packet_feature_schema"), dict)
+                and row["locality_preserving_packet_feature_schema"].get("support_selection_carrier")
+                == "finite_patch_adjacency_bfs"
+                and row["locality_preserving_packet_feature_schema"].get("strict_neutral_eligible") is True
+                and set(row["locality_preserving_packet_feature_schema"].get("fields", []))
+                <= {"repair_load", "cumulative_repair_load"}
+            )
+        )
+    if channel == "overlap_correspondence":
+        return int(
+            sum(
+                1
+                for row in patch_rows
+                if isinstance(row.get("measured_overlap_correspondences"), list)
+                and isinstance(row.get("overlap_correspondence_evidence_provenance"), dict)
+                and row["overlap_correspondence_evidence_provenance"].get("cross_observer_measurement") is True
+                and row["overlap_correspondence_evidence_provenance"].get("self_histogram_synthesis") is False
+                and row["overlap_correspondence_evidence_provenance"].get("support_selection_carrier")
+                == "finite_patch_adjacency_bfs"
+                and row["overlap_correspondence_evidence_provenance"].get("strict_neutral_eligible") is True
+            )
+        )
+    if channel == "perturbation_response_tensor":
+        return int(
+            sum(
+                1
+                for row in patch_rows
+                if row.get("paired_perturbation_response_producer_receipt") is True
+                and isinstance(row.get("paired_perturbation_response_tensor"), list)
+                and isinstance(row.get("paired_perturbation_response_provenance"), dict)
+                and row["paired_perturbation_response_provenance"].get("strict_neutral_eligible") is True
+            )
+        )
+    if channel == "boundary_packet":
+        return int(
+            sum(
+                1
+                for row in patch_rows
+                if isinstance(row.get("boundary_packet_feature_provenance"), dict)
+                and row["boundary_packet_feature_provenance"].get("locality_preserving") is True
+                and row["boundary_packet_feature_provenance"].get("hash_bucket_geometry") is False
+            )
+        )
+    return len(patch_rows)
 
 
 def _first_histogram_vector(view: dict[str, Any], keys: tuple[str, ...], width: int) -> np.ndarray:
@@ -6259,6 +6942,61 @@ def _first_histogram_vector(view: dict[str, Any], keys: tuple[str, ...], width: 
     return np.zeros(max(1, int(width)), dtype=float)
 
 
+def _measured_overlap_summary_vector(view: dict[str, Any], *, width: int) -> np.ndarray:
+    correspondences = view.get("measured_overlap_correspondences")
+    provenance = view.get("overlap_correspondence_evidence_provenance")
+    measured = bool(
+        isinstance(correspondences, list)
+        and isinstance(provenance, dict)
+        and (
+            (
+                provenance.get("cross_observer_measurement") is True
+                and provenance.get("self_histogram_synthesis") is False
+            )
+            or provenance.get("synthetic_negative_control") is True
+        )
+    )
+    if measured:
+        blocks: list[np.ndarray] = []
+        for key in (
+            "jaccard",
+            "measured_affinity",
+            "local_packet_similarity",
+            "support_fraction_self",
+            "support_fraction_peer",
+        ):
+            values = []
+            for row in correspondences:
+                if not isinstance(row, dict):
+                    continue
+                try:
+                    value = float(row.get(key))
+                except (TypeError, ValueError):
+                    continue
+                if np.isfinite(value):
+                    values.append(float(np.clip(value, 0.0, 1.0)))
+            if not values:
+                blocks.append(np.zeros(20, dtype=float))
+                continue
+            array = np.asarray(values, dtype=float)
+            histogram, _ = np.histogram(array, bins=16, range=(0.0, 1.0))
+            histogram = histogram.astype(float) / max(float(histogram.sum()), 1.0)
+            moments = np.asarray(
+                [
+                    float(np.mean(array)),
+                    float(np.std(array)),
+                    float(np.quantile(array, 0.25)),
+                    float(np.quantile(array, 0.75)),
+                ],
+                dtype=float,
+            )
+            blocks.append(np.concatenate([histogram, moments]))
+        return _pad(np.concatenate(blocks), int(width))[: int(width)]
+    # Legacy self-histogram summaries remain in the raw evidence rows, but do
+    # not enter the measured-overlap geometry channel.
+    return np.zeros(max(1, int(width)), dtype=float)
+
+
 def _first_signed_vector(view: dict[str, Any], keys: tuple[str, ...], width: int) -> np.ndarray:
     for key in keys:
         vector = _signed_observable_vector(view.get(key), width)
@@ -6276,6 +7014,17 @@ def _first_signed_vector(view: dict[str, Any], keys: tuple[str, ...], width: int
             vector = _signed_observable_vector(descriptor.get(key), width)
             if float(np.linalg.norm(vector)) > 1e-12:
                 return vector
+    return np.zeros(max(1, int(width)), dtype=float)
+
+
+def _verified_perturbation_response_vector(view: dict[str, Any], *, width: int) -> np.ndarray:
+    if (
+        "paired_perturbation_response_tensor" in view
+        and view.get("paired_perturbation_response_producer_receipt") is True
+    ):
+        return _signed_observable_vector(view.get("paired_perturbation_response_tensor"), width)
+    # Do not silently substitute report-backed/synthetic response summaries for
+    # the actual paired producer in the default geometry.
     return np.zeros(max(1, int(width)), dtype=float)
 
 

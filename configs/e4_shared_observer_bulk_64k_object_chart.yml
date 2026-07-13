@@ -132,7 +132,7 @@ bw:
   mode: state_derived_modular_probe
   source_state: theorem_observer
   state_mode: history_koopman_generator_state
-  history_window: 16
+  history_window: 32
   target_operator_mode: soft
   transition_response_time: 0.25
   transition_response_scale: 6.283185307179586
@@ -240,7 +240,7 @@ observer_objects:
   enabled: true
   family_mode: transition_affinity
   packet_mode: coarse_visible_packet
-  history_window: 4
+  history_window: 32
   signature_bins: 12
   include_s3_sector: true
   include_repair_load_bin: false
@@ -277,7 +277,7 @@ observer_chart_population:
   enabled: true
   refit_incidence_mode: transition_history_mixture_cluster
   incidence_mode: transition_history_mixture_cluster
-  history_window: 4
+  history_window: 32
   min_persistence: 3
   min_objects: 8
   min_observers_per_object: 3
@@ -537,15 +537,16 @@ cosmology:
     - record_sector_mix
   b_a_paired_perturbation:
     enabled: true
-    source_state: theorem_observer
+    source_state: final
     cap_source: h3
     max_caps: 8
     modes_per_cap_time: 2
     a_grid: [0.0009090909090909091, 0.01, 0.1, 1.0]
     times: [0.25]
     controls:
-    - shuffled_source
-    - sign_flip
+    - no_perturbation
+    - phase_shuffled_baryon_mode
+    - wrong_k_label
     response_field: cumulative_repair_load
     perturb_strength: 1.0
     perturb_budget_mode: modular_amount

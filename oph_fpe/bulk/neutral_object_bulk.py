@@ -27,6 +27,8 @@ FORBIDDEN_PRIMARY_FIELDS = (
     "modular_depth",
 )
 
+STRICT_NEUTRAL_OBJECT_SOURCE_SCHEMA = "strict_neutral_object_bulk_source_v1"
+
 
 @dataclass(frozen=True)
 class NeutralObject:
@@ -243,8 +245,35 @@ def write_strict_neutral_object_bulk_report(
         max_model_points=max_model_points,
         heldout_fraction=heldout_fraction,
     )
+    source_manifest = {
+        "schema": STRICT_NEUTRAL_OBJECT_SOURCE_SCHEMA,
+        "observer_views_path": observer_path.name,
+        "observer_views_sha256": _source_file_sha256(observer_path),
+        "observer_view_row_count": len(observer_views),
+        "analysis_kernel_file_sha256": _source_file_sha256(Path(__file__)),
+        "analysis_parameters": {
+            "seed": int(seed),
+            "min_objects": int(min_objects),
+            "min_observers_per_object": int(min_observers_per_object),
+            "max_observer_fraction_per_object": float(max_observer_fraction_per_object),
+            "max_model_points": int(max_model_points),
+            "heldout_fraction": float(heldout_fraction),
+        },
+        "claim_boundary": (
+            "Hash-bound observer JSONL and deterministic object-analysis parameters for "
+            "read-only proof-certificate replay. A persisted object receipt is diagnostic "
+            "unless this source and the current analysis kernel reproduce it exactly."
+        ),
+    }
+    source_manifest_path = run / "strict_neutral_object_source_manifest.json"
+    source_manifest_path.write_text(
+        json.dumps(source_manifest, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
     report["source_run_dir"] = str(run)
     report["observer_views_path"] = str(observer_path)
+    report["source_artifact"] = source_manifest
+    report["source_manifest_path"] = str(source_manifest_path)
     destination = Path(out) if out is not None else run / "strict_neutral_object_bulk_report.json"
     if destination.suffix.lower() != ".json":
         destination = destination / "strict_neutral_object_bulk_report.json"
@@ -257,6 +286,14 @@ def write_strict_neutral_object_bulk_report(
     report["neutral_objects_path"] = str(objects_path)
     destination.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     return report
+
+
+def _source_file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
 
 
 def neutral_object_control_report(objects: list[NeutralObject], *, seed: int = 1) -> dict[str, Any]:

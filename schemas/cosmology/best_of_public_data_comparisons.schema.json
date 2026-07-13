@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph/best_of_public_data_comparisons.schema.json",
+  "title": "OPH best available public-data comparisons",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "mode",
+    "selection_policy",
+    "datasets",
+    "run_bundles",
+    "comparisons",
+    "repair_and_boltzmann_readiness",
+    "summary",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "oph_best_of_public_data_comparisons_v1"
+    },
+    "mode": {
+      "const": "oph_best_of_public_data_comparisons"
+    },
+    "selection_policy": {
+      "type": "object",
+      "required": [
+        "primary_run",
+        "baseline_run",
+        "history_runs",
+        "policy",
+        "patch_count_never_promotes_evidence",
+        "no_cross_domain_score_or_rank"
+      ],
+      "properties": {
+        "primary_run": {"type": "string", "minLength": 1},
+        "baseline_run": {"type": "string", "minLength": 1},
+        "history_runs": {"type": "array", "items": {"type": "string"}},
+        "policy": {"const": "explicit_primary_run_selected_before_public_metric_evaluation"},
+        "patch_count_never_promotes_evidence": {"const": true},
+        "no_cross_domain_score_or_rank": {"const": true},
+        "history_is_context_not_primary_selection": {"const": true}
+      },
+      "additionalProperties": true
+    },
+    "datasets": {
+      "type": "object",
+      "required": ["planck_tt", "sparc", "cassini_q2"],
+      "properties": {
+        "planck_tt": {"$ref": "#/$defs/dataset"},
+        "sparc": {"$ref": "#/$defs/dataset"},
+        "cassini_q2": {"$ref": "#/$defs/dataset"}
+      },
+      "additionalProperties": false
+    },
+    "run_bundles": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/runBundle"}
+    },
+    "planned_run_scale_contract": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/scaleContract"}
+      ]
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/comparison"}
+    },
+    "repair_and_boltzmann_readiness": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "run_id",
+          "run_dir",
+          "paired_b_a_diagnostic_receipt",
+          "b_a_physical_kernel_receipt",
+          "physical_prediction_ready",
+          "integrity_receipt"
+        ],
+        "properties": {
+          "run_id": {"type": "string"},
+          "run_dir": {"type": "string"},
+          "paired_b_a_diagnostic_receipt": {"type": "boolean"},
+          "b_a_physical_kernel_receipt": {"type": "boolean"},
+          "physical_prediction_ready": {"type": "boolean"},
+          "integrity_receipt": {"type": "boolean"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "integrity_receipt",
+        "integrity_errors",
+        "any_public_comparison",
+        "public_comparison_count",
+        "frozen_prediction_count",
+        "physical_prediction_available",
+        "overall_score",
+        "overall_winner"
+      ],
+      "properties": {
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}},
+        "any_public_comparison": {"type": "boolean"},
+        "public_comparison_count": {"type": "integer", "minimum": 0},
+        "frozen_prediction_count": {"type": "integer", "minimum": 0},
+        "physical_prediction_available": {"type": "boolean"},
+        "overall_score": {"type": "null"},
+        "overall_winner": {"type": "null"}
+      },
+      "additionalProperties": true
+    },
+    "claim_boundary": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "dataset": {
+      "type": "object",
+      "required": ["dataset_id", "release", "path", "public_source", "integrity_receipt", "integrity_errors"],
+      "properties": {
+        "dataset_id": {"type": "string", "minLength": 1},
+        "release": {"type": "string", "minLength": 1},
+        "path": {"type": "string"},
+        "public_source": {"type": "string", "format": "uri"},
+        "sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          ]
+        },
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "runBundle": {
+      "type": "object",
+      "required": [
+        "run_id",
+        "run_dir",
+        "selection_role",
+        "carrier_patch_count",
+        "materialized_observer_count",
+        "scale_label",
+        "is_at_least_one_million_carrier_patches",
+        "is_at_least_one_million_materialized_observers",
+        "integrity_receipt",
+        "integrity_errors"
+      ],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "run_dir": {"type": "string", "minLength": 1},
+        "selection_role": {
+          "enum": ["primary", "primary_baseline", "baseline", "history"]
+        },
+        "carrier_patch_count": {"type": ["integer", "null"], "minimum": 1},
+        "materialized_observer_count": {"type": ["integer", "null"], "minimum": 1},
+        "scale_label": {
+          "enum": [
+            "finite_patch_observer_sample",
+            "million_patch_bounded_observer_sample",
+            "million_materialized_observers"
+          ]
+        },
+        "is_at_least_one_million_carrier_patches": {"type": "boolean"},
+        "is_at_least_one_million_materialized_observers": {"type": "boolean"},
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "scaleContract": {
+      "type": "object",
+      "required": ["config_path", "role", "integrity_receipt", "integrity_errors"],
+      "properties": {
+        "config_path": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "carrier_patch_count": {"type": ["integer", "null"], "minimum": 1},
+        "materialized_observer_count": {"type": ["integer", "null"], "minimum": 1},
+        "is_at_least_one_million_carrier_patches": {"type": "boolean"},
+        "is_at_least_one_million_materialized_observers": {"type": "boolean"},
+        "raw_screen_real_ell_overlap_with_planck_bins": {"type": "boolean"},
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "comparison_id",
+        "domain",
+        "dataset_id",
+        "selection_role",
+        "run_dependent",
+        "model_role",
+        "claim_level",
+        "evaluation_class",
+        "metrics",
+        "comparison_receipt",
+        "physical_prediction_receipt",
+        "integrity_receipt",
+        "integrity_errors",
+        "claim_boundary"
+      ],
+      "properties": {
+        "comparison_id": {"type": "string", "minLength": 1},
+        "domain": {"type": "string", "minLength": 1},
+        "dataset_id": {"type": "string", "minLength": 1},
+        "selection_role": {"type": "string", "minLength": 1},
+        "run_id": {"type": ["string", "null"]},
+        "run_dir": {"type": ["string", "null"]},
+        "carrier_patch_count": {"type": ["integer", "null"], "minimum": 1},
+        "materialized_observer_count": {"type": ["integer", "null"], "minimum": 1},
+        "run_dependent": {"type": "boolean"},
+        "model_role": {"type": "string", "minLength": 1},
+        "claim_level": {"type": "string", "minLength": 1},
+        "evaluation_class": {
+          "enum": [
+            "diagnostic_proxy",
+            "calibrated_same_data",
+            "calibrated_independent_dataset",
+            "heldout_test",
+            "frozen_prediction",
+            "blocked"
+          ]
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/metric"}
+        },
+        "comparison_receipt": {"type": "boolean"},
+        "physical_prediction_receipt": {"type": "boolean"},
+        "applicability_receipt": {"type": "boolean"},
+        "current_scope_match": {"type": "boolean"},
+        "raw_pull_not_nuisance_marginalized": {"type": "boolean"},
+        "conditional_external_domain_falsifier": {"type": "boolean"},
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}},
+        "claim_boundary": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"domain": {"const": "solar_system_external_field"}},
+            "required": ["domain"]
+          },
+          "then": {
+            "required": [
+              "applicability",
+              "applicability_receipt",
+              "current_scope_match",
+              "raw_pull_not_nuisance_marginalized",
+              "conditional_external_domain_falsifier"
+            ],
+            "properties": {
+              "applicability_receipt": {"const": false},
+              "current_scope_match": {"const": false},
+              "raw_pull_not_nuisance_marginalized": {"const": true},
+              "physical_prediction_receipt": {"const": false},
+              "applicability": {
+                "type": "object",
+                "required": [
+                  "assumption_tested",
+                  "assumption_derived_by_current_oph",
+                  "current_paper_scope_match",
+                  "missing_gate"
+                ],
+                "properties": {
+                  "assumption_derived_by_current_oph": {"const": false},
+                  "current_paper_scope_match": {"const": false}
+                },
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "metric": {
+      "type": "object",
+      "required": ["value", "unit", "direction", "baseline_value", "delta"],
+      "properties": {
+        "value": {"type": ["number", "null"]},
+        "unit": {"type": "string", "minLength": 1},
+        "direction": {"type": "string", "minLength": 1},
+        "baseline_value": {"type": ["number", "null"]},
+        "delta": {"type": ["number", "null"]}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

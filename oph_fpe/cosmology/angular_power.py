@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import math
 from typing import Any
@@ -226,15 +227,57 @@ def _run_harmonic_tasks_cached(
         for bounds in ranges:
             coeffs += compute_range(bounds)
     else:
-        with ThreadPoolExecutor(max_workers=worker_count) as pool:
-            futures = [pool.submit(compute_range, bounds) for bounds in ranges]
-            for future in as_completed(futures):
-                coeffs += future.result()
+        coeffs, _peak_in_flight = _bounded_ordered_thread_reduce(
+            ranges,
+            compute_range,
+            initial=coeffs,
+            max_workers=worker_count,
+        )
 
     return {
         int(task["task_id"]): _coeffs_to_spectrum(coeffs[index], ell_max=m_max) if active[index] else _zero_spectrum(m_max)
         for index, task in enumerate(tasks)
     }
+
+
+def _bounded_ordered_thread_reduce(
+    inputs,
+    compute,
+    *,
+    initial: np.ndarray,
+    max_workers: int,
+) -> tuple[np.ndarray, int]:
+    """Accumulate threaded batch results with bounded retained futures.
+
+    ``ThreadPoolExecutor`` accepts an unbounded submission queue.  Submitting
+    every harmonic batch at million-patch scale retains each completed tensor
+    on its ``Future`` until the full list is released.  This sliding window
+    keeps at most one batch per worker in flight and reduces in input order,
+    making both peak memory and floating-point accumulation order explicit.
+    """
+
+    worker_count = max(1, int(max_workers))
+    iterator = iter(inputs)
+    result = np.asarray(initial).copy()
+    pending = deque()
+    peak_in_flight = 0
+    with ThreadPoolExecutor(max_workers=worker_count) as pool:
+        for _ in range(worker_count):
+            try:
+                item = next(iterator)
+            except StopIteration:
+                break
+            pending.append(pool.submit(compute, item))
+        peak_in_flight = len(pending)
+        while pending:
+            result += pending.popleft().result()
+            try:
+                item = next(iterator)
+            except StopIteration:
+                continue
+            pending.append(pool.submit(compute, item))
+            peak_in_flight = max(peak_in_flight, len(pending))
+    return result, peak_in_flight
 
 
 def spherical_harmonic_cl(

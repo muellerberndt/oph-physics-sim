@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
+from collections import deque
+from concurrent.futures import Future, ThreadPoolExecutor
+import hashlib
+from typing import Any, Callable, Iterable, Iterator, TypeVar
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -8,6 +11,61 @@ from scipy.spatial import cKDTree
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap
 from oph_fpe.bulk.record_to_h3 import DEFAULT_RECORD_FIELDS
 from oph_fpe.cache.geometry_cache import GeometryCache
+from oph_fpe.gauge.covariant_overlap import (
+    GAUGE_COVARIANT_OVERLAP_SCHEMA,
+    covariant_discrepancy,
+    covariant_mismatch_mask,
+    gauge_invariant_edge_residual,
+    group_inverse_indices,
+    group_multiply_indices,
+    repair_covariant_port_pairs,
+    repair_production_sector_links,
+)
+
+
+_T = TypeVar("_T")
+_R = TypeVar("_R")
+
+
+def _bounded_ordered_thread_map(
+    function: Callable[[_T], _R],
+    items: Iterable[_T],
+    *,
+    max_workers: int,
+) -> Iterator[_R]:
+    """Map in input order while retaining at most ``max_workers`` results.
+
+    ``ThreadPoolExecutor.map`` eagerly submits the whole iterable.  A full-graph
+    perturbation result can own several patch-sized arrays, so an eager queue
+    turns a scientifically modest probe grid into an avoidable memory spike.
+    This sliding window keeps the shared graph read-only, bounds the number of
+    mutable probe states in flight, and yields deterministic ordered assembly.
+    """
+
+    workers = max(1, int(max_workers))
+    if workers == 1:
+        for item in items:
+            yield function(item)
+        return
+
+    iterator = iter(items)
+    with ThreadPoolExecutor(
+        max_workers=workers,
+        thread_name_prefix="oph-full-graph-probe",
+    ) as executor:
+        pending: deque[Future[_R]] = deque()
+        for _ in range(workers):
+            try:
+                pending.append(executor.submit(function, next(iterator)))
+            except StopIteration:
+                break
+        while pending:
+            result = pending.popleft().result()
+            try:
+                pending.append(executor.submit(function, next(iterator)))
+            except StopIteration:
+                pass
+            yield result
 
 
 def modular_response_kernel(
@@ -46,6 +104,9 @@ def modular_response_kernel(
     transition_readout_mode: str = "same_support",
     repair_steps: int = 4,
     repairs_per_step: int = 128,
+    max_full_graph_simulations: int | None = None,
+    full_graph_budget_policy: str = "skip_if_exceeded",
+    full_graph_n_jobs: int = 1,
     perturb_seed: int = 1,
 ) -> dict[str, Any]:
     """Build the support-visible modular response tensor for H3 fitting.
@@ -101,6 +162,9 @@ def modular_response_kernel(
             transition_readout_mode=str(transition_readout_mode),
             repair_steps=int(repair_steps),
             repairs_per_step=int(repairs_per_step),
+            max_full_graph_simulations=max_full_graph_simulations,
+            full_graph_budget_policy=str(full_graph_budget_policy),
+            full_graph_n_jobs=int(full_graph_n_jobs),
             seed=int(perturb_seed),
         )
     if normalized_mode == "object_transition":
@@ -507,6 +571,9 @@ def _perturb_resettle_transition_kernel(
     transition_readout_mode: str,
     repair_steps: int,
     repairs_per_step: int,
+    max_full_graph_simulations: int | None,
+    full_graph_budget_policy: str,
+    full_graph_n_jobs: int,
     seed: int,
 ) -> dict[str, Any]:
     packet_fields = _object_packet_fields(
@@ -517,7 +584,83 @@ def _perturb_resettle_transition_kernel(
     )
     graph = _validated_graph_state(graph_state, points.shape[0])
     if not patch_views or not caps or not packet_fields or not times or graph is None:
-        return _empty_kernel(points, patch_views, caps, packet_fields, times)
+        empty = _empty_kernel(points, patch_views, caps, packet_fields, times)
+        if graph is None:
+            empty["proof_blockers"] = ["gauge_coupled_perturb_resettle_graph_state_unavailable"]
+        return empty
+    sector_replay = _production_sector_replay_contract(graph)
+    if sector_replay["blockers"]:
+        empty = _empty_kernel(points, patch_views, caps, packet_fields, times)
+        empty["proof_blockers"] = list(sector_replay["blockers"])
+        empty["perturb_resettle_report"] = {
+            "gauge_covariant_probe_receipt": False,
+            "production_sector_repair_enabled": bool(
+                sector_replay["production_sector_repair_enabled"]
+            ),
+            "sector_repair_replayed": False,
+            "production_move_contract": sector_replay,
+        }
+        return empty
+    scale_values = [float(value) for value in wrong_scales]
+    unique_simulation_scales: list[float] = [float(transport_scale)]
+    for value in scale_values:
+        if not any(_same_probe_scale(value, existing) for existing in unique_simulation_scales):
+            unique_simulation_scales.append(value)
+    requested_full_graph_simulations = len(caps) * len(times) * (1 + len(scale_values))
+    planned_full_graph_simulations = len(caps) * len(times) * len(unique_simulation_scales)
+    requested_n_jobs = max(1, int(full_graph_n_jobs))
+    tasks_per_matrix = len(caps) * len(times)
+    effective_n_jobs = min(requested_n_jobs, max(1, tasks_per_matrix))
+    parallel_execution = {
+        "schema": "bounded_ordered_full_graph_thread_execution_v1",
+        "requested_n_jobs": int(requested_n_jobs),
+        "effective_n_jobs": int(effective_n_jobs),
+        "executor": (
+            "bounded_ordered_thread_pool" if effective_n_jobs > 1 else "sequential"
+        ),
+        "matrix_batch_count": int(len(unique_simulation_scales)),
+        "probe_task_count": int(planned_full_graph_simulations),
+        "max_in_flight_full_graph_states": int(effective_n_jobs),
+        "ordered_result_assembly": True,
+        "independent_named_rng_streams": True,
+        "shared_graph_state_read_only": True,
+    }
+    budget = (
+        None
+        if max_full_graph_simulations is None
+        else max(0, int(max_full_graph_simulations))
+    )
+    policy = str(full_graph_budget_policy)
+    if policy != "skip_if_exceeded":
+        raise ValueError(
+            "modular response full_graph_budget_policy must be 'skip_if_exceeded'"
+        )
+    if budget is not None and planned_full_graph_simulations > budget:
+        empty = _empty_kernel(points, patch_views, caps, packet_fields, times)
+        empty["proof_blockers"] = ["modular_response_full_graph_simulation_budget_exceeded"]
+        empty["perturb_resettle_report"] = {
+            "gauge_covariant_probe_receipt": False,
+            "production_sector_repair_enabled": bool(
+                sector_replay["production_sector_repair_enabled"]
+            ),
+            "sector_repair_replayed": False,
+            "production_move_contract": sector_replay,
+            "full_graph_simulation_budget": {
+                "schema": "modular_response_full_graph_simulation_budget_v1",
+                "policy": policy,
+                "max_full_graph_simulations": budget,
+                "requested_without_scale_reuse": int(requested_full_graph_simulations),
+                "planned_with_scale_reuse": int(planned_full_graph_simulations),
+                "executed_full_graph_simulations": 0,
+                "receipt": False,
+            },
+            "parallel_execution": {
+                **parallel_execution,
+                "effective_n_jobs": 0,
+                "max_in_flight_full_graph_states": 0,
+            },
+        }
+        return empty
     supports = [_valid_support(view.get("support_nodes", []), points.shape[0]) for view in patch_views]
     feature_types = _normalized_transition_feature_types(transition_feature_types)
     feature_rows = _object_transition_feature_rows(caps, times, packet_fields, feature_types)
@@ -542,36 +685,50 @@ def _perturb_resettle_transition_kernel(
         transition_readout_mode=str(transition_readout_mode),
         repair_steps=int(repair_steps),
         repairs_per_step=int(repairs_per_step),
+        n_jobs=effective_n_jobs,
         seed=int(seed),
     )
     no_perturb = np.zeros_like(raw_matrix)
     s2_boundary = _object_s2_boundary_matrix(points, caps, supports, weights, feature_rows)
     wrong_scale_controls: dict[str, np.ndarray] = {}
-    for wrong_scale in wrong_scales:
+    scale_matrix_cache: list[tuple[float, np.ndarray]] = [(float(transport_scale), raw_matrix)]
+    for wrong_scale in scale_values:
         label = _scale_label(float(wrong_scale))
-        wrong_scale_controls[label] = _perturb_resettle_matrix(
-            points,
-            caps,
-            raw_fields,
-            packet_fields,
-            supports,
-            weights,
-            graph,
-            feature_types,
-            times=times,
-            scale=float(wrong_scale),
-            transition_observables=transition_observables,
-            transition_bins=int(transition_bins),
-            record_family_modulus=int(record_family_modulus),
-            perturb_strength=float(perturb_strength),
-            perturb_budget_mode=str(perturb_budget_mode),
-            fixed_perturb_fraction=fixed_perturb_fraction,
-            perturb_selection_mode=str(perturb_selection_mode),
-            transition_readout_mode=str(transition_readout_mode),
-            repair_steps=int(repair_steps),
-            repairs_per_step=int(repairs_per_step),
-            seed=int(seed),
+        cached_matrix = next(
+            (
+                matrix_value
+                for cached_scale, matrix_value in scale_matrix_cache
+                if _same_probe_scale(float(wrong_scale), cached_scale)
+            ),
+            None,
         )
+        if cached_matrix is None:
+            cached_matrix = _perturb_resettle_matrix(
+                points,
+                caps,
+                raw_fields,
+                packet_fields,
+                supports,
+                weights,
+                graph,
+                feature_types,
+                times=times,
+                scale=float(wrong_scale),
+                transition_observables=transition_observables,
+                transition_bins=int(transition_bins),
+                record_family_modulus=int(record_family_modulus),
+                perturb_strength=float(perturb_strength),
+                perturb_budget_mode=str(perturb_budget_mode),
+                fixed_perturb_fraction=fixed_perturb_fraction,
+                perturb_selection_mode=str(perturb_selection_mode),
+                transition_readout_mode=str(transition_readout_mode),
+                repair_steps=int(repair_steps),
+                repairs_per_step=int(repairs_per_step),
+                n_jobs=effective_n_jobs,
+                seed=int(seed),
+            )
+            scale_matrix_cache.append((float(wrong_scale), cached_matrix))
+        wrong_scale_controls[label] = cached_matrix
     matrix, transformed_controls, transform_report = _transform_with_controls(
         raw_matrix,
         {
@@ -622,6 +779,28 @@ def _perturb_resettle_transition_kernel(
         },
         "perturb_resettle_report": {
             "mode": "cap_collar_perturb_then_local_repair",
+            "gauge_covariant_probe_receipt": bool(
+                sector_replay["gauge_covariant_probe_receipt"]
+            ),
+            "centered_or_single_intervention_support_receipt": True,
+            "production_sector_repair_enabled": bool(
+                sector_replay["production_sector_repair_enabled"]
+            ),
+            "sector_repair_replayed": bool(sector_replay["sector_repair_replayed"]),
+            "production_move_contract": sector_replay,
+            "full_graph_simulation_budget": {
+                "schema": "modular_response_full_graph_simulation_budget_v1",
+                "policy": policy,
+                "max_full_graph_simulations": budget,
+                "requested_without_scale_reuse": int(requested_full_graph_simulations),
+                "planned_with_scale_reuse": int(planned_full_graph_simulations),
+                "executed_full_graph_simulations": int(planned_full_graph_simulations),
+                "scale_reuse_count": int(
+                    requested_full_graph_simulations - planned_full_graph_simulations
+                ),
+                "receipt": True,
+            },
+            "parallel_execution": parallel_execution,
             "repair_steps": int(repair_steps),
             "repairs_per_step": int(repairs_per_step),
             "perturb_strength": float(perturb_strength),
@@ -666,6 +845,7 @@ def _perturb_resettle_matrix(
     transition_readout_mode: str,
     repair_steps: int,
     repairs_per_step: int,
+    n_jobs: int = 1,
     seed: int,
 ) -> np.ndarray:
     points = np.asarray(points, dtype=float)
@@ -673,24 +853,37 @@ def _perturb_resettle_matrix(
     tree: cKDTree | None = None
     if readout_mode in {"transported_support", "transported_support_delta", "cap_transported_support"}:
         tree = cKDTree(points)
-    columns: list[np.ndarray] = []
-    for cap_index, cap in enumerate(caps):
-        for time_index, time_value in enumerate(times):
-            transported_supports = (
-                [
-                    _transport_support_direct(points, tree, support, cap, float(scale) * float(time_value))
-                    for support in supports
-                ]
-                if tree is not None
-                else supports
-            )
-            post_raw = _simulate_cap_collar_perturb_resettle(
+    jobs = [
+        (cap_index, time_index, cap, float(time_value))
+        for cap_index, cap in enumerate(caps)
+        for time_index, time_value in enumerate(times)
+    ]
+
+    def probe_columns(
+        job: tuple[int, int, RoundCap, float],
+    ) -> list[np.ndarray]:
+        cap_index, time_index, cap, time_value = job
+        transported_supports = (
+            [
+                _transport_support_direct(
+                    points,
+                    tree,
+                    support,
+                    cap,
+                    float(scale) * float(time_value),
+                )
+                for support in supports
+            ]
+            if tree is not None
+            else supports
+        )
+        post_raw = _simulate_cap_collar_perturb_resettle(
                 points,
                 cap,
                 raw_fields,
                 graph,
                 scale=float(scale),
-                time_value=float(time_value),
+                time_value=time_value,
                 perturb_strength=float(perturb_strength),
                 perturb_budget_mode=str(perturb_budget_mode),
                 fixed_perturb_fraction=fixed_perturb_fraction,
@@ -699,45 +892,61 @@ def _perturb_resettle_matrix(
                 repairs_per_step=int(repairs_per_step),
                 seed=int(seed) + 1009 * int(cap_index) + 9173 * int(time_index),
             )
-            post_packets = _object_packet_fields(
-                post_raw,
-                transition_observables,
-                bins=max(2, int(transition_bins)),
-                record_family_modulus=max(2, int(record_family_modulus)),
+        post_packets = _object_packet_fields(
+            post_raw,
+            transition_observables,
+            bins=max(2, int(transition_bins)),
+            record_family_modulus=max(2, int(record_family_modulus)),
+        )
+        local_columns: list[np.ndarray] = []
+        for observable, source_packets in base_packet_fields.items():
+            target_packets = np.asarray(
+                post_packets.get(observable, source_packets), dtype=np.int64
             )
-            for observable, source_packets in base_packet_fields.items():
-                target_packets = np.asarray(post_packets.get(observable, source_packets), dtype=np.int64)
-                class_count = int(np.max(source_packets)) + 1 if source_packets.size else 1
-                target_deltas = np.zeros((len(supports), class_count), dtype=float)
-                feature_values: dict[str, np.ndarray] = {
-                    feature_type: _empty_transition_feature_array(len(supports), class_count, feature_type)
-                    for feature_type in feature_types
-                }
-                for row_index, (support, transported) in enumerate(
-                    zip(supports, transported_supports, strict=False)
-                ):
-                    if tree is not None:
-                        values = _transition_features_between_supports(
-                            support,
-                            transported,
-                            np.asarray(source_packets, dtype=np.int64),
-                            target_packets,
-                            weights,
-                            class_count,
-                            feature_types=feature_types,
-                        )
-                    else:
-                        values = _transition_features_same_support(
-                            support,
-                            np.asarray(source_packets, dtype=np.int64),
-                            target_packets,
-                            weights,
-                            class_count,
-                            feature_types=feature_types,
-                        )
-                    for feature_type in feature_types:
-                        feature_values[feature_type][row_index] = values[feature_type]
-                columns.extend(_transition_feature_columns(feature_values, feature_types, class_count))
+            class_count = int(np.max(source_packets)) + 1 if source_packets.size else 1
+            feature_values: dict[str, np.ndarray] = {
+                feature_type: _empty_transition_feature_array(
+                    len(supports), class_count, feature_type
+                )
+                for feature_type in feature_types
+            }
+            for row_index, (support, transported) in enumerate(
+                zip(supports, transported_supports, strict=False)
+            ):
+                if tree is not None:
+                    values = _transition_features_between_supports(
+                        support,
+                        transported,
+                        np.asarray(source_packets, dtype=np.int64),
+                        target_packets,
+                        weights,
+                        class_count,
+                        feature_types=feature_types,
+                    )
+                else:
+                    values = _transition_features_same_support(
+                        support,
+                        np.asarray(source_packets, dtype=np.int64),
+                        target_packets,
+                        weights,
+                        class_count,
+                        feature_types=feature_types,
+                    )
+                for feature_type in feature_types:
+                    feature_values[feature_type][row_index] = values[feature_type]
+            local_columns.extend(
+                _transition_feature_columns(feature_values, feature_types, class_count)
+            )
+        return local_columns
+
+    columns: list[np.ndarray] = []
+    effective_n_jobs = min(max(1, int(n_jobs)), max(1, len(jobs)))
+    for local_columns in _bounded_ordered_thread_map(
+        probe_columns,
+        jobs,
+        max_workers=effective_n_jobs,
+    ):
+        columns.extend(local_columns)
     return np.vstack(columns).T if columns else np.zeros((len(supports), 0), dtype=float)
 
 
@@ -745,7 +954,7 @@ def _simulate_cap_collar_perturb_resettle(
     points: np.ndarray,
     cap: RoundCap,
     raw_fields: dict[str, np.ndarray],
-    graph: dict[str, np.ndarray | int],
+    graph: dict[str, Any],
     *,
     scale: float,
     time_value: float,
@@ -756,15 +965,38 @@ def _simulate_cap_collar_perturb_resettle(
     repair_steps: int,
     repairs_per_step: int,
     seed: int,
-) -> dict[str, np.ndarray]:
+) -> dict[str, Any]:
     left = np.asarray(graph["left"], dtype=np.int64)
     right = np.asarray(graph["right"], dtype=np.int64)
+    group_name = str(graph["group_name"])
     group_order = int(graph["group_order"])
     port_left = np.asarray(graph["port_left"], dtype=np.int16).copy()
     port_right = np.asarray(graph["port_right"], dtype=np.int16).copy()
+    gauge = np.asarray(graph["gauge"], dtype=np.int16).copy()
     patch_count = int(graph["patch_count"])
     degree = np.asarray(graph["degree"], dtype=float)
-    rng = np.random.default_rng(seed)
+    sector_replay = _production_sector_replay_contract(graph)
+    production_sector_repair_enabled = bool(
+        sector_replay["production_sector_repair_enabled"]
+    )
+    sector_repair_config = dict(graph.get("production_sector_repair_config", {}) or {})
+    baseline_edge_residual = gauge_invariant_edge_residual(
+        port_left,
+        port_right,
+        gauge,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    baseline_signature = _local_node_signature(
+        baseline_edge_residual,
+        baseline_edge_residual,
+        left,
+        right,
+        patch_count,
+    )
+    intervention_rng = _probe_rng(seed, "intervention")
+    repair_rng = _probe_rng(seed, "repair")
+    sector_rng = _probe_rng(seed, "sector")
     selected_edges, affected_nodes = _cap_collar_edges(points, cap, left, right)
     if selected_edges.size:
         if str(perturb_budget_mode) in {"fixed", "fixed_collar_fraction", "fixed_fraction"}:
@@ -787,8 +1019,10 @@ def _simulate_cap_collar_perturb_resettle(
             selected_edges,
             perturb_count,
             scale=float(scale),
-            time_value=float(time_value),
-            rng=rng,
+            # A centered +/- probe must use the same edge support. The sign is
+            # carried by inverse group moves below, not by a different sample.
+            time_value=abs(float(time_value)),
+            rng=intervention_rng,
             mode=str(perturb_selection_mode),
         )
         side = _perturb_side(
@@ -797,35 +1031,114 @@ def _simulate_cap_collar_perturb_resettle(
             left[chosen],
             right[chosen],
             scale=float(scale),
-            time_value=float(time_value),
+            time_value=abs(float(time_value)),
             mode=str(perturb_selection_mode),
         )
-        delta = np.int16(1 + (abs(seed) % max(1, group_order - 1)))
-        port_left[chosen[side]] = ((port_left[chosen[side]].astype(np.int64) + delta) % group_order).astype(np.int16)
-        port_right[chosen[~side]] = ((port_right[chosen[~side]].astype(np.int64) + delta) % group_order).astype(np.int16)
+        source_element = np.asarray(
+            [1 + (abs(seed) % max(1, group_order - 1))],
+            dtype=np.int16,
+        )
+        if float(time_value) < 0.0:
+            source_element = group_inverse_indices(
+                source_element,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        # Right multiplication is equivariant under the local-frame left
+        # action p_i -> h_i p_i, including for non-Abelian S3.
+        left_edges = chosen[side]
+        right_edges = chosen[~side]
+        if left_edges.size:
+            port_left[left_edges] = group_multiply_indices(
+                port_left[left_edges],
+                np.full(left_edges.size, source_element[0], dtype=np.int16),
+                group_name=group_name,
+                group_order=group_order,
+            )
+        if right_edges.size:
+            port_right[right_edges] = group_multiply_indices(
+                port_right[right_edges],
+                np.full(right_edges.size, source_element[0], dtype=np.int16),
+                group_name=group_name,
+                group_order=group_order,
+            )
+        intervention_support_hash = _intervention_support_hash(chosen, side)
+    else:
+        intervention_support_hash = _intervention_support_hash(
+            np.zeros(0, dtype=np.int64),
+            np.zeros(0, dtype=bool),
+        )
     repair_incident = np.zeros(patch_count, dtype=float)
+    sector_edges_changed = 0
+    sector_repair_move_calls = 0
     local_edge_mask = np.zeros(left.size, dtype=bool)
     if affected_nodes.size:
         affected = np.zeros(patch_count, dtype=bool)
         affected[affected_nodes] = True
         local_edge_mask = affected[left] | affected[right]
     for _step in range(max(0, int(repair_steps))):
-        active = np.flatnonzero(local_edge_mask & (port_left != port_right))
+        active = np.flatnonzero(
+            local_edge_mask
+            & covariant_mismatch_mask(
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        )
         if active.size == 0:
             break
         count = min(int(repairs_per_step), active.size)
-        chosen = rng.choice(active, size=count, replace=False)
-        direction = rng.random(count) < 0.5
-        port_left[chosen[direction]] = port_right[chosen[direction]]
-        port_right[chosen[~direction]] = port_left[chosen[~direction]]
+        chosen = repair_rng.choice(active, size=count, replace=False)
+        chosen_delta = covariant_discrepancy(
+            port_left[chosen],
+            port_right[chosen],
+            gauge[chosen],
+            group_name=group_name,
+            group_order=group_order,
+        )
+        if production_sector_repair_enabled:
+            sector_repair_move_calls += 1
+        sector_edges_changed += repair_production_sector_links(
+            gauge,
+            chosen,
+            chosen_delta,
+            group_name=group_name,
+            group_order=group_order,
+            rng=sector_rng,
+            config=sector_repair_config,
+        )
+        direction = repair_rng.random(count) < 0.5
+        repair_covariant_port_pairs(
+            port_left,
+            port_right,
+            gauge,
+            chosen,
+            direction,
+            group_name=group_name,
+            group_order=group_order,
+        )
         repair_incident += np.bincount(left[chosen], minlength=patch_count) + np.bincount(right[chosen], minlength=patch_count)
-    mismatch = port_left != port_right
+    mismatch = covariant_mismatch_mask(
+        port_left,
+        port_right,
+        gauge,
+        group_name=group_name,
+        group_order=group_order,
+    )
     incident_mismatch = (
         np.bincount(left, weights=mismatch.astype(float), minlength=patch_count)
         + np.bincount(right, weights=mismatch.astype(float), minlength=patch_count)
     )
-    signature = _local_node_signature(port_left, port_right, left, right, patch_count)
-    baseline_signature = np.asarray(raw_fields.get("record_signature", signature), dtype=np.int64)
+    edge_residual = gauge_invariant_edge_residual(
+        port_left,
+        port_right,
+        gauge,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    signature = _local_node_signature(edge_residual, edge_residual, left, right, patch_count)
     baseline_stable = np.asarray(raw_fields.get("stable_count", np.zeros(patch_count)), dtype=float)
     baseline_committed = np.asarray(raw_fields.get("committed_mask", np.zeros(patch_count)), dtype=float)
     unchanged = signature == baseline_signature
@@ -842,6 +1155,19 @@ def _simulate_cap_collar_perturb_resettle(
             "repair_load": repair_load.astype(float),
             "local_mismatch_density": repair_load.astype(float),
             "cumulative_repair_load": cumulative.astype(float),
+            "_gauge_covariant_probe_receipt": bool(
+                sector_replay["gauge_covariant_probe_receipt"]
+            ),
+            "_gauge_covariant_overlap_schema": GAUGE_COVARIANT_OVERLAP_SCHEMA,
+            "_centered_inverse_intervention_receipt": True,
+            "_intervention_support_hash": intervention_support_hash,
+            "_intervention_action": "right_multiplication_in_endpoint_frame",
+            "_production_sector_repair_enabled": production_sector_repair_enabled,
+            "_sector_repair_replayed": bool(sector_replay["sector_repair_replayed"]),
+            "_sector_repair_move_calls": int(sector_repair_move_calls),
+            "_sector_edges_changed": int(sector_edges_changed),
+            "_production_move_contract": sector_replay,
+            "_probe_rng_stream_schema": "oph-modular-response-probe-rng-v1",
         }
     )
     return post
@@ -862,6 +1188,16 @@ def _cap_collar_edges(points: np.ndarray, cap: RoundCap, left: np.ndarray, right
         selected = np.argsort(scores)[:count].astype(np.int64)
     affected = np.unique(np.concatenate([left[selected], right[selected]])).astype(np.int64) if selected.size else np.zeros(0, dtype=np.int64)
     return selected, affected
+
+
+def _intervention_support_hash(edges: np.ndarray, side: np.ndarray) -> str:
+    selected = np.ascontiguousarray(np.asarray(edges, dtype="<i8").reshape(-1))
+    endpoint_side = np.ascontiguousarray(np.asarray(side, dtype=np.uint8).reshape(-1))
+    hasher = hashlib.sha256()
+    hasher.update(b"oph-paired-cap-intervention-support-v1\0")
+    hasher.update(selected.tobytes())
+    hasher.update(endpoint_side.tobytes())
+    return "sha256:" + hasher.hexdigest()
 
 
 def _perturb_side(
@@ -1308,28 +1644,120 @@ def _transport_support_direct(
     return np.asarray(indices, dtype=np.int64)
 
 
-def _validated_graph_state(graph_state: dict[str, Any], patch_count: int) -> dict[str, np.ndarray | int] | None:
-    required = ["left", "right", "port_left", "port_right", "group_order", "patch_count"]
+def _validated_graph_state(graph_state: dict[str, Any], patch_count: int) -> dict[str, Any] | None:
+    required = [
+        "left",
+        "right",
+        "port_left",
+        "port_right",
+        "gauge",
+        "group_name",
+        "group_order",
+        "patch_count",
+    ]
     if any(key not in graph_state for key in required):
         return None
     left = np.asarray(graph_state["left"], dtype=np.int64)
     right = np.asarray(graph_state["right"], dtype=np.int64)
     port_left = np.asarray(graph_state["port_left"], dtype=np.int16)
     port_right = np.asarray(graph_state["port_right"], dtype=np.int16)
-    if left.shape != right.shape or left.shape != port_left.shape or left.shape != port_right.shape:
+    gauge = np.asarray(graph_state["gauge"], dtype=np.int16)
+    if not (left.shape == right.shape == port_left.shape == port_right.shape == gauge.shape):
         return None
     count = int(graph_state.get("patch_count", patch_count))
     degree = np.bincount(np.concatenate([left, right]), minlength=count).astype(float) if left.size else np.ones(count, dtype=float)
     degree = np.maximum(degree, 1.0)
+    sector_config_value = graph_state.get("production_sector_repair_config")
+    sector_config_available = isinstance(sector_config_value, dict)
+    sector_config = dict(sector_config_value) if sector_config_available else {}
+    sector_enabled = bool(
+        graph_state.get(
+            "production_sector_repair_enabled",
+            sector_config.get("enabled", False),
+        )
+    )
     return {
         "left": left,
         "right": right,
         "port_left": port_left,
         "port_right": port_right,
+        "gauge": gauge,
+        "group_name": str(graph_state["group_name"]),
         "group_order": int(graph_state["group_order"]),
         "patch_count": count,
         "degree": degree,
+        "production_sector_repair_enabled": sector_enabled,
+        "production_sector_repair_config": sector_config,
+        "production_sector_repair_config_available": sector_config_available,
     }
+
+
+def _production_sector_replay_contract(graph: dict[str, Any]) -> dict[str, Any]:
+    """Describe whether a probe can replay the configured production move."""
+
+    requested = bool(graph.get("production_sector_repair_enabled", False))
+    config_available = bool(
+        graph.get(
+            "production_sector_repair_config_available",
+            isinstance(graph.get("production_sector_repair_config"), dict),
+        )
+    )
+    config = dict(graph.get("production_sector_repair_config", {}) or {})
+    configured_enabled = bool(config.get("enabled", False))
+    group_name = str(graph.get("group_name", "")).upper()
+    group_order = int(graph.get("group_order", 0) or 0)
+    mode = str(config.get("mode", "repair_coupled_group_compose"))
+    try:
+        probability = float(config.get("probability", 0.0))
+    except (TypeError, ValueError):
+        probability = float("nan")
+    active_link_mutation = bool(
+        requested
+        and configured_enabled
+        and group_name == "S3"
+        and group_order == 6
+        and np.isfinite(probability)
+        and probability > 0.0
+    )
+    blockers: list[str] = []
+    if requested and not config_available:
+        blockers.append("production_sector_repair_config_unavailable")
+    if requested and config_available and not configured_enabled:
+        blockers.append("production_sector_repair_enablement_mismatch")
+    if requested and not np.isfinite(probability):
+        blockers.append("production_sector_repair_probability_invalid")
+    if active_link_mutation and mode != "repair_coupled_group_compose":
+        blockers.append("production_sector_repair_mode_not_gauge_covariant")
+    exact_move_set_replayed = not blockers
+    return {
+        "schema": "bw_array_production_overlap_move_contract_v1",
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
+        "production_sector_repair_enabled": requested,
+        "production_sector_repair_config_available": config_available,
+        "production_sector_repair_config": config,
+        "active_sector_link_mutation": active_link_mutation,
+        "sector_repair_mode": mode,
+        "sector_repair_probability": probability if np.isfinite(probability) else None,
+        "endpoint_repair_replayed": True,
+        "sector_repair_replayed": bool(requested and exact_move_set_replayed),
+        "exact_production_move_set_replayed": exact_move_set_replayed,
+        "gauge_covariant_probe_receipt": exact_move_set_replayed,
+        "blockers": blockers,
+    }
+
+
+def _probe_rng(seed: int, stream_name: str) -> np.random.Generator:
+    """Return a stable name-isolated RNG for one perturb/resettle subsystem."""
+
+    seed_u64 = int(seed) % (1 << 64)
+    material = f"oph-modular-response-probe-rng-v1\0{stream_name}".encode("utf-8")
+    digest = hashlib.sha256(material).digest()
+    words = [
+        seed_u64 & 0xFFFFFFFF,
+        (seed_u64 >> 32) & 0xFFFFFFFF,
+        *(int(value) for value in np.frombuffer(digest[:16], dtype="<u4")),
+    ]
+    return np.random.default_rng(np.random.SeedSequence(words))
 
 
 def _local_node_signature(
@@ -1835,6 +2263,12 @@ def _scale_label(scale: float) -> str:
     if abs(scale - 4.0 * np.pi) < 1e-12:
         return "4pi"
     return f"{float(scale):.6g}"
+
+
+def _same_probe_scale(left: float, right: float) -> bool:
+    """Match declared scales tightly enough to reuse a deterministic rerun."""
+
+    return bool(np.isclose(float(left), float(right), rtol=0.0, atol=1.0e-15))
 
 
 def _standardized_fields(raw_fields: dict[str, np.ndarray], field_names: list[str] | tuple[str, ...]) -> dict[str, np.ndarray]:

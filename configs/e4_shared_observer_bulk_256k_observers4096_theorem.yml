@@ -134,7 +134,7 @@ bw:
   mode: state_derived_modular_probe
   source_state: theorem_observer
   state_mode: history_koopman_generator_state
-  history_window: 16
+  history_window: 32
   target_operator_mode: soft
   transition_response_time: 0.25
   transition_response_scale: 6.283185307179586
@@ -315,6 +315,9 @@ neutral_reconstruction:
   enabled: true
   require_bw_refinement_pass: false
   forbid_radial_depth_evidence: true
+  # The distance diagnostic is quadratic. Keep the full observer population
+  # for records/objects while bounding only its debug matrix projection.
+  distance_matrix_max_observers: 2048
 h3_population:
   enabled: false
 visualization_diagnostics:
@@ -541,15 +544,16 @@ cosmology:
     - record_sector_mix
   b_a_paired_perturbation:
     enabled: true
-    source_state: theorem_observer
+    source_state: final
     cap_source: h3
     max_caps: 8
     modes_per_cap_time: 2
     a_grid: [0.0009090909090909091, 0.01, 0.1, 1.0]
     times: [0.25]
     controls:
-    - shuffled_source
-    - sign_flip
+    - no_perturbation
+    - phase_shuffled_baryon_mode
+    - wrong_k_label
     response_field: cumulative_repair_load
     perturb_strength: 1.0
     perturb_budget_mode: modular_amount

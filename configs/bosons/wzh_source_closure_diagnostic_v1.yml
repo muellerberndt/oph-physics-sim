@@ -1,0 +1,126 @@
+schema: oph_wzh_numerical_campaign_v1
+claim_id: wzh-source-closure-diagnostic-v1
+branch_id: source_audit_P_cand
+claim_level: diagnostic_only
+
+paper_inputs:
+  d10_receipt: ../reverse-engineering-reality/code/particles/runs/calibration/d10_ew_quotient_transport_receipt.json
+  d11_receipt: ../reverse-engineering-reality/code/particles/runs/calibration/d11_live_exact_split_pair_theorem.json
+  d10_certificate: null
+  d11_certificate: null
+  source_root_receipt: ../reverse-engineering-reality/code/particles/hierarchy/certificates/R_P_source_audit_pixel_certificate.json
+  source_clock_certificate: null
+  rg_packet: null
+  pole_kernel_manifest: null
+  provenance_manifest: null
+
+# Null hashes intentionally keep this dirty diagnostic fixture non-promoting.
+# A certificate-candidate run must pin every source artifact before execution.
+paper_input_hashes:
+  d10_receipt: null
+  d11_receipt: null
+  d10_certificate: null
+  d11_certificate: null
+  source_root_receipt: null
+  source_clock_certificate: null
+  rg_packet: null
+  pole_kernel_manifest: null
+  provenance_manifest: null
+
+source_root:
+  verified: false
+  same_branch: false
+
+source_clock:
+  hamiltonian:
+    - [0.0, 0.0, 0.0]
+    - [0.0, 1.0, 0.0]
+    - [0.0, 0.0, 3.0]
+  frequency_hz: 9192631770.0
+  frequency_role: unit_convention
+  perturbation_norm_bound: 0.01
+  selected_levels: [0, 1]
+  source_packet_verified: false
+  no_target_ancestry: false
+
+rg_transport:
+  initial_state: [0.1, 0.2]
+  initial_scale: 100.0
+  scheme: synthetic_control
+  loop_order: affine_control_v1
+  source_packet_verified: false
+  same_branch: false
+  segments:
+    - end_scale: 10.0
+      matrix:
+        - [0.01, 0.0]
+        - [0.0, -0.02]
+      offset: [0.0, 0.0]
+      matching_matrix:
+        - [1.0, 0.0]
+        - [0.0, 1.0]
+      matching_offset: [0.0, 0.0]
+      truncation_error_bound: 1.0e-8
+    - end_scale: 1.0
+      matrix:
+        - [0.015, 0.0]
+        - [0.0, -0.01]
+      offset: [0.0, 0.0]
+      matching_matrix:
+        - [1.0, 0.0]
+        - [0.0, 1.0]
+      matching_offset: [0.0, 0.0]
+      truncation_error_bound: 1.0e-8
+
+pole_controls:
+  blocks:
+    W:
+      block_kind: charged
+      coordinate_unit: dimensionless_control
+      coefficients:
+        - [[[-2.0, 0.1]]]
+        - [[[1.0, 0.0]]]
+      contour: {center: [2.0, -0.1], radius: 0.25, samples: 1024}
+      source_kernel_verified: false
+      ward_identity_verified: false
+      slavnov_taylor_verified: false
+      nielsen_identity_verified: false
+      physical_sheet_verified: false
+      nonzero_residue_verified: false
+      uncertainty_bound_present: false
+    Z:
+      block_kind: neutral
+      coordinate_unit: dimensionless_control
+      coefficients:
+        -
+          - [[0.0, 0.0], [0.0, 0.0]]
+          - [[0.0, 0.0], [-3.0, 0.2]]
+        -
+          - [[1.0, 0.0], [0.0, 0.0]]
+          - [[0.0, 0.0], [1.0, 0.0]]
+      contour: {center: [3.0, -0.2], radius: 0.25, samples: 1024}
+      source_kernel_verified: false
+      ward_identity_verified: false
+      slavnov_taylor_verified: false
+      nielsen_identity_verified: false
+      physical_sheet_verified: false
+      nonzero_residue_verified: false
+      uncertainty_bound_present: false
+    H:
+      block_kind: higgs
+      coordinate_unit: dimensionless_control
+      coefficients:
+        - [[[-5.0, 0.3]]]
+        - [[[1.0, 0.0]]]
+      contour: {center: [5.0, -0.3], radius: 0.25, samples: 1024}
+      source_kernel_verified: false
+      ward_identity_verified: false
+      slavnov_taylor_verified: false
+      nielsen_identity_verified: false
+      physical_sheet_verified: false
+      nonzero_residue_verified: false
+      uncertainty_bound_present: false
+
+provenance:
+  no_target_ancestry: false
+  prospective_claim_freeze: false

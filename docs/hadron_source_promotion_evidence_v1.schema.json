@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/hadron_source_promotion_evidence_v1.schema.json",
+  "title": "OPH-QCD source-promotion evidence manifest v1",
+  "description": "Manifest for the multi-file hadron source evidence bundle. Runtime validation additionally checks every required artifact hash and the typed positivity, Ward, spectral, systematics, replay, and no-target-leak primitives in those artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "artifact",
+    "generator",
+    "source_commit",
+    "source_dirty",
+    "generated_utc",
+    "file_hashes"
+  ],
+  "properties": {
+    "schema": {"const": "oph_qcd_source_promotion_evidence_v1"},
+    "artifact": {"const": "oph_qcd_source_promotion_evidence"},
+    "generator": {"type": "string", "minLength": 1},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{7,64}$"},
+    "source_dirty": {"const": false},
+    "generated_utc": {"type": "string", "minLength": 1},
+    "file_hashes": {
+      "type": "object",
+      "minProperties": 40,
+      "propertyNames": {"type": "string", "minLength": 1},
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    }
+  }
+}

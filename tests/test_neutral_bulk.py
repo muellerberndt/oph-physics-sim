@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 
 from oph_fpe.cosmology.comparable_data import comparable_data_report
-from oph_fpe.bulk.quotient_geometry import ChannelMetricSpec, quotient_geometry_certificate
+from oph_fpe.bulk.quotient_geometry import (
+    ChannelMetricSpec,
+    ProvenanceRecord,
+    quotient_geometry_certificate,
+)
 from oph_fpe.bulk.neutral_bulk import (
     DEFAULT_NEUTRAL_WEIGHTS,
     _double_center_squared_distance,
+    _measured_overlap_presentation_invariance_report,
     _overlap_feature_distance_matrix,
     _overlap_graph_rank_selection,
     _prime_geometric_selected_rank_controls,
@@ -42,10 +48,47 @@ from oph_fpe.bulk.neutral_bulk import (
     write_overlap_residualized_graph_geometry_sweep_report,
     write_overlap_native_neutral_control_report,
     write_prime_geometric_rank_sweep_report,
+    write_strict_neutral_bulk_report,
     write_strict_neutral_bulk_frontier_report,
     write_neutral_3d_bulk_audit_report,
     write_neutral_profile_audit_report,
 )
+
+
+def _canonical_refinement_receipt() -> dict[str, object]:
+    required = [4_096, 16_384, 65_536, 262_144]
+    return {
+        "mode": "prime_geometric_rank_refinement_v0",
+        "sizes": [{"patch_count": value} for value in required],
+        "required_patch_count_ladder": required,
+        "missing_required_patch_counts": [],
+        "required_ladder_complete": True,
+        "multi_scale": True,
+        "all_control_quotient_spatial_3d_candidates": True,
+        "all_candidate_s2_leakage_pass": True,
+        "all_candidate_rank3_e3": True,
+        "candidate_dimension_stable": True,
+        "independent_rank3_selector_all": True,
+        "proper_negative_control_all": True,
+        "directional_h3_strict_all": True,
+        "measured_overlap_geometry_all": True,
+        "strict_neutral_bulk_refinement_receipt": True,
+        "proof_blockers": [],
+    }
+
+
+def _quotient_provenance(count: int) -> list[ProvenanceRecord]:
+    return [
+        ProvenanceRecord(
+            record_id=f"record_{index}",
+            split="train",
+            batch_id=f"batch_{index}",
+            seed_id=f"seed_{index}",
+            boundary_condition_id=f"boundary_{index}",
+            trajectory_family_id=f"trajectory_{index}",
+        )
+        for index in range(count)
+    ]
 
 
 def test_build_neutral_observer_views_ignores_forbidden_geometry_fields():
@@ -168,10 +211,10 @@ def test_theory_required_neutral_channels_are_extracted_without_geometry():
     view, changed = build_neutral_observer_views([base, changed_geometry])
 
     assert np.isclose(view.boundary_packet_hash_hist.sum(), 1.0)
-    assert np.isclose(view.overlap_correspondence_hist.sum(), 1.0)
+    assert np.isclose(view.overlap_correspondence_hist.sum(), 0.0)
     assert np.isclose(view.port_pair_lag_hist.sum(), 1.0)
     assert np.linalg.norm(view.repair_current_tensor) > 0.0
-    assert np.linalg.norm(view.perturbation_response_tensor) > 0.0
+    assert np.linalg.norm(view.perturbation_response_tensor) == 0.0
     assert np.isclose(view.first_passage_response_hist.sum(), 1.0)
     assert np.allclose(view.boundary_packet_hash_hist, changed.boundary_packet_hash_hist)
     assert np.allclose(view.overlap_correspondence_hist, changed.overlap_correspondence_hist)
@@ -214,7 +257,7 @@ def test_custom_strict_neutral_weights_reach_quotient_manifest_and_evidence_gaps
             "planted_3d_returns_3d": True,
             "planted_h3_returns_h3": True,
         },
-        refinement={"stable_across_64k_256k_1m": True},
+        refinement=_canonical_refinement_receipt(),
     )
 
     manifest = report["quotient_geometry_contract"]["channel_manifest"]
@@ -226,6 +269,45 @@ def test_custom_strict_neutral_weights_reach_quotient_manifest_and_evidence_gaps
     )
     assert report["receipt"]["theory_required_channels_present"] is False
     assert report["strict_neutral_bulk"] is False
+
+
+def test_strict_neutral_writer_hash_binds_primitive_observer_source(tmp_path: Path):
+    observer_path = tmp_path / "observer_views.jsonl"
+    observer_rows = [
+        _observer_view(
+            index,
+            records=[index, index + 1, index + 2],
+            checkpoints=[index % 4],
+            sectors=[index % 3],
+            repairs=[index % 5],
+        )
+        for index in range(8)
+    ]
+    observer_path.write_text(
+        "\n".join(json.dumps(row) for row in observer_rows) + "\n",
+        encoding="utf-8",
+    )
+
+    report = write_strict_neutral_bulk_report(
+        tmp_path,
+        seed=7,
+        max_model_points=16,
+        planted_control_points=16,
+    )
+    manifest = json.loads(
+        (tmp_path / "strict_neutral_source_manifest.json").read_text(encoding="utf-8")
+    )
+    expected_hash = "sha256:" + hashlib.sha256(observer_path.read_bytes()).hexdigest()
+
+    assert report["source_artifact"] == manifest
+    assert manifest["schema"] == "strict_neutral_bulk_source_v1"
+    assert manifest["observer_views_sha256"] == expected_hash
+    assert manifest["analysis_parameters"] == {
+        "seed": 7,
+        "max_model_points": 16,
+        "planted_control_points": 16,
+    }
+    assert manifest["refinement_input"]["primitive_replay_available"] is False
 
 
 def test_rich_observer_visible_packets_affect_neutral_distance_without_geometry():
@@ -262,7 +344,10 @@ def test_rich_observer_visible_packets_affect_neutral_distance_without_geometry(
     a, b, c = build_neutral_observer_views([base, same_packets_new_geometry, changed_packets])
 
     assert neutral_distance(a, b) == 0.0
-    assert neutral_distance(a, c) > 0.05
+    # Hash/categorical packets remain readable but are non-claim-bearing in
+    # the default geometry because their token bins have no locality metric.
+    assert neutral_distance(a, c) == 0.0
+    assert neutral_distance(a, c, weights={"record_signature": 1.0, "object_packet": 1.0}) > 0.05
 
 
 def test_neutral_distance_matrix_is_symmetric_and_zero_diagonal():
@@ -463,7 +548,7 @@ def test_strict_neutral_bulk_receipt_requires_refinement():
             "planted_3d_returns_3d": True,
             "planted_h3_returns_h3": True,
         },
-        refinement={"stable_across_64k_256k_1m": False},
+        refinement={},
     )
 
     assert receipt["receipt"] == "STRICT_NEUTRAL_BULK_RECEIPT"
@@ -494,13 +579,14 @@ def test_strict_neutral_bulk_receipt_can_pass_all_gates():
             "schedule_distortion": 0.0,
             "partition_distortion": 0.0,
         },
-        refinement_receipt={"convergent": True},
+        refinement_receipt=_canonical_refinement_receipt(),
         statistics_receipt={
             "ancestry_leakage_count": 0,
             "test_used_once": True,
             "positive_controls_passed": True,
             "negative_controls_passed": True,
         },
+        provenance_records=_quotient_provenance(2),
     )
     receipt = strict_neutral_bulk_receipt(
         dimension={"estimators_agree_3d": True},
@@ -517,13 +603,77 @@ def test_strict_neutral_bulk_receipt_can_pass_all_gates():
             "planted_3d_returns_3d": True,
             "planted_h3_returns_h3": True,
         },
-        refinement={"stable_across_64k_256k_1m": True},
+        refinement=_canonical_refinement_receipt(),
         quotient_geometry=quotient_contract,
+        channel_audit={
+            "duplicate_channel_gate_pass": True,
+            "feature_ancestry_gate_pass": True,
+        },
+        theory_alignment={"theory_required_channels_present": True},
     )
 
     assert receipt["strict_neutral_bulk"] is True
     assert receipt["physical_claim"] is True
     assert receipt["QUOTIENT_GEOMETRY_CONTRACT_RECEIPT"] is True
+
+
+def test_strict_neutral_bulk_receipt_rejects_truthy_strings() -> None:
+    receipt = strict_neutral_bulk_receipt(
+        dimension={"estimators_agree_3d": "true"},
+        model_selection={
+            "best_model": "H3",
+            "h3_beats_s2": "true",
+            "h3_beats_h2_h4": "true",
+        },
+        leakage={"s2_leakage_pass": "true"},
+        controls={
+            "shuffled_records_fail": "true",
+            "shuffled_transition_labels_fail": "true",
+            "planted_2d_returns_2d": "true",
+            "planted_3d_returns_3d": "true",
+            "planted_h3_returns_h3": "true",
+        },
+        refinement=_canonical_refinement_receipt(),
+        quotient_geometry={"QUOTIENT_GEOMETRY_CONTRACT_RECEIPT": "true"},
+        channel_audit={
+            "duplicate_channel_gate_pass": "true",
+            "feature_ancestry_gate_pass": "true",
+        },
+        theory_alignment={"theory_required_channels_present": "true"},
+    )
+
+    assert receipt["strict_neutral_bulk"] is False
+    assert receipt["physical_claim"] is False
+
+
+def test_strict_neutral_bulk_receipt_includes_feature_ancestry_gate() -> None:
+    receipt = strict_neutral_bulk_receipt(
+        dimension={"estimators_agree_3d": True},
+        model_selection={
+            "best_model": "H3",
+            "h3_beats_s2": True,
+            "h3_beats_h2_h4": True,
+        },
+        leakage={"s2_leakage_pass": True},
+        controls={
+            "shuffled_records_fail": True,
+            "shuffled_transition_labels_fail": True,
+            "planted_2d_returns_2d": True,
+            "planted_3d_returns_3d": True,
+            "planted_h3_returns_h3": True,
+        },
+        refinement=_canonical_refinement_receipt(),
+        quotient_geometry={"QUOTIENT_GEOMETRY_CONTRACT_RECEIPT": True},
+        channel_audit={
+            "duplicate_channel_gate_pass": True,
+            "feature_ancestry_gate_pass": False,
+        },
+        theory_alignment={"theory_required_channels_present": True},
+    )
+
+    assert receipt["feature_ancestry_gate_pass"] is False
+    assert receipt["strict_neutral_bulk"] is False
+    assert receipt["physical_claim"] is False
 
 
 def test_strict_neutral_bulk_receipt_blocks_without_quotient_contract():
@@ -542,7 +692,7 @@ def test_strict_neutral_bulk_receipt_blocks_without_quotient_contract():
             "planted_3d_returns_3d": True,
             "planted_h3_returns_h3": True,
         },
-        refinement={"stable_across_64k_256k_1m": True},
+        refinement=_canonical_refinement_receipt(),
     )
 
     assert receipt["strict_neutral_bulk"] is False
@@ -572,7 +722,7 @@ def test_current_rank3_candidate_not_strict_without_refinement():
             "planted_3d_returns_3d": True,
             "planted_h3_returns_h3": True,
         },
-        refinement={"stable_across_64k_256k_1m": False},
+        refinement={},
     )
 
     assert report["strict_neutral_bulk"] is False
@@ -622,8 +772,8 @@ def test_overlap_native_neutral_control_report_uses_observer_overlap_substrate(t
     assert report["observer_count"] == 32
     assert report["fundamental_operation"].startswith("Overlapping observations")
     assert set(row["control"] for row in report["control_rows"]) == {
-        "shuffled_observer_payloads",
-        "per_observer_packet_label_permutation",
+        "degree_preserving_overlap_graph_rewire",
+        "overlap_edge_weight_permutation",
         "columnwise_histogram_null",
     }
     assert report["strict_neutral_bulk"] is False
@@ -642,6 +792,38 @@ def test_overlap_native_neutral_control_report_uses_observer_overlap_substrate(t
     assert written["mode"] == "overlap_native_neutral_control_v0"
     assert (tmp_path / "out" / "overlap_native_neutral_control_report.json").exists()
     assert (tmp_path / "out" / "overlap_native_neutral_control_report.md").exists()
+
+
+def test_measured_overlap_presentation_invariance_ignores_external_cohort_peers():
+    observer_views = [
+        {
+            "view_type": "patch_observer",
+            "observer_id": observer_id,
+            "overlap_correspondence_evidence_provenance": {
+                "cross_observer_measurement": True,
+                "self_histogram_synthesis": False,
+            },
+            "measured_overlap_correspondences": [
+                {
+                    "peer_observer_id": peer_id,
+                    "measured_affinity": 0.75 if peer_id < 8 else 0.25,
+                }
+                for peer_id in range(16)
+                if peer_id != observer_id
+            ],
+        }
+        for observer_id in range(8)
+    ]
+
+    report = _measured_overlap_presentation_invariance_report(
+        observer_views,
+        np.random.default_rng(91),
+    )
+
+    assert report["available"] is True
+    assert report["receipt"] is True
+    assert report["global_observer_relabel_affinity_distortion"] <= 1.0e-12
+    assert report["global_observer_relabel_distortion"] <= 1.0e-12
 
 
 def test_overlap_native_graph_geometry_report_uses_observer_overlap_graph(tmp_path: Path):
@@ -671,8 +853,8 @@ def test_overlap_native_graph_geometry_report_uses_observer_overlap_graph(tmp_pa
     assert "model_selection" in report
     assert "rank_selection" in report
     assert set(row["control"] for row in report["control_rows"]) == {
-        "shuffled_observer_payloads",
-        "per_observer_packet_label_permutation",
+        "degree_preserving_overlap_graph_rewire",
+        "overlap_edge_weight_permutation",
         "columnwise_histogram_null",
     }
     assert report["strict_neutral_bulk"] is False
@@ -1111,10 +1293,12 @@ def test_prime_rank_refinement_candidate_is_not_strict_without_independent_rank(
 
     report = prime_geometric_rank_refinement_report([tmp_path])
 
-    assert report["control_quotient_rank3_refinement_candidate_receipt"] is True
+    assert report["control_quotient_rank3_refinement_candidate_receipt"] is False
+    assert report["required_ladder_complete"] is False
+    assert report["missing_required_patch_counts"] == [4096, 16384]
     assert report["strict_neutral_bulk_refinement_receipt"] is False
     assert report["independent_rank3_selector_all"] is False
-    assert report["candidate_dimension_stable"] is True
+    assert report["candidate_dimension_stable"] is False
     assert report["candidate_dimension_drift"] < 0.1
     assert "independent_svd_rank3_selector_not_stable_or_false" in report["proof_blockers"]
 

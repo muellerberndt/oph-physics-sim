@@ -68,7 +68,11 @@ class PatchNet:
 
     def edge_mismatch(self, left: int, right: int) -> EdgeMismatch:
         weight = float(self.graph.edges[left, right].get("weight", 1.0))
-        distance = self.group.mismatch(self.states[left].ports[right], self.states[right].ports[left])
+        transported_right = self.group.multiply(
+            self.states[left].gauges[right],
+            self.states[right].ports[left],
+        )
+        distance = self.group.mismatch(self.states[left].ports[right], transported_right)
         return EdgeMismatch(left=left, right=right, weight=weight, distance=distance)
 
     def total_phi(self) -> float:

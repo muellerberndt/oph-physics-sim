@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/wzh_source_closure_receipt.schema.json",
+  "title": "OPH W/Z/H numerical source-closure receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "generated_utc",
+    "claim_id",
+    "branch_id",
+    "claim_level",
+    "observer_like_system",
+    "paper_inputs",
+    "source_clock",
+    "rg_transport",
+    "brst_blocks",
+    "pole_enclosures",
+    "promotion_gates",
+    "promotion_allowed",
+    "overall_status",
+    "blockers",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema": {"const": "oph_wzh_source_closure_receipt_v1"},
+    "generated_utc": {"type": "string", "minLength": 1},
+    "claim_id": {"type": "string", "minLength": 1},
+    "branch_id": {"type": "string", "minLength": 1},
+    "claim_level": {"enum": ["diagnostic_only", "certificate_candidate"]},
+    "observer_like_system": {"type": "object"},
+    "paper_inputs": {"type": "object"},
+    "source_clock": {"type": "object"},
+    "rg_transport": {"type": "object"},
+    "brst_blocks": {"type": "object", "required": ["W", "Z", "H"]},
+    "pole_enclosures": {"type": "object", "required": ["W", "Z", "H"]},
+    "promotion_gates": {
+      "type": "object",
+      "additionalProperties": {"type": "boolean"},
+      "required": [
+        "certificate_candidate_claim",
+        "paper_inputs_hash_pinned",
+        "strict_source_root",
+        "same_branch",
+        "source_clock",
+        "d10_QT1_QT5",
+        "d11_source_character",
+        "rg_matching",
+        "brst_complex_poles",
+        "no_target_ancestry",
+        "prospective_claim_freeze"
+      ]
+    },
+    "promotion_allowed": {"type": "boolean"},
+    "overall_status": {"type": "string", "minLength": 1},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "claim_boundary": {"type": "string", "minLength": 1}
+  }
+}

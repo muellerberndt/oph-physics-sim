@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph-neutrino-status-v1.json",
+  "title": "OPH neutrino status and conventional cosmology reference",
+  "type": "object",
+  "required": [
+    "mode",
+    "oph_neutrino_mass_status",
+    "conventional_camb_baseline",
+    "historical_rejected_weighted_cycle_benchmark",
+    "readiness_gates",
+    "measurement_comparable_now",
+    "conventional_baseline_measurement_comparable",
+    "public_promotion_allowed"
+  ],
+  "properties": {
+    "mode": {"const": "oph_cnb_neutrino_background_v1"},
+    "oph_neutrino_mass_status": {
+      "type": "object",
+      "required": ["available", "masses_eV", "sum_mnu_eV", "public_promotion_allowed", "status"],
+      "properties": {
+        "available": {"const": false},
+        "masses_eV": {"type": "null"},
+        "sum_mnu_eV": {"type": "null"},
+        "public_promotion_allowed": {"const": false},
+        "status": {"const": "no_source_derived_neutrino_mass_prediction"}
+      }
+    },
+    "conventional_camb_baseline": {
+      "type": "object",
+      "required": [
+        "assumption",
+        "solver_mass_components_eV",
+        "sum_mnu_eV",
+        "epistemic_status",
+        "counts_as_oph_prediction",
+        "relic_background",
+        "camb_class_inputs"
+      ],
+      "properties": {
+        "assumption": {"const": "sum_mnu_0.06eV_one_massive_two_massless"},
+        "solver_mass_components_eV": {
+          "const": [0.0, 0.0, 0.06]
+        },
+        "sum_mnu_eV": {"const": 0.06},
+        "epistemic_status": {"const": "conventional_solver_reference_not_oph_prediction"},
+        "counts_as_oph_prediction": {"const": false},
+        "relic_background": {"type": "object"},
+        "camb_class_inputs": {"type": "object"}
+      }
+    },
+    "historical_rejected_weighted_cycle_benchmark": {
+      "type": "object",
+      "required": [
+        "included",
+        "opt_in_required",
+        "masses_eV",
+        "sum_mnu_eV",
+        "public_promotion_allowed",
+        "status",
+        "provenance"
+      ],
+      "properties": {
+        "included": {"type": "boolean"},
+        "opt_in_required": {"const": true},
+        "masses_eV": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}
+          ]
+        },
+        "sum_mnu_eV": {"type": ["number", "null"]},
+        "public_promotion_allowed": {"const": false},
+        "status": {"const": "rejected_weighted_cycle_retrospective_benchmark"},
+        "provenance": {"type": "object"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"included": {"const": false}}},
+          "then": {
+            "properties": {
+              "masses_eV": {"type": "null"},
+              "sum_mnu_eV": {"type": "null"},
+              "cosmology": {"type": "null"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"included": {"const": true}}},
+          "then": {
+            "properties": {
+              "masses_eV": {"type": "array", "minItems": 3, "maxItems": 3},
+              "sum_mnu_eV": {"type": "number"},
+              "cosmology": {"type": "object"}
+            }
+          }
+        }
+      ]
+    },
+    "readiness_gates": {
+      "type": "object",
+      "required": [
+        "oph_neutrino_mass_prediction_available",
+        "oph_neutrino_mass_public_promotion_allowed",
+        "conventional_baseline_relic_background_callable"
+      ],
+      "properties": {
+        "oph_neutrino_mass_prediction_available": {"const": false},
+        "oph_neutrino_mass_public_promotion_allowed": {"const": false},
+        "conventional_baseline_relic_background_callable": {"const": true}
+      }
+    },
+    "measurement_comparable_now": {"const": false},
+    "conventional_baseline_measurement_comparable": {"const": true},
+    "public_promotion_allowed": {"const": false}
+  }
+}

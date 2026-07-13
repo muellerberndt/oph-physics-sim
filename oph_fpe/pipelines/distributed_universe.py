@@ -164,7 +164,8 @@ def prepare_distributed_oph_universe(
                 "global_observer_range": atlas_shard["global_observer_range"],
                 "atlas_center": atlas_shard["atlas_center"],
                 "seam_neighbor_indices": atlas_shard["seam_neighbor_indices"],
-                "owned_nodes": carrier_shard.get("owned_nodes", []),
+                "owned_node_ranges": carrier_shard.get("owned_node_ranges", []),
+                "owned_node_count": carrier_shard.get("owned_node_count", patch_count_per_shard),
                 "ghost_nodes": carrier_shard.get("ghost_nodes", []),
                 "cut_edge_ids": carrier_shard.get("cut_edge_ids", []),
             }
@@ -558,7 +559,7 @@ def _global_halo_exchange_reduction(
     shard_roots = [Path(row["run_dir"]) for row in completed if row.get("completed")]
     reports = _collect_named_reports(shard_roots, "distributed_halo_exchange_report.json")
     expected = len(shard_roots)
-    per_cycle = bool(
+    reported_per_cycle = bool(
         expected
         and len(reports) == expected
         and all(
@@ -567,6 +568,11 @@ def _global_halo_exchange_reduction(
             for report in reports
         )
     )
+    # No worker currently drives a live transactional seam kernel or emits
+    # replayable reciprocal packet/commit primitives.  Self-authored receipt
+    # booleans must therefore remain diagnostic and cannot promote D1.
+    live_seam_kernel_implemented = False
+    per_cycle = bool(reported_per_cycle and live_seam_kernel_implemented)
     seam_links = list(seam_readout.get("links") or [])
     frame_rows = _global_halo_replay_frames(seam_links)
     replay_receipt = bool(seam_links and frame_rows)
@@ -588,9 +594,13 @@ def _global_halo_exchange_reduction(
         "SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT",
         "PARTITION_NATURALITY_RECEIPT",
     )
-    online_receipts = {
+    reported_online_receipts = {
         key: _all_reports_truthy(reports, key, expected)
         for key in online_receipt_keys
+    }
+    online_receipts = {
+        key: bool(value and live_seam_kernel_implemented)
+        for key, value in reported_online_receipts.items()
     }
     online_cross_shard_repair = bool(
         per_cycle
@@ -601,6 +611,8 @@ def _global_halo_exchange_reduction(
     )
     kernel_scaling_ready = bool(per_cycle and all(online_receipts.values()))
     blockers = []
+    if not live_seam_kernel_implemented:
+        blockers.append("live_transactional_seam_kernel_not_implemented")
     if not per_cycle:
         blockers.append("per_cycle_cross_shard_halo_exchange_receipt_missing")
     if not replay_receipt:
@@ -614,10 +626,13 @@ def _global_halo_exchange_reduction(
         "expected_shard_count": int(manifest.get("shard_count", 0)),
         "completed_shard_count": expected,
         "source_report_count": len(reports),
+        "live_seam_kernel_implemented": live_seam_kernel_implemented,
+        "reported_per_cycle_halo_exchange_claim": reported_per_cycle,
         "per_cycle_cross_shard_halo_exchange_receipt": per_cycle,
         "online_cross_shard_overlap_repair_receipt": online_cross_shard_repair,
         "DISTRIBUTED_KERNEL_SCALING_READY_RECEIPT": kernel_scaling_ready,
         "required_online_seam_receipts": online_receipts,
+        "reported_online_seam_receipt_claims": reported_online_receipts,
         "seam_metadata_replay_receipt": seam_metadata_replay_receipt,
         "reducer_halo_exchange_replay_receipt": replay_receipt,
         "seam_link_count": len(seam_links),
@@ -628,7 +643,7 @@ def _global_halo_exchange_reduction(
         "claim_boundary": (
             "Reducer halo replay is synthetic audit/visualization metadata over completed shard traces. It is "
             "not live per-cycle halo exchange and cannot certify cross-shard OPH repair. Online seam receipts "
-            "pass only when every shard emits reciprocal seam packets, visible restrictions, descent, atomic "
+            "remain disabled until a runtime transactional seam producer emits reciprocal seam packets, visible restrictions, descent, atomic "
             "commit, diamond/completeness, holonomy, fair-block, schedule, and partition evidence."
         ),
     }
@@ -998,24 +1013,18 @@ def _write_global_carrier_artifacts(
     total_observers = shard_count * observers_per_shard
 
     nodes = np.arange(total_nodes, dtype=np.int64)
-    owners = np.array([_owner_for_node(int(node), patch_count_per_shard) for node in nodes], dtype=np.int64)
-    edges = _global_graph_edges(total_nodes)
-    for edge in edges:
-        source_owner = int(owners[int(edge["source_node"])])
-        target_owner = int(owners[int(edge["target_node"])])
-        edge["source_owner"] = source_owner
-        edge["target_owner"] = target_owner
-        edge["is_cut_edge"] = source_owner != target_owner
-    edge_array = np.array([[edge["source_node"], edge["target_node"]] for edge in edges], dtype=np.int64)
-    cut_edge_mask = np.array([bool(edge["is_cut_edge"]) for edge in edges], dtype=np.bool_)
-    state_words = np.array(
-        [_stable_uint63(run_id, "patch", int(node), base_seed) for node in nodes],
-        dtype=np.int64,
+    owners = nodes // max(patch_count_per_shard, 1)
+    edge_array = _global_graph_edge_array(total_nodes)
+    cut_edge_mask = (
+        owners[edge_array[:, 0]] != owners[edge_array[:, 1]]
+        if edge_array.size
+        else np.zeros(0, dtype=np.bool_)
     )
-    boundary_sector = np.array([int(value % 17) for value in state_words], dtype=np.int64)
+    state_words = _vectorized_stable_state_words(nodes, run_id=run_id, base_seed=base_seed)
+    boundary_sector = np.remainder(state_words, 17).astype(np.int16, copy=False)
 
     graph_path = carrier_dir / "global_graph.npz"
-    np.savez_compressed(
+    np.savez(
         graph_path,
         nodes=nodes,
         edges=edge_array,
@@ -1023,14 +1032,14 @@ def _write_global_carrier_artifacts(
         cut_edge_mask=cut_edge_mask,
     )
     state_path = carrier_dir / "global_initial_state.npz"
-    np.savez_compressed(
+    np.savez(
         state_path,
         nodes=nodes,
         canonical_state_word=state_words,
         boundary_sector=boundary_sector,
     )
 
-    cut_edges = [edge for edge in edges if edge["is_cut_edge"]]
+    cut_edges = _cut_edge_rows(edge_array, owners, cut_edge_mask)
     partition_map = _partition_map_payload(
         run_id=run_id,
         shard_count=shard_count,
@@ -1171,15 +1180,24 @@ def _global_carrier_contract(
     state_receipt = bool(
         _literal_true(state_info.get("load_receipt"))
         and state_info.get("node_count") == total_nodes
-        and state_info.get("stable_identity_rule") == "blake2b_run_patch_base_seed_uint63"
+        and state_info.get("stable_identity_rule") == "blake2b_keyed_splitmix64_patch_state_v1_uint63"
     )
     if not state_receipt:
         blockers.append("global_initial_state_invalid")
+    owner_encoding = partition.get("node_owner_encoding") if isinstance(partition.get("node_owner_encoding"), dict) else {}
+    encoded_ranges = owner_encoding.get("ranges") if isinstance(owner_encoding.get("ranges"), list) else []
+    compact_owner_encoding_receipt = bool(
+        owner_encoding.get("mode") == "contiguous_half_open_ranges"
+        and len(encoded_ranges) == int(manifest.get("shard_count", 0) or 0)
+        and _owner_ranges_cover_carrier(encoded_ranges, total_nodes)
+        and graph_info.get("owner_ranges") == encoded_ranges
+    )
     partition_receipt = bool(
-        partition.get("schema") == "oph_distributed_partition_map_v1"
+        partition.get("schema") == "oph_distributed_partition_map_v2"
         and partition.get("node_count") == total_nodes
         and partition.get("synthetic_partition") is False
         and shard_ids_match
+        and compact_owner_encoding_receipt
     )
     if not partition_receipt:
         blockers.append("partition_map_invalid")
@@ -1193,9 +1211,10 @@ def _global_carrier_contract(
     if not cut_receipt:
         blockers.append("cut_interfaces_invalid")
     observer_registry_receipt = bool(
-        registry.get("schema") == "oph_global_observer_registry_v2"
+        registry.get("schema") == "oph_global_observer_registry_v3"
         and registry.get("observer_count") == total_observers
         and registry.get("stable_identity_rule") == "blake2b_run_observer_kind_global_index_base_seed_uint63"
+        and registry.get("registry_encoding") == "range_derived_no_per_observer_json_rows"
         and registry.get("observer_kinds") == list(OBSERVER_KINDS)
         and registry.get("registered_identity_count") == total_observers * len(OBSERVER_KINDS)
         and _literal_true(registry.get("global_observer_registry_namespace_receipt"))
@@ -1245,6 +1264,7 @@ def _global_carrier_contract(
         "manifest_declared_global_artifacts_receipt": artifact_receipt,
         "global_graph_receipt": graph_receipt,
         "partition_map_receipt": partition_receipt,
+        "compact_owner_range_encoding_receipt": compact_owner_encoding_receipt,
         "cut_interface_receipt": cut_receipt,
         "stable_global_identity_initial_state_receipt": state_receipt,
         "global_observer_registry_receipt": observer_registry_receipt,
@@ -1280,23 +1300,58 @@ def _global_carrier_contract(
     return report
 
 
-def _global_graph_edges(node_count: int) -> list[dict[str, Any]]:
-    if node_count <= 1:
-        return []
-    pairs = [(node, node + 1) for node in range(node_count - 1)]
-    if node_count > 2:
-        pairs.append((node_count - 1, 0))
-    edges = []
-    for index, (source, target) in enumerate(pairs):
-        edges.append(
+def _global_graph_edge_array(node_count: int) -> np.ndarray:
+    """Build the declared carrier ring without Python dicts per edge."""
+
+    count = int(node_count)
+    if count <= 1:
+        return np.zeros((0, 2), dtype=np.int64)
+    sources = np.arange(count - 1, dtype=np.int64)
+    targets = sources + 1
+    edges = np.column_stack((sources, targets))
+    if count > 2:
+        edges = np.vstack((edges, np.asarray([[count - 1, 0]], dtype=np.int64)))
+    return np.ascontiguousarray(edges, dtype=np.int64)
+
+
+def _cut_edge_rows(
+    edges: np.ndarray,
+    owners: np.ndarray,
+    cut_mask: np.ndarray,
+) -> list[dict[str, Any]]:
+    """Materialize only O(shard_count) cut-edge metadata for JSON receipts."""
+
+    rows: list[dict[str, Any]] = []
+    for edge_index in np.flatnonzero(np.asarray(cut_mask, dtype=bool)):
+        source, target = (int(value) for value in edges[int(edge_index)])
+        rows.append(
             {
-                "edge_id": f"e{index:06d}",
-                "source_node": int(source),
-                "target_node": int(target),
-                "is_cut_edge": False,
+                "edge_id": f"e{int(edge_index):06d}",
+                "source_node": source,
+                "target_node": target,
+                "source_owner": int(owners[source]),
+                "target_owner": int(owners[target]),
+                "is_cut_edge": True,
             }
         )
-    return edges
+    return rows
+
+
+def _vectorized_stable_state_words(
+    nodes: np.ndarray,
+    *,
+    run_id: str,
+    base_seed: int,
+) -> np.ndarray:
+    """Deterministic SplitMix64 state words keyed once by run and seed."""
+
+    key = np.uint64(_stable_uint63(run_id, "patch_state_vector_v1", int(base_seed)))
+    values = np.asarray(nodes, dtype=np.uint64) + key + np.uint64(0x9E3779B97F4A7C15)
+    values = (values ^ (values >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
+    values = (values ^ (values >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
+    values = values ^ (values >> np.uint64(31))
+    values &= np.uint64((1 << 63) - 1)
+    return values.astype(np.int64, copy=False)
 
 
 def _partition_map_payload(
@@ -1323,25 +1378,36 @@ def _partition_map_payload(
     shards = []
     for index in range(shard_count):
         patch_start = index * patch_count_per_shard
+        patch_stop = patch_start + patch_count_per_shard
         observer_start = index * observers_per_shard
-        owned = list(range(patch_start, patch_start + patch_count_per_shard))
         shards.append(
             {
                 "shard_index": index,
                 "shard_id": f"{run_id}_shard{index:04d}",
-                "owned_nodes": owned,
+                "owned_node_ranges": [[patch_start, patch_stop]],
+                "owned_node_count": int(patch_count_per_shard),
                 "ghost_nodes": sorted(ghost_nodes_by_shard[index]),
                 "cut_edge_ids": sorted(edge_ids_by_shard[index]),
-                "global_patch_range": [patch_start, patch_start + patch_count_per_shard],
+                "global_patch_range": [patch_start, patch_stop],
                 "global_observer_range": [observer_start, observer_start + observers_per_shard],
             }
         )
     return {
-        "schema": "oph_distributed_partition_map_v1",
+        "schema": "oph_distributed_partition_map_v2",
         "run_id": run_id,
         "node_count": int(len(owners)),
         "shard_count": int(shard_count),
-        "node_owner": [int(value) for value in owners.tolist()],
+        "node_owner_encoding": {
+            "mode": "contiguous_half_open_ranges",
+            "ranges": [
+                [
+                    int(index * patch_count_per_shard),
+                    int((index + 1) * patch_count_per_shard),
+                    int(index),
+                ]
+                for index in range(shard_count)
+            ],
+        },
         "synthetic_partition": False,
         "owner_rule": "contiguous_global_patch_ranges_declared_before_shard_configs",
         "shards": shards,
@@ -1395,8 +1461,8 @@ def _observer_registry_payload(
     base_seed: int,
 ) -> dict[str, Any]:
     shards = []
-    samples = []
-    registry_entries: list[dict[str, Any]] = []
+    samples: list[dict[str, Any]] = []
+    sample_limit = max(1, min(12, shard_count * max(observers_per_shard, 1)))
     for shard_index in range(shard_count):
         observer_start = shard_index * observers_per_shard
         patch_start = shard_index * patch_count_per_shard
@@ -1410,7 +1476,8 @@ def _observer_registry_payload(
                 "home_patch_range": [patch_start, patch_start + patch_count_per_shard],
             }
         )
-        for local_observer_index in range(observers_per_shard):
+        remaining_sample_observers = max(0, math.ceil((sample_limit - len(samples)) / max(len(OBSERVER_KINDS), 1)))
+        for local_observer_index in range(min(observers_per_shard, remaining_sample_observers)):
             global_observer_index = observer_start + local_observer_index
             local_anchor_index = (2 * local_observer_index + 1) % max(int(patch_count_per_shard), 1)
             global_anchor_index = patch_start + local_anchor_index
@@ -1435,20 +1502,41 @@ def _observer_registry_payload(
                     ),
                     "stable_identity": _stable_uint63(run_id, observer_kind, global_observer_index, base_seed),
                 }
-                registry_entries.append(entry)
-                if len(samples) < max(1, min(12, shard_count * max(observers_per_shard, 1))):
+                if len(samples) < sample_limit:
                     samples.append(entry)
-    audit = observer_registry_audit(registry_entries)
+    sample_audit = observer_registry_audit(samples)
+    total_observers = int(shard_count) * int(observers_per_shard)
+    registered_identity_count = total_observers * len(OBSERVER_KINDS)
+    analytic_namespace_receipt = bool(
+        run_id
+        and shard_count > 0
+        and observers_per_shard > 0
+        and len(set(OBSERVER_KINDS)) == len(OBSERVER_KINDS)
+        and sample_audit.get("GLOBAL_OBSERVER_REGISTRY_NAMESPACE_RECEIPT") is True
+    )
+    audit = {
+        "mode": "observer_registry_range_namespace_audit_v2",
+        "GLOBAL_OBSERVER_REGISTRY_NAMESPACE_RECEIPT": analytic_namespace_receipt,
+        "receipt": analytic_namespace_receipt,
+        "encoding": "cartesian_product_of_global_observer_range_and_kind_enum",
+        "registered_identity_count": registered_identity_count,
+        "sample_audit": sample_audit,
+        "injectivity_argument": (
+            "Within one run_id, (observer_kind, global_observer_index) is serialized injectively; "
+            "global observer half-open ranges are disjoint by shard construction."
+        ),
+    }
     return {
-        "schema": "oph_global_observer_registry_v2",
+        "schema": "oph_global_observer_registry_v3",
         "run_id": run_id,
-        "observer_count": shard_count * observers_per_shard,
-        "registered_identity_count": len(registry_entries),
+        "observer_count": total_observers,
+        "registered_identity_count": registered_identity_count,
+        "registry_encoding": "range_derived_no_per_observer_json_rows",
         "observer_kinds": list(OBSERVER_KINDS),
         "namespace_rule": "distributed_observer_uid = run_id:observer_kind:global_observer_index",
         "stable_identity_rule": "blake2b_run_observer_kind_global_index_base_seed_uint63",
         "registry_namespace_audit": audit,
-        "global_observer_registry_namespace_receipt": bool(audit.get("GLOBAL_OBSERVER_REGISTRY_NAMESPACE_RECEIPT", False)),
+        "global_observer_registry_namespace_receipt": analytic_namespace_receipt,
         "shards": shards,
         "sample_observers": samples,
         "claim_boundary": (
@@ -1461,6 +1549,21 @@ def _observer_registry_payload(
 
 def _owner_for_node(node: int, patch_count_per_shard: int) -> int:
     return int(node // max(int(patch_count_per_shard), 1))
+
+
+def _owner_ranges_cover_carrier(ranges: list[Any], node_count: int) -> bool:
+    expected_start = 0
+    for expected_owner, row in enumerate(ranges):
+        if not isinstance(row, list) or len(row) != 3:
+            return False
+        try:
+            start, stop, owner = (int(value) for value in row)
+        except (TypeError, ValueError):
+            return False
+        if start != expected_start or stop <= start or owner != expected_owner:
+            return False
+        expected_start = stop
+    return bool(expected_start == int(node_count))
 
 
 def _global_cut_pairs(shard_count: int) -> list[tuple[int, int]]:
@@ -1498,16 +1601,71 @@ def _npz_graph_info(path: Path | None) -> dict[str, Any]:
         return {"load_receipt": False}
     try:
         with np.load(path) as data:
-            nodes = data["nodes"]
-            edges = data["edges"]
-            owners = data["node_owner"]
-            cut_mask = data["cut_edge_mask"]
+            nodes = np.asarray(data["nodes"])
+            edges = np.asarray(data["edges"])
+            owners = np.asarray(data["node_owner"])
+            cut_mask = np.asarray(data["cut_edge_mask"])
+            node_count = int(nodes.size) if nodes.ndim == 1 else -1
+            nodes_sequential = bool(
+                node_count >= 0
+                and np.issubdtype(nodes.dtype, np.integer)
+                and np.array_equal(nodes, np.arange(node_count, dtype=nodes.dtype))
+            )
+            edge_shape_valid = bool(edges.ndim == 2 and edges.shape[1:] == (2,))
+            edge_endpoints_valid = bool(
+                edge_shape_valid
+                and np.issubdtype(edges.dtype, np.integer)
+                and (
+                    edges.size == 0
+                    or (np.all(edges >= 0) and np.all(edges < max(node_count, 0)))
+                )
+            )
+            owners_valid = bool(
+                owners.ndim == 1
+                and owners.shape == (max(node_count, 0),)
+                and np.issubdtype(owners.dtype, np.integer)
+                and (owners.size == 0 or np.all(owners >= 0))
+            )
+            expected_ring = _global_graph_edge_array(max(node_count, 0))
+            ring_topology_receipt = bool(
+                edge_endpoints_valid
+                and edges.shape == expected_ring.shape
+                and np.array_equal(edges, expected_ring)
+            )
+            computed_cut_mask = (
+                owners[edges[:, 0]] != owners[edges[:, 1]]
+                if edge_endpoints_valid and owners_valid and edges.size
+                else np.zeros(edges.shape[0] if edge_shape_valid else 0, dtype=np.bool_)
+            )
+            cut_mask_receipt = bool(
+                cut_mask.ndim == 1
+                and edge_shape_valid
+                and cut_mask.shape == (edges.shape[0],)
+                and np.issubdtype(cut_mask.dtype, np.bool_)
+                and np.array_equal(cut_mask, computed_cut_mask)
+            )
+            owner_ranges = _owner_ranges_from_array(owners) if owners_valid else []
+            owner_range_receipt = _owner_ranges_cover_carrier(owner_ranges, max(node_count, 0))
+            load_receipt = bool(
+                nodes_sequential
+                and edge_endpoints_valid
+                and owners_valid
+                and ring_topology_receipt
+                and cut_mask_receipt
+                and owner_range_receipt
+            )
             return {
-                "load_receipt": True,
-                "node_count": int(len(nodes)),
-                "edge_count": int(len(edges)),
-                "owner_count": int(len(set(int(value) for value in owners.tolist()))),
+                "load_receipt": load_receipt,
+                "node_count": node_count,
+                "edge_count": int(edges.shape[0]) if edge_shape_valid else -1,
+                "owner_count": len(owner_ranges),
+                "owner_ranges": owner_ranges,
                 "cut_edge_count": int(np.count_nonzero(cut_mask)),
+                "nodes_sequential_receipt": nodes_sequential,
+                "edge_endpoints_receipt": edge_endpoints_valid,
+                "ring_topology_receipt": ring_topology_receipt,
+                "cut_edge_mask_recomputed_receipt": cut_mask_receipt,
+                "owner_range_receipt": owner_range_receipt,
             }
     except Exception as exc:  # pragma: no cover - defensive artifact report path.
         return {"load_receipt": False, "error": f"{type(exc).__name__}:{exc}"}
@@ -1518,17 +1676,54 @@ def _npz_state_info(path: Path | None) -> dict[str, Any]:
         return {"load_receipt": False}
     try:
         with np.load(path) as data:
-            nodes = data["nodes"]
-            state = data["canonical_state_word"]
-            sectors = data["boundary_sector"]
+            nodes = np.asarray(data["nodes"])
+            state = np.asarray(data["canonical_state_word"])
+            sectors = np.asarray(data["boundary_sector"])
+            node_count = int(nodes.size) if nodes.ndim == 1 else -1
+            nodes_sequential = bool(
+                node_count >= 0
+                and np.issubdtype(nodes.dtype, np.integer)
+                and np.array_equal(nodes, np.arange(node_count, dtype=nodes.dtype))
+            )
+            state_shape_valid = bool(
+                state.ndim == 1
+                and state.shape == (max(node_count, 0),)
+                and np.issubdtype(state.dtype, np.integer)
+                and (state.size == 0 or np.all(state >= 0))
+            )
+            sector_recomputed = bool(
+                sectors.ndim == 1
+                and sectors.shape == (max(node_count, 0),)
+                and np.issubdtype(sectors.dtype, np.integer)
+                and state_shape_valid
+                and np.array_equal(sectors, np.remainder(state, 17))
+            )
             return {
-                "load_receipt": bool(len(nodes) == len(state) == len(sectors)),
-                "node_count": int(len(nodes)),
-                "stable_identity_rule": "blake2b_run_patch_base_seed_uint63",
+                "load_receipt": bool(nodes_sequential and state_shape_valid and sector_recomputed),
+                "node_count": node_count,
+                "stable_identity_rule": "blake2b_keyed_splitmix64_patch_state_v1_uint63",
                 "state_word_dtype": str(state.dtype),
+                "nodes_sequential_receipt": nodes_sequential,
+                "state_shape_receipt": state_shape_valid,
+                "boundary_sector_recomputed_receipt": sector_recomputed,
             }
     except Exception as exc:  # pragma: no cover - defensive artifact report path.
         return {"load_receipt": False, "error": f"{type(exc).__name__}:{exc}"}
+
+
+def _owner_ranges_from_array(owners: np.ndarray) -> list[list[int]]:
+    """Return the compact owner runs encoded by a dense NPZ owner vector."""
+
+    values = np.asarray(owners)
+    if values.ndim != 1 or values.size == 0:
+        return []
+    changes = np.flatnonzero(values[1:] != values[:-1]) + 1
+    starts = np.concatenate((np.asarray([0], dtype=np.int64), changes))
+    stops = np.concatenate((changes, np.asarray([values.size], dtype=np.int64)))
+    return [
+        [int(start), int(stop), int(values[int(start)])]
+        for start, stop in zip(starts, stops, strict=True)
+    ]
 
 
 def _distributed_run_pack_contract(
@@ -2321,7 +2516,8 @@ def _shard_config(
                 for key, value in global_carrier_artifacts.items()
                 if isinstance(value, dict)
             },
-            "owned_nodes": list(carrier_shard.get("owned_nodes") or []),
+            "owned_node_ranges": list(carrier_shard.get("owned_node_ranges") or []),
+            "owned_node_count": int(carrier_shard.get("owned_node_count", patch_count_per_shard)),
             "ghost_nodes": list(carrier_shard.get("ghost_nodes") or []),
             "cut_edge_ids": list(carrier_shard.get("cut_edge_ids") or []),
             "authoritative_owner": int(carrier_shard.get("shard_index", shard_index)),

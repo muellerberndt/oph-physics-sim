@@ -20,6 +20,12 @@ from oph_fpe.claims import (
 from oph_fpe.algebra.maxent_cap_state import maxent_record_operator_cap_state
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap
 from oph_fpe.bulk.collar_state import cap_collar_partition, fawzi_renner_bound, visible_packets
+from oph_fpe.gauge.covariant_overlap import (
+    covariant_mismatch_mask,
+    gauge_invariant_edge_residual,
+    group_multiply_indices,
+    repair_covariant_port_pairs,
+)
 
 
 DECLARED_CAP_FLOW_STATE_MODES = frozenset({"cap_flow_graph_generator", "cap_flow_detailed_balance_kernel"})
@@ -2198,6 +2204,22 @@ def _perturb_remeasure_pullback(
             "response_source": "perturb_remeasure_response",
         "identity_fraction": 1.0,
     }
+    missing_graph_fields = [
+        key
+        for key in ("gauge", "group_name", "group_order")
+        if key not in graph_response
+    ]
+    sector_repair_enabled = bool(graph_response.get("production_sector_repair_enabled", False))
+    if missing_graph_fields or sector_repair_enabled:
+        blockers = [f"gauge_coupled_graph_field_missing:{key}" for key in missing_graph_fields]
+        if sector_repair_enabled:
+            blockers.append("production_sector_repair_not_replayed_by_response_probe")
+        return np.eye(basis.size, dtype=complex), 0.0, {
+            "response_source": "perturb_remeasure_response_fail_closed",
+            "identity_fraction": 1.0,
+            "gauge_covariant_probe_receipt": False,
+            "proof_blockers": blockers,
+        }
 
     response_matrix, meta = _perturb_remeasure_response_matrix(
         points,
@@ -2238,19 +2260,40 @@ def _perturb_remeasure_response_matrix(
     probe_max_incident_edges: int,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     basis = np.asarray(basis, dtype=np.int64)
+    missing_graph_fields = [
+        key
+        for key in ("gauge", "group_name", "group_order")
+        if key not in graph_response
+    ]
+    if missing_graph_fields:
+        raise ValueError(
+            "perturb_remeasure_response requires gauge-coupled graph fields: "
+            + ", ".join(missing_graph_fields)
+        )
+    if bool(graph_response.get("production_sector_repair_enabled", False)):
+        raise ValueError("perturb_remeasure_response does not replay enabled production sector repair")
     left = np.asarray(graph_response["left"], dtype=np.int64)
     right = np.asarray(graph_response["right"], dtype=np.int64)
     port_left = np.asarray(graph_response["port_left"], dtype=np.int64)
     port_right = np.asarray(graph_response["port_right"], dtype=np.int64)
+    gauge = np.asarray(graph_response["gauge"], dtype=np.int16)
+    group_name = str(graph_response["group_name"])
     group_order = int(graph_response.get("group_order", 6))
     patch_count = int(graph_response.get("patch_count", points.shape[0]))
-    if left.size != right.size or left.size != port_left.size or left.size != port_right.size:
+    if not (left.size == right.size == port_left.size == port_right.size == gauge.size):
         raise ValueError("graph_response edge arrays must have the same length")
 
     rng = np.random.default_rng(seed)
     incident_edges = _incident_edges(left, right, patch_count)
     node_score = _repair_affinity_score(raw_fields, np.arange(patch_count, dtype=np.int64))
-    before_signature = _node_packet_signature(port_left, port_right, left, right, patch_count)
+    before_residual = gauge_invariant_edge_residual(
+        port_left,
+        port_right,
+        gauge,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    before_signature = _node_packet_signature(before_residual, before_residual, left, right, patch_count)
     response_matrix = np.zeros((basis.size, basis.size), dtype=float)
     total_perturbed_edges = 0
     total_repaired_edges = 0
@@ -2267,16 +2310,36 @@ def _perturb_remeasure_response_matrix(
         incident = np.asarray(incident_edges[node], dtype=np.int64)
         if incident.size > int(probe_max_incident_edges):
             incident = rng.choice(incident, size=int(probe_max_incident_edges), replace=False)
-        for edge in incident:
-            if int(left[edge]) == node:
-                pl[edge] = (pl[edge] + 1) % group_order
-            else:
-                pr[edge] = (pr[edge] + 1) % group_order
+        perturb_left = left[incident] == node
+        left_edges = incident[perturb_left]
+        right_edges = incident[~perturb_left]
+        if left_edges.size:
+            pl[left_edges] = group_multiply_indices(
+                pl[left_edges],
+                np.ones(left_edges.size, dtype=np.int16),
+                group_name=group_name,
+                group_order=group_order,
+            )
+        if right_edges.size:
+            pr[right_edges] = group_multiply_indices(
+                pr[right_edges],
+                np.ones(right_edges.size, dtype=np.int16),
+                group_name=group_name,
+                group_order=group_order,
+            )
         total_perturbed_edges += int(incident.size)
 
         repair_count = np.zeros(patch_count, dtype=float)
         for _ in range(max(1, int(probe_steps))):
-            active = np.flatnonzero(pl != pr)
+            active = np.flatnonzero(
+                covariant_mismatch_mask(
+                    pl,
+                    pr,
+                    gauge,
+                    group_name=group_name,
+                    group_order=group_order,
+                )
+            )
             if active.size == 0:
                 break
             if active.size > int(probe_repairs_per_source):
@@ -2284,15 +2347,27 @@ def _perturb_remeasure_response_matrix(
             left_score = node_score[left[active]]
             right_score = node_score[right[active]]
             repair_left = left_score >= right_score
-            if np.any(repair_left):
-                pl[active[repair_left]] = pr[active[repair_left]]
-            if np.any(~repair_left):
-                pr[active[~repair_left]] = pl[active[~repair_left]]
+            repair_covariant_port_pairs(
+                pl,
+                pr,
+                gauge,
+                active,
+                repair_left,
+                group_name=group_name,
+                group_order=group_order,
+            )
             repair_count += np.bincount(left[active], minlength=patch_count)
             repair_count += np.bincount(right[active], minlength=patch_count)
             total_repaired_edges += int(active.size)
 
-        after_signature = _node_packet_signature(pl, pr, left, right, patch_count)
+        after_residual = gauge_invariant_edge_residual(
+            pl,
+            pr,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        after_signature = _node_packet_signature(after_residual, after_residual, left, right, patch_count)
         changed = (after_signature != before_signature).astype(float)
         response = repair_count + 0.5 * changed
         exact_basis_masses.append(float(np.sum(response[basis])))
@@ -2333,6 +2408,8 @@ def _perturb_remeasure_response_matrix(
         "probe_repairs_per_source": int(probe_repairs_per_source),
         "probe_max_incident_edges": int(probe_max_incident_edges),
         "response_feature_count": 0,
+        "gauge_covariant_probe_receipt": True,
+        "perturbation_action": "right_multiplication_in_source_endpoint_frame",
     }
 
 

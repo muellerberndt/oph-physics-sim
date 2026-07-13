@@ -1153,7 +1153,26 @@ def defect_timeline_to_h3_report(
     fusion, scattering, and bulk controls pass.
     """
 
-    event_rows = _timeline_event_rows(timeline_report, max_events=max_events)
+    production_timeline = bool(
+        timeline_report and timeline_report.get("mode") == "array_s3_defect_timeline"
+    )
+    timeline_inputs_complete = bool(
+        timeline_report.get("particle_promotion_inputs_complete") is True
+        and timeline_report.get("schema") == "oph_s3_defect_timeline_v2"
+        if production_timeline
+        else timeline_report.get("particle_promotion_inputs_complete", True) is True
+    )
+    event_rows, source_event_count = _timeline_event_rows(
+        timeline_report,
+        max_events=max_events,
+    )
+    event_selection_complete = len(event_rows) == source_event_count
+    h3_promotion_inputs_complete = bool(
+        timeline_inputs_complete and event_selection_complete
+    )
+    h3_truncation_reasons = list(timeline_report.get("truncation_reasons", []))
+    if not event_selection_complete:
+        h3_truncation_reasons.append("h3_event_selection_truncated")
     if not event_rows or not caps:
         return {
             "mode": "defect_timeline_h3_worldline_fit",
@@ -1161,6 +1180,13 @@ def defect_timeline_to_h3_report(
             "worldline_count": 0,
             "bulk_worldline_precursor_receipt": False,
             "particle_matter_receipt": False,
+            "timeline_particle_promotion_inputs_complete": timeline_inputs_complete,
+            "source_event_count_total": int(source_event_count),
+            "event_count_emitted": len(event_rows),
+            "max_events": int(max_events),
+            "event_selection_complete": event_selection_complete,
+            "h3_promotion_inputs_complete": h3_promotion_inputs_complete,
+            "h3_truncation_reasons": h3_truncation_reasons,
             "reason": "empty_timeline_or_caps",
         }
     weights = np.asarray(cell_entropy, dtype=float) if cell_entropy is not None else np.ones(points.shape[0], dtype=float)
@@ -1285,6 +1311,9 @@ def defect_timeline_to_h3_report(
         )
     worldlines = _h3_worldline_summaries(event_reports)
     persistent_h3 = [row for row in worldlines if int(row.get("observation_count", 0)) >= 3]
+    bulk_worldline_diagnostic = bool(
+        persistent_h3 and not response_degenerate and h3_beats_s2 and h3_beats_shuffle
+    )
     return {
         "mode": "defect_timeline_h3_worldline_fit",
         "event_count": len(event_reports),
@@ -1302,9 +1331,17 @@ def defect_timeline_to_h3_report(
         "h3_beats_s2_boundary": h3_beats_s2,
         "h3_beats_shuffled": h3_beats_shuffle,
         "response_degenerate": response_degenerate,
+        "bulk_worldline_precursor_diagnostic": bulk_worldline_diagnostic,
         "bulk_worldline_precursor_receipt": bool(
-            persistent_h3 and not response_degenerate and h3_beats_s2 and h3_beats_shuffle
+            h3_promotion_inputs_complete and bulk_worldline_diagnostic
         ),
+        "timeline_particle_promotion_inputs_complete": timeline_inputs_complete,
+        "source_event_count_total": int(source_event_count),
+        "event_count_emitted": len(event_reports),
+        "max_events": int(max_events),
+        "event_selection_complete": event_selection_complete,
+        "h3_promotion_inputs_complete": h3_promotion_inputs_complete,
+        "h3_truncation_reasons": h3_truncation_reasons,
         "particle_matter_receipt": False,
         "sample_events": event_reports[:256],
         "worldlines": worldlines[:256],
@@ -1456,8 +1493,14 @@ def _support_size_summary(rows: list[dict[str, Any]], support_key: str) -> dict[
     }
 
 
-def _timeline_event_rows(timeline_report: dict[str, Any], *, max_events: int) -> list[dict[str, Any]]:
+def _timeline_event_rows(
+    timeline_report: dict[str, Any],
+    *,
+    max_events: int,
+) -> tuple[list[dict[str, Any]], int]:
     rows: list[dict[str, Any]] = []
+    total = 0
+    limit = max(0, int(max_events))
     for worldline in timeline_report.get("worldlines", []) if timeline_report else []:
         worldline_id = str(worldline.get("worldline_id"))
         if not worldline.get("persistent", False):
@@ -1466,18 +1509,18 @@ def _timeline_event_rows(timeline_report: dict[str, Any], *, max_events: int) ->
             support = event.get("support_nodes", [])
             if not support:
                 continue
-            rows.append(
-                {
-                    "worldline_id": worldline_id,
-                    "cycle": int(event.get("cycle", 0)),
-                    "class": event.get("class"),
-                    "support_node_count": int(event.get("support_node_count", len(support))),
-                    "support_nodes": support,
-                }
-            )
-            if len(rows) >= int(max_events):
-                return rows
-    return rows
+            total += 1
+            if len(rows) < limit:
+                rows.append(
+                    {
+                        "worldline_id": worldline_id,
+                        "cycle": int(event.get("cycle", 0)),
+                        "class": event.get("class"),
+                        "support_node_count": int(event.get("support_node_count", len(support))),
+                        "support_nodes": support,
+                    }
+                )
+    return rows, total
 
 
 def _h3_worldline_summaries(events: list[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -286,6 +286,18 @@ def _varied_views(count: int) -> list[dict]:
             "mismatch_density_mean": float((i * 5) % 11) / 11.0,
             "visible_signature_entropy": float((i * i) % 13) / 13.0,
             "visible_readout_hash": f"h{i % 4}",
+            "locality_preserving_packet_feature_vector": [
+                float(i) / max(1, count - 1),
+                float((i * 3) % 7) / 7.0,
+                float((i * i) % 11) / 11.0,
+            ],
+            "locality_preserving_packet_feature_schema": {
+                "support_selection_carrier": "finite_patch_adjacency_bfs",
+                "fields": ["repair_load", "cumulative_repair_load"],
+                "excluded_hash_fields": ["record_signature", "visible_readout_hash"],
+                "feature_value_coordinate_fields_used": [],
+                "strict_neutral_eligible": False,
+            },
         }
         for i in range(count)
     ]

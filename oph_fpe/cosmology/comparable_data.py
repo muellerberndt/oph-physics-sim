@@ -362,7 +362,10 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         finite_clock_cmb_camb = standalone_report
     if standalone_report.get("mode") == "oph_unique_prediction_gate_v0_9":
         unique_prediction = standalone_report
-    if standalone_report.get("mode") == "oph_cnb_neutrino_background_v0":
+    if standalone_report.get("mode") in {
+        "oph_cnb_neutrino_background_v0",
+        "oph_cnb_neutrino_background_v1",
+    }:
         cnb_neutrino = standalone_report
     if standalone_report.get("mode") == "oph_finite_cosmology_certificate_bundle_v0":
         finite_certificates = standalone_report
@@ -1478,45 +1481,108 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "parity_envelope",
             "predicted_R_OE_TT_2_29",
         ),
-        "oph_unique_sum_mnu_eV": _nested(unique_prediction, "neutrino_cosmology", "sum_mnu_eV"),
-        "oph_unique_neutrino_f_nu": _nested(unique_prediction, "neutrino_cosmology", "f_nu"),
+        "oph_unique_neutrino_prediction_available": bool(
+            _nested(unique_prediction, "neutrino_cosmology", "oph_derived_prediction", "available")
+        ),
+        "oph_unique_sum_mnu_eV": _nested(
+            unique_prediction,
+            "neutrino_cosmology",
+            "oph_derived_prediction",
+            "sum_mnu_eV",
+        ),
+        "oph_unique_conventional_sum_mnu_eV": _nested(
+            unique_prediction,
+            "neutrino_cosmology",
+            "conventional_camb_baseline",
+            "sum_mnu_eV",
+        ),
+        "oph_unique_rejected_neutrino_benchmark_included": bool(
+            _nested(
+                unique_prediction,
+                "neutrino_cosmology",
+                "historical_rejected_weighted_cycle_benchmark",
+                "included",
+            )
+        ),
+        "oph_unique_neutrino_f_nu": _nested(
+            unique_prediction,
+            "neutrino_cosmology",
+            "conventional_camb_baseline",
+            "cosmology",
+            "f_nu",
+        ),
         "oph_unique_small_scale_neutrino_suppression": _nested(
             unique_prediction,
             "neutrino_cosmology",
+            "conventional_camb_baseline",
+            "cosmology",
             "small_scale_power_suppression_fraction",
         ),
         "oph_cnb_neutrino_written": bool(cnb_neutrino),
-        "oph_cnb_neutrino_measurement_comparable": bool(cnb_neutrino.get("measurement_comparable_now", False)),
+        "oph_cnb_neutrino_measurement_comparable": bool(
+            cnb_neutrino.get("conventional_baseline_measurement_comparable", False)
+        ),
+        "oph_cnb_neutrino_prediction_available": bool(
+            _nested(cnb_neutrino, "oph_neutrino_mass_status", "available")
+        ),
+        "oph_cnb_neutrino_public_promotion_allowed": bool(
+            _nested(cnb_neutrino, "oph_neutrino_mass_status", "public_promotion_allowed")
+        ),
+        "oph_cnb_rejected_benchmark_included": bool(
+            _nested(cnb_neutrino, "historical_rejected_weighted_cycle_benchmark", "included")
+        ),
         "oph_cnb_neutrino_finite_lattice_derived": bool(cnb_neutrino.get("finite_lattice_derived", False)),
         "oph_cnb_neutrino_physical_cmb_prediction": bool(cnb_neutrino.get("physical_cmb_prediction", False)),
         "oph_cnb_neutrino_physical_matter_power_prediction": bool(
             cnb_neutrino.get("physical_matter_power_prediction", False)
         ),
-        "oph_cnb_N_eff": _nested(cnb_neutrino, "relic_background", "N_eff"),
-        "oph_cnb_sum_mnu_eV": _nested(cnb_neutrino, "oph_neutrino_branch", "sum_mnu_eV"),
-        "oph_cnb_m_lightest_eV": _nested(cnb_neutrino, "oph_neutrino_branch", "m_lightest_eV"),
-        "oph_cnb_Omega_nu_h2": _nested(cnb_neutrino, "relic_background", "Omega_nu_h2"),
-        "oph_cnb_Omega_nu": _nested(cnb_neutrino, "relic_background", "Omega_nu"),
-        "oph_cnb_f_nu": _nested(cnb_neutrino, "relic_background", "f_nu"),
+        "oph_cnb_N_eff": _nested(cnb_neutrino, "conventional_camb_baseline", "relic_background", "N_eff"),
+        "oph_cnb_sum_mnu_eV": _nested(cnb_neutrino, "oph_neutrino_mass_status", "sum_mnu_eV"),
+        "oph_cnb_conventional_sum_mnu_eV": _nested(
+            cnb_neutrino,
+            "conventional_camb_baseline",
+            "sum_mnu_eV",
+        ),
+        "oph_cnb_m_lightest_eV": None,
+        "oph_cnb_Omega_nu_h2": _nested(
+            cnb_neutrino,
+            "conventional_camb_baseline",
+            "relic_background",
+            "Omega_nu_h2",
+        ),
+        "oph_cnb_Omega_nu": _nested(
+            cnb_neutrino,
+            "conventional_camb_baseline",
+            "relic_background",
+            "Omega_nu",
+        ),
+        "oph_cnb_f_nu": _nested(
+            cnb_neutrino,
+            "conventional_camb_baseline",
+            "relic_background",
+            "f_nu",
+        ),
         "oph_cnb_small_scale_suppression": _nested(
             cnb_neutrino,
+            "conventional_camb_baseline",
             "relic_background",
             "small_scale_power_suppression_fraction",
         ),
         "oph_cnb_planck_neff_pull_sigma": _nested(
             cnb_neutrino,
+            "conventional_camb_baseline",
             "measurement_comparisons",
             "Planck2018_N_eff",
             "pull_sigma",
         ),
         "oph_cnb_planck_bao_sum_mnu_pass": bool(
-            _nested(cnb_neutrino, "measurement_comparisons", "Planck2018_BAO_sum_mnu_bound", "passes_bound")
+            _nested(cnb_neutrino, "conventional_camb_baseline", "measurement_comparisons", "Planck2018_BAO_sum_mnu_bound", "passes_bound")
         ),
         "oph_cnb_act_sum_mnu_pass": bool(
-            _nested(cnb_neutrino, "measurement_comparisons", "ACT_DR6_extended_sum_mnu_bound", "passes_bound")
+            _nested(cnb_neutrino, "conventional_camb_baseline", "measurement_comparisons", "ACT_DR6_extended_sum_mnu_bound", "passes_bound")
         ),
         "oph_cnb_desi_lcdm_sum_mnu_pass": bool(
-            _nested(cnb_neutrino, "measurement_comparisons", "DESI_DR2_LCDM_sum_mnu_bound", "passes_bound")
+            _nested(cnb_neutrino, "conventional_camb_baseline", "measurement_comparisons", "DESI_DR2_LCDM_sum_mnu_bound", "passes_bound")
         ),
         "oph_cnb_eta_A": _nested(cnb_neutrino, "late_repair_projection_target", "eta_A"),
         "oph_cnb_Pi_WL_compressed_required": _nested(
@@ -1555,7 +1621,7 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "pull_sigma_reference",
         ),
         "oph_cnb_background_gate": bool(
-            _nested(cnb_neutrino, "readiness_gates", "measurement_comparable_relic_background")
+            _nested(cnb_neutrino, "readiness_gates", "conventional_baseline_relic_background_callable")
         ),
         "oph_cnb_mass_derivation_gate": bool(
             _nested(cnb_neutrino, "readiness_gates", "finite_lattice_mass_derivation")
@@ -4669,16 +4735,25 @@ def _oph_unique_prediction_summary(rows: list[dict[str, Any]]) -> dict[str, Any]
         "mean_ell_IR": _mean(row.get("oph_unique_ell_IR") for row in usable),
         "mean_N_frz_proxy": _mean(row.get("oph_unique_N_frz_proxy") for row in usable),
         "mean_parity_R_OE_TT_2_29": _mean(row.get("oph_unique_parity_R_OE_TT_2_29") for row in usable),
+        "neutrino_prediction_available_count": sum(
+            1 for row in usable if row.get("oph_unique_neutrino_prediction_available")
+        ),
         "mean_sum_mnu_eV": _mean(row.get("oph_unique_sum_mnu_eV") for row in usable),
+        "mean_conventional_sum_mnu_eV": _mean(
+            row.get("oph_unique_conventional_sum_mnu_eV") for row in usable
+        ),
+        "rejected_neutrino_benchmark_included_count": sum(
+            1 for row in usable if row.get("oph_unique_rejected_neutrino_benchmark_included")
+        ),
         "mean_neutrino_f_nu": _mean(row.get("oph_unique_neutrino_f_nu") for row in usable),
         "mean_small_scale_neutrino_suppression": _mean(
             row.get("oph_unique_small_scale_neutrino_suppression") for row in usable
         ),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Current v0.9 OPH-only public-comparison target lane: alpha-linked scalar tilt, exact IR "
-            "kernel, parity envelope, neutrino mass sum, and compressed dark-sector rows. These are "
-            "measurement-comparable targets, not finite-lattice derivations unless the derivation audit passes."
+            "Current v0.9 OPH-only public-comparison lane: alpha-linked scalar tilt, exact IR kernel, "
+            "parity envelope, and compressed dark-sector rows. There is no OPH-derived neutrino mass "
+            "prediction; neutrino transfer diagnostics use a separate conventional 0.06 eV baseline."
         ),
     }
 
@@ -4689,6 +4764,15 @@ def _oph_cnb_neutrino_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "run_count": len(usable),
         "measurement_comparable_count": sum(
             1 for row in usable if row.get("oph_cnb_neutrino_measurement_comparable")
+        ),
+        "oph_mass_prediction_available_count": sum(
+            1 for row in usable if row.get("oph_cnb_neutrino_prediction_available")
+        ),
+        "oph_public_promotion_allowed_count": sum(
+            1 for row in usable if row.get("oph_cnb_neutrino_public_promotion_allowed")
+        ),
+        "rejected_benchmark_included_count": sum(
+            1 for row in usable if row.get("oph_cnb_rejected_benchmark_included")
         ),
         "finite_lattice_derived_count": sum(
             1 for row in usable if row.get("oph_cnb_neutrino_finite_lattice_derived")
@@ -4714,6 +4798,9 @@ def _oph_cnb_neutrino_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "desi_lcdm_bound_pass_count": sum(1 for row in usable if row.get("oph_cnb_desi_lcdm_sum_mnu_pass")),
         "mean_N_eff": _mean(row.get("oph_cnb_N_eff") for row in usable),
         "mean_sum_mnu_eV": _mean(row.get("oph_cnb_sum_mnu_eV") for row in usable),
+        "mean_conventional_sum_mnu_eV": _mean(
+            row.get("oph_cnb_conventional_sum_mnu_eV") for row in usable
+        ),
         "mean_m_lightest_eV": _mean(row.get("oph_cnb_m_lightest_eV") for row in usable),
         "mean_Omega_nu_h2": _mean(row.get("oph_cnb_Omega_nu_h2") for row in usable),
         "mean_f_nu": _mean(row.get("oph_cnb_f_nu") for row in usable),
@@ -4731,9 +4818,9 @@ def _oph_cnb_neutrino_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Standalone OPH-CnuB relic-neutrino background lane. The weighted-cycle neutrino masses are "
-            "measurement-comparable through standard relic-neutrino cosmology, while finite-lattice mass "
-            "derivation, B_A(k,a), and full Boltzmann/likelihood gates remain closed."
+            "Standalone neutrino-status lane. OPH emits no source-derived neutrino mass prediction. The "
+            "measurement-comparable propagation is the separate conventional 0.06 eV CAMB baseline; the "
+            "weighted-cycle triple is rejected and appears only in explicitly opted-in historical audits."
         ),
     }
 
@@ -7432,15 +7519,21 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean ell_IR: {_fmt(unique_prediction['mean_ell_IR'])}",
         f"- mean N_frz proxy: {_fmt(unique_prediction['mean_N_frz_proxy'])}",
         f"- mean parity R_OE TT(2..29): {_fmt(unique_prediction['mean_parity_R_OE_TT_2_29'])}",
-        f"- mean sum m_nu eV: {_fmt(unique_prediction['mean_sum_mnu_eV'])}",
-        f"- mean neutrino f_nu: {_fmt(unique_prediction['mean_neutrino_f_nu'])}",
-        f"- mean small-scale neutrino suppression: {_fmt(unique_prediction['mean_small_scale_neutrino_suppression'])}",
+        f"- OPH neutrino mass prediction available reports: {unique_prediction['neutrino_prediction_available_count']}",
+        f"- mean OPH-derived sum m_nu eV: {_fmt(unique_prediction['mean_sum_mnu_eV'])}",
+        f"- mean conventional CAMB sum m_nu eV: {_fmt(unique_prediction['mean_conventional_sum_mnu_eV'])}",
+        f"- rejected neutrino benchmark included reports: {unique_prediction['rejected_neutrino_benchmark_included_count']}",
+        f"- mean conventional-baseline neutrino f_nu: {_fmt(unique_prediction['mean_neutrino_f_nu'])}",
+        f"- mean conventional-baseline small-scale neutrino suppression: {_fmt(unique_prediction['mean_small_scale_neutrino_suppression'])}",
         f"- interpretation: {unique_prediction['interpretation']}",
         "",
         "## OPH-CnuB Neutrino Background",
         "",
         f"- neutrino reports: {cnb_neutrino['run_count']}",
-        f"- measurement-comparable reports: {cnb_neutrino['measurement_comparable_count']}",
+        f"- conventional-baseline measurement-comparable reports: {cnb_neutrino['measurement_comparable_count']}",
+        f"- OPH mass-prediction-available reports: {cnb_neutrino['oph_mass_prediction_available_count']}",
+        f"- OPH public-promotion-allowed reports: {cnb_neutrino['oph_public_promotion_allowed_count']}",
+        f"- rejected benchmark included reports: {cnb_neutrino['rejected_benchmark_included_count']}",
         f"- finite-lattice-derived reports: {cnb_neutrino['finite_lattice_derived_count']}",
         f"- physical-CMB prediction reports: {cnb_neutrino['physical_cmb_prediction_count']}",
         f"- physical matter-power prediction reports: {cnb_neutrino['physical_matter_power_prediction_count']}",
@@ -7448,7 +7541,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- five-of-seven kernel/projection counts: {cnb_neutrino['five_of_seven_kernel_callable_count']} / {cnb_neutrino['five_of_seven_projection_count']}",
         f"- Planck+BAO / ACT / DESI strict sum-mnu pass counts: {cnb_neutrino['planck_bao_bound_pass_count']} / {cnb_neutrino['act_bound_pass_count']} / {cnb_neutrino['desi_lcdm_bound_pass_count']}",
         f"- mean N_eff: {_fmt(cnb_neutrino['mean_N_eff'])}",
-        f"- mean sum m_nu eV: {_fmt(cnb_neutrino['mean_sum_mnu_eV'])}",
+        f"- mean OPH-derived sum m_nu eV: {_fmt(cnb_neutrino['mean_sum_mnu_eV'])}",
+        f"- mean conventional CAMB sum m_nu eV: {_fmt(cnb_neutrino['mean_conventional_sum_mnu_eV'])}",
         f"- mean lightest mass eV: {_fmt(cnb_neutrino['mean_m_lightest_eV'])}",
         f"- mean Omega_nu h2: {_fmt(cnb_neutrino['mean_Omega_nu_h2'])}",
         f"- mean f_nu: {_fmt(cnb_neutrino['mean_f_nu'])}",

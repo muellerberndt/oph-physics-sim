@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any
 
 from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
+    BULK_WORLDLINE_PRECURSOR_RECEIPT,
     BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
     BW_KMS_BRANCH_REPLAY_RECEIPT,
     CAP_NORMAL_H3_CHART_RECEIPT,
     CHART_LORENTZ_H3_RECEIPT,
+    CLASSICAL_CARRIER_MODE_RECEIPT,
+    COLORED_DECONFINEMENT_RECEIPT,
     CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT,
     EINSTEIN_BRANCH_ENTRY_RECEIPT,
     EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT,
@@ -27,16 +32,19 @@ from oph_fpe.claims import (
     PHYSICAL_GRAVITY_PREDICTION_RECEIPT,
     PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT,
     PROTO_PARTICLE_RECEIPT,
+    PRODUCTION_PARTICLE_MATTER_RECEIPT,
     PRODUCTION_GRAVITY_RECEIPT,
     RECORD_COMMIT_RECEIPT,
     REPAIR_CORE_RECEIPT,
     SCREEN_PROXY_CMB_RECEIPT,
     STRICT_NEUTRAL_BULK_RECEIPT,
     STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+    QUANTUM_PARTICLE_RECEIPT,
     THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT,
     with_claim_metadata,
 )
 from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report
+from oph_fpe.bulk.particle_contract import particle_promotion_contract_report
 
 
 def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
@@ -57,8 +65,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     cap_normal_h3_chart = _read_json(root / "cap_normal_h3_chart_report.json")
     modular_response_h3_localization = _read_json(root / "modular_response_h3_localization_report.json")
     transition_selection = _read_json(root / "transition_selection_report.json")
-    neutral = _read_json(root / "bulk_reconstruction_report.json")
-    neutral_frontier = _read_json(root / "strict_neutral_bulk_frontier_report.json")
+    strict_neutral_report = _read_json(root / "strict_neutral_bulk_report.json")
     cmb_lite = _read_json(root / "cmb_lite_comparison_report.json")
     cl = _read_json(root / "cl_comparison_report.json")
     physical_cmb_input = _read_json(root / "physical_cmb_input_report.json")
@@ -71,11 +78,15 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     scale_compressed_particle = _read_json(root / "scale_compressed_particle_report.json")
     particle = _read_json(root / "particle_likeness_report.json")
     controlled_particle = _read_json(root / "controlled_defect_particle_assay_report.json")
+    particle_contract = particle_promotion_contract_report(root)
     prime_rank_sweep = _read_json(root / "prime_geometric_rank_sweep_report.json")
     prime_rank_refinement = _read_json(root / "prime_geometric_rank_refinement_report.json")
     strict_neutral_object = _read_json(root / "strict_neutral_object_bulk_report.json")
     theorem_core = _read_json(root / "theorem_core_receipts.json")
-    finite_contract_report = _read_json(root / "finite_oph_theorem_contract_report.json")
+    persisted_finite_contract_report = _read_json(
+        root / "finite_oph_theorem_contract_report.json"
+    )
+    finite_contract_report = _independently_recomputed_finite_contract(root)
     einstein_branch_report = _read_json(root / "einstein_branch_entry_report.json")
     explicit_einstein_bridge_manifest = _read_json(root / "einstein_bridge_manifest.json")
     einstein_bridge_manifest = explicit_einstein_bridge_manifest or einstein_bridge_manifest_report(root)
@@ -87,48 +98,54 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         _ladder_passed(ladder, "R0")
         or _truthy(emergence, "final_phi_zero")
         or _truthy(emergence, FINITE_SETTLE_DIAGNOSTIC_RECEIPT)
-        or theorem_core.get("finite_settle_diagnostic_receipt", False)
+        or _truthy(theorem_core, "finite_settle_diagnostic_receipt")
     )
-    finite_consensus_theorem = bool(
+    finite_consensus_declaration_diagnostic = bool(
         _truthy(emergence, FINITE_CONSENSUS_THEOREM_RECEIPT)
-        or theorem_core.get(FINITE_CONSENSUS_THEOREM_RECEIPT, False)
-        or theorem_core.get("finite_consensus_theorem_receipt", False)
+        or _truthy(theorem_core, FINITE_CONSENSUS_THEOREM_RECEIPT)
+        or _truthy(theorem_core, "finite_consensus_theorem_receipt")
     )
+    finite_consensus_validation = _finite_consensus_validation_from_contract(
+        finite_contract_report
+    )
+    finite_consensus_theorem = _truthy(finite_consensus_validation, "passed")
     repair_core = finite_settle_diagnostic
-    record_commit = _ladder_passed(ladder, "R1") or _truthy(emergence, "records_committed")
-    bw_kms = _truthy_any(
+    record_commit_declaration_diagnostic = bool(
+        _ladder_passed(ladder, "R1") or _truthy(emergence, "records_committed")
+    )
+    bw_kms_declaration_diagnostic = _truthy_any(
         emergence,
         BW_KMS_BRANCH_REPLAY_RECEIPT,
         "BW_KMS_DIRECT_2PI_RECEIPT",
         "state_derived_correct_beats_controls",
         "state_derived_selected_2pi",
     ) or _ladder_passed(ladder, "R2") or _ladder_receipt_passed(ladder, BW_KMS_BRANCH_REPLAY_RECEIPT) or bool(
-        paper_chart.get("bw_2pi_cap_flow_receipt", False)
+        _truthy(paper_chart, "bw_2pi_cap_flow_receipt")
         or (
             transition_selection.get("primary_source") == "kms_collar_transport_response"
-            and transition_selection.get("two_pi_selected", False)
-            and not transition_selection.get("response_degenerate", False)
+            and transition_selection.get("two_pi_selected") is True
+            and transition_selection.get("response_degenerate") is False
         )
     )
-    chart = _truthy_any(
+    chart_declaration_diagnostic = _truthy_any(
         emergence,
         "PAPER_THEOREM_3D_BULK_CHART_RECEIPT",
         "CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT",
         "CHART_LORENTZ_H3_RECEIPT",
         CAP_NORMAL_H3_CHART_RECEIPT,
     ) or _ladder_passed(ladder, "R3") or bool(
-        paper_chart.get("PAPER_THEOREM_3D_BULK_CHART_RECEIPT", False)
-        or paper_chart.get("paper_theorem_3d_bulk_chart_receipt", False)
-        or conformal_chart.get("conformal_h3_spatial_chart_receipt", False)
-        or cap_normal_h3_chart.get(CAP_NORMAL_H3_CHART_RECEIPT, False)
+        _truthy(paper_chart, "PAPER_THEOREM_3D_BULK_CHART_RECEIPT")
+        or _truthy(paper_chart, "paper_theorem_3d_bulk_chart_receipt")
+        or _truthy(conformal_chart, "conformal_h3_spatial_chart_receipt")
+        or _truthy(cap_normal_h3_chart, CAP_NORMAL_H3_CHART_RECEIPT)
     )
-    h3_response = _truthy_any(
+    h3_response_declaration_diagnostic = _truthy_any(
         emergence,
         "H3_RESPONSE_CANDIDATE_RECEIPT",
         "H3_RESPONSE_CONTROL_SEPARATION_RECEIPT",
         "modular_response_h3_candidate_receipt",
     ) or _ladder_passed(ladder, "R4")
-    h3_object_preview = _truthy_any(
+    h3_object_preview_declaration_diagnostic = _truthy_any(
         emergence,
         "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT",
         "PAPER_THEOREM_ASSISTED_H3_POPULATED_CHART_RECEIPT",
@@ -139,7 +156,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "observer_chart_object_h3_receipt",
         "observer_chart_object_h3_median_receipt",
     ) or _ladder_passed(ladder, "R5")
-    object_nonboundary_population = _truthy_any(
+    object_population_declaration_diagnostic = _truthy_any(
         emergence,
         "OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT",
         "OBJECT_BULK_POPULATION_RECEIPT",
@@ -156,14 +173,45 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "h3_modular_response_localization_receipt",
         "H3LOC",
     )
+    # Promotion gates come only from the theorem contract recomputed above.
+    # T308/T309/T310 each rerun their verifier from primitive source fields and
+    # explicitly ignore mutable precomputed receipt JSON.
+    record_commit = _contract_stage_passed(
+        finite_contract_report,
+        "L1_observer_record_algebra",
+    )
+    bw_kms = _contract_stage_passed(
+        finite_contract_report,
+        "T308_finite_cap_bw_certificate",
+    )
+    chart = _contract_stage_passed(
+        finite_contract_report,
+        "T309_cap_normal_h3_chart",
+    )
+    h3_response = _contract_stage_passed(
+        finite_contract_report,
+        "T310_modular_response_h3_localization",
+    )
+    h3_object_preview = h3_response
+    object_nonboundary_population = h3_response
     theorem_assisted_chart_preview = bool(
-        chart and bw_kms and h3_response and (h3_object_preview or object_nonboundary_population)
+        finite_consensus_theorem
+        and record_commit
+        and chart
+        and bw_kms
+        and h3_response
+        and (h3_object_preview or object_nonboundary_population)
     )
     theorem_assisted_nonboundary_population = bool(
-        chart and bw_kms and h3_response and object_nonboundary_population
+        finite_consensus_theorem
+        and record_commit
+        and chart
+        and bw_kms
+        and h3_response
+        and object_nonboundary_population
     )
     observer_modular_experience_written = bool(observer_modular_experience)
-    observer_modular_time = bool(observer_modular_experience.get("observer_modular_time_receipt", False))
+    observer_modular_time = _truthy(observer_modular_experience, "observer_modular_time_receipt")
     observer_facing_h3_chart = bool(chart and bw_kms and h3_response)
     observer_history_component_gates = {
         "observer_modular_experience_written": observer_modular_experience_written,
@@ -193,7 +241,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     observer_experienced_3p1d_history = all(observer_history_component_gates.values())
     observer_facing_3p1d_experience = observer_experienced_3p1d_history
     observer_facing_populated_h3_experience = bool(
-        observer_modular_experience.get("observer_facing_populated_h3_experience_receipt", False)
+        _truthy(observer_modular_experience, "observer_facing_populated_h3_experience_receipt")
         and observer_experienced_3p1d_history
         and object_nonboundary_population
     )
@@ -214,119 +262,156 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     observer_populated_h3_blockers = [
         gate for gate, passed in observer_populated_h3_component_gates.items() if not passed
     ]
-    strict_neutral_object_bulk = bool(
-        strict_neutral_object.get(STRICT_NEUTRAL_OBJECT_BULK_RECEIPT, False)
-        or strict_neutral_object.get("strict_neutral_object_bulk", False)
+    strict_neutral_object_declaration_diagnostic = _truthy_any(
+        strict_neutral_object,
+        STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+        "strict_neutral_object_bulk",
     )
-    strict_neutral_quotient_metric = bool(
-        neutral.get("STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT", False)
-        or neutral.get("strict_neutral_quotient_metric_receipt", False)
-        or _as_dict(neutral.get("receipt")).get("STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT", False)
-        or neutral_frontier.get("STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT", False)
-        or finite_contract_report.get("strict_neutral_quotient_metric_receipt", False)
+    strict_neutral_object_validation = _independently_replayed_strict_neutral_object(
+        root,
+        strict_neutral_object,
     )
-    strict_neutral_bulk = bool(
-        neutral.get("bulk_3d_established", False)
-        or neutral.get("strict_neutral_bulk", False)
-        or neutral.get(STRICT_NEUTRAL_BULK_RECEIPT, False)
-        or neutral_frontier.get("strict_neutral_bulk", False)
-        or emergence.get("strict_blind_observer_bulk_receipt", False)
-        or emergence.get("neutral_bulk_3d_established", False)
+    strict_neutral_object_bulk = _truthy(
+        strict_neutral_object_validation,
+        "passed",
     )
-    prime_geometric_quotient_3d = bool(
-        prime_rank_sweep.get("PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT", False)
-        or prime_rank_sweep.get("prime_geometric_quotient_3d_diagnostic_receipt", False)
+    strict_neutral_validation = _independently_replayed_strict_neutral(
+        root,
+        strict_neutral_report,
+        prime_rank_refinement,
     )
-    prime_geometric_spatial_3d = bool(
-        prime_rank_sweep.get("prime_geometric_spatial_3d_candidate_receipt", False)
+    strict_neutral_quotient_metric = _truthy(
+        strict_neutral_validation,
+        "quotient_metric_passed",
     )
-    prime_geometric_rank3_refinement = bool(
-        prime_rank_refinement.get("control_quotient_rank3_refinement_candidate_receipt", False)
+    strict_neutral_bulk = _truthy(
+        strict_neutral_validation,
+        "strict_neutral_bulk_passed",
     )
-    prime_geometric_strict_refinement = bool(
-        prime_rank_refinement.get("strict_neutral_bulk_refinement_receipt", False)
+    prime_geometric_quotient_3d = _truthy_any(
+        prime_rank_sweep,
+        "PRIME_GEOMETRIC_QUOTIENT_3D_DIAGNOSTIC_RECEIPT",
+        "prime_geometric_quotient_3d_diagnostic_receipt",
+    )
+    prime_geometric_spatial_3d = _truthy(
+        prime_rank_sweep,
+        "prime_geometric_spatial_3d_candidate_receipt",
+    )
+    prime_geometric_rank3_refinement = _truthy(
+        prime_rank_refinement,
+        "control_quotient_rank3_refinement_candidate_receipt",
+    )
+    prime_geometric_strict_refinement = _truthy(
+        prime_rank_refinement,
+        "strict_neutral_bulk_refinement_receipt",
     )
     screen_cmb = bool(
-        emergence.get("SCREEN_PROXY_CMB_RECEIPT", False)
+        _truthy(emergence, "SCREEN_PROXY_CMB_RECEIPT")
         or _ladder_passed(ladder, "R7")
         or cl
         or cmb_lite
-        or physical_cmb_output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT", False)
+        or _truthy(physical_cmb_output, "PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT")
     )
-    physical_cmb_stage1_input = bool(
-        physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
-        or physical_cmb_input_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+    physical_cmb_stage1_input = _truthy(
+        physical_cmb_input,
+        "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT",
+    ) or _truthy(
+        physical_cmb_input_validation,
+        "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT",
     )
     physical_cmb_stage2_frozen_likelihood = bool(
-        frozen_transfer_likelihood.get("FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT", False)
-        and frozen_transfer_likelihood.get("FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT", False)
-        and frozen_transfer_likelihood.get("FROZEN_PHYSICAL_SPECTRUM_RECEIPT", False)
+        _truthy(frozen_transfer_likelihood, "FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT")
+        and _truthy(frozen_transfer_likelihood, "FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT")
+        and _truthy(frozen_transfer_likelihood, "FROZEN_PHYSICAL_SPECTRUM_RECEIPT")
     )
-    physical_cmb_stage3_output = bool(
-        emergence.get("physical_cmb_prediction", False)
-        or cmb_lite.get("physical_cmb_prediction", False)
-        or cl.get("physical_cmb_prediction", False)
-        or physical_cmb_frontier.get("physical_cmb_prediction_receipt", False)
-        or physical_cmb_output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+    physical_cmb_stage3_output = _truthy_any(
+        emergence,
+        "physical_cmb_prediction",
+    ) or _truthy_any(
+        cmb_lite,
+        "physical_cmb_prediction",
+    ) or _truthy_any(
+        cl,
+        "physical_cmb_prediction",
+    ) or _truthy_any(
+        physical_cmb_frontier,
+        "physical_cmb_prediction_receipt",
+    ) or _truthy_any(
+        physical_cmb_output,
+        "PHYSICAL_CMB_PREDICTION_RECEIPT",
     )
     physical_cmb = bool(
         physical_cmb_stage1_input
         and physical_cmb_stage2_frozen_likelihood
         and physical_cmb_stage3_output
     )
-    production_particle = bool(
-        emergence.get("particle_matter_receipt", False)
-        or particle.get("particle_matter_receipt", False)
-        or controlled_particle.get("physical_particle_emergence", False)
-    )
-    scale_operator = bool(scale_compressed.get("scale_compressed_operator_receipt", False))
-    scale_round_trace = bool(scale_compressed.get("repair_round_trace_receipt", False))
+    proto_particle = particle_contract.get(BULK_WORLDLINE_PRECURSOR_RECEIPT) is True
+    classical_carrier = particle_contract.get(CLASSICAL_CARRIER_MODE_RECEIPT) is True
+    quantum_particle = particle_contract.get(QUANTUM_PARTICLE_RECEIPT) is True
+    colored_deconfinement = particle_contract.get(COLORED_DECONFINEMENT_RECEIPT) is True
+    production_particle = particle_contract.get(PRODUCTION_PARTICLE_MATTER_RECEIPT) is True
+    scale_operator = _truthy(scale_compressed, "scale_compressed_operator_receipt")
+    scale_round_trace = _truthy(scale_compressed, "repair_round_trace_receipt")
     scale_h3 = _as_dict(scale_compressed.get("h3_preview"))
     scale_cmb_params = _as_dict(scale_compressed.get("cmb_parameter_readouts"))
     scale_h3_preview = bool(
         scale_operator
-        and scale_h3.get("populated_h3_preview_receipt", False)
-        and scale_h3.get("cap_profile_receipt", False)
+        and _truthy(scale_h3, "populated_h3_preview_receipt")
+        and _truthy(scale_h3, "cap_profile_receipt")
     )
-    scale_particle_preview = bool(
-        scale_compressed_particle.get("particle_preview_receipt", False)
-        or _as_dict(scale_compressed.get("particle_preview")).get("particle_preview_receipt", False)
+    scale_particle_preview = _truthy(
+        scale_compressed_particle,
+        "particle_preview_receipt",
+    ) or _truthy(
+        _as_dict(scale_compressed.get("particle_preview")),
+        "particle_preview_receipt",
     )
     scale_compressed_measurement_cmb = bool(
-        scale_compressed_cmb.get("measurement_comparable_cmb_curve", False)
-        and scale_compressed_cmb.get("screen_camb_transfer_receipt", False)
+        _truthy(scale_compressed_cmb, "measurement_comparable_cmb_curve")
+        and _truthy(scale_compressed_cmb, "screen_camb_transfer_receipt")
     )
-    scale_physical_cmb = bool(
-        scale_compressed.get("physical_cmb_prediction", False)
-        or scale_compressed_cmb.get("physical_cmb_prediction", False)
+    scale_physical_cmb = _truthy(
+        scale_compressed,
+        "physical_cmb_prediction",
+    ) or _truthy(
+        scale_compressed_cmb,
+        "physical_cmb_prediction",
     )
     screen_cmb = bool(screen_cmb or scale_compressed_measurement_cmb)
     physical_cmb = bool(physical_cmb or (scale_physical_cmb and physical_cmb_stage1_input and physical_cmb_stage2_frozen_likelihood))
 
-    finite_lorentz_contract = bool(
-        finite_contract_report.get(OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT, False)
-        or finite_contract_report.get("finite_lorentz_theorem_contract_receipt", False)
+    finite_lorentz_contract = _truthy_any(
+        finite_contract_report,
+        OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
+        "finite_lorentz_theorem_contract_receipt",
     )
-    paper_faithful_observer_spacetime = bool(
-        finite_contract_report.get("paper_faithful_observer_spacetime_emergence_receipt", False)
+    paper_faithful_observer_spacetime = _truthy(
+        finite_contract_report,
+        "paper_faithful_observer_spacetime_emergence_receipt",
     )
-    paper_faithful_populated_h3 = bool(
-        finite_contract_report.get("paper_faithful_populated_h3_observer_experience_receipt", False)
+    paper_faithful_populated_h3 = _truthy(
+        finite_contract_report,
+        "paper_faithful_populated_h3_observer_experience_receipt",
     )
-    paper_faithful_consensus_bulk = bool(
-        finite_contract_report.get("paper_faithful_consensus_bulk_emergence_receipt", False)
+    paper_faithful_consensus_bulk = _truthy(
+        finite_contract_report,
+        "paper_faithful_consensus_bulk_emergence_receipt",
     )
-    paper_geometric_branch_contract = bool(
-        finite_contract_report.get("paper_geometric_branch_lorentz_contract_receipt", False)
+    paper_geometric_branch_contract = _truthy(
+        finite_contract_report,
+        "paper_geometric_branch_lorentz_contract_receipt",
     )
-    paper_geometric_branch_observer_spacetime = bool(
-        finite_contract_report.get("paper_geometric_branch_observer_spacetime_emergence_receipt", False)
+    paper_geometric_branch_observer_spacetime = _truthy(
+        finite_contract_report,
+        "paper_geometric_branch_observer_spacetime_emergence_receipt",
     )
-    paper_geometric_branch_populated_h3 = bool(
-        finite_contract_report.get("paper_geometric_branch_populated_h3_observer_experience_receipt", False)
+    paper_geometric_branch_populated_h3 = _truthy(
+        finite_contract_report,
+        "paper_geometric_branch_populated_h3_observer_experience_receipt",
     )
-    paper_geometric_branch_consensus_bulk = bool(
-        finite_contract_report.get("paper_geometric_branch_consensus_bulk_emergence_receipt", False)
+    paper_geometric_branch_consensus_bulk = _truthy(
+        finite_contract_report,
+        "paper_geometric_branch_consensus_bulk_emergence_receipt",
     )
     einstein_bridge_dependency_discharge = _truthy_any(
         einstein_bridge_manifest,
@@ -346,10 +431,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "einstein_branch_entry_contract_receipt",
         "einstein_branch_entry_receipt",
     )
-    legacy_einstein_branch_entry = bool(
-        finite_contract_report.get(OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT, False)
-        or finite_contract_report.get(EINSTEIN_BRANCH_ENTRY_RECEIPT, False)
-        or finite_contract_report.get("einstein_branch_entry_contract_receipt", False)
+    legacy_einstein_branch_entry = _truthy_any(
+        finite_contract_report,
+        OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+        EINSTEIN_BRANCH_ENTRY_RECEIPT,
+        "einstein_branch_entry_contract_receipt",
     )
     einstein_branch_entry = (
         manifest_einstein_branch_entry if use_einstein_bridge_manifest else legacy_einstein_branch_entry
@@ -467,10 +553,38 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             prime_geometric_rank3_refinement,
             "Control-quotient coordinate rank-3/E3 candidate is stable across supplied finite-regulator sizes; this is still diagnostic, not chart-blind strict neutral quotient proof.",
         ),
-        "T7_production_particles": _tier(
-            PROTO_PARTICLE_RECEIPT,
+        "P0_bulk_worldline_precursor": _tier(
+            BULK_WORLDLINE_PRECURSOR_RECEIPT,
+            proto_particle,
+            "Localized, transported, controlled bulk proto-worldline; not yet a particle claim.",
+        ),
+        "P1a_classical_carrier_mode": _tier(
+            CLASSICAL_CARRIER_MODE_RECEIPT,
+            classical_carrier,
+            "Action-level physical carrier mode with positive kinetic term, reduced Hamiltonian, and wave kernel.",
+        ),
+        "P1b_quantum_particle": _tier(
+            QUANTUM_PARTICLE_RECEIPT,
+            quantum_particle,
+            "Positive-energy physical Hilbert/spectral/asymptotic particle receipt, including deconfinement for color.",
+        ),
+        "P1_production_particle_matter": _tier(
+            PRODUCTION_PARTICLE_MATTER_RECEIPT,
             production_particle,
-            "Production defects satisfy localization, transport, fusion/scattering, and bulk-worldline gates.",
+            "P1 is recomputed as P0 AND classical carrier mode AND quantum particle, with colored deconfinement when applicable.",
+            blockers=particle_contract.get("blockers", []),
+            required_receipts=[
+                BULK_WORLDLINE_PRECURSOR_RECEIPT,
+                CLASSICAL_CARRIER_MODE_RECEIPT,
+                QUANTUM_PARTICLE_RECEIPT,
+                COLORED_DECONFINEMENT_RECEIPT,
+            ],
+        ),
+        "T7_production_particles": _tier(
+            PRODUCTION_PARTICLE_MATTER_RECEIPT,
+            production_particle,
+            "Legacy alias for P1; producer top-level particle booleans are ignored.",
+            canonical_tier="P1_production_particle_matter",
         ),
         "T7a_scale_compressed_particle_preview": _tier(
             "SCALE_COMPRESSED_PARTICLE_PREVIEW_RECEIPT",
@@ -556,7 +670,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             required_receipts=[
                 OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
                 "production_source_stress_bridge_receipt",
-                "particle_matter_receipt",
+                PRODUCTION_PARTICLE_MATTER_RECEIPT,
             ],
         ),
     }
@@ -569,19 +683,19 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         FINITE_CONSENSUS_THEOREM_RECEIPT: finite_consensus_theorem,
         "finite_settle_diagnostic_receipt": finite_settle_diagnostic,
         "finite_consensus_theorem_receipt": finite_consensus_theorem,
+        "finite_consensus_declaration_diagnostic": finite_consensus_declaration_diagnostic,
+        "finite_consensus_primitive_validation": finite_consensus_validation,
         "chart_level_3p1_lorentz_kinematics_established": bool(chart and bw_kms),
-        CAP_NORMAL_H3_CHART_RECEIPT: bool(cap_normal_h3_chart.get(CAP_NORMAL_H3_CHART_RECEIPT, False)),
-        "cap_normal_h3_chart_receipt": bool(cap_normal_h3_chart.get("cap_normal_h3_chart_receipt", False)),
-        "cap_normal_h3_chart_terminal_status": cap_normal_h3_chart.get("terminal_status"),
-        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: bool(
-            modular_response_h3_localization.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT, False)
-        ),
-        "h3_modular_response_localization_receipt": bool(
-            modular_response_h3_localization.get("h3_modular_response_localization_receipt", False)
-        ),
-        "h3_modular_response_localization_terminal_status": modular_response_h3_localization.get(
-            "terminal_status"
-        ),
+        CAP_NORMAL_H3_CHART_RECEIPT: chart,
+        "cap_normal_h3_chart_receipt": chart,
+        "cap_normal_h3_chart_terminal_status": _as_dict(
+            finite_contract_report.get("issue_309_cap_normal_h3_chart")
+        ).get("terminal_status"),
+        MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT: h3_response,
+        "h3_modular_response_localization_receipt": h3_response,
+        "h3_modular_response_localization_terminal_status": _as_dict(
+            finite_contract_report.get("issue_310_modular_response_h3_localization")
+        ).get("terminal_status"),
         "paper_route_lorentz_h3_chart_established": bool(chart and bw_kms),
         OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT: finite_lorentz_contract,
         "finite_lorentz_theorem_contract_receipt": finite_lorentz_contract,
@@ -610,7 +724,10 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         ),
         "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": paper_faithful_consensus_bulk,
         "finite_theorem_contract_summary": {
-            "written": bool(finite_contract_report),
+            "written": bool(persisted_finite_contract_report),
+            "recomputed_in_memory": finite_contract_report.get("mode")
+            == "finite_oph_theorem_contract_audit_v1",
+            "recomputation_error": finite_contract_report.get("recomputation_error"),
             "blockers": finite_contract_report.get("blockers", []),
             "primary_blockers": finite_contract_report.get("primary_blockers", []),
             "paper_geometric_branch_blockers": finite_contract_report.get(
@@ -628,6 +745,46 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "all_stage_blockers": finite_contract_report.get("all_stage_blockers", []),
             "stages": finite_contract_report.get("stages", {}),
             "claim_boundary": finite_contract_report.get("claim_boundary"),
+        },
+        "persisted_finite_theorem_contract_diagnostic": {
+            "written": bool(persisted_finite_contract_report),
+            "mode": persisted_finite_contract_report.get("mode"),
+            "finite_lorentz_contract_claim": persisted_finite_contract_report.get(
+                OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT
+            )
+            or persisted_finite_contract_report.get(
+                "finite_lorentz_theorem_contract_receipt"
+            ),
+            "observer_spacetime_claim": persisted_finite_contract_report.get(
+                "paper_faithful_observer_spacetime_emergence_receipt"
+            ),
+            "consensus_bulk_claim": persisted_finite_contract_report.get(
+                "paper_faithful_consensus_bulk_emergence_receipt"
+            ),
+            "claim_boundary": (
+                "Persisted theorem-contract outputs are diagnostic only. L/B promotion "
+                "uses the read-only in-memory recomputation above."
+            ),
+        },
+        "theorem_assisted_source_validation": {
+            "record_commit": record_commit,
+            "finite_cap_bw_certificate": bw_kms,
+            "cap_normal_h3_chart": chart,
+            "record_conditioned_h3_localization": h3_response,
+            "object_population_from_localization": object_nonboundary_population,
+            "ignored_declaration_diagnostics": {
+                "record_commit": record_commit_declaration_diagnostic,
+                "bw_kms": bw_kms_declaration_diagnostic,
+                "chart": chart_declaration_diagnostic,
+                "h3_response": h3_response_declaration_diagnostic,
+                "h3_object_preview": h3_object_preview_declaration_diagnostic,
+                "object_population": object_population_declaration_diagnostic,
+            },
+            "claim_boundary": (
+                "The theorem-assisted lane uses only in-memory T308/T309/T310 primitive "
+                "verifier results; emergence, ladder, and precomputed report booleans are "
+                "retained as diagnostics and cannot promote."
+            ),
         },
         "theorem_assisted_h3_object_preview_established": theorem_assisted_chart_preview,
         "theorem_assisted_h3_nonboundary_population_established": theorem_assisted_nonboundary_population,
@@ -658,11 +815,27 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "strict_neutral_quotient_metric_receipt": strict_neutral_quotient_metric,
         "STRICT_NEUTRAL_THIRD_PERSON_BULK_RECEIPT": strict_neutral_bulk,
         "strict_neutral_third_person_bulk_receipt": strict_neutral_bulk,
-        "strict_neutral_bulk_contract_receipt": bool(
-            finite_contract_report.get("chart_blind_strict_neutral_quotient_bulk_receipt", strict_neutral_bulk)
-        ),
+        "strict_neutral_bulk_contract_receipt": strict_neutral_bulk,
         STRICT_NEUTRAL_OBJECT_BULK_RECEIPT: strict_neutral_object_bulk,
         STRICT_NEUTRAL_BULK_RECEIPT: strict_neutral_bulk,
+        "strict_neutral_object_source_validation": strict_neutral_object_validation,
+        "strict_neutral_source_validation": strict_neutral_validation,
+        "strict_neutral_derived_report_diagnostic": {
+            "written": bool(strict_neutral_report),
+            "persisted_top_level_claim": strict_neutral_report.get("strict_neutral_bulk"),
+            "persisted_typed_bulk_candidate": _strict_neutral_bulk_passed(
+                strict_neutral_report,
+                prime_rank_refinement,
+            ),
+            "persisted_typed_quotient_metric_candidate": (
+                _strict_neutral_quotient_metric_passed(strict_neutral_report)
+            ),
+            "persisted_blockers": strict_neutral_report.get("blockers", []),
+            "claim_boundary": (
+                "Persisted strict-neutral booleans are retained as diagnostics only; "
+                "promotion uses the source replay validation above."
+            ),
+        },
         "prime_geometric_quotient_3d_diagnostic": prime_geometric_quotient_3d,
         "prime_geometric_spatial_3d_candidate": prime_geometric_spatial_3d,
         "prime_geometric_rank3_refinement_candidate": prime_geometric_rank3_refinement,
@@ -699,7 +872,42 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "likelihood closure second, final output artifact last. Caller booleans alone do not promote."
             ),
         },
+        PROTO_PARTICLE_RECEIPT: proto_particle,
+        BULK_WORLDLINE_PRECURSOR_RECEIPT: proto_particle,
+        "bulk_worldline_precursor_receipt": proto_particle,
+        CLASSICAL_CARRIER_MODE_RECEIPT: classical_carrier,
+        "classical_carrier_mode_receipt": classical_carrier,
+        QUANTUM_PARTICLE_RECEIPT: quantum_particle,
+        "quantum_particle_receipt": quantum_particle,
+        COLORED_DECONFINEMENT_RECEIPT: colored_deconfinement,
+        "colored_deconfinement_receipt": colored_deconfinement,
+        PRODUCTION_PARTICLE_MATTER_RECEIPT: production_particle,
         "production_particle_matter_receipt": production_particle,
+        "particle_promotion_contract_summary": {
+            "evidence_file": particle_contract.get("evidence_file"),
+            "evidence_sha256": particle_contract.get("evidence_sha256"),
+            "candidate_id": particle_contract.get("candidate_id"),
+            "candidate_kind": particle_contract.get("candidate_kind"),
+            "schema_gates": particle_contract.get("schema_gates", {}),
+            "provenance": particle_contract.get("provenance", {}),
+            "lanes": particle_contract.get("lanes", {}),
+            "ignored_caller_promotion_fields": particle_contract.get(
+                "ignored_caller_promotion_fields", {}
+            ),
+            "ignored_legacy_producer_fields": {
+                "emergence_status_report.particle_matter_receipt": emergence.get(
+                    "particle_matter_receipt"
+                ),
+                "particle_likeness_report.particle_matter_receipt": particle.get(
+                    "particle_matter_receipt"
+                ),
+                "controlled_defect_particle_assay_report.physical_particle_emergence": (
+                    controlled_particle.get("physical_particle_emergence")
+                ),
+            },
+            "blockers": particle_contract.get("blockers", []),
+            "claim_boundary": particle_contract.get("claim_boundary"),
+        },
         "selected_object_chart_report": object_chart_name,
         "selected_object_chart_incidence_mode": object_chart.get("postprocess_incidence_mode")
         or object_chart.get("incidence_mode"),
@@ -784,9 +992,12 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 )
             ),
             "physical_cmb_prediction": scale_physical_cmb,
-            "strict_neutral_bulk": bool(
-                scale_compressed.get("strict_neutral_bulk", False)
-                or scale_h3.get("strict_neutral_third_person_bulk_established", False)
+            "strict_neutral_bulk": _truthy(
+                scale_compressed,
+                "strict_neutral_bulk",
+            ) or _truthy(
+                scale_h3,
+                "strict_neutral_third_person_bulk_established",
             ),
         },
         "paper_chart_summary": {
@@ -810,8 +1021,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "written": bool(prime_rank_sweep),
             "diagnostic_receipt": prime_geometric_quotient_3d,
             "spatial_3d_candidate_receipt": prime_geometric_spatial_3d,
-            "strict_neutral_candidate_receipt": bool(
-                prime_rank_sweep.get("prime_geometric_strict_neutral_candidate_receipt", False)
+            "strict_neutral_candidate_receipt": _truthy(
+                prime_rank_sweep,
+                "prime_geometric_strict_neutral_candidate_receipt",
             ),
             "dimension_3d_window_count": prime_rank_sweep.get("dimension_3d_window_count"),
             "coordinate_dimension_3d_window_count": prime_rank_sweep.get(
@@ -849,6 +1061,8 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "strict_neutral_object_bulk_summary": {
             "written": bool(strict_neutral_object),
             "receipt": strict_neutral_object_bulk,
+            "persisted_declaration_diagnostic": strict_neutral_object_declaration_diagnostic,
+            "source_validation": strict_neutral_object_validation,
             "object_count": strict_neutral_object.get("object_count"),
             "selected_model": _as_dict(strict_neutral_object.get("latent_geometry_selection")).get("selected_model"),
             "h3_selected": _as_dict(strict_neutral_object.get("latent_geometry_selection")).get("h3_selected"),
@@ -859,12 +1073,25 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "from theorem-assisted H3 chart population."
             ),
         },
+        "methodological_audit_blockers": [
+            {
+                "component": "neutral_model_selection",
+                "blocker": "pair_holdout_scored_after_full_distance_matrix_fit",
+                "promotion_impact": "strict_neutral_T6_remains_closed",
+                "detail": (
+                    "neutral_model_selection currently fits embeddings on the complete sampled "
+                    "distance matrix and only then scores a sampled pair subset called heldout. "
+                    "It is not independent out-of-sample validation."
+                ),
+            }
+        ],
         "einstein_branch_entry_summary": {
             "written": bool(finite_contract_report) or bool(einstein_branch_report) or use_einstein_bridge_manifest,
             "receipt": einstein_branch_entry,
             "manifest_written": use_einstein_bridge_manifest,
-            "manifest_receipt": bool(
-                einstein_bridge_manifest.get(OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT, False)
+            "manifest_receipt": _truthy(
+                einstein_bridge_manifest,
+                OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
             ),
             "theorem_e0_dependency_discharge_receipt": einstein_bridge_dependency_discharge,
             "einstein_bridge_run_receipts_receipt": einstein_bridge_run_receipts,
@@ -956,7 +1183,7 @@ def write_bulk_proof_certificate(run_dir: Path, out: Path | None = None) -> dict
 
 
 def _tier(receipt_name: str, passed: bool, description: str, **metadata: Any) -> dict[str, Any]:
-    row = {"receipt_name": receipt_name, "passed": bool(passed), "description": description}
+    row = {"receipt_name": receipt_name, "passed": _is_true(passed), "description": description}
     row.update(metadata)
     return row
 
@@ -976,24 +1203,499 @@ def _as_dict(value: Any) -> dict[str, Any]:
 
 
 def _ladder_passed(ladder: dict[str, Any], key: str) -> bool:
-    return bool(_as_dict(_as_dict(ladder.get("receipts")).get(key)).get("passed", False))
+    return _is_true(_as_dict(_as_dict(ladder.get("receipts")).get(key)).get("passed"))
 
 
 def _ladder_receipt_passed(ladder: dict[str, Any], receipt_name: str) -> bool:
-    receipts = (ladder.get("receipts") or {}).values()
+    receipts = _as_dict(ladder.get("receipts")).values()
     return any(
-        bool(row.get("passed", False)) and row.get("receipt_name") == receipt_name
+        _is_true(row.get("passed")) and row.get("receipt_name") == receipt_name
         for row in receipts
         if isinstance(row, dict)
     )
 
 
 def _truthy(data: dict[str, Any], key: str) -> bool:
-    return bool(data.get(key, False))
+    return _is_true(data.get(key))
 
 
 def _truthy_any(data: dict[str, Any], *keys: str) -> bool:
     return any(_truthy(data, key) for key in keys)
+
+
+def _independently_recomputed_finite_contract(root: Path) -> dict[str, Any]:
+    """Recompute the complete finite theorem contract without writing a report."""
+
+    try:
+        from oph_fpe.bulk.theorem_contract import finite_oph_theorem_contract_report
+
+        report = finite_oph_theorem_contract_report(root)
+    except Exception as exc:  # pragma: no cover - defensive proof boundary.
+        return {
+            "mode": "finite_oph_theorem_contract_recomputation_failed",
+            "stages": {},
+            "blockers": [
+                f"finite_theorem_contract_recomputation_failed:{type(exc).__name__}:{exc}"
+            ],
+            "recomputation_error": f"{type(exc).__name__}:{exc}",
+        }
+    if not isinstance(report, dict) or report.get("mode") != "finite_oph_theorem_contract_audit_v1":
+        return {
+            "mode": "finite_oph_theorem_contract_recomputation_failed",
+            "stages": {},
+            "blockers": ["finite_theorem_contract_recomputation_mode_invalid"],
+            "recomputation_error": "invalid_return_mode",
+        }
+    return report
+
+
+def _contract_stage_passed(report: dict[str, Any], stage_name: str) -> bool:
+    if report.get("mode") != "finite_oph_theorem_contract_audit_v1":
+        return False
+    stage = _as_dict(_as_dict(report.get("stages")).get(stage_name))
+    return _truthy(stage, "passed")
+
+
+def _finite_consensus_validation_from_contract(
+    contract: dict[str, Any],
+) -> dict[str, Any]:
+    stage = _as_dict(
+        _as_dict(contract.get("stages")).get("C0_finite_consensus_theorem")
+    )
+    details = _as_dict(stage.get("details"))
+    blockers = list(details.get("blockers", []))
+    if not stage:
+        blockers.append("finite_consensus_stage_missing_from_recomputed_contract")
+    return {
+        "mode": "finite_consensus_primitive_bound_validation_v1",
+        "passed": _truthy(stage, "passed"),
+        "validation": details,
+        "blockers": list(dict.fromkeys(blockers)),
+        "source": "read_only_in_memory_finite_theorem_contract_recomputation",
+    }
+
+
+def _independently_replayed_strict_neutral_object(
+    root: Path,
+    persisted_report: dict[str, Any],
+) -> dict[str, Any]:
+    """Recompute the neutral-object candidate from hash-bound observer rows."""
+
+    persisted_candidate = _truthy_any(
+        persisted_report,
+        STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+        "strict_neutral_object_bulk",
+    )
+    summary: dict[str, Any] = {
+        "mode": "strict_neutral_object_primitive_bound_validation_v1",
+        "persisted_candidate": persisted_candidate,
+        "replay_attempted": False,
+        "source_validation_passed": False,
+        "passed": False,
+        "blockers": [],
+    }
+    if not persisted_candidate:
+        summary["blockers"] = ["persisted_strict_neutral_object_candidate_not_true"]
+        return summary
+
+    manifest_path = root / "strict_neutral_object_source_manifest.json"
+    manifest = _read_json(manifest_path)
+    blockers: list[str] = []
+    if not manifest_path.is_file() or not manifest:
+        blockers.append("strict_neutral_object_source_manifest_missing")
+    if manifest.get("schema") != "strict_neutral_object_bulk_source_v1":
+        blockers.append("strict_neutral_object_source_manifest_schema_invalid")
+    if _as_dict(persisted_report.get("source_artifact")) != manifest:
+        blockers.append("strict_neutral_object_nested_source_manifest_mismatch")
+
+    observer_path = root / "observer_views.jsonl"
+    if manifest.get("observer_views_path") != observer_path.name:
+        blockers.append("strict_neutral_object_observer_source_path_invalid")
+    actual_observer_hash = _certificate_file_sha256(observer_path)
+    expected_observer_hash = manifest.get("observer_views_sha256")
+    if (
+        not _sha256_receipt(expected_observer_hash)
+        or expected_observer_hash != actual_observer_hash
+    ):
+        blockers.append("strict_neutral_object_observer_source_hash_mismatch")
+
+    parameters = _as_dict(manifest.get("analysis_parameters"))
+    seed = parameters.get("seed")
+    min_objects = parameters.get("min_objects")
+    min_observers = parameters.get("min_observers_per_object")
+    max_fraction = parameters.get("max_observer_fraction_per_object")
+    max_model_points = parameters.get("max_model_points")
+    heldout_fraction = parameters.get("heldout_fraction")
+    for name, value, minimum, maximum in (
+        ("seed", seed, 0, 2**63 - 1),
+        ("min_objects", min_objects, 1, 1_000_000),
+        ("min_observers_per_object", min_observers, 1, 1_000_000),
+        ("max_model_points", max_model_points, 8, 4_096),
+    ):
+        if not _bounded_strict_int(value, minimum=minimum, maximum=maximum):
+            blockers.append(f"strict_neutral_object_{name}_invalid")
+    if not _bounded_finite_number(max_fraction, minimum=0.0, maximum=1.0):
+        blockers.append("strict_neutral_object_max_observer_fraction_invalid")
+    if not _bounded_finite_number(heldout_fraction, minimum=0.01, maximum=0.95):
+        blockers.append("strict_neutral_object_heldout_fraction_invalid")
+
+    try:
+        import oph_fpe.bulk.neutral_object_bulk as object_kernel
+    except Exception as exc:  # pragma: no cover - defensive proof boundary.
+        object_kernel = None
+        blockers.append(
+            f"strict_neutral_object_kernel_import_failed:{type(exc).__name__}:{exc}"
+        )
+    if object_kernel is not None:
+        actual_kernel_hash = _certificate_file_sha256(Path(str(object_kernel.__file__)))
+        expected_kernel_hash = manifest.get("analysis_kernel_file_sha256")
+        if (
+            not _sha256_receipt(expected_kernel_hash)
+            or expected_kernel_hash != actual_kernel_hash
+        ):
+            blockers.append("strict_neutral_object_kernel_hash_mismatch")
+    else:
+        actual_kernel_hash = None
+
+    summary.update(
+        {
+            "manifest_path": str(manifest_path),
+            "observer_views_path": str(observer_path),
+            "observer_views_sha256": actual_observer_hash,
+            "analysis_kernel_file_sha256": actual_kernel_hash,
+        }
+    )
+    if blockers or object_kernel is None:
+        summary["blockers"] = list(dict.fromkeys(blockers))
+        return summary
+
+    summary["replay_attempted"] = True
+    observer_rows, row_blockers = _read_strict_jsonl(observer_path)
+    declared_row_count = manifest.get("observer_view_row_count")
+    if (
+        not _bounded_strict_int(declared_row_count, minimum=1, maximum=100_000_000)
+        or declared_row_count != len(observer_rows)
+    ):
+        row_blockers.append("strict_neutral_object_observer_row_count_mismatch")
+    recomputed: dict[str, Any] = {}
+    if not row_blockers:
+        try:
+            recomputed = object_kernel.strict_neutral_object_bulk_report(
+                observer_rows,
+                seed=int(seed),
+                min_objects=int(min_objects),
+                min_observers_per_object=int(min_observers),
+                max_observer_fraction_per_object=float(max_fraction),
+                max_model_points=int(max_model_points),
+                heldout_fraction=float(heldout_fraction),
+            )
+        except Exception as exc:  # pragma: no cover - defensive proof boundary.
+            row_blockers.append(
+                f"strict_neutral_object_primitive_replay_failed:{type(exc).__name__}:{exc}"
+            )
+    core_matches = bool(
+        recomputed
+        and all(persisted_report.get(key) == value for key, value in recomputed.items())
+    )
+    if recomputed and not core_matches:
+        row_blockers.append("strict_neutral_object_persisted_report_does_not_match_replay")
+    source_passed = bool(recomputed and core_matches and not row_blockers)
+    passed = bool(
+        source_passed
+        and _truthy(recomputed, STRICT_NEUTRAL_OBJECT_BULK_RECEIPT)
+        and _truthy(recomputed, "strict_neutral_object_bulk")
+        and recomputed.get("blockers") == []
+    )
+    summary.update(
+        {
+            "source_validation_passed": source_passed,
+            "recomputed_candidate": _truthy(
+                recomputed,
+                STRICT_NEUTRAL_OBJECT_BULK_RECEIPT,
+            ),
+            "recomputed_object_count": recomputed.get("object_count"),
+            "persisted_core_matches_replay": core_matches,
+            "passed": passed,
+            "blockers": list(dict.fromkeys(row_blockers)),
+            "claim_boundary": (
+                "The object-bulk candidate is recomputed from hash-bound observer rows. "
+                "A report boolean or copied derived report cannot promote it."
+            ),
+        }
+    )
+    return summary
+
+
+def _independently_replayed_strict_neutral(
+    root: Path,
+    persisted_report: dict[str, Any],
+    persisted_refinement: dict[str, Any],
+) -> dict[str, Any]:
+    """Replay strict-neutral primitives without invoking any report writer.
+
+    The persisted strict-neutral and refinement JSON files are retained for
+    diagnostics and as replay-trigger hints only.  Promotion is derived from
+    the hash-bound observer JSONL plus pure analysis functions.  The current
+    refinement producer has no primitive replay chain, so the T6 bulk gate is
+    explicitly fail-closed even when its derived JSON is internally
+    self-consistent.
+    """
+
+    persisted_bulk_candidate = _strict_neutral_bulk_passed(
+        persisted_report,
+        persisted_refinement,
+    )
+    persisted_metric_candidate = _strict_neutral_quotient_metric_passed(
+        persisted_report
+    )
+    summary: dict[str, Any] = {
+        "mode": "strict_neutral_primitive_bound_validation_v1",
+        "replay_attempted": False,
+        "persisted_bulk_candidate": persisted_bulk_candidate,
+        "persisted_quotient_metric_candidate": persisted_metric_candidate,
+        "source_validation_passed": False,
+        "refinement_replay_passed": False,
+        "quotient_metric_passed": False,
+        "strict_neutral_bulk_passed": False,
+        "blockers": [],
+    }
+    if not (persisted_bulk_candidate or persisted_metric_candidate):
+        summary["blockers"] = ["persisted_strict_neutral_candidate_not_true"]
+        summary["claim_boundary"] = (
+            "No derived candidate requested replay; false derived reports remain false."
+        )
+        return summary
+
+    manifest_path = root / "strict_neutral_source_manifest.json"
+    manifest = _read_json(manifest_path)
+    source_blockers: list[str] = []
+    if not manifest_path.is_file() or not manifest:
+        source_blockers.append("strict_neutral_source_manifest_missing")
+    if manifest.get("schema") != "strict_neutral_bulk_source_v1":
+        source_blockers.append("strict_neutral_source_manifest_schema_invalid")
+    if _as_dict(persisted_report.get("source_artifact")) != manifest:
+        source_blockers.append("strict_neutral_nested_source_manifest_mismatch")
+
+    observer_name = manifest.get("observer_views_path")
+    if observer_name != "observer_views.jsonl":
+        source_blockers.append("strict_neutral_observer_source_path_invalid")
+    observer_path = root / "observer_views.jsonl"
+    expected_observer_hash = manifest.get("observer_views_sha256")
+    actual_observer_hash = _certificate_file_sha256(observer_path)
+    if (
+        not _sha256_receipt(expected_observer_hash)
+        or expected_observer_hash != actual_observer_hash
+    ):
+        source_blockers.append("strict_neutral_observer_source_hash_mismatch")
+
+    parameters = _as_dict(manifest.get("analysis_parameters"))
+    seed = parameters.get("seed")
+    max_model_points = parameters.get("max_model_points")
+    planted_control_points = parameters.get("planted_control_points")
+    if not _bounded_strict_int(seed, minimum=0, maximum=2**63 - 1):
+        source_blockers.append("strict_neutral_seed_invalid")
+    if not _bounded_strict_int(max_model_points, minimum=8, maximum=4_096):
+        source_blockers.append("strict_neutral_max_model_points_invalid")
+    if not _bounded_strict_int(planted_control_points, minimum=16, maximum=4_096):
+        source_blockers.append("strict_neutral_planted_control_points_invalid")
+
+    refinement_binding = _as_dict(manifest.get("refinement_input"))
+    refinement_path = root / "prime_geometric_rank_refinement_report.json"
+    if refinement_binding.get("path") != refinement_path.name:
+        source_blockers.append("strict_neutral_refinement_path_invalid")
+    expected_refinement_hash = refinement_binding.get("sha256")
+    actual_refinement_hash = _certificate_file_sha256(refinement_path)
+    if actual_refinement_hash is None:
+        if expected_refinement_hash is not None:
+            source_blockers.append("strict_neutral_refinement_hash_mismatch")
+    elif (
+        not _sha256_receipt(expected_refinement_hash)
+        or expected_refinement_hash != actual_refinement_hash
+    ):
+        source_blockers.append("strict_neutral_refinement_hash_mismatch")
+
+    try:
+        from oph_fpe.bulk import neutral_bulk as neutral_kernel
+    except Exception as exc:  # pragma: no cover - defensive proof boundary.
+        neutral_kernel = None
+        source_blockers.append(
+            f"strict_neutral_analysis_kernel_import_failed:{type(exc).__name__}:{exc}"
+        )
+    if neutral_kernel is not None:
+        kernel_path = Path(str(neutral_kernel.__file__))
+        expected_kernel_hash = manifest.get("analysis_kernel_file_sha256")
+        actual_kernel_hash = _certificate_file_sha256(kernel_path)
+        if (
+            not _sha256_receipt(expected_kernel_hash)
+            or expected_kernel_hash != actual_kernel_hash
+        ):
+            source_blockers.append("strict_neutral_analysis_kernel_hash_mismatch")
+    else:
+        actual_kernel_hash = None
+
+    summary.update(
+        {
+            "manifest_path": str(manifest_path),
+            "observer_views_path": str(observer_path),
+            "observer_views_sha256": actual_observer_hash,
+            "analysis_kernel_file_sha256": actual_kernel_hash,
+            "refinement_report_sha256": actual_refinement_hash,
+            "source_blockers": list(dict.fromkeys(source_blockers)),
+        }
+    )
+    if source_blockers or neutral_kernel is None:
+        summary["blockers"] = list(dict.fromkeys(source_blockers))
+        summary["claim_boundary"] = (
+            "A handwritten derived report cannot promote without a hash-bound "
+            "observer source and matching analysis kernel."
+        )
+        return summary
+
+    summary["replay_attempted"] = True
+    observer_rows, row_blockers = _read_strict_jsonl(observer_path)
+    declared_row_count = manifest.get("observer_view_row_count")
+    if (
+        not _bounded_strict_int(declared_row_count, minimum=1, maximum=100_000_000)
+        or declared_row_count != len(observer_rows)
+    ):
+        row_blockers.append("strict_neutral_observer_row_count_mismatch")
+    recomputed: dict[str, Any] = {}
+    if not row_blockers:
+        try:
+            planted = neutral_kernel.planted_neutral_control_report(
+                point_count=int(planted_control_points),
+                seed=int(seed) + 101,
+                max_points=min(int(max_model_points), int(planted_control_points)),
+            )
+            shuffled = neutral_kernel.shuffled_neutral_control_report(
+                observer_rows,
+                seed=int(seed) + 303,
+                max_model_points=min(int(max_model_points), 96),
+            )
+            controls = dict(_as_dict(planted.get("controls")))
+            controls.update(_as_dict(shuffled.get("controls")))
+            # Deliberately omit the unverified derived refinement.  This keeps
+            # the source replay useful for diagnostics while closing T6.
+            recomputed = neutral_kernel.strict_neutral_bulk_report(
+                observer_rows,
+                controls=controls,
+                refinement={},
+                seed=int(seed),
+                max_model_points=int(max_model_points),
+            )
+        except Exception as exc:  # pragma: no cover - defensive proof boundary.
+            row_blockers.append(
+                f"strict_neutral_primitive_replay_failed:{type(exc).__name__}:{exc}"
+            )
+
+    primitive_keys = (
+        "observer_count",
+        "distance_matrix_shape",
+        "neutral_metric_construction",
+        "channel_audit",
+        "strict_neutral_theory_alignment",
+        "dimension",
+        "model_selection",
+        "leakage",
+        "controls",
+    )
+    primitive_matches = {
+        key: persisted_report.get(key) == recomputed.get(key)
+        for key in primitive_keys
+    }
+    if recomputed and not all(primitive_matches.values()):
+        row_blockers.append("strict_neutral_persisted_primitives_do_not_match_replay")
+    source_validation_passed = bool(recomputed and not row_blockers)
+
+    primitive_refinement_available = (
+        refinement_binding.get("primitive_replay_available") is True
+    )
+    refinement_blockers = [
+        (
+            "strict_neutral_refinement_primitive_replay_verifier_not_implemented"
+            if primitive_refinement_available
+            else "strict_neutral_refinement_primitive_replay_unavailable"
+        )
+    ]
+    quotient_metric_passed = bool(
+        source_validation_passed
+        and _strict_neutral_quotient_metric_passed(recomputed)
+    )
+    summary.update(
+        {
+            "source_validation_passed": source_validation_passed,
+            "primitive_section_matches": primitive_matches,
+            "recomputed_dimension": recomputed.get("dimension", {}),
+            "recomputed_model_selection": recomputed.get("model_selection", {}),
+            "recomputed_leakage": recomputed.get("leakage", {}),
+            "recomputed_quotient_metric_candidate": _strict_neutral_quotient_metric_passed(
+                recomputed
+            ),
+            "refinement_replay_passed": False,
+            "refinement_blockers": refinement_blockers,
+            "quotient_metric_passed": quotient_metric_passed,
+            "strict_neutral_bulk_passed": False,
+            "blockers": list(dict.fromkeys([*row_blockers, *refinement_blockers])),
+            "claim_boundary": (
+                "Observer-distance diagnostics are independently replayed from hash-bound JSONL. "
+                "T6 remains false because the multi-scale refinement artifact has no primitive "
+                "source replay chain; its self-reported booleans and hash are not proof."
+            ),
+        }
+    )
+    return summary
+
+
+def _certificate_file_sha256(path: Path) -> str | None:
+    if not Path(path).is_file():
+        return None
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
+
+
+def _sha256_receipt(value: Any) -> bool:
+    if not isinstance(value, str) or not value.startswith("sha256:"):
+        return False
+    digest = value.removeprefix("sha256:")
+    return len(digest) == 64 and all(char in "0123456789abcdef" for char in digest)
+
+
+def _bounded_strict_int(value: Any, *, minimum: int, maximum: int) -> bool:
+    return type(value) is int and minimum <= value <= maximum
+
+
+def _bounded_finite_number(value: Any, *, minimum: float, maximum: float) -> bool:
+    if type(value) not in (int, float):
+        return False
+    parsed = float(value)
+    return math.isfinite(parsed) and minimum <= parsed <= maximum
+
+
+def _read_strict_jsonl(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    rows: list[dict[str, Any]] = []
+    blockers: list[str] = []
+    try:
+        with Path(path).open("r", encoding="utf-8") as handle:
+            for line_number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except json.JSONDecodeError:
+                    blockers.append(f"strict_neutral_observer_json_invalid:{line_number}")
+                    continue
+                if not isinstance(row, dict):
+                    blockers.append(f"strict_neutral_observer_row_not_object:{line_number}")
+                    continue
+                rows.append(row)
+    except OSError as exc:
+        blockers.append(f"strict_neutral_observer_source_unreadable:{type(exc).__name__}:{exc}")
+    if not rows:
+        blockers.append("strict_neutral_observer_source_empty")
+    return rows, blockers
 
 
 def _observer_report_gate(report: dict[str, Any], key: str) -> bool:
@@ -1004,9 +1706,110 @@ def _observer_report_gate(report: dict[str, Any], key: str) -> bool:
         else {}
     )
     return bool(
-        report.get(key, False)
-        or component_gates.get(key, False)
-        or history_gates.get(key, False)
+        _is_true(report.get(key))
+        or _is_true(component_gates.get(key))
+        or _is_true(history_gates.get(key))
+    )
+
+
+def _is_true(value: Any) -> bool:
+    """Accept only the JSON boolean true, never generic truthiness."""
+
+    return type(value) is bool and value
+
+
+def _canonical_refinement_passed(report: dict[str, Any]) -> bool:
+    required = [4_096, 16_384, 65_536, 262_144]
+    sizes = report.get("sizes")
+    if not isinstance(sizes, list) or len(sizes) != len(required):
+        return False
+    if any(
+        not isinstance(row, dict)
+        or type(row.get("patch_count")) is not int
+        for row in sizes
+    ):
+        return False
+    observed = sorted(row["patch_count"] for row in sizes)
+    return all(
+        (
+            report.get("mode") == "prime_geometric_rank_refinement_v0",
+            report.get("required_patch_count_ladder") == required,
+            observed == required,
+            report.get("missing_required_patch_counts") == [],
+            _truthy(report, "required_ladder_complete"),
+            _truthy(report, "multi_scale"),
+            _truthy(report, "all_control_quotient_spatial_3d_candidates"),
+            _truthy(report, "all_candidate_s2_leakage_pass"),
+            _truthy(report, "all_candidate_rank3_e3"),
+            _truthy(report, "candidate_dimension_stable"),
+            _truthy(report, "independent_rank3_selector_all"),
+            _truthy(report, "proper_negative_control_all"),
+            _truthy(report, "directional_h3_strict_all"),
+            _truthy(report, "measured_overlap_geometry_all"),
+            _truthy(report, "strict_neutral_bulk_refinement_receipt"),
+            report.get("proof_blockers") == [],
+        )
+    )
+
+
+def _strict_neutral_quotient_metric_passed(report: dict[str, Any]) -> bool:
+    quotient = _as_dict(report.get("quotient_geometry_contract"))
+    metric = _as_dict(quotient.get("metric"))
+    return all(
+        (
+            _truthy(quotient, "QUOTIENT_GEOMETRY_CONTRACT_RECEIPT"),
+            _truthy(quotient, "bulk_promotion_allowed"),
+            _truthy(metric, "valid_pseudometric"),
+            _truthy(metric, "valid_metric"),
+            _truthy(metric, "triangle_checked_exact"),
+            quotient.get("blockers") == [],
+            metric.get("blockers") == [],
+            metric.get("metric_blockers") == [],
+        )
+    )
+
+
+def _strict_neutral_bulk_passed(
+    report: dict[str, Any],
+    persisted_refinement: dict[str, Any],
+) -> bool:
+    """Independently compose the persisted strict-neutral primitive gates."""
+
+    if report.get("mode") != "strict_neutral_bulk_record_transition_audit":
+        return False
+    dimension = _as_dict(report.get("dimension"))
+    model = _as_dict(report.get("model_selection"))
+    leakage = _as_dict(report.get("leakage"))
+    controls = _as_dict(report.get("controls"))
+    refinement = _as_dict(report.get("refinement"))
+    channel_audit = _as_dict(report.get("channel_audit"))
+    theory = _as_dict(report.get("strict_neutral_theory_alignment"))
+    receipt = _as_dict(report.get("receipt"))
+    return all(
+        (
+            _truthy(dimension, "estimators_agree_3d"),
+            model.get("best_model") == "H3",
+            _truthy(model, "h3_beats_s2"),
+            _truthy(model, "h3_beats_h2_h4"),
+            _truthy(leakage, "s2_leakage_pass"),
+            _truthy(channel_audit, "duplicate_channel_gate_pass"),
+            _truthy(channel_audit, "feature_ancestry_gate_pass"),
+            _truthy(theory, "theory_required_channels_present"),
+            _truthy(controls, "shuffled_records_fail"),
+            _truthy(controls, "shuffled_transition_labels_fail"),
+            _truthy(controls, "planted_2d_returns_2d"),
+            _truthy(controls, "planted_3d_returns_3d"),
+            _truthy(controls, "planted_h3_returns_h3"),
+            refinement == persisted_refinement,
+            _canonical_refinement_passed(refinement),
+            _strict_neutral_quotient_metric_passed(report),
+            _as_dict(report.get("quotient_geometry_contract")).get("refinement") == refinement,
+            receipt.get("receipt") == "STRICT_NEUTRAL_BULK_RECEIPT",
+            _truthy(receipt, "strict_neutral_bulk"),
+            _truthy(receipt, "physical_claim"),
+            _truthy(report, "strict_neutral_bulk"),
+            report.get("blockers") == [],
+        )
     )
 
 
@@ -1054,10 +1857,10 @@ def _best_object_chart_report(root: Path) -> tuple[str | None, dict[str, Any]]:
         }
         current_schema = report.get("h3_compactness_margin_vs_median_shuffle") is not None
         return (
-            float(bool(report.get("observer_chart_bulk_population_receipt", False))),
-            float(bool(report.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT", False))),
-            float(bool(report.get("THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT", False))),
-            float(bool(report.get("h3_beats_shuffled_incidence_robust", False))),
+            float(_truthy(report, "observer_chart_bulk_population_receipt")),
+            float(_truthy(report, "OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT")),
+            float(_truthy(report, "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT")),
+            float(_truthy(report, "h3_beats_shuffled_incidence_robust")),
             float(bool(lineage_or_transition)),
             float(bool(current_schema)),
             _float_or(report.get("localized_not_boundary_object_count"), 0.0),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import time
 from pathlib import Path
@@ -102,11 +103,27 @@ from oph_fpe.dynamics import (
 )
 from oph_fpe.evidence import RunBundle
 from oph_fpe.evidence.controls import mandatory_control_report
-from oph_fpe.evidence.hashes import stable_json_hash
+from oph_fpe.evidence.hashes import CANONICAL_HASH_SCHEMA, stable_json_hash
 from oph_fpe.gauge.mar_sieve import standard_model_candidate_sieve
+from oph_fpe.gauge.covariant_overlap import (
+    GAUGE_COVARIANT_OVERLAP_SCHEMA,
+    GAUGE_QUOTIENT_CANONICALIZER,
+    canonicalize_gauge_quotient_state,
+    coupled_state_hash,
+    covariant_discrepancy,
+    covariant_mismatch_mask,
+    gauge_invariant_edge_residual,
+    gauge_quotient_state_hash,
+    group_inverse_indices,
+    overlap_contract_metadata,
+    repair_covariant_port_pairs,
+    repair_production_sector_links,
+    transform_local_frames,
+)
 from oph_fpe.gauge.repair_projection import exact_repair_projection_receipt
 from oph_fpe.observers import (
     assign_counterfactual_stability_from_records,
+    deterministic_observer_analysis_indices,
     extract_record_families,
     observer_consensus_report,
     observer_object_report,
@@ -123,6 +140,7 @@ from oph_fpe.scale.array_screen import (
     _modular_cap_drive,
     _modular_update,
     _node_signature,
+    _splitmix64,
     _write_csv,
 )
 from oph_fpe.scale.parallel import jobs_from_config
@@ -130,7 +148,14 @@ from oph_fpe.scale.parallel import jobs_from_config
 
 def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     seed = int(config.get("seed", 1))
-    rng = np.random.default_rng(seed)
+    rng_streams, rng_stream_report = _named_rng_streams(
+        seed,
+        ("initialization", "readback", "repair", "sector"),
+    )
+    initialization_rng = rng_streams["initialization"]
+    readback_rng = rng_streams["readback"]
+    repair_rng = rng_streams["repair"]
+    sector_rng = rng_streams["sector"]
     outputs_cfg = config.get("outputs", {}) or {}
     output_profile = str(outputs_cfg.get("profile", "evidence"))
     observer_payload_needed = bool(
@@ -167,13 +192,30 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         left,
         right,
         group_order=group_order,
-        rng=rng,
+        rng=initialization_rng,
         config=config.get("boundary_program", {}),
     )
     initial_port_left = port_left.copy()
     initial_port_right = port_right.copy()
-    gauge = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
-    modular_depth = rng.random(patch_count, dtype=np.float64)
+    gauge = initialization_rng.integers(0, group_order, size=edge_count, dtype=np.int16)
+    initial_gauge = gauge.copy()
+    initial_covariant_mismatch_count = int(
+        np.sum(
+            covariant_mismatch_mask(
+                initial_port_left,
+                initial_port_right,
+                initial_gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        )
+    )
+    boundary_program_report["initial_covariant_mismatch_count"] = initial_covariant_mismatch_count
+    boundary_program_report["initial_covariant_mismatch_fraction"] = (
+        float(initial_covariant_mismatch_count / edge_count) if edge_count else 0.0
+    )
+    boundary_program_report["mismatch_definition"] = GAUGE_COVARIANT_OVERLAP_SCHEMA
+    modular_depth = initialization_rng.random(patch_count, dtype=np.float64)
     modular_time = np.zeros(patch_count, dtype=np.float64)
     stable_count = np.zeros(patch_count, dtype=np.uint32)
     committed = np.zeros(patch_count, dtype=bool)
@@ -189,6 +231,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("screen_microphysics.json", screen_microphysics.as_jsonable())
     bundle.write_json("screen_ports.json", screen_ports.as_jsonable())
     bundle.write_json("boundary_program_report.json", boundary_program_report)
+    bundle.write_json("rng_streams.json", rng_stream_report)
+    bundle.write_json("gauge_covariant_overlap_contract.json", overlap_contract_metadata())
 
     dyn = config.get("dynamics", {})
     cycles = int(dyn.get("cycles", 64))
@@ -254,12 +298,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bw_history_window = int(
         bw_pre_cfg.get(
             "history_window",
-            8 if str(bw_pre_cfg.get("mode", "")) == "state_derived_modular_probe" else 1,
+            32 if str(bw_pre_cfg.get("mode", "")) == "state_derived_modular_probe" else 1,
         )
     )
     history_window = max(
-        int(object_history_cfg.get("history_window", 1)),
-        int(chart_history_cfg.get("history_window", 1)),
+        int(object_history_cfg.get("history_window", 32 if object_history_cfg.get("enabled", False) else 1)),
+        int(chart_history_cfg.get("history_window", 32 if chart_history_cfg.get("enabled", False) else 1)),
         bw_history_window,
     )
     history_enabled = bool(
@@ -305,16 +349,23 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             left,
             right,
             group_order=group_order,
-            rng=rng,
+            rng=readback_rng,
             cycle=cycle,
             config=readback_drive_cfg,
             node_labels=readback_node_labels,
         )
-        mismatches = port_left != port_right
+        mismatches = covariant_mismatch_mask(
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
         phi_before = int(np.sum(mismatches))
         active = np.flatnonzero(mismatches)
         chosen = np.zeros(0, dtype=np.int64)
         chosen_delta = np.zeros(0, dtype=np.int16)
+        sector_edges_changed = 0
         repair_budget = _repair_budget_for_cycle(
             repairs_per_cycle,
             dyn,
@@ -325,32 +376,45 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
         if active.size:
             chosen_count = min(repair_budget, active.size)
-            chosen = rng.choice(active, size=chosen_count, replace=False)
-            chosen_delta = _interface_quotient(
+            chosen = repair_rng.choice(active, size=chosen_count, replace=False)
+            chosen_delta = covariant_discrepancy(
                 port_left[chosen],
                 port_right[chosen],
+                gauge[chosen],
                 group_name=group_name,
                 group_order=group_order,
             )
-            direction = rng.random(chosen_count) < 0.5
-            port_left[chosen[direction]] = port_right[chosen[direction]]
-            port_right[chosen[~direction]] = port_left[chosen[~direction]]
         if chosen.size:
-            _repair_sector_labels(
+            sector_edges_changed = _repair_sector_labels(
                 gauge,
                 chosen,
                 chosen_delta,
                 group_name=group_name,
                 group_order=group_order,
-                rng=rng,
+                rng=sector_rng,
                 config=sector_repair_cfg,
+            )
+            repair_covariant_port_pairs(
+                port_left,
+                port_right,
+                gauge,
+                chosen,
+                repair_rng.random(chosen.size) < 0.5,
+                group_name=group_name,
+                group_order=group_order,
             )
         if chosen.size:
             cumulative_repair_load += (
                 np.bincount(left[chosen], minlength=patch_count)
                 + np.bincount(right[chosen], minlength=patch_count)
             ) / degree
-        mismatches_after = port_left != port_right
+        mismatches_after = covariant_mismatch_mask(
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
         phi_after = int(np.sum(mismatches_after))
         incident_mismatch = (
             np.bincount(left, weights=mismatches_after.astype(float), minlength=patch_count)
@@ -369,7 +433,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             mod_cfg,
             cap_drive=modular_cap_drive,
         )
-        signature = _node_signature(port_left, port_right, left, right, patch_count)
+        signature = _gauge_coupled_node_signature(
+            port_left,
+            port_right,
+            gauge,
+            left,
+            right,
+            patch_count,
+            group_name=group_name,
+            group_order=group_order,
+        )
         stable_count, committed = _advance_record_commit_state(
             signature,
             prev_signature,
@@ -379,34 +452,22 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
         prev_signature = signature
         committed_fraction = float(np.mean(committed))
-        repair_peak_candidate = _state_snapshot(
-            cycle=cycle,
-            committed_fraction=committed_fraction,
-            signature=signature,
-            stable_count=stable_count,
-            committed=committed,
-            repair_load=final_repair_load,
-            mismatch_density=final_mismatch_density,
-            modular_depth=modular_depth,
-            modular_time=modular_time,
-            cumulative_repair_load=cumulative_repair_load,
-        )
-        repair_peak_candidate["mean_mismatch_density"] = float(np.mean(final_mismatch_density))
-        repair_peak_candidate["std_mismatch_density"] = float(np.std(final_mismatch_density))
-        repair_peak_candidate["mean_cumulative_repair_load"] = float(np.mean(cumulative_repair_load))
-        repair_peak_candidate["std_cumulative_repair_load"] = float(np.std(cumulative_repair_load))
+        mean_mismatch_density = float(np.mean(final_mismatch_density))
+        std_mismatch_density = float(np.std(final_mismatch_density))
+        mean_cumulative_repair_load = float(np.mean(cumulative_repair_load))
+        std_cumulative_repair_load = float(np.std(cumulative_repair_load))
         repair_peak_candidate_score = float(
-            repair_peak_candidate["mean_mismatch_density"] + repair_peak_candidate["std_mismatch_density"]
+            mean_mismatch_density + std_mismatch_density
         )
-        if repair_peak_candidate_score > repair_peak_score:
-            repair_peak_score = repair_peak_candidate_score
-            repair_peak_state = repair_peak_candidate
-        if first_commit_state is None and committed_fraction > 0.0:
-            first_commit_state = repair_peak_candidate
-        if half_commit_state is None and committed_fraction >= 0.5:
-            half_commit_state = repair_peak_candidate
-        if freezeout_state is None and committed_fraction >= freezeout_commit_fraction:
-            freezeout_state = _state_snapshot(
+        retain_landmark = bool(
+            repair_peak_candidate_score > repair_peak_score
+            or (first_commit_state is None and committed_fraction > 0.0)
+            or (half_commit_state is None and committed_fraction >= 0.5)
+            or (freezeout_state is None and committed_fraction >= freezeout_commit_fraction)
+        )
+        repair_peak_candidate: dict[str, Any] | None = None
+        if history_enabled or retain_landmark:
+            repair_peak_candidate = _state_snapshot(
                 cycle=cycle,
                 committed_fraction=committed_fraction,
                 signature=signature,
@@ -418,10 +479,65 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 modular_time=modular_time,
                 cumulative_repair_load=cumulative_repair_load,
             )
+            repair_peak_candidate["mean_mismatch_density"] = mean_mismatch_density
+            repair_peak_candidate["std_mismatch_density"] = std_mismatch_density
+            repair_peak_candidate["mean_cumulative_repair_load"] = mean_cumulative_repair_load
+            repair_peak_candidate["std_cumulative_repair_load"] = std_cumulative_repair_load
+        if repair_peak_candidate_score > repair_peak_score:
+            repair_peak_score = repair_peak_candidate_score
+            assert repair_peak_candidate is not None
+            repair_peak_state = _attach_snapshot_overlap_state(
+                repair_peak_candidate,
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        if first_commit_state is None and committed_fraction > 0.0:
+            assert repair_peak_candidate is not None
+            first_commit_state = _attach_snapshot_overlap_state(
+                repair_peak_candidate,
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        if half_commit_state is None and committed_fraction >= 0.5:
+            assert repair_peak_candidate is not None
+            half_commit_state = _attach_snapshot_overlap_state(
+                repair_peak_candidate,
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        if freezeout_state is None and committed_fraction >= freezeout_commit_fraction:
+            assert repair_peak_candidate is not None
+            freezeout_state = _attach_snapshot_overlap_state(
+                repair_peak_candidate,
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
             if history_enabled:
                 freezeout_history_states = [*recent_history_states, repair_peak_candidate][-max(1, int(history_window)) :]
         if history_enabled:
-            recent_history_states.append(repair_peak_candidate)
+            assert repair_peak_candidate is not None
+            recent_history_states.append(
+                _attach_snapshot_overlap_state(
+                    repair_peak_candidate,
+                    port_left,
+                    port_right,
+                    gauge,
+                    group_name=group_name,
+                    group_order=group_order,
+                )
+            )
             recent_history_states = recent_history_states[-max(1, int(history_window)) :]
         trace.append(
             {
@@ -435,6 +551,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 "active_edges_before_repair": int(active.size),
                 "repair_budget": int(repair_budget),
                 "chosen_edges": int(chosen.size),
+                "sector_edges_changed": int(sector_edges_changed),
+                "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
                 "committed_records": int(np.sum(committed)),
                 "committed_fraction": committed_fraction,
                 "record_entropy": _entropy(signature[committed]) if np.any(committed) else 0.0,
@@ -447,9 +565,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             harmonic_trace_samples.append(
                 _harmonic_time_trace_sample(
                     points=points,
+                    port_left=port_left,
+                    port_right=port_right,
                     left=left,
                     right=right,
                     gauge=gauge,
+                    group_name=group_name,
+                    group_order=group_order,
                     patch_count=patch_count,
                     signature=signature,
                     stable_count=stable_count,
@@ -490,6 +612,30 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     if defect_timeline_enabled and (not defect_gauge_snapshots or defect_gauge_snapshots[-1][0] != cycles - 1):
         defect_gauge_snapshots.append((cycles - 1, gauge.copy()))
     base_loop_elapsed_seconds = time.time() - base_loop_started
+    gauge_coupled_dynamics_report = {
+        "mode": "finite_gauge_covariant_overlap_repair_v1",
+        **overlap_contract_metadata(),
+        "group": group_name,
+        "group_order": int(group_order),
+        "edge_count": int(edge_count),
+        "initial_raw_label_mismatch_count": int(np.sum(initial_port_left != initial_port_right)),
+        "initial_covariant_mismatch_count": initial_covariant_mismatch_count,
+        "initial_covariant_mismatch_fraction": (
+            float(initial_covariant_mismatch_count / edge_count) if edge_count else 0.0
+        ),
+        "final_raw_label_mismatch_count": int(np.sum(port_left != port_right)),
+        "final_covariant_mismatch_count": int(trace[-1]["phi"]) if trace else 0,
+        "gauge_link_changed_count": int(np.sum(gauge != initial_gauge)),
+        "sector_edges_changed_total": int(sum(int(row.get("sector_edges_changed", 0)) for row in trace)),
+        "record_signature_includes_gauge_invariant_edge_residual": True,
+        "observer_sector_fields_use_gauge_invariant_edge_residual": True,
+        "claim_boundary": (
+            "Finite regulator overlap dynamics with group-correct link transport. This establishes that the "
+            "simulated mismatch and repair state are gauge coupled; it is not a continuum gauge-theory or "
+            "Standard Model receipt."
+        ),
+    }
+    bundle.write_json("gauge_coupled_dynamics_report.json", gauge_coupled_dynamics_report)
     bundle.write_json(
         "base_progress.json",
         _base_repair_progress_report(
@@ -516,6 +662,17 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         cell_entropy=cell_entropy,
     )
 
+    final_observer_edge_residual = (
+        gauge_invariant_edge_residual(
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        if str(group_name).upper() == "S3"
+        else np.zeros(0, dtype=np.int16)
+    )
     fields_all = _observable_fields(
         port_left=port_left,
         port_right=port_right,
@@ -531,6 +688,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         modular_depth=modular_depth,
         modular_time=modular_time,
         cumulative_repair_load=cumulative_repair_load,
+        edge_residual=final_observer_edge_residual,
     )
     bw_cfg = config.get("bw", {})
     observables = [str(name) for name in bw_cfg.get("observables", ["record_signature", "repair_load", "s3_class_density", "stable_count"])]
@@ -659,19 +817,27 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         modular_depth=modular_depth,
         modular_time=modular_time,
         cumulative_repair_load=cumulative_repair_load,
+        edge_residual=final_observer_edge_residual,
     )
     if freezeout_state is None:
-        freezeout_state = _state_snapshot(
-            cycle=cycles - 1,
-            committed_fraction=float(np.mean(committed)),
-            signature=prev_signature,
-            stable_count=stable_count,
-            committed=committed,
-            repair_load=final_repair_load,
-            mismatch_density=final_mismatch_density,
-            modular_depth=modular_depth,
-            modular_time=modular_time,
-            cumulative_repair_load=cumulative_repair_load,
+        freezeout_state = _attach_snapshot_overlap_state(
+            _state_snapshot(
+                cycle=cycles - 1,
+                committed_fraction=float(np.mean(committed)),
+                signature=prev_signature,
+                stable_count=stable_count,
+                committed=committed,
+                repair_load=final_repair_load,
+                mismatch_density=final_mismatch_density,
+                modular_depth=modular_depth,
+                modular_time=modular_time,
+                cumulative_repair_load=cumulative_repair_load,
+            ),
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
         )
     if repair_peak_state is None:
         repair_peak_state = freezeout_state
@@ -751,8 +917,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "right": right,
             "port_left": port_left,
             "port_right": port_right,
+            "gauge": gauge,
+            "group_name": group_name,
             "group_order": group_order,
             "patch_count": patch_count,
+            "production_sector_repair_enabled": bool(sector_repair_cfg.get("enabled", False)),
+            "production_sector_repair_config": dict(sector_repair_cfg),
         }
         selection_cfg = bw_cfg.get("selection", {})
         state_bw_report = state_derived_bw_report(
@@ -823,7 +993,89 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         sample_count=observer_sample_count,
         neighborhood_size=observer_neighborhood,
         seed=seed + 1201,
+        edge_left=left,
+        edge_right=right,
+        overlap_correspondence_max_observers=(
+            int(observer_cfg["overlap_correspondence_max_observers"])
+            if observer_cfg.get("overlap_correspondence_max_observers") is not None
+            else None
+        ),
     )
+    patch_observer_rows = [
+        row for row in observer_rows if row.get("view_type") == "patch_observer"
+    ]
+    observer_wide_analysis_cap = (
+        int(observer_cfg["observer_wide_analysis_max_observers"])
+        if observer_cfg.get("observer_wide_analysis_max_observers") is not None
+        else None
+    )
+    observer_wide_analysis_indices = deterministic_observer_analysis_indices(
+        [int(row.get("observer_id", index)) for index, row in enumerate(patch_observer_rows)],
+        max_observers=observer_wide_analysis_cap,
+    )
+    observer_wide_analysis_index_set = {
+        int(value) for value in observer_wide_analysis_indices
+    }
+    observer_analysis_rows = [
+        patch_observer_rows[int(index)] for index in observer_wide_analysis_indices
+    ]
+    observer_analysis_sampling = (
+        "all_materialized_observers"
+        if len(observer_analysis_rows) == len(patch_observer_rows)
+        else "deterministic_observer_id_hash_rank_v1"
+    )
+    observer_analysis_ids = [
+        int(row.get("observer_id", -1)) for row in observer_analysis_rows
+    ]
+    observer_analysis_subset_hash = stable_json_hash(
+        {
+            "schema": "deterministic_observer_id_hash_rank_subset_v1",
+            "materialized_observer_count": len(patch_observer_rows),
+            "analysis_max_observers": observer_wide_analysis_cap,
+            "observer_ids": observer_analysis_ids,
+        }
+    )
+    for index, row in enumerate(patch_observer_rows):
+        row["observer_wide_analysis"] = {
+            "included": index in observer_wide_analysis_index_set,
+            "materialized_observer_count": len(patch_observer_rows),
+            "analyzed_observer_count": len(observer_analysis_rows),
+            "max_observers": observer_wide_analysis_cap,
+            "sampling_policy": observer_analysis_sampling,
+        }
+    observer_population_report = {
+        "mode": "bounded_materialized_observer_population_v1",
+        "requested_observer_count": int(observer_sample_count),
+        "materialized_observer_count": len(patch_observer_rows),
+        "observer_wide_analyzed_count": len(observer_analysis_rows),
+        "observer_wide_analysis_max_observers": observer_wide_analysis_cap,
+        "observer_wide_analysis_sampling_policy": observer_analysis_sampling,
+        "observer_wide_analysis_observer_ids": observer_analysis_ids,
+        "observer_wide_analysis_subset_hash": observer_analysis_subset_hash,
+        "observer_wide_analysis_subset_producer": (
+            "oph_fpe.observers.subjective.deterministic_observer_analysis_indices"
+        ),
+        "overlap_correspondence_max_observers": observer_cfg.get(
+            "overlap_correspondence_max_observers"
+        ),
+        "consensus_analysis_max_observers": observer_cfg.get(
+            "consensus_analysis_max_observers"
+        ),
+        "claim_boundary": (
+            "Every materialized observer row is retained. Observer-wide H3, object, paired-response, "
+            "and correspondence analyses use deterministic bounded populations when configured; "
+            "a bounded diagnostic sample cannot be reported as a full-population analysis."
+        ),
+    }
+    observer_analysis_metadata = {
+        "materialized_observer_count": len(patch_observer_rows),
+        "analyzed_observer_count": len(observer_analysis_rows),
+        "analysis_max_observers": observer_wide_analysis_cap,
+        "analysis_sampling_policy": observer_analysis_sampling,
+        "analysis_subset_hash": observer_analysis_subset_hash,
+        "full_population_analyzed": len(observer_analysis_rows)
+        == len(patch_observer_rows),
+    }
     consensus_report = observer_consensus_report(
         points,
         raw_fields=raw_observer_fields,
@@ -832,9 +1084,30 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         neighborhood_size=observer_neighborhood,
         seed=seed + 1201,
         sample_pair_limit=int(observer_cfg.get("sample_pair_limit", 20_000)),
+        analysis_max_observers=(
+            int(observer_cfg["consensus_analysis_max_observers"])
+            if observer_cfg.get("consensus_analysis_max_observers") is not None
+            else None
+        ),
     )
+    consensus_analysis_ids = [
+        int(value) for value in consensus_report.get("analysis_observer_ids", [])
+    ]
+    if consensus_analysis_ids != observer_analysis_ids:
+        raise RuntimeError(
+            "observer analysis population binding failed: consensus and downstream "
+            "observer IDs do not match"
+        )
+    consensus_report["observer_population"] = dict(observer_analysis_metadata)
+    consensus_report["analysis_population_binding"] = {
+        "receipt": True,
+        "analyzed_observer_count": len(observer_analysis_ids),
+        "analysis_subset_hash": observer_analysis_subset_hash,
+        "consensus_ids_equal_downstream_analysis_ids": True,
+    }
     consensus_report["observer_relative_time_grid"] = observer_times
     consensus_report["cap_count"] = len(caps)
+    consensus_report["materialized_rows_preserved"] = True
     consensus_report["claim_boundary"] = (
         "observer-facing consensus readout; tracks what finite patch/cap observers can see "
         "before any third-person bulk embedding is inferred"
@@ -862,9 +1135,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     )
     checkpoint_report = observer_checkpoint_restoration_report(
         raw_observer_fields,
-        observer_rows,
+        observer_analysis_rows,
         max_observers=int((config.get("screen_microphysics_receipts", {}) or {}).get("checkpoint_observers", 64)),
     )
+    checkpoint_report["observer_population"] = dict(observer_analysis_metadata)
     h3_population_cfg = config.get("h3_population", {})
     h3_source_state = str(h3_population_cfg.get("source_state", "freezeout"))
     h3_raw_observer_fields, h3_source_report = _select_h3_source_fields(
@@ -881,7 +1155,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             points,
             h3_caps,
             h3_raw_observer_fields,
-            observer_rows,
+            observer_analysis_rows,
             cell_entropy=cell_entropy,
             seed=seed + 1801,
             field_names=tuple(h3_population_cfg.get("field_names", [
@@ -920,6 +1194,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     )
     h3_population_report["source_state"] = h3_source_state
     h3_population_report["source_report"] = h3_source_report
+    h3_population_report["observer_population"] = dict(observer_analysis_metadata)
     conformal_chart_report["record_population_report"] = h3_population_report
     conformal_chart_report["record_populated_h3_receipt"] = bool(
         h3_population_report.get("record_populated_h3_receipt", False)
@@ -939,7 +1214,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             points,
             h3_caps,
             h3_raw_observer_fields,
-            observer_rows,
+            observer_analysis_rows,
             times=[float(value) for value in h3_modular_response_cfg.get("times", times)],
             field_names=tuple(
                 h3_modular_response_cfg.get(
@@ -987,8 +1262,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 "right": right,
                 "port_left": port_left,
                 "port_right": port_right,
+                "gauge": gauge,
+                "group_name": group_name,
                 "group_order": group_order,
                 "patch_count": patch_count,
+                "production_sector_repair_enabled": bool(sector_repair_cfg.get("enabled", False)),
+                "production_sector_repair_config": dict(sector_repair_cfg),
             },
             perturb_strength=float(h3_modular_response_cfg.get("perturb_strength", 1.0)),
             perturb_budget_mode=str(h3_modular_response_cfg.get("perturb_budget_mode", "modular_amount")),
@@ -1001,10 +1280,27 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             transition_readout_mode=str(h3_modular_response_cfg.get("transition_readout_mode", "same_support")),
             repair_steps=int(h3_modular_response_cfg.get("repair_steps", 4)),
             repairs_per_step=int(h3_modular_response_cfg.get("repairs_per_step", max(16, neighbors * 8))),
+            max_full_graph_simulations=(
+                int(h3_modular_response_cfg["max_full_graph_simulations"])
+                if h3_modular_response_cfg.get("max_full_graph_simulations") is not None
+                else None
+            ),
+            full_graph_budget_policy=str(
+                h3_modular_response_cfg.get(
+                    "full_graph_budget_policy",
+                    "skip_if_exceeded",
+                )
+            ),
+            full_graph_n_jobs=int(
+                h3_modular_response_cfg.get("full_graph_n_jobs", 1) or 1
+            ),
             perturb_seed=seed + 1889,
             geometry_cache=persistent_geometry_cache,
         )
         h3_modular_kernel_report = kernel_json_summary(h3_modular_kernel)
+        h3_modular_kernel_report["observer_population"] = dict(
+            observer_analysis_metadata
+        )
         h3_modular_fit_report = modular_response_h3_report(
             h3_modular_kernel,
             h3_caps,
@@ -1056,14 +1352,22 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 h3_modular_response_cfg.get("control_fit_mode", "same_h3_model_not_affine_target_fit")
             ),
         )
+        h3_modular_fit_report["observer_population"] = dict(
+            observer_analysis_metadata
+        )
     observer_chart_cfg = config.get("observer_chart_population", {}) or {}
     if h3_modular_kernel:
-        _attach_modular_response_histograms(observer_rows, h3_modular_kernel, observer_chart_cfg)
+        _attach_modular_response_histograms(
+            observer_analysis_rows, h3_modular_kernel, observer_chart_cfg
+        )
         prime_geometric_response_report = attach_prime_geometric_response_to_rows(
-            observer_rows,
+            observer_analysis_rows,
             h3_modular_kernel,
             spectrum_width=int(observer_chart_cfg.get("prime_geometric_spectrum_width", 64)),
             component_bins=int(observer_chart_cfg.get("prime_geometric_component_bins", 8)),
+        )
+        prime_geometric_response_report["observer_population"] = dict(
+            observer_analysis_metadata
         )
     object_rows: list[dict[str, Any]] = []
     object_report: dict[str, Any] = {}
@@ -1079,8 +1383,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             max_families=int(object_cfg.get("max_families", 2048)),
         )
         object_packets = visible_object_packets(raw_observer_fields, object_cfg)
-        _attach_object_packet_histograms(observer_rows, object_packets)
-        _attach_transition_affinity_histograms(observer_rows, raw_observer_fields, object_cfg)
+        _attach_object_packet_histograms(observer_analysis_rows, object_packets)
+        _attach_transition_affinity_histograms(
+            observer_analysis_rows, raw_observer_fields, object_cfg
+        )
         history_raw_fields: list[dict[str, np.ndarray]] = []
         if history_enabled:
             history_source_states = freezeout_history_states or recent_history_states
@@ -1088,9 +1394,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 _observer_raw_fields_from_snapshot(snapshot, left=left, right=right, gauge=gauge, patch_count=patch_count)
                 for snapshot in history_source_states[-max(1, int(history_window)) :]
             ]
-            _attach_transition_history_histograms(observer_rows, history_raw_fields, object_cfg)
+            _attach_transition_history_histograms(
+                observer_analysis_rows, history_raw_fields, object_cfg
+            )
         _attach_h2_neutral_evidence_channels(
-            observer_rows,
+            observer_analysis_rows,
             history_raw_fields=history_raw_fields,
             current_raw_fields=raw_observer_fields,
             object_cfg=object_cfg,
@@ -1103,11 +1411,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             seed=seed + 1217,
         )
         object_rows = [family.as_jsonable() for family in record_families]
-        object_report = observer_object_report(record_families, observer_rows)
+        object_report = observer_object_report(record_families, observer_analysis_rows)
+        object_report["observer_population"] = dict(observer_analysis_metadata)
     observer_chart_object_report: dict[str, Any] = {}
     if observer_chart_cfg.get("enabled", bool(object_rows and h3_modular_fit_report)):
         observer_chart_object_report = observer_chart_object_population_report(
-            observer_rows,
+            observer_analysis_rows,
             object_rows,
             h3_modular_fit_report,
             seed=seed + 1853,
@@ -1147,6 +1456,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             packet_visibility_weight=float(observer_chart_cfg.get("packet_visibility_weight", 0.5)),
             boundary_gate_mode=str(observer_chart_cfg.get("boundary_gate_mode", "nonboundary")),
         )
+        observer_chart_object_report["observer_population"] = dict(
+            observer_analysis_metadata
+        )
     s3_holonomy_report = (
         array_holonomy_report(
             points,
@@ -1166,6 +1478,25 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             defect_gauge_snapshots,
             max_triangles=int(timeline_cfg.get("max_triangles", max(1_000, min(int(defects_cfg.get("max_triangles", 10_000)), 5_000)))),
             persistence_cycles=int(timeline_cfg.get("persistence_cycles", 3)),
+            max_angular_speed_per_cycle=float(
+                timeline_cfg.get("max_angular_speed_per_cycle", 0.75)
+            ),
+            max_analysis_clusters_per_snapshot=int(
+                timeline_cfg.get("max_analysis_clusters_per_snapshot", 512)
+            ),
+            max_serialized_snapshots=int(
+                timeline_cfg.get("max_serialized_snapshots", 64)
+            ),
+            max_snapshot_clusters_per_snapshot=int(
+                timeline_cfg.get("max_snapshot_clusters_per_snapshot", 64)
+            ),
+            max_worldlines=int(timeline_cfg.get("max_worldlines", 256)),
+            max_events_per_worldline=int(
+                timeline_cfg.get("max_events_per_worldline", 32)
+            ),
+            max_support_nodes_per_record=int(
+                timeline_cfg.get("max_support_nodes_per_record", 32)
+            ),
         )
         if defect_timeline_enabled and defect_gauge_snapshots
         else {}
@@ -1273,6 +1604,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         initial_port_right=initial_port_right,
         final_port_left=port_left,
         final_port_right=port_right,
+        initial_gauge=initial_gauge,
+        final_gauge=gauge,
+        group_name=group_name,
+        group_order=group_order,
         object_rows=object_rows,
         seed=seed + 1601,
     )
@@ -1283,11 +1618,118 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         for control in config.get("controls", [])
         if control not in controls and control not in non_bw_controls
     ]
+    # The paired perturb-resettle producer must run before neutral geometry so
+    # its observer-local response tensor is an input to the extractor, not a
+    # post-hoc JSON attachment.
+    paired_ba_report: dict[str, Any] = {}
+    paired_ba_cfg = dict(config.get("cosmology", {}).get("b_a_paired_perturbation", {}) or {})
+    if paired_ba_cfg.get("enabled", False):
+        paired_source_name = str(paired_ba_cfg.get("source_state", "final"))
+        paired_raw_fields, paired_source_meta = _select_h3_source_fields(
+            paired_source_name,
+            final_raw_fields=raw_observer_fields,
+            freezeout_raw_fields=freezeout_raw_observer_fields,
+            repair_peak_raw_fields=repair_peak_raw_observer_fields,
+            freezeout_state=freezeout_state,
+            repair_peak_state=repair_peak_state,
+            cycles=cycles,
+        )
+        paired_caps = h3_caps if str(paired_ba_cfg.get("cap_source", "bw")) == "h3" else caps
+        paired_ba_report = write_paired_perturb_resettle_b_a_report(
+            bundle.path,
+            points,
+            paired_caps,
+            paired_raw_fields,
+            {
+                "left": left,
+                "right": right,
+                "port_left": port_left,
+                "port_right": port_right,
+                "gauge": gauge,
+                "group_name": group_name,
+                "group_order": group_order,
+                "patch_count": patch_count,
+                "degree": degree,
+                "production_sector_repair_enabled": bool(sector_repair_cfg.get("enabled", False)),
+                "production_sector_repair_config": dict(sector_repair_cfg),
+            },
+            cell_entropy=cell_entropy,
+            observer_views=observer_analysis_rows,
+            a_grid=[float(value) for value in paired_ba_cfg.get("a_grid", [1.0 / 1100.0, 0.01, 0.1, 1.0])],
+            times=[float(value) for value in paired_ba_cfg.get("times", times)],
+            max_caps=(
+                int(paired_ba_cfg["max_caps"])
+                if paired_ba_cfg.get("max_caps") is not None
+                else None
+            ),
+            modes_per_cap_time=int(paired_ba_cfg.get("modes_per_cap_time", 2)),
+            controls=tuple(str(value) for value in paired_ba_cfg.get("controls", [])) or None,
+            response_field=str(paired_ba_cfg.get("response_field", "cumulative_repair_load")),
+            perturb_strength=float(paired_ba_cfg.get("perturb_strength", 1.0)),
+            perturb_budget_mode=str(paired_ba_cfg.get("perturb_budget_mode", "modular_amount")),
+            fixed_perturb_fraction=(
+                float(paired_ba_cfg["fixed_perturb_fraction"])
+                if paired_ba_cfg.get("fixed_perturb_fraction") is not None
+                else None
+            ),
+            perturb_selection_mode=str(paired_ba_cfg.get("perturb_selection_mode", "lambda_collar_generator")),
+            repair_steps=int(paired_ba_cfg.get("repair_steps", 4)),
+            repairs_per_step=int(paired_ba_cfg.get("repairs_per_step", max(16, neighbors * 8))),
+            transition_scale=float(paired_ba_cfg.get("transition_scale", 2.0 * math.pi)),
+            max_full_graph_simulations=(
+                int(paired_ba_cfg["max_full_graph_simulations"])
+                if paired_ba_cfg.get("max_full_graph_simulations") is not None
+                else None
+            ),
+            full_graph_budget_policy=str(
+                paired_ba_cfg.get("full_graph_budget_policy", "skip_if_exceeded")
+            ),
+            full_graph_n_jobs=int(paired_ba_cfg.get("full_graph_n_jobs", 1) or 1),
+            reuse_dynamics_across_a_grid=bool(
+                paired_ba_cfg.get("reuse_dynamics_across_a_grid", True)
+            ),
+            seed=seed + 23_711,
+        )
+        paired_ba_report["source_state"] = paired_source_meta
+        paired_ba_report["observer_population"] = dict(
+            observer_analysis_metadata
+        )
+        bundle.write_json("paired_b_a_perturbation_report.json", paired_ba_report)
+        bundle.write_json("b_a_parent_report.json", paired_ba_report)
+
     neutral_report: dict[str, Any] = {}
+    neutral_observer_rows: list[dict[str, Any]] = []
     neutral_cfg = config.get("neutral_reconstruction", {})
     if neutral_cfg.get("enabled", False):
+        distance_matrix_max_observers = max(
+            8,
+            int(neutral_cfg.get("distance_matrix_max_observers", 4_096)),
+        )
+        neutral_observer_rows = _bounded_observer_row_sample(
+            observer_rows,
+            max_observers=distance_matrix_max_observers,
+        )
         object_dicts = object_rows
-        neutral_report = bulk_reconstruction_report(observer_rows, object_dicts, state_bw_report, seed=seed + 1701)
+        neutral_report = bulk_reconstruction_report(
+            neutral_observer_rows,
+            object_dicts,
+            state_bw_report,
+            seed=seed + 1701,
+        )
+        materialized_patch_observer_count = sum(
+            1 for row in observer_rows if row.get("view_type") == "patch_observer"
+        )
+        neutral_report["materialized_observer_count"] = materialized_patch_observer_count
+        neutral_report["distance_matrix_observer_count"] = len(neutral_observer_rows)
+        neutral_report["distance_matrix_max_observers"] = distance_matrix_max_observers
+        neutral_report["distance_matrix_sampling"] = (
+            "all_materialized_observers"
+            if len(neutral_observer_rows) == materialized_patch_observer_count
+            else "deterministic_observer_id_hash_rank_v1"
+        )
+        neutral_report["parent_observer_population"] = dict(
+            observer_analysis_metadata
+        )
     paper_3d_chart_report = paper_theorem_3d_bulk_chart_report(
         conformal_chart_report,
         transition_selection_report,
@@ -1306,6 +1748,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         observer_chart_object_report=observer_chart_object_report,
         paper_3d_chart_report=paper_3d_chart_report,
     )
+    observer_modular_experience_report["observer_population"] = dict(
+        observer_analysis_metadata
+    )
     emergence_status = _emergence_status_report(bw_report, consensus_report)
     theorem_core_report = _theorem_core_receipts(
         trace,
@@ -1313,8 +1758,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         config,
         initial_port_left=initial_port_left,
         initial_port_right=initial_port_right,
+        initial_gauge=initial_gauge,
         edge_left=left,
         edge_right=right,
+        group_name=group_name,
         group_order=group_order,
         seed=seed,
     )
@@ -1711,65 +2158,6 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             freezeout_report=freezeout_report,
             config=oph_cmb_cfg,
         )
-    paired_ba_report: dict[str, Any] = {}
-    paired_ba_cfg = dict(config.get("cosmology", {}).get("b_a_paired_perturbation", {}) or {})
-    if paired_ba_cfg.get("enabled", False):
-        paired_source_name = str(paired_ba_cfg.get("source_state", "final"))
-        paired_raw_fields, paired_source_meta = _select_h3_source_fields(
-            paired_source_name,
-            final_raw_fields=raw_observer_fields,
-            freezeout_raw_fields=freezeout_raw_observer_fields,
-            repair_peak_raw_fields=repair_peak_raw_observer_fields,
-            freezeout_state=freezeout_state,
-            repair_peak_state=repair_peak_state,
-            cycles=cycles,
-        )
-        paired_caps = h3_caps if str(paired_ba_cfg.get("cap_source", "bw")) == "h3" else caps
-        paired_ba_report = write_paired_perturb_resettle_b_a_report(
-            bundle.path,
-            points,
-            paired_caps,
-            paired_raw_fields,
-            {
-                "left": left,
-                "right": right,
-                "port_left": port_left,
-                "port_right": port_right,
-                "group_order": group_order,
-                "patch_count": patch_count,
-                "degree": degree,
-            },
-            cell_entropy=cell_entropy,
-            a_grid=[float(value) for value in paired_ba_cfg.get("a_grid", [1.0 / 1100.0, 0.01, 0.1, 1.0])],
-            times=[float(value) for value in paired_ba_cfg.get("times", times)],
-            max_caps=(
-                int(paired_ba_cfg["max_caps"])
-                if paired_ba_cfg.get("max_caps") is not None
-                else None
-            ),
-            modes_per_cap_time=int(paired_ba_cfg.get("modes_per_cap_time", 2)),
-            controls=tuple(str(value) for value in paired_ba_cfg.get("controls", []))
-            or None,
-            response_field=str(paired_ba_cfg.get("response_field", "cumulative_repair_load")),
-            perturb_strength=float(paired_ba_cfg.get("perturb_strength", 1.0)),
-            perturb_budget_mode=str(paired_ba_cfg.get("perturb_budget_mode", "modular_amount")),
-            fixed_perturb_fraction=(
-                float(paired_ba_cfg["fixed_perturb_fraction"])
-                if paired_ba_cfg.get("fixed_perturb_fraction") is not None
-                else None
-            ),
-            perturb_selection_mode=str(paired_ba_cfg.get("perturb_selection_mode", "lambda_collar_generator")),
-            repair_steps=int(paired_ba_cfg.get("repair_steps", 4)),
-            repairs_per_step=int(paired_ba_cfg.get("repairs_per_step", max(16, neighbors * 8))),
-            transition_scale=float(paired_ba_cfg.get("transition_scale", 2.0 * math.pi)),
-            seed=seed + 23_711,
-        )
-        paired_ba_report["source_state"] = paired_source_meta
-        # Refresh JSON files after attaching source metadata; CSVs are already
-        # written by the helper.
-        bundle.write_json("paired_b_a_perturbation_report.json", paired_ba_report)
-        bundle.write_json("b_a_parent_report.json", paired_ba_report)
-
     visualization_defect_diagnostics = _write_bw_visualization_defect_artifacts(bundle.path, config)
     if visualization_defect_diagnostics.get("written_any", False):
         bundle.write_json("visualization_defect_diagnostics_summary.json", visualization_defect_diagnostics)
@@ -1793,6 +2181,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("prime_geometric_response_attachment_report.json", prime_geometric_response_report)
     if h3_modular_kernel and bool(outputs_cfg.get("write_modular_response_kernel_cache", True)):
         h3_modular_kernel_cache_report = write_modular_response_kernel_cache(bundle.path, h3_modular_kernel, h3_caps)
+        h3_modular_kernel_cache_report["observer_population"] = dict(
+            observer_analysis_metadata
+        )
         bundle.write_json("modular_response_kernel_cache_report.json", h3_modular_kernel_cache_report)
     if h3_modular_fit_report:
         bundle.write_json("modular_response_h3_report.json", h3_modular_fit_report)
@@ -1801,6 +2192,26 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("observer_modular_experience_report.json", observer_modular_experience_report)
     bundle.write_json("record_family_h3_report.json", object_h3_report)
     bundle.write_json("defect_cluster_h3_report.json", defect_h3_report)
+    finite_consensus_source_manifest: dict[str, Any] = {}
+    if (theorem_core_report.get("finite_consensus_replay") or {}).get("enabled", False):
+        finite_consensus_source_manifest = _write_finite_consensus_source_artifact(
+            bundle.path,
+            initial_port_left=initial_port_left,
+            initial_port_right=initial_port_right,
+            initial_gauge=initial_gauge,
+            edge_left=left,
+            edge_right=right,
+            group_name=group_name,
+            group_order=group_order,
+            replay_config=(config.get("theorem_core", {}) or {}).get("consensus_replay", {}),
+            production_sector_repair_config=(config.get("defects", {}) or {}).get(
+                "sector_repair", {}
+            ),
+            replay_seed=seed + 31_337,
+        )
+        theorem_core_report["finite_consensus_source_artifact"] = (
+            finite_consensus_source_manifest
+        )
     bundle.write_json("theorem_core_receipts.json", theorem_core_report)
     if (theorem_core_report.get("finite_consensus_replay") or {}).get("enabled", False):
         bundle.write_json("finite_consensus_replay_report.json", theorem_core_report["finite_consensus_replay"])
@@ -1809,8 +2220,44 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("observer_checkpoint_restoration_report.json", checkpoint_report)
     if defect_h3_worldlines_report:
         bundle.write_json("defect_h3_worldlines_report.json", defect_h3_worldlines_report)
+    compact_bounded_observers = bool(
+        observer_cfg.get("compact_unenriched_rows", False)
+        and len(observer_analysis_rows) < len(patch_observer_rows)
+    )
+    if compact_bounded_observers:
+        compact_population_report = _write_compact_observer_population(
+            bundle.path / "observer_population_compact.npz",
+            patch_observer_rows,
+            analysis_indices=observer_wide_analysis_indices,
+            observer_relative_times=observer_times,
+        )
+        observer_population_report["compact_population_artifact"] = (
+            compact_population_report
+        )
+        observer_population_report["materialized_rows_preserved"] = True
+        observer_population_report["verbose_jsonl_population"] = (
+            "deterministic_analysis_subset_plus_cap_observers"
+        )
+        observer_jsonl_rows = observer_analysis_rows + [
+            row for row in observer_rows if row.get("view_type") == "cap_observer"
+        ]
+    else:
+        observer_population_report["materialized_rows_preserved"] = bool(
+            write_jsonl_payloads
+        )
+        observer_population_report["verbose_jsonl_population"] = (
+            "all_materialized_observers"
+        )
+        observer_jsonl_rows = observer_rows
+    observer_population_report["verbose_jsonl_patch_observer_count"] = sum(
+        1 for row in observer_jsonl_rows if row.get("view_type") == "patch_observer"
+    )
+    observer_population_report["verbose_jsonl_cap_observer_count"] = sum(
+        1 for row in observer_jsonl_rows if row.get("view_type") == "cap_observer"
+    )
     if write_jsonl_payloads:
-        bundle.write_jsonl("observer_views.jsonl", observer_rows)
+        bundle.write_jsonl("observer_views.jsonl", observer_jsonl_rows)
+    bundle.write_json("observer_population_report.json", observer_population_report)
     bundle.write_json("observer_consensus_report.json", consensus_report)
     if object_rows and write_jsonl_payloads:
         bundle.write_jsonl("observer_objects.jsonl", object_rows)
@@ -1818,7 +2265,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("object_consensus_report.json", object_report)
     bundle.write_json("mandatory_controls_report.json", mandatory_controls)
     if neutral_report:
-        component_similarities, observer_ids = observer_similarity_components(observer_rows, object_rows, state_bw_report)
+        component_similarities, observer_ids = observer_similarity_components(
+            neutral_observer_rows,
+            object_rows,
+            state_bw_report,
+        )
         similarity = component_similarities.get("composite", np.zeros((0, 0), dtype=float))
         distance = observer_distance_matrix(similarity)
         np.savez_compressed(
@@ -1864,12 +2315,38 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     if s3_holonomy_report:
         bundle.write_json("array_holonomy_report.json", s3_holonomy_report)
     if s3_defect_timeline_report:
-        bundle.write_json("defect_timeline_report.json", s3_defect_timeline_report)
+        timeline_json_max_bytes = int(
+            timeline_cfg.get("max_serialized_json_bytes", 64_000_000)
+        )
+        s3_defect_timeline_report["artifact_serialization"] = {
+            "format": "strict_compact_json",
+            "bounded_detail": True,
+            "hard_maximum_bytes_exclusive": timeline_json_max_bytes,
+        }
+        timeline_artifact_receipt = bundle.write_json(
+            "defect_timeline_report.json",
+            s3_defect_timeline_report,
+            compact=True,
+            max_bytes=timeline_json_max_bytes,
+        )
+        bundle.write_json(
+            "defect_timeline_artifact_receipt.json",
+            timeline_artifact_receipt,
+        )
     if defect_interaction:
         bundle.write_json("defect_interaction_report.json", defect_interaction)
     if particle_report:
         bundle.write_json("particle_likeness_report.json", particle_report)
-    bundle.write_json("seed_material.json", {"config_hash": stable_json_hash(config), "seed": seed})
+    bundle.write_json(
+        "seed_material.json",
+        {
+            "config_hash": stable_json_hash(config),
+            "hash_schema": CANONICAL_HASH_SCHEMA,
+            "seed": seed,
+            "rng_stream_derivation": rng_stream_report["derivation"],
+            "rng_stream_names": sorted(rng_streams),
+        },
+    )
     bundle.write_json("dimension_report.json", {"status": "not_computed_for_bw_primary_path", "reason": "BW residual is primary"})
     kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="bw_array")
     large_run_readiness = _large_run_readiness_report(
@@ -1892,6 +2369,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "patch_count": patch_count,
             "edge_count": edge_count,
             "group": group_name,
+            "gauge_coupled_dynamics": gauge_coupled_dynamics_report,
+            "rng_streams": rng_stream_report,
             "pixel_scale": pixel_scale.as_jsonable(),
             "oph_constants": pixel_scale.constants.as_jsonable(),
             "screen_microphysics": screen_microphysics.as_jsonable(),
@@ -1941,7 +2420,6 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "observer_modular_experience": observer_modular_experience_report,
             "record_family_h3": object_h3_report,
             "defect_cluster_h3": defect_h3_report,
-            "defect_h3_worldlines": defect_h3_worldlines_report,
             "neutral_reconstruction": neutral_report,
             "emergence_status": emergence_status,
             "cosmology_observables": {"freezeout_cl_proxy": freezeout_report} if freezeout_report else {},
@@ -2006,6 +2484,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         "bw_primary_mode": state_bw_report.get("mode", bw_report["mode"]) if state_bw_report else bw_report["mode"],
         "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
         "base_loop_elapsed_seconds": base_loop_elapsed_seconds,
+        "gauge_coupled_dynamics": gauge_coupled_dynamics_report,
         "controls": bw_report["controls"],
         "geometric_controls": bw_report["controls"],
         "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
@@ -2691,6 +3170,7 @@ def _observable_fields(
     modular_depth: np.ndarray,
     modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
+    edge_residual: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
     fields = {
         "record_signature": _standardize(signature.astype(float)),
@@ -2702,9 +3182,10 @@ def _observable_fields(
         "modular_depth": _standardize(modular_depth.astype(float)),
         "modular_time": _standardize(modular_time.astype(float)),
     }
-    if gauge.size:
-        fields["s3_class_density"] = _standardize(s3_edge_class_density(left, right, gauge, patch_count))
-        fields["s3_sector_class"] = _node_sector_class(left, right, gauge, patch_count)
+    residual = np.asarray(edge_residual) if edge_residual is not None else np.zeros(0, dtype=np.int16)
+    if residual.size:
+        fields["s3_class_density"] = _standardize(s3_edge_class_density(left, right, residual, patch_count))
+        fields["s3_sector_class"] = _node_sector_class(left, right, residual, patch_count)
     else:
         fields["s3_class_density"] = np.zeros(patch_count, dtype=float)
         fields["s3_sector_class"] = np.zeros(patch_count, dtype=np.int64)
@@ -2739,14 +3220,15 @@ def _initialize_port_packets(
             port_left[left_noise] = rng.integers(0, group_order, size=int(np.sum(left_noise)), dtype=np.int16)
         if np.any(right_noise):
             port_right[right_noise] = rng.integers(0, group_order, size=int(np.sum(right_noise)), dtype=np.int16)
-        initial_mismatch_fraction = float(np.mean(port_left != port_right)) if edge_count else 0.0
+        raw_endpoint_label_inequality_fraction = float(np.mean(port_left != port_right)) if edge_count else 0.0
         return port_left, port_right, {
             "mode": "support_visible_cap_net_hot",
             "cap_count": int(config.get("cap_count", 24)),
             "sharpness": float(config.get("sharpness", 8.0)),
             "tangent_weight": float(config.get("tangent_weight", 0.35)),
             "endpoint_noise_probability": noise_probability,
-            "initial_mismatch_fraction": initial_mismatch_fraction,
+            "raw_endpoint_label_inequality_fraction": raw_endpoint_label_inequality_fraction,
+            "raw_endpoint_label_inequality_is_not_overlap_mismatch": True,
             "node_label_histogram": _int_histogram(node_labels),
             **program_meta,
             "claim_boundary": (
@@ -2758,7 +3240,8 @@ def _initialize_port_packets(
     port_right = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
     return port_left, port_right, {
         "mode": "iid_hot",
-        "initial_mismatch_fraction": float(np.mean(port_left != port_right)) if edge_count else 0.0,
+        "raw_endpoint_label_inequality_fraction": float(np.mean(port_left != port_right)) if edge_count else 0.0,
+        "raw_endpoint_label_inequality_is_not_overlap_mismatch": True,
         "claim_boundary": "iid hot endpoint packets; useful random control, not a structured OPH cap-net boundary program",
     }
 
@@ -2865,18 +3348,54 @@ def _state_snapshot(
     modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
 ) -> dict[str, Any]:
+    repair_readback = np.asarray(repair_load, dtype=np.float32).copy()
     return {
         "cycle": int(cycle),
         "committed_fraction": float(committed_fraction),
-        "signature": np.asarray(signature).copy(),
-        "stable_count": np.asarray(stable_count).copy(),
-        "committed": np.asarray(committed).copy(),
-        "repair_load": np.asarray(repair_load, dtype=float).copy(),
-        "mismatch_density": np.asarray(mismatch_density, dtype=float).copy(),
-        "modular_depth": np.asarray(modular_depth, dtype=float).copy(),
-        "modular_time": np.asarray(modular_time, dtype=float).copy(),
-        "cumulative_repair_load": np.asarray(cumulative_repair_load, dtype=float).copy(),
+        "signature": np.asarray(signature, dtype=np.int64).copy(),
+        "stable_count": np.asarray(stable_count, dtype=np.int32).copy(),
+        "committed": np.asarray(committed, dtype=bool).copy(),
+        "repair_load": repair_readback,
+        # The production mismatch density is the degree-normalized repair-load
+        # readback. Keep one immutable array rather than storing the alias twice.
+        "mismatch_density": repair_readback,
+        "mismatch_density_aliases_repair_load": True,
+        "modular_depth": np.asarray(modular_depth, dtype=np.float32).copy(),
+        "modular_time": np.asarray(modular_time, dtype=np.float32).copy(),
+        "cumulative_repair_load": np.asarray(cumulative_repair_load, dtype=np.float32).copy(),
+        "snapshot_storage_bytes_per_patch_estimate": 29,
     }
+
+
+def _attach_snapshot_overlap_state(
+    snapshot: dict[str, Any],
+    port_left: np.ndarray,
+    port_right: np.ndarray,
+    gauge: np.ndarray,
+    *,
+    group_name: str,
+    group_order: int,
+) -> dict[str, Any]:
+    """Attach exact invariant edge residuals once to a retained snapshot."""
+
+    if "gauge_invariant_edge_residual" not in snapshot:
+        maximum = max(0, int(group_order) - 1)
+        dtype = np.min_scalar_type(maximum)
+        stored = np.asarray(
+            gauge_invariant_edge_residual(
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            ),
+            dtype=dtype,
+        ).copy()
+        stored.flags.writeable = False
+        snapshot["gauge_invariant_edge_residual"] = stored
+        snapshot["gauge_invariant_edge_residual_snapshot_exact"] = True
+        snapshot["gauge_invariant_edge_residual_group"] = str(group_name).upper()
+    return snapshot
 
 
 def _observable_fields_from_snapshot(
@@ -2887,12 +3406,18 @@ def _observable_fields_from_snapshot(
     gauge: np.ndarray,
     patch_count: int,
 ) -> dict[str, np.ndarray]:
+    del gauge
+    snapshot_residual = (
+        np.asarray(snapshot.get("gauge_invariant_edge_residual", np.zeros(0, dtype=np.int16)))
+        if snapshot.get("gauge_invariant_edge_residual_group") == "S3"
+        else np.zeros(0, dtype=np.int16)
+    )
     return _observable_fields(
         port_left=np.zeros(0, dtype=np.int16),
         port_right=np.zeros(0, dtype=np.int16),
         left=left,
         right=right,
-        gauge=gauge,
+        gauge=np.zeros(0, dtype=np.int16),
         patch_count=patch_count,
         signature=np.asarray(snapshot["signature"]),
         stable_count=np.asarray(snapshot["stable_count"]),
@@ -2902,6 +3427,7 @@ def _observable_fields_from_snapshot(
         modular_depth=np.asarray(snapshot["modular_depth"], dtype=float),
         modular_time=np.asarray(snapshot.get("modular_time", snapshot["modular_depth"]), dtype=float),
         cumulative_repair_load=np.asarray(snapshot["cumulative_repair_load"], dtype=float),
+        edge_residual=snapshot_residual,
     )
 
 
@@ -2919,6 +3445,7 @@ def _observer_raw_fields(
     modular_depth: np.ndarray,
     modular_time: np.ndarray,
     cumulative_repair_load: np.ndarray,
+    edge_residual: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
     fields = {
         "record_signature": signature.astype(float),
@@ -2930,9 +3457,10 @@ def _observer_raw_fields(
         "modular_depth": modular_depth.astype(float),
         "modular_time": modular_time.astype(float),
     }
-    if gauge.size:
-        fields["s3_class_density"] = s3_edge_class_density(left, right, gauge, patch_count)
-        fields["s3_sector_class"] = _node_sector_class(left, right, gauge, patch_count)
+    residual = np.asarray(edge_residual) if edge_residual is not None else np.zeros(0, dtype=np.int16)
+    if residual.size:
+        fields["s3_class_density"] = s3_edge_class_density(left, right, residual, patch_count)
+        fields["s3_sector_class"] = _node_sector_class(left, right, residual, patch_count)
     else:
         fields["s3_class_density"] = np.zeros(patch_count, dtype=float)
         fields["s3_sector_class"] = np.zeros(patch_count, dtype=np.int64)
@@ -2947,10 +3475,16 @@ def _observer_raw_fields_from_snapshot(
     gauge: np.ndarray,
     patch_count: int,
 ) -> dict[str, np.ndarray]:
+    del gauge
+    snapshot_residual = (
+        np.asarray(snapshot.get("gauge_invariant_edge_residual", np.zeros(0, dtype=np.int16)))
+        if snapshot.get("gauge_invariant_edge_residual_group") == "S3"
+        else np.zeros(0, dtype=np.int16)
+    )
     return _observer_raw_fields(
         left=left,
         right=right,
-        gauge=gauge,
+        gauge=np.zeros(0, dtype=np.int16),
         patch_count=patch_count,
         signature=np.asarray(snapshot["signature"]),
         stable_count=np.asarray(snapshot["stable_count"]),
@@ -2960,6 +3494,7 @@ def _observer_raw_fields_from_snapshot(
         modular_depth=np.asarray(snapshot["modular_depth"], dtype=float),
         modular_time=np.asarray(snapshot.get("modular_time", snapshot["modular_depth"]), dtype=float),
         cumulative_repair_load=np.asarray(snapshot["cumulative_repair_load"], dtype=float),
+        edge_residual=snapshot_residual,
     )
 
 
@@ -3089,6 +3624,165 @@ def _unique_snapshots_by_cycle(snapshots: list[dict[str, Any] | None]) -> list[d
     return [by_cycle[cycle] for cycle in sorted(by_cycle)]
 
 
+def _bounded_observer_row_sample(
+    observer_rows: list[dict[str, Any]],
+    *,
+    max_observers: int,
+) -> list[dict[str, Any]]:
+    """Bound quadratic debug distance matrices without changing simulation state.
+
+    Observer rows are already generated from a seeded carrier sample. A fixed
+    observer-ID hash rank avoids both the O(n^2) distance-matrix explosion and
+    the screen-latitude bias of first-row slicing. The same rank is used by the
+    larger observer-wide cap, so this smaller neutral sample is nested within it.
+    """
+
+    patch_rows = [
+        row for row in observer_rows if row.get("view_type") == "patch_observer"
+    ]
+    limit = max(1, int(max_observers))
+    if len(patch_rows) <= limit:
+        return patch_rows
+    indices = deterministic_observer_analysis_indices(
+        [int(row.get("observer_id", index)) for index, row in enumerate(patch_rows)],
+        max_observers=limit,
+    )
+    return [patch_rows[int(index)] for index in indices]
+
+
+def _write_compact_observer_population(
+    path: Path,
+    patch_rows: list[dict[str, Any]],
+    *,
+    analysis_indices: np.ndarray,
+    observer_relative_times: list[float],
+) -> dict[str, Any]:
+    """Persist every materialized local readout without verbose JSON repetition."""
+
+    count = len(patch_rows)
+    ids = np.asarray(
+        [int(row.get("observer_id", index)) for index, row in enumerate(patch_rows)],
+        dtype=np.int64,
+    )
+    axes = np.asarray(
+        [row.get("axis", [0.0, 0.0, 1.0]) for row in patch_rows],
+        dtype=np.float32,
+    ).reshape(count, 3)
+    support_arrays = [
+        np.asarray(row.get("support_nodes", []), dtype=np.int32).reshape(-1)
+        for row in patch_rows
+    ]
+    support_counts = np.asarray([values.size for values in support_arrays], dtype=np.int64)
+    support_offsets = np.concatenate(
+        [np.zeros(1, dtype=np.int64), np.cumsum(support_counts, dtype=np.int64)]
+    )
+    support_nodes = (
+        np.concatenate(support_arrays).astype(np.int32, copy=False)
+        if support_arrays and int(support_offsets[-1]) > 0
+        else np.zeros(0, dtype=np.int32)
+    )
+
+    histogram_keys: list[np.ndarray] = []
+    histogram_values: list[np.ndarray] = []
+    histogram_counts = np.zeros(count, dtype=np.int64)
+    for index, row in enumerate(patch_rows):
+        histogram = dict(row.get("record_signature_histogram", {}) or {})
+        ordered = sorted((int(key), float(value)) for key, value in histogram.items())
+        histogram_counts[index] = len(ordered)
+        if ordered:
+            histogram_keys.append(np.asarray([key for key, _ in ordered], dtype=np.int64))
+            histogram_values.append(
+                np.asarray([value for _, value in ordered], dtype=np.float32)
+            )
+    histogram_offsets = np.concatenate(
+        [np.zeros(1, dtype=np.int64), np.cumsum(histogram_counts, dtype=np.int64)]
+    )
+    signature_histogram_keys = (
+        np.concatenate(histogram_keys) if histogram_keys else np.zeros(0, dtype=np.int64)
+    )
+    signature_histogram_values = (
+        np.concatenate(histogram_values)
+        if histogram_values
+        else np.zeros(0, dtype=np.float32)
+    )
+
+    feature_arrays = [
+        np.asarray(
+            row.get("locality_preserving_packet_feature_vector", []),
+            dtype=np.float32,
+        ).reshape(-1)
+        for row in patch_rows
+    ]
+    feature_width = max((values.size for values in feature_arrays), default=0)
+    locality_features = np.zeros((count, feature_width), dtype=np.float32)
+    for index, values in enumerate(feature_arrays):
+        locality_features[index, : values.size] = values
+
+    scalar_names = (
+        "support_entropy_capacity",
+        "committed_fraction",
+        "record_stability_mean",
+        "modular_depth_mean",
+        "modular_depth_std",
+        "repair_load_mean",
+        "mismatch_density_mean",
+        "visible_signature_entropy",
+    )
+    payload: dict[str, np.ndarray] = {
+        "observer_ids": ids,
+        "axes": axes,
+        "support_offsets": support_offsets,
+        "support_nodes": support_nodes,
+        "signature_histogram_offsets": histogram_offsets,
+        "signature_histogram_keys": signature_histogram_keys,
+        "signature_histogram_values": signature_histogram_values,
+        "locality_packet_features": locality_features,
+        "observer_relative_times": np.asarray(observer_relative_times, dtype=np.float32),
+        "visible_readout_hashes": np.asarray(
+            [str(row.get("visible_readout_hash", "")) for row in patch_rows],
+            dtype="S64",
+        ),
+        "dominant_record_signatures": np.asarray(
+            [
+                int(row["dominant_record_signature"])
+                if row.get("dominant_record_signature") is not None
+                else -1
+                for row in patch_rows
+            ],
+            dtype=np.int64,
+        ),
+        "observer_wide_analysis_included": np.isin(
+            np.arange(count, dtype=np.int64),
+            np.asarray(analysis_indices, dtype=np.int64),
+        ),
+    }
+    for name in scalar_names:
+        payload[name] = np.asarray(
+            [float(row.get(name, 0.0)) for row in patch_rows],
+            dtype=np.float32,
+        )
+    np.savez_compressed(path, **payload)
+    artifact_bytes = path.read_bytes()
+    return {
+        "schema": "compact_materialized_observer_population_npz_v1",
+        "path": path.name,
+        "materialized_observer_count": count,
+        "analysis_enriched_observer_count": int(len(analysis_indices)),
+        "support_incidence_count": int(support_nodes.size),
+        "signature_histogram_entry_count": int(signature_histogram_keys.size),
+        "locality_feature_width": int(feature_width),
+        "byte_count": len(artifact_bytes),
+        "sha256": "sha256:" + hashlib.sha256(artifact_bytes).hexdigest(),
+        "lossless_integer_channels": True,
+        "floating_storage": "float32",
+        "claim_boundary": (
+            "Compact replay/readout storage for all materialized observer-local supports, "
+            "record histograms, hashes, and scalar readbacks; only the separately declared "
+            "analysis subset receives expensive H3/object/perturbation enrichment."
+        ),
+    }
+
+
 def _timeline_cycles(cycles: int, sample_count: int) -> set[int]:
     if cycles <= 0 or sample_count <= 0:
         return set()
@@ -3110,9 +3804,13 @@ def _observer_relative_time_grid(observer_cfg: dict[str, Any], *, fallback_times
 def _harmonic_time_trace_sample(
     *,
     points: np.ndarray,
+    port_left: np.ndarray,
+    port_right: np.ndarray,
     left: np.ndarray,
     right: np.ndarray,
     gauge: np.ndarray,
+    group_name: str,
+    group_order: int,
     patch_count: int,
     signature: np.ndarray,
     stable_count: np.ndarray,
@@ -3127,6 +3825,17 @@ def _harmonic_time_trace_sample(
     config: dict[str, Any],
     seed: int,
 ) -> dict[str, Any]:
+    edge_residual = (
+        gauge_invariant_edge_residual(
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        if str(group_name).upper() == "S3"
+        else np.zeros(0, dtype=np.int16)
+    )
     fields_all = _observable_fields(
         port_left=np.zeros(0, dtype=np.int16),
         port_right=np.zeros(0, dtype=np.int16),
@@ -3142,6 +3851,7 @@ def _harmonic_time_trace_sample(
         modular_depth=modular_depth,
         modular_time=modular_time,
         cumulative_repair_load=cumulative_repair_load,
+        edge_residual=edge_residual,
     )
     field_names = [
         str(name)
@@ -3380,6 +4090,98 @@ def _stable_control_rng(seed: int, field_name: str, control_name: str) -> np.ran
     return np.random.default_rng(value)
 
 
+def _named_rng_streams(
+    seed: int,
+    names: tuple[str, ...] = ("initialization", "readback", "repair", "sector"),
+) -> tuple[dict[str, np.random.Generator], dict[str, Any]]:
+    """Derive stable, name-isolated RNG streams from one public run seed.
+
+    Stream derivation depends on the stream name rather than its position in a
+    ``SeedSequence.spawn`` list.  Adding a new subsystem or consuming extra
+    initialization draws therefore cannot silently perturb repair schedules or
+    sector updates.
+    """
+
+    normalized_names = tuple(str(name).strip() for name in names)
+    if not normalized_names or any(not name for name in normalized_names):
+        raise ValueError("RNG stream names must be nonempty")
+    if len(set(normalized_names)) != len(normalized_names):
+        raise ValueError("RNG stream names must be unique")
+    seed_u64 = int(seed) % (1 << 64)
+    base_words = [seed_u64 & 0xFFFFFFFF, (seed_u64 >> 32) & 0xFFFFFFFF]
+    streams: dict[str, np.random.Generator] = {}
+    rows: dict[str, dict[str, Any]] = {}
+    for name in normalized_names:
+        material = f"oph-bw-array-rng-v1\0{name}".encode("utf-8")
+        digest = hashlib.sha256(material).digest()
+        name_words = np.frombuffer(digest[:16], dtype="<u4").astype(np.uint64).tolist()
+        entropy_words = [*base_words, *(int(value) for value in name_words)]
+        seed_sequence = np.random.SeedSequence(entropy_words)
+        streams[name] = np.random.default_rng(seed_sequence)
+        rows[name] = {
+            "stream_id": "sha256:" + digest.hex(),
+            "entropy_words_u32": entropy_words,
+            "bit_generator": "PCG64",
+        }
+    report = {
+        "mode": "named_seedsequence_rng_streams_v1",
+        "derivation": "sha256(oph-bw-array-rng-v1\\0<stream-name>) plus the uint64 run seed",
+        "run_seed": int(seed),
+        "streams": rows,
+        "cross_stream_draw_isolation": True,
+    }
+    return streams, report
+
+
+def _gauge_coupled_node_signature(
+    port_left: np.ndarray,
+    port_right: np.ndarray,
+    gauge: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+    patch_count: int,
+    *,
+    group_name: str,
+    group_order: int,
+) -> np.ndarray:
+    """Hash each local packet after exact node-frame quotienting."""
+
+    canonical_left, canonical_right, _, _, _ = canonicalize_gauge_quotient_state(
+        port_left,
+        port_right,
+        gauge,
+        edge_left=left,
+        edge_right=right,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    signatures = _node_signature(
+        canonical_left,
+        canonical_right,
+        left,
+        right,
+        patch_count,
+    ).view(np.uint64).copy()
+    residual_left = gauge_invariant_edge_residual(
+        port_left,
+        port_right,
+        gauge,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    residual_right = group_inverse_indices(
+        residual_left,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    edge_slot = np.arange(np.asarray(port_left).size, dtype=np.uint64)
+    left_tokens = edge_slot ^ ((residual_left.astype(np.uint64) + np.uint64(1)) * np.uint64(0x94D049BB133111EB))
+    right_tokens = edge_slot ^ ((residual_right.astype(np.uint64) + np.uint64(1)) * np.uint64(0xBF58476D1CE4E5B9))
+    np.bitwise_xor.at(signatures, np.asarray(left, dtype=np.int64), _splitmix64(left_tokens))
+    np.bitwise_xor.at(signatures, np.asarray(right, dtype=np.int64), _splitmix64(right_tokens))
+    return signatures.view(np.int64)
+
+
 def _repair_sector_labels(
     gauge: np.ndarray,
     chosen_edges: np.ndarray,
@@ -3389,34 +4191,18 @@ def _repair_sector_labels(
     group_order: int,
     rng: np.random.Generator,
     config: dict[str, Any],
-) -> None:
-    """Declared finite S3 sector repair surrogate.
+) -> int:
+    """Compatibility wrapper around the shared production move primitive."""
 
-    The update is group-correct but intentionally reported only as a screen/collar
-    defect-dynamics diagnostic. It composes chosen S3 edge labels with the
-    pre-repair interface delta that the overlap repair just removed.
-    """
-
-    if str(group_name).upper() != "S3" or group_order != 6 or not config.get("enabled", False) or chosen_edges.size == 0:
-        return
-    probability = float(config.get("probability", 0.0))
-    if probability <= 0.0:
-        return
-    mask = rng.random(chosen_edges.size) < min(max(probability, 0.0), 1.0)
-    if not np.any(mask):
-        return
-    edges = np.asarray(chosen_edges[mask], dtype=np.int64)
-    proposals = np.asarray(chosen_delta[mask], dtype=np.int64) % 6
-    nontrivial = proposals != 0
-    if not np.any(nontrivial):
-        return
-    edges = edges[nontrivial]
-    proposals = proposals[nontrivial]
-    mode = str(config.get("mode", "repair_coupled_group_compose"))
-    if mode == "cool_to_identity":
-        gauge[edges] = 0
-    else:
-        gauge[edges] = S3_MUL[gauge[edges].astype(np.int64), proposals].astype(gauge.dtype)
+    return repair_production_sector_links(
+        gauge,
+        chosen_edges,
+        chosen_delta,
+        group_name=group_name,
+        group_order=group_order,
+        rng=rng,
+        config=config,
+    )
 
 
 def _interface_quotient(
@@ -3446,10 +4232,15 @@ def _interface_quotient(
     return ((left_values - right_values) % max(1, int(group_order))).astype(np.int16)
 
 
-def _node_sector_class(left: np.ndarray, right: np.ndarray, gauge: np.ndarray, patch_count: int) -> np.ndarray:
+def _node_sector_class(
+    left: np.ndarray,
+    right: np.ndarray,
+    edge_residual: np.ndarray,
+    patch_count: int,
+) -> np.ndarray:
     from oph_fpe.defects.array_s3_holonomy import S3_CLASS
 
-    classes = S3_CLASS[gauge.astype(np.int64)].astype(float)
+    classes = S3_CLASS[edge_residual.astype(np.int64)].astype(float)
     sums = np.bincount(left, weights=classes, minlength=patch_count) + np.bincount(
         right, weights=classes, minlength=patch_count
     )
@@ -4779,8 +5570,10 @@ def _theorem_core_receipts(
     *,
     initial_port_left: np.ndarray | None = None,
     initial_port_right: np.ndarray | None = None,
+    initial_gauge: np.ndarray | None = None,
     edge_left: np.ndarray | None = None,
     edge_right: np.ndarray | None = None,
+    group_name: str = "S3",
     group_order: int = 1,
     seed: int = 1,
 ) -> dict[str, Any]:
@@ -4811,10 +5604,13 @@ def _theorem_core_receipts(
     replay_report = _array_port_pair_consensus_replay_report(
         initial_port_left,
         initial_port_right,
+        initial_gauge,
         edge_left=edge_left,
         edge_right=edge_right,
+        group_name=group_name,
         group_order=group_order,
         config=theorem_cfg.get("consensus_replay", {}),
+        production_sector_repair_config=(config.get("defects", {}) or {}).get("sector_repair", {}),
         seed=seed + 31_337,
     )
     consensus_evidence = (
@@ -4895,66 +5691,274 @@ def _theorem_core_receipts(
     )
 
 
+def _write_finite_consensus_source_artifact(
+    run_dir: Path,
+    *,
+    initial_port_left: np.ndarray,
+    initial_port_right: np.ndarray,
+    initial_gauge: np.ndarray,
+    edge_left: np.ndarray,
+    edge_right: np.ndarray,
+    group_name: str,
+    group_order: int,
+    replay_config: dict[str, Any],
+    production_sector_repair_config: dict[str, Any],
+    replay_seed: int,
+) -> dict[str, Any]:
+    """Persist primitive C0b state so theorem validation can rerun the kernel."""
+
+    root = Path(run_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    state_path = root / "finite_consensus_source_state.npz"
+    left = np.asarray(initial_port_left, dtype=np.uint8)
+    right = np.asarray(initial_port_right, dtype=np.uint8)
+    gauge = np.asarray(initial_gauge, dtype=np.uint8)
+    endpoints_left = np.asarray(edge_left, dtype=np.uint32)
+    endpoints_right = np.asarray(edge_right, dtype=np.uint32)
+    np.savez(
+        state_path,
+        initial_port_left=left,
+        initial_port_right=right,
+        initial_gauge=gauge,
+        edge_left=endpoints_left,
+        edge_right=endpoints_right,
+    )
+    source_state_sha256 = coupled_state_hash(
+        left,
+        right,
+        gauge,
+        edge_left=endpoints_left,
+        edge_right=endpoints_right,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    source_quotient_hash = gauge_quotient_state_hash(
+        left,
+        right,
+        gauge,
+        edge_left=endpoints_left,
+        edge_right=endpoints_right,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    manifest = {
+        "schema": "finite_consensus_replay_source_v1",
+        "state_path": state_path.name,
+        "state_file_sha256": _file_sha256(state_path),
+        "source_state_sha256": source_state_sha256,
+        "source_quotient_hash": source_quotient_hash,
+        "hash_schema": CANONICAL_HASH_SCHEMA,
+        "group_name": str(group_name).upper(),
+        "group_order": int(group_order),
+        "edge_count": int(left.size),
+        "replay_config": dict(replay_config or {}),
+        "production_sector_repair_config": dict(
+            production_sector_repair_config or {}
+        ),
+        "replay_seed": int(replay_seed),
+        "replay_kernel_file_sha256": _file_sha256(Path(__file__)),
+        "claim_boundary": (
+            "Primitive gauge-coupled source arrays and exact replay parameters; "
+            "the theorem validator must hash-bind and independently rerun them."
+        ),
+    }
+    (root / "finite_consensus_source_manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    return manifest
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
+
+
 def _array_port_pair_consensus_replay_report(
     initial_port_left: np.ndarray | None,
     initial_port_right: np.ndarray | None,
+    initial_gauge: np.ndarray | None = None,
     *,
     edge_left: np.ndarray | None = None,
     edge_right: np.ndarray | None = None,
+    group_name: str = "S3",
     group_order: int,
     config: dict[str, Any],
+    production_sector_repair_config: dict[str, Any] | None = None,
     seed: int,
 ) -> dict[str, Any]:
     cfg = dict(config or {})
+    sector_cfg = dict(production_sector_repair_config or {})
+    try:
+        sector_probability = float(sector_cfg.get("probability", 0.0))
+    except (TypeError, ValueError):
+        sector_probability = float("nan")
+    sector_mode = str(sector_cfg.get("mode", "repair_coupled_group_compose"))
+    production_link_mutation_enabled = bool(
+        str(group_name).upper() == "S3"
+        and int(group_order) == 6
+        and sector_cfg.get("enabled", False)
+        and np.isfinite(sector_probability)
+        and sector_probability > 0.0
+    )
+    sector_move_supported = bool(
+        np.isfinite(sector_probability)
+        and (
+            not production_link_mutation_enabled
+            or sector_mode == "repair_coupled_group_compose"
+        )
+    )
+    move_contract_blockers: list[str] = []
+    if not np.isfinite(sector_probability):
+        move_contract_blockers.append("production_sector_repair_probability_invalid")
+    if production_link_mutation_enabled and sector_mode != "repair_coupled_group_compose":
+        move_contract_blockers.append("production_sector_link_mutation_not_gauge_covariant")
+    move_contract = {
+        "schema": "bw_array_production_overlap_move_contract_v1",
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
+        "endpoint_repair_branches": [
+            "port_left <- g_ij * port_right",
+            "port_right <- inverse(g_ij) * port_left",
+        ],
+        "endpoint_branch_selection": "independent Bernoulli(0.5) per selected edge",
+        "sector_repair": {
+            "enabled": production_link_mutation_enabled,
+            "mode": sector_mode,
+            "probability": sector_probability if np.isfinite(sector_probability) else None,
+            "mutation": "g_ij <- discrepancy_i * g_ij" if production_link_mutation_enabled else None,
+        },
+        "replayed_endpoint_branches": True,
+        "replayed_sector_link_mutation": True,
+        "shared_sector_mutation_primitive": "repair_production_sector_links",
+        "exact_production_move_set_replayed": sector_move_supported,
+        "blockers": move_contract_blockers,
+    }
     if not bool(cfg.get("enabled", False)):
         return {
             "mode": "array_port_pair_strict_consensus_replay",
             "enabled": False,
             "evidence": {},
             "sample_events": [],
+            "production_move_contract": move_contract,
             "claim_boundary": "disabled; C0b finite consensus receipt remains fail-closed",
         }
-    if initial_port_left is None or initial_port_right is None:
+    if initial_port_left is None or initial_port_right is None or initial_gauge is None:
+        missing = [
+            name
+            for name, value in (
+                ("initial_port_left", initial_port_left),
+                ("initial_port_right", initial_port_right),
+                ("initial_gauge", initial_gauge),
+            )
+            if value is None
+        ]
         return {
             "mode": "array_port_pair_strict_consensus_replay",
             "enabled": True,
             "receipt": False,
             "evidence": {},
             "sample_events": [],
-            "claim_boundary": "missing initial port-pair state; C0b finite consensus receipt remains fail-closed",
+            "production_move_contract": move_contract,
+            "missing_state_arrays": missing,
+            "claim_boundary": "missing coupled port-link state; C0b finite consensus receipt remains fail-closed",
         }
     left0 = np.asarray(initial_port_left, dtype=np.int16)
     right0 = np.asarray(initial_port_right, dtype=np.int16)
-    if left0.shape != right0.shape:
-        raise ValueError("initial theorem replay port arrays must have matching shape")
+    gauge0 = np.asarray(initial_gauge, dtype=np.int16)
+    if left0.ndim != 1 or left0.shape != right0.shape or left0.shape != gauge0.shape:
+        raise ValueError("initial theorem replay port and gauge arrays must be matching one-dimensional arrays")
+    replay_edge_left, replay_edge_right = _replay_graph_endpoints(edge_left, edge_right, int(left0.size))
 
     rng = np.random.default_rng(seed)
-    active = np.flatnonzero(left0 != right0).astype(np.int64)
+    sector_rng = _stable_control_rng(seed, "finite_consensus", "sector_replay")
+    active = np.flatnonzero(
+        covariant_mismatch_mask(
+            left0,
+            right0,
+            gauge0,
+            group_name=group_name,
+            group_order=group_order,
+        )
+    ).astype(np.int64)
     initial_phi = int(active.size)
-    schedule_replays = int(cfg.get("schedule_replays", 16))
-    requested_schedule_replays = int(cfg.get("requested_schedule_replays", schedule_replays))
+    exact_branch_check = _endpoint_branch_confluence_report(
+        replay_edge_left,
+        replay_edge_right,
+        active,
+        endpoint_branch_effective=not bool(
+            production_link_mutation_enabled
+            and sector_mode == "repair_coupled_group_compose"
+            and sector_probability >= 1.0
+        ),
+    )
+    configured_schedule_replays = int(cfg.get("schedule_replays", 16))
+    requested_schedule_replays = int(
+        cfg.get("requested_schedule_replays", configured_schedule_replays)
+    )
+    exact_failure_known = bool(
+        not exact_branch_check.get("structurally_confluent", False)
+        or not move_contract["exact_production_move_set_replayed"]
+    )
+    schedule_replays = (
+        min(max(0, configured_schedule_replays), 1)
+        if exact_failure_known
+        else configured_schedule_replays
+    )
     max_event_rows = int(cfg.get("max_event_rows", 256))
     disjoint_checks = int(cfg.get("disjoint_checks", 256))
     local_diamond_checks = int(cfg.get("local_diamond_checks", disjoint_checks))
     terminal_hashes: list[str] = []
+    terminal_representative_hashes: list[str] = []
     first_sample_events: list[dict[str, Any]] = []
     strict_descent_violations = 0
     phi_increase_violations = 0
     terminal_phi_violations = 0
+    sector_replay_call_count = 0
+    sector_link_mutation_count = 0
     for replay_index in range(max(0, schedule_replays)):
         order = active.copy()
         rng.shuffle(order)
         left = left0.copy()
         right = right0.copy()
+        gauge = gauge0.copy()
         phi = initial_phi
         replay_events: list[dict[str, Any]] = []
         for step, edge in enumerate(order):
-            before = int(left[edge] != right[edge])
+            before = int(
+                covariant_mismatch_mask(
+                    left[edge : edge + 1],
+                    right[edge : edge + 1],
+                    gauge[edge : edge + 1],
+                    group_name=group_name,
+                    group_order=group_order,
+                )[0]
+            )
             if before == 0:
                 continue
             capture_event = replay_index == 0 and len(replay_events) < max_event_rows
-            quotient_hash_before = _array_port_pair_hash(left, right, group_order) if capture_event else None
-            before, after = _apply_array_port_pair_rewrite(left, right, int(edge))
+            if capture_event:
+                edge_state_before = {
+                    "port_left": int(left[edge]),
+                    "port_right": int(right[edge]),
+                    "gauge_ij": int(gauge[edge]),
+                }
+            repair_left = bool(rng.random() < 0.5)
+            before, after, sector_changed = _apply_array_production_overlap_move(
+                left,
+                right,
+                gauge,
+                int(edge),
+                repair_left=repair_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=sector_rng,
+                sector_config=sector_cfg,
+            )
+            sector_replay_call_count += 1
+            sector_link_mutation_count += int(sector_changed)
             delta_touched = after - before
             phi_after = phi + delta_touched
             delta_global = phi_after - phi
@@ -4975,43 +5979,101 @@ def _array_port_pair_consensus_replay_report(
                     "global_phi_after": phi_after,
                     "delta_touched_phi": delta_touched,
                     "delta_global_phi": delta_global,
-                    "quotient_hash_before": quotient_hash_before,
+                    "edge_state_before": edge_state_before,
                     "accepted": True,
                     "theorem_eligible": True,
-                    "reason": "strict_canonical_edge_normalization",
+                    "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
+                    "repair_branch": "left_endpoint" if repair_left else "right_endpoint",
+                    "sector_link_mutation_replayed": True,
+                    "sector_link_changed": bool(sector_changed),
+                    "reason": "strict_gauge_covariant_random_endpoint_normalization",
                 }
             phi = phi_after
             if capture_event:
-                event["quotient_hash_after"] = _array_port_pair_hash(left, right, group_order)
+                event["edge_state_after"] = {
+                    "port_left": int(left[edge]),
+                    "port_right": int(right[edge]),
+                    "gauge_ij": int(gauge[edge]),
+                }
                 replay_events.append(event)
         if phi != 0:
             terminal_phi_violations += 1
-        terminal_hashes.append(_array_port_pair_hash(left, right, group_order))
+        terminal_hashes.append(
+            gauge_quotient_state_hash(
+                left,
+                right,
+                gauge,
+                edge_left=replay_edge_left,
+                edge_right=replay_edge_right,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        )
+        terminal_representative_hashes.append(
+            coupled_state_hash(
+                left,
+                right,
+                gauge,
+                edge_left=replay_edge_left,
+                edge_right=replay_edge_right,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        )
         if replay_index == 0:
             first_sample_events = replay_events
 
     pair_checks = _array_port_pair_commutation_checks(
         left0,
         right0,
+        gauge0,
         active,
         edge_left=edge_left,
         edge_right=edge_right,
         disjoint_checks=disjoint_checks,
         local_diamond_checks=local_diamond_checks,
+        group_name=group_name,
+        group_order=group_order,
+        sector_config=sector_cfg,
         rng=rng,
     )
-    unique_terminal_hashes = sorted(set(terminal_hashes))
+    covariance_checks = _array_gauge_covariance_checks(
+        left0,
+        right0,
+        gauge0,
+        replay_edge_left,
+        replay_edge_right,
+        active,
+        checks=int(cfg.get("gauge_relabeling_checks", 4)),
+        group_name=group_name,
+        group_order=group_order,
+        sector_config=sector_cfg,
+        rng=rng,
+    )
+    sampled_unique_terminal_hashes = sorted(set(terminal_hashes))
+    exact_unique_count = exact_branch_check.get("unique_terminal_quotient_hash_count")
     evidence = {
-        "evidence_kind": "computed_array_port_pair_replay_v1",
+        "evidence_kind": "computed_gauge_covariant_quotient_replay_v1",
         "theorem_phase_event_count": initial_phi,
         "accepted_theorem_move_count": initial_phi,
         "strict_descent_violation_count": strict_descent_violations,
         "accepted_phi_increase_violation_count": phi_increase_violations,
         "disjoint_commutation_violation_count": pair_checks["disjoint_violation_count"],
         "local_diamond_violation_count": pair_checks["local_diamond_violation_count"],
+        "gauge_covariance_violation_count": covariance_checks["violation_count"],
+        "gauge_relabeling_check_count": covariance_checks["checked_count"],
+        "production_move_contract_violation_count": int(not move_contract["exact_production_move_set_replayed"]),
+        "sector_replay_call_count": int(sector_replay_call_count),
+        "sector_link_mutation_count": int(sector_link_mutation_count),
+        "endpoint_branch_coverage_incomplete_count": int(not exact_branch_check["coverage_complete"]),
+        "endpoint_branch_confluence_violation_count": (
+            int(exact_branch_check["structural_nonconfluence_witness_count"])
+        ),
         "repair_completeness_violation_count": terminal_phi_violations,
-        "unique_terminal_quotient_hash_count": len(unique_terminal_hashes),
+        "unique_terminal_quotient_hash_count": int(exact_unique_count) if exact_unique_count is not None else -1,
+        "sampled_unique_terminal_quotient_hash_count": len(sampled_unique_terminal_hashes),
         "schedule_replay_count": schedule_replays,
+        "configured_schedule_replay_count": configured_schedule_replays,
         "requested_schedule_replays": requested_schedule_replays,
     }
     receipt = bool(
@@ -5021,8 +6083,13 @@ def _array_port_pair_consensus_replay_report(
         and pair_checks["disjoint_violation_count"] == 0
         and pair_checks["local_diamond_violation_count"] == 0
         and pair_checks["coverage_pass"]
+        and covariance_checks["coverage_pass"]
+        and covariance_checks["violation_count"] == 0
+        and move_contract["exact_production_move_set_replayed"]
+        and exact_branch_check["coverage_complete"]
+        and exact_unique_count == 1
+        and len(sampled_unique_terminal_hashes) == 1
         and terminal_phi_violations == 0
-        and len(unique_terminal_hashes) == 1
         and schedule_replays >= requested_schedule_replays
     )
     return {
@@ -5032,23 +6099,67 @@ def _array_port_pair_consensus_replay_report(
         FINITE_CONSENSUS_THEOREM_RECEIPT: receipt,
         "finite_consensus_theorem_receipt": receipt,
         "computed_from_port_pair_arrays": True,
-        "source_state_sha256": _array_port_pair_hash(left0, right0, group_order),
+        "computed_from_gauge_coupled_arrays": True,
+        "gauge_covariant_mismatch": True,
+        "gauge_quotient_canonicalizer": GAUGE_QUOTIENT_CANONICALIZER,
+        "production_move_contract": move_contract,
+        "exact_endpoint_branch_check": exact_branch_check,
+        "source_state_sha256": coupled_state_hash(
+            left0,
+            right0,
+            gauge0,
+            edge_left=replay_edge_left,
+            edge_right=replay_edge_right,
+            group_name=group_name,
+            group_order=group_order,
+        ),
+        "source_quotient_hash": gauge_quotient_state_hash(
+            left0,
+            right0,
+            gauge0,
+            edge_left=replay_edge_left,
+            edge_right=replay_edge_right,
+            group_name=group_name,
+            group_order=group_order,
+        ),
         "evidence": evidence,
         "sample_events": first_sample_events,
         "initial_phi": initial_phi,
         "initial_edge_count": int(left0.size),
-        "terminal_hash": unique_terminal_hashes[0] if unique_terminal_hashes else None,
-        "unique_terminal_hash_count": len(unique_terminal_hashes),
+        "terminal_hash": (
+            sampled_unique_terminal_hashes[0]
+            if len(sampled_unique_terminal_hashes) == 1
+            and int(exact_unique_count or 0) == 1
+            else None
+        ),
+        "sampled_terminal_hashes": sampled_unique_terminal_hashes,
+        "terminal_representative_hash_count": len(set(terminal_representative_hashes)),
+        "unique_terminal_hash_count": int(exact_unique_count) if exact_unique_count is not None else -1,
         "sample_event_count": len(first_sample_events),
+        "schedule_replays_short_circuited": bool(
+            schedule_replays != configured_schedule_replays
+        ),
+        "schedule_replay_short_circuit_reason": (
+            "exact_nonconfluence_or_unreplayed_production_move_contract"
+            if schedule_replays != configured_schedule_replays
+            else None
+        ),
         "disjoint_commutation_checked_pair_count": pair_checks["disjoint_checked_pair_count"],
         "local_diamond_checked_pair_count": pair_checks["local_diamond_checked_pair_count"],
         "shared_node_diamond_checked_pair_count": pair_checks["shared_node_checked_pair_count"],
         "local_diamond_status": pair_checks["status"],
+        "gauge_relabeling_check_count": covariance_checks["checked_count"],
+        "gauge_covariance_violation_count": covariance_checks["violation_count"],
         "claim_boundary": (
-            "C0b replay evidence for the finite array edge-slot quotient only. AB/BA diamonds are "
-            "executed on the represented port slots, including sampled pairs whose graph edges share "
-            "a patch. The state model still has no coupled patch-local repair variable, so this receipt "
-            "does not certify a coupled OPH patch algebra, record algebra C1, or Lorentz L1-L7 receipts."
+            "C0b replay evidence for the finite gauge-coupled port-link quotient. Mismatch is computed "
+            "after group-correct link transport, terminal hashes canonicalize local node frames, and "
+            "random frame relabelings check the predicate, both endpoint-repair branches, and quotient hash. "
+            "The production sector-link mutation is replayed through the same primitive used by the live BW "
+            "kernel; unsupported non-covariant sector modes fail closed. An exact "
+            "O(E) endpoint-incidence proof exposes endpoint-branch nonconfluence independently of Monte Carlo "
+            "schedule coverage; sampled terminal quotient hashes remain diagnostic. AB/BA diamonds still act on "
+            "edge slots; the state model has no shared patch-local repair variable, so this does not certify "
+            "a full OPH patch algebra, record algebra C1, or Lorentz L1-L7 receipts."
         ),
     }
 
@@ -5063,6 +6174,10 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
         "accepted_phi_increase_violation_count": 0,
         "disjoint_commutation_violation_count": 0,
         "local_diamond_violation_count": 0,
+        "gauge_covariance_violation_count": 0,
+        "production_move_contract_violation_count": 0,
+        "endpoint_branch_coverage_incomplete_count": 0,
+        "endpoint_branch_confluence_violation_count": 0,
         "repair_completeness_violation_count": 0,
         "unique_terminal_quotient_hash_count": 1,
     }
@@ -5075,11 +6190,35 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
     accepted_count = evidence.get("accepted_theorem_move_count")
     replay_count = evidence.get("schedule_replay_count")
     requested_replays = evidence.get("requested_schedule_replays")
+    gauge_relabeling_checks = evidence.get("gauge_relabeling_check_count")
+    exact_branch_check = (
+        report.get("exact_endpoint_branch_check")
+        if isinstance(report.get("exact_endpoint_branch_check"), dict)
+        else {}
+    )
+    exact_coverage = exact_branch_check.get("coverage_complete") is True
+    exact_witness_count = exact_branch_check.get("structural_nonconfluence_witness_count")
+    exact_unique_count = exact_branch_check.get("unique_terminal_quotient_hash_count")
+    if not exact_coverage:
+        invalid.append("exact_endpoint_branch_check.coverage_complete")
+    if (
+        isinstance(exact_witness_count, bool)
+        or not isinstance(exact_witness_count, int)
+        or exact_witness_count != evidence.get("endpoint_branch_confluence_violation_count")
+    ):
+        invalid.append("exact_endpoint_branch_check.structural_nonconfluence_witness_count")
+    if (
+        isinstance(exact_unique_count, bool)
+        or not isinstance(exact_unique_count, int)
+        or exact_unique_count != evidence.get("unique_terminal_quotient_hash_count")
+    ):
+        invalid.append("exact_endpoint_branch_check.unique_terminal_quotient_hash_count")
     for key, value in (
         ("theorem_phase_event_count", event_count),
         ("accepted_theorem_move_count", accepted_count),
         ("schedule_replay_count", replay_count),
         ("requested_schedule_replays", requested_replays),
+        ("gauge_relabeling_check_count", gauge_relabeling_checks),
     ):
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             invalid.append(key)
@@ -5109,20 +6248,34 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
         and report.get("enabled") is True
         and report.get("receipt") is True
         and report.get("computed_from_port_pair_arrays") is True
+        and report.get("computed_from_gauge_coupled_arrays") is True
+        and report.get("gauge_covariant_mismatch") is True
+        and report.get("gauge_quotient_canonicalizer") == GAUGE_QUOTIENT_CANONICALIZER
+        and isinstance(report.get("production_move_contract"), dict)
+        and report["production_move_contract"].get("exact_production_move_set_replayed") is True
         and isinstance(report.get("source_state_sha256"), str)
         and str(report.get("source_state_sha256")).startswith("sha256:")
         and len(str(report.get("source_state_sha256")).removeprefix("sha256:")) == 64
-        and evidence.get("evidence_kind") == "computed_array_port_pair_replay_v1"
+        and isinstance(report.get("source_quotient_hash"), str)
+        and str(report.get("source_quotient_hash")).startswith("sha256:")
+        and len(str(report.get("source_quotient_hash")).removeprefix("sha256:")) == 64
+        and evidence.get("evidence_kind") == "computed_gauge_covariant_quotient_replay_v1"
         and not invalid
     )
     certificate = {
-        "mode": "finite_consensus_theorem_certificate_v2_computed_array_replay",
+        "mode": "finite_consensus_theorem_certificate_v3_computed_gauge_quotient_replay",
         FINITE_CONSENSUS_THEOREM_RECEIPT: passed,
         "finite_consensus_theorem_receipt": passed,
         "receipt": passed,
         "computed_replay_artifact_present": True,
         "computed_from_port_pair_arrays": report.get("computed_from_port_pair_arrays") is True,
+        "computed_from_gauge_coupled_arrays": report.get("computed_from_gauge_coupled_arrays") is True,
+        "gauge_covariant_mismatch": report.get("gauge_covariant_mismatch") is True,
+        "gauge_quotient_canonicalizer": report.get("gauge_quotient_canonicalizer"),
+        "production_move_contract": report.get("production_move_contract"),
+        "exact_endpoint_branch_check": exact_branch_check,
         "source_state_sha256": report.get("source_state_sha256"),
+        "source_quotient_hash": report.get("source_quotient_hash"),
         **{key: evidence.get(key) for key in (
             "theorem_phase_event_count",
             "accepted_theorem_move_count",
@@ -5130,6 +6283,11 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
             "accepted_phi_increase_violation_count",
             "disjoint_commutation_violation_count",
             "local_diamond_violation_count",
+            "gauge_covariance_violation_count",
+            "gauge_relabeling_check_count",
+            "production_move_contract_violation_count",
+            "endpoint_branch_coverage_incomplete_count",
+            "endpoint_branch_confluence_violation_count",
             "repair_completeness_violation_count",
             "unique_terminal_quotient_hash_count",
             "schedule_replay_count",
@@ -5138,10 +6296,10 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
         "invalid_evidence": sorted(set(invalid)),
         "sample_event_count": len(sample_events),
         "claim_boundary": (
-            "Computed C0b receipt for the finite array edge-slot quotient only. Every schedule, descent, "
-            "terminal-hash, and sampled AB/BA count is produced from the in-memory initial port arrays; "
-            "caller-declared count summaries cannot enter this receipt. This does not certify coupled "
-            "patch-local OPH algebras or continuum Lorentz/H3 claims."
+            "Computed C0b receipt for the finite gauge-coupled port-link quotient. Every schedule, "
+            "descent, gauge-relabeling check, quotient terminal hash, and sampled AB/BA count is produced "
+            "from the in-memory port and link arrays; caller-declared summaries cannot enter this receipt. "
+            "This does not certify shared patch-local OPH algebras or continuum Lorentz/H3 claims."
         ),
     }
     return with_claim_metadata(
@@ -5149,32 +6307,394 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
         claim_level=RECOVERED_CORE,
         receipt=FINITE_CONSENSUS_THEOREM_RECEIPT,
         physical_claim=False,
-        observable_id="computed_array_port_pair_replay",
+        observable_id="computed_gauge_covariant_port_link_quotient_replay",
         fit_objective="strict_descent_confluence_and_repair_completeness",
     )
 
 
-def _apply_array_port_pair_rewrite(left: np.ndarray, right: np.ndarray, edge: int) -> tuple[int, int]:
-    """Apply one canonical edge-slot rewrite and return mismatch before/after."""
+def _apply_array_production_overlap_move(
+    left: np.ndarray,
+    right: np.ndarray,
+    gauge: np.ndarray,
+    edge: int,
+    *,
+    repair_left: bool,
+    group_name: str,
+    group_order: int,
+    sector_rng: np.random.Generator,
+    sector_config: dict[str, Any],
+) -> tuple[int, int, int]:
+    """Apply one live-kernel sector mutation plus endpoint repair in order."""
 
     edge = int(edge)
-    before = int(left[edge] != right[edge])
+    selected = np.asarray([edge], dtype=np.int64)
+    before = int(
+        covariant_mismatch_mask(
+            left[selected],
+            right[selected],
+            gauge[selected],
+            group_name=group_name,
+            group_order=group_order,
+        )[0]
+    )
+    sector_changed = 0
     if before:
-        canonical = min(int(left[edge]), int(right[edge]))
-        left[edge] = canonical
-        right[edge] = canonical
-    return before, int(left[edge] != right[edge])
+        discrepancy = covariant_discrepancy(
+            left[selected],
+            right[selected],
+            gauge[selected],
+            group_name=group_name,
+            group_order=group_order,
+        )
+        sector_changed = repair_production_sector_links(
+            gauge,
+            selected,
+            discrepancy,
+            group_name=group_name,
+            group_order=group_order,
+            rng=sector_rng,
+            config=sector_config,
+        )
+        repair_covariant_port_pairs(
+            left,
+            right,
+            gauge,
+            selected,
+            np.asarray([bool(repair_left)]),
+            group_name=group_name,
+            group_order=group_order,
+        )
+    after = int(
+        covariant_mismatch_mask(
+            left[selected],
+            right[selected],
+            gauge[selected],
+            group_name=group_name,
+            group_order=group_order,
+        )[0]
+    )
+    return before, after, int(sector_changed)
+
+
+def _apply_array_port_pair_rewrite(
+    left: np.ndarray,
+    right: np.ndarray,
+    gauge: np.ndarray,
+    edge: int,
+    *,
+    repair_left: bool,
+    group_name: str,
+    group_order: int,
+) -> tuple[int, int]:
+    """Apply one canonical covariant edge rewrite and return mismatch before/after."""
+
+    edge = int(edge)
+    before = int(
+        covariant_mismatch_mask(
+            left[edge : edge + 1],
+            right[edge : edge + 1],
+            gauge[edge : edge + 1],
+            group_name=group_name,
+            group_order=group_order,
+        )[0]
+    )
+    if before:
+        repair_covariant_port_pairs(
+            left,
+            right,
+            gauge,
+            np.asarray([edge], dtype=np.int64),
+            np.asarray([bool(repair_left)]),
+            group_name=group_name,
+            group_order=group_order,
+        )
+    after = int(
+        covariant_mismatch_mask(
+            left[edge : edge + 1],
+            right[edge : edge + 1],
+            gauge[edge : edge + 1],
+            group_name=group_name,
+            group_order=group_order,
+        )[0]
+    )
+    return before, after
+
+
+def _replay_graph_endpoints(
+    edge_left: np.ndarray | None,
+    edge_right: np.ndarray | None,
+    edge_count: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    if edge_left is None and edge_right is None:
+        left = np.arange(edge_count, dtype=np.int64)
+        return left, left + int(edge_count)
+    if edge_left is None or edge_right is None:
+        raise ValueError("both theorem replay graph endpoint arrays are required together")
+    left = np.asarray(edge_left, dtype=np.int64)
+    right = np.asarray(edge_right, dtype=np.int64)
+    if left.shape != (edge_count,) or right.shape != (edge_count,):
+        raise ValueError("graph endpoint arrays must match theorem replay edge slots")
+    if np.any(left < 0) or np.any(right < 0):
+        raise ValueError("theorem replay graph endpoints must be nonnegative")
+    return left, right
+
+
+def _array_gauge_covariance_checks(
+    left0: np.ndarray,
+    right0: np.ndarray,
+    gauge0: np.ndarray,
+    edge_left: np.ndarray,
+    edge_right: np.ndarray,
+    active: np.ndarray,
+    *,
+    checks: int,
+    group_name: str,
+    group_order: int,
+    sector_config: dict[str, Any] | None,
+    rng: np.random.Generator,
+) -> dict[str, Any]:
+    """Replay mismatch, rewrite, and quotient hashing after local frame changes."""
+
+    requested = max(0, int(checks))
+    if requested == 0:
+        return {"checked_count": 0, "violation_count": 0, "coverage_pass": False}
+    node_count = int(max(np.max(edge_left), np.max(edge_right)) + 1) if edge_left.size else 0
+    source_mask = covariant_mismatch_mask(
+        left0,
+        right0,
+        gauge0,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    source_quotient_hash = gauge_quotient_state_hash(
+        left0,
+        right0,
+        gauge0,
+        edge_left=edge_left,
+        edge_right=edge_right,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    violations = 0
+    checked = 0
+    for index in range(requested):
+        frames = rng.integers(0, int(group_order), size=node_count, dtype=np.int16)
+        transformed = transform_local_frames(
+            left0,
+            right0,
+            gauge0,
+            edge_left,
+            edge_right,
+            frames,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        transformed_mask = covariant_mismatch_mask(
+            *transformed,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        transformed_hash = gauge_quotient_state_hash(
+            *transformed,
+            edge_left=edge_left,
+            edge_right=edge_right,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        check_pass = bool(np.array_equal(source_mask, transformed_mask) and source_quotient_hash == transformed_hash)
+        if active.size:
+            edge = int(active[index % int(active.size)])
+            repair_left = bool(index % 2 == 0)
+            original_after = (left0.copy(), right0.copy(), gauge0.copy())
+            transformed_after = tuple(np.asarray(values).copy() for values in transformed)
+            sector_seed = int(rng.integers(0, np.iinfo(np.int64).max))
+            _apply_array_production_overlap_move(
+                *original_after,
+                edge,
+                repair_left=repair_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=np.random.default_rng(sector_seed),
+                sector_config=dict(sector_config or {}),
+            )
+            _apply_array_production_overlap_move(
+                *transformed_after,
+                edge,
+                repair_left=repair_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=np.random.default_rng(sector_seed),
+                sector_config=dict(sector_config or {}),
+            )
+            expected_transformed_after = transform_local_frames(
+                *original_after,
+                edge_left,
+                edge_right,
+                frames,
+                group_name=group_name,
+                group_order=group_order,
+            )
+            check_pass = bool(
+                check_pass
+                and all(
+                    np.array_equal(observed, expected)
+                    for observed, expected in zip(transformed_after, expected_transformed_after, strict=True)
+                )
+            )
+        checked += 1
+        if not check_pass:
+            violations += 1
+    return {
+        "checked_count": int(checked),
+        "violation_count": int(violations),
+        "coverage_pass": bool(checked == requested and requested > 0),
+    }
+
+
+def _endpoint_branch_confluence_report(
+    edge_left: np.ndarray,
+    edge_right: np.ndarray,
+    active: np.ndarray,
+    *,
+    endpoint_branch_effective: bool = True,
+) -> dict[str, Any]:
+    """Decide confluence of the production endpoint branch relation in O(E).
+
+    Each active edge may repair either endpoint.  On a graph matching, the two
+    choices are related by independent endpoint-frame changes, so the terminal
+    quotient orbit is unique.  If an active edge touches any node that also
+    touches another edge, that unchanged incident edge fixes the node frame.
+    The two endpoint choices then leave inequivalent values on the active edge
+    (the active discrepancy is non-identity), which is an exact structural
+    nonconfluence witness.  This proof is independent of sampled schedules.
+    """
+
+    graph_left = np.asarray(edge_left, dtype=np.int64)
+    graph_right = np.asarray(edge_right, dtype=np.int64)
+    active_edges = np.asarray(active, dtype=np.int64)
+    if graph_left.ndim != 1 or graph_right.ndim != 1 or graph_left.shape != graph_right.shape:
+        raise ValueError("edge endpoint arrays must be matching one-dimensional arrays")
+    if active_edges.ndim != 1:
+        raise ValueError("active edges must be one-dimensional")
+    if np.any((active_edges < 0) | (active_edges >= graph_left.size)):
+        raise ValueError("active edge index out of bounds")
+    active_count = int(active_edges.size)
+    if active_count == 0:
+        return {
+            "mode": "exact_endpoint_branch_structural_confluence_v1",
+            "coverage_complete": False,
+            "active_edge_count": 0,
+            "structurally_confluent": False,
+            "structural_nonconfluence_witness_count": 0,
+            "unique_terminal_quotient_hash_count": None,
+            "terminal_quotient_hashes": [],
+            "blockers": ["no_enabled_endpoint_repair_branch"],
+        }
+    if not endpoint_branch_effective:
+        return {
+            "mode": "exact_endpoint_branch_structural_confluence_v1",
+            "coverage_complete": True,
+            "active_edge_count": active_count,
+            "structurally_confluent": True,
+            "structural_nonconfluence_witness_count": 0,
+            "unique_terminal_quotient_hash_count": 1,
+            "terminal_orbit_count_semantics": "exact",
+            "terminal_quotient_hashes": [],
+            "endpoint_branch_effective": False,
+            "proof": (
+                "probability-one covariant discrepancy absorption makes every selected edge "
+                "consistent before the endpoint branch, so both endpoint assignments are no-ops"
+            ),
+            "blockers": [],
+        }
+    active_self_loops = active_edges[graph_left[active_edges] == graph_right[active_edges]]
+    if active_self_loops.size:
+        return {
+            "mode": "exact_endpoint_branch_structural_confluence_v1",
+            "coverage_complete": False,
+            "active_edge_count": active_count,
+            "structurally_confluent": False,
+            "structural_nonconfluence_witness_count": 0,
+            "unique_terminal_quotient_hash_count": None,
+            "terminal_quotient_hashes": [],
+            "unsupported_active_self_loop": int(active_self_loops[0]),
+            "blockers": ["active_self_loop_endpoint_branch_not_covered"],
+        }
+
+    if graph_left.size:
+        node_count = int(max(np.max(graph_left), np.max(graph_right))) + 1
+        degree = np.bincount(np.concatenate([graph_left, graph_right]), minlength=node_count)
+    else:
+        degree = np.zeros(0, dtype=np.int64)
+    witness: dict[str, Any] | None = None
+    for edge_raw in active_edges:
+        edge = int(edge_raw)
+        for endpoint_name, node_raw in (("left", graph_left[edge]), ("right", graph_right[edge])):
+            node = int(node_raw)
+            if int(degree[node]) <= 1:
+                continue
+            incident = np.flatnonzero(
+                ((graph_left == node) | (graph_right == node))
+                & (np.arange(graph_left.size, dtype=np.int64) != edge)
+            )
+            witness = {
+                "active_edge": edge,
+                "shared_node": node,
+                "active_edge_endpoint": endpoint_name,
+                "unchanged_incident_edge": int(incident[0]),
+                "node_degree": int(degree[node]),
+                "divergent_branches": ["repair_left_endpoint", "repair_right_endpoint"],
+                "proof": (
+                    "the unchanged incident edge fixes the shared-node frame; because the active edge "
+                    "has non-identity discrepancy, repairing opposite endpoints leaves two distinct "
+                    "local-frame quotient orbits"
+                ),
+            }
+            break
+        if witness is not None:
+            break
+
+    if witness is not None:
+        return {
+            "mode": "exact_endpoint_branch_structural_confluence_v1",
+            "coverage_complete": True,
+            "active_edge_count": active_count,
+            "structurally_confluent": False,
+            "structural_nonconfluence_witness_count": 1,
+            "unique_terminal_quotient_hash_count": 2,
+            "terminal_orbit_count_semantics": "exact lower bound",
+            "terminal_quotient_hashes": [],
+            "witness": witness,
+            "blockers": ["random_endpoint_branch_nonconfluent_at_shared_patch"],
+        }
+
+    return {
+        "mode": "exact_endpoint_branch_structural_confluence_v1",
+        "coverage_complete": True,
+        "active_edge_count": active_count,
+        "structurally_confluent": True,
+        "structural_nonconfluence_witness_count": 0,
+        "unique_terminal_quotient_hash_count": 1,
+        "terminal_orbit_count_semantics": "exact",
+        "terminal_quotient_hashes": [],
+        "proof": "every active endpoint has graph degree one, so endpoint branches factor into independent gauge-equivalent edge orbits",
+        "blockers": [],
+    }
 
 
 def _array_port_pair_commutation_checks(
     left0: np.ndarray,
     right0: np.ndarray,
+    gauge0: np.ndarray,
     active: np.ndarray,
     *,
     edge_left: np.ndarray | None,
     edge_right: np.ndarray | None,
     disjoint_checks: int,
     local_diamond_checks: int,
+    group_name: str,
+    group_order: int,
+    sector_config: dict[str, Any] | None,
     rng: np.random.Generator,
 ) -> dict[str, Any]:
     """Execute sampled AB/BA rewrites instead of asserting confluence.
@@ -5234,11 +6754,29 @@ def _array_port_pair_commutation_checks(
     local_pairs = list(dict.fromkeys([*disjoint_pairs, *shared_pairs, *generic_pairs]))
 
     disjoint_violations = sum(
-        not _array_port_pair_rewrites_commute(left0, right0, first, second)
+        not _array_port_pair_rewrites_commute(
+            left0,
+            right0,
+            gauge0,
+            first,
+            second,
+            group_name=group_name,
+            group_order=group_order,
+            sector_config=sector_config,
+        )
         for first, second in disjoint_pairs
     )
     local_violations = sum(
-        not _array_port_pair_rewrites_commute(left0, right0, first, second)
+        not _array_port_pair_rewrites_commute(
+            left0,
+            right0,
+            gauge0,
+            first,
+            second,
+            group_name=group_name,
+            group_order=group_order,
+            sector_config=sector_config,
+        )
         for first, second in local_pairs
     )
     requested_both = int(disjoint_checks) > 0 and int(local_diamond_checks) > 0
@@ -5269,21 +6807,86 @@ def _array_port_pair_commutation_checks(
 def _array_port_pair_rewrites_commute(
     left0: np.ndarray,
     right0: np.ndarray,
+    gauge0: np.ndarray,
     first: int,
     second: int,
+    *,
+    group_name: str,
+    group_order: int,
+    sector_config: dict[str, Any] | None = None,
 ) -> bool:
-    """Run the two local rewrite orders and compare their terminal states."""
+    """Run both orders for every enabled endpoint-branch assignment."""
 
     slots = np.asarray([int(first), int(second)], dtype=np.int64)
-    left_ab = np.asarray(left0[slots], dtype=np.int16).copy()
-    right_ab = np.asarray(right0[slots], dtype=np.int16).copy()
-    left_ba = left_ab.copy()
-    right_ba = right_ab.copy()
-    _apply_array_port_pair_rewrite(left_ab, right_ab, 0)
-    _apply_array_port_pair_rewrite(left_ab, right_ab, 1)
-    _apply_array_port_pair_rewrite(left_ba, right_ba, 1)
-    _apply_array_port_pair_rewrite(left_ba, right_ba, 0)
-    return bool(np.array_equal(left_ab, left_ba) and np.array_equal(right_ab, right_ba))
+    source_left = np.asarray(left0[slots], dtype=np.int16)
+    source_right = np.asarray(right0[slots], dtype=np.int16)
+    source_gauge = np.asarray(gauge0[slots], dtype=np.int16)
+    for first_repairs_left in (False, True):
+        for second_repairs_left in (False, True):
+            branch_code = int(first_repairs_left) + 2 * int(second_repairs_left)
+            first_sector_seed = (
+                (int(first) + 1) * 1_000_003 + branch_code * 97 + 17
+            ) % np.iinfo(np.int64).max
+            second_sector_seed = (
+                (int(second) + 1) * 1_000_033 + branch_code * 193 + 29
+            ) % np.iinfo(np.int64).max
+            left_ab = source_left.copy()
+            right_ab = source_right.copy()
+            gauge_ab = source_gauge.copy()
+            left_ba = source_left.copy()
+            right_ba = source_right.copy()
+            gauge_ba = source_gauge.copy()
+            _apply_array_production_overlap_move(
+                left_ab,
+                right_ab,
+                gauge_ab,
+                0,
+                repair_left=first_repairs_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=np.random.default_rng(first_sector_seed),
+                sector_config=dict(sector_config or {}),
+            )
+            _apply_array_production_overlap_move(
+                left_ab,
+                right_ab,
+                gauge_ab,
+                1,
+                repair_left=second_repairs_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=np.random.default_rng(second_sector_seed),
+                sector_config=dict(sector_config or {}),
+            )
+            _apply_array_production_overlap_move(
+                left_ba,
+                right_ba,
+                gauge_ba,
+                1,
+                repair_left=second_repairs_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=np.random.default_rng(second_sector_seed),
+                sector_config=dict(sector_config or {}),
+            )
+            _apply_array_production_overlap_move(
+                left_ba,
+                right_ba,
+                gauge_ba,
+                0,
+                repair_left=first_repairs_left,
+                group_name=group_name,
+                group_order=group_order,
+                sector_rng=np.random.default_rng(first_sector_seed),
+                sector_config=dict(sector_config or {}),
+            )
+            if not (
+                np.array_equal(left_ab, left_ba)
+                and np.array_equal(right_ab, right_ba)
+                and np.array_equal(gauge_ab, gauge_ba)
+            ):
+                return False
+    return True
 
 
 def _sample_rewrite_pairs(
@@ -5339,14 +6942,6 @@ def _shared_node_rewrite_pairs(
                 if len(pairs) >= int(checks):
                     return sorted(pairs)
     return sorted(pairs)
-
-
-def _array_port_pair_hash(left: np.ndarray, right: np.ndarray, group_order: int) -> str:
-    hasher = hashlib.sha256()
-    hasher.update(str(int(group_order)).encode("ascii"))
-    hasher.update(np.asarray(left, dtype=np.int16).tobytes())
-    hasher.update(np.asarray(right, dtype=np.int16).tobytes())
-    return "sha256:" + hasher.hexdigest()
 
 
 def _regularize_support_visible_fields(

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -8,6 +7,8 @@ from typing import Any
 
 import numpy as np
 from scipy.optimize import linprog
+
+from oph_fpe.evidence.hashes import stable_json_hash
 
 
 FORBIDDEN_UHE_SOURCE_TOKENS = (
@@ -410,8 +411,7 @@ def write_uhe_coefficient_emission_report(
 
 
 def stable_hash(payload: Any) -> str:
-    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
-    return "sha256:" + hashlib.sha256(raw).hexdigest()
+    return stable_json_hash(payload)
 
 
 def _feature_matrix(features: list[list[float]] | np.ndarray) -> np.ndarray:

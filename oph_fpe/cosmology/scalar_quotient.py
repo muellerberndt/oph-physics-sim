@@ -11,6 +11,7 @@ import numpy as np
 
 from oph_fpe.constants.oph_pixel import P_STAR
 from oph_fpe.cosmology.screen_to_primordial import source_only_quotient_screen_scalar
+from oph_fpe.evidence.hashes import canonical_json_bytes
 
 
 SCALAR_READOUT_FIELDS = (
@@ -68,7 +69,12 @@ def scalar_quotient_report(
     source_scalar = source_only_quotient_screen_scalar(scalar_field, axes)
     source_scalar_values = source_scalar.pop("values")
     source_scalar["values_sha256"] = hashlib.sha256(
-        json.dumps(source_scalar_values, separators=(",", ":"), sort_keys=True).encode("utf-8")
+        canonical_json_bytes(
+            {
+                "schema": "oph_scalar_quotient_values_hash_v2",
+                "values": source_scalar_values,
+            }
+        )
     ).hexdigest()
 
     target_level_count = int(target_ell_ir) + 1

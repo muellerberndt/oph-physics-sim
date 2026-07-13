@@ -7,6 +7,7 @@ from pathlib import Path
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants
 from oph_fpe.cosmology.cmb_derivation import write_cmb_parameter_derivation_report
+from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.unique_predictions import (
     parity_odd_even_ratio,
     unique_prediction_gate_report,
@@ -31,10 +32,36 @@ def test_unique_prediction_gate_computes_alpha_linked_targets(tmp_path: Path):
     assert report["scalar_tilt"]["canonical_kappa_rep_status"] == "certificate_pending"
     assert abs(report["parity_envelope"]["predicted_R_OE_TT_2_29"] - 1.2160638411338078) < 1e-12
     assert abs(report["parity_envelope"]["unweighted_envelope_R_OE_2_29_debug"] - parity_odd_even_ratio(range(2, 30))) < 1e-12
-    assert abs(report["neutrino_cosmology"]["sum_mnu_eV"] - 0.09001192964464505) < 1e-14
+    cosmology_constants = OPHConstants().as_jsonable()
+    assert cosmology_constants["oph_neutrino_mass_prediction"]["available"] is False
+    assert cosmology_constants["oph_neutrino_mass_prediction"]["sum_mnu_eV"] is None
+    assert cosmology_constants["conventional_camb_neutrino_baseline"]["sum_mnu_eV"] == 0.06
+    neutrino = report["neutrino_cosmology"]
+    assert neutrino["oph_derived_prediction"]["available"] is False
+    assert neutrino["oph_derived_prediction"]["masses_eV"] is None
+    assert neutrino["oph_derived_prediction"]["sum_mnu_eV"] is None
+    assert neutrino["oph_derived_prediction"]["public_promotion_allowed"] is False
+    assert neutrino["conventional_camb_baseline"]["sum_mnu_eV"] == 0.06
+    assert neutrino["conventional_camb_baseline"]["counts_as_oph_prediction"] is False
+    rejected = neutrino["historical_rejected_weighted_cycle_benchmark"]
+    assert rejected["included"] is False
+    assert rejected["masses_eV"] is None
+    assert rejected["sum_mnu_eV"] is None
+    assert rejected["public_promotion_allowed"] is False
     assert report["measurement_comparable_now"] is True
     assert report["finite_lattice_derived"] is False
     assert report["physical_cmb_prediction"] is False
+
+
+def test_unique_prediction_gate_requires_opt_in_for_rejected_neutrino_benchmark():
+    report = unique_prediction_gate_report(include_rejected_weighted_cycle_benchmark=True)
+    rejected = report["neutrino_cosmology"]["historical_rejected_weighted_cycle_benchmark"]
+
+    assert rejected["included"] is True
+    assert rejected["status"] == "rejected_weighted_cycle_retrospective_benchmark"
+    assert abs(rejected["sum_mnu_eV"] - 0.09001192964464505) < 1e-14
+    assert rejected["declared_gate"]["current_weighted_cycle_candidate_rejected"] is True
+    assert rejected["public_promotion_allowed"] is False
 
 
 def test_unique_prediction_gate_imports_v09_csvs(tmp_path: Path):

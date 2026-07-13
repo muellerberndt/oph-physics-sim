@@ -280,12 +280,12 @@ def test_oph_universe_object_chart_config_excludes_auxiliary_h3_response_labels(
     assert h3_config["control_fit_mode"] == "same_h3_model_not_affine_target_fit"
     assert bw_config["source_state"] == "theorem_observer"
     assert bw_config["state_mode"] == "history_koopman_generator_state"
-    assert bw_config["history_window"] >= 16
+    assert bw_config["history_window"] >= 32
     assert len(bw_config["times"]) >= 3
     assert config["observer_chart_population"]["incidence_mode"] == "transition_history_mixture_cluster"
     assert theorem_core["consensus_replay"]["enabled"] is True
     assert cosmology["b_a_paired_perturbation"]["enabled"] is True
-    assert cosmology["b_a_paired_perturbation"]["source_state"] == "theorem_observer"
+    assert cosmology["b_a_paired_perturbation"]["source_state"] == "final"
 
 
 def test_oph_universe_uses_configured_visualization_export_observer_caps():

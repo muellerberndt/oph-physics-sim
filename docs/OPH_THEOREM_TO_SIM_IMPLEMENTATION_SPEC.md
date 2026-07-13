@@ -60,6 +60,11 @@ BH1  black_hole_physical_evaporation_bridge_receipt
 BH2  black_hole_qnm_radiative_bridge_receipt
 D0   distributed_artifact_packaging_smoke_receipt
 D1   distributed_kernel_scaling_readiness_receipt
+WZH0 boson_numerical_diagnostic_receipt
+WZH1 source_clock_scale_receipt
+WZH2 frozen_rg_matching_receipt
+WZH3 brst_complex_pole_receipt
+WZH4 full_source_only_wzh_prediction_receipt
 ```
 
 Legacy aliases may remain in JSON for compatibility, but new docs and UIs should present the
@@ -118,6 +123,8 @@ These are hard boundaries:
 - `visualizationViews.effectiveStringTheory` is a schematic edge-cycle/worldsheet diagnostic view,
   not a critical string CFT, heterotic worldsheet derivation, or production-particle proof.
 - H3 proto-worldlines and screen holonomy defects are not matter particles until `P1` passes.
+  `P1` is recomputed from `particle_promotion_evidence.json`; legacy producer fields such as
+  `particle_matter_receipt` and `physical_particle_emergence` are never promotion inputs.
 - `visualizationViews.emergentCurvedSpacetime` is a quotient-visible H3 source/compaction
   diagnostic, not production gravity. `G2` requires `E0`, and `E0` requires
   `einstein_bridge_manifest.json` plus all theorem-tagged bridge sidecar receipts.
@@ -132,6 +139,11 @@ These are hard boundaries:
   `oph-fpe hadron-source-backend --out <run>/hadron_source_backend`. Its default claim is
   `SOURCE_PROTOTYPE_NOT_PROMOTED` at tier `H2`; this is the correct state until a source QCD law,
   Ward current ledger, spectral exports, and no-target-leak certificates are actually populated.
+  Requesting `SOURCE_INTERVAL_PROMOTED` does not populate those receipts. Promotion additionally
+  requires `--evidence-dir <independent-bundle>` with a clean source commit, complete SHA-256
+  manifest, typed positivity and systematics evidence, deterministic replay, and a frozen
+  no-target-leak audit. The manifest schema is
+  `docs/hadron_source_promotion_evidence_v1.schema.json`.
 - The Q3 JWST compact-object workbench is emitted with commands such as
   `oph-fpe jwst-object-source-artifact --out <run>/jwst/source` and
   `oph-fpe jwst-compact-object-simulation-plan --run-dir <run> --out <run>/jwst/plan`.
@@ -148,6 +160,11 @@ These are hard boundaries:
   Bondi/asymptotic readout, and frozen detector comparison gates.
 - Reference Gaussian/free-field or compact-`U(1)` baselines do not become OPH-native vacuum or
   primordial-field claims without explicit promotion receipts.
+- Synthetic W/Z/H determinant zeros are `WZH0` controls only. `WZH1` requires
+  the source clock packet; `WZH2` requires the frozen physical RG packet;
+  `WZH3` requires source BRST blocks, identities, sheets, residues, and error
+  bounds; and `WZH4` additionally requires hash-pinned D10/D11 certificates,
+  one strict source branch, no target ancestry, and a prospective claim freeze.
 - Shape-substrate and positive-geometry reports do not alter trusted OPH repair/readout outcomes
   unless fail-closed equivalence and provenance receipts pass.
 
@@ -166,6 +183,27 @@ universe harness is the reference fixture. A larger run can claim `C0b` only if 
 - source hashes, config hash, replay tables, and bundle checksums.
 
 Exploration runs may emit `C0a` and still keep `C0b` false.
+
+## Collar CMI Contract
+
+The issue #307 finite audit is `ISSUE_307_COLLAR_CMI_DECAY_FINITE_RECEIPT`. It is the conjunction
+of:
+
+- `FINITE_RANGE_GIBBS_EVIDENCE_RECEIPT`, with hash-pinned local Hamiltonian terms, uniform range,
+  norm and degree bounds, and Gibbs reconstruction residuals;
+- `STRONG_CONDITIONAL_MATRIX_MIXING_RECEIPT`, with predeclared constants uniform over the stage,
+  cap and boundary-condition family;
+- `REGIONAL_COLLAR_CMI_EVIDENCE_RECEIPT`, computed from the four regional entropy terms in nats;
+- `BOUNDARY_PREFACTORED_CMI_BOUND_RECEIPT`, which recomputes
+  `I_upper <= c_mix * boundary_size_uv * exp[-delta/(xi_uv_cells*ell_uv)]`;
+- `SHARP_DOUBLE_SCALING_RATE_RECEIPT`, which checks a common family and the full log margin
+  `delta/(xi_uv_cells*ell_uv) - log(c_mix*boundary_size_uv)`.
+
+Use `issue-307-collar-cmi-decay --source <primitive.json> --out <report.json>`. Ordinary
+two-point clustering, a fitted correlation length from the same rows, the local packet-triplet CMI,
+or a caller pass flag cannot satisfy this contract. The output claim level is
+`branch_instantiation_sanity`; it never promotes a CMI value to modular source charge, stress,
+Einstein branch entry, or a physical claim.
 
 ## Lorentz And H3 Contract
 
@@ -247,7 +285,23 @@ refinement tail modulus, and train/validation/test ancestry separation.
 Proto-particle diagnostics can use screen holonomy clusters, collar-like defect tracks, and H3
 worldline fits. `P1` requires localized shared-bulk support, stable topological/sector charge,
 contractible-path transport, fusion conservation, scattering reproducibility, speed/causality
-controls, observer-resampling stability, and refinement stability.
+controls, observer-resampling stability, and refinement stability. Those conditions form `P0`,
+not `P1` by themselves.
+
+The independent particle contract has three lanes. `P0` is the controlled proto-worldline lane.
+The classical carrier-mode lane requires a stated background and phase, explicit quadratic action,
+positive physical kinetic coefficient, physical projector/constraint reduction, positive reduced
+Hamiltonian, and the structural-speed wave kernel. The quantum-particle lane separately requires
+positive-energy vacuum quantization, a physical Hilbert space from constraint reduction or BRST,
+a nonnegative Kallen--Lehmann measure with positive-residue mass shell, and stable asymptotic/LSZ
+hypotheses. A colored candidate must additionally provide a deconfined asymptotic sector. Thus
+`P1 = P0 AND classical-carrier AND quantum-particle AND colored-deconfinement-when-applicable`.
+
+Each lane's primitive JSON must byte-match a hash-pinned sidecar below the run directory. The
+contract rejects missing primitives, truthy integers or strings in place of booleans, path escapes,
+hash mismatches, dirty source provenance, and caller-supplied top-level pass flags. The schema is
+`docs/particle_promotion_evidence_v1.schema.json`; audit a run with
+`oph-fpe particle-promotion-contract --run-dir <run>`.
 
 Gauge and Standard Model claims are not supplied by toy `S3` sectors. `G0` may sieve finite
 candidate packets. `G1` requires a four-dimensional OS/gauge certificate and must remain separate
@@ -301,6 +355,13 @@ Until then:
 
 `CMB0` covers screen-level angular spectra, CMB-lite shape comparisons, CMB anomaly diagnostics, and
 comparable-observation tables. It is measurement-facing but not physical prediction.
+
+The neutrino lane follows the separate contract in `docs/neutrino_status.md` and
+`schemas/cosmology/neutrino_status.schema.json`. OPH currently has no source-derived neutrino mass
+prediction. The default `sum_mnu=0.06 eV` input is a conventional CAMB/CLASS reference and must be
+tagged `counts_as_oph_prediction=false`. The former weighted-cycle triple is a target-informed branch
+rejected by its declared NuFIT 6.1 gate; it may appear only behind an explicit historical-benchmark
+opt-in with `public_promotion_allowed=false`.
 
 `CMB2` requires finite OPH source arrays, no-data-use dependency graph, finite covariant
 collar-packet parent, stress closure, gauge-independent source fields, screen-to-radial or

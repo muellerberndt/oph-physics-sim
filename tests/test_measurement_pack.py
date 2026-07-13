@@ -355,15 +355,21 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     out = tmp_path / "pack"
     report = export_measurement_pack([run], out)
 
-    assert report["claims"]["chart_level_3p1"] is True
+    assert report["claims"]["chart_level_3p1"] is False
+    assert report["claims"]["chart_level_3p1_declaration_diagnostic"] is True
     assert report["claims"]["observer_modular_time_receipt"] is True
-    assert report["claims"]["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert report["claims"]["observer_facing_3p1d_h3_experience_receipt"] is False
     assert report["claims"]["observer_facing_populated_h3_experience_receipt"] is False
     assert report["claims"]["observer_modular_time_observer_count"] == 16
-    assert report["claims"]["observer_modular_experience_blockers"] == []
+    assert "conformal_h3_chart_receipt" in report["claims"][
+        "observer_modular_experience_blockers"
+    ]
     assert "observer_h3_object_population_receipt" in report["claims"]["observer_populated_h3_experience_blockers"]
     assert report["claims"]["observer_modular_experience_source_blockers"] == []
     assert report["claims"]["observer_populated_h3_experience_blockers"] == [
+        "bw_kms_branch_replay_receipt",
+        "conformal_h3_chart_receipt",
+        "h3_modular_response_receipt",
         "observer_h3_object_population_receipt"
     ]
     assert "bulk_proof_certificate_report.json" in report["files"]
@@ -476,9 +482,11 @@ def test_export_measurement_pack_regenerates_combined_bulk_certificate(tmp_path:
     report = export_measurement_pack([h3_run, scale_run], out)
     proof = json.loads((out / "bulk_proof_certificate_report.json").read_text(encoding="utf-8"))
 
-    assert report["claims"]["theorem_assisted_h3_bulk"] is True
+    # Self-authored emergence/chart summaries no longer substitute for the
+    # independently validated finite-consensus theorem contract.
+    assert report["claims"]["theorem_assisted_h3_bulk"] is False
     assert report["claims"]["scale_compressed_cmb_curve_comparable"] is True
-    assert proof["theorem_assisted_h3_nonboundary_population_established"] is True
+    assert proof["theorem_assisted_h3_nonboundary_population_established"] is False
     assert proof["scale_compressed_h3_preview_established"] is True
     assert proof["scale_compressed_measurement_comparable_cmb_curve"] is True
     assert proof["scale_compressed_particle_preview_established"] is True
@@ -521,7 +529,8 @@ def test_export_measurement_pack_aggregates_sweep_cl_and_transition_report(tmp_p
     out = tmp_path / "pack"
     report = export_measurement_pack([sweep], out)
 
-    assert report["claims"]["chart_level_3p1"] is True
+    assert report["claims"]["chart_level_3p1"] is False
+    assert report["claims"]["chart_level_3p1_declaration_diagnostic"] is True
     assert (out / "cmb_screen_cl.csv").read_text(encoding="utf-8").count("record_signature") == 2
     assert json.loads((out / "transition_selection_report.json").read_text(encoding="utf-8"))[
         "two_pi_selected"
@@ -1077,7 +1086,25 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
         encoding="utf-8",
     )
     (run / "neutrinos" / "oph_cnb_neutrino_report.json").write_text(
-        json.dumps({"measurement_comparable_now": True, "finite_lattice_derived": False}),
+        json.dumps(
+            {
+                "measurement_comparable_now": False,
+                "conventional_baseline_measurement_comparable": True,
+                "oph_neutrino_mass_prediction_available": False,
+                "public_promotion_allowed": False,
+                "finite_lattice_derived": False,
+                "oph_neutrino_mass_status": {
+                    "available": False,
+                    "public_promotion_allowed": False,
+                },
+                "conventional_camb_baseline": {"sum_mnu_eV": 0.06},
+                "historical_rejected_weighted_cycle_benchmark": {
+                    "included": False,
+                    "public_promotion_allowed": False,
+                },
+                "readiness_gates": {"conventional_baseline_relic_background_callable": True},
+            }
+        ),
         encoding="utf-8",
     )
     (run / "h0s8" / "h0s8_branch_report.json").write_text(
@@ -1422,6 +1449,11 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["selector_elimination_theorem_side_receipt"] is True
     assert claims["cmb_anomaly_parity_asymmetry_proxy"] is True
     assert claims["neutrino_measurement_comparable"] is True
+    assert claims["neutrino_oph_mass_prediction_available"] is False
+    assert claims["neutrino_oph_mass_public_promotion_allowed"] is False
+    assert claims["neutrino_conventional_baseline_sum_mnu_eV"] == 0.06
+    assert claims["neutrino_rejected_weighted_cycle_benchmark_included"] is False
+    assert claims["neutrino_rejected_weighted_cycle_public_promotion_allowed"] is False
     assert claims["neutrino_finite_lattice_derived"] is False
     assert claims["h0s8_measurement_comparable"] is True
     assert claims["compressed_likelihood_reference"] is True

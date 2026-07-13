@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import yaml
 
 from oph_fpe.claims import (
@@ -34,6 +36,11 @@ from oph_fpe.bulk.cap_normal_h3_chart import cap_normal_h3_chart_report
 from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report
 from oph_fpe.bulk.lorentz_algebra import lorentz_algebra_report
 from oph_fpe.bulk.modular_response_h3_localization import modular_response_h3_localization_report
+from oph_fpe.evidence.hashes import CANONICAL_HASH_SCHEMA
+from oph_fpe.gauge.covariant_overlap import (
+    GAUGE_COVARIANT_OVERLAP_SCHEMA,
+    GAUGE_QUOTIENT_CANONICALIZER,
+)
 from oph_fpe.simulation_assumptions import (
     manifest_assumptions_pass,
     revalidate_simulation_assumption_manifest,
@@ -769,6 +776,31 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     )
 
 
+def finite_consensus_replay_validation_report(run_dir: Path) -> dict[str, Any]:
+    """Independently validate C0b from its primitive gauge-coupled source.
+
+    This is the read-only proof-certificate entry point.  It deliberately does
+    not read ``finite_oph_theorem_contract_report.json`` and it never writes a
+    replacement report: the primitive NPZ, its manifest, the replay sidecar,
+    and the theorem-core certificate are revalidated in memory.
+    """
+
+    root = Path(run_dir)
+    theorem_core = _read_json(root / "theorem_core_receipts.json")
+    passed, validation = _validated_finite_consensus_replay(root, theorem_core)
+    return {
+        "mode": "finite_consensus_primitive_bound_validation_v1",
+        "passed": bool(passed),
+        "validation": validation,
+        "blockers": list(validation.get("blockers", [])),
+        "claim_boundary": (
+            "C0b is recomputed from the hash-bound primitive gauge-coupled "
+            "arrays and exact replay parameters. Persisted theorem-contract "
+            "stage booleans are diagnostic only."
+        ),
+    }
+
+
 def write_finite_oph_theorem_contract_report(run_dir: Path, out: Path | None = None) -> dict[str, Any]:
     report = finite_oph_theorem_contract_report(run_dir)
     out_path = Path(out) if out is not None else Path(run_dir) / "finite_oph_theorem_contract_report.json"
@@ -835,7 +867,7 @@ def _validated_finite_consensus_replay(
 ) -> tuple[bool, dict[str, Any]]:
     """Cross-check the computed C0b certificate against its replay artifact.
 
-    A copied top-level boolean is never sufficient.  The v2 certificate and
+    A copied top-level boolean is never sufficient.  The gauge-coupled v3 certificate and
     independently written replay sidecar must agree on provenance hash and all
     theorem-relevant counts, while sampled accepted events must still exhibit
     strict touched descent and non-increasing global mismatch.
@@ -856,14 +888,19 @@ def _validated_finite_consensus_replay(
     evidence = replay.get("evidence") if isinstance(replay.get("evidence"), dict) else {}
     blockers: list[str] = []
 
-    if certificate.get("mode") != "finite_consensus_theorem_certificate_v2_computed_array_replay":
-        blockers.append("computed_v2_consensus_certificate_missing")
+    certificate_mode = certificate.get("mode")
+    if certificate_mode == "finite_consensus_theorem_certificate_v2_computed_array_replay":
+        blockers.append("obsolete_v2_decoupled_consensus_certificate_rejected")
+    if certificate_mode != "finite_consensus_theorem_certificate_v3_computed_gauge_quotient_replay":
+        blockers.append("computed_v3_gauge_quotient_consensus_certificate_missing")
     for key in (
         FINITE_CONSENSUS_THEOREM_RECEIPT,
         "finite_consensus_theorem_receipt",
         "receipt",
         "computed_replay_artifact_present",
         "computed_from_port_pair_arrays",
+        "computed_from_gauge_coupled_arrays",
+        "gauge_covariant_mismatch",
     ):
         if not _literal_true(certificate.get(key)):
             blockers.append(f"certificate_{key}_not_literal_true")
@@ -883,6 +920,8 @@ def _validated_finite_consensus_replay(
         FINITE_CONSENSUS_THEOREM_RECEIPT,
         "finite_consensus_theorem_receipt",
         "computed_from_port_pair_arrays",
+        "computed_from_gauge_coupled_arrays",
+        "gauge_covariant_mismatch",
     ):
         if not _literal_true(replay.get(key)):
             blockers.append(f"replay_{key}_not_literal_true")
@@ -894,16 +933,43 @@ def _validated_finite_consensus_replay(
         blockers.append("certificate_source_state_sha256_invalid")
     if replay.get("source_state_sha256") != source_hash:
         blockers.append("replay_source_state_sha256_mismatch")
+    source_quotient_hash = certificate.get("source_quotient_hash")
+    if not _sha256_receipt(source_quotient_hash):
+        blockers.append("certificate_source_quotient_hash_invalid")
+    if replay.get("source_quotient_hash") != source_quotient_hash:
+        blockers.append("replay_source_quotient_hash_mismatch")
     if not _sha256_receipt(replay.get("terminal_hash")):
         blockers.append("replay_terminal_hash_invalid")
-    if evidence.get("evidence_kind") != "computed_array_port_pair_replay_v1":
+    if evidence.get("evidence_kind") != "computed_gauge_covariant_quotient_replay_v1":
         blockers.append("computed_replay_evidence_kind_invalid")
+    for owner, payload in (("certificate", certificate), ("replay", replay)):
+        if payload.get("gauge_quotient_canonicalizer") != GAUGE_QUOTIENT_CANONICALIZER:
+            blockers.append(f"{owner}_gauge_quotient_canonicalizer_invalid")
+    production_move_contract = (
+        replay.get("production_move_contract")
+        if isinstance(replay.get("production_move_contract"), dict)
+        else {}
+    )
+    if certificate.get("production_move_contract") != production_move_contract:
+        blockers.append("certificate_production_move_contract_mismatch")
+    if production_move_contract.get("schema") != "bw_array_production_overlap_move_contract_v1":
+        blockers.append("production_move_contract_schema_invalid")
+    if production_move_contract.get("mismatch_definition") != GAUGE_COVARIANT_OVERLAP_SCHEMA:
+        blockers.append("production_move_contract_mismatch_definition_invalid")
+    if not _literal_true(production_move_contract.get("replayed_endpoint_branches")):
+        blockers.append("production_endpoint_branches_not_replayed")
+    if not _literal_true(production_move_contract.get("exact_production_move_set_replayed")):
+        blockers.append("production_move_set_not_exactly_replayed")
 
     exact_counts = {
         "strict_descent_violation_count": 0,
         "accepted_phi_increase_violation_count": 0,
         "disjoint_commutation_violation_count": 0,
         "local_diamond_violation_count": 0,
+        "gauge_covariance_violation_count": 0,
+        "production_move_contract_violation_count": 0,
+        "endpoint_branch_coverage_incomplete_count": 0,
+        "endpoint_branch_confluence_violation_count": 0,
         "repair_completeness_violation_count": 0,
         "unique_terminal_quotient_hash_count": 1,
     }
@@ -919,6 +985,7 @@ def _validated_finite_consensus_replay(
         "accepted_theorem_move_count",
         "schedule_replay_count",
         "requested_schedule_replays",
+        "gauge_relabeling_check_count",
     )
     for key in positive_counts:
         value = evidence.get(key)
@@ -934,6 +1001,32 @@ def _validated_finite_consensus_replay(
         blockers.append("insufficient_schedule_replays")
     if replay.get("initial_phi") != evidence.get("theorem_phase_event_count"):
         blockers.append("replay_initial_phi_mismatch")
+
+    exact_branch_check = (
+        replay.get("exact_endpoint_branch_check")
+        if isinstance(replay.get("exact_endpoint_branch_check"), dict)
+        else {}
+    )
+    if certificate.get("exact_endpoint_branch_check") != exact_branch_check:
+        blockers.append("certificate_exact_endpoint_branch_check_mismatch")
+    if exact_branch_check.get("mode") != "exact_endpoint_branch_structural_confluence_v1":
+        blockers.append("exact_endpoint_branch_check_mode_invalid")
+    if not _literal_true(exact_branch_check.get("coverage_complete")):
+        blockers.append("exact_endpoint_branch_coverage_incomplete")
+    if not _literal_true(exact_branch_check.get("structurally_confluent")):
+        blockers.append("exact_endpoint_branch_nonconfluent")
+    exact_witness_count = exact_branch_check.get("structural_nonconfluence_witness_count")
+    if (
+        not _strict_int(exact_witness_count, minimum=0)
+        or exact_witness_count != evidence.get("endpoint_branch_confluence_violation_count")
+    ):
+        blockers.append("exact_endpoint_branch_witness_count_mismatch")
+    exact_unique_count = exact_branch_check.get("unique_terminal_quotient_hash_count")
+    if (
+        not _strict_int(exact_unique_count, minimum=1)
+        or exact_unique_count != evidence.get("unique_terminal_quotient_hash_count")
+    ):
+        blockers.append("exact_endpoint_branch_terminal_count_mismatch")
 
     sample_events = replay.get("sample_events") if isinstance(replay.get("sample_events"), list) else []
     if certificate.get("sample_event_count") != len(sample_events):
@@ -951,16 +1044,181 @@ def _validated_finite_consensus_replay(
     if certificate.get("invalid_evidence") not in ([], ()):
         blockers.append("certificate_invalid_evidence_nonempty")
 
+    independent_replay = _independently_replay_finite_consensus_source(
+        root,
+        theorem_core=theorem_core,
+        certificate=certificate,
+        replay=replay,
+    )
+    blockers.extend(independent_replay["blockers"])
+
     details = {
-        "validation_mode": "local_v2_certificate_replay_crosscheck",
+        "validation_mode": "primitive_bound_v3_gauge_quotient_independent_replay",
         "certificate_mode": certificate.get("mode"),
         "replay_mode": replay.get("mode"),
         "source_state_sha256": source_hash,
+        "source_quotient_hash": source_quotient_hash,
         "sidecar_path": str(replay_path),
         "sample_event_count": len(sample_events),
+        "independent_source_replay": independent_replay,
         "blockers": list(dict.fromkeys(blockers)),
     }
     return not details["blockers"], details
+
+
+def _independently_replay_finite_consensus_source(
+    root: Path,
+    *,
+    theorem_core: dict[str, Any],
+    certificate: dict[str, Any],
+    replay: dict[str, Any],
+) -> dict[str, Any]:
+    """Hash-bind primitive arrays and rerun C0b instead of trusting JSON claims."""
+
+    manifest_path = root / "finite_consensus_source_manifest.json"
+    manifest = _read_json(manifest_path)
+    nested_manifest = theorem_core.get("finite_consensus_source_artifact")
+    blockers: list[str] = []
+    if not manifest_path.is_file() or not manifest:
+        blockers.append("finite_consensus_source_manifest_missing")
+    if not isinstance(nested_manifest, dict) or nested_manifest != manifest:
+        blockers.append("finite_consensus_nested_source_manifest_mismatch")
+    if manifest.get("schema") != "finite_consensus_replay_source_v1":
+        blockers.append("finite_consensus_source_manifest_schema_invalid")
+    if manifest.get("hash_schema") != CANONICAL_HASH_SCHEMA:
+        blockers.append("finite_consensus_source_hash_schema_invalid")
+    if manifest.get("state_path") != "finite_consensus_source_state.npz":
+        blockers.append("finite_consensus_source_state_path_invalid")
+    state_path = root / "finite_consensus_source_state.npz"
+    expected_file_hash = manifest.get("state_file_sha256")
+    actual_file_hash = _file_sha256(state_path) if state_path.is_file() else None
+    if not _sha256_receipt(expected_file_hash) or actual_file_hash != expected_file_hash:
+        blockers.append("finite_consensus_source_state_file_hash_mismatch")
+
+    try:
+        from oph_fpe.scale import bw_array as replay_kernel
+    except Exception:
+        replay_kernel = None
+        blockers.append("finite_consensus_replay_kernel_import_failed")
+    if replay_kernel is not None:
+        kernel_hash = _file_sha256(Path(replay_kernel.__file__))
+        if (
+            not _sha256_receipt(manifest.get("replay_kernel_file_sha256"))
+            or manifest.get("replay_kernel_file_sha256") != kernel_hash
+        ):
+            blockers.append("finite_consensus_replay_kernel_hash_mismatch")
+
+    arrays: dict[str, np.ndarray] = {}
+    if state_path.is_file():
+        try:
+            with np.load(state_path, allow_pickle=False) as payload:
+                required = {
+                    "initial_port_left",
+                    "initial_port_right",
+                    "initial_gauge",
+                    "edge_left",
+                    "edge_right",
+                }
+                if set(payload.files) != required:
+                    blockers.append("finite_consensus_source_array_schema_invalid")
+                arrays = {
+                    key: np.asarray(payload[key]).copy()
+                    for key in required
+                    if key in payload.files
+                }
+        except (OSError, ValueError, KeyError):
+            blockers.append("finite_consensus_source_state_unreadable")
+    if arrays:
+        shapes = {array.shape for array in arrays.values()}
+        if len(shapes) != 1 or any(array.ndim != 1 for array in arrays.values()):
+            blockers.append("finite_consensus_source_array_shapes_invalid")
+        edge_count = manifest.get("edge_count")
+        if not _strict_int(edge_count, minimum=1) or next(iter(shapes), ()) != (edge_count,):
+            blockers.append("finite_consensus_source_edge_count_invalid")
+
+    group_name = manifest.get("group_name")
+    group_order = manifest.get("group_order")
+    replay_seed = manifest.get("replay_seed")
+    replay_config = manifest.get("replay_config")
+    sector_config = manifest.get("production_sector_repair_config")
+    if group_name not in {"S3", "ZN"}:
+        blockers.append("finite_consensus_source_group_name_invalid")
+    if not _strict_int(group_order, minimum=1):
+        blockers.append("finite_consensus_source_group_order_invalid")
+    if not _strict_int(replay_seed, minimum=0):
+        blockers.append("finite_consensus_source_replay_seed_invalid")
+    if not isinstance(replay_config, dict) or not _literal_true(replay_config.get("enabled")):
+        blockers.append("finite_consensus_source_replay_config_invalid")
+    if not isinstance(sector_config, dict):
+        blockers.append("finite_consensus_source_sector_config_invalid")
+
+    recomputed_source_hash = None
+    recomputed_quotient_hash = None
+    recomputed_replay: dict[str, Any] = {}
+    if not blockers and replay_kernel is not None:
+        recomputed_source_hash = replay_kernel.coupled_state_hash(
+            arrays["initial_port_left"],
+            arrays["initial_port_right"],
+            arrays["initial_gauge"],
+            edge_left=arrays["edge_left"],
+            edge_right=arrays["edge_right"],
+            group_name=str(group_name),
+            group_order=int(group_order),
+        )
+        recomputed_quotient_hash = replay_kernel.gauge_quotient_state_hash(
+            arrays["initial_port_left"],
+            arrays["initial_port_right"],
+            arrays["initial_gauge"],
+            edge_left=arrays["edge_left"],
+            edge_right=arrays["edge_right"],
+            group_name=str(group_name),
+            group_order=int(group_order),
+        )
+        for owner, payload in (
+            ("manifest", manifest),
+            ("certificate", certificate),
+            ("replay", replay),
+        ):
+            if payload.get("source_state_sha256") != recomputed_source_hash:
+                blockers.append(f"finite_consensus_{owner}_source_hash_not_recomputed")
+            if payload.get("source_quotient_hash") != recomputed_quotient_hash:
+                blockers.append(f"finite_consensus_{owner}_quotient_hash_not_recomputed")
+        recomputed_replay = replay_kernel._array_port_pair_consensus_replay_report(
+            arrays["initial_port_left"],
+            arrays["initial_port_right"],
+            arrays["initial_gauge"],
+            edge_left=arrays["edge_left"],
+            edge_right=arrays["edge_right"],
+            group_name=str(group_name),
+            group_order=int(group_order),
+            config=dict(replay_config),
+            production_sector_repair_config=dict(sector_config),
+            seed=int(replay_seed),
+        )
+        if recomputed_replay != replay:
+            blockers.append("finite_consensus_independent_replay_mismatch")
+
+    return {
+        "mode": "finite_consensus_primitive_bound_independent_replay_v1",
+        "manifest_path": str(manifest_path),
+        "state_path": str(state_path),
+        "state_file_sha256": actual_file_hash,
+        "source_state_sha256": recomputed_source_hash,
+        "source_quotient_hash": recomputed_quotient_hash,
+        "recomputed_receipt": recomputed_replay.get("receipt"),
+        "blockers": list(dict.fromkeys(blockers)),
+        "passed": not blockers,
+    }
+
+
+def _file_sha256(path: Path) -> str | None:
+    if not Path(path).is_file():
+        return None
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
 
 
 def _validated_endogenous_modular_generator(state_bw: dict[str, Any]) -> bool:
@@ -1020,6 +1278,7 @@ def _validated_refinement_naturality(
     refinement_summary: dict[str, Any],
     neutral_audit: dict[str, Any],
 ) -> bool:
+    required_ladder = {4_096, 16_384, 65_536, 262_144}
     candidates = [refinement, refinement_summary]
     if isinstance(neutral_audit.get("refinement_summary"), dict):
         candidates.append(neutral_audit["refinement_summary"])
@@ -1033,12 +1292,24 @@ def _validated_refinement_naturality(
             if isinstance(item, dict)
             and _strict_int(item.get("patch_count"), minimum=1)
         }
+        declared_ladder = row.get("required_patch_count_ladder")
+        declared_patch_counts = (
+            {value for value in declared_ladder if _strict_int(value, minimum=1)}
+            if isinstance(declared_ladder, list)
+            else set()
+        )
+        dimension_drift = _finite_number(row.get("candidate_dimension_drift"))
         if (
             _literal_true(row.get("strict_neutral_bulk_refinement_receipt"))
             and _literal_true(row.get("multi_scale"))
             and _literal_true(row.get("candidate_dimension_stable"))
-            and _strict_int(row.get("run_count"), minimum=2)
-            and len(patch_counts) >= 2
+            and _literal_true(row.get("required_ladder_complete"))
+            and _strict_int(row.get("run_count"), minimum=4)
+            and patch_counts == required_ladder
+            and declared_patch_counts == required_ladder
+            and list(row.get("missing_required_patch_counts") or []) == []
+            and dimension_drift is not None
+            and dimension_drift <= 0.10
             and not list(row.get("proof_blockers") or [])
         ):
             return True

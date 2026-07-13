@@ -4,6 +4,7 @@ from oph_fpe.bulk.cap_geometry import sample_caps
 from oph_fpe.bulk.markov_collar import collar_markov_report
 from oph_fpe.bulk.modular_probe import (
     _clock_fit_from_rows,
+    _perturb_remeasure_response_matrix,
     cap_state_density,
     collar_operator_system_density,
     geometric_permutation_operator,
@@ -18,8 +19,12 @@ from oph_fpe.bulk.modular_probe import (
     state_derived_modular_transport,
     transition_response_modular_generator,
 )
-from oph_fpe.bulk.transition_selection import transition_scale_selection_report
+from oph_fpe.bulk.transition_selection import (
+    _perturb_remeasure_pullback as selection_perturb_remeasure_pullback,
+    transition_scale_selection_report,
+)
 from oph_fpe.core.graph import fibonacci_sphere_points
+from oph_fpe.gauge.covariant_overlap import transform_local_frames
 
 
 def test_regularized_modular_generator_finite_for_zero_probabilities():
@@ -29,6 +34,100 @@ def test_regularized_modular_generator_finite_for_zero_probabilities():
 
     assert np.all(np.isfinite(K))
     assert np.allclose(K, K.conj().T)
+
+
+def test_perturb_remeasure_response_is_invariant_under_local_s3_frames():
+    points = fibonacci_sphere_points(48)
+    left = np.arange(48, dtype=np.int64)
+    right = (left + 1) % 48
+    rng = np.random.default_rng(8)
+    port_left = rng.integers(0, 6, size=left.size, dtype=np.int16)
+    port_right = rng.integers(0, 6, size=left.size, dtype=np.int16)
+    gauge = rng.integers(0, 6, size=left.size, dtype=np.int16)
+    graph = {
+        "left": left,
+        "right": right,
+        "port_left": port_left,
+        "port_right": port_right,
+        "gauge": gauge,
+        "group_name": "S3",
+        "group_order": 6,
+        "patch_count": 48,
+    }
+    frames = rng.integers(0, 6, size=48, dtype=np.int16)
+    transformed_left, transformed_right, transformed_gauge = transform_local_frames(
+        port_left,
+        port_right,
+        gauge,
+        left,
+        right,
+        frames,
+        group_name="S3",
+        group_order=6,
+    )
+    transformed_graph = {
+        **graph,
+        "port_left": transformed_left,
+        "port_right": transformed_right,
+        "gauge": transformed_gauge,
+    }
+    raw_fields = {
+        "repair_load": np.linspace(0.0, 1.0, 48),
+        "cumulative_repair_load": np.linspace(1.0, 2.0, 48),
+        "local_mismatch_density": np.linspace(0.0, 0.5, 48),
+    }
+    kwargs = {
+        "seed": 11,
+        "probe_steps": 3,
+        "probe_repairs_per_source": 12,
+        "probe_max_incident_edges": 2,
+    }
+
+    original, original_meta = _perturb_remeasure_response_matrix(
+        points,
+        raw_fields,
+        np.arange(12, dtype=np.int64),
+        graph_response=graph,
+        **kwargs,
+    )
+    transformed, transformed_meta = _perturb_remeasure_response_matrix(
+        points,
+        raw_fields,
+        np.arange(12, dtype=np.int64),
+        graph_response=transformed_graph,
+        **kwargs,
+    )
+
+    np.testing.assert_allclose(original, transformed)
+    assert original_meta["gauge_covariant_probe_receipt"] is True
+    assert transformed_meta["gauge_covariant_probe_receipt"] is True
+
+    cap = sample_caps(points, count=1, theta_values=[0.75], seed=4)[0]
+    selection_kwargs = {
+        "seed": 11,
+        "probe_steps": 3,
+        "probe_repairs_per_source": 12,
+        "probe_max_incident_edges": 2,
+    }
+    original_pullback, _, original_selection_meta = selection_perturb_remeasure_pullback(
+        points,
+        cap,
+        raw_fields,
+        np.arange(12, dtype=np.int64),
+        graph_response=graph,
+        **selection_kwargs,
+    )
+    transformed_pullback, _, transformed_selection_meta = selection_perturb_remeasure_pullback(
+        points,
+        cap,
+        raw_fields,
+        np.arange(12, dtype=np.int64),
+        graph_response=transformed_graph,
+        **selection_kwargs,
+    )
+    np.testing.assert_allclose(original_pullback, transformed_pullback)
+    assert original_selection_meta["gauge_covariant_probe_receipt"] is True
+    assert transformed_selection_meta["gauge_covariant_probe_receipt"] is True
 
 
 def test_modular_transport_identity_at_t0_and_unitary_norm():
@@ -780,6 +879,8 @@ def test_perturb_remeasure_response_density_is_endogenous_positive_state():
             "right": right,
             "port_left": np.zeros(left.size, dtype=np.int64),
             "port_right": np.zeros(left.size, dtype=np.int64),
+            "gauge": np.zeros(left.size, dtype=np.int16),
+            "group_name": "Z6",
             "group_order": 6,
             "patch_count": patch_count,
         },
@@ -838,6 +939,8 @@ def test_state_derived_bw_report_accepts_perturb_remeasure_response_density_log(
             "right": right,
             "port_left": np.zeros(left.size, dtype=np.int64),
             "port_right": np.zeros(left.size, dtype=np.int64),
+            "gauge": np.zeros(left.size, dtype=np.int16),
+            "group_name": "Z6",
             "group_order": 6,
             "patch_count": patch_count,
         },
@@ -879,6 +982,8 @@ def test_state_derived_bw_report_accepts_perturb_remeasure_response_kernel_log()
         "right": right,
         "port_left": np.zeros(left.size, dtype=np.int64),
         "port_right": np.zeros(left.size, dtype=np.int64),
+        "gauge": np.zeros(left.size, dtype=np.int16),
+        "group_name": "Z6",
         "group_order": 6,
         "patch_count": patch_count,
     }
@@ -1048,8 +1153,10 @@ def test_transition_scale_selection_perturb_remeasure_is_primary_with_graph_resp
             "left": left,
             "right": right,
             "port_left": np.zeros(left.size, dtype=np.int64),
-            "port_right": np.zeros(left.size, dtype=np.int64),
-            "group_order": 6,
+                "port_right": np.zeros(left.size, dtype=np.int64),
+                "gauge": np.zeros(left.size, dtype=np.int16),
+                "group_name": "Z6",
+                "group_order": 6,
             "patch_count": patch_count,
         },
         max_basis=16,
@@ -1095,8 +1202,10 @@ def test_transition_scale_selection_kms_collar_transport_is_branch_instantiation
             "left": left,
             "right": right,
             "port_left": np.zeros(left.size, dtype=np.int64),
-            "port_right": np.zeros(left.size, dtype=np.int64),
-            "group_order": 6,
+                "port_right": np.zeros(left.size, dtype=np.int64),
+                "gauge": np.zeros(left.size, dtype=np.int16),
+                "group_name": "Z6",
+                "group_order": 6,
             "patch_count": patch_count,
         },
         kms_response_scale=2.0 * np.pi,

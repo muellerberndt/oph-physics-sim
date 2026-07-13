@@ -1,0 +1,63 @@
+{
+  "all_fixtures_present": true,
+  "all_golden_regressions_pass": true,
+  "artifact_manifest_verified": true,
+  "bulk_depth_caveats": [
+    "narrow timelike margin: normalized eigenvalue in [-0.028, -0.009] across seeds; sign stable, magnitude small",
+    "window sensitivity: dtick <= 4 tangent windows give (1,3); wide windows (dtick >= 6) blur the smallest eigenvalue through zero (chart curvature plus cone underfill)",
+    "one commit density evaluated; convergence of the margin with density/stages uncertified"
+  ],
+  "claim_boundary": "Passing these hash-pinned golden fixtures checks simulator/paper interface drift. It does not show that the current simulator run produced the paper-side states or entered the Einstein branch.",
+  "einstein_branch_entry_receipt": false,
+  "fixture_receipts": {
+    "bulk_depth_2_2_negative_control": true,
+    "bulk_depth_seed_sweep": true,
+    "cyclic_cap_net": true,
+    "event_sheet_countermodel": true,
+    "modular_clock_boundary_collar": true,
+    "null_net_one_particle": true
+  },
+  "fixtures_present": [
+    "geometry_bulk_depth",
+    "geometry_cyclic_cap_net",
+    "geometry_modular_clock",
+    "geometry_null_net",
+    "geometry_realized_events"
+  ],
+  "open_obligations": {
+    "geometry_cyclic_cap_net": [
+      "modular_cross_ratio_receipt (needs modular-clock instrumentation of the MaxEnt states on this tower)",
+      "geometric_2pi_kms_receipt (same instrumentation)",
+      "Cyc/NTI/weak-additivity/MI null-net receipts",
+      "E1-E4 event receipts",
+      "UC/VR/scale physical-identification receipts"
+    ],
+    "geometry_modular_clock": [
+      "cap-interior modular data (full 2D cap algebras)",
+      "Cyc/NTI/weak-additivity/MI null-net receipts",
+      "E1-E4 event receipts",
+      "UC/VR/scale physical-identification receipts"
+    ],
+    "geometry_null_net": [
+      "Cyc limit clause (cyclicity modulus along refinement)",
+      "Lie-closure convergence rate (percent-level match witnessed; the decay of the smooth subleading systematic is uncertified)",
+      "second-quantized MI relations (one-particle Lie closure is the finite surrogate)",
+      "E1-E4 event receipts on realized records",
+      "UC/VR/scale physical-identification receipts"
+    ],
+    "geometry_realized_events": [
+      "E3 rank-four frames: bulk-depth record channel (H^3 radial coordinate) on the realized tower",
+      "bulk E1 population (records off the screen sheet)"
+    ]
+  },
+  "paper_side_fixtures_informational": true,
+  "schema": "oph_paper_geometry_regression_report_v1",
+  "sim_native_geometry_receipt": false,
+  "timelike_eigenvalues_across_seeds": [
+    -0.020865232486834737,
+    -0.023792008033559686,
+    -0.027987845197299892,
+    -0.009183329276665151,
+    -0.022934014754353575
+  ]
+}

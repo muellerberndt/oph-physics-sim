@@ -1,37 +1,24 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from itertools import permutations
+from time import perf_counter
+from typing import TypeAlias, TypeVar
 
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 from scipy.spatial import cKDTree
 
-
-S3_ELEMENTS: tuple[tuple[int, int, int], ...] = tuple(permutations((0, 1, 2)))
-S3_INDEX = {element: index for index, element in enumerate(S3_ELEMENTS)}
+from oph_fpe.finite_groups import S3_CLASS, S3_ELEMENTS, S3_INDEX, S3_INV, S3_MUL
 
 
-def _compose(left: tuple[int, int, int], right: tuple[int, int, int]) -> tuple[int, int, int]:
-    return tuple(left[right[index]] for index in range(3))
+TriangleEdgeLookup: TypeAlias = tuple[np.ndarray, np.ndarray]
+T = TypeVar("T")
 
-
-S3_MUL = np.array(
-    [[S3_INDEX[_compose(left, right)] for right in S3_ELEMENTS] for left in S3_ELEMENTS],
-    dtype=np.int16,
-)
-S3_INV = np.array(
-    [S3_INDEX[tuple(element.index(index) for index in range(3))] for element in S3_ELEMENTS],
-    dtype=np.int16,
-)
-S3_CLASS = np.array(
-    [
-        0 if element == (0, 1, 2) else 1 if sum(1 for i, image in enumerate(element) if i != image) == 2 else 2
-        for element in S3_ELEMENTS
-    ],
-    dtype=np.int16,
-)
-_EDGE_LOOKUP_CACHE_MAX = 4
-_EDGE_LOOKUP_CACHE: dict[tuple[int, int, int], dict[tuple[int, int], tuple[int, int, int]]] = {}
+DEFAULT_TIMELINE_MAX_SNAPSHOT_CLUSTERS = 64
+DEFAULT_TIMELINE_MAX_WORLDLINES = 256
+DEFAULT_TIMELINE_MAX_EVENTS_PER_WORLDLINE = 32
+DEFAULT_TIMELINE_MAX_SUPPORT_NODES_PER_RECORD = 32
+DEFECT_TIMELINE_SCHEMA = "oph_s3_defect_timeline_v2"
 
 
 def _stable_index_priority(value: int) -> int:
@@ -72,9 +59,37 @@ def s3_class_counts(gauge: np.ndarray) -> dict[str, int]:
     }
 
 
-def oriented_triangles(points: np.ndarray, left: np.ndarray, right: np.ndarray, *, max_triangles: int | None = None) -> np.ndarray:
-    if max_triangles is not None and int(max_triangles) <= 0:
-        return np.zeros((0, 3), dtype=np.int64)
+def oriented_triangles(
+    points: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+    *,
+    max_triangles: int | None = None,
+) -> np.ndarray:
+    triangles, _truncated = _oriented_triangles_with_receipt(
+        points,
+        left,
+        right,
+        max_triangles=max_triangles,
+    )
+    return triangles
+
+
+def _oriented_triangles_with_receipt(
+    points: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+    *,
+    max_triangles: int | None,
+) -> tuple[np.ndarray, bool]:
+    """Return the stable triangle sample and whether the topology exceeded it.
+
+    A bounded scan observes one additional triangle before stopping. This keeps
+    the old sample exactly unchanged while distinguishing a complete topology
+    from a prefix that merely happens to have reached ``max_triangles``.
+    """
+
+    triangle_limit = max(0, int(max_triangles)) if max_triangles is not None else None
     adjacency: dict[int, set[int]] = {}
     for a, b in zip(np.asarray(left, dtype=np.int64), np.asarray(right, dtype=np.int64), strict=False):
         adjacency.setdefault(int(a), set()).add(int(b))
@@ -98,9 +113,12 @@ def oriented_triangles(points: np.ndarray, left: np.ndarray, right: np.ndarray, 
                 seen.add(key)
                 tri = _orient_triangle(points, (i, j, int(k)))
                 triangles.append(tri)
-                if max_triangles is not None and len(triangles) >= int(max_triangles):
-                    return np.asarray(triangles, dtype=np.int64).reshape((-1, 3))
-    return np.asarray(triangles, dtype=np.int64).reshape((-1, 3))
+                if triangle_limit is not None and len(triangles) > triangle_limit:
+                    return (
+                        np.asarray(triangles[:triangle_limit], dtype=np.int64).reshape((-1, 3)),
+                        True,
+                    )
+    return np.asarray(triangles, dtype=np.int64).reshape((-1, 3)), False
 
 
 def s3_triangle_holonomy(g_ij: np.ndarray | int, g_jk: np.ndarray | int, g_ki: np.ndarray | int) -> np.ndarray:
@@ -108,21 +126,26 @@ def s3_triangle_holonomy(g_ij: np.ndarray | int, g_jk: np.ndarray | int, g_ki: n
     return S3_MUL[first, np.asarray(g_ki, dtype=np.int64)]
 
 
-def triangle_holonomies(triangles: np.ndarray, left: np.ndarray, right: np.ndarray, gauge: np.ndarray) -> np.ndarray:
-    lookup = _edge_index_lookup(left, right)
+def triangle_holonomies(
+    triangles: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+    gauge: np.ndarray,
+    *,
+    edge_lookup: TriangleEdgeLookup | None = None,
+) -> np.ndarray:
+    edge_indices, forward = (
+        edge_lookup
+        if edge_lookup is not None
+        else _triangle_edge_index_lookup(triangles, left, right)
+    )
     gauge = np.asarray(gauge, dtype=np.int64)
-    holonomies: list[int] = []
-    for i, j, k in np.asarray(triangles, dtype=np.int64):
-        holonomies.append(
-            int(
-                s3_triangle_holonomy(
-                    _edge_label(lookup, gauge, int(i), int(j)),
-                    _edge_label(lookup, gauge, int(j), int(k)),
-                    _edge_label(lookup, gauge, int(k), int(i)),
-                )
-            )
-        )
-    return np.asarray(holonomies, dtype=np.int16)
+    if edge_indices.size == 0:
+        return np.zeros(0, dtype=np.int16)
+    labels = gauge[edge_indices]
+    labels = np.where(forward, labels, S3_INV[labels])
+    first = S3_MUL[labels[:, 0], labels[:, 1]]
+    return np.asarray(S3_MUL[first, labels[:, 2]], dtype=np.int16)
 
 
 def defect_class(holonomy: np.ndarray | int) -> np.ndarray:
@@ -136,9 +159,31 @@ def array_holonomy_report(
     gauge: np.ndarray,
     *,
     max_triangles: int | None = 10_000,
+    precomputed_triangles: np.ndarray | None = None,
+    precomputed_edge_lookup: TriangleEdgeLookup | None = None,
+    triangle_sampling_truncated: bool | None = None,
 ) -> dict[str, object]:
-    triangles = oriented_triangles(points, left, right, max_triangles=max_triangles)
-    holonomies = triangle_holonomies(triangles, left, right, gauge) if triangles.size else np.zeros(0, dtype=np.int16)
+    topology_reused = precomputed_triangles is not None
+    if precomputed_triangles is None:
+        triangles, triangle_sampling_truncated = _oriented_triangles_with_receipt(
+            points,
+            left,
+            right,
+            max_triangles=max_triangles,
+        )
+    else:
+        triangles = np.asarray(precomputed_triangles, dtype=np.int64)
+    holonomies = (
+        triangle_holonomies(
+            triangles,
+            left,
+            right,
+            gauge,
+            edge_lookup=precomputed_edge_lookup,
+        )
+        if triangles.size
+        else np.zeros(0, dtype=np.int16)
+    )
     classes = defect_class(holonomies) if holonomies.size else np.zeros(0, dtype=np.int16)
     clusters = cluster_defects(triangles, classes, points, holonomies=holonomies) if triangles.size else []
     worldlines = track_defect_worldlines([], clusters)
@@ -151,6 +196,9 @@ def array_holonomy_report(
         "mode": "array_s3_screen_holonomy",
         "triangle_count": int(triangles.shape[0]),
         "max_triangles": int(max_triangles) if max_triangles is not None else None,
+        "triangle_sampling_truncated": triangle_sampling_truncated,
+        "triangle_topology_complete": bool(triangle_sampling_truncated is False),
+        "fixed_topology_reused": bool(topology_reused),
         "class_counts": class_counts,
         "defect_triangle_count": int(np.sum(classes != 0)),
         "defect_fraction": float(np.mean(classes != 0)) if classes.size else 0.0,
@@ -172,22 +220,90 @@ def defect_timeline_report(
     *,
     max_triangles: int | None = 5_000,
     persistence_cycles: int = 3,
+    max_angular_speed_per_cycle: float = 0.75,
+    max_analysis_clusters_per_snapshot: int | None = None,
+    max_serialized_snapshots: int | None = None,
+    max_snapshot_clusters_per_snapshot: int | None = None,
+    max_worldlines: int | None = None,
+    max_events_per_worldline: int | None = None,
+    max_support_nodes_per_record: int | None = None,
 ) -> dict[str, object]:
+    total_started = perf_counter()
+    snapshot_cluster_cap = _normalize_detail_cap(
+        max_snapshot_clusters_per_snapshot,
+        name="max_snapshot_clusters_per_snapshot",
+    )
+    worldline_cap = _normalize_detail_cap(max_worldlines, name="max_worldlines")
+    event_cap = _normalize_detail_cap(max_events_per_worldline, name="max_events_per_worldline")
+    support_cap = _normalize_detail_cap(
+        max_support_nodes_per_record,
+        name="max_support_nodes_per_record",
+    )
+    analysis_cluster_cap = _normalize_detail_cap(
+        max_analysis_clusters_per_snapshot,
+        name="max_analysis_clusters_per_snapshot",
+    )
+    serialized_snapshot_cap = _normalize_detail_cap(
+        max_serialized_snapshots,
+        name="max_serialized_snapshots",
+    )
+    serialized_snapshot_indices = set(
+        _uniform_sample_indices(len(gauge_snapshots), serialized_snapshot_cap)
+    )
+
+    topology_started = perf_counter()
+    fixed_triangles, triangle_sampling_truncated = _oriented_triangles_with_receipt(
+        points,
+        left,
+        right,
+        max_triangles=max_triangles,
+    )
+    fixed_edge_lookup = _triangle_edge_index_lookup(fixed_triangles, left, right)
+    topology_seconds = perf_counter() - topology_started
+
     snapshots: list[dict[str, object]] = []
     active_worldlines: dict[str, dict[str, object]] = {}
     completed: list[dict[str, object]] = []
     next_worldline = 0
     previous_clusters: list[dict[str, object]] = []
     previous_ids: list[str] = []
-    for cycle, gauge in gauge_snapshots:
-        report = array_holonomy_report(points, left, right, gauge, max_triangles=max_triangles)
-        clusters = list(report.get("clusters", []))
+    previous_cycle: int | None = None
+    holonomy_cluster_seconds = 0.0
+    worldline_assignment_seconds = 0.0
+    output_shaping_seconds = 0.0
+    snapshot_cluster_records_total = 0
+    snapshot_cluster_records_emitted = 0
+    snapshot_support_node_ids_total = 0
+    snapshot_support_node_ids_emitted = 0
+    cluster_analysis_records_total = 0
+    cluster_analysis_records_analyzed = 0
+    for snapshot_index, (cycle, gauge) in enumerate(gauge_snapshots):
+        snapshot_compute_started = perf_counter()
+        report = array_holonomy_report(
+            points,
+            left,
+            right,
+            gauge,
+            max_triangles=max_triangles,
+            precomputed_triangles=fixed_triangles,
+            precomputed_edge_lookup=fixed_edge_lookup,
+            triangle_sampling_truncated=triangle_sampling_truncated,
+        )
+        full_clusters = list(report.get("clusters", []))
+        clusters = _bounded_analysis_clusters(full_clusters, analysis_cluster_cap)
+        cluster_analysis_records_total += len(full_clusters)
+        cluster_analysis_records_analyzed += len(clusters)
+        holonomy_cluster_seconds += perf_counter() - snapshot_compute_started
+        assignment_started = perf_counter()
         assignments, next_worldline = _assign_worldlines(
             previous_clusters,
             previous_ids,
             clusters,
             next_worldline,
+            cycle_delta=max(1, int(cycle) - int(previous_cycle)) if previous_cycle is not None else 1,
+            max_angular_speed_per_cycle=max_angular_speed_per_cycle,
         )
+        worldline_assignment_seconds += perf_counter() - assignment_started
         seen: set[str] = set()
         for cluster, worldline_id, event, distance in assignments:
             seen.add(worldline_id)
@@ -217,50 +333,287 @@ def defect_timeline_report(
         ended = [worldline_id for worldline_id in active_worldlines if worldline_id not in seen and worldline_id in previous_ids]
         for worldline_id in ended:
             completed.append(_finalize_worldline(active_worldlines.pop(worldline_id), persistence_cycles))
-        snapshots.append(
-            {
-                "cycle": int(cycle),
-                "triangle_count": report.get("triangle_count"),
-                "defect_triangle_count": report.get("defect_triangle_count"),
-                "cluster_count": len(clusters),
-                "clusters": [
-                    {
-                        "cluster_id": cluster.get("cluster_id"),
-                        "worldline_id": worldline_id,
-                        "class": cluster.get("class"),
-                        "holonomy_mode": cluster.get("holonomy_mode"),
-                        "inverse_holonomy_mode": cluster.get("inverse_holonomy_mode"),
-                        "support_node_count": cluster.get("support_node_count"),
-                        "support_nodes": list(cluster.get("support_nodes", [])),
-                        "centroid": cluster.get("centroid"),
-                    }
-                    for cluster, worldline_id, _event, _distance in assignments
-                ],
-            }
+
+        shaping_started = perf_counter()
+        emit_snapshot = snapshot_index in serialized_snapshot_indices
+        emitted_assignments = (
+            _bounded_prefix(assignments, snapshot_cluster_cap) if emit_snapshot else []
         )
+        emitted_clusters = [
+            _timeline_cluster_output(cluster, worldline_id, support_cap=support_cap)
+            for cluster, worldline_id, _event, _distance in emitted_assignments
+        ]
+        snapshot_cluster_records_total += len(assignments)
+        snapshot_cluster_records_emitted += len(emitted_clusters)
+        snapshot_support_node_ids_total += sum(
+            len(cluster.get("support_nodes", []) or [])
+            for cluster, _worldline_id, _event, _distance in assignments
+        )
+        snapshot_support_node_ids_emitted += sum(
+            len(cluster.get("support_nodes", []) or []) for cluster in emitted_clusters
+        )
+        if emit_snapshot:
+            snapshots.append(
+                {
+                    "cycle": int(cycle),
+                    "triangle_count": report.get("triangle_count"),
+                    "defect_triangle_count": report.get("defect_triangle_count"),
+                    "cluster_count": len(full_clusters),
+                    "clusters_analyzed_count": len(clusters),
+                    "cluster_analysis_complete": len(clusters) == len(full_clusters),
+                    "clusters_emitted_count": len(emitted_clusters),
+                    "cluster_records_complete": len(emitted_clusters) == len(assignments),
+                    "clusters": emitted_clusters,
+                }
+            )
+        output_shaping_seconds += perf_counter() - shaping_started
         previous_clusters = clusters
         previous_ids = [worldline_id for _cluster, worldline_id, _event, _distance in assignments]
+        previous_cycle = int(cycle)
     completed.extend(_finalize_worldline(row, persistence_cycles) for row in active_worldlines.values())
     persistent = [row for row in completed if row.get("persistent")]
+
+    final_shaping_started = perf_counter()
+    emitted_worldlines = [
+        _timeline_worldline_output(
+            row,
+            event_cap=event_cap,
+            support_cap=support_cap,
+        )
+        for row in _bounded_prefix(completed, worldline_cap)
+    ]
+    worldline_events_total = sum(len(row.get("events", []) or []) for row in completed)
+    worldline_events_emitted = sum(len(row.get("events", []) or []) for row in emitted_worldlines)
+    worldline_support_node_ids_total = sum(
+        len(event.get("support_nodes", []) or [])
+        for row in completed
+        for event in (row.get("events", []) or [])
+    )
+    worldline_support_node_ids_emitted = sum(
+        len(event.get("support_nodes", []) or [])
+        for row in emitted_worldlines
+        for event in (row.get("events", []) or [])
+    )
+    detail_counts = {
+        "snapshots_total": len(gauge_snapshots),
+        "snapshots_emitted": len(snapshots),
+        "snapshot_cluster_records_total": int(snapshot_cluster_records_total),
+        "snapshot_cluster_records_emitted": int(snapshot_cluster_records_emitted),
+        "worldlines_total": len(completed),
+        "worldlines_emitted": len(emitted_worldlines),
+        "worldline_events_total": int(worldline_events_total),
+        "worldline_events_emitted": int(worldline_events_emitted),
+        "support_node_id_occurrences_total": int(
+            snapshot_support_node_ids_total + worldline_support_node_ids_total
+        ),
+        "support_node_id_occurrences_emitted": int(
+            snapshot_support_node_ids_emitted + worldline_support_node_ids_emitted
+        ),
+    }
+    completeness = {
+        "snapshots_complete": len(snapshots) == len(gauge_snapshots),
+        "snapshot_cluster_records_complete": (
+            snapshot_cluster_records_emitted == snapshot_cluster_records_total
+        ),
+        "worldlines_complete": len(emitted_worldlines) == len(completed),
+        "worldline_events_complete": worldline_events_emitted == worldline_events_total,
+        "support_node_ids_complete": (
+            detail_counts["support_node_id_occurrences_emitted"]
+            == detail_counts["support_node_id_occurrences_total"]
+        ),
+    }
+    output_detail_complete = all(bool(value) for value in completeness.values())
+    completeness["output_detail_complete"] = output_detail_complete
+    truncation_reasons = [name for name, complete in completeness.items() if name != "output_detail_complete" and not complete]
+    if triangle_sampling_truncated:
+        truncation_reasons.insert(0, "triangle_topology_sample_truncated")
+    cluster_analysis_complete = cluster_analysis_records_analyzed == cluster_analysis_records_total
+    if not cluster_analysis_complete:
+        truncation_reasons.insert(0, "cluster_analysis_truncated")
+    particle_promotion_inputs_complete = bool(
+        output_detail_complete
+        and cluster_analysis_complete
+        and not triangle_sampling_truncated
+    )
+    output_shaping_seconds += perf_counter() - final_shaping_started
+    total_seconds = perf_counter() - total_started
     return {
+        "schema": DEFECT_TIMELINE_SCHEMA,
         "mode": "array_s3_defect_timeline",
         "patch_count": int(points.shape[0]),
-        "snapshot_count": len(snapshots),
+        "snapshot_count": len(gauge_snapshots),
+        "snapshots_emitted_count": len(snapshots),
+        "snapshot_selection": (
+            "all_snapshots"
+            if len(snapshots) == len(gauge_snapshots)
+            else "uniform_cycle_order_sample_including_endpoints"
+        ),
         "max_triangles": int(max_triangles) if max_triangles is not None else None,
+        "triangle_count": int(fixed_triangles.shape[0]),
+        "triangle_sampling_truncated": bool(triangle_sampling_truncated),
+        "triangle_topology_complete": not bool(triangle_sampling_truncated),
+        "fixed_topology_cache": {
+            "triangles_prepared_once": True,
+            "edge_lookup_prepared_once": True,
+            "snapshot_reuse_count": len(gauge_snapshots),
+        },
+        "cluster_analysis": {
+            "selection": "stable_mixed_support_anchor_priority",
+            "max_clusters_per_snapshot": analysis_cluster_cap,
+            "cluster_records_total": int(cluster_analysis_records_total),
+            "cluster_records_analyzed": int(cluster_analysis_records_analyzed),
+            "complete": cluster_analysis_complete,
+        },
+        "worldline_assignment": "minimum_total_intrinsic_transport_cost",
+        "max_angular_speed_per_cycle": float(max_angular_speed_per_cycle),
+        "motion_gate_cadence_scaled": True,
         "snapshots": snapshots,
-        "worldlines": completed,
+        "worldlines": emitted_worldlines,
         "worldline_count": len(completed),
         "persistent_worldline_count": len(persistent),
         "max_observation_count": max((int(row.get("observation_count", 0)) for row in completed), default=0),
         "max_lifetime_cycles": max((int(row.get("lifetime_cycles", 0)) for row in completed), default=0),
-        "persistent_worldline_precursor_receipt": bool(persistent),
+        "persistent_worldline_precursor_diagnostic": bool(persistent),
+        "persistent_worldline_precursor_receipt": bool(
+            persistent and particle_promotion_inputs_complete
+        ),
+        "output_detail_limits": {
+            "max_serialized_snapshots": serialized_snapshot_cap,
+            "max_snapshot_clusters_per_snapshot": snapshot_cluster_cap,
+            "max_worldlines": worldline_cap,
+            "max_events_per_worldline": event_cap,
+            "max_support_nodes_per_record": support_cap,
+        },
+        "output_detail_counts": detail_counts,
+        "output_detail_completeness": completeness,
+        "output_truncated": not output_detail_complete,
+        "analysis_or_output_truncated": bool(
+            triangle_sampling_truncated
+            or not cluster_analysis_complete
+            or not output_detail_complete
+        ),
+        "truncation_reasons": truncation_reasons,
+        "particle_promotion_inputs_complete": particle_promotion_inputs_complete,
+        "stage_timings_seconds": {
+            "fixed_topology_preparation": float(topology_seconds),
+            "snapshot_holonomy_and_clustering": float(holonomy_cluster_seconds),
+            "worldline_assignment": float(worldline_assignment_seconds),
+            "output_shaping": float(output_shaping_seconds),
+            "total": float(total_seconds),
+        },
         "particle_matter_receipt": False,
         "claim_boundary": (
             "time-resolved screen/collar S3 holonomy defect clusters under declared finite repair dynamics. "
             "Persistent worldlines are particle precursors only; particle claims require localization, "
-            "transport, fusion/scattering, neutral-bulk mapping, and repeated-seed controls."
+            "transport, fusion/scattering, neutral-bulk mapping, repeated-seed controls, and complete "
+            "untruncated promotion inputs."
         ),
     }
+
+
+def _normalize_detail_cap(value: int | None, *, name: str) -> int | None:
+    if value is None:
+        return None
+    cap = int(value)
+    if cap < 0:
+        raise ValueError(f"{name} must be nonnegative or None")
+    return cap
+
+
+def _timeline_particle_inputs_complete(timeline_report: dict[str, object] | None) -> bool:
+    if not timeline_report:
+        return False
+    if timeline_report.get("mode") == "array_s3_defect_timeline":
+        return bool(
+            timeline_report.get("schema") == DEFECT_TIMELINE_SCHEMA
+            and timeline_report.get("particle_promotion_inputs_complete") is True
+        )
+    return bool(timeline_report.get("particle_promotion_inputs_complete", True) is True)
+
+
+def _bounded_prefix(rows: list[T], cap: int | None) -> list[T]:
+    return list(rows) if cap is None else list(rows[:cap])
+
+
+def _bounded_analysis_clusters(
+    clusters: list[dict[str, object]],
+    cap: int | None,
+) -> list[dict[str, object]]:
+    if cap is None or cap >= len(clusters):
+        return list(clusters)
+
+    def priority(cluster: dict[str, object]) -> tuple[object, ...]:
+        support = sorted(int(value) for value in (cluster.get("support_nodes", []) or []))
+        anchor = support[0] if support else 0
+        return (_stable_index_priority(anchor), _cluster_match_key(cluster))
+
+    return sorted(clusters, key=priority)[:cap]
+
+
+def _uniform_sample_indices(count: int, cap: int | None) -> list[int]:
+    count = max(0, int(count))
+    if cap is None or cap >= count:
+        return list(range(count))
+    if cap <= 0 or count == 0:
+        return []
+    if cap == 1:
+        return [0]
+    return [round(index * (count - 1) / (cap - 1)) for index in range(cap)]
+
+
+def _bounded_support_record(record: dict[str, object], *, support_cap: int | None) -> dict[str, object]:
+    result = dict(record)
+    support_nodes = [int(value) for value in (record.get("support_nodes", []) or [])]
+    emitted_support = _bounded_prefix(support_nodes, support_cap)
+    result["support_node_count"] = int(record.get("support_node_count", len(support_nodes)))
+    result["support_nodes"] = emitted_support
+    result["support_nodes_emitted_count"] = len(emitted_support)
+    result["support_nodes_complete"] = len(emitted_support) == len(support_nodes)
+    return result
+
+
+def _timeline_cluster_output(
+    cluster: dict[str, object],
+    worldline_id: str,
+    *,
+    support_cap: int | None,
+) -> dict[str, object]:
+    return _bounded_support_record(
+        {
+            "cluster_id": cluster.get("cluster_id"),
+            "worldline_id": worldline_id,
+            "class": cluster.get("class"),
+            "holonomy_mode": cluster.get("holonomy_mode"),
+            "inverse_holonomy_mode": cluster.get("inverse_holonomy_mode"),
+            "support_node_count": cluster.get("support_node_count"),
+            "support_nodes": list(cluster.get("support_nodes", []) or []),
+            "centroid": cluster.get("centroid"),
+        },
+        support_cap=support_cap,
+    )
+
+
+def _timeline_worldline_output(
+    worldline: dict[str, object],
+    *,
+    event_cap: int | None,
+    support_cap: int | None,
+) -> dict[str, object]:
+    result = {key: value for key, value in worldline.items() if key != "events"}
+    events = list(worldline.get("events", []) or [])
+    selected_indices = _uniform_sample_indices(len(events), event_cap)
+    result["events"] = [
+        _bounded_support_record(dict(events[index]), support_cap=support_cap)
+        for index in selected_indices
+    ]
+    result["events_emitted_count"] = len(selected_indices)
+    result["events_complete"] = len(selected_indices) == len(events)
+    result["event_selection"] = (
+        "all_cycle_ordered_events"
+        if len(selected_indices) == len(events)
+        else "uniform_cycle_order_sample_including_endpoints"
+    )
+    return result
 
 
 def particle_likeness_report(
@@ -280,6 +633,7 @@ def particle_likeness_report(
     """
 
     patch_count = max(1, int(timeline_report.get("patch_count", 1) if timeline_report else 1))
+    timeline_inputs_complete = _timeline_particle_inputs_complete(timeline_report)
     transport_pass_by_id = {
         str(row.get("worldline_id")): bool(row.get("screen_transport_proxy_pass", False))
         for row in (interaction_report or {}).get("worldlines", [])
@@ -319,7 +673,8 @@ def particle_likeness_report(
         fusion_proxy_pass = bool(fusion_proxy and fusion_pass_by_id.get(worldline_id, False))
         fusion_conserving = bool(fusion_proxy_pass and fusion_gauge_covariant)
         particle_like = bool(
-            bulk_localization_pass
+            timeline_inputs_complete
+            and bulk_localization_pass
             and localized
             and persistent
             and class_stable
@@ -358,7 +713,8 @@ def particle_likeness_report(
     particle_like_count = sum(bool(row["particle_like"]) for row in rows)
     detector_positive_count = sum(
         bool(
-            row["bulk_localization_pass"]
+            timeline_inputs_complete
+            and row["bulk_localization_pass"]
             and row["localization_pass"]
             and row["persistence_pass"]
             and row["sector_stability_pass"]
@@ -383,10 +739,17 @@ def particle_likeness_report(
         "min_observations": int(min_observations),
         "min_class_stability": float(min_class_stability),
         "interaction_report_mode": (interaction_report or {}).get("mode"),
+        "timeline_particle_promotion_inputs_complete": timeline_inputs_complete,
+        "timeline_truncation_reasons": list(timeline_report.get("truncation_reasons", []))
+        if timeline_report
+        else [],
         "particle_like_count": int(particle_like_count),
         "particle_detector_positive_receipt": bool(detector_positive_count > 0),
         "particle_matter_receipt": bool(
-            particle_like_count > 0 and bulk_localization_pass and fusion_gauge_covariant
+            timeline_inputs_complete
+            and particle_like_count > 0
+            and bulk_localization_pass
+            and fusion_gauge_covariant
         ),
         "worldlines": rows[:256],
         "claim_boundary": (
@@ -417,6 +780,7 @@ def defect_interaction_report(
     repeated transport/fusion/scattering controls.
     """
 
+    timeline_inputs_complete = _timeline_particle_inputs_complete(timeline_report)
     rows: list[dict[str, object]] = []
     transition_counts: dict[str, int] = {}
     for worldline in timeline_report.get("worldlines", []) if timeline_report else []:
@@ -437,7 +801,8 @@ def defect_interaction_report(
                 transition_counts[key] = transition_counts.get(key, 0) + 1
         persistent = bool(int(worldline.get("observation_count", len(events))) >= int(min_observations))
         class_stable = bool(class_fraction >= float(min_class_stability))
-        transport_proxy = bool(persistent and class_stable and transport_distances)
+        transport_diagnostic = bool(persistent and class_stable and transport_distances)
+        transport_proxy = bool(timeline_inputs_complete and transport_diagnostic)
         rows.append(
             {
                 "worldline_id": worldline.get("worldline_id"),
@@ -446,6 +811,7 @@ def defect_interaction_report(
                 "class_stability_fraction": float(class_fraction),
                 "transport_event_count": len(transport_distances),
                 "mean_transport_distance": float(np.mean(transport_distances)) if transport_distances else 0.0,
+                "screen_transport_diagnostic_positive": transport_diagnostic,
                 "screen_transport_proxy_pass": transport_proxy,
             }
         )
@@ -479,10 +845,11 @@ def defect_interaction_report(
     dominant_transition_fraction = (
         max(transition_counts.values()) / total_transitions if total_transitions else 0.0
     )
-    scattering_proxy = bool(
+    scattering_diagnostic = bool(
         total_transitions >= int(min_scattering_transitions)
         and dominant_transition_fraction >= float(min_class_stability)
     )
+    scattering_proxy = bool(timeline_inputs_complete and scattering_diagnostic)
     transportable_count = sum(bool(row["screen_transport_proxy_pass"]) for row in rows)
     return {
         "mode": "screen_s3_defect_interaction_diagnostic",
@@ -498,7 +865,8 @@ def defect_interaction_report(
         "fusion_nearest_per_cluster": fusion_neighbor_count,
         "fusion_conserving_worldline_ids": fusion_conserving_worldline_ids,
         "fusion_conservation_proxy_pass": bool(
-            verified_fusion_candidates
+            timeline_inputs_complete
+            and verified_fusion_candidates
             and verified_identity_fusion_count == len(verified_fusion_candidates)
         ),
         "fusion_common_basepoint_transport_receipt": False,
@@ -507,8 +875,15 @@ def defect_interaction_report(
         "scattering_transition_counts": transition_counts,
         "scattering_transition_total": int(total_transitions),
         "dominant_scattering_transition_fraction": float(dominant_transition_fraction),
+        "scattering_reproducibility_diagnostic_positive": scattering_diagnostic,
         "scattering_reproducibility_proxy_pass": scattering_proxy,
-        "interaction_proxy_receipt": bool(transportable_count and scattering_proxy),
+        "timeline_particle_promotion_inputs_complete": timeline_inputs_complete,
+        "timeline_truncation_reasons": list(timeline_report.get("truncation_reasons", []))
+        if timeline_report
+        else [],
+        "interaction_proxy_receipt": bool(
+            timeline_inputs_complete and transportable_count and scattering_proxy
+        ),
         "particle_matter_receipt": False,
         "worldlines": rows[:256],
         "fusion_candidates": fusion_candidates[:256],
@@ -595,6 +970,9 @@ def _assign_worldlines(
     previous_ids: list[str],
     current_clusters: list[dict[str, object]],
     next_worldline: int,
+    *,
+    cycle_delta: int = 1,
+    max_angular_speed_per_cycle: float = 0.75,
 ) -> tuple[list[tuple[dict[str, object], str, str, float | None]], int]:
     if not previous_clusters:
         birth_ids, next_worldline = _deterministic_birth_ids(
@@ -615,7 +993,10 @@ def _assign_worldlines(
     if current_centroids.size == 0:
         return [], next_worldline
     distances = _spherical_distance_matrix(previous_centroids, current_centroids)
-    scale = _matching_scale(previous_centroids, current_centroids, distances=distances)
+    scale = _matching_scale(
+        cycle_delta=cycle_delta,
+        max_angular_speed_per_cycle=max_angular_speed_per_cycle,
+    )
     matched = _global_compatible_cluster_matches(
         previous_clusters,
         current_clusters,
@@ -648,32 +1029,45 @@ def _global_compatible_cluster_matches(
     distances: np.ndarray,
     max_distance: float,
 ) -> dict[int, tuple[int, float]]:
-    """Deterministic global greedy matching under sector and distance gates."""
+    """Deterministic minimum-total-cost one-to-one transport assignment."""
 
-    candidates: list[tuple[float, tuple[object, ...], tuple[object, ...], int, int]] = []
-    for previous_index, previous in enumerate(previous_clusters):
-        for current_index, current in enumerate(current_clusters):
+    if not previous_clusters or not current_clusters:
+        return {}
+    previous_order = sorted(
+        range(len(previous_clusters)),
+        key=lambda index: _cluster_match_key(previous_clusters[index]),
+    )
+    current_order = sorted(
+        range(len(current_clusters)),
+        key=lambda index: _cluster_match_key(current_clusters[index]),
+    )
+    cutoff = float(max_distance)
+    if not np.isfinite(cutoff) or cutoff <= 0.0:
+        return {}
+    invalid_cost = max(1.0e6, cutoff * 1.0e6)
+    cost = np.full((len(previous_order), len(current_order)), invalid_cost, dtype=float)
+    valid = np.zeros_like(cost, dtype=bool)
+    for ordered_previous, previous_index in enumerate(previous_order):
+        previous = previous_clusters[previous_index]
+        for ordered_current, current_index in enumerate(current_order):
+            current = current_clusters[current_index]
             distance = float(distances[previous_index, current_index])
-            if distance > float(max_distance) or not _cluster_sector_compatible(previous, current):
-                continue
-            candidates.append(
-                (
-                    distance,
-                    _cluster_match_key(previous),
-                    _cluster_match_key(current),
-                    int(previous_index),
-                    int(current_index),
-                )
-            )
-    candidates.sort()
-    used_previous: set[int] = set()
-    used_current: set[int] = set()
+            if (
+                np.isfinite(distance)
+                and distance <= cutoff
+                and _cluster_sector_compatible(previous, current)
+            ):
+                cost[ordered_previous, ordered_current] = distance
+                valid[ordered_previous, ordered_current] = True
+
+    assigned_rows, assigned_columns = linear_sum_assignment(cost)
     matches: dict[int, tuple[int, float]] = {}
-    for distance, _previous_key, _current_key, previous_index, current_index in candidates:
-        if previous_index in used_previous or current_index in used_current:
+    for ordered_previous, ordered_current in zip(assigned_rows, assigned_columns, strict=True):
+        if not bool(valid[ordered_previous, ordered_current]):
             continue
-        used_previous.add(previous_index)
-        used_current.add(current_index)
+        previous_index = int(previous_order[int(ordered_previous)])
+        current_index = int(current_order[int(ordered_current)])
+        distance = float(distances[previous_index, current_index])
         matches[current_index] = (previous_index, float(distance))
     return matches
 
@@ -708,25 +1102,16 @@ def _deterministic_birth_ids(
     return result, int(next_worldline)
 
 
-def _matching_scale(
-    previous_centroids: np.ndarray,
-    current_centroids: np.ndarray,
-    *,
-    distances: np.ndarray | None = None,
-) -> float:
-    """Robust angular displacement gate for consecutive S2 snapshots."""
+def _matching_scale(*, cycle_delta: int, max_angular_speed_per_cycle: float) -> float:
+    """Cadence-aware intrinsic motion bound, independent of cluster density."""
 
-    if distances is None:
-        distances = _spherical_distance_matrix(previous_centroids, current_centroids)
-    if distances.size == 0:
-        return 0.0
-    nearest = np.min(distances, axis=0)
-    finite = nearest[np.isfinite(nearest)]
-    if not finite.size:
-        return 0.0
-    # Permit normal sub-snapshot motion without joining unrelated defects on
-    # opposite parts of the screen.  All values are intrinsic radians.
-    return float(np.clip(2.5 * np.percentile(finite, 75), 0.05, 0.75))
+    delta = int(cycle_delta)
+    speed = float(max_angular_speed_per_cycle)
+    if delta <= 0:
+        raise ValueError("cycle_delta must be positive")
+    if not np.isfinite(speed) or speed <= 0.0:
+        raise ValueError("max_angular_speed_per_cycle must be finite and positive")
+    return float(min(np.pi, speed * delta))
 
 
 def _finalize_worldline(row: dict[str, object], persistence_cycles: int) -> dict[str, object]:
@@ -862,33 +1247,52 @@ def _oriented_edge_labels(left: np.ndarray, right: np.ndarray, gauge: np.ndarray
     return labels
 
 
-def _edge_index_lookup(left: np.ndarray, right: np.ndarray) -> dict[tuple[int, int], tuple[int, int, int]]:
+def _triangle_edge_index_lookup(
+    triangles: np.ndarray,
+    left: np.ndarray,
+    right: np.ndarray,
+) -> TriangleEdgeLookup:
+    """Resolve the three directed edges of every fixed triangle once."""
+
+    triangles_array = np.asarray(triangles, dtype=np.int64).reshape((-1, 3))
     left_array = np.asarray(left, dtype=np.int64)
     right_array = np.asarray(right, dtype=np.int64)
-    key = (id(left), id(right), int(left_array.size))
-    cached = _EDGE_LOOKUP_CACHE.get(key)
-    if cached is not None:
-        return cached
-    if len(_EDGE_LOOKUP_CACHE) >= _EDGE_LOOKUP_CACHE_MAX:
-        _EDGE_LOOKUP_CACHE.clear()
-    lookup: dict[tuple[int, int], tuple[int, int, int]] = {}
-    for edge_index, (a_raw, b_raw) in enumerate(zip(left_array, right_array, strict=False)):
-        a = int(a_raw)
-        b = int(b_raw)
-        lookup[(min(a, b), max(a, b))] = (int(edge_index), a, b)
-    _EDGE_LOOKUP_CACHE[key] = lookup
-    return lookup
+    if triangles_array.size == 0:
+        return np.zeros((0, 3), dtype=np.int64), np.zeros((0, 3), dtype=bool)
+    if left_array.size != right_array.size:
+        raise ValueError("left and right edge arrays must have equal length")
+    max_node = int(
+        max(
+            np.max(triangles_array, initial=0),
+            np.max(left_array, initial=0),
+            np.max(right_array, initial=0),
+        )
+    )
+    stride = max_node + 1
+    edge_keys = np.minimum(left_array, right_array) * stride + np.maximum(left_array, right_array)
+    order = np.argsort(edge_keys, kind="stable")
+    sorted_keys = edge_keys[order]
+    if sorted_keys.size == 0:
+        raise KeyError("triangle topology has no corresponding graph edges")
 
-
-def _edge_label(
-    lookup: dict[tuple[int, int], tuple[int, int, int]],
-    gauge: np.ndarray,
-    source: int,
-    target: int,
-) -> int:
-    edge_index, left_node, right_node = lookup[(min(int(source), int(target)), max(int(source), int(target)))]
-    value = int(gauge[edge_index])
-    return value if int(source) == left_node and int(target) == right_node else int(S3_INV[value])
+    sources = triangles_array[:, [0, 1, 2]]
+    targets = triangles_array[:, [1, 2, 0]]
+    query_keys = np.minimum(sources, targets) * stride + np.maximum(sources, targets)
+    positions = np.searchsorted(sorted_keys, query_keys)
+    in_bounds = positions < sorted_keys.size
+    safe_positions = np.minimum(positions, max(0, sorted_keys.size - 1))
+    found = in_bounds & (sorted_keys[safe_positions] == query_keys)
+    if not np.all(found):
+        row, slot = (int(value) for value in np.argwhere(~found)[0])
+        raise KeyError(
+            f"triangle edge ({int(sources[row, slot])}, {int(targets[row, slot])}) is absent"
+        )
+    edge_indices = order[positions]
+    forward = (left_array[edge_indices] == sources) & (right_array[edge_indices] == targets)
+    reverse = (left_array[edge_indices] == targets) & (right_array[edge_indices] == sources)
+    if not np.all(forward | reverse):
+        raise ValueError("resolved triangle edge orientation is inconsistent")
+    return np.asarray(edge_indices, dtype=np.int64), np.asarray(forward, dtype=bool)
 
 
 def _class_name(class_id: int) -> str:

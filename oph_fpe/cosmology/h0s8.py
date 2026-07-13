@@ -10,13 +10,16 @@ from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_cl
 from oph_fpe.constants.oph_pixel import P_STAR
 from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.h0s8_certificates import h0s8_lane8_certificate_report
+from oph_fpe.cosmology.neutrino_status import (
+    CONVENTIONAL_CAMB_NEUTRINO_ASSUMPTION,
+    CONVENTIONAL_CAMB_SUM_MNU_EV,
+)
 
 
 H_DS_KM_S_MPC = 55.759940256
 OMEGA_B_H2 = 0.02237
 OMEGA_R_H2 = 4.18343e-5
-SUM_MNU_OPH_EV = 0.09001192964464505
-OMEGA_NU_H2_OPH = SUM_MNU_OPH_EV / 93.12
+OMEGA_NU_H2_CONVENTIONAL_CAMB = CONVENTIONAL_CAMB_SUM_MNU_EV / 93.12
 Q_A_TARGET = 5.363470441
 H0_PLANCK_BRANCH = 67.4
 SIGMA8_CDM_BRANCH = 0.807787208
@@ -30,7 +33,7 @@ def h0s8_branch_report(
     q_a: float = Q_A_TARGET,
     h_ds: float = H_DS_KM_S_MPC,
     omega_b_h2: float = OMEGA_B_H2,
-    omega_nu_h2: float = OMEGA_NU_H2_OPH,
+    omega_nu_h2: float = OMEGA_NU_H2_CONVENTIONAL_CAMB,
     omega_r_h2: float = OMEGA_R_H2,
     s8_cdm: float = S8_CDM_BRANCH,
     sigma8_cdm: float = SIGMA8_CDM_BRANCH,
@@ -74,7 +77,11 @@ def h0s8_branch_report(
             "omega_b_h2": float(omega_b_h2),
             "omega_nu_h2": float(omega_nu_h2),
             "omega_r_h2": float(omega_r_h2),
-            "sum_mnu_OPH_eV": SUM_MNU_OPH_EV,
+            "neutrino_assumption": CONVENTIONAL_CAMB_NEUTRINO_ASSUMPTION,
+            "sum_mnu_input_eV": float(omega_nu_h2) * 93.12,
+            "sum_mnu_conventional_camb_baseline_eV": CONVENTIONAL_CAMB_SUM_MNU_EV,
+            "neutrino_baseline_counts_as_oph_prediction": False,
+            "oph_derived_sum_mnu_eV": None,
             "sigma8_cdm_branch": float(sigma8_cdm),
             "S8_cdm_branch": float(s8_cdm),
         },
@@ -157,7 +164,8 @@ def h0s8_branch_report(
         "claim_boundary": (
             "H0/S8 branch diagnostic from OPH cosmology notes. It computes consequences of declared "
             "branch assumptions but does not prove that finite lattice runs derive Q_A, B_A(k,a), or "
-            "Gamma_rec=Gamma_J. The exp(-P/24) collar value is reported as an exact-uniform "
+            "Gamma_rec=Gamma_J. Its 0.06 eV neutrino input is the conventional CAMB baseline, not an "
+            "OPH-derived mass prediction. The exp(-P/24) collar value is reported as an exact-uniform "
             "product-thickening diagnostic target only; finite-thickness/local-coefficient promotion "
             "requires the UNIFORM_PRODUCT_THICKENING_EXACT gate. Treat as measurement-facing continuation "
             "data until those gates close."
@@ -188,7 +196,7 @@ def h0_from_flat_q_a(
     q_a: float,
     h_ds: float = H_DS_KM_S_MPC,
     omega_b_h2: float = OMEGA_B_H2,
-    omega_nu_h2: float = OMEGA_NU_H2_OPH,
+    omega_nu_h2: float = OMEGA_NU_H2_CONVENTIONAL_CAMB,
     omega_r_h2: float = OMEGA_R_H2,
 ) -> float:
     h2 = (float(h_ds) / 100.0) ** 2 + (1.0 + float(q_a)) * float(omega_b_h2) + float(omega_nu_h2) + float(omega_r_h2)

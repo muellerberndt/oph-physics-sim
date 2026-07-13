@@ -1,7 +1,31 @@
 import json
 from pathlib import Path
 
+import pytest
+
+from oph_fpe.evidence.bundle import RunBundle
 from oph_fpe.experiments import load_config, run_config
+
+
+def test_run_bundle_can_write_compact_json(tmp_path: Path):
+    bundle = RunBundle(tmp_path, "compact_json")
+
+    receipt = bundle.write_json(
+        "timeline.json",
+        {"rows": [1, 2], "receipt": False},
+        compact=True,
+        max_bytes=64,
+    )
+
+    assert (bundle.path / "timeline.json").read_text(encoding="utf-8") == (
+        '{"rows":[1,2],"receipt":false}'
+    )
+    assert receipt["byte_count"] == 30
+    assert receipt["under_hard_limit"] is True
+
+    with pytest.raises(ValueError, match="hard gate"):
+        bundle.write_json("too_large.json", {"payload": "x" * 80}, max_bytes=64)
+    assert not (bundle.path / "too_large.json").exists()
 
 
 def test_e0_run_writes_receipts(tmp_path: Path):
@@ -38,3 +62,7 @@ def test_e0_run_can_attach_positive_geometry_kernel_dispatch(tmp_path: Path):
     assert result["kernel_dispatch"]["effective_acceleration_enabled"] is False
     assert manifest["kernel_dispatch"]["positive_geometry"]["dispatch_status"] == "geometry_certified_diagnostic_only"
     assert manifest["kernel_dispatch"]["physical_observables_changed"] is False
+    assert manifest["source_provenance"]["simulator"]["commit"] == manifest["git_commit"]
+    assert manifest["source_provenance"]["simulator"]["worktree_state_sha256"].startswith("sha256:")
+    assert "dirty" in manifest["source_provenance"]["simulator"]
+    assert manifest["dependency_provenance"]["pyproject_sha256"].startswith("sha256:")

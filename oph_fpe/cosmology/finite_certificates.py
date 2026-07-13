@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.evidence.hashes import stable_json_hash
 
 LN2 = math.log(2.0)
 HBAR_SI = 1.054571817e-34
@@ -68,8 +69,7 @@ def read_json_file(path: Path) -> dict[str, Any]:
 
 
 def sha256_json(obj: Any) -> str:
-    blob = json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
-    return hashlib.sha256(blob).hexdigest()
+    return stable_json_hash(obj).removeprefix("sha256:")
 
 
 def entropy_bits(p: np.ndarray) -> float:

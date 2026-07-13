@@ -68,7 +68,10 @@ class RepairKernel:
         neighbors = list(net.graph.neighbors(node))
         self.rng.shuffle(neighbors)
         for neighbor in neighbors:
-            state.ports[neighbor] = net.states[neighbor].ports[node]
+            state.ports[neighbor] = net.group.multiply(
+                state.gauges[neighbor],
+                net.states[neighbor].ports[node],
+            )
         if neighbors:
             state.scalar = float(np.mean([net.states[neighbor].scalar for neighbor in neighbors]))
             neighbor_hidden = [net.states[neighbor].hidden for neighbor in neighbors]

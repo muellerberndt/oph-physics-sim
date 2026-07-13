@@ -1,0 +1,91 @@
+{
+  "artifact": "oph_modular_clock_instrumentation",
+  "object_id": "ModularClockInstrumentation_Issue503",
+  "issue": 503,
+  "scope": "boundary-collar instrumentation: declared Gaussian MaxEnt reference states (critical hopping, anti-periodic twist, half filling, v_F = 1) on the stage-r cap-boundary collar rings; modular data computed at 120-digit precision; profile extracted by odd-range chiral resummation (nearest-neighbour truncation alone is off by ~9 percent and does not converge); receipts evaluated are the boundary-circle profile-KMS and cross-ratio clauses; cap-interior modular data are pending",
+  "rings": [
+    16,
+    32,
+    64
+  ],
+  "resummation_rmax": 9,
+  "kms_profile_receipt": [
+    {
+      "n_ring": 16,
+      "arc_sites": 8,
+      "interior_bonds": 5,
+      "median_relative_residual_2pi": 0.004807594416665895,
+      "max_relative_residual_2pi": 0.006485050005438087,
+      "median_relative_residual_wrong_1p2": 0.17067299534722147,
+      "separation_factor": 35.50070587393363
+    },
+    {
+      "n_ring": 32,
+      "arc_sites": 16,
+      "interior_bonds": 9,
+      "median_relative_residual_2pi": 0.0011474903070090026,
+      "max_relative_residual_2pi": 0.0015845438556624236,
+      "median_relative_residual_wrong_1p2": 0.16762290858917417,
+      "separation_factor": 146.07784271929287
+    },
+    {
+      "n_ring": 64,
+      "arc_sites": 32,
+      "interior_bonds": 17,
+      "median_relative_residual_2pi": 0.00011239035725785218,
+      "max_relative_residual_2pi": 0.0002453673130835554,
+      "median_relative_residual_wrong_1p2": 0.16668836640762252,
+      "separation_factor": 1483.1198198364727
+    }
+  ],
+  "crossratio_receipt": [
+    {
+      "n_ring": 16,
+      "quadruple_bonds": [
+        1,
+        5
+      ],
+      "cr_lattice": 6.08042436424952,
+      "cr_moebius": 5.82842712474619,
+      "relative_error": 0.04323589093760938
+    },
+    {
+      "n_ring": 32,
+      "quadruple_bonds": [
+        3,
+        11
+      ],
+      "cr_lattice": 5.891265823688044,
+      "cr_moebius": 5.82842712474619,
+      "relative_error": 0.010781416254662446
+    },
+    {
+      "n_ring": 64,
+      "quadruple_bonds": [
+        7,
+        23
+      ],
+      "cr_lattice": 5.841805767794002,
+      "cr_moebius": 5.82842712474619,
+      "relative_error": 0.0022954122547074185
+    }
+  ],
+  "verdicts": {
+    "kms_residual_decreasing": true,
+    "kms_final_median_residual": 0.00011239035725785218,
+    "wrong_normalization_separated": true,
+    "crossratio_error_decreasing": true,
+    "crossratio_final_relative_error": 0.0022954122547074185,
+    "crossratio_cauchy_decreasing": true
+  },
+  "receipts_witnessed": {
+    "geometric_2pi_kms_boundary_collar": true,
+    "modular_cross_ratio_boundary_collar": true
+  },
+  "receipts_pending": [
+    "cap-interior modular data (full 2D cap algebras)",
+    "Cyc/NTI/weak-additivity/MI null-net receipts",
+    "E1-E4 event receipts",
+    "UC/VR/scale physical-identification receipts"
+  ]
+}

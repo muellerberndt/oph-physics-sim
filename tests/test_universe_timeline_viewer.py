@@ -39,7 +39,9 @@ def test_small_universe_payload_rejects_stale_unvalidated_receipt_fallback(tmp_p
     assert payload["dataMode"] == "theorem_receipt_summary_only"
     assert payload["receiptSource"] is None
     assert payload["bundleReceiptKind"] is None
-    assert "computed_v2_consensus_certificate_missing" in payload["theoremCoreConsensusValidation"]["blockers"]
+    assert "computed_v3_gauge_quotient_consensus_certificate_missing" in payload[
+        "theoremCoreConsensusValidation"
+    ]["blockers"]
     assert payload["renderableExactMiniUniverseReceipt"] is False
     assert payload["receipts"]["renderable_exact_mini_universe_receipt"] is False
     assert payload["receipts"]["exact_nonzero_holonomy_cycle_count"] is None

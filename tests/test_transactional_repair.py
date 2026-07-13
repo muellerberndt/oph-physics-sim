@@ -32,6 +32,23 @@ def test_stale_transaction_is_not_a_repair_step():
     assert result.state == {"root": 1, "a": 1}
 
 
+def test_in_place_state_mutation_cannot_rewrite_prepared_snapshot():
+    state = {"root": 0, "a": [2]}
+    tx = prepare_transaction(state, tx_id="repair_a", read_set={"a"}, payload={"a": [0]})
+    state["a"][0] = 1
+
+    result = commit_transaction(
+        state,
+        tx,
+        measure=lambda row: row["a"][0],
+        boundary=_boundary,
+    )
+
+    assert result.committed is False
+    assert result.status == "STALE_SNAPSHOT"
+    assert tx.snapshot_dict == {"a": [2]}
+
+
 def test_versioned_transaction_aborts_on_stale_read_version():
     state = {"root": 0, "a": 1}
     tx = prepare_transaction(
@@ -66,6 +83,23 @@ def test_duplicate_delivery_replays_as_stale_snapshot():
     assert replay.status == "STALE_SNAPSHOT"
 
 
+def test_empty_transaction_batch_cannot_certify_atomic_descent():
+    state = {"root": 0, "a": 1}
+
+    report = transactional_repair_receipt(
+        state,
+        [],
+        measure=_measure,
+        boundary=_boundary,
+    )
+
+    assert report["SEAM_ATOMIC_COMMIT_RECEIPT"] is False
+    assert report["SEAM_REPAIR_DESCENT_RECEIPT"] is False
+    assert report["receipt"] is False
+    assert report["primitive_transaction_count"] == 0
+    assert report["nonempty_transaction_set"] is False
+
+
 def test_disjoint_transactions_commute_by_atomic_diamond():
     state = {"root": 0, "a": 1, "b": 1}
     left = prepare_transaction(state, tx_id="repair_a", read_set={"a"}, payload={"a": 0})
@@ -76,6 +110,19 @@ def test_disjoint_transactions_commute_by_atomic_diamond():
     assert report["DISTRIBUTED_LOCAL_DIAMOND_RECEIPT"] is True
     assert report["left_then_right"] == {"root": 0, "a": 0, "b": 0}
     assert report["right_then_left"] == {"root": 0, "a": 0, "b": 0}
+
+
+def test_duplicate_transaction_id_cannot_certify_a_conflicting_diamond():
+    state = {"root": 0, "a": 2}
+    left = prepare_transaction(state, tx_id="duplicate", read_set={"a"}, payload={"a": 1})
+    right = prepare_transaction(state, tx_id="duplicate", read_set={"a"}, payload={"a": 0})
+
+    report = atomic_diamond_report(state, left, right, measure=_measure, boundary=_boundary)
+
+    assert report["duplicate_transaction_id"] is True
+    assert report["DISTRIBUTED_LOCAL_DIAMOND_RECEIPT"] is False
+    assert report["receipt"] is False
+    assert report["status"] == "CONFLICT_REQUIRES_AGGREGATE_TRANSACTION"
 
 
 def test_conflicting_repairs_are_aggregated_before_commit():
@@ -118,6 +165,39 @@ def test_aggregate_rejects_incompatible_overlapping_writes() -> None:
     )
     assert receipt["SEAM_ATOMIC_COMMIT_RECEIPT"] is False
     assert receipt["aggregate_results"][0]["status"] == "INCOMPATIBLE_OVERLAPPING_WRITES"
+
+
+def test_stale_primitive_cannot_be_laundered_through_a_fresh_aggregate() -> None:
+    prepared_state = {"root": 0, "a": 2}
+    stale = prepare_transaction(
+        prepared_state,
+        tx_id="stale",
+        read_set={"a"},
+        payload={"a": 0},
+    )
+    current_state = {"root": 0, "a": 1}
+
+    direct = commit_transaction(current_state, stale, measure=_measure, boundary=_boundary)
+    assert direct.committed is False
+    assert direct.status == "STALE_SNAPSHOT"
+
+    try:
+        aggregate_component(current_state, [stale])
+    except ValueError as exc:
+        assert "is not fresh (STALE_SNAPSHOT)" in str(exc)
+    else:
+        raise AssertionError("a stale primitive transaction must not be re-prepared by aggregation")
+
+    receipt = transactional_repair_receipt(
+        current_state,
+        [stale],
+        measure=_measure,
+        boundary=_boundary,
+    )
+    assert receipt["SEAM_ATOMIC_COMMIT_RECEIPT"] is False
+    assert receipt["SEAM_REPAIR_DESCENT_RECEIPT"] is False
+    assert receipt["aggregate_results"][0]["status"] == "STALE_PRIMITIVE_SNAPSHOT"
+    assert receipt["final_state"] == current_state
 
 
 def test_validation_support_includes_every_changed_mismatch_endpoint():
@@ -302,7 +382,41 @@ def test_gauge_duplicates_have_identical_quotient_transitions():
     )
 
     assert report["GAUGE_RELABELING_QUOTIENT_INVARIANCE_RECEIPT"] is True
+    assert report["representative_pair_count"] == 1
     assert report["violation_count"] == 0
+
+
+def test_gauge_invariance_receipt_rejects_vacuous_representative_set():
+    report = gauge_relabeling_invariance_report(
+        [{"x": 1, "gauge": "only"}],
+        quotient_map=lambda row: {"x": row["x"]},
+        quotient_transition_fn=lambda _row: [{"x": 0}],
+    )
+
+    assert report["GAUGE_RELABELING_QUOTIENT_INVARIANCE_RECEIPT"] is False
+    assert report["nonvacuous_representative_comparison"] is False
+    assert report["representative_pair_count"] == 0
+
+
+def test_gauge_invariance_checks_representative_dynamics_before_quotienting():
+    representatives = [
+        {"x": 1, "gauge": "left"},
+        {"x": 1, "gauge": "right"},
+    ]
+
+    report = gauge_relabeling_invariance_report(
+        representatives,
+        quotient_map=lambda row: {"x": row["x"]},
+        quotient_transition_fn=lambda row: [
+            {"x": 0, "gauge": row["gauge"]}
+            if row["gauge"] == "left"
+            else {"x": 2, "gauge": row["gauge"]}
+        ],
+    )
+
+    assert report["GAUGE_RELABELING_QUOTIENT_INVARIANCE_RECEIPT"] is False
+    assert report["receipt"] is False
+    assert report["violation_count"] == 1
 
 
 def _measure(state):

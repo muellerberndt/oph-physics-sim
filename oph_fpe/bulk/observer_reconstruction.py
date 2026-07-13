@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import math
 from typing import Any
 
@@ -42,6 +43,18 @@ BLIND_FEATURE_GROUPS = {
 }
 
 
+DEFAULT_OBSERVER_SIMILARITY_WEIGHTS = {
+    "local_packet": 0.50,
+    "measured_overlap": 0.35,
+    "paired_perturb_resettle": 0.15,
+    # These legacy diagnostics remain callable with explicit nonzero weights,
+    # but they no longer enter the default geometry instrument.
+    "record_family": 0.0,
+    "cap_response": 0.0,
+    "counterfactual": 0.0,
+}
+
+
 def observer_similarity_matrix(
     observer_views: list[dict[str, Any]],
     record_families: list[dict[str, Any]] | None = None,
@@ -69,51 +82,80 @@ def observer_similarity_components(
     comes from a single heuristic blend rather than conformal cap geometry.
     """
 
-    weights = weights or {
-        "overlap_projection_agreement": 0.35,
-        "record_family_mutual_information": 0.35,
-        "cap_modular_response_similarity": 0.20,
-        "counterfactual_response_similarity": 0.10,
-    }
+    weights = dict(DEFAULT_OBSERVER_SIMILARITY_WEIGHTS if weights is None else weights)
     patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
     ids = [int(view.get("observer_id", index)) for index, view in enumerate(patch_views)]
     if not patch_views:
         return {"composite": np.zeros((0, 0), dtype=float)}, []
-    features = np.array([_view_feature(view) for view in patch_views], dtype=float)
-    features = _standardize_columns(features)
-    distances = squareform(pdist(features, metric="euclidean")) if len(patch_views) > 1 else np.zeros((1, 1))
-    overlap_similarity = np.exp(-distances)
-    hash_similarity = np.equal.outer(
-        [view.get("visible_readout_hash") for view in patch_views],
-        [view.get("visible_readout_hash") for view in patch_views],
-    ).astype(float)
+
+    count = len(patch_views)
+    unavailable = np.eye(count, dtype=float)
+    local_features = _verified_local_packet_feature_matrix(patch_views)
+    local_similarity = (
+        _feature_block_similarity(local_features)
+        if local_features is not None
+        else unavailable.copy()
+    )
+    measured_overlap_features = _verified_measured_overlap_feature_matrix(patch_views)
+    measured_overlap_similarity = (
+        _feature_block_similarity(measured_overlap_features)
+        if measured_overlap_features is not None
+        else unavailable.copy()
+    )
+    paired_features = _verified_paired_response_feature_matrix(patch_views)
+    paired_similarity = (
+        _feature_block_similarity(paired_features)
+        if paired_features is not None
+        else unavailable.copy()
+    )
+
+    # The old record/cap/counterfactual matrices are retained only as explicit
+    # debug lanes. In particular there is no visible-hash fallback: token/hash
+    # equality is not a locality metric.
     record_similarity = _record_family_similarity(patch_views, record_families or {})
+    record_available = record_similarity is not None
     if record_similarity is None:
-        record_similarity = hash_similarity
+        record_similarity = unavailable.copy()
     cap_similarity = _cap_response_similarity(patch_views, observer_views, cap_responses or {})
+    cap_available = cap_similarity is not None
     if cap_similarity is None:
-        cap_similarity = overlap_similarity
+        cap_similarity = unavailable.copy()
     counterfactual_similarity = _counterfactual_similarity(patch_views, record_families or {})
+    counterfactual_available = counterfactual_similarity is not None
     if counterfactual_similarity is None:
-        counterfactual_similarity = record_similarity
-    overlap_weight = float(weights.get("overlap_projection_agreement", 0.35))
-    record_weight = float(weights.get("record_family_mutual_information", 0.35))
-    cap_weight = float(weights.get("cap_modular_response_similarity", 0.20))
-    cf_weight = float(weights.get("counterfactual_response_similarity", 0.10))
-    total = max(overlap_weight + record_weight + cap_weight + cf_weight, 1e-12)
-    similarity = (
-        overlap_weight * overlap_similarity
-        + record_weight * record_similarity
-        + cap_weight * cap_similarity
-        + cf_weight * counterfactual_similarity
-    ) / total
-    np.fill_diagonal(similarity, 1.0)
-    return {
-        "composite": similarity,
-        "overlap_projection": overlap_similarity,
+        counterfactual_similarity = unavailable.copy()
+
+    components = {
+        "local_packet": local_similarity,
+        "measured_overlap": measured_overlap_similarity,
+        "paired_perturb_resettle": paired_similarity,
         "record_family": record_similarity,
         "cap_response": cap_similarity,
         "counterfactual": counterfactual_similarity,
+    }
+    available = {
+        "local_packet": local_features is not None,
+        "measured_overlap": measured_overlap_features is not None,
+        "paired_perturb_resettle": paired_features is not None,
+        "record_family": record_available,
+        "cap_response": cap_available,
+        "counterfactual": counterfactual_available,
+    }
+    active = [
+        (name, max(0.0, float(weights.get(name, 0.0))), matrix)
+        for name, matrix in components.items()
+        if available[name] and float(weights.get(name, 0.0)) > 0.0
+    ]
+    total = float(sum(weight for _, weight, _ in active))
+    similarity = (
+        sum(weight * matrix for _, weight, matrix in active) / total
+        if total > 1e-12
+        else unavailable.copy()
+    )
+    np.fill_diagonal(similarity, 1.0)
+    return {
+        "composite": similarity,
+        **components,
     }, ids
 
 
@@ -203,6 +245,21 @@ def bulk_reconstruction_report(
     }
     blind_report = blind_observer_bulk_report(observer_views)
     controls = neutral_reconstruction_controls(observer_views, seed=seed)
+    patch_views = [view for view in observer_views if view.get("view_type") == "patch_observer"]
+    local_available = _verified_local_packet_feature_matrix(patch_views) is not None
+    overlap_available = _verified_measured_overlap_feature_matrix(patch_views) is not None
+    paired_available = _verified_paired_response_feature_matrix(patch_views) is not None
+    instrument_blockers = []
+    if not local_available:
+        instrument_blockers.append("verified_local_packet_producer_unavailable_or_partial")
+    if not overlap_available:
+        instrument_blockers.append("measured_reciprocal_overlap_producer_unavailable_or_partial")
+    if not paired_available:
+        instrument_blockers.append("actual_paired_perturb_resettle_producer_unavailable_or_partial")
+    if local_available or overlap_available:
+        instrument_blockers.append("support_selection_carrier_has_s2_screen_chart_ancestry")
+    if paired_available:
+        instrument_blockers.append("paired_intervention_axes_have_s2_screen_chart_ancestry")
     report = {
         "mode": "neutral_summary_distance_diagnostic",
         "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
@@ -211,6 +268,22 @@ def bulk_reconstruction_report(
         "observer_similarity_debug_report": dimension,
         "neutral_dimension_report": dimension,
         "component_dimension_debug_reports": component_reports,
+        "geometry_instrument": {
+            "default_channels": ["local_packet", "measured_overlap", "paired_perturb_resettle"],
+            "verified_local_packet_available": local_available,
+            "measured_reciprocal_overlap_available": overlap_available,
+            "actual_paired_perturb_resettle_available": paired_available,
+            "hash_or_token_geometry_used": False,
+            "legacy_self_histogram_overlap_used": False,
+            "strict_emergent_bulk_eligible": False,
+            "blockers": instrument_blockers,
+            "claim_boundary": (
+                "The debug instrument now reads locality-preserving packets, literal reciprocal overlap "
+                "correspondences, and actual paired perturb/resettle responses. Current support selection "
+                "and cap interventions still descend from the S2 screen chart, so this instrument can "
+                "diagnose geometry but cannot certify that the geometry emerged chart-blind."
+            ),
+        },
         "blind_observer_bulk_report": blind_report,
         "controls": controls,
         "control_gate_passed": bool(controls.get("all_expected_failures_observed", False)),
@@ -658,7 +731,7 @@ def planted_dimension_controls(*, seed: int = 1, sample_count: int = 900) -> dic
 
 
 def shuffled_observer_record_control(observer_views: list[dict[str, Any]], *, seed: int = 1) -> dict[str, Any]:
-    patch_views = [dict(view) for view in observer_views if view.get("view_type") == "patch_observer"]
+    patch_views = [copy.deepcopy(view) for view in observer_views if view.get("view_type") == "patch_observer"]
     if len(patch_views) < 4:
         return {
             "observer_count": len(patch_views),
@@ -668,18 +741,38 @@ def shuffled_observer_record_control(observer_views: list[dict[str, Any]], *, se
     rng = np.random.default_rng(seed)
     original_similarity, _ = observer_similarity_matrix(patch_views)
     original_distance = observer_distance_matrix(original_similarity)
-    shuffled = [dict(view) for view in patch_views]
-    for key in (
-        "visible_readout_hash",
-        "record_stability_mean",
-        "repair_load_mean",
-        "mismatch_density_mean",
-        "visible_signature_entropy",
-    ):
-        values = [view.get(key) for view in shuffled]
-        order = rng.permutation(len(values))
-        for index, source in enumerate(order):
-            shuffled[index][key] = values[int(source)]
+    shuffled = [copy.deepcopy(view) for view in patch_views]
+    channels_permuted: list[str] = []
+    channel_fields = (
+        ("local_packet", ("locality_preserving_packet_feature_vector",)),
+        (
+            "paired_perturb_resettle",
+            ("paired_perturbation_response_tensor", "paired_perturbation_control_tensors"),
+        ),
+    )
+    for channel, fields in channel_fields:
+        if not any(any(field in view for field in fields) for view in shuffled):
+            continue
+        order = np.asarray(rng.permutation(len(shuffled)), dtype=np.int64)
+        if len(shuffled) > 1 and np.array_equal(order, np.arange(len(shuffled))):
+            order = np.roll(order, 1)
+        for key in fields:
+            values = [copy.deepcopy(view.get(key)) for view in shuffled]
+            for index, source in enumerate(order):
+                value = values[int(source)]
+                if value is None:
+                    shuffled[index].pop(key, None)
+                else:
+                    shuffled[index][key] = copy.deepcopy(value)
+        channels_permuted.append(channel)
+    if not channels_permuted:
+        return {
+            "observer_count": len(patch_views),
+            "channels_permuted": [],
+            "cross_observer_overlap_fixed": True,
+            "expected_failure_observed": False,
+            "failure_mode": "no active row-local measured geometry channels were available to shuffle",
+        }
     shuffled_similarity, _ = observer_similarity_matrix(shuffled)
     shuffled_distance = observer_distance_matrix(shuffled_similarity)
     original_vec = _upper_triangle(original_distance)
@@ -691,8 +784,13 @@ def shuffled_observer_record_control(observer_views: list[dict[str, Any]], *, se
         "observer_count": len(patch_views),
         "distance_shape_correlation": corr if np.isfinite(corr) else None,
         "mean_abs_distance_delta": mean_abs_delta,
+        "channels_permuted": channels_permuted,
+        "cross_observer_overlap_fixed": True,
         "expected_failure_observed": degraded,
-        "failure_mode": "shuffled observer records should degrade neutral observer-distance reconstruction",
+        "failure_mode": (
+            "row-local measured channels were permuted relative to fixed observer identity and fixed "
+            "cross-observer overlap; the reconstruction should degrade"
+        ),
     }
 
 
@@ -704,6 +802,116 @@ def _view_feature(view: dict[str, Any]) -> list[float]:
         float(view.get("mismatch_density_mean", 0.0)),
         float(view.get("visible_signature_entropy", 0.0)),
     ]
+
+
+def _verified_local_packet_feature_matrix(patch_views: list[dict[str, Any]]) -> np.ndarray | None:
+    vectors: list[list[float]] = []
+    for view in patch_views:
+        schema = view.get("locality_preserving_packet_feature_schema")
+        vector = _flatten_numeric(view.get("locality_preserving_packet_feature_vector"))
+        valid = bool(
+            isinstance(schema, dict)
+            and schema.get("support_selection_carrier") == "finite_patch_adjacency_bfs"
+            and schema.get("excluded_hash_fields")
+            and not schema.get("feature_value_coordinate_fields_used")
+            and set(schema.get("fields", [])) <= {"repair_load", "cumulative_repair_load"}
+            and vector
+        )
+        if not valid:
+            return None
+        vectors.append(vector)
+    return _padded_feature_rows(vectors)
+
+
+def _verified_measured_overlap_feature_matrix(patch_views: list[dict[str, Any]]) -> np.ndarray | None:
+    ids: list[int] = []
+    for index, view in enumerate(patch_views):
+        try:
+            ids.append(int(view.get("observer_id", index)))
+        except (TypeError, ValueError):
+            return None
+    if len(set(ids)) != len(ids):
+        return None
+    by_id = {observer_id: index for index, observer_id in enumerate(ids)}
+    directed = np.zeros((len(patch_views), len(patch_views)), dtype=float)
+    for index, view in enumerate(patch_views):
+        provenance = view.get("overlap_correspondence_evidence_provenance")
+        correspondences = view.get("measured_overlap_correspondences")
+        valid = bool(
+            isinstance(provenance, dict)
+            and provenance.get("cross_observer_measurement") is True
+            and provenance.get("self_histogram_synthesis") is False
+            and provenance.get("support_selection_carrier") == "finite_patch_adjacency_bfs"
+            and isinstance(correspondences, list)
+        )
+        if not valid:
+            return None
+        for row in correspondences:
+            if not isinstance(row, dict):
+                continue
+            try:
+                peer = by_id[int(row.get("peer_observer_id"))]
+                affinity = float(row.get("measured_affinity"))
+            except (KeyError, TypeError, ValueError):
+                continue
+            if peer == index or not np.isfinite(affinity):
+                continue
+            directed[index, peer] = max(directed[index, peer], float(np.clip(affinity, 0.0, 1.0)))
+    reciprocal = (directed > 0.0) & (directed.T > 0.0)
+    if int(np.count_nonzero(np.triu(reciprocal, k=1))) <= 0:
+        return None
+    affinity = np.sqrt(np.maximum(directed, 0.0) * np.maximum(directed.T, 0.0))
+    np.fill_diagonal(affinity, 1.0)
+    return affinity
+
+
+def _verified_paired_response_feature_matrix(patch_views: list[dict[str, Any]]) -> np.ndarray | None:
+    vectors: list[list[float]] = []
+    for view in patch_views:
+        provenance = view.get("paired_perturbation_response_provenance")
+        vector = _flatten_numeric(view.get("paired_perturbation_response_tensor"))
+        valid = bool(
+            view.get("paired_perturbation_response_producer_receipt") is True
+            and isinstance(provenance, dict)
+            and provenance.get("actual_paired_perturb_resettle") is True
+            and provenance.get("observer_local_support_readout") is True
+            and vector
+        )
+        if not valid:
+            return None
+        vectors.append(vector)
+    return _padded_feature_rows(vectors)
+
+
+def _padded_feature_rows(vectors: list[list[float]]) -> np.ndarray:
+    width = max((len(vector) for vector in vectors), default=0)
+    matrix = np.zeros((len(vectors), width), dtype=float)
+    for index, vector in enumerate(vectors):
+        matrix[index, : len(vector)] = np.asarray(vector, dtype=float)
+    return np.where(np.isfinite(matrix), matrix, 0.0)
+
+
+def _feature_block_similarity(features: np.ndarray) -> np.ndarray:
+    features = np.asarray(features, dtype=float)
+    count = int(features.shape[0]) if features.ndim == 2 else 0
+    if count <= 0:
+        return np.zeros((0, 0), dtype=float)
+    if count == 1 or features.shape[1] <= 0:
+        return np.eye(count, dtype=float)
+    finite = np.where(np.isfinite(features), features, 0.0)
+    varying = np.std(finite, axis=0) > 1e-12
+    if not np.any(varying):
+        return np.eye(count, dtype=float)
+    standardized = _standardize_columns(finite[:, varying])
+    distances = squareform(pdist(standardized, metric="euclidean"))
+    positive = distances[np.triu_indices_from(distances, k=1)]
+    positive = positive[np.isfinite(positive) & (positive > 1e-12)]
+    if positive.size == 0:
+        return np.eye(count, dtype=float)
+    scale = max(float(np.median(positive)), 1e-12)
+    similarity = np.exp(-np.square(distances / scale))
+    np.fill_diagonal(similarity, 1.0)
+    return similarity
 
 
 def _flatten_numeric(value: Any) -> list[float]:

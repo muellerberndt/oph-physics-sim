@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import math
 from dataclasses import asdict, dataclass
@@ -12,7 +11,12 @@ from typing import Any, Iterable
 import numpy as np
 
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights
-from oph_fpe.bulk.modular_response_kernel import _simulate_cap_collar_perturb_resettle
+from oph_fpe.bulk.modular_response_kernel import (
+    _bounded_ordered_thread_map,
+    _production_sector_replay_contract,
+    _simulate_cap_collar_perturb_resettle,
+)
+from oph_fpe.evidence.hashes import CANONICAL_HASH_SCHEMA, stable_json_hash
 
 
 DEFAULT_PAIRED_B_A_CONTROLS = (
@@ -22,6 +26,14 @@ DEFAULT_PAIRED_B_A_CONTROLS = (
     "phase_shuffled_baryon_mode",
     "random_collar_labels",
     "wrong_k_label",
+)
+
+NO_FULL_GRAPH_SIMULATION_CONTROLS = frozenset(
+    {
+        "no_perturbation",
+        "no_repair_load_channel",
+        "baryon_delta_applied_after_record_freezeout",
+    }
 )
 
 
@@ -44,6 +56,7 @@ def paired_perturb_resettle_b_a_report(
     graph_state: dict[str, Any],
     *,
     cell_entropy: np.ndarray | float | None = None,
+    observer_views: list[dict[str, Any]] | None = None,
     a_grid: Iterable[float] | None = None,
     times: Iterable[float] | None = None,
     max_caps: int | None = None,
@@ -57,6 +70,10 @@ def paired_perturb_resettle_b_a_report(
     repair_steps: int = 4,
     repairs_per_step: int = 64,
     transition_scale: float = 2.0 * math.pi,
+    max_full_graph_simulations: int | None = None,
+    full_graph_budget_policy: str = "skip_if_exceeded",
+    full_graph_n_jobs: int = 1,
+    reuse_dynamics_across_a_grid: bool = True,
     seed: int = 1,
 ) -> dict[str, Any]:
     """Estimate a non-fit B_A parent from actual paired perturb/resettle probes.
@@ -75,76 +92,248 @@ def paired_perturb_resettle_b_a_report(
     time_values = [float(value) for value in (times if times is not None else [0.025, 0.05, 0.1])]
     a_values = [float(value) for value in (a_grid if a_grid is not None else [1.0 / 1100.0, 0.01, 0.1, 1.0])]
     entropy = _cell_entropy(cell_entropy, points.shape[0])
+    observer_context = _observer_probe_context(
+        observer_views,
+        entropy=entropy,
+        patch_count=points.shape[0],
+    )
     seed_base = int(seed)
 
     rows: list[dict[str, Any]] = []
     control_rows: list[dict[str, Any]] = []
+    observer_response_rows: list[dict[str, Any]] = []
+    observer_response_control_rows: list[dict[str, Any]] = []
     control_values = tuple(DEFAULT_PAIRED_B_A_CONTROLS if controls is None else controls)
-    for a_value in a_values:
-        for cap_index, cap in enumerate(cap_values):
-            normalized_cap = cap.normalized()
-            k_proxy = 1.0 / max(float(normalized_cap.theta0), 1.0e-12)
-            weights = cap_weights(points, normalized_cap, soft=True) * entropy
-            rho_a = _response_scale(raw_fields, response_field, weights)
-            for time_index, time_value in enumerate(time_values):
-                rows.append(
-                    _paired_row(
-                        points,
-                        normalized_cap,
-                        raw_fields,
-                        graph,
-                        weights,
-                        entropy,
-                        response_field=response_field,
-                        rho_a=rho_a,
-                        a_value=a_value,
-                        k_proxy=k_proxy,
-                        cap_index=cap_index,
-                        time_index=time_index,
-                        time_value=time_value,
-                        modes_per_cap_time=modes_per_cap_time,
-                        control=None,
-                        perturb_strength=perturb_strength,
-                        perturb_budget_mode=perturb_budget_mode,
-                        fixed_perturb_fraction=fixed_perturb_fraction,
-                        perturb_selection_mode=perturb_selection_mode,
-                        repair_steps=repair_steps,
-                        repairs_per_step=repairs_per_step,
-                        transition_scale=transition_scale,
-                        seed=seed_base + 1009 * cap_index + 9173 * time_index,
-                    )
-                )
-                for control in control_values:
-                    control_rows.append(
-                        _paired_row(
-                            points,
-                            normalized_cap,
-                            raw_fields,
-                            graph,
-                            weights,
-                            entropy,
-                            response_field=response_field,
-                            rho_a=rho_a,
-                            a_value=a_value,
-                            k_proxy=k_proxy,
-                            cap_index=cap_index,
-                            time_index=time_index,
-                            time_value=time_value,
-                            modes_per_cap_time=modes_per_cap_time,
-                            control=str(control),
-                            perturb_strength=perturb_strength,
-                            perturb_budget_mode=perturb_budget_mode,
-                            fixed_perturb_fraction=fixed_perturb_fraction,
-                            perturb_selection_mode=perturb_selection_mode,
-                            repair_steps=repair_steps,
-                            repairs_per_step=repairs_per_step,
-                            transition_scale=transition_scale,
-                            seed=seed_base + 31_337 + 1009 * cap_index + 9173 * time_index,
+    mode_count = max(1, int(modes_per_cap_time))
+    live_control_count = sum(
+        str(control) not in NO_FULL_GRAPH_SIMULATION_CONTROLS
+        for control in control_values
+    )
+    unique_full_graph_simulations = (
+        2
+        * len(cap_values)
+        * len(time_values)
+        * mode_count
+        * (1 + live_control_count)
+    )
+    unreused_full_graph_simulations = unique_full_graph_simulations * len(a_values)
+    planned_full_graph_simulations = (
+        unique_full_graph_simulations
+        if bool(reuse_dynamics_across_a_grid) and a_values
+        else unreused_full_graph_simulations
+    )
+    requested_n_jobs = max(1, int(full_graph_n_jobs))
+    unique_simulation_task_count = (
+        len(cap_values)
+        * len(time_values)
+        * (1 + live_control_count)
+    )
+    planned_simulation_task_count = (
+        unique_simulation_task_count
+        if bool(reuse_dynamics_across_a_grid) and a_values
+        else unique_simulation_task_count * len(a_values)
+    )
+    effective_n_jobs = min(
+        requested_n_jobs,
+        max(1, int(planned_simulation_task_count)),
+    )
+    parallel_execution = {
+        "schema": "bounded_ordered_full_graph_thread_execution_v1",
+        "requested_n_jobs": int(requested_n_jobs),
+        "effective_n_jobs": int(effective_n_jobs),
+        "executor": (
+            "bounded_ordered_thread_pool" if effective_n_jobs > 1 else "sequential"
+        ),
+        "simulation_bearing_probe_task_count": int(planned_simulation_task_count),
+        "full_graph_simulation_count": int(planned_full_graph_simulations),
+        "max_in_flight_full_graph_states": int(effective_n_jobs),
+        "ordered_result_assembly": True,
+        "independent_named_rng_streams": True,
+        "shared_graph_state_read_only": True,
+    }
+    budget = (
+        None
+        if max_full_graph_simulations is None
+        else max(0, int(max_full_graph_simulations))
+    )
+    policy = str(full_graph_budget_policy)
+    if policy != "skip_if_exceeded":
+        raise ValueError(
+            "paired B_A full_graph_budget_policy must be 'skip_if_exceeded'"
+        )
+    sector_replay = _production_sector_replay_contract(graph)
+    execution_blockers = list(sector_replay["blockers"])
+    if budget is not None and planned_full_graph_simulations > budget:
+        execution_blockers.append("paired_full_graph_simulation_budget_exceeded")
+    execution_allowed = not execution_blockers
+    probe_cache: dict[tuple[Any, ...], dict[str, Any]] | None = (
+        {} if bool(reuse_dynamics_across_a_grid) else None
+    )
+    probe_counter = {"full_graph_simulations": 0, "a_grid_cache_hits": 0}
+
+    cap_contexts: list[dict[str, Any]] = []
+    for cap_index, cap in enumerate(cap_values):
+        normalized_cap = cap.normalized()
+        weights = cap_weights(points, normalized_cap, soft=True) * entropy
+        cap_contexts.append(
+            {
+                "cap_index": int(cap_index),
+                "cap": normalized_cap,
+                "k_proxy": 1.0 / max(float(normalized_cap.theta0), 1.0e-12),
+                "weights": weights,
+                "rho_a": _response_scale(raw_fields, response_field, weights),
+            }
+        )
+
+    def task_specs(grid_values: Iterable[float]) -> list[dict[str, Any]]:
+        specs: list[dict[str, Any]] = []
+        for a_value in grid_values:
+            for cap_context in cap_contexts:
+                for time_index, time_value in enumerate(time_values):
+                    for control in (None, *control_values):
+                        specs.append(
+                            {
+                                "a_value": float(a_value),
+                                "cap_context": cap_context,
+                                "time_index": int(time_index),
+                                "time_value": float(time_value),
+                                "control": control,
+                            }
                         )
-                    )
+        return specs
+
+    def execute_task(
+        spec: dict[str, Any],
+    ) -> tuple[str | None, dict[str, Any], dict[tuple[Any, ...], dict[str, Any]], dict[str, int]]:
+        cap_context = spec["cap_context"]
+        control = spec["control"]
+        local_cache: dict[tuple[Any, ...], dict[str, Any]] = {}
+        local_counter = {"full_graph_simulations": 0, "a_grid_cache_hits": 0}
+        cap_index = int(cap_context["cap_index"])
+        time_index = int(spec["time_index"])
+        row = _paired_row(
+            points,
+            cap_context["cap"],
+            raw_fields,
+            graph,
+            cap_context["weights"],
+            entropy,
+            response_field=response_field,
+            rho_a=float(cap_context["rho_a"]),
+            a_value=float(spec["a_value"]),
+            k_proxy=float(cap_context["k_proxy"]),
+            cap_index=cap_index,
+            time_index=time_index,
+            time_value=float(spec["time_value"]),
+            modes_per_cap_time=modes_per_cap_time,
+            control=None if control is None else str(control),
+            perturb_strength=perturb_strength,
+            perturb_budget_mode=perturb_budget_mode,
+            fixed_perturb_fraction=fixed_perturb_fraction,
+            perturb_selection_mode=perturb_selection_mode,
+            repair_steps=repair_steps,
+            repairs_per_step=repairs_per_step,
+            transition_scale=transition_scale,
+            seed=(
+                seed_base + 1009 * cap_index + 9173 * time_index
+                if control is None
+                else seed_base + 31_337 + 1009 * cap_index + 9173 * time_index
+            ),
+            observer_context=observer_context,
+            probe_cache=local_cache if bool(reuse_dynamics_across_a_grid) else None,
+            probe_execution_counter=local_counter,
+        )
+        return control, row, local_cache, local_counter
+
+    def record_task_result(
+        result: tuple[
+            str | None,
+            dict[str, Any],
+            dict[tuple[Any, ...], dict[str, Any]],
+            dict[str, int],
+        ],
+    ) -> None:
+        control, row, local_cache, local_counter = result
+        if probe_cache is not None:
+            for cache_key, cache_value in local_cache.items():
+                if cache_key in probe_cache:
+                    raise RuntimeError("duplicate paired full-graph probe cache key")
+                probe_cache[cache_key] = cache_value
+        probe_counter["full_graph_simulations"] += int(
+            local_counter["full_graph_simulations"]
+        )
+        probe_counter["a_grid_cache_hits"] += int(local_counter["a_grid_cache_hits"])
+        if control is None:
+            observer_response_rows.append(_pop_observer_response(row))
+            rows.append(row)
+        else:
+            observer_response_control_rows.append(_pop_observer_response(row))
+            control_rows.append(row)
+
+    if execution_allowed:
+        first_grid = a_values[:1] if bool(reuse_dynamics_across_a_grid) else a_values
+        for result in _bounded_ordered_thread_map(
+            execute_task,
+            task_specs(first_grid),
+            max_workers=effective_n_jobs,
+        ):
+            record_task_result(result)
+
+        # With reuse enabled, every later a-grid row is a compact deterministic
+        # read from the first-grid primitive cache.  This preserves the old row
+        # ordering and cache-hit accounting without repeating whole-graph work.
+        for a_value in a_values[1:] if bool(reuse_dynamics_across_a_grid) else []:
+            for spec in task_specs([a_value]):
+                cap_context = spec["cap_context"]
+                control = spec["control"]
+                cap_index = int(cap_context["cap_index"])
+                time_index = int(spec["time_index"])
+                row = _paired_row(
+                    points,
+                    cap_context["cap"],
+                    raw_fields,
+                    graph,
+                    cap_context["weights"],
+                    entropy,
+                    response_field=response_field,
+                    rho_a=float(cap_context["rho_a"]),
+                    a_value=float(a_value),
+                    k_proxy=float(cap_context["k_proxy"]),
+                    cap_index=cap_index,
+                    time_index=time_index,
+                    time_value=float(spec["time_value"]),
+                    modes_per_cap_time=modes_per_cap_time,
+                    control=None if control is None else str(control),
+                    perturb_strength=perturb_strength,
+                    perturb_budget_mode=perturb_budget_mode,
+                    fixed_perturb_fraction=fixed_perturb_fraction,
+                    perturb_selection_mode=perturb_selection_mode,
+                    repair_steps=repair_steps,
+                    repairs_per_step=repairs_per_step,
+                    transition_scale=transition_scale,
+                    seed=(
+                        seed_base + 1009 * cap_index + 9173 * time_index
+                        if control is None
+                        else seed_base + 31_337 + 1009 * cap_index + 9173 * time_index
+                    ),
+                    observer_context=observer_context,
+                    probe_cache=probe_cache,
+                    probe_execution_counter=probe_counter,
+                )
+                if control is None:
+                    observer_response_rows.append(_pop_observer_response(row))
+                    rows.append(row)
+                else:
+                    observer_response_control_rows.append(_pop_observer_response(row))
+                    control_rows.append(row)
 
     readiness = _readiness(rows, control_rows)
-    return {
+    observer_geometry = _observer_geometry_response_rows(
+        observer_context,
+        observer_response_rows,
+        observer_response_control_rows,
+    )
+    report = {
         "mode": "paired_cap_collar_perturb_resettle_B_A_parent_v0",
         "primary_parent_source": "paired_cap_collar_perturb_resettle_rerun",
         "normalization": "EQUILIBRIUM_CONTRAST_DIAGNOSTIC",
@@ -152,7 +341,7 @@ def paired_perturb_resettle_b_a_report(
         "source_variable": "ANOMALY_FRAME_BARYON_CONTRAST_PROXY",
         "denominator": "RHO_A_EQ_BACKGROUND_DIAGNOSTIC",
         "source_report_count": 0,
-        "observer_view_source_count": 0,
+        "observer_view_source_count": int(observer_geometry["producer_receipt"]),
         "paired_perturbation_source_count": int(bool(rows)),
         "a_grid": a_values,
         "k_grid_proxy_inverse_theta": sorted({float(row["k_proxy_inverse_theta"]) for row in rows}) if rows else [],
@@ -166,13 +355,54 @@ def paired_perturb_resettle_b_a_report(
         "repairs_per_step": int(repairs_per_step),
         "transition_scale": float(transition_scale),
         "modes_per_cap_time": int(modes_per_cap_time),
+        "production_move_contract": sector_replay,
+        "execution_status": "completed" if execution_allowed else "skipped",
+        "execution_blockers": execution_blockers,
+        "parallel_execution": (
+            parallel_execution
+            if execution_allowed
+            else {
+                **parallel_execution,
+                "effective_n_jobs": 0,
+                "max_in_flight_full_graph_states": 0,
+            }
+        ),
+        "full_graph_simulation_budget": {
+            "schema": "paired_full_graph_simulation_budget_v1",
+            "policy": policy,
+            "max_full_graph_simulations": budget,
+            "requested_without_a_grid_reuse": int(unreused_full_graph_simulations),
+            "planned_with_a_grid_reuse": int(planned_full_graph_simulations),
+            "unique_centered_probe_simulations": int(unique_full_graph_simulations),
+            "executed_full_graph_simulations": int(probe_counter["full_graph_simulations"]),
+            "a_grid_cache_hits": int(probe_counter["a_grid_cache_hits"]),
+            "reuse_dynamics_across_a_grid": bool(reuse_dynamics_across_a_grid),
+            "live_control_count": int(live_control_count),
+            "analytic_zero_control_count": int(len(control_values) - live_control_count),
+            "receipt": bool(
+                execution_allowed
+                and int(probe_counter["full_graph_simulations"])
+                == int(planned_full_graph_simulations)
+            ),
+        },
         "rows": rows,
         "control_rows": control_rows,
         "paired_perturbation_rows": rows,
         "paired_perturbation_control_rows": control_rows,
         "source_intervention_schema": list(PhysicalSourceIntervention.__dataclass_fields__),
-        "observer_view_rows": [],
-        "observer_view_control_rows": [],
+        "source_intervention_hash_schema": CANONICAL_HASH_SCHEMA,
+        "observer_view_rows": observer_geometry["observer_view_rows"],
+        "observer_view_control_rows": observer_geometry["observer_view_control_rows"],
+        "observer_response_feature_manifest": observer_geometry["feature_manifest"],
+        "observer_response_control_manifest": observer_geometry["control_manifest"],
+        "observer_response_producer": observer_geometry["producer"],
+        "observer_response_producer_blockers": observer_geometry["blockers"],
+        "observer_response_cap_relabel_invariance": observer_geometry["cap_relabel_invariance"],
+        "observer_response_nondegenerate": observer_geometry["response_nondegenerate"],
+        "observer_response_no_perturbation_control_separation_receipt": observer_geometry[
+            "no_perturbation_control_separation_receipt"
+        ],
+        "paired_perturbation_response_producer_receipt": observer_geometry["producer_receipt"],
         "stress_report_surrogate_rows": [],
         "stress_report_surrogate_control_rows": [],
         "readiness": readiness,
@@ -189,6 +419,11 @@ def paired_perturb_resettle_b_a_report(
             "exchange and gauge closure, and derivative-level refinement pass."
         ),
     }
+    report["observer_geometry_attachment"] = attach_paired_perturbation_features(
+        observer_views,
+        report,
+    )
+    return report
 
 
 def write_paired_perturb_resettle_b_a_report(
@@ -244,6 +479,9 @@ def _paired_row(
     repairs_per_step: int,
     transition_scale: float,
     seed: int,
+    observer_context: dict[str, Any],
+    probe_cache: dict[tuple[Any, ...], dict[str, Any]] | None = None,
+    probe_execution_counter: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     readout_weights = np.asarray(weights, dtype=float)
     readout_cap = cap
@@ -255,7 +493,9 @@ def _paired_row(
         readout_cap = _randomized_cap(cap, seed + 811)
         readout_weights = cap_weights(points, readout_cap, soft=True) * np.asarray(entropy, dtype=float)
     base_value = _weighted_mean(raw_fields.get(response_field), readout_weights)
-    if control in {"no_perturbation", "no_repair_load_channel", "baryon_delta_applied_after_record_freezeout"}:
+    observer_count = int(observer_context.get("observer_count", 0) or 0)
+    observer_base_values = _observer_weighted_means(raw_fields.get(response_field), observer_context)
+    if control in NO_FULL_GRAPH_SIMULATION_CONTROLS:
         estimates = np.zeros(max(1, int(modes_per_cap_time)), dtype=float)
         plus_values = np.full(estimates.size, base_value, dtype=float)
         minus_values = np.full(estimates.size, base_value, dtype=float)
@@ -265,64 +505,166 @@ def _paired_row(
         effective_k_proxy = float(k_proxy)
         cap_used = cap
         sim_scale = float(transition_scale)
+        observer_estimates = np.zeros((estimates.size, observer_count), dtype=float)
+        observer_even_estimates = np.zeros((estimates.size, observer_count), dtype=float)
+        observer_response_simulated = False
     else:
         effective_k_proxy = float(k_proxy) * (1.7 if control == "wrong_k_label" else 1.0)
         cap_used = cap
         sim_scale = float(transition_scale) * (0.5 if control == "wrong_k_label" else 1.0)
-        estimates = []
-        plus_values = []
-        minus_values = []
-        deltas = []
-        for mode_index in range(max(1, int(modes_per_cap_time))):
-            local_seed = int(seed) + 65_537 * mode_index
-            plus_time = float(time_value)
-            minus_time = -float(time_value)
-            if control == "phase_shuffled_baryon_mode":
-                rng = np.random.default_rng(local_seed + 9001)
-                plus_time *= float(rng.choice([-1.0, 1.0]))
-                minus_time *= float(rng.choice([-1.0, 1.0]))
-            post_plus = _simulate_cap_collar_perturb_resettle(
-                points,
-                cap_used,
-                raw_fields,
-                graph,
-                scale=float(sim_scale),
-                time_value=plus_time,
-                perturb_strength=float(perturb_strength),
-                perturb_budget_mode=str(perturb_budget_mode),
-                fixed_perturb_fraction=fixed_perturb_fraction,
-                perturb_selection_mode=str(perturb_selection_mode),
-                repair_steps=int(repair_steps),
-                repairs_per_step=int(repairs_per_step),
-                seed=local_seed,
+        cache_key = (int(cap_index), int(time_index), str(control), int(seed))
+        cached = probe_cache.get(cache_key) if probe_cache is not None else None
+        if cached is not None:
+            estimates = np.asarray(cached["estimates"], dtype=float)
+            plus_values = np.asarray(cached["plus_values"], dtype=float)
+            minus_values = np.asarray(cached["minus_values"], dtype=float)
+            deltas = np.asarray(cached["deltas"], dtype=float)
+            observer_estimates = np.asarray(cached["observer_estimates"], dtype=float)
+            observer_even_estimates = np.asarray(cached["observer_even_estimates"], dtype=float)
+            observer_response_simulated = bool(cached["observer_response_simulated"])
+            intervention_support_hashes = list(cached["intervention_support_hashes"])
+            if probe_execution_counter is not None:
+                probe_execution_counter["a_grid_cache_hits"] = int(
+                    probe_execution_counter.get("a_grid_cache_hits", 0)
+                ) + 2 * max(1, int(modes_per_cap_time))
+        else:
+            estimate_values: list[float] = []
+            plus_value_rows: list[float] = []
+            minus_value_rows: list[float] = []
+            delta_values: list[float] = []
+            observer_estimate_rows: list[np.ndarray] = []
+            observer_even_rows: list[np.ndarray] = []
+            paired_probe_receipts: list[bool] = []
+            intervention_support_hashes = []
+            for mode_index in range(max(1, int(modes_per_cap_time))):
+                local_seed = int(seed) + 65_537 * mode_index
+                plus_time = float(time_value)
+                minus_time = -float(time_value)
+                if control == "phase_shuffled_baryon_mode":
+                    rng = np.random.default_rng(local_seed + 9001)
+                    plus_time *= float(rng.choice([-1.0, 1.0]))
+                    minus_time *= float(rng.choice([-1.0, 1.0]))
+                post_plus = _simulate_cap_collar_perturb_resettle(
+                    points,
+                    cap_used,
+                    raw_fields,
+                    graph,
+                    scale=float(sim_scale),
+                    time_value=plus_time,
+                    perturb_strength=float(perturb_strength),
+                    perturb_budget_mode=str(perturb_budget_mode),
+                    fixed_perturb_fraction=fixed_perturb_fraction,
+                    perturb_selection_mode=str(perturb_selection_mode),
+                    repair_steps=int(repair_steps),
+                    repairs_per_step=int(repairs_per_step),
+                    seed=local_seed,
+                )
+                plus_support_hash = str(
+                    post_plus.get("_intervention_support_hash", "")
+                )
+                plus_probe_receipt = bool(
+                    post_plus.get("_gauge_covariant_probe_receipt", False)
+                )
+                plus_inverse_receipt = bool(
+                    post_plus.get("_centered_inverse_intervention_receipt", False)
+                )
+                plus = _weighted_mean(
+                    post_plus.get(response_field), readout_weights
+                )
+                observer_plus = _observer_weighted_means(
+                    post_plus.get(response_field), observer_context
+                )
+                # Do not retain two patch-sized post states per worker.  The
+                # compact plus readout is sufficient for the centered pair.
+                del post_plus
+                post_minus = _simulate_cap_collar_perturb_resettle(
+                    points,
+                    cap_used,
+                    raw_fields,
+                    graph,
+                    scale=float(sim_scale),
+                    time_value=minus_time,
+                    perturb_strength=float(perturb_strength),
+                    perturb_budget_mode=str(perturb_budget_mode),
+                    fixed_perturb_fraction=fixed_perturb_fraction,
+                    perturb_selection_mode=str(perturb_selection_mode),
+                    repair_steps=int(repair_steps),
+                    repairs_per_step=int(repairs_per_step),
+                    seed=local_seed,
+                )
+                minus_support_hash = str(
+                    post_minus.get("_intervention_support_hash", "")
+                )
+                minus_probe_receipt = bool(
+                    post_minus.get("_gauge_covariant_probe_receipt", False)
+                )
+                minus_inverse_receipt = bool(
+                    post_minus.get("_centered_inverse_intervention_receipt", False)
+                )
+                minus = _weighted_mean(
+                    post_minus.get(response_field), readout_weights
+                )
+                observer_minus = _observer_weighted_means(
+                    post_minus.get(response_field), observer_context
+                )
+                del post_minus
+                if probe_execution_counter is not None:
+                    probe_execution_counter["full_graph_simulations"] = int(
+                        probe_execution_counter.get("full_graph_simulations", 0)
+                    ) + 2
+                matched_centered_pair = bool(
+                    plus_time == -minus_time
+                    and plus_support_hash
+                    and plus_support_hash == minus_support_hash
+                )
+                paired_probe_receipts.append(
+                    bool(
+                        plus_probe_receipt
+                        and minus_probe_receipt
+                        and plus_inverse_receipt
+                        and minus_inverse_receipt
+                        and matched_centered_pair
+                    )
+                )
+                intervention_support_hashes.append(
+                    plus_support_hash if matched_centered_pair else ""
+                )
+                delta = _delta_baryon(time_value, perturb_strength, transition_scale)
+                derivative = (plus - minus) / (2.0 * max(delta, 1.0e-12))
+                observer_derivative = (observer_plus - observer_minus) / (
+                    2.0 * max(delta, 1.0e-12)
+                )
+                observer_even_response = (
+                    observer_plus + observer_minus - 2.0 * observer_base_values
+                ) / (2.0 * max(abs(delta), 1.0e-12))
+                estimate_values.append(
+                    float(derivative / max(abs(float(base_value)), 1.0e-12))
+                )
+                observer_estimate_rows.append(observer_derivative)
+                observer_even_rows.append(observer_even_response)
+                plus_value_rows.append(float(plus))
+                minus_value_rows.append(float(minus))
+                delta_values.append(float(delta))
+            estimates = np.asarray(estimate_values, dtype=float)
+            plus_values = np.asarray(plus_value_rows, dtype=float)
+            minus_values = np.asarray(minus_value_rows, dtype=float)
+            deltas = np.asarray(delta_values, dtype=float)
+            observer_estimates = np.asarray(observer_estimate_rows, dtype=float)
+            observer_even_estimates = np.asarray(observer_even_rows, dtype=float)
+            observer_response_simulated = bool(
+                paired_probe_receipts and all(paired_probe_receipts)
             )
-            post_minus = _simulate_cap_collar_perturb_resettle(
-                points,
-                cap_used,
-                raw_fields,
-                graph,
-                scale=float(sim_scale),
-                time_value=minus_time,
-                perturb_strength=float(perturb_strength),
-                perturb_budget_mode=str(perturb_budget_mode),
-                fixed_perturb_fraction=fixed_perturb_fraction,
-                perturb_selection_mode=str(perturb_selection_mode),
-                repair_steps=int(repair_steps),
-                repairs_per_step=int(repairs_per_step),
-                seed=local_seed,
-            )
-            plus = _weighted_mean(post_plus.get(response_field), readout_weights)
-            minus = _weighted_mean(post_minus.get(response_field), readout_weights)
-            delta = _delta_baryon(time_value, perturb_strength, transition_scale)
-            derivative = (plus - minus) / (2.0 * max(delta, 1.0e-12))
-            estimates.append(float(derivative / max(abs(float(base_value)), 1.0e-12)))
-            plus_values.append(float(plus))
-            minus_values.append(float(minus))
-            deltas.append(float(delta))
-        estimates = np.asarray(estimates, dtype=float)
-        plus_values = np.asarray(plus_values, dtype=float)
-        minus_values = np.asarray(minus_values, dtype=float)
-        deltas = np.asarray(deltas, dtype=float)
+            if probe_cache is not None:
+                probe_cache[cache_key] = {
+                    "estimates": estimates,
+                    "plus_values": plus_values,
+                    "minus_values": minus_values,
+                    "deltas": deltas,
+                    "observer_estimates": observer_estimates,
+                    "observer_even_estimates": observer_even_estimates,
+                    "observer_response_simulated": observer_response_simulated,
+                    "intervention_support_hashes": intervention_support_hashes,
+                }
     requested_delta_baryon = _delta_baryon(time_value, perturb_strength, transition_scale)
     delivered_half_step = float(np.mean(deltas)) if deltas.size else 0.0
     source_intervention = _source_intervention(
@@ -377,11 +719,410 @@ def _paired_row(
         "sign_stable": _sign_stable(estimates),
         "source": "paired_cap_collar_perturb_resettle_rerun",
         "parent_source": "finite_screen_plus_minus_cap_collar_perturb_resettle",
+        "gauge_covariant_centered_probe_receipt": bool(observer_response_simulated),
+        "intervention_support_hashes": intervention_support_hashes if control not in {
+            "no_perturbation",
+            "no_repair_load_channel",
+            "baryon_delta_applied_after_record_freezeout",
+        } else [],
+        "_observer_response": (
+            np.mean(observer_estimates, axis=0).tolist()
+            if observer_estimates.ndim == 2 and observer_estimates.shape[1] == observer_count
+            else []
+        ),
+        "_observer_even_response": (
+            np.mean(observer_even_estimates, axis=0).tolist()
+            if observer_even_estimates.ndim == 2 and observer_even_estimates.shape[1] == observer_count
+            else []
+        ),
+        "_observer_response_simulated": bool(observer_response_simulated),
+    }
+
+
+def _observer_probe_context(
+    observer_views: list[dict[str, Any]] | None,
+    *,
+    entropy: np.ndarray,
+    patch_count: int,
+) -> dict[str, Any]:
+    patch_rows = [
+        row
+        for row in (observer_views or [])
+        if isinstance(row, dict) and row.get("view_type") == "patch_observer"
+    ]
+    blockers: list[str] = []
+    if not patch_rows:
+        blockers.append("patch_observer_views_unavailable")
+    observer_ids: list[int] = []
+    flat_observer_indices: list[int] = []
+    flat_support_nodes: list[int] = []
+    flat_weights: list[float] = []
+    totals = np.zeros(len(patch_rows), dtype=float)
+    entropy = np.asarray(entropy, dtype=float).reshape(-1)
+    for observer_index, row in enumerate(patch_rows):
+        try:
+            observer_id = int(row.get("observer_id", observer_index))
+        except (TypeError, ValueError):
+            observer_id = observer_index
+            blockers.append(f"invalid_observer_id:{observer_index}")
+        observer_ids.append(observer_id)
+        support_value = row.get("support_nodes")
+        if not isinstance(support_value, (list, tuple, np.ndarray)):
+            blockers.append(f"observer_support_unavailable:{observer_id}")
+            continue
+        try:
+            support = np.asarray(support_value, dtype=np.int64).reshape(-1)
+        except (TypeError, ValueError):
+            blockers.append(f"observer_support_invalid:{observer_id}")
+            continue
+        valid = (support >= 0) & (support < int(patch_count))
+        if not np.all(valid):
+            blockers.append(f"observer_support_out_of_range:{observer_id}")
+        support = support[valid]
+        if support.size == 0:
+            blockers.append(f"observer_support_empty:{observer_id}")
+            continue
+        local_weights = np.where(
+            np.isfinite(entropy[support]) & (entropy[support] > 0.0),
+            entropy[support],
+            0.0,
+        )
+        total = float(np.sum(local_weights))
+        if total <= 0.0:
+            blockers.append(f"observer_support_weight_nonpositive:{observer_id}")
+            continue
+        totals[observer_index] = total
+        flat_observer_indices.extend([observer_index] * int(support.size))
+        flat_support_nodes.extend(int(value) for value in support)
+        flat_weights.extend(float(value) for value in local_weights)
+    if len(set(observer_ids)) != len(observer_ids):
+        blockers.append("duplicate_patch_observer_ids")
+    return {
+        "observer_count": len(patch_rows),
+        "observer_ids": np.asarray(observer_ids, dtype=np.int64),
+        "flat_observer_indices": np.asarray(flat_observer_indices, dtype=np.int64),
+        "flat_support_nodes": np.asarray(flat_support_nodes, dtype=np.int64),
+        "flat_weights": np.asarray(flat_weights, dtype=float),
+        "weight_totals": totals,
+        "available": not blockers,
+        "blockers": blockers,
+    }
+
+
+def _observer_weighted_means(values: Any, context: dict[str, Any]) -> np.ndarray:
+    observer_count = int(context.get("observer_count", 0) or 0)
+    if observer_count <= 0 or values is None:
+        return np.zeros(observer_count, dtype=float)
+    array = np.asarray(values, dtype=float).reshape(-1)
+    support_nodes = np.asarray(context.get("flat_support_nodes", []), dtype=np.int64)
+    observer_indices = np.asarray(context.get("flat_observer_indices", []), dtype=np.int64)
+    weights = np.asarray(context.get("flat_weights", []), dtype=float)
+    totals = np.asarray(context.get("weight_totals", []), dtype=float)
+    if not (support_nodes.size == observer_indices.size == weights.size) or totals.size != observer_count:
+        return np.zeros(observer_count, dtype=float)
+    if support_nodes.size == 0 or int(np.max(support_nodes, initial=-1)) >= array.size:
+        return np.zeros(observer_count, dtype=float)
+    local_values = np.where(np.isfinite(array[support_nodes]), array[support_nodes], 0.0)
+    sums = np.bincount(
+        observer_indices,
+        weights=local_values * weights,
+        minlength=observer_count,
+    ).astype(float)
+    return np.divide(sums, totals, out=np.zeros_like(sums), where=totals > 0.0)
+
+
+def _pop_observer_response(row: dict[str, Any]) -> dict[str, Any]:
+    response = row.pop("_observer_response", [])
+    even_response = row.pop("_observer_even_response", [])
+    simulated = bool(row.pop("_observer_response_simulated", False))
+    return {
+        "a": float(row["a"]),
+        "cap_index": int(row["cap_index"]),
+        "time_index": int(row["time_index"]),
+        "time": float(row["time"]),
+        "control": row.get("control"),
+        "observer_response": response,
+        "observer_even_response": even_response,
+        "actual_perturb_resettle_rerun": simulated,
+    }
+
+
+def _observer_geometry_response_rows(
+    context: dict[str, Any],
+    response_rows: list[dict[str, Any]],
+    control_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    observer_count = int(context.get("observer_count", 0) or 0)
+    observer_ids = np.asarray(context.get("observer_ids", []), dtype=np.int64)
+    blockers = list(context.get("blockers", []))
+    feature_manifest: list[dict[str, Any]] = []
+    for row in response_rows:
+        for component in ("odd_centered_derivative", "even_settling_response"):
+            feature_manifest.append(
+                {
+                    "feature_index": len(feature_manifest),
+                    "a": float(row["a"]),
+                    "cap_index": int(row["cap_index"]),
+                    "time_index": int(row["time_index"]),
+                    "time": float(row["time"]),
+                    "observable": component,
+                    "cap_index_role": "shared_intervention_axis_only",
+                }
+            )
+    if not response_rows:
+        blockers.append("paired_observer_response_rows_unavailable")
+        matrix = np.zeros((observer_count, 0), dtype=float)
+    else:
+        response_vectors = [
+            np.asarray(row.get(key, []), dtype=float)
+            for row in response_rows
+            for key in ("observer_response", "observer_even_response")
+        ]
+        if any(vector.size != observer_count for vector in response_vectors):
+            blockers.append("paired_observer_response_width_mismatch")
+            matrix = np.zeros((observer_count, 0), dtype=float)
+        else:
+            matrix = np.column_stack(response_vectors)
+    if response_rows and not all(row.get("actual_perturb_resettle_rerun", False) for row in response_rows):
+        blockers.append("main_observer_response_not_from_actual_paired_reruns")
+    if matrix.size and not np.all(np.isfinite(matrix)):
+        blockers.append("paired_observer_response_nonfinite")
+        matrix = np.where(np.isfinite(matrix), matrix, 0.0)
+
+    control_names = sorted(
+        {
+            str(row["control"])
+            for row in control_rows
+            if row.get("control") is not None
+        }
+    )
+    control_matrices: dict[str, np.ndarray] = {}
+    control_manifest: list[dict[str, Any]] = []
+    main_keys = [
+        (float(row["a"]), int(row["cap_index"]), int(row["time_index"]))
+        for row in response_rows
+    ]
+    for control in control_names:
+        by_key = {
+            (float(row["a"]), int(row["cap_index"]), int(row["time_index"])): row
+            for row in control_rows
+            if str(row.get("control")) == control
+        }
+        vectors = [
+            np.asarray(by_key.get(key, {}).get(component, []), dtype=float)
+            for key in main_keys
+            for component in ("observer_response", "observer_even_response")
+        ]
+        if not vectors or any(vector.size != observer_count for vector in vectors):
+            blockers.append(f"paired_observer_control_width_mismatch:{control}")
+            continue
+        control_matrix = np.column_stack(vectors)
+        if not np.all(np.isfinite(control_matrix)):
+            blockers.append(f"paired_observer_control_nonfinite:{control}")
+            control_matrix = np.where(np.isfinite(control_matrix), control_matrix, 0.0)
+        control_matrices[control] = control_matrix
+        control_manifest.append(
+            {
+                "control": control,
+                "feature_count": int(control_matrix.shape[1]),
+                "intervention_control": True,
+                "presentation_relabel_control": False,
+            }
+        )
+    if not control_matrices:
+        blockers.append("paired_observer_response_controls_unavailable")
+
+    response_nondegenerate = bool(
+        matrix.size
+        and np.any(np.abs(matrix) > 1.0e-12)
+        and np.any(np.std(matrix, axis=0) > 1.0e-12)
+    )
+    if not response_nondegenerate:
+        blockers.append("paired_observer_response_geometry_degenerate")
+    no_perturbation = control_matrices.get("no_perturbation")
+    no_perturbation_separation = bool(
+        matrix.size
+        and no_perturbation is not None
+        and no_perturbation.shape == matrix.shape
+        and float(np.mean(np.abs(matrix - no_perturbation))) > 1.0e-12
+    )
+    if not no_perturbation_separation:
+        blockers.append("no_perturbation_observer_response_control_not_separated")
+
+    cap_invariance = _cap_relabel_invariance_report(matrix, feature_manifest)
+    if not cap_invariance["receipt"]:
+        blockers.extend(cap_invariance["blockers"])
+    producer_receipt = bool(
+        context.get("available", False)
+        and matrix.shape == (observer_count, len(feature_manifest))
+        and matrix.shape[1] > 0
+        and control_matrices
+        and not blockers
+    )
+    observer_rows = []
+    observer_control_rows = []
+    for observer_index, observer_id in enumerate(observer_ids):
+        observer_rows.append(
+            {
+                "observer_id": int(observer_id),
+                "paired_perturbation_response_tensor": matrix[observer_index].tolist(),
+            }
+        )
+        observer_control_rows.append(
+            {
+                "observer_id": int(observer_id),
+                "paired_perturbation_control_tensors": {
+                    name: values[observer_index].tolist()
+                    for name, values in sorted(control_matrices.items())
+                },
+            }
+        )
+    return {
+        "producer": "paired_cap_collar_perturb_resettle.observer_local_support_readout_v1",
+        "producer_receipt": producer_receipt,
+        "observer_view_rows": observer_rows,
+        "observer_view_control_rows": observer_control_rows,
+        "feature_manifest": feature_manifest,
+        "control_manifest": control_manifest,
+        "cap_relabel_invariance": cap_invariance,
+        "response_nondegenerate": response_nondegenerate,
+        "no_perturbation_control_separation_receipt": no_perturbation_separation,
+        "blockers": blockers,
+    }
+
+
+def _cap_relabel_invariance_report(
+    matrix: np.ndarray,
+    feature_manifest: list[dict[str, Any]],
+) -> dict[str, Any]:
+    matrix = np.asarray(matrix, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[1] == 0 or len(feature_manifest) != matrix.shape[1]:
+        return {
+            "receipt": False,
+            "blockers": ["cap_relabel_invariance_input_unavailable"],
+            "max_pairwise_distance_distortion": None,
+        }
+    cap_labels = sorted({int(row["cap_index"]) for row in feature_manifest})
+    relabel = dict(zip(cap_labels, reversed(cap_labels), strict=True))
+    permutation = sorted(
+        range(len(feature_manifest)),
+        key=lambda index: (
+            float(feature_manifest[index]["a"]),
+            relabel[int(feature_manifest[index]["cap_index"])],
+            int(feature_manifest[index]["time_index"]),
+        ),
+    )
+    sample = matrix[: min(matrix.shape[0], 128)]
+    original_distance = _squared_row_distance(sample)
+    permuted_distance = _squared_row_distance(sample[:, permutation])
+    distortion = float(np.max(np.abs(original_distance - permuted_distance))) if sample.size else 0.0
+    receipt = bool(sorted(permutation) == list(range(matrix.shape[1])) and distortion <= 1.0e-10)
+    return {
+        "control": "shared_cap_column_serialization_permutation",
+        "presentation_only": True,
+        "expected_geometry_change": False,
+        "algebraic_serialization_sanity_only": True,
+        "dynamics_rerun": False,
+        "tested_observer_count": int(sample.shape[0]),
+        "max_pairwise_distance_distortion": distortion,
+        "receipt": receipt,
+        "blockers": [] if receipt else ["global_cap_relabel_changed_observer_response_geometry"],
+    }
+
+
+def _squared_row_distance(matrix: np.ndarray) -> np.ndarray:
+    matrix = np.asarray(matrix, dtype=float)
+    squared_norm = np.sum(matrix * matrix, axis=1)
+    distance = squared_norm[:, None] + squared_norm[None, :] - 2.0 * matrix @ matrix.T
+    return np.maximum(distance, 0.0)
+
+
+def attach_paired_perturbation_features(
+    observer_views: list[dict[str, Any]] | None,
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    patch_rows = [
+        row
+        for row in (observer_views or [])
+        if isinstance(row, dict) and row.get("view_type") == "patch_observer"
+    ]
+    feature_rows = report.get("observer_view_rows")
+    control_rows = report.get("observer_view_control_rows")
+    blockers = list(report.get("observer_response_producer_blockers", []))
+    if not isinstance(feature_rows, list) or not isinstance(control_rows, list):
+        blockers.append("paired_observer_feature_rows_unavailable")
+        feature_rows = []
+        control_rows = []
+    feature_by_id = {
+        int(row["observer_id"]): row
+        for row in feature_rows
+        if isinstance(row, dict) and row.get("observer_id") is not None
+    }
+    controls_by_id = {
+        int(row["observer_id"]): row
+        for row in control_rows
+        if isinstance(row, dict) and row.get("observer_id") is not None
+    }
+    manifest = report.get("observer_response_feature_manifest")
+    manifest_hash = stable_json_hash(
+        manifest if isinstance(manifest, list) else []
+    ).removeprefix("sha256:")
+    attached = 0
+    producer_receipt = bool(report.get("paired_perturbation_response_producer_receipt", False))
+    cap_invariance = report.get("observer_response_cap_relabel_invariance")
+    for index, row in enumerate(patch_rows):
+        observer_id = int(row.get("observer_id", index))
+        source = feature_by_id.get(observer_id)
+        controls = controls_by_id.get(observer_id)
+        response = source.get("paired_perturbation_response_tensor") if source else None
+        control_tensors = controls.get("paired_perturbation_control_tensors") if controls else None
+        row_receipt = bool(
+            producer_receipt
+            and isinstance(response, list)
+            and bool(response)
+            and isinstance(control_tensors, dict)
+            and bool(control_tensors)
+        )
+        if response is not None:
+            row["paired_perturbation_response_tensor"] = response
+        if control_tensors is not None:
+            row["paired_perturbation_control_tensors"] = control_tensors
+        row["paired_perturbation_response_feature_schema"] = {
+            "version": "observer_local_paired_cap_response_v1",
+            "feature_manifest_sha256": manifest_hash,
+            "feature_manifest_hash_schema": CANONICAL_HASH_SCHEMA,
+            "feature_count": len(manifest) if isinstance(manifest, list) else 0,
+            "hash_bucket_geometry": False,
+            "screen_coordinates_embedded": False,
+            "cap_index_role": "shared_intervention_axis_only",
+        }
+        row["paired_perturbation_response_provenance"] = {
+            "producer": report.get("observer_response_producer"),
+            "actual_paired_perturb_resettle": True,
+            "observer_local_support_readout": True,
+            "cap_column_serialization_sanity": cap_invariance,
+            "causal_feature_ancestors": ["s2_cap_axis", "screen_pixel_coordinate"],
+            "strict_neutral_eligible": False,
+            "diagnostic_reason": "RoundCap interventions are selected from the S2 screen chart",
+        }
+        row["paired_perturbation_response_producer_receipt"] = row_receipt
+        attached += int(row_receipt)
+    if len(feature_by_id) != len(patch_rows):
+        blockers.append(f"paired_feature_observer_coverage:{len(feature_by_id)}/{len(patch_rows)}")
+    receipt = bool(patch_rows and attached == len(patch_rows) and not blockers)
+    return {
+        "mode": "paired_observer_geometry_attachment_v1",
+        "patch_observer_count": len(patch_rows),
+        "attached_observer_count": attached,
+        "feature_manifest_sha256": manifest_hash,
+        "feature_manifest_hash_schema": CANONICAL_HASH_SCHEMA,
+        "receipt": receipt,
+        "blockers": blockers,
     }
 
 
 def _validated_graph_state(graph_state: dict[str, Any], patch_count: int) -> dict[str, Any]:
-    required = ("left", "right", "port_left", "port_right", "group_order")
+    required = ("left", "right", "port_left", "port_right", "gauge", "group_name", "group_order")
     missing = [name for name in required if name not in graph_state]
     if missing:
         raise ValueError(f"paired B_A perturbation graph_state missing keys: {missing}")
@@ -389,20 +1130,35 @@ def _validated_graph_state(graph_state: dict[str, Any], patch_count: int) -> dic
     right = np.asarray(graph_state["right"], dtype=np.int64)
     port_left = np.asarray(graph_state["port_left"], dtype=np.int16)
     port_right = np.asarray(graph_state["port_right"], dtype=np.int16)
-    if not (left.shape == right.shape == port_left.shape == port_right.shape):
+    gauge = np.asarray(graph_state["gauge"], dtype=np.int16)
+    if not (left.shape == right.shape == port_left.shape == port_right.shape == gauge.shape):
         raise ValueError("paired B_A perturbation graph_state arrays must have matching edge shape")
     count = int(graph_state.get("patch_count", patch_count))
     degree = np.asarray(graph_state.get("degree", np.zeros(0)), dtype=float)
     if degree.size != count:
         degree = np.bincount(np.concatenate([left, right]), minlength=count).astype(float) if left.size else np.ones(count)
+    sector_config_value = graph_state.get("production_sector_repair_config")
+    sector_config_available = isinstance(sector_config_value, dict)
+    sector_config = dict(sector_config_value) if sector_config_available else {}
+    sector_enabled = bool(
+        graph_state.get(
+            "production_sector_repair_enabled",
+            sector_config.get("enabled", False),
+        )
+    )
     return {
         "left": left,
         "right": right,
         "port_left": port_left,
         "port_right": port_right,
+        "gauge": gauge,
+        "group_name": str(graph_state["group_name"]),
         "group_order": int(graph_state["group_order"]),
         "patch_count": count,
         "degree": np.maximum(degree, 1.0),
+        "production_sector_repair_enabled": sector_enabled,
+        "production_sector_repair_config": sector_config,
+        "production_sector_repair_config_available": sector_config_available,
     }
 
 
@@ -483,8 +1239,7 @@ def _source_intervention(
 
 
 def _hash_payload(payload: dict[str, Any]) -> str:
-    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
-    return "sha256:" + hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    return stable_json_hash(payload)
 
 
 def _randomized_cap(cap: RoundCap, seed: int) -> RoundCap:

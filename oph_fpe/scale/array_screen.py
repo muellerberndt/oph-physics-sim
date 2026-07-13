@@ -15,7 +15,13 @@ from oph_fpe.core.pixel_scale import pixel_scale_from_config
 from oph_fpe.core.screen_microphysics import ports_per_patch_from_config, screen_microphysics_from_config
 from oph_fpe.dynamics import dispatch_configured_kernels, kernel_dispatch_manifest_summary
 from oph_fpe.evidence import RunBundle
-from oph_fpe.evidence.hashes import stable_json_hash
+from oph_fpe.evidence.hashes import CANONICAL_HASH_SCHEMA, stable_json_hash
+from oph_fpe.gauge.covariant_overlap import (
+    GAUGE_COVARIANT_OVERLAP_SCHEMA,
+    covariant_mismatch_mask,
+    overlap_contract_metadata,
+    repair_covariant_port_pairs,
+)
 
 
 def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
@@ -67,16 +73,35 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
 
     for cycle in range(cycles):
         beta = _beta_at(beta_schedule, cycle, cycles)
-        mismatches = port_left != port_right
+        mismatches = covariant_mismatch_mask(
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
         phi_before = int(np.sum(mismatches))
         active = np.flatnonzero(mismatches)
         if active.size:
             chosen_count = min(repairs_per_cycle, active.size)
             chosen = rng.choice(active, size=chosen_count, replace=False)
             direction = rng.random(chosen_count) < 0.5
-            port_left[chosen[direction]] = port_right[chosen[direction]]
-            port_right[chosen[~direction]] = port_left[chosen[~direction]]
-        mismatches_after = port_left != port_right
+            repair_covariant_port_pairs(
+                port_left,
+                port_right,
+                gauge,
+                chosen,
+                direction,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        mismatches_after = covariant_mismatch_mask(
+            port_left,
+            port_right,
+            gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
         phi_after = int(np.sum(mismatches_after))
         repair_receipts.append(
             {
@@ -86,6 +111,7 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
                 "phi_before": phi_before,
                 "phi_after": phi_after,
                 "beta": beta,
+                "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
             }
         )
 
@@ -124,7 +150,15 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
                 "mismatch_edges": phi_after,
                 "committed_records": int(np.sum(committed)),
                 "record_entropy": _entropy(signature[committed]) if np.any(committed) else 0.0,
-                "defect_proxy_count": int(_defect_proxy(gauge, port_left, port_right)),
+                "defect_proxy_count": int(
+                    _defect_proxy(
+                        gauge,
+                        port_left,
+                        port_right,
+                        group_name=group_name,
+                        group_order=group_order,
+                    )
+                ),
                 "modular_depth_mean": float(np.mean(modular_depth)),
                 "modular_depth_std": float(np.std(modular_depth)),
             }
@@ -149,7 +183,15 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
         _cosmology_proxy(trace, dimensions, pixel_scale.as_jsonable(), screen_microphysics.as_jsonable()),
     )
     bundle.write_json("state_final_summary.json", _summary(patch_count, edge_count, trace[-1], modular_depth))
-    bundle.write_json("seed_material.json", {"config_hash": stable_json_hash(config), "seed": seed})
+    bundle.write_json(
+        "seed_material.json",
+        {
+            "config_hash": stable_json_hash(config),
+            "hash_schema": CANONICAL_HASH_SCHEMA,
+            "seed": seed,
+        },
+    )
+    bundle.write_json("gauge_covariant_overlap_contract.json", overlap_contract_metadata())
     kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="array_screen")
     manifest = {
         "run_id": run_id,
@@ -159,6 +201,7 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
         "patch_count": patch_count,
         "edge_count": edge_count,
         "group": group_name,
+        "gauge_covariant_overlap": overlap_contract_metadata(),
         "pixel_scale": pixel_scale.as_jsonable(),
         "oph_constants": pixel_scale.constants.as_jsonable(),
         "screen_microphysics": screen_microphysics.as_jsonable(),
@@ -348,8 +391,25 @@ def _entropy(values: np.ndarray) -> float:
     return float(-np.sum(probs * np.log(probs)))
 
 
-def _defect_proxy(gauge: np.ndarray, port_left: np.ndarray, port_right: np.ndarray) -> int:
-    return int(np.sum(((gauge + port_left - port_right) % max(2, int(np.max(gauge)) + 1)) != 0))
+def _defect_proxy(
+    gauge: np.ndarray,
+    port_left: np.ndarray,
+    port_right: np.ndarray,
+    *,
+    group_name: str,
+    group_order: int,
+) -> int:
+    return int(
+        np.sum(
+            covariant_mismatch_mask(
+                port_left,
+                port_right,
+                gauge,
+                group_name=group_name,
+                group_order=group_order,
+            )
+        )
+    )
 
 
 def _modular_cloud(points: np.ndarray, depth_samples: list[np.ndarray], config: dict[str, Any], seed: int) -> np.ndarray:

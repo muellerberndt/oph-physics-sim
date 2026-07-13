@@ -1,7 +1,10 @@
 import numpy as np
 
 from oph_fpe.core.graph import fibonacci_sphere_points
-from oph_fpe.cosmology.angular_power import angular_power_report
+from oph_fpe.cosmology.angular_power import (
+    _bounded_ordered_thread_reduce,
+    angular_power_report,
+)
 
 
 def test_dipole_field_has_l1_dominance():
@@ -62,3 +65,19 @@ def test_parallel_angular_power_matches_single_job():
             assert [row["C_ell"] for row in parallel_control] == [
                 row["C_ell"] for row in single_control
             ]
+
+
+def test_harmonic_thread_reduction_bounds_retained_futures_and_preserves_order():
+    inputs = list(range(37))
+    initial = np.zeros(1, dtype=np.int64)
+
+    result, peak_in_flight = _bounded_ordered_thread_reduce(
+        inputs,
+        lambda value: np.asarray([value], dtype=np.int64),
+        initial=initial,
+        max_workers=4,
+    )
+
+    assert int(result[0]) == sum(inputs)
+    assert peak_in_flight == 4
+    assert int(initial[0]) == 0

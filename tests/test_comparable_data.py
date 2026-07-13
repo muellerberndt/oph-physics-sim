@@ -1387,35 +1387,41 @@ def test_comparable_data_collects_oph_cnb_neutrino_background(tmp_path: Path):
     _write_json(
         run / "oph_cnb_neutrino_report.json",
         {
-            "mode": "oph_cnb_neutrino_background_v0",
-            "oph_neutrino_branch": {
-                "sum_mnu_eV": 0.09001192964464505,
-                "m_lightest_eV": 0.017454720257976796,
+            "mode": "oph_cnb_neutrino_background_v1",
+            "oph_neutrino_mass_status": {
+                "available": False,
+                "sum_mnu_eV": None,
+                "public_promotion_allowed": False,
             },
-            "relic_background": {
-                "N_eff": 3.044,
-                "Omega_nu_h2": 0.0009661936177406568,
-                "Omega_nu": 0.002127375,
-                "f_nu": 0.006743,
-                "small_scale_power_suppression_fraction": -0.053944,
+            "conventional_camb_baseline": {
+                "sum_mnu_eV": 0.06,
+                "relic_background": {
+                    "N_eff": 3.044,
+                    "Omega_nu_h2": 0.0006443298969072165,
+                    "Omega_nu": 0.0014183665809050366,
+                    "f_nu": 0.004495615153423254,
+                    "small_scale_power_suppression_fraction": -0.03596492122738603,
+                },
+                "measurement_comparisons": {
+                    "Planck2018_N_eff": {"pull_sigma": 0.3176470588235297},
+                    "Planck2018_BAO_sum_mnu_bound": {"passes_bound": True},
+                    "ACT_DR6_extended_sum_mnu_bound": {"passes_bound": True},
+                    "DESI_DR2_LCDM_sum_mnu_bound": {"passes_bound": True},
+                },
             },
-            "measurement_comparisons": {
-                "Planck2018_N_eff": {"pull_sigma": 0.3176470588235297},
-                "Planck2018_BAO_sum_mnu_bound": {"passes_bound": True},
-                "ACT_DR6_extended_sum_mnu_bound": {"passes_bound": False},
-                "DESI_DR2_LCDM_sum_mnu_bound": {"passes_bound": False},
-            },
+            "historical_rejected_weighted_cycle_benchmark": {"included": False},
             "late_repair_projection_target": {
                 "eta_A": 0.0656993605106136,
                 "Pi_WL_compressed_required": 0.7147300876,
             },
             "readiness_gates": {
-                "measurement_comparable_relic_background": True,
+                "conventional_baseline_relic_background_callable": True,
                 "finite_lattice_mass_derivation": False,
                 "B_A_k_a_from_finite_collar_parent": False,
                 "full_boltzmann_likelihood_run": False,
             },
-            "measurement_comparable_now": True,
+            "measurement_comparable_now": False,
+            "conventional_baseline_measurement_comparable": True,
             "finite_lattice_derived": False,
             "physical_cmb_prediction": False,
             "physical_matter_power_prediction": False,
@@ -1431,9 +1437,11 @@ def test_comparable_data_collects_oph_cnb_neutrino_background(tmp_path: Path):
     assert cnb["background_gate_count"] == 1
     assert cnb["B_A_kernel_gate_count"] == 0
     assert cnb["planck_bao_bound_pass_count"] == 1
-    assert cnb["act_bound_pass_count"] == 0
-    assert cnb["desi_lcdm_bound_pass_count"] == 0
-    assert cnb["mean_sum_mnu_eV"] == 0.09001192964464505
+    assert cnb["act_bound_pass_count"] == 1
+    assert cnb["desi_lcdm_bound_pass_count"] == 1
+    assert cnb["oph_mass_prediction_available_count"] == 0
+    assert cnb["mean_sum_mnu_eV"] is None
+    assert cnb["mean_conventional_sum_mnu_eV"] == 0.06
     assert cnb["mean_Pi_WL_compressed_required"] == 0.7147300876
 
 

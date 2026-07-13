@@ -3,12 +3,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
+
 from oph_fpe.bulk.einstein_bridge import RECEIPT_SPECS, write_einstein_bridge_manifest
 from oph_fpe.bulk.theorem_contract import finite_oph_theorem_contract_report
 from oph_fpe.claims import (
     CAP_NORMAL_H3_CHART_RECEIPT,
     ISSUE_308_BW_CERTIFICATE_RECEIPT,
     MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
+)
+from oph_fpe.scale.bw_array import (
+    _array_port_pair_consensus_replay_report,
+    _computed_array_replay_consensus_certificate,
+    _write_finite_consensus_source_artifact,
 )
 from tests.test_bw_certificate_308 import _primitive_bwrec
 from tests.test_cap_normal_h3_chart_309 import _primitive_chart
@@ -41,52 +48,46 @@ def _write_computed_bridge_reports(run: Path, *, include_localization: bool = Tr
 
 
 def _write_computed_consensus_replay(run: Path) -> None:
-    source_hash = "sha256:" + "1" * 64
-    terminal_hash = "sha256:" + "2" * 64
-    evidence = {
-        "evidence_kind": "computed_array_port_pair_replay_v1",
-        "theorem_phase_event_count": 4,
-        "accepted_theorem_move_count": 4,
-        "strict_descent_violation_count": 0,
-        "accepted_phi_increase_violation_count": 0,
-        "disjoint_commutation_violation_count": 0,
-        "local_diamond_violation_count": 0,
-        "repair_completeness_violation_count": 0,
-        "unique_terminal_quotient_hash_count": 1,
-        "schedule_replay_count": 4,
-        "requested_schedule_replays": 4,
-    }
-    replay = {
-        "mode": "array_port_pair_strict_consensus_replay",
+    initial_port_left = np.zeros(4, dtype=np.uint8)
+    initial_port_right = np.ones(4, dtype=np.uint8)
+    initial_gauge = np.zeros(4, dtype=np.uint8)
+    edge_left = np.asarray([0, 2, 4, 6], dtype=np.uint32)
+    edge_right = np.asarray([1, 3, 5, 7], dtype=np.uint32)
+    replay_config = {
         "enabled": True,
-        "receipt": True,
-        "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
-        "finite_consensus_theorem_receipt": True,
-        "computed_from_port_pair_arrays": True,
-        "source_state_sha256": source_hash,
-        "terminal_hash": terminal_hash,
-        "initial_phi": 4,
-        "evidence": evidence,
-        "sample_events": [
-            {
-                "accepted": True,
-                "delta_touched_phi": -1,
-                "delta_global_phi": -1,
-            }
-        ],
+        "schedule_replays": 4,
+        "requested_schedule_replays": 4,
+        "max_event_rows": 16,
+        "disjoint_checks": 16,
     }
-    certificate = {
-        "mode": "finite_consensus_theorem_certificate_v2_computed_array_replay",
-        "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
-        "finite_consensus_theorem_receipt": True,
-        "receipt": True,
-        "computed_replay_artifact_present": True,
-        "computed_from_port_pair_arrays": True,
-        "source_state_sha256": source_hash,
-        **{key: value for key, value in evidence.items() if key != "evidence_kind"},
-        "invalid_evidence": [],
-        "sample_event_count": 1,
-    }
+    replay_seed = 31_338
+    replay = _array_port_pair_consensus_replay_report(
+        initial_port_left,
+        initial_port_right,
+        initial_gauge,
+        edge_left=edge_left,
+        edge_right=edge_right,
+        group_name="S3",
+        group_order=6,
+        config=replay_config,
+        production_sector_repair_config={},
+        seed=replay_seed,
+    )
+    assert replay["receipt"] is True
+    certificate = _computed_array_replay_consensus_certificate(replay)
+    manifest = _write_finite_consensus_source_artifact(
+        run,
+        initial_port_left=initial_port_left,
+        initial_port_right=initial_port_right,
+        initial_gauge=initial_gauge,
+        edge_left=edge_left,
+        edge_right=edge_right,
+        group_name="S3",
+        group_order=6,
+        replay_config=replay_config,
+        production_sector_repair_config={},
+        replay_seed=replay_seed,
+    )
     _write_json(run / "finite_consensus_replay_report.json", replay)
     _write_json(
         run / "theorem_core_receipts.json",
@@ -95,6 +96,7 @@ def _write_computed_consensus_replay(run: Path) -> None:
             "finite_consensus_theorem_receipt": True,
             "finite_consensus_theorem": certificate,
             "finite_consensus_replay": replay,
+            "finite_consensus_source_artifact": manifest,
         },
     )
 
@@ -145,10 +147,60 @@ def _write_valid_refinement_naturality(run: Path) -> None:
             "multi_scale": True,
             "candidate_dimension_stable": True,
             "run_count": 4,
+            "sizes": [
+                {"patch_count": 4_096},
+                {"patch_count": 16_384},
+                {"patch_count": 65_536},
+                {"patch_count": 262_144},
+            ],
+            "required_patch_count_ladder": [4_096, 16_384, 65_536, 262_144],
+            "missing_required_patch_counts": [],
+            "required_ladder_complete": True,
+            "candidate_dimension_drift": 0.05,
+            "proof_blockers": [],
+        },
+    )
+
+
+def test_refinement_naturality_rejects_a_two_scale_receipt_claiming_four_runs(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "strict_neutral_bulk_frontier_report.json",
+        {
+            "strict_neutral_bulk_refinement_receipt": True,
+            "multi_scale": True,
+            "candidate_dimension_stable": True,
+            "run_count": 4,
             "sizes": [{"patch_count": 65_536}, {"patch_count": 262_144}],
             "proof_blockers": [],
         },
     )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["stages"]["L7_refinement_naturality"]["passed"] is False
+
+
+def test_consensus_contract_rejects_tampered_primitive_source_arrays(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run)
+    source = run / "finite_consensus_source_state.npz"
+    with np.load(source, allow_pickle=False) as payload:
+        arrays = {name: np.asarray(payload[name]).copy() for name in payload.files}
+    arrays["initial_port_left"][0] = 1
+    np.savez(source, **arrays)
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
+    blockers = report["stages"]["C0_finite_consensus_theorem"]["details"]["blockers"]
+    assert "finite_consensus_source_state_file_hash_mismatch" in blockers
 
 
 def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contract(tmp_path: Path) -> None:
@@ -764,11 +816,28 @@ def test_theorem_contract_ignores_forged_precomputed_bridge_reports(tmp_path: Pa
     assert report[CAP_NORMAL_H3_CHART_RECEIPT] is False
     assert report[MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT] is False
     assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
-    assert "computed_v2_consensus_certificate_missing" in report["stages"][
+    assert "computed_v3_gauge_quotient_consensus_certificate_missing" in report["stages"][
         "C0_finite_consensus_theorem"
     ]["missing_or_blocking_evidence"]
     assert report["issue_308_bw_certificate"]["report_written"] is True
     assert "requires_primitive_fields" in report["issue_309_cap_normal_h3_chart"]["primary_blockers"][0]
+
+
+def test_theorem_contract_explicitly_rejects_obsolete_v2_consensus_certificate(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run)
+    theorem_core = json.loads((run / "theorem_core_receipts.json").read_text(encoding="utf-8"))
+    theorem_core["finite_consensus_theorem"]["mode"] = (
+        "finite_consensus_theorem_certificate_v2_computed_array_replay"
+    )
+    _write_json(run / "theorem_core_receipts.json", theorem_core)
+
+    report = finite_oph_theorem_contract_report(run)
+
+    blockers = report["stages"]["C0_finite_consensus_theorem"]["missing_or_blocking_evidence"]
+    assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
+    assert "obsolete_v2_decoupled_consensus_certificate_rejected" in blockers
 
 
 def test_theorem_contract_rejects_truthy_receipt_strings_and_manifest_rows(tmp_path: Path) -> None:

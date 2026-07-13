@@ -8,15 +8,19 @@ from pathlib import Path
 import numpy as np
 
 from oph_fpe.bulk.h3_worldline_stitch import (
+    H3_CERTIFICATE_INCOMPLETE,
     H3_STITCH_AMBIGUOUS,
     H3_STITCH_CERTIFIED,
     H3_STITCH_REJECTED,
+    H3_PRIMITIVE_SCHEMA,
     h3_distance,
     h3_point_from_spatial_point,
+    h3_worldline_stitch_primitive_hash,
     h3_worldline_stitch_certificate_report,
     lorentz_matrix_residual,
     write_h3_worldline_stitch_certificate_report,
 )
+from oph_fpe.evidence.hashes import stable_json_hash
 from oph_fpe.measurement_pack import export_measurement_pack
 
 
@@ -50,7 +54,9 @@ def test_h3_worldline_stitch_certificate_passes_and_ignores_record_ids() -> None
     assert report["round1_terminal_status"] == "H3_WORLDLINE_STITCH_CERTIFIED"
     assert report["H3_WORLDLINE_STITCH_CERTIFIED"] is True
     assert report["h3_worldline_stitch_certificate_receipt"] is True
-    assert report["certified_assignment_gap"] == pytest_approx(0.3)
+    assert report["primitive_provenance_verified"] is True
+    assert report["assignment_replay"]["record_id_independence_recomputed"] is True
+    assert report["certified_assignment_gap"] > 1.0
     assert relabeled_report["terminal_status"] == H3_STITCH_CERTIFIED
     assert relabeled_report["certified_assignment_gap"] == report["certified_assignment_gap"]
     assert relabeled_report["metric_rows"] == report["metric_rows"]
@@ -58,7 +64,15 @@ def test_h3_worldline_stitch_certificate_passes_and_ignores_record_ids() -> None
 
 def test_h3_worldline_stitch_certificate_returns_ambiguous_for_equal_costs() -> None:
     artifact = _valid_artifact()
-    artifact["assignment"]["runner_up_cost_lower"] = artifact["assignment"]["proposed_cost_upper"]
+    same = h3_point_from_spatial_point([0.2, 0.0, 0.0]).tolist()
+    for edge in artifact["candidate_edges"]:
+        edge["predicted_h3_point"] = same
+        edge["observed_h3_point"] = same
+        edge["h3_geodesic_cost"] = 0.0
+    artifact["assignment"]["proposed_cost_upper"] = 0.0
+    artifact["assignment"]["runner_up_cost_lower"] = 0.0
+    artifact["assignment"]["multiple_optima"] = True
+    _rebind(artifact)
 
     report = h3_worldline_stitch_certificate_report(artifact)
 
@@ -71,12 +85,100 @@ def test_h3_worldline_stitch_certificate_rejects_id_based_or_euclidean_matching(
     artifact = _valid_artifact()
     artifact["assignment"]["uses_record_ids"] = True
     artifact["candidate_edges"][0]["metric"] = "euclidean_h3SpatialPoint"
+    _rebind(artifact)
 
     report = h3_worldline_stitch_certificate_report(artifact)
 
     assert report["terminal_status"] == H3_STITCH_REJECTED
     assert "record_ids_used_in_admissibility_or_cost" in report["blockers"]
     assert "candidate_edge_0_uses_euclidean_h3_distance" in report["blockers"]
+
+
+def test_h3_worldline_stitch_rejects_assertions_without_primitive_producer_evidence() -> None:
+    artifact = _valid_artifact()
+    artifact.pop("primitive_provenance")
+    artifact["candidate_edges"] = []
+    artifact["h3_metric_receipt"] = True
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["terminal_status"] == H3_CERTIFICATE_INCOMPLETE
+    assert report["h3_worldline_stitch_certificate_receipt"] is False
+    assert "h3_primitive_producer_provenance_missing" in report["blockers"]
+    assert "candidate_edge_h3_metric_primitives_missing" in report["blockers"]
+
+
+def test_h3_worldline_stitch_requires_exact_booleans() -> None:
+    artifact = _valid_artifact()
+    artifact["assignment"]["complete_graph"] = "true"
+    artifact["crossing"]["transverse"] = 1
+    _rebind(artifact)
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["terminal_status"] == H3_STITCH_REJECTED
+    assert "complete_graph_not_exact_boolean" in report["blockers"]
+    assert "transverse_not_exact_boolean" in report["blockers"]
+
+
+def test_h3_worldline_stitch_recomputes_complete_graph_and_assignment() -> None:
+    artifact = _valid_artifact()
+    artifact["candidate_edges"].pop()
+    _rebind(artifact)
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["terminal_status"] == H3_STITCH_REJECTED
+    assert "candidate_graph_not_complete_bipartite_from_primitives" in report["blockers"]
+
+
+def test_h3_worldline_stitch_rejects_forged_assignment_bounds() -> None:
+    artifact = _valid_artifact()
+    artifact["assignment"]["proposed_cost_upper"] = 0.0
+    artifact["assignment"]["runner_up_cost_lower"] = 100.0
+    _rebind(artifact)
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["terminal_status"] == H3_STITCH_REJECTED
+    assert "assignment_winner_cost_upper_below_recomputed_winner" in report["blockers"]
+    assert "assignment_runner_cost_lower_above_recomputed_runner_up" in report["blockers"]
+
+
+def test_h3_worldline_stitch_rejects_unbound_primitive_or_source_mutation() -> None:
+    artifact = _valid_artifact()
+    artifact["candidate_edges"][0]["observed_h3_point"] = h3_point_from_spatial_point(
+        [0.4, 0.0, 0.0]
+    ).tolist()
+    artifact["primitive_provenance"]["source_manifest"]["run_id"] = "mutated"
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["terminal_status"] == H3_STITCH_REJECTED
+    assert "h3_primitive_payload_hash_mismatch" in report["blockers"]
+    assert "h3_primitive_source_hash_mismatch" in report["blockers"]
+
+
+def test_h3_worldline_stitch_rejects_empty_selected_continuation() -> None:
+    artifact = _valid_artifact()
+    artifact["assignment"]["selected_pairs"] = []
+    _rebind(artifact)
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["h3_worldline_stitch_certificate_receipt"] is False
+    assert "selected_assignment_pair_primitives_missing" in report["blockers"]
+
+
+def test_h3_worldline_stitch_rejects_nonfinite_h3_primitives() -> None:
+    artifact = _valid_artifact()
+    artifact["candidate_edges"][0]["predicted_h3_point"][0] = float("nan")
+    _rebind(artifact)
+
+    report = h3_worldline_stitch_certificate_report(artifact)
+
+    assert report["h3_worldline_stitch_certificate_receipt"] is False
+    assert "candidate_edge_0_h3_distance_invalid" in report["blockers"]
 
 
 def test_h3_worldline_stitch_cli_writer_and_measurement_pack(tmp_path: Path) -> None:
@@ -103,13 +205,45 @@ def pytest_approx(value: float):
 
 def _valid_artifact() -> dict:
     identity = np.eye(4).tolist()
-    predicted = h3_point_from_spatial_point([0.12, 0.0, 0.0]).tolist()
-    observed = h3_point_from_spatial_point([0.14, 0.0, 0.0]).tolist()
-    return {
+    left_points = {
+        "l0": h3_point_from_spatial_point([0.10, 0.0, 0.0]).tolist(),
+        "l1": h3_point_from_spatial_point([1.00, 0.0, 0.0]).tolist(),
+    }
+    right_points = {
+        "r0": h3_point_from_spatial_point([0.12, 0.0, 0.0]).tolist(),
+        "r1": h3_point_from_spatial_point([0.98, 0.0, 0.0]).tolist(),
+    }
+    edge_rows = []
+    for left, predicted in left_points.items():
+        for right, observed in right_points.items():
+            edge_rows.append(
+                {
+                    "left": left,
+                    "right": right,
+                    "left_shard_id": "left_shard",
+                    "right_shard_id": "right_shard",
+                    "record_id": f"{left}_record",
+                    "right_record_id": f"{right}_record",
+                    "metric": "h3_hyperboloid_geodesic",
+                    "predicted_h3_point": predicted,
+                    "observed_h3_point": observed,
+                    "h3_geodesic_cost": h3_distance(predicted, observed),
+                }
+            )
+    winner = h3_distance(left_points["l0"], right_points["r0"]) + h3_distance(
+        left_points["l1"], right_points["r1"]
+    )
+    runner = h3_distance(left_points["l0"], right_points["r1"]) + h3_distance(
+        left_points["l1"], right_points["r0"]
+    )
+    artifact = {
         "atlas": {
             "model": "H3 hyperboloid in R^{1,3}",
             "R_H": 1.0,
-            "points": [{"id": "p0", "X": predicted}, {"id": "p1", "X": observed}],
+            "points": [
+                {"id": key, "X": point}
+                for key, point in {**left_points, **right_points}.items()
+            ],
             "chart_transitions": [{"id": "id", "matrix": identity}],
         },
         "clock": {
@@ -149,9 +283,20 @@ def _valid_artifact() -> dict:
             "one_to_one": True,
             "appearance_disappearance_penalties": True,
             "uses_record_ids": False,
-            "distinct_shard_ids": ["left_shard", "right_shard"],
-            "proposed_cost_upper": 0.1,
-            "runner_up_cost_lower": 0.4,
+            "selected_pairs": [
+                {"left": "l0", "right": "r0"},
+                {"left": "l1", "right": "r1"},
+            ],
+            "appearance_penalties": [
+                {"right": "r0", "cost": 2.0},
+                {"right": "r1", "cost": 2.0},
+            ],
+            "disappearance_penalties": [
+                {"left": "l0", "cost": 2.0},
+                {"left": "l1", "cost": 2.0},
+            ],
+            "proposed_cost_upper": winner,
+            "runner_up_cost_lower": runner,
             "required_gap": 0.05,
         },
         "refinement": {
@@ -159,22 +304,40 @@ def _valid_artifact() -> dict:
             "Q_sr_present": True,
             "contracted_graph_isomorphic": True,
             "eta_sr": 0.02,
-            "coarse_gap": 0.1,
+            "coarse_gap": runner - winner,
         },
         "interaction": {
             "free_propagation_slab": True,
             "interaction_required": False,
         },
-        "candidate_edges": [
-            {
-                "left": "l0",
-                "right": "r0",
-                "record_id": "left_record",
-                "right_record_id": "right_record",
-                "metric": "h3_hyperboloid_geodesic",
-                "predicted_h3_point": predicted,
-                "observed_h3_point": observed,
-            }
-        ],
-        "hashes": {"source_hash": "sha256:source", "configuration_hash": "sha256:config"},
+        "candidate_edges": edge_rows,
+    }
+    source_manifest = {
+        "run_id": "test_measured_interface",
+        "left_shard_id": "left_shard",
+        "right_shard_id": "right_shard",
+    }
+    configuration = {"curvature_radius": 1.0, "assignment_replay_limit": 7}
+    artifact["primitive_provenance"] = {
+        "schema": H3_PRIMITIVE_SCHEMA,
+        "source_kind": "measured_cross_shard_interface",
+        "producer": "external_h3_interface_measurement_fixture",
+        "producer_version": "1",
+        "source_manifest": source_manifest,
+        "configuration": configuration,
+        "source_hash": stable_json_hash(source_manifest),
+        "configuration_hash": stable_json_hash(configuration),
+    }
+    _rebind(artifact)
+    return artifact
+
+
+def _rebind(artifact: dict) -> None:
+    provenance = artifact["primitive_provenance"]
+    provenance["source_hash"] = stable_json_hash(provenance["source_manifest"])
+    provenance["configuration_hash"] = stable_json_hash(provenance["configuration"])
+    provenance["primitive_hash"] = h3_worldline_stitch_primitive_hash(artifact)
+    artifact["hashes"] = {
+        "source_hash": provenance["source_hash"],
+        "configuration_hash": provenance["configuration_hash"],
     }

@@ -17,6 +17,12 @@ and one-off closeout bundles do not belong here. Keep those under `runs/`, `repo
 - `OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: the single source of truth for simulator state,
   paper-stack alignment, receipt lanes, CMB/bulk/particle/string/vacuum boundaries, and promotion
   rules.
+- `PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`: hash-pinned cross-repo imports, particle-frontier
+  diagnostics, pixel-parameter provenance, non-circularity policy, and the hard boundary between
+  paper-side status and run-specific receipts.
+- `WZH_NUMERICAL_BACKEND.md`: source-clock, RG/matching, BRST-block, and
+  complex-pole backend, including the boundary between synthetic controls and
+  actual W/Z/H prediction receipts.
 - `VISUALIZATION_APP_AGENT_MANUAL.md`: implementation manual for visualization app agents building
   quantum-vacuum, observer-camera, effective-string, repair, H3, and CMB diagnostic views from the
   universe-timeline payload.

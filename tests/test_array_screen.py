@@ -199,8 +199,10 @@ def test_h2_neutral_evidence_channels_are_emitted_without_chart_ids():
 
     neutral_view = build_neutral_observer_views(observer_rows)[0]
     assert neutral_view.boundary_packet_hash_hist.sum() > 0.0
-    assert neutral_view.overlap_correspondence_hist.sum() > 0.0
+    assert neutral_view.overlap_correspondence_hist.sum() == 0.0
     assert neutral_view.port_pair_lag_hist.sum() > 0.0
     assert np.linalg.norm(neutral_view.repair_current_tensor) > 0.0
-    assert np.linalg.norm(neutral_view.perturbation_response_tensor) > 0.0
+    # The legacy H2 summary is still exported, but it cannot masquerade as the
+    # real paired perturb-resettle producer in claim-bearing geometry.
+    assert np.linalg.norm(neutral_view.perturbation_response_tensor) == 0.0
     assert neutral_view.first_passage_response_hist.sum() > 0.0

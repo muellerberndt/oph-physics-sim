@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/particle_promotion_evidence_v1.schema.json",
+  "title": "OPH particle promotion primitive evidence v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "candidate_id",
+    "candidate_kind",
+    "structural_speed",
+    "proto",
+    "classical_carrier",
+    "quantum_particle",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {"const": "oph_particle_promotion_evidence_v1"},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "candidate_kind": {"enum": ["neutral", "colored"]},
+    "structural_speed": {"type": "number", "exclusiveMinimum": 0},
+    "tolerance": {"type": "number", "exclusiveMinimum": 0, "maximum": 0.001},
+    "proto": {"$ref": "#/$defs/proto"},
+    "classical_carrier": {"$ref": "#/$defs/classicalCarrier"},
+    "quantum_particle": {"$ref": "#/$defs/quantumParticle"},
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "$defs": {
+    "proto": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "localized_shared_bulk_support",
+        "bulk_localization_margin",
+        "maximum_support_fraction",
+        "stable_topological_sector_charge",
+        "maximum_sector_charge_variation",
+        "contractible_path_transport",
+        "maximum_contractible_holonomy_residual",
+        "fusion_charge_conservation",
+        "maximum_fusion_charge_residual",
+        "scattering_reproducibility",
+        "minimum_scattering_replay_agreement",
+        "speed_causality_controls",
+        "maximum_causality_violation",
+        "observer_resampling_stability",
+        "maximum_observer_resampling_drift",
+        "refinement_stability",
+        "maximum_refinement_drift",
+        "worldline_count",
+        "independent_seed_count",
+        "refinement_level_count"
+      ],
+      "properties": {
+        "localized_shared_bulk_support": {"type": "boolean"},
+        "bulk_localization_margin": {"type": "number", "exclusiveMinimum": 0},
+        "maximum_support_fraction": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+        "stable_topological_sector_charge": {"type": "boolean"},
+        "maximum_sector_charge_variation": {"type": "number", "minimum": 0},
+        "contractible_path_transport": {"type": "boolean"},
+        "maximum_contractible_holonomy_residual": {"type": "number", "minimum": 0},
+        "fusion_charge_conservation": {"type": "boolean"},
+        "maximum_fusion_charge_residual": {"type": "number", "minimum": 0},
+        "scattering_reproducibility": {"type": "boolean"},
+        "minimum_scattering_replay_agreement": {"type": "number", "minimum": 0, "maximum": 1},
+        "speed_causality_controls": {"type": "boolean"},
+        "maximum_causality_violation": {"type": "number", "minimum": 0},
+        "observer_resampling_stability": {"type": "boolean"},
+        "maximum_observer_resampling_drift": {"type": "number", "minimum": 0},
+        "refinement_stability": {"type": "boolean"},
+        "maximum_refinement_drift": {"type": "number", "minimum": 0},
+        "worldline_count": {"type": "integer", "minimum": 1},
+        "independent_seed_count": {"type": "integer", "minimum": 2},
+        "refinement_level_count": {"type": "integer", "minimum": 2}
+      }
+    },
+    "classicalCarrier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "background",
+        "phase",
+        "quadratic_action_explicit",
+        "quadratic_action_rank",
+        "physical_kinetic_coefficient",
+        "constraint_reduction",
+        "physical_projector_rank",
+        "reduced_hamiltonian_minimum",
+        "hessian_wave_operator_residual",
+        "dispersion_speed",
+        "forbidden_mass_operator_norm"
+      ],
+      "properties": {
+        "background": {"type": "string", "minLength": 1},
+        "phase": {"type": "string", "minLength": 1},
+        "quadratic_action_explicit": {"type": "boolean"},
+        "quadratic_action_rank": {"type": "integer", "minimum": 1},
+        "physical_kinetic_coefficient": {"type": "number", "exclusiveMinimum": 0},
+        "constraint_reduction": {"enum": ["gauge_fixing", "constraint_reduction", "brst_cohomology"]},
+        "physical_projector_rank": {"type": "integer", "minimum": 1},
+        "reduced_hamiltonian_minimum": {"type": "number", "minimum": 0},
+        "hessian_wave_operator_residual": {"type": "number", "minimum": 0},
+        "dispersion_speed": {"type": "number", "exclusiveMinimum": 0},
+        "forbidden_mass_operator_norm": {"type": "number", "minimum": 0}
+      }
+    },
+    "quantumParticle": {
+      "type": "object",
+      "required": [
+        "vacuum_quantization",
+        "vacuum_energy_lower_bound",
+        "physical_hilbert_construction",
+        "negative_norm_state_count",
+        "pole_residue",
+        "spectral_negative_weight",
+        "positive_energy_shell_minimum",
+        "mass_shell_residual",
+        "asymptotic_state_norm",
+        "decay_width_upper_bound",
+        "lsz_residue"
+      ],
+      "properties": {
+        "vacuum_quantization": {"enum": ["canonical", "fock", "brst", "operator_algebraic"]},
+        "vacuum_energy_lower_bound": {"type": "number", "minimum": 0},
+        "physical_hilbert_construction": {"enum": ["constraint_reduction", "brst_cohomology"]},
+        "negative_norm_state_count": {"type": "integer", "const": 0},
+        "pole_residue": {"type": "number", "exclusiveMinimum": 0},
+        "spectral_negative_weight": {"type": "number", "minimum": 0},
+        "positive_energy_shell_minimum": {"type": "number", "exclusiveMinimum": 0},
+        "mass_shell_residual": {"type": "number", "minimum": 0},
+        "asymptotic_state_norm": {"type": "number", "exclusiveMinimum": 0},
+        "decay_width_upper_bound": {"type": "number", "minimum": 0},
+        "lsz_residue": {"type": "number", "exclusiveMinimum": 0},
+        "deconfined_asymptotic_sector": {"type": "boolean"}
+      }
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generator", "source_commit", "source_dirty", "generated_utc", "lane_artifacts"],
+      "properties": {
+        "generator": {"type": "string", "minLength": 1},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{7,64}$"},
+        "source_dirty": {"const": false},
+        "generated_utc": {"type": "string", "minLength": 1},
+        "lane_artifacts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["proto", "classical_carrier", "quantum_particle"],
+          "properties": {
+            "proto": {"$ref": "#/$defs/artifactReference"},
+            "classical_carrier": {"$ref": "#/$defs/artifactReference"},
+            "quantum_particle": {"$ref": "#/$defs/artifactReference"}
+          }
+        }
+      }
+    }
+  }
+}

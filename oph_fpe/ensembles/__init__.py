@@ -16,6 +16,7 @@ from oph_fpe.ensembles.quotient_ensemble import (
     fail_closed_promotion_receipts,
     quotient_lumpability_receipt,
     representative_lift_firewall_receipt,
+    rg_exponential_family_closure_receipt,
     sampler_correctness_receipt,
 )
 
@@ -30,6 +31,7 @@ __all__ = [
     "harmonic_gaussian_reference_report",
     "quotient_lumpability_receipt",
     "representative_lift_firewall_receipt",
+    "rg_exponential_family_closure_receipt",
     "sampler_correctness_receipt",
     "sample_harmonic_coefficients",
     "u1_lattice_gauge_reference_report",

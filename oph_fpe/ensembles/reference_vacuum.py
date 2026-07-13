@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.ensembles.quotient_ensemble import claim_tier_gate, fail_closed_promotion_receipts
+from oph_fpe.evidence.hashes import canonical_json_bytes, stable_json_hash
 
 
 CLAIM_TIERS: dict[str, str] = {
@@ -440,8 +441,7 @@ def write_reference_vacuum_baseline_report(
 
 
 def stable_hash(payload: Any) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return stable_json_hash(payload).removeprefix("sha256:")
 
 
 def file_sha256(path: Path) -> str:
@@ -473,7 +473,7 @@ def _uniform_from_event(seed_key: str, event: dict[str, Any]) -> float:
 def _seed_from_event(seed_key: str, event: dict[str, Any]) -> int:
     payload = {"seed_key": seed_key, "event": event}
     digest = hashlib.blake2b(
-        json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8"),
+        canonical_json_bytes(payload),
         digest_size=16,
     ).digest()
     return int.from_bytes(digest, "little", signed=False)

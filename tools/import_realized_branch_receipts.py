@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Import the paper-side realized-branch receipt report as a run sidecar.
+"""Import the paper-side realized-branch receipt report as a pinned sidecar.
 
 The canonical Einstein branch-entry receipt evaluation (issue #503) lives in
 the reverse-engineering-reality repository at
@@ -15,10 +15,20 @@ Usage:
 
 from __future__ import annotations
 
-import json
-import shutil
+from dataclasses import replace
+import subprocess
 import sys
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from oph_fpe.evidence.cross_repo_artifacts import (  # noqa: E402
+    DEFAULT_ARTIFACT_SPECS,
+    import_cross_repo_artifacts,
+    verify_cross_repo_artifact_manifest,
+)
 
 DEFAULT_SOURCE = (
     Path(__file__).resolve().parents[2]
@@ -29,37 +39,44 @@ DEFAULT_SOURCE = (
     / "realized_branch_receipt_report.json"
 )
 
-REQUIRED_KEYS = (
-    "artifact",
-    "issue",
-    "status",
-    "realized_geometric_branch_certified_nonempty",
-)
-
-
 def main() -> int:
     if len(sys.argv) < 2:
         print(__doc__)
         return 2
     run_dir = Path(sys.argv[1])
     source = Path(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_SOURCE
-    if not source.exists():
+    if not source.is_file():
         print(f"source report not found: {source}")
         return 1
-    with open(source) as f:
-        report = json.load(f)
-    missing = [k for k in REQUIRED_KEYS if k not in report]
-    if missing or report.get("issue") != 503:
-        print(f"source report failed validation (missing {missing})")
+    try:
+        source_repo = Path(
+            subprocess.check_output(
+                ["git", "-C", str(source.parent), "rev-parse", "--show-toplevel"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+        ).resolve()
+        source_relpath = source.resolve().relative_to(source_repo).as_posix()
+    except (OSError, subprocess.CalledProcessError, ValueError):
+        print(f"source report is not inside a Git research checkout: {source}")
         return 1
-    run_dir.mkdir(parents=True, exist_ok=True)
-    target = run_dir / "realized_branch_receipt_report.json"
-    shutil.copyfile(source, target)
-    print(f"imported {source} -> {target}")
-    print(f"status: {report['status'][:100]}")
-    nonempty = report["realized_geometric_branch_certified_nonempty"]
-    print(f"realized_geometric_branch_certified_nonempty: {nonempty}")
-    return 0
+    base_spec = next(
+        spec for spec in DEFAULT_ARTIFACT_SPECS if spec.key == "einstein_realized_branch"
+    )
+    spec = replace(base_spec, source_relpath=source_relpath)
+    try:
+        manifest = import_cross_repo_artifacts(source_repo, run_dir, specs=(spec,))
+    except (ValueError, RuntimeError) as exc:
+        print(f"source report failed validation: {exc}")
+        return 1
+    verified = verify_cross_repo_artifact_manifest(run_dir)
+    row = manifest["artifacts"][0]
+    print(f"imported {source} -> {run_dir / row['target_relpath']}")
+    print(f"sha256: {row['sha256']}")
+    print(f"source commit: {manifest['source_repository']['commit']}")
+    print(f"source dirty: {manifest['source_repository']['dirty']}")
+    print("realized_geometric_branch_certified_nonempty remains informational")
+    return 0 if verified["verified"] else 1
 
 
 if __name__ == "__main__":

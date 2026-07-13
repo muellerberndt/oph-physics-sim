@@ -1,6 +1,10 @@
 from oph_fpe.constants.oph_pixel import (
     OPHPixelConstants,
+    PixelParameterProfile,
+    PixelProfileSpec,
     P_STAR,
+    pixel_constants_for_profile,
+    pixel_parameter_profile,
     cap_area_planck,
     cap_entropy_capacity,
     equal_cell_area_planck,
@@ -13,7 +17,11 @@ from oph_fpe.constants.oph_pixel import (
 
 __all__ = [
     "OPHPixelConstants",
+    "PixelParameterProfile",
+    "PixelProfileSpec",
     "P_STAR",
+    "pixel_constants_for_profile",
+    "pixel_parameter_profile",
     "cap_area_planck",
     "cap_entropy_capacity",
     "equal_cell_area_planck",

@@ -3,10 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from oph_fpe.pipelines.distributed_universe import (
     _distributed_bulk_receipts,
+    _npz_graph_info,
+    _npz_state_info,
     prepare_distributed_oph_universe,
     reduce_distributed_oph_universe,
 )
@@ -127,6 +130,53 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert contract["distributed_kernel_scaling_readiness_receipt"] is False
     assert "distributed_realization_event_certificate_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
     assert "online_cross_shard_overlap_repair_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
+
+
+def test_self_authored_online_seam_booleans_cannot_promote_missing_runtime_kernel(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path, shard_count=2)
+    shard_root = tmp_path / "shards"
+    receipt_keys = (
+        "SEAM_PACKET_RECIPROCITY_RECEIPT",
+        "SEAM_VISIBLE_RESTRICTION_RECEIPT",
+        "SEAM_REPAIR_DESCENT_RECEIPT",
+        "SEAM_ATOMIC_COMMIT_RECEIPT",
+        "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT",
+        "DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT",
+        "CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT",
+        "SELECTED_FIBER_NONTRIVIAL_ELIMINATION_RECEIPT",
+        "SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT",
+        "QUOTIENT_NORMAL_FORM_CANONICAL_HASH_RECEIPT",
+        "FAIR_BLOCK_CONTRACTION_RECEIPT",
+        "SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT",
+        "PARTITION_NATURALITY_RECEIPT",
+    )
+    for shard_id in ("u_shard0000", "u_shard0001"):
+        run = shard_root / shard_id
+        _write_shard(run)
+        _write_json(
+            run / "distributed_halo_exchange_report.json",
+            {
+                "PER_CYCLE_HALO_EXCHANGE_RECEIPT": True,
+                **{key: True for key in receipt_keys},
+            },
+        )
+
+    summary = reduce_distributed_oph_universe(
+        manifest_path=manifest,
+        shard_root=shard_root,
+        out_dir=tmp_path / "reduced",
+    )
+    halo = summary["global_halo_exchange_reduction"]
+
+    assert halo["reported_per_cycle_halo_exchange_claim"] is True
+    assert all(halo["reported_online_seam_receipt_claims"].values())
+    assert halo["live_seam_kernel_implemented"] is False
+    assert halo["per_cycle_cross_shard_halo_exchange_receipt"] is False
+    assert halo["online_cross_shard_overlap_repair_receipt"] is False
+    assert halo["DISTRIBUTED_KERNEL_SCALING_READY_RECEIPT"] is False
+    assert "live_transactional_seam_kernel_not_implemented" in halo["blockers"]
 
 
 def test_distributed_reducer_carries_explicit_visual_universe_assumptions(tmp_path: Path) -> None:
@@ -304,12 +354,17 @@ def test_prepare_distributed_universe_emits_global_carrier_artifacts(tmp_path: P
     cut = json.loads(artifact_paths["cut_interfaces"].read_text())
     registry = json.loads(artifact_paths["global_observer_registry"].read_text())
     assert partition["node_count"] == 64
+    assert partition["schema"] == "oph_distributed_partition_map_v2"
+    assert partition["node_owner_encoding"]["mode"] == "contiguous_half_open_ranges"
+    assert "node_owner" not in partition
+    assert all("owned_nodes" not in row for row in partition["shards"])
     assert [row["shard_id"] for row in partition["shards"]] == [
         f"u_shard{index:04d}" for index in range(4)
     ]
     assert cut["cut_edge_count"] > 0
     assert registry["observer_count"] == 32
-    assert registry["schema"] == "oph_global_observer_registry_v2"
+    assert registry["schema"] == "oph_global_observer_registry_v3"
+    assert registry["registry_encoding"] == "range_derived_no_per_observer_json_rows"
     assert registry["observer_kinds"] == ["patch", "cap", "future"]
     assert registry["registered_identity_count"] == 96
     assert registry["global_observer_registry_namespace_receipt"] is True
@@ -318,6 +373,31 @@ def test_prepare_distributed_universe_emits_global_carrier_artifacts(tmp_path: P
     assert sample["observer_kind"] == "patch"
     assert str(sample["local_anchor_patch_id"]).startswith("patch:")
     assert sample["local_anchor_patch_id"] != str(sample["local_observer_index"])
+
+
+def test_global_carrier_npz_verifier_recomputes_cut_mask(tmp_path: Path) -> None:
+    path = tmp_path / "forged_graph.npz"
+    nodes = np.arange(4, dtype=np.int64)
+    edges = np.asarray([[0, 1], [1, 2], [2, 3], [3, 0]], dtype=np.int64)
+    owners = np.asarray([0, 0, 1, 1], dtype=np.int64)
+    np.savez(path, nodes=nodes, edges=edges, node_owner=owners, cut_edge_mask=np.zeros(4, dtype=np.bool_))
+
+    report = _npz_graph_info(path)
+
+    assert report["load_receipt"] is False
+    assert report["cut_edge_mask_recomputed_receipt"] is False
+
+
+def test_global_initial_state_npz_verifier_recomputes_boundary_sector(tmp_path: Path) -> None:
+    path = tmp_path / "forged_state.npz"
+    nodes = np.arange(4, dtype=np.int64)
+    state = np.asarray([10, 20, 30, 40], dtype=np.int64)
+    np.savez(path, nodes=nodes, canonical_state_word=state, boundary_sector=np.zeros(4, dtype=np.int16))
+
+    report = _npz_state_info(path)
+
+    assert report["load_receipt"] is False
+    assert report["boundary_sector_recomputed_receipt"] is False
 
 
 def test_distributed_reducer_fails_closed_without_global_carrier_contract(tmp_path: Path) -> None:

@@ -4,6 +4,10 @@ from dataclasses import dataclass
 import math
 
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.neutrino_status import (
+    CONVENTIONAL_CAMB_NEUTRINO_ASSUMPTION,
+    CONVENTIONAL_CAMB_SUM_MNU_EV,
+)
 
 DEFAULT_R_DS_M = 1.66e26
 DEFAULT_L_PLANCK_M = 1.616e-35
@@ -23,11 +27,7 @@ class OPHConstants:
     P: float = P_STAR
     N_CRC: float = DEFAULT_N_CRC
     pi_wl: float = 5.0 / 7.0
-    mnu_eV: tuple[float, float, float] = (
-        0.017454720257976796,
-        0.019481987935919015,
-        0.05307522145074924,
-    )
+    conventional_camb_sum_mnu_eV: float = CONVENTIONAL_CAMB_SUM_MNU_EV
     N_eff: float = 3.044
     S8_oph_compressed: float = 0.828924043
     S8_wl_target_reference: float = 0.790
@@ -121,8 +121,18 @@ class OPHConstants:
             "pi_wl": float(self.pi_wl),
             "epsilon_A_wl": self.epsilon_A_wl,
             "R_wl": self.R_wl,
-            "mnu_eV": [float(value) for value in self.mnu_eV],
-            "sum_mnu_eV": float(sum(self.mnu_eV)),
+            "oph_neutrino_mass_prediction": {
+                "available": False,
+                "masses_eV": None,
+                "sum_mnu_eV": None,
+                "public_promotion_allowed": False,
+                "status": "no_source_derived_neutrino_mass_prediction",
+            },
+            "conventional_camb_neutrino_baseline": {
+                "assumption": CONVENTIONAL_CAMB_NEUTRINO_ASSUMPTION,
+                "sum_mnu_eV": float(self.conventional_camb_sum_mnu_eV),
+                "counts_as_oph_prediction": False,
+            },
             "N_eff": float(self.N_eff),
             "S8_oph_compressed": float(self.S8_oph_compressed),
             "S8_wl_target_reference": float(self.S8_wl_target_reference),

@@ -18,7 +18,11 @@ from oph_fpe.observers.semantic_clock import (
     semantic_history_digest,
     semantic_history_invariance_report,
 )
-from oph_fpe.observers.subjective import observer_consensus_report, observer_view_rows
+from oph_fpe.observers.subjective import (
+    deterministic_observer_analysis_indices,
+    observer_consensus_report,
+    observer_view_rows,
+)
 
 __all__ = [
     "OBSERVER_KINDS",
@@ -26,6 +30,7 @@ __all__ = [
     "affine_clock_residual_report",
     "assign_counterfactual_stability_from_records",
     "counterfactual_stability",
+    "deterministic_observer_analysis_indices",
     "distributed_observer_uid",
     "extract_record_families",
     "normalize_observer_frame",

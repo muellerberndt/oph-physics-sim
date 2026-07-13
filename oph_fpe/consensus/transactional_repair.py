@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import hashlib
-import json
+import copy
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from oph_fpe.claims import RECOVERED_CORE, with_claim_metadata
+from oph_fpe.evidence.hashes import stable_json_hash
 
 State = dict[str, Any]
 MeasureFn = Callable[[Mapping[str, Any]], Any]
@@ -25,15 +25,15 @@ class Transaction:
 
     @property
     def snapshot_dict(self) -> dict[str, Any]:
-        return dict(self.snapshot)
+        return copy.deepcopy(dict(self.snapshot))
 
     @property
     def payload_dict(self) -> dict[str, Any]:
-        return dict(self.payload)
+        return copy.deepcopy(dict(self.payload))
 
     @property
     def read_versions_dict(self) -> dict[str, Any]:
-        return dict(self.read_versions)
+        return copy.deepcopy(dict(self.read_versions))
 
 
 @dataclass(frozen=True)
@@ -63,14 +63,16 @@ def prepare_transaction(
         raise KeyError(f"read set contains missing registers: {missing_reads}")
     if not writes:
         raise ValueError("transaction payload must write at least one register")
-    snapshot = tuple(sorted((key, state[key]) for key in reads))
-    payload_items = tuple(sorted((str(key), value) for key, value in payload.items()))
+    snapshot = tuple(sorted((key, copy.deepcopy(state[key])) for key in reads))
+    payload_items = tuple(
+        sorted((str(key), copy.deepcopy(value)) for key, value in payload.items())
+    )
     version_items: tuple[tuple[str, Any], ...] = ()
     if versions is not None:
         missing_versions = sorted(key for key in reads if key not in versions)
         if missing_versions:
             raise KeyError(f"version map is missing read registers: {missing_versions}")
-        version_items = tuple(sorted((key, versions[key]) for key in reads))
+        version_items = tuple(sorted((key, copy.deepcopy(versions[key])) for key in reads))
     return Transaction(
         tx_id=str(tx_id),
         read_set=reads,
@@ -98,43 +100,19 @@ def commit_transaction(
     before = dict(state)
     before_measure = measure(before)
     before_boundary = boundary(before)
-    snapshot = tx.snapshot_dict
-    read_versions = tx.read_versions_dict
-    if read_versions and versions is None:
+    freshness_failure = _transaction_freshness_failure(before, tx, versions=versions)
+    if freshness_failure is not None:
+        status, reason = freshness_failure
         return CommitResult(
-            status="MISSING_READ_VERSIONS",
+            status=status,
             committed=False,
             state=before,
             before_measure=before_measure,
             after_measure=before_measure,
             before_boundary=before_boundary,
             after_boundary=before_boundary,
-            reason="transaction carries read versions but no current version map was supplied",
+            reason=reason,
         )
-    for key, expected_version in read_versions.items():
-        if versions is None or versions.get(key) != expected_version:
-            return CommitResult(
-                status="STALE_READ_VERSION",
-                committed=False,
-                state=before,
-                before_measure=before_measure,
-                after_measure=before_measure,
-                before_boundary=before_boundary,
-                after_boundary=before_boundary,
-                reason=f"register {key!r} version changed since prepare",
-            )
-    for key, expected in snapshot.items():
-        if before.get(key) != expected:
-            return CommitResult(
-                status="STALE_SNAPSHOT",
-                committed=False,
-                state=before,
-                before_measure=before_measure,
-                after_measure=before_measure,
-                before_boundary=before_boundary,
-                after_boundary=before_boundary,
-                reason=f"register {key!r} changed since prepare",
-            )
     after = apply_payload(before, tx)
     after_boundary = boundary(after)
     after_measure = measure(after)
@@ -207,10 +185,18 @@ def aggregate_component(
     component: Sequence[Transaction],
     *,
     tx_id: str | None = None,
+    versions: Mapping[str, Any] | None = None,
 ) -> Transaction:
     if not component:
         raise ValueError("cannot aggregate an empty conflict component")
     ordered = sorted(component, key=lambda tx: tx.tx_id)
+    for tx in ordered:
+        freshness_failure = _transaction_freshness_failure(state, tx, versions=versions)
+        if freshness_failure is not None:
+            status, reason = freshness_failure
+            raise ValueError(
+                f"primitive transaction {tx.tx_id!r} is not fresh ({status}): {reason}"
+            )
     read_set: set[str] = set()
     payload: dict[str, Any] = {}
     for tx in ordered:
@@ -245,17 +231,19 @@ def atomic_diamond_report(
     boundary: BoundaryFn,
 ) -> dict[str, Any]:
     if transactions_conflict(left, right):
-        same_component = left.tx_id == right.tx_id
+        duplicate_transaction_id = left.tx_id == right.tx_id
         report = {
             "mode": "atomic_conflict_component_diamond",
-            "same_conflict_component": same_component,
+            "same_conflict_component": True,
             "disjoint_components": False,
-            "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT": same_component,
-            "receipt": same_component,
-            "status": "SAME_COMPONENT" if same_component else "CONFLICT_REQUIRES_AGGREGATE_TRANSACTION",
+            "duplicate_transaction_id": duplicate_transaction_id,
+            "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT": False,
+            "receipt": False,
+            "status": "CONFLICT_REQUIRES_AGGREGATE_TRANSACTION",
             "claim_boundary": (
                 "Conflicting primitive repairs do not commit independently; they must be replaced by one "
-                "canonical aggregate transaction before a local-diamond claim is meaningful."
+                "canonical aggregate transaction before a local-diamond claim is meaningful. Transaction "
+                "identifiers are metadata and cannot establish equality or confluence."
             ),
         }
         return with_claim_metadata(report, claim_level=RECOVERED_CORE, receipt="DISTRIBUTED_LOCAL_DIAMOND_RECEIPT")
@@ -274,7 +262,9 @@ def atomic_diamond_report(
     if not right_then_left.committed:
         return _diamond_failure("right_then_left_failed", right_then_left)
 
-    same_terminal = left_then_right.state == right_then_left.state
+    same_terminal = canonical_state_hash(left_then_right.state) == canonical_state_hash(
+        right_then_left.state
+    )
     report = {
         "mode": "atomic_conflict_component_diamond",
         "same_conflict_component": False,
@@ -403,13 +393,53 @@ def transactional_repair_receipt(
     *,
     measure: MeasureFn,
     boundary: BoundaryFn,
+    versions: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     components = conflict_components(transactions)
     aggregate_results = []
     current = dict(state)
     for index, component in enumerate(components):
+        stale_primitives = []
+        for tx in component:
+            freshness_failure = _transaction_freshness_failure(current, tx, versions=versions)
+            if freshness_failure is None:
+                continue
+            primitive_status, reason = freshness_failure
+            stale_primitives.append(
+                {
+                    "tx_id": tx.tx_id,
+                    "status": primitive_status,
+                    "reason": reason,
+                }
+            )
+        if stale_primitives:
+            primitive_statuses = {row["status"] for row in stale_primitives}
+            if "MISSING_READ_VERSIONS" in primitive_statuses:
+                status = "MISSING_PRIMITIVE_READ_VERSIONS"
+            elif "STALE_READ_VERSION" in primitive_statuses:
+                status = "STALE_PRIMITIVE_READ_VERSION"
+            else:
+                status = "STALE_PRIMITIVE_SNAPSHOT"
+            aggregate_results.append(
+                {
+                    "component_index": index,
+                    "primitive_transaction_ids": [tx.tx_id for tx in component],
+                    "status": status,
+                    "committed": False,
+                    "before_measure": measure(current),
+                    "after_measure": measure(current),
+                    "stale_primitives": stale_primitives,
+                    "reason": "one or more primitive transactions are stale at aggregate prepare time",
+                }
+            )
+            continue
         try:
-            aggregate = aggregate_component(current, component, tx_id=f"component_{index}")
+            aggregate = aggregate_component(
+                current,
+                component,
+                tx_id=f"component_{index}",
+                versions=versions,
+            )
         except ValueError as exc:
             aggregate_results.append(
                 {
@@ -436,12 +466,19 @@ def transactional_repair_receipt(
         )
         if result.committed:
             current = result.state
-    all_committed = all(row["committed"] for row in aggregate_results)
+    nonempty_transaction_set = bool(transactions)
+    all_committed = bool(
+        nonempty_transaction_set
+        and len(aggregate_results) == len(components)
+        and all(row["committed"] for row in aggregate_results)
+    )
     report = {
         "mode": "transactional_repair_receipt_v1",
         "SEAM_REPAIR_DESCENT_RECEIPT": all_committed,
-        "SEAM_ATOMIC_COMMIT_RECEIPT": all_committed and len(components) <= len(transactions),
+        "SEAM_ATOMIC_COMMIT_RECEIPT": all_committed,
         "receipt": all_committed,
+        "primitive_transaction_count": len(transactions),
+        "nonempty_transaction_set": nonempty_transaction_set,
         "component_count": len(components),
         "aggregate_results": aggregate_results,
         "final_state": current,
@@ -597,26 +634,38 @@ def gauge_relabeling_invariance_report(
         grouped.setdefault(canonical_state_hash(quotient_state), []).append(dict(representative))
 
     violations: list[dict[str, Any]] = []
+    comparison_class_count = 0
+    representative_pair_count = 0
     for quotient_hash, reps in grouped.items():
+        if len(reps) > 1:
+            comparison_class_count += 1
+            representative_pair_count += len(reps) * (len(reps) - 1) // 2
         transition_hash_sets = []
         for rep in reps:
-            quotient_state = dict(quotient_map(rep))
             transition_hash_sets.append(
-                sorted(canonical_state_hash(dict(next_state)) for next_state in quotient_transition_fn(quotient_state))
+                sorted(
+                    canonical_state_hash(dict(quotient_map(dict(next_state))))
+                    for next_state in quotient_transition_fn(dict(rep))
+                )
             )
         if any(row != transition_hash_sets[0] for row in transition_hash_sets[1:]):
             violations.append({"quotient_hash": quotient_hash, "representative_count": len(reps)})
-    receipt = not violations
+    nonvacuous = representative_pair_count > 0
+    receipt = bool(nonvacuous and not violations)
     report = {
         "mode": "gauge_relabeling_invariance_report_v1",
         "GAUGE_RELABELING_QUOTIENT_INVARIANCE_RECEIPT": receipt,
         "receipt": receipt,
         "quotient_class_count": len(grouped),
+        "comparison_class_count": comparison_class_count,
+        "representative_pair_count": representative_pair_count,
+        "nonvacuous_representative_comparison": nonvacuous,
         "violation_count": len(violations),
         "violations": violations[:4],
         "claim_boundary": (
-            "Finite representative-layer check: gauge/carrier relabelings must canonicalize to the same "
-            "quotient transitions and normal-form serialization."
+            "Finite representative-layer check: at least two representatives of one quotient class are "
+            "required, their representative dynamics are executed, and the resulting targets must "
+            "canonicalize to the same quotient transitions and normal-form serialization."
         ),
     }
     return with_claim_metadata(
@@ -627,8 +676,32 @@ def gauge_relabeling_invariance_report(
 
 
 def canonical_state_hash(state: Mapping[str, Any]) -> str:
-    payload = json.dumps(dict(state), sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return stable_json_hash(dict(state)).removeprefix("sha256:")
+
+
+def _transaction_freshness_failure(
+    state: Mapping[str, Any],
+    tx: Transaction,
+    *,
+    versions: Mapping[str, Any] | None,
+) -> tuple[str, str] | None:
+    read_versions = tx.read_versions_dict
+    if read_versions and versions is None:
+        return (
+            "MISSING_READ_VERSIONS",
+            "transaction carries read versions but no current version map was supplied",
+        )
+    for key, expected_version in read_versions.items():
+        if versions is None or key not in versions or canonical_state_hash(
+            {"value": versions[key]}
+        ) != canonical_state_hash({"value": expected_version}):
+            return "STALE_READ_VERSION", f"register {key!r} version changed since prepare"
+    for key, expected in tx.snapshot_dict.items():
+        if key not in state or canonical_state_hash({"value": state[key]}) != canonical_state_hash(
+            {"value": expected}
+        ):
+            return "STALE_SNAPSHOT", f"register {key!r} changed since prepare"
+    return None
 
 
 def _strictly_descends(after: Any, before: Any) -> bool:

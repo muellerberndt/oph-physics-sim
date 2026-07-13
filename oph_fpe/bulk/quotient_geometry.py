@@ -24,16 +24,29 @@ class ChannelMetricSpec:
     physical_status: str = "quotient_visible"
 
     def __post_init__(self) -> None:
-        if not self.name:
+        if not isinstance(self.name, str) or not self.name:
             raise ValueError("channel name is required")
-        if not self.version:
+        if not isinstance(self.version, str) or not self.version:
             raise ValueError("channel version is required")
+        if not isinstance(self.metric, str) or not self.metric:
+            raise ValueError("channel metric is required")
+        if isinstance(self.weight, bool) or not isinstance(
+            self.weight,
+            (int, float, np.integer, np.floating),
+        ):
+            raise ValueError("channel weight must be numeric")
         if not math.isfinite(float(self.weight)) or float(self.weight) <= 0.0:
             raise ValueError("channel weight must be positive")
+        if not isinstance(self.missingness, str):
+            raise ValueError("channel missingness policy must be a string")
         if self.missingness in FORBIDDEN_METRIC_MODES:
             raise ValueError(f"forbidden missingness policy: {self.missingness}")
         if self.missingness not in ALLOWED_METRIC_MODES:
             raise ValueError(f"unknown missingness policy: {self.missingness}")
+        if not isinstance(self.units, str) or not self.units:
+            raise ValueError("channel units are required")
+        if not isinstance(self.physical_status, str) or not self.physical_status:
+            raise ValueError("channel physical status is required")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -58,14 +71,17 @@ class ProvenanceRecord:
     parent_record_ids: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
-        if not self.record_id:
+        if not isinstance(self.record_id, str) or not self.record_id:
             raise ValueError("record_id is required")
-        if self.split not in {"train", "validation", "test"}:
+        if not isinstance(self.split, str) or self.split not in {"train", "validation", "test"}:
             raise ValueError(f"unknown split: {self.split}")
         for name in ("batch_id", "seed_id", "boundary_condition_id", "trajectory_family_id"):
-            if not getattr(self, name):
+            if not isinstance(getattr(self, name), str) or not getattr(self, name):
                 raise ValueError(f"{name} is required")
-        object.__setattr__(self, "parent_record_ids", tuple(str(value) for value in self.parent_record_ids))
+        if not isinstance(self.parent_record_ids, tuple) or any(
+            not isinstance(value, str) or not value for value in self.parent_record_ids
+        ):
+            raise ValueError("parent_record_ids must be a tuple of nonempty strings")
 
     @property
     def group_ids(self) -> tuple[str, ...]:
@@ -122,6 +138,8 @@ def metric_validity_report(
             "blockers": ["distance_matrix_not_square"],
         }
     n = int(d.shape[0])
+    if type(jointly_separating) is not bool:
+        blockers.append("jointly_separating_not_boolean")
     if quotient_ids is not None and len(quotient_ids) != n:
         blockers.append("quotient_id_count_mismatch")
     if not np.all(np.isfinite(d)):
@@ -138,6 +156,10 @@ def metric_validity_report(
     triangle = _triangle_violation(d)
     if triangle["max_violation"] > float(tolerance):
         blockers.append("triangle_violation")
+    if not triangle["checked_exact"]:
+        # A sampled check remains useful as a diagnostic, but it is not a
+        # certificate of the triangle inequality on the full quotient.
+        blockers.append("triangle_inequality_not_checked_exact")
     collision_summary = _zero_distance_pair_summary(d, quotient_ids=quotient_ids, tolerance=tolerance)
     pseudometric = not any(
         blocker
@@ -148,10 +170,15 @@ def metric_validity_report(
             "distance_matrix_not_symmetric",
             "distance_diagonal_not_zero",
             "triangle_violation",
+            "triangle_inequality_not_checked_exact",
         }
         for blocker in blockers
     )
-    metric = bool(pseudometric and (jointly_separating or collision_summary["count"] == 0))
+    metric = bool(
+        pseudometric
+        and type(jointly_separating) is bool
+        and (jointly_separating or collision_summary["count"] == 0)
+    )
     metric_blockers = []
     if pseudometric and not metric:
         metric_blockers.append("zero_distance_feature_collisions")
@@ -160,7 +187,7 @@ def metric_validity_report(
         "observer_count": n,
         "valid_pseudometric": bool(pseudometric),
         "valid_metric": bool(metric),
-        "jointly_separating": bool(jointly_separating),
+        "jointly_separating": jointly_separating is True,
         "symmetry_defect": symmetry_defect,
         "diagonal_defect": diagonal_defect,
         "triangle_max_violation": triangle["max_violation"],
@@ -276,48 +303,78 @@ def quotient_geometry_certificate(
         tolerance=tolerance,
     )
     euclidean = euclidean_distance_certificate(distance, tolerance=tolerance)
-    ancestry = ancestry_split_report(provenance_records or [])
-    atlas = atlas_receipt or {}
-    features = feature_receipt or {}
-    invariance = invariance_receipt or {}
-    refinement = refinement_receipt or {}
-    statistics = statistics_receipt or {}
+    valid_provenance, provenance_blockers = _validated_provenance_records(provenance_records)
+    ancestry = ancestry_split_report(valid_provenance)
+    atlas = atlas_receipt if isinstance(atlas_receipt, dict) else {}
+    features = feature_receipt if isinstance(feature_receipt, dict) else {}
+    invariance = invariance_receipt if isinstance(invariance_receipt, dict) else {}
+    refinement = refinement_receipt if isinstance(refinement_receipt, dict) else {}
+    statistics = statistics_receipt if isinstance(statistics_receipt, dict) else {}
+    manifest_rows, manifest_blockers = _validated_channel_manifest(channel_manifest)
+    distance_shape = np.asarray(distance).shape
+    distance_count = int(distance_shape[0]) if distance_shape else -1
 
-    blockers = list(metric.get("blockers", []))
-    if not metric.get("valid_pseudometric", False):
+    blockers = [*metric.get("blockers", []), *manifest_blockers, *provenance_blockers]
+    if not isinstance(quotient_ids, list):
+        blockers.append("quotient_ids_missing")
+    elif (
+        len(quotient_ids) != distance_count
+        or any(not isinstance(value, str) or not value for value in quotient_ids)
+        or len(set(quotient_ids)) != len(quotient_ids)
+    ):
+        blockers.append("quotient_id_schema_invalid")
+    if metric.get("valid_pseudometric") is not True:
         blockers.append("neutral_distance_not_pseudometric")
-    if require_metric and not metric.get("valid_metric", False):
+    if type(require_metric) is not bool:
+        blockers.append("require_metric_not_boolean")
+    elif require_metric and metric.get("valid_metric") is not True:
         blockers.extend(str(blocker) for blocker in metric.get("metric_blockers", []))
-    if metric_mode == "fixed_missing_symbol" and not missingness_quotient_visible:
+    if type(require_euclidean) is not bool:
+        blockers.append("require_euclidean_not_boolean")
+    if type(jointly_separating) is not bool:
+        blockers.append("jointly_separating_not_boolean")
+    if type(missingness_quotient_visible) is not bool:
+        blockers.append("missingness_quotient_visible_not_boolean")
+    elif missingness_quotient_visible is not True:
         blockers.append("missingness_mask_not_quotient_visible")
-    if channel_manifest is None:
-        blockers.append("channel_manifest_missing")
     if not _defects_clear(
         atlas,
         ("identity_defect", "inverse_defect", "cocycle_defect", "cycle_holonomy_defect"),
         tolerance,
     ):
         blockers.append("atlas_transport_defects_unproven")
-    if not bool(features.get("quotient_visible_missingness", missingness_quotient_visible)):
+    if features.get("quotient_visible_missingness") is not True:
         blockers.append("feature_missingness_not_quotient_visible")
-    if float(features.get("max_transport_defect", 0.0) or 0.0) > float(tolerance):
+    feature_defect = _finite_number(features.get("max_transport_defect"))
+    if feature_defect is None:
+        blockers.append("feature_transport_defect_unproven")
+    elif abs(feature_defect) > float(tolerance):
         blockers.append("feature_transport_defect_positive")
     if not _invariance_clear(invariance, tolerance):
         blockers.append("presentation_invariance_not_certified")
-    if refinement and not bool(refinement.get("convergent", refinement.get("stable_across_64k_256k_1m", False))):
-        blockers.append("refinement_tail_modulus_not_certified")
-    if require_euclidean and not euclidean.get("euclidean_realizable", False):
+    if not refinement:
+        blockers.append("refinement_receipt_missing")
+    elif not _canonical_refinement_receipt_passed(refinement):
+        blockers.append("canonical_4k_16k_64k_256k_refinement_not_certified")
+    if require_euclidean is True and euclidean.get("euclidean_realizable") is not True:
         blockers.extend(str(blocker) for blocker in euclidean.get("blockers", []))
-    if provenance_records and ancestry["ancestry_leakage_count"] > 0:
+    if valid_provenance and ancestry["blockers"]:
         blockers.extend(ancestry["blockers"])
-    if statistics:
-        if int(statistics.get("ancestry_leakage_count", 0) or 0) > 0:
+    if not statistics:
+        blockers.append("statistics_receipt_missing")
+    else:
+        statistical_ancestry_count = _nonnegative_int(statistics.get("ancestry_leakage_count"))
+        if statistical_ancestry_count is None:
+            blockers.append("statistical_ancestry_count_invalid")
+        elif statistical_ancestry_count != int(ancestry["ancestry_leakage_count"]):
+            blockers.append("statistical_ancestry_count_mismatch")
+        if statistical_ancestry_count is not None and statistical_ancestry_count > 0:
             blockers.append("statistical_ancestry_leakage")
-        if statistics.get("test_used_once") is False:
+        if statistics.get("test_used_once") is not True:
             blockers.append("test_set_reused")
-        if statistics.get("positive_controls_passed") is False:
+        if statistics.get("positive_controls_passed") is not True:
             blockers.append("positive_controls_failed")
-        if statistics.get("negative_controls_passed") is False:
+        if statistics.get("negative_controls_passed") is not True:
             blockers.append("negative_controls_failed")
 
     blockers = _unique(blockers)
@@ -331,7 +388,7 @@ def quotient_geometry_certificate(
         "bulk_promotion_allowed": certified,
         "physical_claim": False,
         "quotient_id_count": len(quotient_ids or []),
-        "channel_manifest": _channel_manifest_to_dict(channel_manifest),
+        "channel_manifest": manifest_rows,
         "metric": metric,
         "euclidean": euclidean,
         "atlas": atlas,
@@ -432,7 +489,10 @@ def _parent_component_split_leaks(
 
 
 def _defects_clear(receipt: dict[str, Any], keys: tuple[str, ...], tolerance: float) -> bool:
-    return bool(receipt) and all(abs(float(receipt.get(key, float("inf")))) <= float(tolerance) for key in keys)
+    if not receipt:
+        return False
+    values = [_finite_number(receipt.get(key)) for key in keys]
+    return all(value is not None and abs(value) <= float(tolerance) for value in values)
 
 
 def _invariance_clear(receipt: dict[str, Any], tolerance: float) -> bool:
@@ -445,7 +505,8 @@ def _invariance_clear(receipt: dict[str, Any], tolerance: float) -> bool:
         "schedule_distortion",
         "partition_distortion",
     )
-    return all(abs(float(receipt.get(key, float("inf")))) <= float(tolerance) for key in keys)
+    values = [_finite_number(receipt.get(key)) for key in keys]
+    return all(value is not None and abs(value) <= float(tolerance) for value in values)
 
 
 def _all_exact_zero(
@@ -459,7 +520,8 @@ def _all_exact_zero(
         ("identity_defect", "inverse_defect", "cocycle_defect", "cycle_holonomy_defect"),
         tolerance,
     )
-    feature_exact = abs(float(features.get("max_transport_defect", float("inf")))) <= float(tolerance)
+    feature_defect = _finite_number(features.get("max_transport_defect"))
+    feature_exact = feature_defect is not None and abs(feature_defect) <= float(tolerance)
     invariance_exact = _invariance_clear(invariance, tolerance)
     return bool(atlas_exact and feature_exact and invariance_exact)
 
@@ -476,6 +538,105 @@ def _channel_manifest_to_dict(
         else:
             rows.append(dict(row))
     return rows
+
+
+def _validated_channel_manifest(
+    channel_manifest: list[ChannelMetricSpec] | list[dict[str, Any]] | None,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not isinstance(channel_manifest, list) or not channel_manifest:
+        return [], ["channel_manifest_missing"]
+    required = {
+        "name",
+        "version",
+        "metric",
+        "weight",
+        "missingness",
+        "units",
+        "physical_status",
+    }
+    rows: list[dict[str, Any]] = []
+    blockers: list[str] = []
+    names: list[str] = []
+    for index, row in enumerate(channel_manifest):
+        if isinstance(row, ChannelMetricSpec):
+            normalized = row.to_dict()
+        elif isinstance(row, dict) and set(row) == required:
+            try:
+                normalized = ChannelMetricSpec(**row).to_dict()
+            except (TypeError, ValueError):
+                blockers.append(f"channel_manifest_row_{index}_invalid")
+                continue
+        else:
+            blockers.append(f"channel_manifest_row_{index}_schema_invalid")
+            continue
+        if normalized["physical_status"] != "quotient_visible":
+            blockers.append(f"channel_manifest_row_{index}_not_quotient_visible")
+        rows.append(normalized)
+        names.append(str(normalized["name"]))
+    if len(set(names)) != len(names):
+        blockers.append("channel_manifest_duplicate_names")
+    return rows, blockers
+
+
+def _validated_provenance_records(
+    records: list[ProvenanceRecord] | None,
+) -> tuple[list[ProvenanceRecord], list[str]]:
+    if not isinstance(records, list) or not records:
+        return [], ["provenance_records_missing"]
+    if any(not isinstance(record, ProvenanceRecord) for record in records):
+        return [], ["provenance_record_schema_invalid"]
+    record_ids = [record.record_id for record in records]
+    if len(set(record_ids)) != len(record_ids):
+        return list(records), ["provenance_record_ids_not_unique"]
+    return list(records), []
+
+
+def _finite_number(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float, np.integer, np.floating)):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) else None
+
+
+def _nonnegative_int(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+        return None
+    return int(value) if int(value) >= 0 else None
+
+
+def _canonical_refinement_receipt_passed(receipt: dict[str, Any]) -> bool:
+    required = [4_096, 16_384, 65_536, 262_144]
+    sizes = receipt.get("sizes")
+    if not isinstance(sizes, list) or len(sizes) != len(required):
+        return False
+    if any(
+        not isinstance(row, dict)
+        or type(row.get("patch_count")) is not int
+        for row in sizes
+    ):
+        return False
+    observed = sorted(row["patch_count"] for row in sizes)
+    exact_true_fields = (
+        "required_ladder_complete",
+        "multi_scale",
+        "all_control_quotient_spatial_3d_candidates",
+        "all_candidate_s2_leakage_pass",
+        "all_candidate_rank3_e3",
+        "candidate_dimension_stable",
+        "independent_rank3_selector_all",
+        "proper_negative_control_all",
+        "directional_h3_strict_all",
+        "measured_overlap_geometry_all",
+        "strict_neutral_bulk_refinement_receipt",
+    )
+    return bool(
+        receipt.get("mode") == "prime_geometric_rank_refinement_v0"
+        and receipt.get("required_patch_count_ladder") == required
+        and observed == required
+        and receipt.get("missing_required_patch_counts") == []
+        and all(receipt.get(field) is True for field in exact_true_fields)
+        and receipt.get("proof_blockers") == []
+    )
 
 
 def _unique(values: list[str]) -> list[str]:

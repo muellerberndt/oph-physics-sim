@@ -316,6 +316,8 @@ def test_perturb_resettle_transition_kernel_uses_graph_state():
             "right": right,
             "port_left": port_left,
             "port_right": port_right,
+            "gauge": np.zeros(left.size, dtype=np.int16),
+            "group_name": "Z6",
             "group_order": 6,
             "patch_count": points.shape[0],
         },
@@ -339,6 +341,112 @@ def test_perturb_resettle_transition_kernel_uses_graph_state():
     assert np.allclose(kernel["wrong_scale_controls"]["2pi"], kernel["matrix"])
     assert kernel["raw_response_summary"]["std"] > 0.0
     assert kernel["response_summary"]["std"] > 0.0
+
+
+def test_perturb_resettle_replays_production_sector_move_and_caps_full_graph_runs():
+    points = fibonacci_sphere_points(128)
+    caps = sample_caps(points, count=2, theta_values=[0.65, 0.75], seed=108)
+    left = np.arange(96, dtype=np.int64)
+    right = (left + 7) % points.shape[0]
+    raw_fields = {
+        "record_signature": np.arange(points.shape[0]) % 17,
+        "stable_count": (np.arange(points.shape[0]) % 7) + 1,
+        "committed_mask": np.ones(points.shape[0], dtype=float),
+        "repair_load": np.abs(points[:, 0]),
+        "cumulative_repair_load": np.abs(points[:, 1]),
+    }
+    observer_views = [
+        {
+            "view_type": "patch_observer",
+            "observer_id": index,
+            "axis": points[index].tolist(),
+            "support_nodes": list(range(index, min(index + 16, points.shape[0]))),
+        }
+        for index in range(0, 64, 16)
+    ]
+    graph_state = {
+        "left": left,
+        "right": right,
+        "port_left": (np.arange(left.size) % 6).astype(np.int16),
+        "port_right": ((np.arange(left.size) + 1) % 6).astype(np.int16),
+        "gauge": np.zeros(left.size, dtype=np.int16),
+        "group_name": "S3",
+        "group_order": 6,
+        "patch_count": points.shape[0],
+        "production_sector_repair_enabled": True,
+        "production_sector_repair_config": {
+            "enabled": True,
+            "mode": "repair_coupled_group_compose",
+            "probability": 1.0,
+        },
+    }
+    kwargs = {
+        "times": [0.125],
+        "observable_mode": "perturb_resettle_transition",
+        "transition_observables": ["record_family", "repair_load_bucket"],
+        "graph_state": graph_state,
+        "repair_steps": 1,
+        "repairs_per_step": 16,
+        "wrong_scales": [2.0 * np.pi],
+        "perturb_seed": 109,
+    }
+
+    kernel = modular_response_kernel(
+        points,
+        caps,
+        raw_fields,
+        observer_views,
+        max_full_graph_simulations=2,
+        full_graph_n_jobs=2,
+        **kwargs,
+    )
+
+    report = kernel["perturb_resettle_report"]
+    budget = report["full_graph_simulation_budget"]
+    assert kernel["observable_mode"] == "perturb_resettle_transition"
+    assert report["gauge_covariant_probe_receipt"] is True
+    assert report["sector_repair_replayed"] is True
+    assert report["production_move_contract"]["exact_production_move_set_replayed"] is True
+    assert budget["requested_without_scale_reuse"] == 4
+    assert budget["planned_with_scale_reuse"] == 2
+    assert budget["executed_full_graph_simulations"] == 2
+    parallel_receipt = report["parallel_execution"]
+    assert parallel_receipt["requested_n_jobs"] == 2
+    assert parallel_receipt["effective_n_jobs"] == 2
+    assert parallel_receipt["max_in_flight_full_graph_states"] == 2
+    assert parallel_receipt["ordered_result_assembly"] is True
+
+    sequential = modular_response_kernel(
+        points,
+        caps,
+        raw_fields,
+        observer_views,
+        max_full_graph_simulations=2,
+        full_graph_n_jobs=1,
+        **kwargs,
+    )
+    assert np.array_equal(kernel["matrix"], sequential["matrix"])
+    assert np.array_equal(
+        kernel["wrong_scale_controls"]["2pi"],
+        sequential["wrong_scale_controls"]["2pi"],
+    )
+
+    skipped = modular_response_kernel(
+        points,
+        caps,
+        raw_fields,
+        observer_views,
+        max_full_graph_simulations=1,
+        full_graph_n_jobs=2,
+        **kwargs,
+    )
+    assert skipped["observable_mode"] == "empty"
+    assert skipped["proof_blockers"] == [
+        "modular_response_full_graph_simulation_budget_exceeded"
+    ]
+    assert skipped["perturb_resettle_report"]["full_graph_simulation_budget"][
+        "executed_full_graph_simulations"
+    ] == 0
 
 
 def test_collar_generator_selection_targets_cap_collar_and_oriented_side():
@@ -511,6 +619,8 @@ def test_perturb_resettle_can_read_transported_observer_supports():
             "right": right,
             "port_left": port_left,
             "port_right": port_right,
+            "gauge": np.zeros(left.size, dtype=np.int16),
+            "group_name": "Z6",
             "group_order": 6,
             "patch_count": points.shape[0],
         },
@@ -568,6 +678,8 @@ def test_transition_response_alias_uses_perturb_resettle_kernel():
             "right": right,
             "port_left": (np.arange(left.size) % 6).astype(np.int16),
             "port_right": ((np.arange(left.size) + 1) % 6).astype(np.int16),
+            "gauge": np.zeros(left.size, dtype=np.int16),
+            "group_name": "Z6",
             "group_order": 6,
             "patch_count": points.shape[0],
         },

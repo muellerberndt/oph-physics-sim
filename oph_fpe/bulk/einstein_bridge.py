@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from oph_fpe.evidence.cross_repo_artifacts import verify_cross_repo_artifact_manifest
+
 from oph_fpe.claims import (
     EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT,
     EINSTEIN_BOUNDED_INTERVAL_KERNEL_RECEIPT,
@@ -150,6 +152,7 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
     root = Path(run_dir)
     legacy = _read_json(root / "einstein_branch_entry_report.json")
     paper_side = _read_json(root / "realized_branch_receipt_report.json")
+    cross_repo_verification = verify_cross_repo_artifact_manifest(root)
     receipt_rows = [_receipt_row(root, legacy, spec) for spec in RECEIPT_SPECS]
     required_rows = [row for row in receipt_rows if row["requiredForBranchEntry"]]
     run_receipts = bool(required_rows and all(row["receipt"] for row in required_rows))
@@ -196,7 +199,9 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
         "blockers": blockers,
         "einstein_branch_entry_blockers": blockers,
         "einstein_branch_entry_child_gates": child_gates,
-        "paperSideRealizedBranch": _paper_side_realized_branch_block(paper_side),
+        "paperSideRealizedBranch": _paper_side_realized_branch_block(
+            paper_side, cross_repo_verification
+        ),
         "legacyIssue503": {
             "status": legacy.get("issue_503_status", "not_used_by_e0_manifest"),
             "sourceReportWritten": bool(legacy),
@@ -240,7 +245,10 @@ def _row_receipt(rows: list[dict[str, Any]], name: str) -> bool:
     return any(row["name"] == name and row["receipt"] for row in rows)
 
 
-def _paper_side_realized_branch_block(report: dict[str, Any]) -> dict[str, Any]:
+def _paper_side_realized_branch_block(
+    report: dict[str, Any],
+    cross_repo_verification: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Summarize the paper-side realized-branch receipt state (issue #503).
 
     The canonical evaluation lives in reverse-engineering-reality at
@@ -259,13 +267,77 @@ def _paper_side_realized_branch_block(report: dict[str, Any]) -> dict[str, Any]:
         "bulk_depth_channel_witnessed",
         "realized_geometric_branch_certified_nonempty",
     )
+    evaluations = report.get("evaluations") if isinstance(report.get("evaluations"), dict) else {}
+    witnessed: dict[str, dict[str, bool]] = {}
+    open_obligations: dict[str, list[str]] = {}
+    caveats: dict[str, list[str]] = {}
+    for name, raw in evaluations.items():
+        if not isinstance(raw, dict):
+            continue
+        receipts = raw.get("receipts_witnessed")
+        if isinstance(receipts, dict):
+            witnessed[str(name)] = {str(key): value is True for key, value in receipts.items()}
+        pending = raw.get("receipts_pending")
+        if isinstance(pending, list):
+            open_obligations[str(name)] = [str(value) for value in pending]
+        raw_caveats = raw.get("caveats")
+        if isinstance(raw_caveats, list):
+            caveats[str(name)] = [str(value) for value in raw_caveats]
+    modular = evaluations.get("modular_clock_instrumentation", {})
+    bulk_depth = evaluations.get("bulk_depth_receipts", {})
+    pin = _paper_side_pin(cross_repo_verification or {})
     return {
+        "artifact": report.get("artifact"),
         "status": report.get("status", "unknown"),
         "issue": report.get("issue", 503),
-        "tiers": {key: bool(report.get(key)) for key in tier_keys},
-        "certified_nonempty": bool(
-            report.get("realized_geometric_branch_certified_nonempty")
+        "tiers": {key: report.get(key) is True for key in tier_keys},
+        "certified_nonempty": report.get("realized_geometric_branch_certified_nonempty") is True,
+        "witnessed_receipts": witnessed,
+        "open_obligations": open_obligations,
+        "caveats": caveats,
+        "numerical_diagnostics": {
+            "kms_final_median_residual": (
+                modular.get("kms_final_median_residual") if isinstance(modular, dict) else None
+            ),
+            "crossratio_final_relative_error": (
+                modular.get("crossratio_final_relative_error") if isinstance(modular, dict) else None
+            ),
+            "timelike_eigenvalues_across_seeds": (
+                list(bulk_depth.get("timelike_eigenvalues_across_seeds") or [])
+                if isinstance(bulk_depth, dict)
+                else []
+            ),
+            "countermodel_signature": (
+                list(bulk_depth.get("countermodel_signature") or [])
+                if isinstance(bulk_depth, dict)
+                else []
+            ),
+        },
+        "artifact_pin": pin,
+        "simulation_branch_entry_effect": "informational_only",
+    }
+
+
+def _paper_side_pin(verification: dict[str, Any]) -> dict[str, Any]:
+    manifest = verification.get("manifest") if isinstance(verification.get("manifest"), dict) else {}
+    rows = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), list) else []
+    row = next(
+        (
+            value
+            for value in rows
+            if isinstance(value, dict)
+            and value.get("key") == "einstein_realized_branch"
+            and value.get("hash_verified") is True
         ),
+        {},
+    )
+    source = manifest.get("source_repository") if isinstance(manifest.get("source_repository"), dict) else {}
+    return {
+        "manifest_verified": verification.get("verified") is True,
+        "sha256": row.get("sha256"),
+        "paper_release_id": manifest.get("paper_release_id"),
+        "source_commit": source.get("commit"),
+        "source_dirty": source.get("dirty"),
     }
 
 
@@ -279,9 +351,6 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _truthy_any(mapping: dict[str, Any], *keys: str) -> bool:
     for key in keys:
-        value = mapping.get(key)
-        if value is True:
-            return True
-        if isinstance(value, str) and value.lower() in {"true", "passed", "complete", "closed"}:
+        if mapping.get(key) is True:
             return True
     return False

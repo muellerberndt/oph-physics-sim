@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.defects.array_s3_holonomy import S3_INV, S3_MUL, defect_class, s3_triangle_holonomy
+from oph_fpe.gauge.covariant_overlap import GAUGE_COVARIANT_OVERLAP_SCHEMA, covariant_mismatch_mask
 from oph_fpe.observers.objects import RecordFamily, observer_object_report
 
 
@@ -18,15 +19,41 @@ def mandatory_control_report(
     initial_port_right: np.ndarray,
     final_port_left: np.ndarray,
     final_port_right: np.ndarray,
+    initial_gauge: np.ndarray | None = None,
+    final_gauge: np.ndarray | None = None,
+    group_name: str | None = None,
+    group_order: int | None = None,
     object_rows: list[dict[str, Any]] | None = None,
     seed: int = 1,
 ) -> dict[str, Any]:
     requested = [str(control) for control in requested_controls]
     controls: dict[str, Any] = {}
+    coupled_state_supplied = bool(
+        initial_gauge is not None
+        and final_gauge is not None
+        and group_name is not None
+        and group_order is not None
+    )
     if "no_repair" in requested:
-        controls["no_repair"] = _no_repair_control(initial_port_left, initial_port_right, final_port_left, final_port_right)
+        controls["no_repair"] = _no_repair_control(
+            initial_port_left,
+            initial_port_right,
+            final_port_left,
+            final_port_right,
+            initial_gauge=initial_gauge,
+            final_gauge=final_gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
     if "shuffled_interfaces" in requested:
-        controls["shuffled_interfaces"] = _shuffled_interfaces_control(final_port_left, final_port_right, seed)
+        controls["shuffled_interfaces"] = _shuffled_interfaces_control(
+            final_port_left,
+            final_port_right,
+            seed,
+            gauge=final_gauge,
+            group_name=group_name,
+            group_order=group_order,
+        )
     if "random_same_degree_graph" in requested:
         controls["random_same_degree_graph"] = _random_same_degree_graph_control(points, left, right, seed)
     if "wrong_s3_orientation" in requested:
@@ -37,31 +64,97 @@ def mandatory_control_report(
         "mode": "mandatory_negative_controls",
         "implemented_controls": sorted(controls),
         "controls": controls,
+        "gauge_coupled_overlap_state_supplied": coupled_state_supplied,
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled_state_supplied else "legacy_raw_label_inequality",
         "all_expected_failures_observed": bool(controls) and all(bool(row.get("expected_failure_observed")) for row in controls.values()),
         "claim_boundary": "negative-control receipts; required before any 3D-bulk or early-universe claim",
     }
 
 
-def _no_repair_control(initial_left: np.ndarray, initial_right: np.ndarray, final_left: np.ndarray, final_right: np.ndarray) -> dict[str, Any]:
-    initial_phi = int(np.sum(initial_left != initial_right))
-    final_phi = int(np.sum(final_left != final_right))
+def _no_repair_control(
+    initial_left: np.ndarray,
+    initial_right: np.ndarray,
+    final_left: np.ndarray,
+    final_right: np.ndarray,
+    *,
+    initial_gauge: np.ndarray | None,
+    final_gauge: np.ndarray | None,
+    group_name: str | None,
+    group_order: int | None,
+) -> dict[str, Any]:
+    coupled = bool(
+        initial_gauge is not None
+        and final_gauge is not None
+        and group_name is not None
+        and group_order is not None
+    )
+    if coupled:
+        initial_phi = int(
+            np.sum(
+                covariant_mismatch_mask(
+                    initial_left,
+                    initial_right,
+                    np.asarray(initial_gauge),
+                    group_name=str(group_name),
+                    group_order=int(group_order),
+                )
+            )
+        )
+        final_phi = int(
+            np.sum(
+                covariant_mismatch_mask(
+                    final_left,
+                    final_right,
+                    np.asarray(final_gauge),
+                    group_name=str(group_name),
+                    group_order=int(group_order),
+                )
+            )
+        )
+    else:
+        initial_phi = int(np.sum(initial_left != initial_right))
+        final_phi = int(np.sum(final_left != final_right))
     return {
         "initial_phi_without_repair": initial_phi,
         "final_phi_with_repair": final_phi,
         "expected_failure_observed": bool(initial_phi > final_phi and initial_phi > 0),
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled else "legacy_raw_label_inequality",
         "failure_mode": "Phi does not settle when repair is absent",
     }
 
 
-def _shuffled_interfaces_control(final_left: np.ndarray, final_right: np.ndarray, seed: int) -> dict[str, Any]:
+def _shuffled_interfaces_control(
+    final_left: np.ndarray,
+    final_right: np.ndarray,
+    seed: int,
+    *,
+    gauge: np.ndarray | None,
+    group_name: str | None,
+    group_order: int | None,
+) -> dict[str, Any]:
     rng = np.random.default_rng(seed)
     shuffled_right = final_right[rng.permutation(final_right.size)]
-    shuffled_phi = int(np.sum(final_left != shuffled_right))
+    coupled = bool(gauge is not None and group_name is not None and group_order is not None)
+    if coupled:
+        shuffled_phi = int(
+            np.sum(
+                covariant_mismatch_mask(
+                    final_left,
+                    shuffled_right,
+                    np.asarray(gauge),
+                    group_name=str(group_name),
+                    group_order=int(group_order),
+                )
+            )
+        )
+    else:
+        shuffled_phi = int(np.sum(final_left != shuffled_right))
     threshold = 0.25 * int(final_left.size)
     return {
         "shuffled_phi": shuffled_phi,
         "edge_count": int(final_left.size),
         "expected_failure_observed": bool(shuffled_phi > threshold),
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled else "legacy_raw_label_inequality",
         "failure_mode": "interface label shuffle destroys overlap agreement",
     }
 

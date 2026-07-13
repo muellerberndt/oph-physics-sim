@@ -191,6 +191,7 @@ def _controlled_timeline(
             }
         )
     return {
+        "schema": "oph_controlled_s3_defect_timeline_v1",
         "mode": "controlled_s3_defect_timeline",
         "patch_count": patch_count,
         "snapshot_count": len(snapshots),
@@ -202,6 +203,8 @@ def _controlled_timeline(
         "max_observation_count": observation_count,
         "max_lifetime_cycles": (observation_count - 1) * max(1, cycle_stride),
         "persistent_worldline_precursor_receipt": True,
+        "particle_promotion_inputs_complete": True,
+        "truncation_reasons": [],
         "particle_matter_receipt": False,
         "claim_boundary": "controlled planted inverse S3 defect-pair timeline for detector validation",
     }

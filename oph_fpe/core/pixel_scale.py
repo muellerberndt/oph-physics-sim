@@ -7,8 +7,11 @@ from typing import Any
 from oph_fpe.constants.oph_pixel import (
     OPHPixelConstants,
     PIXEL_MODE_ENDPOINT_CALIBRATED,
+    PIXEL_MODE_SOURCE_CANDIDATE,
     P_STAR,
+    PixelParameterProfile,
     pixel_constants_for_mode,
+    pixel_parameter_profile,
 )
 
 
@@ -32,10 +35,16 @@ class PixelScale:
     k_b: float = 1.0
     source: str = "endpoint_public"
     pixel_mode: str = PIXEL_MODE_ENDPOINT_CALIBRATED
+    epistemic_profile: str = PixelParameterProfile.HIERARCHY_PUBLIC.value
 
     @property
     def constants(self) -> OPHPixelConstants:
-        return OPHPixelConstants(P=self.ratio_p, source=self.source, pixel_mode=self.pixel_mode)
+        return OPHPixelConstants(
+            P=self.ratio_p,
+            source=self.source,
+            pixel_mode=self.pixel_mode,
+            epistemic_profile=self.epistemic_profile,
+        )
 
     @property
     def a_cell(self) -> float:
@@ -81,6 +90,8 @@ class PixelScale:
             "P_source": self.source,
             "source": self.source,
             "pixel_mode": self.pixel_mode,
+            "epistemic_profile": self.epistemic_profile,
+            "profile": pixel_parameter_profile(self.epistemic_profile).as_jsonable(),
             "phi": constants.phi,
             "sqrt_pi": constants.sqrt_pi,
             "alpha_from_P": constants.alpha_from_P,
@@ -115,6 +126,19 @@ def pixel_scale_from_config(config: dict[str, Any]) -> PixelScale:
     pixel_mode = str(
         oph_constants.get("pixel_mode", pixel.get("pixel_mode", PIXEL_MODE_ENDPOINT_CALIBRATED))
     )
+    default_profile = (
+        PixelParameterProfile.SOURCE_CANDIDATE.value
+        if pixel_mode == PIXEL_MODE_SOURCE_CANDIDATE
+        else PixelParameterProfile.HIERARCHY_PUBLIC.value
+    )
+    epistemic_profile = str(
+        oph_constants.get("epistemic_profile", pixel.get("epistemic_profile", default_profile))
+    )
+    profile_spec = pixel_parameter_profile(epistemic_profile)
+    if profile_spec.profile is PixelParameterProfile.EMPIRICAL_HADRON_CLOSURE:
+        raise ValueError(
+            "interval-valued empirical_hadron_closure cannot be selected implicitly as the global pixel scale"
+        )
     explicit_p = oph_constants.get("P", oph_constants.get("ratio_P", pixel.get("ratio_P", pixel.get("P"))))
     if explicit_p is None:
         mode_constants = pixel_constants_for_mode(pixel_mode)
@@ -136,4 +160,5 @@ def pixel_scale_from_config(config: dict[str, Any]) -> PixelScale:
         k_b=float(pixel.get("k_B", pixel.get("k_b", 1.0))),
         source=str(source),
         pixel_mode=pixel_mode,
+        epistemic_profile=epistemic_profile,
     )

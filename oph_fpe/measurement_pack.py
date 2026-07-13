@@ -588,14 +588,30 @@ def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, An
     _copy_first(roots, out / "cmb_anomaly_rows.csv", exported, "cmb_anomaly_rows.csv")
     _copy_first(roots, out / "oph_cnb_neutrino_report.json", exported, "oph_cnb_neutrino_report.json")
     _copy_first(roots, out / "oph_cnb_neutrino_report.md", exported, "oph_cnb_neutrino_report.md")
-    _copy_first(roots, out / "oph_cnb_neutrino_mass_rows.csv", exported, "oph_cnb_neutrino_mass_rows.csv")
     _copy_first(
         roots,
-        out / "oph_cnb_neutrino_comparison_rows.csv",
+        out / "oph_cnb_conventional_baseline_mass_rows.csv",
         exported,
-        "oph_cnb_neutrino_comparison_rows.csv",
+        "oph_cnb_conventional_baseline_mass_rows.csv",
     )
-    _copy_first(roots, out / "oph_cnb_free_streaming_rows.csv", exported, "oph_cnb_free_streaming_rows.csv")
+    _copy_first(
+        roots,
+        out / "oph_cnb_conventional_baseline_comparison_rows.csv",
+        exported,
+        "oph_cnb_conventional_baseline_comparison_rows.csv",
+    )
+    _copy_first(
+        roots,
+        out / "oph_cnb_conventional_baseline_free_streaming_rows.csv",
+        exported,
+        "oph_cnb_conventional_baseline_free_streaming_rows.csv",
+    )
+    _copy_first(
+        roots,
+        out / "oph_cnb_historical_rejected_weighted_cycle_benchmark_rows.csv",
+        exported,
+        "oph_cnb_historical_rejected_weighted_cycle_benchmark_rows.csv",
+    )
     _copy_first(roots, out / "h0s8_branch_report.json", exported, "h0s8_branch_report.json")
     _copy_first(roots, out / "h0s8_branch_report.md", exported, "h0s8_branch_report.md")
     _copy_first(roots, out / "h0s8_branch_rows.csv", exported, "h0s8_branch_rows.csv")
@@ -1018,6 +1034,9 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     clock_bridge_values = no_g_clock_bridge.get("clock_bridge") or {}
     clock_bridge_gates = no_g_clock_bridge.get("readiness_gates") or {}
     neutrino_gates = neutrinos.get("readiness_gates") or {}
+    neutrino_oph_status = neutrinos.get("oph_neutrino_mass_status") or {}
+    neutrino_conventional = neutrinos.get("conventional_camb_baseline") or {}
+    neutrino_rejected_benchmark = neutrinos.get("historical_rejected_weighted_cycle_benchmark") or {}
     h0s8_gates = h0s8.get("readiness_gates") or {}
     h0s8_comparisons = h0s8.get("measurement_comparisons") or {}
     cmb_anomaly_aggregate = cmb_anomaly.get("aggregate") or {}
@@ -1104,31 +1123,24 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         "camb_lcdm_oph_anomaly_module_ready": bool(
             camb_baseline.get("oph_anomaly_module_ready", False)
         ),
-        "chart_level_3p1": bool(
+        "chart_level_3p1": (
+            bulk.get("chart_level_3p1_lorentz_kinematics_established") is True
+        ),
+        "chart_level_3p1_declaration_diagnostic": bool(
             comparable.get("chart_level_3p1_any", False)
             or comparable.get("chart_level_3p1_count", 0)
             or comparable_lorentz.get("support_visible_lorentz_3p1_count", 0)
             or comparable_lorentz.get("paper_theorem_3d_bulk_chart_count", 0)
-            or bulk.get("chart_level_3p1_lorentz_kinematics_established", False)
         ),
         "theorem_assisted_h3_bulk": bool(
-            comparable.get("theorem_assisted_h3_bulk_any", False)
-            or comparable.get("theorem_assisted_h3_bulk_count", 0)
-            or comparable_lorentz.get("paper_theorem_assisted_h3_populated_chart_count", 0)
-            or bulk.get("bulk_3d_established_theorem_assisted", False)
+            bulk.get("theorem_assisted_h3_nonboundary_population_established") is True
         ),
         "theorem_assisted_observer_facing_h3_population": bool(
-            comparable.get("theorem_assisted_h3_bulk_any", False)
-            or comparable.get("theorem_assisted_h3_bulk_count", 0)
-            or comparable_lorentz.get("paper_theorem_assisted_h3_populated_chart_count", 0)
-            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
-            or bulk.get("bulk_3d_established_theorem_assisted", False)
+            bulk.get("theorem_assisted_observer_facing_h3_population") is True
         ),
         "observer_facing_3p1d_h3_experience": bool(
-            bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
-            or bulk.get("observer_facing_3p1d_h3_experience_receipt", False)
-            or observer_modular_experience.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
-            or observer_modular_experience.get("observer_facing_3p1d_h3_experience_receipt", False)
+            bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT") is True
+            and bulk.get("observer_facing_3p1d_h3_experience_receipt") is True
         ),
         "observer_modular_experience_written": bool(observer_modular_experience),
         "observer_modular_time_receipt": bool(
@@ -1142,22 +1154,28 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             observer_modular_experience.get("observer_relative_time_count") or 0
         ),
         "observer_facing_3p1d_h3_experience_receipt": bool(
-            observer_modular_experience.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
-            or observer_modular_experience.get("observer_facing_3p1d_h3_experience_receipt", False)
-            or bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
-            or bulk.get("observer_facing_3p1d_h3_experience_receipt", False)
+            bulk.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT") is True
+            and bulk.get("observer_facing_3p1d_h3_experience_receipt") is True
         ),
-        "observer_facing_populated_h3_experience_receipt": bool(
-            observer_modular_experience.get("observer_facing_populated_h3_experience_receipt", False)
-            or bulk.get("observer_facing_populated_h3_experience_receipt", False)
-            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+        "observer_facing_populated_h3_experience_receipt": (
+            bulk.get("observer_facing_populated_h3_experience_receipt") is True
         ),
-        "observer_h3_object_population_receipt": bool(
-            observer_modular_experience.get("observer_h3_object_population_receipt", False)
-            or bulk.get("observer_h3_object_population_receipt", False)
-            or bulk.get("observer_facing_h3_object_population_receipt", False)
-            or bulk.get("theorem_assisted_observer_facing_h3_population", False)
+        "observer_h3_object_population_receipt": (
+            bulk.get("observer_h3_object_population_receipt") is True
+            and bulk.get("observer_facing_h3_object_population_receipt") is True
         ),
+        "observer_experience_declaration_diagnostic": {
+            "observer_facing_3p1d_h3_experience_receipt": bool(
+                observer_modular_experience.get("OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT", False)
+                or observer_modular_experience.get("observer_facing_3p1d_h3_experience_receipt", False)
+            ),
+            "observer_facing_populated_h3_experience_receipt": bool(
+                observer_modular_experience.get("observer_facing_populated_h3_experience_receipt", False)
+            ),
+            "observer_h3_object_population_receipt": bool(
+                observer_modular_experience.get("observer_h3_object_population_receipt", False)
+            ),
+        },
         "observer_modular_experience_blockers": list(
             observer_modular_experience_blockers
         ),
@@ -2064,8 +2082,27 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             cmb_anomaly_aggregate.get("planck_tilt_compatible_proxy_count", 0)
         ),
         "neutrino_measurement_comparable": bool(
-            neutrinos.get("measurement_comparable_now", False)
-            or neutrino_gates.get("measurement_comparable_relic_background", False)
+            neutrinos.get("conventional_baseline_measurement_comparable", False)
+            or neutrino_gates.get("conventional_baseline_relic_background_callable", False)
+        ),
+        "neutrino_oph_mass_prediction_available": bool(
+            neutrinos.get("oph_neutrino_mass_prediction_available", False)
+            or neutrino_oph_status.get("available", False)
+        ),
+        "neutrino_oph_mass_public_promotion_allowed": bool(
+            neutrinos.get("public_promotion_allowed", False)
+            or neutrino_oph_status.get("public_promotion_allowed", False)
+        ),
+        "neutrino_conventional_baseline_measurement_comparable": bool(
+            neutrinos.get("conventional_baseline_measurement_comparable", False)
+            or neutrino_gates.get("conventional_baseline_relic_background_callable", False)
+        ),
+        "neutrino_conventional_baseline_sum_mnu_eV": neutrino_conventional.get("sum_mnu_eV"),
+        "neutrino_rejected_weighted_cycle_benchmark_included": bool(
+            neutrino_rejected_benchmark.get("included", False)
+        ),
+        "neutrino_rejected_weighted_cycle_public_promotion_allowed": bool(
+            neutrino_rejected_benchmark.get("public_promotion_allowed", False)
         ),
         "neutrino_finite_lattice_derived": bool(neutrinos.get("finite_lattice_derived", False)),
         "h0s8_measurement_comparable": bool(h0s8_comparisons),
@@ -3004,7 +3041,12 @@ def _readme(report: dict[str, Any]) -> str:
         f"- CMB anomaly parity proxy: {claims.get('cmb_anomaly_parity_asymmetry_proxy')}\n"
         f"- CMB anomaly low-power proxy: {claims.get('cmb_anomaly_low_power_proxy')}\n"
         f"- CMB anomaly Planck-tilt proxy: {claims.get('cmb_anomaly_planck_tilt_proxy')}\n\n"
-        f"- neutrino measurement-comparable: {claims.get('neutrino_measurement_comparable')}\n"
+        f"- neutrino conventional baseline measurement-comparable: {claims.get('neutrino_measurement_comparable')}\n"
+        f"- OPH neutrino mass prediction available: {claims.get('neutrino_oph_mass_prediction_available')}\n"
+        f"- OPH neutrino mass public promotion allowed: {claims.get('neutrino_oph_mass_public_promotion_allowed')}\n"
+        f"- conventional neutrino baseline sum m_nu eV: {claims.get('neutrino_conventional_baseline_sum_mnu_eV')}\n"
+        f"- rejected weighted-cycle benchmark included: {claims.get('neutrino_rejected_weighted_cycle_benchmark_included')}\n"
+        f"- rejected weighted-cycle public promotion allowed: {claims.get('neutrino_rejected_weighted_cycle_public_promotion_allowed')}\n"
         f"- neutrino finite-lattice-derived: {claims.get('neutrino_finite_lattice_derived')}\n"
         f"- H0/S8 measurement-comparable: {claims.get('h0s8_measurement_comparable')}\n"
         f"- H0/S8 physical prediction ready: {claims.get('h0s8_physical_prediction_ready')}\n"

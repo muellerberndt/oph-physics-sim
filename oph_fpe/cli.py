@@ -690,6 +690,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     cnb_parser.add_argument("--out", required=True, type=Path)
     cnb_parser.add_argument("--delta-neff-coh", default=0.0, type=float)
+    cnb_parser.add_argument(
+        "--include-rejected-weighted-cycle-benchmark",
+        action="store_true",
+        help="include the historical rejected weighted-cycle masses as a non-promotable benchmark",
+    )
 
     compressed_parser = subparsers.add_parser(
         "oph-compressed-likelihood",
@@ -819,7 +824,23 @@ def main(argv: list[str] | None = None) -> int:
         choices=("H0", "H1", "H2", "H3", "H4", "H5", "H6", "H7"),
     )
     hadron_parser.add_argument("--lambda-msbar-descendant", default=None, type=Path)
+    hadron_parser.add_argument(
+        "--evidence-dir",
+        default=None,
+        type=Path,
+        help=(
+            "independent hash-pinned OPH-QCD evidence bundle required for "
+            "SOURCE_INTERVAL_PROMOTED; the claim flag alone never promotes"
+        ),
+    )
     hadron_parser.add_argument("--source", default="cli_hadron_source_backend")
+
+    particle_promotion_parser = subparsers.add_parser(
+        "particle-promotion-contract",
+        help="recompute P0/classical/quantum/P1 particle receipts from primitive evidence",
+    )
+    particle_promotion_parser.add_argument("--run-dir", required=True, type=Path)
+    particle_promotion_parser.add_argument("--out", default=None, type=Path)
 
     fractional_parser = subparsers.add_parser(
         "fractional-quotient-report",
@@ -1244,6 +1265,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     unique_cmb_parser.add_argument("--source-dir", default=None, type=Path)
     unique_cmb_parser.add_argument("--out", required=True, type=Path)
+    unique_cmb_parser.add_argument(
+        "--include-rejected-weighted-cycle-benchmark",
+        action="store_true",
+        help="include the historical rejected weighted-cycle masses as a non-promotable benchmark",
+    )
 
     cmb_derivation_parser = subparsers.add_parser(
         "cmb-derivation-report",
@@ -1440,6 +1466,13 @@ def main(argv: list[str] | None = None) -> int:
     overlap_residual_graph_sweep_parser.add_argument("--max-model-points-values", default="256")
     overlap_residual_graph_sweep_parser.add_argument("--k-neighbor-values", default="12")
     overlap_residual_graph_sweep_parser.add_argument("--remove-mode-values", default="1")
+
+    issue307_cmi_parser = subparsers.add_parser(
+        "issue-307-collar-cmi-decay",
+        help="write the fail-closed issue #307 finite collar-CMI decay audit",
+    )
+    issue307_cmi_parser.add_argument("--source", required=True, type=Path)
+    issue307_cmi_parser.add_argument("--out", required=True, type=Path)
 
     issue308_bw_parser = subparsers.add_parser(
         "issue-308-bw-certificate",
@@ -2381,6 +2414,9 @@ def main(argv: list[str] | None = None) -> int:
             args.source_dir,
             args.out,
             delta_neff_coh=args.delta_neff_coh,
+            include_rejected_weighted_cycle_benchmark=(
+                args.include_rejected_weighted_cycle_benchmark
+            ),
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
@@ -2499,8 +2535,15 @@ def main(argv: list[str] | None = None) -> int:
                 tier=args.tier,
                 source=args.source,
                 lambda_msbar_descendant=args.lambda_msbar_descendant,
+                evidence_dir=args.evidence_dir,
             ),
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "particle-promotion-contract":
+        from oph_fpe.bulk.particle_contract import write_particle_promotion_contract_report
+
+        result = write_particle_promotion_contract_report(args.run_dir, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "fractional-quotient-report":
@@ -2901,7 +2944,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "oph-unique-predictions":
         from oph_fpe.cosmology.unique_predictions import write_unique_prediction_gate_report
 
-        result = write_unique_prediction_gate_report(args.source_dir, args.out)
+        result = write_unique_prediction_gate_report(
+            args.source_dir,
+            args.out,
+            include_rejected_weighted_cycle_benchmark=(
+                args.include_rejected_weighted_cycle_benchmark
+            ),
+        )
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "cmb-derivation-report":
@@ -3116,6 +3165,14 @@ def main(argv: list[str] | None = None) -> int:
             k_neighbor_values=tuple(int(value) for value in _csv_values(args.k_neighbor_values)),
             remove_mode_values=tuple(int(value) for value in _csv_values(args.remove_mode_values)),
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "issue-307-collar-cmi-decay":
+        from oph_fpe.bulk.collar_cmi_decay_307 import (
+            write_issue307_collar_cmi_decay_report,
+        )
+
+        result = write_issue307_collar_cmi_decay_report(args.source, args.out)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "issue-308-bw-certificate":

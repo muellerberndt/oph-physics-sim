@@ -10,7 +10,7 @@ The working surface includes finite consensus receipts, observer record algebra,
 
 The README describes the simulator surface. Pass/fail receipt labels belong in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles. Mutable project progress belongs in GitHub issues.
 
-The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / issue #503). The paper-side receipt state for that contract is machine-evaluated in reverse-engineering-reality (`code/geometry/`), and `tools/import_realized_branch_receipts.py` imports the canonical report into a run directory, where the Einstein bridge manifest surfaces it as the informational `paperSideRealizedBranch` block. The block never flips the run-receipt gate.
+The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / issue #503). `tools/import_oph_artifacts.py` hash-pins the current paper/particle/geometry status into a run or staging directory; imported status is always informational or diagnostic and never flips a run receipt. The current pinned snapshot is under `data/oph_cross_repo_current/`. See `docs/PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`.
 
 For explanatory universe rendering, the simulator also supports an explicit
 `simulation_assumptions` lane. It can supply paper bridges such as the BW `2*pi`
@@ -38,6 +38,21 @@ only the finite-regulator gate. Continuum correlations, BW modular convergence, 
 unitarity, and Yang-Mills identification remain closed or conditional until the emitted
 certificate includes Cauchy envelopes, transported-state/cutoff bounds, positive-transfer plus
 transfer-tower convergence, and the four-dimensional OS/gauge certificate.
+
+Issue #307 has a separate fail-closed collar-CMI audit. Run
+`python3 -m oph_fpe.cli issue-307-collar-cmi-decay --source <primitive.json> --out <report.json>`.
+The audit recomputes five clauses: finite-range Gibbs evidence, uniform strong conditional matrix
+mixing, regional CMI in nats, the boundary-prefactored exponential bound, and the sharp scaling
+margin
+
+```text
+delta / xi - log(|partial C|_UV).
+```
+
+The ratio `delta / ell_UV -> infinity` does not pass the scaling gate by itself. Caller-provided
+pass flags are ignored. A passing `ISSUE_307_COLLAR_CMI_DECAY_FINITE_RECEIPT` is a finite
+branch-instantiation sanity check. It does not certify the continuum limit, turn local packet CMI
+into regional quantum CMI, produce a stress tensor, or open the Einstein gate.
 
 Issue #308 is represented by the finite cap-normal BW certificate audit:
 
@@ -68,7 +83,8 @@ Main run families:
 - explicit screen ports, local pixel closure, screen-capacity readouts, and scale-bridge reports;
 - finite overlap mismatch, annealed repair, stability-window records, readback hashes, and replayable verifier receipts;
 - Borel-Weil one-Higgs carrier receipts for `H_OPH = H^0(CP1,O(1)) ~= C^2`, with Higgs mass, quartic, weak scale, and Coleman-Weinberg claims explicitly out of scope;
-- support-visible cap/collar states, collar Markov reports, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
+- support-visible cap/collar states, diagnostic collar Markov reports, the fail-closed issue #307 regional CMI audit, BW/KMS branch replay, transition-scale selection, and H3 chart receipts;
+- fine-to-coarse MaxEnt I-projection reports with relative-entropy closure defect, moment residual, Hessian floor, trace residual, and Pinsker bound, plus a separate noncommutative central-interface MSA receipt with Bell/noncentral negative controls;
 - observer objects, observer-local modular time, H3 object-population reports, and theorem-assisted consensus readouts;
 - strict neutral frontiers with overlap-native controls, graph sweeps, residualized graph sweeps, independent rank-selector audits, and closed promotion gates;
 - freezeout-screen angular spectra, CMB frontier reports, no-data-use receipts, finite certificate schemas, and Boltzmann/likelihood gate reports;
@@ -77,7 +93,7 @@ Main run families:
 - high-energy messenger coefficient-emission receipts: finite MaxEnt source coefficients for shared hidden compact-engine source laws, no-UHE-data-use dependency scans, moment-polytope and feature-minimality gates, and common-source locks across neutrino, cosmic-ray, and gamma forward channels;
 - compact-transient receipt ladders for FRBs, old-host compact sources, and black-hole recycling, with detector thinning, censoring, marked-catalog likelihood, repeater-history, control-model, refinement, simulator-accuracy, promotion, and no-generation-leakage gates separated from physical claims;
 - H3 record-worldline stitch certificates that require a declared hyperboloid atlas, real cut interface, observer-time adjacency, sector/gauge transport, ID-independent assignment gap, and coarse/fine contraction before emitting a cross-boundary continuation receipt;
-- static galaxy, neutrino, H0/S8, dark-response, CMB anomaly, and compressed-likelihood diagnostics with physical-prediction gates separated from diagnostics;
+- static galaxy, neutrino, H0/S8, dark-response, CMB anomaly, and compressed-likelihood diagnostics with physical-prediction gates separated from diagnostics; there is currently no OPH-derived neutrino-mass default, the conventional CAMB baseline is 0.06 eV, and the rejected weighted-cycle triple is opt-in and non-promoting;
 - viewer bundles for screen/repair playback, object-H3 displays, universe timelines, CMB/neutral frontiers, and scale-compressed outputs.
 
 Every substantive output is receipt-gated. A false receipt is part of the result, especially for strict neutral bulk, production particles, and physical CMB.
@@ -245,6 +261,21 @@ jq '{neutral_3d_bulk_data_bundle_written,physical_cmb_data_bundle_written,physic
   runs/<run_id>/measurement_pack/claims.json
 ```
 
+Targeted POFT direct-carrier assay:
+
+```bash
+PYTHONPATH=. python3 tools/audit_poft_transport_emission.py \
+  --state fresh_4k runs/<fresh-4k>/s3_gauge_state.npz \
+  --state replication_64k runs/<replication-64k>/s3_gauge_state.npz \
+  --out runs/poft_transport_emission/report.json
+```
+
+The observable is frozen as the edge-average of the natural three-label
+permutation representation. The assay compares scale- and unitary-invariant
+singular ratios with POFT (T_0,T_1), checks for an independently exported
+complex oriented amplitude and coarse/fine intertwiner, and fails closed when
+either is absent. It must not construct a complex lift by fitting POFT itself.
+
 Selected cosmology and scale gates:
 
 ```bash
@@ -394,7 +425,7 @@ remain the default unless those receipts close.
 
 ## Defects And Particles
 
-The screen-holonomy layer writes defect clusters, timelines, interaction proxies, H3 worldline fits, and particle-likeness reports. These are screen/collar diagnostics. Production particle matter requires a separate receipt; until that receipt passes, the simulator emits diagnostics only.
+The screen-holonomy layer writes defect clusters, timelines, interaction proxies, H3 worldline fits, and particle-likeness reports. These are screen/collar diagnostics. Production P1 is independently recomputed as P0 proto-worldline evidence AND a classical carrier-mode receipt AND a quantum Hilbert/spectral/asymptotic receipt, with deconfinement required for colored candidates. Legacy producer booleans cannot promote it.
 
 Useful commands:
 
@@ -421,6 +452,23 @@ kernels:
 ```
 
 The expected safe verdict is `GEOMETRY_CERTIFIED_BACKEND_NOT_ENABLED` unless OPH sector recognition, native geometry certification, observer-readout equivalence, resource accounting, provenance hashes, and fallback receipts all pass for the concrete sector.
+
+## W/Z/H Numerical Backend
+
+The fail-closed boson backend consumes hash-pinned D10/D11 theorem artifacts
+and computes source-clock gaps, frozen affine RG controls, BRST-block
+determinants, and Rouché pole enclosures:
+
+```bash
+python3 -m oph_fpe.bosons \
+  --config configs/bosons/wzh_source_closure_diagnostic_v1.yml \
+  --out runs/bosons/wzh_source_closure_diagnostic_v1
+```
+
+The tracked config is synthetic and diagnostic. Actual W/Z/H predictions
+require the independently frozen carriers, source clock, physical RG packet,
+BRST-complete kernels, identities, uncertainties, and prospective provenance
+listed in `docs/WZH_NUMERICAL_BACKEND.md`.
 
 ## Cloud And Reproducibility
 

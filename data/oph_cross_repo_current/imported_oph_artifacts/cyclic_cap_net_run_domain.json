@@ -1,0 +1,104 @@
+{
+  "artifact": "oph_cyclic_cap_net_repair_run",
+  "object_id": "CyclicCapNetRepairTower_Issue503",
+  "issue": 503,
+  "provenance": "consensus_product_on_selected_branch: the repair, termination, confluence, schedule-independence, and incidence readout are genuine run outputs; the overlap net is CHOSEN spherical (explicit branch selection per cor:dimension-selection-status), never claimed as a consensus output",
+  "stages": [
+    {
+      "d1_verification": {
+        "n_records": 20,
+        "n_conflict_seeds": 5,
+        "n_schedules_per_seed": 24,
+        "terminating": true,
+        "conflict_free_normal_form": true,
+        "schedule_independent": true,
+        "stage": 0
+      },
+      "incidence": {
+        "n_vertices": 12,
+        "n_edges": 30,
+        "n_triangles": 20,
+        "euler_characteristic": 2,
+        "connected": true,
+        "closed_surface": true,
+        "orientable_coherent": true,
+        "spherical_incidence_receipt": true,
+        "surface_classification": "S2"
+      },
+      "mesh_receipt": {
+        "max_star_size": 5,
+        "n_triangles": 20,
+        "theta": 0.25
+      }
+    },
+    {
+      "d1_verification": {
+        "n_records": 80,
+        "n_conflict_seeds": 5,
+        "n_schedules_per_seed": 24,
+        "terminating": true,
+        "conflict_free_normal_form": true,
+        "schedule_independent": true,
+        "stage": 1
+      },
+      "incidence": {
+        "n_vertices": 42,
+        "n_edges": 120,
+        "n_triangles": 80,
+        "euler_characteristic": 2,
+        "connected": true,
+        "closed_surface": true,
+        "orientable_coherent": true,
+        "spherical_incidence_receipt": true,
+        "surface_classification": "S2"
+      },
+      "mesh_receipt": {
+        "max_star_size": 6,
+        "n_triangles": 80,
+        "theta": 0.075
+      },
+      "refinement_natural": true
+    },
+    {
+      "d1_verification": {
+        "n_records": 320,
+        "n_conflict_seeds": 5,
+        "n_schedules_per_seed": 24,
+        "terminating": true,
+        "conflict_free_normal_form": true,
+        "schedule_independent": true,
+        "stage": 2
+      },
+      "incidence": {
+        "n_vertices": 162,
+        "n_edges": 480,
+        "n_triangles": 320,
+        "euler_characteristic": 2,
+        "connected": true,
+        "closed_surface": true,
+        "orientable_coherent": true,
+        "spherical_incidence_receipt": true,
+        "surface_classification": "S2"
+      },
+      "mesh_receipt": {
+        "max_star_size": 6,
+        "n_triangles": 320,
+        "theta": 0.01875
+      },
+      "refinement_natural": true
+    }
+  ],
+  "receipts_witnessed": {
+    "d1_repair_clauses": true,
+    "spherical_incidence_all_stages": true,
+    "mesh_modulus_decreasing": true,
+    "refinement_naturality": true
+  },
+  "receipts_pending": [
+    "modular_cross_ratio_receipt (needs modular-clock instrumentation of the MaxEnt states on this tower)",
+    "geometric_2pi_kms_receipt (same instrumentation)",
+    "Cyc/NTI/weak-additivity/MI null-net receipts",
+    "E1-E4 event receipts",
+    "UC/VR/scale physical-identification receipts"
+  ]
+}

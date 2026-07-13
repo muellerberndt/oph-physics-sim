@@ -7,7 +7,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from oph_fpe.claims import COSMOLOGY_PERTURBATION_RECEIPT, QUANTITATIVE_BRANCH, with_claim_metadata
+from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_claim_metadata
 from oph_fpe.constants.oph_pixel import P_STAR
 from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.oph_kernels import (
@@ -38,17 +38,25 @@ def oph_cnb_background_report(
     h: float = 0.674,
     omega_m: float = 0.3155,
     delta_neff_coh: float = 0.0,
+    include_rejected_weighted_cycle_benchmark: bool = False,
 ) -> dict[str, Any]:
-    """Return the OPH relic-neutrino measurement lane.
+    """Return the neutrino status and conventional relic-background lane.
 
-    This report treats the OPH weighted-cycle neutrino masses as an imported
-    target from the particle/quantitative branch and propagates them through
-    standard relic-neutrino cosmology. It deliberately does not claim the
-    current finite screen run has derived those masses or the late repair
-    kernel from collar state data.
+    OPH currently has no source-derived neutrino mass prediction.  The default
+    propagation is the separate conventional 0.06 eV CAMB reference.  The old
+    weighted-cycle triple can be emitted only as an explicitly requested,
+    permanently non-promotable historical benchmark.
     """
 
-    background = dict(neutrino_cosmology_report(h=h, omega_m=omega_m))
+    neutrino_status = neutrino_cosmology_report(
+        h=h,
+        omega_m=omega_m,
+        include_rejected_weighted_cycle_benchmark=include_rejected_weighted_cycle_benchmark,
+    )
+    oph_mass_status = dict(neutrino_status["oph_derived_prediction"])
+    conventional = dict(neutrino_status["conventional_camb_baseline"])
+    background = dict(conventional.pop("cosmology"))
+    rejected_benchmark = dict(neutrino_status["historical_rejected_weighted_cycle_benchmark"])
     masses = [float(item) for item in background["masses_eV"]]
     n_eff = 3.044 + float(delta_neff_coh)
     sum_mnu = float(background["sum_mnu_eV"])
@@ -62,7 +70,6 @@ def oph_cnb_background_report(
     )
     eta_a = oph_constants.reserve
     epsilon_required = 1.0 - float(WEAK_LENSING_S8_TARGET) / float(S8_CDM_BRANCH)
-    pi_wl_required = epsilon_required / eta_a if eta_a > 0.0 else math.nan
     s8_five_of_seven = apply_projected_wl_selector(S8_CDM_BRANCH, constants=oph_constants)
     s8_five_of_seven_pull = (s8_five_of_seven - WEAK_LENSING_S8_TARGET) / oph_constants.S8_wl_sigma_reference
     pi_wl_projected = compressed_projection_fraction(
@@ -71,7 +78,8 @@ def oph_cnb_background_report(
         constants=oph_constants,
     )
     report = {
-        "mode": "oph_cnb_neutrino_background_v0",
+        "schema": "schemas/cosmology/neutrino_status.schema.json",
+        "mode": "oph_cnb_neutrino_background_v1",
         "source_files": _source_status(source_dir),
         "inputs": {
             "P": float(p_value),
@@ -80,37 +88,45 @@ def oph_cnb_background_report(
             "Delta_N_eff_coh": float(delta_neff_coh),
             "S8_cdm_branch": float(S8_CDM_BRANCH),
             "weak_lensing_S8_target": float(WEAK_LENSING_S8_TARGET),
+            "include_rejected_weighted_cycle_benchmark": bool(
+                include_rejected_weighted_cycle_benchmark
+            ),
         },
-        "oph_neutrino_branch": {
-            "mass_ordering": "normal",
-            "masses_eV": masses,
-            "sum_mnu_eV": sum_mnu,
-            "delta_m21_squared_eV2": float(masses[1] ** 2 - masses[0] ** 2),
-            "delta_m31_squared_eV2": float(masses[2] ** 2 - masses[0] ** 2),
-            "m_lightest_eV": min(masses),
-            "m_beta_proxy_eV": background.get("m_beta_proxy_eV"),
-            "finite_lattice_derived": False,
-            "source": "OPH weighted-cycle absolute neutrino target from local cosmology notes",
+        "oph_neutrino_mass_status": oph_mass_status,
+        "conventional_camb_baseline": {
+            **conventional,
+            "relic_background": {
+                "N_eff": float(n_eff),
+                "baseline_N_eff": 3.044,
+                "Delta_N_eff_coh": float(delta_neff_coh),
+                "T_nu0_K": background["T_nu0_K"],
+                "number_density_total_cm3": background["number_density_total_cm3"],
+                "Omega_nu_h2": omega_nu_h2,
+                "Omega_nu": omega_nu,
+                "f_nu": f_nu,
+                "small_scale_power_suppression_fraction": float(
+                    background["small_scale_power_suppression_fraction"]
+                ),
+                "growth_exponent_deformation": float(background["growth_exponent_deformation"]),
+            },
+            "free_streaming": _free_streaming_rows(background),
+            "measurement_comparisons": _measurement_comparisons(
+                n_eff=n_eff,
+                sum_mnu=sum_mnu,
+                lightest_mass=min(masses),
+                f_nu=f_nu,
+            ),
+            "camb_class_inputs": {
+                "nnu": float(n_eff),
+                "num_massive_neutrinos": 1,
+                "mnu_sum_eV": sum_mnu,
+                "neutrino_assumption": conventional["assumption"],
+                "omnuh2": omega_nu_h2,
+                "solver_mass_components_eV": masses,
+                "note": "Conventional solver reference only; this is not an OPH neutrino prediction.",
+            },
         },
-        "relic_background": {
-            "N_eff": float(n_eff),
-            "baseline_N_eff": 3.044,
-            "Delta_N_eff_coh": float(delta_neff_coh),
-            "T_nu0_K": background["T_nu0_K"],
-            "number_density_total_cm3": background["number_density_total_cm3"],
-            "Omega_nu_h2": omega_nu_h2,
-            "Omega_nu": omega_nu,
-            "f_nu": f_nu,
-            "small_scale_power_suppression_fraction": float(background["small_scale_power_suppression_fraction"]),
-            "growth_exponent_deformation": float(background["growth_exponent_deformation"]),
-        },
-        "free_streaming": _free_streaming_rows(background),
-        "measurement_comparisons": _measurement_comparisons(
-            n_eff=n_eff,
-            sum_mnu=sum_mnu,
-            lightest_mass=min(masses),
-            f_nu=f_nu,
-        ),
+        "historical_rejected_weighted_cycle_benchmark": rejected_benchmark,
         "late_repair_projection_target": {
             "theorem_form": "L_OPH/L_0 = 1 - eta_A * Pi_L",
             "eta_A": eta_a,
@@ -200,20 +216,10 @@ def oph_cnb_background_report(
                 "needs finite-collar packet data to derive the actual W(k,a) window and close B_A(k,a)."
             ),
         },
-        "camb_class_inputs": {
-            "nnu": float(n_eff),
-            "num_massive_neutrinos": len(masses),
-            "mnu_sum_eV": sum_mnu,
-            "neutrino_hierarchy": "normal",
-            "omnuh2": omega_nu_h2,
-            "individual_masses_eV": masses,
-            "note": (
-                "CAMB commonly accepts a total mnu and neutrino_hierarchy; exact per-eigenstate transfer "
-                "requires solver-specific setup and official likelihood validation."
-            ),
-        },
         "readiness_gates": {
-            "measurement_comparable_relic_background": True,
+            "oph_neutrino_mass_prediction_available": False,
+            "oph_neutrino_mass_public_promotion_allowed": False,
+            "conventional_baseline_relic_background_callable": True,
             "finite_lattice_mass_derivation": False,
             "Delta_N_eff_coh_channel_declared": bool(float(delta_neff_coh) != 0.0),
             "z6_poisson_five_of_seven_kernel_callable": True,
@@ -224,24 +230,28 @@ def oph_cnb_background_report(
             "survey_projection_kernel_declared": False,
             "full_boltzmann_likelihood_run": False,
         },
-        "measurement_comparable_now": True,
+        "measurement_comparable_now": False,
+        "conventional_baseline_measurement_comparable": True,
+        "oph_neutrino_mass_prediction_available": False,
+        "public_promotion_allowed": False,
         "finite_lattice_derived": False,
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
         "claim_boundary": (
-            "OPH-CnuB target/readout lane. The neutrino masses are imported from the OPH weighted-cycle "
-            "quantitative branch and propagated through standard relic-neutrino cosmology. Do not interpret "
-            "this as a finite-lattice derivation, an official Planck/DESI likelihood, or a completed OPH "
-            "late-repair Boltzmann kernel."
+            "Neutrino status and conventional-reference lane. OPH currently emits no source-derived mass "
+            "prediction. The propagated 0.06 eV input is a conventional CAMB reference, not an OPH target. "
+            "The weighted-cycle triple is rejected by the declared NuFIT 6.1 gate and is exposed only when "
+            "explicitly requested as a historical, non-promotable benchmark. This is not an official "
+            "Planck/DESI likelihood or a completed OPH late-repair Boltzmann kernel."
         ),
     }
     return with_claim_metadata(
         report,
-        claim_level=QUANTITATIVE_BRANCH,
+        claim_level=CONTINUATION,
         receipt=COSMOLOGY_PERTURBATION_RECEIPT,
         physical_claim=False,
         observable_id="oph_cnb_neutrino_background",
-        fit_objective="neutrino_relic_background_public_comparison",
+        fit_objective="neutrino_status_and_conventional_reference_audit",
     )
 
 
@@ -251,9 +261,17 @@ def write_oph_cnb_background_report(source_dir: Path | None, out_dir: Path, **kw
     out.mkdir(parents=True, exist_ok=True)
     (out / "oph_cnb_neutrino_report.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     (out / "oph_cnb_neutrino_report.md").write_text(_markdown_report(report), encoding="utf-8")
-    _write_csv(out / "oph_cnb_neutrino_mass_rows.csv", _mass_rows(report))
-    _write_csv(out / "oph_cnb_neutrino_comparison_rows.csv", _comparison_rows(report))
-    _write_csv(out / "oph_cnb_free_streaming_rows.csv", report["free_streaming"])
+    conventional = report["conventional_camb_baseline"]
+    _write_csv(out / "oph_cnb_conventional_baseline_mass_rows.csv", _mass_rows(report))
+    _write_csv(out / "oph_cnb_conventional_baseline_comparison_rows.csv", _comparison_rows(report))
+    _write_csv(
+        out / "oph_cnb_conventional_baseline_free_streaming_rows.csv",
+        conventional["free_streaming"],
+    )
+    _write_csv(
+        out / "oph_cnb_historical_rejected_weighted_cycle_benchmark_rows.csv",
+        _historical_benchmark_rows(report),
+    )
     return report
 
 
@@ -345,19 +363,54 @@ def _measurement_comparisons(*, n_eff: float, sum_mnu: float, lightest_mass: flo
 
 def _mass_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
-    free = {row["state"]: row for row in report["free_streaming"]}
-    for index, mass in enumerate(report["oph_neutrino_branch"]["masses_eV"]):
+    conventional = report["conventional_camb_baseline"]
+    free = {row["state"]: row for row in conventional["free_streaming"]}
+    for index, mass in enumerate(conventional["solver_mass_components_eV"]):
         state = f"nu_{index + 1}"
-        rows.append({"state": state, "mass_eV": mass, **free.get(state, {})})
+        rows.append(
+            {
+                "branch": "conventional_camb_baseline",
+                "counts_as_oph_prediction": False,
+                "state": state,
+                "mass_eV": mass,
+                **free.get(state, {}),
+            }
+        )
     return rows
 
 
 def _comparison_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
-    for name, values in report["measurement_comparisons"].items():
-        rows.append({"comparison": name, **values})
+    comparisons = report["conventional_camb_baseline"]["measurement_comparisons"]
+    for name, values in comparisons.items():
+        rows.append(
+            {
+                "branch": "conventional_camb_baseline",
+                "counts_as_oph_prediction": False,
+                "comparison": name,
+                **values,
+            }
+        )
     rows.append({"comparison": "late_repair_projection_target", **report["late_repair_projection_target"]})
     return rows
+
+
+def _historical_benchmark_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
+    benchmark = report["historical_rejected_weighted_cycle_benchmark"]
+    if not benchmark["included"]:
+        return []
+    cosmology = benchmark["cosmology"]
+    return [
+        {
+            "branch": "historical_rejected_weighted_cycle_benchmark",
+            "state": f"nu_{index + 1}",
+            "mass_eV": float(mass),
+            "sum_mnu_eV": float(benchmark["sum_mnu_eV"]),
+            "public_promotion_allowed": False,
+            "status": benchmark["status"],
+        }
+        for index, mass in enumerate(cosmology["masses_eV"])
+    ]
 
 
 def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -382,18 +435,24 @@ def _sha256_file_or_none(path: Path) -> str | None:
 
 
 def _markdown_report(report: dict[str, Any]) -> str:
-    branch = report["oph_neutrino_branch"]
-    relic = report["relic_background"]
+    status = report["oph_neutrino_mass_status"]
+    conventional = report["conventional_camb_baseline"]
+    rejected = report["historical_rejected_weighted_cycle_benchmark"]
+    relic = conventional["relic_background"]
     wl = report["late_repair_projection_target"]
-    comparisons = report["measurement_comparisons"]
+    comparisons = conventional["measurement_comparisons"]
     return "\n".join(
         [
             "# OPH-CnuB Neutrino Background",
             "",
             f"- mode: `{report['mode']}`",
-            f"- mass ordering: `{branch['mass_ordering']}`",
-            f"- masses eV: `{', '.join(f'{item:.12f}' for item in branch['masses_eV'])}`",
-            f"- sum m_nu: `{branch['sum_mnu_eV']:.12f}` eV",
+            f"- OPH-derived mass prediction available: `{status['available']}`",
+            "- OPH-derived masses / sum m_nu: `none` / `none`",
+            f"- conventional CAMB assumption: `{conventional['assumption']}`",
+            f"- conventional CAMB sum m_nu: `{conventional['sum_mnu_eV']:.12f}` eV",
+            f"- conventional baseline counts as OPH prediction: `{conventional['counts_as_oph_prediction']}`",
+            f"- rejected weighted-cycle benchmark included: `{rejected['included']}`",
+            f"- rejected benchmark public promotion allowed: `{rejected['public_promotion_allowed']}`",
             f"- N_eff: `{relic['N_eff']:.6f}`",
             f"- Omega_nu h^2: `{relic['Omega_nu_h2']:.9g}`",
             f"- f_nu: `{relic['f_nu']:.9g}`",

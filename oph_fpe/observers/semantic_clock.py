@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from typing import Any, Iterable, Mapping, Sequence
 
 from oph_fpe.claims import CONTINUATION, RECOVERED_CORE, with_claim_metadata
+from oph_fpe.evidence.hashes import stable_json_hash
 
 OBSERVER_KINDS = ("patch", "cap", "future")
 EXECUTION_METADATA_KEYS = {
@@ -170,5 +169,4 @@ def _checked_kind(observer_kind: str) -> str:
 
 
 def _stable_hash(value: Any) -> str:
-    payload = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    return stable_json_hash(value).removeprefix("sha256:")

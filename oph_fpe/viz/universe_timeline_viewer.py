@@ -2913,7 +2913,7 @@ def _small_universe_payload(run_dir: Path) -> dict[str, Any]:
         else (
             False,
             {
-                "validation_mode": "local_v2_certificate_replay_crosscheck",
+                "validation_mode": "local_v3_gauge_quotient_certificate_replay_crosscheck",
                 "blockers": ["theorem_core_receipts_missing"],
             },
         )
@@ -2933,13 +2933,13 @@ def _small_universe_payload(run_dir: Path) -> dict[str, Any]:
     if exact_consensus_receipt:
         receipt_source = "exact_consensus_receipt"
     elif theorem_core_consensus:
-        receipt_source = "theorem_core_receipts_v2_crossvalidated"
+        receipt_source = "theorem_core_receipts_v3_gauge_quotient_crossvalidated"
     else:
         receipt_source = None
     if evidence.get("bundle_receipt") is True:
         bundle_receipt_kind = "exact_mini_universe_evidence_bundle"
     elif theorem_core_consensus:
-        bundle_receipt_kind = "theorem_core_v2_consensus_certificate"
+        bundle_receipt_kind = "theorem_core_v3_gauge_quotient_consensus_certificate"
     else:
         bundle_receipt_kind = None
     content_blockers = []

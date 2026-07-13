@@ -6,6 +6,7 @@ from pathlib import Path
 from oph_fpe.bulk.einstein_bridge import RECEIPT_SPECS, write_einstein_bridge_manifest
 from oph_fpe.bulk.proof_certificate import bulk_proof_certificate, write_bulk_proof_certificate
 from oph_fpe.cosmology.comparable_data import comparable_data_report
+from tests.test_theorem_contract import _write_computed_consensus_replay
 
 
 def _write_json(path: Path, data: dict) -> None:
@@ -15,6 +16,75 @@ def _write_json(path: Path, data: dict) -> None:
 def _write_all_einstein_bridge_sidecars(run: Path) -> None:
     for spec in RECEIPT_SPECS:
         _write_json(run / spec.file_name, {spec.keys[0]: True})
+
+
+def _canonical_refinement_receipt() -> dict:
+    required = [4_096, 16_384, 65_536, 262_144]
+    return {
+        "mode": "prime_geometric_rank_refinement_v0",
+        "sizes": [{"patch_count": value} for value in required],
+        "required_patch_count_ladder": required,
+        "missing_required_patch_counts": [],
+        "required_ladder_complete": True,
+        "multi_scale": True,
+        "all_control_quotient_spatial_3d_candidates": True,
+        "all_candidate_s2_leakage_pass": True,
+        "all_candidate_rank3_e3": True,
+        "candidate_dimension_stable": True,
+        "independent_rank3_selector_all": True,
+        "proper_negative_control_all": True,
+        "directional_h3_strict_all": True,
+        "measured_overlap_geometry_all": True,
+        "strict_neutral_bulk_refinement_receipt": True,
+        "proof_blockers": [],
+    }
+
+
+def _strict_neutral_proof_report() -> dict:
+    refinement = _canonical_refinement_receipt()
+    return {
+        "mode": "strict_neutral_bulk_record_transition_audit",
+        "dimension": {"estimators_agree_3d": True},
+        "model_selection": {
+            "best_model": "H3",
+            "h3_beats_s2": True,
+            "h3_beats_h2_h4": True,
+        },
+        "leakage": {"s2_leakage_pass": True},
+        "controls": {
+            "shuffled_records_fail": True,
+            "shuffled_transition_labels_fail": True,
+            "planted_2d_returns_2d": True,
+            "planted_3d_returns_3d": True,
+            "planted_h3_returns_h3": True,
+        },
+        "refinement": refinement,
+        "channel_audit": {
+            "duplicate_channel_gate_pass": True,
+            "feature_ancestry_gate_pass": True,
+        },
+        "strict_neutral_theory_alignment": {"theory_required_channels_present": True},
+        "quotient_geometry_contract": {
+            "QUOTIENT_GEOMETRY_CONTRACT_RECEIPT": True,
+            "bulk_promotion_allowed": True,
+            "refinement": refinement,
+            "metric": {
+                "valid_pseudometric": True,
+                "valid_metric": True,
+                "triangle_checked_exact": True,
+                "blockers": [],
+                "metric_blockers": [],
+            },
+            "blockers": [],
+        },
+        "receipt": {
+            "receipt": "STRICT_NEUTRAL_BULK_RECEIPT",
+            "strict_neutral_bulk": True,
+            "physical_claim": True,
+        },
+        "strict_neutral_bulk": True,
+        "blockers": [],
+    }
 
 
 def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_path: Path):
@@ -42,8 +112,8 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
 
     report = bulk_proof_certificate(run)
 
-    assert report["chart_level_3p1_lorentz_kinematics_established"] is True
-    assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["passed"] is True
+    assert report["chart_level_3p1_lorentz_kinematics_established"] is False
+    assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["passed"] is False
     assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["receipt_name"] == "BW_KMS_BRANCH_REPLAY_RECEIPT"
     assert report["proof_tiers"]["T2_bw_kms_2pi_branch"]["legacy_receipt_name"] == (
         "BW_KMS_BRANCH_INSTANTIATION_RECEIPT"
@@ -51,18 +121,23 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     assert report["proof_tiers"]["L_full_oph_lorentz_finite_contract"]["passed"] is False
     assert report["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
     assert report["finite_lorentz_theorem_contract_receipt"] is False
-    assert report["theorem_assisted_h3_object_preview_established"] is True
-    assert report["theorem_assisted_h3_nonboundary_population_established"] is True
-    assert report["theorem_assisted_h3_populated_chart_established"] is True
-    assert report["theorem_assisted_observer_facing_h3_population"] is True
-    assert report["observer_facing_h3_object_population_receipt"] is True
-    assert report["OBSERVER_FACING_H3_CHART_RECEIPT"] is True
+    # Raw emergence booleans remain diagnostics.  They cannot manufacture a
+    # theorem-assisted population without validated C0 and record-commit gates.
+    assert report["theorem_assisted_h3_object_preview_established"] is False
+    assert report["theorem_assisted_h3_nonboundary_population_established"] is False
+    assert report["theorem_assisted_h3_populated_chart_established"] is False
+    assert report["theorem_assisted_observer_facing_h3_population"] is False
+    assert report["observer_facing_h3_object_population_receipt"] is False
+    assert report["OBSERVER_FACING_H3_CHART_RECEIPT"] is False
+    assert report["theorem_assisted_source_validation"][
+        "ignored_declaration_diagnostics"
+    ]["chart"] is True
     assert report["OBSERVER_EXPERIENCED_3P1D_HISTORY_RECEIPT"] is False
     assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
-    assert report["THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT"] is True
+    assert report["THEOREM_ASSISTED_H3_OBJECT_POPULATION_RECEIPT"] is False
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
     assert report["strict_neutral_third_person_bulk_established"] is False
-    assert report["bulk_3d_established_theorem_assisted"] is True
+    assert report["bulk_3d_established_theorem_assisted"] is False
     assert report["bulk_3d_established_strict"] is False
     assert report["screen_cmb_proxy_available"] is True
     assert report["physical_cmb_prediction"] is False
@@ -72,6 +147,111 @@ def test_bulk_proof_certificate_splits_theorem_assisted_from_strict_neutral(tmp_
     assert report["physical_gravity_prediction"] is False
     assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is False
     assert report["proof_tiers"]["G2_production_gravity"]["passed"] is False
+
+
+def test_bulk_proof_certificate_rejects_string_truthiness_and_debug_aliases(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "bulk_reconstruction_report.json",
+        {
+            "bulk_3d_established": "false",
+            "strict_neutral_bulk": "false",
+            "STRICT_NEUTRAL_BULK_RECEIPT": "false",
+        },
+    )
+    _write_json(
+        run / "emergence_status_report.json",
+        {
+            "FINITE_SETTLE_DIAGNOSTIC_RECEIPT": "false",
+            "BW_KMS_BRANCH_REPLAY_RECEIPT": "false",
+            "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": "false",
+            "SCREEN_PROXY_CMB_RECEIPT": "false",
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["FINITE_SETTLE_DIAGNOSTIC_RECEIPT"] is False
+    assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["passed"] is False
+    assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+    assert report["proof_tiers"]["T6_chart_blind_strict_neutral_quotient_bulk"]["passed"] is False
+    assert report["screen_cmb_proxy_available"] is False
+
+
+def test_bulk_proof_ignores_precomputed_theorem_assisted_receipts_without_primitives(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "finite_oph_theorem_contract_report.json",
+        {
+            "mode": "finite_oph_theorem_contract_audit_v1",
+            "OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1": True,
+            "paper_faithful_consensus_bulk_emergence_receipt": True,
+            "stages": {
+                "T308_finite_cap_bw_certificate": {"passed": True},
+                "T309_cap_normal_h3_chart": {"passed": True},
+                "T310_modular_response_h3_localization": {"passed": True},
+            },
+        },
+    )
+    _write_json(run / "issue_308_bw_certificate_report.json", {"receipt": True})
+    _write_json(
+        run / "cap_normal_h3_chart_report.json",
+        {"CAP_NORMAL_H3_CHART_RECEIPT": True, "terminal_status": "CERTIFIED"},
+    )
+    _write_json(
+        run / "modular_response_h3_localization_report.json",
+        {"MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT": True, "terminal_status": "CERTIFIED"},
+    )
+    _write_json(
+        run / "observer_chart_object_h3_report.json",
+        {"OBJECT_BULK_POPULATION_RECEIPT": True},
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["proof_tiers"]["L0_bw_kms_branch_replay"]["passed"] is False
+    assert report["proof_tiers"]["T3_chart_lorentz_h3"]["passed"] is False
+    assert report["proof_tiers"]["T4_h3_response_controls"]["passed"] is False
+    assert report["proof_tiers"]["T5b_nonboundary_h3_object_population"]["passed"] is False
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
+    assert report["persisted_finite_theorem_contract_diagnostic"][
+        "finite_lorentz_contract_claim"
+    ] is True
+
+
+def test_bulk_proof_certificate_rejects_handcrafted_strict_neutral_fixture(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    strict = _strict_neutral_proof_report()
+    _write_json(run / "strict_neutral_bulk_report.json", strict)
+    _write_json(run / "prime_geometric_rank_refinement_report.json", strict["refinement"])
+
+    report = bulk_proof_certificate(run)
+
+    assert report["strict_neutral_derived_report_diagnostic"][
+        "persisted_typed_bulk_candidate"
+    ] is True
+    assert report["STRICT_NEUTRAL_QUOTIENT_METRIC_RECEIPT"] is False
+    assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+    assert report["proof_tiers"]["T6_chart_blind_strict_neutral_quotient_bulk"]["passed"] is False
+    assert "strict_neutral_source_manifest_missing" in report[
+        "strict_neutral_source_validation"
+    ]["blockers"]
+
+    strict["channel_audit"]["feature_ancestry_gate_pass"] = "true"
+    _write_json(run / "strict_neutral_bulk_report.json", strict)
+
+    malformed = bulk_proof_certificate(run)
+    assert malformed["STRICT_NEUTRAL_BULK_RECEIPT"] is False
+    assert malformed["proof_tiers"]["T6_chart_blind_strict_neutral_quotient_bulk"]["passed"] is False
 
 
 def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path: Path):
@@ -90,7 +270,7 @@ def test_bulk_proof_preview_does_not_promote_to_nonboundary_population(tmp_path:
 
     report = bulk_proof_certificate(run)
 
-    assert report["theorem_assisted_h3_object_preview_established"] is True
+    assert report["theorem_assisted_h3_object_preview_established"] is False
     assert report["theorem_assisted_h3_nonboundary_population_established"] is False
     assert report["theorem_assisted_h3_populated_chart_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is False
@@ -112,7 +292,7 @@ def test_missing_observer_history_blocks_experienced_3p1d_history(tmp_path: Path
 
     report = bulk_proof_certificate(run)
 
-    assert report["OBSERVER_FACING_H3_CHART_RECEIPT"] is True
+    assert report["OBSERVER_FACING_H3_CHART_RECEIPT"] is False
     assert report["OBSERVER_EXPERIENCED_3P1D_HISTORY_RECEIPT"] is False
     assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
     assert report["observer_modular_experience_summary"]["written"] is False
@@ -133,8 +313,14 @@ def test_strict_neutral_object_candidate_does_not_promote_full_neutral_bulk(tmp_
 
     report = bulk_proof_certificate(run)
 
-    assert report["STRICT_NEUTRAL_OBJECT_BULK_CANDIDATE_RECEIPT"] is True
-    assert report["STRICT_NEUTRAL_OBJECT_BULK_RECEIPT"] is True
+    assert report["STRICT_NEUTRAL_OBJECT_BULK_CANDIDATE_RECEIPT"] is False
+    assert report["STRICT_NEUTRAL_OBJECT_BULK_RECEIPT"] is False
+    assert report["strict_neutral_object_bulk_summary"][
+        "persisted_declaration_diagnostic"
+    ] is True
+    assert "strict_neutral_object_source_manifest_missing" in report[
+        "strict_neutral_object_source_validation"
+    ]["blockers"]
     assert report["STRICT_NEUTRAL_BULK_RECEIPT"] is False
     assert report["STRICT_NEUTRAL_THIRD_PERSON_BULK_RECEIPT"] is False
     assert report["strict_neutral_third_person_bulk_established"] is False
@@ -158,7 +344,7 @@ def test_physical_cmb_prediction_requires_staged_contracts_not_output_booleans(t
     assert report["physical_cmb_prediction"] is False
 
 
-def test_bulk_proof_certificate_keeps_observer_consensus_separate_from_neutral_quotient(tmp_path: Path):
+def test_bulk_proof_certificate_rejects_handwritten_finite_contract_promotions(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
     _write_json(
@@ -175,14 +361,15 @@ def test_bulk_proof_certificate_keeps_observer_consensus_separate_from_neutral_q
 
     report = bulk_proof_certificate(run)
 
-    assert report["observer_facing_consensus_3d_bulk_emergence_receipt"] is True
-    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
-    assert report["bulk_3d_established_observer_facing_consensus"] is True
+    assert report["observer_facing_consensus_3d_bulk_emergence_receipt"] is False
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
+    assert report["bulk_3d_established_observer_facing_consensus"] is False
     assert report["chart_blind_strict_neutral_quotient_bulk_receipt"] is False
     assert report["bulk_3d_established_chart_blind_strict_neutral"] is False
-    assert report["finite_theorem_contract_summary"]["strict_neutral_blockers"] == [
-        "B4_strict_neutral_bulk_audit"
-    ]
+    assert report["persisted_finite_theorem_contract_diagnostic"][
+        "consensus_bulk_claim"
+    ] is True
+    assert report["finite_theorem_contract_summary"]["recomputed_in_memory"] is True
     assert report["finite_theorem_contract_summary"]["einstein_branch_entry_contract_receipt"] is False
 
 
@@ -203,12 +390,12 @@ def test_bulk_proof_certificate_keeps_gravity_closed_after_branch_entry_without_
 
     report = bulk_proof_certificate(run)
 
-    assert report["einstein_branch_entry_contract_receipt"] is True
-    assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is True
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is False
     assert report["production_gravity_receipt"] is False
     assert report["physical_gravity_prediction"] is False
     assert report["proof_tiers"]["G2_production_gravity"]["passed"] is False
-    assert "production_source_stress_bridge_missing" in report["proof_tiers"]["G2_production_gravity"][
+    assert "E0_einstein_branch_entry_umbrella" in report["proof_tiers"]["G2_production_gravity"][
         "blockers"
     ]
 
@@ -257,6 +444,56 @@ def test_bulk_proof_certificate_splits_c0a_settle_from_c0b_consensus(tmp_path: P
     assert report["proof_tiers"]["T0_finite_repair_core"]["canonical_tier"] == "C0a"
 
 
+def test_bulk_proof_c0b_rejects_handwritten_theorem_stage(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "emergence_status_report.json",
+        {"FINITE_CONSENSUS_THEOREM_RECEIPT": True},
+    )
+    _write_json(
+        run / "theorem_core_receipts.json",
+        {
+            "FINITE_CONSENSUS_THEOREM_RECEIPT": True,
+            "finite_consensus_theorem_receipt": True,
+        },
+    )
+
+    declarations_only = bulk_proof_certificate(run)
+    assert declarations_only["finite_consensus_declaration_diagnostic"] is True
+    assert declarations_only["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert declarations_only["proof_tiers"]["C0b_finite_consensus_theorem"]["passed"] is False
+
+    contract = {
+        "mode": "finite_oph_theorem_contract_audit_v1",
+        "stages": {"C0_finite_consensus_theorem": {"passed": "true"}},
+    }
+    _write_json(run / "finite_oph_theorem_contract_report.json", contract)
+    string_stage = bulk_proof_certificate(run)
+    assert string_stage["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+
+    contract["stages"]["C0_finite_consensus_theorem"]["passed"] = True
+    _write_json(run / "finite_oph_theorem_contract_report.json", contract)
+    handwritten = bulk_proof_certificate(run)
+    assert handwritten["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert handwritten["proof_tiers"]["C0b_finite_consensus_theorem"]["passed"] is False
+    assert "computed_v3_gauge_quotient_consensus_certificate_missing" in handwritten[
+        "finite_consensus_primitive_validation"
+    ]["blockers"]
+
+
+def test_bulk_proof_c0b_accepts_primitive_bound_independent_replay(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run)
+
+    report = bulk_proof_certificate(run)
+
+    assert report["finite_consensus_primitive_validation"]["passed"] is True
+    assert report["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
+    assert report["proof_tiers"]["C0b_finite_consensus_theorem"]["passed"] is True
+
+
 def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
@@ -302,16 +539,18 @@ def test_bulk_proof_certificate_reads_observer_modular_experience(tmp_path: Path
     report = bulk_proof_certificate(run)
 
     assert report["observer_modular_time_receipt"] is True
-    assert report["observer_facing_h3_chart_receipt"] is True
-    assert report["observer_experienced_3p1d_history_receipt"] is True
-    assert report["observer_facing_3p1d_h3_experience_receipt"] is True
+    assert report["observer_facing_h3_chart_receipt"] is False
+    assert report["observer_experienced_3p1d_history_receipt"] is False
+    assert report["observer_facing_3p1d_h3_experience_receipt"] is False
     assert report["observer_facing_populated_h3_experience_receipt"] is False
     assert report["observer_modular_experience_summary"]["observer_count"] == 16
     assert report["observer_modular_experience_summary"]["source_report_blockers"] == []
     assert report["observer_modular_experience_summary"]["source_report_populated_h3_blockers"] == [
         "observer_h3_object_population_receipt"
     ]
-    assert report["observer_modular_experience_summary"]["blockers"] == []
+    assert "conformal_h3_chart_receipt" in report[
+        "observer_modular_experience_summary"
+    ]["blockers"]
     assert "observer_h3_object_population_receipt" in report["observer_modular_experience_summary"][
         "populated_h3_experience_blockers"
     ]
@@ -336,10 +575,10 @@ def test_bulk_proof_certificate_writes_and_comparable_data_collects_tiers(tmp_pa
     lane = snapshot["measurement_lanes"]["support_visible_lorentz_branch"]
 
     assert lane["bulk_proof_certificate_count"] == 1
-    assert lane["bulk_proof_chart_level_3p1_count"] == 1
-    assert lane["bulk_proof_theorem_assisted_h3_object_preview_count"] == 1
-    assert lane["bulk_proof_theorem_assisted_h3_nonboundary_population_count"] == 1
-    assert lane["bulk_proof_theorem_assisted_h3_populated_chart_count"] == 1
+    assert lane["bulk_proof_chart_level_3p1_count"] == 0
+    assert lane["bulk_proof_theorem_assisted_h3_object_preview_count"] == 0
+    assert lane["bulk_proof_theorem_assisted_h3_nonboundary_population_count"] == 0
+    assert lane["bulk_proof_theorem_assisted_h3_populated_chart_count"] == 0
     assert lane["bulk_proof_strict_neutral_3d_bulk_count"] == 0
     assert lane["bulk_proof_screen_cmb_proxy_count"] == 1
     assert lane["bulk_proof_physical_cmb_prediction_count"] == 0
@@ -457,7 +696,7 @@ def test_bulk_proof_certificate_reads_paper_chart_files_without_strict_bulk(tmp_
 
     report = bulk_proof_certificate(run)
 
-    assert report["chart_level_3p1_lorentz_kinematics_established"] is True
+    assert report["chart_level_3p1_lorentz_kinematics_established"] is False
     assert report["strict_neutral_third_person_bulk_established"] is False
     assert report["bulk_3d_established_theorem_assisted"] is False
     assert report["paper_chart_summary"]["h3_spatial_dimension_from_boost_orbit"] == 3

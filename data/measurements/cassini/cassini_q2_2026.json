@@ -1,0 +1,37 @@
+{
+  "schema_version": "oph_published_summary_statistic_v1",
+  "dataset_id": "cassini_de440_q2_2026",
+  "release": "Park et al. 2026 Cassini DE440 quadrupole constraint",
+  "data_kind": "published_summary_statistic_not_raw_tracking_data",
+  "citation": {
+    "title": "Improved constraints on modified Newtonian gravity from Cassini radio tracking data",
+    "authors": "R. S. Park et al.",
+    "arxiv": "2602.17884",
+    "arxiv_url": "https://arxiv.org/abs/2602.17884",
+    "doi": "10.1103/r7n8-kw38",
+    "journal_url": "https://journals.aps.org/prd/accepted/10.1103/r7n8-kw38"
+  },
+  "observable": {
+    "name": "Q2",
+    "central_value_s2": 1.6e-27,
+    "standard_uncertainty_s2": 1.8e-27,
+    "uncertainty_interpretation": "one_standard_uncertainty"
+  },
+  "galactic_external_field": {
+    "measured_acceleration_m_s2": 2.32e-10,
+    "standard_uncertainty_m_s2": 1.6e-11,
+    "source": {
+      "title": "Gaia Early Data Release 3: Acceleration of the solar system from Gaia astrometry",
+      "arxiv_url": "https://arxiv.org/abs/2012.02036",
+      "doi": "10.1051/0004-6361/202039734"
+    },
+    "spherical_rar_e_newtonian": 1.643,
+    "disk_corrected_rar_e_newtonian": 1.659
+  },
+  "rar_benchmark": {
+    "a0_m_s2": 1.02e-10,
+    "spherical_Q2_s2": 3.387e-26,
+    "disk_corrected_Q2_s2": 3.411e-26
+  },
+  "provenance_note": "Values transcribed from the cited paper for a reproducible summary-statistic comparison. The underlying Cassini radiometric observations and orbit-determination likelihood are not bundled."
+}

@@ -14,6 +14,9 @@ from oph_fpe.cosmology.sync_gap import synchronization_gap_report
 def test_h0s8_branch_report_keeps_theorem_gates_closed():
     report = h0s8_branch_report()
     assert report["flat_q_a_closure"]["H0_km_s_Mpc"] == np.float64(h0_from_flat_q_a(q_a=5.363470441))
+    assert report["inputs"]["sum_mnu_conventional_camb_baseline_eV"] == 0.06
+    assert report["inputs"]["neutrino_baseline_counts_as_oph_prediction"] is False
+    assert report["inputs"]["oph_derived_sum_mnu_eV"] is None
     assert report["collar_tracking"]["lambda_collar"] == np.float64(np.exp(-report["inputs"]["P"] / 24.0))
     assert report["collar_tracking"]["lambda_collar_exact_gate"] == "UNIFORM_PRODUCT_THICKENING_EXACT"
     assert report["collar_tracking"]["lambda_collar_exact_gate_pass"] is False

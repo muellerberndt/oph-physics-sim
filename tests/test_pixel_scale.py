@@ -2,6 +2,7 @@ from math import isclose, sqrt
 from pathlib import Path
 
 import json
+import pytest
 
 from oph_fpe.constants.oph_pixel import (
     ALPHA_INV_SOURCE_CANDIDATE,
@@ -9,9 +10,12 @@ from oph_fpe.constants.oph_pixel import (
     P_STAR,
     P_SOURCE_CANDIDATE,
     OPHPixelConstants,
+    PixelParameterProfile,
     cap_area_planck,
     cap_entropy_capacity,
     equal_cell_entropy,
+    pixel_constants_for_profile,
+    pixel_parameter_profile,
     scale_factor_from_patch_count,
     screen_radius_planck,
 )
@@ -54,8 +58,29 @@ def test_source_candidate_pixel_mode_is_distinct_from_endpoint():
 
     assert scale.source == "source_candidate"
     assert scale.pixel_mode == PIXEL_MODE_SOURCE_CANDIDATE
+    assert scale.epistemic_profile == PixelParameterProfile.SOURCE_CANDIDATE.value
     assert isclose(scale.ratio_p, P_SOURCE_CANDIDATE)
     assert isclose(as_json["alpha_inverse_from_P"], ALPHA_INV_SOURCE_CANDIDATE, rel_tol=1e-12)
+
+
+def test_pixel_parameter_profiles_keep_empirical_and_measured_branches_out_of_core():
+    empirical = pixel_parameter_profile(PixelParameterProfile.EMPIRICAL_HADRON_CLOSURE)
+    measured = pixel_parameter_profile(PixelParameterProfile.MEASURED_COMPARISON)
+    source = pixel_constants_for_profile(PixelParameterProfile.SOURCE_CANDIDATE)
+
+    assert empirical.interval is not None
+    assert empirical.recovered_core_allowed is False
+    assert measured.simulation_role.startswith("comparison only")
+    assert source.epistemic_profile == "source_candidate"
+    with pytest.raises(ValueError, match="interval-valued"):
+        pixel_constants_for_profile(PixelParameterProfile.EMPIRICAL_HADRON_CLOSURE)
+
+
+def test_pixel_scale_rejects_implicit_interval_profile():
+    with pytest.raises(ValueError, match="interval-valued"):
+        pixel_scale_from_config(
+            {"oph_constants": {"epistemic_profile": "empirical_hadron_closure"}}
+        )
 
 
 def test_array_screen_receipts_include_pixel_scale(tmp_path: Path):

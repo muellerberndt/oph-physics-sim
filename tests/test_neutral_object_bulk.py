@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -155,10 +156,20 @@ def test_strict_neutral_object_bulk_writer_outputs_report_and_objects(tmp_path: 
     )
 
     assert (run / "strict_neutral_object_bulk_report.json").exists()
+    assert (run / "strict_neutral_object_source_manifest.json").exists()
     assert (run / "neutral_objects.jsonl").exists()
     assert report["object_count"] >= 4
     assert report["dimension"]["not_the_support_visible_chart_dimension"] is True
     assert report["physical_claim"] is False
+    manifest = json.loads(
+        (run / "strict_neutral_object_source_manifest.json").read_text(encoding="utf-8")
+    )
+    observer_hash = "sha256:" + hashlib.sha256(
+        (run / "observer_views.jsonl").read_bytes()
+    ).hexdigest()
+    assert report["source_artifact"] == manifest
+    assert manifest["schema"] == "strict_neutral_object_bulk_source_v1"
+    assert manifest["observer_views_sha256"] == observer_hash
 
 
 def _observer_view(observer_id: int, *, group: int) -> dict:

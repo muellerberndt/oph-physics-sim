@@ -11,6 +11,11 @@ from __future__ import annotations
 from typing import Any
 
 _EXPORTS = {
+    "particle_frontier_report": ("oph_fpe.cosmology.particle_frontier", "particle_frontier_report"),
+    "write_particle_frontier_report": (
+        "oph_fpe.cosmology.particle_frontier",
+        "write_particle_frontier_report",
+    ),
     "anomaly_background_rhs": ("oph_fpe.cosmology.anomaly_fluid", "anomaly_background_rhs"),
     "anomaly_perturbation_rhs": ("oph_fpe.cosmology.anomaly_fluid", "anomaly_perturbation_rhs"),
     "covariant_exchange_current": ("oph_fpe.cosmology.anomaly_fluid", "covariant_exchange_current"),
@@ -480,6 +485,15 @@ _EXPORTS = {
     "write_oph_cnb_background_report": (
         "oph_fpe.cosmology.neutrino_background",
         "write_oph_cnb_background_report",
+    ),
+    "neutrino_mass_status": ("oph_fpe.cosmology.neutrino_status", "neutrino_mass_status"),
+    "CONVENTIONAL_CAMB_NEUTRINO_ASSUMPTION": (
+        "oph_fpe.cosmology.neutrino_status",
+        "CONVENTIONAL_CAMB_NEUTRINO_ASSUMPTION",
+    ),
+    "CONVENTIONAL_CAMB_SUM_MNU_EV": (
+        "oph_fpe.cosmology.neutrino_status",
+        "CONVENTIONAL_CAMB_SUM_MNU_EV",
     ),
     "hot_release_report": ("oph_fpe.cosmology.hot_release", "hot_release_report"),
     "write_hot_release_report": ("oph_fpe.cosmology.hot_release", "write_hot_release_report"),

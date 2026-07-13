@@ -77,9 +77,11 @@ def collar_markov_report(
         "packet_encoding": packet_encoding,
         "SOURCE_LOCALIZATION_SATURATION_RECEIPT": False,
         "MODULAR_SOURCE_CHARGE_RECEIPT": False,
+        "CENTRAL_INTERFACE_MSA_RECEIPT": False,
         "claim_boundary": (
             "classical diagonal collar-Markov diagnostic in nats; not final noncommutative BW proof, "
-            "not a modular source charge, and not a physical anomaly-density source"
+            "not a central-interface MSA receipt, not a modular source charge, and not a physical "
+            "anomaly-density source"
         ),
         "cap_count": len(rows),
         "median_epsilon_cmi": float(np.median(eps)) if eps else 0.0,

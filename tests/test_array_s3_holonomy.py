@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
+import oph_fpe.defects.array_s3_holonomy as holonomy_module
 from oph_fpe.defects.array_s3_holonomy import (
     S3_INV,
     S3_MUL,
@@ -89,8 +90,17 @@ def test_triangle_holonomies_use_reverse_edge_inverse():
     triangles = np.array([[0, 1, 2]])
 
     holonomies = triangle_holonomies(triangles, left, right, gauge)
+    prepared_lookup = holonomy_module._triangle_edge_index_lookup(triangles, left, right)
+    prepared_holonomies = triangle_holonomies(
+        triangles,
+        left,
+        right,
+        gauge,
+        edge_lookup=prepared_lookup,
+    )
 
     assert int(holonomies[0]) == 0
+    assert np.array_equal(prepared_holonomies, holonomies)
 
 
 def test_array_holonomy_report_has_claim_boundary():
@@ -140,7 +150,6 @@ def test_defect_timeline_reports_persistent_precursor_without_particle_claim():
     assert "screen_transport_proxy_count" in interaction
     assert particle["particle_matter_receipt"] is False
     assert particle["worldlines"][0]["particle_like"] is False
-
 
 def test_defect_interaction_reports_screen_transport_and_fusion_proxies():
     timeline = {
@@ -319,10 +328,264 @@ def test_public_worldline_matching_is_permutation_stable_and_inherits_ids():
     assert by_cluster_forward["new_birth"]["event"] == "birth"
 
 
+def test_worldline_matching_minimizes_total_transport_not_greedy_first_pair():
+    def point(angle: float) -> list[float]:
+        return [float(np.cos(angle)), float(np.sin(angle)), 0.0]
+
+    previous = [
+        {
+            "cluster_id": "previous_a",
+            "worldline_id": "worldline_a",
+            "class": "transposition",
+            "centroid": point(0.0),
+        },
+        {
+            "cluster_id": "previous_b",
+            "worldline_id": "worldline_b",
+            "class": "transposition",
+            "centroid": point(0.3),
+        },
+    ]
+    current = [
+        {"cluster_id": "current_x", "class": "transposition", "centroid": point(0.1)},
+        {"cluster_id": "current_y", "class": "transposition", "centroid": point(-0.2)},
+    ]
+
+    tracked = track_defect_worldlines(previous, current)
+    by_current = {row["current_cluster_id"]: row for row in tracked}
+
+    assert by_current["current_x"]["worldline_id"] == "worldline_b"
+    assert by_current["current_y"]["worldline_id"] == "worldline_a"
+    assert np.isclose(
+        float(by_current["current_x"]["transport_distance"])
+        + float(by_current["current_y"]["transport_distance"]),
+        0.4,
+    )
+
+
+def test_defect_timeline_reports_explicit_cadence_scaled_motion_contract():
+    points = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    left = np.array([0, 1, 2])
+    right = np.array([1, 2, 0])
+    gauge = np.array([1, 1, 1])
+
+    report = defect_timeline_report(
+        points,
+        left,
+        right,
+        [(0, gauge), (4, gauge)],
+        max_angular_speed_per_cycle=0.2,
+    )
+
+    assert report["worldline_assignment"] == "minimum_total_intrinsic_transport_cost"
+    assert report["motion_gate_cadence_scaled"] is True
+    assert report["max_angular_speed_per_cycle"] == 0.2
+
+
+def test_defect_timeline_prepares_fixed_topology_once(monkeypatch):
+    points = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    left = np.array([0, 1, 2])
+    right = np.array([1, 2, 0])
+    gauge = np.array([1, 1, 1])
+    calls = {"triangles": 0, "edge_lookup": 0}
+    original_triangles = holonomy_module._oriented_triangles_with_receipt
+    original_edge_lookup = holonomy_module._triangle_edge_index_lookup
+
+    def counted_triangles(*args, **kwargs):
+        calls["triangles"] += 1
+        return original_triangles(*args, **kwargs)
+
+    def counted_edge_lookup(*args, **kwargs):
+        calls["edge_lookup"] += 1
+        return original_edge_lookup(*args, **kwargs)
+
+    monkeypatch.setattr(holonomy_module, "_oriented_triangles_with_receipt", counted_triangles)
+    monkeypatch.setattr(holonomy_module, "_triangle_edge_index_lookup", counted_edge_lookup)
+
+    report = defect_timeline_report(
+        points,
+        left,
+        right,
+        [(0, gauge), (1, gauge), (2, gauge)],
+        max_triangles=None,
+    )
+
+    assert calls == {"triangles": 1, "edge_lookup": 1}
+    assert report["fixed_topology_cache"] == {
+        "triangles_prepared_once": True,
+        "edge_lookup_prepared_once": True,
+        "snapshot_reuse_count": 3,
+    }
+    assert report["triangle_topology_complete"] is True
+    assert report["stage_timings_seconds"]["total"] >= 0.0
+
+
+def test_triangle_sampling_receipt_distinguishes_bounded_topology():
+    points = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [-1.0, -1.0, -1.0],
+        ]
+    )
+    left = np.array([0, 0, 0, 1, 1, 2])
+    right = np.array([1, 2, 3, 2, 3, 3])
+    gauge = np.ones(left.size, dtype=np.int64)
+
+    bounded = array_holonomy_report(points, left, right, gauge, max_triangles=1)
+    complete = array_holonomy_report(points, left, right, gauge, max_triangles=None)
+
+    assert bounded["triangle_count"] == 1
+    assert bounded["triangle_sampling_truncated"] is True
+    assert bounded["triangle_topology_complete"] is False
+    assert complete["triangle_count"] == 4
+    assert complete["triangle_sampling_truncated"] is False
+    assert complete["triangle_topology_complete"] is True
+
+
+def test_timeline_detail_caps_are_explicit_and_fail_particle_promotion(monkeypatch):
+    points = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    left = np.array([0, 1, 2])
+    right = np.array([1, 2, 0])
+    gauge = np.array([1, 1, 1])
+
+    def many_cluster_report(*_args, **_kwargs):
+        clusters = [
+            {
+                "cluster_id": f"defect_cluster_{index:06d}",
+                "support_nodes": list(range(100)),
+                "support_node_count": 100,
+                "support_size": 1,
+                "class": "transposition",
+                "holonomy_mode": 1,
+                "inverse_holonomy_mode": int(S3_INV[1]),
+                "centroid": [1.0, 0.0, 0.0],
+            }
+            for index in range(300)
+        ]
+        return {
+            "triangle_count": 1,
+            "defect_triangle_count": 1,
+            "clusters": clusters,
+        }
+
+    monkeypatch.setattr(holonomy_module, "array_holonomy_report", many_cluster_report)
+    report = defect_timeline_report(
+        points,
+        left,
+        right,
+        [(0, gauge)],
+        max_triangles=None,
+        max_analysis_clusters_per_snapshot=512,
+        max_snapshot_clusters_per_snapshot=64,
+        max_worldlines=256,
+        max_events_per_worldline=32,
+        max_support_nodes_per_record=32,
+    )
+
+    assert report["worldline_count"] == 300
+    assert len(report["worldlines"]) == 256
+    assert report["snapshots"][0]["cluster_count"] == 300
+    assert len(report["snapshots"][0]["clusters"]) == 64
+    assert all(
+        len(cluster["support_nodes"]) <= 32
+        for cluster in report["snapshots"][0]["clusters"]
+    )
+    assert report["output_truncated"] is True
+    assert report["particle_promotion_inputs_complete"] is False
+    assert report["persistent_worldline_precursor_diagnostic"] is False
+    assert report["persistent_worldline_precursor_receipt"] is False
+    assert "snapshot_cluster_records_complete" in report["truncation_reasons"]
+    assert "worldlines_complete" in report["truncation_reasons"]
+    assert "support_node_ids_complete" in report["truncation_reasons"]
+
+    analysis_limited = defect_timeline_report(
+        points,
+        left,
+        right,
+        [(0, gauge)],
+        max_triangles=None,
+        max_analysis_clusters_per_snapshot=128,
+    )
+    assert analysis_limited["cluster_analysis"]["cluster_records_total"] == 300
+    assert analysis_limited["cluster_analysis"]["cluster_records_analyzed"] == 128
+    assert analysis_limited["cluster_analysis"]["complete"] is False
+    assert analysis_limited["worldline_count"] == 128
+    assert analysis_limited["particle_promotion_inputs_complete"] is False
+    assert "cluster_analysis_truncated" in analysis_limited["truncation_reasons"]
+
+    promoted_timeline = dict(report)
+    promoted_timeline["worldlines"] = [
+        {
+            "worldline_id": "worldline_000000",
+            "observation_count": 3,
+            "events": [
+                {"class": "transposition", "support_node_count": 1},
+                {"class": "transposition", "support_node_count": 1},
+                {"class": "transposition", "support_node_count": 1},
+            ],
+        }
+    ]
+    positive_interaction = {
+        "mode": "controlled_positive_interaction",
+        "worldlines": [
+            {"worldline_id": "worldline_000000", "screen_transport_proxy_pass": True}
+        ],
+        "fusion_conservation_proxy_pass": True,
+        "fusion_gauge_covariant_receipt": True,
+        "fusion_common_basepoint_transport_receipt": True,
+        "fusion_conserving_worldline_ids": ["worldline_000000"],
+        "scattering_reproducibility_proxy_pass": True,
+    }
+    particle = particle_likeness_report(
+        promoted_timeline,
+        positive_interaction,
+        bulk_localization_pass=True,
+        max_support_fraction=1.0,
+    )
+
+    assert particle["timeline_particle_promotion_inputs_complete"] is False
+    assert particle["particle_detector_positive_receipt"] is False
+    assert particle["particle_matter_receipt"] is False
+    assert particle["worldlines"][0]["particle_like"] is False
+
+    missing_completeness = dict(promoted_timeline)
+    missing_completeness.pop("schema", None)
+    missing_completeness.pop("particle_promotion_inputs_complete", None)
+    missing_metadata_particle = particle_likeness_report(
+        missing_completeness,
+        positive_interaction,
+        bulk_localization_pass=True,
+        max_support_fraction=1.0,
+    )
+    assert missing_metadata_particle["timeline_particle_promotion_inputs_complete"] is False
+    assert missing_metadata_particle["particle_detector_positive_receipt"] is False
+
+
 def test_controlled_s3_particle_assay_validates_particle_gate_without_physical_claim():
     report = controlled_s3_particle_assay_report(patch_count=4096, observation_count=5, support_node_count=6)
 
     assert report["controlled_planted_assay"] is True
+    assert report["timeline_report"]["particle_promotion_inputs_complete"] is True
     assert report["s3_inverse_identity_pass"] is True
     assert report["interaction_proxy_receipt"] is True
     assert report["fusion_conservation_proxy_pass"] is True

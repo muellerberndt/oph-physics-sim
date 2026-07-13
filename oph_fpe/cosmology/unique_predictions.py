@@ -11,6 +11,7 @@ import numpy as np
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
 from oph_fpe.cosmology.oph_constants import OPHConstants
+from oph_fpe.cosmology.neutrino_status import neutrino_mass_status
 from oph_fpe.cosmology.oph_screen_power import DEFAULT_D_STAR_MPC, DEFAULT_K0_MPC
 from oph_fpe.cosmology.selector_elimination import selector_elimination_report
 
@@ -23,14 +24,18 @@ ACT_PLANCK_S8 = 0.831
 ACT_PLANCK_S8_SIGMA = 0.023
 V09_PARITY_R_OE_TT_2_29 = 1.2160638411338078
 
-NEUTRINO_MASSES_EV = (0.017454720257976796, 0.019481987935919015, 0.05307522145074924)
 H_REFERENCE = 0.674
 OMEGA_M_REFERENCE = 0.3155
 T_NU0_K = 1.945
 NEUTRINO_NUMBER_DENSITY_CM3 = 339.5
 
 
-def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = P_STAR) -> dict[str, Any]:
+def unique_prediction_gate_report(
+    source_dir: Path | None = None,
+    *,
+    P: float = P_STAR,
+    include_rejected_weighted_cycle_benchmark: bool = False,
+) -> dict[str, Any]:
     """Return the current OPH-only public-comparison prediction gate.
 
     This imports the v0.9 local cosmology note when present and computes the
@@ -80,7 +85,9 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
             "assessment_csv_sha256": _sha256_file_or_none(assessment_path),
             "note_md_sha256": _sha256_file_or_none(note_path),
         }
-    neutrino = neutrino_cosmology_report()
+    neutrino = neutrino_cosmology_report(
+        include_rejected_weighted_cycle_benchmark=include_rejected_weighted_cycle_benchmark
+    )
     report = {
         "mode": "oph_unique_prediction_gate_v0_9",
         "oph_constants": pixel.as_jsonable(),
@@ -174,8 +181,11 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
             "Current OPH-only prediction gate imported from local cosmology notes and recomputed from OPH "
             "constants. In the v1.5 selector-elimination surface, q_IR=1/4 and ell_IR=32 are theorem-side "
             "target counts rather than fit selectors; eta_R is reduced to the single repair-clock certificate "
-            "kappa_rep=e. The scalar tilt, IR/parity anomaly templates, neutrino mass sum, and compressed "
-            "dark-sector rows are comparable to public measurements. They remain target/readout lanes until "
+            "kappa_rep=e. The scalar tilt, IR/parity anomaly templates, and compressed dark-sector rows are "
+            "comparable to public measurements. OPH currently has no source-derived neutrino mass prediction; "
+            "the 0.06 eV neutrino input is a conventional CAMB reference, while the old weighted-cycle row is a "
+            "rejected retrospective benchmark available only by explicit opt-in. The remaining rows stay "
+            "target/readout lanes until "
             "the finite OPH lattice derives kappa_rep, validates the finite-register IR/covariance certificates, "
             "derives parity covariance and anomaly kernels from state-derived cap/collar microphysics, and "
             "passes official likelihood/map-space tests."
@@ -186,9 +196,41 @@ def unique_prediction_gate_report(source_dir: Path | None = None, *, P: float = 
 
 def neutrino_cosmology_report(
     *,
-    masses_ev: tuple[float, float, float] = NEUTRINO_MASSES_EV,
     h: float = H_REFERENCE,
     omega_m: float = OMEGA_M_REFERENCE,
+    include_rejected_weighted_cycle_benchmark: bool = False,
+) -> dict[str, Any]:
+    status = neutrino_mass_status(
+        include_rejected_benchmark=include_rejected_weighted_cycle_benchmark
+    )
+    conventional = status["conventional_camb_baseline"]
+    conventional["cosmology"] = _propagate_neutrino_masses(
+        tuple(float(value) for value in conventional["solver_mass_components_eV"]),
+        h=float(h),
+        omega_m=float(omega_m),
+        mass_ordering="solver_reference_one_massive_two_massless",
+    )
+    rejected = status["historical_rejected_weighted_cycle_benchmark"]
+    if rejected["included"]:
+        rejected["cosmology"] = _propagate_neutrino_masses(
+            tuple(float(value) for value in rejected["masses_eV"]),
+            h=float(h),
+            omega_m=float(omega_m),
+            mass_ordering="normal",
+            m_beta_proxy_eV=0.01956,
+        )
+    else:
+        rejected["cosmology"] = None
+    return status
+
+
+def _propagate_neutrino_masses(
+    masses_ev: tuple[float, ...],
+    *,
+    h: float,
+    omega_m: float,
+    mass_ordering: str,
+    m_beta_proxy_eV: float | None = None,
 ) -> dict[str, Any]:
     mass_sum = float(sum(masses_ev))
     omega_nu_h2 = mass_sum / 93.12
@@ -202,10 +244,10 @@ def neutrino_cosmology_report(
         "Delta_N_eff_coh": 0.0,
         "T_nu0_K": T_NU0_K,
         "number_density_total_cm3": NEUTRINO_NUMBER_DENSITY_CM3,
-        "mass_ordering": "normal",
+        "mass_ordering": str(mass_ordering),
         "masses_eV": [float(item) for item in masses_ev],
         "sum_mnu_eV": mass_sum,
-        "m_beta_proxy_eV": 0.01956,
+        "m_beta_proxy_eV": None if m_beta_proxy_eV is None else float(m_beta_proxy_eV),
         "Omega_nu_h2": float(omega_nu_h2),
         "h_reference": float(h),
         "Omega_nu": float(omega_nu),
@@ -219,10 +261,7 @@ def neutrino_cosmology_report(
         "planck_bao_mass_bound_eV": 0.12,
         "desi_lcdm_mass_bound_eV": 0.064,
         "desi_w0wa_mass_bound_eV": 0.16,
-        "claim_boundary": (
-            "OPH weighted-cycle neutrino target propagated through standard relic-neutrino cosmology. "
-            "The finite physics simulator is not deriving these masses in the CMB run."
-        ),
+        "claim_boundary": "Standard relic-neutrino propagation for a declared input; it is not a mass derivation.",
     }
 
 
@@ -257,8 +296,16 @@ def unique_ir_power(
     return np.asarray(base * np.maximum(f_ir, 0.0), dtype=float)
 
 
-def write_unique_prediction_gate_report(source_dir: Path | None, out_dir: Path) -> dict[str, Any]:
-    report = unique_prediction_gate_report(source_dir)
+def write_unique_prediction_gate_report(
+    source_dir: Path | None,
+    out_dir: Path,
+    *,
+    include_rejected_weighted_cycle_benchmark: bool = False,
+) -> dict[str, Any]:
+    report = unique_prediction_gate_report(
+        source_dir,
+        include_rejected_weighted_cycle_benchmark=include_rejected_weighted_cycle_benchmark,
+    )
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "oph_unique_prediction_gate_report.json").write_text(
@@ -326,9 +373,10 @@ def _markdown_report(report: dict[str, Any]) -> str:
             f"- theta_IR: `{ir['theta_IR_deg']:.6f} deg`",
             f"- k_IR: `{ir['k_IR_Mpc_inverse']:.8f} Mpc^-1`",
             f"- parity R_OE TT(2..29): `{parity['predicted_R_OE_TT_2_29']:.6f}`",
-            f"- sum m_nu: `{nu['sum_mnu_eV']:.12f} eV`",
-            f"- Omega_nu h^2: `{nu['Omega_nu_h2']:.6g}`",
-            f"- small-scale neutrino suppression: `{nu['small_scale_power_suppression_fraction']:.4f}`",
+            f"- OPH-derived neutrino mass prediction available: `{nu['oph_derived_prediction']['available']}`",
+            "- OPH-derived sum m_nu: `none`",
+            f"- conventional CAMB baseline sum m_nu: `{nu['conventional_camb_baseline']['sum_mnu_eV']:.12f} eV`",
+            f"- rejected weighted-cycle benchmark included: `{nu['historical_rejected_weighted_cycle_benchmark']['included']}`",
             f"- rho_A/rho_b: `{dark['rho_A_over_rho_b']:.9f}`",
             f"- S8: `{dark['S8']:.9f}`",
             "",

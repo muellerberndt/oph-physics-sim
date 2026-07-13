@@ -1,0 +1,145 @@
+{
+  "artifact_manifest_verified": true,
+  "blockers": [],
+  "claim_boundary": "This report exposes rejected, conditional, empirical, and no-go particle results to the simulator. It is a comparison/frontier surface, not a microscopic particle law or a production-particle receipt.",
+  "conditional_electroweak": {
+    "artifact_present": true,
+    "conditional_envelope_GeV": {
+      "MW_pole_gev": [
+        80.36921677537332,
+        80.37741251025889
+      ],
+      "MZ_pole_gev": [
+        91.18797807794321,
+        91.19826930764052
+      ],
+      "mH_gev": [
+        125.18328541107648,
+        125.23166574233353
+      ],
+      "mt_pole_gev": [
+        172.27749368420027,
+        172.3523553288312
+      ]
+    },
+    "display_allowed": true,
+    "promotion_blockers": [
+      "current_corpus_underdetermination_of_forward_d10_repair_law",
+      "d10.same-scheme-anchor-bridge (issue #545)",
+      "source derivation of the selection axioms (issue #521)"
+    ],
+    "public_prediction_allowed": false,
+    "row_class": "conditional_on_P_and_repair_selection",
+    "selection_promotion_allowed": false,
+    "selection_status": "conditional_selection_theorem_axioms_named",
+    "simulation_input_allowed": false
+  },
+  "empirical_hadron_closure": {
+    "artifact_present": true,
+    "empirical_closure_validation_receipt": true,
+    "external_data_used": true,
+    "production_constructive_receipt": false,
+    "profile_id": "empirical_pdg2025_piecewise_v1_ward_projected_export",
+    "row_class": "oph_plus_empirical_hadron_closure",
+    "source_only": false,
+    "source_theorem_promotion_allowed": false,
+    "transport_moments": {
+      "inverse_alpha_packet_spacelike": {
+        "definition": "(1/(3 pi)) Int R(s) M_Z^2/(s (s + M_Z^2)) ds; the additive inverse-alpha transport packet of the source-spectral-theorem endpoint map, alpha-free",
+        "uncertainty": 0.10284421423160518,
+        "value": 3.660821560927726
+      },
+      "spacelike_mz": {
+        "kernel": "M_Z^2 / (s (s + M_Z^2)), prefactor alpha/(3 pi); target Delta_alpha_had^(5)(-M_Z^2)",
+        "uncertainty": 0.0007504904904496544,
+        "value": 0.02671430560519571
+      },
+      "timelike_on_shell_mz": {
+        "kernel": "M_Z^2 / (s (M_Z^2 - s)), principal value at s = M_Z^2, prefactor alpha/(3 pi); target Delta_alpha_had^(5)(M_Z^2)",
+        "uncertainty": 0.0007525009744534412,
+        "value": 0.026759272457494498
+      }
+    }
+  },
+  "lattice_diagnostic": {
+    "artifact_present": true,
+    "diagnostic_adapter_receipt": true,
+    "executed_real_lattice_diagnostic_receipt": false,
+    "execution_class": "diagnostic",
+    "execution_summary": {},
+    "export_present": false,
+    "production_qcd_receipt": false,
+    "public_promotion_allowed": false,
+    "remaining": {
+      "closure_requires": [
+        "seeded N_f = 2+1 ensembles at the frozen receipt schedule (N_therm = 2048, N_sep = 512) on production volumes",
+        "strange RHMC branch with persisted rational coefficients",
+        "clover force in the dynamical update",
+        "even-odd preconditioned solvers at production tolerances",
+        "continuum, finite-volume, chiral, and statistical budgets",
+        "publication-complete manifest provenance"
+      ],
+      "compute_class": "HPC allocation or an established production engine driven through run_external_production_backend.py; out of local scope",
+      "promotion_gate": "unchanged: hadron rows stay suppressed until production output and systematics exist"
+    },
+    "status": "real_engine_executed_diagnostic_scale_production_closure_open",
+    "target_anchored": null
+  },
+  "neutrino": {
+    "declared_3sigma_threshold": 11.829158081900795,
+    "historical_benchmark_mode": "historical_rejected_weighted_cycle_benchmark",
+    "historical_benchmark_opt_in_only": true,
+    "oph_mass_prediction": null,
+    "profile_delta_chi2_lower_bounds": {
+      "TBoff-NO": 18.435275228909504,
+      "TByes-NO": 20.119548723965472
+    },
+    "public_promotion_allowed": false,
+    "reason": "The target-informed weighted-cycle continuation is rejected; this does not falsify finite OPH.",
+    "rejection_receipt": true
+  },
+  "paper_release_id": "r1534",
+  "physical_particle_prediction_receipt": false,
+  "pixel_parameter_profiles": {
+    "empirical_hadron_closure": {
+      "P_central": 1.6310415203592243,
+      "P_interval": [
+        1.6310314631270646,
+        1.6310515775913839
+      ],
+      "epistemic_class": "external_data_closure",
+      "recovered_core_allowed": false
+    },
+    "hierarchy_public": {
+      "P": 1.630968209403959,
+      "epistemic_class": "endpoint_calibrated_comparison",
+      "recovered_core_allowed": false
+    },
+    "implicit_global_profile_switch_allowed": false,
+    "measured_comparison": {
+      "P": null,
+      "epistemic_class": "comparison_only",
+      "recovered_core_allowed": false
+    },
+    "profile_selection_required": true
+  },
+  "schema": "oph_particle_frontier_report_v1",
+  "simulation_receipts_promoted_by_import": false,
+  "source_electroweak_mass_prediction_receipt": false,
+  "source_hadron_endpoint_receipt": false,
+  "source_obstructions": {
+    "charged_lepton_absolute_mass_origin_unresolved": true,
+    "charged_lepton_public_promotion_allowed": false,
+    "numeric_mass_or_yukawa_packet_emitted": false,
+    "quark_numeric_rows_allowed": false,
+    "quark_scheme_obstruction": "closed_structural_finite_renormalization_nonidentifiability_obstruction",
+    "quark_two_moduli_source_nonidentifiability": true
+  },
+  "source_repository": {
+    "checkout_name": "reverse-engineering-reality",
+    "commit": "e6af1459b869616025afed8c751e4938f29da4dd",
+    "dirty": true,
+    "untracked_file_count": 13,
+    "worktree_state_sha256": "sha256:e360634c2a87f7c8fa90f30a9ad78eabb6a2de2427cc488036f8e786446a42de"
+  }
+}

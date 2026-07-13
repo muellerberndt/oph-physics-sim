@@ -9,14 +9,22 @@ from oph_fpe.scale.bw_array import (
     _attach_modular_response_histograms,
     _attach_transition_history_histograms,
     _array_port_pair_consensus_replay_report,
+    _attach_snapshot_overlap_state,
     _collar_report,
     _collar_width_from_config,
+    _computed_array_replay_consensus_certificate,
     _drop_source_snapshot_from_history,
+    _gauge_coupled_node_signature,
     _interface_quotient,
     _lorentz_branch_receipts,
+    _named_rng_streams,
+    _observer_raw_fields,
+    _observer_raw_fields_from_snapshot,
     _repairs_per_cycle_from_config,
+    _write_compact_observer_population,
     run_bw_array_config,
 )
+from oph_fpe.gauge.covariant_overlap import gauge_invariant_edge_residual, transform_local_frames
 from oph_fpe.viz.universe_timeline_viewer import _read_proto_particle_candidates
 
 
@@ -32,6 +40,53 @@ def test_repair_fraction_per_cycle_scales_with_patch_count():
         edge_count=786_432,
     ) == 4096
     assert _repairs_per_cycle_from_config({"repairs_per_cycle": 512}, patch_count=4096, edge_count=49_152) == 512
+
+
+def test_compact_observer_population_preserves_every_materialized_local_record(
+    tmp_path: Path,
+):
+    rows = []
+    for index in range(5):
+        rows.append(
+            {
+                "view_type": "patch_observer",
+                "observer_id": 10 + index,
+                "axis": [float(index), 0.0, 1.0],
+                "support_nodes": [index, index + 1],
+                "record_signature_histogram": {str(index): 0.25, str(index + 1): 0.75},
+                "locality_preserving_packet_feature_vector": [index / 5.0, 1.0],
+                "visible_readout_hash": f"{index:064x}",
+                "dominant_record_signature": index + 1,
+                "support_entropy_capacity": 2.0,
+                "committed_fraction": 1.0,
+                "record_stability_mean": 3.0,
+                "modular_depth_mean": 0.5,
+                "modular_depth_std": 0.1,
+                "repair_load_mean": 0.25,
+                "mismatch_density_mean": 0.125,
+                "visible_signature_entropy": 0.75,
+            }
+        )
+
+    path = tmp_path / "observers.npz"
+    report = _write_compact_observer_population(
+        path,
+        rows,
+        analysis_indices=np.asarray([1, 4], dtype=np.int64),
+        observer_relative_times=[0.0, 1.0],
+    )
+
+    assert report["materialized_observer_count"] == 5
+    assert report["analysis_enriched_observer_count"] == 2
+    assert report["support_incidence_count"] == 10
+    assert report["signature_histogram_entry_count"] == 10
+    with np.load(path) as payload:
+        np.testing.assert_array_equal(payload["observer_ids"], [10, 11, 12, 13, 14])
+        np.testing.assert_array_equal(payload["support_offsets"], [0, 2, 4, 6, 8, 10])
+        np.testing.assert_array_equal(
+            payload["observer_wide_analysis_included"],
+            [False, True, False, False, True],
+        )
 
 
 def test_bw_array_writes_bw_report(tmp_path: Path):
@@ -78,6 +133,9 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "emergence_status_report.json").exists()
     assert (run_path / "screen_microphysics.json").exists()
     assert (run_path / "base_progress.json").exists()
+    assert (run_path / "rng_streams.json").exists()
+    assert (run_path / "gauge_covariant_overlap_contract.json").exists()
+    assert (run_path / "gauge_coupled_dynamics_report.json").exists()
     assert (run_path / "edge_sector_heat_kernel_report.json").exists()
     assert (run_path / "central_record_born_report.json").exists()
     assert (run_path / "observer_checkpoint_restoration_report.json").exists()
@@ -181,6 +239,10 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert bw_report["support_visible_regularization"]["steps"] == 4
     assert ports_report["port_names"][0] == "P0"
     assert boundary_report["mode"] in {"iid_hot", "support_visible_cap_net_hot"}
+    assert boundary_report["raw_endpoint_label_inequality_is_not_overlap_mismatch"] is True
+    assert "initial_mismatch_fraction" not in boundary_report
+    assert boundary_report["initial_covariant_mismatch_count"] >= 0
+    assert boundary_report["mismatch_definition"] == "left_equals_g_ij_times_right_v1"
     assert "boundary_program" in manifest
     assert holonomy_report["mode"] == "array_s3_screen_holonomy"
     assert holonomy_report["claim_boundary"].startswith("screen/collar S3 holonomy")
@@ -408,6 +470,8 @@ def test_array_port_pair_consensus_replay_emits_c0b_evidence():
     report = _array_port_pair_consensus_replay_report(
         left,
         right,
+        np.zeros(left.size, dtype=np.int16),
+        group_name="S3",
         group_order=6,
         config={"enabled": True, "schedule_replays": 4, "requested_schedule_replays": 4, "max_event_rows": 2},
         seed=17,
@@ -417,8 +481,19 @@ def test_array_port_pair_consensus_replay_emits_c0b_evidence():
     assert report["evidence"]["theorem_phase_event_count"] == 3
     assert report["evidence"]["strict_descent_violation_count"] == 0
     assert report["evidence"]["unique_terminal_quotient_hash_count"] == 1
+    assert report["evidence"]["gauge_covariance_violation_count"] == 0
+    assert report["computed_from_gauge_coupled_arrays"] is True
+    assert report["gauge_covariant_mismatch"] is True
+    assert report["source_quotient_hash"].startswith("sha256:")
     assert len(report["sample_events"]) == 2
     assert all(event["phase"] == "theorem" for event in report["sample_events"])
+    assert _computed_array_replay_consensus_certificate(report)["receipt"] is True
+
+    reduced = dict(report)
+    reduced.pop("exact_endpoint_branch_check")
+    reduced_certificate = _computed_array_replay_consensus_certificate(reduced)
+    assert reduced_certificate["receipt"] is False
+    assert "exact_endpoint_branch_check.coverage_complete" in reduced_certificate["invalid_evidence"]
 
 
 def test_s3_interface_quotient_uses_group_product_not_index_subtraction():
@@ -433,7 +508,7 @@ def test_s3_interface_quotient_uses_group_product_not_index_subtraction():
     assert int(quotient[0]) != (1 - 4) % 6
 
 
-def test_consensus_replay_executes_shared_node_ab_ba_diamonds():
+def test_consensus_replay_exposes_endpoint_branch_nonconfluence_despite_ab_ba_diamonds():
     port_left = np.asarray([5, 4, 3, 2], dtype=np.int16)
     port_right = np.asarray([0, 1, 0, 1], dtype=np.int16)
     edge_left = np.asarray([0, 0, 1, 2], dtype=np.int64)
@@ -442,8 +517,10 @@ def test_consensus_replay_executes_shared_node_ab_ba_diamonds():
     report = _array_port_pair_consensus_replay_report(
         port_left,
         port_right,
+        np.asarray([1, 2, 3, 4], dtype=np.int16),
         edge_left=edge_left,
         edge_right=edge_right,
+        group_name="S3",
         group_order=6,
         config={
             "enabled": True,
@@ -455,18 +532,51 @@ def test_consensus_replay_executes_shared_node_ab_ba_diamonds():
         seed=91,
     )
 
-    assert report["receipt"] is True
+    assert report["receipt"] is False
     assert report["local_diamond_status"] == "computed_ab_ba_edge_slot_diamonds"
     assert report["local_diamond_checked_pair_count"] > 0
     assert report["shared_node_diamond_checked_pair_count"] > 0
     assert report["evidence"]["local_diamond_violation_count"] == 0
-    assert "edge-slot quotient" in report["claim_boundary"]
+    assert report["evidence"]["unique_terminal_quotient_hash_count"] > 1
+    assert report["production_move_contract"]["replayed_endpoint_branches"] is True
+    assert report["production_move_contract"]["exact_production_move_set_replayed"] is True
+    assert "gauge-coupled port-link quotient" in report["claim_boundary"]
+
+
+def test_endpoint_branch_nonconfluence_is_structural_not_monte_carlo_luck():
+    report = _array_port_pair_consensus_replay_report(
+        np.asarray([1, 4], dtype=np.int16),
+        np.asarray([3, 2], dtype=np.int16),
+        np.asarray([5, 2], dtype=np.int16),
+        edge_left=np.asarray([0, 1], dtype=np.int64),
+        edge_right=np.asarray([1, 2], dtype=np.int64),
+        group_name="S3",
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 2,
+            "requested_schedule_replays": 2,
+            "disjoint_checks": 2,
+            "local_diamond_checks": 2,
+        },
+        seed=1,
+    )
+
+    exact = report["exact_endpoint_branch_check"]
+    assert report["receipt"] is False
+    assert exact["coverage_complete"] is True
+    assert exact["mode"] == "exact_endpoint_branch_structural_confluence_v1"
+    assert exact["structural_nonconfluence_witness_count"] == 1
+    assert exact["unique_terminal_quotient_hash_count"] >= 2
+    assert report["evidence"]["endpoint_branch_confluence_violation_count"] == 1
 
 
 def test_consensus_replay_cannot_disable_required_ab_ba_coverage():
     report = _array_port_pair_consensus_replay_report(
         np.asarray([2, 1, 4], dtype=np.int16),
         np.asarray([1, 0, 3], dtype=np.int16),
+        np.zeros(3, dtype=np.int16),
+        group_name="S3",
         group_order=6,
         config={
             "enabled": True,
@@ -482,6 +592,189 @@ def test_consensus_replay_cannot_disable_required_ab_ba_coverage():
     assert report["local_diamond_status"] == "required_ab_ba_checks_not_requested"
 
 
+def test_consensus_replay_uses_exact_shared_production_link_mutation():
+    report = _array_port_pair_consensus_replay_report(
+        np.asarray([2, 1, 4], dtype=np.int16),
+        np.asarray([1, 0, 3], dtype=np.int16),
+        np.zeros(3, dtype=np.int16),
+        group_name="S3",
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 4,
+            "requested_schedule_replays": 4,
+            "disjoint_checks": 4,
+            "local_diamond_checks": 4,
+        },
+        production_sector_repair_config={
+            "enabled": True,
+            "mode": "repair_coupled_group_compose",
+            "probability": 0.08,
+        },
+        seed=23,
+    )
+
+    assert report["production_move_contract"]["exact_production_move_set_replayed"] is True
+    assert report["production_move_contract"]["replayed_sector_link_mutation"] is True
+    assert report["production_move_contract"]["shared_sector_mutation_primitive"] == (
+        "repair_production_sector_links"
+    )
+    assert report["production_move_contract"]["blockers"] == []
+    assert report["evidence"]["production_move_contract_violation_count"] == 0
+    assert report["evidence"]["sector_replay_call_count"] > 0
+
+
+def test_consensus_replay_detects_gauge_only_mismatch_and_hashes_coupled_state():
+    port_left = np.asarray([2, 4, 5], dtype=np.int16)
+    port_right = port_left.copy()
+    gauge = np.asarray([1, 0, 3], dtype=np.int16)
+
+    report = _array_port_pair_consensus_replay_report(
+        port_left,
+        port_right,
+        gauge,
+        group_name="S3",
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 3,
+            "requested_schedule_replays": 3,
+            "disjoint_checks": 4,
+            "local_diamond_checks": 4,
+            "gauge_relabeling_checks": 3,
+        },
+        seed=29,
+    )
+
+    assert report["initial_phi"] == 2
+    assert report["receipt"] is True
+    assert report["gauge_relabeling_check_count"] == 3
+    assert report["gauge_covariance_violation_count"] == 0
+    assert report["terminal_hash"].startswith("sha256:")
+
+
+def test_named_rng_streams_are_reproducible_and_draw_isolated():
+    streams_a, report_a = _named_rng_streams(1729)
+    initialization_draws = streams_a["initialization"].integers(0, 2**31, size=1024)
+    repair_after_initialization = streams_a["repair"].integers(0, 2**31, size=32)
+
+    streams_b, report_b = _named_rng_streams(1729)
+    repair_without_initialization = streams_b["repair"].integers(0, 2**31, size=32)
+
+    assert initialization_draws.size == 1024
+    assert np.array_equal(repair_after_initialization, repair_without_initialization)
+    assert report_a == report_b
+    assert report_a["cross_stream_draw_isolation"] is True
+
+
+def test_retained_snapshot_uses_its_contemporaneous_invariant_residual_not_final_links():
+    snapshot = {
+        "signature": np.asarray([1, 2]),
+        "stable_count": np.asarray([3, 4]),
+        "committed": np.asarray([True, False]),
+        "repair_load": np.asarray([0.1, 0.2]),
+        "mismatch_density": np.asarray([0.2, 0.3]),
+        "modular_depth": np.asarray([0.4, 0.5]),
+        "modular_time": np.asarray([0.6, 0.7]),
+        "cumulative_repair_load": np.asarray([0.8, 0.9]),
+    }
+    _attach_snapshot_overlap_state(
+        snapshot,
+        np.asarray([0], dtype=np.int16),
+        np.asarray([0], dtype=np.int16),
+        np.asarray([0], dtype=np.int16),
+        group_name="S3",
+        group_order=6,
+    )
+
+    fields = _observer_raw_fields_from_snapshot(
+        snapshot,
+        left=np.asarray([0]),
+        right=np.asarray([1]),
+        gauge=np.asarray([1], dtype=np.int16),
+        patch_count=2,
+    )
+
+    assert snapshot["gauge_invariant_edge_residual_snapshot_exact"] is True
+    assert snapshot["gauge_invariant_edge_residual"].dtype == np.uint8
+    assert fields["s3_class_density"].tolist() == [0.0, 0.0]
+    assert fields["s3_sector_class"].tolist() == [0, 0]
+
+
+def test_record_signatures_and_observer_sector_fields_are_frame_invariant():
+    edge_left = np.asarray([0, 0, 1, 2], dtype=np.int64)
+    edge_right = np.asarray([1, 2, 2, 3], dtype=np.int64)
+    port_left = np.asarray([1, 4, 2, 5], dtype=np.int16)
+    port_right = np.asarray([3, 0, 1, 2], dtype=np.int16)
+    gauge = np.asarray([5, 2, 4, 1], dtype=np.int16)
+    frames = np.asarray([2, 5, 1, 4], dtype=np.int16)
+    transformed = transform_local_frames(
+        port_left,
+        port_right,
+        gauge,
+        edge_left,
+        edge_right,
+        frames,
+        group_name="S3",
+        group_order=6,
+    )
+
+    signature = _gauge_coupled_node_signature(
+        port_left,
+        port_right,
+        gauge,
+        edge_left,
+        edge_right,
+        4,
+        group_name="S3",
+        group_order=6,
+    )
+    transformed_signature = _gauge_coupled_node_signature(
+        *transformed,
+        edge_left,
+        edge_right,
+        4,
+        group_name="S3",
+        group_order=6,
+    )
+    residual = gauge_invariant_edge_residual(
+        port_left,
+        port_right,
+        gauge,
+        group_name="S3",
+        group_order=6,
+    )
+    transformed_residual = gauge_invariant_edge_residual(
+        *transformed,
+        group_name="S3",
+        group_order=6,
+    )
+    common = {
+        "left": edge_left,
+        "right": edge_right,
+        "patch_count": 4,
+        "signature": signature,
+        "stable_count": np.zeros(4),
+        "committed": np.zeros(4, dtype=bool),
+        "repair_load": np.zeros(4),
+        "mismatch_density": np.zeros(4),
+        "modular_depth": np.zeros(4),
+        "modular_time": np.zeros(4),
+        "cumulative_repair_load": np.zeros(4),
+    }
+    original_fields = _observer_raw_fields(gauge=gauge, edge_residual=residual, **common)
+    transformed_fields = _observer_raw_fields(
+        gauge=transformed[2],
+        edge_residual=transformed_residual,
+        **{**common, "signature": transformed_signature},
+    )
+
+    assert np.array_equal(signature, transformed_signature)
+    assert np.array_equal(residual, transformed_residual)
+    assert np.array_equal(original_fields["s3_class_density"], transformed_fields["s3_class_density"])
+    assert np.array_equal(original_fields["s3_sector_class"], transformed_fields["s3_sector_class"])
+
+
 def test_state_modular_array_writes_gated_receipts(tmp_path: Path):
     config = load_config(Path("configs/e1_s3_state_modular_screen_4k.yml"))
     config = dict(config)
@@ -489,9 +782,21 @@ def test_state_modular_array_writes_gated_receipts(tmp_path: Path):
     config["graph"] = dict(config["graph"], patch_count=384, neighbors=8)
     config["dynamics"] = dict(config["dynamics"], cycles=10, repairs_per_cycle=384)
     config["bw"] = dict(config["bw"], cap_count=2, times=[0.025], n_jobs=1, max_basis=16)
-    config["observers"] = dict(config["observers"], sample_count=16, neighborhood_size=16)
+    config["observers"] = dict(
+        config["observers"],
+        sample_count=16,
+        neighborhood_size=16,
+        overlap_correspondence_max_observers=8,
+        consensus_analysis_max_observers=8,
+        observer_wide_analysis_max_observers=8,
+        compact_unenriched_rows=True,
+    )
     config["observer_objects"] = dict(config["observer_objects"], max_families=64)
-    config["neutral_reconstruction"] = {"enabled": True, "require_bw_refinement_pass": False}
+    config["neutral_reconstruction"] = {
+        "enabled": True,
+        "require_bw_refinement_pass": False,
+        "distance_matrix_max_observers": 8,
+    }
 
     result = run_bw_array_config(config, tmp_path)
     run_path = Path(result["path"])
@@ -512,7 +817,33 @@ def test_state_modular_array_writes_gated_receipts(tmp_path: Path):
     assert (run_path / "bulk_reconstruction_report.json").exists()
     assert (run_path / "observer_distance_matrix.npz").exists()
     assert (run_path / "distance_composite.npz").exists()
-    assert (run_path / "distance_overlap_projection.npz").exists()
+    assert (run_path / "distance_measured_overlap.npz").exists()
+    assert (run_path / "observer_population_compact.npz").exists()
+    population = json.loads(
+        (run_path / "observer_population_report.json").read_text(encoding="utf-8")
+    )
+    consensus = json.loads(
+        (run_path / "observer_consensus_report.json").read_text(encoding="utf-8")
+    )
+    assert population["materialized_observer_count"] == 16
+    assert population["observer_wide_analyzed_count"] == 8
+    assert population["verbose_jsonl_patch_observer_count"] == 8
+    assert consensus["analysis_population_binding"]["receipt"] is True
+    assert consensus["analysis_population_binding"]["analysis_subset_hash"] == population[
+        "observer_wide_analysis_subset_hash"
+    ]
+    assert consensus["analysis_observer_ids"] == population[
+        "observer_wide_analysis_observer_ids"
+    ]
+    with np.load(run_path / "observer_population_compact.npz") as compact_observers:
+        assert compact_observers["observer_ids"].shape == (16,)
+        assert int(np.sum(compact_observers["observer_wide_analysis_included"])) == 8
+    neutral = json.loads((run_path / "bulk_reconstruction_report.json").read_text(encoding="utf-8"))
+    assert neutral["materialized_observer_count"] == 16
+    assert neutral["distance_matrix_observer_count"] == 8
+    assert neutral["distance_matrix_sampling"] == "deterministic_observer_id_hash_rank_v1"
+    with np.load(run_path / "observer_distance_matrix.npz") as matrices:
+        assert matrices["distance"].shape == (8, 8)
     assert state_report["controls"]
     assert "correct_beats_controls" in state_report
     assert status["bulk_3d_established"] is False
@@ -573,8 +904,8 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     assert "support_visible_lorentz_3p1_kinematics_receipt" in status
     assert status["CHART_LEVEL_CONFORMAL_LORENTZ_RECEIPT"] is True
     assert status["BW_KMS_BRANCH_REPLAY_RECEIPT"] is True
-    assert status["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
-    assert status["finite_consensus_theorem_receipt"] is True
+    assert status["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert status["finite_consensus_theorem_receipt"] is False
     assert status["OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1"] is False
     assert status["finite_lorentz_theorem_contract_receipt"] is False
     assert status["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
@@ -582,13 +913,20 @@ def test_transition_response_array_writes_scale_selection_receipt(tmp_path: Path
     assert "Endogenous observer-record modular generators" in status["lorentz_claim_boundary"]
     assert manifest["transition_scale_selection"]["primary_source"] == "kms_collar_transport_response"
     assert "support_visible_lorentz_3p1_kinematics_receipt" in manifest["emergence_status"]
-    assert manifest["theorem_core_receipts"]["finite_consensus_theorem_receipt"] is True
+    assert manifest["theorem_core_receipts"]["finite_consensus_theorem_receipt"] is False
     assert manifest["emergence_status"]["bulk_3d_established"] is False
     assert result["transition_scale_selection"]["primary_source"] == "kms_collar_transport_response"
-    assert result["theorem_core_receipts"]["finite_consensus_theorem"] is True
-    assert theorem["finite_consensus_theorem"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is True
-    assert replay["receipt"] is True
-    assert replay["evidence"]["schedule_replay_count"] == 4
+    assert result["theorem_core_receipts"]["finite_consensus_theorem"] is False
+    assert theorem["finite_consensus_theorem"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
+    assert replay["receipt"] is False
+    assert replay["production_move_contract"]["exact_production_move_set_replayed"] is True
+    assert replay["evidence"]["unique_terminal_quotient_hash_count"] > 1
+    assert replay["evidence"]["configured_schedule_replay_count"] == 4
+    assert replay["evidence"]["schedule_replay_count"] == 1
+    assert replay["schedule_replays_short_circuited"] is True
+    assert replay["schedule_replay_short_circuit_reason"] == (
+        "exact_nonconfluence_or_unreplayed_production_move_contract"
+    )
 
 
 def test_lorentz_receipt_uses_direct_kms_selection_when_endogenous_state_fails():
@@ -637,19 +975,17 @@ def test_kms_freezeout_cl_proxy_is_gate_checked(tmp_path: Path):
     run_path = Path(result["path"])
 
     gate = json.loads((run_path / "cosmology_gate_report.json").read_text(encoding="utf-8"))
-    cl_report = json.loads((run_path / "cl_comparison_report.json").read_text(encoding="utf-8"))
-    cosmology = json.loads((run_path / "cosmology_observables.json").read_text(encoding="utf-8"))
     manifest = json.loads((run_path / "manifest.json").read_text(encoding="utf-8"))
     interaction = json.loads((run_path / "defect_interaction_report.json").read_text(encoding="utf-8"))
     particle = json.loads((run_path / "particle_likeness_report.json").read_text(encoding="utf-8"))
 
-    assert gate["allowed"] is True
-    assert gate["checks"]["kms_bw_pass"] is True
+    assert gate["allowed"] is False
+    assert gate["checks"]["kms_bw_pass"] is False
+    assert "kms_bw_pass" in gate["missing_requirements"]
     assert gate["required"]["state_bw_controls_pass"] is False
-    assert cl_report["gate_report"]["allowed"] is True
-    assert "control_comparison" in cl_report["fields"]["record_signature"]
-    assert cosmology["freezeout_cl_proxy"]["claim_boundary"].startswith("first measurement-facing")
-    assert manifest["cosmology_gate"]["allowed"] is True
+    assert not (run_path / "cl_comparison_report.json").exists()
+    assert not (run_path / "cosmology_observables.json").exists()
+    assert manifest["cosmology_gate"]["allowed"] is False
     assert interaction["mode"] == "screen_s3_defect_interaction_diagnostic"
     assert "defect_interaction" in manifest
     assert particle["particle_matter_receipt"] is False

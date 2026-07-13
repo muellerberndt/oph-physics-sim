@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import hashlib
-import json
+import math
 from dataclasses import asdict, dataclass
 from typing import Any, Mapping, Sequence
+
+from oph_fpe.evidence.hashes import stable_json_hash
 
 
 CLAIM_TIERS: dict[str, str] = {
@@ -45,6 +46,7 @@ RECEIPT_REQUIREMENTS: dict[str, tuple[str, ...]] = {
         "REPRESENTATIVE_LIFT_FIREWALL_RECEIPT",
         "QUOTIENT_LUMPABILITY_RECEIPT",
         "SAMPLER_CORRECTNESS_RECEIPT",
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT",
     ),
     "E3": (
         "SOURCE_EUCLIDEAN_SLAB_RECEIPT",
@@ -244,13 +246,160 @@ def sampler_correctness_receipt(
     }
 
 
-def fail_closed_promotion_receipts(*, claim_tier: str, baseline_kind: str) -> dict[str, Any]:
+def rg_exponential_family_closure_receipt(
+    evidence: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Recompute the RG MaxEnt receipt from primitive one-edge evidence.
+
+    A producer's top-level boolean is intentionally ignored. Only a simulator-native
+    finite-matrix I-projection report with a valid evidence hash, cutoff-independent
+    constraint count, unique moment match, vanishing closure defect, and Pinsker check
+    can pass this gate.
+    """
+
+    blockers: list[str] = []
+    if not isinstance(evidence, Mapping):
+        return {
+            "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": False,
+            "promotion_blockers": ["finite_matrix_refinement_evidence_missing"],
+            "claim_boundary": (
+                "No MaxEnt closure promotion without simulator-native fine/coarse matrices."
+            ),
+        }
+
+    if evidence.get("schema_version") != 1:
+        blockers.append("unsupported_refinement_evidence_schema")
+    if evidence.get("evidence_kind") != "finite_matrix_refinement_closure":
+        blockers.append("wrong_refinement_evidence_kind")
+    if evidence.get("algorithm") != "oph-maxent-i-projection-v1":
+        blockers.append("wrong_refinement_algorithm")
+    if not evidence.get("coarse_graining_applied", False):
+        blockers.append("coarse_graining_not_applied")
+    evidence_hash = str(evidence.get("evidence_input_sha256", ""))
+    if len(evidence_hash) != 64 or any(char not in "0123456789abcdef" for char in evidence_hash):
+        blockers.append("invalid_refinement_evidence_hash")
+
+    tolerances = evidence.get("tolerances")
+    if not isinstance(tolerances, Mapping):
+        blockers.append("refinement_tolerances_missing")
+        tolerances = {}
+
+    def finite_number(key: str, source: Mapping[str, Any] = evidence) -> float | None:
+        try:
+            value = float(source[key])
+        except (KeyError, TypeError, ValueError):
+            blockers.append(f"{key}_missing_or_non_numeric")
+            return None
+        if not math.isfinite(value):
+            blockers.append(f"{key}_non_finite")
+            return None
+        return value
+
+    moment = finite_number("moment_matching_residual_linf")
+    hessian = finite_number("duhamel_hessian_min_eigenvalue")
+    defect = finite_number("closure_defect_nats")
+    trace_residual = finite_number("trace_norm_residual")
+    pinsker = finite_number("pinsker_residual_bound")
+    moment_tol = finite_number("moment", tolerances)
+    defect_tol = finite_number("closure_defect_nats", tolerances)
+    hessian_tol = finite_number("hessian_floor", tolerances)
+    numerical_tol = finite_number("numerical", tolerances)
+
+    if not evidence.get("input_state_validated", False):
+        blockers.append("fine_state_not_validated")
+    if not evidence.get("coarse_state_validated", False):
+        blockers.append("coarse_state_not_validated")
+    if not str(evidence.get("refinement_channel_id", "")).strip():
+        blockers.append("refinement_channel_id_missing")
+
+    constraint_counts: list[int] = []
+    for key in (
+        "fine_constraint_count",
+        "coarse_constraint_count",
+        "fine_independent_constraint_count",
+        "coarse_independent_constraint_count",
+    ):
+        try:
+            value = int(evidence[key])
+        except (KeyError, TypeError, ValueError):
+            blockers.append(f"{key}_missing_or_non_integer")
+            continue
+        constraint_counts.append(value)
+    if (
+        len(constraint_counts) != 4
+        or constraint_counts[0] <= 0
+        or len(set(constraint_counts)) != 1
+    ):
+        blockers.append("constraint_dimension_not_cutoff_independent")
+    if not evidence.get("projection_converged", False):
+        blockers.append("i_projection_not_converged")
+
+    numeric_values = (
+        moment,
+        hessian,
+        defect,
+        trace_residual,
+        pinsker,
+        moment_tol,
+        defect_tol,
+        hessian_tol,
+        numerical_tol,
+    )
+    if all(value is not None for value in numeric_values):
+        assert moment is not None
+        assert hessian is not None
+        assert defect is not None
+        assert trace_residual is not None
+        assert pinsker is not None
+        assert moment_tol is not None
+        assert defect_tol is not None
+        assert hessian_tol is not None
+        assert numerical_tol is not None
+        if min(moment_tol, defect_tol, hessian_tol, numerical_tol) < 0.0:
+            blockers.append("negative_refinement_tolerance")
+        if moment > moment_tol:
+            blockers.append("moment_matching_residual_above_tolerance")
+        if hessian <= hessian_tol:
+            blockers.append("i_projection_not_unique")
+        if defect < -numerical_tol or defect > defect_tol:
+            blockers.append("exponential_family_closure_defect_nonzero")
+        expected_pinsker = math.sqrt(2.0 * max(defect, 0.0))
+        if abs(pinsker - expected_pinsker) > numerical_tol:
+            blockers.append("pinsker_bound_not_recomputed_from_defect")
+        if trace_residual > pinsker + numerical_tol:
+            blockers.append("pinsker_residual_bound_violated")
+
+    passed = not blockers
+    return {
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": bool(passed),
+        "promotion_blockers": blockers,
+        "evidence_input_sha256": evidence_hash or None,
+        "refinement_channel_id": evidence.get("refinement_channel_id"),
+        "closure_defect_nats": defect,
+        "trace_norm_residual": trace_residual,
+        "pinsker_residual_bound": pinsker,
+        "claim_boundary": (
+            "Finite-dimensional one-edge closure receipt only; regulator-uniform and "
+            "continuum closure require a separately audited refinement family."
+        ),
+    }
+
+
+def fail_closed_promotion_receipts(
+    *,
+    claim_tier: str,
+    baseline_kind: str,
+    rg_closure_evidence: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     tier = checked_claim_tier(claim_tier)
+    rg_gate = rg_exponential_family_closure_receipt(rg_closure_evidence)
     receipts = {
         "TRACIALLY_POINTED_QUOTIENT_RECEIPT": False,
         "REFERENCE_STATE_REFINEMENT_RECEIPT": False,
         "SOURCE_ONLY_CONSTRAINT_LEDGER_RECEIPT": False,
-        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": False,
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": bool(
+            rg_gate["RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT"]
+        ),
         "FIBER_ORBIT_HOMOGENEITY_RECEIPT": False,
         "LOCAL_REPAIR_GAP_FIELD_RECEIPT": False,
         "GLOBAL_POINCARE_CONSTANT_RECEIPT": False,
@@ -267,6 +416,7 @@ def fail_closed_promotion_receipts(*, claim_tier: str, baseline_kind: str) -> di
         "baseline_kind": str(baseline_kind),
         "claim_tier": tier,
         "receipts": receipts,
+        "rg_exponential_family_closure_evidence": rg_gate,
         "claim_tier_gate": claim_tier_gate(claim_tier=tier, receipts=receipts),
         "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": False,
         "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": False,
@@ -276,8 +426,7 @@ def fail_closed_promotion_receipts(*, claim_tier: str, baseline_kind: str) -> di
 
 
 def stable_hash(payload: Any) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+    return stable_json_hash(payload).removeprefix("sha256:")
 
 
 def _requirements_through(claim_tier: str) -> list[str]:

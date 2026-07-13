@@ -23,3 +23,4 @@ def test_collar_markov_report_schema():
     assert report["rows"]
     assert "epsilon_cmi" in report["rows"][0]
     assert report["rows"][0]["claim_boundary"].startswith("classical diagonal")
+    assert report["CENTRAL_INTERFACE_MSA_RECEIPT"] is False

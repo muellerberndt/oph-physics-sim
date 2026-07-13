@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/wzh_source_closure_run.schema.json",
+  "title": "OPH W/Z/H numerical source-closure run configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "claim_id",
+    "branch_id",
+    "claim_level",
+    "paper_inputs",
+    "paper_input_hashes",
+    "source_root",
+    "source_clock",
+    "rg_transport",
+    "pole_controls",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {"const": "oph_wzh_numerical_campaign_v1"},
+    "claim_id": {"type": "string", "minLength": 1},
+    "branch_id": {"type": "string", "minLength": 1},
+    "claim_level": {"enum": ["diagnostic_only", "certificate_candidate"]},
+    "paper_inputs": {
+      "type": "object",
+      "additionalProperties": {"type": ["string", "null"]},
+      "required": [
+        "d10_receipt",
+        "d11_receipt",
+        "d10_certificate",
+        "d11_certificate",
+        "source_root_receipt",
+        "source_clock_certificate",
+        "rg_packet",
+        "pole_kernel_manifest",
+        "provenance_manifest"
+      ]
+    },
+    "paper_input_hashes": {
+      "type": "object",
+      "additionalProperties": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+      "required": [
+        "d10_receipt",
+        "d11_receipt",
+        "d10_certificate",
+        "d11_certificate",
+        "source_root_receipt",
+        "source_clock_certificate",
+        "rg_packet",
+        "pole_kernel_manifest",
+        "provenance_manifest"
+      ]
+    },
+    "source_root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "same_branch"],
+      "properties": {
+        "verified": {"type": "boolean"},
+        "same_branch": {"type": "boolean"}
+      }
+    },
+    "source_clock": {
+      "type": "object",
+      "required": [
+        "hamiltonian",
+        "frequency_hz",
+        "perturbation_norm_bound",
+        "selected_levels",
+        "source_packet_verified",
+        "no_target_ancestry",
+        "frequency_role"
+      ],
+      "properties": {
+        "hamiltonian": {"type": "array", "minItems": 2},
+        "frequency_hz": {"type": "number", "exclusiveMinimum": 0},
+        "perturbation_norm_bound": {"type": "number", "minimum": 0},
+        "selected_levels": {
+          "type": "array",
+          "prefixItems": [{"type": "integer", "minimum": 0}, {"type": "integer", "minimum": 1}],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "source_packet_verified": {"type": "boolean"},
+        "no_target_ancestry": {"type": "boolean"},
+        "frequency_role": {"enum": ["unit_convention", "source_emitted", "measurement_calibration"]}
+      }
+    },
+    "rg_transport": {
+      "type": "object",
+      "required": [
+        "initial_state",
+        "initial_scale",
+        "segments",
+        "source_packet_verified",
+        "same_branch",
+        "scheme",
+        "loop_order"
+      ],
+      "properties": {
+        "initial_state": {"type": "array", "minItems": 1, "items": {"type": "number"}},
+        "initial_scale": {"type": "number", "exclusiveMinimum": 0},
+        "segments": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+        "source_packet_verified": {"type": "boolean"},
+        "same_branch": {"type": "boolean"},
+        "scheme": {"type": "string", "minLength": 1},
+        "loop_order": {"type": "string", "minLength": 1}
+      }
+    },
+    "pole_controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocks"],
+      "properties": {
+        "blocks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["W", "Z", "H"],
+          "properties": {
+            "W": {"$ref": "#/$defs/block"},
+            "Z": {"$ref": "#/$defs/block"},
+            "H": {"$ref": "#/$defs/block"}
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["no_target_ancestry", "prospective_claim_freeze"],
+      "properties": {
+        "no_target_ancestry": {"type": "boolean"},
+        "prospective_claim_freeze": {"type": "boolean"}
+      }
+    }
+  },
+  "$defs": {
+    "block": {
+      "type": "object",
+      "required": [
+        "block_kind",
+        "coordinate_unit",
+        "coefficients",
+        "contour",
+        "source_kernel_verified",
+        "ward_identity_verified",
+        "slavnov_taylor_verified",
+        "nielsen_identity_verified",
+        "physical_sheet_verified",
+        "nonzero_residue_verified",
+        "uncertainty_bound_present"
+      ],
+      "properties": {
+        "block_kind": {"enum": ["charged", "neutral", "higgs"]},
+        "coordinate_unit": {
+          "enum": ["dimensionless_control", "dimensionless_E_star_squared", "GeV_squared"]
+        },
+        "coefficients": {"type": "array", "minItems": 1},
+        "reference_coefficients": {"type": "array", "minItems": 1},
+        "contour": {
+          "type": "object",
+          "required": ["center", "radius"],
+          "properties": {
+            "center": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
+            "radius": {"type": "number", "exclusiveMinimum": 0},
+            "samples": {"type": "integer", "minimum": 32}
+          }
+        },
+        "source_kernel_verified": {"type": "boolean"},
+        "ward_identity_verified": {"type": "boolean"},
+        "slavnov_taylor_verified": {"type": "boolean"},
+        "nielsen_identity_verified": {"type": "boolean"},
+        "physical_sheet_verified": {"type": "boolean"},
+        "nonzero_residue_verified": {"type": "boolean"},
+        "uncertainty_bound_present": {"type": "boolean"}
+      }
+    }
+  }
+}

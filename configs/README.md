@@ -21,6 +21,9 @@ prove. These assumptions are visualization-only and remain separate from all
 computed receipts; see `../docs/SIMULATION_ASSUMPTION_POLICY.md`.
 - `sou_v1_icosa12.yml`: exact small-universe finite-consensus harness.
 - `shape_dodeca_vertex_smoke.yml` and `shape_dodeca_ensemble.yml`: shape/defect assay fixtures.
+- `bosons/wzh_source_closure_diagnostic_v1.yml`: fail-closed synthetic control
+  for the W/Z/H source-clock, RG, BRST-block, and complex-pole backend. It is
+  not a physical mass prediction fixture.
 
 Put local variants under `configs/local/` or use suffixes such as `.local.yml`, `.private.yml`, or
 `.tmp.yml`; those paths are ignored by Git. See `docs/configuration.md` for the accepted format and

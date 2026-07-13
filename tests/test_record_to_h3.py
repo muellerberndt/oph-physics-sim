@@ -1066,6 +1066,45 @@ def test_defect_timeline_to_h3_report_emits_worldline_precursor_nonclaim():
     assert report["worldlines"][0]["events"][0]["h3_spatial_point"]
 
 
+def test_defect_timeline_to_h3_event_cap_is_explicit_and_fail_closed():
+    points = fibonacci_sphere_points(128)
+    caps = sample_caps(points, count=4, theta_values=[0.6], seed=114)
+    timeline = {
+        "particle_promotion_inputs_complete": True,
+        "worldlines": [
+            {
+                "worldline_id": "w0",
+                "persistent": True,
+                "events": [
+                    {
+                        "cycle": cycle,
+                        "class": "transposition",
+                        "support_nodes": list(range(cycle, cycle + 12)),
+                        "support_node_count": 12,
+                    }
+                    for cycle in range(4)
+                ],
+            }
+        ],
+    }
+
+    report = defect_timeline_to_h3_report(
+        points,
+        caps,
+        timeline,
+        candidate_count=128,
+        max_events=2,
+        seed=115,
+    )
+
+    assert report["source_event_count_total"] == 4
+    assert report["event_count_emitted"] == 2
+    assert report["event_selection_complete"] is False
+    assert report["h3_promotion_inputs_complete"] is False
+    assert "h3_event_selection_truncated" in report["h3_truncation_reasons"]
+    assert report["bulk_worldline_precursor_receipt"] is False
+
+
 def test_defect_timeline_to_h3_can_use_transport_response_fields():
     points = fibonacci_sphere_points(256)
     caps = sample_caps(points, count=6, theta_values=[0.55, 0.75], seed=16)
