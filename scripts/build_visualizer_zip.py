@@ -44,6 +44,8 @@ for doc in (
     "oph_visualizer_pack_v2.schema.json",
     "SIMULATION_ASSUMPTION_POLICY.md",
     "VISUALIZATION_APP_AGENT_MANUAL.md",
+    "SCALING_MILESTONE_ESTIMATES_2026-07-13.md",
+    "BEST_OF_PUBLIC_DATA_COMPARISONS.md",
 ):
     add(REPO / "docs" / doc, f"docs/{doc}")
 
@@ -60,6 +62,8 @@ for pattern in ("*.csv", "*.bin", "observers_full_*.json", "cameras_full_*.json"
 RUN_REPORTS = [
     "manifest.json",
     "config.yml",
+    "RUN_HIGHLIGHTS.md",
+    "run_highlights.json",
     "AUTO_THEOREM_UNIVERSE_SUMMARY.json",
     "simulation_assumption_manifest.json",
     "bulk_proof_certificate_report.json",

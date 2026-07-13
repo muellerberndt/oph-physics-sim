@@ -278,3 +278,22 @@ Interactions that carry the physics:
 - H3 lift: reuse the existing camera/H3 contract to render the same
   multiplicity field in the hyperboloid chart; the ghost-vs-solid story
   is identical there.
+
+## Run highlights panel and the run switcher
+
+Every bundle carries `run_reports/RUN_HIGHLIGHTS.md` and
+`run_reports/run_highlights.json`: this run's milestone receipts (from
+its own gate values), run-derived diagnostics, the curated near-fit
+scoreboard against public data, and the banked negatives. Render it as a
+"highlights" panel: milestone ladder with PASS/open states, the near-fit
+table with pulls, the claim-boundary string verbatim.
+
+Bundles are per run (64k, 128k, 1M, ...). `run_highlights.json` carries
+`run_id` and a human `label` with patch and observer counts: when the app
+loads more than one bundle, use those for a run switcher so the viewer
+can flip between scales and watch which milestones and diagnostics move.
+The near-fit table is paper-side and identical across bundles by design;
+the milestone ladder and diagnostics are where scale shows.
+
+Source excerpts ride in `docs/SCALING_MILESTONE_ESTIMATES_2026-07-13.md`
+and `docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md` inside the bundle.
