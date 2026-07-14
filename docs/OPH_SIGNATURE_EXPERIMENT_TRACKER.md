@@ -30,6 +30,9 @@ supersede it; the principle and claim-rule surface is
 includes the externally timestamped blind hadronic closure target
 (`falsification/frozen_targets/` in the `oph-meta` repo one level up,
 OpenTimestamps, frozen 2026-07-14); tracker rows never close ledger rows.
+The Ward-projected payload harness now exists in the companion repo
+(`reverse-engineering-reality/code/particles/hadron/ward_projected_payload/`);
+tracker rows still never close ledger rows.
 
 ## 0a. At a glance (updated 2026-07-14, day)
 

@@ -16,7 +16,9 @@ of the consistency stack (`reverse-engineering-reality/CONSISTENCY_STACK.md`,
 a companion-repo file). The simulator's open items — strict neutral bulk,
 Einstein branch entry, physical particles, physical CMB — sit on C5 and
 downstream rows. The simulator emits no ledger-row closures; closure verdicts
-live only in `reverse-engineering-reality/CLOSURE_LEDGER.md`.
+live only in `reverse-engineering-reality/CLOSURE_LEDGER.md`. The companion
+repo's generator program executed its first full round on 2026-07-14; the
+simulator's open items are unchanged.
 
 The package name is `OPH-FPE`: Observer-Patch Fundamental Physics Emergence.
 
