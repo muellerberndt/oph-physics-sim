@@ -14,8 +14,6 @@ run artifacts under `runs/`; mutable progress lives in GitHub issues
   comparison suite.
 - `SCALING_MILESTONE_ESTIMATES_2026-07-13.md`: scale milestones,
   empirical lower bounds, and measured actuals.
-- `KMS_PROBE_SECTOR_REPLAY_TODO.md`: covariant-probe episode record
-  (fix implemented 2026-07-14).
 
 ## Contracts and lanes
 
@@ -44,7 +42,5 @@ run artifacts under `runs/`; mutable progress lives in GitHub issues
 - `configuration.md`: config format and claim-boundary rules.
 - `VISUALIZATION_APP_AGENT_MANUAL.md`: payload-driven visualization
   manual (`../scripts/README_FOR_WEB_CODING_AGENT.md` for bundles).
-- `GCP_SCALING_PLAN.md`: Google Cloud fleet and monolithic scaling plan.
-- `parallel_cloud_plan.md`: code-level parallelism analysis.
-- `cloud.md`: provider-neutral credential and wiring policy.
-- `digitalocean_pool_setup.md`: DigitalOcean pool runbook.
+- `GCP_SCALING_PLAN.md`: scaling and cloud operations (fleet ensembles,
+  monolithic sizing, code-level parallelism, credentials policy).

@@ -46,6 +46,7 @@ for doc in (
     "VISUALIZATION_APP_AGENT_MANUAL.md",
     "SCALING_MILESTONE_ESTIMATES_2026-07-13.md",
     "BEST_OF_PUBLIC_DATA_COMPARISONS.md",
+    "WHAT_THIS_RUN_EXPLAINS.md",
 ):
     add(REPO / "docs" / doc, f"docs/{doc}")
 

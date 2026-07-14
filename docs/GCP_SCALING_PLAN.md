@@ -90,3 +90,26 @@ keep 64,000 materialized for the monolithic 1M flagship, and reach
 agreement certificate needs overlap density, never raw observer count:
 32,000 observers on 131,072 patches gives richer pair statistics than
 131,072 observers on 1M patches at fixed support size.
+
+
+## Credentials and wiring policy (absorbed from cloud.md, 2026-07-14)
+
+Production cloud identifiers stay out of the repo: configure projects,
+buckets, tokens, and account ids through `.env.local`, shell exports,
+named CLI profiles, or cloud-native identity. Baseline APIs for a GCP
+worker: Compute Engine and Cloud Storage; add Cloud Build, IAM, Service
+Usage, and Artifact Registry for automated flows.
+
+## Code-level parallelism (absorbed from parallel_cloud_plan.md, 2026-07-14)
+
+The hot path is CPU-bound NumPy/SciPy/KD-tree and graph-array work; no
+useful GPU path exists today. Two levels of parallelism: inner cap/time
+parallelism inside one run (`bw.n_jobs: auto`,
+`cosmology.angular_power.n_jobs: auto`) and outer sweep parallelism
+(`run-bw-sweep` fills CPUs when `--workers`/`--inner-jobs` are omitted;
+`OPH_FPE_CPUS=<N>` overrides detection). Cap BLAS fan-out per worker
+(`OMP_NUM_THREADS=1` etc.). The direct spherical-harmonic `C_l`
+estimator is the cost driver for screen-spectrum receipts: use it for
+final receipts, the sampled pair proxy or lower `ell_max` for sweeps.
+The DigitalOcean fixed-pool runbook was removed 2026-07-14 (git history
+`docs/digitalocean_pool_setup.md`); GCP is the provider of record.

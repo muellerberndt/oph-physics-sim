@@ -79,6 +79,38 @@ full board in section 1.
 | Einstein bridge E1-E6 | red, bw_2pi resolved | sphere_fold, null_stress, bounded_interval |
 | Freeze registry FZ-01 | pending | hash-pin the 20 rows (1 day) |
 
+## 0b. Evaluation sweep 2026-07-14 (after the earned-run ladder)
+
+Per-experiment status against the new data (64k/128k/1M earned runs plus
+the 4k/16k diagnostics). Three groups: improved, new invariants, and
+gaps with causes and proposed fixes.
+
+### Improved or new results
+
+| Experiment | New result | Note |
+|---|---|---|
+| 3+1D observer experience | EARNED at 4k, 128k, 1M under the covariant sector-replay contract, zero overrides | the 07-11 receipts stay superseded |
+| Spacetime consensus (NEW receipt) | TRUE at 128k and 1M with empty blockers | 600-800 pairs defect 0.0; 300-400 cocycles exact; controls ~0.80 |
+| Observer agreement vs scale | flat at defect 0.0 from 4k to 1M | the certificate saturates on the shared record; the discriminating regime is independent commit histories |
+| Emergent-bulk field (NEW product) | multiplicity maxima 43 (64k), 169 (128k), 28 (1M at the 2048 cohort) | consensus-slider data in every bundle |
+| Committed-record transposition density (NEW invariant) | 0.4828 / 0.4830 / 0.4816 across 64k/128k/1M | three-decimal scale-stable, consistently below the uniform 0.5; a reproducible order parameter awaiting a theory target |
+| Fusion identity fraction vs scale | 0.230 -> 0.207 -> 0.190 (random composition = 0.167) | the identity excess decays with scale: current encounter candidates approach composition-randomness |
+| Worldline count vs scale | 256 -> 439 -> 507 over 16x patches | strongly sublinear: defect worldline density falls with refinement |
+
+### Gaps, causes, and proposed fixes
+
+| Experiment | State | Likely cause | Proposed fixes |
+|---|---|---|---|
+| 2 pi clock strength at scale | selected, score 0.691 -> 0.304 -> 0.0 | probe budgets (basis size, repairs per source, steps) fixed while the patch count grew 256x | scale `probe_repairs_per_source`/`max_basis` with patch count; add a score-vs-budget sweep at 4k; longer post-commit tail (256-cycle temporal ladder) |
+| Einstein bw_2pi blocker | open despite the replay fix | the bridge reads the L3 `KMS_GEOMETRIC_CLOCK_FIT_RECEIPT` (geometric clock FIT), stronger than the L0 branch replay | more informative clock carriers (26-39 rows today): longer tails, more cycles, carrier-row selection tuning; then the fit either passes or its failure is a physics statement |
+| Einstein E1/E3/E5 (null stress, small-ball area, lambda constancy) | producers absent | verifier-without-producer | write the three producers against the finite-collar stress objects; E6 is a bookkeeping audit once inputs exist |
+| Strict neutral bulk / effective 4D | ladder incomplete; rank-3 unstable; independent selector false | 256k rung interrupted (resume in flight); rank estimators still consume hash-token features that destroy locality; measured-overlap gate has no producer | finish the 256k sweep, run the four-rung audit; replace hash-token features with locality-preserving packet features (H2 audit item); wire the agreement certificate into `measured_overlap_geometry_receipt`; ancestry-split refinement batches |
+| Particle promotion (P1) | fusion conservation fails; transport receipts hardcoded false | encounter detector counts passers-by (identity fraction decays to random with scale); no covariant common-basepoint transport | redefine fusion as product-worldline continuation (two tubes end, one begins, composed class); implement covariant fusion transport (same playbook as the clock replay); tighten the angular cutoff; deconfinement check for colored candidates |
+| Worldline turning power | z in [-1.5, +0.8], 4-18 usable worldlines | timeline caps events per worldline | raise timeline caps for analysis runs; consume the full cluster catalogs; 64-seed GCP fleet for a proper null band |
+| Screen parity field pairs (e5) | degenerate at 128k/1M | bounded e5 profile writes constant freezeout fields | export smoothed/evolution-era fields in e5, or enable raw frames on one analysis run per scale |
+| Physical CMB lane | gates unchanged | screen export ell_max 24 sits below the first Planck bin; source/transfer/likelihood contract open | post-process the 1M freezeout with `cl-from-freezeout-npz --ell-max 96` (defined command); the contract items stay paper-side |
+| Paper-side theorem gaps (DK-06 birefringence emission, DK-08 applicability predicate, MM-01 bridge multiplicity, CL-03 pole packet, CL-04 spectral backend, NT-02 alpha-dot statement, FZ-01 freeze registry) | unchanged by sim data | missing theorems or one-day artifacts | as listed per row in sections 2-8; FZ-01 stays the highest value-per-day action |
+
 ## 0. Discipline (applies to every entry)
 
 - **Claim classes** (Pro round 1, section 14): S0 identity/imported, S1
@@ -314,7 +346,7 @@ Newest first. Every entry names the artifact that reproduces it.
   by the pre-covariant probe; under the stricter contract those receipts
   are unproven and must be re-earned. Second, the queued fix is
   probe-side sector-repair replay, filed with a fixture-test plan at
-  `oph-physics-sim/docs/KMS_PROBE_SECTOR_REPLAY_TODO.md`. Night ladder
+  `docs/KMS_PROBE_SECTOR_REPLAY_TODO.md` (implemented and removed 2026-07-14; git history). Night ladder
   runs keep sector repair enabled and declare a product-gating override
   (`require_kms_bw_pass: false` with reason string); no receipt value is
   altered.

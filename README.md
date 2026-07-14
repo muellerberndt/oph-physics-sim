@@ -341,8 +341,8 @@ Cloud credentials, project IDs, bucket names, account IDs, tokens, and keys belo
 
 Curated example configs live in `configs/`. Local or generated configs belong under ignored paths
 such as `configs/local/`, `configs/generated/`, or `*.local.yml`; see `docs/configuration.md` for
-the format and claim-boundary rules. See `docs/cloud.md`, `docs/parallel_cloud_plan.md`, and
-`docs/digitalocean_pool_setup.md` for provider boundaries and sizing notes.
+the format and claim-boundary rules, and `docs/GCP_SCALING_PLAN.md` for provider boundaries and
+sizing notes.
 
 For CPU sweeps, cap BLAS fan-out per worker:
 
@@ -378,8 +378,6 @@ Contracts and lanes:
   (issues #307, #308, #309, #310, #361) and Lean-mirrored fixtures.
 - `docs/SIMULATION_ASSUMPTION_POLICY.md`: the assumed-bridge visualization
   lane and its `SIMULATION_ASSUMED_*` statuses.
-- `docs/KMS_PROBE_SECTOR_REPLAY_TODO.md`: the covariant-probe fail-closed
-  episode and the sector-replay fix (implemented 2026-07-14).
 - `docs/PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`: cross-repo artifact
   import and hash-pinning.
 
@@ -395,9 +393,8 @@ Configuration, visualization, operations:
 - `docs/VISUALIZATION_APP_AGENT_MANUAL.md`: app-agent manual for the
   payload-driven visualizations; `scripts/README_FOR_WEB_CODING_AGENT.md`:
   bundle contents and scene catalog.
-- `docs/GCP_SCALING_PLAN.md`, `docs/parallel_cloud_plan.md`,
-  `docs/cloud.md`, `docs/digitalocean_pool_setup.md`: scaling and cloud
-  operations.
+- `docs/GCP_SCALING_PLAN.md`: scaling and cloud operations (fleet ensembles,
+  monolithic sizing, parallelism, credentials policy).
 - `docs/small_oph_universe_v1.md`: exact finite-consensus calibration
   harness.
 - `REPRODUCTION.md`: reproducibility notes.

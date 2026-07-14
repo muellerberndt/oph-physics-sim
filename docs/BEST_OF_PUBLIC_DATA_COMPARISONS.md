@@ -15,7 +15,12 @@ The generated bundle contains:
 
 Validate the JSON with `schemas/cosmology/best_of_public_data_comparisons.schema.json`.
 
-## Current result
+## Current result (as of the 2026-07-11 audited primary run)
+
+Update 2026-07-14: earned-receipt runs exist at 64k/128k/1M
+(`oph_universe_{64k_3p1d_reearned,128k_3p1d_earned,1m_earned}`); rerun
+the suite with one of them as primary to refresh this table. Live
+verdicts: `OPH_SIGNATURE_EXPERIMENT_TRACKER.md` section 0a.
 
 The current audited primary run is `runs/oph_universe_64k_final_audited_20260711`. Its strongest available comparisons are mixed:
 

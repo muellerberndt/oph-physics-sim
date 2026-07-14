@@ -127,3 +127,20 @@ tree:
 The observer-report tail dominates above 64k. Receipt state per run sits
 in the tracker results log; the 3+1D receipts earned before the
 sector-replay fix are superseded per the hardened-contract rule above.
+
+
+## Update 2026-07-14: receipts under the covariant contract
+
+- Observer-facing 3+1D experience: earned at 4,096 (all four gates, zero
+  overrides) and at 131,072/32,000 and 1,048,576/64,000 under the
+  sector-replay covariant probe. The 2 pi selection-score median thins
+  with scale (0.691 at 4k, 0.304 at 128k, 0.0 at 1M): the probe budget
+  wants scaling with patch count before the 1M time gate counts as
+  strong.
+- NEW: `OBSERVER_SPACETIME_CONSENSUS_RECEIPT` (3+1D experience AND exact
+  mutual chart re-gauging with cocycle closure) true at 128k and 1M.
+- Glued objective 4D spacetime: no change; the 4k/16k/64k/256k ladder
+  audit is the active gate.
+- The Einstein `bw_2pi` blocker reads the L3
+  `KMS_GEOMETRIC_CLOCK_FIT_RECEIPT`, a stronger object than the L0
+  branch replay fixed on 2026-07-14; it stays open.
