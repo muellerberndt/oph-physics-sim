@@ -168,6 +168,23 @@ full board in section 1.
 
 Newest first. Every entry names the artifact that reproduces it.
 
+- **2026-07-14 (day) · THE MILLION-PATCH CONSENSUS UNIVERSE, with one
+  declared caveat.** `oph_universe_1m_earned` (1,048,576 patches, 64,000
+  observers, zero overrides, covariant probe):
+  `observer_facing_3p1d_h3_experience_receipt: TRUE` (all four gates) and
+  `OBSERVER_SPACETIME_CONSENSUS_RECEIPT: TRUE` with an empty blocker
+  list: 800/800 agreement pairs at defect 0.0, 400/400 cocycle-exact
+  triples, control 0.801; emergent-bulk multiplicity to 28; turning
+  statistic null (z = -1.48). Declared caveat: the 2 pi selection-score
+  median flattens across scale (0.691 at 4k, 0.304 at 128k, 0.0 at 1M
+  with selection landing on 2 pi non-degenerately), so the 1M time-gate
+  pass is formally earned with a thin margin; the probe budget wants
+  scaling with patch count, and the 128k run stays the strongest
+  at-scale full receipt until that lands. Flagship package #3:
+  `runs/oph_universe_1m_earned_visualizer_bundle.zip` (106.2 MB; ships
+  the slim `observer_supports.jsonl` derivative per the bundle budget).
+  Ladder of per-run packages for the run switcher: 64k 126.1 MB, 128k
+  202.9 MB, 1M 106.2 MB.
 - **2026-07-14 (day) · FIRST FULL SPACETIME-CONSENSUS RECEIPT AT SCALE.**
   `oph_universe_128k_3p1d_earned` (131,072 patches, 32,000 observers, the
   1M production configuration one step down, zero overrides, covariant
