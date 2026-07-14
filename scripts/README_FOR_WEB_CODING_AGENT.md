@@ -297,3 +297,10 @@ the milestone ladder and diagnostics are where scale shows.
 
 Source excerpts ride in `docs/SCALING_MILESTONE_ESTIMATES_2026-07-13.md`
 and `docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md` inside the bundle.
+
+Note on large runs: when the full `observer_views.jsonl` exceeds the
+bundle budget, the bundle ships `data/observer_supports.jsonl` instead
+(one row per observer: `observer_id`, `support_nodes`,
+`modular_depth_mean`). Every consensus/parliament scene works from that
+slim file; the heavyweight per-observer spectra stay in the run
+directory.

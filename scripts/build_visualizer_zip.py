@@ -106,8 +106,31 @@ for name in (
 ):
     add(RUN_DIR / name, f"data/{name}", required=False)
 
-# Full observer-view rows (all observers, spectra + histograms + repair tensors)
-add(RUN_DIR / "observer_views.jsonl", "data/observer_views.jsonl", required=False)
+# Full observer-view rows (all observers, spectra + histograms + repair tensors).
+# Above the size cutoff, ship a slim id+support derivative instead: the
+# consensus scenes need supports and ids, and the certificates ride as
+# digested reports anyway.
+_views = RUN_DIR / "observer_views.jsonl"
+if _views.exists():
+    if _views.stat().st_size <= 150_000_000:
+        add(_views, "data/observer_views.jsonl", required=False)
+    else:
+        slim = RUN_DIR / "observer_supports.jsonl"
+        if not slim.exists() or slim.stat().st_mtime < _views.stat().st_mtime:
+            with _views.open() as _in, slim.open("w") as _out:
+                for _line in _in:
+                    try:
+                        _row = json.loads(_line)
+                    except Exception:
+                        continue
+                    if _row.get("view_type") != "patch_observer":
+                        continue
+                    _out.write(json.dumps({
+                        "observer_id": _row.get("observer_id"),
+                        "support_nodes": _row.get("support_nodes", []),
+                        "modular_depth_mean": _row.get("modular_depth_mean"),
+                    }) + "\n")
+        add(slim, "data/observer_supports.jsonl", required=False)
 
 # Reference single-file viewers produced by the simulator (working examples)
 for name in ("oph_realtime_viewer.html", "object_h3_bulk_viewer.html", "cmb_neutral_frontier_viewer.html"):
