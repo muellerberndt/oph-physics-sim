@@ -20,6 +20,17 @@ with `epic-wins/`, `particle_crisis/`, or `audit-bundles/` live in the
    numerical spot-checks (receipts in the session scratchpad,
    `signature_checks.py`).
 
+Canonical closure surface: the closure equations the principle set requires to
+hold exactly, with current residuals, live in
+`reverse-engineering-reality/CLOSURE_LEDGER.md` (in the `oph-meta` repo one
+level up). Tracker rows that touch alpha, Lambda, capacity, or the
+electroweak chart state closure status against that ledger and never
+supersede it; the principle and claim-rule surface is
+`reverse-engineering-reality/STRANGE_LOOP_PRINCIPLES.md`. The decisive falsification surface
+includes the externally timestamped blind hadronic closure target
+(`falsification/frozen_targets/` in the `oph-meta` repo one level up,
+OpenTimestamps, frozen 2026-07-14); tracker rows never close ledger rows.
+
 ## 0a. At a glance (updated 2026-07-14, day)
 
 Done rows first, compared against measurement where a public datum
@@ -65,9 +76,18 @@ full board in section 1.
 | Experiment | Verdict | Number that matters |
 |---|---|---|
 | 3+1D observer experience | RE-EARNED under covariant contract | 4k: all 4 gates TRUE, no overrides; time gate TRUE at 4k/16k/64k |
-| Observer mutual agreement | TRUE at every scale | 4k..1M: pair defect 0.0, cocycle 100 percent, control ~0.80 |
-| 2 pi KMS clock | GENUINELY CERTIFIED post replay fix | two_pi_selected true, non-degenerate (was fail-closed) |
+| Observer mutual agreement | TRUE at every scale (self-consistency of the shared record) | 4k..1M: pair defect 0.0, cocycle 100 percent, control ~0.80; discriminating regime (independent commit histories) open |
+| 2 pi KMS clock | CERTIFIED on the 2 pi-normalized source post replay fix | two_pi_selected true, non-degenerate (was fail-closed); endogenous scale discrimination open |
 | Proto-particles | RECEIPTED | organic population + worldlines TRUE; 2-defect assays TRUE |
+
+RETRACTION (superseded receipts). Every 3+1D experience and 2 pi KMS
+receipt certified before 2026-07-14 was earned by the pre-covariant,
+gauge-blind probe and is retracted as evidence; the rows above reflect the
+covariant re-earn only. The re-earned 2 pi verdict itself rests on the
+`kms_collar_transport_response` source, whose scale normalization defaults
+to 2 pi, while the endogenous perturb-remeasure probe selected pi without
+discrimination; the re-earn stands as final only after the repaired gate
+passes on covariant data (open work).
 
 ### In flight / pending
 
@@ -285,8 +305,9 @@ Newest first. Every entry names the artifact that reproduces it.
   128k 200.4 MB, 1M 247.3 MB, each under the 256 MB cap with the
   web-agent README.
 
-- **2026-07-14 · DK-05 DECISIVE PASS: the unbinned low-l data prefers a
-  shallow IR filter at the corpus scale.** Downloaded the full PR3 TT
+- **2026-07-14 · DK-05 EXECUTED (unbinned pass): mild preference, about
+  1.6 sigma equivalent, for a shallow IR filter at the corpus scale.**
+  Downloaded the full PR3 TT
   table (l = 2..2508, IRSA, sha256 ccf31136...) and ran the filter fit
   with the amplitude frozen on l >= 100 and side-dependent diagonal
   errors (declared approximation of the non-Gaussian Commander
@@ -295,8 +316,10 @@ Newest first. Every entry names the artifact that reproduces it.
   over l_IR in [24, 40], and the corpus diagnostic l_IR = 32 sits 0.2
   chi2 units from optimal (best q there 0.13). Reading: a ~15 percent
   deep, l_IR ~ 30 suppression is mildly preferred by the data
-  (~1.6 sigma equivalent), and the tail penalty confines the scale to
-  exactly the corpus's window. Freeze target defined: the source theorem
+  (~1.6 sigma equivalent); the net Delta chi2 = -3.9 for two fitted
+  parameters sits below the AIC penalty of 4, and the diagonal-likelihood
+  approximation caps the strength of the statement. The tail penalty
+  confines the scale to exactly the corpus's window. Freeze target defined: the source theorem
   must emit (q_IR, t_IR); emission near (0.15, l_IR = 32) lands on the
   measured optimum, emission far from it is a kill. Artifacts:
   `epic-wins/analysis/dk05_ir_filter_lowell.py`, pinned data at

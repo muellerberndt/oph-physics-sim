@@ -1,0 +1,85 @@
+{
+  "mode": "oph_compressed_cmb_bao_growth_reference_v0",
+  "oph_compressed_point": {
+    "Omega_m": 0.315905207,
+    "sigma_8": 0.807787208,
+    "H0": 67.4,
+    "S_8": 0.8289240425,
+    "chi2_diag": 11.46326129
+  },
+  "row_contributions": [
+    {
+      "row": "Weak-lensing S8",
+      "pull": 2.433,
+      "chi2": 5.918
+    },
+    {
+      "row": "DESI_DR1_BAO_BBN_theta_star_H0",
+      "pull": -1.806,
+      "chi2": 3.263
+    },
+    {
+      "row": "DESI_DR1_BAO_Omega_m",
+      "pull": 1.394,
+      "chi2": 1.942
+    },
+    {
+      "row": "Planck_sigma8",
+      "pull": -0.535,
+      "chi2": 0.287
+    },
+    {
+      "row": "Planck_S8",
+      "pull": -0.19,
+      "chi2": 0.036
+    },
+    {
+      "row": "Planck_Omega_m",
+      "pull": 0.129,
+      "chi2": 0.017
+    }
+  ],
+  "row_chi2_sum_from_rounded_table": 11.463,
+  "pull_chi2_sum_from_rounded_pulls": 11.463327,
+  "scan_points": [
+    {
+      "case": "OPH compressed point",
+      "Omega_m": 0.315905207,
+      "sigma_8": 0.807787208,
+      "H0": 67.4,
+      "S_8": 0.8289240425,
+      "chi2": 11.4633
+    },
+    {
+      "case": "Best grid point, H0 fixed",
+      "Omega_m": 0.309,
+      "sigma_8": 0.809583333,
+      "H0": 67.4,
+      "S_8": 0.8216373463,
+      "chi2": 9.5504
+    },
+    {
+      "case": "Free compressed best",
+      "Omega_m": 0.3090205,
+      "sigma_8": 0.809357206,
+      "H0": 68.519973,
+      "S_8": 0.8214350999,
+      "chi2": 6.2852
+    }
+  ],
+  "acceptance": {
+    "reference_chi2_target": 11.46326129,
+    "reproduces_reference_chi2": true,
+    "weak_lensing_S8_tension_visible": true,
+    "full_likelihood_required": true
+  },
+  "physical_cmb_prediction": false,
+  "physical_matter_power_prediction": false,
+  "claim_boundary": "Reference compressed CMB/BAO/growth/S8 diagnostic from the research note. It preserves the OPH compressed point and weak-lensing S8 tension for regression testing. It is not a full Boltzmann likelihood, not a Planck likelihood, and not a physical OPH prediction by itself.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "proxy",
+  "receipt_name": "COSMOLOGY_PERTURBATION_RECEIPT",
+  "observable_id": "oph_compressed_cmb_bao_growth_reference",
+  "fit_objective": "compressed_measurement_surface_regression_reference",
+  "physical_claim": false
+}

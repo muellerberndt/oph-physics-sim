@@ -1,0 +1,467 @@
+{
+  "mode": "cmb_source_provenance_certificate_v0",
+  "CMB_SOURCE_PROVENANCE_RECEIPT": false,
+  "source_provenance_receipt": false,
+  "TRANSITIVE_SOURCE_ANCESTRY_RECEIPT": false,
+  "HERMETIC_READ_SET_RECEIPT": false,
+  "SOURCE_MODEL_FREEZE_RECEIPT": false,
+  "pooled_source_reducer_receipt": false,
+  "contradiction_free_provenance_receipt": false,
+  "N_CRC_consensus_invariant_receipt": false,
+  "global_likelihood_reduction_receipt": false,
+  "blockers": [
+    "forbidden_source_ancestor:A_zeta:diagnostic_proxy|path:A_zeta",
+    "ancestor_not_source_only:A_zeta|path:A_zeta",
+    "A_zeta_forbidden_source_kind:diagnostic_proxy",
+    "A_zeta_not_source_only",
+    "A_zeta_not_source_derived",
+    "forbidden_source_ancestor:q_IR:diagnostic_proxy|path:q_IR",
+    "ancestor_not_source_only:q_IR|path:q_IR",
+    "q_IR_forbidden_source_kind:diagnostic_proxy",
+    "q_IR_not_source_only",
+    "q_IR_not_source_derived",
+    "forbidden_source_ancestor:ell_IR:diagnostic_proxy|path:ell_IR",
+    "ancestor_not_source_only:ell_IR|path:ell_IR",
+    "ell_IR_forbidden_source_kind:diagnostic_proxy",
+    "ell_IR_not_source_only",
+    "ell_IR_not_source_derived",
+    "forbidden_source_ancestor:B_A_k_a:diagnostic_proxy|path:B_A_k_a",
+    "ancestor_not_source_only:B_A_k_a|path:B_A_k_a",
+    "B_A_k_a_forbidden_source_kind:diagnostic_proxy",
+    "B_A_k_a_not_source_only",
+    "B_A_k_a_not_source_derived",
+    "forbidden_source_ancestor:rho_A_a:diagnostic_proxy|path:rho_A_a",
+    "ancestor_not_source_only:rho_A_a|path:rho_A_a",
+    "rho_A_a_forbidden_source_kind:diagnostic_proxy",
+    "rho_A_a_not_source_only",
+    "rho_A_a_not_source_derived",
+    "ancestor_not_source_only:N_CRC|path:N_CRC",
+    "N_CRC_not_source_only",
+    "N_CRC_not_source_derived",
+    "eta_R_source_reducer_not_pooled_or_global",
+    "Gamma_rec_source_reducer_not_pooled_or_global",
+    "A_zeta_source_reducer_not_pooled_or_global",
+    "q_IR_source_reducer_not_pooled_or_global",
+    "ell_IR_source_reducer_not_pooled_or_global",
+    "B_A_k_a_source_reducer_not_pooled_or_global",
+    "rho_A_a_source_reducer_not_pooled_or_global",
+    "N_CRC_not_consensus_invariant_or_additive_disjoint",
+    "official_likelihood_global_rollup_missing",
+    "cdm_limit_global_rollup_missing",
+    "hermetic_read_set_receipt_missing",
+    "source_model_freeze_receipt_missing"
+  ],
+  "required_quantities": [
+    "eta_R",
+    "Gamma_rec",
+    "A_zeta",
+    "q_IR",
+    "ell_IR",
+    "B_A_k_a",
+    "rho_A_a",
+    "N_CRC"
+  ],
+  "quantity_status": {
+    "eta_R": {
+      "present": true,
+      "source": "finite_repair_transition_clock",
+      "source_report": "finite_transition_matrix_report",
+      "source_only": true,
+      "node_id": "eta_R",
+      "ancestry": {
+        "source_only": true,
+        "ancestor_ids": [
+          "eta_R"
+        ],
+        "blockers": []
+      }
+    },
+    "Gamma_rec": {
+      "present": true,
+      "source": "finite_repair_transition_clock",
+      "source_report": "finite_transition_matrix_report",
+      "source_only": true,
+      "node_id": "Gamma_rec",
+      "ancestry": {
+        "source_only": true,
+        "ancestor_ids": [
+          "Gamma_rec"
+        ],
+        "blockers": []
+      }
+    },
+    "A_zeta": {
+      "present": true,
+      "source": "diagnostic_proxy",
+      "source_report": "finite_certificate_report",
+      "source_only": false,
+      "node_id": "A_zeta",
+      "ancestry": {
+        "source_only": false,
+        "ancestor_ids": [
+          "A_zeta"
+        ],
+        "blockers": [
+          "forbidden_source_ancestor:A_zeta:diagnostic_proxy|path:A_zeta",
+          "ancestor_not_source_only:A_zeta|path:A_zeta"
+        ]
+      }
+    },
+    "q_IR": {
+      "present": true,
+      "source": "diagnostic_proxy",
+      "source_report": "scale_compressed_repair_report",
+      "source_only": false,
+      "node_id": "q_IR",
+      "ancestry": {
+        "source_only": false,
+        "ancestor_ids": [
+          "q_IR"
+        ],
+        "blockers": [
+          "forbidden_source_ancestor:q_IR:diagnostic_proxy|path:q_IR",
+          "ancestor_not_source_only:q_IR|path:q_IR"
+        ]
+      }
+    },
+    "ell_IR": {
+      "present": true,
+      "source": "diagnostic_proxy",
+      "source_report": "scale_compressed_repair_report",
+      "source_only": false,
+      "node_id": "ell_IR",
+      "ancestry": {
+        "source_only": false,
+        "ancestor_ids": [
+          "ell_IR"
+        ],
+        "blockers": [
+          "forbidden_source_ancestor:ell_IR:diagnostic_proxy|path:ell_IR",
+          "ancestor_not_source_only:ell_IR|path:ell_IR"
+        ]
+      }
+    },
+    "B_A_k_a": {
+      "present": true,
+      "source": "diagnostic_proxy",
+      "source_report": "b_a_parent_report",
+      "source_only": false,
+      "node_id": "B_A_k_a",
+      "ancestry": {
+        "source_only": false,
+        "ancestor_ids": [
+          "B_A_k_a"
+        ],
+        "blockers": [
+          "forbidden_source_ancestor:B_A_k_a:diagnostic_proxy|path:B_A_k_a",
+          "ancestor_not_source_only:B_A_k_a|path:B_A_k_a"
+        ]
+      }
+    },
+    "rho_A_a": {
+      "present": true,
+      "source": "diagnostic_proxy",
+      "source_report": "finite_certificate_report",
+      "source_only": false,
+      "node_id": "rho_A_a",
+      "ancestry": {
+        "source_only": false,
+        "ancestor_ids": [
+          "rho_A_a"
+        ],
+        "blockers": [
+          "forbidden_source_ancestor:rho_A_a:diagnostic_proxy|path:rho_A_a",
+          "ancestor_not_source_only:rho_A_a|path:rho_A_a"
+        ]
+      }
+    },
+    "N_CRC": {
+      "present": true,
+      "source": "unknown",
+      "source_report": "screen_capacity_closure_report",
+      "source_only": false,
+      "node_id": "N_CRC",
+      "ancestry": {
+        "source_only": false,
+        "ancestor_ids": [
+          "N_CRC"
+        ],
+        "blockers": [
+          "ancestor_not_source_only:N_CRC|path:N_CRC"
+        ]
+      }
+    }
+  },
+  "reducer_status": {
+    "eta_R": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "Gamma_rec": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "A_zeta": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "q_IR": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "ell_IR": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "B_A_k_a": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "rho_A_a": {
+      "receipt": false,
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false
+    },
+    "N_CRC": {
+      "receipt": false,
+      "consensus_invariant": false,
+      "additive_capacity_schema": false,
+      "disjoint_coverage_receipt": false,
+      "claim_boundary": "N_CRC is treated as a consensus invariant unless an additive capacity schema proves disjoint coverage before any summation.",
+      "mode": "consensus_invariant"
+    }
+  },
+  "N_CRC_status": {
+    "receipt": false,
+    "consensus_invariant": false,
+    "additive_capacity_schema": false,
+    "disjoint_coverage_receipt": false,
+    "claim_boundary": "N_CRC is treated as a consensus invariant unless an additive capacity schema proves disjoint coverage before any summation.",
+    "mode": "consensus_invariant"
+  },
+  "global_likelihood_status": {
+    "receipt": false,
+    "official_likelihood_rollup": "missing",
+    "cdm_limit_rollup": "missing",
+    "claim_boundary": "Official likelihood and CDM-limit readiness may be false, but their reduction status must be global rather than a shard-local any() rollup."
+  },
+  "claim_boundary": "Source-provenance receipt for promoted CMB inputs. It certifies a source-only dependency DAG and global pooled reducers for eta_R, Gamma_rec, A_zeta, q_IR, ell_IR, B_A(k,a), rho_A(a), and N_CRC. It rejects contradictory no-data-use metadata and shard-local nonlinear averages; it does not run the Boltzmann or likelihood prediction.",
+  "nodes": [
+    {
+      "node_id": "eta_R",
+      "quantity": "eta_R",
+      "source": "finite_repair_transition_clock",
+      "source_kind": "finite_repair_transition_clock",
+      "source_report": "finite_transition_matrix_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": true,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "Gamma_rec",
+      "quantity": "Gamma_rec",
+      "source": "finite_repair_transition_clock",
+      "source_kind": "finite_repair_transition_clock",
+      "source_report": "finite_transition_matrix_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": true,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "A_zeta",
+      "quantity": "A_zeta",
+      "source": "diagnostic_proxy",
+      "source_kind": "diagnostic_proxy",
+      "source_report": "finite_certificate_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": false,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "q_IR",
+      "quantity": "q_IR",
+      "source": "diagnostic_proxy",
+      "source_kind": "diagnostic_proxy",
+      "source_report": "scale_compressed_repair_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": false,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "ell_IR",
+      "quantity": "ell_IR",
+      "source": "diagnostic_proxy",
+      "source_kind": "diagnostic_proxy",
+      "source_report": "scale_compressed_repair_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": false,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "B_A_k_a",
+      "quantity": "B_A_k_a",
+      "source": "diagnostic_proxy",
+      "source_kind": "diagnostic_proxy",
+      "source_report": "b_a_parent_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": false,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "rho_A_a",
+      "quantity": "rho_A_a",
+      "source": "diagnostic_proxy",
+      "source_kind": "diagnostic_proxy",
+      "source_report": "finite_certificate_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": false,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    },
+    {
+      "node_id": "N_CRC",
+      "quantity": "N_CRC",
+      "source": "unknown",
+      "source_kind": "unknown",
+      "source_report": "screen_capacity_closure_report",
+      "source_hash": null,
+      "parents": [],
+      "source_only": false,
+      "no_cmb_data_used": true,
+      "fit_to_planck": false,
+      "fit_to_measurement": false,
+      "measurement_data_used": false,
+      "cmb_data_used": false,
+      "cmb_data_used_for_input": false,
+      "planck_data_used_for_input": false,
+      "uses_measurements_to_set_inputs": false
+    }
+  ],
+  "reducers": {
+    "eta_R": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 1
+    },
+    "Gamma_rec": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 1
+    },
+    "A_zeta": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 0
+    },
+    "q_IR": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 0
+    },
+    "ell_IR": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 0
+    },
+    "B_A_k_a": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 1
+    },
+    "rho_A_a": {
+      "mode": "requires_pooled_sufficient_statistics",
+      "single_global_source": false,
+      "pooled_sufficient_statistics": false,
+      "shard_local_nonlinear_average": false,
+      "report_count": 0
+    },
+    "N_CRC": {
+      "mode": "consensus_invariant",
+      "consensus_invariant": false,
+      "additive_capacity_schema": false,
+      "disjoint_coverage_receipt": false
+    }
+  },
+  "explicit_report_present": false,
+  "explicit_report_receipt": null
+}

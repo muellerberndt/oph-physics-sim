@@ -1,0 +1,40 @@
+{
+  "chirality_detected": false,
+  "k_neighbors": 12,
+  "max_abs_z": null,
+  "pairs": [
+    {
+      "fields": [
+        "record_signature",
+        "s3_class_density"
+      ],
+      "status": "degenerate_field"
+    },
+    {
+      "fields": [
+        "record_signature",
+        "cell_entropy"
+      ],
+      "status": "degenerate_field"
+    },
+    {
+      "fields": [
+        "s3_class_density",
+        "cumulative_repair_load"
+      ],
+      "status": "degenerate_field"
+    },
+    {
+      "fields": [
+        "record_signature_smooth_k16",
+        "s3_class_density"
+      ],
+      "status": "field_missing"
+    }
+  ],
+  "points_used": 16000,
+  "s3_holonomy_scoping_note": "S3 is ambivalent: conjugation-invariant holonomy statistics are parity-even by group theory. A parity-odd screen signal must be geometric or transport-side; this report measures the leading geometric candidate.",
+  "schema": "screen_parity_pseudoscalar_v1",
+  "shuffle_draws": 24,
+  "status": "no_field_pairs"
+}

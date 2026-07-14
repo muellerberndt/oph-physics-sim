@@ -1,0 +1,347 @@
+{
+  "mode": "explicit_named_echosahedral_ports",
+  "ports_per_patch": 12,
+  "port_names": [
+    "P0",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7",
+    "P8",
+    "P9",
+    "P10",
+    "P11"
+  ],
+  "edge_count": 390924,
+  "overflow_count": 0,
+  "overflow_fraction": 0.0,
+  "degree_min": 10,
+  "degree_mean": 11.9300537109375,
+  "degree_max": 12,
+  "sample_edge_ports": [
+    {
+      "edge_index": 0,
+      "left_port": "P0",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 1,
+      "left_port": "P1",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 2,
+      "left_port": "P2",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 3,
+      "left_port": "P3",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 4,
+      "left_port": "P4",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 5,
+      "left_port": "P5",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 6,
+      "left_port": "P6",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 7,
+      "left_port": "P7",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 8,
+      "left_port": "P8",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 9,
+      "left_port": "P9",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 10,
+      "left_port": "P10",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 11,
+      "left_port": "P11",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 12,
+      "left_port": "P1",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 13,
+      "left_port": "P2",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 14,
+      "left_port": "P3",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 15,
+      "left_port": "P4",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 16,
+      "left_port": "P5",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 17,
+      "left_port": "P6",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 18,
+      "left_port": "P7",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 19,
+      "left_port": "P8",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 20,
+      "left_port": "P9",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 21,
+      "left_port": "P10",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 22,
+      "left_port": "P11",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 23,
+      "left_port": "P2",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 24,
+      "left_port": "P3",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 25,
+      "left_port": "P4",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 26,
+      "left_port": "P5",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 27,
+      "left_port": "P6",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 28,
+      "left_port": "P7",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 29,
+      "left_port": "P8",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 30,
+      "left_port": "P9",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 31,
+      "left_port": "P10",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 32,
+      "left_port": "P3",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 33,
+      "left_port": "P4",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 34,
+      "left_port": "P5",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 35,
+      "left_port": "P6",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 36,
+      "left_port": "P7",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 37,
+      "left_port": "P8",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 38,
+      "left_port": "P9",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 39,
+      "left_port": "P10",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 40,
+      "left_port": "P11",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 41,
+      "left_port": "P3",
+      "right_port": "P3"
+    },
+    {
+      "edge_index": 42,
+      "left_port": "P4",
+      "right_port": "P3"
+    },
+    {
+      "edge_index": 43,
+      "left_port": "P5",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 44,
+      "left_port": "P6",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 45,
+      "left_port": "P7",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 46,
+      "left_port": "P8",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 47,
+      "left_port": "P9",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 48,
+      "left_port": "P10",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 49,
+      "left_port": "P11",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 50,
+      "left_port": "P3",
+      "right_port": "P4"
+    },
+    {
+      "edge_index": 51,
+      "left_port": "P4",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 52,
+      "left_port": "P5",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 53,
+      "left_port": "P6",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 54,
+      "left_port": "P7",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 55,
+      "left_port": "P8",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 56,
+      "left_port": "P9",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 57,
+      "left_port": "P10",
+      "right_port": "P0"
+    },
+    {
+      "edge_index": 58,
+      "left_port": "P4",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 59,
+      "left_port": "P5",
+      "right_port": "P3"
+    },
+    {
+      "edge_index": 60,
+      "left_port": "P6",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 61,
+      "left_port": "P7",
+      "right_port": "P1"
+    },
+    {
+      "edge_index": 62,
+      "left_port": "P8",
+      "right_port": "P2"
+    },
+    {
+      "edge_index": 63,
+      "left_port": "P9",
+      "right_port": "P1"
+    }
+  ],
+  "claim_boundary": "explicit finite P0..P11 port assignment for the screen regulator; overflow marks edges that exceed the local echosahedral port budget"
+}

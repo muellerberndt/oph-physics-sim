@@ -1,0 +1,11 @@
+operator,r_charge_mod4,allowed,result
+Q H_u u^c,2,True,Up-type Yukawa allowed.
+Q H_d d^c,2,True,Down-type Yukawa allowed.
+L H_d e^c,2,True,Charged-lepton Yukawa allowed.
+L H_u L H_u,2,True,Weinberg neutrino operator allowed.
+L H_u,1,False,Bilinear RPV forbidden perturbatively.
+L L e^c,3,False,Lepton-number RPV forbidden perturbatively.
+L Q d^c,3,False,Lepton-number RPV forbidden perturbatively.
+u^c d^c d^c,3,False,Baryon-number RPV forbidden perturbatively.
+Q Q Q L,0,False,Dimension-five proton decay forbidden perturbatively.
+u^c u^c d^c e^c,0,False,Dimension-five proton decay forbidden perturbatively.

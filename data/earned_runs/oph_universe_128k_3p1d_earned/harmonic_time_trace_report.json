@@ -1,0 +1,28 @@
+{
+  "mode": "screen_harmonic_time_trace_v0",
+  "enabled": true,
+  "sample_count": 4,
+  "cycles": [
+    0,
+    42,
+    84,
+    127
+  ],
+  "field_names": [
+    "cumulative_repair_load",
+    "local_mismatch_density",
+    "record_signature"
+  ],
+  "control_keys": [
+    "control__cumulative_repair_load__shuffled_field",
+    "control__local_mismatch_density__shuffled_field",
+    "control__record_signature__shuffled_field"
+  ],
+  "fixed_time_controls": true,
+  "raw_frame_fields": [],
+  "raw_frames_path": null,
+  "ell_max": 12,
+  "n_jobs": 1,
+  "harmonic_batch_size": 8192,
+  "claim_boundary": "time-resolved observer-screen harmonic trace for synchronization-gap audits; not a CMB prediction or bulk reconstruction by itself"
+}

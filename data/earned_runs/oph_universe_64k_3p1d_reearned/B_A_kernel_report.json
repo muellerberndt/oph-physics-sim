@@ -1,0 +1,404 @@
+{
+  "mode": "parent_collar_B_A_kernel_promotion_v0",
+  "parent_report": "runs/oph_universe_64k_3p1d_reearned/b_a_parent_report.json",
+  "B_A_source": "parent_collar_finite_difference",
+  "B_A_DIAGNOSTIC_CANDIDATE_RECEIPT": false,
+  "B_A_KERNEL_CANDIDATE_RECEIPT": false,
+  "B_A_KERNEL_RECEIPT": false,
+  "B_A_k_a_physical_emitted": false,
+  "physical_cmb_prediction": false,
+  "physical_matter_power_prediction": false,
+  "row_count": 20,
+  "candidate_checks": {
+    "paired_perturb_resettle_rows_emitted": true,
+    "finite_difference_rows_emitted": true,
+    "control_rows_emitted": true,
+    "no_cmb_data_used": true,
+    "real_baryon_perturbation_runs_present": true,
+    "full_perturbation_rerun": true,
+    "report_backed_surrogate_parent": false,
+    "controls_fail": false,
+    "sign_stable": false
+  },
+  "physical_checks": {
+    "B_A_PARENT_RECEIPT": false,
+    "scale_calibrated_k_h_mpc": false,
+    "calibrated_a_evolution": false,
+    "finite_observer_view_parent_variation": false,
+    "energy_momentum_exchange_closed": false,
+    "gauge_consistency_audited": false,
+    "refinement_convergence_passed": false
+  },
+  "promotion_blockers": [
+    "candidate_check_failed_controls_fail",
+    "candidate_check_failed_sign_stable",
+    "physical_check_failed_B_A_PARENT_RECEIPT",
+    "physical_check_failed_scale_calibrated_k_h_mpc",
+    "physical_check_failed_calibrated_a_evolution",
+    "physical_check_failed_finite_observer_view_parent_variation",
+    "physical_check_failed_energy_momentum_exchange_closed",
+    "physical_check_failed_gauge_consistency_audited",
+    "physical_check_failed_refinement_convergence_passed",
+    "B_A_diagnostic_candidate_not_physical_kernel",
+    "common_source_functional_receipt_missing",
+    "admissible_source_tangent_receipt_missing",
+    "constraint_preserving_retraction_receipt_missing",
+    "B_A_source_lift_independence_receipt_missing",
+    "source_vector_sufficiency_receipt_missing",
+    "fixed_geometry_partial_response_receipt_missing",
+    "source_design_identifiability_receipt_missing",
+    "finite_difference_order_receipt_missing",
+    "C1_refinement_receipt_missing",
+    "order_of_limits_receipt_missing"
+  ],
+  "rows": [
+    {
+      "k_bin": 0.8,
+      "a_bin": 0.0009090909090909091,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 0.8,
+      "a_bin": 0.01,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 0.8,
+      "a_bin": 0.1,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 0.8,
+      "a_bin": 1.0,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.0,
+      "a_bin": 0.0009090909090909091,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.0,
+      "a_bin": 0.01,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.0,
+      "a_bin": 0.1,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.0,
+      "a_bin": 1.0,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 2,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.3333333333333333,
+      "a_bin": 0.0009090909090909091,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.3333333333333333,
+      "a_bin": 0.01,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.3333333333333333,
+      "a_bin": 0.1,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.3333333333333333,
+      "a_bin": 1.0,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.8181818181818181,
+      "a_bin": 0.0009090909090909091,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.8181818181818181,
+      "a_bin": 0.01,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.8181818181818181,
+      "a_bin": 0.1,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 1.8181818181818181,
+      "a_bin": 1.0,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 2.857142857142857,
+      "a_bin": 0.0009090909090909091,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 2.857142857142857,
+      "a_bin": 0.01,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 2.857142857142857,
+      "a_bin": 0.1,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    },
+    {
+      "k_bin": 2.857142857142857,
+      "a_bin": 1.0,
+      "B_A": 0.0,
+      "sem": 0.0,
+      "sample_count": 4,
+      "control_B_A": null,
+      "control_sem": null,
+      "z_score": null
+    }
+  ],
+  "B_A_k_a": [
+    [
+      0.8,
+      0.0009090909090909091,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      0.8,
+      0.01,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      0.8,
+      0.1,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      0.8,
+      1.0,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      1.0,
+      0.0009090909090909091,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      1.0,
+      0.01,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      1.0,
+      0.1,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      1.0,
+      1.0,
+      0.0,
+      0.0,
+      2
+    ],
+    [
+      1.3333333333333333,
+      0.0009090909090909091,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.3333333333333333,
+      0.01,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.3333333333333333,
+      0.1,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.3333333333333333,
+      1.0,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.8181818181818181,
+      0.0009090909090909091,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.8181818181818181,
+      0.01,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.8181818181818181,
+      0.1,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      1.8181818181818181,
+      1.0,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      2.857142857142857,
+      0.0009090909090909091,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      2.857142857142857,
+      0.01,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      2.857142857142857,
+      0.1,
+      0.0,
+      0.0,
+      4
+    ],
+    [
+      2.857142857142857,
+      1.0,
+      0.0,
+      0.0,
+      4
+    ]
+  ],
+  "control_failures": {
+    "no_perturbation": true,
+    "phase_shuffled_baryon_mode": false,
+    "wrong_k_label": false
+  },
+  "claim_boundary": "Parent-collar B_A kernel promotion audit. Candidate rows come from paired finite perturbation reruns and controls, but the physical B_A kernel receipt remains false until a source functional, admissible tangent, source-vector response, lift-independence, physical k/a calibration, exchange/gauge audits, and derivative-level refinement receipts pass."
+}

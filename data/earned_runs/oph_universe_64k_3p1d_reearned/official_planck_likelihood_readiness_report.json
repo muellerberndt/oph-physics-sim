@@ -1,0 +1,64 @@
+{
+  "mode": "official_planck_likelihood_readiness_v0",
+  "camb_available": true,
+  "cobaya_available": false,
+  "healpy_available": false,
+  "official_clik_api_available": false,
+  "official_planck_likelihood_data_paths_configured": false,
+  "official_likelihood_execution_ready": false,
+  "data_paths": [
+    {
+      "env_var": "OPH_PLANCK_LIKELIHOOD_DIR",
+      "configured": false,
+      "exists": false,
+      "is_dir": false,
+      "path": null
+    },
+    {
+      "env_var": "PLANCK_PR3_LIKELIHOOD_DIR",
+      "configured": false,
+      "exists": false,
+      "is_dir": false,
+      "path": null
+    },
+    {
+      "env_var": "PLANCK_LIKELIHOOD_DIR",
+      "configured": false,
+      "exists": false,
+      "is_dir": false,
+      "path": null
+    },
+    {
+      "env_var": "CLIK_DATA",
+      "configured": false,
+      "exists": false,
+      "is_dir": false,
+      "path": null
+    }
+  ],
+  "blockers": [
+    "official_clik_api_not_available",
+    "official_planck_likelihood_data_path_not_configured",
+    "cobaya_not_importable"
+  ],
+  "modules": {
+    "camb": {
+      "importable": true,
+      "origin": "/Users/muellerberndt/Projects/oph-meta/oph-physics-sim/.venv/lib/python3.13/site-packages/camb/__init__.py",
+      "version": "1.6.6"
+    },
+    "cobaya": {
+      "importable": false
+    },
+    "clik": {
+      "importable": false
+    },
+    "clipy": {
+      "importable": false
+    },
+    "healpy": {
+      "importable": false
+    }
+  },
+  "claim_boundary": "Runtime readiness check only. Official Planck likelihood execution also needs the ESA PR3 likelihood data files and validated nuisance/path configuration."
+}

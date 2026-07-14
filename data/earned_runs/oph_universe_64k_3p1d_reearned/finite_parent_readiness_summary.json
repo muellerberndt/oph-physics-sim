@@ -1,0 +1,40 @@
+{
+  "mode": "finite_parent_readiness_summary_from_reports_v0",
+  "not_a_model_artifact": true,
+  "not_a_verification_report": true,
+  "physical_parent_builder": false,
+  "manifest": {
+    "source_hash": "sha256:83bc1407b5f5195038c90eb34d57c2e6e32f891f4f5c4253549d0ef87f92e8bc",
+    "regulator_id": "finite_source_reports",
+    "parent_theorem_version": "finite_covariant_collar_packet_parent_from_sources_v1",
+    "builder": "physical_cmb_source_readiness_builder_v0",
+    "promotion_allowed": false
+  },
+  "gamma_repair_step": -0.0,
+  "Gamma_rec": null,
+  "Gamma_rec_status": "UNPROMOTED_REPAIR_STEP_DIAGNOSTIC",
+  "finite_covariant_parent_artifact": null,
+  "finite_covariant_parent_verification_report": null,
+  "source_blockers": [
+    "explicit_finite_covariant_parent_artifact_missing",
+    "finite_certificate_not_theorem_grade",
+    "B_A_kernel_receipt_missing",
+    "energy_momentum_exchange_not_closed",
+    "gauge_consistency_not_audited",
+    "regulator_refinement_convergence_not_passed",
+    "cdm_limit_regression_not_passed",
+    "official_likelihood_not_ready",
+    "frozen_likelihood_protocol_not_ready"
+  ],
+  "source_gate_status": {
+    "finite_transition_ready": true,
+    "finite_certificate_ready": false,
+    "B_A_kernel_ready": false,
+    "energy_momentum_exchange_closed": false,
+    "gauge_consistency_audited": false,
+    "refinement_convergence_passed": false,
+    "cdm_limit_regression_passed": false,
+    "official_likelihood_ready": false,
+    "frozen_likelihood_protocol_ready": false
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "mode": "mandatory_negative_controls",
+  "implemented_controls": [
+    "fake_record_rewrite",
+    "no_repair",
+    "random_same_degree_graph",
+    "shuffled_interfaces",
+    "wrong_s3_orientation"
+  ],
+  "controls": {
+    "no_repair": {
+      "initial_phi_without_repair": 653612,
+      "final_phi_with_repair": 0,
+      "expected_failure_observed": true,
+      "mismatch_definition": "left_equals_g_ij_times_right_v1",
+      "failure_mode": "Phi does not settle when repair is absent"
+    },
+    "shuffled_interfaces": {
+      "shuffled_phi": 639879,
+      "edge_count": 783619,
+      "expected_failure_observed": true,
+      "mismatch_definition": "left_equals_g_ij_times_right_v1",
+      "failure_mode": "interface label shuffle destroys overlap agreement"
+    },
+    "random_same_degree_graph": {
+      "degree_l1_error": 0,
+      "original_mean_chord": 0.014279868844642836,
+      "random_mean_chord": 1.33315603802027,
+      "expected_failure_observed": true,
+      "failure_mode": "same-degree random graph destroys screen-local adjacency geometry"
+    },
+    "wrong_s3_orientation": {
+      "forward_holonomy": 0,
+      "wrong_orientation_holonomy": 3,
+      "wrong_orientation_class": 2,
+      "expected_failure_observed": true,
+      "failure_mode": "nonabelian S3 orientation reversal changes holonomy"
+    },
+    "fake_record_rewrite": {
+      "bad_record_rewrite_detected": true,
+      "expected_failure_observed": true,
+      "failure_mode": "record-family verifier rejects same-history/different-signature rewrite"
+    }
+  },
+  "gauge_coupled_overlap_state_supplied": true,
+  "mismatch_definition": "left_equals_g_ij_times_right_v1",
+  "all_expected_failures_observed": true,
+  "claim_boundary": "negative-control receipts; required before any 3D-bulk or early-universe claim"
+}

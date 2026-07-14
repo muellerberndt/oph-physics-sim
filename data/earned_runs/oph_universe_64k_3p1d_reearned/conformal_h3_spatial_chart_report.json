@@ -1,0 +1,119 @@
+{
+  "mode": "conformal_lorentz_to_h3_spatial_chart",
+  "cap_normal_report": {
+    "mode": "s2_cap_de_sitter_normals",
+    "cap_count": 32,
+    "minkowski_signature": "(-,+,+,+)",
+    "max_unit_normal_error": 1.7763568394002505e-15,
+    "unit_normal_receipt": true,
+    "gram_min": -15.833996481275394,
+    "gram_max": 1.1904670453170925,
+    "claim_boundary": "finite algebraic bridge from round S2 caps to Lorentzian de Sitter cap normals; not a record-populated spatial bulk claim"
+  },
+  "h3_chart_report": {
+    "mode": "canonical_conformal_h3_spatial_chart",
+    "homogeneous_space": "SO+(3,1)/SO(3)",
+    "model": "H3 hyperboloid {X: eta(X,X)=-1, X0>0}",
+    "minkowski_signature": "(-,+,+,+)",
+    "spatial_dimension": 3,
+    "lorentz_group_dimension": 6,
+    "stabilizer_group": "SO(3)",
+    "stabilizer_dimension": 3,
+    "spatial_dimension_derivation": "dim SO+(3,1)-dim SO(3)=6-3=3",
+    "origin_norm": -1.0,
+    "cap_count": 32,
+    "max_cap_normal_unit_error": 1.7763568394002505e-15,
+    "conformal_h3_spatial_chart_receipt": true,
+    "blockers": [],
+    "record_population_receipt": false,
+    "claim_boundary": "canonical 3D spatial chart implied by the conformal/Lorentz cap branch; record and defect population requires a separate populated-bulk gate"
+  },
+  "lorentz_algebra_report": {
+    "mode": "so_3_1_lorentz_algebra_chart_verifier",
+    "minkowski_signature": "(-,+,+,+)",
+    "group": "SO+(3,1)",
+    "conformal_boundary_group": "Conf+(S2) ~= PSL(2,C)",
+    "spatial_homogeneous_space": "H3 = SO+(3,1)/SO(3)",
+    "group_dimension": 6,
+    "stabilizer_group": "SO(3)",
+    "stabilizer_dimension": 3,
+    "rotation_generator_count": 3,
+    "boost_generator_count": 3,
+    "h3_spatial_dimension_from_boost_orbit": 3,
+    "spatial_dimension_derivation": "dim SO+(3,1)-dim SO(3)=6-3=3",
+    "max_algebra_membership_error": 0.0,
+    "max_commutator_error": 0.0,
+    "max_metric_preservation_error": 2.220446049250313e-16,
+    "max_null_cone_preservation_error": 4.440892098500626e-16,
+    "commutator_relations": {
+      "[J_i,J_j]": "epsilon_ijk J_k",
+      "[J_i,K_j]": "epsilon_ijk K_k",
+      "[K_i,K_j]": "-epsilon_ijk J_k"
+    },
+    "lorentz_algebra_receipt": true,
+    "claim_boundary": "finite algebraic chart-level verifier for the paper-side Lorentz branch. It verifies the so(3,1) generator relations, null-cone preservation, and 3D H3 boost orbit. It does not by itself populate the bulk with observer records, matter defects, or CMB predictions."
+  },
+  "cross_ratio_proxy": {
+    "kind": "minkowski_cap_normal_gram",
+    "entry_count": 1024,
+    "min": -15.833996481275394,
+    "median": -1.1035250263188265,
+    "max": 1.1904670453170925
+  },
+  "conformal_h3_spatial_chart_receipt": true,
+  "lorentz_algebra_receipt": true,
+  "spatial_homogeneous_space": "SO+(3,1)/SO(3)",
+  "spatial_dimension_derivation": "dim SO+(3,1)-dim SO(3)=6-3=3",
+  "record_populated_h3_receipt": false,
+  "defect_localized_in_h3_receipt": false,
+  "claim_boundary": "constructs the canonical 3D H3 spatial chart from the S2 cap/conformal Lorentz branch. The receipt tier is legacy chart-level; the issue #309 theorem-aligned receipt is CAP_NORMAL_H3_CHART_RECEIPT, recomputed from primitive null-section, cap-normal, Lorentz-equivariance, and H3-sheet fields. Populated spatial-bulk, neutral bulk, particle, and CMB prediction claims require separate gates.",
+  "h3_reconstruction_cap_net": {
+    "mode": "dedicated_h3_reconstruction_cap_net",
+    "cap_count": 32,
+    "theta0": [
+      0.35,
+      0.55,
+      0.75,
+      1.0,
+      1.25
+    ],
+    "collar_width": 0.013847295710199343,
+    "bw_verifier_cap_count": 4,
+    "claim_boundary": "denser support-visible cap net used for observer/H3 population and defect mapping; BW/KMS residuals remain scored on their declared verifier cap family"
+  },
+  "bw_verifier_cap_count": 4,
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "branch_instantiation_sanity",
+  "receipt_name": "CONFORMAL_H3_CHART_RECEIPT",
+  "observable_id": "cap_normals_conformal_h3_chart",
+  "fit_objective": "conformal_chart_instantiation",
+  "physical_claim": false,
+  "record_population_report": {
+    "mode": "record_populated_h3_fit",
+    "enabled": false,
+    "record_populated_h3_receipt": false,
+    "receipt": false,
+    "claim_boundary": "disabled for compact proxy output profile; current record-to-H3 observable is a weak demo path, not the modular response-kernel bulk receipt",
+    "receipt_schema_version": "2026-06-06b",
+    "claim_level": "demo",
+    "receipt_name": "RECORD_TO_H3_DEMO_RECEIPT",
+    "observable_id": "RECORD_TO_H3_DEMO_RECEIPT",
+    "fit_objective": "not_applicable",
+    "physical_claim": false,
+    "source_state": "freezeout",
+    "source_report": {
+      "source_state": "freezeout",
+      "cycle": 106,
+      "committed_fraction": 0.961395263671875,
+      "description": "first observer-record commit threshold snapshot"
+    },
+    "observer_population": {
+      "materialized_observer_count": 1024,
+      "analyzed_observer_count": 1024,
+      "analysis_max_observers": null,
+      "analysis_sampling_policy": "all_materialized_observers",
+      "analysis_subset_hash": "sha256:f1657e3b124a735e26ddd97a2a6d488b01742c23950863f6fc64d0d703349eb6",
+      "full_population_analyzed": true
+    }
+  }
+}

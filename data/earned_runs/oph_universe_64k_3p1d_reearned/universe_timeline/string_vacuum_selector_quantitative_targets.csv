@@ -1,0 +1,10 @@
+quantity,label,value,unit
+top_yukawa,Top Yukawa,0.987745211164,
+higgs_quartic,Higgs quartic,0.128706603202,
+mssm_tree_quartic_ceiling,MSSM tree-level quartic ceiling,0.068973725409,
+minimum_positive_threshold_lift,Minimum positive threshold lift,0.059732877792,
+tree_level_higgs_mass_proxy_ceiling,Tree-level Higgs mass proxy ceiling,91.6524602856,GeV
+gut_log10_mu_gev,Gauge-unification log10(M_U/GeV),16.0815812332,
+gut_alpha_u_inverse,Gauge-unification alpha_U^-1,26.017680753,
+alpha3_pred_mz,alpha_3 predicted at m_Z,0.111511310319,
+alpha3_threshold_needed,Delta(alpha_3^-1) needed,-0.521754255407,

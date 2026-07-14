@@ -1,0 +1,1375 @@
+{
+  "mode": "neutral_summary_distance_diagnostic",
+  "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+  "observer_count": 2048,
+  "distance_matrix_shape": [
+    2048,
+    2048
+  ],
+  "observer_similarity_debug_report": {
+    "mode": "neutral_summary_distance_diagnostic",
+    "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+    "distance_source": "neutral_observer_record_similarity",
+    "radial_depth_used": false,
+    "physics_claim": false,
+    "physical_claim": false,
+    "primary_dimension": {
+      "estimate": null,
+      "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+    },
+    "dimension_estimators_agree": false,
+    "correlation_dimension": {
+      "estimate": 8.583226376098187,
+      "points_used": 8
+    },
+    "correlation_dimension_logfit": {
+      "estimate": 8.583226376098187,
+      "points_used": 8
+    },
+    "local_mle_dimension": {
+      "estimate": 7.311295574726769
+    },
+    "local_mle_k_sweep": {
+      "6": 5.750400769315804,
+      "8": 6.416821086549623,
+      "12": 7.311295574726769,
+      "16": 7.723970907607482,
+      "24": 8.020835992437704,
+      "32": 8.132385391168143
+    },
+    "correlation_logfit_quantile_sweep": {
+      "0-5": {
+        "estimate": 8.583226376098187,
+        "points_used": 8,
+        "quantile_window": [
+          0.001,
+          0.05
+        ]
+      },
+      "0-8": {
+        "estimate": 7.753324844112661,
+        "points_used": 8,
+        "quantile_window": [
+          0.002,
+          0.08
+        ]
+      },
+      "0-10": {
+        "estimate": 6.901389082751008,
+        "points_used": 8,
+        "quantile_window": [
+          0.005,
+          0.1
+        ]
+      },
+      "1-15": {
+        "estimate": 5.998814247822182,
+        "points_used": 8,
+        "quantile_window": [
+          0.01,
+          0.15
+        ]
+      },
+      "5-30": {
+        "estimate": 4.33145485114981,
+        "points_used": 8,
+        "quantile_window": [
+          0.05,
+          0.3
+        ]
+      },
+      "15-75": {
+        "estimate": 2.717716980183156,
+        "points_used": 8,
+        "quantile_window": [
+          0.15,
+          0.75
+        ]
+      }
+    },
+    "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+    "receipt_schema_version": "2026-06-06b",
+    "claim_level": "debug",
+    "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+    "observable_id": "neutral_observer_record_similarity",
+    "fit_objective": "debug_dimension_estimator"
+  },
+  "neutral_dimension_report": {
+    "mode": "neutral_summary_distance_diagnostic",
+    "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+    "distance_source": "neutral_observer_record_similarity",
+    "radial_depth_used": false,
+    "physics_claim": false,
+    "physical_claim": false,
+    "primary_dimension": {
+      "estimate": null,
+      "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+    },
+    "dimension_estimators_agree": false,
+    "correlation_dimension": {
+      "estimate": 8.583226376098187,
+      "points_used": 8
+    },
+    "correlation_dimension_logfit": {
+      "estimate": 8.583226376098187,
+      "points_used": 8
+    },
+    "local_mle_dimension": {
+      "estimate": 7.311295574726769
+    },
+    "local_mle_k_sweep": {
+      "6": 5.750400769315804,
+      "8": 6.416821086549623,
+      "12": 7.311295574726769,
+      "16": 7.723970907607482,
+      "24": 8.020835992437704,
+      "32": 8.132385391168143
+    },
+    "correlation_logfit_quantile_sweep": {
+      "0-5": {
+        "estimate": 8.583226376098187,
+        "points_used": 8,
+        "quantile_window": [
+          0.001,
+          0.05
+        ]
+      },
+      "0-8": {
+        "estimate": 7.753324844112661,
+        "points_used": 8,
+        "quantile_window": [
+          0.002,
+          0.08
+        ]
+      },
+      "0-10": {
+        "estimate": 6.901389082751008,
+        "points_used": 8,
+        "quantile_window": [
+          0.005,
+          0.1
+        ]
+      },
+      "1-15": {
+        "estimate": 5.998814247822182,
+        "points_used": 8,
+        "quantile_window": [
+          0.01,
+          0.15
+        ]
+      },
+      "5-30": {
+        "estimate": 4.33145485114981,
+        "points_used": 8,
+        "quantile_window": [
+          0.05,
+          0.3
+        ]
+      },
+      "15-75": {
+        "estimate": 2.717716980183156,
+        "points_used": 8,
+        "quantile_window": [
+          0.15,
+          0.75
+        ]
+      }
+    },
+    "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+    "receipt_schema_version": "2026-06-06b",
+    "claim_level": "debug",
+    "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+    "observable_id": "neutral_observer_record_similarity",
+    "fit_objective": "debug_dimension_estimator"
+  },
+  "component_dimension_debug_reports": {
+    "composite": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": null,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": false,
+      "correlation_dimension": {
+        "estimate": 8.583226376098187,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 8.583226376098187,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 7.311295574726769
+      },
+      "local_mle_k_sweep": {
+        "6": 5.750400769315804,
+        "8": 6.416821086549623,
+        "12": 7.311295574726769,
+        "16": 7.723970907607482,
+        "24": 8.020835992437704,
+        "32": 8.132385391168143
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 8.583226376098187,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 7.753324844112661,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 6.901389082751008,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 5.998814247822182,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 4.33145485114981,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 2.717716980183156,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "local_packet": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": 2.900400127827633,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": true,
+      "correlation_dimension": {
+        "estimate": 2.900400127827633,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 2.900400127827633,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 3.312655066741471
+      },
+      "local_mle_k_sweep": {
+        "6": 3.4532698099277477,
+        "8": 3.4018857964299087,
+        "12": 3.312655066741471,
+        "16": 3.2820874193688336,
+        "24": 3.2369983856609092,
+        "32": 3.18422103731904
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 2.900400127827633,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 2.8004048058914375,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 2.69113687488333,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 2.5471366733436915,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 2.150913278262577,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 1.439839294206084,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "measured_overlap": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": null,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": false,
+      "correlation_dimension": {
+        "estimate": 4.348723918874046,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 4.348723918874046,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 2.6782469868039818
+      },
+      "local_mle_k_sweep": {
+        "6": 1.9180998028016467,
+        "8": 2.077883421885449,
+        "12": 2.6782469868039818,
+        "16": 3.4922501854712857,
+        "24": 5.169560314660034,
+        "32": 6.814990451223708
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 4.348723918874046,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 9.09502707181743,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 59.84188800548111,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 69.40130669591223,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 63.79784523300527,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 36.17927818792019,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "paired_perturb_resettle": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": 1.763642142186739,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": true,
+      "correlation_dimension": {
+        "estimate": 1.763642142186739,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 1.763642142186739,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 2.1120874971739663
+      },
+      "local_mle_k_sweep": {
+        "6": 2.9668835386813632,
+        "8": 2.01145905636416,
+        "12": 2.1120874971739663,
+        "16": 2.094790144060967,
+        "24": 0.7887722393526562,
+        "32": 0.6054026216952718
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 1.763642142186739,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 1.3144263740123683,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 0.7295609782375438,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 0.6920698394536108,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 0.4230091387705263,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 0.41515845949724933,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "record_family": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": null,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": false,
+      "correlation_dimension": {
+        "estimate": 4.812918353562262,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 4.812918353562262,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 5.36472222504614
+      },
+      "local_mle_k_sweep": {
+        "6": 5.264166068979794,
+        "8": 5.320840918898373,
+        "12": 5.36472222504614,
+        "16": 5.401384861461466,
+        "24": 5.33728791599594,
+        "32": 5.25787490758497
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 4.812918353562262,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 4.538585771927353,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 4.232598025436211,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 3.776799431561794,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 2.350307286761081,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 1.0809171865919769,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "cap_response": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": null,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": false,
+      "correlation_dimension": {
+        "estimate": null,
+        "points_used": 0
+      },
+      "correlation_dimension_logfit": {
+        "estimate": null,
+        "points_used": 0
+      },
+      "local_mle_dimension": {
+        "estimate": 1.1e+16
+      },
+      "local_mle_k_sweep": {
+        "6": 5000000000000000.0,
+        "8": 6999999999999999.0,
+        "12": 1.1e+16,
+        "16": 1.4999999999999998e+16,
+        "24": 2.3e+16,
+        "32": 3.0999999999999996e+16
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": null,
+          "points_used": 0,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": null,
+          "points_used": 0,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": null,
+          "points_used": 0,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": null,
+          "points_used": 0,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": null,
+          "points_used": 0,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": null,
+          "points_used": 0,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "counterfactual": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": null,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": false,
+      "correlation_dimension": {
+        "estimate": 4.812918353562839,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 4.812918353562839,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 5.364722225044307
+      },
+      "local_mle_k_sweep": {
+        "6": 5.264166068980362,
+        "8": 5.3208409188968995,
+        "12": 5.364722225044307,
+        "16": 5.4013848614609685,
+        "24": 5.337287915995656,
+        "32": 5.257874907585649
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 4.812918353562839,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 4.538585771927182,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 4.2325980254363165,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 3.776799431561755,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 2.3503072867611725,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 1.080917186591967,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    }
+  },
+  "geometry_instrument": {
+    "default_channels": [
+      "local_packet",
+      "measured_overlap",
+      "paired_perturb_resettle"
+    ],
+    "verified_local_packet_available": true,
+    "measured_reciprocal_overlap_available": true,
+    "actual_paired_perturb_resettle_available": true,
+    "hash_or_token_geometry_used": false,
+    "legacy_self_histogram_overlap_used": false,
+    "strict_emergent_bulk_eligible": false,
+    "blockers": [
+      "support_selection_carrier_has_s2_screen_chart_ancestry",
+      "paired_intervention_axes_have_s2_screen_chart_ancestry"
+    ],
+    "claim_boundary": "The debug instrument now reads locality-preserving packets, literal reciprocal overlap correspondences, and actual paired perturb/resettle responses. Current support selection and cap interventions still descend from the S2 screen chart, so this instrument can diagnose geometry but cannot certify that the geometry emerged chart-blind."
+  },
+  "blind_observer_bulk_report": {
+    "mode": "strict_blind_observer_bulk_audit",
+    "observer_count": 2048,
+    "feature_width": 55,
+    "usable": true,
+    "distance_source": "blind_transition_continuation_features",
+    "neutral_dimension_report": {
+      "mode": "neutral_summary_distance_diagnostic",
+      "receipt": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "distance_source": "neutral_observer_record_similarity",
+      "radial_depth_used": false,
+      "physics_claim": false,
+      "physical_claim": false,
+      "primary_dimension": {
+        "estimate": null,
+        "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+      },
+      "dimension_estimators_agree": false,
+      "correlation_dimension": {
+        "estimate": 5.999325319446111,
+        "points_used": 8
+      },
+      "correlation_dimension_logfit": {
+        "estimate": 5.999325319446111,
+        "points_used": 8
+      },
+      "local_mle_dimension": {
+        "estimate": 7.245757566726693
+      },
+      "local_mle_k_sweep": {
+        "6": 7.381515731071098,
+        "8": 7.2700838588718675,
+        "12": 7.245757566726693,
+        "16": 7.206782768092841,
+        "24": 7.167623158813194,
+        "32": 7.060790371557294
+      },
+      "correlation_logfit_quantile_sweep": {
+        "0-5": {
+          "estimate": 5.999325319446111,
+          "points_used": 8,
+          "quantile_window": [
+            0.001,
+            0.05
+          ]
+        },
+        "0-8": {
+          "estimate": 5.8151054319249775,
+          "points_used": 8,
+          "quantile_window": [
+            0.002,
+            0.08
+          ]
+        },
+        "0-10": {
+          "estimate": 5.636449282130399,
+          "points_used": 8,
+          "quantile_window": [
+            0.005,
+            0.1
+          ]
+        },
+        "1-15": {
+          "estimate": 5.388444354437563,
+          "points_used": 8,
+          "quantile_window": [
+            0.01,
+            0.15
+          ]
+        },
+        "5-30": {
+          "estimate": 4.60141090917532,
+          "points_used": 8,
+          "quantile_window": [
+            0.05,
+            0.3
+          ]
+        },
+        "15-75": {
+          "estimate": 3.0334471768175812,
+          "points_used": 8,
+          "quantile_window": [
+            0.15,
+            0.75
+          ]
+        }
+      },
+      "claim_boundary": "debug estimator on the current observer-similarity matrix; no physics interpretation and not a bulk-dimension receipt",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "debug",
+      "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+      "observable_id": "neutral_observer_record_similarity",
+      "fit_objective": "debug_dimension_estimator"
+    },
+    "low_rank_transition_chart_sweep": {
+      "mode": "strict_blind_observer_low_rank_transition_chart_sweep",
+      "usable": true,
+      "observer_count": 2048,
+      "feature_width": 55,
+      "singular_values": [
+        155.77907549111046,
+        114.91334586721688,
+        111.04934367651948,
+        93.54075619958503,
+        67.59290701035673,
+        63.8177369186131,
+        59.53684497529007,
+        58.513773761459646,
+        52.13004800643575,
+        47.30217898633983,
+        44.314073622358194,
+        39.941336340687336,
+        33.25500873211483,
+        31.02334509704869,
+        28.381587386141995,
+        26.964105178473723
+      ],
+      "explained_variance_ratio": [
+        0.26929954235690146,
+        0.14654071664593635,
+        0.1368514374443553,
+        0.09709997636707886,
+        0.05070136139593765,
+        0.045196017682587394,
+        0.039335892107729545,
+        0.03799562455396934,
+        0.030157380872173487,
+        0.02483016842213835,
+        0.021792182184479127,
+        0.017703639345258253,
+        0.012272456562644644,
+        0.0106805746294675,
+        0.008939037004585568,
+        0.008068436701835425
+      ],
+      "participation_rank": 7.5385225313701785,
+      "entropy_rank": 11.589810632284456,
+      "selected_rank": 8,
+      "selected_rank_report": {
+        "rank": 8,
+        "explained_variance": 0.8230205685544959,
+        "candidate_3d_dimension_window": false,
+        "dimension_estimators_agree": false,
+        "correlation_dimension": {
+          "estimate": 4.527920241661019,
+          "points_used": 8
+        },
+        "local_mle_dimension": {
+          "estimate": 5.16789897816135
+        },
+        "primary_dimension": {
+          "estimate": null,
+          "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+        },
+        "s2_distance_correlation": 0.034460924233555616,
+        "s2_leakage_audit_pass": true
+      },
+      "rank_reports": [
+        {
+          "rank": 2,
+          "explained_variance": 0.41584025900283783,
+          "candidate_3d_dimension_window": false,
+          "dimension_estimators_agree": true,
+          "correlation_dimension": {
+            "estimate": 1.9863083848589287,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 2.0395489546520844
+          },
+          "primary_dimension": {
+            "estimate": 1.9863083848589287,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.026979468815808108,
+          "s2_leakage_audit_pass": true
+        },
+        {
+          "rank": 3,
+          "explained_variance": 0.5526916964471931,
+          "candidate_3d_dimension_window": true,
+          "dimension_estimators_agree": true,
+          "correlation_dimension": {
+            "estimate": 2.9418829275095746,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 3.140013924886443
+          },
+          "primary_dimension": {
+            "estimate": 2.9418829275095746,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.023190220226257285,
+          "s2_leakage_audit_pass": true
+        },
+        {
+          "rank": 4,
+          "explained_variance": 0.649791672814272,
+          "candidate_3d_dimension_window": false,
+          "dimension_estimators_agree": true,
+          "correlation_dimension": {
+            "estimate": 3.4222800757673006,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 3.8333187147308236
+          },
+          "primary_dimension": {
+            "estimate": 3.4222800757673006,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.025224182099553547,
+          "s2_leakage_audit_pass": true
+        },
+        {
+          "rank": 5,
+          "explained_variance": 0.7004930342102096,
+          "candidate_3d_dimension_window": false,
+          "dimension_estimators_agree": true,
+          "correlation_dimension": {
+            "estimate": 3.941261071600847,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 4.377602871622386
+          },
+          "primary_dimension": {
+            "estimate": 3.941261071600847,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.02623499523399721,
+          "s2_leakage_audit_pass": true
+        },
+        {
+          "rank": 6,
+          "explained_variance": 0.745689051892797,
+          "candidate_3d_dimension_window": false,
+          "dimension_estimators_agree": false,
+          "correlation_dimension": {
+            "estimate": 4.290747046769194,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 4.860522250416557
+          },
+          "primary_dimension": {
+            "estimate": null,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.031402718624821156,
+          "s2_leakage_audit_pass": true
+        },
+        {
+          "rank": 7,
+          "explained_variance": 0.7850249440005266,
+          "candidate_3d_dimension_window": false,
+          "dimension_estimators_agree": false,
+          "correlation_dimension": {
+            "estimate": 4.525212564482386,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 5.123227914674023
+          },
+          "primary_dimension": {
+            "estimate": null,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.03237285025700577,
+          "s2_leakage_audit_pass": true
+        },
+        {
+          "rank": 8,
+          "explained_variance": 0.8230205685544959,
+          "candidate_3d_dimension_window": false,
+          "dimension_estimators_agree": false,
+          "correlation_dimension": {
+            "estimate": 4.527920241661019,
+            "points_used": 8
+          },
+          "local_mle_dimension": {
+            "estimate": 5.16789897816135
+          },
+          "primary_dimension": {
+            "estimate": null,
+            "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+          },
+          "s2_distance_correlation": 0.034460924233555616,
+          "s2_leakage_audit_pass": true
+        }
+      ],
+      "selected_rank_3d_candidate_receipt": false,
+      "physical_claim": false,
+      "claim_boundary": "strict blind low-rank transition-chart diagnostic. It removes redundant observer-visible transition features without using screen coordinates, but it is not a bulk proof because rank selection can bias dimension estimates. Use it to diagnose overcomplete observer features before any neutral 3D-bulk claim."
+    },
+    "strict_blind_low_rank_3d_candidate_receipt": false,
+    "blind_feature_group_sweep": {
+      "mode": "strict_blind_observer_feature_group_sweep",
+      "predeclared_rank": 3,
+      "group_reports": {
+        "record_transition_histogram": {
+          "usable": true,
+          "feature_keys": [
+            "record_transition_histogram"
+          ],
+          "feature_width": 8,
+          "used_key_counts": {
+            "record_transition_histogram": 2048
+          },
+          "predeclared_rank": 3,
+          "rank3_candidate_receipt": false,
+          "rank3_report": {
+            "rank": 3,
+            "explained_variance": 0.9539206908529071,
+            "candidate_3d_dimension_window": false,
+            "dimension_estimators_agree": false,
+            "correlation_dimension": {
+              "estimate": 1.613081788055649,
+              "points_used": 8
+            },
+            "local_mle_dimension": {
+              "estimate": 1.1e+16
+            },
+            "primary_dimension": {
+              "estimate": null,
+              "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+            },
+            "s2_distance_correlation": 0.0009573441098223058,
+            "s2_leakage_audit_pass": true
+          },
+          "participation_rank": 1.715449472451654,
+          "entropy_rank": 2.281711899541038,
+          "selected_rank": 2,
+          "selected_rank_3d_candidate_receipt": false,
+          "forbidden_feature_keys_used": [],
+          "forbidden_input_keys_seen_but_not_used": [
+            "axis",
+            "support_nodes"
+          ],
+          "claim_boundary": "strict blind feature-group low-rank diagnostic. A rank-3 candidate here is a predeclared observer-visible continuation signal, not a final third-person bulk proof."
+        },
+        "repair_response_spectrum": {
+          "usable": true,
+          "feature_keys": [
+            "repair_response_spectrum"
+          ],
+          "feature_width": 32,
+          "used_key_counts": {
+            "repair_response_spectrum": 2048
+          },
+          "predeclared_rank": 3,
+          "rank3_candidate_receipt": false,
+          "rank3_report": {
+            "rank": 3,
+            "explained_variance": 0.6771269460337582,
+            "candidate_3d_dimension_window": false,
+            "dimension_estimators_agree": true,
+            "correlation_dimension": {
+              "estimate": 2.5237653188907005,
+              "points_used": 8
+            },
+            "local_mle_dimension": {
+              "estimate": 2.9279111486257507
+            },
+            "primary_dimension": {
+              "estimate": 2.5237653188907005,
+              "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+            },
+            "s2_distance_correlation": 0.02852200617514256,
+            "s2_leakage_audit_pass": true
+          },
+          "participation_rank": 5.26018343786976,
+          "entropy_rank": 8.078378248867178,
+          "selected_rank": 5,
+          "selected_rank_3d_candidate_receipt": false,
+          "forbidden_feature_keys_used": [],
+          "forbidden_input_keys_seen_but_not_used": [
+            "axis",
+            "support_nodes"
+          ],
+          "claim_boundary": "strict blind feature-group low-rank diagnostic. A rank-3 candidate here is a predeclared observer-visible continuation signal, not a final third-person bulk proof."
+        },
+        "transition_continuation_core": {
+          "usable": true,
+          "feature_keys": [
+            "record_transition_histogram",
+            "checkpoint_class_transition",
+            "sector_change_signature"
+          ],
+          "feature_width": 20,
+          "used_key_counts": {
+            "record_transition_histogram": 2048,
+            "checkpoint_class_transition": 2048,
+            "sector_change_signature": 2048
+          },
+          "predeclared_rank": 3,
+          "rank3_candidate_receipt": false,
+          "rank3_report": {
+            "rank": 3,
+            "explained_variance": 0.9006514964085437,
+            "candidate_3d_dimension_window": false,
+            "dimension_estimators_agree": true,
+            "correlation_dimension": {
+              "estimate": 1.6746005152666694,
+              "points_used": 8
+            },
+            "local_mle_dimension": {
+              "estimate": 1.7468500158792306
+            },
+            "primary_dimension": {
+              "estimate": 1.6746005152666694,
+              "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+            },
+            "s2_distance_correlation": 0.0010698892497371022,
+            "s2_leakage_audit_pass": true
+          },
+          "participation_rank": 2.0462297225485306,
+          "entropy_rank": 2.869955565453586,
+          "selected_rank": 2,
+          "selected_rank_3d_candidate_receipt": false,
+          "forbidden_feature_keys_used": [],
+          "forbidden_input_keys_seen_but_not_used": [
+            "axis",
+            "support_nodes"
+          ],
+          "claim_boundary": "strict blind feature-group low-rank diagnostic. A rank-3 candidate here is a predeclared observer-visible continuation signal, not a final third-person bulk proof."
+        }
+      },
+      "record_transition_rank3_receipt": false,
+      "record_transition_rank3_report": {
+        "rank": 3,
+        "explained_variance": 0.9539206908529071,
+        "candidate_3d_dimension_window": false,
+        "dimension_estimators_agree": false,
+        "correlation_dimension": {
+          "estimate": 1.613081788055649,
+          "points_used": 8
+        },
+        "local_mle_dimension": {
+          "estimate": 1.1e+16
+        },
+        "primary_dimension": {
+          "estimate": null,
+          "reason": "set only when logfit and local-MLE diagnostics agree within tolerance"
+        },
+        "s2_distance_correlation": 0.0009573441098223058,
+        "s2_leakage_audit_pass": true
+      },
+      "physical_claim": false,
+      "bulk_3d_established": false,
+      "claim_boundary": "Predeclared strict-blind observer-visible feature groups. This can establish a diagnostic rank-3 continuation candidate, but strict neutral bulk still requires refinement stability, control separation, object persistence, and theorem-aligned BW/collar gates."
+    },
+    "strict_blind_record_transition_3d_candidate_receipt": false,
+    "candidate_3d_dimension_window": false,
+    "s2_distance_correlation": 0.030598907212727695,
+    "s2_leakage_threshold": 0.35,
+    "s2_leakage_audit_pass": true,
+    "forbidden_feature_keys_used": [],
+    "forbidden_input_keys_seen_but_not_used": [
+      "axis",
+      "support_nodes"
+    ],
+    "bulk_3d_established": false,
+    "claim_boundary": "strict blind observer features; support_nodes, axes, cap membership, S2 compactness, raw screen distance, radial depth, and modular depth are not used; this audit is necessary but not sufficient for a 3D bulk proof. The feature-group sweep reports predeclared visible subfamilies separately so a 3D-looking low-rank continuation cannot be hidden inside or manufactured by the full overcomplete vector."
+  },
+  "controls": {
+    "mode": "neutral_reconstruction_controls",
+    "planted_dimensions": {
+      "planted_2d": {
+        "target_dimension": 2,
+        "estimate": 1.9623234049428455,
+        "tolerance": 0.35,
+        "expected_failure_observed": true,
+        "distance_source": "neutral_observer_record_similarity",
+        "radial_depth_used": false,
+        "failure_mode": "neutral estimator should recover planted 2D point cloud"
+      },
+      "planted_3d": {
+        "target_dimension": 3,
+        "estimate": 2.8502328102604793,
+        "tolerance": 0.45,
+        "expected_failure_observed": true,
+        "distance_source": "neutral_observer_record_similarity",
+        "radial_depth_used": false,
+        "failure_mode": "neutral estimator should recover planted 3D point cloud"
+      },
+      "planted_4d": {
+        "target_dimension": 4,
+        "estimate": 3.7616820092828527,
+        "tolerance": 0.65,
+        "expected_failure_observed": true,
+        "distance_source": "neutral_observer_record_similarity",
+        "radial_depth_used": false,
+        "failure_mode": "neutral estimator should recover planted 4D point cloud"
+      },
+      "planted_s2_boundary": {
+        "target_dimension": 2,
+        "estimate": 2.0351944798549018,
+        "tolerance": 0.35,
+        "expected_failure_observed": true,
+        "distance_source": "s2_boundary_chord_distance",
+        "radial_depth_used": false,
+        "failure_mode": "neutral estimator should recognize planted S2 boundary data as boundary-like"
+      },
+      "planted_h3_bulk": {
+        "target_dimension": 3,
+        "estimate": 2.8985849047089913,
+        "tolerance": 0.55,
+        "expected_failure_observed": true,
+        "distance_source": "h3_hyperbolic_distance",
+        "radial_depth_used": false,
+        "failure_mode": "neutral estimator should recover planted H3 bulk data as 3D"
+      }
+    },
+    "shuffled_observer_records": {
+      "observer_count": 2048,
+      "distance_shape_correlation": 0.003760072167929736,
+      "mean_abs_distance_delta": 0.30667958434624154,
+      "channels_permuted": [
+        "local_packet",
+        "paired_perturb_resettle"
+      ],
+      "cross_observer_overlap_fixed": true,
+      "expected_failure_observed": true,
+      "failure_mode": "row-local measured channels were permuted relative to fixed observer identity and fixed cross-observer overlap; the reconstruction should degrade"
+    },
+    "all_expected_failures_observed": true,
+    "radial_depth_used": false,
+    "claim_boundary": "controls for neutral observer-record reconstruction; planted dimensions must recover their source dimension and shuffled observer records must degrade the reconstruction"
+  },
+  "control_gate_passed": true,
+  "dimension_estimators_agree": false,
+  "candidate_3d_dimension_window": false,
+  "bulk_3d_established": false,
+  "claim_boundary": "observer-similarity debug scaffold; no 3D-bulk claim. The theorem-aligned path is cap/BW conformal geometry -> H3 chart -> record/object fit into that chart. Strict blind observer features exclude S2 coordinates, support nodes, cap membership, and radial-depth priors.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "debug",
+  "receipt_name": "NEUTRAL_SUMMARY_DISTANCE_DIAGNOSTIC",
+  "observable_id": "neutral_observer_record_similarity",
+  "fit_objective": "debug_dimension_estimator",
+  "physical_claim": false,
+  "materialized_observer_count": 32000,
+  "distance_matrix_observer_count": 2048,
+  "distance_matrix_max_observers": 2048,
+  "distance_matrix_sampling": "deterministic_observer_id_hash_rank_v1",
+  "parent_observer_population": {
+    "materialized_observer_count": 32000,
+    "analyzed_observer_count": 8192,
+    "analysis_max_observers": 8192,
+    "analysis_sampling_policy": "deterministic_observer_id_hash_rank_v1",
+    "analysis_subset_hash": "sha256:c9b9604bdb8f24301abf13f7a075b425a612d76b7c77b3bbaff3eff759aece98",
+    "full_population_analyzed": false
+  }
+}

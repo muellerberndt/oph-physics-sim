@@ -1,0 +1,3 @@
+Gamma_rec_over_H,Gamma_rec_status,a,clock_normalization_certified,eta_R_estimate,finite_transition_matrix_ready,k,k_units,lambda_2,n_s_estimate,physical_clock,source_report_index,z
+-0.0,EQUILIBRIUM_SAMPLER_DIAGNOSTIC_NOT_NATIVE_GENERATOR,0.01,False,-0.0,True,,scale_independent_transition_matrix_diagnostic,1.0,1.0,False,0,99.0
+-0.0,EQUILIBRIUM_SAMPLER_DIAGNOSTIC_NOT_NATIVE_GENERATOR,0.1,False,-0.0,True,,scale_independent_transition_matrix_diagnostic,1.0,1.0,False,0,9.0

@@ -1,0 +1,931 @@
+{
+  "schema": "oph_yang_mills_gap_certificate_v0",
+  "mode": "finite_su2_yang_mills_gap_certificate_lane",
+  "paper_source": "markdown/yang_mills_gap_clay_problem.md",
+  "gauge_group": {
+    "name": "SU(2)",
+    "compact": true,
+    "simple": true,
+    "nonabelian": true,
+    "representation": "unit quaternions; normalized trace is quaternion scalar part"
+  },
+  "regulator": {
+    "dimension": 4,
+    "lattice_size": 2,
+    "site_count": 16,
+    "link_count": 64,
+    "plaquette_count": 96,
+    "boundary": "periodic_hypercubic",
+    "beta": 2.2,
+    "sweeps": 16,
+    "proposal_width": 0.35,
+    "seed": 20260706,
+    "transition_bins": 8
+  },
+  "lattice_gauge_stage": {
+    "compact_simple_nonabelian_reference": true,
+    "su2_reference": true,
+    "su3_reference": false,
+    "u1_reference": false,
+    "four_dimensional_wilson_lattice": true,
+    "continuum_yang_mills_theory_constructed": false
+  },
+  "finite_lattice_diagnostics": {
+    "mean_plaquette": -0.009140773843973384,
+    "plaquette_variance": 0.0003230225346402148,
+    "acceptance_rate": 0.9296875,
+    "polyakov_abs_mean_final": 0.5261308016333731,
+    "finite_nontriviality_proxy_receipt": true,
+    "canonical_serial_chain_replay_receipt": true,
+    "diagnostic_only_not_stationary_law_proof": true
+  },
+  "plaquette_trace": [
+    {
+      "sweep": 0,
+      "mean_plaquette": -0.04886587740589602,
+      "plaquette_variance": 0.2370775308781546,
+      "action_density": -0.10750493029297131,
+      "acceptance_rate": 0.921875
+    },
+    {
+      "sweep": 1,
+      "mean_plaquette": -0.04187685796490328,
+      "plaquette_variance": 0.25067068070819665,
+      "action_density": -0.09212908752278726,
+      "acceptance_rate": 0.921875
+    },
+    {
+      "sweep": 2,
+      "mean_plaquette": -0.024540819312857568,
+      "plaquette_variance": 0.25241508174563493,
+      "action_density": -0.05398980248828667,
+      "acceptance_rate": 0.921875
+    },
+    {
+      "sweep": 3,
+      "mean_plaquette": -0.020072022774728526,
+      "plaquette_variance": 0.26776207160672433,
+      "action_density": -0.04415845010440275,
+      "acceptance_rate": 0.9296875
+    },
+    {
+      "sweep": 4,
+      "mean_plaquette": -0.007300498052182763,
+      "plaquette_variance": 0.2700005757228027,
+      "action_density": -0.016061095714802038,
+      "acceptance_rate": 0.93125
+    },
+    {
+      "sweep": 5,
+      "mean_plaquette": -0.009511459944275793,
+      "plaquette_variance": 0.2787743054383281,
+      "action_density": -0.020925211877406702,
+      "acceptance_rate": 0.9296875
+    },
+    {
+      "sweep": 6,
+      "mean_plaquette": -0.006029092280218956,
+      "plaquette_variance": 0.27631909300886,
+      "action_density": -0.01326400301648169,
+      "acceptance_rate": 0.9352678571428571
+    },
+    {
+      "sweep": 7,
+      "mean_plaquette": -0.005328411380364255,
+      "plaquette_variance": 0.27692777591950896,
+      "action_density": -0.01172250503680135,
+      "acceptance_rate": 0.94140625
+    },
+    {
+      "sweep": 8,
+      "mean_plaquette": -0.003829331721766469,
+      "plaquette_variance": 0.2792031993407818,
+      "action_density": -0.00842452978788624,
+      "acceptance_rate": 0.9375
+    },
+    {
+      "sweep": 9,
+      "mean_plaquette": -0.006137666119053707,
+      "plaquette_variance": 0.27808385090079946,
+      "action_density": -0.013502865461918171,
+      "acceptance_rate": 0.9375
+    },
+    {
+      "sweep": 10,
+      "mean_plaquette": -0.010153334321223695,
+      "plaquette_variance": 0.2917693455805752,
+      "action_density": -0.022337335506692108,
+      "acceptance_rate": 0.9332386363636364
+    },
+    {
+      "sweep": 11,
+      "mean_plaquette": -0.007338027218674266,
+      "plaquette_variance": 0.2970995022349065,
+      "action_density": -0.016143659881083478,
+      "acceptance_rate": 0.9309895833333334
+    },
+    {
+      "sweep": 12,
+      "mean_plaquette": -0.0022097278471828485,
+      "plaquette_variance": 0.29548757971920414,
+      "action_density": -0.004861401263802291,
+      "acceptance_rate": 0.9302884615384616
+    },
+    {
+      "sweep": 13,
+      "mean_plaquette": 0.00407289828398381,
+      "plaquette_variance": 0.303063863390327,
+      "action_density": 0.008960376224764427,
+      "acceptance_rate": 0.9285714285714286
+    },
+    {
+      "sweep": 14,
+      "mean_plaquette": 0.020953706810608375,
+      "plaquette_variance": 0.30160539627683985,
+      "action_density": 0.04609815498333839,
+      "acceptance_rate": 0.93125
+    },
+    {
+      "sweep": 15,
+      "mean_plaquette": 0.02191413974516181,
+      "plaquette_variance": 0.30935889131809297,
+      "action_density": 0.048211107439355964,
+      "acceptance_rate": 0.9296875
+    }
+  ],
+  "wilson_loop_trace": [
+    {
+      "sweep": 0,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.04886587740589602,
+      "variance": 0.2370775308781546
+    },
+    {
+      "sweep": 1,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.04187685796490328,
+      "variance": 0.25067068070819665
+    },
+    {
+      "sweep": 2,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.024540819312857568,
+      "variance": 0.25241508174563493
+    },
+    {
+      "sweep": 3,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.020072022774728526,
+      "variance": 0.26776207160672433
+    },
+    {
+      "sweep": 4,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.007300498052182763,
+      "variance": 0.2700005757228027
+    },
+    {
+      "sweep": 5,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.009511459944275793,
+      "variance": 0.2787743054383281
+    },
+    {
+      "sweep": 6,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.006029092280218956,
+      "variance": 0.27631909300886
+    },
+    {
+      "sweep": 7,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.005328411380364255,
+      "variance": 0.27692777591950896
+    },
+    {
+      "sweep": 8,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.003829331721766469,
+      "variance": 0.2792031993407818
+    },
+    {
+      "sweep": 9,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.006137666119053707,
+      "variance": 0.27808385090079946
+    },
+    {
+      "sweep": 10,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.010153334321223695,
+      "variance": 0.2917693455805752
+    },
+    {
+      "sweep": 11,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.007338027218674266,
+      "variance": 0.2970995022349065
+    },
+    {
+      "sweep": 12,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": -0.0022097278471828485,
+      "variance": 0.29548757971920414
+    },
+    {
+      "sweep": 13,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": 0.00407289828398381,
+      "variance": 0.303063863390327
+    },
+    {
+      "sweep": 14,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": 0.020953706810608375,
+      "variance": 0.30160539627683985
+    },
+    {
+      "sweep": 15,
+      "loop": "plaquette_1x1",
+      "mean_normalized_trace": 0.02191413974516181,
+      "variance": 0.30935889131809297
+    }
+  ],
+  "polyakov_loop_trace": [
+    {
+      "sweep": 0,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.4516353165511071
+    },
+    {
+      "sweep": 1,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.41985020657160665
+    },
+    {
+      "sweep": 2,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.45671419986989104
+    },
+    {
+      "sweep": 3,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.44804395644170636
+    },
+    {
+      "sweep": 4,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.4340006360379394
+    },
+    {
+      "sweep": 5,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.43696333272597854
+    },
+    {
+      "sweep": 6,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.47126649168310963
+    },
+    {
+      "sweep": 7,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.4480367317998137
+    },
+    {
+      "sweep": 8,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.444547986864211
+    },
+    {
+      "sweep": 9,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.466525002343826
+    },
+    {
+      "sweep": 10,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.4842440465778346
+    },
+    {
+      "sweep": 11,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.5159177212698385
+    },
+    {
+      "sweep": 12,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.5023635165808136
+    },
+    {
+      "sweep": 13,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.5125498964246364
+    },
+    {
+      "sweep": 14,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.5204043829029157
+    },
+    {
+      "sweep": 15,
+      "loop": "time_polyakov_abs",
+      "mean_abs_normalized_trace": 0.5261308016333731
+    }
+  ],
+  "orientation_plaquette_rows": [
+    {
+      "sweep": 0,
+      "orientation": "01",
+      "mean_plaquette": -0.054022541318008155
+    },
+    {
+      "sweep": 0,
+      "orientation": "02",
+      "mean_plaquette": 0.030702685070984503
+    },
+    {
+      "sweep": 0,
+      "orientation": "03",
+      "mean_plaquette": -0.13324312760168794
+    },
+    {
+      "sweep": 0,
+      "orientation": "12",
+      "mean_plaquette": -0.11162374735541246
+    },
+    {
+      "sweep": 0,
+      "orientation": "13",
+      "mean_plaquette": -0.04650915389569085
+    },
+    {
+      "sweep": 0,
+      "orientation": "23",
+      "mean_plaquette": 0.02150062066443878
+    },
+    {
+      "sweep": 1,
+      "orientation": "01",
+      "mean_plaquette": -0.07946388345256535
+    },
+    {
+      "sweep": 1,
+      "orientation": "02",
+      "mean_plaquette": 0.0279112789868248
+    },
+    {
+      "sweep": 1,
+      "orientation": "03",
+      "mean_plaquette": -0.13436831854874037
+    },
+    {
+      "sweep": 1,
+      "orientation": "12",
+      "mean_plaquette": -0.11710489821675257
+    },
+    {
+      "sweep": 1,
+      "orientation": "13",
+      "mean_plaquette": -0.018800575051149654
+    },
+    {
+      "sweep": 1,
+      "orientation": "23",
+      "mean_plaquette": 0.07056524849296349
+    },
+    {
+      "sweep": 2,
+      "orientation": "01",
+      "mean_plaquette": -0.01197855754587187
+    },
+    {
+      "sweep": 2,
+      "orientation": "02",
+      "mean_plaquette": 0.044852628727334865
+    },
+    {
+      "sweep": 2,
+      "orientation": "03",
+      "mean_plaquette": -0.07578318885865833
+    },
+    {
+      "sweep": 2,
+      "orientation": "12",
+      "mean_plaquette": -0.15411584990722618
+    },
+    {
+      "sweep": 2,
+      "orientation": "13",
+      "mean_plaquette": -0.06969891536321837
+    },
+    {
+      "sweep": 2,
+      "orientation": "23",
+      "mean_plaquette": 0.11947896707049453
+    },
+    {
+      "sweep": 3,
+      "orientation": "01",
+      "mean_plaquette": 0.0076953031426357996
+    },
+    {
+      "sweep": 3,
+      "orientation": "02",
+      "mean_plaquette": 0.0706562495342882
+    },
+    {
+      "sweep": 3,
+      "orientation": "03",
+      "mean_plaquette": -0.06327573417300292
+    },
+    {
+      "sweep": 3,
+      "orientation": "12",
+      "mean_plaquette": -0.20005238135795853
+    },
+    {
+      "sweep": 3,
+      "orientation": "13",
+      "mean_plaquette": -0.08255348068911325
+    },
+    {
+      "sweep": 3,
+      "orientation": "23",
+      "mean_plaquette": 0.14709790689477953
+    },
+    {
+      "sweep": 4,
+      "orientation": "01",
+      "mean_plaquette": 0.01407109768036719
+    },
+    {
+      "sweep": 4,
+      "orientation": "02",
+      "mean_plaquette": 0.09346079891725087
+    },
+    {
+      "sweep": 4,
+      "orientation": "03",
+      "mean_plaquette": -0.04779500539787587
+    },
+    {
+      "sweep": 4,
+      "orientation": "12",
+      "mean_plaquette": -0.18008299620373525
+    },
+    {
+      "sweep": 4,
+      "orientation": "13",
+      "mean_plaquette": -0.0659504719085448
+    },
+    {
+      "sweep": 4,
+      "orientation": "23",
+      "mean_plaquette": 0.1424935885994413
+    },
+    {
+      "sweep": 5,
+      "orientation": "01",
+      "mean_plaquette": 0.01749175879502289
+    },
+    {
+      "sweep": 5,
+      "orientation": "02",
+      "mean_plaquette": 0.08890796996463976
+    },
+    {
+      "sweep": 5,
+      "orientation": "03",
+      "mean_plaquette": -0.0471011872641976
+    },
+    {
+      "sweep": 5,
+      "orientation": "12",
+      "mean_plaquette": -0.16602929760969243
+    },
+    {
+      "sweep": 5,
+      "orientation": "13",
+      "mean_plaquette": -0.06954640241574522
+    },
+    {
+      "sweep": 5,
+      "orientation": "23",
+      "mean_plaquette": 0.11920839886431787
+    },
+    {
+      "sweep": 6,
+      "orientation": "01",
+      "mean_plaquette": 0.04750815547705712
+    },
+    {
+      "sweep": 6,
+      "orientation": "02",
+      "mean_plaquette": 0.07524182395120346
+    },
+    {
+      "sweep": 6,
+      "orientation": "03",
+      "mean_plaquette": -0.041281717945630916
+    },
+    {
+      "sweep": 6,
+      "orientation": "12",
+      "mean_plaquette": -0.20540792612771147
+    },
+    {
+      "sweep": 6,
+      "orientation": "13",
+      "mean_plaquette": -0.057690863553757965
+    },
+    {
+      "sweep": 6,
+      "orientation": "23",
+      "mean_plaquette": 0.14545597451752607
+    },
+    {
+      "sweep": 7,
+      "orientation": "01",
+      "mean_plaquette": 0.02773968448629096
+    },
+    {
+      "sweep": 7,
+      "orientation": "02",
+      "mean_plaquette": 0.06117252574893464
+    },
+    {
+      "sweep": 7,
+      "orientation": "03",
+      "mean_plaquette": 0.02034455350597058
+    },
+    {
+      "sweep": 7,
+      "orientation": "12",
+      "mean_plaquette": -0.19708683146715225
+    },
+    {
+      "sweep": 7,
+      "orientation": "13",
+      "mean_plaquette": -0.08970100519635826
+    },
+    {
+      "sweep": 7,
+      "orientation": "23",
+      "mean_plaquette": 0.14556060464012882
+    },
+    {
+      "sweep": 8,
+      "orientation": "01",
+      "mean_plaquette": 0.052429861152346525
+    },
+    {
+      "sweep": 8,
+      "orientation": "02",
+      "mean_plaquette": 0.051417076824362
+    },
+    {
+      "sweep": 8,
+      "orientation": "03",
+      "mean_plaquette": -0.018840124081681946
+    },
+    {
+      "sweep": 8,
+      "orientation": "12",
+      "mean_plaquette": -0.17171575736283276
+    },
+    {
+      "sweep": 8,
+      "orientation": "13",
+      "mean_plaquette": -0.1048133391163392
+    },
+    {
+      "sweep": 8,
+      "orientation": "23",
+      "mean_plaquette": 0.1685462922535466
+    },
+    {
+      "sweep": 9,
+      "orientation": "01",
+      "mean_plaquette": 0.07183199652208541
+    },
+    {
+      "sweep": 9,
+      "orientation": "02",
+      "mean_plaquette": 0.050397193095065324
+    },
+    {
+      "sweep": 9,
+      "orientation": "03",
+      "mean_plaquette": -0.03931476722202208
+    },
+    {
+      "sweep": 9,
+      "orientation": "12",
+      "mean_plaquette": -0.16284530290396032
+    },
+    {
+      "sweep": 9,
+      "orientation": "13",
+      "mean_plaquette": -0.10549790981554727
+    },
+    {
+      "sweep": 9,
+      "orientation": "23",
+      "mean_plaquette": 0.14860279361005663
+    },
+    {
+      "sweep": 10,
+      "orientation": "01",
+      "mean_plaquette": 0.03491382807126509
+    },
+    {
+      "sweep": 10,
+      "orientation": "02",
+      "mean_plaquette": 0.05785490822879244
+    },
+    {
+      "sweep": 10,
+      "orientation": "03",
+      "mean_plaquette": -0.033124457999080245
+    },
+    {
+      "sweep": 10,
+      "orientation": "12",
+      "mean_plaquette": -0.11776689722570617
+    },
+    {
+      "sweep": 10,
+      "orientation": "13",
+      "mean_plaquette": -0.11064501526045292
+    },
+    {
+      "sweep": 10,
+      "orientation": "23",
+      "mean_plaquette": 0.10784762825783971
+    },
+    {
+      "sweep": 11,
+      "orientation": "01",
+      "mean_plaquette": 0.03297694522437303
+    },
+    {
+      "sweep": 11,
+      "orientation": "02",
+      "mean_plaquette": 0.06390001515072105
+    },
+    {
+      "sweep": 11,
+      "orientation": "03",
+      "mean_plaquette": -0.004759018368820367
+    },
+    {
+      "sweep": 11,
+      "orientation": "12",
+      "mean_plaquette": -0.10961722904401928
+    },
+    {
+      "sweep": 11,
+      "orientation": "13",
+      "mean_plaquette": -0.10960201182811413
+    },
+    {
+      "sweep": 11,
+      "orientation": "23",
+      "mean_plaquette": 0.08307313555381413
+    },
+    {
+      "sweep": 12,
+      "orientation": "01",
+      "mean_plaquette": 0.033673257574107454
+    },
+    {
+      "sweep": 12,
+      "orientation": "02",
+      "mean_plaquette": 0.07856923948099667
+    },
+    {
+      "sweep": 12,
+      "orientation": "03",
+      "mean_plaquette": 0.013835757206906104
+    },
+    {
+      "sweep": 12,
+      "orientation": "12",
+      "mean_plaquette": -0.1274470476976303
+    },
+    {
+      "sweep": 12,
+      "orientation": "13",
+      "mean_plaquette": -0.12027986436766075
+    },
+    {
+      "sweep": 12,
+      "orientation": "23",
+      "mean_plaquette": 0.10839029072018369
+    },
+    {
+      "sweep": 13,
+      "orientation": "01",
+      "mean_plaquette": 0.036882359734297834
+    },
+    {
+      "sweep": 13,
+      "orientation": "02",
+      "mean_plaquette": 0.08396840098169256
+    },
+    {
+      "sweep": 13,
+      "orientation": "03",
+      "mean_plaquette": 0.04714285369117187
+    },
+    {
+      "sweep": 13,
+      "orientation": "12",
+      "mean_plaquette": -0.09876385996001535
+    },
+    {
+      "sweep": 13,
+      "orientation": "13",
+      "mean_plaquette": -0.14280783481197212
+    },
+    {
+      "sweep": 13,
+      "orientation": "23",
+      "mean_plaquette": 0.0980154700687281
+    },
+    {
+      "sweep": 14,
+      "orientation": "01",
+      "mean_plaquette": 0.03977385806766999
+    },
+    {
+      "sweep": 14,
+      "orientation": "02",
+      "mean_plaquette": 0.09739042871495868
+    },
+    {
+      "sweep": 14,
+      "orientation": "03",
+      "mean_plaquette": 0.08254738402321046
+    },
+    {
+      "sweep": 14,
+      "orientation": "12",
+      "mean_plaquette": -0.08014350040173067
+    },
+    {
+      "sweep": 14,
+      "orientation": "13",
+      "mean_plaquette": -0.14043873300645532
+    },
+    {
+      "sweep": 14,
+      "orientation": "23",
+      "mean_plaquette": 0.1265928034659971
+    },
+    {
+      "sweep": 15,
+      "orientation": "01",
+      "mean_plaquette": 0.03186685416567276
+    },
+    {
+      "sweep": 15,
+      "orientation": "02",
+      "mean_plaquette": 0.115653993733524
+    },
+    {
+      "sweep": 15,
+      "orientation": "03",
+      "mean_plaquette": 0.07864224121104693
+    },
+    {
+      "sweep": 15,
+      "orientation": "12",
+      "mean_plaquette": -0.07302537244713858
+    },
+    {
+      "sweep": 15,
+      "orientation": "13",
+      "mean_plaquette": -0.16565961591855224
+    },
+    {
+      "sweep": 15,
+      "orientation": "23",
+      "mean_plaquette": 0.1440067377264179
+    }
+  ],
+  "finite_transfer_gap_diagnostic": {
+    "method": "plaquette_trace_binned_markov_proxy",
+    "transition_bins": 8,
+    "spectral_gap_estimate": 0.12204558417161115,
+    "lambda2_abs": 0.8779544158283888,
+    "screening_mass_proxy": 0.34531468484056316,
+    "row_stochastic_error": 2.220446049250313e-16,
+    "nondegenerate_transition_support": true,
+    "finite_transfer_gap_proxy_receipt": true,
+    "claim_boundary": "Finite binned Markov proxy from plaquette trace. This is sampler/regulator evidence only, not a continuum Yang-Mills Hamiltonian spectral gap."
+  },
+  "reflection_positivity_proxy": {
+    "method": "finite_feature_reflection_gram_proxy",
+    "feature_labels": [
+      "constant",
+      "mean_plaquette",
+      "action_density",
+      "time_polyakov_abs"
+    ],
+    "reflection_gram_lower_bound": 4.298564124021082e-19,
+    "finite_reflection_gram_proxy_receipt": true,
+    "claim_boundary": "Positive finite feature Gram for reflection-style diagnostics. This is not the continuum Osterwalder-Schrader reflection-positivity certificate."
+  },
+  "refinement_gap_rows": [
+    {
+      "lattice_size": 2,
+      "site_count": 16,
+      "sweeps": 16,
+      "mean_plaquette": -0.009140773843973384,
+      "plaquette_variance": 0.0003230225346402148,
+      "acceptance_rate": 0.9296875,
+      "finite_transfer_gap_estimate": 0.12204558417161115,
+      "lambda2_abs": 0.8779544158283888,
+      "screening_mass_proxy": 0.34531468484056316,
+      "finite_transfer_gap_proxy_receipt": true
+    },
+    {
+      "lattice_size": 3,
+      "site_count": 81,
+      "sweeps": 8,
+      "mean_plaquette": -0.0036422236433829285,
+      "plaquette_variance": 0.00023436531146572482,
+      "acceptance_rate": 0.9220679012345679,
+      "finite_transfer_gap_estimate": 0.350512631616281,
+      "lambda2_abs": 0.649487368383719,
+      "screening_mass_proxy": 0.43992345814040035,
+      "finite_transfer_gap_proxy_receipt": true
+    }
+  ],
+  "finite_positive_gap_floor_estimate": 0.12204558417161115,
+  "continuum_certificate": {
+    "schema": "oph_compact_gauge_continuum_certificate_status_v0",
+    "provided": false,
+    "required_receipts": {
+      "support_visible_extraction_receipt": false,
+      "renormalized_schwinger_convergence_receipt": false,
+      "reflection_positivity_receipt": false,
+      "euclidean_covariance_locality_receipt": false,
+      "nontriviality_receipt": false,
+      "transfer_intertwiner_convergence_receipt": false
+    },
+    "candidate_complete": false,
+    "external_certificate_hash": null,
+    "trusted_external_verification": false,
+    "continuum_certificate_receipt": false,
+    "missing": [
+      "support_visible_extraction_receipt",
+      "renormalized_schwinger_convergence_receipt",
+      "reflection_positivity_receipt",
+      "euclidean_covariance_locality_receipt",
+      "nontriviality_receipt",
+      "transfer_intertwiner_convergence_receipt"
+    ],
+    "claim_boundary": "These are the Assumption-14-style continuum-certificate slots. This simulator lane records whether fields were supplied but does not independently verify the continuum theorem."
+  },
+  "promotion_status": {
+    "finite_nonabelian_regulator": "pass",
+    "finite_positive_gap_floor": "pass",
+    "continuum_certificate": "pending",
+    "os_reconstruction": "pending",
+    "yang_mills_identification": "conditional",
+    "yang_mills_mass_gap": "not_promoted",
+    "reasons": [
+      "missing continuum certificate field: support_visible_extraction_receipt",
+      "missing continuum certificate field: renormalized_schwinger_convergence_receipt",
+      "missing continuum certificate field: reflection_positivity_receipt",
+      "missing continuum certificate field: euclidean_covariance_locality_receipt",
+      "missing continuum certificate field: nontriviality_receipt",
+      "missing continuum certificate field: transfer_intertwiner_convergence_receipt",
+      "Clay/Yang-Mills promotion remains disabled in this simulator lane"
+    ]
+  },
+  "FINITE_NONABELIAN_GAUGE_GAP_DIAGNOSTIC_RECEIPT": true,
+  "finite_nonabelian_gauge_gap_diagnostic_receipt": true,
+  "finite_repair_gap_proxy_receipt": true,
+  "continuum_yang_mills_mass_gap_receipt": false,
+  "YANG_MILLS_GAP_REPRODUCED_RECEIPT": false,
+  "CLAY_YANG_MILLS_GAP_RECEIPT": false,
+  "yang_mills_identification": "conditional",
+  "explicit_nonclaims": [
+    "Clay-admissible Yang-Mills construction",
+    "continuum Osterwalder-Schrader reconstruction",
+    "physical glueball mass prediction",
+    "SU(3) QCD mass-gap computation",
+    "proof that the finite transfer proxy survives refinement"
+  ],
+  "claim_boundary": "Finite SU(2) compact-simple nonabelian lattice diagnostic. A positive finite diagnostic receipt means this run emitted nonabelian Wilson-lattice data, deterministic replay, a finite transfer-gap proxy, and a finite reflection-Gram proxy. It is not a reproduction of the Yang-Mills mass gap. The Clay/Jaffe-Witten claim remains closed until the support-visible compact-gauge continuum certificate supplies Schwinger convergence, reflection positivity, Euclidean covariance/locality, nontriviality, and transfer/intertwiner convergence.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "continuation",
+  "receipt_name": "FINITE_NONABELIAN_GAUGE_GAP_DIAGNOSTIC_RECEIPT",
+  "observable_id": "finite_su2_yang_mills_gap_diagnostic",
+  "fit_objective": "nonabelian_compact_gauge_continuum_certificate_lane",
+  "physical_claim": false
+}

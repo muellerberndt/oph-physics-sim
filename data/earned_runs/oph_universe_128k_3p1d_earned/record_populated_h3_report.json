@@ -1,0 +1,28 @@
+{
+  "mode": "record_populated_h3_fit",
+  "enabled": false,
+  "record_populated_h3_receipt": false,
+  "receipt": false,
+  "claim_boundary": "disabled for compact proxy output profile; current record-to-H3 observable is a weak demo path, not the modular response-kernel bulk receipt",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "demo",
+  "receipt_name": "RECORD_TO_H3_DEMO_RECEIPT",
+  "observable_id": "RECORD_TO_H3_DEMO_RECEIPT",
+  "fit_objective": "not_applicable",
+  "physical_claim": false,
+  "source_state": "freezeout",
+  "source_report": {
+    "source_state": "freezeout",
+    "cycle": 107,
+    "committed_fraction": 1.0,
+    "description": "first observer-record commit threshold snapshot"
+  },
+  "observer_population": {
+    "materialized_observer_count": 32000,
+    "analyzed_observer_count": 8192,
+    "analysis_max_observers": 8192,
+    "analysis_sampling_policy": "deterministic_observer_id_hash_rank_v1",
+    "analysis_subset_hash": "sha256:c9b9604bdb8f24301abf13f7a075b425a612d76b7c77b3bbaff3eff759aece98",
+    "full_population_analyzed": false
+  }
+}

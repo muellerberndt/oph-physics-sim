@@ -1,0 +1,1851 @@
+{
+  "mode": "oph_universe_theorem_following_pipeline_v1",
+  "run_dir": "runs/oph_universe_64k_3p1d_reearned",
+  "config_path": "configs/e4_shared_observer_bulk_64k_object_chart.yml",
+  "base_result": {
+    "run_id": "oph_universe_64k_3p1d_reearned",
+    "path": "runs/oph_universe_64k_3p1d_reearned",
+    "final_phi": 0,
+    "bw_median": 0.4434257872410458,
+    "bw_p90": 0.4643109303609347,
+    "bw_primary_mode": "state_derived_modular_probe",
+    "bw_primary_median": 1.0072843195164651,
+    "base_loop_elapsed_seconds": 118.95668506622314,
+    "gauge_coupled_dynamics": {
+      "mode": "finite_gauge_covariant_overlap_repair_v1",
+      "schema": "left_equals_g_ij_times_right_v1",
+      "consistency_equation": "port_left = g_ij * port_right",
+      "link_orientation": "g_ij maps the right endpoint frame j into the left endpoint frame i",
+      "local_frame_action": {
+        "port_i": "h_i * port_i",
+        "link_ij": "h_i * g_ij * inverse(h_j)"
+      },
+      "quotient_canonicalizer": "node_reference_port_frame_v1",
+      "group": "S3",
+      "group_order": 6,
+      "edge_count": 390924,
+      "initial_raw_label_mismatch_count": 207433,
+      "initial_covariant_mismatch_count": 325839,
+      "initial_covariant_mismatch_fraction": 0.8335098382294257,
+      "final_raw_label_mismatch_count": 315363,
+      "final_covariant_mismatch_count": 0,
+      "gauge_link_changed_count": 27093,
+      "sector_edges_changed_total": 27133,
+      "record_signature_includes_gauge_invariant_edge_residual": true,
+      "observer_sector_fields_use_gauge_invariant_edge_residual": true,
+      "claim_boundary": "Finite regulator overlap dynamics with group-correct link transport. This establishes that the simulated mismatch and repair state are gauge coupled; it is not a continuum gauge-theory or Standard Model receipt."
+    },
+    "controls": {
+      "wrong_1x_normalization": {
+        "median": 1.2662271197581803,
+        "mean": 1.2566078401842045,
+        "p90": 1.3032671158196687,
+        "count": 32
+      },
+      "wrong_pi_normalization": {
+        "median": 1.2300157615042324,
+        "mean": 1.2221703315438495,
+        "p90": 1.2962937652859325,
+        "count": 32
+      },
+      "wrong_4pi_normalization": {
+        "median": 1.21581359460858,
+        "mean": 1.1346798348815852,
+        "p90": 1.291211435933423,
+        "count": 32
+      },
+      "shuffled_observables": {
+        "median": 1.2697079618393339,
+        "mean": 1.2671835116442651,
+        "p90": 1.3197436947814052,
+        "count": 32
+      },
+      "no_modular_flow": {
+        "median": 1.27027124094867,
+        "mean": 1.2596227789168986,
+        "p90": 1.3196458286214048,
+        "count": 32
+      }
+    },
+    "geometric_controls": {
+      "wrong_1x_normalization": {
+        "median": 1.2662271197581803,
+        "mean": 1.2566078401842045,
+        "p90": 1.3032671158196687,
+        "count": 32
+      },
+      "wrong_pi_normalization": {
+        "median": 1.2300157615042324,
+        "mean": 1.2221703315438495,
+        "p90": 1.2962937652859325,
+        "count": 32
+      },
+      "wrong_4pi_normalization": {
+        "median": 1.21581359460858,
+        "mean": 1.1346798348815852,
+        "p90": 1.291211435933423,
+        "count": 32
+      },
+      "shuffled_observables": {
+        "median": 1.2697079618393339,
+        "mean": 1.2671835116442651,
+        "p90": 1.3197436947814052,
+        "count": 32
+      },
+      "no_modular_flow": {
+        "median": 1.27027124094867,
+        "mean": 1.2596227789168986,
+        "p90": 1.3196458286214048,
+        "count": 32
+      }
+    },
+    "state_bw_controls": {
+      "wrong_1x_normalization": {
+        "median": 0.9967025318519034,
+        "mean": 0.8437097415029482,
+        "p90": 1.0176487959814606,
+        "corrected_upper_median": 1.1335363305285604,
+        "count": 64
+      },
+      "wrong_pi_normalization": {
+        "median": 1.0006520573069349,
+        "mean": 1.2009201746078433,
+        "p90": 2.9461066120571906,
+        "corrected_upper_median": 1.180086486853381,
+        "count": 64
+      },
+      "wrong_4pi_normalization": {
+        "median": 1.0514686793286905,
+        "mean": 2.5161396819724544,
+        "p90": 6.123863741703327,
+        "corrected_upper_median": 1.3395134769036388,
+        "count": 64
+      },
+      "shuffled_observables": {
+        "median": 1.0083490886518836,
+        "mean": 1.8876529748773037,
+        "p90": 5.106920190225181,
+        "corrected_upper_median": 1.267188046711311,
+        "count": 64
+      },
+      "no_modular_flow": {
+        "median": 1.0040248572778592,
+        "mean": 1.7865303226109623,
+        "p90": 5.224520760595897,
+        "corrected_upper_median": 1.2213074103147767,
+        "count": 64
+      }
+    },
+    "state_bw_control_medians": {
+      "wrong_1x_normalization": 0.9967025318519034,
+      "wrong_pi_normalization": 1.0006520573069349,
+      "wrong_4pi_normalization": 1.0514686793286905,
+      "shuffled_observables": 1.0083490886518836,
+      "no_modular_flow": 1.0040248572778592
+    },
+    "state_bw_correct_beats_controls": false,
+    "theorem_core_receipts": {
+      "finite_settle_diagnostic": true,
+      "finite_consensus_theorem": false,
+      "lyapunov": true,
+      "exact_repair_projection": true,
+      "sm_quotient_gate": true
+    },
+    "transition_scale_selection": {
+      "selected_label": "2pi",
+      "two_pi_selected": true,
+      "primary_source": "kms_collar_transport_response"
+    },
+    "observer_modular_experience": {
+      "observer_modular_time_receipt": true,
+      "observer_facing_3p1d_h3_experience_receipt": false,
+      "observer_count": 1024
+    },
+    "cosmology_gate": {
+      "enabled": true,
+      "allowed": true,
+      "missing_requirements": [],
+      "checks": {
+        "kms_bw_pass": true,
+        "state_bw_controls_pass": false,
+        "neutral_reconstruction_written": false,
+        "bulk_3d_established": false,
+        "screen_proxy_allowed_without_bulk": true
+      },
+      "required": {
+        "kms_bw_pass": true,
+        "state_bw_controls_pass": false,
+        "neutral_reconstruction_written": false
+      },
+      "mode": "freezeout_screen_cl_proxy_gate",
+      "claim_boundary": "Allows only a measurement-facing screen C_l proxy. This gate does not certify a physical CMB prediction, a 3D bulk, a P(k), or a Boltzmann adapter."
+    },
+    "screen_holonomy": {
+      "triangle_count": 12000,
+      "defect_triangle_count": 10015,
+      "cluster_count": 1463
+    },
+    "large_run_readiness": {
+      "mode": "large_run_preflight_readiness",
+      "claim_boundary": "Scale-readiness is a routing summary over existing finite receipts. It does not promote diagnostic rows into bulk, particle, or physical-CMB claims.",
+      "recommended_large_run_lane": "screen_cmb_proxy_refinement",
+      "claim_scale_candidate": true,
+      "stability_only_candidate": false,
+      "stability_only_lanes": [
+        "observer_modular_time"
+      ],
+      "any_scale_candidate": true,
+      "state_bw_expensive_run_worthwhile": false,
+      "lanes": {
+        "state_bw": {
+          "status": "blocked",
+          "scale_candidate": false,
+          "blockers": [
+            "l3_kms_modular_clock_fit_missing",
+            "state_bw_controls_failed",
+            "state_bw_selected_1x_not_2pi",
+            "generator_scale_best_0_not_2pi",
+            "clock_all_rows:two_pi_not_inside_kappa_confidence_interval",
+            "clock_all_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+            "clock_clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+            "clock_clock_carrier_rows:nearest_known_scale_is_4pi",
+            "clock_clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+            "clock_informative_clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+            "clock_informative_clock_carrier_rows:4pi_not_excluded_by_kappa_confidence_interval",
+            "clock_informative_clock_carrier_rows:nearest_known_scale_is_4pi",
+            "clock_informative_clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls"
+          ],
+          "details": {
+            "median": 1.0072843195164651,
+            "selected_scale_label": "1x",
+            "correct_beats_controls": false,
+            "best_control": "wrong_1x_normalization",
+            "generator_scale_diagnosis": "no_flow_best",
+            "inferred_kappa_hat": 11.704606870389222,
+            "clock_receipt": false,
+            "endogenous_modular_generator_receipt": true,
+            "kms_geometric_clock_fit_receipt": false,
+            "finite_lorentz_modular_clock_receipt": false,
+            "legacy_scale_diagnostic_blockers": [
+              "state_bw_controls_failed",
+              "state_bw_selected_1x_not_2pi",
+              "generator_scale_best_0_not_2pi",
+              "clock_all_rows:two_pi_not_inside_kappa_confidence_interval",
+              "clock_all_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+              "clock_clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+              "clock_clock_carrier_rows:nearest_known_scale_is_4pi",
+              "clock_clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+              "clock_informative_clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+              "clock_informative_clock_carrier_rows:4pi_not_excluded_by_kappa_confidence_interval",
+              "clock_informative_clock_carrier_rows:nearest_known_scale_is_4pi",
+              "clock_informative_clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls"
+            ]
+          }
+        },
+        "transition_scale": {
+          "status": "scale_candidate",
+          "scale_candidate": true,
+          "blockers": [],
+          "details": {
+            "selected_label": "2pi",
+            "primary_source": "kms_collar_transport_response",
+            "two_pi_over_best": 1.0,
+            "normalization_source": "kms_bw_collar_transport_for_primary"
+          }
+        },
+        "screen_cmb_proxy": {
+          "status": "scale_candidate",
+          "scale_candidate": true,
+          "blockers": [],
+          "details": {
+            "checks": {
+              "kms_bw_pass": true,
+              "state_bw_controls_pass": false,
+              "neutral_reconstruction_written": false,
+              "bulk_3d_established": false,
+              "screen_proxy_allowed_without_bulk": true
+            },
+            "required": {
+              "kms_bw_pass": true,
+              "state_bw_controls_pass": false,
+              "neutral_reconstruction_written": false
+            },
+            "allowed": true
+          }
+        },
+        "bulk_3d": {
+          "status": "blocked",
+          "scale_candidate": false,
+          "blockers": [
+            "paper_3d_bulk_chart_receipt_false",
+            "paper_theorem_object_populated_chart_precursor_receipt_false",
+            "strict_neutral_bulk_gate_not_established"
+          ],
+          "details": {
+            "paper_theorem_3d_bulk_chart_receipt": false,
+            "paper_theorem_object_populated_chart_precursor_receipt": false,
+            "paper_theorem_neutral_populated_bulk_receipt": false,
+            "h3_spatial_dimension_from_boost_orbit": 3,
+            "neutral_reconstruction_bulk_3d_established": false,
+            "strict_neutral_note": "Scaling the legacy neutral_summary_distance_diagnostic cannot make this pass; run strict-neutral object/frontier audits for a strict neutral-bulk claim."
+          }
+        },
+        "observer_facing_bulk": {
+          "status": "blocked",
+          "scale_candidate": false,
+          "blockers": [
+            "paper_3d_bulk_chart_receipt_false",
+            "paper_theorem_object_populated_chart_precursor_receipt_false",
+            "h3_modular_response_receipt",
+            "observer_h3_object_population_receipt",
+            "observer_facing_populated_h3_experience_receipt_false"
+          ],
+          "details": {
+            "paper_theorem_3d_bulk_chart_receipt": false,
+            "paper_theorem_object_populated_chart_precursor_receipt": false,
+            "observer_facing_populated_h3_experience_receipt": false,
+            "strict_neutral_not_required": true,
+            "claim_boundary": "observer-facing consensus H3 bulk visualization lane. It is not a chart-blind strict neutral third-person bulk, particle, or physical-CMB claim."
+          }
+        },
+        "observer_modular_time": {
+          "status": "scale_candidate",
+          "scale_candidate": true,
+          "blockers": [],
+          "details": {
+            "observer_modular_time_receipt": true,
+            "observer_facing_3p1d_h3_experience_receipt": false,
+            "observer_count": 1024,
+            "observer_facing_3p1d_blockers": [
+              "h3_modular_response_receipt"
+            ]
+          }
+        },
+        "finite_consensus": {
+          "status": "blocked",
+          "scale_candidate": false,
+          "blockers": [
+            "finite_consensus_theorem_receipt_false"
+          ],
+          "details": {
+            "finite_settle_diagnostic_receipt": true,
+            "finite_consensus_theorem_receipt": false
+          }
+        }
+      },
+      "blockers": [
+        "clock_all_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+        "clock_all_rows:two_pi_not_inside_kappa_confidence_interval",
+        "clock_clock_carrier_rows:nearest_known_scale_is_4pi",
+        "clock_clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+        "clock_clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+        "clock_informative_clock_carrier_rows:4pi_not_excluded_by_kappa_confidence_interval",
+        "clock_informative_clock_carrier_rows:nearest_known_scale_is_4pi",
+        "clock_informative_clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+        "clock_informative_clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+        "finite_consensus_theorem_receipt_false",
+        "generator_scale_best_0_not_2pi",
+        "h3_modular_response_receipt",
+        "l3_kms_modular_clock_fit_missing",
+        "observer_facing_populated_h3_experience_receipt_false",
+        "observer_h3_object_population_receipt",
+        "paper_3d_bulk_chart_receipt_false",
+        "paper_theorem_object_populated_chart_precursor_receipt_false",
+        "state_bw_controls_failed",
+        "state_bw_selected_1x_not_2pi",
+        "strict_neutral_bulk_gate_not_established"
+      ]
+    },
+    "visualization_defect_diagnostics": {
+      "mode": "bw_array_visualization_defect_artifacts_v0",
+      "written_any": true,
+      "organic_defect_population_written": true,
+      "free_two_defect_dynamics_written": true,
+      "two_defect_stress_contraction_assay_written": true,
+      "selected_proto_worldline_preference": "organic_defect_population_report",
+      "claim_boundary": "BW-array visualization defect sidecars. Organic multi-defect diagnostics are preferred for natural proto-worldline rendering; two-defect reports are controls/fallbacks. These sidecars do not promote particle matter or production gravity.",
+      "organic_defect_population_receipt": true,
+      "organic_proto_worldline_visualization_receipt": true,
+      "organic_defect_worldline_count": 16,
+      "organic_defect_near_contact_event_count": 783,
+      "organic_fixed_left_right_pair": false,
+      "organic_transverse_motion_present": true,
+      "two_defect_stress_contraction_assay_receipt": true,
+      "controlled_two_defect_is_fallback_only": true,
+      "free_two_defect_dynamics_receipt": true,
+      "free_two_defect_contact_outcome": "scatter",
+      "free_two_defect_straight_x_axis_control": false
+    }
+  },
+  "visualization_export_settings": {
+    "max_screen_points": 6000,
+    "max_observers": 128,
+    "max_h3_objects": 768,
+    "readout_observer_sample_count": 128,
+    "readout_object_sample_count": 768,
+    "config_visualization_export_overrides": []
+  },
+  "simulation_assumptions": {
+    "schema": "oph_simulation_assumption_manifest_v1",
+    "profile": "known_observer_universe_v1",
+    "scope": "visualization_only",
+    "scope_valid": true,
+    "policy_id": "oph-visual-bridges-v1",
+    "enabled": true,
+    "assumed_bridges": [
+      "BW3_FINITE_CAP_CERTIFICATE",
+      "CAP_NORMAL_H3_CHART",
+      "CMB_SCREEN_TO_TEMPERATURE_TRANSFER_VISUALIZATION",
+      "CMB_TT_REFERENCE_SHAPE_VISUALIZATION",
+      "DS4_OPEN_SLICING_BACKGROUND",
+      "MODULAR_RESPONSE_H3_LOCALIZATION",
+      "OBSERVER_MODULAR_TIME_INTERPRETATION",
+      "REFINEMENT_NATURALITY_VISUALIZATION",
+      "SCREEN_OBSERVER_TO_H3_CAMERA_EMBEDDING",
+      "TOPOLOGICAL_DEFECT_MATTER_RENDERING"
+    ],
+    "assumptions": {
+      "screen_s2": {
+        "label": "finite observer screen is S2",
+        "applies_to": [
+          "screen",
+          "visualizationViews.fluctuatingQuantumVacuum"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "bw_2pi_geometric_branch": {
+        "label": "BW 2*pi branch supplies the geometric observer clock",
+        "applies_to": [
+          "observerModularTime",
+          "consensusBulk"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "observer_modular_time_interpretation": {
+        "label": "finite modular-depth readout is rendered as observer-experienced time",
+        "applies_to": [
+          "observerModularTime",
+          "subjectiveObserverCameras[*].timeFrames"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "h3_observer_chart": {
+        "label": "observer-facing spatial chart is H3",
+        "applies_to": [
+          "consensusBulk",
+          "coordinateSystems.h3_hyperboloid_spatial_components_v1"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "screen_observer_to_h3_camera_embedding": {
+        "label": "an S2 observer axis determines an inward-looking H3 camera frame",
+        "applies_to": [
+          "subjectiveObserverCameras",
+          "assumedDs4Spacetime.observerReferenceFrames"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "record_population_on_h3": {
+        "label": "persistent consensus records populate the observer-facing H3 chart",
+        "applies_to": [
+          "consensusBulk.objects",
+          "emergentCurvedSpacetime.continuousBulkField"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "refinement_naturality_visualization": {
+        "label": "the visual chart/population handoff is treated as refinement-natural",
+        "applies_to": [
+          "consensusBulk",
+          "visualizationRenderData.sceneGraph.bulk"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "ds4_open_slicing_background": {
+        "label": "the H3 chart is placed in an open-slicing de Sitter background",
+        "applies_to": [
+          "assumedDs4Spacetime"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "positive_cosmological_constant": {
+        "label": "the renderer uses positive Lambda=3H^2",
+        "applies_to": [
+          "assumedDs4Spacetime.geometry.cosmologicalConstant"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "observer_tetrad_visualization": {
+        "label": "observer cameras carry comoving reference frames/tetrads",
+        "applies_to": [
+          "assumedDs4Spacetime.observerReferenceFrames"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "topological_defects_render_as_matter": {
+        "label": "topological defect worldlines receive matter-like visual styling",
+        "applies_to": [
+          "assumedDs4Spacetime.defectMatterRendering"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "cmb_screen_to_temperature_transfer_visualization": {
+        "label": "screen readout is handed to a CMB-temperature transfer renderer",
+        "applies_to": [
+          "cmbComparison.assumedVisualization",
+          "visualizationRenderData.plotSeries"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "cmb_tt_reference_shape_visualization": {
+        "label": "a pinned measured/reference TT shape completes the explanatory CMB view",
+        "applies_to": [
+          "cmbComparison.assumedVisualization.referenceRows"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      }
+    },
+    "missing_assumptions": [],
+    "parameter_sets_valid": true,
+    "SIMULATION_ASSUMPTIONS_COMPLETE_RECEIPT": true,
+    "simulation_assumptions_complete_receipt": true,
+    "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": true,
+    "simulation_assumed_visual_universe_receipt": true,
+    "ds4_visualization_parameters": {
+      "coordinate_chart": "open_h3_slicing",
+      "metric": "ds^2=-d_tau^2+H^-2*sinh(H*tau)^2*dH3^2",
+      "curvature_radius": 1.0,
+      "hubble_parameter": 1.0,
+      "declared_curvature_radius": 1.0,
+      "declared_hubble_parameter": 1.0,
+      "parameter_inputs_valid": true,
+      "de_sitter_radius_relation_valid": true,
+      "proper_time_min_over_h": 0.05,
+      "proper_time_max_over_h": 3.0,
+      "proper_time_range_valid": true,
+      "normalization_policy": "H=1/curvature_radius; radius wins when both are declared",
+      "time_sample_count": 96,
+      "time_sample_count_valid": true,
+      "units": "simulation_units",
+      "units_valid": true,
+      "provenance": "explicit_simulation_assumption"
+    },
+    "observer_camera_visualization_parameters": {
+      "coordinate_system": "h3_hyperboloid_spatial_components_v1",
+      "h3_radial_coordinate": 1.18,
+      "look_at": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "orientation": "inward_radial",
+      "fov_degrees": 72.0,
+      "parameter_inputs_valid": true,
+      "provenance": "explicit_simulation_assumption"
+    },
+    "cmb_visualization_parameters": {
+      "reference_label": "Planck2018_TT_binned",
+      "reference_path": "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+      "reference_source_url": "https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+      "reference_sha256": "sha256:ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd",
+      "transfer_model": "pinned_tt_reference_best_fit_visualization",
+      "sky_realization_seed": 20260751,
+      "parameter_inputs_valid": true,
+      "provenance": "explicit_simulation_assumption",
+      "claim_boundary": "Pinned observed/reference TT rows and their published best-fit column are visual references, not an OPH prediction or fitted simulator output."
+    },
+    "computed_theorem_receipts_unchanged": true,
+    "proof_receipt": false,
+    "physical_measurement_receipt": false,
+    "claim_boundary": "Renderer-completion ledger only. True rows are assumptions authorized for the visual OPH universe simulation; they do not prove OPH, discharge Lean obligations, establish neutral bulk, identify defects as measured particles, or turn Einstein/CMB receipts true.",
+    "manifest_integrity_valid": true
+  },
+  "selected_h3_refit": {
+    "label": "scale_rank_512",
+    "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_refit_scale_rank_512.json",
+    "candidate_receipt": false,
+    "control_separation_receipt": false,
+    "signal_gate": false,
+    "geometry_gate": false,
+    "aggregate_wrong_scale_gate": true,
+    "material_feature_gate": true,
+    "heldout_explained_variance": -0.13367455330097444,
+    "heldout_normalized_rmse": 1.0647415429581841,
+    "material_wrong_scale_win_fraction": 0.09375,
+    "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+    "material_wrong_scale_gate_value": 0.02621661508651299,
+    "feature_count": 512,
+    "excluded_observables": [
+      "record_family",
+      "repair_load_bucket"
+    ],
+    "theorem_clean_feature_policy": true,
+    "score": [
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      -0.02621661508651299,
+      -0.13367455330097444,
+      -1.0647415429581841,
+      512
+    ]
+  },
+  "selected_object_chart": {
+    "label": "scale_rank_512__transition_history_mixture_cluster",
+    "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/object_chart_scale_rank_512__transition_history_mixture_cluster.json",
+    "object_bulk_population_receipt": false,
+    "object_preview_receipt": false,
+    "object_median_receipt": true,
+    "localized_precursor_receipt": false,
+    "h3_beats_shuffled_robust": true,
+    "boundary_leakage_audit_pass": true,
+    "localized_object_count": 69,
+    "localized_not_boundary_object_count": 69,
+    "object_count": 70,
+    "median_h3_compactness_normalized": 0.12792994227184618,
+    "median_shuffled_h3_compactness_normalized": 0.6290670489530458,
+    "score": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      69,
+      69,
+      0.5011371066811996,
+      70
+    ]
+  },
+  "h3_refit_candidates": [
+    {
+      "label": "baseline_original",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_baseline_original.json",
+      "candidate_receipt": false,
+      "control_separation_receipt": false,
+      "signal_gate": false,
+      "geometry_gate": false,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "heldout_explained_variance": 0.02011440636893891,
+      "heldout_normalized_rmse": 0.9898917080322782,
+      "material_wrong_scale_win_fraction": 0.0625,
+      "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+      "material_wrong_scale_gate_value": 0.0018116477220617138,
+      "feature_count": 384,
+      "excluded_observables": [
+        "record_family",
+        "repair_load_bucket"
+      ],
+      "theorem_clean_feature_policy": true
+    },
+    {
+      "label": "scale_rank_512",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_refit_scale_rank_512.json",
+      "candidate_receipt": false,
+      "control_separation_receipt": false,
+      "signal_gate": false,
+      "geometry_gate": false,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "heldout_explained_variance": -0.13367455330097444,
+      "heldout_normalized_rmse": 1.0647415429581841,
+      "material_wrong_scale_win_fraction": 0.09375,
+      "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+      "material_wrong_scale_gate_value": 0.02621661508651299,
+      "feature_count": 512,
+      "excluded_observables": [
+        "record_family",
+        "repair_load_bucket"
+      ],
+      "theorem_clean_feature_policy": true
+    },
+    {
+      "label": "scale_weighted_512",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_refit_scale_weighted_512.json",
+      "candidate_receipt": false,
+      "control_separation_receipt": false,
+      "signal_gate": false,
+      "geometry_gate": false,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "heldout_explained_variance": 0.004049144745129851,
+      "heldout_normalized_rmse": 0.9979733740210057,
+      "material_wrong_scale_win_fraction": 0.1796875,
+      "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+      "material_wrong_scale_gate_value": 0.0022817852020863404,
+      "feature_count": 512,
+      "excluded_observables": [
+        "record_family",
+        "repair_load_bucket"
+      ],
+      "theorem_clean_feature_policy": true
+    },
+    {
+      "label": "scale_rank_768",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_refit_scale_rank_768.json",
+      "candidate_receipt": false,
+      "control_separation_receipt": false,
+      "signal_gate": false,
+      "geometry_gate": false,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "heldout_explained_variance": 0.024068602866109567,
+      "heldout_normalized_rmse": 0.987892401597406,
+      "material_wrong_scale_win_fraction": 0.07291666666666667,
+      "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+      "material_wrong_scale_gate_value": 0.0015486711349007407,
+      "feature_count": 768,
+      "excluded_observables": [
+        "record_family",
+        "repair_load_bucket"
+      ],
+      "theorem_clean_feature_policy": true
+    },
+    {
+      "label": "grouped_scale_weighted",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_refit_grouped_scale_weighted.json",
+      "candidate_receipt": false,
+      "control_separation_receipt": false,
+      "signal_gate": false,
+      "geometry_gate": false,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "heldout_explained_variance": 0.05594810217653223,
+      "heldout_normalized_rmse": 0.9716233312469743,
+      "material_wrong_scale_win_fraction": 0.026041666666666668,
+      "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+      "material_wrong_scale_gate_value": 5.396225416161265e-07,
+      "feature_count": 768,
+      "excluded_observables": [
+        "record_family",
+        "repair_load_bucket"
+      ],
+      "theorem_clean_feature_policy": true
+    },
+    {
+      "label": "grouped_low_order_transition_contract",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/h3_refit_grouped_low_order_transition_contract.json",
+      "candidate_receipt": false,
+      "control_separation_receipt": false,
+      "signal_gate": false,
+      "geometry_gate": false,
+      "aggregate_wrong_scale_gate": true,
+      "material_feature_gate": true,
+      "heldout_explained_variance": 0.021360672823171778,
+      "heldout_normalized_rmse": 0.989262011388706,
+      "material_wrong_scale_win_fraction": 0.09375,
+      "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+      "material_wrong_scale_gate_value": 0.002608831615644209,
+      "feature_count": 384,
+      "excluded_observables": [
+        "record_family",
+        "repair_load_bucket"
+      ],
+      "theorem_clean_feature_policy": true
+    }
+  ],
+  "object_chart_candidates": [
+    {
+      "label": "scale_rank_512__transition_history_mixture_cluster",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/object_chart_scale_rank_512__transition_history_mixture_cluster.json",
+      "object_bulk_population_receipt": false,
+      "object_preview_receipt": false,
+      "object_median_receipt": true,
+      "localized_precursor_receipt": false,
+      "h3_beats_shuffled_robust": true,
+      "boundary_leakage_audit_pass": true,
+      "localized_object_count": 69,
+      "localized_not_boundary_object_count": 69,
+      "object_count": 70,
+      "median_h3_compactness_normalized": 0.12792994227184618,
+      "median_shuffled_h3_compactness_normalized": 0.6290670489530458
+    },
+    {
+      "label": "scale_rank_512__observer_transition_mixture_cluster",
+      "path": "runs/oph_universe_64k_3p1d_reearned/auto_theorem_refinement/object_chart_scale_rank_512__observer_transition_mixture_cluster.json",
+      "object_bulk_population_receipt": false,
+      "object_preview_receipt": false,
+      "object_median_receipt": true,
+      "localized_precursor_receipt": false,
+      "h3_beats_shuffled_robust": true,
+      "boundary_leakage_audit_pass": true,
+      "localized_object_count": 69,
+      "localized_not_boundary_object_count": 69,
+      "object_count": 70,
+      "median_h3_compactness_normalized": 0.12792994227184618,
+      "median_shuffled_h3_compactness_normalized": 0.6290670489530458
+    }
+  ],
+  "final_receipts": {
+    "observer_like_self_reading_system_receipt": true,
+    "observer_modular_time_receipt": true,
+    "h3_response_candidate_receipt": false,
+    "h3_response_control_separation_receipt": false,
+    "observer_h3_object_population_receipt": false,
+    "observer_facing_3p1d_h3_experience_receipt": false,
+    "theorem_assisted_consensus_3d_bulk_readout_receipt": false,
+    "observer_facing_consensus_3d_bulk_readout_receipt": false,
+    "chart_blind_strict_neutral_quotient_bulk_receipt": false,
+    "strict_neutral_third_person_bulk_receipt": false,
+    "physical_cmb_output_comparison_receipt": false,
+    "physical_cmb_prediction_receipt": false,
+    "screen_proxy_cmb_receipt": true,
+    "cmb_lite_shape_comparison_receipt": true,
+    "cmb_lite_real_ell_physical_comparison_receipt": false,
+    "finite_lorentz_theorem_contract_receipt": false,
+    "paper_faithful_observer_spacetime_emergence_receipt": false,
+    "paper_faithful_consensus_bulk_emergence_receipt": false,
+    "paper_geometric_branch_lorentz_contract_receipt": false,
+    "paper_geometric_branch_observer_spacetime_emergence_receipt": false,
+    "paper_geometric_branch_consensus_bulk_emergence_receipt": false,
+    "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": false,
+    "simulation_assumed_visual_universe_receipt": true,
+    "strict_neutral_bulk_contract_receipt": false,
+    "einstein_branch_entry_contract_receipt": false,
+    "scale_compressed_pn_silence_to_observation_receipt": false,
+    "literal_global_N_capacity_simulated_receipt": false,
+    "dynamic_p_detuning_control_receipt": false
+  },
+  "finite_theorem_contract_summary": {
+    "finite_lorentz_theorem_contract_receipt": false,
+    "paper_faithful_observer_spacetime_emergence_receipt": false,
+    "paper_faithful_consensus_bulk_emergence_receipt": false,
+    "paper_geometric_branch_lorentz_contract_receipt": false,
+    "paper_geometric_branch_observer_spacetime_emergence_receipt": false,
+    "paper_geometric_branch_consensus_bulk_emergence_receipt": false,
+    "simulation_assumed_visual_universe_receipt": true,
+    "strict_neutral_bulk_contract_receipt": false,
+    "einstein_branch_entry_contract_receipt": false,
+    "einstein_branch_entry_primary_blockers": [
+      "E0_einstein_branch_entry_umbrella",
+      "E1_null_generator_stress_charge",
+      "E2_fixed_cap_entropy_stationarity",
+      "E3_small_ball_area_bridge",
+      "E4_all_timelike_tensor_upgrade",
+      "E5_lambda_constancy_conservation"
+    ],
+    "einstein_branch_entry_blockers": [
+      "E0_einstein_branch_entry_umbrella",
+      "E1_null_generator_stress_charge",
+      "E2_fixed_cap_entropy_stationarity",
+      "E3_small_ball_area_bridge",
+      "E4_all_timelike_tensor_upgrade",
+      "E5_lambda_constancy_conservation",
+      "E6_newton_coupling_forbidden_input_audit"
+    ],
+    "chart_blind_strict_neutral_blockers": [
+      "L7_refinement_naturality",
+      "B4_strict_neutral_bulk_audit"
+    ],
+    "paper_geometric_branch_primary_blockers": [
+      "C0_finite_consensus_theorem",
+      "L4_support_visible_bw_covariance",
+      "L5_ordered_cut_pair_rigidity",
+      "L6_lorentz_algebra_closure",
+      "L7_refinement_naturality",
+      "T308_finite_cap_bw_certificate"
+    ],
+    "primary_blockers": [
+      "C0_finite_consensus_theorem",
+      "L3_kms_modular_clock_fit",
+      "L4_support_visible_bw_covariance",
+      "L5_ordered_cut_pair_rigidity",
+      "L6_lorentz_algebra_closure",
+      "L7_refinement_naturality"
+    ]
+  },
+  "proof_summary": {
+    "bulk_3d_established_theorem_assisted": false,
+    "bulk_3d_established_observer_facing_consensus": false,
+    "bulk_3d_established_paper_geometric_branch_observer_facing_consensus": false,
+    "bulk_3d_established_strict": false,
+    "bulk_3d_established_chart_blind_strict_neutral": false,
+    "physical_cmb_prediction": false
+  },
+  "post_theorem_large_run_readiness": {
+    "mode": "post_theorem_large_run_readiness_v0",
+    "recommended_large_run_lane": "assumption_completed_observer_universe_visualization_large_run",
+    "cloud_run_safe_for_visualization_data": true,
+    "simulation_assumptions_complete_receipt": true,
+    "visual_universe_render_data_complete_receipt": true,
+    "visual_universe_render_ready_receipt": true,
+    "visual_universe_render_data_blockers": [],
+    "visualization_completion_basis": "explicit_visualization_assumptions",
+    "cloud_run_safe_for_physical_cmb_prediction": false,
+    "cloud_run_safe_for_strict_neutral_bulk_claim": false,
+    "lanes": {
+      "assumption_completed_visual_universe": {
+        "status": "render_ready",
+        "scale_candidate": true,
+        "render_data_complete": true,
+        "render_ready": true,
+        "proof_receipt": false,
+        "physical_measurement_receipt": false,
+        "source_receipt": "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT"
+      },
+      "observer_facing_3p1d_h3_bulk_visualization": {
+        "status": "blocked",
+        "scale_candidate": false,
+        "details": {
+          "readout_receipt": false,
+          "paper_geometric_branch_receipt": false,
+          "paper_faithful_receipt": false
+        }
+      },
+      "strict_neutral_third_person_bulk": {
+        "status": "blocked",
+        "scale_candidate": false,
+        "blockers": [
+          "L7_refinement_naturality",
+          "B4_strict_neutral_bulk_audit"
+        ]
+      },
+      "screen_cmb_proxy": {
+        "status": "scale_candidate",
+        "scale_candidate": true,
+        "physical_prediction": false
+      },
+      "physical_cmb_prediction": {
+        "status": "blocked",
+        "scale_candidate": false,
+        "blockers": [
+          "physical_scale_bridge_receipt_missing",
+          "physical_spatial_k_receipt_missing",
+          "screen_to_physical_k_association_receipt_missing",
+          "source_angular_sector_receipt_missing",
+          "calibrated_a_evolution_receipt_missing",
+          "physical_mode_freezeout_map_receipt_missing",
+          "physical_freezeout_surface_receipt_missing",
+          "common_primordial_anomaly_mode_basis_receipt_missing",
+          "cross_receipt_consistency_receipt_missing",
+          "no_posthoc_calibration_receipt_missing",
+          "source_provenance_receipt_missing",
+          "pooled_source_reducer_receipt_missing",
+          "source_provenance_contradiction_check_failed",
+          "N_CRC_consensus_invariant_receipt_missing",
+          "global_likelihood_reduction_receipt_missing",
+          "A_zeta_not_finite_derived"
+        ]
+      },
+      "reference_vacuum": {
+        "status": "diagnostic_ready",
+        "scale_candidate": true,
+        "oph_native_vacuum": false
+      },
+      "two_defect_gravity": {
+        "status": "diagnostic_ready",
+        "scale_candidate": true,
+        "controlled_stress_contraction": true,
+        "free_two_defect_dynamics": true,
+        "free_contact_outcome": "scatter",
+        "einstein_branch_entry_contract": false,
+        "raw_production_gravity_requested": false,
+        "production_gravity": false,
+        "production_gravity_blockers": [
+          "E0_einstein_branch_entry_umbrella",
+          "E1_null_generator_stress_charge",
+          "E2_fixed_cap_entropy_stationarity",
+          "E3_small_ball_area_bridge",
+          "E4_all_timelike_tensor_upgrade",
+          "E5_lambda_constancy_conservation"
+        ]
+      }
+    },
+    "blockers": [
+      "A_zeta_not_finite_derived",
+      "B4_strict_neutral_bulk_audit",
+      "C0_finite_consensus_theorem",
+      "L4_support_visible_bw_covariance",
+      "L5_ordered_cut_pair_rigidity",
+      "L6_lorentz_algebra_closure",
+      "L7_refinement_naturality",
+      "N_CRC_consensus_invariant_receipt_missing",
+      "T308_finite_cap_bw_certificate",
+      "calibrated_a_evolution_receipt_missing",
+      "common_primordial_anomaly_mode_basis_receipt_missing",
+      "cross_receipt_consistency_receipt_missing",
+      "global_likelihood_reduction_receipt_missing",
+      "no_posthoc_calibration_receipt_missing",
+      "oph_native_vacuum_promotion_receipt_false",
+      "physical_freezeout_surface_receipt_missing",
+      "physical_mode_freezeout_map_receipt_missing",
+      "physical_scale_bridge_receipt_missing",
+      "physical_spatial_k_receipt_missing",
+      "pooled_source_reducer_receipt_missing",
+      "production_gravity_receipt_false",
+      "screen_to_physical_k_association_receipt_missing",
+      "source_angular_sector_receipt_missing",
+      "source_provenance_contradiction_check_failed",
+      "source_provenance_receipt_missing"
+    ],
+    "claim_boundary": "Post-theorem routing after H3/object refinement, finite theorem contract audit, proof certificate, and observer readout. Visualization data may be scale-safe either from the computed observer-facing lane or from the separately labeled explicit-assumption lane. The latter is never a proof or measurement receipt; physical CMB, strict-neutral bulk, OPH-native vacuum, and production-gravity lanes remain independently gated."
+  },
+  "cmb_diagnostic_summary": {
+    "mode": "cmb_diagnostic_summary_v0",
+    "screen_proxy_cmb_receipt": true,
+    "cmb_lite_shape_comparison_receipt": true,
+    "cmb_lite_best_shape_field": "record_signature_smooth_k32",
+    "cmb_lite_best_positive_shape_field": null,
+    "cmb_lite_positive_shape_field_count": 0,
+    "cmb_lite_positive_shape_fields_sample": [],
+    "cmb_lite_real_ell_physical_comparison_receipt": false,
+    "cmb_lite_real_ell_fields_sample": [],
+    "cmb_lite_overlap_ell_physical_comparison_receipt": false,
+    "cmb_lite_overlap_ell_fields_sample": [],
+    "claim_boundary": "Screen/CMB-lite diagnostics only. Shape comparisons and finite-screen angular spectra are measurement-facing debug data, not a physical CMB prediction and not a substitute for the finite source, Boltzmann-transfer, and frozen-likelihood gates."
+  },
+  "silence_to_observation_summary": {
+    "scale_compressed_pn_silence_to_observation_receipt": false,
+    "literal_global_N_capacity_simulated_receipt": false,
+    "dynamic_p_detuning_control_receipt": false,
+    "P_detuning_delta": 0.012938107110212593,
+    "N_eff": 26721.846818572,
+    "effective_repair_round_depth": 0.8664230706875428
+  },
+  "frontier_artifacts": {
+    "neutral_frontier_written": true,
+    "strict_neutral_bulk": false,
+    "strict_neutral_bulk_ready": false,
+    "strict_neutral_record_report_written": true,
+    "strict_neutral_record_bulk": false,
+    "strict_neutral_record_blockers": [
+      "neutral_dimension_estimators_do_not_agree_3d",
+      "duplicate_primary_neutral_channels",
+      "unverified_or_legacy_required_neutral_channel_producer:local_packet:512/512",
+      "inactive_required_neutral_channel:record:512/512",
+      "inactive_required_neutral_channel:checkpoint:512/512",
+      "inactive_required_neutral_channel:boundary_packet:512/512",
+      "unverified_or_legacy_required_neutral_channel_producer:overlap_correspondence:511/512",
+      "inactive_required_neutral_channel:port_pair_lag:512/512",
+      "inactive_required_neutral_channel:repair_current_tensor:512/512",
+      "unverified_or_legacy_required_neutral_channel_producer:perturbation_response_tensor:150/512",
+      "inactive_required_neutral_channel:first_passage_response:512/512",
+      "quotient_geometry:provenance_records_missing",
+      "quotient_geometry:atlas_transport_defects_unproven",
+      "quotient_geometry:feature_transport_defect_unproven",
+      "quotient_geometry:presentation_invariance_not_certified",
+      "quotient_geometry:refinement_receipt_missing"
+    ],
+    "strict_neutral_object_report_written": true,
+    "strict_neutral_object_bulk": false,
+    "strict_neutral_object_count": 32,
+    "strict_neutral_object_blockers": [
+      "object_geometry_gate_failed",
+      "object_dimension_estimators_do_not_agree_3d",
+      "heldout_latent_geometry_does_not_select_h3",
+      "object_s2_leakage_audit_failed"
+    ],
+    "neutral_blockers": [
+      "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+      "control_quotient_rank3_candidate_not_stable_across_refinement",
+      "independent_svd_rank3_selector_not_stable_or_false",
+      "control_quotient_lane_is_not_a_negative_control",
+      "directional_h3_strict_rank_gate_not_passed",
+      "measured_cross_observer_overlap_refinement_gate_not_passed",
+      "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+      "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+      "best_3d_windows_still_fail_s2_leakage_gate",
+      "requires_refinement_stability_across_regulator_sizes",
+      "requires_independent_rank_selection_rule_before_physical_interpretation",
+      "strict_neutral_bulk_refinement_receipt_false",
+      "overlap_native_negative_control_receipt_false",
+      "prime_geometric_independent_rank3_selector_not_all_true",
+      "control_quotient_independent_rank3_selector_not_all_true",
+      "control_quotient_rank3_cumulative_explained_variance_low"
+    ],
+    "neutral_audit_blockers": [
+      "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+      "control_quotient_rank3_candidate_not_stable_across_refinement",
+      "independent_svd_rank3_selector_not_stable_or_false",
+      "control_quotient_lane_is_not_a_negative_control",
+      "directional_h3_strict_rank_gate_not_passed",
+      "measured_cross_observer_overlap_refinement_gate_not_passed",
+      "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+      "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+      "best_3d_windows_still_fail_s2_leakage_gate",
+      "requires_refinement_stability_across_regulator_sizes",
+      "requires_independent_rank_selection_rule_before_physical_interpretation",
+      "strict_neutral_bulk_refinement_receipt_false",
+      "overlap_native_negative_control_receipt_false"
+    ],
+    "neutral_report_dirs": [
+      "runs/oph_universe_64k_3p1d_reearned/strict_neutral_bulk_report.json",
+      "runs/oph_universe_64k_3p1d_reearned/strict_neutral_object_bulk_report.json",
+      "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_control",
+      "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_sweep",
+      "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_refinement",
+      "runs/oph_universe_64k_3p1d_reearned/neutral_rank_selector_audit",
+      "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_graph_sweep",
+      "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_residual_graph_sweep"
+    ],
+    "neutral_frontier_settings": {
+      "seed": 11,
+      "sample_count": 512,
+      "max_model_points": 384,
+      "strict_bulk_max_model_points": 384,
+      "planted_control_points": 192,
+      "object_min_objects": 16,
+      "object_min_observers_per_object": 3,
+      "object_max_observer_fraction_per_object": 0.65,
+      "object_max_model_points": 192,
+      "object_heldout_fraction": 0.25,
+      "graph_workers": 4,
+      "overlap_control_max_model_points": 384,
+      "ranks": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "graph_seeds": [
+        7
+      ],
+      "graph_max_model_points_values": [
+        384
+      ],
+      "graph_k_neighbor_values": [
+        12
+      ],
+      "residual_remove_mode_values": [
+        1
+      ]
+    },
+    "reference_vacuum_baseline_written": true,
+    "yang_mills_gap_certificate_written": true,
+    "organic_defect_population_written": true,
+    "two_defect_stress_contraction_assay_written": true,
+    "free_two_defect_dynamics_written": true,
+    "raw_production_gravity_receipt": false,
+    "production_gravity_receipt": false,
+    "physical_gravity_prediction": false,
+    "einstein_branch_entry_contract_receipt": false,
+    "einstein_branch_entry_issue": 503,
+    "reference_vacuum_baseline_path": "runs/oph_universe_64k_3p1d_reearned/reference_vacuum_baseline/reference_vacuum_baseline_report.json",
+    "reference_vacuum_regression_receipt": true,
+    "oph_native_vacuum_promotion_receipt": false,
+    "oph_primordial_field_promotion_receipt": false,
+    "finite_nonabelian_gauge_gap_diagnostic_receipt": true,
+    "finite_repair_gap_proxy_receipt": true,
+    "yang_mills_gap_reproduced_receipt": false,
+    "clay_yang_mills_gap_receipt": false,
+    "yang_mills_identification": "conditional",
+    "organic_defect_population_receipt": true,
+    "organic_proto_worldline_visualization_receipt": true,
+    "organic_defect_worldline_count": 16,
+    "organic_defect_near_contact_event_count": 783,
+    "raw_physical_gravity_prediction": false,
+    "two_defect_stress_contraction_assay_receipt": true,
+    "gravity_like_attraction_diagnostic_receipt": true,
+    "free_two_defect_dynamics_receipt": true,
+    "gravity_like_free_dynamics_diagnostic_receipt": true,
+    "free_two_defect_contact_outcome": "scatter",
+    "finite_repair_transition_clock_written": true,
+    "finite_certificate_report_written": false,
+    "B_A_kernel_report_written": true,
+    "compressed_likelihood_reference_written": true,
+    "official_planck_likelihood_readiness_written": true,
+    "physical_cmb_source_artifact_errors": [
+      "finite_certificate: ValueError: runs/oph_universe_64k_3p1d_reearned/collar_markov_report.json has no positive epsilon_cmi rows"
+    ],
+    "physical_cmb_transfer_benchmark_path": "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+    "physical_cmb_transfer_benchmark_found": true,
+    "camb_lcdm_baseline_written": false,
+    "scale_compressed_cmb_camb_written": false,
+    "finite_repair_clock_cmb_camb_written": false,
+    "physical_cmb_transfer_errors": [
+      "camb_lcdm_baseline: TypeError: only 0-dimensional arrays can be converted to Python scalars",
+      "finite_repair_clock_cmb_camb: TypeError: only 0-dimensional arrays can be converted to Python scalars"
+    ],
+    "physical_cmb_frontier_written": true,
+    "physical_cmb_source_readiness_written": true,
+    "finite_covariant_parent_receipt": false,
+    "finite_covariant_parent_blockers": [
+      "explicit_finite_covariant_parent_artifact_missing",
+      "finite_certificate_not_theorem_grade",
+      "B_A_kernel_receipt_missing",
+      "energy_momentum_exchange_not_closed",
+      "gauge_consistency_not_audited",
+      "regulator_refinement_convergence_not_passed",
+      "cdm_limit_regression_not_passed",
+      "official_likelihood_not_ready",
+      "frozen_likelihood_protocol_not_ready"
+    ],
+    "oph_boltzmann_input_written": true,
+    "oph_boltzmann_physical_prediction_ready": false,
+    "finite_collar_boltzmann_bundle_receipt": true,
+    "finite_collar_boltzmann_physical_certificate": false,
+    "physical_cmb_no_data_use_receipt": true,
+    "physical_cmb_input_contract_receipt": false,
+    "physical_cmb_promotion_ready": false,
+    "physical_cmb_output_comparison_receipt": false,
+    "usable_physical_cmb_data_receipt": false,
+    "physical_cmb_prediction_receipt": false,
+    "physical_cmb_blockers": [
+      "physical_scale_bridge_receipt_missing",
+      "physical_spatial_k_receipt_missing",
+      "screen_to_physical_k_association_receipt_missing",
+      "source_angular_sector_receipt_missing",
+      "calibrated_a_evolution_receipt_missing",
+      "physical_mode_freezeout_map_receipt_missing",
+      "physical_freezeout_surface_receipt_missing",
+      "common_primordial_anomaly_mode_basis_receipt_missing",
+      "cross_receipt_consistency_receipt_missing",
+      "no_posthoc_calibration_receipt_missing",
+      "source_provenance_receipt_missing",
+      "pooled_source_reducer_receipt_missing",
+      "source_provenance_contradiction_check_failed",
+      "N_CRC_consensus_invariant_receipt_missing",
+      "global_likelihood_reduction_receipt_missing",
+      "A_zeta_not_finite_derived"
+    ]
+  },
+  "viewer_outputs": {
+    "visualizations_emitted": true,
+    "run_viewer": "runs/oph_universe_64k_3p1d_reearned/oph_realtime_viewer.html",
+    "object_h3_viewer": "runs/oph_universe_64k_3p1d_reearned/object_h3_bulk_viewer.html",
+    "timeline_viewer": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/oph_universe_timeline_viewer.html",
+    "timeline_payload": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/visualization_payload.json",
+    "timeline_visualizer_pack": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/oph_visualizer_pack_v2.tar.zst",
+    "timeline_visualizer_pack_bytes": 30856627,
+    "timeline_visualizer_pack_under_256m": true,
+    "timeline_sidecar_exports": {
+      "schema": "oph_universe_visualization_sidecars_v1",
+      "manifest_path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/visualization_export_manifest.json",
+      "files": {
+        "screen_points_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_points.csv",
+          "row_count": 6000,
+          "written": true
+        },
+        "screen_full_bin": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_full_65536.bin",
+          "row_count": 65536,
+          "byte_count": 1048576,
+          "dtype": "float32-le",
+          "layout": "x,y,z,value",
+          "field_name": "record_signature",
+          "source": "runs/oph_universe_64k_3p1d_reearned/freezeout_fields.npz",
+          "exact_freezeout_values": true,
+          "written": true
+        },
+        "screen_frames_bins": {
+          "written": true,
+          "source": "runs/oph_universe_64k_3p1d_reearned/screen_evolution_frames.npz",
+          "files": [
+            {
+              "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_frames_cumulative_repair_load_65536x48.bin",
+              "fieldName": "cumulative_repair_load",
+              "rowCount": 65536,
+              "frameCount": 48,
+              "byteCount": 12582912,
+              "dtype": "float32-le",
+              "layout": "frame_major_rows_match_screen_full_bin_order",
+              "cycles": [
+                0,
+                2,
+                5,
+                8,
+                10,
+                13,
+                16,
+                18,
+                21,
+                24,
+                27,
+                29,
+                32,
+                35,
+                37,
+                40,
+                43,
+                45,
+                48,
+                51,
+                54,
+                56,
+                59,
+                62,
+                64,
+                67,
+                70,
+                72,
+                75,
+                78,
+                81,
+                83,
+                86,
+                89,
+                91,
+                94,
+                97,
+                99,
+                102,
+                105,
+                108,
+                110,
+                113,
+                116,
+                118,
+                121,
+                124,
+                127
+              ]
+            },
+            {
+              "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_frames_local_mismatch_density_65536x48.bin",
+              "fieldName": "local_mismatch_density",
+              "rowCount": 65536,
+              "frameCount": 48,
+              "byteCount": 12582912,
+              "dtype": "float32-le",
+              "layout": "frame_major_rows_match_screen_full_bin_order",
+              "cycles": [
+                0,
+                2,
+                5,
+                8,
+                10,
+                13,
+                16,
+                18,
+                21,
+                24,
+                27,
+                29,
+                32,
+                35,
+                37,
+                40,
+                43,
+                45,
+                48,
+                51,
+                54,
+                56,
+                59,
+                62,
+                64,
+                67,
+                70,
+                72,
+                75,
+                78,
+                81,
+                83,
+                86,
+                89,
+                91,
+                94,
+                97,
+                99,
+                102,
+                105,
+                108,
+                110,
+                113,
+                116,
+                118,
+                121,
+                124,
+                127
+              ]
+            },
+            {
+              "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_frames_modular_depth_65536x48.bin",
+              "fieldName": "modular_depth",
+              "rowCount": 65536,
+              "frameCount": 48,
+              "byteCount": 12582912,
+              "dtype": "float32-le",
+              "layout": "frame_major_rows_match_screen_full_bin_order",
+              "cycles": [
+                0,
+                2,
+                5,
+                8,
+                10,
+                13,
+                16,
+                18,
+                21,
+                24,
+                27,
+                29,
+                32,
+                35,
+                37,
+                40,
+                43,
+                45,
+                48,
+                51,
+                54,
+                56,
+                59,
+                62,
+                64,
+                67,
+                70,
+                72,
+                75,
+                78,
+                81,
+                83,
+                86,
+                89,
+                91,
+                94,
+                97,
+                99,
+                102,
+                105,
+                108,
+                110,
+                113,
+                116,
+                118,
+                121,
+                124,
+                127
+              ]
+            },
+            {
+              "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_frames_record_signature_65536x48.bin",
+              "fieldName": "record_signature",
+              "rowCount": 65536,
+              "frameCount": 48,
+              "byteCount": 12582912,
+              "dtype": "float32-le",
+              "layout": "frame_major_rows_match_screen_full_bin_order",
+              "cycles": [
+                0,
+                2,
+                5,
+                8,
+                10,
+                13,
+                16,
+                18,
+                21,
+                24,
+                27,
+                29,
+                32,
+                35,
+                37,
+                40,
+                43,
+                45,
+                48,
+                51,
+                54,
+                56,
+                59,
+                62,
+                64,
+                67,
+                70,
+                72,
+                75,
+                78,
+                81,
+                83,
+                86,
+                89,
+                91,
+                94,
+                97,
+                99,
+                102,
+                105,
+                108,
+                110,
+                113,
+                116,
+                118,
+                121,
+                124,
+                127
+              ]
+            }
+          ]
+        },
+        "repair_trace_full_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/repair_trace_full.csv",
+          "byte_count": 22858,
+          "written": true,
+          "source": "runs/oph_universe_64k_3p1d_reearned/mismatch_trace.csv",
+          "contract": "full per-cycle repair/mismatch trace; payload screen.repairTrace is a stride sample"
+        },
+        "visualization_render_data_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/visualization_render_data.json",
+          "byte_count": 4671698,
+          "written": true,
+          "schema": "oph_visualization_render_data_v1"
+        },
+        "effective_string_theory_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/effective_string_theory.json",
+          "byte_count": 7388295,
+          "written": true,
+          "schema": "oph_effective_string_theory_visualization_v1"
+        },
+        "emergent_curved_spacetime_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/emergent_curved_spacetime.json",
+          "byte_count": 6171072,
+          "written": true,
+          "schema": "oph_emergent_curved_spacetime_visualization_v1"
+        },
+        "observer_cinema_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/observer_cinema.json",
+          "byte_count": 84481,
+          "written": true,
+          "schema": "oph_observer_cinema_v1"
+        },
+        "hilbert_space_observer_algebra_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/hilbert_space_observer_algebra.json",
+          "byte_count": 99822,
+          "written": true,
+          "schema": "oph_hilbert_observer_algebra_summary_v1"
+        },
+        "observer_anatomy_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/observer_anatomy.json",
+          "byte_count": 207347,
+          "written": true,
+          "schema": "oph_observer_anatomy_v1"
+        },
+        "paper_accuracy_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/paper_accuracy.json",
+          "byte_count": 6567,
+          "written": true,
+          "schema": "oph_paper_accuracy_guard_v1"
+        },
+        "subjective_observer_cameras_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/subjective_observer_cameras.csv",
+          "row_count": 128,
+          "written": true
+        },
+        "subjective_observer_camera_frames_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/subjective_observer_camera_frames.csv",
+          "row_count": 12288,
+          "written": true
+        },
+        "observer_proto_worldline_sightings_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/observer_proto_worldline_sightings.csv",
+          "row_count": 196608,
+          "written": true
+        },
+        "observers_full_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/observers_full_128.json",
+          "row_count": 128,
+          "byte_count": 65307,
+          "written": true
+        },
+        "cameras_full_json": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/cameras_full_128.json",
+          "row_count": 128,
+          "objective_observer_view_count": 128,
+          "byte_count": 251897,
+          "written": true
+        },
+        "consensus_h3_objects_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/consensus_h3_objects.csv",
+          "row_count": 70,
+          "written": true
+        },
+        "neutral_object_candidates_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/neutral_object_candidates.csv",
+          "row_count": 32,
+          "written": true
+        },
+        "cmb_residual_rows_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/cmb_residual_rows.csv",
+          "row_count": 0,
+          "written": true
+        },
+        "cmb_screen_spectrum_rows_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/cmb_screen_spectrum_rows.csv",
+          "row_count": 33,
+          "written": true
+        },
+        "reference_vacuum_scalar_spectrum_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/reference_vacuum_scalar_spectrum.csv",
+          "row_count": 30,
+          "written": true
+        },
+        "reference_vacuum_u1_plaquette_trace_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/reference_vacuum_u1_plaquette_trace.csv",
+          "row_count": 32,
+          "written": true
+        },
+        "yang_mills_su2_plaquette_trace_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/yang_mills_su2_plaquette_trace.csv",
+          "row_count": 16,
+          "written": true
+        },
+        "yang_mills_su2_wilson_loop_trace_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/yang_mills_su2_wilson_loop_trace.csv",
+          "row_count": 16,
+          "written": true
+        },
+        "yang_mills_su2_polyakov_loop_trace_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/yang_mills_su2_polyakov_loop_trace.csv",
+          "row_count": 16,
+          "written": true
+        },
+        "yang_mills_su2_orientation_plaquettes_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/yang_mills_su2_orientation_plaquettes.csv",
+          "row_count": 96,
+          "written": true
+        },
+        "yang_mills_su2_refinement_gap_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/yang_mills_su2_refinement_gap.csv",
+          "row_count": 2,
+          "written": true
+        },
+        "yang_mills_gap_promotion_gates_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/yang_mills_gap_promotion_gates.csv",
+          "row_count": 13,
+          "written": true
+        },
+        "finite_repair_frames_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/finite_repair_frames.csv",
+          "row_count": 0,
+          "written": true
+        },
+        "finite_cycle_rows_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/finite_cycle_rows.csv",
+          "row_count": 0,
+          "written": true
+        },
+        "finite_edge_string_vibration_samples_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/finite_edge_string_vibration_samples.csv",
+          "row_count": 0,
+          "written": true
+        },
+        "screen_cluster_tracks_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/screen_cluster_tracks.csv",
+          "row_count": 4245,
+          "written": true
+        },
+        "proto_particle_worldlines_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/proto_particle_worldlines.csv",
+          "row_count": 139,
+          "written": true
+        },
+        "proto_particle_worldline_events_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/proto_particle_worldline_events.csv",
+          "row_count": 1536,
+          "written": true
+        },
+        "emergent_curved_spacetime_curvature_proxy_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/emergent_curved_spacetime_curvature_proxy.csv",
+          "row_count": 1606,
+          "written": true
+        },
+        "emergent_curved_spacetime_time_slices_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/emergent_curved_spacetime_time_slices.csv",
+          "row_count": 12,
+          "written": true
+        },
+        "emergent_curved_spacetime_continuous_field_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/emergent_curved_spacetime_continuous_field.csv",
+          "row_count": 6674,
+          "written": true
+        },
+        "organic_defect_population_trajectory_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/organic_defect_population_trajectory.csv",
+          "row_count": 2409,
+          "written": true
+        },
+        "organic_defect_population_worldlines_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/organic_defect_population_worldlines.csv",
+          "row_count": 16,
+          "written": true
+        },
+        "organic_defect_population_worldline_events_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/organic_defect_population_worldline_events.csv",
+          "row_count": 2048,
+          "written": true
+        },
+        "two_defect_stress_trajectory_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/two_defect_stress_trajectory.csv",
+          "row_count": 96,
+          "written": true
+        },
+        "two_defect_stress_controls_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/two_defect_stress_controls.csv",
+          "row_count": 128,
+          "written": true
+        },
+        "two_defect_stress_worldlines_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/two_defect_stress_worldlines.csv",
+          "row_count": 2,
+          "written": true
+        },
+        "two_defect_stress_worldline_events_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/two_defect_stress_worldline_events.csv",
+          "row_count": 128,
+          "written": true
+        },
+        "free_two_defect_dynamics_trajectory_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/free_two_defect_dynamics_trajectory.csv",
+          "row_count": 128,
+          "written": true
+        },
+        "free_two_defect_dynamics_worldlines_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/free_two_defect_dynamics_worldlines.csv",
+          "row_count": 2,
+          "written": true
+        },
+        "free_two_defect_dynamics_worldline_events_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/free_two_defect_dynamics_worldline_events.csv",
+          "row_count": 192,
+          "written": true
+        },
+        "string_vacuum_selector_candidates_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/string_vacuum_selector_candidates.csv",
+          "row_count": 6,
+          "written": true
+        },
+        "string_vacuum_selector_gates_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/string_vacuum_selector_gates.csv",
+          "row_count": 9,
+          "written": true
+        },
+        "string_vacuum_selector_critical_edge_gates_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/string_vacuum_selector_critical_edge_gates.csv",
+          "row_count": 9,
+          "written": true
+        },
+        "string_vacuum_selector_operator_safety_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/string_vacuum_selector_operator_safety.csv",
+          "row_count": 10,
+          "written": true
+        },
+        "string_vacuum_selector_quantitative_targets_csv": {
+          "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/string_vacuum_selector_quantitative_targets.csv",
+          "row_count": 9,
+          "written": true
+        }
+      },
+      "receipts": {
+        "observer_facing_consensus_3d_bulk_readout_receipt": false,
+        "theorem_assisted_consensus_3d_bulk_readout_receipt": false,
+        "strict_neutral_third_person_bulk_receipt": false,
+        "physical_cmb_prediction_receipt": false,
+        "reference_vacuum_regression_receipt": true,
+        "finite_nonabelian_gauge_gap_diagnostic_receipt": true,
+        "yang_mills_gap_reproduced_receipt": false,
+        "clay_yang_mills_gap_receipt": false,
+        "oph_native_vacuum_promotion_receipt": false,
+        "bulk_worldline_precursor_receipt": false,
+        "particle_matter_receipt": false,
+        "emergent_curved_spacetime_visualization_receipt": true,
+        "two_defect_stress_contraction_assay_receipt": true,
+        "organic_defect_population_receipt": true,
+        "organic_proto_worldline_visualization_receipt": true,
+        "free_two_defect_dynamics_receipt": true,
+        "string_vacuum_selector_visualization_receipt": true,
+        "finite_edge_string_vibration_receipt": false,
+        "encoded_structural_audit_data_receipt": true,
+        "critical_edge_cft_receipt": false,
+        "global_singleton_string_vacuum_receipt": false,
+        "gravity_like_free_dynamics_diagnostic_receipt": true,
+        "einstein_branch_entry_receipt": false,
+        "EINSTEIN_BRANCH_ENTRY_RECEIPT": false,
+        "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": false,
+        "raw_production_gravity_requested": false,
+        "raw_physical_gravity_requested": false,
+        "production_gravity_receipt": false,
+        "physical_gravity_prediction": false,
+        "raw_physical_gravity_from_lanes": false,
+        "paper_accuracy_guard_receipt": true,
+        "no_semantic_promotion_by_relabeling_receipt": true
+      }
+    },
+    "timeline_instructions": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/VISUALIZATION_INSTRUCTIONS.md",
+    "web_agent_brief": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/WEB_CODING_AGENT_VISUALIZATION_BRIEF.md",
+    "cmb_neutral_frontier_viewer": "runs/oph_universe_64k_3p1d_reearned/cmb_neutral_frontier_viewer.html",
+    "visualizer_csv_aliases": {
+      "h3_objects.csv": {
+        "written": true,
+        "source": "runs/oph_universe_64k_3p1d_reearned/observer_consensus_bulk/consensus_h3_object_rows.csv",
+        "path": "runs/oph_universe_64k_3p1d_reearned/h3_objects.csv"
+      },
+      "observer_perspective_rows.csv": {
+        "written": true,
+        "source": "runs/oph_universe_64k_3p1d_reearned/observer_consensus_bulk/observer_perspective_rows.csv",
+        "path": "runs/oph_universe_64k_3p1d_reearned/observer_perspective_rows.csv"
+      }
+    }
+  },
+  "claim_boundary": "Canonical theorem-following OPH universe run. The pipeline instantiates observer-like self-reading systems, runs a finite overlap-repair simulation, refits the cached modular response through controlled H3 candidates, recomputes observer-object chart population, and emits proof/readout/viewer artifacts. It does not lower computed receipt thresholds. A separately labeled simulation-assumption manifest may complete the explanatory S2/BW/H3/dS4/topological-matter scene without changing any proof or physical-measurement receipt."
+}

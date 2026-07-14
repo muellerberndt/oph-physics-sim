@@ -1,0 +1,660 @@
+name: e5_shared_observer_bulk_128k_observers32000_pilot
+simulation_assumptions:
+  enabled: true
+  scope: visualization_only
+  profile: known_observer_universe_v1
+  policy_id: oph-visual-bridges-v1
+  assumed_bridges:
+  - BW3_FINITE_CAP_CERTIFICATE
+  - CAP_NORMAL_H3_CHART
+  - MODULAR_RESPONSE_H3_LOCALIZATION
+  - OBSERVER_MODULAR_TIME_INTERPRETATION
+  - SCREEN_OBSERVER_TO_H3_CAMERA_EMBEDDING
+  - REFINEMENT_NATURALITY_VISUALIZATION
+  - DS4_OPEN_SLICING_BACKGROUND
+  - TOPOLOGICAL_DEFECT_MATTER_RENDERING
+  - CMB_SCREEN_TO_TEMPERATURE_TRANSFER_VISUALIZATION
+  - CMB_TT_REFERENCE_SHAPE_VISUALIZATION
+  assumed:
+    screen_s2: true
+    bw_2pi_geometric_branch: true
+    observer_modular_time_interpretation: true
+    h3_observer_chart: true
+    screen_observer_to_h3_camera_embedding: true
+    record_population_on_h3: true
+    refinement_naturality_visualization: true
+    ds4_open_slicing_background: true
+    positive_cosmological_constant: true
+    observer_tetrad_visualization: true
+    topological_defects_render_as_matter: true
+    cmb_screen_to_temperature_transfer_visualization: true
+    cmb_tt_reference_shape_visualization: true
+  ds4:
+    curvature_radius: 1.0
+    hubble_parameter: 1.0
+    proper_time_min_over_h: 0.05
+    proper_time_max_over_h: 3.0
+    time_sample_count: 96
+    units: simulation_units
+  observer_camera:
+    coordinate_system: h3_hyperboloid_spatial_components_v1
+    h3_radial_coordinate: 1.18
+    look_at:
+    - 0.0
+    - 0.0
+    - 0.0
+    orientation: inward_radial
+    fov_degrees: 72.0
+  cmb_visualization:
+    reference_label: Planck2018_TT_binned
+    reference_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    reference_source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    reference_sha256: sha256:ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd
+    transfer_model: pinned_tt_reference_best_fit_visualization
+    sky_realization_seed: 20260752
+run_mode: observer_shared_bulk_candidate_1m_config_pilot_128k
+seed: 20260753
+claim_boundary: 131,072-carrier-patch pilot derived from the bounded 1,048,576-patch
+  production configuration, with exactly 32,000 materialized observer-like local records.
+  The same deterministic 8,192-observer analysis cohort, 2,048 dense-geometry cap,
+  history window, coupled probes, controls, and visualization gates are retained.
+  This pilot cannot promote a bulk, particle, gravity, or physical-CMB claim.
+graph:
+  family: fibonacci_sphere
+  patch_count: 131072
+  neighbors: 12
+cache:
+  geometry:
+    enabled: true
+    cache_dir: .oph_fpe_cache/geometry
+group:
+  name: S3
+boundary_program:
+  mode: support_visible_cap_net_hot
+  cap_count: 64
+  sharpness: 8.0
+  tangent_weight: 0.35
+  endpoint_noise_probability: 0.35
+screen:
+  chart: support_visible_s2_cellulation
+  carrier: federated_echosahedral_patch
+  ports_per_patch: 12
+  cap_family: round_caps_on_s2
+oph_constants:
+  pixel_mode: source_candidate
+  use_P_for:
+  - cell_area
+  - cell_entropy
+  - cap_capacity
+  - residual_weighting
+screen_units:
+  mode: numerical_regulator
+dynamics:
+  cycles: 128
+  repair_fraction_per_cycle: 0.0625
+  repairs_per_cycle: 8192
+  repair_budget_schedule:
+    enabled: true
+    kind: smooth_hotspot
+    floor_fraction: 0.24
+    warmup_fraction: 0.28
+    peak_fraction: 0.54
+    peak_width_fraction: 0.24
+    taper_start_fraction: 0.72
+    taper_strength: 0.32
+    jitter_fraction: 0.1
+    jitter_period_cycles: 13
+  record_commit_cycles: 12
+  observer_readback_drive:
+    enabled: true
+    mode: support_visible_boundary_refresh
+    edge_fraction: 0.003
+    max_edges_per_cycle: 32768
+    start_cycle: 0
+    stop_cycle: 72
+    endpoint_noise_probability: 0.03
+    phase_advance_per_cycle: 0
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.05
+    beta_end: 15.0
+modular_flow:
+  enabled: true
+  dt: 0.03
+  damping: 0.012
+  repair_load_coupling: 0.35
+  cap_coupling: 0.08
+  diffusion: 0.06
+  cap_axes: 20
+bw:
+  mode: state_derived_modular_probe
+  source_state: theorem_observer
+  state_mode: history_koopman_generator_state
+  history_window: 32
+  target_operator_mode: soft
+  transition_response_time: 0.25
+  transition_response_scale: 6.283185307179586
+  density_inverse_temperature: 0.1
+  generator_scale: 1.0
+  generator_scale_candidates:
+  - 0.0
+  - 1.0
+  - 3.141592653589793
+  - 6.283185307179586
+  - 10.0
+  - 12.566370614359172
+  probe_steps: 4
+  probe_repairs_per_source: 48
+  probe_max_incident_edges: 12
+  cap_count: 4
+  theta0:
+  - 0.35
+  - 0.55
+  - 0.75
+  - 1.0
+  collar_width_mode: double_scaling
+  angular_prefactor: 0.8
+  angular_exponent: 0.25
+  times:
+  - 0.0625
+  - 0.125
+  - 0.25
+  - 0.5
+  normalization: 2pi
+  observables:
+  - record_signature_projectors
+  - repair_load_projectors
+  - s3_sector_projectors
+  - cumulative_repair_load_projectors
+  regularizer_a:
+  - 1.0e-06
+  max_basis: 48
+  k_interp: 8
+  sim_k_interp: 1
+  n_jobs: 2
+  support_visible_smoothing_steps: 4
+  support_visible_smoothing_alpha: 0.35
+  selection:
+    enabled: true
+    sources:
+    - kms_collar_transport_response
+    - perturb_remeasure_response
+    - repair_affinity_response
+    include_declared_sanity: true
+    candidate_scales:
+    - 1.0
+    - 3.141592653589793
+    - 6.283185307179586
+    - 12.566370614359172
+    times:
+    - 0.25
+    observables:
+    - record_signature_projectors
+    - repair_load_projectors
+    - s3_sector_projectors
+    - cumulative_repair_load_projectors
+    max_basis: 48
+    probe_steps: 4
+    probe_repairs_per_source: 48
+    probe_max_incident_edges: 12
+    kms_response_scale: 6.283185307179586
+    kms_transport_steps: 8
+collar_markov:
+  enabled: true
+  max_triplets: 2048
+  packet_bins:
+    record_signature: 64
+    stable_count: 8
+    repair_load: 8
+    s3_class_density: 6
+  sector_conditioned: true
+  write_recovery_bound: true
+observers:
+  sample_count: 32000
+  neighborhood_size: 160
+  time_sample_count: 32
+  overlap_correspondence_max_observers: 8192
+  consensus_analysis_max_observers: 8192
+  observer_wide_analysis_max_observers: 8192
+  compact_unenriched_rows: true
+observer_consensus_readout:
+  observer_sample_count: 96
+  object_sample_count: 512
+visualization_export:
+  max_screen_points: 3500
+  max_observers: 96
+  max_h3_objects: 512
+neutral_frontier:
+  seed: 11
+  sample_count: 2048
+  max_model_points: 1024
+  strict_bulk_max_model_points: 1024
+  planted_control_points: 256
+  object_min_objects: 16
+  object_min_observers_per_object: 3
+  object_max_observer_fraction_per_object: 0.65
+  object_max_model_points: 384
+  object_heldout_fraction: 0.25
+  graph_workers: 32
+  overlap_control_max_model_points: 1024
+  ranks:
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  graph_seeds:
+  - 7
+  - 11
+  - 17
+  graph_max_model_points_values:
+  - 512
+  - 768
+  - 1024
+  graph_k_neighbor_values:
+  - 8
+  - 12
+  - 16
+  - 24
+  residual_remove_mode_values:
+  - 1
+  - 2
+  - 3
+  - 4
+observer_objects:
+  enabled: true
+  family_mode: transition_affinity
+  packet_mode: coarse_visible_packet
+  history_window: 32
+  signature_bins: 12
+  include_s3_sector: true
+  include_repair_load_bin: false
+  transition_history_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_history_key_fields:
+  - record_family
+  - checkpoint_class
+  - stable_flag
+  - s3_sector_class
+  - repair_load_bucket
+  transition_persistence_fields:
+  - record_family
+  - s3_sector_class
+  transition_affinity_fields:
+  - checkpoint_class
+  - record_family
+  - s3_sector_class
+  - repair_load_bucket
+  - cumulative_repair_load_bucket
+  transition_bins: 8
+  record_family_modulus: 16
+  min_support_size: 3
+  max_support_size: 1024
+  max_support_nodes_per_family: 4096
+  persistence_horizon: 8
+  counterfactual_perturbations: 16
+  max_families: 4096
+  transition_history_local_min_persistence: 2
+observer_chart_population:
+  enabled: true
+  refit_incidence_mode: transition_history_mixture_cluster
+  incidence_mode: transition_affinity_modular_response_mixture
+  history_window: 32
+  min_persistence: 3
+  min_objects: 8
+  min_observers_per_object: 4
+  max_objects: 8192
+  observer_cluster_fields:
+  - modular_response_cluster
+  - modular_response_component_0
+  - modular_response_component_1
+  max_observer_fraction_per_object: 0.35
+  min_packet_mass: 0.05
+  min_transition_affinity: 0.18
+  transition_affinity_score: geometric_mean
+  max_h3_compactness: 0.5
+  min_localized_objects: 2
+  pass_ratio: 1.0
+  observer_cluster_top_k: 2
+  min_observer_cluster_weight: 0.05
+  shuffle_control_count: 24
+  split_h3_components: true
+  component_link_fraction: 0.22
+  component_min_observers: 4
+  require_support_visibility: true
+  min_support_visibility: 0.01
+  visibility_mode: packet_or_support
+  packet_visibility_weight: 0.5
+  boundary_gate_mode: boundary_leakage_audit
+neutral_reconstruction:
+  enabled: true
+  require_bw_refinement_pass: false
+  forbid_radial_depth_evidence: true
+  distance_matrix_max_observers: 2048
+h3_population:
+  enabled: false
+visualization_diagnostics:
+  reference_vacuum:
+    enabled: true
+    ell_max: 16
+    sample_count: 256
+    coarse_ell_max: 8
+    u1_lattice_size: 4
+    u1_sweeps: 32
+  yang_mills_gap_certificate:
+    enabled: true
+    lattice_size: 2
+    sweeps: 16
+    beta: 2.2
+    proposal_width: 0.35
+    transition_bins: 8
+    refinement_lattice_sizes:
+    - 2
+    - 3
+    refinement_sweeps: 8
+  organic_defect_population:
+    enabled: false
+    patch_count: 262144
+    steps: 192
+    defect_count: 18
+    min_defects: 10
+    max_defects: 20
+    support_node_count: 8
+    seed: 2039
+    cycle_stride: 1
+    initial_speed: 0.028
+    stress_coupling: 0.018
+    transverse_kick: 0.014
+    stress_radius: 0.9
+    curvature_radius: 1.0
+    contact_radius: 0.12
+    overlap_radius: 0.28
+    spawn_radius: 1.25
+  two_defect_gravity_assay:
+    enabled: false
+    free_dynamics_enabled: true
+    patch_count: 262144
+    steps: 128
+    free_steps: 160
+    support_node_count: 8
+    free_seed: 1729
+    cycle_stride: 1
+    initial_separation: 1.2
+    initial_speed: 0.035
+    stress_coupling: 0.04
+    free_stress_coupling: 0.03
+    transverse_kick: 0.012
+    stress_radius: 1.0
+    curvature_radius: 1.0
+    contact_radius: 0.1
+    overlap_radius: 0.22
+    bind_speed_threshold: 0.055
+    annihilation_overlap_threshold: 0.85
+h3_support_profiles:
+  enabled: true
+  dedicated_cap_net: true
+  cap_count: 8
+  theta0:
+  - 0.35
+  - 0.55
+  - 0.75
+  - 1.0
+  - 1.25
+  collar_width_mode: double_scaling
+  angular_prefactor: 0.8
+  angular_exponent: 0.25
+  candidate_count: 4096
+  candidate_radius: 2.0
+  softness: 0.25
+  pass_ratio: 0.85
+  min_support_count: 8
+  defect_min_support_count: 8
+h3_modular_response:
+  enabled: true
+  blind_feature_selection: true
+  refit_recipe: scale_rank_512
+  observable_mode: perturb_resettle_transition
+  times:
+  - 0.25
+  transition_observables:
+  - checkpoint_class
+  - stable_flag
+  - record_family
+  - s3_sector_class
+  - repair_load_bucket
+  transition_bins: 8
+  record_family_modulus: 16
+  feature_types:
+  - class_distribution_delta
+  - entropy_delta
+  - sector_preservation_delta
+  - change_probability_delta
+  transform: signed_robust_zscore
+  perturb_strength: 1.0
+  perturb_budget_mode: modular_amount
+  fixed_perturb_fraction: null
+  perturb_selection_mode: lambda_displacement
+  transition_readout_mode: transported_support
+  repair_steps: 4
+  repairs_per_step: 256
+  wrong_scales:
+  - 1.0
+  - 3.141592653589793
+  - 12.566370614359172
+  transport_scale: 6.283185307179586
+  k_transport: 1
+  fit_mode: joint_global
+  control_fit_mode: same_h3_model_not_affine_target_fit
+  candidate_count: 4096
+  candidate_radius: 2.0
+  softness: 0.25
+  heldout_fraction: 0.25
+  anchor_weight: 0.05
+  max_iterations: 6
+  candidate_mode: fibonacci_ball
+  channel_mode: time_observable_class
+  profile_mode: static_halfspace
+  profile_time_scale: 6.283185307179586
+  feature_selection: class_distribution_and_change
+  min_feature_std: 0.01
+  min_wrong_scale_feature_delta: 0.0
+  exclude_observables:
+  - record_family
+  - repair_load_bucket
+  exclusion_claim_boundary: 'record_family and repair_load_bucket are still used for
+    observer-object extraction and diagnostics, but they are auxiliary record/repair
+    labels. Excluding them from this fit tests whether the support-visible geometric
+    transition observables carry the BW/H3 response without letting auxiliary labels
+    decide the receipt.
+
+    '
+  max_fit_features: 512
+  max_features_per_cap_time_observable: 8
+  refine_steps: 1
+  refine_max_rows: 24
+  refine_max_nfev: 24
+  pass_ratio: 1.0
+  min_observers: 32
+  min_features: 16
+  max_full_graph_simulations: 32
+  full_graph_budget_policy: skip_if_exceeded
+  full_graph_n_jobs: 8
+theorem_core:
+  projection_sample: 768
+  include_default_sm_candidate: false
+  consensus_replay:
+    enabled: true
+    schedule_replays: 0
+    requested_schedule_replays: 0
+    max_event_rows: 256
+    disjoint_checks: 256
+    large_run_exact_failure_short_circuit: true
+cosmology:
+  output_profile: compact
+  write_freezeout_npz: true
+  freezeout:
+    enabled: true
+    require_state_bw_controls: false
+    require_neutral_reconstruction: false
+    allow_screen_proxy_without_bulk: true
+    commit_fraction: 0.95
+    fields:
+    - record_signature
+    - local_mismatch_density
+    - cumulative_repair_load
+    - s3_class_density
+    derived_fields: []
+    million_patch_diagnostic_export_policy: export_final_screen_fields_for_visualization_without_promoting_bw_bulk_or_physical_cmb
+  angular_power:
+    estimator: spherical_harmonic
+    harmonic_batch_size: 8192
+    ell_max: 24
+    pair_samples: 100000
+    controls:
+    - shuffled_field
+    n_jobs: 2
+  cmb_lite:
+    enabled: true
+    benchmark_path: data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    benchmark_label: Planck2018_TT_binned
+    source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt
+    fields:
+    - record_signature
+    - local_mismatch_density
+    - cumulative_repair_load
+    - s3_class_density
+  b_a_paired_perturbation:
+    enabled: true
+    source_state: final
+    cap_source: h3
+    max_caps: 4
+    modes_per_cap_time: 1
+    a_grid:
+    - 0.01
+    - 0.1
+    times:
+    - 0.25
+    controls:
+    - no_perturbation
+    - phase_shuffled_baryon_mode
+    - wrong_k_label
+    response_field: cumulative_repair_load
+    perturb_strength: 1.0
+    perturb_budget_mode: modular_amount
+    perturb_selection_mode: lambda_collar_generator
+    repair_steps: 4
+    repairs_per_step: 192
+    transition_scale: 6.283185307179586
+    max_full_graph_simulations: 24
+    full_graph_budget_policy: skip_if_exceeded
+    full_graph_n_jobs: 8
+    reuse_dynamics_across_a_grid: true
+  harmonic_time_trace:
+    enabled: true
+    sample_count: 4
+    ell_max: 12
+    harmonic_batch_size: 8192
+    save_raw_frames: false
+    fixed_time_controls: true
+    controls:
+    - shuffled_field
+    fields:
+    - record_signature
+    - local_mismatch_density
+    - cumulative_repair_load
+defects:
+  max_triangles: 12000
+  sector_repair:
+    enabled: true
+    mode: repair_coupled_group_compose
+    probability: 0.08
+  timeline:
+    enabled: true
+    sample_count: 32
+    max_triangles: 4096
+    persistence_cycles: 3
+    particle_min_observations: 3
+    particle_min_class_stability: 0.8
+    max_angular_speed_per_cycle: 0.75
+    max_analysis_clusters_per_snapshot: 512
+    max_serialized_snapshots: 32
+    max_snapshot_clusters_per_snapshot: 512
+    max_worldlines: 512
+    max_events_per_worldline: 128
+    max_support_nodes_per_record: 64
+    max_serialized_json_bytes: 64000000
+controls:
+- wrong_1x_normalization
+- wrong_pi_normalization
+- wrong_4pi_normalization
+- shuffled_observables
+- no_modular_flow
+- no_repair
+- shuffled_interfaces
+- random_same_degree_graph
+- wrong_s3_orientation
+- fake_record_rewrite
+outputs:
+  profile: compact
+  write_jsonl: true
+  write_bw_report: true
+  write_cap_geometry_report: true
+  write_collar_markov_report: true
+  write_state_derived_bw_report: true
+  write_freezeout_cl_proxy: true
+  write_dimension_report: false
+million_patch_preparation:
+  schema: oph_monolithic_million_patch_preparation_v1
+  carrier_patch_count: 1048576
+  materialized_observer_count: 64000
+  observer_wide_analysis_count: 8192
+  observer_wide_analysis_sampling: deterministic_observer_id_hash_rank_v1
+  observer_population_storage: all_materialized_local_records_in_compact_npz_plus_enriched_analysis_jsonl
+  dense_distance_observer_cap: 2048
+  visualizer_caps:
+    screen_points: 3500
+    observers: 96
+    h3_objects: 512
+    raw_screen_frames: 0
+  recommended_machine: n2-standard-64 (64 vCPU, 256 GiB)
+  blas_threads_per_worker: 1
+  full_graph_probe_workers:
+    h3_modular_response: 8
+    paired_b_a: 8
+    execution: bounded_ordered_thread_pool
+  full_graph_simulation_caps:
+    h3_modular_response: 32
+    paired_b_a: 24
+    paired_without_a_grid_reuse: 48
+  pilot_gate:
+    schema: oph_monolithic_million_patch_pilot_gate_v1
+    production_target_patch_count: 1048576
+    production_target_materialized_observer_count: 64000
+    pilot_patch_count: 131072
+    pilot_materialized_observer_count: 32000
+    observer_wide_analysis_count: 8192
+    allowed_scale_differences:
+    - name
+    - run_mode
+    - claim_boundary
+    - graph.patch_count
+    - dynamics.repairs_per_cycle
+    - observers.sample_count
+    - million_patch_preparation.pilot_gate
+  base_config: configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml
+  base_config_sha256: sha256:28daee794e1ede95b2bb43f0bb5a7ddc7bc3ea8079bb3e6a7408641227dc01f1
+run_id: oph_universe_128k_3p1d_earned

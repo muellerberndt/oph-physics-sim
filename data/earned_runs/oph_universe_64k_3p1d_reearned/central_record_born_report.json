@@ -1,0 +1,1553 @@
+{
+  "mode": "central_record_born_surface",
+  "record_count": 65536,
+  "committed_count": 32942,
+  "committed_fraction": 1.0,
+  "event_count": 32942,
+  "probability_sum": 0.9999999999999998,
+  "max_projector_idempotent_error": 0.0,
+  "record_projectors_commute": true,
+  "luders_conditioning_idempotent": true,
+  "repeat_read_stability_fraction": 1.0,
+  "commit_cycles": 12,
+  "sample_events": [
+    {
+      "event_id": 84015993414534,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 112910823150621,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 132520847764326,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 302146257688539,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 344736002093863,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 870397794111442,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 1258829099651928,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 1554736053894628,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 1640602830379946,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 2057260865356256,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 2291496344336616,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 2370542431055174,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 2784808245156749,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 3250721512543422,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 3276034880502574,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 3905299898931436,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 4090861401606001,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 4232665246553560,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 4579052926148960,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 4609493142432838,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 4649770603434304,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 5329007025797178,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 5380425331243921,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 5526858717324441,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 7089170453461108,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 7497883761846841,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 7636634183251389,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 8072733105757957,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 8125839538378500,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 8229476723016492,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 9922398695481616,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 10300598744393792,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 10560601180984747,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 10749196264800604,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 10940659785635470,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 11258681591962432,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 11581474134752106,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 11715071984626935,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 11806217434830149,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 11920906652949281,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 11952683312832723,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 12493901966375059,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 12689124913133232,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 12737989923036754,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 13348325997670675,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 13371841462844242,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 13582466638554616,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 14342149334743393,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 14396490188327548,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 14542440349616454,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 14935855317637549,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 14942838155131996,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 14985837901358446,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 16919949352696470,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 17096544794068899,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 17953572747953710,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 18036795783296124,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 18479926169000581,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 18583465937751067,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 18710319198623724,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 18845518769250966,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 19550472517750548,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 19552793209464091,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 20171687805711198,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 20636558596929185,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 21080431814047502,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 21595328445601930,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 21757590892416364,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 21904015818059446,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 22102688674003625,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 22373165108517297,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 22598016708177615,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 23432120482883638,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 23583841951559643,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 23994768352348444,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 24009731482462245,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 24097041478898283,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 24368188204024088,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 25252125770433591,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 25323153260592863,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 25435914851069738,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 26276542720406449,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 26483587614860001,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 26762624165250194,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 27016553327469136,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 27296527421608180,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 27970299151647447,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 28136040971829706,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 29163475643066059,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 29722270741345751,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 29884504529625065,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 29922691032507006,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 29982756854538150,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 30396720575590130,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 30482319418232929,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 30487900078443690,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 31078050386940405,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 31370512254330157,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 31408381659882913,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 31979194483800542,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 32130332814984047,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 32607028515364555,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 32631301549535363,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 32699479005270481,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 32811628042202293,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 33939659304932609,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 33981491940340760,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 34370026640777167,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 34814404862220573,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 34991010858035528,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 35511231412774894,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 35602435476077454,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 36224891783190594,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 36332443804815508,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 36449511097966722,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 36946188203723107,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 37025272733194809,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 37960856834781420,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 38312586418340625,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 38400200916678021,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 38801042858971052,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 40310658004185634,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 40433150773156549,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 40615557621573037,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 40719185877162920,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 41464095332971964,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 41695560707263586,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 42007912294488315,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 42242715714817062,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 42450466268304813,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 42657171125573665,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 42883232806669672,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 43223319491677637,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 43393888952513622,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 43931872967670957,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 44134286261074159,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 44504997820370901,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 44693137530128891,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 44747117830201704,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 44750603472428164,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 45561502085533469,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 45608636225879687,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 45618561137643620,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 45708604853621768,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 45866134308881647,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 46419121069142388,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 46474737553449304,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 46684492436886137,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 46864274760305151,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 47201719964232758,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 48279216479210754,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 48510614082855150,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 48726161040952710,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 48736218273659901,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 48830274713279814,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 49127865755779287,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 49202184640360394,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 49293425499058534,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 49328470034538005,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 49456413918453874,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 49830074241882674,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 50241078949333930,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 50797793072093824,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 50846837918804195,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 50946104303784400,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 50962602971857159,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 51008753307686013,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 51373871096621077,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 51748536204462674,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 51825281087947830,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 52335252364800622,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 52408311194027954,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 52513151228704389,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 52847284884246591,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 52979462013414862,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 53585388057888634,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 53613316896214260,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 53692952988412203,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 53916230751186634,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 54200303394524870,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 54638020593476775,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 54991101996830807,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 55570865033917096,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 55805830833877112,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 57140646357614783,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 58062180948363721,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 58571033850613431,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 58930261073886751,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59008147867745588,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59324220368209170,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59354482790246179,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59558954905836688,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59587502825840868,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59664395881563682,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 59727041343887481,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 60270934758067960,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 60360172050017006,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 60452777208065939,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 61472541252696964,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 61860930123150796,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 61944743189931188,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 62232517000555459,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 62237359732161763,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 62696390825814020,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 62739450830935892,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 62960933818130220,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 62976554912114781,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 63588799809362909,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 63727561727358136,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 64116442196938954,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 64200434602037234,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 65101411358820092,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 65961581093937651,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 66430989356204964,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 66625396256309232,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 66694292336541349,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 67314454770767217,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 67315219604127443,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 67598311370221014,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 68082141936537559,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 68803604995614777,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 69123514474630266,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 69530754506698554,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 69558868660407363,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 70432471774612862,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 70965647052898658,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 71012195149334279,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 71258025149050547,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 71544270941683085,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 72329167200891476,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 73335646607873142,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 73833139747626833,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 73943480066954485,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 74140019926872628,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 75121806276162480,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 75191411289175442,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 75736068811140588,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 76611044505556773,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 76958607944979822,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 77011758471954717,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 77344653772355159,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 77877582952036848,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 78085721938391882,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 78919369679197755,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 78977453822706533,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 78995052771671632,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 80007296813644250,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 80395483933228342,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 80764208325085910,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 80910954283044212,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 80915629596889779,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 80998939794964600,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 81579837921082764,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 81927667218287675,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 82016708215009916,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    },
+    {
+      "event_id": 82032271924030128,
+      "count": 1,
+      "born_probability_empirical": 3.0356383947544167e-05,
+      "luders_conditioning_idempotent": true
+    }
+  ],
+  "receipt": true,
+  "claim_boundary": "finite central record algebra / Born-Luders receipt over committed observer-facing record signatures. It is a fixed-cutoff measurement surface, not a physical CMB, bulk, or particle claim."
+}

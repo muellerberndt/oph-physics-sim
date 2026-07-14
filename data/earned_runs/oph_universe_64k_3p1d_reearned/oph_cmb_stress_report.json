@@ -1,0 +1,240 @@
+{
+  "mode": "oph_cmb_anomaly_stress_adapter_v0",
+  "enabled": true,
+  "standard_photon_baryon_baseline": {
+    "status": "external_boltzmann_baseline_required",
+    "photon_generation": "standard thermal photon-baryon plasma; photons redshift into microwaves",
+    "keep_standard_physics": [
+      "photons",
+      "baryons",
+      "electrons",
+      "neutrinos",
+      "Thomson_scattering",
+      "recombination_visibility_function",
+      "line_of_sight_integration"
+    ],
+    "visibility_function": "g(eta) = -tau'(eta) exp[-tau(eta)]",
+    "cmb_temperature_today_K": 2.725,
+    "recombination_redshift_slot": 1100,
+    "regression": "Before OPH anomaly extensions are trusted, CAMB/CLASS must recover standard LambdaCDM TT/TE/EE/lensing spectra in the CDM limit."
+  },
+  "anomaly_stress_model": {
+    "selected_branch": "repair_exchange_diagnostic",
+    "conserved_cdm_limit": {
+      "rho_A": "rho_A0 * a^-3",
+      "w_A": 0.0,
+      "c_s_A_squared": 0.0,
+      "sigma_A": 0.0,
+      "Gamma_rec": 0.0,
+      "status": "formula_emitted_regression_not_run"
+    },
+    "repair_exchange_branch": {
+      "background": "rho_A' + 3 H rho_A = -a Gamma_rec (rho_A - rho_A_eq)",
+      "density_perturbation": "delta_A' = -theta_A + 3 Phi' - a Gamma_rec q_A (delta_A - B_A(k,a) delta_b)",
+      "velocity_perturbation": "theta_A' = -H theta_A + k^2 Psi",
+      "required_parent_quantities": [
+        "rho_A(a)",
+        "rho_A_eq(a)",
+        "Gamma_rec(k,a)",
+        "B_A(k,a)"
+      ],
+      "status": "schema_emitted_parent_quantities_not_theorem_grade"
+    },
+    "static_galaxy_law_boundary": "The settled static RAR law is not used as a homogeneous FLRW source and is not Taylor-expanded at g_b=0."
+  },
+  "finite_collar_parent": {
+    "source": "collar_markov_report",
+    "parent_formula": "rho_A_eq[X] c^2 = 15/(8*pi^2*l(X)^4) * int_C dmu_C I_omega_C(A:D|B)",
+    "status": "diagnostic_finite_collar_samples_not_theorem_grade",
+    "sample_count": 4,
+    "weighted_collar_repair_defect_R": 0.0,
+    "median_epsilon_cmi": 0.0,
+    "mean_epsilon_cmi": 0.0,
+    "p90_epsilon_cmi": 0.0,
+    "rho_A_eq_proxy": null,
+    "rho_A_eq_proxy_units": "not_available_without_parent_length_scale",
+    "density_prefactor_15_over_8pi2": 0.18997721932938333,
+    "sample_rows": [
+      {
+        "cap_id": 0,
+        "theta0": 0.35,
+        "k_proxy_inverse_theta": 2.857142857142857,
+        "epsilon_cmi": 0.0,
+        "weight": 2048.0,
+        "r_fr_bound": 0.0,
+        "packet_alphabet_size": 1987
+      },
+      {
+        "cap_id": 1,
+        "theta0": 0.55,
+        "k_proxy_inverse_theta": 1.8181818181818181,
+        "epsilon_cmi": 0.0,
+        "weight": 2048.0,
+        "r_fr_bound": 0.0,
+        "packet_alphabet_size": 4838
+      },
+      {
+        "cap_id": 2,
+        "theta0": 0.75,
+        "k_proxy_inverse_theta": 1.3333333333333333,
+        "epsilon_cmi": 0.0,
+        "weight": 2048.0,
+        "r_fr_bound": 0.0,
+        "packet_alphabet_size": 8795
+      },
+      {
+        "cap_id": 3,
+        "theta0": 1.0,
+        "k_proxy_inverse_theta": 1.0,
+        "epsilon_cmi": 0.0,
+        "weight": 2048.0,
+        "r_fr_bound": 0.0,
+        "packet_alphabet_size": 15063
+      }
+    ],
+    "claim_boundary": "Uses diagonal empirical collar CMI samples as a parent diagnostic. It is not a theorem-grade finite-collar evaluator and must not be fitted to CMB likelihoods."
+  },
+  "diagnostic_kernel_proxy": {
+    "status": "screen_cap_size_shape_proxy_only",
+    "a_grid": [
+      0.0009090909090909091,
+      0.01,
+      0.1,
+      1.0
+    ],
+    "k_grid_h_mpc_required_for_boltzmann": [
+      0.001,
+      0.003,
+      0.01,
+      0.03,
+      0.1,
+      0.3
+    ],
+    "kernel_proxy_rows": [
+      {
+        "k_proxy_inverse_theta": 2.857142857142857,
+        "theta0": 0.35,
+        "B_A_shape_proxy": 0.0
+      },
+      {
+        "k_proxy_inverse_theta": 1.8181818181818181,
+        "theta0": 0.55,
+        "B_A_shape_proxy": 0.0
+      },
+      {
+        "k_proxy_inverse_theta": 1.3333333333333333,
+        "theta0": 0.75,
+        "B_A_shape_proxy": 0.0
+      },
+      {
+        "k_proxy_inverse_theta": 1.0,
+        "theta0": 1.0,
+        "B_A_shape_proxy": 0.0
+      }
+    ],
+    "B_A_k_a_emitted": false,
+    "Gamma_rec_emitted": false,
+    "claim_boundary": "Cap-size variation of collar CMI is a diagnostic shape proxy, not a gauge-consistent B_A(k,a) kernel."
+  },
+  "boltzmann_adapter_requirements": {
+    "baseline_solver": "CAMB_or_CLASS",
+    "must_pass_first": [
+      "LambdaCDM_CDM_limit_regression",
+      "gauge_consistency_of_delta_A_theta_A_equations",
+      "energy_momentum_exchange_sign_audit",
+      "script_and_input_hashing",
+      "full_likelihood_covariances"
+    ],
+    "required_anomaly_inputs": [
+      "rho_A(a)",
+      "rho_A_eq(a)",
+      "Gamma_rec(k,a)",
+      "B_A(k,a)",
+      "initial_conditions_for_delta_A_theta_A",
+      "compensating_sector_for_Q_A_mu_if_exchange_enabled"
+    ],
+    "first_physical_outputs": [
+      "C_ell_TT",
+      "C_ell_TE",
+      "C_ell_EE",
+      "C_ell_BB",
+      "C_ell_phiphi",
+      "P_k",
+      "sigma_8",
+      "S_8",
+      "f_sigma_8",
+      "r_s",
+      "D_A",
+      "H_z"
+    ]
+  },
+  "observer_facing_outputs_required": [
+    "C_ell_TT",
+    "C_ell_TE",
+    "C_ell_EE",
+    "C_ell_BB",
+    "C_ell_phiphi",
+    "P_k",
+    "sigma_8",
+    "S_8",
+    "f_sigma_8",
+    "r_s",
+    "D_A",
+    "H_z"
+  ],
+  "screen_proxy_context": {
+    "freezeout_screen_cl_available": true,
+    "screen_proxy_gate_allowed": true,
+    "physical_cmb_prediction": false
+  },
+  "physical_prediction_readiness": {
+    "boltzmann_ready": false,
+    "physical_cmb_prediction_ready": false,
+    "checks": {
+      "screen_proxy_gate_allowed": true,
+      "finite_collar_samples_available": true,
+      "finite_collar_parent_theorem_grade": false,
+      "rho_A_eq_scalar_proxy_available": false,
+      "rho_A_of_a_emitted": false,
+      "rho_A_eq_of_a_emitted": false,
+      "Gamma_rec_of_k_a_emitted": false,
+      "B_A_of_k_a_emitted": false,
+      "energy_momentum_exchange_closed": false,
+      "rho_A_a_emitted": false,
+      "rho_A_eq_a_emitted": false,
+      "Gamma_rec_emitted": false,
+      "B_A_k_a_emitted": false,
+      "cdm_limit_regression_run": false,
+      "gauge_consistency_audited": false,
+      "camb_or_class_run": false,
+      "full_likelihood_run": false
+    },
+    "missing_gates": [
+      "finite_collar_parent_theorem_grade",
+      "rho_A_eq_scalar_proxy_available",
+      "rho_A_of_a_emitted",
+      "rho_A_eq_of_a_emitted",
+      "Gamma_rec_of_k_a_emitted",
+      "B_A_of_k_a_emitted",
+      "energy_momentum_exchange_closed",
+      "rho_A_a_emitted",
+      "rho_A_eq_a_emitted",
+      "Gamma_rec_emitted",
+      "B_A_k_a_emitted",
+      "cdm_limit_regression_run",
+      "gauge_consistency_audited",
+      "camb_or_class_run",
+      "full_likelihood_run"
+    ]
+  },
+  "COSMOLOGY_PERTURBATION_RECEIPT": false,
+  "physical_cmb_prediction": false,
+  "physical_matter_power_prediction": false,
+  "claim_boundary": "OPH-CMB anomaly-stress adapter scaffold derived from the CMB writeup. Standard photons/recombination are delegated to CAMB/CLASS-style physics. Finite-collar I(A:D|B) values are diagnostic parent samples only; they do not yet supply theorem-grade rho_A(a), Gamma_rec, or B_A(k,a). This is not a physical CMB prediction, not a likelihood, and not a Boltzmann run.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "proxy",
+  "receipt_name": "OPH_CMB_ANOMALY_STRESS_ADAPTER",
+  "observable_id": "oph_cmb_anomaly_stress_bridge",
+  "fit_objective": "finite_collar_parent_to_boltzmann_input_scaffold",
+  "physical_claim": false
+}

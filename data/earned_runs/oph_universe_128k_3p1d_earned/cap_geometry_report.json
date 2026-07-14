@@ -1,0 +1,120 @@
+{
+  "cap_count": 4,
+  "weight_measure": "cell_entropy_capacity",
+  "P_usage": "cap area/capacity only; lambda_C geometry is unchanged",
+  "caps": [
+    {
+      "cap_index": 0,
+      "theta0": 0.35,
+      "frame_p_minus": [
+        0.5223969416318801,
+        0.7917861527236121,
+        -0.31650611957559177
+      ],
+      "frame_p_plus": [
+        0.7202763516652468,
+        0.6172729165474562,
+        0.31650611957559177
+      ],
+      "frame_ordering": "p_minus_attracting_for_positive_s",
+      "hard_count": 3972,
+      "hard_fraction": 0.030303955078125,
+      "collar_count": 5499,
+      "hard_cap_area_planck": 6478.221164756348,
+      "hard_cap_entropy_capacity": 1619.555291189087,
+      "soft_cap_area_planck": 7434.175124290396,
+      "soft_cap_entropy_capacity": 1858.543781072599
+    },
+    {
+      "cap_index": 1,
+      "theta0": 0.55,
+      "frame_p_minus": [
+        -0.4312590161581212,
+        0.704757661357097,
+        0.5633225539074437
+      ],
+      "frame_p_plus": [
+        -0.7860681593786303,
+        -0.2784954003273442,
+        0.5518488568508634
+      ],
+      "frame_ordering": "p_minus_attracting_for_positive_s",
+      "hard_count": 9658,
+      "hard_fraction": 0.0736846923828125,
+      "collar_count": 5524,
+      "hard_cap_area_planck": 15751.928501816918,
+      "hard_cap_entropy_capacity": 3937.9821254542294,
+      "soft_cap_area_planck": 15895.97415768359,
+      "soft_cap_entropy_capacity": 3973.9935394208974
+    },
+    {
+      "cap_index": 2,
+      "theta0": 0.75,
+      "frame_p_minus": [
+        -0.19955810921770928,
+        -0.79746622443919,
+        -0.5694068685256232
+      ],
+      "frame_p_plus": [
+        0.32343244053506487,
+        0.4316217900022795,
+        -0.8420772451531747
+      ],
+      "frame_ordering": "p_minus_attracting_for_positive_s",
+      "hard_count": 17581,
+      "hard_fraction": 0.13413238525390625,
+      "collar_count": 5516,
+      "hard_cap_area_planck": 28674.120417316553,
+      "hard_cap_entropy_capacity": 7168.530104329138,
+      "soft_cap_area_planck": 28686.675539713797,
+      "soft_cap_entropy_capacity": 7171.668884928449
+    },
+    {
+      "cap_index": 3,
+      "theta0": 1.0,
+      "frame_p_minus": [
+        0.08763197170418821,
+        0.02362110273240242,
+        0.9958728237284827
+      ],
+      "frame_p_plus": [
+        0.347251387767852,
+        -0.8340745615346121,
+        -0.4286444908011132
+      ],
+      "frame_ordering": "p_minus_attracting_for_positive_s",
+      "hard_count": 30136,
+      "hard_fraction": 0.22991943359375,
+      "collar_count": 5494,
+      "hard_cap_area_planck": 49150.9750808402,
+      "hard_cap_entropy_capacity": 12287.74377021005,
+      "soft_cap_area_planck": 49135.96550141579,
+      "soft_cap_entropy_capacity": 12283.991375353948
+    }
+  ],
+  "times": [
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+  ],
+  "regulator_collar": {
+    "mode": "double_scaling",
+    "collar_width": 0.04204482076268573,
+    "collar_k": 1.0,
+    "cell_angular_scale": 0.009791516697777345,
+    "collar_to_cell_ratio": 4.29400490857865,
+    "angular_prefactor": 0.8,
+    "angular_exponent": 0.25,
+    "double_scaling_delta_to_zero": true,
+    "double_scaling_collar_to_cell_diverges": true,
+    "double_scaling_formula": "delta_N = c * N^(-alpha); paper default c=0.8, alpha=0.25",
+    "claim_boundary": "finite regulator collar; double_scaling mode instantiates delta_N -> 0 and delta_N / ell_UV -> infinity for 0 < alpha < 1/2"
+  },
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "demo",
+  "receipt_name": "CAP_GEOMETRY_DIAGNOSTIC",
+  "observable_id": "round_caps_on_support_visible_s2",
+  "fit_objective": "cap_geometry_consistency",
+  "physical_claim": false
+}

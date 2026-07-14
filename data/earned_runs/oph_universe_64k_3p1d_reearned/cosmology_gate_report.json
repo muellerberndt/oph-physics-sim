@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "allowed": true,
+  "missing_requirements": [],
+  "checks": {
+    "kms_bw_pass": true,
+    "state_bw_controls_pass": false,
+    "neutral_reconstruction_written": false,
+    "bulk_3d_established": false,
+    "screen_proxy_allowed_without_bulk": true
+  },
+  "required": {
+    "kms_bw_pass": true,
+    "state_bw_controls_pass": false,
+    "neutral_reconstruction_written": false
+  },
+  "mode": "freezeout_screen_cl_proxy_gate",
+  "claim_boundary": "Allows only a measurement-facing screen C_l proxy. This gate does not certify a physical CMB prediction, a 3D bulk, a P(k), or a Boltzmann adapter."
+}

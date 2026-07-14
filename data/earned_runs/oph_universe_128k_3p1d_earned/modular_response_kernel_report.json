@@ -1,0 +1,1431 @@
+{
+  "mode": "observer_modular_response_kernel",
+  "observable_mode": "perturb_resettle_transition",
+  "observer_count": 8192,
+  "feature_count": 312,
+  "cap_count": 8,
+  "time_count": 1,
+  "field_names": [
+    "checkpoint_class",
+    "stable_flag",
+    "record_family",
+    "s3_sector_class",
+    "repair_load_bucket"
+  ],
+  "feature_rows_sample": [
+    {
+      "feature_index": 0,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_0",
+      "observable": "checkpoint_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 1,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_1",
+      "observable": "checkpoint_class",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 2,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_2",
+      "observable": "checkpoint_class",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 3,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_3",
+      "observable": "checkpoint_class",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 4,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:entropy_delta",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 5,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:sector_preservation",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 6,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:change",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 7,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_0",
+      "observable": "stable_flag",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 8,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_1",
+      "observable": "stable_flag",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 9,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:entropy_delta",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 10,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:sector_preservation",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 11,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:change",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 12,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_0",
+      "observable": "record_family",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 13,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_1",
+      "observable": "record_family",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 14,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_2",
+      "observable": "record_family",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 15,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_3",
+      "observable": "record_family",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 16,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_4",
+      "observable": "record_family",
+      "target_class": 4,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 17,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_5",
+      "observable": "record_family",
+      "target_class": 5,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 18,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_6",
+      "observable": "record_family",
+      "target_class": 6,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 19,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_7",
+      "observable": "record_family",
+      "target_class": 7,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 20,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_8",
+      "observable": "record_family",
+      "target_class": 8,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 21,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_9",
+      "observable": "record_family",
+      "target_class": 9,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 22,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_10",
+      "observable": "record_family",
+      "target_class": 10,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 23,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_11",
+      "observable": "record_family",
+      "target_class": 11,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 24,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_12",
+      "observable": "record_family",
+      "target_class": 12,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 25,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_13",
+      "observable": "record_family",
+      "target_class": 13,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 26,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_14",
+      "observable": "record_family",
+      "target_class": 14,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 27,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_15",
+      "observable": "record_family",
+      "target_class": 15,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 28,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:entropy_delta",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 29,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:sector_preservation",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 30,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:change",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 31,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:class_delta_0",
+      "observable": "s3_sector_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 32,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:entropy_delta",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 33,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:sector_preservation",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 34,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:change",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 35,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:class_delta_0",
+      "observable": "repair_load_bucket",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 36,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:entropy_delta",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 37,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:sector_preservation",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 38,
+      "cap_index": 0,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:change",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 39,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_0",
+      "observable": "checkpoint_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 40,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_1",
+      "observable": "checkpoint_class",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 41,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_2",
+      "observable": "checkpoint_class",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 42,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_3",
+      "observable": "checkpoint_class",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 43,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:entropy_delta",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 44,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:sector_preservation",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 45,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:change",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 46,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_0",
+      "observable": "stable_flag",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 47,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_1",
+      "observable": "stable_flag",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 48,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:entropy_delta",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 49,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:sector_preservation",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 50,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:change",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 51,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_0",
+      "observable": "record_family",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 52,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_1",
+      "observable": "record_family",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 53,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_2",
+      "observable": "record_family",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 54,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_3",
+      "observable": "record_family",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 55,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_4",
+      "observable": "record_family",
+      "target_class": 4,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 56,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_5",
+      "observable": "record_family",
+      "target_class": 5,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 57,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_6",
+      "observable": "record_family",
+      "target_class": 6,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 58,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_7",
+      "observable": "record_family",
+      "target_class": 7,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 59,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_8",
+      "observable": "record_family",
+      "target_class": 8,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 60,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_9",
+      "observable": "record_family",
+      "target_class": 9,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 61,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_10",
+      "observable": "record_family",
+      "target_class": 10,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 62,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_11",
+      "observable": "record_family",
+      "target_class": 11,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 63,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_12",
+      "observable": "record_family",
+      "target_class": 12,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 64,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_13",
+      "observable": "record_family",
+      "target_class": 13,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 65,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_14",
+      "observable": "record_family",
+      "target_class": 14,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 66,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_15",
+      "observable": "record_family",
+      "target_class": 15,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 67,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:entropy_delta",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 68,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:sector_preservation",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 69,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:change",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 70,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:class_delta_0",
+      "observable": "s3_sector_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 71,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:entropy_delta",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 72,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:sector_preservation",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 73,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:change",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 74,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:class_delta_0",
+      "observable": "repair_load_bucket",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 75,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:entropy_delta",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 76,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:sector_preservation",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 77,
+      "cap_index": 1,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:change",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 78,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_0",
+      "observable": "checkpoint_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 79,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_1",
+      "observable": "checkpoint_class",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 80,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_2",
+      "observable": "checkpoint_class",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 81,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_3",
+      "observable": "checkpoint_class",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 82,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:entropy_delta",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 83,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:sector_preservation",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 84,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:change",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 85,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_0",
+      "observable": "stable_flag",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 86,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_1",
+      "observable": "stable_flag",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 87,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:entropy_delta",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 88,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:sector_preservation",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 89,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:change",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 90,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_0",
+      "observable": "record_family",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 91,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_1",
+      "observable": "record_family",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 92,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_2",
+      "observable": "record_family",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 93,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_3",
+      "observable": "record_family",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 94,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_4",
+      "observable": "record_family",
+      "target_class": 4,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 95,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_5",
+      "observable": "record_family",
+      "target_class": 5,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 96,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_6",
+      "observable": "record_family",
+      "target_class": 6,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 97,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_7",
+      "observable": "record_family",
+      "target_class": 7,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 98,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_8",
+      "observable": "record_family",
+      "target_class": 8,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 99,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_9",
+      "observable": "record_family",
+      "target_class": 9,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 100,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_10",
+      "observable": "record_family",
+      "target_class": 10,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 101,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_11",
+      "observable": "record_family",
+      "target_class": 11,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 102,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_12",
+      "observable": "record_family",
+      "target_class": 12,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 103,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_13",
+      "observable": "record_family",
+      "target_class": 13,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 104,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_14",
+      "observable": "record_family",
+      "target_class": 14,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 105,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:class_delta_15",
+      "observable": "record_family",
+      "target_class": 15,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 106,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:entropy_delta",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 107,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:sector_preservation",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 108,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "record_family:change",
+      "observable": "record_family",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 109,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:class_delta_0",
+      "observable": "s3_sector_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 110,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:entropy_delta",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 111,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:sector_preservation",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 112,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "s3_sector_class:change",
+      "observable": "s3_sector_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 113,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:class_delta_0",
+      "observable": "repair_load_bucket",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 114,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:entropy_delta",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 115,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:sector_preservation",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 116,
+      "cap_index": 2,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "repair_load_bucket:change",
+      "observable": "repair_load_bucket",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 117,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_0",
+      "observable": "checkpoint_class",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 118,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_1",
+      "observable": "checkpoint_class",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 119,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_2",
+      "observable": "checkpoint_class",
+      "target_class": 2,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 120,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:class_delta_3",
+      "observable": "checkpoint_class",
+      "target_class": 3,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 121,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:entropy_delta",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 122,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:sector_preservation",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    },
+    {
+      "feature_index": 123,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "checkpoint_class:change",
+      "observable": "checkpoint_class",
+      "target_class": null,
+      "feature_type": "change_probability_delta"
+    },
+    {
+      "feature_index": 124,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_0",
+      "observable": "stable_flag",
+      "target_class": 0,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 125,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:class_delta_1",
+      "observable": "stable_flag",
+      "target_class": 1,
+      "feature_type": "class_distribution_delta"
+    },
+    {
+      "feature_index": 126,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:entropy_delta",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "entropy_delta"
+    },
+    {
+      "feature_index": 127,
+      "cap_index": 3,
+      "time_index": 0,
+      "time": 0.25,
+      "field": "stable_flag:sector_preservation",
+      "observable": "stable_flag",
+      "target_class": null,
+      "feature_type": "sector_preservation_delta"
+    }
+  ],
+  "response_summary": {
+    "min": -6.0,
+    "mean": -0.02643083198963499,
+    "max": 6.0,
+    "std": 0.7105183772534999,
+    "mean_row_std": 0.6865354332293322,
+    "mean_col_std": 0.3970722915443676
+  },
+  "raw_response_summary": {
+    "min": -1.0,
+    "mean": -0.005587186276370299,
+    "max": 1.501493767763853,
+    "std": 0.3691412459980392,
+    "mean_row_std": 0.3690488997750716,
+    "mean_col_std": 0.04839841311425519
+  },
+  "transform_report": {
+    "mode": "signed_robust_zscore",
+    "mean_abs_center": 0.1566376727554178,
+    "median_scale": 0.05,
+    "min_scale_floor": 0.05,
+    "clip": 6.0,
+    "zero_robust_scale_columns": 203,
+    "zero_std_columns": 72
+  },
+  "controls": {
+    "s2_boundary": {
+      "min": -6.0,
+      "mean": 0.9243058564550546,
+      "max": 6.0,
+      "std": 3.2689033419564884,
+      "mean_row_std": 3.246146183316485,
+      "mean_col_std": 1.7757764392774205
+    },
+    "no_modular_flow": {
+      "min": -6.0,
+      "mean": 0.013515218816036,
+      "max": 6.0,
+      "std": 2.718160787265845,
+      "mean_row_std": 2.718160787265847,
+      "mean_col_std": 2.7744455593347012e-18
+    },
+    "shuffled_response": {
+      "min": -6.0,
+      "mean": -0.02643083198963499,
+      "max": 6.0,
+      "std": 0.7105183772534999,
+      "mean_row_std": 0.6865354332293323,
+      "mean_col_std": 0.7101788384399641
+    },
+    "shuffled_observer_labels": {
+      "min": -6.0,
+      "mean": -0.026430831989634987,
+      "max": 6.0,
+      "std": 0.7105183772534999,
+      "mean_row_std": 0.6865354332293323,
+      "mean_col_std": 0.39707229154436774
+    },
+    "wrong_scale_labels": [
+      "1x",
+      "pi",
+      "4pi"
+    ]
+  },
+  "perturb_resettle_report": {
+    "mode": "cap_collar_perturb_then_local_repair",
+    "gauge_covariant_probe_receipt": true,
+    "centered_or_single_intervention_support_receipt": true,
+    "production_sector_repair_enabled": true,
+    "sector_repair_replayed": true,
+    "production_move_contract": {
+      "schema": "bw_array_production_overlap_move_contract_v1",
+      "mismatch_definition": "left_equals_g_ij_times_right_v1",
+      "production_sector_repair_enabled": true,
+      "production_sector_repair_config_available": true,
+      "production_sector_repair_config": {
+        "enabled": true,
+        "mode": "repair_coupled_group_compose",
+        "probability": 0.08
+      },
+      "active_sector_link_mutation": true,
+      "sector_repair_mode": "repair_coupled_group_compose",
+      "sector_repair_probability": 0.08,
+      "endpoint_repair_replayed": true,
+      "sector_repair_replayed": true,
+      "exact_production_move_set_replayed": true,
+      "gauge_covariant_probe_receipt": true,
+      "blockers": []
+    },
+    "full_graph_simulation_budget": {
+      "schema": "modular_response_full_graph_simulation_budget_v1",
+      "policy": "skip_if_exceeded",
+      "max_full_graph_simulations": 32,
+      "requested_without_scale_reuse": 32,
+      "planned_with_scale_reuse": 32,
+      "executed_full_graph_simulations": 32,
+      "scale_reuse_count": 0,
+      "receipt": true
+    },
+    "parallel_execution": {
+      "schema": "bounded_ordered_full_graph_thread_execution_v1",
+      "requested_n_jobs": 8,
+      "effective_n_jobs": 8,
+      "executor": "bounded_ordered_thread_pool",
+      "matrix_batch_count": 4,
+      "probe_task_count": 32,
+      "max_in_flight_full_graph_states": 8,
+      "ordered_result_assembly": true,
+      "independent_named_rng_streams": true,
+      "shared_graph_state_read_only": true
+    },
+    "repair_steps": 4,
+    "repairs_per_step": 256,
+    "perturb_strength": 1.0,
+    "perturb_budget_mode": "modular_amount",
+    "fixed_perturb_fraction": null,
+    "perturb_selection_mode": "lambda_displacement",
+    "transition_readout_mode": "transported_support",
+    "graph_edge_count": 783619,
+    "claim_boundary": "finite cap/collar perturb-resettle surrogate: perturb boundary/collar edge packets, run local overlap repair, then read observer packet transitions"
+  },
+  "geometry_cache": {
+    "mode": "not_used_by_perturb_resettle",
+    "point_count": 131072
+  },
+  "claim_boundary": "support-visible observer transition tensor from cap/collar perturbation followed by local repair. This is the current finite surrogate for state-derived record/collar response; it is not a bulk claim until joint H3 beats S2, shuffled, no-perturbation, and wrong-scale controls.",
+  "observer_population": {
+    "materialized_observer_count": 32000,
+    "analyzed_observer_count": 8192,
+    "analysis_max_observers": 8192,
+    "analysis_sampling_policy": "deterministic_observer_id_hash_rank_v1",
+    "analysis_subset_hash": "sha256:c9b9604bdb8f24301abf13f7a075b425a612d76b7c77b3bbaff3eff759aece98",
+    "full_population_analyzed": false
+  }
+}

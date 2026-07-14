@@ -1,0 +1,95 @@
+{
+  "freezeout_cycle": 106,
+  "committed_fraction": 0.961395263671875,
+  "point_count": 65536,
+  "fields": {
+    "record_signature": {
+      "min": -1.7323404927310766,
+      "mean": 4.119968255444917e-17,
+      "max": 1.7246414637208027,
+      "std": 1.0
+    },
+    "stable_count": {
+      "min": -1.1204976069447483,
+      "mean": -2.168404344971009e-18,
+      "max": 7.2692132336097215,
+      "std": 0.9999999999999999
+    },
+    "cumulative_repair_load": {
+      "min": -4.408630939890896,
+      "mean": 1.7780915628762273e-17,
+      "max": 3.842683460662357,
+      "std": 1.0
+    },
+    "repair_load": {
+      "min": 0.0,
+      "mean": 0.0,
+      "max": 0.0,
+      "std": 0.0
+    },
+    "local_mismatch_density": {
+      "min": 0.0,
+      "mean": 0.0,
+      "max": 0.0,
+      "std": 0.0
+    },
+    "s3_class_density": {
+      "min": 0.0,
+      "mean": 0.0,
+      "max": 0.0,
+      "std": 0.0
+    },
+    "record_signature_smooth_k16": {
+      "min": -3.7916622977524272,
+      "mean": 1.734723475976807e-18,
+      "max": 3.7946928675382083,
+      "std": 1.0
+    },
+    "record_signature_smooth_k32": {
+      "min": -3.800064032188733,
+      "mean": 1.0408340855860843e-17,
+      "max": 3.6451816928585736,
+      "std": 1.0
+    },
+    "record_repair_mix": {
+      "min": -3.021280149098213,
+      "mean": 2.0816681711721685e-17,
+      "max": 2.635734420849997,
+      "std": 1.0
+    },
+    "record_sector_mix": {
+      "min": -1.7323404927310766,
+      "mean": 1.6046192152785466e-17,
+      "max": 1.7246414637208027,
+      "std": 1.0
+    }
+  },
+  "output_profile": "compact",
+  "freezeout_npz_written": true,
+  "claim_boundary": "freezeout screen field bundle; this is an observer-screen angular statistic, not a reconstructed 3D bulk observable",
+  "gate_report": {
+    "enabled": true,
+    "allowed": true,
+    "missing_requirements": [],
+    "checks": {
+      "kms_bw_pass": true,
+      "state_bw_controls_pass": false,
+      "neutral_reconstruction_written": false,
+      "bulk_3d_established": false,
+      "screen_proxy_allowed_without_bulk": true
+    },
+    "required": {
+      "kms_bw_pass": true,
+      "state_bw_controls_pass": false,
+      "neutral_reconstruction_written": false
+    },
+    "mode": "freezeout_screen_cl_proxy_gate",
+    "claim_boundary": "Allows only a measurement-facing screen C_l proxy. This gate does not certify a physical CMB prediction, a 3D bulk, a P(k), or a Boltzmann adapter."
+  },
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "proxy",
+  "receipt_name": "FREEZEOUT_SCREEN_FIELD_BUNDLE",
+  "observable_id": "FREEZEOUT_SCREEN_FIELD_BUNDLE",
+  "fit_objective": "not_applicable",
+  "physical_claim": false
+}

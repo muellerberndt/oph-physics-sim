@@ -1,0 +1,136 @@
+{
+  "no_data_use_receipt": true,
+  "P_source": "OPH_pixel_branch_predeclared",
+  "N_source": "unknown",
+  "eta_R_source": "finite_repair_transition_clock",
+  "eta_R_value": -0.0,
+  "A_zeta_source": "diagnostic_proxy",
+  "A_zeta_value": null,
+  "q_IR_source": "diagnostic_proxy",
+  "q_IR_value": null,
+  "ell_IR_source": "diagnostic_proxy",
+  "ell_IR_value": null,
+  "B_A_source": "diagnostic_proxy",
+  "B_A_k_a": [
+    [
+      2.857142857142857,
+      0.01,
+      0.0
+    ],
+    [
+      1.8181818181818181,
+      0.01,
+      0.0
+    ],
+    [
+      1.3333333333333333,
+      0.01,
+      0.0
+    ],
+    [
+      1.0,
+      0.01,
+      0.0
+    ],
+    [
+      2.857142857142857,
+      0.1,
+      0.0
+    ],
+    [
+      1.8181818181818181,
+      0.1,
+      0.0
+    ],
+    [
+      1.3333333333333333,
+      0.1,
+      0.0
+    ],
+    [
+      1.0,
+      0.1,
+      0.0
+    ]
+  ],
+  "Gamma_rec_source": "finite_repair_transition_clock",
+  "Gamma_rec_k_a": [
+    [
+      0.0,
+      1.0,
+      -0.0
+    ]
+  ],
+  "rho_A_source": "diagnostic_proxy",
+  "rho_A_a": [
+    [
+      0.01,
+      0.8689862382313548
+    ],
+    [
+      0.01,
+      0.8661982495919859
+    ],
+    [
+      0.01,
+      0.870525159421577
+    ],
+    [
+      0.01,
+      0.8691375375089533
+    ],
+    [
+      0.1,
+      0.8689862382313548
+    ],
+    [
+      0.1,
+      0.8661982495919859
+    ],
+    [
+      0.1,
+      0.870525159421577
+    ],
+    [
+      0.1,
+      0.8691375375089533
+    ]
+  ],
+  "freezeout_source": "unknown",
+  "freezeout_surface": null,
+  "official_likelihood_ready": false,
+  "cdm_limit_regression_passed": false,
+  "rho_A_transport_receipt": false,
+  "anomaly_abundance_source_receipt": false,
+  "rho_A_source_receipt": false,
+  "rho_A_claim_label": "PHYSICAL_PARENT_WITH_CONDITIONAL_ABUNDANCE",
+  "screen_to_primordial_lift_receipt": false,
+  "finite_covariant_parent_receipt": false,
+  "stress_energy_closure_receipt": false,
+  "gauge_independence_receipt": false,
+  "causal_response_receipt": false,
+  "refinement_convergence_receipt": false,
+  "explicit_recipient_stress_receipt": false,
+  "exchange_current_closure_receipt": false,
+  "physical_clock_receipt": false,
+  "active_fiber_receipt": false,
+  "conserved_sector_decomposition_receipt": false,
+  "common_parent_response_pole_receipt": false,
+  "source_provenance_receipt": false,
+  "pooled_source_reducer_receipt": false,
+  "contradiction_free_provenance_receipt": false,
+  "N_CRC_consensus_invariant_receipt": false,
+  "global_likelihood_reduction_receipt": false,
+  "frozen_likelihood_protocol_receipt": false,
+  "source_freeze_manifest_receipt": false,
+  "solver_assumption_pin_receipt": false,
+  "custom_parent_cdm_limit_regression_receipt": false,
+  "standard_model_off_regression_receipt": false,
+  "blinded_comparison_setup_receipt": false,
+  "full_observable_likelihood_receipt": false,
+  "frozen_transfer_likelihood_receipt": false,
+  "frozen_source_hash": null,
+  "frozen_solver_hash": null,
+  "frozen_likelihood_hash": null,
+  "physical_scale_bridge_receipts": {}
+}

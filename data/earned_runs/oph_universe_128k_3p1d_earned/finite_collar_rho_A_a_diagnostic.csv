@@ -1,0 +1,17 @@
+a,cmi_diagnostic_nats,control,physical_background,rho_A,rho_A_eq,rho_A_eq_minus,rho_A_eq_plus,rho_units,source,source_report_index,z
+0.01,,,False,0.8689862382313548,0.8831277812683292,0.8831277812683292,0.8831277812683292,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,99.0
+0.01,,,False,0.8661982495919859,0.8727443203720935,0.8727443203720935,0.8727443203720935,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,99.0
+0.01,,,False,0.870525159421577,0.8741511780522615,0.8741511780522615,0.8741511780522615,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,99.0
+0.01,,,False,0.8691375375089533,0.8712695622962019,0.8712695622962019,0.8712695622962019,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,99.0
+0.1,,,False,0.8689862382313548,0.8831277812683292,0.8831277812683292,0.8831277812683292,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,9.0
+0.1,,,False,0.8661982495919859,0.8727443203720935,0.8727443203720935,0.8727443203720935,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,9.0
+0.1,,,False,0.870525159421577,0.8741511780522615,0.8741511780522615,0.8741511780522615,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,9.0
+0.1,,,False,0.8691375375089533,0.8712695622962019,0.8712695622962019,0.8712695622962019,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,0,9.0
+0.01,,,False,0.8689862382313548,0.8831277812683292,0.8831277812683292,0.8831277812683292,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,99.0
+0.01,,,False,0.8661982495919859,0.8727443203720935,0.8727443203720935,0.8727443203720935,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,99.0
+0.01,,,False,0.870525159421577,0.8741511780522615,0.8741511780522615,0.8741511780522615,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,99.0
+0.01,,,False,0.8691375375089533,0.8712695622962019,0.8712695622962019,0.8712695622962019,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,99.0
+0.1,,,False,0.8689862382313548,0.8831277812683292,0.8831277812683292,0.8831277812683292,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,9.0
+0.1,,,False,0.8661982495919859,0.8727443203720935,0.8727443203720935,0.8727443203720935,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,9.0
+0.1,,,False,0.870525159421577,0.8741511780522615,0.8741511780522615,0.8741511780522615,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,9.0
+0.1,,,False,0.8691375375089533,0.8712695622962019,0.8712695622962019,0.8712695622962019,finite_screen_response_units,paired_cap_collar_perturb_resettle_rerun,1,9.0

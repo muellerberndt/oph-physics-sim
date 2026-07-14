@@ -1,0 +1,285 @@
+{
+  "mode": "oph_galaxy_rar_btfr_proxy",
+  "GALAXY_PROXY_RECEIPT": true,
+  "receipt": true,
+  "a0_oph": 1.2e-10,
+  "lambda_collar_declared": 1.0,
+  "a0_eff": 1.2e-10,
+  "rar_curve": [
+    {
+      "g_baryon": 1e-13,
+      "g_observed_proxy": 3.5143421744088294e-12
+    },
+    {
+      "g_baryon": 1.2005080577484067e-13,
+      "g_observed_proxy": 3.8558782432535954e-12
+    },
+    {
+      "g_baryon": 1.4412195967188518e-13,
+      "g_observed_proxy": 4.2311590937433616e-12
+    },
+    {
+      "g_baryon": 1.7301957388458909e-13,
+      "g_observed_proxy": 4.643629309346163e-12
+    },
+    {
+      "g_baryon": 2.0771139259664585e-13,
+      "g_observed_proxy": 5.097106951059619e-12
+    },
+    {
+      "g_baryon": 2.493592004984161e-13,
+      "g_observed_proxy": 5.59582828524075e-12
+    },
+    {
+      "g_baryon": 2.9935772947204904e-13,
+      "g_observed_proxy": 6.144498654333071e-12
+    },
+    {
+      "g_baryon": 3.593813663804626e-13,
+      "g_observed_proxy": 6.748350470763112e-12
+    },
+    {
+      "g_baryon": 4.314402261443777e-13,
+      "g_observed_proxy": 7.41320949272457e-12
+    },
+    {
+      "g_baryon": 5.179474679231202e-13,
+      "g_observed_proxy": 8.145570754931594e-12
+    },
+    {
+      "g_baryon": 6.218001087320927e-13,
+      "g_observed_proxy": 8.952685785504309e-12
+    },
+    {
+      "g_baryon": 7.464760408417128e-13,
+      "g_observed_proxy": 9.84266305155608e-12
+    },
+    {
+      "g_baryon": 8.961505019466049e-13,
+      "g_observed_proxy": 1.0824583952633578e-11
+    },
+    {
+      "g_baryon": 1.0758358985421786e-12,
+      "g_observed_proxy": 1.1908637137569003e-11
+    },
+    {
+      "g_baryon": 1.2915496650148826e-12,
+      "g_observed_proxy": 1.310627447468905e-11
+    },
+    {
+      "g_baryon": 1.5505157798326221e-12,
+      "g_observed_proxy": 1.4430392680212965e-11
+    },
+    {
+      "g_baryon": 1.8614066873551173e-12,
+      "g_observed_proxy": 1.5895545433075546e-11
+    },
+    {
+      "g_baryon": 2.234633726916597e-12,
+      "g_observed_proxy": 1.7518191811231372e-11
+    },
+    {
+      "g_baryon": 2.6826957952797272e-12,
+      "g_observed_proxy": 1.9316988118286747e-11
+    },
+    {
+      "g_baryon": 3.2205979187210826e-12,
+      "g_observed_proxy": 2.131313168451342e-11
+    },
+    {
+      "g_baryon": 3.866353752192408e-12,
+      "g_observed_proxy": 2.353076709107421e-11
+    },
+    {
+      "g_baryon": 4.6415888336127725e-12,
+      "g_observed_proxy": 2.5997467566063965e-11
+    },
+    {
+      "g_baryon": 5.572264795507185e-12,
+      "g_observed_proxy": 2.8744807142906997e-11
+    },
+    {
+      "g_baryon": 6.689548786914153e-12,
+      "g_observed_proxy": 3.180904269030459e-11
+    },
+    {
+      "g_baryon": 8.03085722139152e-12,
+      "g_observed_proxy": 3.523192928725723e-11
+    },
+    {
+      "g_baryon": 9.641108804907501e-12,
+      "g_observed_proxy": 3.9061697838827654e-11
+    },
+    {
+      "g_baryon": 1.1574228805920566e-11,
+      "g_observed_proxy": 4.335423057441023e-11
+    },
+    {
+      "g_baryon": 1.389495494373136e-11,
+      "g_observed_proxy": 4.817447847371435e-11
+    },
+    {
+      "g_baryon": 1.6681005372000556e-11,
+      "g_observed_proxy": 5.3598175143114344e-11
+    },
+    {
+      "g_baryon": 2.0025681360431126e-11,
+      "g_observed_proxy": 5.971391473538776e-11
+    },
+    {
+      "g_baryon": 2.4040991835099744e-11,
+      "g_observed_proxy": 6.662567781236062e-11
+    },
+    {
+      "g_baryon": 2.8861404414300897e-11,
+      "g_observed_proxy": 7.445590938466355e-11
+    },
+    {
+      "g_baryon": 3.464834855730366e-11,
+      "g_observed_proxy": 8.334927869258478e-11
+    },
+    {
+      "g_baryon": 4.159562163071843e-11,
+      "g_observed_proxy": 9.347728178354818e-11
+    },
+    {
+      "g_baryon": 4.9935878934731395e-11,
+      "g_observed_proxy": 1.0504388698103608e-10
+    },
+    {
+      "g_baryon": 5.994842503189421e-11,
+      "g_observed_proxy": 1.1829247153893192e-10
+    },
+    {
+      "g_baryon": 7.196856730011528e-11,
+      "g_observed_proxy": 1.3351435695547795e-10
+    },
+    {
+      "g_baryon": 8.63988449483969e-11,
+      "g_observed_proxy": 1.5105932255500014e-10
+    },
+    {
+      "g_baryon": 1.037225095407057e-10,
+      "g_observed_proxy": 1.7134856403646264e-10
+    },
+    {
+      "g_baryon": 1.245197084735032e-10,
+      "g_observed_proxy": 1.9489066755684236e-10
+    },
+    {
+      "g_baryon": 1.4948691337092313e-10,
+      "g_observed_proxy": 2.2230129186705447e-10
+    },
+    {
+      "g_baryon": 1.7946024402973125e-10,
+      "g_observed_proxy": 2.5432739134944073e-10
+    },
+    {
+      "g_baryon": 2.1544346900318779e-10,
+      "g_observed_proxy": 2.918769701867704e-10
+    },
+    {
+      "g_baryon": 2.5864162052759707e-10,
+      "g_observed_proxy": 3.3605552864535735e-10
+    },
+    {
+      "g_baryon": 3.1050134951248604e-10,
+      "g_observed_proxy": 3.882105399423871e-10
+    },
+    {
+      "g_baryon": 3.727593720314938e-10,
+      "g_observed_proxy": 4.4998547066587e-10
+    },
+    {
+      "g_baryon": 4.475006297250444e-10,
+      "g_observed_proxy": 5.233850174407184e-10
+    },
+    {
+      "g_baryon": 5.37228111832402e-10,
+      "g_observed_proxy": 6.108533668243911e-10
+    },
+    {
+      "g_baryon": 6.449466771037634e-10,
+      "g_observed_proxy": 7.153673912834778e-10
+    },
+    {
+      "g_baryon": 7.742636826811277e-10,
+      "g_observed_proxy": 8.405467871511387e-10
+    },
+    {
+      "g_baryon": 9.295097898806493e-10,
+      "g_observed_proxy": 9.907832899448365e-10
+    },
+    {
+      "g_baryon": 1.115883992507748e-09,
+      "g_observed_proxy": 1.1713913674288037e-09
+    },
+    {
+      "g_baryon": 1.3396277245180142e-09,
+      "g_observed_proxy": 1.3887833500643005e-09
+    },
+    {
+      "g_baryon": 1.6082338776670389e-09,
+      "g_observed_proxy": 1.650673021119695e-09
+    },
+    {
+      "g_baryon": 1.9306977288832458e-09,
+      "g_observed_proxy": 1.966313471402631e-09
+    },
+    {
+      "g_baryon": 2.317818180600885e-09,
+      "g_observed_proxy": 2.3467776670868918e-09
+    },
+    {
+      "g_baryon": 2.7825594022071257e-09,
+      "g_observed_proxy": 2.805293639198499e-09
+    },
+    {
+      "g_baryon": 3.3404849835132444e-09,
+      "g_observed_proxy": 3.3576501656765085e-09
+    },
+    {
+      "g_baryon": 4.010279139495204e-09,
+      "g_observed_proxy": 4.022692713161764e-09
+    },
+    {
+      "g_baryon": 4.814372420784339e-09,
+      "g_observed_proxy": 4.822932594960366e-09
+    },
+    {
+      "g_baryon": 5.779692884153325e-09,
+      "g_observed_proxy": 5.7852944040748924e-09
+    },
+    {
+      "g_baryon": 6.9385678787371955e-09,
+      "g_observed_proxy": 6.94202802513319e-09
+    },
+    {
+      "g_baryon": 8.329806647658273e-09,
+      "g_observed_proxy": 8.331812896122048e-09
+    },
+    {
+      "g_baryon": 1e-08,
+      "g_observed_proxy": 1.0001085173184878e-08
+    }
+  ],
+  "lambda_collar_estimate": {
+    "usable": false,
+    "reason": "observed_rar_not_provided"
+  },
+  "btfr": {
+    "usable": false,
+    "reason": "btfr_data_not_provided"
+  },
+  "disk_potential_residual": {
+    "usable": false,
+    "reason": "disk_velocity_data_not_provided"
+  },
+  "physical_claim": false,
+  "claim_boundary": "measurement-facing galaxy proxy for OPH RAR/BTFR continuation surfaces. It is not a SPARC fit unless external SPARC rows are supplied, not a populated-bulk proof, and not a replacement for a baryonic mass-model likelihood",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "proxy",
+  "receipt_name": "STATIC_GALAXY_LAW_RECEIPT",
+  "observable_id": "oph_static_galaxy_proxy",
+  "fit_objective": "rar_btfr_formula_bookkeeping"
+}

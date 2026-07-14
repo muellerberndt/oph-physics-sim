@@ -1,0 +1,16 @@
+{
+  "analysis_kernel_file_sha256": "sha256:b3cc5a67b2870b45d47e045b645a8226397b73c004dc63bc8128acd5bc489e88",
+  "analysis_parameters": {
+    "heldout_fraction": 0.25,
+    "max_model_points": 192,
+    "max_observer_fraction_per_object": 0.65,
+    "min_objects": 16,
+    "min_observers_per_object": 3,
+    "seed": 11
+  },
+  "claim_boundary": "Hash-bound observer JSONL and deterministic object-analysis parameters for read-only proof-certificate replay. A persisted object receipt is diagnostic unless this source and the current analysis kernel reproduce it exactly.",
+  "observer_view_row_count": 1028,
+  "observer_views_path": "observer_views.jsonl",
+  "observer_views_sha256": "sha256:3568f030412ac3db259f438ff6c36e5cee51214d5004984569814905a6abec44",
+  "schema": "strict_neutral_object_bulk_source_v1"
+}

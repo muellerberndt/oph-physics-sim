@@ -1,0 +1,550 @@
+{
+  "median": 0.42817711244598344,
+  "mean": 0.4232524266446474,
+  "p90": 0.4688704735731133,
+  "by_observable": {
+    "cumulative_repair_load": {
+      "median": 0.37681938934620945,
+      "mean": 0.37796234963824,
+      "p90": 0.3915244440071374,
+      "count": 16
+    },
+    "record_signature": {
+      "median": 0.4585913073784803,
+      "mean": 0.4685425036510549,
+      "p90": 0.4795960401437116,
+      "count": 16
+    }
+  },
+  "by_cap_size": {
+    "0.350000": {
+      "median": 0.43329196321675734,
+      "mean": 0.436141605273889,
+      "p90": 0.5126509444710048,
+      "count": 8
+    },
+    "0.550000": {
+      "median": 0.41566956718544934,
+      "mean": 0.4156535364269175,
+      "p90": 0.4614802058290137,
+      "count": 8
+    },
+    "0.750000": {
+      "median": 0.42732259184161864,
+      "mean": 0.42342782331295803,
+      "p90": 0.4594881976463309,
+      "count": 8
+    },
+    "1.000000": {
+      "median": 0.41686465705737785,
+      "mean": 0.4177867415648251,
+      "p90": 0.4597415650113173,
+      "count": 8
+    }
+  },
+  "rows": [
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.4631801819787767
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.3699452612614034
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.4691464539086444
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.3649408227359828
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.48876880147236196
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.3613716315780333
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.5683759448011714
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 0,
+      "theta0": "0.350000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 7434.175124290396,
+      "cap_entropy_capacity": 1858.543781072599,
+      "residual": 0.40340374445473803
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.4566496417998944
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.3745404568518023
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.4576474602635648
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.37692317994608127
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.45441595442481747
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.37054979960824114
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.47042327881506124
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 1,
+      "theta0": "0.550000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 15895.97415768359,
+      "cap_entropy_capacity": 3973.9935394208974,
+      "residual": 0.36407851970587707
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.4588986693611357
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.3857472456814829
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.4608637636451197
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.3838507231903141
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.4573435413504454
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.3851330555465495
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.45828394539582495
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 2,
+      "theta0": "0.750000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 28686.675539713797,
+      "cap_entropy_capacity": 7171.668884928449,
+      "residual": 0.39730164233279186
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.4568936712075963
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.0625,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.37811954163537287
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.45645161900190134
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.125,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.37671559874633764
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.45295048043722885
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.25,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.3739975372593043
+    },
+    {
+      "mode": "transport",
+      "observable": "record_signature",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.466386650553333
+    },
+    {
+      "mode": "transport",
+      "observable": "cumulative_repair_load",
+      "cap_index": 3,
+      "theta0": "1.000000",
+      "time": 0.5,
+      "target_scale": 6.283185307179586,
+      "sim_scale": 6.283185307179586,
+      "weight_measure": "cell_entropy_capacity",
+      "cap_area_planck": 49135.96550141579,
+      "cap_entropy_capacity": 12283.991375353948,
+      "residual": 0.38077883367752685
+    }
+  ],
+  "controls": {
+    "wrong_1x_normalization": {
+      "median": 1.2629784311478072,
+      "mean": 1.2571623926948856,
+      "p90": 1.2987694876927842,
+      "count": 32
+    },
+    "wrong_pi_normalization": {
+      "median": 1.2478535009651361,
+      "mean": 1.2400327953582102,
+      "p90": 1.3017760305402981,
+      "count": 32
+    },
+    "wrong_4pi_normalization": {
+      "median": 1.2313475141222854,
+      "mean": 1.1725448459177783,
+      "p90": 1.3304264198829763,
+      "count": 32
+    },
+    "shuffled_observables": {
+      "median": 1.27001611656051,
+      "mean": 1.272620023909939,
+      "p90": 1.3159684205644229,
+      "count": 32
+    },
+    "no_modular_flow": {
+      "median": 1.26149553294597,
+      "mean": 1.257713664084769,
+      "p90": 1.3084384691183037,
+      "count": 32
+    }
+  },
+  "usable_scalar_observables": true,
+  "mode": "kinematic_geometric_bw_sanity",
+  "claim_boundary": "kinematic geometry/interpolation sanity check for lambda_C(2*pi*t); not a state-derived modular-transport receipt",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "demo",
+  "receipt_name": "KINEMATIC_GEOMETRIC_BW_SANITY",
+  "observable_id": "lambda_cap_support_visible_fields",
+  "fit_objective": "weighted_geometric_pullback_residual",
+  "physical_claim": false,
+  "elapsed_seconds": 10.244181871414185,
+  "implemented_controls": [
+    "wrong_1x_normalization",
+    "wrong_pi_normalization",
+    "wrong_4pi_normalization",
+    "shuffled_observables",
+    "no_modular_flow"
+  ],
+  "unimplemented_controls": [],
+  "scalar_observable_count": 2,
+  "skipped_scalar_observables": [
+    {
+      "observable": "repair_load",
+      "reason": "zero_or_nonfinite_scalar_variance"
+    },
+    {
+      "observable": "s3_sector_class",
+      "reason": "zero_or_nonfinite_scalar_variance"
+    }
+  ],
+  "regulator_collar": {
+    "mode": "double_scaling",
+    "collar_width": 0.04204482076268573,
+    "collar_k": 1.0,
+    "cell_angular_scale": 0.009791516697777345,
+    "collar_to_cell_ratio": 4.29400490857865,
+    "angular_prefactor": 0.8,
+    "angular_exponent": 0.25,
+    "double_scaling_delta_to_zero": true,
+    "double_scaling_collar_to_cell_diverges": true,
+    "double_scaling_formula": "delta_N = c * N^(-alpha); paper default c=0.8, alpha=0.25",
+    "claim_boundary": "finite regulator collar; double_scaling mode instantiates delta_N -> 0 and delta_N / ell_UV -> infinity for 0 < alpha < 1/2"
+  },
+  "support_visible_regularization": {
+    "mode": "graph_neighbor_diffusion",
+    "steps": 4,
+    "alpha": 0.35,
+    "claim_boundary": "finite support-visible extraction proxy; removes raw regulator-scale noise before BW cap-flow scoring"
+  },
+  "implemented_non_bw_controls": [
+    "fake_record_rewrite",
+    "no_repair",
+    "random_same_degree_graph",
+    "shuffled_interfaces",
+    "wrong_s3_orientation"
+  ]
+}

@@ -1,0 +1,365 @@
+{
+  "mode": "strict_neutral_bulk_frontier_v0",
+  "report_paths": [
+    "runs/oph_universe_64k_3p1d_reearned/strict_neutral_bulk_report.json",
+    "runs/oph_universe_64k_3p1d_reearned/strict_neutral_object_bulk_report.json",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_control",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_sweep",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_refinement",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_rank_selector_audit",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_graph_sweep",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_residual_graph_sweep",
+    "runs/oph_universe_64k_3p1d_reearned"
+  ],
+  "STRICT_NEUTRAL_BULK_FRONTIER_REPORT": true,
+  "strict_neutral_bulk": false,
+  "strict_neutral_bulk_ready": false,
+  "control_residualized_rank3_refinement_candidate": false,
+  "control_residualized_rank3_dimension_drift": null,
+  "overlap_native_negative_control_receipt_all": false,
+  "overlap_native_spatial_3d_candidate_count": 0,
+  "overlap_native_graph_geometry_report_count": 1,
+  "overlap_native_graph_geometry_receipt_count": 0,
+  "overlap_native_graph_geometry_receipt_all": false,
+  "overlap_native_graph_spatial_3d_candidate_count": 0,
+  "overlap_native_graph_strict_h3_candidate_count": 0,
+  "overlap_native_graph_rank3_selector_count": 0,
+  "overlap_native_graph_model_order_rank3_selector_count": 0,
+  "overlap_native_graph_nontrivial_model_order_rank3_selector_count": 0,
+  "overlap_native_graph_summary": {
+    "report_count": 1,
+    "receipt_count": 0,
+    "receipt_all": false,
+    "spatial_3d_candidate_count": 0,
+    "strict_h3_candidate_count": 0,
+    "rank3_selector_count": 0,
+    "model_order_rank3_selector_count": 0,
+    "nontrivial_model_order_rank3_selector_count": 0,
+    "rows": [
+      {
+        "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+        "observer_count": 1024,
+        "sampled_observer_count": 384,
+        "graph_geometry_receipt": false,
+        "spatial_3d_candidate": false,
+        "strict_h3_candidate": false,
+        "rank3_selector": false,
+        "model_order_rank3_selector": false,
+        "nontrivial_model_order_rank3_selector": false,
+        "model_order_consensus_rank": 12,
+        "nontrivial_model_order_consensus_rank": 12,
+        "median_dimension": null,
+        "selected_model": "H3",
+        "edge_count": 670,
+        "component_count": 116,
+        "blockers": [
+          "overlap_graph_degenerate_or_disconnected",
+          "overlap_graph_negative_controls_did_not_all_fail",
+          "overlap_graph_independent_rank3_selector_false",
+          "overlap_graph_not_spatial_3d_candidate",
+          "overlap_graph_not_strict_h3_candidate"
+        ]
+      }
+    ]
+  },
+  "overlap_residualized_graph_geometry_report_count": 1,
+  "overlap_residualized_graph_geometry_receipt_count": 0,
+  "overlap_residualized_graph_geometry_receipt_all": false,
+  "overlap_residualized_graph_spatial_3d_candidate_count": 0,
+  "overlap_residualized_graph_strict_h3_candidate_count": 0,
+  "overlap_residualized_graph_rank3_selector_count": 0,
+  "overlap_residualized_graph_model_order_rank3_selector_count": 0,
+  "overlap_residualized_graph_nontrivial_model_order_rank3_selector_count": 0,
+  "overlap_residualized_graph_summary": {
+    "report_count": 1,
+    "receipt_count": 0,
+    "receipt_all": false,
+    "spatial_3d_candidate_count": 0,
+    "strict_h3_candidate_count": 0,
+    "rank3_selector_count": 0,
+    "model_order_rank3_selector_count": 0,
+    "nontrivial_model_order_rank3_selector_count": 0,
+    "rows": [
+      {
+        "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+        "observer_count": 1024,
+        "sampled_observer_count": 384,
+        "residual_graph_receipt": false,
+        "spatial_3d_candidate": false,
+        "strict_h3_candidate": false,
+        "rank3_selector": false,
+        "model_order_rank3_selector": false,
+        "nontrivial_model_order_rank3_selector": false,
+        "model_order_consensus_rank": 12,
+        "nontrivial_model_order_consensus_rank": 12,
+        "raw_largest_gap_rank": 1,
+        "largest_gap_rank": 2,
+        "median_dimension": 1.6461713734472294,
+        "selected_model": "H2",
+        "edge_count": 847,
+        "component_count": 96,
+        "blockers": [
+          "overlap_residual_graph_degenerate_or_disconnected",
+          "overlap_residual_graph_independent_rank3_selector_false",
+          "overlap_residual_graph_not_spatial_3d_candidate",
+          "overlap_residual_graph_not_strict_h3_candidate"
+        ]
+      }
+    ]
+  },
+  "neutral_independent_rank3_selector_receipt": false,
+  "control_quotient_rank3_candidate_count": 0,
+  "control_quotient_rank3_selector_count": 0,
+  "directional_strict_ready_total": 0,
+  "gate_rows": [
+    {
+      "gate": "control_residualized_rank3_refinement_candidate",
+      "passed": false,
+      "detail": "stable rank-3 diagnostic candidate across supplied finite regulators"
+    },
+    {
+      "gate": "candidate_dimension_stable",
+      "passed": false,
+      "detail": "dimension drift=None"
+    },
+    {
+      "gate": "overlap_native_negative_controls",
+      "passed": false,
+      "detail": "0/1 overlap-control receipts"
+    },
+    {
+      "gate": "overlap_native_raw_spatial_3d",
+      "passed": false,
+      "detail": "0 raw-overlap spatial-3D candidates"
+    },
+    {
+      "gate": "overlap_native_graph_geometry",
+      "passed": false,
+      "detail": "0/1 graph receipts; 0 spatial-3D candidates; 0 model-order rank-3 selectors"
+    },
+    {
+      "gate": "overlap_native_graph_strict_h3",
+      "passed": false,
+      "detail": "0 strict-H3 graph candidates"
+    },
+    {
+      "gate": "overlap_residualized_graph_geometry",
+      "passed": false,
+      "detail": "0/1 residualized graph receipts; 0 spatial-3D candidates; 0 model-order rank-3 selectors"
+    },
+    {
+      "gate": "overlap_residualized_graph_strict_h3",
+      "passed": false,
+      "detail": "0 strict-H3 residual graph candidates"
+    },
+    {
+      "gate": "independent_rank3_selector",
+      "passed": false,
+      "detail": "control selector count=0; candidate count=0"
+    },
+    {
+      "gate": "directional_h3_strict_gate",
+      "passed": false,
+      "detail": "strict-ready directional rows=0"
+    },
+    {
+      "gate": "strict_neutral_bulk_ready",
+      "passed": false,
+      "detail": "all hard promotion gates passed"
+    }
+  ],
+  "gate_gap_rows": [
+    {
+      "gate": "independent_rank3_selector",
+      "passed": false,
+      "missing_receipt": "observer-native target-rank-free rank-3 selector",
+      "current_evidence": "selector_receipt=False; control_selector_count=0; control_candidate_count=0",
+      "action_surface": "prime_geometric_rank_sweep_report/neutral_independent_rank_selector_audit_report",
+      "blockers": [
+        "independent_svd_rank3_selector_not_stable_or_false",
+        "requires_independent_rank_selection_rule_before_physical_interpretation",
+        "prime_geometric_independent_rank3_selector_not_all_true",
+        "control_quotient_independent_rank3_selector_not_all_true"
+      ],
+      "blocking": true,
+      "claim_boundary": "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt required for promotion and does not promote theorem-assisted H3 previews."
+    },
+    {
+      "gate": "overlap_native_graph_strict_h3",
+      "passed": false,
+      "missing_receipt": "strict-H3 overlap graph candidate with independent rank-3 selection",
+      "current_evidence": "receipts=0/1; spatial=0; strict_h3=0; rank3=0; model_order_rank3=0; nontrivial_model_order_rank3=0",
+      "action_surface": "neutral-overlap-graph-sweep",
+      "blockers": [
+        "overlap_graph_strict_h3_candidate_false"
+      ],
+      "blocking": true,
+      "claim_boundary": "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt required for promotion and does not promote theorem-assisted H3 previews."
+    },
+    {
+      "gate": "overlap_residualized_graph_geometry",
+      "passed": false,
+      "missing_receipt": "all residualized graph parameter cases complete",
+      "current_evidence": "receipts=0/1",
+      "action_surface": "neutral-overlap-residual-graph-sweep",
+      "blockers": [],
+      "blocking": true,
+      "claim_boundary": "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt required for promotion and does not promote theorem-assisted H3 previews."
+    },
+    {
+      "gate": "overlap_residualized_graph_strict_h3",
+      "passed": false,
+      "missing_receipt": "strict-H3 residualized overlap graph candidate with independent rank-3 selection",
+      "current_evidence": "receipts=0/1; spatial=0; strict_h3=0; rank3=0; model_order_rank3=0; nontrivial_model_order_rank3=0",
+      "action_surface": "neutral-overlap-residual-graph-sweep",
+      "blockers": [
+        "overlap_residual_graph_strict_h3_candidate_false"
+      ],
+      "blocking": true,
+      "claim_boundary": "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt required for promotion and does not promote theorem-assisted H3 previews."
+    },
+    {
+      "gate": "directional_h3_strict_gate",
+      "passed": false,
+      "missing_receipt": "directional neutral row passing strict H3 model and leakage gates",
+      "current_evidence": "directional_strict_ready_total=0",
+      "action_surface": "neutral-prime-rank-sweep/neutral-3d-bulk-audit",
+      "blockers": [
+        "directional_h3_strict_rank_gate_not_passed",
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates"
+      ],
+      "blocking": true,
+      "claim_boundary": "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt required for promotion and does not promote theorem-assisted H3 previews."
+    },
+    {
+      "gate": "strict_neutral_bulk_ready",
+      "passed": false,
+      "missing_receipt": "all strict neutral promotion gates pass in one audit frontier",
+      "current_evidence": "strict_neutral_bulk_ready=False",
+      "action_surface": "strict-neutral-bulk-frontier",
+      "blockers": [
+        "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+        "control_quotient_rank3_candidate_not_stable_across_refinement",
+        "independent_svd_rank3_selector_not_stable_or_false",
+        "control_quotient_lane_is_not_a_negative_control",
+        "directional_h3_strict_rank_gate_not_passed",
+        "measured_cross_observer_overlap_refinement_gate_not_passed",
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+        "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+        "best_3d_windows_still_fail_s2_leakage_gate",
+        "requires_refinement_stability_across_regulator_sizes",
+        "requires_independent_rank_selection_rule_before_physical_interpretation",
+        "strict_neutral_bulk_refinement_receipt_false",
+        "overlap_native_negative_control_receipt_false",
+        "prime_geometric_independent_rank3_selector_not_all_true",
+        "control_quotient_independent_rank3_selector_not_all_true",
+        "control_quotient_rank3_cumulative_explained_variance_low",
+        "control_quotient_effective_rank_not_low_dimensional",
+        "overlap_graph_strict_h3_candidate_false",
+        "overlap_residual_graph_strict_h3_candidate_false"
+      ],
+      "blocking": true,
+      "claim_boundary": "Strict-neutral-bulk hard-gate gap row. It identifies the missing neutral receipt required for promotion and does not promote theorem-assisted H3 previews."
+    }
+  ],
+  "blockers": [
+    "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+    "control_quotient_rank3_candidate_not_stable_across_refinement",
+    "independent_svd_rank3_selector_not_stable_or_false",
+    "control_quotient_lane_is_not_a_negative_control",
+    "directional_h3_strict_rank_gate_not_passed",
+    "measured_cross_observer_overlap_refinement_gate_not_passed",
+    "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+    "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+    "best_3d_windows_still_fail_s2_leakage_gate",
+    "requires_refinement_stability_across_regulator_sizes",
+    "requires_independent_rank_selection_rule_before_physical_interpretation",
+    "strict_neutral_bulk_refinement_receipt_false",
+    "overlap_native_negative_control_receipt_false",
+    "prime_geometric_independent_rank3_selector_not_all_true",
+    "control_quotient_independent_rank3_selector_not_all_true",
+    "control_quotient_rank3_cumulative_explained_variance_low",
+    "control_quotient_effective_rank_not_low_dimensional",
+    "overlap_graph_strict_h3_candidate_false",
+    "overlap_residual_graph_strict_h3_candidate_false"
+  ],
+  "next_missing_receipts": [
+    {
+      "blocker": "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "control_quotient_rank3_candidate_not_stable_across_refinement",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "independent_svd_rank3_selector_not_stable_or_false",
+      "next_step": "Find an observer-native, target-rank-free selector that independently chooses rank 3 across regulators."
+    },
+    {
+      "blocker": "control_quotient_lane_is_not_a_negative_control",
+      "next_step": "Replace or supplement the control quotient with null controls that test the same rank-3 candidate path."
+    },
+    {
+      "blocker": "directional_h3_strict_rank_gate_not_passed",
+      "next_step": "Close the directional H3 model-selection/leakage gate for a non-coordinate, neutral distance lane."
+    },
+    {
+      "blocker": "measured_cross_observer_overlap_refinement_gate_not_passed",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+      "next_step": "Produce at least one directional neutral rank row with strict H3 model selection and leakage pass."
+    },
+    {
+      "blocker": "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "best_3d_windows_still_fail_s2_leakage_gate",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "requires_refinement_stability_across_regulator_sizes",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "requires_independent_rank_selection_rule_before_physical_interpretation",
+      "next_step": "Keep rank-3 windows diagnostic until the independent SVD/rank selector receipt passes."
+    },
+    {
+      "blocker": "strict_neutral_bulk_refinement_receipt_false",
+      "next_step": "Rerun refinement only after the independent-rank, negative-control, and directional-H3 gates close."
+    },
+    {
+      "blocker": "overlap_native_negative_control_receipt_false",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "prime_geometric_independent_rank3_selector_not_all_true",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    },
+    {
+      "blocker": "control_quotient_independent_rank3_selector_not_all_true",
+      "next_step": "Audit why the control-quotient singular spectrum remains high-dimensional despite rank-3 distance windows."
+    },
+    {
+      "blocker": "control_quotient_rank3_cumulative_explained_variance_low",
+      "next_step": "Do not treat low rank-3 explained variance as a strict 3D source; investigate the high-rank substrate."
+    },
+    {
+      "blocker": "control_quotient_effective_rank_not_low_dimensional",
+      "next_step": "Resolve the gap between low-dimensional distance behavior and high effective spectral rank."
+    },
+    {
+      "blocker": "overlap_graph_strict_h3_candidate_false",
+      "next_step": "Continue overlap-native graph sweeps: current graph geometry is control-sensitive, but has not produced a strict H3 candidate with independent rank-3 selection."
+    },
+    {
+      "blocker": "overlap_residual_graph_strict_h3_candidate_false",
+      "next_step": "Clear this blocker with an independent neutral receipt."
+    }
+  ],
+  "claim_boundary": "Strict-neutral-bulk frontier report. It distinguishes overlap-native negative-control receipts and stable rank-3 diagnostics from the missing hard proof gates. It does not promote the diagnostic quotient or theorem-assisted H3 viewer to strict neutral bulk."
+}

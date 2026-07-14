@@ -1,0 +1,26 @@
+{
+  "claim_boundary": "Primitive gauge-coupled source arrays and exact replay parameters; the theorem validator must hash-bind and independently rerun them.",
+  "edge_count": 390924,
+  "group_name": "S3",
+  "group_order": 6,
+  "hash_schema": "oph_typed_canonical_json_v1",
+  "production_sector_repair_config": {
+    "enabled": true,
+    "mode": "repair_coupled_group_compose",
+    "probability": 0.08
+  },
+  "replay_config": {
+    "disjoint_checks": 256,
+    "enabled": true,
+    "max_event_rows": 256,
+    "requested_schedule_replays": 16,
+    "schedule_replays": 16
+  },
+  "replay_kernel_file_sha256": "sha256:f41c3d426a5d8fcd72e0ae401afaba5ab4d6401476cbe12557dbb8074330e42a",
+  "replay_seed": 20292088,
+  "schema": "finite_consensus_replay_source_v1",
+  "source_quotient_hash": "sha256:ac6b1795f759b2fa1c5e4e9e645871827d83e004a0d2c85ed7d1841e5a0335e0",
+  "source_state_sha256": "sha256:d61c415ce412312df0af38c395537b88ea69031c4e2867044799bcb819441281",
+  "state_file_sha256": "sha256:2a6b45776fd8ee92416144748153fa95de69964581420478c6d94ac06ea840cb",
+  "state_path": "finite_consensus_source_state.npz"
+}

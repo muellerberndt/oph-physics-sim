@@ -1,0 +1,26 @@
+{
+  "mode": "object_h3_bulk_viewer",
+  "viewer_path": "runs/oph_universe_128k_3p1d_earned/object_h3_bulk_viewer.html",
+  "run_path": "runs/oph_universe_128k_3p1d_earned",
+  "source_path": "runs/oph_universe_128k_3p1d_earned/h3_objects.csv",
+  "object_count": 57,
+  "reported_object_count": 57,
+  "reported_localized_object_count": 49,
+  "reported_localized_not_boundary_object_count": 48,
+  "theorem_assisted_h3_bulk": true,
+  "observer_chart_bulk_population_receipt": true,
+  "strict_neutral_bulk": false,
+  "physical_cmb_prediction": false,
+  "observer_overlap_link_count": 0,
+  "fundamental_operation": "Overlapping observations by observers. Object packets are consensus groupings of record/support events seen by overlapping observer samples; the H3 chart is a derived representation of those overlap-stabilized packets.",
+  "dot_semantics": "Each rendered dot is an observer-consensus object/component exported from h3_objects.csv. The H3 spatial point is a derived chart coordinate from modular-response/record-family incidence, not a fundamental particle position.",
+  "color_encoding": "Cyan/blue means lower h3_compactness for that object packet; amber means higher h3_compactness. Dot size scales with observer_count.",
+  "view_panels": [
+    "H3 bulk chart: derived 3D spatial object cloud",
+    "Observer overlap substrate: sampled observer IDs co-observing object packets",
+    "Boundary shadow: normalized S2-like directions seen at the observer screen",
+    "Hyperboloid readout: H3 embedding time versus spatial radius",
+    "Record/support substrate: record signature, observer support, and component structure before geometric interpretation"
+  ],
+  "claim_boundary": "Standalone object-H3 visualization. It renders exported observer-object H3 spatial points and receipt metadata only; it does not promote theorem-assisted H3 previews to strict neutral third-person bulk or physical cosmology."
+}

@@ -1,0 +1,284 @@
+{
+  "mode": "observer_checkpoint_restoration",
+  "observer_count": 64,
+  "field_names": [
+    "record_signature",
+    "stable_count",
+    "committed_mask",
+    "repair_load",
+    "s3_class_density",
+    "s3_sector_class"
+  ],
+  "median_checkpoint_norm": 5.305515216705988e+18,
+  "max_exact_copy_trace_distance_bound": 0.0,
+  "max_future_law_total_variation_bound": 0.0,
+  "exact_restoration_receipt": true,
+  "receipt": true,
+  "sample_checkpoints": [
+    {
+      "observer_id": 18,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.087437312284684e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 21,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 4.926493129869497e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 40,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 4.97205164912627e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 41,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.18176175784526e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 57,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.268246798186017e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 62,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.321266799991119e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 88,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.333654005221014e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 106,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.106699235163997e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 184,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 4.96947307291609e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 185,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.368123974150278e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 199,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.32163975095259e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 236,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.216863643640266e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 276,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.26525021953081e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 284,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.30680261265173e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 290,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.248863416247284e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 292,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.43844324461492e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 295,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.36876725235582e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 300,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.359036216945263e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 308,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.342024267436942e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 310,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.036037966717836e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 378,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.202536522125039e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 392,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.223856416940396e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 419,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.378241524174522e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 427,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.158734086940212e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 433,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.262460838576983e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 445,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.326134234486526e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 448,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.078521108138469e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 457,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.509761647974573e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 480,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.318116951868398e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 483,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.484168224798896e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 509,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.312606034782115e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    },
+    {
+      "observer_id": 516,
+      "support_node_count": 160,
+      "field_count": 12,
+      "checkpoint_norm": 5.127146661529347e+18,
+      "exact_copy_trace_distance_bound": 0.0,
+      "future_law_total_variation_bound": 0.0
+    }
+  ],
+  "claim_boundary": "finite observer-accessible checkpoint/restoration receipt. Exact copy gives zero distance on the encoded accessible event vector; approximate restoration and continuum observer identity remain separate downstream questions.",
+  "observer_population": {
+    "materialized_observer_count": 32000,
+    "analyzed_observer_count": 8192,
+    "analysis_max_observers": 8192,
+    "analysis_sampling_policy": "deterministic_observer_id_hash_rank_v1",
+    "analysis_subset_hash": "sha256:c9b9604bdb8f24301abf13f7a075b425a612d76b7c77b3bbaff3eff759aece98",
+    "full_population_analyzed": false
+  }
+}

@@ -1,0 +1,1 @@
+mode,step,cycle,left_x,left_y,left_z,right_x,right_y,right_z,left_vx,left_vy,left_vz,right_vx,right_vy,right_vz,tangent_separation,h3_separation,stress_kernel,relative_speed,support_overlap_fraction,support_overlap_node_count,contact_event,contact_outcome,charge_conservation_pass

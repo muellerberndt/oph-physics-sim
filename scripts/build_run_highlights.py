@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Per-run highlights: milestone status and near-fit scoreboard.
+"""Per-run highlights: milestone status and run-derived diagnostics.
 
 Writes RUN_HIGHLIGHTS.md and run_highlights.json into a run directory.
-The milestone rows are read from THIS run's receipts; the public-data
-near-fit rows are curated excerpts (source: the experiment tracker
-section 0a and docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md) and are
-run-independent paper-side lanes unless marked run-derived. Claim
-discipline: near-fits are conditional or diagnostic comparisons; the
+Every row is read from THIS run's receipts and artifacts; run artifacts
+carry no paper-side physics-comparison rows. Public-data comparison
+lanes live in the paper-side documents (the experiment tracker section
+0a and docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md). Claim discipline: the
 suite holds zero frozen physical-prediction receipts.
 """
 from __future__ import annotations
@@ -144,46 +143,25 @@ run_derived = [
     },
 ]
 
-near_fits = [
-    {"quantity": "Scalar tilt n_s = 1 - P/48", "oph": 0.9660215, "measured": "0.9649(42) (Planck 2018)", "pull": "+0.27 sigma"},
-    {"quantity": "Higgs-top criticality relation m_H(m_t)", "oph": 125.72, "measured": "125.13(11) GeV (PDG)", "pull": "+0.47 percent"},
-    {"quantity": "Electroweak chart pair M_W / M_Z", "oph": "80.330 / 91.119 GeV", "measured": "80.3692(133) / 91.1880(20)", "pull": "-0.05 / -0.08 percent (chart, pole packet open)"},
-    {"quantity": "Strong coupling alpha_s(M_Z)", "oph": 0.11834, "measured": "0.1179(9)", "pull": "+0.5 sigma"},
-    {"quantity": "QCD scale Lambda_QCD(3)", "oph": "334.8 [319, 350] MeV", "measured": "338(12) MeV (FLAG-class)", "pull": "inside interval"},
-    {"quantity": "Capacity -> Lambda (EW branch)", "oph": "Lambda l_P^2 = 2.668e-122", "measured": "2.845e-122 (Planck display)", "pull": "+6.6 percent over 122 orders of magnitude"},
-    {"quantity": "CMB low-l IR filter scale", "oph": "corpus l_IR = 32", "measured": "unbinned PR3 TT optimum l_IR ~ 26 (flat 24-40), q ~ 0.16", "pull": "corpus scale 0.2 chi2 units from the data optimum (net -3.9)"},
-    {"quantity": "Cosmic birefringence candidate alpha_U/(2 pi)", "oph": "0.37501 deg", "measured": "0.342 +0.094/-0.091 deg (Planck+WMAP EB)", "pull": "+0.35 sigma (S1 coincidence, 4 trials declared)"},
-    {"quantity": "Clock-free ratio m_t/m_W", "oph": 2.1490, "measured": 2.1476, "pull": "+0.07 percent"},
-    {"quantity": "SPARC RAR fixed-branch RMS", "oph": "0.13283 dex (Z6)", "measured": "0.13281 dex same-data optimum", "pull": "2e-5 dex from optimal (retrospective)"},
-]
-
-banked = [
-    "Cassini universal continuation excluded (19.2 sigma raw): the settled-galaxy scope survives, the universal extension died",
-    "Weighted-cycle neutrino candidate rejected by NuFIT 6.1",
-    "Screen C_l proxy anti-correlates with Planck TT: the raw screen is not the CMB",
-]
-
 label = f"{RUN.name} ({patch_count:,} patches / {observer_count:,} observers)" if patch_count and observer_count else RUN.name
 payload = {
-    "schema": "run_highlights_v1",
+    "schema": "run_highlights_v2",
     "run_id": RUN.name,
     "label": label,
     "patch_count": patch_count,
     "observer_count": observer_count,
     "milestones": milestones,
     "run_derived_diagnostics": run_derived,
-    "near_fits_public_data": near_fits,
-    "banked_negatives": banked,
     "claim_boundary": (
-        "Milestone receipts are this run's own gate values. Near-fit rows are "
-        "curated conditional or diagnostic comparisons from the paper-side "
-        "lanes (tracker section 0a); none is a frozen physical-prediction "
-        "receipt. Banked negatives stay visible because the gates bite."
+        "Milestone receipts and diagnostics are this run's own gate values "
+        "and artifacts; none is a frozen physical-prediction receipt. This "
+        "file contains only quantities computed from this run's data. "
+        "Paper-side public-data comparisons live in "
+        "docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md (section 0a) and "
+        "docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md, never in run artifacts."
     ),
     "sources": [
-        "docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md (section 0a)",
-        "docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md",
-        "docs/SCALING_MILESTONE_ESTIMATES_2026-07-13.md",
+        "this run's receipt and report JSONs",
     ],
 }
 (RUN / "run_highlights.json").write_text(json.dumps(payload, indent=2, sort_keys=False))
@@ -201,18 +179,6 @@ lines.append("## Run-derived diagnostics")
 lines.append("")
 for row in run_derived:
     lines.append(f"- {row['quantity']}: `{row['value']}` ({row['note']})")
-lines.append("")
-lines.append("## Near-fits against public data (paper-side lanes, curated)")
-lines.append("")
-lines.append("| Quantity | OPH | Measured | Pull |")
-lines.append("|---|---|---|---|")
-for row in near_fits:
-    lines.append(f"| {row['quantity']} | {row['oph']} | {row['measured']} | {row['pull']} |")
-lines.append("")
-lines.append("## Banked negatives (kept visible)")
-lines.append("")
-for row in banked:
-    lines.append(f"- {row}")
 lines.append("")
 lines.append(f"Claim boundary: {payload['claim_boundary']}")
 lines.append("")

@@ -2,6 +2,22 @@
 
 OPH-FPE is the finite simulator for Observer-Patch Holography physics experiments. It models bounded software patches with local state, ports, readback, records, feedback and repair moves, then writes public evidence bundles that say which claims passed and which gates are closed.
 
+**Scope.** The lattice tests consensus and geometry-emergence claims only. The
+relaxation dynamics never consumes the pixel constant P, and no quantitative
+physical constant (alpha, n_s, particle masses, Lambda) is produced by the
+lattice. Any such number appearing in sim documents is a paper-side comparison
+and carries that label; the paper-side surfaces live in
+`reverse-engineering-reality/`.
+
+**Consistency-stack mapping.** The structural receipts the simulator earns —
+observer-local modular time, the KMS replay contract, the H3 chart, and the
+overlap mutual-agreement certificate — are finite instantiations of rows C1–C3
+of the consistency stack (`reverse-engineering-reality/CONSISTENCY_STACK.md`,
+a companion-repo file). The simulator's open items — strict neutral bulk,
+Einstein branch entry, physical particles, physical CMB — sit on C5 and
+downstream rows. The simulator emits no ledger-row closures; closure verdicts
+live only in `reverse-engineering-reality/CLOSURE_LEDGER.md`.
+
 The package name is `OPH-FPE`: Observer-Patch Fundamental Physics Emergence.
 
 Live visualizations of simulator runs: <https://simulation.floatingpragma.io>
@@ -16,16 +32,26 @@ The working surface includes finite consensus receipts, observer record algebra,
 Latest completed run ladder: 4k, 16k, 64k, 128k (32,000 observers), 256k,
 and 1,048,576 patches with 64,000 materialized observers
 (`runs/oph_universe_1m_night1`; earned-receipt reruns at 128k and 1M in
-flight on the covariant probe).
+flight on the covariant probe). 1M-scale claims carry a standing
+qualification: the committed earned-run source directory for the 1M run is
+empty (`data/earned_runs/oph_universe_1m_earned/SOURCE_EMPTY.md`); until 1M
+artifacts are committed or hash-pinned with a fetch path, scale claims cite
+the 64k and 128k earned runs.
 
 - The observer 3+1D experience receipt is earned under the gauge-covariant
   sector-replay contract: all four component gates pass at 4k with zero
-  overrides, and the 2 pi KMS clock gate passes genuinely at 4k, 16k, and
-  64k. Receipts certified before 2026-07-14 used the pre-covariant probe
-  and are superseded.
-- The observer mutual-agreement certificate is scale-stable from 4k to 1M:
-  every evaluated pair re-gauges at defect 0.0, every evaluated observer
-  triple closes the Cech cocycle, shuffled controls sit near 0.8.
+  overrides. The 2 pi KMS clock gate passes at 4k, 16k, and 64k on the
+  `kms_collar_transport_response` source, whose scale normalization defaults
+  to 2 pi; the endogenous perturb-remeasure probe selected pi without
+  discrimination (scores near 0.93-1.01), so gate repair is open work. Receipts
+  certified before 2026-07-14 used the pre-covariant probe and are superseded.
+- The observer mutual-agreement certificate records self-consistency of the
+  shared record under hash-frame conjugation: every evaluated pair re-gauges
+  at defect 0.0 from 4k through the 128k earned run (1M pending artifacts, per
+  the qualification above), every evaluated observer triple closes the Cech
+  cocycle, shuffled controls sit near 0.8. The re-gauging map exists by
+  construction for views of one stored record; the discriminating experiment,
+  independent per-observer commit histories, is open work.
 - Proto-particles are receipted (organic defect population, worldlines,
   two-defect dynamics assays); particle promotion stays gated on
   gauge-covariant fusion transport.
@@ -39,7 +65,7 @@ section 0a).
 
 ## Receipt Boundaries
 
-The README describes the simulator surface. Pass/fail receipt labels belong in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles. Mutable project progress belongs in GitHub issues.
+The README describes the simulator surface. Pass/fail receipt labels belong in run artifacts under `runs/`, measurement packs, frontier reports, and handoff bundles. Curated immutable snapshots selected for repository publication live under `data/earned_runs/`; their working sources remain under the ignored `runs/` tree. Mutable project progress belongs in GitHub issues.
 
 The theorem-assisted H3 route, strict neutral-bulk route, physical CMB route, production particle route, and production-gravity route are separate claim paths. A diagnostic chart, curved-spacetime compaction field, stress-pair motion, or screen spectrum must not be promoted into a paper-faithful physical claim unless the corresponding receipt gate is present in the concrete run output. Gravity promotion is additionally gated by the post-Lean-audit Einstein branch-entry contract (`EINSTEIN_BRANCH_ENTRY_RECEIPT` / [issue #503](https://github.com/FloatingPragma/observer-patch-holography/issues/503)). `tools/import_oph_artifacts.py` hash-pins the current paper/particle/geometry status into a run or staging directory; imported status is always informational or diagnostic and never flips a run receipt. The current pinned snapshot is under `data/oph_cross_repo_current/`. See `docs/PAPER_PARTICLE_ARTIFACT_INTEGRATION.md`.
 
@@ -55,9 +81,12 @@ particle, Einstein, gravity, or physical-CMB receipts true. See
 Since 2026-07-14 the perturb-remeasure response probes (BW/KMS branch replay
 and transition-scale selection) replay the production sector-repair law
 against a per-source local gauge (`repair_production_sector_links`), so the
-`2*pi` clock certification is gauge-covariant and production-faithful; the
+`2*pi` clock probe is gauge-covariant and production-faithful; the
 probes fail closed only when the replay config is absent. Receipts earned
-before that date by the pre-covariant probe are superseded.
+before that date by the pre-covariant probe are superseded. The `2*pi`
+selection itself still rests on the `kms_collar_transport_response` source,
+whose scale normalization defaults to 2 pi; the endogenous probe does not yet
+discriminate among scales, and gate repair is open work.
 
 Every ensemble-facing output must name its claim tier:
 

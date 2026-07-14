@@ -1,0 +1,17 @@
+{
+  "mode": "modular_response_kernel_cache_written",
+  "payload_path": "runs/oph_universe_64k_3p1d_reearned/modular_response_kernel_payload.npz",
+  "metadata_path": "runs/oph_universe_64k_3p1d_reearned/modular_response_kernel_cache.json",
+  "observer_count": 1024,
+  "feature_count": 3648,
+  "wrong_scale_control_count": 3,
+  "claim_boundary": "Cached support-visible modular-response matrix for post-run H3 refits. This cache does not add evidence; refit reports must still pass the same controls.",
+  "observer_population": {
+    "materialized_observer_count": 1024,
+    "analyzed_observer_count": 1024,
+    "analysis_max_observers": null,
+    "analysis_sampling_policy": "all_materialized_observers",
+    "analysis_subset_hash": "sha256:f1657e3b124a735e26ddd97a2a6d488b01742c23950863f6fc64d0d703349eb6",
+    "full_population_analyzed": true
+  }
+}

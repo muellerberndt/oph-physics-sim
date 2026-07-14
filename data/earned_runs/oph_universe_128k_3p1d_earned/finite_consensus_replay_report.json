@@ -1,0 +1,97 @@
+{
+  "mode": "array_port_pair_strict_consensus_replay",
+  "enabled": true,
+  "receipt": false,
+  "FINITE_CONSENSUS_THEOREM_RECEIPT": false,
+  "finite_consensus_theorem_receipt": false,
+  "computed_from_port_pair_arrays": true,
+  "computed_from_gauge_coupled_arrays": true,
+  "gauge_covariant_mismatch": true,
+  "gauge_quotient_canonicalizer": "node_reference_port_frame_v1",
+  "production_move_contract": {
+    "schema": "bw_array_production_overlap_move_contract_v1",
+    "mismatch_definition": "left_equals_g_ij_times_right_v1",
+    "endpoint_repair_branches": [
+      "port_left <- g_ij * port_right",
+      "port_right <- inverse(g_ij) * port_left"
+    ],
+    "endpoint_branch_selection": "independent Bernoulli(0.5) per selected edge",
+    "sector_repair": {
+      "enabled": true,
+      "mode": "repair_coupled_group_compose",
+      "probability": 0.08,
+      "mutation": "g_ij <- discrepancy_i * g_ij"
+    },
+    "replayed_endpoint_branches": true,
+    "replayed_sector_link_mutation": true,
+    "shared_sector_mutation_primitive": "repair_production_sector_links",
+    "exact_production_move_set_replayed": true,
+    "blockers": []
+  },
+  "exact_endpoint_branch_check": {
+    "mode": "exact_endpoint_branch_structural_confluence_v1",
+    "coverage_complete": true,
+    "active_edge_count": 653612,
+    "structurally_confluent": false,
+    "structural_nonconfluence_witness_count": 1,
+    "unique_terminal_quotient_hash_count": 2,
+    "terminal_orbit_count_semantics": "exact lower bound",
+    "terminal_quotient_hashes": [],
+    "witness": {
+      "active_edge": 0,
+      "shared_node": 0,
+      "active_edge_endpoint": "left",
+      "unchanged_incident_edge": 1,
+      "node_degree": 12,
+      "divergent_branches": [
+        "repair_left_endpoint",
+        "repair_right_endpoint"
+      ],
+      "proof": "the unchanged incident edge fixes the shared-node frame; because the active edge has non-identity discrepancy, repairing opposite endpoints leaves two distinct local-frame quotient orbits"
+    },
+    "blockers": [
+      "random_endpoint_branch_nonconfluent_at_shared_patch"
+    ]
+  },
+  "source_state_sha256": "sha256:79bc27108b7c9b2c17f8ccd1c94b58c2825fea4698be96c9b6c5ba5bdf80b737",
+  "source_quotient_hash": "sha256:e44b8b224006888d67eee7c9aea541d8f75b77006f918d7b5e177f255321554c",
+  "evidence": {
+    "evidence_kind": "computed_gauge_covariant_quotient_replay_v1",
+    "theorem_phase_event_count": 653612,
+    "accepted_theorem_move_count": 653612,
+    "strict_descent_violation_count": 0,
+    "accepted_phi_increase_violation_count": 0,
+    "disjoint_commutation_violation_count": 0,
+    "local_diamond_violation_count": 0,
+    "gauge_covariance_violation_count": 0,
+    "gauge_relabeling_check_count": 4,
+    "production_move_contract_violation_count": 0,
+    "sector_replay_call_count": 0,
+    "sector_link_mutation_count": 0,
+    "endpoint_branch_coverage_incomplete_count": 0,
+    "endpoint_branch_confluence_violation_count": 1,
+    "repair_completeness_violation_count": 0,
+    "unique_terminal_quotient_hash_count": 2,
+    "sampled_unique_terminal_quotient_hash_count": 0,
+    "schedule_replay_count": 0,
+    "configured_schedule_replay_count": 0,
+    "requested_schedule_replays": 0
+  },
+  "sample_events": [],
+  "initial_phi": 653612,
+  "initial_edge_count": 783619,
+  "terminal_hash": null,
+  "sampled_terminal_hashes": [],
+  "terminal_representative_hash_count": 0,
+  "unique_terminal_hash_count": 2,
+  "sample_event_count": 0,
+  "schedule_replays_short_circuited": false,
+  "schedule_replay_short_circuit_reason": null,
+  "disjoint_commutation_checked_pair_count": 256,
+  "local_diamond_checked_pair_count": 512,
+  "shared_node_diamond_checked_pair_count": 256,
+  "local_diamond_status": "computed_ab_ba_edge_slot_diamonds",
+  "gauge_relabeling_check_count": 4,
+  "gauge_covariance_violation_count": 0,
+  "claim_boundary": "C0b replay evidence for the finite gauge-coupled port-link quotient. Mismatch is computed after group-correct link transport, terminal hashes canonicalize local node frames, and random frame relabelings check the predicate, both endpoint-repair branches, and quotient hash. The production sector-link mutation is replayed through the same primitive used by the live BW kernel; unsupported non-covariant sector modes fail closed. An exact O(E) endpoint-incidence proof exposes endpoint-branch nonconfluence independently of Monte Carlo schedule coverage; sampled terminal quotient hashes remain diagnostic. AB/BA diamonds still act on edge slots; the state model has no shared patch-local repair variable, so this does not certify a full OPH patch algebra, record algebra C1, or Lorentz L1-L7 receipts."
+}

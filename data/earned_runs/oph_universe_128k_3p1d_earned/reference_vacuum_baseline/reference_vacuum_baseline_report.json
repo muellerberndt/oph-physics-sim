@@ -1,0 +1,561 @@
+{
+  "mode": "reference_vacuum_baseline_bundle",
+  "claim_tier": "E1",
+  "claim_tier_meaning": "conventional reference ensemble",
+  "claim_tier_gate": {
+    "claim_tier": "E1",
+    "claim_tier_meaning": "conventional reference ensemble",
+    "promotion_allowed": false,
+    "required_receipts": [],
+    "promotion_blockers": [
+      "E1_is_not_a_physical_promotion_tier"
+    ],
+    "explicit_nonclaims": [
+      "not an OPH-native vacuum",
+      "not an OPH primordial field",
+      "not a physical TT/TE/EE prediction",
+      "not promoted by seed noise, proposal noise, or repair jitter"
+    ]
+  },
+  "free_scalar_gaussian": {
+    "mode": "reference_vacuum_free_scalar_gaussian",
+    "claim_tier": "E1",
+    "claim_tier_meaning": "conventional reference ensemble",
+    "ensemble_spec": {
+      "ensemble_id": "free_scalar_harmonic_reference_v1",
+      "claim_tier": "E1",
+      "regulator_id": "real_spherical_harmonic_modes_2_to_16",
+      "representative_schema_hash": "0171aeac0c493b1deac45442ad501434e68efda8e88e1d1097eb0dfd2db5628e",
+      "gauge_action_hash": "b7b7241bad2a25c699708b4747e014e2e7866393bf338c2a8b4cc1c344e164f3",
+      "quotient_canonicalizer_hash": "5f01262c87266f6c5c1618dd8f485849500b13c18031a345a94bce5bb26c5cac",
+      "base_measure_definition": "Euclidean volume in ordered real harmonic coefficient coordinates",
+      "action_definition_and_coefficients": {
+        "kind": "free_scalar_harmonic_gaussian",
+        "mean_constraint": "E[a_lm]=0",
+        "mean_quadratic_release": "E[q^T K q]=d*A",
+        "amplitude_A": 1.0,
+        "kappa_l": "[ell*(ell+1)]^(1+theta/2)",
+        "theta": 0.0,
+        "removed_modes": "ell=0,1",
+        "ell_max": 16
+      },
+      "coarse_map_hashes": [
+        "258cd50f4b0c921704dd89b081587e22e14f0ae155c48ddd0aa5f224980c57e0"
+      ],
+      "zero_mode_projector_hash": "8f62d1ce548b12107f780b42bcd4720bde40e02e53eba71d2ce381525b4c49b8",
+      "amplitude_convention": "A=E[q^T K q]/d; if H=(1/2)q^T K q then A=2E[H]/d",
+      "sampler_kernel_hash": "771040822246fa411e960136e9dfc7e2039cc1892744a9814204b03785a67c2f",
+      "rng_event_label_schema": "PRF(seed_key, ensemble_id, ell, m, draw='normal_sequence') seeds one deterministic Gaussian stream per harmonic mode; sample_index is the stream offset; regulator size, worker id, thread id, and execution order are excluded",
+      "smoothing_policy": "none; raw coefficients are the reference output",
+      "source_provenance": "conventional free-scalar Gaussian reference baseline; paper issue #360 / sim issue #11",
+      "explicit_nonclaims": [
+        "not an OPH-native vacuum",
+        "not an OPH primordial field",
+        "not a physical TT/TE/EE prediction",
+        "not promoted by seed noise, proposal noise, or repair jitter"
+      ],
+      "claim_tier_meaning": "conventional reference ensemble",
+      "ensemble_spec_hash": "e4cde8e94d461f5816644930638e567628eac88cf33aec439725e883fd6574bc"
+    },
+    "claim_tier_gate": {
+      "claim_tier": "E1",
+      "claim_tier_meaning": "conventional reference ensemble",
+      "promotion_allowed": false,
+      "required_receipts": [],
+      "promotion_blockers": [
+        "E1_is_not_a_physical_promotion_tier"
+      ],
+      "explicit_nonclaims": [
+        "not an OPH-native vacuum",
+        "not an OPH primordial field",
+        "not a physical TT/TE/EE prediction",
+        "not promoted by seed noise, proposal noise, or repair jitter"
+      ]
+    },
+    "seed_receipt": {
+      "claim_tier": "E0",
+      "claim_tier_meaning": "seed noise, proposal noise, repair jitter",
+      "seed_key_hash": "8fb167fb90e7b76c0cda02be9fc8364661fe8747d637f1f5ccc0fbb816c3feb8",
+      "seed_not_in_ensemble_spec": true
+    },
+    "mode_count": 285,
+    "sample_count": 256,
+    "raw_spectrum": [
+      {
+        "ell": 2,
+        "mean_coefficient_power": 0.17247632945195332,
+        "mode_count": 5
+      },
+      {
+        "ell": 3,
+        "mean_coefficient_power": 0.08091730467943778,
+        "mode_count": 7
+      },
+      {
+        "ell": 4,
+        "mean_coefficient_power": 0.04996707040497277,
+        "mode_count": 9
+      },
+      {
+        "ell": 5,
+        "mean_coefficient_power": 0.032824435467419234,
+        "mode_count": 11
+      },
+      {
+        "ell": 6,
+        "mean_coefficient_power": 0.025067498877197242,
+        "mode_count": 13
+      },
+      {
+        "ell": 7,
+        "mean_coefficient_power": 0.018267463144078868,
+        "mode_count": 15
+      },
+      {
+        "ell": 8,
+        "mean_coefficient_power": 0.013222644142242963,
+        "mode_count": 17
+      },
+      {
+        "ell": 9,
+        "mean_coefficient_power": 0.011044172109019862,
+        "mode_count": 19
+      },
+      {
+        "ell": 10,
+        "mean_coefficient_power": 0.00894959975898272,
+        "mode_count": 21
+      },
+      {
+        "ell": 11,
+        "mean_coefficient_power": 0.007575188724278376,
+        "mode_count": 23
+      },
+      {
+        "ell": 12,
+        "mean_coefficient_power": 0.006355145410316154,
+        "mode_count": 25
+      },
+      {
+        "ell": 13,
+        "mean_coefficient_power": 0.005541715975433766,
+        "mode_count": 27
+      },
+      {
+        "ell": 14,
+        "mean_coefficient_power": 0.004747348738922508,
+        "mode_count": 29
+      },
+      {
+        "ell": 15,
+        "mean_coefficient_power": 0.004054822629005772,
+        "mode_count": 31
+      },
+      {
+        "ell": 16,
+        "mean_coefficient_power": 0.0036468162114624923,
+        "mode_count": 33
+      }
+    ],
+    "smoothed_spectrum": [
+      {
+        "ell": 2,
+        "mean_coefficient_power": 0.17247632945195332,
+        "mode_count": 5
+      },
+      {
+        "ell": 3,
+        "mean_coefficient_power": 0.08091730467943778,
+        "mode_count": 7
+      },
+      {
+        "ell": 4,
+        "mean_coefficient_power": 0.04996707040497277,
+        "mode_count": 9
+      },
+      {
+        "ell": 5,
+        "mean_coefficient_power": 0.032824435467419234,
+        "mode_count": 11
+      },
+      {
+        "ell": 6,
+        "mean_coefficient_power": 0.025067498877197242,
+        "mode_count": 13
+      },
+      {
+        "ell": 7,
+        "mean_coefficient_power": 0.018267463144078868,
+        "mode_count": 15
+      },
+      {
+        "ell": 8,
+        "mean_coefficient_power": 0.013222644142242963,
+        "mode_count": 17
+      },
+      {
+        "ell": 9,
+        "mean_coefficient_power": 0.011044172109019862,
+        "mode_count": 19
+      },
+      {
+        "ell": 10,
+        "mean_coefficient_power": 0.00894959975898272,
+        "mode_count": 21
+      },
+      {
+        "ell": 11,
+        "mean_coefficient_power": 0.007575188724278376,
+        "mode_count": 23
+      },
+      {
+        "ell": 12,
+        "mean_coefficient_power": 0.006355145410316154,
+        "mode_count": 25
+      },
+      {
+        "ell": 13,
+        "mean_coefficient_power": 0.005541715975433766,
+        "mode_count": 27
+      },
+      {
+        "ell": 14,
+        "mean_coefficient_power": 0.004747348738922508,
+        "mode_count": 29
+      },
+      {
+        "ell": 15,
+        "mean_coefficient_power": 0.004054822629005772,
+        "mode_count": 31
+      },
+      {
+        "ell": 16,
+        "mean_coefficient_power": 0.0036468162114624923,
+        "mode_count": 33
+      }
+    ],
+    "smoothing_provenance": {
+      "policy": "none; raw coefficients are the reference output",
+      "raw_data_preserved": true,
+      "smoothing_sigma": null
+    },
+    "covariance_diagnostics": {
+      "known_covariance": "diag(A/[ell*(ell+1)]^(1+theta/2))",
+      "variance_relative_rmse": 0.09119871380717416,
+      "max_abs_offdiag_correlation": 0.2463487929695447,
+      "direct_sampling_no_burn_in": true,
+      "integrated_autocorrelation_time": 1.0
+    },
+    "refinement_diagnostics": {
+      "coarse_ell_max": 8,
+      "coarse_mode_count": 77,
+      "exact_covariance_residual_frobenius": 0.0,
+      "shared_mode_bitwise_replay": true,
+      "exact_mode_truncation_refinement_receipt": true,
+      "finite_volume_report": {
+        "fine_ell_max": 16,
+        "coarse_ell_max": 8,
+        "mesh_rendering_not_primary_probability_space": true
+      }
+    },
+    "deterministic_replay": {
+      "event_label_schema": "PRF(seed_key, ensemble_id, ell, m, draw='normal_sequence') seeds one deterministic Gaussian stream per harmonic mode; sample_index is the stream offset; regulator size, worker id, thread id, and execution order are excluded",
+      "SEMANTIC_STREAM_DETERMINISTIC_REPLAY": true,
+      "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+      "partition_count_argument_used_for_path_scheduling": false,
+      "worker_thread_ids_excluded": true
+    },
+    "partition_randomness": {
+      "receipt_renamed_to": "SEMANTIC_STREAM_DETERMINISTIC_REPLAY",
+      "partition_replay_receipt": true,
+      "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+      "overstatement_fixed": true
+    },
+    "reference_theory_regression_receipt": true,
+    "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": false,
+    "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": false,
+    "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": false,
+    "quotient_ensemble_receipts": {
+      "baseline_kind": "free_scalar_harmonic_gaussian_reference",
+      "claim_tier": "E1",
+      "receipts": {
+        "TRACIALLY_POINTED_QUOTIENT_RECEIPT": false,
+        "REFERENCE_STATE_REFINEMENT_RECEIPT": false,
+        "SOURCE_ONLY_CONSTRAINT_LEDGER_RECEIPT": false,
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": false,
+        "FIBER_ORBIT_HOMOGENEITY_RECEIPT": false,
+        "LOCAL_REPAIR_GAP_FIELD_RECEIPT": false,
+        "GLOBAL_POINCARE_CONSTANT_RECEIPT": false,
+        "SOURCE_EUCLIDEAN_SLAB_RECEIPT": false,
+        "TRANSFER_REFINEMENT_RECEIPT": false,
+        "TRANSFER_VACUUM_RECEIPT": false,
+        "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": false,
+        "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": false,
+        "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+        "PRIMORDIAL_BRIDGE_RECEIPT": false,
+        "FROZEN_LIKELIHOOD_RECEIPT": false
+      },
+      "rg_exponential_family_closure_evidence": {
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": false,
+        "promotion_blockers": [
+          "finite_matrix_refinement_evidence_missing"
+        ],
+        "claim_boundary": "No MaxEnt closure promotion without simulator-native fine/coarse matrices."
+      },
+      "claim_tier_gate": {
+        "claim_tier": "E1",
+        "claim_tier_meaning": "conventional reference ensemble",
+        "promotion_allowed": false,
+        "required_receipts": [],
+        "promotion_blockers": [
+          "E1_is_not_a_physical_promotion_tier"
+        ],
+        "explicit_nonclaims": []
+      },
+      "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": false,
+      "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": false,
+      "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": false,
+      "PHYSICAL_CMB_PREDICTION_RECEIPT": false
+    },
+    "explicit_nonclaims": [
+      "not an OPH-native vacuum",
+      "not an OPH primordial field",
+      "not a physical TT/TE/EE prediction",
+      "not promoted by seed noise, proposal noise, or repair jitter"
+    ],
+    "artifacts": {
+      "coefficients_npz": "runs/oph_universe_128k_3p1d_earned/reference_vacuum_baseline/free_scalar_harmonic_coefficients.npz",
+      "coefficients_npz_sha256": "265b9c65d1079d5aa236075abeccc2f54752d43cb5425e505bf96fcef24c3d7d",
+      "spectra_csv": "runs/oph_universe_128k_3p1d_earned/reference_vacuum_baseline/free_scalar_spectra.csv",
+      "spectra_csv_sha256": "a865f40886535c73a859eee43fa29f3e43197772270826a594c57125f483ca3a"
+    }
+  },
+  "compact_u1_lattice_gauge": {
+    "mode": "reference_vacuum_compact_u1_lattice_gauge",
+    "claim_tier": "E1",
+    "claim_tier_meaning": "conventional reference ensemble",
+    "claim_tier_gate": {
+      "claim_tier": "E1",
+      "claim_tier_meaning": "conventional reference ensemble",
+      "promotion_allowed": false,
+      "required_receipts": [],
+      "promotion_blockers": [
+        "E1_is_not_a_physical_promotion_tier"
+      ],
+      "explicit_nonclaims": [
+        "not an OPH-native vacuum",
+        "not an OPH primordial field",
+        "not a physical TT/TE/EE prediction",
+        "not promoted by seed noise, proposal noise, or repair jitter"
+      ]
+    },
+    "lattice_gauge_stage": {
+      "compact_u1_reference": true,
+      "su2_reference": false,
+      "su3_reference": false,
+      "su2_su3_status": "staged later; no OPH promotion attached to this U1 baseline"
+    },
+    "target_action": {
+      "kind": "compact_u1_wilson_2d_reference",
+      "log_weight": "beta*sum_p cos(theta_p)",
+      "beta": 0.5,
+      "proposal": "single-link symmetric uniform angle displacement"
+    },
+    "lattice_size": 4,
+    "sweeps": 32,
+    "burn_in": 8,
+    "acceptance_rate": 0.8369140625,
+    "plaquette_trace": [
+      0.7054001702408261,
+      0.764254595209267,
+      0.1868928415027078,
+      0.12012023271126426,
+      0.16381538291898648,
+      0.3122933899692594,
+      0.14799896592366835,
+      0.5159772407749452,
+      0.476020261693724,
+      0.23313913023996874,
+      0.415385303345434,
+      -0.048544090994398006,
+      0.24121089490109418,
+      0.2595543582508241,
+      0.07290119655186225,
+      0.18952851796183606,
+      0.3136752401605038,
+      0.38662360246521105,
+      0.3655137740613072,
+      0.48476873138341686,
+      0.045462014134143296,
+      0.36894758234312364,
+      0.3753431825073326,
+      0.26744777553238164,
+      0.18416950338340135,
+      0.33552110396252005,
+      0.12150017460601847,
+      0.36338183263381735,
+      0.019424325110997537,
+      -0.30069982351049396,
+      0.25491117665814506,
+      0.19596668487967167
+    ],
+    "post_burn_in_mean_plaquette": 0.2342146855109101,
+    "thermalization_autocorrelation": {
+      "integrated_autocorrelation_time": 1.2112464628876194,
+      "autocorrelation_receipt": true,
+      "diagnostic_only_not_stationary_law_proof": true
+    },
+    "canonical_serial_chain_replay": {
+      "event_label_schema": "PRF(seed_key, ensemble_id='compact_u1_wilson_reference_v1', sweep, x, y, mu, draw); canonical serial order is used for noncommuting local updates",
+      "CANONICAL_SERIAL_CHAIN_REPLAY": true,
+      "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": false,
+      "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": false,
+      "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+      "noncommuting_link_updates": true,
+      "worker_thread_ids_excluded": true
+    },
+    "partition_randomness": {
+      "receipt_renamed_to": "CANONICAL_SERIAL_CHAIN_REPLAY",
+      "partition_replay_receipt": true,
+      "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+      "overstatement_fixed": true
+    },
+    "reference_theory_regression_receipt": true,
+    "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": false,
+    "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": false,
+    "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": false,
+    "quotient_ensemble_receipts": {
+      "baseline_kind": "compact_u1_lattice_gauge_reference",
+      "claim_tier": "E1",
+      "receipts": {
+        "TRACIALLY_POINTED_QUOTIENT_RECEIPT": false,
+        "REFERENCE_STATE_REFINEMENT_RECEIPT": false,
+        "SOURCE_ONLY_CONSTRAINT_LEDGER_RECEIPT": false,
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": false,
+        "FIBER_ORBIT_HOMOGENEITY_RECEIPT": false,
+        "LOCAL_REPAIR_GAP_FIELD_RECEIPT": false,
+        "GLOBAL_POINCARE_CONSTANT_RECEIPT": false,
+        "SOURCE_EUCLIDEAN_SLAB_RECEIPT": false,
+        "TRANSFER_REFINEMENT_RECEIPT": false,
+        "TRANSFER_VACUUM_RECEIPT": false,
+        "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": false,
+        "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": false,
+        "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+        "PRIMORDIAL_BRIDGE_RECEIPT": false,
+        "FROZEN_LIKELIHOOD_RECEIPT": false
+      },
+      "rg_exponential_family_closure_evidence": {
+        "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": false,
+        "promotion_blockers": [
+          "finite_matrix_refinement_evidence_missing"
+        ],
+        "claim_boundary": "No MaxEnt closure promotion without simulator-native fine/coarse matrices."
+      },
+      "claim_tier_gate": {
+        "claim_tier": "E1",
+        "claim_tier_meaning": "conventional reference ensemble",
+        "promotion_allowed": false,
+        "required_receipts": [],
+        "promotion_blockers": [
+          "E1_is_not_a_physical_promotion_tier"
+        ],
+        "explicit_nonclaims": []
+      },
+      "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": false,
+      "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": false,
+      "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": false,
+      "PHYSICAL_CMB_PREDICTION_RECEIPT": false
+    },
+    "explicit_nonclaims": [
+      "not an OPH-native vacuum",
+      "not an OPH primordial field",
+      "not a physical TT/TE/EE prediction",
+      "not promoted by seed noise, proposal noise, or repair jitter"
+    ],
+    "final_state_hash": "7ea30422f4543133d5d8544e3078ea9259065996b68a29de12b0cad9d7e37e99"
+  },
+  "receipt_contract": {
+    "ensemble_definition": true,
+    "semantic_stream_deterministic_replay": true,
+    "canonical_serial_chain_replay": true,
+    "partition_invariant_randomness": false,
+    "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": false,
+    "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": false,
+    "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+    "thermalization_autocorrelation": {
+      "integrated_autocorrelation_time": 1.2112464628876194,
+      "autocorrelation_receipt": true,
+      "diagnostic_only_not_stationary_law_proof": true
+    },
+    "smoothing_provenance": {
+      "policy": "none; raw coefficients are the reference output",
+      "raw_data_preserved": true,
+      "smoothing_sigma": null
+    },
+    "finite_volume_lattice_spacing": {
+      "coarse_ell_max": 8,
+      "coarse_mode_count": 77,
+      "exact_covariance_residual_frobenius": 0.0,
+      "shared_mode_bitwise_replay": true,
+      "exact_mode_truncation_refinement_receipt": true,
+      "finite_volume_report": {
+        "fine_ell_max": 16,
+        "coarse_ell_max": 8,
+        "mesh_rendering_not_primary_probability_space": true
+      }
+    },
+    "reference_theory_regression": true,
+    "oph_native_promotion": false
+  },
+  "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": false,
+  "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": false,
+  "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": false,
+  "quotient_ensemble_receipts": {
+    "baseline_kind": "reference_vacuum_baseline_bundle",
+    "claim_tier": "E1",
+    "receipts": {
+      "TRACIALLY_POINTED_QUOTIENT_RECEIPT": false,
+      "REFERENCE_STATE_REFINEMENT_RECEIPT": false,
+      "SOURCE_ONLY_CONSTRAINT_LEDGER_RECEIPT": false,
+      "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": false,
+      "FIBER_ORBIT_HOMOGENEITY_RECEIPT": false,
+      "LOCAL_REPAIR_GAP_FIELD_RECEIPT": false,
+      "GLOBAL_POINCARE_CONSTANT_RECEIPT": false,
+      "SOURCE_EUCLIDEAN_SLAB_RECEIPT": false,
+      "TRANSFER_REFINEMENT_RECEIPT": false,
+      "TRANSFER_VACUUM_RECEIPT": false,
+      "STATIONARY_LAW_SCHEDULE_INVARIANCE_RECEIPT": false,
+      "DETAILED_BALANCE_OF_AGGREGATE_KERNEL_RECEIPT": false,
+      "PATHWISE_PARTITION_INVARIANCE_RECEIPT": false,
+      "PRIMORDIAL_BRIDGE_RECEIPT": false,
+      "FROZEN_LIKELIHOOD_RECEIPT": false
+    },
+    "rg_exponential_family_closure_evidence": {
+      "RG_EXPONENTIAL_FAMILY_CLOSURE_RECEIPT": false,
+      "promotion_blockers": [
+        "finite_matrix_refinement_evidence_missing"
+      ],
+      "claim_boundary": "No MaxEnt closure promotion without simulator-native fine/coarse matrices."
+    },
+    "claim_tier_gate": {
+      "claim_tier": "E1",
+      "claim_tier_meaning": "conventional reference ensemble",
+      "promotion_allowed": false,
+      "required_receipts": [],
+      "promotion_blockers": [
+        "E1_is_not_a_physical_promotion_tier"
+      ],
+      "explicit_nonclaims": []
+    },
+    "OPH_NATIVE_QUOTIENT_ENSEMBLE_RECEIPT": false,
+    "OPH_NATIVE_VACUUM_PROMOTION_RECEIPT": false,
+    "OPH_PRIMORDIAL_FIELD_PROMOTION_RECEIPT": false,
+    "PHYSICAL_CMB_PREDICTION_RECEIPT": false
+  },
+  "explicit_nonclaims": [
+    "not an OPH-native vacuum",
+    "not an OPH primordial field",
+    "not a physical TT/TE/EE prediction",
+    "not promoted by seed noise, proposal noise, or repair jitter"
+  ]
+}

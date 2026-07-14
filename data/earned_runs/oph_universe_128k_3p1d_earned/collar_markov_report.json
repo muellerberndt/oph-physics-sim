@@ -1,0 +1,139 @@
+{
+  "mode": "diagonal_empirical_collar_state",
+  "state_semantics": "classical_commuting",
+  "log_unit": "nat",
+  "packet_encoding": {
+    "state_semantics": "classical_commuting",
+    "log_unit": "nat",
+    "fields": [
+      {
+        "field": "record_signature",
+        "encoding": "canonical_unique_inverse",
+        "collision_count": 0,
+        "theorem_safe": true
+      },
+      {
+        "field": "committed_mask",
+        "encoding": "boolean",
+        "collision_count": 0,
+        "theorem_safe": true
+      },
+      {
+        "field": "stable_count",
+        "encoding": "sample_quantile_edges",
+        "collision_count": 0,
+        "theorem_safe": false
+      },
+      {
+        "field": "repair_load",
+        "encoding": "sample_quantile_edges",
+        "collision_count": 0,
+        "theorem_safe": false
+      },
+      {
+        "field": "s3_class_density",
+        "encoding": "sample_quantile_edges",
+        "collision_count": 0,
+        "theorem_safe": false
+      },
+      {
+        "field": "local_mismatch_density",
+        "encoding": "sample_quantile_edges",
+        "collision_count": 0,
+        "theorem_safe": false
+      }
+    ],
+    "THEOREM_SAFE_PACKET_ENCODING_RECEIPT": false,
+    "claim_boundary": "Visible packet ids encode the commuting classical readout used by diagnostics. Theorem promotion requires collision-free integer ids and externally frozen float bins."
+  },
+  "SOURCE_LOCALIZATION_SATURATION_RECEIPT": false,
+  "MODULAR_SOURCE_CHARGE_RECEIPT": false,
+  "CENTRAL_INTERFACE_MSA_RECEIPT": false,
+  "claim_boundary": "classical diagonal collar-Markov diagnostic in nats; not final noncommutative BW proof, not a central-interface MSA receipt, not a modular source charge, and not a physical anomaly-density source",
+  "cap_count": 4,
+  "median_epsilon_cmi": 0.0,
+  "mean_epsilon_cmi": 0.0,
+  "p90_epsilon_cmi": 0.0,
+  "rows": [
+    {
+      "cap_id": 0,
+      "theta0": 0.35,
+      "collar_width": 0.04204482076268573,
+      "inside_count": 1222,
+      "collar_count": 5499,
+      "outside_count": 124351,
+      "epsilon_cmi": 0.0,
+      "classical_diagonal_cmi_nats": 0.0,
+      "state_semantics": "classical_commuting",
+      "log_unit": "nat",
+      "sector_conditioned_cmi": {
+        "identity": 0.0
+      },
+      "r_fr_bound": 0.0,
+      "sample_count": 131072,
+      "packet_alphabet_size": 3972,
+      "triplet_count": 2048,
+      "claim_boundary": "classical diagonal collar-Markov diagnostic in nats; not a noncommutative collar CMI, not a modular source charge, and not a finite Einstein-source proof"
+    },
+    {
+      "cap_id": 1,
+      "theta0": 0.55,
+      "collar_width": 0.04204482076268573,
+      "inside_count": 6905,
+      "collar_count": 5524,
+      "outside_count": 118643,
+      "epsilon_cmi": 0.0,
+      "classical_diagonal_cmi_nats": 0.0,
+      "state_semantics": "classical_commuting",
+      "log_unit": "nat",
+      "sector_conditioned_cmi": {
+        "identity": 0.0
+      },
+      "r_fr_bound": 0.0,
+      "sample_count": 131072,
+      "packet_alphabet_size": 9658,
+      "triplet_count": 2048,
+      "claim_boundary": "classical diagonal collar-Markov diagnostic in nats; not a noncommutative collar CMI, not a modular source charge, and not a finite Einstein-source proof"
+    },
+    {
+      "cap_id": 2,
+      "theta0": 0.75,
+      "collar_width": 0.04204482076268573,
+      "inside_count": 14820,
+      "collar_count": 5516,
+      "outside_count": 110736,
+      "epsilon_cmi": 0.0,
+      "classical_diagonal_cmi_nats": 0.0,
+      "state_semantics": "classical_commuting",
+      "log_unit": "nat",
+      "sector_conditioned_cmi": {
+        "identity": 0.0
+      },
+      "r_fr_bound": 0.0,
+      "sample_count": 131072,
+      "packet_alphabet_size": 17581,
+      "triplet_count": 2048,
+      "claim_boundary": "classical diagonal collar-Markov diagnostic in nats; not a noncommutative collar CMI, not a modular source charge, and not a finite Einstein-source proof"
+    },
+    {
+      "cap_id": 3,
+      "theta0": 1.0,
+      "collar_width": 0.04204482076268573,
+      "inside_count": 27378,
+      "collar_count": 5494,
+      "outside_count": 98200,
+      "epsilon_cmi": 0.0,
+      "classical_diagonal_cmi_nats": 0.0,
+      "state_semantics": "classical_commuting",
+      "log_unit": "nat",
+      "sector_conditioned_cmi": {
+        "identity": 0.0
+      },
+      "r_fr_bound": 0.0,
+      "sample_count": 131072,
+      "packet_alphabet_size": 30136,
+      "triplet_count": 2048,
+      "claim_boundary": "classical diagonal collar-Markov diagnostic in nats; not a noncommutative collar CMI, not a modular source charge, and not a finite Einstein-source proof"
+    }
+  ]
+}

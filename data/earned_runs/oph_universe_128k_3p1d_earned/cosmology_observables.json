@@ -1,0 +1,261 @@
+{
+  "freezeout_cl_proxy": {
+    "freezeout_cycle": 107,
+    "committed_fraction": 1.0,
+    "ell_max": 24,
+    "pair_samples": 100000,
+    "output_profile": "compact",
+    "freezeout_npz_written": true,
+    "cl_csv_written": false,
+    "fields": {
+      "record_signature": {
+        "peak_ell": 23,
+        "peak_D_ell": 0.007579108282276745,
+        "low_ell_power_2_10": 0.0006192570305498314,
+        "control_comparison": {
+          "control_count": 1,
+          "min_relative_l2_delta": 0.3488699891082784,
+          "max_shape_correlation": 0.9591201553936142,
+          "by_control": {
+            "shuffled_field": {
+              "relative_l2_delta": 0.3488699891082784,
+              "target_to_control_abs_power_ratio": 0.7989598899455651,
+              "shape_correlation": 0.9591201553936142
+            }
+          }
+        }
+      },
+      "local_mismatch_density": {
+        "peak_ell": 2,
+        "peak_D_ell": 0.0,
+        "low_ell_power_2_10": 0.0,
+        "control_comparison": {
+          "control_count": 1,
+          "min_relative_l2_delta": 0.0,
+          "max_shape_correlation": 0.0,
+          "by_control": {
+            "shuffled_field": {
+              "relative_l2_delta": 0.0,
+              "target_to_control_abs_power_ratio": 0.0,
+              "shape_correlation": 0.0
+            }
+          }
+        }
+      },
+      "cumulative_repair_load": {
+        "peak_ell": 23,
+        "peak_D_ell": 0.017626011514177836,
+        "low_ell_power_2_10": 0.0014842132660373459,
+        "control_comparison": {
+          "control_count": 1,
+          "min_relative_l2_delta": 0.44281410620728845,
+          "max_shape_correlation": 0.9404654359833623,
+          "by_control": {
+            "shuffled_field": {
+              "relative_l2_delta": 0.44281410620728845,
+              "target_to_control_abs_power_ratio": 1.7541531068357838,
+              "shape_correlation": 0.9404654359833623
+            }
+          }
+        }
+      },
+      "s3_class_density": {
+        "peak_ell": 2,
+        "peak_D_ell": 0.0,
+        "low_ell_power_2_10": 0.0,
+        "control_comparison": {
+          "control_count": 1,
+          "min_relative_l2_delta": 0.0,
+          "max_shape_correlation": 0.0,
+          "by_control": {
+            "shuffled_field": {
+              "relative_l2_delta": 0.0,
+              "target_to_control_abs_power_ratio": 0.0,
+              "shape_correlation": 0.0
+            }
+          }
+        }
+      }
+    },
+    "gate_report": {
+      "enabled": true,
+      "allowed": true,
+      "missing_requirements": [],
+      "checks": {
+        "kms_bw_pass": true,
+        "state_bw_controls_pass": false,
+        "neutral_reconstruction_written": true,
+        "bulk_3d_established": false,
+        "screen_proxy_allowed_without_bulk": true
+      },
+      "required": {
+        "kms_bw_pass": true,
+        "state_bw_controls_pass": false,
+        "neutral_reconstruction_written": false
+      },
+      "mode": "freezeout_screen_cl_proxy_gate",
+      "claim_boundary": "Allows only a measurement-facing screen C_l proxy. This gate does not certify a physical CMB prediction, a 3D bulk, a P(k), or a Boltzmann adapter."
+    },
+    "cosmo_proxy_receipt": {
+      "mode": "OPH_COSMO_PROXY_V0",
+      "OPH_COSMO_PROXY_V0": true,
+      "receipt": true,
+      "physical_cmb_prediction": false,
+      "physical_matter_power_prediction": false,
+      "boltzmann_adapter": false,
+      "target_label": null,
+      "target_registry": {
+        "sparc": {
+          "name": "SPARC",
+          "lane": "galaxy_proxy",
+          "source_url": "https://astroweb.case.edu/SPARC/",
+          "status": "external_table_required",
+          "claim_boundary": "RAR/BTFR target metadata only; no SPARC rows are bundled with this package"
+        },
+        "planck2018_low_l_tt": {
+          "name": "Planck2018_low_l_TT_shape",
+          "lane": "cosmo_proxy",
+          "source_url": "https://arxiv.org/abs/1807.06209",
+          "status": "external_table_required",
+          "claim_boundary": "shape-only benchmark metadata; use a local binned TT table for comparisons"
+        },
+        "planck2018_tt_te_ee_lensing": {
+          "name": "Planck2018_TT_TE_EE_lensing",
+          "lane": "oph_cmb_anomaly_stress_adapter",
+          "source_url": "https://arxiv.org/abs/1807.06209",
+          "status": "full_likelihood_required",
+          "claim_boundary": "physical CMB target metadata only; requires CAMB/CLASS OPH anomaly module, full covariance likelihoods, and CDM-limit regression"
+        },
+        "planck2018_scalar_tilt": {
+          "name": "Planck2018_scalar_tilt_ns",
+          "lane": "oph_screen_power_effective_theory",
+          "source_url": "https://arxiv.org/abs/1807.06209",
+          "status": "screen_eta_R_regression_target",
+          "claim_boundary": "Target metadata for eta_R = 1 - n_s. This is a screen-theory parameter target, not a CMB likelihood and not a physical TT/TE/EE prediction."
+        },
+        "planck2018_tt_camb_lcdm_baseline": {
+          "name": "Planck2018_TT_CAMB_LambdaCDM_baseline",
+          "lane": "camb_lcdm_baseline",
+          "source_url": "https://arxiv.org/abs/1807.06209",
+          "status": "local_binned_tt_regression_enabled",
+          "claim_boundary": "standard LambdaCDM CAMB regression target; useful for Boltzmann plumbing only, not an OPH prediction"
+        },
+        "act_dr6_lensing": {
+          "name": "ACT_DR6_CMB_lensing_shape",
+          "lane": "cosmo_proxy",
+          "source_url": "https://arxiv.org/abs/2304.05202",
+          "status": "external_table_required",
+          "claim_boundary": "late-structure target metadata only; no lensing table is bundled"
+        },
+        "desi_dr2_bao": {
+          "name": "DESI_DR2_BAO",
+          "lane": "background_adapter",
+          "source_url": "https://arxiv.org/abs/2503.14738",
+          "status": "adapter_not_enabled",
+          "claim_boundary": "future background-adapter metadata only"
+        },
+        "oph_compressed_cmb_bao_growth": {
+          "name": "OPH_compressed_CMB_BAO_growth_S8_reference",
+          "lane": "compressed_likelihood_reference",
+          "source_url": "local:cosmology/correspondence/inflation/inflation.md",
+          "status": "reference_diagnostic_available",
+          "claim_boundary": "Compressed diagnostic regression target only. Keeps S8/weak-lensing tension visible; does not replace full Planck/BAO/lensing likelihoods."
+        },
+        "oph_cmb_success_ladder_v04": {
+          "name": "OPH_CMB_success_ladder_v0_4",
+          "lane": "oph_inflation_cmb_bridge",
+          "source_url": "local:cosmology/correspondence/cmb/2",
+          "status": "public_data_diagnostic_available",
+          "claim_boundary": "Planck low-ell TT/CAMB/full-sky-MC diagnostic ladder imported from Pro notes. This is measured-data comparison, not an official likelihood and not a finite-lattice derivation of the fitted OPH IR/parity parameters."
+        },
+        "oph_p48_screen_spectrum": {
+          "name": "OPH_P_over_48_screen_spectrum",
+          "lane": "oph_inflation_cmb_bridge",
+          "source_url": "local:cosmology/correspondence/inflation/2/comms.md",
+          "status": "conditional_screen_theorem_target_available",
+          "claim_boundary": "Conditional finite-screen target for the MaxEnt Gaussian screen covariance and n_s=1-P/48 tilt after scalar-readout and repair-operator receipts. Scalar release amplitude, screen-to-primordial lift, and physical TT/TE/EE spectra remain separate gates."
+        },
+        "pantheon_plus": {
+          "name": "PantheonPlus",
+          "lane": "background_adapter",
+          "source_url": "https://arxiv.org/abs/2202.04077",
+          "status": "adapter_not_enabled",
+          "claim_boundary": "future supernova-distance adapter metadata only"
+        }
+      },
+      "best_field": "cumulative_repair_load",
+      "field_scores": {
+        "record_signature": {
+          "control_separation_score": 0.3488699891082784,
+          "peak_ell": 23,
+          "low_ell_power_2_10": 0.0006192570305498314,
+          "target_shape_comparison": {
+            "usable": false,
+            "reason": "target_spectrum_not_provided"
+          }
+        },
+        "local_mismatch_density": {
+          "control_separation_score": 0.0,
+          "peak_ell": 2,
+          "low_ell_power_2_10": 0.0,
+          "target_shape_comparison": {
+            "usable": false,
+            "reason": "target_spectrum_not_provided"
+          }
+        },
+        "cumulative_repair_load": {
+          "control_separation_score": 0.44281410620728845,
+          "peak_ell": 23,
+          "low_ell_power_2_10": 0.0014842132660373459,
+          "target_shape_comparison": {
+            "usable": false,
+            "reason": "target_spectrum_not_provided"
+          }
+        },
+        "s3_class_density": {
+          "control_separation_score": 0.0,
+          "peak_ell": 2,
+          "low_ell_power_2_10": 0.0,
+          "target_shape_comparison": {
+            "usable": false,
+            "reason": "target_spectrum_not_provided"
+          }
+        }
+      },
+      "simulator": {
+        "ell_max": 24,
+        "estimator": "spherical_harmonic",
+        "point_count": 131072,
+        "gate_allowed": true
+      },
+      "claim_boundary": "screen-level freezeout C_l proxy and shape diagnostic. It is measurement-facing, but not a physical CMB prediction, not a P(k), not CAMB/CLASS input, and not a populated 3D bulk claim",
+      "receipt_schema_version": "2026-06-06b",
+      "claim_level": "proxy",
+      "receipt_name": "OPH_COSMO_PROXY_V0",
+      "observable_id": "OPH_COSMO_PROXY_V0",
+      "fit_objective": "not_applicable",
+      "physical_claim": false
+    },
+    "cmb_lite_comparison": {
+      "enabled": true,
+      "written": true,
+      "benchmark": {
+        "label": "Planck2018_TT_binned",
+        "source_url": "https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+        "row_count": 83,
+        "ell_min": 47.711224,
+        "ell_max": 2499.024
+      },
+      "best_shape_field": "record_signature",
+      "physical_cmb_prediction": false,
+      "claim_boundary": "Shape-only diagnostics between a gated OPH freezeout-screen C_l proxy and an observed TT benchmark. The normalized-axis diagnostic rescales multipole axes to [0,1]; the positive amplitude diagnostic forbids anti-correlated spectra from winning; the real-ell physical comparison is marked unusable unless the simulator covers the benchmark ell range; the overlap-ell comparison only scores the measured multipole interval covered by the finite screen. This is not a Planck likelihood, not CAMB/CLASS input, and not a physical CMB prediction."
+    },
+    "claim_boundary": "first measurement-facing screen proxy gated by finite BW/KMS receipts; not a physical CMB prediction, not CAMB/CLASS input, and not a 3D-bulk claim",
+    "receipt_schema_version": "2026-06-06b",
+    "claim_level": "proxy",
+    "receipt_name": "SCREEN_PROXY_CMB_RECEIPT",
+    "observable_id": "SCREEN_PROXY_CMB_RECEIPT",
+    "fit_objective": "not_applicable",
+    "physical_claim": false
+  }
+}

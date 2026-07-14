@@ -1,0 +1,25 @@
+{
+  "mode": "support_visible_cap_net_hot",
+  "cap_count": 64,
+  "sharpness": 8.0,
+  "tangent_weight": 0.35,
+  "endpoint_noise_probability": 0.35,
+  "raw_endpoint_label_inequality_fraction": 0.5149262588068947,
+  "raw_endpoint_label_inequality_is_not_overlap_mismatch": true,
+  "node_label_histogram": {
+    "0": 3105,
+    "1": 15345,
+    "2": 47041,
+    "3": 47095,
+    "4": 15369,
+    "5": 3117
+  },
+  "phase_min": -0.04142384206663348,
+  "phase_max": 0.04140365520700545,
+  "phase_std": 0.013150224169028377,
+  "phase_source": "mean_round_cap_drive_plus_tangent_cut_pair_drive",
+  "claim_boundary": "boundary-driven support-visible S2 cap-net initial condition. It is a declared OPH screen boundary program for diagnostics, not spontaneous 3D bulk emergence.",
+  "initial_covariant_mismatch_count": 653612,
+  "initial_covariant_mismatch_fraction": 0.834094119718894,
+  "mismatch_definition": "left_equals_g_ij_times_right_v1"
+}

@@ -1,0 +1,1 @@
+mode,step,cycle,defect_id,birth_trigger,class,holonomy_mode,x,y,z,vx,vy,vz,local_stress_density,nearest_defect_id,nearest_h3_separation,support_overlap_fraction,support_overlap_node_count,contact_event,contact_outcome,support_node_count,render_as_point,render_as_string,render_in_subjective_observer_view

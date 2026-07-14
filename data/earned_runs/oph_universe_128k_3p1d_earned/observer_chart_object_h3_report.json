@@ -1,0 +1,2825 @@
+{
+  "mode": "observer_chart_object_h3_population",
+  "observer_count": 8192,
+  "object_count": 57,
+  "min_objects": 8,
+  "min_observers_per_object": 3,
+  "incidence_mode": "transition_history_mixture_cluster",
+  "min_packet_mass": 0.05,
+  "min_transition_affinity": 0.25,
+  "transition_affinity_score": "geometric_mean",
+  "observer_cluster_fields": [
+    "modular_response_cluster",
+    "modular_response_component_0",
+    "modular_response_component_1"
+  ],
+  "observer_cluster_top_k": 2,
+  "min_observer_cluster_weight": 0.05,
+  "history_window": 4,
+  "min_persistence": 3,
+  "max_observer_fraction_per_object": 0.35,
+  "max_h3_compactness": 0.5,
+  "min_localized_objects": 2,
+  "pass_ratio": 1.0,
+  "shuffle_control_count": 16,
+  "split_h3_components": true,
+  "component_link_fraction": 0.22,
+  "component_min_observers": 4,
+  "require_support_visibility": true,
+  "min_support_visibility": 0.01,
+  "visibility_mode": "packet_or_support",
+  "packet_visibility_weight": 0.5,
+  "requested_boundary_gate_mode": "boundary_leakage_audit",
+  "bulk_population_gate_mode": "localized_h3_subpopulation_vs_shuffled_with_boundary_leakage_audit",
+  "global_h3_pairwise_median": 2.6538305565344436,
+  "global_s2_pairwise_median": 1.5709207243168266,
+  "median_h3_compactness_normalized": 0.15192087678055274,
+  "median_s2_boundary_compactness_normalized": 0.6006499281035446,
+  "median_shuffled_h3_compactness_normalized": 0.6389860822520262,
+  "p10_shuffled_h3_compactness_normalized": 0.630530446932456,
+  "p90_shuffled_h3_compactness_normalized": 0.6430812346536491,
+  "h3_compactness_margin_vs_median_shuffle": 0.7622469706302104,
+  "h3_compactness_margin_vs_p10_shuffle": 0.7590586187873225,
+  "h3_compactness_margin_vs_s2_boundary": 0.7470725131688295,
+  "localized_object_count": 49,
+  "localized_not_boundary_object_count": 48,
+  "localized_object_fraction": 0.8596491228070176,
+  "localized_not_boundary_object_fraction": 0.8421052631578947,
+  "shuffled_localized_object_count": 2,
+  "shuffled_localized_object_p90": 3.0,
+  "shuffled_localized_not_boundary_object_count": 1,
+  "shuffled_localized_not_boundary_object_p90": 2.0,
+  "shuffled_localized_object_fraction": 0.03508771929824561,
+  "shuffled_localized_not_boundary_object_fraction": 0.017543859649122806,
+  "localized_count_saturation_warning": false,
+  "localized_not_boundary_count_saturation_warning": false,
+  "localized_nonboundary_object_median_precursor_receipt": true,
+  "localized_nonboundary_object_precursor_receipt": true,
+  "localized_h3_object_median_precursor_receipt": true,
+  "localized_h3_object_precursor_receipt": true,
+  "localized_object_median_precursor_receipt": true,
+  "localized_object_precursor_receipt": true,
+  "localized_nonboundary_bulk_population_receipt": true,
+  "localized_h3_bulk_population_receipt": true,
+  "compactness_distribution_control_receipt": true,
+  "compactness_distribution_population_receipt": true,
+  "THEOREM_ASSISTED_H3_OBJECT_PREVIEW_RECEIPT": true,
+  "OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT": true,
+  "OBJECT_BULK_POPULATION_RECEIPT": true,
+  "observer_facing_h3_object_population_receipt": true,
+  "h3_beats_shuffled_incidence": true,
+  "h3_beats_shuffled_incidence_robust": true,
+  "h3_not_boundary_dominated": true,
+  "boundary_leakage_audit_pass": true,
+  "h3_localized": true,
+  "modular_response_h3_receipt": true,
+  "modular_response_h3_strict_receipt": true,
+  "modular_response_h3_control_separation_receipt": true,
+  "observer_chart_object_h3_median_receipt": true,
+  "observer_chart_object_h3_receipt": true,
+  "observer_chart_bulk_population_receipt": true,
+  "sample_objects": [
+    {
+      "object_id": "observer_mixture_cluster_000000_component_000",
+      "observer_count": 1037,
+      "support_size": 0,
+      "h3_point": [
+        1.2899437358000965,
+        0.10818676246615336,
+        0.373613916594395,
+        0.7160049631699473
+      ],
+      "h3_spatial_point": [
+        0.10818676246615336,
+        0.373613916594395,
+        0.7160049631699473
+      ],
+      "h3_compactness": 1.7614914856832895,
+      "h3_compactness_normalized": 0.663754315943806,
+      "s2_boundary_compactness": 1.440605307656382,
+      "s2_boundary_compactness_normalized": 0.9170451986257186,
+      "observer_ids_sample": [
+        18,
+        21,
+        40,
+        199,
+        276,
+        310,
+        378,
+        433,
+        480,
+        588,
+        669,
+        677,
+        778,
+        849,
+        938,
+        975,
+        1064,
+        1211,
+        1219,
+        1260,
+        1394,
+        1507,
+        1562,
+        1630,
+        1643,
+        1706,
+        1719,
+        1761,
+        1836,
+        2038,
+        2049,
+        2247
+      ],
+      "component_split": true,
+      "parent_observer_count": 1071,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 183518338641761,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000000_component_001",
+      "observer_count": 18,
+      "support_size": 0,
+      "h3_point": [
+        3.6226125153646116,
+        2.8346797308028404,
+        -1.9125582008076363,
+        0.6557693106385132
+      ],
+      "h3_spatial_point": [
+        2.8346797308028404,
+        -1.9125582008076363,
+        0.6557693106385132
+      ],
+      "h3_compactness": 0.5096252305812332,
+      "h3_compactness_normalized": 0.19203382421172258,
+      "s2_boundary_compactness": 0.799285040132109,
+      "s2_boundary_compactness_normalized": 0.5088003664091375,
+      "observer_ids_sample": [
+        57453,
+        57597,
+        59105,
+        59194,
+        79251,
+        84757,
+        85906,
+        86050,
+        86638,
+        93986,
+        95364,
+        95784,
+        97237,
+        97342,
+        102837,
+        123729,
+        125279,
+        130745
+      ],
+      "component_split": true,
+      "parent_observer_count": 1071,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 183518338641761,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000000_component_002",
+      "observer_count": 6,
+      "support_size": 0,
+      "h3_point": [
+        3.434553162606536,
+        2.1452767750737185,
+        0.4323777939256505,
+        2.4509166506472333
+      ],
+      "h3_spatial_point": [
+        2.1452767750737185,
+        0.4323777939256505,
+        2.4509166506472333
+      ],
+      "h3_compactness": 0.0,
+      "h3_compactness_normalized": 0.0,
+      "s2_boundary_compactness": 0.6430050475828115,
+      "s2_boundary_compactness_normalized": 0.4093173115800902,
+      "observer_ids_sample": [
+        92534,
+        93288,
+        94796,
+        121632,
+        130338,
+        130991
+      ],
+      "component_split": true,
+      "parent_observer_count": 1071,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 183518338641761,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000000_component_003",
+      "observer_count": 5,
+      "support_size": 0,
+      "h3_point": [
+        2.703132891367569,
+        -2.1894313964135446,
+        0.7767767785899321,
+        0.9539053543383005
+      ],
+      "h3_spatial_point": [
+        -2.1894313964135446,
+        0.7767767785899321,
+        0.9539053543383005
+      ],
+      "h3_compactness": 0.17083099272705118,
+      "h3_compactness_normalized": 0.06437147703587157,
+      "s2_boundary_compactness": 0.21036315029606953,
+      "s2_boundary_compactness_normalized": 0.13391073593962152,
+      "observer_ids_sample": [
+        76251,
+        108542,
+        108809,
+        109385,
+        110050
+      ],
+      "component_split": true,
+      "parent_observer_count": 1071,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 183518338641761,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000004_component_000",
+      "observer_count": 970,
+      "support_size": 0,
+      "h3_point": [
+        1.1091852107229283,
+        0.010320836683245715,
+        0.1169348709462825,
+        0.4653080140867993
+      ],
+      "h3_spatial_point": [
+        0.010320836683245715,
+        0.1169348709462825,
+        0.4653080140867993
+      ],
+      "h3_compactness": 1.689226124993219,
+      "h3_compactness_normalized": 0.63652373013563,
+      "s2_boundary_compactness": 1.3925422712881306,
+      "s2_boundary_compactness_normalized": 0.8864497423278501,
+      "observer_ids_sample": [
+        642,
+        676,
+        731,
+        1913,
+        1989,
+        2009,
+        2221,
+        2321,
+        2475,
+        2619,
+        2688,
+        2741,
+        2742,
+        2753,
+        2777,
+        2796,
+        2842,
+        3319,
+        3504,
+        3601,
+        3745,
+        3809,
+        3953,
+        4070,
+        4379,
+        4413,
+        4468,
+        4483,
+        4790,
+        4860,
+        5240,
+        5311
+      ],
+      "component_split": true,
+      "parent_observer_count": 990,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 192526736756918,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000004_component_001",
+      "observer_count": 10,
+      "support_size": 0,
+      "h3_point": [
+        3.560368978886431,
+        2.589576875531807,
+        -2.092898110076927,
+        0.7681773052910097
+      ],
+      "h3_spatial_point": [
+        2.589576875531807,
+        -2.092898110076927,
+        0.7681773052910097
+      ],
+      "h3_compactness": 0.7008656852075019,
+      "h3_compactness_normalized": 0.26409586832203075,
+      "s2_boundary_compactness": 1.3472678186949432,
+      "s2_boundary_compactness_normalized": 0.8576294130188223,
+      "observer_ids_sample": [
+        8279,
+        28428,
+        54556,
+        67435,
+        78565,
+        81446,
+        83945,
+        85843,
+        87207,
+        97715
+      ],
+      "component_split": true,
+      "parent_observer_count": 990,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 192526736756918,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000006_component_000",
+      "observer_count": 940,
+      "support_size": 0,
+      "h3_point": [
+        1.1883339346072541,
+        -0.2673981185358191,
+        0.09893993193899614,
+        0.575192729622488
+      ],
+      "h3_spatial_point": [
+        -0.2673981185358191,
+        0.09893993193899614,
+        0.575192729622488
+      ],
+      "h3_compactness": 1.6628870524690624,
+      "h3_compactness_normalized": 0.6265988038967251,
+      "s2_boundary_compactness": 1.4088296723434697,
+      "s2_boundary_compactness_normalized": 0.8968178027927869,
+      "observer_ids_sample": [
+        88,
+        106,
+        184,
+        284,
+        292,
+        300,
+        483,
+        509,
+        620,
+        634,
+        700,
+        891,
+        1408,
+        1514,
+        1535,
+        1785,
+        1797,
+        2227,
+        2418,
+        2573,
+        2706,
+        3193,
+        3220,
+        3344,
+        3383,
+        3451,
+        3488,
+        3527,
+        3625,
+        3629,
+        3646,
+        3670
+      ],
+      "component_split": true,
+      "parent_observer_count": 976,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 80978506143188,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000006_component_001",
+      "observer_count": 20,
+      "support_size": 0,
+      "h3_point": [
+        3.5391226143696306,
+        2.7975723260176895,
+        -1.8073442069412349,
+        0.6576358246616911
+      ],
+      "h3_spatial_point": [
+        2.7975723260176895,
+        -1.8073442069412349,
+        0.6576358246616911
+      ],
+      "h3_compactness": 0.7847852174976394,
+      "h3_compactness_normalized": 0.2957179069195987,
+      "s2_boundary_compactness": 0.8966937562405347,
+      "s2_boundary_compactness_normalized": 0.570807770475175,
+      "observer_ids_sample": [
+        34903,
+        36877,
+        38762,
+        38995,
+        40071,
+        42098,
+        43606,
+        44449,
+        48145,
+        74295,
+        77397,
+        77863,
+        86494,
+        87714,
+        87784,
+        88091,
+        96024,
+        96783,
+        98744,
+        119246
+      ],
+      "component_split": true,
+      "parent_observer_count": 976,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 80978506143188,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000006_component_002",
+      "observer_count": 5,
+      "support_size": 0,
+      "h3_point": [
+        3.4345531626065364,
+        2.145276775073719,
+        0.4323777939256505,
+        2.4509166506472333
+      ],
+      "h3_spatial_point": [
+        2.145276775073719,
+        0.4323777939256505,
+        2.4509166506472333
+      ],
+      "h3_compactness": 0.0,
+      "h3_compactness_normalized": 0.0,
+      "s2_boundary_compactness": 0.43887694519805764,
+      "s2_boundary_compactness_normalized": 0.27937561609859063,
+      "observer_ids_sample": [
+        108734,
+        120590,
+        123902,
+        130564,
+        130619
+      ],
+      "component_split": true,
+      "parent_observer_count": 976,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 80978506143188,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000006_component_003",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        2.490265645728452,
+        -1.6906551549186568,
+        -1.5201781863022865,
+        -0.17934998001953562
+      ],
+      "h3_spatial_point": [
+        -1.6906551549186568,
+        -1.5201781863022865,
+        -0.17934998001953562
+      ],
+      "h3_compactness": 0.24114390804709013,
+      "h3_compactness_normalized": 0.09086635446763135,
+      "s2_boundary_compactness": 0.7561248174232322,
+      "s2_boundary_compactness_normalized": 0.48132589106433826,
+      "observer_ids_sample": [
+        11869,
+        35012,
+        35245,
+        72368
+      ],
+      "component_split": true,
+      "parent_observer_count": 976,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 80978506143188,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000010_component_000",
+      "observer_count": 784,
+      "support_size": 0,
+      "h3_point": [
+        1.4349641765450394,
+        -0.519127625569364,
+        -0.1432423288388857,
+        0.8769893565871308
+      ],
+      "h3_spatial_point": [
+        -0.519127625569364,
+        -0.1432423288388857,
+        0.8769893565871308
+      ],
+      "h3_compactness": 1.6381923791844002,
+      "h3_compactness_normalized": 0.6172935099984928,
+      "s2_boundary_compactness": 1.508285642506566,
+      "s2_boundary_compactness_normalized": 0.9601284260620473,
+      "observer_ids_sample": [
+        41,
+        62,
+        185,
+        236,
+        290,
+        295,
+        308,
+        532,
+        604,
+        888,
+        921,
+        1108,
+        1311,
+        1413,
+        1455,
+        1536,
+        1557,
+        1679,
+        1713,
+        3060,
+        3127,
+        3399,
+        3404,
+        3548,
+        4089,
+        4147,
+        4411,
+        4555,
+        4606,
+        4631,
+        4898,
+        5186
+      ],
+      "component_split": true,
+      "parent_observer_count": 972,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 89805018297231,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000010_component_001",
+      "observer_count": 170,
+      "support_size": 0,
+      "h3_point": [
+        3.596622705091862,
+        1.553126463994437,
+        3.058045785458811,
+        0.4145467930886048
+      ],
+      "h3_spatial_point": [
+        1.553126463994437,
+        3.058045785458811,
+        0.4145467930886048
+      ],
+      "h3_compactness": 0.6205223008299418,
+      "h3_compactness_normalized": 0.23382137164034425,
+      "s2_boundary_compactness": 1.2150553571926423,
+      "s2_boundary_compactness_normalized": 0.7734670110237768,
+      "observer_ids_sample": [
+        3390,
+        4947,
+        5091,
+        5413,
+        8498,
+        9210,
+        13602,
+        23831,
+        24441,
+        25580,
+        25669,
+        26141,
+        26279,
+        27122,
+        27588,
+        27714,
+        27931,
+        28431,
+        28740,
+        36245,
+        36533,
+        37232,
+        37744,
+        38185,
+        38501,
+        39252,
+        40077,
+        40435,
+        40564,
+        42087,
+        42483,
+        42875
+      ],
+      "component_split": true,
+      "parent_observer_count": 972,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 89805018297231,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000010_component_002",
+      "observer_count": 7,
+      "support_size": 0,
+      "h3_point": [
+        2.3962652345530246,
+        -1.5956648822690453,
+        -1.4053558204155223,
+        -0.4700166761349962
+      ],
+      "h3_spatial_point": [
+        -1.5956648822690453,
+        -1.4053558204155223,
+        -0.4700166761349962
+      ],
+      "h3_compactness": 0.39452151305431127,
+      "h3_compactness_normalized": 0.14866115399978846,
+      "s2_boundary_compactness": 0.798652223072702,
+      "s2_boundary_compactness_normalized": 0.5083975344586695,
+      "observer_ids_sample": [
+        25217,
+        40036,
+        41023,
+        85375,
+        90928,
+        107429,
+        108416
+      ],
+      "component_split": true,
+      "parent_observer_count": 972,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 89805018297231,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000010_component_003",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        2.7104855293835284,
+        -2.1560142328184804,
+        0.8542725886721947,
+        0.984150789830986
+      ],
+      "h3_spatial_point": [
+        -2.1560142328184804,
+        0.8542725886721947,
+        0.984150789830986
+      ],
+      "h3_compactness": 0.1459541209882509,
+      "h3_compactness_normalized": 0.05499752824417243,
+      "s2_boundary_compactness": 0.3980543111426804,
+      "s2_boundary_compactness_normalized": 0.25338917806676026,
+      "observer_ids_sample": [
+        53136,
+        54034,
+        55343,
+        76649
+      ],
+      "component_split": true,
+      "parent_observer_count": 972,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 89805018297231,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000014_component_000",
+      "observer_count": 893,
+      "support_size": 0,
+      "h3_point": [
+        1.4264609477175758,
+        0.17467251385043842,
+        0.48563152452798763,
+        0.8766084477422718
+      ],
+      "h3_spatial_point": [
+        0.17467251385043842,
+        0.48563152452798763,
+        0.8766084477422718
+      ],
+      "h3_compactness": 1.7963344926906584,
+      "h3_compactness_normalized": 0.67688364212538,
+      "s2_boundary_compactness": 1.3550873881688859,
+      "s2_boundary_compactness_normalized": 0.862607111353882,
+      "observer_ids_sample": [
+        57,
+        457,
+        658,
+        666,
+        1049,
+        1269,
+        1431,
+        1748,
+        1766,
+        1837,
+        2487,
+        2847,
+        2864,
+        3085,
+        3101,
+        3275,
+        3285,
+        3573,
+        3806,
+        3887,
+        4005,
+        4158,
+        4187,
+        4259,
+        4547,
+        4607,
+        4755,
+        4764,
+        4818,
+        4903,
+        4992,
+        5276
+      ],
+      "component_split": true,
+      "parent_observer_count": 936,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 38713850592823,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000014_component_001",
+      "observer_count": 19,
+      "support_size": 0,
+      "h3_point": [
+        3.5756950198706403,
+        2.5885587529936194,
+        -2.1300906671950046,
+        0.740048786875946
+      ],
+      "h3_spatial_point": [
+        2.5885587529936194,
+        -2.1300906671950046,
+        0.740048786875946
+      ],
+      "h3_compactness": 0.6380251379338622,
+      "h3_compactness_normalized": 0.24041668235482214,
+      "s2_boundary_compactness": 0.6991300891322103,
+      "s2_boundary_compactness_normalized": 0.4450447933559811,
+      "observer_ids_sample": [
+        43266,
+        49759,
+        50136,
+        57356,
+        73541,
+        80953,
+        82173,
+        83215,
+        87181,
+        87558,
+        92389,
+        96632,
+        97941,
+        105707,
+        118684,
+        123970,
+        125135,
+        125368,
+        125491
+      ],
+      "component_split": true,
+      "parent_observer_count": 936,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 38713850592823,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000014_component_002",
+      "observer_count": 10,
+      "support_size": 0,
+      "h3_point": [
+        2.6790922484068207,
+        -2.167998111140507,
+        0.78847579074278,
+        0.9250002124201139
+      ],
+      "h3_spatial_point": [
+        -2.167998111140507,
+        0.78847579074278,
+        0.9250002124201139
+      ],
+      "h3_compactness": 0.31322817736905045,
+      "h3_compactness_normalized": 0.11802870254764328,
+      "s2_boundary_compactness": 0.6352619542033674,
+      "s2_boundary_compactness_normalized": 0.4043882955835564,
+      "observer_ids_sample": [
+        8342,
+        37470,
+        39910,
+        42028,
+        106225,
+        106780,
+        106835,
+        107445,
+        107589,
+        110427
+      ],
+      "component_split": true,
+      "parent_observer_count": 936,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 38713850592823,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000017_component_000",
+      "observer_count": 850,
+      "support_size": 0,
+      "h3_point": [
+        1.1212264646092656,
+        -0.09887190002138463,
+        0.09113909534337133,
+        0.4889445752090371
+      ],
+      "h3_spatial_point": [
+        -0.09887190002138463,
+        0.09113909534337133,
+        0.4889445752090371
+      ],
+      "h3_compactness": 1.694422917380063,
+      "h3_compactness_normalized": 0.6384819532686209,
+      "s2_boundary_compactness": 1.497160066339572,
+      "s2_boundary_compactness_normalized": 0.9530462251624238,
+      "observer_ids_sample": [
+        427,
+        445,
+        573,
+        751,
+        793,
+        893,
+        935,
+        990,
+        1080,
+        1223,
+        1382,
+        1393,
+        1395,
+        1470,
+        1505,
+        1511,
+        1537,
+        1566,
+        1689,
+        1724,
+        1800,
+        1806,
+        1812,
+        1813,
+        1924,
+        2202,
+        2211,
+        2279,
+        2389,
+        2401,
+        2444,
+        2588
+      ],
+      "component_split": true,
+      "parent_observer_count": 877,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 67448479664204,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000017_component_001",
+      "observer_count": 12,
+      "support_size": 0,
+      "h3_point": [
+        3.6649759145408902,
+        2.9609864468438984,
+        -1.854596982512402,
+        0.4744235957743584
+      ],
+      "h3_spatial_point": [
+        2.9609864468438984,
+        -1.854596982512402,
+        0.4744235957743584
+      ],
+      "h3_compactness": 0.4411581414746872,
+      "h3_compactness_normalized": 0.16623447958590926,
+      "s2_boundary_compactness": 1.2946792745223017,
+      "s2_boundary_compactness_normalized": 0.8241531571144949,
+      "observer_ids_sample": [
+        8493,
+        9655,
+        41444,
+        46203,
+        46491,
+        91681,
+        96193,
+        103157,
+        107825,
+        109422,
+        122488,
+        123098
+      ],
+      "component_split": true,
+      "parent_observer_count": 877,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 67448479664204,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000017_component_002",
+      "observer_count": 8,
+      "support_size": 0,
+      "h3_point": [
+        3.434553162606536,
+        2.1452767750737185,
+        0.43237779392565046,
+        2.4509166506472333
+      ],
+      "h3_spatial_point": [
+        2.1452767750737185,
+        0.43237779392565046,
+        2.4509166506472333
+      ],
+      "h3_compactness": 0.0,
+      "h3_compactness_normalized": 0.0,
+      "s2_boundary_compactness": 0.02948266048137017,
+      "s2_boundary_compactness_normalized": 0.01876775831205092,
+      "observer_ids_sample": [
+        119404,
+        119637,
+        120480,
+        120679,
+        120768,
+        121556,
+        121645,
+        121755
+      ],
+      "component_split": true,
+      "parent_observer_count": 877,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 67448479664204,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000020_component_000",
+      "observer_count": 821,
+      "support_size": 0,
+      "h3_point": [
+        1.2866987927606945,
+        -0.5189119523941109,
+        0.4065708054486336,
+        0.4701322676770974
+      ],
+      "h3_spatial_point": [
+        -0.5189119523941109,
+        0.4065708054486336,
+        0.4701322676770974
+      ],
+      "h3_compactness": 1.591286439516647,
+      "h3_compactness_normalized": 0.5996187042154867,
+      "s2_boundary_compactness": 1.1317218267717242,
+      "s2_boundary_compactness_normalized": 0.7204194389019188,
+      "observer_ids_sample": [
+        1366,
+        1565,
+        1946,
+        2341,
+        2666,
+        2702,
+        2791,
+        2810,
+        3142,
+        3150,
+        3359,
+        3422,
+        3846,
+        4019,
+        4021,
+        4110,
+        4195,
+        4330,
+        4367,
+        4435,
+        4579,
+        4608,
+        4676,
+        4825,
+        4828,
+        4930,
+        4961,
+        5037,
+        5048,
+        5176,
+        5194,
+        5249
+      ],
+      "component_split": true,
+      "parent_observer_count": 832,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 123609964566576,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000020_component_001",
+      "observer_count": 8,
+      "support_size": 0,
+      "h3_point": [
+        3.568075209947502,
+        2.293140937282214,
+        -2.3530585521114658,
+        0.9673576360051396
+      ],
+      "h3_spatial_point": [
+        2.293140937282214,
+        -2.3530585521114658,
+        0.9673576360051396
+      ],
+      "h3_compactness": 0.44937475613064093,
+      "h3_compactness_normalized": 0.16933061345011632,
+      "s2_boundary_compactness": 0.9709347779835921,
+      "s2_boundary_compactness_normalized": 0.6180673301676882,
+      "observer_ids_sample": [
+        5168,
+        34749,
+        40359,
+        44744,
+        45498,
+        64948,
+        81458,
+        90550
+      ],
+      "component_split": true,
+      "parent_observer_count": 832,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 123609964566576,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000022_component_000",
+      "observer_count": 254,
+      "support_size": 0,
+      "h3_point": [
+        3.0338132385714474,
+        0.2724485266204622,
+        -2.589476133662931,
+        1.193485617870526
+      ],
+      "h3_spatial_point": [
+        0.2724485266204622,
+        -2.589476133662931,
+        1.193485617870526
+      ],
+      "h3_compactness": 1.015845035460566,
+      "h3_compactness_normalized": 0.3827844369940208,
+      "s2_boundary_compactness": 1.298773380358854,
+      "s2_boundary_compactness_normalized": 0.826759339446409,
+      "observer_ids_sample": [
+        2144,
+        5041,
+        5942,
+        6552,
+        7146,
+        7630,
+        8437,
+        8939,
+        9102,
+        9110,
+        9748,
+        9845,
+        10041,
+        10285,
+        10439,
+        10740,
+        10884,
+        11056,
+        11145,
+        11433,
+        12573,
+        13922,
+        14436,
+        16349,
+        16395,
+        16986,
+        17814,
+        18056,
+        18068,
+        18100,
+        18234,
+        18710
+      ],
+      "component_split": true,
+      "parent_observer_count": 756,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 29506494508881,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000022_component_001",
+      "observer_count": 190,
+      "support_size": 0,
+      "h3_point": [
+        3.6057094551296753,
+        1.557781572029294,
+        3.067816473770041,
+        0.4036822165053035
+      ],
+      "h3_spatial_point": [
+        1.557781572029294,
+        3.067816473770041,
+        0.4036822165053035
+      ],
+      "h3_compactness": 0.591959935418979,
+      "h3_compactness_normalized": 0.2230586779406148,
+      "s2_boundary_compactness": 1.1077440295773406,
+      "s2_boundary_compactness_normalized": 0.7051559078890403,
+      "observer_ids_sample": [
+        3309,
+        23272,
+        24026,
+        27561,
+        29069,
+        29624,
+        30467,
+        30988,
+        33106,
+        33284,
+        34004,
+        39110,
+        41353,
+        42025,
+        42052,
+        42984,
+        44457,
+        45420,
+        48029,
+        50058,
+        51566,
+        51977,
+        52253,
+        52354,
+        52562,
+        53384,
+        53473,
+        53672,
+        54085,
+        54824,
+        55091,
+        55977
+      ],
+      "component_split": true,
+      "parent_observer_count": 756,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 29506494508881,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000022_component_002",
+      "observer_count": 172,
+      "support_size": 0,
+      "h3_point": [
+        2.713780187316409,
+        -0.744187583343904,
+        1.4769573284899902,
+        1.9050944322231258
+      ],
+      "h3_spatial_point": [
+        -0.744187583343904,
+        1.4769573284899902,
+        1.9050944322231258
+      ],
+      "h3_compactness": 0.934728139380239,
+      "h3_compactness_normalized": 0.35221847042143944,
+      "s2_boundary_compactness": 1.269963505085206,
+      "s2_boundary_compactness_normalized": 0.8084198555834171,
+      "observer_ids_sample": [
+        2911,
+        3089,
+        3144,
+        3199,
+        3288,
+        3919,
+        4008,
+        4162,
+        9863,
+        10563,
+        11172,
+        11460,
+        11727,
+        15961,
+        16105,
+        16438,
+        16482,
+        17603,
+        17901,
+        22875,
+        31148,
+        33009,
+        33635,
+        33643,
+        35409,
+        36396,
+        36651,
+        36795,
+        36871,
+        37289,
+        38123,
+        38331
+      ],
+      "component_split": true,
+      "parent_observer_count": 756,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 29506494508881,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000022_component_003",
+      "observer_count": 128,
+      "support_size": 0,
+      "h3_point": [
+        1.5661603194965719,
+        0.016638141494626158,
+        -0.17837903849522288,
+        -1.1919573135136714
+      ],
+      "h3_spatial_point": [
+        0.016638141494626158,
+        -0.17837903849522288,
+        -1.1919573135136714
+      ],
+      "h3_compactness": 0.893271396105624,
+      "h3_compactness_normalized": 0.33659699708640023,
+      "s2_boundary_compactness": 1.14866672374211,
+      "s2_boundary_compactness_normalized": 0.7312060411206622,
+      "observer_ids_sample": [
+        5759,
+        7083,
+        7227,
+        8060,
+        8248,
+        8358,
+        8555,
+        8903,
+        8968,
+        9021,
+        9434,
+        9568,
+        9746,
+        10233,
+        10447,
+        10843,
+        12717,
+        15586,
+        17802,
+        18289,
+        20569,
+        21179,
+        21268,
+        21823,
+        22255,
+        23743,
+        25251,
+        28187,
+        31847,
+        33287,
+        33709,
+        34785
+      ],
+      "component_split": true,
+      "parent_observer_count": 756,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 29506494508881,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000026_component_000",
+      "observer_count": 177,
+      "support_size": 0,
+      "h3_point": [
+        1.7891416699909728,
+        0.03884477253083072,
+        -1.4022081269480162,
+        -0.4830438568764237
+      ],
+      "h3_spatial_point": [
+        0.03884477253083072,
+        -1.4022081269480162,
+        -0.4830438568764237
+      ],
+      "h3_compactness": 1.3705115927427658,
+      "h3_compactness_normalized": 0.5164276933085264,
+      "s2_boundary_compactness": 1.1930664156225537,
+      "s2_boundary_compactness_normalized": 0.7594695245626752,
+      "observer_ids_sample": [
+        448,
+        516,
+        639,
+        919,
+        945,
+        1000,
+        1090,
+        1288,
+        1310,
+        1323,
+        1338,
+        1516,
+        1587,
+        1699,
+        1715,
+        1844,
+        1945,
+        2399,
+        4159,
+        8925,
+        9420,
+        11342,
+        12218,
+        13562,
+        16345,
+        16434,
+        18175,
+        18874,
+        18990,
+        19367,
+        19765,
+        19977
+      ],
+      "component_split": true,
+      "parent_observer_count": 262,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 214896338110230,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000026_component_001",
+      "observer_count": 50,
+      "support_size": 0,
+      "h3_point": [
+        2.816385871118563,
+        -0.797244770666905,
+        2.106520232816776,
+        1.3634524778715607
+      ],
+      "h3_spatial_point": [
+        -0.797244770666905,
+        2.106520232816776,
+        1.3634524778715607
+      ],
+      "h3_compactness": 0.6655919028534537,
+      "h3_compactness_normalized": 0.2508042200413239,
+      "s2_boundary_compactness": 1.1729463988332587,
+      "s2_boundary_compactness_normalized": 0.7466617383530656,
+      "observer_ids_sample": [
+        1992,
+        2710,
+        2746,
+        5955,
+        9789,
+        10687,
+        12434,
+        18940,
+        22749,
+        24431,
+        24808,
+        25185,
+        25562,
+        26089,
+        28576,
+        28926,
+        29330,
+        29680,
+        30057,
+        30461,
+        30484,
+        31825,
+        31914,
+        32032,
+        37580,
+        42901,
+        46501,
+        49116,
+        52428,
+        53576,
+        53936,
+        54186
+      ],
+      "component_split": true,
+      "parent_observer_count": 262,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 214896338110230,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000026_component_002",
+      "observer_count": 10,
+      "support_size": 0,
+      "h3_point": [
+        3.687348313142979,
+        1.1347036387112763,
+        3.35880317871368,
+        0.16560930347248543
+      ],
+      "h3_spatial_point": [
+        1.1347036387112763,
+        3.35880317871368,
+        0.16560930347248543
+      ],
+      "h3_compactness": 0.4121910823546345,
+      "h3_compactness_normalized": 0.15531929170824765,
+      "s2_boundary_compactness": 0.7987715099138504,
+      "s2_boundary_compactness_normalized": 0.508473468806789,
+      "observer_ids_sample": [
+        4481,
+        5146,
+        53271,
+        74574,
+        75006,
+        76082,
+        79187,
+        87633,
+        98564,
+        129609
+      ],
+      "component_split": true,
+      "parent_observer_count": 262,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 214896338110230,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000026_component_003",
+      "observer_count": 8,
+      "support_size": 0,
+      "h3_point": [
+        2.951686265793232,
+        -1.238030898507073,
+        0.8366889175380481,
+        2.34087226505061
+      ],
+      "h3_spatial_point": [
+        -1.238030898507073,
+        0.8366889175380481,
+        2.34087226505061
+      ],
+      "h3_compactness": 0.286328612584523,
+      "h3_compactness_normalized": 0.1078925750852876,
+      "s2_boundary_compactness": 1.0542853921235098,
+      "s2_boundary_compactness_normalized": 0.6711257772616152,
+      "observer_ids_sample": [
+        2346,
+        7349,
+        26466,
+        54652,
+        76646,
+        83302,
+        108418,
+        108795
+      ],
+      "component_split": true,
+      "parent_observer_count": 262,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 214896338110230,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000026_component_004",
+      "observer_count": 7,
+      "support_size": 0,
+      "h3_point": [
+        3.7061539982273937,
+        2.3597592738787134,
+        2.6608705343101318,
+        0.2947568956961272
+      ],
+      "h3_spatial_point": [
+        2.3597592738787134,
+        2.6608705343101318,
+        0.2947568956961272
+      ],
+      "h3_compactness": 0.1868024839940642,
+      "h3_compactness_normalized": 0.07038975549290678,
+      "s2_boundary_compactness": 0.9834060945322084,
+      "s2_boundary_compactness_normalized": 0.626006188160691,
+      "observer_ids_sample": [
+        39707,
+        43523,
+        77910,
+        100654,
+        101387,
+        101641,
+        129465
+      ],
+      "component_split": true,
+      "parent_observer_count": 262,
+      "component_index": 4,
+      "cluster_key": {
+        "modular_response_cluster": 214896338110230,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000031_component_000",
+      "observer_count": 90,
+      "support_size": 0,
+      "h3_point": [
+        2.83595923101256,
+        -0.48772368648254605,
+        -1.6022744078855633,
+        2.058520606514347
+      ],
+      "h3_spatial_point": [
+        -0.48772368648254605,
+        -1.6022744078855633,
+        2.058520606514347
+      ],
+      "h3_compactness": 0.9917536319579068,
+      "h3_compactness_normalized": 0.37370646348009784,
+      "s2_boundary_compactness": 1.2661309684672388,
+      "s2_boundary_compactness_normalized": 0.8059801802015586,
+      "observer_ids_sample": [
+        392,
+        4450,
+        4754,
+        7434,
+        7811,
+        14100,
+        16485,
+        17061,
+        17205,
+        17349,
+        18603,
+        28819,
+        30326,
+        30559,
+        32301,
+        32859,
+        33524,
+        34888,
+        42919,
+        43728,
+        44372,
+        45251,
+        45600,
+        47019,
+        47074,
+        47710,
+        48464,
+        48904,
+        48958,
+        49745,
+        49794,
+        50315
+      ],
+      "component_split": true,
+      "parent_observer_count": 243,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 17425267965217,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000031_component_001",
+      "observer_count": 65,
+      "support_size": 0,
+      "h3_point": [
+        2.8192094628359263,
+        -0.9523088648705957,
+        1.702117466859429,
+        1.7730893802187613
+      ],
+      "h3_spatial_point": [
+        -0.9523088648705957,
+        1.702117466859429,
+        1.7730893802187613
+      ],
+      "h3_compactness": 0.7277353853280644,
+      "h3_compactness_normalized": 0.2742207423666083,
+      "s2_boundary_compactness": 0.7003646304827864,
+      "s2_boundary_compactness_normalized": 0.44583066455334086,
+      "observer_ids_sample": [
+        15982,
+        16095,
+        16765,
+        17082,
+        41644,
+        43851,
+        44469,
+        55219,
+        61872,
+        62948,
+        63236,
+        79015,
+        83580,
+        98036,
+        101152,
+        102122,
+        103503,
+        104147,
+        104168,
+        104947,
+        105655,
+        105689,
+        105977,
+        108474,
+        110111,
+        111619,
+        112428,
+        112517,
+        113656,
+        118606,
+        118784,
+        119195
+      ],
+      "component_split": true,
+      "parent_observer_count": 243,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 17425267965217,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000031_component_002",
+      "observer_count": 60,
+      "support_size": 0,
+      "h3_point": [
+        3.62077782474039,
+        1.7266344115745607,
+        2.9878463931200043,
+        0.4489316161934914
+      ],
+      "h3_spatial_point": [
+        1.7266344115745607,
+        2.9878463931200043,
+        0.4489316161934914
+      ],
+      "h3_compactness": 0.5180506674194154,
+      "h3_compactness_normalized": 0.19520864515778355,
+      "s2_boundary_compactness": 1.015884351960555,
+      "s2_boundary_compactness_normalized": 0.6466808517039268,
+      "observer_ids_sample": [
+        40043,
+        41119,
+        42572,
+        44571,
+        53227,
+        54591,
+        57455,
+        57832,
+        57976,
+        63613,
+        65587,
+        74269,
+        74646,
+        82354,
+        83900,
+        84328,
+        84794,
+        84979,
+        85641,
+        87762,
+        87851,
+        88461,
+        89825,
+        89905,
+        90371,
+        92345,
+        95596,
+        95774,
+        96028,
+        96850,
+        97513,
+        100580
+      ],
+      "component_split": true,
+      "parent_observer_count": 243,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 17425267965217,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000031_component_003",
+      "observer_count": 9,
+      "support_size": 0,
+      "h3_point": [
+        1.9380608423242647,
+        -0.27832693769665107,
+        -0.6515845225439534,
+        -1.501349910675127
+      ],
+      "h3_spatial_point": [
+        -0.27832693769665107,
+        -0.6515845225439534,
+        -1.501349910675127
+      ],
+      "h3_compactness": 0.3715455872877202,
+      "h3_compactness_normalized": 0.14000350790025956,
+      "s2_boundary_compactness": 0.9652198053762172,
+      "s2_boundary_compactness_normalized": 0.6144293537129183,
+      "observer_ids_sample": [
+        66148,
+        74790,
+        79897,
+        80342,
+        106032,
+        106354,
+        107862,
+        117460,
+        121727
+      ],
+      "component_split": true,
+      "parent_observer_count": 243,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 17425267965217,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000031_component_004",
+      "observer_count": 8,
+      "support_size": 0,
+      "h3_point": [
+        2.8293862980125564,
+        -1.5850775867442908,
+        -1.5265445102451598,
+        1.4705841443530043
+      ],
+      "h3_spatial_point": [
+        -1.5850775867442908,
+        -1.5265445102451598,
+        1.4705841443530043
+      ],
+      "h3_compactness": 0.21279976654521518,
+      "h3_compactness_normalized": 0.08018589055026328,
+      "s2_boundary_compactness": 0.3248941299942262,
+      "s2_boundary_compactness_normalized": 0.20681764837975417,
+      "observer_ids_sample": [
+        43311,
+        43455,
+        43544,
+        45052,
+        47170,
+        50466,
+        57050,
+        78738
+      ],
+      "component_split": true,
+      "parent_observer_count": 243,
+      "component_index": 4,
+      "cluster_key": {
+        "modular_response_cluster": 17425267965217,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000031_component_005",
+      "observer_count": 7,
+      "support_size": 0,
+      "h3_point": [
+        1.737443513612707,
+        0.3474841216125123,
+        0.5437133000516672,
+        -1.2658359275865794
+      ],
+      "h3_spatial_point": [
+        0.3474841216125123,
+        0.5437133000516672,
+        -1.2658359275865794
+      ],
+      "h3_compactness": 0.3259835534134462,
+      "h3_compactness_normalized": 0.12283510437800452,
+      "s2_boundary_compactness": 0.6567566783727271,
+      "s2_boundary_compactness_normalized": 0.41807117839020314,
+      "observer_ids_sample": [
+        102552,
+        108114,
+        113234,
+        114687,
+        118791,
+        119666,
+        125522
+      ],
+      "component_split": true,
+      "parent_observer_count": 243,
+      "component_index": 5,
+      "cluster_key": {
+        "modular_response_cluster": 17425267965217,
+        "modular_response_component_0": 3,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_000",
+      "observer_count": 14,
+      "support_size": 0,
+      "h3_point": [
+        1.8848939764777402,
+        -0.10101766144798298,
+        -0.8691981614441373,
+        -1.3368303148791096
+      ],
+      "h3_spatial_point": [
+        -0.10101766144798298,
+        -0.8691981614441373,
+        -1.3368303148791096
+      ],
+      "h3_compactness": 0.3706324412440963,
+      "h3_compactness_normalized": 0.13965942186154262,
+      "s2_boundary_compactness": 0.6262524493941769,
+      "s2_boundary_compactness_normalized": 0.3986531208737641,
+      "observer_ids_sample": [
+        5456,
+        6103,
+        6336,
+        6425,
+        6658,
+        6912,
+        7755,
+        8454,
+        10488,
+        12129,
+        32582,
+        40351,
+        43401,
+        128486
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_001",
+      "observer_count": 13,
+      "support_size": 0,
+      "h3_point": [
+        2.767277606615384,
+        -1.0357778780145217,
+        2.212255866322268,
+        0.8312120796844902
+      ],
+      "h3_spatial_point": [
+        -1.0357778780145217,
+        2.212255866322268,
+        0.8312120796844902
+      ],
+      "h3_compactness": 0.40317226497573494,
+      "h3_compactness_normalized": 0.15192087678055274,
+      "s2_boundary_compactness": 0.8448814725381758,
+      "s2_boundary_compactness_normalized": 0.5378256582015646,
+      "observer_ids_sample": [
+        2068,
+        2257,
+        2390,
+        15489,
+        40630,
+        41914,
+        43134,
+        55300,
+        55766,
+        67466,
+        68220,
+        69728,
+        85520
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_002",
+      "observer_count": 11,
+      "support_size": 0,
+      "h3_point": [
+        3.603952440345613,
+        1.4621359381979766,
+        3.098328362092867,
+        0.5009920669571067
+      ],
+      "h3_spatial_point": [
+        1.4621359381979766,
+        3.098328362092867,
+        0.5009920669571067
+      ],
+      "h3_compactness": 0.4424595709620449,
+      "h3_compactness_normalized": 0.16672487618796558,
+      "s2_boundary_compactness": 1.2919131602165015,
+      "s2_boundary_compactness_normalized": 0.8223923335013217,
+      "observer_ids_sample": [
+        10553,
+        41761,
+        44023,
+        55965,
+        70482,
+        78556,
+        79022,
+        99180,
+        102340,
+        129041,
+        129130
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_003",
+      "observer_count": 6,
+      "support_size": 0,
+      "h3_point": [
+        1.6330145678493402,
+        0.6362678885753731,
+        0.5288182452327838,
+        -0.9910857764517275
+      ],
+      "h3_spatial_point": [
+        0.6362678885753731,
+        0.5288182452327838,
+        -0.9910857764517275
+      ],
+      "h3_compactness": 0.17469514800919264,
+      "h3_compactness_normalized": 0.06582754410564995,
+      "s2_boundary_compactness": 0.8457536200824323,
+      "s2_boundary_compactness_normalized": 0.538380840605588,
+      "observer_ids_sample": [
+        11574,
+        15290,
+        16743,
+        57204,
+        80272,
+        80505
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_004",
+      "observer_count": 5,
+      "support_size": 0,
+      "h3_point": [
+        2.8254610141135914,
+        -0.620480881120597,
+        -2.4782212991812838,
+        0.6757607644158116
+      ],
+      "h3_spatial_point": [
+        -0.620480881120597,
+        -2.4782212991812838,
+        0.6757607644158116
+      ],
+      "h3_compactness": 0.3287183006568187,
+      "h3_compactness_normalized": 0.12386559490296994,
+      "s2_boundary_compactness": 1.2861871391461588,
+      "s2_boundary_compactness_normalized": 0.8187473239335519,
+      "observer_ids_sample": [
+        5815,
+        41571,
+        76758,
+        83368,
+        88823
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 4,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_005",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        3.5640226564731776,
+        0.7753893960493023,
+        -3.3102982905687233,
+        0.37809259157806
+      ],
+      "h3_spatial_point": [
+        0.7753893960493023,
+        -3.3102982905687233,
+        0.37809259157806
+      ],
+      "h3_compactness": 0.2928258017411257,
+      "h3_compactness_normalized": 0.11034080567808294,
+      "s2_boundary_compactness": 0.9514858154665775,
+      "s2_boundary_compactness_normalized": 0.6056867165466714,
+      "observer_ids_sample": [
+        1052,
+        1217,
+        32438,
+        104746
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 5,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_006",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        2.114985458125791,
+        -0.649241833100408,
+        1.2959336718860985,
+        -1.1714113062062355
+      ],
+      "h3_spatial_point": [
+        -0.649241833100408,
+        1.2959336718860985,
+        -1.1714113062062355
+      ],
+      "h3_compactness": 0.1074448394392703,
+      "h3_compactness_normalized": 0.04048669918835332,
+      "s2_boundary_compactness": 0.8225150847937353,
+      "s2_boundary_compactness_normalized": 0.5235879010708427,
+      "observer_ids_sample": [
+        39842,
+        41816,
+        55998,
+        80640
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 6,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000037_component_007",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        2.9438279419376165,
+        -1.0383232641120568,
+        -1.3502554451850712,
+        2.182846303266543
+      ],
+      "h3_spatial_point": [
+        -1.0383232641120568,
+        -1.3502554451850712,
+        2.182846303266543
+      ],
+      "h3_compactness": 0.4579739077135142,
+      "h3_compactness_normalized": 0.17257089251077445,
+      "s2_boundary_compactness": 0.6647774949407658,
+      "s2_boundary_compactness_normalized": 0.423176984459142,
+      "observer_ids_sample": [
+        68252,
+        69904,
+        79975,
+        84211
+      ],
+      "component_split": true,
+      "parent_observer_count": 77,
+      "component_index": 7,
+      "cluster_key": {
+        "modular_response_cluster": 99708170682143,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 0
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000045_component_000",
+      "observer_count": 20,
+      "support_size": 0,
+      "h3_point": [
+        3.496000058190936,
+        0.4055811412842444,
+        -3.3145991492938136,
+        0.26636971338034166
+      ],
+      "h3_spatial_point": [
+        0.4055811412842444,
+        -3.3145991492938136,
+        0.26636971338034166
+      ],
+      "h3_compactness": 0.4268659395852928,
+      "h3_compactness_normalized": 0.16084898055538407,
+      "s2_boundary_compactness": 1.1651995291392208,
+      "s2_boundary_compactness_normalized": 0.7417303184703679,
+      "observer_ids_sample": [
+        2408,
+        2463,
+        15455,
+        15945,
+        16644,
+        26953,
+        29270,
+        29359,
+        30846,
+        36983,
+        40787,
+        41359,
+        41791,
+        50758,
+        68427,
+        75420,
+        82061,
+        82205,
+        83281,
+        92606
+      ],
+      "component_split": true,
+      "parent_observer_count": 73,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 76835903199600,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000045_component_001",
+      "observer_count": 8,
+      "support_size": 0,
+      "h3_point": [
+        1.8276609554443395,
+        0.05645929543885475,
+        -1.386437048283007,
+        -0.6441655277664016
+      ],
+      "h3_spatial_point": [
+        0.05645929543885475,
+        -1.386437048283007,
+        -0.6441655277664016
+      ],
+      "h3_compactness": 0.3888701994817769,
+      "h3_compactness_normalized": 0.14653166100762313,
+      "s2_boundary_compactness": 0.9435734201172701,
+      "s2_boundary_compactness_normalized": 0.6006499281035446,
+      "observer_ids_sample": [
+        2264,
+        2353,
+        26343,
+        29215,
+        37322,
+        38696,
+        39916,
+        77432
+      ],
+      "component_split": true,
+      "parent_observer_count": 73,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 76835903199600,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000045_component_002",
+      "observer_count": 7,
+      "support_size": 0,
+      "h3_point": [
+        1.6344344864395495,
+        0.6034107630509113,
+        0.4858592665104685,
+        -1.0349938717901377
+      ],
+      "h3_spatial_point": [
+        0.6034107630509113,
+        0.4858592665104685,
+        -1.0349938717901377
+      ],
+      "h3_compactness": 0.28151638306364524,
+      "h3_compactness_normalized": 0.10607926055055636,
+      "s2_boundary_compactness": 1.475403032782424,
+      "s2_boundary_compactness_normalized": 0.9391963642366854,
+      "observer_ids_sample": [
+        16877,
+        50154,
+        67700,
+        69647,
+        69736,
+        75217,
+        83103
+      ],
+      "component_split": true,
+      "parent_observer_count": 73,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 76835903199600,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000045_component_003",
+      "observer_count": 6,
+      "support_size": 0,
+      "h3_point": [
+        3.6356263858969973,
+        0.837046863108141,
+        3.388163804695472,
+        0.19359183697353274
+      ],
+      "h3_spatial_point": [
+        0.837046863108141,
+        3.388163804695472,
+        0.19359183697353274
+      ],
+      "h3_compactness": 0.2852593223510376,
+      "h3_compactness_normalized": 0.1074896517596621,
+      "s2_boundary_compactness": 0.5788563340600784,
+      "s2_boundary_compactness_normalized": 0.36848220607173904,
+      "observer_ids_sample": [
+        9045,
+        56863,
+        62322,
+        88709,
+        100019,
+        101671
+      ],
+      "component_split": true,
+      "parent_observer_count": 73,
+      "component_index": 3,
+      "cluster_key": {
+        "modular_response_cluster": 76835903199600,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000045_component_004",
+      "observer_count": 6,
+      "support_size": 0,
+      "h3_point": [
+        3.6365184630877567,
+        2.0261393598200845,
+        2.7828465874305395,
+        0.6122015173063519
+      ],
+      "h3_spatial_point": [
+        2.0261393598200845,
+        2.7828465874305395,
+        0.6122015173063519
+      ],
+      "h3_compactness": 0.2692669421225819,
+      "h3_compactness_normalized": 0.10146350205350314,
+      "s2_boundary_compactness": 0.45444712200533094,
+      "s2_boundary_compactness_normalized": 0.2892871135830003,
+      "observer_ids_sample": [
+        115320,
+        115841,
+        116201,
+        116341,
+        117006,
+        127543
+      ],
+      "component_split": true,
+      "parent_observer_count": 73,
+      "component_index": 4,
+      "cluster_key": {
+        "modular_response_cluster": 76835903199600,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000045_component_005",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        1.9178470436798223,
+        -0.11621503715106052,
+        -0.2246905952029743,
+        -1.6168319283459072
+      ],
+      "h3_spatial_point": [
+        -0.11621503715106052,
+        -0.2246905952029743,
+        -1.6168319283459072
+      ],
+      "h3_compactness": 0.23941087129588756,
+      "h3_compactness_normalized": 0.0902133222885665,
+      "s2_boundary_compactness": 1.2769774656048627,
+      "s2_boundary_compactness_normalized": 0.8128847279420824,
+      "observer_ids_sample": [
+        723,
+        35447,
+        68598,
+        118686
+      ],
+      "component_split": true,
+      "parent_observer_count": 73,
+      "component_index": 5,
+      "cluster_key": {
+        "modular_response_cluster": 76835903199600,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 2
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000051_component_000",
+      "observer_count": 34,
+      "support_size": 0,
+      "h3_point": [
+        1.6663966960100796,
+        -0.28552289488471444,
+        0.1620641254533098,
+        -1.2919326004908365
+      ],
+      "h3_spatial_point": [
+        -0.28552289488471444,
+        0.1620641254533098,
+        -1.2919326004908365
+      ],
+      "h3_compactness": 0.8836935873118094,
+      "h3_compactness_normalized": 0.3329879464745473,
+      "s2_boundary_compactness": 0.9371386779559726,
+      "s2_boundary_compactness_normalized": 0.5965537684045273,
+      "observer_ids_sample": [
+        10085,
+        10551,
+        11106,
+        11195,
+        11339,
+        11483,
+        11661,
+        11949,
+        12127,
+        12504,
+        13213,
+        18381,
+        19423,
+        21966,
+        22189,
+        22809,
+        23142,
+        25448,
+        25815,
+        26469,
+        28990,
+        30773,
+        43799,
+        56897,
+        73100,
+        89134,
+        89744,
+        89799,
+        92294,
+        93480,
+        98668,
+        100265
+      ],
+      "component_split": true,
+      "parent_observer_count": 59,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 253006311869886,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000051_component_001",
+      "observer_count": 6,
+      "support_size": 0,
+      "h3_point": [
+        2.8523240912905705,
+        -1.4490251301783423,
+        1.6116869839263748,
+        1.5615837984913012
+      ],
+      "h3_spatial_point": [
+        -1.4490251301783423,
+        1.6116869839263748,
+        1.5615837984913012
+      ],
+      "h3_compactness": 0.24960638451903053,
+      "h3_compactness_normalized": 0.09405513245916645,
+      "s2_boundary_compactness": 0.016460196543832312,
+      "s2_boundary_compactness_normalized": 0.010478056778447965,
+      "observer_ids_sample": [
+        107617,
+        109070,
+        109591,
+        109680,
+        109824,
+        110057
+      ],
+      "component_split": true,
+      "parent_observer_count": 59,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 253006311869886,
+        "modular_response_component_0": 1,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000053_component_000",
+      "observer_count": 11,
+      "support_size": 0,
+      "h3_point": [
+        3.64584520530141,
+        2.100567669993084,
+        2.7402554905685075,
+        0.6089356051408537
+      ],
+      "h3_spatial_point": [
+        2.100567669993084,
+        2.7402554905685075,
+        0.6089356051408537
+      ],
+      "h3_compactness": 0.20438324037682964,
+      "h3_compactness_normalized": 0.07701442726762762,
+      "s2_boundary_compactness": 0.3970815991622061,
+      "s2_boundary_compactness_normalized": 0.2527699794239406,
+      "observer_ids_sample": [
+        87060,
+        91303,
+        116224,
+        119470,
+        120601,
+        121156,
+        121190,
+        121567,
+        121944,
+        121999,
+        123020
+      ],
+      "component_split": true,
+      "parent_observer_count": 40,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 27145676561665,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000053_component_001",
+      "observer_count": 10,
+      "support_size": 0,
+      "h3_point": [
+        3.717001046428507,
+        1.1613570828040942,
+        3.3836243762668117,
+        0.13576665903088872
+      ],
+      "h3_spatial_point": [
+        1.1613570828040942,
+        3.3836243762668117,
+        0.13576665903088872
+      ],
+      "h3_compactness": 0.03481966224018408,
+      "h3_compactness_normalized": 0.013120529550934864,
+      "s2_boundary_compactness": 0.7815601357419351,
+      "s2_boundary_compactness_normalized": 0.49751723536642856,
+      "observer_ids_sample": [
+        81130,
+        90686,
+        90919,
+        92660,
+        93821,
+        126319,
+        126730,
+        126963,
+        127806,
+        128149
+      ],
+      "component_split": true,
+      "parent_observer_count": 40,
+      "component_index": 1,
+      "cluster_key": {
+        "modular_response_cluster": 27145676561665,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000053_component_002",
+      "observer_count": 4,
+      "support_size": 0,
+      "h3_point": [
+        2.73004844354082,
+        -1.2253073699651402,
+        2.136907594581206,
+        0.6208158224545581
+      ],
+      "h3_spatial_point": [
+        -1.2253073699651402,
+        2.136907594581206,
+        0.6208158224545581
+      ],
+      "h3_compactness": 0.08254198313102425,
+      "h3_compactness_normalized": 0.031102959052070493,
+      "s2_boundary_compactness": 0.49333723411472274,
+      "s2_boundary_compactness_normalized": 0.3140433673565983,
+      "observer_ids_sample": [
+        91872,
+        128293,
+        128848,
+        129589
+      ],
+      "component_split": true,
+      "parent_observer_count": 40,
+      "component_index": 2,
+      "cluster_key": {
+        "modular_response_cluster": 27145676561665,
+        "modular_response_component_0": 2,
+        "modular_response_component_1": 3
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    },
+    {
+      "object_id": "observer_mixture_cluster_000056_component_000",
+      "observer_count": 6,
+      "support_size": 0,
+      "h3_point": [
+        1.6650626456557633,
+        0.6062866443768006,
+        0.5333056259795897,
+        -1.0585061304059635
+      ],
+      "h3_spatial_point": [
+        0.6062866443768006,
+        0.5333056259795897,
+        -1.0585061304059635
+      ],
+      "h3_compactness": 0.10174819612863951,
+      "h3_compactness_normalized": 0.03834012532492255,
+      "s2_boundary_compactness": 0.7348584681800675,
+      "s2_boundary_compactness_normalized": 0.4677883847382866,
+      "observer_ids_sample": [
+        4787,
+        16798,
+        17264,
+        18251,
+        80244,
+        80710
+      ],
+      "component_split": true,
+      "parent_observer_count": 27,
+      "component_index": 0,
+      "cluster_key": {
+        "modular_response_cluster": 77237094724222,
+        "modular_response_component_0": 0,
+        "modular_response_component_1": 1
+      },
+      "family_mode": "observer_transition_mixture_cluster",
+      "mean_observer_key_weight": 1.0
+    }
+  ],
+  "claim_boundary": "places persistent observer-facing record objects into the observer-derived modular-response H3 chart using only sampled observers that see the object. The preview receipt requires either a localized H3 object subpopulation beating shuffled incidence or a whole-population compactness distribution that robustly beats shuffled incidence, plus the strict modular-response H3 chart gate. The displayed localized H3 precursor is not by itself a bulk-population proof: the final bulk-population receipt still requires either a localized non-boundary subpopulation that beats its matched shuffled controls, or a robust whole-population compactness distribution with the non-boundary leakage audit passing. This is not a neutral third-person reconstruction, CMB, or particle claim. This is a postprocessed object-chart recomputation from saved observer JSONL and a cached H3 report; it does not rerun dynamics and does not add evidence beyond the supplied run and H3-refit receipt.",
+  "source_run_dir": "runs/oph_universe_128k_3p1d_earned",
+  "source_h3_report": "runs/oph_universe_128k_3p1d_earned/auto_theorem_refinement/h3_refit_scale_rank_512.json",
+  "selected_h3_report": "runs/oph_universe_128k_3p1d_earned/auto_theorem_refinement/h3_refit_scale_rank_512.json",
+  "postprocess_recomputed": true,
+  "postprocess_incidence_mode": "transition_history_mixture_cluster",
+  "selected_by_oph_universe_pipeline": true,
+  "selected_object_chart_label": "scale_rank_512__transition_history_mixture_cluster"
+}

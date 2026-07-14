@@ -1,0 +1,42 @@
+{
+  "mode": "paper_theorem_3d_bulk_chart",
+  "PAPER_THEOREM_3D_BULK_CHART_RECEIPT": false,
+  "paper_theorem_3d_bulk_chart_receipt": false,
+  "paper_theorem_object_populated_chart_precursor_receipt": false,
+  "paper_theorem_neutral_populated_bulk_receipt": false,
+  "chart_level_conformal_lorentz_receipt": true,
+  "bw_2pi_cap_flow_receipt": false,
+  "declared_bw_2pi_cap_flow_receipt": false,
+  "SIMULATION_ASSUMED_BW_2PI_GEOMETRIC_BRANCH_RECEIPT": false,
+  "simulation_assumed_bw_2pi_geometric_branch_receipt": false,
+  "SIMULATION_ASSUMED_3D_H3_CHART_RECEIPT": false,
+  "simulation_assumed_3d_h3_chart_receipt": false,
+  "finite_lorentz_modular_clock_receipt": false,
+  "bw_2pi_cap_flow_source": null,
+  "lorentz_algebra_receipt": true,
+  "conformal_boundary_group": "Conf+(S2) ~= PSL(2,C)",
+  "lorentz_group": "SO+(3,1)",
+  "spatial_homogeneous_space": "H3 = SO+(3,1)/SO(3)",
+  "lorentz_group_dimension": 6,
+  "h3_spatial_dimension_from_boost_orbit": 3,
+  "h3_chart_spatial_dimension": 3,
+  "spatial_dimension_derivation": "dim SO+(3,1)-dim SO(3)=6-3=3",
+  "finite_point_cloud_dimension_estimator_used": false,
+  "neutral_reconstruction_bulk_3d_established": false,
+  "observer_object_precursor_available": true,
+  "observer_object_precursor_components": {
+    "localized_object_precursor_receipt": true,
+    "h3_object_precursor_receipt": true,
+    "strict_object_h3_receipt": true,
+    "h3_control_separation_receipt": true
+  },
+  "source_alignment": {
+    "screen_net": "Axiom Screen Net: physical data is organized on a horizon screen S2 carrying local algebras.",
+    "bw_normalization": "The issue #308 theorem target is sigma_t = alpha_{lambda_C_hat(2*pi*t)} on a BW-framed support-visible cap pair. This chart report records the paper route; BW3 requires the separate finite cap-normal BWRec audit.",
+    "lorentz_group": "Conf+(S2) ~= PSL(2,C) ~= SO+(3,1).",
+    "spatial_chart": "The 3D spatial chart is H3 = SO+(3,1)/SO(3), with dimension 6-3=3.",
+    "cap_normal_h3_chart": "Issue #309 chart certification requires CAP_NORMAL_H3_CHART_RECEIPT: q(Omega)=(1,Omega), n_C=(cot(alpha),csc(alpha)c), signed cap incidence, n_gC=Lambda_g n_C, and H3 future-sheet checks.",
+    "finite_regulator_boundary": "The finite cellulated carrier is the regulator side; the theorem concerns the support-visible scaling-limit spherical cap chart."
+  },
+  "claim_boundary": "This is the paper-side 3D spatial chart receipt: S2 cap/conformal geometry plus a computed finite modular-clock receipt yields the SO+(3,1) Lorentz branch and the H3 spatial chart of dimension 3. The receipt tier is chart-level; issue #309 primitive-field chart certification uses CAP_NORMAL_H3_CHART_RECEIPT. A declared 2pi target is reported only as SIMULATION_ASSUMED_* visualization data. BW3 finite cap-net evidence, populated third-person bulk, particle, and physical CMB claims require separate gates."
+}

@@ -1,0 +1,207 @@
+{
+  "mode": "cmb_lite_shape_comparison",
+  "benchmark": {
+    "label": "Planck2018_TT_binned",
+    "source_url": "https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+    "row_count": 83,
+    "ell_min": 47.711224,
+    "ell_max": 2499.024
+  },
+  "simulator": {
+    "ell_max": 24,
+    "estimator": "spherical_harmonic",
+    "point_count": 131072,
+    "gate_allowed": true
+  },
+  "best_shape_field": "record_signature",
+  "best_positive_shape_field": null,
+  "best_normalized_axis_diagnostic_field": "record_signature",
+  "field_comparisons": {
+    "record_signature": {
+      "usable": true,
+      "normalized_axis_shape_diagnostic": {
+        "usable": true,
+        "shape_correlation": -0.7944294839825228,
+        "unconstrained_amplitude": -0.7944294839825228,
+        "unconstrained_normalized_rmse": 0.6073563986484893,
+        "positive_amplitude": 0.0,
+        "positive_amp_normalized_rmse": 1.0,
+        "usable_positive_shape": false,
+        "sim_peak_fraction": 0.9545454545454546,
+        "benchmark_peak_fraction": 0.07239130099487556,
+        "peak_fraction_delta": 0.882154153550579,
+        "sample_count": 128,
+        "claim_boundary": "normalized-axis shape diagnostic; not physical ell-space"
+      },
+      "real_ell_physical_comparison": {
+        "usable": false,
+        "reason": "sim_ell_range_does_not_cover_benchmark_ell_range",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "screen proxy does not cover physical CMB multipole range"
+      },
+      "overlap_ell_physical_comparison": {
+        "usable": false,
+        "reason": "no_ell_overlap",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "finite screen has no real-ell overlap with the benchmark table"
+      },
+      "shape_correlation": -0.7944294839825228,
+      "normalized_rmse": 1.0,
+      "unconstrained_normalized_rmse": 0.6073563986484893,
+      "best_fit_amplitude": -0.7944294839825228,
+      "positive_best_fit_amplitude": 0.0,
+      "positive_amp_normalized_rmse": 1.0,
+      "usable_positive_shape": false,
+      "sim_peak_fraction": 0.9545454545454546,
+      "benchmark_peak_fraction": 0.07239130099487556,
+      "peak_fraction_delta": 0.882154153550579,
+      "sample_count": 128
+    },
+    "local_mismatch_density": {
+      "usable": true,
+      "normalized_axis_shape_diagnostic": {
+        "usable": true,
+        "shape_correlation": 0.0,
+        "unconstrained_amplitude": 0.0,
+        "unconstrained_normalized_rmse": 1.0,
+        "positive_amplitude": 0.0,
+        "positive_amp_normalized_rmse": 1.0,
+        "usable_positive_shape": false,
+        "sim_peak_fraction": 0.0,
+        "benchmark_peak_fraction": 0.07239130099487556,
+        "peak_fraction_delta": 0.07239130099487556,
+        "sample_count": 128,
+        "claim_boundary": "normalized-axis shape diagnostic; not physical ell-space"
+      },
+      "real_ell_physical_comparison": {
+        "usable": false,
+        "reason": "sim_ell_range_does_not_cover_benchmark_ell_range",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "screen proxy does not cover physical CMB multipole range"
+      },
+      "overlap_ell_physical_comparison": {
+        "usable": false,
+        "reason": "no_ell_overlap",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "finite screen has no real-ell overlap with the benchmark table"
+      },
+      "shape_correlation": 0.0,
+      "normalized_rmse": 1.0,
+      "unconstrained_normalized_rmse": 1.0,
+      "best_fit_amplitude": 0.0,
+      "positive_best_fit_amplitude": 0.0,
+      "positive_amp_normalized_rmse": 1.0,
+      "usable_positive_shape": false,
+      "sim_peak_fraction": 0.0,
+      "benchmark_peak_fraction": 0.07239130099487556,
+      "peak_fraction_delta": 0.07239130099487556,
+      "sample_count": 128
+    },
+    "cumulative_repair_load": {
+      "usable": true,
+      "normalized_axis_shape_diagnostic": {
+        "usable": true,
+        "shape_correlation": -0.7523121921959757,
+        "unconstrained_amplitude": -0.7523121921959759,
+        "unconstrained_normalized_rmse": 0.6588067740037933,
+        "positive_amplitude": 0.0,
+        "positive_amp_normalized_rmse": 1.0,
+        "usable_positive_shape": false,
+        "sim_peak_fraction": 0.9545454545454546,
+        "benchmark_peak_fraction": 0.07239130099487556,
+        "peak_fraction_delta": 0.882154153550579,
+        "sample_count": 128,
+        "claim_boundary": "normalized-axis shape diagnostic; not physical ell-space"
+      },
+      "real_ell_physical_comparison": {
+        "usable": false,
+        "reason": "sim_ell_range_does_not_cover_benchmark_ell_range",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "screen proxy does not cover physical CMB multipole range"
+      },
+      "overlap_ell_physical_comparison": {
+        "usable": false,
+        "reason": "no_ell_overlap",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "finite screen has no real-ell overlap with the benchmark table"
+      },
+      "shape_correlation": -0.7523121921959757,
+      "normalized_rmse": 1.0,
+      "unconstrained_normalized_rmse": 0.6588067740037933,
+      "best_fit_amplitude": -0.7523121921959759,
+      "positive_best_fit_amplitude": 0.0,
+      "positive_amp_normalized_rmse": 1.0,
+      "usable_positive_shape": false,
+      "sim_peak_fraction": 0.9545454545454546,
+      "benchmark_peak_fraction": 0.07239130099487556,
+      "peak_fraction_delta": 0.882154153550579,
+      "sample_count": 128
+    },
+    "s3_class_density": {
+      "usable": true,
+      "normalized_axis_shape_diagnostic": {
+        "usable": true,
+        "shape_correlation": 0.0,
+        "unconstrained_amplitude": 0.0,
+        "unconstrained_normalized_rmse": 1.0,
+        "positive_amplitude": 0.0,
+        "positive_amp_normalized_rmse": 1.0,
+        "usable_positive_shape": false,
+        "sim_peak_fraction": 0.0,
+        "benchmark_peak_fraction": 0.07239130099487556,
+        "peak_fraction_delta": 0.07239130099487556,
+        "sample_count": 128,
+        "claim_boundary": "normalized-axis shape diagnostic; not physical ell-space"
+      },
+      "real_ell_physical_comparison": {
+        "usable": false,
+        "reason": "sim_ell_range_does_not_cover_benchmark_ell_range",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "screen proxy does not cover physical CMB multipole range"
+      },
+      "overlap_ell_physical_comparison": {
+        "usable": false,
+        "reason": "no_ell_overlap",
+        "sim_ell_min": 2.0,
+        "sim_ell_max": 24.0,
+        "benchmark_ell_min": 47.711224,
+        "benchmark_ell_max": 2499.024,
+        "claim_boundary": "finite screen has no real-ell overlap with the benchmark table"
+      },
+      "shape_correlation": 0.0,
+      "normalized_rmse": 1.0,
+      "unconstrained_normalized_rmse": 1.0,
+      "best_fit_amplitude": 0.0,
+      "positive_best_fit_amplitude": 0.0,
+      "positive_amp_normalized_rmse": 1.0,
+      "usable_positive_shape": false,
+      "sim_peak_fraction": 0.0,
+      "benchmark_peak_fraction": 0.07239130099487556,
+      "peak_fraction_delta": 0.07239130099487556,
+      "sample_count": 128
+    }
+  },
+  "physical_cmb_prediction": false,
+  "claim_boundary": "Shape-only diagnostics between a gated OPH freezeout-screen C_l proxy and an observed TT benchmark. The normalized-axis diagnostic rescales multipole axes to [0,1]; the positive amplitude diagnostic forbids anti-correlated spectra from winning; the real-ell physical comparison is marked unusable unless the simulator covers the benchmark ell range; the overlap-ell comparison only scores the measured multipole interval covered by the finite screen. This is not a Planck likelihood, not CAMB/CLASS input, and not a physical CMB prediction."
+}

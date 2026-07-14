@@ -1,0 +1,4579 @@
+{
+  "mode": "observer_consensus_bulk_readout_v0",
+  "run_dirs": [
+    "runs/oph_universe_64k_3p1d_reearned"
+  ],
+  "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": true,
+  "observer_like_self_reading_system_receipt": true,
+  "observer_modular_time_receipt": true,
+  "observer_facing_3p1d_h3_experience_receipt": false,
+  "observer_facing_consensus_3d_bulk_readout_receipt": false,
+  "theorem_assisted_consensus_3d_bulk_readout_receipt": false,
+  "THEOREM_ASSISTED_CONSENSUS_3D_BULK_READOUT_RECEIPT": false,
+  "finite_lorentz_theorem_contract_receipt": false,
+  "paper_faithful_observer_spacetime_emergence_receipt": false,
+  "paper_faithful_consensus_bulk_emergence_receipt": false,
+  "paper_geometric_branch_observer_spacetime_emergence_receipt": false,
+  "paper_geometric_branch_consensus_bulk_emergence_receipt": false,
+  "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": false,
+  "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": false,
+  "chart_blind_strict_neutral_quotient_bulk_receipt": false,
+  "strict_neutral_third_person_bulk_receipt": false,
+  "STRICT_NEUTRAL_BULK_RECEIPT": false,
+  "physical_cmb_output_comparison_receipt": false,
+  "physical_cmb_prediction_receipt": false,
+  "bulk_status": "not_established",
+  "observer_readout": {
+    "source_path": "runs/oph_universe_64k_3p1d_reearned/observer_views.jsonl",
+    "observer_view_count": 1028,
+    "sample_patch_observer_count": 128,
+    "sample_cap_observer_count": 4,
+    "relative_time_count": 4,
+    "relative_times_sample": [
+      0.0,
+      0.3333333333333333,
+      0.6666666666666666,
+      1.0
+    ],
+    "sample_views": [
+      {
+        "view_type": "patch_observer",
+        "observer_id": 276,
+        "axis": [
+          -0.11461159036275631,
+          0.9915618896484375,
+          0.060573941190412886
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9135095827820796928,
+        "modular_depth_mean": 0.4655043796535007,
+        "modular_depth_std": 0.2098041510504617,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "a0a9b2f65a5782a5"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 503,
+        "axis": [
+          0.12041546342670939,
+          0.9846343994140625,
+          0.12647219322143208
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9204826063857882112,
+        "modular_depth_mean": 0.47413081097677673,
+        "modular_depth_std": 0.23330444304243844,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "1ac338d676039c2a"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 522,
+        "axis": [
+          -0.13434535430195324,
+          0.9840545654296875,
+          0.11656731117458075
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9135095827820796928,
+        "modular_depth_mean": 0.4760768642421141,
+        "modular_depth_std": 0.23101382764008355,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "feecf6a783f001ff"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 535,
+        "axis": [
+          -0.1074846545254954,
+          0.9836578369140625,
+          0.14444483001853173
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9135095827820796928,
+        "modular_depth_mean": 0.47339391384678947,
+        "modular_depth_std": 0.23966262050281725,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "02cba4a3916aabec"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 579,
+        "axis": [
+          0.10198838613954195,
+          0.9823150634765625,
+          0.15702065201650603
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9204826063857882112,
+        "modular_depth_mean": 0.4653883748914804,
+        "modular_depth_std": 0.23820103815635407,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e12172ff9b38ebd8"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 609,
+        "axis": [
+          -0.14215329707729185,
+          0.9813995361328125,
+          -0.12902476742221106
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8999932036801576960,
+        "modular_depth_mean": 0.486260845406763,
+        "modular_depth_std": 0.25873164572307145,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "40be2a0e9fd36f9d"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 615,
+        "axis": [
+          0.16229026197443092,
+          0.9812164306640625,
+          -0.10428895944992264
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8994022789544390656,
+        "modular_depth_mean": 0.505486349198111,
+        "modular_depth_std": 0.2452495157908739,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "918c71176e3fa21f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 631,
+        "axis": [
+          0.1937504418685535,
+          0.9807281494140625,
+          0.025160747655993264
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9142799883936407552,
+        "modular_depth_mean": 0.45068310758763086,
+        "modular_depth_std": 0.22551002531613662,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "d45bf62a6fc9749c"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 776,
+        "axis": [
+          -0.17946262370294633,
+          0.9763031005859375,
+          0.12093561295143579
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9135095827820796928,
+        "modular_depth_mean": 0.42154114756102873,
+        "modular_depth_std": 0.21175160091886341,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "b33dae9a4599036b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 841,
+        "axis": [
+          0.02342112898698408,
+          0.9743194580078125,
+          0.22394875410311518
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9105370907800175616,
+        "modular_depth_mean": 0.41120577488820975,
+        "modular_depth_std": 0.24225023721223007,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "f77341d45a4de104"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 868,
+        "axis": [
+          -0.21901497013157506,
+          0.9734954833984375,
+          -0.0658709849714408
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8957312674005459968,
+        "modular_depth_mean": 0.4475835673615294,
+        "modular_depth_std": 0.22552345134153995,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ba8f080dc53865b3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1178,
+        "axis": [
+          0.25566542058973357,
+          0.9640350341796875,
+          -0.07260609884054786
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9027825057535741952,
+        "modular_depth_mean": 0.5125074526779813,
+        "modular_depth_std": 0.22922246653971184,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "bd2b0b156838f794"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1282,
+        "axis": [
+          -0.11728170484331592,
+          0.9608612060546875,
+          -0.2509795697027483
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8491000327607744512,
+        "modular_depth_mean": 0.4501746730844256,
+        "modular_depth_std": 0.21306085465677604,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "b92c8c349efd69a3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1314,
+        "axis": [
+          0.23025177992072304,
+          0.9598846435546875,
+          -0.16001746439445116
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8994022789544390656,
+        "modular_depth_mean": 0.4789587665366412,
+        "modular_depth_std": 0.2359362681613729,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "bfa1af2cb7cd141e"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1395,
+        "axis": [
+          0.1586453420321339,
+          0.9574127197265625,
+          -0.24123129887577593
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9206590823817712640,
+        "modular_depth_mean": 0.48317814485404054,
+        "modular_depth_std": 0.24040270387471974,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "4254bce96ba4f868"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1421,
+        "axis": [
+          0.043227461128579565,
+          0.9566192626953125,
+          -0.2881162488383011
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9104629046955779072,
+        "modular_depth_mean": 0.43806750916128095,
+        "modular_depth_std": 0.2247523548226532,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "9630336cf084dcba"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1558,
+        "axis": [
+          0.24306038928073434,
+          0.9524383544921875,
+          0.1838010556414518
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9159249343551761408,
+        "modular_depth_mean": 0.4977257372798436,
+        "modular_depth_std": 0.20090032852067286,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "8c11441e42802558"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1638,
+        "axis": [
+          -0.1667757406455402,
+          0.9499969482421875,
+          -0.2639917624901619
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8966816622409046016,
+        "modular_depth_mean": 0.4456074937096021,
+        "modular_depth_std": 0.21337677833189722,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "677e5e01242196e2"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1648,
+        "axis": [
+          -0.31071321980159705,
+          0.9496917724609375,
+          0.03927890477759455
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8957312674005459968,
+        "modular_depth_mean": 0.4975949191115873,
+        "modular_depth_std": 0.23396944660560914,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ed48d8f9cd42b93c"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1674,
+        "axis": [
+          -0.2676199995192221,
+          0.9488983154296875,
+          0.16724689184565686
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9102214600601798656,
+        "modular_depth_mean": 0.46116027415582583,
+        "modular_depth_std": 0.21460720510118353,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "114aea7e8647f353"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1705,
+        "axis": [
+          -0.004099570228432363,
+          0.9479522705078125,
+          0.31838606496363064
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8998330012451625984,
+        "modular_depth_mean": 0.4761630134022717,
+        "modular_depth_std": 0.2368155857472583,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "44a08163beb11ebb"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1755,
+        "axis": [
+          -0.19038102833016438,
+          0.9464263916015625,
+          0.2608297324539421
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9144075650148533248,
+        "modular_depth_mean": 0.4865885835326085,
+        "modular_depth_std": 0.247706704645341,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "a0cd8f15f83aaf97"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1814,
+        "axis": [
+          0.2479727660738789,
+          0.9446258544921875,
+          -0.21492208427840526
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9165184011023263744,
+        "modular_depth_mean": 0.47237924250948443,
+        "modular_depth_std": 0.23316088654389555,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "09b34dcf2490c44b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1850,
+        "axis": [
+          -0.21575848211227766,
+          0.9435272216796875,
+          -0.2514053685703943
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8966816622409046016,
+        "modular_depth_mean": 0.46179644008551884,
+        "modular_depth_std": 0.2420054187572791,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "2684d4306d840640"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1852,
+        "axis": [
+          -0.26944685030784327,
+          0.9434661865234375,
+          0.19305426632453612
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9102214600601798656,
+        "modular_depth_mean": 0.46153381751141537,
+        "modular_depth_std": 0.2320613539153438,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e46e48b0e766c2b9"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1877,
+        "axis": [
+          0.31743459902240306,
+          0.9427032470703125,
+          -0.10269305383800567
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9202287345833925632,
+        "modular_depth_mean": 0.4999773175311763,
+        "modular_depth_std": 0.23304206579598813,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e8b1c382c7f73ed3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 1987,
+        "axis": [
+          0.33538448536505394,
+          0.9393463134765625,
+          -0.07173388553821347
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9202287345833925632,
+        "modular_depth_mean": 0.49308572244377874,
+        "modular_depth_std": 0.2315401827213586,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "f073aa25106f28c9"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2048,
+        "axis": [
+          -0.0357791937079285,
+          0.9374847412109375,
+          0.3461823353296237
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8998330012451625984,
+        "modular_depth_mean": 0.478281626906442,
+        "modular_depth_std": 0.23852857235875585,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "d9bae34e4cfe6988"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2123,
+        "axis": [
+          0.303495415743046,
+          0.9351959228515625,
+          -0.18248046061091033
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9120349675203632128,
+        "modular_depth_mean": 0.5147639061512637,
+        "modular_depth_std": 0.23574823710381665,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "bb1d4e2ff0a994fc"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2161,
+        "axis": [
+          -0.3217858834306779,
+          0.9340362548828125,
+          0.15501651456934484
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9040094358679449600,
+        "modular_depth_mean": 0.436591320360309,
+        "modular_depth_std": 0.22436420062996854,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "277f86acf242ab08"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2170,
+        "axis": [
+          0.23877243620367553,
+          0.9337615966796875,
+          -0.2666027086800926
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9165184011023263744,
+        "modular_depth_mean": 0.4942978203929904,
+        "modular_depth_std": 0.2177301918461572,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "8c9bd70f5bc3a83b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2266,
+        "axis": [
+          -0.3566557175942518,
+          0.9308319091796875,
+          -0.0796784535506767
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8643180399056097280,
+        "modular_depth_mean": 0.45518548288572563,
+        "modular_depth_std": 0.23474351414479702,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "a65d6c3531c9ed72"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2341,
+        "axis": [
+          0.1529080938069989,
+          0.9285430908203125,
+          0.33827037017476264
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199791008625266688,
+        "modular_depth_mean": 0.48019188767713444,
+        "modular_depth_std": 0.23953036173786918,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "05dc437206431aa2"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2370,
+        "axis": [
+          -0.02215201607737922,
+          0.9276580810546875,
+          0.3727730849158002
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8998330012451625984,
+        "modular_depth_mean": 0.4461810946259119,
+        "modular_depth_std": 0.2525883869410314,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "3b72ba64cfb46b09"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2410,
+        "axis": [
+          -0.36572092571514964,
+          0.9264373779296875,
+          -0.08922997965268946
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8673209762762638336,
+        "modular_depth_mean": 0.44505235403988314,
+        "modular_depth_std": 0.2290499525330258,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ee95f5c3c978fda3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2594,
+        "axis": [
+          0.1656766515341686,
+          0.9208221435546875,
+          -0.35304082919086877
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9128744168670629888,
+        "modular_depth_mean": 0.5164345147861706,
+        "modular_depth_std": 0.23525385352433992,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0cfb5a4db17cfe61"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2596,
+        "axis": [
+          -0.33732923341005694,
+          0.9207611083984375,
+          -0.19597951308201622
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8449541696916507648,
+        "modular_depth_mean": 0.527571451166147,
+        "modular_depth_std": 0.2364468500764292,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0c2f9878b285eaf1"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2631,
+        "axis": [
+          0.3753356977225375,
+          0.9196929931640625,
+          -0.11527320738169673
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9120349675203632128,
+        "modular_depth_mean": 0.49859004079930086,
+        "modular_depth_std": 0.2364697038133356,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "90de95f3d5c75d5f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2673,
+        "axis": [
+          0.3954432276603015,
+          0.9184112548828125,
+          -0.012059046487204857
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8808691504352408576,
+        "modular_depth_mean": 0.4869378725796606,
+        "modular_depth_std": 0.22430495430336886,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "f6a19ec775623caf"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2684,
+        "axis": [
+          0.13011157093932113,
+          0.9180755615234375,
+          0.37444391094144786
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8731160987205060608,
+        "modular_depth_mean": 0.4987465112213191,
+        "modular_depth_std": 0.22524991571896066,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "139cf993c481ddb1"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2728,
+        "axis": [
+          0.3994161645237945,
+          0.9167327880859375,
+          0.008229384259147949
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9098320177464523776,
+        "modular_depth_mean": 0.4900191117482631,
+        "modular_depth_std": 0.21536318908070004,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ed423ca56be3fa35"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2909,
+        "axis": [
+          0.26432070848290756,
+          0.9112091064453125,
+          0.31596285762448245
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199346742060070912,
+        "modular_depth_mean": 0.4677518448130752,
+        "modular_depth_std": 0.24785831313112192,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e55e99d0b4a8524f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 2937,
+        "axis": [
+          0.20880698450335647,
+          0.9103546142578125,
+          -0.3572871667470362
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8976417289039778816,
+        "modular_depth_mean": 0.4868672514520609,
+        "modular_depth_std": 0.2315833650253889,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "cb102af1fd09c394"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3078,
+        "axis": [
+          -0.15235435273045464,
+          0.9060516357421875,
+          -0.39478929136058216
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9201592786788794368,
+        "modular_depth_mean": 0.47979787986990635,
+        "modular_depth_std": 0.24874353330964136,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "cadc3f8116a23346"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3155,
+        "axis": [
+          0.34196562799580615,
+          0.9037017822265625,
+          0.25764820602901267
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9110726352696401920,
+        "modular_depth_mean": 0.5023076767928059,
+        "modular_depth_std": 0.2172501912146545,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "2f0afec72b20ddf0"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3408,
+        "axis": [
+          -0.02742157099641892,
+          0.8959808349609375,
+          -0.4432453054763126
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9057299380971368448,
+        "modular_depth_mean": 0.48010842485198835,
+        "modular_depth_std": 0.23629548949812545,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "81909c4f4d52360d"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3432,
+        "axis": [
+          0.3721787045718475,
+          0.8952484130859375,
+          -0.24497610236578604
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8712721132151665664,
+        "modular_depth_mean": 0.47236514174417527,
+        "modular_depth_std": 0.2478370913993106,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e4c5d2fec85ec3d8"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3644,
+        "axis": [
+          0.34217009228513784,
+          0.8887786865234375,
+          -0.304946018710285
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8712721132151665664,
+        "modular_depth_mean": 0.4831510965071586,
+        "modular_depth_std": 0.24254349122598165,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "2f99d616f8d3be61"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3731,
+        "axis": [
+          0.34727591119730433,
+          0.8861236572265625,
+          0.30689461644920324
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9170197808840953856,
+        "modular_depth_mean": 0.4895145685941244,
+        "modular_depth_std": 0.2094641089775381,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "de2a2f8cb7cc0c14"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3736,
+        "axis": [
+          0.45802287727382235,
+          0.8859710693359375,
+          0.07259688831860836
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9054937441030883328,
+        "modular_depth_mean": 0.507322638281838,
+        "modular_depth_std": 0.23287735645147226,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "9a2001b437c0c02f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3771,
+        "axis": [
+          -0.36592338548753506,
+          0.8849029541015625,
+          0.28817848249942046
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9058628857710904320,
+        "modular_depth_mean": 0.44689218239564904,
+        "modular_depth_std": 0.21973165681549003,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "58a3ef9dfbe5cd1a"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3779,
+        "axis": [
+          -0.44301642865178226,
+          0.8846588134765625,
+          0.14531079685577708
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9055268282406774784,
+        "modular_depth_mean": 0.48934784089856886,
+        "modular_depth_std": 0.2474675825403749,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "01433dbbbb428adb"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3785,
+        "axis": [
+          -0.025338713794142494,
+          0.8844757080078125,
+          -0.4658977050032951
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199012273662822400,
+        "modular_depth_mean": 0.4634897123155559,
+        "modular_depth_std": 0.24302837809013197,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "c531b6bf17cd86a2"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3933,
+        "axis": [
+          -0.06640974047626236,
+          0.8799591064453125,
+          0.47038464829737237
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9108572312950370304,
+        "modular_depth_mean": 0.46256470753731166,
+        "modular_depth_std": 0.25243762828969296,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0d19471922effbbd"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 3951,
+        "axis": [
+          0.28533574413688073,
+          0.8794097900390625,
+          0.3810799578845686
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199346742060070912,
+        "modular_depth_mean": 0.4710728683683699,
+        "modular_depth_std": 0.23347612527699088,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "8a5b2b5fa73ca6a0"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4195,
+        "axis": [
+          -0.2812973970879634,
+          0.8719635009765625,
+          0.4006886913256137
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8790977424705618944,
+        "modular_depth_mean": 0.47902413527599663,
+        "modular_depth_std": 0.22597062065929824,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "432fa9fd944bfac2"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4238,
+        "axis": [
+          0.06764347362595632,
+          0.8706512451171875,
+          -0.4872276365844877
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9107872809755815936,
+        "modular_depth_mean": 0.47226055927573724,
+        "modular_depth_std": 0.2451951945559624,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "24530aa85960416f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4260,
+        "axis": [
+          0.22328276676622957,
+          0.8699798583984375,
+          0.4396360449806774
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9173729791918183424,
+        "modular_depth_mean": 0.4610026273658554,
+        "modular_depth_std": 0.21543175076860346,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "61fad377c0bbaa18"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4279,
+        "axis": [
+          -0.45041181691649335,
+          0.8694000244140625,
+          0.20315706419125776
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8598079288969144320,
+        "modular_depth_mean": 0.5295483301013375,
+        "modular_depth_std": 0.222156188277084,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "f1c0325fba3f71ed"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4300,
+        "axis": [
+          -0.4745586804366322,
+          0.8687591552734375,
+          0.1416036332543264
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9203297451799252992,
+        "modular_depth_mean": 0.5036345141283765,
+        "modular_depth_std": 0.2383201823705623,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "42e6c7004e8c3352"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4314,
+        "axis": [
+          0.15732955650719324,
+          0.8683319091796875,
+          -0.4703691169173513
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9128744168670629888,
+        "modular_depth_mean": 0.4739567741043095,
+        "modular_depth_std": 0.22661967556796764,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "9e6f0460b8bb72ff"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4333,
+        "axis": [
+          0.4635452897946514,
+          0.8677520751953125,
+          0.17925428949796793
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8950013999521116160,
+        "modular_depth_mean": 0.4735558099802503,
+        "modular_depth_std": 0.23314300325187765,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "adad797144c48bae"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4365,
+        "axis": [
+          -0.0984867679180062,
+          0.8667755126953125,
+          0.4888768425041658
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9108572312950370304,
+        "modular_depth_mean": 0.507276830786293,
+        "modular_depth_std": 0.24848694141752486,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ad7465c7af721fa3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4399,
+        "axis": [
+          -0.0579948127243329,
+          0.8657379150390625,
+          0.49712620546586206
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9108572312950370304,
+        "modular_depth_mean": 0.496539708642244,
+        "modular_depth_std": 0.23922321630611196,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "749c7e0b1999dc87"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4407,
+        "axis": [
+          -0.2251990041400784,
+          0.8654937744140625,
+          0.4474437785742661
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9072507474021423104,
+        "modular_depth_mean": 0.4742226664926454,
+        "modular_depth_std": 0.22292869551548167,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "6b02970e569360f7"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4516,
+        "axis": [
+          0.48950342340095193,
+          0.8621673583984375,
+          -0.1305903694420407
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9012506131754726400,
+        "modular_depth_mean": 0.42245689942310366,
+        "modular_depth_std": 0.240364567229519,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0db5dfa3c8fa305a"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4539,
+        "axis": [
+          -0.020016270680812968,
+          0.8614654541015625,
+          -0.5074215410264145
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199012273662822400,
+        "modular_depth_mean": 0.45415668328600645,
+        "modular_depth_std": 0.23544882430627337,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0cc74dcff7f3c305"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4593,
+        "axis": [
+          -0.3492726501961923,
+          0.8598175048828125,
+          0.3724546604917476
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9035094009081184256,
+        "modular_depth_mean": 0.4690124963392425,
+        "modular_depth_std": 0.23364868670493646,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "05868f5662b51503"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4655,
+        "axis": [
+          0.4868197448862918,
+          0.8579254150390625,
+          0.16422703254610088
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9054937441030883328,
+        "modular_depth_mean": 0.4924387170450907,
+        "modular_depth_std": 0.22863072269741175,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "864decdde8297762"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4747,
+        "axis": [
+          0.18277966414645025,
+          0.8551177978515625,
+          0.4851444590758563
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9173729791918183424,
+        "modular_depth_mean": 0.4762114557890178,
+        "modular_depth_std": 0.2416920813983067,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "50b816830da17222"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4754,
+        "axis": [
+          0.34653150912087427,
+          0.8549041748046875,
+          -0.3860761130760692
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8988452111366296576,
+        "modular_depth_mean": 0.5125232224717948,
+        "modular_depth_std": 0.22521276595713816,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "74c48d121557b702"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4783,
+        "axis": [
+          0.48772514129288286,
+          0.8540191650390625,
+          -0.18103991906985584
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9012506131754726400,
+        "modular_depth_mean": 0.4506306520621372,
+        "modular_depth_std": 0.23820589263700334,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "5268718ab6e475b2"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 4977,
+        "axis": [
+          0.5089504697863007,
+          0.8480987548828125,
+          0.1473021427900047
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9098018855843193856,
+        "modular_depth_mean": 0.4707766377796185,
+        "modular_depth_std": 0.23753815473433307,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "9e63363630812d78"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5149,
+        "axis": [
+          -0.023688669680779924,
+          0.8428497314453125,
+          -0.5376273589869841
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199012273662822400,
+        "modular_depth_mean": 0.4957126565553082,
+        "modular_depth_std": 0.25470896264958803,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "5c04b4774aef72a5"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5154,
+        "axis": [
+          -0.3086841039453414,
+          0.8426971435546875,
+          -0.44110729784966396
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9219582260470064128,
+        "modular_depth_mean": 0.47513911147323523,
+        "modular_depth_std": 0.21079094578543797,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "bbdb55bfc1babe3b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5214,
+        "axis": [
+          -0.48859232997589697,
+          0.8408660888671875,
+          -0.23285565417640885
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9114801738400286720,
+        "modular_depth_mean": 0.4789410721460526,
+        "modular_depth_std": 0.23042052077419986,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "5e9fd1787e2f912b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5281,
+        "axis": [
+          0.2844359283266109,
+          0.8388214111328125,
+          0.46419267863909286
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9163795325955630080,
+        "modular_depth_mean": 0.47124385493362286,
+        "modular_depth_std": 0.21987039659934002,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "c4f9f27e6405d4cf"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5406,
+        "axis": [
+          0.4613257593474283,
+          0.8350067138671875,
+          -0.2999038705306078
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9079257478024985600,
+        "modular_depth_mean": 0.47312584565145516,
+        "modular_depth_std": 0.21906551643774064,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "a2586297eb85120f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5417,
+        "axis": [
+          0.42461736619097523,
+          0.8346710205078125,
+          0.3507483141135338
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9096527189498937344,
+        "modular_depth_mean": 0.505907849289346,
+        "modular_depth_std": 0.18322458097488023,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "02f01c1db3ca3d58"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5432,
+        "axis": [
+          0.2936411681207631,
+          0.8342132568359375,
+          -0.46675808134819896
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9153538180050917376,
+        "modular_depth_mean": 0.5187057576720695,
+        "modular_depth_std": 0.23246966992472437,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "2eb6f9ff32ede61b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5454,
+        "axis": [
+          0.025589588866137086,
+          0.8335418701171875,
+          0.5518633197660484
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8832348230964066304,
+        "modular_depth_mean": 0.4424445094756695,
+        "modular_depth_std": 0.24521213668811465,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "1d806ba8809f53cb"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5468,
+        "axis": [
+          -0.4667194686609083,
+          0.8331146240234375,
+          -0.2968045835413695
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9114801738400286720,
+        "modular_depth_mean": 0.5074383169632988,
+        "modular_depth_std": 0.21415323690188764,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "fb5f86b5425e024d"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5663,
+        "axis": [
+          0.5030590233391913,
+          0.8271636962890625,
+          0.2504632479595251
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8969320941216932864,
+        "modular_depth_mean": 0.43671032786334424,
+        "modular_depth_std": 0.2211025825528297,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "5af5ffee7474e704"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5713,
+        "axis": [
+          0.2661271047225026,
+          0.8256378173828125,
+          0.497492269929256
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9173729791918183424,
+        "modular_depth_mean": 0.4947675185348212,
+        "modular_depth_std": 0.23094371378029965,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e5b95e503293e12f"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 5744,
+        "axis": [
+          0.563763224975812,
+          0.8246917724609375,
+          0.04532666544220116
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9098018855843193856,
+        "modular_depth_mean": 0.48617102863435907,
+        "modular_depth_std": 0.21915483904305202,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "d98690a8348c2bbd"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6173,
+        "axis": [
+          0.4161722109432751,
+          0.8115997314453125,
+          -0.4100080081614049
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9153538180050917376,
+        "modular_depth_mean": 0.49800731520099634,
+        "modular_depth_std": 0.22791013239172353,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e1d716b67f698558"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6193,
+        "axis": [
+          -0.5822857624127098,
+          0.8109893798828125,
+          -0.05691675156525063
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8943078907788656640,
+        "modular_depth_mean": 0.48241718975541037,
+        "modular_depth_std": 0.22899091385178894,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "38842f1218fd1375"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6195,
+        "axis": [
+          -0.10762113336630867,
+          0.8109283447265625,
+          0.5751633779822813
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9108572312950370304,
+        "modular_depth_mean": 0.507911645674905,
+        "modular_depth_std": 0.23374521812701418,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "fd30d2a486523c9b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6266,
+        "axis": [
+          -0.47368909053085323,
+          0.8087615966796875,
+          0.3486019581817859
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9160806440627724288,
+        "modular_depth_mean": 0.4604783214204842,
+        "modular_depth_std": 0.24169740524450864,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "dfdeb5152c396951"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6342,
+        "axis": [
+          -0.5325478233727251,
+          0.8064422607421875,
+          0.25698968055157856
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9012331918138937344,
+        "modular_depth_mean": 0.4875104749166583,
+        "modular_depth_std": 0.21783269274358577,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ebf4dd7c8b4d8f00"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6344,
+        "axis": [
+          0.20947677945187596,
+          0.8063812255859375,
+          0.5530540641682252
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9173729791918183424,
+        "modular_depth_mean": 0.4484585512729207,
+        "modular_depth_std": 0.24970021365041492,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "2d29e754170fee75"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6452,
+        "axis": [
+          -0.560261405950537,
+          0.8030853271484375,
+          0.20288202069482353
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8932113059461127168,
+        "modular_depth_mean": 0.49026819494646284,
+        "modular_depth_std": 0.22851049782222976,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "d33688a1ef05eab4"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6474,
+        "axis": [
+          0.34454467705264114,
+          0.8024139404296875,
+          -0.48725848758004525
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9153538180050917376,
+        "modular_depth_mean": 0.4745590526133368,
+        "modular_depth_std": 0.23781060929046818,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "855c9a3a733616a3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6476,
+        "axis": [
+          -0.4553333290625361,
+          0.8023529052734375,
+          -0.3858774090875267
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9082869849115877376,
+        "modular_depth_mean": 0.5095338722545132,
+        "modular_depth_std": 0.2483366512190294,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "4c97febd8ba09ff8"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6505,
+        "axis": [
+          -0.22397910625569747,
+          0.8014678955078125,
+          -0.5545111111882044
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8530667913026914304,
+        "modular_depth_mean": 0.4722145647840505,
+        "modular_depth_std": 0.23872087017130303,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "15b4ca2f541742eb"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6581,
+        "axis": [
+          -0.11886769413114548,
+          0.7991485595703125,
+          -0.5892639909485723
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8755754250535992320,
+        "modular_depth_mean": 0.46427963609485623,
+        "modular_depth_std": 0.24123568460090958,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "2ff9103ad49ef3fd"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6675,
+        "axis": [
+          -0.4327581863133889,
+          0.7962799072265625,
+          -0.42268033018583107
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9137787232226727936,
+        "modular_depth_mean": 0.48666584254206,
+        "modular_depth_std": 0.24823224853668657,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e8aca236ac8a11a8"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6806,
+        "axis": [
+          -0.32475741478857145,
+          0.7922821044921875,
+          -0.5165478568741471
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9219582260470064128,
+        "modular_depth_mean": 0.48246770820450036,
+        "modular_depth_std": 0.2319781908834776,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "4fee9f8d61b4b610"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6818,
+        "axis": [
+          0.021999865778394842,
+          0.7919158935546875,
+          0.6102337449217419
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9221094665200575488,
+        "modular_depth_mean": 0.4377700730878905,
+        "modular_depth_std": 0.24231318245575667,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "4e17d404e98ebff2"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6840,
+        "axis": [
+          -0.3671048255289641,
+          0.7912445068359375,
+          -0.4890461915558722
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8915459239247780864,
+        "modular_depth_mean": 0.4899093312705398,
+        "modular_depth_std": 0.24584369759158034,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0ce5786e8f207957"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6881,
+        "axis": [
+          -0.21896577973830372,
+          0.7899932861328125,
+          0.5726819319383815
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9010422933310551040,
+        "modular_depth_mean": 0.47692743014690825,
+        "modular_depth_std": 0.2367860943703428,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "3c42d2074bfebbaf"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 6972,
+        "axis": [
+          0.56278782156032,
+          0.7872161865234375,
+          0.25211216467851333
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9110942288425121792,
+        "modular_depth_mean": 0.4464893317273984,
+        "modular_depth_std": 0.25078650665207153,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "fb8339b73d4da653"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7003,
+        "axis": [
+          0.5174449934797086,
+          0.7862701416015625,
+          -0.33768319938759617
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199542199254039552,
+        "modular_depth_mean": 0.44301126793763174,
+        "modular_depth_std": 0.21874625484972038,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "e3cd2746d1d48174"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7081,
+        "axis": [
+          -0.18694346680625704,
+          0.7838897705078125,
+          -0.5920886486934764
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8071578133382957056,
+        "modular_depth_mean": 0.4467535423395455,
+        "modular_depth_std": 0.22373044197305192,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "c3fc2859cc318436"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7148,
+        "axis": [
+          -0.1665888887846989,
+          0.7818450927734375,
+          0.6008047877968135
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9101812258676210688,
+        "modular_depth_mean": 0.47727174337043377,
+        "modular_depth_std": 0.2374098397692661,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "f75cf7e30187835d"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7216,
+        "axis": [
+          -0.06571759410916991,
+          0.7797698974609375,
+          0.622607504643384
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8757584030133240832,
+        "modular_depth_mean": 0.4857356413186093,
+        "modular_depth_std": 0.23072778454218731,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "c23726b561379b48"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7233,
+        "axis": [
+          0.03997787017048598,
+          0.7792510986328125,
+          -0.625435444451453
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8847623891616927744,
+        "modular_depth_mean": 0.4709430665268097,
+        "modular_depth_std": 0.2237812504975307,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "bf28a4e5fc8463cf"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7257,
+        "axis": [
+          0.5633498240101632,
+          0.7785186767578125,
+          -0.27666883765068806
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199542199254039552,
+        "modular_depth_mean": 0.47337609754686905,
+        "modular_depth_std": 0.24708424570097537,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "99130292525254de"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7304,
+        "axis": [
+          0.4581225489003662,
+          0.7770843505859375,
+          -0.43158271775346074
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9168102564005986304,
+        "modular_depth_mean": 0.479152556900945,
+        "modular_depth_std": 0.2331760299524706,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "3364f977d9cb868b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7326,
+        "axis": [
+          -0.12973352869478177,
+          0.7764129638671875,
+          0.6167269420670461
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9101812258676210688,
+        "modular_depth_mean": 0.4626320059381154,
+        "modular_depth_std": 0.21892276926530688,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "bfbed2ac56d3c974"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7480,
+        "axis": [
+          0.5006380970744796,
+          0.7717132568359375,
+          0.39219911394764045
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9033951037117286400,
+        "modular_depth_mean": 0.4627328969337515,
+        "modular_depth_std": 0.22398185620187674,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "815bd75af16af71a"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7612,
+        "axis": [
+          -0.6327619758177437,
+          0.7676849365234375,
+          -0.1013514686338134
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8939733525547667456,
+        "modular_depth_mean": 0.47551392618037436,
+        "modular_depth_std": 0.2121910065204531,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "b875d62e70c10267"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7655,
+        "axis": [
+          0.6107253603349845,
+          0.7663726806640625,
+          -0.19921708906487465
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9071607831271007232,
+        "modular_depth_mean": 0.4412839158437816,
+        "modular_depth_std": 0.22590635682834215,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "a7f5e4062dc07a2a"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7813,
+        "axis": [
+          -0.20200159829125344,
+          0.7615509033203125,
+          0.6158210583763721
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9101812258676210688,
+        "modular_depth_mean": 0.4713011621145337,
+        "modular_depth_std": 0.24632091477410176,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0b665d7c057694b4"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7874,
+        "axis": [
+          -0.5251963317156682,
+          0.7596893310546875,
+          -0.383459167883736
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9127571647705413632,
+        "modular_depth_mean": 0.440734727672882,
+        "modular_depth_std": 0.25259138974150025,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "7f13907c54d925d3"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 7964,
+        "axis": [
+          0.6468535602324308,
+          0.7569427490234375,
+          -0.0928339717747246
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9183961136693910528,
+        "modular_depth_mean": 0.4475611999516273,
+        "modular_depth_std": 0.20996044329017985,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "380e7e8c0010f64c"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8061,
+        "axis": [
+          0.64674279263634,
+          0.7539825439453125,
+          0.11503948712812906
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9141479881871787008,
+        "modular_depth_mean": 0.47387824826762687,
+        "modular_depth_std": 0.23408188545507178,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "b1e1713278dcaa8b"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8075,
+        "axis": [
+          -0.4664180034665751,
+          0.7535552978515625,
+          0.4632587388512998
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9160806440627724288,
+        "modular_depth_mean": 0.4023458305414158,
+        "modular_depth_std": 0.21077294388488488,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "1f082a2834e3f9d0"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8277,
+        "axis": [
+          -0.6504320489640627,
+          0.7473907470703125,
+          -0.13544453061711775
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9150918590440858624,
+        "modular_depth_mean": 0.43341211710719457,
+        "modular_depth_std": 0.2099363006057491,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "c2091a05e8c9b88a"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8286,
+        "axis": [
+          0.6532072101594748,
+          0.7471160888671875,
+          -0.12303613433244959
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9183961136693910528,
+        "modular_depth_mean": 0.44558804891938775,
+        "modular_depth_std": 0.21913726625516036,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "97f4461c26f9d0fc"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8337,
+        "axis": [
+          -0.6346386472824972,
+          0.7455596923828125,
+          0.20340730682423414
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9113406866950319104,
+        "modular_depth_mean": 0.4697240898403647,
+        "modular_depth_std": 0.23989495311729087,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "db7936f52d6b71b6"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8570,
+        "axis": [
+          -0.6396048136347717,
+          0.7384490966796875,
+          0.2135383197184585
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9155479756877292544,
+        "modular_depth_mean": 0.46022995304004244,
+        "modular_depth_std": 0.23705357189099993,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "23f4157d0635fa53"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8629,
+        "axis": [
+          0.6731577770561353,
+          0.7366485595703125,
+          -0.06486529790131418
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8820367155103037440,
+        "modular_depth_mean": 0.485567645556493,
+        "modular_depth_std": 0.22204365718691157,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "965526f1084544da"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8785,
+        "axis": [
+          -0.6139795023725442,
+          0.7318878173828125,
+          -0.2955831413206542
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -8777314460160060416,
+        "modular_depth_mean": 0.5541809404225445,
+        "modular_depth_std": 0.20023234871658807,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "5fab8ac07cc821b5"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8807,
+        "axis": [
+          0.673518423334118,
+          0.7312164306640625,
+          -0.10814557298582282
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9071607831271007232,
+        "modular_depth_mean": 0.44514575966623104,
+        "modular_depth_std": 0.22431880716298452,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "0c4fa3d42cac4e64"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8852,
+        "axis": [
+          0.35487179405731123,
+          0.7298431396484375,
+          0.5842901687437986
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9018500648207297536,
+        "modular_depth_mean": 0.5160974347703553,
+        "modular_depth_std": 0.21259656409386118,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "67272379cf0ba0b5"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8888,
+        "axis": [
+          0.5870182293459872,
+          0.7287445068359375,
+          -0.35262025207288955
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9199542199254039552,
+        "modular_depth_mean": 0.4562287870479834,
+        "modular_depth_std": 0.23196715734412163,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "ce038e13304ccaa8"
+      },
+      {
+        "view_type": "patch_observer",
+        "observer_id": 8989,
+        "axis": [
+          -0.6872822105464594,
+          0.7256622314453125,
+          0.03251905472460501
+        ],
+        "support_patch_count": 96,
+        "support_entropy_capacity": 39.14333030064259,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "dominant_record_signature": -9060692576005055488,
+        "modular_depth_mean": 0.48605212391931363,
+        "modular_depth_std": 0.2314404396978787,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0,
+        "visible_signature_entropy": 4.564348191467836,
+        "visible_readout_hash": "56b81f01843f49be"
+      },
+      {
+        "view_type": "cap_observer",
+        "cap_index": 0,
+        "axis": [
+          0.6614378277661477,
+          0.75,
+          0.0
+        ],
+        "theta0": 0.35,
+        "collar_width": 0.05,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "cap_area_planck": 3935.963373844136,
+        "cap_entropy_capacity": 983.990843461034,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0
+      },
+      {
+        "view_type": "cap_observer",
+        "cap_index": 1,
+        "axis": [
+          -0.713954346202245,
+          0.25,
+          0.6540406650499073
+        ],
+        "theta0": 0.55,
+        "collar_width": 0.05,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "cap_area_planck": 8018.023570544923,
+        "cap_entropy_capacity": 2004.5058926362308,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0
+      },
+      {
+        "view_type": "cap_observer",
+        "cap_index": 2,
+        "axis": [
+          0.08464959396472493,
+          -0.25,
+          -0.9645384628108966
+        ],
+        "theta0": 0.75,
+        "collar_width": 0.05,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "cap_area_planck": 14351.992586571672,
+        "cap_entropy_capacity": 3587.998146642918,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0
+      },
+      {
+        "view_type": "cap_observer",
+        "cap_index": 3,
+        "axis": [
+          0.402444478534368,
+          -0.75,
+          0.5249175570479622
+        ],
+        "theta0": 1.0,
+        "collar_width": 0.05,
+        "observer_relative_times": [
+          0.0,
+          0.3333333333333333,
+          0.6666666666666666,
+          1.0
+        ],
+        "cap_area_planck": 24568.214785852066,
+        "cap_entropy_capacity": 6142.053696463016,
+        "repair_load_mean": 0.0,
+        "mismatch_density_mean": 0.0
+      }
+    ],
+    "claim_boundary": "Observer-local self-readout rows: visible support, modular time, record signature, and local repair/mismatch summaries. Hidden representatives are not used."
+  },
+  "h3_object_readout": {
+    "source_path": null,
+    "source_report": "observer_chart_object_h3_population",
+    "object_count": 70,
+    "sample_object_count": 70,
+    "spatial_dimension": 3,
+    "centroid": [
+      0.022013681039774476,
+      0.0037383357204621784,
+      0.639063552744231
+    ],
+    "rms_radius_about_centroid": 2.4931566463165797,
+    "observer_chart_object_h3_receipt": false,
+    "observer_facing_h3_object_population_receipt": false,
+    "object_population_blockers": [],
+    "sample_objects": [
+      {
+        "object_id": "observer_mixture_cluster_000000_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 99,
+        "parent_observer_count": 183,
+        "support_size": 0,
+        "h3_compactness": 1.154786035004847,
+        "h3_compactness_normalized": 0.467742117461509,
+        "h3_spatial_point": [
+          -0.6065522197722605,
+          0.8420803295268673,
+          -0.7989608758565592
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000000_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 23,
+        "parent_observer_count": 183,
+        "support_size": 0,
+        "h3_compactness": 0.5906703433741276,
+        "h3_compactness_normalized": 0.23924899397520982,
+        "h3_spatial_point": [
+          0.2707695870775498,
+          -0.05848173341916728,
+          2.930236980084323
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000000_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 13,
+        "parent_observer_count": 183,
+        "support_size": 0,
+        "h3_compactness": 0.22339082973089963,
+        "h3_compactness_normalized": 0.0904836883651575,
+        "h3_spatial_point": [
+          -1.6380099751965982,
+          1.7606002523873525,
+          1.4078177104548322
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000000_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 10,
+        "parent_observer_count": 183,
+        "support_size": 0,
+        "h3_compactness": 0.12693448013869252,
+        "h3_compactness_normalized": 0.0514143752341954,
+        "h3_spatial_point": [
+          0.7558492868115454,
+          -3.500309133595205,
+          0.07520478724654395
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000000_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 8,
+        "parent_observer_count": 183,
+        "support_size": 0,
+        "h3_compactness": 0.3466634740005152,
+        "h3_compactness_normalized": 0.14041484955685596,
+        "h3_spatial_point": [
+          0.43210177586525184,
+          -1.305953339974388,
+          2.7066502028955823
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000000_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 183,
+        "support_size": 0,
+        "h3_compactness": 0.20335497994735402,
+        "h3_compactness_normalized": 0.08236823622180263,
+        "h3_spatial_point": [
+          0.26356701110955205,
+          2.5772882364649474,
+          1.5391414849335212
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 21,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.7087381794046255,
+        "h3_compactness_normalized": 0.2870719654651374,
+        "h3_spatial_point": [
+          -0.9186043561233566,
+          0.6425096112718348,
+          -1.2749774097242172
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 19,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.5234822913981828,
+        "h3_compactness_normalized": 0.2120347042741654,
+        "h3_spatial_point": [
+          -1.3189198388385375,
+          1.8562251966837975,
+          0.07655222486539719
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 16,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.6443841152430143,
+        "h3_compactness_normalized": 0.2610055727951919,
+        "h3_spatial_point": [
+          -1.5619745563067393,
+          -0.8070748894219653,
+          -0.9102104363341177
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.4885489450125038,
+        "h3_compactness_normalized": 0.19788507229633734,
+        "h3_spatial_point": [
+          0.04077667625200531,
+          1.1729217937628453,
+          -0.3176468339438978
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.2738317547302013,
+        "h3_compactness_normalized": 0.11091461180093623,
+        "h3_spatial_point": [
+          0.6756439486887218,
+          -0.21702374953027906,
+          2.9825923872027897
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.33866082067613074,
+        "h3_compactness_normalized": 0.13717340231226552,
+        "h3_spatial_point": [
+          2.361727476741985,
+          -0.8953410964242865,
+          2.142080159435108
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000006_component_006",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 113,
+        "support_size": 0,
+        "h3_compactness": 0.06962637860280423,
+        "h3_compactness_normalized": 0.028201925527022553,
+        "h3_spatial_point": [
+          2.8966943878518316,
+          -2.1493952969590016,
+          0.12012389003242026
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000013_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 35,
+        "parent_observer_count": 104,
+        "support_size": 0,
+        "h3_compactness": 0.6873193472889989,
+        "h3_compactness_normalized": 0.2783963410779117,
+        "h3_spatial_point": [
+          0.12181479531643016,
+          0.5910836807708283,
+          -0.7906134386354982
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000013_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 13,
+        "parent_observer_count": 104,
+        "support_size": 0,
+        "h3_compactness": 0.2952947466441952,
+        "h3_compactness_normalized": 0.11960812296282745,
+        "h3_spatial_point": [
+          0.5440848253987893,
+          -0.11302975861999448,
+          2.995070963772172
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000013_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 12,
+        "parent_observer_count": 104,
+        "support_size": 0,
+        "h3_compactness": 0.4715250402544307,
+        "h3_compactness_normalized": 0.19098959814127384,
+        "h3_spatial_point": [
+          -1.5606439687592075,
+          -0.8100242826952982,
+          -1.011580052570877
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000013_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 11,
+        "parent_observer_count": 104,
+        "support_size": 0,
+        "h3_compactness": 0.4637154810037157,
+        "h3_compactness_normalized": 0.18782636298805758,
+        "h3_spatial_point": [
+          1.9451142710975444,
+          -1.0055987531125439,
+          2.38026096494341
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000013_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 10,
+        "parent_observer_count": 104,
+        "support_size": 0,
+        "h3_compactness": 5.960464477539061e-08,
+        "h3_compactness_normalized": 2.414265665904529e-08,
+        "h3_spatial_point": [
+          0.6777874833786647,
+          -3.5156494240569858,
+          0.07730220133781682
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000013_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 8,
+        "parent_observer_count": 104,
+        "support_size": 0,
+        "h3_compactness": 0.4353854345370703,
+        "h3_compactness_normalized": 0.1763513749639462,
+        "h3_spatial_point": [
+          -0.7629789383551864,
+          1.8153857145120365,
+          -0.4808414840263829
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 19,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.7247939893672616,
+        "h3_compactness_normalized": 0.29357531614815074,
+        "h3_spatial_point": [
+          0.4288510732726806,
+          0.06310739598177996,
+          2.9393282991934964
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 16,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.4349961395306207,
+        "h3_compactness_normalized": 0.17619369235858534,
+        "h3_spatial_point": [
+          -0.9319063530258883,
+          0.7437638187927761,
+          -1.3965615169413865
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 7,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.28609377594608665,
+        "h3_compactness_normalized": 0.11588130138153206,
+        "h3_spatial_point": [
+          0.5152834978551409,
+          0.8070251562986236,
+          -0.6327581967270695
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.22398043962427108,
+        "h3_compactness_normalized": 0.09072250782750114,
+        "h3_spatial_point": [
+          -1.499655306371454,
+          -0.7381972236093036,
+          -1.166889805249259
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.3325971245116833,
+        "h3_compactness_normalized": 0.13471732300611944,
+        "h3_spatial_point": [
+          0.2803559010296284,
+          -1.6976366350150662,
+          2.4804111060785687
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.4181339781233772,
+        "h3_compactness_normalized": 0.1693637317922812,
+        "h3_spatial_point": [
+          -1.2450341428296574,
+          1.9708419168255091,
+          0.09262696659475474
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_006",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.4240340460801006,
+        "h3_compactness_normalized": 0.1717535340548562,
+        "h3_spatial_point": [
+          0.48474886132538875,
+          2.366742619394248,
+          1.8752382322656398
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_007",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.09457644332928762,
+        "h3_compactness_normalized": 0.03830786355554926,
+        "h3_spatial_point": [
+          -2.2705209576065943,
+          0.5060818689155265,
+          -0.0711461913995203
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000019_component_008",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 93,
+        "support_size": 0,
+        "h3_compactness": 0.3389726308969545,
+        "h3_compactness_normalized": 0.13729969997132374,
+        "h3_spatial_point": [
+          -0.3081801575052001,
+          1.697207951683245,
+          -0.46713465601025816
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 32,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.7406744739959294,
+        "h3_compactness_normalized": 0.3000076519067806,
+        "h3_spatial_point": [
+          -0.88800876538982,
+          1.2111097975290843,
+          -0.9754511591162606
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 16,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.3493954062210753,
+        "h3_compactness_normalized": 0.14152140932019835,
+        "h3_spatial_point": [
+          0.31857954603114946,
+          0.8490969302033151,
+          -0.3014478404930672
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 10,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.631387654873689,
+        "h3_compactness_normalized": 0.25574140115786576,
+        "h3_spatial_point": [
+          0.08406960757366104,
+          0.18383717484587125,
+          2.90399168195178
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.23517303400129178,
+        "h3_compactness_normalized": 0.09525602973987296,
+        "h3_spatial_point": [
+          -1.3262598228897589,
+          -0.24758500123678057,
+          -1.4258486312466536
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.2038253619084656,
+        "h3_compactness_normalized": 0.0825587628196629,
+        "h3_spatial_point": [
+          -1.4909350457540929,
+          1.7198507460993346,
+          1.34107726841097
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.16464182450505896,
+        "h3_compactness_normalized": 0.06668760556703408,
+        "h3_spatial_point": [
+          2.452273462672435,
+          -0.6381119409220719,
+          2.164654621679026
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000028_component_006",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 85,
+        "support_size": 0,
+        "h3_compactness": 0.16487923295981705,
+        "h3_compactness_normalized": 0.06678376704627413,
+        "h3_spatial_point": [
+          3.047968947959679,
+          -1.9100978495466723,
+          0.16386022683492502
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000035_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 15,
+        "parent_observer_count": 78,
+        "support_size": 0,
+        "h3_compactness": 0.47984387370664866,
+        "h3_compactness_normalized": 0.1943591130607487,
+        "h3_spatial_point": [
+          0.7002108947815884,
+          -0.2820890160540736,
+          2.9629763247287553
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000035_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 13,
+        "parent_observer_count": 78,
+        "support_size": 0,
+        "h3_compactness": 0.4675165383857979,
+        "h3_compactness_normalized": 0.1893659682262525,
+        "h3_spatial_point": [
+          0.29933185639313636,
+          0.8225540881018543,
+          -0.7537850893916624
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000035_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 78,
+        "support_size": 0,
+        "h3_compactness": 5.960464477539061e-08,
+        "h3_compactness_normalized": 2.414265665904529e-08,
+        "h3_spatial_point": [
+          0.6777874833786647,
+          -3.5156494240569853,
+          0.0773022013378168
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000035_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 7,
+        "parent_observer_count": 78,
+        "support_size": 0,
+        "h3_compactness": 0.24370879477998555,
+        "h3_compactness_normalized": 0.09871341032791789,
+        "h3_spatial_point": [
+          -1.1974110251776755,
+          -0.7122506968048924,
+          -1.3628171799662034
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000035_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 78,
+        "support_size": 0,
+        "h3_compactness": 0.0694107000547135,
+        "h3_compactness_normalized": 0.028114565671848557,
+        "h3_spatial_point": [
+          -1.4378009982430513,
+          1.9629181339272304,
+          0.5129970274140627
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000035_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 78,
+        "support_size": 0,
+        "h3_compactness": 0.13300405273774413,
+        "h3_compactness_normalized": 0.053872834769995756,
+        "h3_spatial_point": [
+          1.9733333807605429,
+          -1.5405604706775693,
+          2.1387340475814454
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000041_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 22,
+        "parent_observer_count": 74,
+        "support_size": 0,
+        "h3_compactness": 0.41704593119011724,
+        "h3_compactness_normalized": 0.16892302211877153,
+        "h3_spatial_point": [
+          0.2593623896290264,
+          1.060884010918312,
+          -0.37039627101227895
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000041_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 15,
+        "parent_observer_count": 74,
+        "support_size": 0,
+        "h3_compactness": 0.4624103742708325,
+        "h3_compactness_normalized": 0.18729773398818444,
+        "h3_spatial_point": [
+          0.7457900580729989,
+          -0.30181215693692265,
+          2.939303226157088
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000041_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 11,
+        "parent_observer_count": 74,
+        "support_size": 0,
+        "h3_compactness": 0.579670562085937,
+        "h3_compactness_normalized": 0.23479357034226803,
+        "h3_spatial_point": [
+          -0.8192440393931232,
+          0.9719213698684555,
+          -1.2696828377779994
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000044_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 16,
+        "parent_observer_count": 73,
+        "support_size": 0,
+        "h3_compactness": 0.40390193026559806,
+        "h3_compactness_normalized": 0.16359908968627998,
+        "h3_spatial_point": [
+          0.19961935114909232,
+          0.9706301636922912,
+          -0.27198727696666286
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000044_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 73,
+        "support_size": 0,
+        "h3_compactness": 0.30638211834873585,
+        "h3_compactness_normalized": 0.1240990247930898,
+        "h3_spatial_point": [
+          0.7048015966617335,
+          -0.17783778659396998,
+          3.1025968727415516
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000044_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 8,
+        "parent_observer_count": 73,
+        "support_size": 0,
+        "h3_compactness": 0.31859754109677796,
+        "h3_compactness_normalized": 0.12904683982432433,
+        "h3_spatial_point": [
+          -1.3725010595068574,
+          1.931445408705784,
+          0.23719313694303681
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000044_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 73,
+        "support_size": 0,
+        "h3_compactness": 0.29871286494435423,
+        "h3_compactness_normalized": 0.12099262004106204,
+        "h3_spatial_point": [
+          -0.05063598614481133,
+          0.4248544915195078,
+          -1.545404649646554
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000044_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 73,
+        "support_size": 0,
+        "h3_compactness": 0.17107692553655268,
+        "h3_compactness_normalized": 0.06929412113901792,
+        "h3_spatial_point": [
+          -0.6548185887198085,
+          0.39717907273894876,
+          2.7923932031132024
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 12,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.3624702898847096,
+        "h3_compactness_normalized": 0.14681734604354602,
+        "h3_spatial_point": [
+          0.28838035809586376,
+          0.691888607880324,
+          -0.2675642036309191
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.4233820671372652,
+        "h3_compactness_normalized": 0.1714894522232285,
+        "h3_spatial_point": [
+          1.1028241249380477,
+          -0.4845797219203863,
+          2.864429361380296
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.220264476840946,
+        "h3_compactness_normalized": 0.0892173698642824,
+        "h3_spatial_point": [
+          -1.2997398488757146,
+          2.0289094221212127,
+          0.3790161878754866
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 7,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.2538176389932487,
+        "h3_compactness_normalized": 0.1028079629585101,
+        "h3_spatial_point": [
+          -0.7494379972354179,
+          1.135111218822037,
+          -1.2622076040601748
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.184288645647097,
+        "h3_compactness_normalized": 0.074645482995233,
+        "h3_spatial_point": [
+          3.0037288641840774,
+          -1.9918169328739967,
+          0.11383893612704647
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_005",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.3095240060040195,
+        "h3_compactness_normalized": 0.12537163559730896,
+        "h3_spatial_point": [
+          -0.26499309940508775,
+          0.2991772029711365,
+          2.9121384523476883
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_006",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.09354942751585626,
+        "h3_compactness_normalized": 0.03789187432751982,
+        "h3_spatial_point": [
+          -2.2700177338228613,
+          0.5065201727763269,
+          -0.07102577802893621
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000049_component_007",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 69,
+        "support_size": 0,
+        "h3_compactness": 0.23991835978963452,
+        "h3_compactness_normalized": 0.09717810765301192,
+        "h3_spatial_point": [
+          -1.2998677289363831,
+          -0.6687787194163892,
+          -1.3278131302891694
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000057_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 10,
+        "parent_observer_count": 58,
+        "support_size": 0,
+        "h3_compactness": 0.43441515573464057,
+        "h3_compactness_normalized": 0.1759583668673644,
+        "h3_spatial_point": [
+          -1.5886794055913958,
+          -1.0333111484012778,
+          -0.8414628198299592
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000057_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 9,
+        "parent_observer_count": 58,
+        "support_size": 0,
+        "h3_compactness": 0.10759858226696525,
+        "h3_compactness_normalized": 0.043582436208795566,
+        "h3_spatial_point": [
+          0.7281610662959167,
+          -3.5118061925411768,
+          0.04868341480277227
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000057_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 58,
+        "support_size": 0,
+        "h3_compactness": 0.2673091992666889,
+        "h3_compactness_normalized": 0.10827267311161823,
+        "h3_spatial_point": [
+          0.2570430610732417,
+          0.7814079917355353,
+          -0.17317789786778462
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000057_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 58,
+        "support_size": 0,
+        "h3_compactness": 0.37461023233753615,
+        "h3_compactness_normalized": 0.15173458804043433,
+        "h3_spatial_point": [
+          0.3108074610370162,
+          -0.15011399837911948,
+          2.9873820416374963
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000057_component_004",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 58,
+        "support_size": 0,
+        "h3_compactness": 0.3130826317140924,
+        "h3_compactness_normalized": 0.12681304471936805,
+        "h3_spatial_point": [
+          2.7695401182760397,
+          -2.266998689659112,
+          0.17262363596830016
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000062_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 6,
+        "parent_observer_count": 51,
+        "support_size": 0,
+        "h3_compactness": 0.3871434828406782,
+        "h3_compactness_normalized": 0.15681113811231892,
+        "h3_spatial_point": [
+          0.3372763189044749,
+          0.9581016088335583,
+          -0.7921625246068128
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000062_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 51,
+        "support_size": 0,
+        "h3_compactness": 0.09911190005142081,
+        "h3_compactness_normalized": 0.04014493472419801,
+        "h3_spatial_point": [
+          2.95353485466003,
+          -2.0665251882552056,
+          0.1285015241588452
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000062_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 51,
+        "support_size": 0,
+        "h3_compactness": 0.25129937358340154,
+        "h3_compactness_normalized": 0.10178794820302593,
+        "h3_spatial_point": [
+          -0.30880064436485316,
+          0.30128721025887495,
+          2.9049335027272214
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000065_component_000",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 11,
+        "parent_observer_count": 39,
+        "support_size": 0,
+        "h3_compactness": 0.4686964721245769,
+        "h3_compactness_normalized": 0.18984389633476004,
+        "h3_spatial_point": [
+          0.36850785679794273,
+          0.6980510548233784,
+          -0.44613389918952745
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000065_component_001",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 5,
+        "parent_observer_count": 39,
+        "support_size": 0,
+        "h3_compactness": 0.18343673775498257,
+        "h3_compactness_normalized": 0.07430042062933932,
+        "h3_spatial_point": [
+          0.7836278720975537,
+          -0.2708521791711143,
+          2.9806109035459074
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000065_component_002",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 39,
+        "support_size": 0,
+        "h3_compactness": 0.29191562796808723,
+        "h3_compactness_normalized": 0.11823942254837376,
+        "h3_spatial_point": [
+          -0.767506004417917,
+          0.5534194498051661,
+          2.7009451431781333
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000065_component_003",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": 39,
+        "support_size": 0,
+        "h3_compactness": 0.26485430837381674,
+        "h3_compactness_normalized": 0.10727832798658025,
+        "h3_spatial_point": [
+          -2.2711067684940565,
+          0.5321654203168029,
+          0.03725208082289247
+        ],
+        "mean_observer_key_weight": 1.0
+      },
+      {
+        "object_id": "observer_mixture_cluster_000069",
+        "record_family_id": null,
+        "family_mode": "observer_transition_mixture_cluster",
+        "observer_count": 4,
+        "parent_observer_count": null,
+        "support_size": 0,
+        "h3_compactness": 1.3591051499841575,
+        "h3_compactness_normalized": 0.5505008732667636,
+        "h3_spatial_point": [
+          -0.8400283846590435,
+          -1.5590103614530064,
+          1.1240647978337235
+        ],
+        "mean_observer_key_weight": 1.0
+      }
+    ],
+    "claim_boundary": "Observer-facing shared objects placed in the theorem-side H3 spatial chart. These are consensus-bulk readout objects, not strict neutral third-person objects."
+  },
+  "neutral_object_readout": {
+    "source_path": "runs/oph_universe_64k_3p1d_reearned/neutral_objects.jsonl",
+    "neutral_object_count": 32,
+    "sample_neutral_object_count": 32,
+    "median_observers_per_neutral_object": 27.5,
+    "sample_neutral_objects": [
+      {
+        "object_id": "neutral_object_9c7d2a29474c",
+        "observer_count": 77,
+        "visible_signature_key": "8:0:2:0:0:8"
+      },
+      {
+        "object_id": "neutral_object_3795c5c3e8d3",
+        "observer_count": 75,
+        "visible_signature_key": "0:0:2:0:0:8"
+      },
+      {
+        "object_id": "neutral_object_c60e16a38265",
+        "observer_count": 68,
+        "visible_signature_key": "0:0:2:0:0:0"
+      },
+      {
+        "object_id": "neutral_object_ae631f5cfa12",
+        "observer_count": 54,
+        "visible_signature_key": "8:0:2:0:0:0"
+      },
+      {
+        "object_id": "neutral_object_35f097007c5f",
+        "observer_count": 48,
+        "visible_signature_key": "8:0:2:0:0:3"
+      },
+      {
+        "object_id": "neutral_object_70459d0dd27e",
+        "observer_count": 41,
+        "visible_signature_key": "0:0:2:0:0:3"
+      },
+      {
+        "object_id": "neutral_object_3d7946ff4a95",
+        "observer_count": 40,
+        "visible_signature_key": "0:0:2:0:0:10"
+      },
+      {
+        "object_id": "neutral_object_02e44d45a2af",
+        "observer_count": 38,
+        "visible_signature_key": "8:0:2:0:0:11"
+      },
+      {
+        "object_id": "neutral_object_348bbf031c70",
+        "observer_count": 37,
+        "visible_signature_key": "8:0:2:0:0:10"
+      },
+      {
+        "object_id": "neutral_object_d64806ffa670",
+        "observer_count": 36,
+        "visible_signature_key": "8:0:2:0:0:15"
+      },
+      {
+        "object_id": "neutral_object_3fc0d4cb8e83",
+        "observer_count": 34,
+        "visible_signature_key": "0:0:2:0:0:6"
+      },
+      {
+        "object_id": "neutral_object_646771d90b0e",
+        "observer_count": 34,
+        "visible_signature_key": "0:0:2:0:0:13"
+      },
+      {
+        "object_id": "neutral_object_c11c66be7dc1",
+        "observer_count": 34,
+        "visible_signature_key": "0:0:2:0:0:15"
+      },
+      {
+        "object_id": "neutral_object_b8c2d5501f81",
+        "observer_count": 32,
+        "visible_signature_key": "8:0:2:0:0:13"
+      },
+      {
+        "object_id": "neutral_object_3b0acff28b46",
+        "observer_count": 29,
+        "visible_signature_key": "0:0:2:0:0:14"
+      },
+      {
+        "object_id": "neutral_object_5cbfc47dc98d",
+        "observer_count": 28,
+        "visible_signature_key": "0:0:2:0:0:1"
+      },
+      {
+        "object_id": "neutral_object_c69ba66c2663",
+        "observer_count": 27,
+        "visible_signature_key": "8:0:2:0:0:6"
+      },
+      {
+        "object_id": "neutral_object_e3971d2fb591",
+        "observer_count": 27,
+        "visible_signature_key": "8:0:2:0:0:1"
+      },
+      {
+        "object_id": "neutral_object_0fc791c9dcb2",
+        "observer_count": 25,
+        "visible_signature_key": "8:0:2:0:0:9"
+      },
+      {
+        "object_id": "neutral_object_7ed17aedf808",
+        "observer_count": 25,
+        "visible_signature_key": "8:0:2:0:0:12"
+      },
+      {
+        "object_id": "neutral_object_d8dc5e9ce1d5",
+        "observer_count": 25,
+        "visible_signature_key": "0:0:2:0:0:12"
+      },
+      {
+        "object_id": "neutral_object_597c01d8612a",
+        "observer_count": 24,
+        "visible_signature_key": "0:0:2:0:0:4"
+      },
+      {
+        "object_id": "neutral_object_abc9397684e4",
+        "observer_count": 23,
+        "visible_signature_key": "0:0:2:0:0:11"
+      },
+      {
+        "object_id": "neutral_object_e1b5b6c41c68",
+        "observer_count": 22,
+        "visible_signature_key": "0:0:2:0:0:9"
+      },
+      {
+        "object_id": "neutral_object_743e53d6bea7",
+        "observer_count": 19,
+        "visible_signature_key": "8:0:2:0:0:5"
+      },
+      {
+        "object_id": "neutral_object_071bdf70bed1",
+        "observer_count": 18,
+        "visible_signature_key": "8:0:2:0:0:7"
+      },
+      {
+        "object_id": "neutral_object_d71535b19e2b",
+        "observer_count": 17,
+        "visible_signature_key": "0:0:2:0:0:7"
+      },
+      {
+        "object_id": "neutral_object_73541476b263",
+        "observer_count": 16,
+        "visible_signature_key": "8:0:2:0:0:4"
+      },
+      {
+        "object_id": "neutral_object_5ee25bde04da",
+        "observer_count": 14,
+        "visible_signature_key": "0:0:2:0:0:5"
+      },
+      {
+        "object_id": "neutral_object_05f0e80f45f8",
+        "observer_count": 13,
+        "visible_signature_key": "0:0:2:0:0:2"
+      },
+      {
+        "object_id": "neutral_object_559786105235",
+        "observer_count": 12,
+        "visible_signature_key": "8:0:2:0:0:14"
+      },
+      {
+        "object_id": "neutral_object_d3281b08acc8",
+        "observer_count": 12,
+        "visible_signature_key": "8:0:2:0:0:2"
+      }
+    ],
+    "claim_boundary": "Neutral-object rows are included for audit context. Their existence does not by itself clear chart-blind strict neutral quotient bulk gates."
+  },
+  "selected_object_chart_report": "observer_chart_object_h3_report.json",
+  "selected_object_chart_incidence_mode": "transition_history_mixture_cluster",
+  "object_viewer_summary": {
+    "object_count": null,
+    "reported_object_count": null,
+    "observer_overlap_link_count": null,
+    "viewer_path": null
+  },
+  "strict_neutral_blockers": [
+    "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+    "control_quotient_rank3_candidate_not_stable_across_refinement",
+    "independent_svd_rank3_selector_not_stable_or_false",
+    "control_quotient_lane_is_not_a_negative_control",
+    "directional_h3_strict_rank_gate_not_passed",
+    "measured_cross_observer_overlap_refinement_gate_not_passed",
+    "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+    "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+    "best_3d_windows_still_fail_s2_leakage_gate",
+    "requires_refinement_stability_across_regulator_sizes",
+    "requires_independent_rank_selection_rule_before_physical_interpretation",
+    "strict_neutral_bulk_refinement_receipt_false",
+    "overlap_native_negative_control_receipt_false",
+    "prime_geometric_independent_rank3_selector_not_all_true",
+    "control_quotient_independent_rank3_selector_not_all_true",
+    "control_quotient_rank3_cumulative_explained_variance_low",
+    "control_quotient_effective_rank_not_low_dimensional",
+    "overlap_graph_strict_h3_candidate_false",
+    "overlap_residual_graph_strict_h3_candidate_false"
+  ],
+  "finite_theorem_contract_blockers": [
+    "C0_finite_consensus_theorem",
+    "L3_kms_modular_clock_fit",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate",
+    "T309_cap_normal_h3_chart",
+    "B1_h3_response_candidate",
+    "B3_observer_facing_3p1d_experience",
+    "T310_modular_response_h3_localization",
+    "B2_observer_object_population"
+  ],
+  "finite_theorem_contract_primary_blockers": [
+    "C0_finite_consensus_theorem",
+    "L3_kms_modular_clock_fit",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality"
+  ],
+  "paper_geometric_branch_blockers": [
+    "C0_finite_consensus_theorem",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate",
+    "T309_cap_normal_h3_chart",
+    "B1_h3_response_candidate",
+    "B3_observer_facing_3p1d_experience",
+    "T310_modular_response_h3_localization",
+    "B2_observer_object_population"
+  ],
+  "paper_geometric_branch_primary_blockers": [
+    "C0_finite_consensus_theorem",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate"
+  ],
+  "claim_boundary": "Instantiation of observer-like self-reading systems: local observer rows read support, record, modular-time, and visible-object data from run artifacts. A true theorem-assisted consensus 3D bulk readout means observer-local records share objects in a 3D H3 chart under the current theorem-assisted route. The paper-geometric branch receipts additionally require the declared KMS collar/cap 2*pi theorem branch. The stricter paper-faithful observer-spacetime and observer-facing consensus-bulk receipts additionally require the endogenous finite OPH theorem contract. The chart-blind strict neutral quotient audit is separate: it deliberately discards the S2/H3 chart prior and can fail without falsifying the observer-facing 3+1D/H3 theorem receipt. This is not a physical CMB prediction unless physical_cmb_prediction_receipt passes."
+}

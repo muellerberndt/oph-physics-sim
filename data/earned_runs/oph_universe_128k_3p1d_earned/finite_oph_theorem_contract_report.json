@@ -1,0 +1,726 @@
+{
+  "mode": "finite_oph_theorem_contract_audit_v1",
+  "run_path": "runs/oph_universe_128k_3p1d_earned",
+  "stages": {
+    "C0_finite_consensus_theorem": {
+      "passed": false,
+      "meaning": "finite overlap repair is replayed as a theorem-phase consensus certificate",
+      "missing_or_blocking_evidence": [
+        "certificate_FINITE_CONSENSUS_THEOREM_RECEIPT_not_literal_true",
+        "certificate_finite_consensus_theorem_receipt_not_literal_true",
+        "certificate_receipt_not_literal_true",
+        "theorem_core_consensus_receipt_mismatch",
+        "replay_receipt_not_literal_true",
+        "replay_FINITE_CONSENSUS_THEOREM_RECEIPT_not_literal_true",
+        "replay_finite_consensus_theorem_receipt_not_literal_true",
+        "replay_terminal_hash_invalid",
+        "replay_endpoint_branch_confluence_violation_count_invalid",
+        "replay_unique_terminal_quotient_hash_count_invalid",
+        "replay_schedule_replay_count_invalid",
+        "replay_requested_schedule_replays_invalid",
+        "exact_endpoint_branch_nonconfluent",
+        "certificate_invalid_evidence_nonempty"
+      ],
+      "details": {
+        "validation_mode": "primitive_bound_v3_gauge_quotient_independent_replay",
+        "certificate_mode": "finite_consensus_theorem_certificate_v3_computed_gauge_quotient_replay",
+        "replay_mode": "array_port_pair_strict_consensus_replay",
+        "source_state_sha256": "sha256:79bc27108b7c9b2c17f8ccd1c94b58c2825fea4698be96c9b6c5ba5bdf80b737",
+        "source_quotient_hash": "sha256:e44b8b224006888d67eee7c9aea541d8f75b77006f918d7b5e177f255321554c",
+        "sidecar_path": "runs/oph_universe_128k_3p1d_earned/finite_consensus_replay_report.json",
+        "sample_event_count": 0,
+        "independent_source_replay": {
+          "mode": "finite_consensus_primitive_bound_independent_replay_v1",
+          "manifest_path": "runs/oph_universe_128k_3p1d_earned/finite_consensus_source_manifest.json",
+          "state_path": "runs/oph_universe_128k_3p1d_earned/finite_consensus_source_state.npz",
+          "state_file_sha256": "sha256:75039bc160465088dc05da8c0de6da6fd9d08afadfd9e4fa8ac8a8dda31c4167",
+          "source_state_sha256": "sha256:79bc27108b7c9b2c17f8ccd1c94b58c2825fea4698be96c9b6c5ba5bdf80b737",
+          "source_quotient_hash": "sha256:e44b8b224006888d67eee7c9aea541d8f75b77006f918d7b5e177f255321554c",
+          "recomputed_receipt": false,
+          "blockers": [],
+          "passed": true
+        },
+        "blockers": [
+          "certificate_FINITE_CONSENSUS_THEOREM_RECEIPT_not_literal_true",
+          "certificate_finite_consensus_theorem_receipt_not_literal_true",
+          "certificate_receipt_not_literal_true",
+          "theorem_core_consensus_receipt_mismatch",
+          "replay_receipt_not_literal_true",
+          "replay_FINITE_CONSENSUS_THEOREM_RECEIPT_not_literal_true",
+          "replay_finite_consensus_theorem_receipt_not_literal_true",
+          "replay_terminal_hash_invalid",
+          "replay_endpoint_branch_confluence_violation_count_invalid",
+          "replay_unique_terminal_quotient_hash_count_invalid",
+          "replay_schedule_replay_count_invalid",
+          "replay_requested_schedule_replays_invalid",
+          "exact_endpoint_branch_nonconfluent",
+          "certificate_invalid_evidence_nonempty"
+        ]
+      }
+    },
+    "L1_observer_record_algebra": {
+      "passed": true,
+      "meaning": "observer-like self-reading rows expose support, records, readback, and transition histories",
+      "details": {
+        "observer_view_count": 8196,
+        "patch_observer_count": 8192,
+        "cap_observer_count": 4,
+        "rows_with_support_nodes": 8192,
+        "rows_with_readout_hash": 8192,
+        "rows_with_transition_histories": 8192,
+        "rows_with_modular_time": 8196
+      }
+    },
+    "L2_endogenous_modular_generator": {
+      "passed": true,
+      "meaning": "modular generator is recovered from observer-record/cap state rather than supplied by branch replay",
+      "details": {
+        "source_mode": "state_derived_modular_probe",
+        "state_mode": "history_koopman_generator_state",
+        "row_count": 64,
+        "endogenous_modular_generator": true,
+        "endogenous_generator_non_degenerate": true
+      }
+    },
+    "L3_kms_modular_clock_fit": {
+      "passed": false,
+      "meaning": "finite support-visible KMS/BW clock infers kappa ~= 2*pi against controls",
+      "details": {
+        "kappa_hat": 8.47765416121809,
+        "kappa_95ci": [
+          6.702471245754657,
+          10.252837076681525
+        ],
+        "nearest_known_scale": "2pi",
+        "clock_fit_blockers": [
+          "all_rows:two_pi_not_inside_kappa_confidence_interval",
+          "all_rows:nearest_known_scale_is_pi",
+          "all_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+          "clock_carrier_rows:two_pi_not_inside_kappa_confidence_interval",
+          "clock_carrier_rows:two_pi_does_not_strictly_beat_all_declared_scale_controls",
+          "informative_clock_carrier_rows:requires_at_least_three_nonzero_modular_times"
+        ],
+        "transition_primary_source": "kms_collar_transport_response",
+        "transition_selected_label": "2pi",
+        "transition_two_pi_over_best": 1.0
+      }
+    },
+    "L3b_declared_geometric_kms_branch": {
+      "passed": true,
+      "meaning": "paper geometric branch supplies the KMS collar/cap 2*pi normalization used by the Lorentz/H3 chart theorem",
+      "details": {
+        "paper_chart_declared_bw_2pi_cap_flow_receipt": false,
+        "paper_chart_bw_2pi_cap_flow_receipt": false,
+        "paper_chart_bw_2pi_cap_flow_source": null,
+        "emergence_transition_primary_source": "kms_collar_transport_response",
+        "emergence_transition_selected_label": "2pi",
+        "emergence_transition_two_pi_selected_by_primary": true
+      }
+    },
+    "L4_support_visible_bw_covariance": {
+      "passed": false,
+      "meaning": "held-out support-visible H3 response clears signal, geometry, aggregate wrong-scale, and material feature gates",
+      "details": {
+        "signal_gate": true,
+        "geometry_gate": true,
+        "aggregate_wrong_scale_gate": true,
+        "material_feature_gate": true,
+        "material_wrong_scale_win_fraction": 0.08333333333333333,
+        "material_wrong_scale_gate_metric": "material_wrong_scale_advantage_energy_fraction",
+        "material_wrong_scale_gate_value": 0.0007001563302963226,
+        "material_wrong_scale_advantage_energy_fraction": 0.0007001563302963226,
+        "wrong_scale_material_margin": 0.02
+      }
+    },
+    "L5_ordered_cut_pair_rigidity": {
+      "passed": false,
+      "meaning": "ordered boundary cap-pair/collar rigidity is witnessed by the finite conformal H3/Lorentz chart verifier",
+      "details": {
+        "emergence_receipt": null,
+        "chart_receipt": null,
+        "paper_chart_receipt": null,
+        "paper_chart_receipt_inferred_from_cap_lorentz_verifier": false,
+        "conformal_chart_receipt_inferred_from_cap_normals": true
+      }
+    },
+    "L6_lorentz_algebra_closure": {
+      "passed": false,
+      "meaning": "the issue #309 chart is paired with a locally recomputed Lorentz algebra closure",
+      "details": {
+        "locally_recomputed": true,
+        "max_commutator_error": 0.0,
+        "max_null_cone_preservation_error": 4.440892098500626e-16
+      }
+    },
+    "L7_refinement_naturality": {
+      "passed": false,
+      "meaning": "chart-blind neutral quotient receipts survive regulator refinement and observer resampling",
+      "details": {
+        "strict_neutral_bulk_refinement_receipt": null,
+        "nested_strict_neutral_bulk_refinement_receipt": false,
+        "candidate_dimension_stable": false,
+        "multi_scale": false,
+        "proof_blockers": [
+          "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,65536,262144",
+          "control_quotient_rank3_candidate_not_stable_across_refinement",
+          "independent_svd_rank3_selector_not_stable_or_false",
+          "control_quotient_lane_is_not_a_negative_control",
+          "directional_h3_strict_rank_gate_not_passed",
+          "measured_cross_observer_overlap_refinement_gate_not_passed"
+        ]
+      }
+    },
+    "T308_finite_cap_bw_certificate": {
+      "passed": false,
+      "meaning": "issue #308 BW3 is recomputed from primitive finite cap-net certificate fields",
+      "details": {
+        "tier": "BW0",
+        "source_report_written": false
+      }
+    },
+    "T309_cap_normal_h3_chart": {
+      "passed": false,
+      "meaning": "issue #309 cap-normal H3 chart is recomputed from unit centers, Lorentz maps, and H3 points",
+      "details": {
+        "terminal_status": null,
+        "source_report_written": false
+      }
+    },
+    "T310_modular_response_h3_localization": {
+      "passed": false,
+      "meaning": "issue #310 record-conditioned H3 localization passes frame, domain, net, interval, and uniqueness checks",
+      "details": {
+        "terminal_status": null,
+        "source_report_written": false
+      }
+    },
+    "B1_h3_response_candidate": {
+      "passed": true,
+      "meaning": "observer/cap response is a strict H3 candidate after material wrong-scale audit"
+    },
+    "B2_observer_object_population": {
+      "passed": true,
+      "meaning": "observer-visible records populate the H3 chart through the issue #310 cap-response localization receipt or the older object-population gate",
+      "details": {
+        "object_chart_population_receipt": true,
+        "issue_310_modular_response_h3_localization_receipt": null,
+        "issue_310_terminal_status": null,
+        "issue_310_blockers": []
+      }
+    },
+    "B3_observer_facing_3p1d_experience": {
+      "passed": true,
+      "meaning": "observer-local modular time, H3 chart, and H3 response all pass"
+    },
+    "B4_strict_neutral_bulk_audit": {
+      "passed": false,
+      "meaning": "chart-blind neutral quotient records independently reconstruct a third-person 3D bulk",
+      "missing_or_blocking_evidence": [
+        "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,65536,262144",
+        "control_quotient_rank3_candidate_not_stable_across_refinement",
+        "independent_svd_rank3_selector_not_stable_or_false",
+        "control_quotient_lane_is_not_a_negative_control",
+        "directional_h3_strict_rank_gate_not_passed",
+        "measured_cross_observer_overlap_refinement_gate_not_passed",
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+        "requires_refinement_stability_across_regulator_sizes",
+        "requires_independent_rank_selection_rule_before_physical_interpretation",
+        "strict_neutral_bulk_refinement_receipt_false",
+        "overlap_native_negative_control_receipt_false",
+        "prime_geometric_independent_rank3_selector_not_all_true",
+        "control_quotient_independent_rank3_selector_not_all_true",
+        "control_quotient_effective_rank_not_low_dimensional",
+        "overlap_graph_strict_h3_candidate_false",
+        "overlap_residual_graph_strict_h3_candidate_false"
+      ],
+      "details": {
+        "legacy_bulk_reconstruction_established": false,
+        "neutral_3d_audit_strict_bulk": false,
+        "neutral_frontier_strict_bulk": false,
+        "strict_neutral_bulk_ready": false
+      }
+    },
+    "E0_einstein_branch_entry_umbrella": {
+      "passed": false,
+      "meaning": "E0 OPH5 Einstein bridge manifest is theorem-discharged and all required run sidecar receipts are theorem-tagged",
+      "missing_or_blocking_evidence": [
+        "sphere_fold",
+        "bw_2pi",
+        "null_stress",
+        "bounded_interval",
+        "fixed_cap_entropy",
+        "small_ball_area",
+        "remainder_control",
+        "timelike_coverage",
+        "stress_closure",
+        "lambda_closure",
+        "newton_forbidden_input_audit",
+        "einstein_residual"
+      ],
+      "details": {
+        "manifest_written": true,
+        "manifest_receipt": true,
+        "theorem_e0_dependency_discharge_receipt": true,
+        "einstein_bridge_run_receipts_receipt": false,
+        "claim_tier": "OPH5_E0_THEOREM_BACKED_RUN_RECEIPTS_OPEN",
+        "legacy_issue": 503,
+        "legacy_issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
+        "legacy_issue_503_status": "open_or_unreported",
+        "legacy_source_report_written": false,
+        "child_gate_issue_map": {
+          "E1_null_generator_stress_charge": "#19",
+          "E2_fixed_cap_entropy_stationarity": "#20",
+          "E3_small_ball_area_bridge": "#21",
+          "E4_all_timelike_tensor_upgrade": "chi_nu_test/EinsteinBranch Lean core plus #21",
+          "E5_lambda_constancy_conservation": "chi_nu_test/LambdaConstancy Lean core plus #22",
+          "E6_newton_coupling_forbidden_input_audit": "#345"
+        }
+      }
+    },
+    "E1_null_generator_stress_charge": {
+      "passed": false,
+      "meaning": "OPH null generator is identified with the local null-stress charge inside the branch"
+    },
+    "E2_fixed_cap_entropy_stationarity": {
+      "passed": false,
+      "meaning": "fixed-cap generalized-entropy stationarity is derived for the realized MaxEnt family"
+    },
+    "E3_small_ball_area_bridge": {
+      "passed": false,
+      "meaning": "small-ball entropy/area bridge and fixed-volume area response are internally certified"
+    },
+    "E4_all_timelike_tensor_upgrade": {
+      "passed": false,
+      "meaning": "all-observer/all-timelike rest-frame coverage upgrades scalar data to the tensor equation"
+    },
+    "E5_lambda_constancy_conservation": {
+      "passed": false,
+      "meaning": "Bianchi identity, stress conservation, metric compatibility, and connectedness fix one Lambda"
+    },
+    "E6_newton_coupling_forbidden_input_audit": {
+      "passed": false,
+      "meaning": "Einstein/Newton coupling is audited without measured G, Planck area, Lambda, or gravity-calibrated endpoints"
+    }
+  },
+  "OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1": false,
+  "finite_lorentz_theorem_contract_receipt": false,
+  "paper_faithful_observer_spacetime_emergence_receipt": false,
+  "paper_faithful_populated_h3_observer_experience_receipt": false,
+  "observer_facing_consensus_3d_bulk_emergence_receipt": false,
+  "paper_faithful_consensus_bulk_emergence_receipt": false,
+  "paper_geometric_branch_lorentz_contract_receipt": false,
+  "paper_geometric_branch_observer_spacetime_emergence_receipt": false,
+  "paper_geometric_branch_populated_h3_observer_experience_receipt": false,
+  "paper_geometric_branch_consensus_bulk_emergence_receipt": false,
+  "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt": false,
+  "simulation_matches_full_oph_spacetime_bulk_prediction_receipt": false,
+  "SIMULATION_ASSUMED_LORENTZ_H3_BRIDGE_RECEIPT": true,
+  "simulation_assumed_lorentz_h3_bridge_receipt": true,
+  "SIMULATION_ASSUMED_OBSERVER_SPACETIME_VISUALIZATION_RECEIPT": true,
+  "simulation_assumed_observer_spacetime_visualization_receipt": true,
+  "SIMULATION_ASSUMED_POPULATED_H3_VISUALIZATION_RECEIPT": true,
+  "simulation_assumed_populated_h3_visualization_receipt": true,
+  "SIMULATION_ASSUMED_TOPOLOGICAL_MATTER_VISUALIZATION_RECEIPT": true,
+  "simulation_assumed_topological_matter_visualization_receipt": true,
+  "SIMULATION_ASSUMED_CMB_VISUALIZATION_RECEIPT": true,
+  "simulation_assumed_cmb_visualization_receipt": true,
+  "SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT": true,
+  "simulation_assumed_visual_universe_receipt": true,
+  "simulation_assumption_tier": {
+    "enabled": true,
+    "profile": "known_observer_universe_v1",
+    "source": "runs/oph_universe_128k_3p1d_earned/simulation_assumption_manifest.json",
+    "schema": "oph_simulation_assumption_manifest_v1",
+    "assumptions": {
+      "screen_s2": {
+        "label": "finite observer screen is S2",
+        "applies_to": [
+          "screen",
+          "visualizationViews.fluctuatingQuantumVacuum"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "bw_2pi_geometric_branch": {
+        "label": "BW 2*pi branch supplies the geometric observer clock",
+        "applies_to": [
+          "observerModularTime",
+          "consensusBulk"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "observer_modular_time_interpretation": {
+        "label": "finite modular-depth readout is rendered as observer-experienced time",
+        "applies_to": [
+          "observerModularTime",
+          "subjectiveObserverCameras[*].timeFrames"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "h3_observer_chart": {
+        "label": "observer-facing spatial chart is H3",
+        "applies_to": [
+          "consensusBulk",
+          "coordinateSystems.h3_hyperboloid_spatial_components_v1"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "screen_observer_to_h3_camera_embedding": {
+        "label": "an S2 observer axis determines an inward-looking H3 camera frame",
+        "applies_to": [
+          "subjectiveObserverCameras",
+          "assumedDs4Spacetime.observerReferenceFrames"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "record_population_on_h3": {
+        "label": "persistent consensus records populate the observer-facing H3 chart",
+        "applies_to": [
+          "consensusBulk.objects",
+          "emergentCurvedSpacetime.continuousBulkField"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "refinement_naturality_visualization": {
+        "label": "the visual chart/population handoff is treated as refinement-natural",
+        "applies_to": [
+          "consensusBulk",
+          "visualizationRenderData.sceneGraph.bulk"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "ds4_open_slicing_background": {
+        "label": "the H3 chart is placed in an open-slicing de Sitter background",
+        "applies_to": [
+          "assumedDs4Spacetime"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "positive_cosmological_constant": {
+        "label": "the renderer uses positive Lambda=3H^2",
+        "applies_to": [
+          "assumedDs4Spacetime.geometry.cosmologicalConstant"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "observer_tetrad_visualization": {
+        "label": "observer cameras carry comoving reference frames/tetrads",
+        "applies_to": [
+          "assumedDs4Spacetime.observerReferenceFrames"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "topological_defects_render_as_matter": {
+        "label": "topological defect worldlines receive matter-like visual styling",
+        "applies_to": [
+          "assumedDs4Spacetime.defectMatterRendering"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "cmb_screen_to_temperature_transfer_visualization": {
+        "label": "screen readout is handed to a CMB-temperature transfer renderer",
+        "applies_to": [
+          "cmbComparison.assumedVisualization",
+          "visualizationRenderData.plotSeries"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      },
+      "cmb_tt_reference_shape_visualization": {
+        "label": "a pinned measured/reference TT shape completes the explanatory CMB view",
+        "applies_to": [
+          "cmbComparison.assumedVisualization.referenceRows"
+        ],
+        "status": "assumed_for_visualization",
+        "assumed": true,
+        "provenance": "explicit_simulation_assumption",
+        "proof_receipt": false,
+        "physical_measurement_receipt": false
+      }
+    },
+    "missing_assumptions": [],
+    "ds4_visualization_parameters": {
+      "coordinate_chart": "open_h3_slicing",
+      "metric": "ds^2=-d_tau^2+H^-2*sinh(H*tau)^2*dH3^2",
+      "curvature_radius": 1.0,
+      "hubble_parameter": 1.0,
+      "declared_curvature_radius": 1.0,
+      "declared_hubble_parameter": 1.0,
+      "parameter_inputs_valid": true,
+      "de_sitter_radius_relation_valid": true,
+      "proper_time_min_over_h": 0.05,
+      "proper_time_max_over_h": 3.0,
+      "proper_time_range_valid": true,
+      "normalization_policy": "H=1/curvature_radius; radius wins when both are declared",
+      "time_sample_count": 96,
+      "time_sample_count_valid": true,
+      "units": "simulation_units",
+      "units_valid": true,
+      "provenance": "explicit_simulation_assumption"
+    },
+    "observer_camera_visualization_parameters": {
+      "coordinate_system": "h3_hyperboloid_spatial_components_v1",
+      "h3_radial_coordinate": 1.18,
+      "look_at": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "orientation": "inward_radial",
+      "fov_degrees": 72.0,
+      "parameter_inputs_valid": true,
+      "provenance": "explicit_simulation_assumption"
+    },
+    "cmb_visualization_parameters": {
+      "reference_label": "Planck2018_TT_binned",
+      "reference_path": "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+      "reference_source_url": "https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+      "reference_sha256": "sha256:ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd",
+      "transfer_model": "pinned_tt_reference_best_fit_visualization",
+      "sky_realization_seed": 20260752,
+      "parameter_inputs_valid": true,
+      "provenance": "explicit_simulation_assumption",
+      "claim_boundary": "Pinned observed/reference TT rows and their published best-fit column are visual references, not an OPH prediction or fitted simulator output."
+    },
+    "computed_theorem_receipts_unchanged": true
+  },
+  "chart_blind_strict_neutral_quotient_bulk_receipt": false,
+  "strict_neutral_bulk_contract_receipt": false,
+  "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": false,
+  "EINSTEIN_BRANCH_ENTRY_RECEIPT": false,
+  "einstein_branch_entry_contract_receipt": false,
+  "issue_503_einstein_branch_entry_status": "open_or_unreported",
+  "einstein_bridge_manifest_written": true,
+  "einstein_bridge_manifest": {
+    "receipt": true,
+    "dependency_discharge_receipt": true,
+    "run_receipts_receipt": false,
+    "claim_tier": "OPH5_E0_THEOREM_BACKED_RUN_RECEIPTS_OPEN",
+    "blockers": [
+      "sphere_fold",
+      "bw_2pi",
+      "null_stress",
+      "bounded_interval",
+      "fixed_cap_entropy",
+      "small_ball_area",
+      "remainder_control",
+      "timelike_coverage",
+      "stress_closure",
+      "lambda_closure",
+      "newton_forbidden_input_audit",
+      "einstein_residual"
+    ],
+    "required_receipt_files": [
+      "sphere_fold_receipt.json",
+      "bw_receipt.json",
+      "null_stress_receipt.json",
+      "bounded_interval_receipt.json",
+      "fixed_cap_entropy_receipt.json",
+      "small_ball_area_receipt.json",
+      "remainder_receipt.json",
+      "timelike_coverage_receipt.json",
+      "stress_closure_receipt.json",
+      "lambda_closure_receipt.json",
+      "newton_forbidden_input_receipt.json",
+      "einstein_residual_receipt.json"
+    ],
+    "provenance_tags": {
+      "AllTimelikeCoverage": "LEMMA_E0_7",
+      "BW_2pi": "THEOREM_4_2",
+      "BoundedInterval": "LEMMA_E0_5",
+      "FixedCapStat": "AXIOM_3_PLUS_4",
+      "GeomRead": "THEOREM_E0_STEP_1",
+      "Lambda": "D6_NCRC_CLOSURE",
+      "Lorentz_H3": "THEOREM_E0_STEP_2",
+      "MAR": "AXIOM_5",
+      "NullStress": "THEOREM_5_2G",
+      "RemainderControl": "LEMMA_E0_6",
+      "S2_screen": "AXIOM_1",
+      "S_gen": "AXIOM_4",
+      "SmallBallArea": "STANDARD_GEOMETRY_AFTER_GEOMREAD",
+      "StressClosure": "PROPOSITION_E2",
+      "local_MaxEnt": "AXIOM_3",
+      "overlap_consistency": "AXIOM_2",
+      "sphere_fold": "MICROPHYSICS_SPHERE_FOLD"
+    }
+  },
+  "issue_308_bw_certificate": {
+    "receipt": false,
+    "tier": "BW0",
+    "report_written": false,
+    "nonclaims": {},
+    "primary_blockers": []
+  },
+  "ISSUE_308_FINITE_CAP_BW_CERTIFICATE_RECEIPT": false,
+  "issue_308_finite_cap_bw_certificate_receipt": false,
+  "issue_309_cap_normal_h3_chart": {
+    "receipt": false,
+    "terminal_status": null,
+    "report_written": false,
+    "mandatory_nonclaims": {},
+    "primary_blockers": []
+  },
+  "CAP_NORMAL_H3_CHART_RECEIPT": false,
+  "cap_normal_h3_chart_receipt": false,
+  "issue_310_modular_response_h3_localization": {
+    "receipt": false,
+    "terminal_status": null,
+    "report_written": false,
+    "component_receipts": {},
+    "primary_blockers": []
+  },
+  "MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT": false,
+  "h3_modular_response_localization_receipt": false,
+  "blockers": [
+    "C0_finite_consensus_theorem",
+    "L3_kms_modular_clock_fit",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate",
+    "T309_cap_normal_h3_chart",
+    "T310_modular_response_h3_localization"
+  ],
+  "primary_blockers": [
+    "C0_finite_consensus_theorem",
+    "L3_kms_modular_clock_fit",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality"
+  ],
+  "paper_geometric_branch_blockers": [
+    "C0_finite_consensus_theorem",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate",
+    "T309_cap_normal_h3_chart",
+    "T310_modular_response_h3_localization"
+  ],
+  "paper_geometric_branch_primary_blockers": [
+    "C0_finite_consensus_theorem",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate"
+  ],
+  "chart_blind_strict_neutral_blockers": [
+    "L7_refinement_naturality",
+    "B4_strict_neutral_bulk_audit"
+  ],
+  "strict_neutral_blockers": [
+    "L7_refinement_naturality",
+    "B4_strict_neutral_bulk_audit"
+  ],
+  "einstein_branch_entry_blockers": [
+    "E0_einstein_branch_entry_umbrella",
+    "E1_null_generator_stress_charge",
+    "E2_fixed_cap_entropy_stationarity",
+    "E3_small_ball_area_bridge",
+    "E4_all_timelike_tensor_upgrade",
+    "E5_lambda_constancy_conservation",
+    "E6_newton_coupling_forbidden_input_audit"
+  ],
+  "einstein_branch_entry_primary_blockers": [
+    "E0_einstein_branch_entry_umbrella",
+    "E1_null_generator_stress_charge",
+    "E2_fixed_cap_entropy_stationarity",
+    "E3_small_ball_area_bridge",
+    "E4_all_timelike_tensor_upgrade",
+    "E5_lambda_constancy_conservation"
+  ],
+  "einstein_branch_entry_child_gates": {
+    "E1_null_generator_stress_charge": false,
+    "E2_fixed_cap_entropy_stationarity": false,
+    "E3_small_ball_area_bridge": false,
+    "E4_all_timelike_tensor_upgrade": false,
+    "E5_lambda_constancy_conservation": false,
+    "E6_newton_coupling_forbidden_input_audit": false
+  },
+  "all_stage_blockers": [
+    "C0_finite_consensus_theorem",
+    "L3_kms_modular_clock_fit",
+    "L4_support_visible_bw_covariance",
+    "L5_ordered_cut_pair_rigidity",
+    "L6_lorentz_algebra_closure",
+    "L7_refinement_naturality",
+    "T308_finite_cap_bw_certificate",
+    "T309_cap_normal_h3_chart",
+    "T310_modular_response_h3_localization",
+    "B4_strict_neutral_bulk_audit",
+    "E0_einstein_branch_entry_umbrella",
+    "E1_null_generator_stress_charge",
+    "E2_fixed_cap_entropy_stationarity",
+    "E3_small_ball_area_bridge",
+    "E4_all_timelike_tensor_upgrade",
+    "E5_lambda_constancy_conservation",
+    "E6_newton_coupling_forbidden_input_audit"
+  ],
+  "observer_like_self_reading_system_receipt": true,
+  "observer_row_summary": {
+    "observer_view_count": 8196,
+    "patch_observer_count": 8192,
+    "cap_observer_count": 4,
+    "rows_with_support_nodes": 8192,
+    "rows_with_readout_hash": 8192,
+    "rows_with_transition_histories": 8192,
+    "rows_with_modular_time": 8196
+  },
+  "claim_boundary": "Computed finite OPH spacetime/bulk emergence audit. This is stricter than branch replay: OPH tech must instantiate observer-like self-reading systems with local state, boundaries, readback, records, feedback/repair moves, and public evidence bundles. The legacy finite Lorentz/modular L-lane stops at support-visible BW covariance, cut-pair rigidity diagnostics, Lorentz algebra closure, and an endogenous finite KMS clock fit. The issue #308 BW3 theorem receipt is stricter: it requires primitive cap-normal, frame, support-order, held-out cross-ratio, mixed-GNS, geometric KMS, wrong-scale, and envelope fields. The paper-geometric diagnostic may use the declared theorem chart, but its computed contract still requires issue #308/#309 and L7 refinement receipts. The separate SIMULATION_ASSUMED_* tier may complete a renderer scene from an explicit assumption manifest; it never changes these computed receipts. The issue #309 chart receipt proves the cap-normal H3 chart; the issue #310 localization receipt is the stricter route for record-populated observer-facing H3, requiring record-conditioned responses, a compact domain, verified epsilon-net metadata, alpha>0, bounded error, and positive Delta_loc for unique finite points. The observer spacetime receipt adds the H3 response and observer-local 3+1D experience. The observer-facing consensus 3D bulk receipt adds shared record/object population in that H3 chart. The chart-blind strict neutral quotient audit is a separate stronger certificate and is reported without being required for the observer-facing 3D theorem receipt. The Einstein branch-entry receipt is separate again: the E0 paper theorem discharges the OPH5 bridge dependencies, but no run promotes production gravity unless the manifest sidecar receipts for stress, entropy, bounded interval, small ball, remainder, timelike coverage, stress closure, Lambda, Newton audit, and residual checks are explicitly closed.",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "branch_instantiation_sanity",
+  "receipt_name": "FINITE_OPH_THEOREM_CONTRACT_AUDIT",
+  "observable_id": "finite_observer_spacetime_bulk_contract",
+  "fit_objective": "paper_faithful_theorem_hypothesis_receipts",
+  "physical_claim": false
+}

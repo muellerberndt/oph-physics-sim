@@ -1,0 +1,2400 @@
+{
+  "mode": "prime_geometric_modular_response_attachment_v0",
+  "observer_count": 8192,
+  "attached_observer_count": 8192,
+  "input_feature_count": 312,
+  "spectrum_width": 64,
+  "component_bins": 8,
+  "prime_geometric": {
+    "observables": [
+      "checkpoint_class",
+      "s3_sector_class",
+      "stable_flag"
+    ],
+    "feature_types": [
+      "change_probability_delta",
+      "class_distribution_delta",
+      "class_log_odds_delta",
+      "entropy_delta",
+      "sector_preservation_delta",
+      "target_distribution_delta",
+      "transition_matrix_delta"
+    ],
+    "selected_feature_count": 128,
+    "grouped_feature_count": 96,
+    "group_keys_sample": [
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      }
+    ],
+    "embedding": {
+      "mode": "svd_component_spectrum",
+      "input_feature_count": 96,
+      "component_count": 64,
+      "output_width": 64,
+      "rank_selection": {
+        "mode": "svd_rank_selection_v0",
+        "component_count": 96,
+        "singular_values_top": [
+          199.31124806528373,
+          196.37922565524542,
+          194.26942408667006,
+          188.38124860652948,
+          180.6780021223247,
+          176.4243595858544,
+          172.97118443715254,
+          165.01349539851194,
+          156.90869658817712,
+          141.18386424681364,
+          128.59772993472785,
+          119.95102153373759,
+          114.54585379442642,
+          111.76305497878224,
+          108.35873302983931,
+          106.26345004014716,
+          91.00108115699145,
+          89.91375802147523,
+          89.64606700309207,
+          89.3929171306597,
+          88.9227088594042,
+          88.09474171320174,
+          85.61367823443268,
+          81.55558116326883,
+          8.244318144960278,
+          5.138167221133935,
+          3.2098216409808082,
+          2.9815070071101126,
+          2.8166402561238697,
+          2.5854266925364895,
+          2.101484363177743,
+          1.9380727478567243,
+          1.776216371905938,
+          1.4585046073056769,
+          1.3921424333697605,
+          1.287449041346472,
+          1.1079520994974708,
+          1.0042621396508808,
+          0.9651102611911461,
+          0.9445020167942609,
+          8.670235413569387e-14,
+          7.957616610805588e-14,
+          7.677633822718904e-14,
+          5.779220580322303e-14,
+          4.5413852814439726e-14,
+          4.2690778349231895e-14,
+          3.6872353574851806e-14,
+          3.222423611705169e-14,
+          3.092178394320281e-14,
+          2.838003748495502e-14,
+          2.4526306535361353e-14,
+          2.0595644373913405e-14,
+          2.0241596613247906e-14,
+          1.8337376118698887e-14,
+          1.6432159980951298e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14,
+          1.6375442359426437e-14
+        ],
+        "explained_variance_fraction_top": [
+          0.08659357039389705,
+          0.08406459322020132,
+          0.08226799912581624,
+          0.07735659970213767,
+          0.0711594509689653,
+          0.06784832470545928,
+          0.06521831108222186,
+          0.05935549853435999,
+          0.053668080062867565,
+          0.043450237870707266,
+          0.0360486191762983,
+          0.03136389065766945,
+          0.028600970941803222,
+          0.027228176570762198,
+          0.02559468955739046,
+          0.024614433973987798,
+          0.018051576389293875,
+          0.01762277631823818,
+          0.017517999549043647,
+          0.01741920173237172,
+          0.01723643308562003,
+          0.01691694753922757,
+          0.015977482170822083,
+          0.014498711327424247,
+          0.00014816018605983466,
+          5.754909491911801e-05,
+          2.245865950864242e-05,
+          1.937731940884552e-05,
+          1.729357546652121e-05,
+          1.4570903630894625e-05,
+          9.626631663034852e-06,
+          8.187704851390106e-06,
+          6.877233450375569e-06,
+          4.6370058103984e-06,
+          4.224636742267451e-06,
+          3.613117837227848e-06,
+          2.675863766873721e-06,
+          2.1984480615586747e-06,
+          2.0303733090132405e-06,
+          1.9445889276306725e-06,
+          1.6386409678151314e-32,
+          1.3803462900340274e-32,
+          1.2849221609008198e-32,
+          7.280489352857504e-33,
+          4.4957145199401743e-33,
+          3.972740295548023e-33,
+          2.963628405214335e-33,
+          2.2635354032843417e-33,
+          2.0842562478858192e-33,
+          1.7556904986734704e-33,
+          1.3112525117416575e-33,
+          9.246402569944346e-34,
+          8.931235906403657e-34,
+          7.329872412951404e-34,
+          5.885879116376111e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34,
+          5.845317567376222e-34
+        ],
+        "cumulative_explained_variance_top": [
+          0.08659357039389705,
+          0.17065816361409836,
+          0.2529261627399146,
+          0.33028276244205224,
+          0.40144221341101755,
+          0.4692905381164768,
+          0.5345088491986987,
+          0.5938643477330586,
+          0.6475324277959262,
+          0.6909826656666335,
+          0.7270312848429318,
+          0.7583951755006012,
+          0.7869961464424045,
+          0.8142243230131666,
+          0.839819012570557,
+          0.8644334465445448,
+          0.8824850229338387,
+          0.9001077992520768,
+          0.9176257988011205,
+          0.9350450005334923,
+          0.9522814336191123,
+          0.9691983811583399,
+          0.985175863329162,
+          0.9996745746565862,
+          0.9998227348426459,
+          0.999880283937565,
+          0.9999027425970737,
+          0.9999221199164825,
+          0.999939413491949,
+          0.9999539843955799,
+          0.999963611027243,
+          0.9999717987320943,
+          0.9999786759655447,
+          0.9999833129713551,
+          0.9999875376080974,
+          0.9999911507259347,
+          0.9999938265897016,
+          0.9999960250377632,
+          0.9999980554110722,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999
+        ],
+        "rank3_cumulative_explained_variance": 0.2529261627399146,
+        "rank90": 18,
+        "rank95": 21,
+        "spectral_entropy": 3.0008989680328275,
+        "effective_rank": 20.10360129723464,
+        "participation_rank": 17.565988667368526,
+        "largest_gap_rank": 40,
+        "chord_elbow_rank": 40,
+        "independent_rank3_selector_receipt": false,
+        "claim_boundary": "Rank selector from observer-visible modular-response singular values only. It is independent of downstream dimension estimation, S2 axes, H3 coordinates, and target rank. It is diagnostic unless stable across refinement and controls."
+      },
+      "claim_boundary": "Data-derived compression of observer-visible modular-response rows. It uses no target geometry; distances computed from it must still pass leakage and shuffled controls."
+    }
+  },
+  "prime_geometric_control_quotient": {
+    "mode": "control_quotient_response_matrix_v0",
+    "raw": {
+      "observables": [
+        "checkpoint_class",
+        "s3_sector_class",
+        "stable_flag"
+      ],
+      "feature_types": [
+        "change_probability_delta",
+        "class_distribution_delta",
+        "class_log_odds_delta",
+        "entropy_delta",
+        "sector_preservation_delta",
+        "target_distribution_delta",
+        "transition_matrix_delta"
+      ],
+      "selected_feature_count": 128,
+      "grouped_feature_count": 96,
+      "group_keys_sample": [
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 4
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 2
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 0,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 4
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 2
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 1,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 4
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 2
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 2,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 4
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 2
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 3,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 4
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "s3_sector_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 2
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 4,
+          "time_index": 0,
+          "observable": "stable_flag",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 5,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "change_probability_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 5,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "class_distribution_delta",
+          "source_feature_count": 4
+        },
+        {
+          "cap_index": 5,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "entropy_delta",
+          "source_feature_count": 1
+        },
+        {
+          "cap_index": 5,
+          "time_index": 0,
+          "observable": "checkpoint_class",
+          "feature_type": "sector_preservation_delta",
+          "source_feature_count": 1
+        }
+      ]
+    },
+    "controls": [
+      {
+        "name": "s2_boundary_control",
+        "used": true,
+        "shape": [
+          8192,
+          96
+        ],
+        "grouped_feature_count": 96
+      },
+      {
+        "name": "no_modular_flow_control",
+        "used": true,
+        "shape": [
+          8192,
+          96
+        ],
+        "grouped_feature_count": 96
+      },
+      {
+        "name": "wrong_scale_control_1x",
+        "used": true,
+        "shape": [
+          8192,
+          96
+        ],
+        "grouped_feature_count": 96
+      },
+      {
+        "name": "wrong_scale_control_4pi",
+        "used": true,
+        "shape": [
+          8192,
+          96
+        ],
+        "grouped_feature_count": 96
+      },
+      {
+        "name": "wrong_scale_control_pi",
+        "used": true,
+        "shape": [
+          8192,
+          96
+        ],
+        "grouped_feature_count": 96
+      }
+    ],
+    "control_count": 5,
+    "control_basis_rank": 24,
+    "max_control_rank": 24,
+    "singular_value_floor": 1e-06,
+    "raw_centered_frobenius_norm": 717.9627551456674,
+    "residual_frobenius_norm": 671.7880649791196,
+    "residual_energy_fraction": 0.9356865104274392,
+    "claim_boundary": "Finite diagnostic quotient: raw observer-visible prime-geometric modular responses are projected away from observer-level directions spanned by cached regulator controls. This approximates, but does not prove, the paper-side repair-invariant overlap-trivial quotient.",
+    "embedding": {
+      "mode": "svd_component_spectrum",
+      "input_feature_count": 96,
+      "component_count": 64,
+      "output_width": 64,
+      "rank_selection": {
+        "mode": "svd_rank_selection_v0",
+        "component_count": 96,
+        "singular_values_top": [
+          200.34201541151654,
+          193.75145216335594,
+          191.34848453134543,
+          187.59119254115234,
+          181.86246568060702,
+          177.2771836520409,
+          172.48913531347077,
+          162.952508948895,
+          134.55615024948116,
+          130.8100816567047,
+          128.65683518589373,
+          125.2556032520949,
+          122.31891654857304,
+          121.07439785035011,
+          119.31978376069709,
+          118.21827207366866,
+          92.39547134665123,
+          91.26845229652955,
+          89.93021799832471,
+          89.79695815492241,
+          89.27759300303933,
+          87.92561797536202,
+          86.53472612445769,
+          82.42667197954503,
+          8.816653614917081,
+          5.574167860494633,
+          3.569096018916797,
+          3.0131450620118874,
+          2.9921797196455877,
+          2.6418597815016014,
+          2.1806270533219716,
+          2.004737375098273,
+          1.7886443765234454,
+          1.6096379155587028,
+          1.5588943815550846,
+          1.3685599610789734,
+          1.184699490484206,
+          1.0558323878297555,
+          1.0520585555653055,
+          1.0190799685282572,
+          9.663218882451559e-14,
+          5.4716549986695106e-14,
+          5.317928944266023e-14,
+          5.257307900779621e-14,
+          3.106811728482147e-14,
+          2.8458083399218684e-14,
+          2.8206543010333306e-14,
+          2.7590238542641656e-14,
+          2.7507254092316302e-14,
+          2.191000603344732e-14,
+          2.0178146563143874e-14,
+          1.9492873611592463e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14,
+          1.699743273358567e-14
+        ],
+        "explained_variance_fraction_top": [
+          0.08749154911400565,
+          0.081829888949605,
+          0.07981271478367949,
+          0.07670910539684117,
+          0.07209550350391923,
+          0.0685058590340738,
+          0.06485530700942736,
+          0.05788208045466767,
+          0.039466547437310234,
+          0.03729962477119173,
+          0.03608176365454585,
+          0.03419923214731751,
+          0.03261439153533232,
+          0.03195410551850424,
+          0.031034656626455055,
+          0.030464302830470368,
+          0.018609015601828104,
+          0.018157807234854315,
+          0.01762922910249155,
+          0.017577021340238044,
+          0.01737428635170274,
+          0.01685205578689423,
+          0.01632310883753073,
+          0.014810085304529489,
+          0.00016944532332377935,
+          6.773016212893089e-05,
+          2.776760949761031e-05,
+          1.9790743505699416e-05,
+          1.9516295241564823e-05,
+          1.521393499127129e-05,
+          1.036537027779642e-05,
+          8.760663589730207e-06,
+          6.973808736896938e-06,
+          5.647788389378499e-06,
+          5.297310295854861e-06,
+          4.082720875480609e-06,
+          3.0594152892053595e-06,
+          2.4300319806568317e-06,
+          2.4126918342332166e-06,
+          2.2638026259407117e-06,
+          2.0354744866544086e-32,
+          6.526185918418891e-33,
+          6.164631054744684e-33,
+          6.0248862922886035e-33,
+          2.1040298715284565e-33,
+          1.7653601744665656e-33,
+          1.7342901362692314e-33,
+          1.6593306685090614e-33,
+          1.6493639868583716e-33,
+          1.0464223902799288e-33,
+          8.875331305884548e-34,
+          8.282734933853535e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34,
+          6.297797492605363e-34
+        ],
+        "cumulative_explained_variance_top": [
+          0.08749154911400565,
+          0.16932143806361066,
+          0.24913415284729015,
+          0.3258432582441313,
+          0.39793876174805054,
+          0.46644462078212434,
+          0.5312999277915517,
+          0.5891820082462194,
+          0.6286485556835296,
+          0.6659481804547214,
+          0.7020299441092672,
+          0.7362291762565847,
+          0.768843567791917,
+          0.8007976733104212,
+          0.8318323299368763,
+          0.8622966327673467,
+          0.8809056483691748,
+          0.8990634556040291,
+          0.9166926847065207,
+          0.9342697060467587,
+          0.9516439923984614,
+          0.9684960481853556,
+          0.9848191570228864,
+          0.9996292423274159,
+          0.9997986876507396,
+          0.9998664178128686,
+          0.9998941854223662,
+          0.9999139761658719,
+          0.9999334924611134,
+          0.9999487063961047,
+          0.9999590717663824,
+          0.9999678324299721,
+          0.999974806238709,
+          0.9999804540270985,
+          0.9999857513373943,
+          0.9999898340582698,
+          0.999992893473559,
+          0.9999953235055397,
+          0.9999977361973739,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998,
+          0.9999999999999998
+        ],
+        "rank3_cumulative_explained_variance": 0.24913415284729015,
+        "rank90": 19,
+        "rank95": 21,
+        "spectral_entropy": 3.015213156687522,
+        "effective_rank": 20.39343747486566,
+        "participation_rank": 17.915889203466048,
+        "largest_gap_rank": 40,
+        "chord_elbow_rank": 40,
+        "independent_rank3_selector_receipt": false,
+        "claim_boundary": "Rank selector from observer-visible modular-response singular values only. It is independent of downstream dimension estimation, S2 axes, H3 coordinates, and target rank. It is diagnostic unless stable across refinement and controls."
+      },
+      "claim_boundary": "Data-derived compression of observer-visible modular-response rows. It uses no target geometry; distances computed from it must still pass leakage and shuffled controls."
+    }
+  },
+  "support_visible": {
+    "observables": [
+      "checkpoint_class",
+      "repair_load_bucket",
+      "s3_sector_class",
+      "stable_flag"
+    ],
+    "feature_types": [
+      "change_probability_delta",
+      "class_distribution_delta",
+      "class_log_odds_delta",
+      "entropy_delta",
+      "sector_preservation_delta",
+      "target_distribution_delta",
+      "transition_matrix_delta"
+    ],
+    "selected_feature_count": 160,
+    "grouped_feature_count": 128,
+    "group_keys_sample": [
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 4
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "checkpoint_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "s3_sector_class",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 2
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "stable_flag",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      }
+    ],
+    "embedding": {
+      "mode": "svd_component_spectrum",
+      "input_feature_count": 128,
+      "component_count": 64,
+      "output_width": 64,
+      "rank_selection": {
+        "mode": "svd_rank_selection_v0",
+        "component_count": 128,
+        "singular_values_top": [
+          199.31124806528362,
+          196.37922565524534,
+          194.26942408666997,
+          188.38124860652925,
+          180.6780021223248,
+          176.42435958585443,
+          172.97118443715246,
+          165.01349539851185,
+          156.90869658817704,
+          141.1838642468137,
+          128.59772993472785,
+          119.9510215337376,
+          114.54585379442635,
+          111.76305497878218,
+          108.35873302983927,
+          106.26345004014719,
+          91.00108115699149,
+          89.91375802147526,
+          89.64606700309209,
+          89.39291713065974,
+          88.92270885940418,
+          88.09474171320177,
+          85.61367823443265,
+          81.55558116326871,
+          8.244318144960289,
+          5.138167221133933,
+          3.2098216409808105,
+          2.9815070071101135,
+          2.81664025612387,
+          2.5854266925364846,
+          2.1014843631777427,
+          1.9380727478567237,
+          1.7762163719059392,
+          1.4585046073056764,
+          1.3921424333697592,
+          1.2874490413464792,
+          1.107952099497469,
+          1.0042621396508826,
+          0.9651102611911462,
+          0.944502016794264,
+          1.0920126019096283e-13,
+          8.389796348943217e-14,
+          8.300399602045179e-14,
+          7.822376950320891e-14,
+          5.781988799350189e-14,
+          5.1637329120201673e-14,
+          3.851210246776681e-14,
+          3.078942810694221e-14,
+          3.0208080010203244e-14,
+          2.4075203769816676e-14,
+          1.736502608677877e-14,
+          1.6488608345590555e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14,
+          1.6375442359426447e-14
+        ],
+        "explained_variance_fraction_top": [
+          0.08659357039389701,
+          0.0840645932202013,
+          0.08226799912581621,
+          0.07735659970213753,
+          0.07115945096896542,
+          0.06784832470545933,
+          0.06521831108222183,
+          0.059355498534359966,
+          0.05366808006286754,
+          0.04345023787070733,
+          0.03604861917629832,
+          0.03136389065766947,
+          0.0286009709418032,
+          0.027228176570762184,
+          0.025594689557390454,
+          0.024614433973987822,
+          0.0180515763892939,
+          0.017622776318238196,
+          0.017517999549043664,
+          0.017419201732371745,
+          0.017236433085620034,
+          0.016916947539227588,
+          0.01597748217082208,
+          0.014498711327424214,
+          0.00014816018605983515,
+          5.7549094919117976e-05,
+          2.245865950864246e-05,
+          1.937731940884554e-05,
+          1.7293575466521222e-05,
+          1.4570903630894576e-05,
+          9.626631663034852e-06,
+          8.187704851390104e-06,
+          6.877233450375582e-06,
+          4.637005810398399e-06,
+          4.224636742267445e-06,
+          3.6131178372278895e-06,
+          2.6758637668737138e-06,
+          2.1984480615586836e-06,
+          2.030373309013242e-06,
+          1.944588927630686e-06,
+          2.599425229163986e-32,
+          1.5343515183964528e-32,
+          1.5018274264446105e-32,
+          1.3338270166214334e-32,
+          7.287465662451838e-33,
+          5.8123207281233186e-33,
+          3.2330802622937256e-33,
+          2.066451771659989e-33,
+          1.989153394214829e-33,
+          1.263461383401479e-33,
+          6.5731404112572215e-34,
+          5.9263873546988045e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34,
+          5.8453175673762305e-34
+        ],
+        "cumulative_explained_variance_top": [
+          0.08659357039389701,
+          0.1706581636140983,
+          0.25292616273991453,
+          0.33028276244205207,
+          0.4014422134110175,
+          0.4692905381164768,
+          0.5345088491986987,
+          0.5938643477330586,
+          0.6475324277959261,
+          0.6909826656666335,
+          0.7270312848429318,
+          0.7583951755006012,
+          0.7869961464424045,
+          0.8142243230131666,
+          0.839819012570557,
+          0.8644334465445448,
+          0.8824850229338387,
+          0.9001077992520768,
+          0.9176257988011205,
+          0.9350450005334923,
+          0.9522814336191123,
+          0.9691983811583399,
+          0.985175863329162,
+          0.9996745746565862,
+          0.9998227348426459,
+          0.999880283937565,
+          0.9999027425970737,
+          0.9999221199164825,
+          0.999939413491949,
+          0.9999539843955799,
+          0.999963611027243,
+          0.9999717987320943,
+          0.9999786759655447,
+          0.9999833129713551,
+          0.9999875376080974,
+          0.9999911507259347,
+          0.9999938265897016,
+          0.9999960250377632,
+          0.9999980554110722,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999,
+          0.9999999999999999
+        ],
+        "rank3_cumulative_explained_variance": 0.25292616273991453,
+        "rank90": 18,
+        "rank95": 21,
+        "spectral_entropy": 3.0008989680328275,
+        "effective_rank": 20.10360129723464,
+        "participation_rank": 17.565988667368533,
+        "largest_gap_rank": 40,
+        "chord_elbow_rank": 40,
+        "independent_rank3_selector_receipt": false,
+        "claim_boundary": "Rank selector from observer-visible modular-response singular values only. It is independent of downstream dimension estimation, S2 axes, H3 coordinates, and target rank. It is diagnostic unless stable across refinement and controls."
+      },
+      "claim_boundary": "Data-derived compression of observer-visible modular-response rows. It uses no target geometry; distances computed from it must still pass leakage and shuffled controls."
+    }
+  },
+  "repair_only": {
+    "observables": [
+      "repair_load_bucket"
+    ],
+    "feature_types": [
+      "change_probability_delta",
+      "class_distribution_delta",
+      "class_log_odds_delta",
+      "entropy_delta",
+      "sector_preservation_delta",
+      "target_distribution_delta",
+      "transition_matrix_delta"
+    ],
+    "selected_feature_count": 32,
+    "grouped_feature_count": 32,
+    "group_keys_sample": [
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 0,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 1,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 2,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 3,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 4,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 5,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 6,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 6,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 6,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 6,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 7,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "change_probability_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 7,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "class_distribution_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 7,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "entropy_delta",
+        "source_feature_count": 1
+      },
+      {
+        "cap_index": 7,
+        "time_index": 0,
+        "observable": "repair_load_bucket",
+        "feature_type": "sector_preservation_delta",
+        "source_feature_count": 1
+      }
+    ],
+    "embedding": {
+      "mode": "svd_component_spectrum",
+      "input_feature_count": 32,
+      "component_count": 32,
+      "output_width": 32,
+      "rank_selection": {
+        "mode": "svd_rank_selection_v0",
+        "component_count": 0,
+        "independent_rank3_selector_receipt": false,
+        "reason": "no_positive_singular_values"
+      },
+      "claim_boundary": "Data-derived compression of observer-visible modular-response rows. It uses no target geometry; distances computed from it must still pass leakage and shuffled controls."
+    }
+  },
+  "primary_forbidden_features": [
+    "S2 axes",
+    "support_nodes",
+    "H3 fitted points",
+    "cap target coordinates",
+    "radial_depth",
+    "modular_depth"
+  ],
+  "claim_boundary": "Observer-visible modular-response attachment for neutral bulk diagnostics. The prime geometric spectrum excludes record-family and repair-load auxiliaries; support-visible and repair-only spectra are emitted as diagnostics. The control-quotient spectrum removes observer-level directions spanned by finite-regulator controls before compression. This does not prove 3D bulk by itself.",
+  "observer_population": {
+    "materialized_observer_count": 32000,
+    "analyzed_observer_count": 8192,
+    "analysis_max_observers": 8192,
+    "analysis_sampling_policy": "deterministic_observer_id_hash_rank_v1",
+    "analysis_subset_hash": "sha256:c9b9604bdb8f24301abf13f7a075b425a612d76b7c77b3bbaff3eff759aece98",
+    "full_population_analyzed": false
+  }
+}

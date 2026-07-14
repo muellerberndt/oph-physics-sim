@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OPH Universe Timeline Visualization</title>
+<style>body{margin:0;background:#0b0f14;color:#e8eef5;font:15px system-ui,sans-serif}main{max-width:900px;margin:4rem auto;padding:2rem}code{color:#78dce8}.card{border:1px solid #33404d;border-radius:12px;padding:1rem;background:#111820}dt{color:#9fb1c3}dd{margin:0 0 .7rem}</style></head>
+<body><main><h1>OPH Universe Timeline Visualization</h1><p>This large export keeps data external so the HTML does not duplicate the full payload.</p>
+<div class="card" id="status">Loading <code>universe_timeline_summary.json</code>…</div>
+<p>If this file was opened directly and loading is blocked, serve the directory with <code>python3 -m http.server</code> and open it over HTTP, or consume <code>oph_visualizer_pack_v2.tar.zst</code>.</p>
+<script>fetch("universe_timeline_summary.json").then(r=>{if(!r.ok)throw Error(r.status);return r.json()}).then(d=>{document.getElementById("status").innerHTML=`<dl><dt>Observers / detailed cameras</dt><dd>${d.observer_count??0} / ${d.objective_observer_view_count??0}</dd><dt>H3 objects / worldlines</dt><dd>${d.h3_object_count??0} / ${d.proto_particle_candidate_worldline_count??0}</dd><dt>Assumed dS4 visual layer</dt><dd>${!!d.assumed_ds4_visualization_layer_receipt}</dd><dt>Pack bytes</dt><dd>${d.visualizer_pack?.byte_count??"building"}</dd><dt>Claim boundary</dt><dd>${d.claim_boundary}</dd></dl>`}).catch(e=>{document.getElementById("status").textContent=`Summary not loaded (${e}). Use an HTTP server or the manifested pack.`});</script>
+</main></body></html>

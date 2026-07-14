@@ -1,0 +1,1 @@
+worldline_id,event_index,cycle,event,class,holonomy_mode,support_node_count,x,y,z,vx,vy,vz,local_stress_density,nearest_defect_id,nearest_h3_separation,support_overlap_fraction,support_overlap_node_count,contact_outcome,transport_distance

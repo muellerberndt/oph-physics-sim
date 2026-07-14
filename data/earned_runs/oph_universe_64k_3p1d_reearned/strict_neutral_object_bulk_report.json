@@ -1,0 +1,313 @@
+{
+  "mode": "strict_neutral_object_bulk_v0",
+  "object_count": 32,
+  "observer_count": 1024,
+  "min_objects": 16,
+  "min_observers_per_object": 3,
+  "max_observer_fraction_per_object": 0.65,
+  "distance_matrix_shape": [
+    32,
+    32
+  ],
+  "dimension": {
+    "diagnostic_target": "neutral_record_feature_quotient_dimension",
+    "not_the_support_visible_chart_dimension": true,
+    "does_not_measure": [
+      "support_visible_s2_screen_dimension",
+      "canonical_h3_spatial_chart_dimension",
+      "forced_simulator_chart_dimension",
+      "paper_D3_support_visible_lorentz_chart_receipt"
+    ],
+    "correlation_dimension": {
+      "estimate": 11.140094503383073,
+      "points_used": 10
+    },
+    "local_mle_dimension": {
+      "median_estimate": 11.104634315139243,
+      "by_k": {
+        "8": 13.115648266453624,
+        "12": 11.7295669534936,
+        "16": 10.479701676784885,
+        "24": 7.601432638860093
+      }
+    },
+    "spectral_dimension": {
+      "estimate": 0.0928482845197935,
+      "tau_count": 5
+    },
+    "diffusion_elbow_dimension": {
+      "estimate": 2,
+      "eigenvalues": [
+        1.0,
+        0.13475609192231533,
+        0.09371821525436053,
+        0.09022930141856372,
+        0.08161352980311687,
+        0.07732628135962871,
+        0.06696723012809146,
+        0.06564518542028046
+      ]
+    },
+    "dimension_gate_estimators": [
+      "correlation_dimension",
+      "local_mle_dimension"
+    ],
+    "estimator_pairwise_gap": 0.035460188243829904,
+    "median_dimension_estimate": 11.12236440926116,
+    "all_estimators_individually_3d": false,
+    "estimators_agree_3d": false,
+    "claim_boundary": "Strict neutral dimension diagnostic for the record-feature quotient after H3 fitted points, cap normals, S2 axes, screen coordinates, radial depth, and modular depth have been excluded. It is not a measurement of the support-visible S2/H3 chart dimension, which is the separate D3 Lorentz/H3 chart branch. The finite-regulator gate uses the median of correlation and local-MLE estimators plus a pairwise-gap bound, because planted 3D controls show a small finite-sample low bias in the correlation estimator. The spectral proxy is reported but not gated because it is not calibrated on the finite planted controls. This is not sufficient for strict neutral bulk without leakage, controls, and refinement gates."
+  },
+  "latent_geometry_selection": {
+    "mode": "strict_neutral_heldout_latent_geometry_selection_v0",
+    "observer_or_object_count": 32,
+    "fit_count": 32,
+    "subsample_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "heldout_pair_count": 124,
+    "train_pair_count": 372,
+    "raw_best_model": "H5",
+    "selected_model": "H2",
+    "selected_family": "H",
+    "selected_dimension": 2,
+    "one_se_threshold": 0.09274678862284286,
+    "selection_rule": "lowest-complexity geometry whose held-out RMSE is within max(0.01, one standard error) of the raw best held-out RMSE",
+    "fits": [
+      {
+        "model": "E2",
+        "family": "E",
+        "dimension": 2,
+        "train_rmse": 0.596093584970686,
+        "heldout_rmse": 0.6417703586065604,
+        "heldout_se": 0.01386038601991663,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": null,
+        "selected_by_one_se": false,
+        "raw_best": false
+      },
+      {
+        "model": "E3",
+        "family": "E",
+        "dimension": 3,
+        "train_rmse": 0.5096439555132339,
+        "heldout_rmse": 0.5594237112128422,
+        "heldout_se": 0.012988585335842963,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": null,
+        "selected_by_one_se": false,
+        "raw_best": false
+      },
+      {
+        "model": "E4",
+        "family": "E",
+        "dimension": 4,
+        "train_rmse": 0.44783573586228914,
+        "heldout_rmse": 0.49232676168611095,
+        "heldout_se": 0.012338272898412186,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": null,
+        "selected_by_one_se": false,
+        "raw_best": false
+      },
+      {
+        "model": "H2",
+        "family": "H",
+        "dimension": 2,
+        "train_rmse": 0.061639282552522594,
+        "heldout_rmse": 0.08355830637502173,
+        "heldout_se": 0.004654569528100646,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": 0.04587720920104756,
+        "selected_by_one_se": true,
+        "raw_best": false
+      },
+      {
+        "model": "H3",
+        "family": "H",
+        "dimension": 3,
+        "train_rmse": 0.055895310063670364,
+        "heldout_rmse": 0.08422511867266225,
+        "heldout_se": 0.004653549867377367,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": 0.04587720920104756,
+        "selected_by_one_se": false,
+        "raw_best": false
+      },
+      {
+        "model": "H4",
+        "family": "H",
+        "dimension": 4,
+        "train_rmse": 0.05300112917437675,
+        "heldout_rmse": 0.08386684646001605,
+        "heldout_se": 0.004627720705907937,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": 0.04587720920104756,
+        "selected_by_one_se": false,
+        "raw_best": false
+      },
+      {
+        "model": "H5",
+        "family": "H",
+        "dimension": 5,
+        "train_rmse": 0.04879471168407969,
+        "heldout_rmse": 0.08274678862284286,
+        "heldout_se": 0.004499257830121469,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": 0.04587720920104756,
+        "selected_by_one_se": false,
+        "raw_best": true
+      },
+      {
+        "model": "S2",
+        "family": "S",
+        "dimension": 2,
+        "train_rmse": 0.3607230589707444,
+        "heldout_rmse": 0.39245184964097257,
+        "heldout_se": 0.02144167532169255,
+        "pair_count_train": 372,
+        "pair_count_heldout": 124,
+        "radius": 0.06553887028721081,
+        "selected_by_one_se": false,
+        "raw_best": false
+      }
+    ],
+    "h3_selected": false,
+    "STRICT_NEUTRAL_LATENT_H3_SELECTION_RECEIPT": false,
+    "h3_margin_vs_s2": 0.3082267309683103,
+    "h3_margin_vs_h2": -0.0006668122976405122,
+    "h3_margin_vs_h4": -0.000358272212646199,
+    "physical_claim": false,
+    "claim_boundary": "Held-out latent-geometry selector over a neutral distance matrix. It replaces raw rank/SVD as a strict-neutral diagnostic, but it is only one gate; it does not establish bulk emergence without object extraction, dimension, leakage, control, and refinement receipts."
+  },
+  "object_geometry_gate": {
+    "object_geometry_gate_pass": false,
+    "dimension_estimators_agree_3d": false,
+    "heldout_latent_h3_selected": false,
+    "dimension_gate_role": "blocking_without_heldout_latent_h3_selection",
+    "claim_boundary": "Object-bulk geometry is promoted by a neutral held-out H3 selector or by calibrated 3D dimension estimators. The correlation/local-MLE dimension estimates remain reported, but they are not used as a veto when the neutral held-out H3 geometry selector passes."
+  },
+  "leakage": {
+    "s2_distance_correlation": 0.07378390253688978,
+    "s2_leakage_pass": false,
+    "screen_axes_used_in_primary_object_extraction": false,
+    "support_nodes_used_in_primary_object_extraction": false,
+    "h3_coordinates_used_in_primary_object_extraction": false,
+    "claim_boundary": "Post-hoc leakage check only. S2 axes are compared after object distances are built and are not used by extraction or distance construction."
+  },
+  "controls": {
+    "mode": "strict_neutral_object_controls_v0",
+    "object_count": 32,
+    "shuffled_records": {
+      "distance_scope": "record_subspace",
+      "distance_shape_correlation_to_original": -0.06709641471017762,
+      "mean_abs_distance_delta": 0.03417638942109803,
+      "full_distance_shape_correlation_to_original": 0.7100602059249079,
+      "full_mean_abs_distance_delta": 0.010759233706641972,
+      "expected_failure_observed": true
+    },
+    "shuffled_transition_labels": {
+      "distance_scope": "transition_subspace",
+      "distance_shape_correlation_to_original": 0.20940402736362296,
+      "mean_abs_distance_delta": 0.024326470669816445,
+      "full_distance_shape_correlation_to_original": 0.46354199097871857,
+      "full_mean_abs_distance_delta": 0.01486617652044338,
+      "expected_failure_observed": true
+    },
+    "shuffled_records_fail": true,
+    "shuffled_transition_labels_fail": true,
+    "claim_boundary": "Run-specific neutral-object controls. Record and transition shuffles are evaluated against their own neutral feature subspaces so a dominant record channel cannot mask a failed transition null. Full-distance correlations are reported for audit only."
+  },
+  "STRICT_NEUTRAL_OBJECT_BULK_RECEIPT": false,
+  "strict_neutral_object_bulk": false,
+  "physical_claim": false,
+  "blockers": [
+    "object_geometry_gate_failed",
+    "object_dimension_estimators_do_not_agree_3d",
+    "heldout_latent_geometry_does_not_select_h3",
+    "object_s2_leakage_audit_failed"
+  ],
+  "primary_features": [
+    "record_signature_histogram",
+    "record_transition_histogram",
+    "object_packet_histogram",
+    "checkpoint_class_transition",
+    "sector_change_signature",
+    "repair_response_spectrum",
+    "repair_load_mean",
+    "mismatch_density_mean",
+    "counterfactual_stability",
+    "transition_history_histograms",
+    "transition_affinity_histograms"
+  ],
+  "forbidden_primary_features": [
+    "axis",
+    "support_nodes",
+    "h3_point",
+    "h3_points",
+    "cap_axis",
+    "cap_normal",
+    "screen_point",
+    "radial_depth",
+    "modular_depth"
+  ],
+  "claim_boundary": "Strict neutral object-bulk diagnostic. It extracts persistent observer-visible object classes without H3/S2/support coordinates, then runs held-out latent geometry selection, diagnostic dimension estimates, leakage, and channel-specific controls. A true receipt is still not a physical cosmology prediction or a full strict-neutral third-person bulk receipt.",
+  "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+  "observer_views_path": "runs/oph_universe_64k_3p1d_reearned/observer_views.jsonl",
+  "source_artifact": {
+    "schema": "strict_neutral_object_bulk_source_v1",
+    "observer_views_path": "observer_views.jsonl",
+    "observer_views_sha256": "sha256:3568f030412ac3db259f438ff6c36e5cee51214d5004984569814905a6abec44",
+    "observer_view_row_count": 1028,
+    "analysis_kernel_file_sha256": "sha256:b3cc5a67b2870b45d47e045b645a8226397b73c004dc63bc8128acd5bc489e88",
+    "analysis_parameters": {
+      "seed": 11,
+      "min_objects": 16,
+      "min_observers_per_object": 3,
+      "max_observer_fraction_per_object": 0.65,
+      "max_model_points": 192,
+      "heldout_fraction": 0.25
+    },
+    "claim_boundary": "Hash-bound observer JSONL and deterministic object-analysis parameters for read-only proof-certificate replay. A persisted object receipt is diagnostic unless this source and the current analysis kernel reproduce it exactly."
+  },
+  "source_manifest_path": "runs/oph_universe_64k_3p1d_reearned/strict_neutral_object_source_manifest.json",
+  "neutral_objects_path": "runs/oph_universe_64k_3p1d_reearned/neutral_objects.jsonl"
+}

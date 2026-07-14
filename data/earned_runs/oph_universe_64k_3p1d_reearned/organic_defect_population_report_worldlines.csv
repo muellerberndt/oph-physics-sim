@@ -1,0 +1,17 @@
+birth_cycle,class_mode,death_cycle,holonomy_mode,lifetime_cycles,mean_transport_distance,observation_count,persistent,worldline_id
+0,transposition,159,5,159,0.04264895291651709,160,True,organic_defect_00
+1,transposition,159,2,158,0.03608998692514117,159,True,organic_defect_01
+2,threecycle,159,3,157,0.05882426536619978,158,True,organic_defect_02
+3,threecycle,159,3,156,0.04901385829968468,157,True,organic_defect_03
+10,transposition,159,1,149,0.04841701036587433,150,True,organic_defect_04
+19,threecycle,159,4,140,0.04437217117019212,141,True,organic_defect_05
+14,threecycle,159,3,145,0.04619945785692782,146,True,organic_defect_06
+2,threecycle,159,3,157,0.04143473403828956,158,True,organic_defect_07
+22,transposition,159,2,137,0.03774352019791444,138,True,organic_defect_08
+16,transposition,159,2,143,0.037883626406250384,144,True,organic_defect_09
+10,transposition,159,2,149,0.03687326610354309,150,True,organic_defect_10
+12,transposition,159,5,147,0.049069002650994537,148,True,organic_defect_11
+16,transposition,159,5,143,0.04391536453959484,144,True,organic_defect_12
+20,threecycle,159,3,139,0.04677519385885312,140,True,organic_defect_13
+4,transposition,159,2,155,0.03711218252942059,156,True,organic_defect_14
+0,threecycle,159,4,159,0.04542973974470653,160,True,organic_defect_15

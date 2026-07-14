@@ -1,0 +1,7 @@
+{
+  "path": "defect_timeline_report.json",
+  "byte_count": 1486529,
+  "compact_json": true,
+  "hard_maximum_bytes_exclusive": 64000000,
+  "under_hard_limit": true
+}

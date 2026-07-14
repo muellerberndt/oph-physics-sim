@@ -1,0 +1,20 @@
+{
+  "mode": "bw_array_visualization_defect_artifacts_v0",
+  "written_any": true,
+  "organic_defect_population_written": true,
+  "free_two_defect_dynamics_written": true,
+  "two_defect_stress_contraction_assay_written": true,
+  "selected_proto_worldline_preference": "organic_defect_population_report",
+  "claim_boundary": "BW-array visualization defect sidecars. Organic multi-defect diagnostics are preferred for natural proto-worldline rendering; two-defect reports are controls/fallbacks. These sidecars do not promote particle matter or production gravity.",
+  "organic_defect_population_receipt": true,
+  "organic_proto_worldline_visualization_receipt": true,
+  "organic_defect_worldline_count": 16,
+  "organic_defect_near_contact_event_count": 783,
+  "organic_fixed_left_right_pair": false,
+  "organic_transverse_motion_present": true,
+  "two_defect_stress_contraction_assay_receipt": true,
+  "controlled_two_defect_is_fallback_only": true,
+  "free_two_defect_dynamics_receipt": true,
+  "free_two_defect_contact_outcome": "scatter",
+  "free_two_defect_straight_x_axis_control": false
+}

@@ -1,0 +1,10 @@
+gate_id,label,needed_input,status,receipt
+carrier_refinement_manifest,Carrier and refinement manifest,"model hashes, local factors, update/repair gates, transfer callbacks, A5 action, orientation involution, translation, record/port operators",not_emitted_by_simulator,False
+twelve_port_rank,Twelve-port dynamical rank,rank R_port=12 with A5 sectors 1+3+3'+5 nonzero under refinement,not_emitted_by_simulator,False
+orientation_independence,Orientation independence,both A5 x C2 orientation parities survive dynamically,not_emitted_by_simulator,False
+conserved_currents,Conserved currents,"edge-cylinder continuity equation and chiral level ranks k_L=24, k_R=12",open_edge_cylinder_required,False
+virasoro_central_charge,Virasoro central charge,lattice stress-tensor modes with c_L -> 24 and c_R -> 12,open_edge_cylinder_required,False
+sugawara_exhaustion,Sugawara exhaustion,T_OPH - T_Sug -> 0; no residual positive-central-charge coset,open_edge_cylinder_required,False
+supercurrent,Supercurrent,right-moving graded sector and local odd supercurrent with Q_N^2 -> H_R,open_edge_cylinder_required,False
+spin_structures_internal_lattice,"Torus, spin structures, internal lattice",modular spin-structure partition functions and rank-sixteen even self-dual left-moving internal lattice,open_edge_cylinder_required,False
+blind_refinement_controls,Blind refinement and falsification,"pre-registered refinements plus controls that break orientation, ports, geometry, spectators, chirality, and seams",open_protocol,False

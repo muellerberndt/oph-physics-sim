@@ -1,0 +1,3 @@
+worldline_id,observation_count,birth_cycle,death_cycle,lifetime_cycles,persistent,mean_transport_distance
+stress_pair_left,96,0,95,95,True,0.0063157893800481054
+stress_pair_right,96,0,95,95,True,0.0063157893800481054

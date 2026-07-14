@@ -1,0 +1,14 @@
+gate,status
+finite_nonabelian_regulator,pass
+finite_positive_gap_floor,pass
+continuum_certificate,pending
+os_reconstruction,pending
+yang_mills_identification,conditional
+yang_mills_mass_gap,not_promoted
+blocker,missing continuum certificate field: support_visible_extraction_receipt
+blocker,missing continuum certificate field: renormalized_schwinger_convergence_receipt
+blocker,missing continuum certificate field: reflection_positivity_receipt
+blocker,missing continuum certificate field: euclidean_covariance_locality_receipt
+blocker,missing continuum certificate field: nontriviality_receipt
+blocker,missing continuum certificate field: transfer_intertwiner_convergence_receipt
+blocker,Clay/Yang-Mills promotion remains disabled in this simulator lane

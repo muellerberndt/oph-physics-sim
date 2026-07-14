@@ -1,0 +1,37 @@
+{
+  "P": 1.6309720958601075,
+  "ratio_P": 1.6309720958601075,
+  "P_source": "source_candidate",
+  "source": "source_candidate",
+  "pixel_mode": "source_candidate",
+  "epistemic_profile": "source_candidate",
+  "profile": {
+    "profile": "source_candidate",
+    "P": 1.6309720958601075,
+    "interval": null,
+    "epistemic_class": "source_candidate_audit",
+    "simulation_role": "source-directed diagnostic; no theorem promotion",
+    "recovered_core_allowed": false,
+    "public_prediction_allowed": false
+  },
+  "phi": 1.618033988749895,
+  "sqrt_pi": 1.7724538509055159,
+  "alpha_from_P": 0.007299545262407108,
+  "alpha_inverse_from_P": 136.99483516460018,
+  "role": "local screen-cell area and entropy/capacity normalization for the D10/Phase-II quantitative layer; not a BW normalization factor and not a dimension-forcing input. endpoint_calibrated values are excluded from recovered-core receipt claims",
+  "planck_area": 1.0,
+  "cell_area_planck": 1.6309720958601075,
+  "cell_entropy_capacity": 0.4077430239650269,
+  "a_cell": 1.6309720958601075,
+  "ellbar_shared": 0.4077430239650269,
+  "G_natural": 1.0,
+  "unit_readout": {
+    "length_unit": 1.2770951788571232,
+    "time_unit": 1.2770951788571232,
+    "energy_unit": 0.7830269948203104,
+    "temperature_unit": 0.7830269948203104,
+    "c": 1.0,
+    "hbar": 1.0,
+    "k_B": 1.0
+  }
+}

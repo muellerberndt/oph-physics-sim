@@ -1,0 +1,1014 @@
+{
+  "MUTUAL_GAUGE_CHART_AGREEMENT_RECEIPT": true,
+  "OBSERVER_SPACETIME_CONSENSUS_RECEIPT": true,
+  "blockers": [],
+  "bulk_dimension_claim": null,
+  "claim_boundary": "v1 certificate over a shared committed record with deterministic private observer frames. It certifies that truncated observer charts admit one mutual re-gauging with cocycle consistency, with shuffled-view controls. It is not a fundamental-bulk claim; the follow-on gate is genuinely independent per-observer commit histories measured by this same certificate.",
+  "cocycle": {
+    "median_defect": 0.0,
+    "perfect_fraction": 1.0
+  },
+  "control": {
+    "median_defect_shuffled": 0.8044521837349398,
+    "separation_receipt": true
+  },
+  "experienced_chart": {
+    "integer_by_construction": true,
+    "source": "observer_modular_experience_report.json",
+    "spatial_dimension": 3,
+    "time_dimension": 1
+  },
+  "modular_time": {
+    "grid_count": 1,
+    "modular_depth_mean_std": 0.023722682717863895,
+    "shared_relative_time_grid": true
+  },
+  "pair_agreement": {
+    "fragmented_pairs": 0,
+    "median_defect": 0.0,
+    "p95_defect": 0.0,
+    "perfect_fraction": 1.0,
+    "section_unique_pairs": 599
+  },
+  "pair_records": [
+    {
+      "checkable_edges": 434,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 14793,
+      "overlap_edges": 543,
+      "overlap_nodes": 110,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 315,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 14827,
+      "overlap_edges": 397,
+      "overlap_nodes": 83,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 525,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 14827,
+      "overlap_edges": 654,
+      "overlap_nodes": 130,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 237,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 15293,
+      "overlap_edges": 301,
+      "overlap_nodes": 65,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 423,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 15293,
+      "overlap_edges": 529,
+      "overlap_nodes": 107,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 14,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 15560,
+      "overlap_edges": 22,
+      "overlap_nodes": 9,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 118,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 15560,
+      "overlap_edges": 154,
+      "overlap_nodes": 37,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 57,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 15568,
+      "overlap_edges": 80,
+      "overlap_nodes": 24,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 325,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 15602,
+      "overlap_edges": 410,
+      "overlap_nodes": 86,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 143,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 15602,
+      "overlap_edges": 187,
+      "overlap_nodes": 45,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 51,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 15945,
+      "overlap_edges": 70,
+      "overlap_nodes": 20,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 102,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 15992,
+      "overlap_edges": 133,
+      "overlap_nodes": 32,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 244,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 15992,
+      "overlap_edges": 310,
+      "overlap_nodes": 67,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 240,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 16047,
+      "overlap_edges": 305,
+      "overlap_nodes": 66,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 410,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16047,
+      "overlap_edges": 514,
+      "overlap_nodes": 105,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 292,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 16589,
+      "overlap_edges": 369,
+      "overlap_nodes": 78,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 130,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16589,
+      "overlap_edges": 171,
+      "overlap_nodes": 42,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 136,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 16644,
+      "overlap_edges": 178,
+      "overlap_nodes": 43,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 23,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16644,
+      "overlap_edges": 33,
+      "overlap_nodes": 11,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 233,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 16801,
+      "overlap_edges": 296,
+      "overlap_nodes": 64,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 384,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16801,
+      "overlap_edges": 482,
+      "overlap_nodes": 99,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 291,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 16822,
+      "overlap_edges": 367,
+      "overlap_nodes": 77,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 156,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16822,
+      "overlap_edges": 202,
+      "overlap_nodes": 47,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 163,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 16877,
+      "overlap_edges": 210,
+      "overlap_nodes": 48,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 25,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16877,
+      "overlap_edges": 37,
+      "overlap_nodes": 13,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 13,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 17678,
+      "overlap_edges": 20,
+      "overlap_nodes": 8,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 76,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 17678,
+      "overlap_edges": 102,
+      "overlap_nodes": 27,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 25,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 17822,
+      "overlap_edges": 37,
+      "overlap_nodes": 13,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 100,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 17822,
+      "overlap_edges": 133,
+      "overlap_nodes": 34,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 24,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 18288,
+      "overlap_edges": 37,
+      "overlap_nodes": 14,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 79,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 18474,
+      "overlap_edges": 105,
+      "overlap_nodes": 27,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 94,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 18940,
+      "overlap_edges": 123,
+      "overlap_nodes": 30,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 13,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 18940,
+      "overlap_edges": 22,
+      "overlap_nodes": 10,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 89,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14793,
+      "observer_b": 19207,
+      "overlap_edges": 121,
+      "overlap_nodes": 33,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 95,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 19207,
+      "overlap_edges": 125,
+      "overlap_nodes": 31,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 14,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 20050,
+      "overlap_edges": 24,
+      "overlap_nodes": 11,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 548,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 15293,
+      "overlap_edges": 682,
+      "overlap_nodes": 135,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 202,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 15560,
+      "overlap_edges": 258,
+      "overlap_nodes": 57,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 57,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 15602,
+      "overlap_edges": 80,
+      "overlap_nodes": 24,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 46,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 15738,
+      "overlap_edges": 63,
+      "overlap_nodes": 18,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 15,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 15738,
+      "overlap_edges": 22,
+      "overlap_nodes": 8,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 344,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 15992,
+      "overlap_edges": 433,
+      "overlap_nodes": 90,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 497,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16047,
+      "overlap_edges": 620,
+      "overlap_nodes": 124,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 73,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16259,
+      "overlap_edges": 97,
+      "overlap_nodes": 25,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 22,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16259,
+      "overlap_edges": 32,
+      "overlap_nodes": 11,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 54,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16589,
+      "overlap_edges": 74,
+      "overlap_nodes": 21,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 75,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16636,
+      "overlap_edges": 99,
+      "overlap_nodes": 25,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 29,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 16636,
+      "overlap_edges": 41,
+      "overlap_nodes": 13,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 24,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16725,
+      "overlap_edges": 35,
+      "overlap_nodes": 12,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 380,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16801,
+      "overlap_edges": 477,
+      "overlap_nodes": 98,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 73,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 16822,
+      "overlap_edges": 99,
+      "overlap_nodes": 27,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 137,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 17678,
+      "overlap_edges": 178,
+      "overlap_nodes": 42,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 166,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 17822,
+      "overlap_edges": 215,
+      "overlap_nodes": 50,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 69,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 18288,
+      "overlap_edges": 95,
+      "overlap_nodes": 27,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 24,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 18377,
+      "overlap_edges": 36,
+      "overlap_nodes": 13,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 25,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 19042,
+      "overlap_edges": 42,
+      "overlap_nodes": 18,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 93,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 19207,
+      "overlap_edges": 122,
+      "overlap_nodes": 30,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 54,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 19474,
+      "overlap_edges": 79,
+      "overlap_nodes": 26,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 18,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14738,
+      "observer_b": 19474,
+      "overlap_edges": 32,
+      "overlap_nodes": 15,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 26,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 14827,
+      "observer_b": 20050,
+      "overlap_edges": 39,
+      "overlap_nodes": 14,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 269,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 15293,
+      "observer_b": 15560,
+      "overlap_edges": 341,
+      "overlap_nodes": 73,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 20,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 15293,
+      "observer_b": 15602,
+      "overlap_edges": 29,
+      "overlap_nodes": 10,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 70,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 15293,
+      "observer_b": 15738,
+      "overlap_edges": 96,
+      "overlap_nodes": 27,
+      "section_unique": true
+    },
+    {
+      "checkable_edges": 441,
+      "components": 1,
+      "defect": 0.0,
+      "observer_a": 15293,
+      "observer_b": 15992,
+      "overlap_edges": 552,
+      "overlap_nodes": 112,
+      "section_unique": true
+    }
+  ],
+  "parameters": {
+    "max_observers": 2048,
+    "max_pairs": 600,
+    "max_triples": 300,
+    "min_overlap_edges": 8,
+    "seed": 1
+  },
+  "policy": "Bulk dimensionality is reported only as integer observer-chart verdicts plus mutual-agreement certificates. Continuous dimension estimators are internal diagnostics and never physical claims. A fractional bulk dimension is a category error under the OPH claim boundary: observers are primary, the bulk is their agreement.",
+  "population": {
+    "candidate_pairs": 36946,
+    "evaluated_pairs": 600,
+    "evaluated_triples": 300,
+    "mean_overlap_edges": 287.51,
+    "patch_observers": 2048
+  },
+  "schema": "observer_mutual_agreement_v1",
+  "status": "evaluated",
+  "triple_records": [
+    {
+      "checked_nodes": 60,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14505,
+        14615,
+        14738
+      ]
+    },
+    {
+      "checked_nodes": 66,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14505,
+        14615,
+        14793
+      ]
+    },
+    {
+      "checked_nodes": 110,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14505,
+        14738,
+        14793
+      ]
+    },
+    {
+      "checked_nodes": 60,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14615,
+        14738,
+        14793
+      ]
+    },
+    {
+      "checked_nodes": 83,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        14827
+      ]
+    },
+    {
+      "checked_nodes": 65,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        15293
+      ]
+    },
+    {
+      "checked_nodes": 9,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        15560
+      ]
+    },
+    {
+      "checked_nodes": 43,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        15602
+      ]
+    },
+    {
+      "checked_nodes": 32,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        15992
+      ]
+    },
+    {
+      "checked_nodes": 66,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        16047
+      ]
+    },
+    {
+      "checked_nodes": 41,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        16589
+      ]
+    },
+    {
+      "checked_nodes": 11,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        16644
+      ]
+    },
+    {
+      "checked_nodes": 64,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        16801
+      ]
+    },
+    {
+      "checked_nodes": 45,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        16822
+      ]
+    },
+    {
+      "checked_nodes": 13,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        16877
+      ]
+    },
+    {
+      "checked_nodes": 8,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        17678
+      ]
+    },
+    {
+      "checked_nodes": 13,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        17822
+      ]
+    },
+    {
+      "checked_nodes": 10,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        18940
+      ]
+    },
+    {
+      "checked_nodes": 26,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14793,
+        19207
+      ]
+    },
+    {
+      "checked_nodes": 107,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        15293
+      ]
+    },
+    {
+      "checked_nodes": 37,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        15560
+      ]
+    },
+    {
+      "checked_nodes": 24,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        15602
+      ]
+    },
+    {
+      "checked_nodes": 8,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        15738
+      ]
+    },
+    {
+      "checked_nodes": 67,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        15992
+      ]
+    },
+    {
+      "checked_nodes": 104,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        16047
+      ]
+    },
+    {
+      "checked_nodes": 11,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        16259
+      ]
+    },
+    {
+      "checked_nodes": 21,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        16589
+      ]
+    },
+    {
+      "checked_nodes": 13,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        16636
+      ]
+    },
+    {
+      "checked_nodes": 90,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        16801
+      ]
+    },
+    {
+      "checked_nodes": 27,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        16822
+      ]
+    },
+    {
+      "checked_nodes": 27,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        17678
+      ]
+    },
+    {
+      "checked_nodes": 34,
+      "cocycle_defect": 0.0,
+      "cocycle_failures": 0,
+      "observers": [
+        14738,
+        14827,
+        17822
+      ]
+    }
+  ]
+}

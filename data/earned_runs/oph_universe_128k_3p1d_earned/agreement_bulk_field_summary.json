@@ -1,0 +1,13 @@
+{
+  "certified_pairs_used": 800,
+  "certified_triples_used": 400,
+  "claim_boundary": "Sampled-certificate rendering field: certified multiplicities reflect the evaluated pair/triple sample, never a complete enumeration; zero certified multiplicity means untested, never disagreement. Disagreement would appear as nonzero pair defects in the agreement report itself.",
+  "cohort_observers": 2048,
+  "covered_patch_fraction": 0.264556884765625,
+  "max_pair_multiplicity": 169,
+  "pair_certified_patch_fraction": 0.0550994873046875,
+  "patch_count": 131072,
+  "schema": "agreement_bulk_field_v1",
+  "status": "evaluated",
+  "triple_certified_patch_fraction": 0.0018463134765625
+}

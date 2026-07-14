@@ -1,0 +1,68 @@
+{
+  "mode": "neutral_independent_rank_selector_audit_v0",
+  "report_paths": [
+    "runs/oph_universe_128k_3p1d_earned/neutral_prime_rank_sweep/prime_geometric_rank_sweep_report.json"
+  ],
+  "run_count": 1,
+  "NEUTRAL_INDEPENDENT_RANK3_SELECTOR_RECEIPT": false,
+  "neutral_independent_rank3_selector_receipt": false,
+  "physical_claim": false,
+  "strict_neutral_bulk": false,
+  "prime_geometric_rank3_selector_count": 0,
+  "control_quotient_rank3_selector_count": 0,
+  "control_quotient_rank3_candidate_count": 1,
+  "prime_geometric_rank3_selector_all": false,
+  "control_quotient_rank3_selector_all": false,
+  "prime_geometric_largest_gap_rank_counts": {
+    "40": 1
+  },
+  "prime_geometric_chord_elbow_rank_counts": {
+    "40": 1
+  },
+  "control_quotient_largest_gap_rank_counts": {
+    "40": 1
+  },
+  "control_quotient_chord_elbow_rank_counts": {
+    "40": 1
+  },
+  "control_quotient_max_rank3_cumulative_explained_variance": 0.24913415284729015,
+  "control_quotient_median_rank3_cumulative_explained_variance": 0.24913415284729015,
+  "control_quotient_min_effective_rank": 20.39343747486566,
+  "control_quotient_median_effective_rank": 20.39343747486566,
+  "control_quotient_median_participation_rank": 17.915889203466048,
+  "rows": [
+    {
+      "path": "runs/oph_universe_128k_3p1d_earned/neutral_prime_rank_sweep/prime_geometric_rank_sweep_report.json",
+      "source_run_dir": "runs/oph_universe_128k_3p1d_earned",
+      "observer_count": 8192,
+      "sampled_observer_count": 2048,
+      "prime_rank3_selector_receipt": false,
+      "control_quotient_rank3_selector_receipt": false,
+      "control_quotient_rank3_candidate": true,
+      "control_quotient_lane_is_negative_control": false,
+      "prime_geometric_largest_gap_rank": 40,
+      "prime_geometric_chord_elbow_rank": 40,
+      "prime_geometric_effective_rank": 20.10360129723464,
+      "prime_geometric_participation_rank": 17.565988667368526,
+      "prime_geometric_rank3_cumulative_explained_variance": 0.2529261627399146,
+      "control_quotient_largest_gap_rank": 40,
+      "control_quotient_chord_elbow_rank": 40,
+      "control_quotient_effective_rank": 20.39343747486566,
+      "control_quotient_participation_rank": 17.915889203466048,
+      "control_quotient_rank3_cumulative_explained_variance": 0.24913415284729015,
+      "proof_blockers": [
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+        "control_quotient_lane_is_not_a_negative_control",
+        "requires_refinement_stability_across_regulator_sizes",
+        "requires_independent_rank_selection_rule_before_physical_interpretation"
+      ]
+    }
+  ],
+  "blockers": [
+    "prime_geometric_independent_rank3_selector_not_all_true",
+    "control_quotient_independent_rank3_selector_not_all_true",
+    "control_quotient_effective_rank_not_low_dimensional",
+    "control_quotient_lane_is_not_a_negative_control"
+  ],
+  "claim_boundary": "Independent neutral rank-selector audit. Coordinate rank-3 windows and control-residualized rank-3 candidates are diagnostic only unless the independent singular-value selector also selects rank 3 across regulator sizes, with proper negative controls and strict neutral gates."
+}

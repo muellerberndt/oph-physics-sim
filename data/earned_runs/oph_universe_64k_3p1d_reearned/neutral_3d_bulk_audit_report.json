@@ -1,0 +1,159 @@
+{
+  "mode": "neutral_3d_bulk_audit_v0",
+  "report_paths": [
+    "runs/oph_universe_64k_3p1d_reearned/strict_neutral_bulk_report.json",
+    "runs/oph_universe_64k_3p1d_reearned/strict_neutral_object_bulk_report.json",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_control",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_sweep",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_refinement",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_rank_selector_audit",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_graph_sweep",
+    "runs/oph_universe_64k_3p1d_reearned/neutral_overlap_residual_graph_sweep"
+  ],
+  "sweep_report_count": 1,
+  "refinement_source": "existing_prime_geometric_rank_refinement_report",
+  "strict_neutral_bulk_ready": false,
+  "strict_neutral_bulk": false,
+  "physical_claim": false,
+  "control_residualized_rank3_refinement_candidate": false,
+  "control_residualized_rank3_independent_selector_all": false,
+  "control_residualized_rank3_dimension_drift": null,
+  "directional_strict_ready_total": 0,
+  "control_quotient_candidate_count": 0,
+  "overlap_native_negative_control_report_count": 1,
+  "overlap_native_negative_control_receipt_count": 0,
+  "overlap_native_negative_control_receipt_all": false,
+  "overlap_native_spatial_3d_candidate_count": 0,
+  "overlap_native_strict_h3_candidate_count": 0,
+  "overlap_native_control_summary": {
+    "report_count": 1,
+    "receipt_count": 0,
+    "receipt_all": false,
+    "spatial_3d_candidate_count": 0,
+    "strict_h3_candidate_count": 0,
+    "rows": [
+      {
+        "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+        "observer_count": 1024,
+        "sampled_observer_count": 384,
+        "negative_control_receipt": false,
+        "spatial_3d_candidate": false,
+        "strict_h3_candidate": false,
+        "blockers": [
+          "overlap_native_negative_controls_did_not_all_fail",
+          "overlap_native_distance_not_spatial_3d_candidate",
+          "overlap_native_distance_not_strict_h3_candidate"
+        ]
+      }
+    ]
+  },
+  "blockers": [
+    "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+    "control_quotient_rank3_candidate_not_stable_across_refinement",
+    "independent_svd_rank3_selector_not_stable_or_false",
+    "control_quotient_lane_is_not_a_negative_control",
+    "directional_h3_strict_rank_gate_not_passed",
+    "measured_cross_observer_overlap_refinement_gate_not_passed",
+    "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+    "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+    "best_3d_windows_still_fail_s2_leakage_gate",
+    "requires_refinement_stability_across_regulator_sizes",
+    "requires_independent_rank_selection_rule_before_physical_interpretation",
+    "strict_neutral_bulk_refinement_receipt_false",
+    "overlap_native_negative_control_receipt_false"
+  ],
+  "refinement_summary": {
+    "present": true,
+    "run_count": 1,
+    "multi_scale": false,
+    "control_quotient_rank3_refinement_candidate_receipt": false,
+    "independent_rank3_selector_all": false,
+    "candidate_dimension_drift": null,
+    "candidate_dimension_stable": false,
+    "strict_neutral_bulk_refinement_receipt": false,
+    "proof_blockers": [
+      "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+      "control_quotient_rank3_candidate_not_stable_across_refinement",
+      "independent_svd_rank3_selector_not_stable_or_false",
+      "control_quotient_lane_is_not_a_negative_control",
+      "directional_h3_strict_rank_gate_not_passed",
+      "measured_cross_observer_overlap_refinement_gate_not_passed"
+    ],
+    "sizes": [
+      {
+        "patch_count": 65536,
+        "run_count": 1,
+        "candidate_count": 0,
+        "independent_rank3_count": 0,
+        "candidate_rank_counts": {
+          "None": 1
+        },
+        "candidate_model_counts": {
+          "None": 1
+        },
+        "median_candidate_dimension": null,
+        "median_candidate_corr_dimension": null,
+        "median_candidate_mle_dimension": null,
+        "median_candidate_s2_leakage_corr": null,
+        "s2_leakage_pass_count": 0
+      }
+    ]
+  },
+  "sweeps": [
+    {
+      "path": "runs/oph_universe_64k_3p1d_reearned/neutral_prime_rank_sweep/prime_geometric_rank_sweep_report.json",
+      "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+      "observer_count": 1024,
+      "sampled_observer_count": 512,
+      "strict_3d_ready_count": 0,
+      "coordinate_spatial_3d_ready_count": 0,
+      "control_quotient_coordinate_spatial_3d_ready_count": 0,
+      "control_quotient_rank3_candidate": false,
+      "control_quotient_candidate": {
+        "rank": null,
+        "best_model": null,
+        "median_dimension": null,
+        "s2_distance_correlation": null,
+        "s2_leakage_pass": false,
+        "h3_beats_s2": false,
+        "h3_beats_e3": false,
+        "h3_beats_h2_h4": false
+      },
+      "independent_rank_selection": {
+        "prime_geometric": {
+          "available": true,
+          "independent_rank3_selector_receipt": false,
+          "largest_gap_rank": 1,
+          "chord_elbow_rank": 7,
+          "effective_rank": 164.95746770722465,
+          "participation_rank": 85.78600964743765,
+          "rank3_cumulative_explained_variance": 0.12300175496864824,
+          "rank90": 167,
+          "rank95": 212
+        },
+        "control_quotient": {
+          "available": true,
+          "independent_rank3_selector_receipt": false,
+          "largest_gap_rank": 1,
+          "chord_elbow_rank": 9,
+          "effective_rank": 210.99444357542546,
+          "participation_rank": 159.30772057472453,
+          "rank3_cumulative_explained_variance": 0.045032273619670965,
+          "rank90": 185,
+          "rank95": 227
+        },
+        "prime_rank3_selector_receipt": false,
+        "control_quotient_rank3_selector_receipt": false
+      },
+      "proof_blockers": [
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+        "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+        "best_3d_windows_still_fail_s2_leakage_gate",
+        "control_quotient_lane_is_not_a_negative_control",
+        "requires_refinement_stability_across_regulator_sizes",
+        "requires_independent_rank_selection_rule_before_physical_interpretation"
+      ]
+    }
+  ],
+  "claim_boundary": "Audit for strict neutral 3D bulk promotion. Control-residualized rank-3 rows are treated as diagnostic candidates only. Strict neutral bulk remains false until independent rank selection, proper negative/null controls, directional H3 gates, and refinement all pass."
+}

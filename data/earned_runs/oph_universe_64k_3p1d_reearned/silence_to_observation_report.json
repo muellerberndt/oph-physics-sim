@@ -1,0 +1,484 @@
+{
+  "mode": "oph_pn_silence_to_observation_witness_v1",
+  "source": "finite_scale_compressed_pn_silence_to_observation",
+  "run_dir": "runs/oph_universe_64k_3p1d_reearned",
+  "scale_compressed_pn_silence_to_observation_receipt": false,
+  "SCALE_COMPRESSED_PN_SILENCE_TO_OBSERVATION_RECEIPT": false,
+  "literal_global_N_capacity_simulated_receipt": false,
+  "LITERAL_GLOBAL_N_CAPACITY_SIMULATED_RECEIPT": false,
+  "dynamic_p_detuning_control_receipt": false,
+  "DYNAMIC_P_DETUNING_CONTROL_RECEIPT": false,
+  "closure_coordinates": {
+    "P": 1.6309720958601075,
+    "phi_silent_equilibrium": 1.618033988749895,
+    "sqrt_pi": 1.7724538509055159,
+    "P_detuning_delta": 0.012938107110212593,
+    "alpha_from_P": 0.007299545262407108,
+    "alpha_inverse_from_P": 136.99483516460018,
+    "loop_detuning_phase": 0.050241543170802434,
+    "N_star_source": "ew_bridge",
+    "N_star": 3.529989885650375e+122,
+    "PN_RESONANCE_NUMERIC_REPLAY": true,
+    "PN_RESONANCE_RECEIPT": false
+  },
+  "finite_regulator_depth": {
+    "patch_count": 65536,
+    "regulator_entropy_capacity_N_eff": 26721.846818572,
+    "local_repair_contraction_abs_gprime": 0.002788178187821245,
+    "effective_repair_round_depth": 0.8664230706875428,
+    "declared_cosmic_repair_round_depth": 24,
+    "depth_fraction_of_declared_cosmic_rounds": 0.03610096127864761,
+    "claim_boundary": "N_eff is the finite regulator's P-weighted entropy capacity and depth on the P/N branch. It is not the literal cosmic capacity N_CRC."
+  },
+  "silence_initial_state": {
+    "cycle": 0,
+    "committed_records": 0,
+    "committed_fraction": 0,
+    "record_entropy": 0,
+    "mismatch_phi": 324531,
+    "initial_record_silence_receipt": true,
+    "claim_boundary": "Silence means no committed observer records/readback entropy at the first recorded repair cycle. It does not mean the finite carrier has no screen geometry or no hot pre-record interface state."
+  },
+  "observation_emergence": {
+    "final_cycle": 127,
+    "final_committed_records": 65536,
+    "final_committed_fraction": 1,
+    "final_record_entropy": 11.090354888959125,
+    "final_phi": 0,
+    "finite_consensus_theorem_receipt": false,
+    "observer_modular_time_receipt": true,
+    "observer_facing_3p1d_h3_experience_receipt": false,
+    "observer_count": 1024,
+    "h3_object_count": 70,
+    "h3_object_emergence_receipt": false,
+    "persistent_h3_worldline_count": 139,
+    "observation_emergence_receipt": true
+  },
+  "detuning_controls": {
+    "no_detuning_phi_equilibrium": {
+      "P": 1.618033988749895,
+      "P_detuning_delta": 0.0,
+      "alpha_from_P": 0.0,
+      "blocks_pn_bridge": true,
+      "reason": "alpha_from_P=0 makes N=pi*exp(6*pi/(P*alpha_U(P))) undefined/infinite on this bridge"
+    },
+    "wrong_detuning_multipliers": [
+      {
+        "detuning_multiplier": 0.5,
+        "candidate_P": 1.624503042305001,
+        "candidate_alpha_from_P": 0.0036497726312034913,
+        "candidate_N_EW_bridge": 1.0809367048281944e+123,
+        "log_residual_vs_selected_N": 1.1191180718252551,
+        "blocks_selected_bridge": true
+      },
+      {
+        "detuning_multiplier": 1.5,
+        "candidate_P": 1.637441149415214,
+        "candidate_alpha_from_P": 0.010949317893610725,
+        "candidate_N_EW_bridge": 1.163019399113249e+122,
+        "log_residual_vs_selected_N": -1.1102754520538838,
+        "blocks_selected_bridge": true
+      },
+      {
+        "detuning_multiplier": 2.0,
+        "candidate_P": 1.64391020297032,
+        "candidate_alpha_from_P": 0.014599090524814217,
+        "candidate_N_EW_bridge": 3.8654087100748934e+121,
+        "log_residual_vs_selected_N": -2.2118126757698633,
+        "blocks_selected_bridge": true
+      }
+    ],
+    "claim_boundary": "Analytic P-detuning controls only. They prove that the selected P/N bridge is not invariant under no/wrong detuning, but they are not dynamic finite reruns."
+  },
+  "component_reports": {
+    "pn_resonance_report": {
+      "mode": "oph_pn_resonance_v0",
+      "source": "finite_scale_compressed_pn_silence_to_observation",
+      "PN_RESONANCE_NUMERIC_REPLAY": true,
+      "PN_RESONANCE_RECEIPT": false,
+      "branch_status": "paper_declared_pn_resonance_replay_diagnostic",
+      "inputs": {
+        "P_star": 1.6309720958601075,
+        "alpha_U": 0.041124336195630495,
+        "alpha_U_interval": [
+          0.041123336195630494,
+          0.041125336195630496
+        ],
+        "N_source": "ew_bridge",
+        "N_star": 3.529989885650375e+122,
+        "repair_rounds": 24,
+        "exact_log_tolerance": 1e-10,
+        "observed_display_log_tolerance": 0.1
+      },
+      "paper_bridge_relation": {
+        "formula": "N_EW(P)=pi*exp(6*pi/(P*alpha_U(P)))",
+        "N_EW_from_P_alpha_U": 3.529989885650375e+122,
+        "selected_N_star": 3.529989885650375e+122,
+        "log_N_over_pi": 281.0319464651104,
+        "target_log_N_over_pi": 281.0319464651104,
+        "log_residual_selected_minus_target": 0.0,
+        "capacity_relative_error_vs_bridge": 0.0,
+        "paper_bridge_relation_exact": true,
+        "claim_boundary": "This relation is replayed from the paper-declared P and alpha_U source values. The finite simulator has not emitted the alpha_U proof record or the global F(N) capacity fixed-point proof."
+      },
+      "observed_branch_sidecar": {
+        "DEFAULT_N_CRC": 3.3149984974788145e+122,
+        "selected_N_over_default_N_CRC": 1.0648541434739927,
+        "log_residual_selected_vs_default_N_CRC": 0.06283783529775273,
+        "observed_display_compatible": true,
+        "claim_boundary": "The public 3.31e122 capacity display is a branch-scale approximation unless an exact capacity/source certificate is supplied."
+      },
+      "repair_depth_ansatz_sidecar": {
+        "formula": "N_repair=|g'(P)|^(-2m)",
+        "N_implied_by_declared_repair_depth_ansatz": 4.213226268291752e+122,
+        "selected_N_star": 3.529989885650375e+122,
+        "capacity_log_residual_repair_minus_selected": 0.17693368303478285,
+        "capacity_relative_error_repair_vs_selected": 0.19355193776015467,
+        "contraction_relative_error_vs_selected_N": 0.003679333001957879,
+        "effective_round_depth_for_selected_N": 23.984960672568263,
+        "declared_repair_rounds": 24,
+        "repair_depth_derived_from_finite_selector": false,
+        "claim_boundary": "The 24-round repair-depth lane is a diagnostic ansatz. It is not the exact P/N bridge relation and it is not promoted as a finite derivation of N from P."
+      },
+      "component_reports": {
+        "screen_capacity_closure_report": {
+          "mode": "oph_screen_capacity_closure_v0",
+          "source": "observers_are_all_you_need.tex cosmic record-capacity closure",
+          "closure_equations": {
+            "cosmic_record_closure": "N_CRC = F(N_CRC)",
+            "readback_map": "F(N)=Cap_read(Obs(nf(U_N)))",
+            "active_capacity": "N_CRC = log dim Z_boundary^act after predictive quotient",
+            "lambda_readout": "Lambda_CRC * l_P^2 = 3*pi / N_CRC",
+            "dimensionless_lambda_readout": "Lambda_CRC * ell_star^2 = 3*pi / N_CRC",
+            "count_density_selector": "N_star = MAR argmax_N [log|Omega_N^sc| - N]",
+            "pressure_certificate": "ell'(N_star)=0 with ell''<0, or Banach contraction for F"
+          },
+          "observed_branch_normalization": {
+            "input_mode": "direct_N_CRC_closure_input",
+            "R_dS_m": 1.7129833851374432e+26,
+            "planck_length_m": 1.616e-35,
+            "N_CRC": 3.529989885650375e+122,
+            "N_patch_bare_radius_squared_ratio": 1.1236306787313033e+122,
+            "N_scr_entropy_capacity": 3.529989885650375e+122,
+            "Lambda_lP2": 2.669916420747175e-122,
+            "Lambda_lP2_is_dimensionless": true,
+            "dimensionful_Lambda_m2": null,
+            "dimensionful_ell_star_squared_m2": null,
+            "dimensionful_G_SI": null,
+            "N_cells_if_tiled_by_local_P_cells": 8.65738879190034e+122,
+            "cell_entropy_capacity": 0.4077430239650269,
+            "P": 1.6309720958601075,
+            "constants": {
+              "N_CRC": 3.529989885650375e+122,
+              "P": 1.6309720958601075,
+              "source": "direct_N_CRC_closure_input",
+              "N_patch_bare_radius_squared_ratio": 1.1236306787313033e+122,
+              "Lambda_lP2": 2.669916420747175e-122,
+              "radius_planck": 1.0600144710008931e+61,
+              "N_cells_if_tiled_by_local_P_cells": 8.65738879190034e+122
+            }
+          },
+          "active_capacity_requirements": {
+            "capacity_variable": "entropy_capacity_N_not_raw_Hilbert_dimension",
+            "active_edge_center_algebra": "Z_boundary^act = Z_boundary^raw / predictive-equivalence",
+            "predictive_equivalence": "central record labels are identified when they induce the same future observer-accessible probability law under same-interface continuations",
+            "observer_sector": "Obs(nf(U_N)) must select stable self-reading observer-supporting terminal normal forms",
+            "readback_value": "Cap_read returns the active horizon record capacity reconstructed by observers",
+            "finite_regulator_status": "not implemented here; finite patch counts remain numerical regulators"
+          },
+          "regulator_scale_comparison": [
+            {
+              "patch_count": 4096,
+              "regulator_entropy_capacity": 1670.11542616075,
+              "fraction_of_observed_N_scr": 4.7312187294073316e-120,
+              "claim_boundary": "finite simulation regulator count, not the cosmic record capacity"
+            },
+            {
+              "patch_count": 65536,
+              "regulator_entropy_capacity": 26721.846818572,
+              "fraction_of_observed_N_scr": 7.56994996705173e-119,
+              "claim_boundary": "finite simulation regulator count, not the cosmic record capacity"
+            },
+            {
+              "patch_count": 262144,
+              "regulator_entropy_capacity": 106887.387274288,
+              "fraction_of_observed_N_scr": 3.027979986820692e-118,
+              "claim_boundary": "finite simulation regulator count, not the cosmic record capacity"
+            },
+            {
+              "patch_count": 1048576,
+              "regulator_entropy_capacity": 427549.549097152,
+              "fraction_of_observed_N_scr": 1.2111919947282769e-117,
+              "claim_boundary": "finite simulation regulator count, not the cosmic record capacity"
+            }
+          ],
+          "readiness_gates": {
+            "local_P_cell_capacity_available": true,
+            "N_CRC_closure_value_declared": true,
+            "observed_branch_N_scr_readout_available": true,
+            "active_edge_center_predictive_quotient_implemented": false,
+            "observer_supporting_terminal_sector_implemented": false,
+            "capacity_readback_map_from_terminal_records_implemented": false,
+            "F_N_readback_map_implemented": false,
+            "count_density_normal_form_enumerator_implemented": false,
+            "banach_contraction_certificate_implemented": false,
+            "pressure_certificate_implemented": false,
+            "N_CRC_fixed_point_solved_from_finite_simulator": false,
+            "Lambda_from_finite_simulator_record_closure": false,
+            "independent_scale_bridge_supplied": false,
+            "dimensionful_G_SI_eligible": false,
+            "finite_simulator_derived_G_SI": false
+          },
+          "simulation_relevance": "This closure is globally relevant to cosmology and capacity normalization. It should not be used to reinterpret ordinary finite run patch counts as physical horizon capacity. Current 64k/256k/1M runs remain numerical regulators unless a dedicated readback map F(N) and self-closure normal-form enumeration are implemented.",
+          "physical_cmb_prediction": false,
+          "physical_matter_power_prediction": false,
+          "claim_boundary": "Observed-branch screen-capacity closure report. Computes the de Sitter entropy-capacity normalization and dimensionless Lambda*l_P^2 readout from the paper equations, but does not solve the OPH readback fixed point from simulator data and does not supply an independent dimensionful scale bridge for G_SI."
+        },
+        "oph_scale_bridge_report": {
+          "mode": "oph_pn_scale_bridge_v1",
+          "source": "finite_scale_compressed_pn_silence_to_observation",
+          "constants": {
+            "c_SI": 299792458.0,
+            "hbar_SI": 1.0545718176461565e-34,
+            "G_SI_relation": "G_SI = ell_star^2 c^3 / hbar once ell_star^2 is independently bridged to m^2"
+          },
+          "dimensionless_invariants": {
+            "P_star": 1.6309720958601075,
+            "N_star": 3.529989885650375e+122,
+            "a_cell_over_ell_star_squared": 1.6309720958601075,
+            "B_ell_ell_star_squared": 9.42477796076938,
+            "B_ell_a_cell": 15.371549863692184,
+            "P_N_determine_dimensionless_invariants_only": true,
+            "P_N_determine_dimensionful_scale": false,
+            "P_cancels_from_local_gravity_readout": true,
+            "G_geom_in_OPH_units": "ell_star_squared",
+            "relation": "P=a_cell/ell_star^2, N=3*pi/(Lambda_star*ell_star^2), B_ell=Lambda_star*N",
+            "Lambda_star_ell_star_squared": 2.669916420747175e-122,
+            "Lambda_star_a_cell": 4.3545591805173364e-122
+          },
+          "scale_bridge": {
+            "source_input_mode": "none",
+            "source": "finite_scale_compressed_pn_silence_to_observation",
+            "P_star": 1.6309720958601075,
+            "N_star": 3.529989885650375e+122,
+            "Lambda_star_m2_inverse": null,
+            "B_ell_m2_inverse": null,
+            "B_ell_m^-2": null,
+            "ell_star_squared_m2": null,
+            "ell_star_m": null,
+            "G_geom": null,
+            "G_SI": null,
+            "G_SI_units": null,
+            "independent_scale_bridge_supplied": false,
+            "OPH_independent_scale_bridge_supplied": false,
+            "dimensionful_G_SI_eligible": false,
+            "finite_simulator_derived_G_SI": false,
+            "P_N_alone_dimensionful_scale_eligible": false,
+            "P_cancels_from_G_geom": true
+          },
+          "readiness_gates": {
+            "P_branch_available": true,
+            "N_capacity_branch_declared": true,
+            "P_N_dimensionless_invariants_available": true,
+            "independent_scale_bridge_supplied": false,
+            "OPH_independent_scale_bridge_supplied": false,
+            "B_ell_available": false,
+            "dimensionful_ell_star_available": false,
+            "dimensionful_G_SI_eligible": false,
+            "finite_simulator_derived_G_SI": false,
+            "physical_cmb_prediction": false,
+            "strict_neutral_bulk": false
+          },
+          "physical_cmb_prediction": false,
+          "strict_neutral_bulk": false,
+          "claim_boundary": "P and N fix dimensionless OPH invariants only. They do not determine a dimensionful Planck area, B_ell, or G_SI by themselves. A dimensionful G_SI readout is eligible only after an independent scale bridge supplies B_ell directly, or supplies Lambda_star and N_star so B_ell=Lambda_star*N_star. This report is a bookkeeping gate, not a finite-simulator derivation of G."
+        },
+        "repair_scale_closure_report": {
+          "mode": "oph_repair_scale_closure_hypothesis_v0",
+          "source": "declared repair-depth ansatz carried by oph_fpe.cosmology.repair_scale_closure",
+          "hypothesis": {
+            "local_repair_map": "delta_{n+1} = g'(P) delta_n",
+            "contraction_formula": "|g'(P)| = alpha(P) / phi^2",
+            "capacity_formula": "N_CRC = |g'(P)|^(-2 m)",
+            "declared_repair_rounds_m": 24,
+            "capacity_exponent_2m": 48,
+            "length_round_factor_q": "q = 1 / |g'(P)|",
+            "tilt_candidate": "eta_R = P / (2 m); n_s = 1 - P/(2 m)"
+          },
+          "local_pixel_inputs": {
+            "P": 1.6309720958601075,
+            "phi": 1.618033988749895,
+            "sqrt_pi": 1.7724538509055159,
+            "alpha_from_P": 0.007299545262407108,
+            "alpha_over_phi_squared": 0.002788178187821245
+          },
+          "global_capacity_inputs": {
+            "N_CRC": 3.529989885650375e+122,
+            "contraction_from_N_CRC": 0.00279847470817016,
+            "Lambda_lP2_from_N_CRC": 2.669916420747175e-122
+          },
+          "closure_outputs": {
+            "local_repair_contraction_abs_gprime": 0.002788178187821245,
+            "scale_factor_per_round_q": 358.65713474411257,
+            "length_ratio_after_m_rounds": 2.0526144957813534e+61,
+            "capacity_implied_by_declared_repair_depth_ansatz": 4.213226268291752e+122,
+            "Lambda_lP2_implied_by_declared_repair_depth_ansatz": 2.2369503465074152e-122,
+            "relative_error_ansatz_capacity_vs_declared_N_CRC": 0.003679333001957879,
+            "capacity_predicted_from_local_P": 4.213226268291752e+122,
+            "Lambda_lP2_predicted_from_local_P": 2.2369503465074152e-122,
+            "relative_error_gprime_vs_N_CRC_closure": 0.003679333001957879,
+            "compatibility_note": "capacity_predicted_from_local_P and Lambda_lP2_predicted_from_local_P are legacy aliases. The canonical interpretation is capacity implied by the declared repair-depth ansatz.",
+            "eta_R_p_over_2m": 0.033978585330418906,
+            "n_s_p_over_2m": 0.9660214146695811
+          },
+          "finite_regulator_round_depth": [
+            {
+              "patch_count": 4096,
+              "patch_count_as_capacity_depth_rounds": 0.7070084493597577,
+              "P_entropy_capacity": 1670.11542616075,
+              "P_entropy_capacity_depth_rounds": 0.6307535875676235,
+              "fraction_of_declared_24_round_depth_patch_count": 0.029458685389989903,
+              "fraction_of_declared_24_round_depth_entropy_capacity": 0.02628139948198431,
+              "claim_boundary": "finite regulator depth estimate only; not a literal cosmic-capacity simulation"
+            },
+            {
+              "patch_count": 65536,
+              "patch_count_as_capacity_depth_rounds": 0.9426779324796769,
+              "P_entropy_capacity": 26721.846818572,
+              "P_entropy_capacity_depth_rounds": 0.8664230706875428,
+              "fraction_of_declared_24_round_depth_patch_count": 0.0392782471866532,
+              "fraction_of_declared_24_round_depth_entropy_capacity": 0.03610096127864761,
+              "claim_boundary": "finite regulator depth estimate only; not a literal cosmic-capacity simulation"
+            },
+            {
+              "patch_count": 262144,
+              "patch_count_as_capacity_depth_rounds": 1.0605126740396367,
+              "P_entropy_capacity": 106887.387274288,
+              "P_entropy_capacity_depth_rounds": 0.9842578122475024,
+              "fraction_of_declared_24_round_depth_patch_count": 0.044188028084984864,
+              "fraction_of_declared_24_round_depth_entropy_capacity": 0.04101074217697927,
+              "claim_boundary": "finite regulator depth estimate only; not a literal cosmic-capacity simulation"
+            },
+            {
+              "patch_count": 1048576,
+              "patch_count_as_capacity_depth_rounds": 1.178347415599596,
+              "P_entropy_capacity": 427549.549097152,
+              "P_entropy_capacity_depth_rounds": 1.102092553807462,
+              "fraction_of_declared_24_round_depth_patch_count": 0.049097808983316504,
+              "fraction_of_declared_24_round_depth_entropy_capacity": 0.045920523075310915,
+              "claim_boundary": "finite regulator depth estimate only; not a literal cosmic-capacity simulation"
+            }
+          ],
+          "readiness_gates": {
+            "local_P_closure_available": true,
+            "global_N_CRC_declared": true,
+            "scale_closure_numeric_match_within_1_percent": true,
+            "twenty_four_round_hypothesis_declared": true,
+            "twenty_four_round_hypothesis_derived_from_finite_selector": false,
+            "finite_lattice_24_round_operator_implemented": false,
+            "finite_lattice_derived_eta_R": false,
+            "populated_3d_bulk_established": false,
+            "physical_cmb_prediction": false
+          },
+          "physical_cmb_prediction": false,
+          "bulk_3d_established": false,
+          "claim_boundary": "Scale-closure / repair-depth hypothesis report. It connects the local OPH pixel constant P to a global capacity scale through a declared 24-round repair-depth ansatz. It explains why ordinary 64k/256k/1M patch regulators are only about one effective scale round deep, and it exports the paper-side n_s = 1 - P/48 candidate. It is not a derivation of N from P alone, not a dimensionful SI scale bridge, not a finite proof of 24 repair rounds, not a strict 3D bulk receipt, and not a physical CMB prediction."
+        },
+        "capacity_readback_proxy_report": {
+          "mode": "oph_capacity_readback_proxy_v0",
+          "run_dirs": [
+            "runs/oph_universe_64k_3p1d_reearned"
+          ],
+          "N_CRC": 3.529989885650375e+122,
+          "P": 1.6309720958601075,
+          "row_count": 1,
+          "max_observer_count": 1028,
+          "max_active_record_signature_count": 1028,
+          "max_terminal_normal_form_count_proxy": 1028,
+          "rows": [
+            {
+              "path": "runs/oph_universe_64k_3p1d_reearned",
+              "run_id": "oph_universe_64k_3p1d_reearned",
+              "patch_count": 65536,
+              "observer_count": 1028,
+              "active_record_signature_count": 1028,
+              "terminal_normal_form_count_proxy": 1028,
+              "object_count": 70,
+              "localized_object_count": 69,
+              "regulator_entropy_capacity": 26721.846818572,
+              "fraction_of_N_CRC": 7.56994996705173e-119,
+              "log_terminal_proxy_count_minus_regulator_capacity": -26714.911448125986,
+              "observer_supporting_proxy_present": true,
+              "terminal_sector_proxy_present": true,
+              "theorem_assisted_h3_bulk": false,
+              "strict_neutral_bulk": false,
+              "source_files": [
+                "manifest.json",
+                "observer_views.jsonl",
+                "observer_chart_object_h3_report.json",
+                "bulk_proof_certificate_report.json",
+                "neutral_3d_bulk_audit_report.json"
+              ],
+              "claim_boundary": "finite regulator diagnostic row; not a cosmic capacity fixed-point solution"
+            }
+          ],
+          "readiness_gates": {
+            "capacity_readback_proxy_written": true,
+            "finite_regulator_rows_present": true,
+            "observer_supporting_proxy_present": true,
+            "terminal_sector_proxy_present": true,
+            "active_edge_center_predictive_quotient_implemented": false,
+            "observer_supporting_terminal_sector_implemented": false,
+            "terminal_normal_form_enumerator_implemented": false,
+            "capacity_readback_map_from_terminal_records_implemented": false,
+            "F_N_readback_map_implemented": false,
+            "count_density_normal_form_enumerator_implemented": false,
+            "banach_contraction_certificate_implemented": false,
+            "pressure_certificate_implemented": false,
+            "N_CRC_fixed_point_solved_from_finite_simulator": false
+          },
+          "physical_cmb_prediction": false,
+          "strict_neutral_bulk": false,
+          "claim_boundary": "Finite capacity-readback proxy only. Rows summarize emitted finite-regulator observer/object support and count-density proxy quantities. They do not implement Cap_read(Obs(nf(U_N))), the active edge-center predictive quotient, terminal normal-form enumeration, or the N_CRC=F(N_CRC) fixed-point proof."
+        }
+      },
+      "readiness_gates": {
+        "paper_bridge_relation_exact": true,
+        "P_alpha_U_source_certificate_implemented": false,
+        "N_CRC_fixed_point_solved_from_finite_simulator": false,
+        "F_N_readback_map_implemented": false,
+        "capacity_readback_proxy_written": true,
+        "capacity_readback_proxy_fixed_point_solved": false,
+        "repair_depth_derived_from_finite_selector": false,
+        "independent_scale_bridge_supplied": false,
+        "dimensionful_G_SI_eligible": false,
+        "finite_simulator_derived_G_SI": false,
+        "finite_regulator_patch_count_used_as_cosmic_capacity": false,
+        "observed_display_compatible": true,
+        "repair_ansatz_capacity_matches_selected_N": false,
+        "theorem_grade_pn_resonance": false,
+        "scale_compressed_pn_resonance_replay_eligible": true,
+        "physical_cmb_prediction": false,
+        "strict_neutral_bulk": false
+      },
+      "claim_boundary": "Paper-faithful P/N resonance replay. The simulator can run on the selected P/N branch by using the exact dimensionless bridge relation and by keeping finite patch counts as regulators. This is not a brute-force N_CRC-cell simulation, not a finite derivation of alpha_U(P), not a solved F(N) capacity fixed point, and not a finite-simulator derivation of G_SI."
+    }
+  },
+  "readiness_gates": {
+    "paper_pn_numeric_replay": true,
+    "P_detuning_nonzero": true,
+    "finite_regulator_depth_positive": true,
+    "initial_record_silence": true,
+    "finite_consensus_theorem": false,
+    "observation_records_emerged": true,
+    "observer_modular_time": true,
+    "observer_facing_3p1d_h3_experience": false,
+    "h3_object_emergence": false,
+    "analytic_no_detuning_control_blocks_pn_bridge": true,
+    "analytic_wrong_detuning_controls_block_selected_bridge": true,
+    "dynamic_no_wrong_detuning_reruns_present": false,
+    "literal_N_CRC_cells_instantiated": false,
+    "scale_compressed_pn_silence_to_observation": false
+  },
+  "claim_boundary": "Finite scale-compressed P/N silence-to-observation witness. It tests the core OPH story that a silent observer-record layer on a finite screen becomes observer-readable only on the P-detuned local/global closure branch. It does not brute-force the astronomical N_CRC cell count, does not solve the global F(N) fixed point from simulator data, and does not yet include dynamic reruns with P=phi or wrong detuning."
+}

@@ -1,0 +1,12 @@
+{
+  "config_hash": "sha256:ebf8d99bc946f3f75ab748ee7e68c8d67aabe49fd858fb10623e3804e85718e6",
+  "hash_schema": "oph_typed_canonical_json_v1",
+  "seed": 20260751,
+  "rng_stream_derivation": "sha256(oph-bw-array-rng-v1\\0<stream-name>) plus the uint64 run seed",
+  "rng_stream_names": [
+    "initialization",
+    "readback",
+    "repair",
+    "sector"
+  ]
+}

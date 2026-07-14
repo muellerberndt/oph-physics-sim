@@ -1,0 +1,119 @@
+{
+  "mode": "physical_cmb_input_no_data_use_receipt_v0",
+  "no_data_use_receipt": true,
+  "NO_DATA_USE_RECEIPT": true,
+  "measurement_data_used_for_input_functions": false,
+  "measurement_reference_reports_present": true,
+  "source_status": {
+    "finite_repair_transition_matrix_report": {
+      "present": true,
+      "used_for": [
+        "eta_R",
+        "Gamma_rec"
+      ],
+      "measurement_data_used": false
+    },
+    "finite_certificate_report": {
+      "present": false,
+      "used_for": [
+        "A_zeta",
+        "rho_A"
+      ],
+      "measurement_data_used": false
+    },
+    "B_A_kernel_report": {
+      "present": true,
+      "used_for": [
+        "B_A"
+      ],
+      "measurement_data_used": false
+    },
+    "B_A_kernel_refinement_report": {
+      "present": false,
+      "used_for": [
+        "B_A_refinement_gate"
+      ],
+      "measurement_data_used": false
+    },
+    "b_a_parent_report": {
+      "present": true,
+      "used_for": [
+        "diagnostic_B_A",
+        "diagnostic_rho_A"
+      ],
+      "measurement_data_used": false
+    },
+    "scale_compressed_repair_report": {
+      "present": false,
+      "used_for": [
+        "q_IR",
+        "ell_IR",
+        "freezeout_surface"
+      ],
+      "measurement_data_used": false
+    },
+    "strict_neutral_bulk_report": {
+      "present": true,
+      "used_for": [
+        "neutral_freezeout_if_strict"
+      ],
+      "measurement_data_used": false
+    },
+    "scalar_quotient_report": {
+      "present": false,
+      "used_for": [
+        "diagnostic_eta_R",
+        "diagnostic_q_IR",
+        "diagnostic_ell_IR",
+        "scalar_freezeout_gate"
+      ],
+      "measurement_data_used": false
+    },
+    "screen_capacity_closure_report": {
+      "present": false,
+      "used_for": [
+        "N_source"
+      ],
+      "measurement_data_used": false
+    },
+    "oph_compressed_likelihood_report": {
+      "present": true,
+      "used_for": [
+        "validation_gate_only"
+      ],
+      "measurement_data_used": false,
+      "note": "Measurement reference reports may be present, but this receipt does not allow them to set OPH input functions."
+    },
+    "official_planck_likelihood_readiness_report": {
+      "present": true,
+      "used_for": [
+        "official_likelihood_gate_only"
+      ],
+      "measurement_data_used": false,
+      "note": "Environment readiness only; it does not set OPH input functions."
+    },
+    "camb_lcdm_baseline_report": {
+      "present": false,
+      "used_for": [
+        "cdm_limit_regression_gate_only"
+      ],
+      "measurement_data_used": false,
+      "note": "External LambdaCDM baseline checks Boltzmann plumbing only; it does not set OPH input functions."
+    },
+    "finite_covariant_collar_packet_parent_report": {
+      "present": false,
+      "used_for": [
+        "stress_closure_gate",
+        "recipient_stress_gate",
+        "gauge_gate",
+        "causal_response_gate"
+      ],
+      "measurement_data_used": false,
+      "note": "Source-contract receipt only; it does not fit OPH input functions to CMB data."
+    }
+  },
+  "run_dirs": [
+    "runs/oph_universe_128k_3p1d_earned"
+  ],
+  "claim_boundary": "Certifies only the data firewall for assembling OPH CMB input functions. It does not certify finite-theorem grade B_A/rho_A/A_zeta inputs, CDM-limit regression, official likelihood readiness, or a physical CMB prediction."
+}

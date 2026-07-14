@@ -1,0 +1,90 @@
+{
+  "mode": "prime_geometric_rank_refinement_v0",
+  "run_count": 1,
+  "rows": [
+    {
+      "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+      "patch_count": 65536,
+      "observer_count": 1024,
+      "sampled_observer_count": 512,
+      "control_quotient_spatial_3d_candidate": false,
+      "independent_rank3_selector": false,
+      "control_quotient_lane_is_negative_control": false,
+      "directional_strict_3d_ready_count": 0,
+      "measured_overlap_geometry_receipt": false,
+      "candidate_rank": null,
+      "candidate_model": null,
+      "candidate_median_dimension": null,
+      "candidate_corr_dimension": null,
+      "candidate_mle_dimension": null,
+      "candidate_s2_leakage_corr": null,
+      "candidate_s2_leakage_pass": false,
+      "proof_blockers": [
+        "no_directional_rank_passes_strict_h3_model_and_leakage_gates",
+        "no_coordinate_rank_passes_spatial_3d_model_and_leakage_gates",
+        "best_3d_windows_still_fail_s2_leakage_gate",
+        "control_quotient_lane_is_not_a_negative_control",
+        "requires_refinement_stability_across_regulator_sizes",
+        "requires_independent_rank_selection_rule_before_physical_interpretation"
+      ]
+    }
+  ],
+  "sizes": [
+    {
+      "patch_count": 65536,
+      "run_count": 1,
+      "candidate_count": 0,
+      "independent_rank3_count": 0,
+      "candidate_rank_counts": {
+        "None": 1
+      },
+      "candidate_model_counts": {
+        "None": 1
+      },
+      "median_candidate_dimension": null,
+      "median_candidate_corr_dimension": null,
+      "median_candidate_mle_dimension": null,
+      "median_candidate_s2_leakage_corr": null,
+      "s2_leakage_pass_count": 0
+    }
+  ],
+  "required_patch_count_ladder": [
+    4096,
+    16384,
+    65536,
+    262144
+  ],
+  "missing_required_patch_counts": [
+    4096,
+    16384,
+    262144
+  ],
+  "required_ladder_complete": false,
+  "multi_scale": false,
+  "all_control_quotient_spatial_3d_candidates": false,
+  "all_candidate_s2_leakage_pass": false,
+  "all_candidate_rank3_e3": false,
+  "candidate_dimension_drift": null,
+  "candidate_dimension_stable": false,
+  "control_quotient_rank3_refinement_candidate_receipt": false,
+  "CONTROL_RESIDUALIZED_RANK3_CANDIDATE_RECEIPT": false,
+  "CONTROL_RESIDUALIZED_RANK3_DIAGNOSTIC_RECEIPT": false,
+  "control_residualized_rank3_candidate_receipt": false,
+  "control_residualized_rank3_diagnostic_receipt": false,
+  "independent_rank3_selector_all": false,
+  "proper_negative_control_all": false,
+  "directional_h3_strict_all": false,
+  "measured_overlap_geometry_all": false,
+  "strict_neutral_bulk_refinement_receipt": false,
+  "proof_blockers": [
+    "required_4k_16k_64k_256k_refinement_ladder_incomplete:4096,16384,262144",
+    "control_quotient_rank3_candidate_not_stable_across_refinement",
+    "independent_svd_rank3_selector_not_stable_or_false",
+    "control_quotient_lane_is_not_a_negative_control",
+    "directional_h3_strict_rank_gate_not_passed",
+    "measured_cross_observer_overlap_refinement_gate_not_passed"
+  ],
+  "physical_claim": false,
+  "strict_neutral_bulk_participation": "diagnostic_only",
+  "claim_boundary": "Refinement diagnostic for the control-quotient coordinate rank-3 spatial window. Passing this report means the finite-regulator candidate is stable across the explicit 4k/16k/64k/256k ladder with dimension drift at most 0.10. It is not strict neutral bulk proof unless an independent rank selector passes, the quotient lane is replaced by a proper null/negative-control gate, and the directional H3 strict gate passes."
+}

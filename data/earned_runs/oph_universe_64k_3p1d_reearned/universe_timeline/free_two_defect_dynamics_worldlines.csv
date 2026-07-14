@@ -1,0 +1,3 @@
+worldline_id,observation_count,birth_cycle,death_cycle,lifetime_cycles,persistent,contact_outcome,mean_transport_distance
+free_pair_left,128,0,127,127,True,scatter,0.08211951811589735
+free_pair_right,128,0,127,127,True,scatter,0.08220583223455266

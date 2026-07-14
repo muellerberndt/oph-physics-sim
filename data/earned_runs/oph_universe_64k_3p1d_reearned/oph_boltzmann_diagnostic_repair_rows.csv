@@ -1,0 +1,17 @@
+B_A_shape_proxy,Gamma_rec_over_H_shape_proxy,a,k_proxy_inverse_theta,rho_A_eq_proxy,rho_A_eq_proxy_units,source,source_report_index,theta0,weighted_collar_repair_defect_R,z
+0.0,0.0,0.000909090909,2.857142857142857,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.35,0.0,1099.00000011
+0.0,0.0,0.000909090909,1.8181818181818181,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.55,0.0,1099.00000011
+0.0,0.0,0.000909090909,1.3333333333333333,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.75,0.0,1099.00000011
+0.0,0.0,0.000909090909,1.0,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,1.0,0.0,1099.00000011
+0.0,0.0,0.01,2.857142857142857,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.35,0.0,99.0
+0.0,0.0,0.01,1.8181818181818181,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.55,0.0,99.0
+0.0,0.0,0.01,1.3333333333333333,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.75,0.0,99.0
+0.0,0.0,0.01,1.0,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,1.0,0.0,99.0
+0.0,0.0,0.1,2.857142857142857,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.35,0.0,9.0
+0.0,0.0,0.1,1.8181818181818181,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.55,0.0,9.0
+0.0,0.0,0.1,1.3333333333333333,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.75,0.0,9.0
+0.0,0.0,0.1,1.0,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,1.0,0.0,9.0
+0.0,0.0,1.0,2.857142857142857,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.35,0.0,0.0
+0.0,0.0,1.0,1.8181818181818181,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.55,0.0,0.0
+0.0,0.0,1.0,1.3333333333333333,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,0.75,0.0,0.0
+0.0,0.0,1.0,1.0,,not_available_without_parent_length_scale,finite_collar_diagnostic_shape_proxy,0,1.0,0.0,0.0

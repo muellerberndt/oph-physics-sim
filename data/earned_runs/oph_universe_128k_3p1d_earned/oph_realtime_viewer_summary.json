@@ -1,0 +1,17 @@
+{
+  "viewer_path": "runs/oph_universe_128k_3p1d_earned/oph_realtime_viewer.html",
+  "run_path": "runs/oph_universe_128k_3p1d_earned",
+  "screen_point_count": 3500,
+  "defect_cluster_count": 512,
+  "defect_timeline_snapshots": 32,
+  "persistent_defect_worldlines": 435,
+  "h3_point_count": 96,
+  "h3_worldline_count": 55,
+  "defect_screen_transport_proxy_count": 0,
+  "defect_fusion_candidate_count": 31773,
+  "particle_likeness_worldline_count": 439,
+  "particle_like_count": 0,
+  "bulk_3d_established": false,
+  "physical_cmb_prediction": false,
+  "claim_boundary": "standalone receipt viewer for OPH screen, observer readouts, H3 support fits, defect clusters, and C_l diagnostics. It visualizes current receipts and gates; it does not upgrade failed bulk or particle gates."
+}

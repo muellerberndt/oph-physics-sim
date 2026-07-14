@@ -1,0 +1,19 @@
+{
+  "object_count": 220,
+  "persistent_object_count": 220,
+  "transition_object_count": 220,
+  "support_free_transition_object_count": 220,
+  "median_overlap_agreement": 0.39451994542923124,
+  "p10_overlap_agreement": 0.32989721898037716,
+  "median_counterfactual_stability": 1.0,
+  "bad_record_rewrite_detected": false,
+  "claim_boundary": "observer-facing record-family object construction; transition-affinity objects are scored from observer-visible packet/transition histograms before any support-overlap fallback. This is not yet bulk reconstruction.",
+  "observer_population": {
+    "materialized_observer_count": 32000,
+    "analyzed_observer_count": 8192,
+    "analysis_max_observers": 8192,
+    "analysis_sampling_policy": "deterministic_observer_id_hash_rank_v1",
+    "analysis_subset_hash": "sha256:c9b9604bdb8f24301abf13f7a075b425a612d76b7c77b3bbaff3eff759aece98",
+    "full_population_analyzed": false
+  }
+}

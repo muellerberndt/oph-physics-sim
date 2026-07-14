@@ -1,0 +1,12 @@
+{
+  "chirality_detected": false,
+  "claim_boundary": "Dynamical parity observable on defect worldline centroids; the closed-surface pseudo-scalar mean is excluded by construction (it vanishes identically by Stokes). Sign reproducibility across independent seeds is required before any chirality claim.",
+  "mean_signed_turning_per_step_rad": -0.7990923974635251,
+  "mirror_covariance_ok": true,
+  "schema": "defect_worldline_turning_v1",
+  "signflip_null_std": 0.9945239449274321,
+  "status": "evaluated",
+  "total_turning_steps": 6,
+  "worldlines_used": 6,
+  "z_score": -0.8034923659096341
+}

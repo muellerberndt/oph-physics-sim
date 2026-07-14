@@ -1,0 +1,238 @@
+{
+  "mode": "oph_finite_repair_transition_clock_v0",
+  "source_run_dir": "runs/oph_universe_64k_3p1d_reearned",
+  "observer_views_path": "runs/oph_universe_64k_3p1d_reearned/observer_views.jsonl",
+  "packet_fields": [
+    "checkpoint_class",
+    "stable_flag",
+    "s3_sector_class",
+    "repair_load_bucket"
+  ],
+  "primary_matrix": "raw_empirical",
+  "repair_step_time": 1.0,
+  "clock_normalization_source": "declared_cli_value",
+  "clock_normalization_source_status": {
+    "source": "declared_cli_value",
+    "theorem_grade": false,
+    "hypothesis_side": false,
+    "posthoc_or_cli_declared": true,
+    "claim_boundary": "Only theorem_grade clock sources may close the exact repair-clock certificate. Hypothesis-side and CLI-declared sources may support diagnostics but cannot by themselves make a physical CMB prediction."
+  },
+  "weight_field": "transition_history_mean_modal_mass",
+  "observer_count": 1028,
+  "transition_count": 31744,
+  "skipped_observer_count": 4,
+  "state_count": 29,
+  "state_labels": [
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 1]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 4]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 2]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 5]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 3]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 3]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 4]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 2]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 6]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 7]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 0]]",
+    "[[\"checkpoint_class\", 3], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 0]]",
+    "[[\"checkpoint_class\", 2], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 0]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 5]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 6]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 6]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 4]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 7]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 2]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 0], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 3]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 5]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 0]]",
+    "[[\"checkpoint_class\", 3], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 0]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 1]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 7]]",
+    "[[\"checkpoint_class\", 3], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 7]]",
+    "[[\"checkpoint_class\", 1], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 0]]",
+    "[[\"checkpoint_class\", 0], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 1]]",
+    "[[\"checkpoint_class\", 3], [\"stable_flag\", 1], [\"s3_sector_class\", 0], [\"repair_load_bucket\", 6]]"
+  ],
+  "target": {
+    "required_kappa_rep": 2.718281828459045,
+    "required_eta_R": 0.0351588569692228,
+    "required_n_s": 0.9648411430307772,
+    "P": 1.6309682094039593,
+    "phi": 1.618033988749895,
+    "delta_P": 0.012934220654064355
+  },
+  "matrices": {
+    "raw_empirical": {
+      "finite": true,
+      "irreducible": false,
+      "aperiodic": false,
+      "row_sum_max_abs_error": 2.220446049250313e-16,
+      "lambda_2": 1.0,
+      "gamma_continuous": -0.0,
+      "gamma_discrete_one_minus_lambda2": 0.0,
+      "kappa_rep_estimate": -0.0,
+      "eta_R_estimate": -0.0,
+      "n_s_estimate": 1.0,
+      "required_repair_step_time_for_kappa_e": -0.0,
+      "stationary_min": 0.0,
+      "stationary_max": 1.0,
+      "detailed_balance_max_abs_error": 0.0,
+      "top_abs_eigenvalues": [
+        1.0,
+        1.0,
+        0.9490555190866427,
+        0.8503956876477632,
+        0.7752792998561496,
+        0.7431072368350549,
+        0.5351075622806546,
+        0.5
+      ]
+    },
+    "reversible_empirical": {
+      "finite": true,
+      "irreducible": true,
+      "aperiodic": true,
+      "row_sum_max_abs_error": 2.220446049250313e-16,
+      "lambda_2": 0.9702339968012714,
+      "gamma_continuous": 0.03021800276116315,
+      "gamma_discrete_one_minus_lambda2": 0.029766003198728574,
+      "kappa_rep_estimate": 2.3362832264399067,
+      "eta_R_estimate": 0.03021800276116315,
+      "n_s_estimate": 0.9697819972388368,
+      "required_repair_step_time_for_kappa_e": 0.8594705677609271,
+      "stationary_min": 6.499214328222886e-05,
+      "stationary_max": 0.11904710440245811,
+      "detailed_balance_max_abs_error": 2.949029909160572e-17,
+      "top_abs_eigenvalues": [
+        0.9999999999999977,
+        0.9702339968012714,
+        0.9585344017361729,
+        0.7791591562131908,
+        0.7483242205613364,
+        0.5912302525401968,
+        0.5739966646954339,
+        0.5518197270945361
+      ]
+    }
+  },
+  "primary": {
+    "finite": true,
+    "irreducible": false,
+    "aperiodic": false,
+    "row_sum_max_abs_error": 2.220446049250313e-16,
+    "lambda_2": 1.0,
+    "gamma_continuous": -0.0,
+    "gamma_discrete_one_minus_lambda2": 0.0,
+    "kappa_rep_estimate": -0.0,
+    "eta_R_estimate": -0.0,
+    "n_s_estimate": 1.0,
+    "required_repair_step_time_for_kappa_e": -0.0,
+    "stationary_min": 0.0,
+    "stationary_max": 1.0,
+    "detailed_balance_max_abs_error": 0.0,
+    "top_abs_eigenvalues": [
+      1.0,
+      1.0,
+      0.9490555190866427,
+      0.8503956876477632,
+      0.7752792998561496,
+      0.7431072368350549,
+      0.5351075622806546,
+      0.5
+    ]
+  },
+  "clock_normalization_candidates": [
+    {
+      "name": "unit_step",
+      "value": 1.0,
+      "relative_error_to_required": 9.999999999999999e+29,
+      "description": "one simulator transition-history step"
+    },
+    {
+      "name": "record_commit_cycles",
+      "value": 12.0,
+      "relative_error_to_required": 1.2e+31,
+      "description": "record commit horizon in cycles"
+    },
+    {
+      "name": "history_window",
+      "value": 32.0,
+      "relative_error_to_required": 3.1999999999999996e+31,
+      "description": "observer transition-history window"
+    },
+    {
+      "name": "cycles_times_bw_modular_time",
+      "value": 50.26548245743669,
+      "relative_error_to_required": 5.026548245743668e+31,
+      "description": "simulation cycles times BW modular parameter s=2pi*t"
+    },
+    {
+      "name": "record_commit_cycles_times_2pi",
+      "value": 75.39822368615503,
+      "relative_error_to_required": 7.539822368615503e+31,
+      "description": "KMS 2pi times record commit horizon"
+    },
+    {
+      "name": "commit_times_history_times_bw_modular_time",
+      "value": 150.79644737231007,
+      "relative_error_to_required": 1.5079644737231007e+32,
+      "description": "record commit horizon times history window times BW modular parameter"
+    },
+    {
+      "name": "history_window_times_2pi",
+      "value": 201.06192982974676,
+      "relative_error_to_required": 2.0106192982974673e+32,
+      "description": "KMS 2pi times observer history window"
+    }
+  ],
+  "relative_error_to_kappa_e": 1.0,
+  "clock_normalization_numeric_match": false,
+  "repair_scale_hypothesis_clock_match": false,
+  "finite_transition_matrix_ready": true,
+  "finite_lattice_derived": true,
+  "clock_normalization_certified": false,
+  "repair_clock_certificate": false,
+  "eta_R_finite_lattice_derived": false,
+  "clock_modes": {
+    "empirical": {
+      "clock_mode": "empirical",
+      "clock_normalization_certified": true,
+      "eta_R_finite_lattice_derived": true,
+      "eta_R_hypothesis": false,
+      "kappa_rep_value": -0.0,
+      "eta_R_value": -0.0,
+      "claim_boundary": "Finite-derived empirical transition-clock value; not constrained to kappa_rep=e."
+    },
+    "e_hypothesis": {
+      "clock_mode": "e_hypothesis",
+      "clock_normalization_certified": false,
+      "eta_R_finite_lattice_derived": false,
+      "eta_R_hypothesis": true,
+      "kappa_rep_value": -0.0,
+      "eta_R_value": 0.0351588569692228,
+      "claim_boundary": "Euler repair-clock hypothesis; retains old exact OPH kappa_rep=e certificate semantics."
+    },
+    "crc48_hypothesis": {
+      "clock_mode": "crc48_hypothesis",
+      "clock_normalization_certified": true,
+      "eta_R_finite_lattice_derived": false,
+      "eta_R_hypothesis": true,
+      "kappa_rep_value": 2.6270237126274267,
+      "eta_R_value": 0.033978504362582485,
+      "claim_boundary": "CRC-48/P/48 hypothesis branch; prediction outputs must be labeled hypothesis-side."
+    }
+  },
+  "repair_clock_empirical_certificate": true,
+  "repair_clock_e_hypothesis_certificate": false,
+  "repair_clock_crc48_hypothesis_certificate": true,
+  "eta_R_empirical_finite_lattice_derived": true,
+  "physical_cmb_eligible_eta_R_empirical": true,
+  "physical_cmb_prediction": false,
+  "blockers": [
+    "primary transition matrix is reducible, so it is not a finite repair-matrix certificate",
+    "primary transition matrix is not certified aperiodic",
+    "finite transition matrix does not yield kappa_rep=e under the declared repair-step time"
+  ],
+  "claim_boundary": "Finite observer-visible transition-matrix clock diagnostic. Packet paths are read from observer_views.jsonl and projected to a declared support-visible quotient alphabet. The report is finite-lattice-derived as a transition-matrix diagnostic, but it certifies the exact CMB repair clock only if the primary matrix yields kappa_rep=e under a theorem-grade predeclared repair-step time. Hypothesis-side clock matches are reported separately."
+}

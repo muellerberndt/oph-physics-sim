@@ -1,0 +1,3 @@
+matrix,lambda_2,gamma_continuous,kappa_rep_estimate,eta_R_estimate,required_repair_step_time_for_kappa_e,detailed_balance_max_abs_error
+raw_empirical,1.0,-0.0,-0.0,-0.0,-0.0,0.0
+reversible_empirical,0.9702339968012714,0.03021800276116315,2.3362832264399067,0.03021800276116315,0.8594705677609271,2.949029909160572e-17

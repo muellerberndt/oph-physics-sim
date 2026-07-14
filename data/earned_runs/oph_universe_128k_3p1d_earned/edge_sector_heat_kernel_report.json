@@ -1,0 +1,46 @@
+{
+  "mode": "edge_sector_heat_kernel_casimir_surrogate",
+  "group": "S3",
+  "edge_count": 783619,
+  "beta": 1.0,
+  "sector_rows": [
+    {
+      "class_id": 0,
+      "class": "identity",
+      "casimir_surrogate": 0.0,
+      "degeneracy": 1,
+      "observed_count": 152682,
+      "observed_probability": 0.19484213629327518,
+      "target_probability": 0.4211751909016534
+    },
+    {
+      "class_id": 1,
+      "class": "transposition",
+      "casimir_surrogate": 1.0,
+      "degeneracy": 3,
+      "observed_count": 378484,
+      "observed_probability": 0.4829949248295409,
+      "target_probability": 0.46482508159252733
+    },
+    {
+      "class_id": 2,
+      "class": "threecycle",
+      "casimir_surrogate": 2.0,
+      "degeneracy": 2,
+      "observed_count": 252453,
+      "observed_probability": 0.32216293887718395,
+      "target_probability": 0.11399972750581937
+    }
+  ],
+  "total_variation_to_declared_stationary_law": 0.22633305460837816,
+  "kl_to_declared_stationary_law": 0.20300721201780222,
+  "receipt": true,
+  "claim_boundary": "finite S3 conjugacy-class/Casimir surrogate for the screen-microphysics edge-sector heat-kernel branch. This logs the fixed-cutoff sector law; it is not the compact Peter-Weyl refinement lift and not a particle claim.",
+  "EDGE_HEAT_KERNEL_RECEIPT": true,
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "recovered_core",
+  "receipt_name": "EDGE_HEAT_KERNEL_RECEIPT",
+  "observable_id": "EDGE_HEAT_KERNEL_RECEIPT",
+  "fit_objective": "not_applicable",
+  "physical_claim": false
+}

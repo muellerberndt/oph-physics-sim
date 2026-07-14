@@ -1,0 +1,194 @@
+{
+  "mode": "OPH_COSMO_PROXY_V0",
+  "OPH_COSMO_PROXY_V0": true,
+  "receipt": true,
+  "physical_cmb_prediction": false,
+  "physical_matter_power_prediction": false,
+  "boltzmann_adapter": false,
+  "target_label": null,
+  "target_registry": {
+    "sparc": {
+      "name": "SPARC",
+      "lane": "galaxy_proxy",
+      "source_url": "https://astroweb.case.edu/SPARC/",
+      "status": "external_table_required",
+      "claim_boundary": "RAR/BTFR target metadata only; no SPARC rows are bundled with this package"
+    },
+    "planck2018_low_l_tt": {
+      "name": "Planck2018_low_l_TT_shape",
+      "lane": "cosmo_proxy",
+      "source_url": "https://arxiv.org/abs/1807.06209",
+      "status": "external_table_required",
+      "claim_boundary": "shape-only benchmark metadata; use a local binned TT table for comparisons"
+    },
+    "planck2018_tt_te_ee_lensing": {
+      "name": "Planck2018_TT_TE_EE_lensing",
+      "lane": "oph_cmb_anomaly_stress_adapter",
+      "source_url": "https://arxiv.org/abs/1807.06209",
+      "status": "full_likelihood_required",
+      "claim_boundary": "physical CMB target metadata only; requires CAMB/CLASS OPH anomaly module, full covariance likelihoods, and CDM-limit regression"
+    },
+    "planck2018_scalar_tilt": {
+      "name": "Planck2018_scalar_tilt_ns",
+      "lane": "oph_screen_power_effective_theory",
+      "source_url": "https://arxiv.org/abs/1807.06209",
+      "status": "screen_eta_R_regression_target",
+      "claim_boundary": "Target metadata for eta_R = 1 - n_s. This is a screen-theory parameter target, not a CMB likelihood and not a physical TT/TE/EE prediction."
+    },
+    "planck2018_tt_camb_lcdm_baseline": {
+      "name": "Planck2018_TT_CAMB_LambdaCDM_baseline",
+      "lane": "camb_lcdm_baseline",
+      "source_url": "https://arxiv.org/abs/1807.06209",
+      "status": "local_binned_tt_regression_enabled",
+      "claim_boundary": "standard LambdaCDM CAMB regression target; useful for Boltzmann plumbing only, not an OPH prediction"
+    },
+    "act_dr6_lensing": {
+      "name": "ACT_DR6_CMB_lensing_shape",
+      "lane": "cosmo_proxy",
+      "source_url": "https://arxiv.org/abs/2304.05202",
+      "status": "external_table_required",
+      "claim_boundary": "late-structure target metadata only; no lensing table is bundled"
+    },
+    "desi_dr2_bao": {
+      "name": "DESI_DR2_BAO",
+      "lane": "background_adapter",
+      "source_url": "https://arxiv.org/abs/2503.14738",
+      "status": "adapter_not_enabled",
+      "claim_boundary": "future background-adapter metadata only"
+    },
+    "oph_compressed_cmb_bao_growth": {
+      "name": "OPH_compressed_CMB_BAO_growth_S8_reference",
+      "lane": "compressed_likelihood_reference",
+      "source_url": "local:cosmology/correspondence/inflation/inflation.md",
+      "status": "reference_diagnostic_available",
+      "claim_boundary": "Compressed diagnostic regression target only. Keeps S8/weak-lensing tension visible; does not replace full Planck/BAO/lensing likelihoods."
+    },
+    "oph_cmb_success_ladder_v04": {
+      "name": "OPH_CMB_success_ladder_v0_4",
+      "lane": "oph_inflation_cmb_bridge",
+      "source_url": "local:cosmology/correspondence/cmb/2",
+      "status": "public_data_diagnostic_available",
+      "claim_boundary": "Planck low-ell TT/CAMB/full-sky-MC diagnostic ladder imported from Pro notes. This is measured-data comparison, not an official likelihood and not a finite-lattice derivation of the fitted OPH IR/parity parameters."
+    },
+    "oph_p48_screen_spectrum": {
+      "name": "OPH_P_over_48_screen_spectrum",
+      "lane": "oph_inflation_cmb_bridge",
+      "source_url": "local:cosmology/correspondence/inflation/2/comms.md",
+      "status": "conditional_screen_theorem_target_available",
+      "claim_boundary": "Conditional finite-screen target for the MaxEnt Gaussian screen covariance and n_s=1-P/48 tilt after scalar-readout and repair-operator receipts. Scalar release amplitude, screen-to-primordial lift, and physical TT/TE/EE spectra remain separate gates."
+    },
+    "pantheon_plus": {
+      "name": "PantheonPlus",
+      "lane": "background_adapter",
+      "source_url": "https://arxiv.org/abs/2202.04077",
+      "status": "adapter_not_enabled",
+      "claim_boundary": "future supernova-distance adapter metadata only"
+    }
+  },
+  "best_field": "record_signature_smooth_k32",
+  "field_scores": {
+    "record_signature": {
+      "control_separation_score": 0.17519700367753344,
+      "peak_ell": 32,
+      "low_ell_power_2_10": 0.001845414534134061,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "stable_count": {
+      "control_separation_score": 0.2795844540436186,
+      "peak_ell": 31,
+      "low_ell_power_2_10": 0.002039341964390513,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "cumulative_repair_load": {
+      "control_separation_score": 0.5347099481561584,
+      "peak_ell": 31,
+      "low_ell_power_2_10": 0.002320779709550806,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "repair_load": {
+      "control_separation_score": 0.0,
+      "peak_ell": 2,
+      "low_ell_power_2_10": 0.0,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "local_mismatch_density": {
+      "control_separation_score": 0.0,
+      "peak_ell": 2,
+      "low_ell_power_2_10": 0.0,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "s3_class_density": {
+      "control_separation_score": 0.0,
+      "peak_ell": 2,
+      "low_ell_power_2_10": 0.0,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "record_signature_smooth_k16": {
+      "control_separation_score": 0.9574881930957645,
+      "peak_ell": 32,
+      "low_ell_power_2_10": 0.06007215185018146,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "record_signature_smooth_k32": {
+      "control_separation_score": 0.9727804764456257,
+      "peak_ell": 24,
+      "low_ell_power_2_10": 0.16315342413889194,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "record_repair_mix": {
+      "control_separation_score": 0.2259901722117586,
+      "peak_ell": 31,
+      "low_ell_power_2_10": 0.0017387695999908405,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    },
+    "record_sector_mix": {
+      "control_separation_score": 0.20816935258203562,
+      "peak_ell": 32,
+      "low_ell_power_2_10": 0.001845414534134061,
+      "target_shape_comparison": {
+        "usable": false,
+        "reason": "target_spectrum_not_provided"
+      }
+    }
+  },
+  "simulator": {
+    "ell_max": 32,
+    "estimator": "spherical_harmonic",
+    "point_count": 65536,
+    "gate_allowed": true
+  },
+  "claim_boundary": "screen-level freezeout C_l proxy and shape diagnostic. It is measurement-facing, but not a physical CMB prediction, not a P(k), not CAMB/CLASS input, and not a populated 3D bulk claim",
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "proxy",
+  "receipt_name": "OPH_COSMO_PROXY_V0",
+  "observable_id": "OPH_COSMO_PROXY_V0",
+  "fit_objective": "not_applicable",
+  "physical_claim": false
+}

@@ -39,3 +39,7 @@ temp/
 .oph_fpe_cache/
 *.log
 *.jsonl
+
+# Curated, immutable earned-run snapshots are intentionally repository-visible.
+!data/earned_runs/
+!data/earned_runs/**

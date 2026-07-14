@@ -1,0 +1,7 @@
+candidate,score_numerator,score_denominator,selected,verdict
+"BD_{n=0}^{SU(5),Z2}",7,9,False,Rejected: no Higgs pair.
+"BD_{n=1}^{SU(5),Z2}",8,9,False,Geometric witness; safety layer absent.
+"BD_{n=1,+}^{SU(5),Z2}",9,9,True,Selected operator-safe candidate in the encoded structural audit.
+"BD_{n=2}^{SU(5),Z2}",7,9,False,Rejected: extra Higgs pair.
+"BHOP SU(4),Z3xZ3",4,9,False,Backup witness.
+Generic Spin(32)/Z2 heterotic,0,9,False,Rejected as minimal class.

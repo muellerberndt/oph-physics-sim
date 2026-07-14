@@ -1,0 +1,10 @@
+gate_id,label,requirement,status,visual_state
+global_group,Global group,(SU(3)xSU(2)xU(1))/Z6 visible quotient,encoded_structural_gate,paper_gate
+hypercharge_lattice,Hypercharge lattice,Standard Model charge lattice,encoded_structural_gate,paper_gate
+color_generations,Color and generations,N_c=3 and N_g=3,encoded_structural_gate,paper_gate
+one_higgs_pair,Higgs sector,Exactly one Higgs pair on the low-energy branch,encoded_structural_gate,paper_gate
+no_light_chiral_exotics,Exotics,No light chiral exotics,encoded_structural_gate,paper_gate
+no_extra_visible_u1,Extra visible gauge factors,No extra visible low-scale U(1),encoded_structural_gate,paper_gate
+no_xy_gauge_proton_decay,Gauge proton decay,"Product-group adjoint contains no mixed (3,2,+/-5/6) gauge bosons",encoded_structural_gate,paper_gate
+operator_safety,Operator safety,"Z_4^R permits Yukawas/Weinberg and forbids perturbative RPV, d=5 proton decay, and mu term",encoded_charge_algebra_gate,paper_gate
+moduli_thresholds,Moduli and thresholds,"F_BD,n=1,+(m_star)=O_OPH with full transverse rank",open_certificate,open_gate

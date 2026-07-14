@@ -1,0 +1,5 @@
+Gamma_rec_over_H_diagnostic,a,clock_normalization_certified,eta_R_estimate,finite_lattice_derived,finite_transition_matrix_ready,gamma_discrete_one_minus_lambda2,k_proxy_inverse_theta,k_units,kappa_rep_estimate,lambda_2,n_s_estimate,physical_cmb_prediction,primary_matrix,repair_clock_certificate,repair_step_time,source,source_transition_report_index,state_count,transition_count,z
+-0.0,0.000909090909,False,-0.0,True,True,0.0,,scale_independent_transition_matrix_diagnostic,-0.0,1.0,1.0,False,raw_empirical,False,1.0,finite_repair_transition_matrix_diagnostic,0,28,253952,1099.00000011
+-0.0,0.01,False,-0.0,True,True,0.0,,scale_independent_transition_matrix_diagnostic,-0.0,1.0,1.0,False,raw_empirical,False,1.0,finite_repair_transition_matrix_diagnostic,0,28,253952,99.0
+-0.0,0.1,False,-0.0,True,True,0.0,,scale_independent_transition_matrix_diagnostic,-0.0,1.0,1.0,False,raw_empirical,False,1.0,finite_repair_transition_matrix_diagnostic,0,28,253952,9.0
+-0.0,1.0,False,-0.0,True,True,0.0,,scale_independent_transition_matrix_diagnostic,-0.0,1.0,1.0,False,raw_empirical,False,1.0,finite_repair_transition_matrix_diagnostic,0,28,253952,0.0

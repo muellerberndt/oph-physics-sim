@@ -1,0 +1,59 @@
+{
+  "freezeout_cycle": 107,
+  "committed_fraction": 1.0,
+  "point_count": 131072,
+  "fields": {
+    "record_signature": {
+      "min": -1.7332512180579944,
+      "mean": 3.621235256101585e-17,
+      "max": 1.7302529561981908,
+      "std": 1.0
+    },
+    "local_mismatch_density": {
+      "min": 0.0,
+      "mean": 0.0,
+      "max": 0.0,
+      "std": 0.0
+    },
+    "cumulative_repair_load": {
+      "min": -4.384539408052345,
+      "mean": 5.442694905877232e-17,
+      "max": 4.493439596192132,
+      "std": 0.9999999999999998
+    },
+    "s3_class_density": {
+      "min": 0.0,
+      "mean": 0.0,
+      "max": 0.0,
+      "std": 0.0
+    }
+  },
+  "output_profile": "compact",
+  "freezeout_npz_written": true,
+  "claim_boundary": "freezeout screen field bundle; this is an observer-screen angular statistic, not a reconstructed 3D bulk observable",
+  "gate_report": {
+    "enabled": true,
+    "allowed": true,
+    "missing_requirements": [],
+    "checks": {
+      "kms_bw_pass": true,
+      "state_bw_controls_pass": false,
+      "neutral_reconstruction_written": true,
+      "bulk_3d_established": false,
+      "screen_proxy_allowed_without_bulk": true
+    },
+    "required": {
+      "kms_bw_pass": true,
+      "state_bw_controls_pass": false,
+      "neutral_reconstruction_written": false
+    },
+    "mode": "freezeout_screen_cl_proxy_gate",
+    "claim_boundary": "Allows only a measurement-facing screen C_l proxy. This gate does not certify a physical CMB prediction, a 3D bulk, a P(k), or a Boltzmann adapter."
+  },
+  "receipt_schema_version": "2026-06-06b",
+  "claim_level": "proxy",
+  "receipt_name": "FREEZEOUT_SCREEN_FIELD_BUNDLE",
+  "observable_id": "FREEZEOUT_SCREEN_FIELD_BUNDLE",
+  "fit_objective": "not_applicable",
+  "physical_claim": false
+}
