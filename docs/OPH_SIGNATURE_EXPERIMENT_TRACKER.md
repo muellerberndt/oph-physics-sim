@@ -168,6 +168,23 @@ full board in section 1.
 
 Newest first. Every entry names the artifact that reproduces it.
 
+- **2026-07-14 (day) · FIRST FULL SPACETIME-CONSENSUS RECEIPT AT SCALE.**
+  `oph_universe_128k_3p1d_earned` (131,072 patches, 32,000 observers, the
+  1M production configuration one step down, zero overrides, covariant
+  probe): `observer_facing_3p1d_h3_experience_receipt: TRUE` with all
+  four component gates (modular time, gauge-covariant 2 pi KMS clock at
+  score 0.304 non-degenerate, conformal H3 chart, H3 modular response),
+  AND `OBSERVER_SPACETIME_CONSENSUS_RECEIPT: TRUE` with an EMPTY blocker
+  list: 600/600 agreement pairs at defect 0.0, 300/300 cocycle-exact
+  triples, shuffled control 0.804. Operational reading, exactly at the
+  claim boundary: observers experience integer 3+1 charts and their
+  charts glue exactly; a shared spacetime in the OPH sense holds at this
+  scale over the shared committed record. The follow-on physics gate is
+  unchanged: genuinely independent per-observer commit histories, then
+  strict neutral bulk. Emergent-bulk field: pair-certified multiplicity
+  up to 169. Package #2:
+  `runs/oph_universe_128k_3p1d_earned_visualizer_bundle.zip` (202.9 MB)
+  with the milestone ladder reading 7 PASS / 4 open.
 - **2026-07-14 (day) · THE 3+1D EXPERIENCE RECEIPT IS RE-EARNED UNDER THE
   COVARIANT CONTRACT.** Root cause of the loss, from the deep audit: the
   e460f34 covariance upgrade correctly invalidated the gauge-blind 2 pi
