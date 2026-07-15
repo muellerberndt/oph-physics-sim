@@ -12,11 +12,11 @@ and carries that label; the paper-side surfaces live in
 **Consistency-stack mapping.** The structural receipts the simulator earns —
 observer-local modular time, the KMS replay contract, the H3 chart, and the
 overlap mutual-agreement certificate — are finite instantiations of rows C1–C3
-of the consistency stack (`reverse-engineering-reality/CONSISTENCY_STACK.md`,
+of the consistency stack (`reverse-engineering-reality/docs/CONSISTENCY_STACK.md`,
 a companion-repo file). The simulator's open items — strict neutral bulk,
 Einstein branch entry, physical particles, physical CMB — sit on C5 and
 downstream rows. The simulator emits no ledger-row closures; closure verdicts
-live only in `reverse-engineering-reality/CLOSURE_LEDGER.md`. The companion
+live only in `reverse-engineering-reality/docs/CLOSURE_LEDGER.md`. The companion
 repo's generator program executed its first full round on 2026-07-14; the
 simulator's open items are unchanged.
 
@@ -31,14 +31,14 @@ The working surface includes finite consensus receipts, observer record algebra,
 
 ## Status (2026-07-14)
 
-Latest completed run ladder: 4k, 16k, 64k, 128k (32,000 observers), 256k,
-and 1,048,576 patches with 64,000 materialized observers
-(`runs/oph_universe_1m_night1`; earned-receipt reruns at 128k and 1M in
-flight on the covariant probe). 1M-scale claims carry a standing
-qualification: the committed earned-run source directory for the 1M run is
-empty (`data/earned_runs/oph_universe_1m_earned/SOURCE_EMPTY.md`); until 1M
-artifacts are committed or hash-pinned with a fetch path, scale claims cite
-the 64k and 128k earned runs.
+Local execution reports cover 4k, 16k, 64k, 128k (32,000 observers), 256k,
+and 1,048,576 patches with 64,000 materialized observers. The populated
+repository-visible earned surface stops at 128k. The directory named for the
+1M earned run records that its source was empty when the snapshot was created
+(`data/earned_runs/oph_universe_1m_earned/SOURCE_EMPTY.md`). Million-patch
+results are local, unpinned observations until their artifacts are committed
+or hash-pinned with a fetch path; scale claims cite the 64k and 128k earned
+runs.
 
 - The observer 3+1D experience receipt is earned under the gauge-covariant
   sector-replay contract: all four component gates pass at 4k with zero
@@ -390,6 +390,8 @@ python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen
 
 Status and experiments:
 
+- `docs/WHAT_OPH_FPE_DOES.md`: one-page account of what the simulator
+  computes, publishes, and leaves gated.
 - `docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md`: the living experiment tracker
   (at-a-glance verdict tables, anomaly docket, results log).
 - `docs/RUN_OUTPUTS_AND_VISUALIZATION.md`: full run-output inventory with the
@@ -423,7 +425,7 @@ Configuration, visualization, operations:
   visualizer payload schemas.
 - `docs/VISUALIZATION_APP_AGENT_MANUAL.md`: app-agent manual for the
   payload-driven visualizations; `scripts/README_FOR_WEB_CODING_AGENT.md`:
-  bundle contents and scene catalog.
+  run-agnostic bundle contract and claim-boundary checklist.
 - `docs/GCP_SCALING_PLAN.md`: scaling and cloud operations (fleet ensembles,
   monolithic sizing, parallelism, credentials policy).
 - `docs/small_oph_universe_v1.md`: exact finite-consensus calibration

@@ -12,7 +12,7 @@ def write_object_h3_bulk_viewer(
     *,
     max_objects: int = 512,
 ) -> dict[str, Any]:
-    """Write a standalone object-H3 bulk viewer from exported object receipts."""
+    """Write a standalone object-H3 viewer from exported object receipts."""
 
     run_path = Path(run_dir)
     destination = out_path or (run_path / "plots" / "object_h3_bulk_viewer.html")
@@ -43,21 +43,20 @@ def write_object_h3_bulk_viewer(
         "physical_cmb_prediction": False,
         "observer_overlap_link_count": len(observer_overlap_links),
         "fundamental_operation": (
-            "Overlapping observations by observers. Object packets are consensus groupings of record/support "
-            "events seen by overlapping observer samples; the H3 chart is a derived representation of those "
-            "overlap-stabilized packets."
+            "Object packets group record/support events seen by overlapping observer samples. The H3 viewer "
+            "chart is a derived representation whose computed and assumed layers retain separate receipts."
         ),
         "dot_semantics": (
-            "Each rendered dot is an observer-consensus object/component exported from h3_objects.csv. "
-            "The H3 spatial point is a derived chart coordinate from modular-response/record-family "
-            "incidence, not a fundamental particle position."
+            "Each rendered dot is an overlap-grouped record object exported from h3_objects.csv. The H3 "
+            "spatial point is a viewer-chart coordinate from modular-response/record-family incidence, "
+            "not a fundamental particle position or a neutral-bulk object."
         ),
         "color_encoding": (
             "Cyan/blue means lower h3_compactness for that object packet; amber means higher h3_compactness. "
             "Dot size scales with observer_count."
         ),
         "view_panels": [
-            "H3 bulk chart: derived 3D spatial object cloud",
+            "H3 viewer chart: derived spatial record-object cloud",
             "Observer overlap substrate: sampled observer IDs co-observing object packets",
             "Boundary shadow: normalized S2-like directions seen at the observer screen",
             "Hyperboloid readout: H3 embedding time versus spatial radius",
@@ -71,7 +70,7 @@ def write_object_h3_bulk_viewer(
     }
     destination.write_text(_html(summary, objects, observer_overlap_links), encoding="utf-8")
     (destination.parent / "object_h3_bulk_viewer_summary.json").write_text(
-        json.dumps(summary, indent=2, default=str),
+        json.dumps(summary, indent=2, default=str) + "\n",
         encoding="utf-8",
     )
     return summary
@@ -286,7 +285,7 @@ def _html(summary: dict[str, Any], objects: list[dict[str, Any]], overlap_links:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OPH Object-H3 Bulk Viewer</title>
+<title>OPH Object-H3 Viewer</title>
 <style>
 :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 body { margin: 0; min-height: 100vh; background: #101216; color: #eef2f8; display: grid; grid-template-rows: auto 1fr; }
@@ -309,10 +308,10 @@ canvas { width: 100%; height: 100%; min-height: 190px; display: block; backgroun
 </head>
 <body>
 <header>
-  <h1>OPH Object-H3 Bulk Viewer</h1>
+  <h1>OPH Object-H3 Viewer</h1>
   <div class="metric">objects <b id="object-count">0</b></div>
   <div class="metric">observer overlaps <b id="overlap-count">0</b></div>
-  <div class="metric">theorem-assisted H3 <b id="h3-gate">false</b></div>
+  <div class="metric">H3 chart diagnostic <b id="h3-gate">false</b></div>
   <div class="metric">chart-blind neutral quotient <b id="neutral-gate">false</b></div>
   <div class="metric">physical CMB <b id="cmb-gate">false</b></div>
 </header>
@@ -320,12 +319,12 @@ canvas { width: 100%; height: 100%; min-height: 190px; display: block; backgroun
   <section class="panel wide">
     <h2>Observer overlap substrate</h2>
     <canvas id="overlap"></canvas>
-    <p>Most fundamental panel here: links connect object packets with shared sampled observers. Consensus objects are built from these overlapping observations before any H3 chart is assigned.</p>
+    <p>Links connect record-object packets that share sampled observers. This panel records overlap provenance before an H3 viewer coordinate is assigned.</p>
   </section>
   <section class="panel">
-    <h2>H3 bulk chart</h2>
+    <h2>H3 viewer chart</h2>
     <canvas id="bulk"></canvas>
-    <p>Each dot is an observer-consensus object/component rendered at its derived H3 spatial coordinate.</p>
+    <p>Each dot is an overlap-grouped record object rendered at its derived H3 viewer coordinate.</p>
   </section>
   <section class="panel">
     <h2>Boundary shadow</h2>
@@ -343,10 +342,10 @@ canvas { width: 100%; height: 100%; min-height: 190px; display: block; backgroun
     <p>Record signature and observer support expose the record-family substrate underneath the geometric visualization.</p>
   </section>
   <section class="explainer">
-    <div><b>Fundamental operation:</b> Overlapping observations by observers. Object packets are consensus groupings of record/support events seen by overlapping observer samples; the H3 chart is derived after that overlap step.</div>
-    <div><b>Dot semantics:</b> Each rendered dot is an observer-consensus object/component exported from h3_objects.csv, not a fundamental particle position.</div>
+    <div><b>Fundamental operation:</b> Object packets group record/support events seen by overlapping observer samples. The H3 viewer chart is a separate representation layer.</div>
+    <div><b>Dot semantics:</b> Each rendered dot is an overlap-grouped record object exported from h3_objects.csv, not a fundamental particle position or neutral-bulk object.</div>
     <b>What are the blue dots?</b>
-    The dots are observer-consensus object packets. Cyan/blue means lower H3 compactness for that packet; amber means higher H3 compactness. Dot size scales with observer count. This viewer deliberately shows the causal order: observer overlap substrate -> record/support packets -> boundary shadow/hyperboloid readout -> derived H3 bulk chart.
+    The dots are overlap-grouped record packets. Cyan/blue means lower H3 compactness for that packet; amber means higher H3 compactness. Dot size scales with observer count. The viewer keeps overlap provenance, record packets, and H3 presentation visible as separate layers.
     <div class="legend">
       <span class="swatch"><span class="dot" style="background:#50e1d2"></span>lower H3 compactness</span>
       <span class="swatch"><span class="dot" style="background:#d2aa5a"></span>higher H3 compactness</span>

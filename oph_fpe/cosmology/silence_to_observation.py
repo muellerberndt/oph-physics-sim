@@ -25,10 +25,10 @@ class SilenceToObservationInputs:
     """Inputs for the finite P/N silence-to-observation witness.
 
     The finite simulator cannot instantiate the literal global capacity
-    ``N_CRC`` as cells. This report therefore treats ``N_CRC`` as the
-    theorem-side closure coordinate and checks whether a finite regulator run
-    is on the same P/N branch, starts from record silence, and emits observer
-    readouts after P-detuned repair/readback dynamics.
+    ``N_CRC`` as cells. This report therefore treats ``P`` and ``N_CRC`` as
+    theorem-side closure coordinates and compares them post hoc with a finite
+    regulator run that starts from record silence and emits observer readouts.
+    The relaxation dynamics does not consume ``P``.
     """
 
     P_star: float | None = None
@@ -146,6 +146,8 @@ def silence_to_observation_report(
         "LITERAL_GLOBAL_N_CAPACITY_SIMULATED_RECEIPT": False,
         "dynamic_p_detuning_control_receipt": False,
         "DYNAMIC_P_DETUNING_CONTROL_RECEIPT": False,
+        "p_role": "post_hoc_analytic_branch_association",
+        "relaxation_dynamics_consumed_p": False,
         "closure_coordinates": {
             "P": pixel.P,
             "phi_silent_equilibrium": pixel.phi,
@@ -167,8 +169,8 @@ def silence_to_observation_report(
             "declared_cosmic_repair_round_depth": int(opts.repair_rounds),
             "depth_fraction_of_declared_cosmic_rounds": finite_round_depth / float(opts.repair_rounds),
             "claim_boundary": (
-                "N_eff is the finite regulator's P-weighted entropy capacity and depth on the P/N branch. "
-                "It is not the literal cosmic capacity N_CRC."
+                "N_eff is a postprocessed P-weighted entropy-capacity coordinate for the finite "
+                "regulator. It is not an input to the relaxation law or the literal cosmic capacity N_CRC."
             ),
         },
         "silence_initial_state": {
@@ -224,11 +226,11 @@ def silence_to_observation_report(
             "scale_compressed_pn_silence_to_observation": scale_compressed_receipt,
         },
         "claim_boundary": (
-            "Finite scale-compressed P/N silence-to-observation witness. It tests the core OPH story that "
-            "a silent observer-record layer on a finite screen becomes observer-readable only on the "
-            "P-detuned local/global closure branch. It does not brute-force the astronomical N_CRC cell "
-            "count, does not solve the global F(N) fixed point from simulator data, and does not yet "
-            "include dynamic reruns with P=phi or wrong detuning."
+            "Finite scale-compressed association between an observed record-silence/readout transition "
+            "and the paper-side P/N closure coordinates. The relaxation dynamics did not consume P. "
+            "The analytic detuning controls test bridge arithmetic rather than dynamic causation; no "
+            "P=phi or wrong-detuning reruns are present. The report neither instantiates the astronomical "
+            "N_CRC cell count nor solves the global F(N) fixed point from simulator data."
         ),
     }
 
@@ -242,7 +244,7 @@ def write_silence_to_observation_report(
     out = Path(out_dir) if out_dir is not None else Path(run_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "silence_to_observation_report.json").write_text(
-        json.dumps(report, indent=2, default=str),
+        json.dumps(report, indent=2, default=str) + "\n",
         encoding="utf-8",
     )
     (out / "silence_to_observation_report.md").write_text(_markdown_report(report), encoding="utf-8")

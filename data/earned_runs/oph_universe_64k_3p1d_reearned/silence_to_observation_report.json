@@ -8,6 +8,8 @@
   "LITERAL_GLOBAL_N_CAPACITY_SIMULATED_RECEIPT": false,
   "dynamic_p_detuning_control_receipt": false,
   "DYNAMIC_P_DETUNING_CONTROL_RECEIPT": false,
+  "p_role": "post_hoc_analytic_branch_association",
+  "relaxation_dynamics_consumed_p": false,
   "closure_coordinates": {
     "P": 1.6309720958601075,
     "phi_silent_equilibrium": 1.618033988749895,
@@ -28,7 +30,7 @@
     "effective_repair_round_depth": 0.8664230706875428,
     "declared_cosmic_repair_round_depth": 24,
     "depth_fraction_of_declared_cosmic_rounds": 0.03610096127864761,
-    "claim_boundary": "N_eff is the finite regulator's P-weighted entropy capacity and depth on the P/N branch. It is not the literal cosmic capacity N_CRC."
+    "claim_boundary": "N_eff is a postprocessed P-weighted entropy-capacity coordinate for the finite regulator. It is not an input to the relaxation law or the literal cosmic capacity N_CRC."
   },
   "silence_initial_state": {
     "cycle": 0,
@@ -480,5 +482,5 @@
     "literal_N_CRC_cells_instantiated": false,
     "scale_compressed_pn_silence_to_observation": false
   },
-  "claim_boundary": "Finite scale-compressed P/N silence-to-observation witness. It tests the core OPH story that a silent observer-record layer on a finite screen becomes observer-readable only on the P-detuned local/global closure branch. It does not brute-force the astronomical N_CRC cell count, does not solve the global F(N) fixed point from simulator data, and does not yet include dynamic reruns with P=phi or wrong detuning."
+  "claim_boundary": "Finite scale-compressed association between an observed record-silence/readout transition and the paper-side P/N closure coordinates. The relaxation dynamics did not consume P. The analytic detuning controls test bridge arithmetic rather than dynamic causation; no P=phi or wrong-detuning reruns are present. The report neither instantiates the astronomical N_CRC cell count nor solves the global F(N) fixed point from simulator data."
 }

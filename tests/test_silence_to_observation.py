@@ -77,6 +77,9 @@ def test_silence_to_observation_report_passes_scale_compressed_witness(tmp_path:
     assert report["scale_compressed_pn_silence_to_observation_receipt"] is True
     assert report["literal_global_N_capacity_simulated_receipt"] is False
     assert report["dynamic_p_detuning_control_receipt"] is False
+    assert report["p_role"] == "post_hoc_analytic_branch_association"
+    assert report["relaxation_dynamics_consumed_p"] is False
+    assert "did not consume P" in report["claim_boundary"]
     assert report["silence_initial_state"]["initial_record_silence_receipt"] is True
     assert report["observation_emergence"]["h3_object_count"] == 3
     assert math.isclose(

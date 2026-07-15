@@ -1139,7 +1139,11 @@ def test_kms_freezeout_cl_proxy_is_gate_checked(tmp_path: Path):
     config["graph"] = dict(config["graph"], patch_count=512, neighbors=8)
     config["dynamics"] = dict(config["dynamics"], cycles=10, repairs_per_cycle=512)
     config["bw"] = dict(config["bw"], cap_count=2, times=[0.1], n_jobs=1, max_basis=16)
-    config["bw"]["selection"] = dict(config["bw"]["selection"], max_basis=16)
+    config["bw"]["selection"] = dict(
+        config["bw"]["selection"],
+        max_basis=16,
+        sources=["repair_affinity_response"],
+    )
     config["observers"] = dict(config["observers"], sample_count=16, neighborhood_size=16)
     config["observer_objects"] = dict(config["observer_objects"], max_families=64)
     config["cosmology"] = dict(config["cosmology"])

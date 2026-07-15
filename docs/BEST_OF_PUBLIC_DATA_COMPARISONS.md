@@ -17,10 +17,13 @@ Validate the JSON with `schemas/cosmology/best_of_public_data_comparisons.schema
 
 ## Current result (as of the 2026-07-11 audited primary run)
 
-Update 2026-07-14: earned-receipt runs exist at 64k/128k/1M
-(`oph_universe_{64k_3p1d_reearned,128k_3p1d_earned,1m_earned}`); rerun
-the suite with one of them as primary to refresh this table. Live
-verdicts: `OPH_SIGNATURE_EXPERIMENT_TRACKER.md` section 0a.
+Repository-visible earned-receipt bundles exist at 64k and 128k
+(`oph_universe_64k_3p1d_reearned` and
+`oph_universe_128k_3p1d_earned`). The directory named
+`oph_universe_1m_earned` is an explicit empty-source placeholder, so it is
+ineligible as a primary comparison run until the artifacts are committed or
+hash-pinned with a fetch path. Live verdicts appear in
+`OPH_SIGNATURE_EXPERIMENT_TRACKER.md` section 0a.
 
 The current audited primary run is `runs/oph_universe_64k_final_audited_20260711`. Its strongest available comparisons are mixed:
 
@@ -65,7 +68,7 @@ Use `--strict` in automation to fail if a primary/baseline report, public table,
 
 ## Prepare the large run and preflight its scale contract
 
-The current bounded monolithic preparer makes `1,048,576` carrier patches and `64,000` materialized observer-like self-reading systems. The expensive cross-observer analyses use a deterministic `8,192`-observer subset. These observer-like systems have bounded local state, ports or boundaries, readback, records, and feedback/repair moves; they are not merely generic graph samples. This is not a one-million-materialized-observer run.
+The bounded monolithic preparer makes `1,048,576` carrier patches and `64,000` materialized observer-like self-reading systems. The expensive cross-observer analyses use a deterministic `8,192`-observer subset. These systems have bounded local state, ports or boundaries, readback, records, and feedback or repair moves. The configuration therefore describes one million carrier patches and 64,000 materialized observers.
 
 Prepare an ignored, machine-local config:
 

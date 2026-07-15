@@ -142,9 +142,9 @@ marked config- or gate-dependent. The visualizer bundle builder
 
 - `scripts/build_visualizer_zip.py <run_dir> <out.zip> .` assembles the
   web-agent bundle (256 MB hard cap) from the [ZIP] subset plus
-  `scripts/README_FOR_WEB_CODING_AGENT.md` (scene catalog, including the
-  2026-07-14 additions: consensus graph, proto-particle block universe,
-  emergence gate board, gauge-relativity toggle, 2 pi clock dial).
+  `scripts/README_FOR_WEB_CODING_AGENT.md` (run-agnostic implementation
+  contract and claim-boundary checklist). The run-generated web brief and
+  visualization manual carry the detailed scene contracts.
 - `run-universe-timeline-viewer` regenerates `universe_timeline/` from a
   completed run.
 - `observer-agreement-report`, `strict-neutral-bulk-report`,

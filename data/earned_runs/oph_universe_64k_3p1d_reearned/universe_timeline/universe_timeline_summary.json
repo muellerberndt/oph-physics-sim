@@ -7,7 +7,7 @@
   "embedded_viewer_max_bytes": 8000000,
   "compact_json": true,
   "payload_path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/visualization_payload.json",
-  "payload_byte_count": 324225786,
+  "payload_byte_count": 324226247,
   "sidecar_exports": {
     "schema": "oph_universe_visualization_sidecars_v1",
     "manifest_path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/visualization_export_manifest.json",
@@ -279,7 +279,7 @@
       },
       "visualization_render_data_json": {
         "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/visualization_render_data.json",
-        "byte_count": 4671698,
+        "byte_count": 4671857,
         "written": true,
         "schema": "oph_visualization_render_data_v1"
       },
@@ -291,7 +291,7 @@
       },
       "emergent_curved_spacetime_json": {
         "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/emergent_curved_spacetime.json",
-        "byte_count": 6171072,
+        "byte_count": 6171069,
         "written": true,
         "schema": "oph_emergent_curved_spacetime_visualization_v1"
       },
@@ -315,7 +315,7 @@
       },
       "paper_accuracy_json": {
         "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/paper_accuracy.json",
-        "byte_count": 6567,
+        "byte_count": 6561,
         "written": true,
         "schema": "oph_paper_accuracy_guard_v1"
       },
@@ -615,12 +615,12 @@
     },
     "claimBoundary": "Nonphysical renderer-completeness audit. Data availability and explicit assumption completeness are independent; neither promotes a theorem or physical receipt."
   },
-  "claim_boundary": "Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite observer screen, overlap repair, observer-local modular-time readouts, theorem-assisted H3 consensus object charts, and measurement-comparable CMB diagnostics when present. It does not promote chart-blind strict neutral quotient bulk or physical CMB prediction unless those receipts are true in the payload.",
+  "claim_boundary": "Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite observer screen, overlap repair, observer-local modular-time readouts, controlled H3 chart diagnostics, record-object layers, and measurement-comparable CMB diagnostics when present. Computed H3 receipts, assumed scene completion, strict neutral bulk, and physical CMB promotion remain separately labeled.",
   "visualizer_pack": {
     "schema": "oph_visualizer_pack_v2",
     "path": "runs/oph_universe_64k_3p1d_reearned/universe_timeline/oph_visualizer_pack_v2.tar.zst",
-    "byte_count": 30856627,
-    "sha256": "sha256:aebb6366e016ec36c5abadf2df42b10c465c62dafbbd4f233e8f223811eb9bdd",
+    "byte_count": 30857259,
+    "sha256": "sha256:881ca4c3599e4a0ec65bf7f895772b9968a24304d7c00f7df0eee056420a797a",
     "target_bytes": 128000000,
     "hard_maximum_bytes_exclusive": 256000000,
     "within_target": true,

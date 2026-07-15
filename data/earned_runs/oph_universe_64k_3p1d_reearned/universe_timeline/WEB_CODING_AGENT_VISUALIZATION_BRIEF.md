@@ -24,21 +24,21 @@ the viewer can pause, scrub, replay, or jump without losing the active observer 
    repair move, and decreasing `phi`; repaired relations cool to teal. Use the exact mini-universe
    path only when `smallUniverse.contentAvailable=true`; otherwise use the separately labelled
    large-run `screen.repairTrace` and show the theorem receipt card, never a fabricated exact path.
-3. **Shared records and consensus.** Keep the patch network visible while equal readout hashes and
-   record/object packets synchronize across overlaps. Let repeated packets coalesce into stable
-   teal consensus glyphs. Caption: "Objectivity is the agreement carried by shared records." This
-   visual transition must not imply that a neutral bulk was present before consensus.
+3. **Shared-record gauge views.** Keep the patch network visible while sampled observers read one
+   committed shared record through different local gauge frames. Render recovered re-gauging maps,
+   Cech-closed triples, and shuffled controls only from their exported rows. Caption: "Different gauge
+   views of one shared record agree." Independent commit histories require a separate experiment.
 4. **Enter one observer's 3+1D view.** Select a patch, retain a small labelled overview inset, and
    move the main camera through its boundary into `subjectiveObserverCameras[*]`. Reveal only its
    visible records, object packets, nominal-FOV worldline sightings, and modular time. If
    `assumedDs4Spacetime.enabled`, `assumed_ds4_visualization_layer_receipt`, and
    `SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT` pass, grow the declared open-H3 dS4 grid around that
    camera with a persistent **ASSUMED VISUAL LAYER — NOT DERIVED** badge.
-5. **Populate the observer-facing H3 bulk.** Match consensus glyphs to
-   `consensusBulk.objects` and reveal them along intrinsic H3 geodesics. Keep a faint provenance
-   tether back to the contributing patch records during the transition. Caption the space
-   "observer-facing H3 consensus chart," not a strict neutral third-person bulk unless its receipt
-   passes.
+5. **Show the observer-facing H3 layers.** Reveal `consensusBulk.objects` along intrinsic H3 geodesics
+   only with their exact data and status. Keep a faint provenance tether to contributing patch
+   records. Label a computed H3 chart diagnostic, a receipted record population, and any assumed
+   scene completion separately. Do not call the scene a strict neutral third-person bulk unless that
+   receipt passes.
 6. **Defect worldlines styled as matter.** Draw exported holonomy/defect worldlines as luminous
    magenta candidate tracks with distinct birth/contact markers. When
    `assumedDs4Spacetime.defectMatterRendering.enabled` and
@@ -149,13 +149,14 @@ Required views:
 
 3. **P/N silence-to-observation view**
    - Render `pnSilenceToObservation.closureCoordinates`.
-   - Show the sequence: `silenceInitialState` -> P detuning -> `finiteRegulatorDepth` -> `observationEmergence`.
+   - Animate `silenceInitialState` -> `observationEmergence` as the measured run trace. Show P detuning and `finiteRegulatorDepth` in a parallel analytic-association panel.
    - Gate `scale_compressed_pn_silence_to_observation_receipt`, `literal_global_N_capacity_simulated_receipt`, and `dynamic_p_detuning_control_receipt` separately.
-   - Explain that this is a finite scale-compressed witness of the OPH thesis, not literal global `N_CRC` cells.
+   - Explain that P was not an input to the relaxation dynamics. No causal arrow from P to readout is allowed unless dynamic P-varied controls pass.
+   - Keep the literal global `N_CRC` receipt separate from the finite association report.
 
 4. **Observer camera / modular-time view**
    - Render `observerModularTime.observers` on the screen by `axis`.
-   - Render `observerModularTime.overlapLinks` as the observer-overlap substrate. These are not decorative graph edges; they are the local shared-support relations from which objectivity is read.
+   - Render `observerModularTime.overlapLinks` as the observer-overlap substrate. These are not decorative graph edges; they are local shared-support relations. Agreement over one shared record does not certify independent observer histories.
    - Animate overlap repair: the strongest links carry `repairTrajectory`. When
      `overlapSummary.overlapRepairDynamics.available=true` those trajectories are measured per-cycle
      mismatch intensity on the pair's shared support (`overlapMismatchDensity` over `cycle`), so pulse
@@ -185,9 +186,9 @@ Required views:
    - Label the selected track source with `consensusBulk.protoParticleCandidates.worldlineSource`.
    - Treat `proto_particle_worldlines.csv` as a legacy fallback only; do not let stale sidecars
      override organic or free dynamics JSON reports.
-   - Use neutral wording: "edge-worldline diagnostic", "consensus object packet", and "holonomy/proto-particle candidate" unless the stronger receipts pass.
+   - Use neutral wording: "edge-worldline diagnostic", "record-object packet", and "holonomy/proto-particle candidate" unless the stronger receipts pass.
    - Do not label it a critical string CFT unless a future critical-edge receipt is true.
-   - Gate labels must show observer-facing H3 consensus bulk and chart-blind neutral quotient bulk separately.
+   - Gate labels must show the observer-facing H3 record readout and chart-blind neutral quotient bulk separately.
 
 6. **Emergent curved-spacetime proxy view**
    - Use `visualizationViews.emergentCurvedSpacetime` for the canonical layer list and claim boundary.
@@ -227,4 +228,4 @@ Visual language:
 
 Receipt boundary to preserve verbatim:
 
-Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite observer screen, overlap repair, observer-local modular-time readouts, theorem-assisted H3 consensus object charts, and measurement-comparable CMB diagnostics when present. It does not promote chart-blind strict neutral quotient bulk or physical CMB prediction unless those receipts are true in the payload.
+Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite observer screen, overlap repair, observer-local modular-time readouts, controlled H3 chart diagnostics, record-object layers, and measurement-comparable CMB diagnostics when present. Computed H3 receipts, assumed scene completion, strict neutral bulk, and physical CMB promotion remain separately labeled.

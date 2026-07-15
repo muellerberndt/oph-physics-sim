@@ -196,10 +196,11 @@ selection. It must tell this sequence:
    repair, then cool repaired relations to teal as `phi` descends. Use the exact path only when
    `smallUniverse.contentAvailable=true`; otherwise show the theorem receipt and separately labelled
    `screen.repairTrace` without fabricating a mini-universe path.
-3. **Shared records and consensus.** Keep the patch network visible. Show equal readout hashes and
-   record/object packets synchronizing across overlap links, then coalescing into stable consensus
-   glyphs. Caption: "Objectivity is the agreement carried by shared records." Do not imply that a
-   neutral bulk existed before this agreement.
+3. **Shared-record gauge views.** Keep the patch network visible. Show the sampled observers reading
+   one committed shared record through different local gauge frames. Where the report supplies a
+   recovered re-gauging map and Cech-closed triples, render that self-consistency with its shuffled
+   controls. Caption: "Different gauge views of one shared record agree." Independent per-observer
+   commit histories require a separate experiment.
 4. **Enter one observer's 3+1D view.** Select one patch and move the main camera into its
    `subjectiveObserverCameras[*]` frame while retaining a small labelled overview inset. Reveal only
    its visible records, object packets, nominal-FOV sightings, and modular time. Grow the declared
@@ -207,10 +208,11 @@ selection. It must tell this sequence:
    `assumed_ds4_visualization_layer_receipt`, and `SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT` pass.
    Keep a persistent **ASSUMED VISUAL LAYER — NOT DERIVED** badge; never promote the physical
    dS4/Einstein receipts.
-5. **Populate the observer-facing H3 bulk.** Match consensus glyphs to `consensusBulk.objects`, reveal
-   them along intrinsic H3 geodesics, and temporarily retain faint provenance tethers to contributing
-   patch records. Caption: "observer-facing H3 consensus chart." Do not call this a strict neutral
-   third-person bulk unless that separate receipt passes.
+5. **Show the observer-facing H3 layers.** Render the H3 chart diagnostic only when its exact receipt
+   passes. Render record-object population under its own receipt; if the assumption manifest supplies
+   the population or scene completion, keep the assumption badge visible. Retain faint provenance
+   tethers to contributing patch records. A record-populated H3 viewer chart does not establish a
+   chart-blind neutral third-person bulk.
 6. **Defect worldlines styled as matter.** Draw exported holonomy/defect tracks in magenta with
    distinct birth/contact markers. Matter-like glow and silhouettes are allowed only when
    `assumedDs4Spacetime.defectMatterRendering.enabled` and
@@ -397,7 +399,7 @@ defect-matter links are explicit simulation assumptions. Display the visual-assu
 Required meaning:
 
 This is a diagnostic quotient-visible source/curvature/compaction proxy over the observer-facing H3
-chart. It shows where consensus object packets and proto-worldline events contribute source density
+chart. It shows where record-object packets and proto-worldline events contribute source density
 to the H3 Green-potential and compactification display field in the current run. It is not an
 Einstein-equation solution, not production gravity, not a physical metric, and not a strict neutral
 third-person bulk. Gravity promotion requires the explicit
@@ -533,7 +535,7 @@ Required labels:
 - "repair-history ribbon"
 - "collar/defect track"
 - "H3 proto-worldline"
-- "consensus object packet"
+- "record-object packet"
 - "string-vacuum selector gate"
 - "open critical-edge certificate"
 - "finite repair edge-pulse vibration"
@@ -669,8 +671,10 @@ Use `visualizationViews.silenceToObservation` and `pnSilenceToObservation`.
 
 Required meaning:
 
-This is a finite scale-compressed witness of the transition from record silence to observer readout.
-It is not a literal brute-force simulation of astronomical global capacity.
+This view places a measured finite transition from record silence to observer
+readout beside paper-side P/N closure coordinates. The relaxation run did not
+consume P. The literal global-capacity and dynamic P-detuning-control receipts
+remain separate.
 
 Primary fields:
 
@@ -682,14 +686,18 @@ Primary fields:
 
 Recommended rendering:
 
-- Render staged progression: silence, P detuning, finite regulator depth, readout emergence.
-- Display detuning and regulator-depth evidence as data values, not as free text claims.
+- Animate the measured silence-to-readout trace on one side and show the P/N
+  coordinates as a static analytic-association card on the other.
+- Do not draw a causal arrow from P detuning to readout unless the dynamic
+  P-detuning-control receipt passes.
+- Display detuning and regulator-depth values as postprocessed coordinates.
 - Gate scale-compressed and literal-global-capacity claims separately.
 
 Forbidden labels unless receipts pass:
 
 - "literal global N simulation"
 - "physical cosmology prediction"
+- "P detuning caused observer readout"
 
 ## View 6: H3 Objects And Proto-Worldlines
 

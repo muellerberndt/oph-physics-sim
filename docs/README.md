@@ -6,6 +6,8 @@ run artifacts under `runs/`; mutable progress lives in GitHub issues
 
 ## Status and experiments
 
+- `WHAT_OPH_FPE_DOES.md`: one-page account of the simulator's finite
+  observer-patch loop, evidence bundles, and claim boundary.
 - `OPH_SIGNATURE_EXPERIMENT_TRACKER.md`: living experiment tracker with
   at-a-glance verdict tables and the results log.
 - `RUN_OUTPUTS_AND_VISUALIZATION.md`: run-output inventory; visualizer

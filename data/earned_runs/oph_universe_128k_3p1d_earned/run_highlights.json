@@ -1,5 +1,5 @@
 {
-  "schema": "run_highlights_v1",
+  "schema": "run_highlights_v2",
   "run_id": "oph_universe_128k_3p1d_earned",
   "label": "oph_universe_128k_3p1d_earned (131,072 patches / 32,000 observers)",
   "patch_count": 131072,
@@ -31,12 +31,12 @@
       "detail": "integer 3 spatial + 1 modular time; never a fractional bulk"
     },
     {
-      "milestone": "Observer mutual agreement (bulk-as-agreement)",
+      "milestone": "Shared-record gauge agreement",
       "receipt": true,
       "detail": "pairs 600, median defect 0.0, cocycle perfect 1.0, control 0.804"
     },
     {
-      "milestone": "Emergent-bulk agreement field",
+      "milestone": "Shared-record agreement multiplicity field",
       "receipt": true,
       "detail": "coverage 26.5 pct, pair-certified 5.5 pct, max multiplicity 169"
     },
@@ -56,9 +56,14 @@
       "detail": "blockers: ['sphere_fold', 'bw_2pi', 'null_stress', 'bounded_interval', 'fixed_cap_entropy', 'small_ball_area', 'remainder_control', 'timelike_coverage', 'stress_closure', 'lambda_closure', 'newton_forbidden_input_audit', 'einstein_residual']"
     },
     {
-      "milestone": "Physical particle / physical CMB",
+      "milestone": "Production particle matter",
       "receipt": false,
-      "detail": "fail-closed by contract; screen proxies stay diagnostics"
+      "detail": "canonical promotion receipt from the bulk proof certificate"
+    },
+    {
+      "milestone": "Physical CMB prediction",
+      "receipt": false,
+      "detail": "source, transfer, scale, and frozen-likelihood frontier"
     }
   ],
   "run_derived_diagnostics": [
@@ -78,77 +83,8 @@
       "note": "kms_bw_pass=True"
     }
   ],
-  "near_fits_public_data": [
-    {
-      "quantity": "Scalar tilt n_s = 1 - P/48",
-      "oph": 0.9660215,
-      "measured": "0.9649(42) (Planck 2018)",
-      "pull": "+0.27 sigma"
-    },
-    {
-      "quantity": "Higgs-top criticality relation m_H(m_t)",
-      "oph": 125.72,
-      "measured": "125.13(11) GeV (PDG)",
-      "pull": "+0.47 percent"
-    },
-    {
-      "quantity": "Electroweak chart pair M_W / M_Z",
-      "oph": "80.330 / 91.119 GeV",
-      "measured": "80.3692(133) / 91.1880(20)",
-      "pull": "-0.05 / -0.08 percent (chart, pole packet open)"
-    },
-    {
-      "quantity": "Strong coupling alpha_s(M_Z)",
-      "oph": 0.11834,
-      "measured": "0.1179(9)",
-      "pull": "+0.5 sigma"
-    },
-    {
-      "quantity": "QCD scale Lambda_QCD(3)",
-      "oph": "334.8 [319, 350] MeV",
-      "measured": "338(12) MeV (FLAG-class)",
-      "pull": "inside interval"
-    },
-    {
-      "quantity": "Capacity -> Lambda (EW branch)",
-      "oph": "Lambda l_P^2 = 2.668e-122",
-      "measured": "2.845e-122 (Planck display)",
-      "pull": "+6.6 percent over 122 orders of magnitude"
-    },
-    {
-      "quantity": "CMB low-l IR filter scale",
-      "oph": "corpus l_IR = 32",
-      "measured": "unbinned PR3 TT optimum l_IR ~ 26 (flat 24-40), q ~ 0.16",
-      "pull": "corpus scale 0.2 chi2 units from the data optimum (net -3.9)"
-    },
-    {
-      "quantity": "Cosmic birefringence candidate alpha_U/(2 pi)",
-      "oph": "0.37501 deg",
-      "measured": "0.342 +0.094/-0.091 deg (Planck+WMAP EB)",
-      "pull": "+0.35 sigma (S1 coincidence, 4 trials declared)"
-    },
-    {
-      "quantity": "Clock-free ratio m_t/m_W",
-      "oph": 2.149,
-      "measured": 2.1476,
-      "pull": "+0.07 percent"
-    },
-    {
-      "quantity": "SPARC RAR fixed-branch RMS",
-      "oph": "0.13283 dex (Z6)",
-      "measured": "0.13281 dex same-data optimum",
-      "pull": "2e-5 dex from optimal (retrospective)"
-    }
-  ],
-  "banked_negatives": [
-    "Cassini universal continuation excluded (19.2 sigma raw): the settled-galaxy scope survives, the universal extension died",
-    "Weighted-cycle neutrino candidate rejected by NuFIT 6.1",
-    "Screen C_l proxy anti-correlates with Planck TT: the raw screen is not the CMB"
-  ],
-  "claim_boundary": "Milestone receipts are this run's own gate values. Near-fit rows are curated conditional or diagnostic comparisons from the paper-side lanes (tracker section 0a); none is a frozen physical-prediction receipt. Banked negatives stay visible because the gates bite.",
+  "claim_boundary": "Milestone receipts and diagnostics are this run's own gate values and artifacts; each row carries only its named scope. This file contains only quantities computed from this run's data. Shared-record gauge agreement compares observer views of one committed record; it does not certify independent per-observer commit histories or a strict neutral third-person bulk. Paper-side public-data comparisons live in docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md (section 0a) and docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md, never in run artifacts.",
   "sources": [
-    "docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md (section 0a)",
-    "docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md",
-    "docs/SCALING_MILESTONE_ESTIMATES_2026-07-13.md"
+    "this run's receipt and report JSONs"
   ]
 }

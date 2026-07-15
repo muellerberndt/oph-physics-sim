@@ -2634,10 +2634,10 @@ def build_universe_timeline_payload(
         },
         "claimBoundary": (
             "Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite "
-            "observer screen, overlap repair, observer-local modular-time readouts, theorem-assisted H3 "
-            "consensus object charts, and measurement-comparable CMB diagnostics when present. It does "
-            "not promote chart-blind strict neutral quotient bulk or physical CMB prediction unless those receipts "
-            "are true in the payload."
+            "observer screen, overlap repair, observer-local modular-time readouts, controlled H3 chart "
+            "diagnostics, record-object layers, and measurement-comparable CMB diagnostics when present. "
+            "Computed H3 receipts, assumed scene completion, strict neutral bulk, and physical CMB "
+            "promotion remain separately labeled."
         ),
         "ophDifferentiator": (
             "OPH technology instantiates observer-like self-reading systems: bounded patches with local "
@@ -2728,7 +2728,7 @@ def _paper_accuracy_payload(
         {
             "id": "observer_facing_consensus_3d_bulk",
             "payloadPath": "consensusBulk.objects",
-            "paperStatus": "observer-facing H3 consensus chart",
+            "paperStatus": "observer-facing H3 record chart",
             "receipt": "observer_facing_consensus_3d_bulk_readout_receipt",
             "passed": bool(
                 bulk_receipts.get(
@@ -2736,7 +2736,7 @@ def _paper_accuracy_payload(
                     bulk_receipts.get("theorem_assisted_consensus_3d_bulk_readout_receipt", False),
                 )
             ),
-            "allowedClaim": "consensus object packets in the derived observer-facing H3 chart",
+            "allowedClaim": "record-object packets in the derived observer-facing H3 chart",
             "notAllowedClaim": "chart-blind strict neutral third-person bulk unless its receipt also passes",
         },
         {
@@ -5278,7 +5278,7 @@ def _attach_oph_curvature_compaction_fields(points: list[dict[str, Any]]) -> dic
         "model": "oph_quotient_visible_source_to_h3_compaction_v1",
         "paperBranch": "Einstein-branch geometry readout / null-stress bridge diagnostic",
         "sourceDefinition": (
-            "sourceDensity = quotient-visible consensus object support/localization or "
+            "sourceDensity = quotient-visible record-object support/localization or "
             "proto-worldline support/transport/residual readout; it is not raw rest mass"
         ),
         "distanceKernel": "screened H3 chart Green proxy exp(-d_H3)/(4*pi*sinh(d_H3 + eps))",
@@ -6252,9 +6252,10 @@ def _consensus_bulk_payload(
     )
     return {
         "description": (
-            "Theorem-assisted observer-consensus H3 chart. Dots are consensus object/readback packets "
-            "seen by overlapping observers, represented in a derived H3 spatial chart. Holonomy/defect "
-            "worldlines are rendered separately as proto-particle candidates when the run emits them."
+            "Observer-facing H3 viewer chart. Dots are overlap-grouped record/readback packets represented "
+            "in a derived H3 chart. The payload keeps computed chart receipts, record-population receipts, "
+            "and assumed scene-completion layers separate. Holonomy/defect worldlines render as "
+            "proto-particle candidates when the run emits them."
         ),
         "source": str(consensus_pack_dir),
         "coordinateSystem": H3_COORDINATE_SYSTEM,
@@ -6306,8 +6307,8 @@ def _consensus_bulk_payload(
         "strictNeutralBlockers": readout.get("strict_neutral_blockers", []),
         "claimBoundary": readout.get(
             "claim_boundary",
-            "Theorem-assisted H3 chart visualization; not chart-blind strict neutral quotient bulk, matter particles, "
-            "or physical CMB prediction.",
+            "Observer-facing H3 viewer chart with per-layer receipts. Chart-blind strict neutral quotient "
+            "bulk, matter particles, and physical CMB prediction require separate promotions.",
         ),
     }
 
@@ -6327,13 +6328,13 @@ def _h3_chart_status(
             label="observer H3 object population",
             claim_level="observer_facing_chart",
             false_status="missing_data",
-            false_meaning="No observer-consensus H3 object packets were exported.",
+            false_meaning="No receipted observer-facing H3 record-object population was exported.",
             render_as_error=not renderable,
         ),
         _receipt_display_entry(
             "theorem_assisted_consensus_3d_bulk_readout_receipt",
             receipts.get("theorem_assisted_consensus_3d_bulk_readout_receipt"),
-            label="theorem-assisted H3 consensus readout",
+            label="theorem-assisted H3 record readout",
             claim_level="observer_facing_chart",
             false_status="blocked",
             false_meaning="The observer-facing theorem-assisted H3 readout did not pass.",
@@ -7357,10 +7358,9 @@ def _pn_silence_to_observation_payload(run_dir: Path, alternate_dir: Path | None
     wrong_controls = controls.get("wrong_detuning_multipliers") or []
     return {
         "description": (
-            "Scale-compressed OPH P/N silence-to-observation witness. It shows the finite simulator's "
-            "core thesis lane: a record-silent observer screen is run on a P-detuned local/global "
-            "closure branch, then overlap repair/readback emits observer records, modular time, and "
-            "H3 object readouts."
+            "Scale-compressed association between a finite run's measured record-silence/readout "
+            "transition and the paper-side P/N closure coordinates. The relaxation dynamics did not "
+            "consume P; the analytic branch overlay and the measured run trace are separate layers."
         ),
         "source": report.get("run_dir") or str(run_dir),
         "closureCoordinates": {
@@ -7423,6 +7423,8 @@ def _pn_silence_to_observation_payload(run_dir: Path, alternate_dir: Path | None
                 report.get("dynamic_p_detuning_control_receipt", False)
             ),
         },
+        "pRole": report.get("p_role", "post_hoc_analytic_branch_association"),
+        "relaxationDynamicsConsumedP": bool(report.get("relaxation_dynamics_consumed_p", False)),
         "readinessGates": report.get("readiness_gates") or {},
         "claimBoundary": report.get(
             "claim_boundary",
@@ -7443,10 +7445,10 @@ def _geometry_and_symmetry_payload(
     pn_receipts = pn_silence_payload.get("receipts", {})
     return {
         "pnSilenceToObservation": {
-            "name": "P/N silence-to-observation lane",
+            "name": "P/N branch-association lane",
             "meaning": (
-                "finite record silence on an observer screen followed by P-detuned overlap repair, "
-                "observer readback, modular time, and H3 object readouts; scale-compressed, not literal N_CRC"
+                "a measured finite record-silence/readout transition shown beside postprocessed P/N "
+                "closure coordinates; P was not an input to the relaxation dynamics"
             ),
             "scaleCompressedReceipt": pn_receipts.get(
                 "scale_compressed_pn_silence_to_observation_receipt", False
@@ -7479,8 +7481,8 @@ def _geometry_and_symmetry_payload(
             "conformalH3SpatialChartReceipt": observer_receipts.get("conformal_h3_spatial_chart_receipt", False),
         },
         "consensusBulk": {
-            "name": "observer-consensus H3 object cloud",
-            "meaning": "shared object/readback packets represented in a derived H3 chart",
+            "name": "observer-facing H3 record-object cloud",
+            "meaning": "overlap-grouped record/readback packets represented in a derived H3 viewer chart",
             "theoremAssistedConsensus3dBulkReceipt": bulk_receipts.get(
                 "theorem_assisted_consensus_3d_bulk_readout_receipt", False
             ),
@@ -8329,7 +8331,7 @@ def _render_claim_badges(
             "passed": (bulk_payload.get("receipts") or {}).get("observer_h3_object_population_receipt"),
             "claimLevel": "observer_facing_chart",
             "falseDisplayStatus": "missing_data",
-            "falseMeaning": "No observer-consensus H3 object population receipt was available.",
+            "falseMeaning": "No observer-facing H3 record-object population receipt was available.",
             "renderAsError": not bool((bulk_payload.get("h3ChartStatus") or {}).get("renderable", False)),
         },
         {
@@ -8439,7 +8441,7 @@ def _render_legend() -> list[dict[str, Any]]:
         {"layer": "repair_or_holonomy_residue", "color": "#f59e0b", "meaning": "diagnostic repair/holonomy activity"},
         {"layer": "observer_axis", "color": "#10b981", "meaning": "observer-local readout axis"},
         {"layer": "observer_overlap", "color": "#64748b", "meaning": "shared support or carrier-cut overlap"},
-        {"layer": "h3_object", "color": "#8b5cf6", "meaning": "observer-consensus H3 object packet"},
+        {"layer": "h3_object", "color": "#8b5cf6", "meaning": "observer-facing H3 record-object packet"},
         {"layer": "proto_worldline", "color": "#ef4444", "meaning": "diagnostic H3 defect/worldline candidate"},
         {"layer": "cmb_diagnostic", "color": "#14b8a6", "meaning": "measurement-comparable CMB diagnostic"},
         {
@@ -10249,11 +10251,11 @@ def _visualization_views_payload(
         "silenceToObservation": {
             "viewId": "silenceToObservation",
             "sectionKind": "silence_to_observation",
-            "label": "Silence-to-observation bridge",
-            "visualMetaphor": "scale_compressed_readout_emergence",
+            "label": "Silence-to-observation and P/N association",
+            "visualMetaphor": "parallel_measured_trace_and_analytic_overlay",
             "description": (
-                "Render the scale-compressed sequence from record silence through P detuning, finite "
-                "repair depth, and observer/H3 readout emergence."
+                "Render the measured transition from record silence to observer/H3 readout beside "
+                "the postprocessed P/N coordinates. Do not draw a causal arrow from P to readout."
             ),
             "dataSources": ["pnSilenceToObservation"],
             "primaryFields": [
@@ -10264,7 +10266,7 @@ def _visualization_views_payload(
             ],
             "renderLayers": [
                 {"layer": "silent_initial_state", "source": "pnSilenceToObservation.silenceInitialState"},
-                {"layer": "p_detuning", "source": "pnSilenceToObservation.closureCoordinates"},
+                {"layer": "p_branch_overlay", "source": "pnSilenceToObservation.closureCoordinates"},
                 {"layer": "finite_repair_depth", "source": "pnSilenceToObservation.finiteRegulatorDepth"},
                 {"layer": "readout_emergence", "source": "pnSilenceToObservation.observationEmergence"},
             ],
@@ -10297,6 +10299,9 @@ def _visualization_views_payload(
                 "literal_global_N_capacity_simulated_receipt": bool(
                     pn_receipts.get("literal_global_N_capacity_simulated_receipt", False)
                 ),
+                "dynamic_p_detuning_control_receipt": bool(
+                    pn_receipts.get("dynamic_p_detuning_control_receipt", False)
+                ),
             },
             "exportSufficiency": "sufficient_for_scale_compressed_bridge_visualization",
             "promotionReceiptsRequired": [
@@ -10305,6 +10310,7 @@ def _visualization_views_payload(
             "nonClaims": [
                 "literal global N simulation",
                 "physical cosmology prediction",
+                "P detuning caused observer readout",
             ],
             "claimBoundary": pn_silence_payload.get("claimBoundary"),
         },
@@ -10487,7 +10493,7 @@ function drawH3() {{
   }});
   const pr=(DATA.consensusBulk.protoParticleCandidates||{{}}).receipts||{{}};
   const hs=DATA.consensusBulk.h3ChartStatus||{{}};
-  document.getElementById("h3Note").textContent = `${{objs.length}} consensus object packets and ${{lines.length}} holonomy/proto-particle candidate worldlines in the derived H3 chart. H3 chart status=${{hs.displayStatus || "unknown"}}. Observer-facing consensus bulk=${{DATA.consensusBulk.receipts.observer_facing_consensus_3d_bulk_readout_receipt || DATA.consensusBulk.receipts.theorem_assisted_consensus_3d_bulk_readout_receipt}}, chart-blind neutral quotient=${{DATA.consensusBulk.receipts.chart_blind_strict_neutral_quotient_bulk_receipt || DATA.consensusBulk.receipts.strict_neutral_third_person_bulk_receipt}} (not promoted is not a chart error), bulk worldline precursor=${{pr.bulk_worldline_precursor_receipt}}, particle matter=${{pr.particle_matter_receipt}}. ${{DATA.consensusBulk.claimBoundary}}`;
+  document.getElementById("h3Note").textContent = `${{objs.length}} record-object packets and ${{lines.length}} holonomy/proto-particle candidate worldlines in the H3 viewer chart. H3 chart status=${{hs.displayStatus || "unknown"}}. Observer-facing record-populated readout=${{DATA.consensusBulk.receipts.observer_facing_consensus_3d_bulk_readout_receipt || DATA.consensusBulk.receipts.theorem_assisted_consensus_3d_bulk_readout_receipt}}, chart-blind neutral quotient=${{DATA.consensusBulk.receipts.chart_blind_strict_neutral_quotient_bulk_receipt || DATA.consensusBulk.receipts.strict_neutral_third_person_bulk_receipt}} (a closed promotion is not a chart error), bulk worldline precursor=${{pr.bulk_worldline_precursor_receipt}}, particle matter=${{pr.particle_matter_receipt}}. ${{DATA.consensusBulk.claimBoundary}}`;
 }}
 function drawLine(svg, rows, key, stroke, yLabel) {{
   const vals=rows.map(r=>Number(r[key])).filter(Number.isFinite); if(!vals.length) return;
@@ -10502,17 +10508,18 @@ function drawTrace() {{
 function drawPN() {{
   const svg=document.getElementById("pnSvg"); clear(svg); const [w,h]=dims(svg); svg.setAttribute("viewBox",`0 0 ${{w}} ${{h}}`); svg.appendChild(el("rect",{{x:0,y:0,width:w,height:h,fill:"#11151b"}}));
   const pn=DATA.pnSilenceToObservation||{{}}; const c=pn.closureCoordinates||{{}}; const d=pn.finiteRegulatorDepth||{{}}; const s=pn.silenceInitialState||{{}}; const e=pn.observationEmergence||{{}};
-  const y=h*0.5; const xs=[w*0.16,w*0.39,w*0.63,w*0.84];
+  const y=h*0.5; const xs=[w*0.16,w*0.39,w*0.65,w*0.84];
   const labels=[
-    ["silent screen",`records=${{s.committedRecords ?? "n/a"}}`],
-    ["P detuning",`P-phi=${{Number(c.PDetuningDelta ?? 0).toExponential(3)}}`],
-    ["finite repair",`N_eff=${{Number(d.N_eff ?? 0).toExponential(3)}}`],
+    ["silent record",`records=${{s.committedRecords ?? "n/a"}}`],
     ["observer readout",`objects=${{e.h3ObjectCount ?? "n/a"}}`],
+    ["P/N overlay",`P-phi=${{Number(c.PDetuningDelta ?? 0).toExponential(3)}}`],
+    ["finite coordinate",`N_eff=${{Number(d.N_eff ?? 0).toExponential(3)}}`],
   ];
-  for(let i=0;i<xs.length-1;i++) svg.appendChild(el("line",{{x1:xs[i]+34,y1:y,x2:xs[i+1]-34,y2:y,stroke:"#39424e","stroke-width":3}}));
-  labels.forEach((row,i)=>{{ const pass=i===0?!!s.initialRecordSilenceReceipt:i===3?!!e.observationEmergenceReceipt:true; svg.appendChild(el("circle",{{cx:xs[i],cy:y,r:28,fill:pass?"#1d5f3a":"#683033",stroke:"#e8eef5","stroke-width":1.2,opacity:0.9}})); const t=el("text",{{x:xs[i],y:y-42,"text-anchor":"middle","font-size":12,fill:"#eef2f6"}}); t.textContent=row[0]; svg.appendChild(t); const u=el("text",{{x:xs[i],y:y+50,"text-anchor":"middle","font-size":11,fill:"#aab4be"}}); u.textContent=row[1]; svg.appendChild(u); }});
+  svg.appendChild(el("line",{{x1:xs[0]+34,y1:y,x2:xs[1]-34,y2:y,stroke:"#39424e","stroke-width":3}}));
+  svg.appendChild(el("line",{{x1:w*0.52,y1:h*0.18,x2:w*0.52,y2:h*0.82,stroke:"#596471","stroke-width":1,"stroke-dasharray":"5 5"}}));
+  labels.forEach((row,i)=>{{ const pass=i===0?!!s.initialRecordSilenceReceipt:i===1?!!e.observationEmergenceReceipt:true; const diagnostic=i>1; svg.appendChild(el("circle",{{cx:xs[i],cy:y,r:28,fill:diagnostic?"#174f67":(pass?"#1d5f3a":"#683033"),stroke:"#e8eef5","stroke-width":1.2,opacity:0.9}})); const t=el("text",{{x:xs[i],y:y-42,"text-anchor":"middle","font-size":12,fill:"#eef2f6"}}); t.textContent=row[0]; svg.appendChild(t); const u=el("text",{{x:xs[i],y:y+50,"text-anchor":"middle","font-size":11,fill:"#aab4be"}}); u.textContent=row[1]; svg.appendChild(u); }});
   const rc=pn.receipts||{{}};
-  document.getElementById("pnNote").textContent = `Scale-compressed P/N silence-to-observation=${{rc.scale_compressed_pn_silence_to_observation_receipt}}, literal global N simulated=${{rc.literal_global_N_capacity_simulated_receipt}}, dynamic detuning controls=${{rc.dynamic_p_detuning_control_receipt}}. P=${{c.P ?? "n/a"}}, N*=${{c.NStar ?? "n/a"}}, effective finite repair-round depth=${{d.effectiveRepairRoundDepth ?? "n/a"}}. ${{pn.claimBoundary}}`;
+  document.getElementById("pnNote").textContent = `Measured silence-to-readout trace at left; postprocessed P/N association at right. Relaxation consumed P=${{pn.relaxationDynamicsConsumedP}}. Scale-compressed association=${{rc.scale_compressed_pn_silence_to_observation_receipt}}, literal global N simulated=${{rc.literal_global_N_capacity_simulated_receipt}}, dynamic detuning controls=${{rc.dynamic_p_detuning_control_receipt}}. P=${{c.P ?? "n/a"}}, N*=${{c.NStar ?? "n/a"}}, effective finite repair-round depth=${{d.effectiveRepairRoundDepth ?? "n/a"}}. ${{pn.claimBoundary}}`;
 }}
 function drawCmb() {{
   const svg=document.getElementById("cmbSvg"); clear(svg); const [w,h]=dims(svg); svg.setAttribute("viewBox",`0 0 ${{w}} ${{h}}`); svg.appendChild(el("rect",{{x:0,y:0,width:w,height:h,fill:"#11151b"}}));
@@ -10584,21 +10591,21 @@ the viewer can pause, scrub, replay, or jump without losing the active observer 
    repair move, and decreasing `phi`; repaired relations cool to teal. Use the exact mini-universe
    path only when `smallUniverse.contentAvailable=true`; otherwise use the separately labelled
    large-run `screen.repairTrace` and show the theorem receipt card, never a fabricated exact path.
-3. **Shared records and consensus.** Keep the patch network visible while equal readout hashes and
-   record/object packets synchronize across overlaps. Let repeated packets coalesce into stable
-   teal consensus glyphs. Caption: "Objectivity is the agreement carried by shared records." This
-   visual transition must not imply that a neutral bulk was present before consensus.
+3. **Shared-record gauge views.** Keep the patch network visible while sampled observers read one
+   committed shared record through different local gauge frames. Render recovered re-gauging maps,
+   Cech-closed triples, and shuffled controls only from their exported rows. Caption: "Different gauge
+   views of one shared record agree." Independent commit histories require a separate experiment.
 4. **Enter one observer's 3+1D view.** Select a patch, retain a small labelled overview inset, and
    move the main camera through its boundary into `subjectiveObserverCameras[*]`. Reveal only its
    visible records, object packets, nominal-FOV worldline sightings, and modular time. If
    `assumedDs4Spacetime.enabled`, `assumed_ds4_visualization_layer_receipt`, and
    `SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT` pass, grow the declared open-H3 dS4 grid around that
    camera with a persistent **ASSUMED VISUAL LAYER — NOT DERIVED** badge.
-5. **Populate the observer-facing H3 bulk.** Match consensus glyphs to
-   `consensusBulk.objects` and reveal them along intrinsic H3 geodesics. Keep a faint provenance
-   tether back to the contributing patch records during the transition. Caption the space
-   "observer-facing H3 consensus chart," not a strict neutral third-person bulk unless its receipt
-   passes.
+5. **Show the observer-facing H3 layers.** Reveal `consensusBulk.objects` along intrinsic H3 geodesics
+   only with their exact data and status. Keep a faint provenance tether to contributing patch
+   records. Label a computed H3 chart diagnostic, a receipted record population, and any assumed
+   scene completion separately. Do not call the scene a strict neutral third-person bulk unless that
+   receipt passes.
 6. **Defect worldlines styled as matter.** Draw exported holonomy/defect worldlines as luminous
    magenta candidate tracks with distinct birth/contact markers. When
    `assumedDs4Spacetime.defectMatterRendering.enabled` and
@@ -10679,6 +10686,16 @@ gate badges. Keep these visible long enough to read and include them in screensh
 """
 
 
+def _reader_facing_claim_boundary(payload: dict[str, Any]) -> str:
+    """Normalize legacy display terms without changing receipt identifiers."""
+
+    boundary = str(payload.get("claimBoundary", ""))
+    return boundary.replace(
+        "theorem-assisted H3 consensus object charts",
+        "observer-facing H3 record-object charts with separately labelled computed and assumed layers",
+    ).replace("Consensus object packets", "Record-object packets")
+
+
 def _visualization_instructions(viewer_path: Path | None, payload_path: Path, payload: dict[str, Any]) -> str:
     viewer_block = (
         f"""Open the standalone viewer:
@@ -10738,16 +10755,16 @@ What to inspect:
 - `assumedDs4Spacetime` completes the narrative renderer with an explicitly assumed open-H3 dS4 background, observer frames/tetrads, and defect-as-matter styling sourced from `simulation_assumption_manifest.json`. Its physical receipts remain false.
 - `simulationAssumptions` is the authoritative thirteen-row assumption ledger. Keep its assumption-completeness receipt separate from `visualizationRenderData.visualUniverseCompleteness` data completeness and render readiness; none is a theorem or physical receipt.
 - Panel 4 shows the emergent curved-spacetime proxy view. It uses `emergentCurvedSpacetime.sourceMath`, `curvatureProxyPoints`, `continuousBulkField`, and `timeSlices` to render quotient-visible source density, H3 Green potential, curvature, compactification, continuous volume samples, and warped slices over the observer-facing H3 chart. `dataRefs` names compatibility aliases without duplicating arrays. It is a diagnostic warped-grid/field layer, not production gravity or a physical metric unless `einstein_branch_entry_receipt`, `production_gravity_receipt`, and related promotion receipts are true.
-- Panel 5 shows the effective string-theory diagnostic view. Consensus object packets are shared readback/object packets from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates and edge-worldline/collar diagnostics, not matter particles or a critical worldsheet unless the corresponding receipts pass.
+- Panel 5 shows the effective string-theory diagnostic view. Record-object packets group shared readback events from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates and edge-worldline/collar diagnostics, not matter particles or a critical worldsheet unless the corresponding receipts pass.
 {finite_edge_instruction}
-- Panel 6 shows the scale-compressed P/N silence-to-observation witness: initial record silence, P detuning, finite regulator depth, and observer/H3 readout emergence. This is not a literal brute-force simulation of astronomical N_CRC.
+- Panel 6 places the measured record-silence/readout transition beside a postprocessed P/N branch overlay. The relaxation dynamics did not consume P, and the view must not imply P caused the transition while dynamic detuning controls are false.
 - Panel 7 shows usable run CMB diagnostics when present. If those rows are absent, it may instead show the SHA-256-pinned `cmbComparison.assumedVisualization` reference and published-best-fit shape under a persistent assumption badge; `assumedModelRows` is not an OPH model. `comparableObservations` also carries compact measurement-lane summaries. None of this is a physical prediction unless the relevant prediction receipt passes.
 - `visualizationViews.fluctuatingQuantumVacuum`, `visualizationViews.observerCamera`, `visualizationViews.emergentCurvedSpacetime`, and `visualizationViews.effectiveStringTheory` are the canonical view contracts for a custom visualizer.
 - `paperAccuracy` is the fail-closed paper-accuracy guard. Use it to render which claims are allowed, which promotions remain blocked, and why visual similarity alone is not a receipt.
 
 Claim boundary:
 
-{payload["claimBoundary"]}
+{_reader_facing_claim_boundary(payload)}
 """
 
 
@@ -10797,13 +10814,14 @@ Required views:
 
 3. **P/N silence-to-observation view**
    - Render `pnSilenceToObservation.closureCoordinates`.
-   - Show the sequence: `silenceInitialState` -> P detuning -> `finiteRegulatorDepth` -> `observationEmergence`.
+   - Animate `silenceInitialState` -> `observationEmergence` as the measured run trace. Show P detuning and `finiteRegulatorDepth` in a parallel analytic-association panel.
    - Gate `scale_compressed_pn_silence_to_observation_receipt`, `literal_global_N_capacity_simulated_receipt`, and `dynamic_p_detuning_control_receipt` separately.
-   - Explain that this is a finite scale-compressed witness of the OPH thesis, not literal global `N_CRC` cells.
+   - Explain that P was not an input to the relaxation dynamics. No causal arrow from P to readout is allowed unless dynamic P-varied controls pass.
+   - Keep the literal global `N_CRC` receipt separate from the finite association report.
 
 4. **Observer camera / modular-time view**
    - Render `observerModularTime.observers` on the screen by `axis`.
-   - Render `observerModularTime.overlapLinks` as the observer-overlap substrate. These are not decorative graph edges; they are the local shared-support relations from which objectivity is read.
+   - Render `observerModularTime.overlapLinks` as the observer-overlap substrate. These are not decorative graph edges; they are local shared-support relations. Agreement over one shared record does not certify independent observer histories.
    - Animate overlap repair: the strongest links carry `repairTrajectory`. When
      `overlapSummary.overlapRepairDynamics.available=true` those trajectories are measured per-cycle
      mismatch intensity on the pair's shared support (`overlapMismatchDensity` over `cycle`), so pulse
@@ -10833,9 +10851,9 @@ Required views:
    - Label the selected track source with `consensusBulk.protoParticleCandidates.worldlineSource`.
    - Treat `proto_particle_worldlines.csv` as a legacy fallback only; do not let stale sidecars
      override organic or free dynamics JSON reports.
-   - Use neutral wording: "edge-worldline diagnostic", "consensus object packet", and "holonomy/proto-particle candidate" unless the stronger receipts pass.
+   - Use neutral wording: "edge-worldline diagnostic", "record-object packet", and "holonomy/proto-particle candidate" unless the stronger receipts pass.
    - Do not label it a critical string CFT unless a future critical-edge receipt is true.
-   - Gate labels must show observer-facing H3 consensus bulk and chart-blind neutral quotient bulk separately.
+   - Gate labels must show the observer-facing H3 record readout and chart-blind neutral quotient bulk separately.
 
 6. **Emergent curved-spacetime proxy view**
    - Use `visualizationViews.emergentCurvedSpacetime` for the canonical layer list and claim boundary.
@@ -10875,7 +10893,7 @@ Visual language:
 
 Receipt boundary to preserve verbatim:
 
-{payload["claimBoundary"]}
+{_reader_facing_claim_boundary(payload)}
 """
 
 

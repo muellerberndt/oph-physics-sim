@@ -4,6 +4,12 @@
 
 This note records empirical lower bounds and planning estimates from the archived OPH-FPE runs. It is an experiment-planning document, not a theorem receipt or a physical claim.
 
+The repository-visible earned surface contains populated 64k and 128k
+bundles. The directory named `oph_universe_1m_earned` records that its source
+was empty when the snapshot was created. Million-patch timings and receipt
+values below are local run observations rather than repository-verifiable
+evidence until their artifacts are committed or hash-pinned with a fetch path.
+
 Three quantities must remain distinct:
 
 1. **Smallest observed success**: the smallest archived run whose receipt passed under the contract used by that run.
@@ -122,7 +128,7 @@ tree:
 |---|---|---|---|
 | `oph_universe_64k_night1_20260713` | 65,536 / 1,024 | ~35 min | full viz |
 | `oph_universe_128k_obs32k_night1` | 131,072 / 32,000 | ~1.5-2 h | 1.4 GB |
-| `oph_universe_1m_night1` | 1,048,576 / 64,000 | ~2.5 h | 1.8 GB |
+| `oph_universe_1m_night1` | 1,048,576 / 64,000 | ~2.5 h | 1.8 GB local, unpinned |
 
 The observer-report tail dominates above 64k. Receipt state per run sits
 in the tracker results log; the 3+1D receipts earned before the
@@ -132,13 +138,13 @@ sector-replay fix are superseded per the hardened-contract rule above.
 ## Update 2026-07-14: receipts under the covariant contract
 
 - Observer-facing 3+1D experience: earned at 4,096 (all four gates, zero
-  overrides) and at 131,072/32,000 and 1,048,576/64,000 under the
-  sector-replay covariant probe. The 2 pi selection-score median thins
-  with scale (0.691 at 4k, 0.304 at 128k, 0.0 at 1M): the probe budget
-  wants scaling with patch count before the 1M time gate counts as
-  strong.
-- NEW: `OBSERVER_SPACETIME_CONSENSUS_RECEIPT` (3+1D experience AND exact
-  mutual chart re-gauging with cocycle closure) true at 128k and 1M.
+  overrides) and at 131,072/32,000 under the sector-replay covariant probe.
+  The local, unpinned 1M report also recorded a pass, with a 2 pi
+  selection-score median of 0.0 and insufficient scale discrimination. That
+  report does not extend the repository-visible evidence ladder.
+- `OBSERVER_SPACETIME_CONSENSUS_RECEIPT` (3+1D experience plus exact mutual
+  chart re-gauging with cocycle closure) is true in the 128k earned bundle.
+  The corresponding 1M value is a local, unpinned report.
 - Glued objective 4D spacetime: no change; the 4k/16k/64k/256k ladder
   audit is the active gate.
 - The Einstein `bw_2pi` blocker reads the L3

@@ -27,21 +27,21 @@ the viewer can pause, scrub, replay, or jump without losing the active observer 
    repair move, and decreasing `phi`; repaired relations cool to teal. Use the exact mini-universe
    path only when `smallUniverse.contentAvailable=true`; otherwise use the separately labelled
    large-run `screen.repairTrace` and show the theorem receipt card, never a fabricated exact path.
-3. **Shared records and consensus.** Keep the patch network visible while equal readout hashes and
-   record/object packets synchronize across overlaps. Let repeated packets coalesce into stable
-   teal consensus glyphs. Caption: "Objectivity is the agreement carried by shared records." This
-   visual transition must not imply that a neutral bulk was present before consensus.
+3. **Shared-record gauge views.** Keep the patch network visible while sampled observers read one
+   committed shared record through different local gauge frames. Render recovered re-gauging maps,
+   Cech-closed triples, and shuffled controls only from their exported rows. Caption: "Different gauge
+   views of one shared record agree." Independent commit histories require a separate experiment.
 4. **Enter one observer's 3+1D view.** Select a patch, retain a small labelled overview inset, and
    move the main camera through its boundary into `subjectiveObserverCameras[*]`. Reveal only its
    visible records, object packets, nominal-FOV worldline sightings, and modular time. If
    `assumedDs4Spacetime.enabled`, `assumed_ds4_visualization_layer_receipt`, and
    `SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT` pass, grow the declared open-H3 dS4 grid around that
    camera with a persistent **ASSUMED VISUAL LAYER — NOT DERIVED** badge.
-5. **Populate the observer-facing H3 bulk.** Match consensus glyphs to
-   `consensusBulk.objects` and reveal them along intrinsic H3 geodesics. Keep a faint provenance
-   tether back to the contributing patch records during the transition. Caption the space
-   "observer-facing H3 consensus chart," not a strict neutral third-person bulk unless its receipt
-   passes.
+5. **Show the observer-facing H3 layers.** Reveal `consensusBulk.objects` along intrinsic H3 geodesics
+   only with their exact data and status. Keep a faint provenance tether to contributing patch
+   records. Label a computed H3 chart diagnostic, a receipted record population, and any assumed
+   scene completion separately. Do not call the scene a strict neutral third-person bulk unless that
+   receipt passes.
 6. **Defect worldlines styled as matter.** Draw exported holonomy/defect worldlines as luminous
    magenta candidate tracks with distinct birth/contact markers. When
    `assumedDs4Spacetime.defectMatterRendering.enabled` and
@@ -133,13 +133,13 @@ What to inspect:
 - `assumedDs4Spacetime` completes the narrative renderer with an explicitly assumed open-H3 dS4 background, observer frames/tetrads, and defect-as-matter styling sourced from `simulation_assumption_manifest.json`. Its physical receipts remain false.
 - `simulationAssumptions` is the authoritative thirteen-row assumption ledger. Keep its assumption-completeness receipt separate from `visualizationRenderData.visualUniverseCompleteness` data completeness and render readiness; none is a theorem or physical receipt.
 - Panel 4 shows the emergent curved-spacetime proxy view. It uses `emergentCurvedSpacetime.sourceMath`, `curvatureProxyPoints`, `continuousBulkField`, and `timeSlices` to render quotient-visible source density, H3 Green potential, curvature, compactification, continuous volume samples, and warped slices over the observer-facing H3 chart. `dataRefs` names compatibility aliases without duplicating arrays. It is a diagnostic warped-grid/field layer, not production gravity or a physical metric unless `einstein_branch_entry_receipt`, `production_gravity_receipt`, and related promotion receipts are true.
-- Panel 5 shows the effective string-theory diagnostic view. Consensus object packets are shared readback/object packets from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates and edge-worldline/collar diagnostics, not matter particles or a critical worldsheet unless the corresponding receipts pass.
+- Panel 5 shows the effective string-theory diagnostic view. Record-object packets group shared readback events from overlapping observers. Magenta/red tracks are holonomy/defect worldlines fitted into the same H3 chart: proto-particle candidates and edge-worldline/collar diagnostics, not matter particles or a critical worldsheet unless the corresponding receipts pass.
 - The finite-edge vibration sublayer is unavailable and must be hidden. Keep the other populated H3/worldline string-view layers; do not synthesize replacement string oscillations.
-- Panel 6 shows the scale-compressed P/N silence-to-observation witness: initial record silence, P detuning, finite regulator depth, and observer/H3 readout emergence. This is not a literal brute-force simulation of astronomical N_CRC.
+- Panel 6 places the measured record-silence/readout transition beside a postprocessed P/N branch overlay. The relaxation dynamics did not consume P, and the view must not imply P caused the transition while dynamic detuning controls are false.
 - Panel 7 shows usable run CMB diagnostics when present. If those rows are absent, it may instead show the SHA-256-pinned `cmbComparison.assumedVisualization` reference and published-best-fit shape under a persistent assumption badge; `assumedModelRows` is not an OPH model. `comparableObservations` also carries compact measurement-lane summaries. None of this is a physical prediction unless the relevant prediction receipt passes.
 - `visualizationViews.fluctuatingQuantumVacuum`, `visualizationViews.observerCamera`, `visualizationViews.emergentCurvedSpacetime`, and `visualizationViews.effectiveStringTheory` are the canonical view contracts for a custom visualizer.
 - `paperAccuracy` is the fail-closed paper-accuracy guard. Use it to render which claims are allowed, which promotions remain blocked, and why visual similarity alone is not a receipt.
 
 Claim boundary:
 
-Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite observer screen, overlap repair, observer-local modular-time readouts, theorem-assisted H3 consensus object charts, and measurement-comparable CMB diagnostics when present. It does not promote chart-blind strict neutral quotient bulk or physical CMB prediction unless those receipts are true in the payload.
+Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite observer screen, overlap repair, observer-local modular-time readouts, controlled H3 chart diagnostics, record-object layers, and measurement-comparable CMB diagnostics when present. Computed H3 receipts, assumed scene completion, strict neutral bulk, and physical CMB promotion remain separately labeled.

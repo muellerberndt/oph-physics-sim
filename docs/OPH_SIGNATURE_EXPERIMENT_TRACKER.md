@@ -22,17 +22,23 @@ with `epic-wins/`, `particle_crisis/`, or `audit-bundles/` live in the
 
 Canonical closure surface: the closure equations the principle set requires to
 hold exactly, with current residuals, live in
-`reverse-engineering-reality/CLOSURE_LEDGER.md` (in the `oph-meta` repo one
+`reverse-engineering-reality/docs/CLOSURE_LEDGER.md` (in the `oph-meta` repo one
 level up). Tracker rows that touch alpha, Lambda, capacity, or the
 electroweak chart state closure status against that ledger and never
 supersede it; the principle and claim-rule surface is
-`reverse-engineering-reality/STRANGE_LOOP_PRINCIPLES.md`. The decisive falsification surface
+`reverse-engineering-reality/docs/STRANGE_LOOP_PRINCIPLES.md`. The decisive falsification surface
 includes the externally timestamped blind hadronic closure target
 (`falsification/frozen_targets/` in the `oph-meta` repo one level up,
 OpenTimestamps, frozen 2026-07-14); tracker rows never close ledger rows.
 The Ward-projected payload harness now exists in the companion repo
 (`reverse-engineering-reality/code/particles/hadron/ward_projected_payload/`);
 tracker rows still never close ledger rows.
+
+Evidence-availability rule: repository-visible scale claims cite the populated
+64k and 128k earned bundles. The directory named `oph_universe_1m_earned` is an
+empty-source placeholder. Million-patch entries in the historical results log
+record a local run report; they are not earned evidence until the source
+artifacts are committed or hash-pinned with a fetch path.
 
 ## 0a. At a glance (updated 2026-07-14, day)
 
@@ -79,7 +85,7 @@ full board in section 1.
 | Experiment | Verdict | Number that matters |
 |---|---|---|
 | 3+1D observer experience | RE-EARNED under covariant contract | 4k: all 4 gates TRUE, no overrides; time gate TRUE at 4k/16k/64k |
-| Observer mutual agreement | TRUE at every scale (self-consistency of the shared record) | 4k..1M: pair defect 0.0, cocycle 100 percent, control ~0.80; discriminating regime (independent commit histories) open |
+| Shared-record gauge agreement | TRUE in repository-visible runs through 128k; local 1M report unpinned | Pair defect 0.0, cocycle 100 percent, control ~0.80; discriminating regime (independent commit histories) open |
 | 2 pi KMS clock | CERTIFIED on the 2 pi-normalized source post replay fix | two_pi_selected true, non-degenerate (was fail-closed); endogenous scale discrimination open |
 | Proto-particles | RECEIPTED | organic population + worldlines TRUE; 2-defect assays TRUE |
 
@@ -96,7 +102,7 @@ passes on covariant data (open work).
 
 | Experiment | Status | Next gate |
 |---|---|---|
-| At-scale full 3+1D receipt | 128k + 1M reruns in tails | all four gates at 128k/1M |
+| At-scale full 3+1D receipt | 128k earned; local 1M report unpinned | recover or hash-pin 1M artifacts and repair endogenous scale discrimination |
 | Effective-4D direction check | 256k rung in tail | four-rung ladder audit: rank-3 stability, drift <= 0.10 |
 | Particle promotion | producers named | covariant fusion transport (same playbook as the clock fix) |
 | Einstein bridge E1-E6 | red, bw_2pi resolved | sphere_fold, null_stress, bounded_interval |
@@ -104,21 +110,21 @@ passes on covariant data (open work).
 
 ## 0b. Evaluation sweep 2026-07-14 (after the earned-run ladder)
 
-Per-experiment status against the new data (64k/128k/1M earned runs plus
-the 4k/16k diagnostics). Three groups: improved, new invariants, and
-gaps with causes and proposed fixes.
+Per-experiment status against the 64k and 128k earned runs, the local unpinned
+1M report, and the 4k/16k diagnostics. Three groups: improved, new invariants,
+and gaps with causes and proposed fixes.
 
 ### Improved or new results
 
 | Experiment | New result | Note |
 |---|---|---|
-| 3+1D observer experience | EARNED at 4k, 128k, 1M under the covariant sector-replay contract, zero overrides | the 07-11 receipts stay superseded |
-| Spacetime consensus (NEW receipt) | TRUE at 128k and 1M with empty blockers | 600-800 pairs defect 0.0; 300-400 cocycles exact; controls ~0.80 |
-| Observer agreement vs scale | flat at defect 0.0 from 4k to 1M | the certificate saturates on the shared record; the discriminating regime is independent commit histories |
-| Emergent-bulk field (NEW product) | multiplicity maxima 43 (64k), 169 (128k), 28 (1M at the 2048 cohort) | consensus-slider data in every bundle |
-| Committed-record transposition density (NEW invariant) | 0.4828 / 0.4830 / 0.4816 across 64k/128k/1M | three-decimal scale-stable, consistently below the uniform 0.5; a reproducible order parameter awaiting a theory target |
-| Fusion identity fraction vs scale | 0.230 -> 0.207 -> 0.190 (random composition = 0.167) | the identity excess decays with scale: current encounter candidates approach composition-randomness |
-| Worldline count vs scale | 256 -> 439 -> 507 over 16x patches | strongly sublinear: defect worldline density falls with refinement |
+| 3+1D observer experience | EARNED at 4k and 128k under the covariant sector-replay contract, zero overrides; local 1M report says pass | the 07-11 receipts stay superseded; 1M is not repository evidence |
+| Shared-record 3+1D gauge agreement | TRUE at 128k with empty blockers; local 1M report says pass | 600 earned-run pairs and 300 cocycles exact at 128k; independent commit histories open |
+| Shared-record agreement vs scale | flat at defect 0.0 through the repository-visible ladder; local 1M report matches | the certificate saturates on one shared record; independent commit histories are the discriminating regime |
+| Shared-record agreement field | multiplicity maxima 43 (64k) and 169 (128k); local 1M report gives 28 on its 2048 cohort | multiplicity measures evaluated agreement coverage, not a neutral bulk |
+| Committed-record transposition density | 0.4828 / 0.4830 for the 64k/128k earned bundles; local 1M report gives 0.4816 | the repository-visible values are scale-stable below the uniform 0.5; the local 1M value awaits pinned artifacts |
+| Fusion identity fraction vs scale | 0.230 -> 0.207 in the earned bundles; local 1M report gives 0.190 (random composition = 0.167) | the identity excess decays over the pinned ladder; the 1M extension is a local observation |
+| Worldline count vs scale | 256 -> 439 in the earned bundles; local 1M report gives 507 | defect worldline density falls over the pinned refinement step; no repository claim extends beyond 128k |
 
 ### Gaps, causes, and proposed fixes
 
@@ -130,8 +136,8 @@ gaps with causes and proposed fixes.
 | Strict neutral bulk / effective 4D | ladder incomplete; rank-3 unstable; independent selector false | 256k rung interrupted (resume in flight); rank estimators still consume hash-token features that destroy locality; measured-overlap gate has no producer | finish the 256k sweep, run the four-rung audit; replace hash-token features with locality-preserving packet features (H2 audit item); wire the agreement certificate into `measured_overlap_geometry_receipt`; ancestry-split refinement batches |
 | Particle promotion (P1) | fusion conservation fails; transport receipts hardcoded false | encounter detector counts passers-by (identity fraction decays to random with scale); no covariant common-basepoint transport | redefine fusion as product-worldline continuation (two tubes end, one begins, composed class); implement covariant fusion transport (same playbook as the clock replay); tighten the angular cutoff; deconfinement check for colored candidates |
 | Worldline turning power | z in [-1.5, +0.8], 4-18 usable worldlines | timeline caps events per worldline | raise timeline caps for analysis runs; consume the full cluster catalogs; 64-seed GCP fleet for a proper null band |
-| Screen parity field pairs (e5) | degenerate at 128k/1M | bounded e5 profile writes constant freezeout fields | export smoothed/evolution-era fields in e5, or enable raw frames on one analysis run per scale |
-| Physical CMB lane | gates unchanged | screen export ell_max 24 sits below the first Planck bin; source/transfer/likelihood contract open | post-process the 1M freezeout with `cl-from-freezeout-npz --ell-max 96` (defined command); the contract items stay paper-side |
+| Screen parity field pairs (e5) | degenerate at 128k and in the local 1M report | bounded e5 profile writes constant freezeout fields | export smoothed/evolution-era fields in e5, or enable raw frames on one analysis run per scale |
+| Physical CMB lane | gates unchanged | screen export ell_max 24 sits below the first Planck bin; source/transfer/likelihood contract open | recover and pin the local 1M freezeout before any `ell_max 96` post-processing; the contract items stay paper-side |
 | Paper-side theorem gaps (DK-06 birefringence emission, DK-08 applicability predicate, MM-01 bridge multiplicity, CL-03 pole packet, CL-04 spectral backend, NT-02 alpha-dot statement, FZ-01 freeze registry) | unchanged by sim data | missing theorems or one-day artifacts | as listed per row in sections 2-8; FZ-01 stays the highest value-per-day action |
 
 ## 0. Discipline (applies to every entry)
@@ -223,9 +229,9 @@ gaps with causes and proposed fixes.
 
 Newest first. Every entry names the artifact that reproduces it.
 
-- **2026-07-14 (day) · THE MILLION-PATCH CONSENSUS UNIVERSE, with one
-  declared caveat.** `oph_universe_1m_earned` (1,048,576 patches, 64,000
-  observers, zero overrides, covariant probe):
+- **2026-07-14 (day) · LOCAL MILLION-PATCH REPORT; SOURCE ARTIFACTS NOT
+  PINNED.** The local report for `oph_universe_1m_earned` described
+  1,048,576 patches, 64,000 observers, zero overrides, and the covariant probe:
   `observer_facing_3p1d_h3_experience_receipt: TRUE` (all four gates) and
   `OBSERVER_SPACETIME_CONSENSUS_RECEIPT: TRUE` with an empty blocker
   list: 800/800 agreement pairs at defect 0.0, 400/400 cocycle-exact
@@ -233,14 +239,11 @@ Newest first. Every entry names the artifact that reproduces it.
   statistic null (z = -1.48). Declared caveat: the 2 pi selection-score
   median flattens across scale (0.691 at 4k, 0.304 at 128k, 0.0 at 1M
   with selection landing on 2 pi non-degenerately), so the 1M time-gate
-  pass is formally earned with a thin margin; the probe budget wants
-  scaling with patch count, and the 128k run stays the strongest
-  at-scale full receipt until that lands. Flagship package #3:
-  `runs/oph_universe_1m_earned_visualizer_bundle.zip` (106.2 MB; ships
-  the slim `observer_supports.jsonl` derivative per the bundle budget).
-  Ladder of per-run packages for the run switcher: 64k 126.1 MB, 128k
-  202.9 MB, 1M 106.2 MB.
-- **2026-07-14 (day) · FIRST FULL SPACETIME-CONSENSUS RECEIPT AT SCALE.**
+  pass had a thin margin and insufficient endogenous scale discrimination.
+  The report also named a 106.2 MB local visualizer package. Neither the run
+  artifacts nor that package are present in the repository-visible earned
+  surface, so the 128k bundle is the largest citable earned receipt.
+- **2026-07-14 (day) · FIRST FULL SHARED-RECORD 3+1D AGREEMENT RECEIPT AT SCALE.**
   `oph_universe_128k_3p1d_earned` (131,072 patches, 32,000 observers, the
   1M production configuration one step down, zero overrides, covariant
   probe): `observer_facing_3p1d_h3_experience_receipt: TRUE` with all
@@ -249,12 +252,11 @@ Newest first. Every entry names the artifact that reproduces it.
   AND `OBSERVER_SPACETIME_CONSENSUS_RECEIPT: TRUE` with an EMPTY blocker
   list: 600/600 agreement pairs at defect 0.0, 300/300 cocycle-exact
   triples, shuffled control 0.804. Operational reading, exactly at the
-  claim boundary: observers experience integer 3+1 charts and their
-  charts glue exactly; a shared spacetime in the OPH sense holds at this
-  scale over the shared committed record. The follow-on physics gate is
-  unchanged: genuinely independent per-observer commit histories, then
-  strict neutral bulk. Emergent-bulk field: pair-certified multiplicity
-  up to 169. Package #2:
+  claim boundary: the run supplies integer 3+1 observer-facing charts whose
+  gauge views agree exactly over one shared committed record. Independent
+  per-observer commit histories and strict neutral bulk are separate, open
+  tests. The shared-record agreement field has pair-certified multiplicity up
+  to 169. Package #2:
   `runs/oph_universe_128k_3p1d_earned_visualizer_bundle.zip` (202.9 MB)
   with the milestone ladder reading 7 PASS / 4 open.
 - **2026-07-14 (day) · THE 3+1D EXPERIENCE RECEIPT IS RE-EARNED UNDER THE
@@ -276,7 +278,7 @@ Newest first. Every entry names the artifact that reproduces it.
   replay. One of the four named Einstein-branch-entry blockers (bw_2pi)
   falls with it, pending reruns.
 - **2026-07-14 (day) · Effective-4D-GR direction check defined and
-  running.** The 1M run carries the full neutral-bulk and
+  running.** The local, unpinned 1M report carries the full neutral-bulk and
   Einstein-bridge suite: bridge manifest TRUE, dependency discharge
   TRUE, branch-entry gates E1-E6 false with named blockers (sphere_fold,
   bw_2pi, null_stress, bounded_interval), strict neutral bulk false with
@@ -288,8 +290,8 @@ Newest first. Every entry names the artifact that reproduces it.
   boundary language is the right one: rank-3 candidates stay diagnostic
   until independent selection, negative controls, directional H3 gates,
   and refinement stability all pass.
-- **2026-07-14 · THE 1M RUN: mutual agreement is scale-stable to one
-  million patches.** `oph_universe_1m_night1`: 1,048,576 patches, 64,000
+- **2026-07-14 · LOCAL 1M SHARED-RECORD AGREEMENT REPORT.**
+  `oph_universe_1m_night1`: 1,048,576 patches, 64,000
   materialized observers, 128 cycles, committed_fraction 1.0 at
   freezeout cycle 107, ~2.5 h wall-clock on a 10-core laptop, 1.8 GB
   artifacts. Agreement certificate (2048-observer deterministic cohort):
@@ -304,7 +306,8 @@ Newest first. Every entry names the artifact that reproduces it.
   consensus. Worldline turning at 1M: z = -1.48, null, power-limited.
   Viz ZIP #3: 247.3 MB
   (`runs/oph_universe_1m_night1_visualizer_bundle.zip`), including the
-  agreement-graph consensus scene data. Ladder ZIPs: 64k 115.1 MB,
+  agreement-graph scene data. These 1M files are local and unpinned; the
+  populated repository evidence stops at 128k. Ladder ZIPs: 64k 115.1 MB,
   128k 200.4 MB, 1M 247.3 MB, each under the 256 MB cap with the
   web-agent README.
 

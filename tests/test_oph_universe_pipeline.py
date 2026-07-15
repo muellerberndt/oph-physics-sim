@@ -15,10 +15,39 @@ from oph_fpe.pipelines.oph_universe import (
     _write_frontier_artifacts,
     _write_physical_cmb_source_artifacts,
     _write_physical_cmb_transfer_artifacts,
+    _write_readme,
     _write_visualizer_csv_aliases,
     _write_visualization_diagnostic_artifacts,
     _visualization_export_settings,
 )
+
+
+def test_universe_pack_readme_separates_visual_assumptions_from_computed_receipts(tmp_path):
+    path = tmp_path / "README_OPH_UNIVERSE_PACK.md"
+    _write_readme(
+        path,
+        {
+            "final_receipts": {
+                "observer_modular_time_receipt": True,
+                "physical_cmb_prediction_receipt": False,
+                "simulation_assumed_visual_universe_receipt": True,
+            },
+            "simulation_assumptions": {
+                "profile": "known_observer_universe_v1",
+                "scope": "visualization_only",
+            },
+            "viewer_outputs": {},
+            "claim_boundary": "finite test boundary",
+        },
+    )
+
+    content = path.read_text(encoding="utf-8")
+    computed_section, assumption_section = content.split("## Visualization Assumption Marker", 1)
+    assert "observer_modular_time_receipt" in computed_section
+    assert "physical_cmb_prediction_receipt" in computed_section
+    assert "simulation_assumed_visual_universe_receipt" not in computed_section
+    assert "simulation_assumed_visual_universe_receipt`: `true" in assumption_section
+    assert "not a computed proof receipt or a physical prediction" in assumption_section
 
 
 def test_refit_selection_is_predeclared_not_best_score():

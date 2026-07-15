@@ -33,7 +33,7 @@
     },
     "visualization_render_data_json": {
       "path": "runs/oph_universe_128k_3p1d_earned/universe_timeline/visualization_render_data.json",
-      "byte_count": 8965309,
+      "byte_count": 8965432,
       "written": true,
       "schema": "oph_visualization_render_data_v1"
     },
@@ -45,7 +45,7 @@
     },
     "emergent_curved_spacetime_json": {
       "path": "runs/oph_universe_128k_3p1d_earned/universe_timeline/emergent_curved_spacetime.json",
-      "byte_count": 5460721,
+      "byte_count": 5460718,
       "written": true,
       "schema": "oph_emergent_curved_spacetime_visualization_v1"
     },
@@ -69,7 +69,7 @@
     },
     "paper_accuracy_json": {
       "path": "runs/oph_universe_128k_3p1d_earned/universe_timeline/paper_accuracy.json",
-      "byte_count": 6567,
+      "byte_count": 6561,
       "written": true,
       "schema": "oph_paper_accuracy_guard_v1"
     },

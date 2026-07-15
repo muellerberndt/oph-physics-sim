@@ -5,8 +5,8 @@ Writes RUN_HIGHLIGHTS.md and run_highlights.json into a run directory.
 Every row is read from THIS run's receipts and artifacts; run artifacts
 carry no paper-side physics-comparison rows. Public-data comparison
 lanes live in the paper-side documents (the experiment tracker section
-0a and docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md). Claim discipline: the
-suite holds zero frozen physical-prediction receipts.
+0a and docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md). Each emitted row keeps
+the scope of its named receipt.
 """
 from __future__ import annotations
 
@@ -39,6 +39,8 @@ cmb_lite = read_json("cmb_lite_comparison_report.json")
 gate = read_json("cosmology_gate_report.json")
 einstein = read_json("einstein_bridge_manifest.json")
 neutral_audit = read_json("neutral_3d_bulk_audit_report.json")
+proof = read_json("bulk_proof_certificate_report.json")
+physical_cmb = read_json("physical_cmb_frontier_report.json")
 
 patch_count = manifest.get("patch_count") or freezeout.get("point_count")
 observer_count = experience.get("observer_count")
@@ -81,7 +83,7 @@ milestones = [
         "detail": "integer 3 spatial + 1 modular time; never a fractional bulk",
     },
     {
-        "milestone": "Observer mutual agreement (bulk-as-agreement)",
+        "milestone": "Shared-record gauge agreement",
         "receipt": bool(agreement.get("MUTUAL_GAUGE_CHART_AGREEMENT_RECEIPT")),
         "detail": (
             f"pairs {agreement.get('population', {}).get('evaluated_pairs')}, "
@@ -91,7 +93,7 @@ milestones = [
         ),
     },
     {
-        "milestone": "Emergent-bulk agreement field",
+        "milestone": "Shared-record agreement multiplicity field",
         "receipt": bulk_field.get("status") == "evaluated",
         "detail": (
             f"coverage {round((bulk_field.get('covered_patch_fraction') or 0) * 100, 1)} pct, "
@@ -119,9 +121,14 @@ milestones = [
         "detail": f"blockers: {einstein.get('einstein_branch_entry_blockers')}",
     },
     {
-        "milestone": "Physical particle / physical CMB",
-        "receipt": False,
-        "detail": "fail-closed by contract; screen proxies stay diagnostics",
+        "milestone": "Production particle matter",
+        "receipt": bool(proof.get("production_particle_matter_receipt", False)),
+        "detail": "canonical promotion receipt from the bulk proof certificate",
+    },
+    {
+        "milestone": "Physical CMB prediction",
+        "receipt": bool(physical_cmb.get("physical_cmb_prediction_receipt", False)),
+        "detail": "source, transfer, scale, and frozen-likelihood frontier",
     },
 ]
 
@@ -154,8 +161,11 @@ payload = {
     "run_derived_diagnostics": run_derived,
     "claim_boundary": (
         "Milestone receipts and diagnostics are this run's own gate values "
-        "and artifacts; none is a frozen physical-prediction receipt. This "
-        "file contains only quantities computed from this run's data. "
+        "and artifacts; each row carries only its named scope. This file "
+        "contains only quantities computed from this run's data. "
+        "Shared-record gauge agreement compares observer views of one committed "
+        "record; it does not certify independent per-observer commit histories "
+        "or a strict neutral third-person bulk. "
         "Paper-side public-data comparisons live in "
         "docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md (section 0a) and "
         "docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md, never in run artifacts."
@@ -164,7 +174,7 @@ payload = {
         "this run's receipt and report JSONs",
     ],
 }
-(RUN / "run_highlights.json").write_text(json.dumps(payload, indent=2, sort_keys=False))
+(RUN / "run_highlights.json").write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n")
 
 lines = [f"# Run highlights: {label}", ""]
 lines.append("## Milestones (this run's receipts)")

@@ -113,6 +113,10 @@ These are hard boundaries:
 
 - `final_phi == 0` is not `C0b`; finite consensus needs strict descent, confluence, local-diamond,
   repair-completeness, and uniqueness receipts.
+- Pair re-gauging and Cech closure over one committed shared record certify
+  shared-record gauge-chart self-consistency. They do not certify agreement
+  between independently produced per-observer commit histories, finite
+  consensus, or a strict neutral third-person bulk.
 - A declared or replayed `2pi` BW branch is `L0`, not the full `L1-L7` finite Lorentz theorem
   contract.
 - The theorem-assisted H3 chart is not strict neutral third-person bulk. It is `H0/H1`; chart-blind

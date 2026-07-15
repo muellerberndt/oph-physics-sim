@@ -1,6 +1,6 @@
 # OPH P/N Silence To Observation
 
-Finite scale-compressed P/N silence-to-observation witness. It tests the core OPH story that a silent observer-record layer on a finite screen becomes observer-readable only on the P-detuned local/global closure branch. It does not brute-force the astronomical N_CRC cell count, does not solve the global F(N) fixed point from simulator data, and does not yet include dynamic reruns with P=phi or wrong detuning.
+Finite scale-compressed association between an observed record-silence/readout transition and the paper-side P/N closure coordinates. The relaxation dynamics did not consume P. The analytic detuning controls test bridge arithmetic rather than dynamic causation; no P=phi or wrong-detuning reruns are present. The report neither instantiates the astronomical N_CRC cell count nor solves the global F(N) fixed point from simulator data.
 
 ## Status
 

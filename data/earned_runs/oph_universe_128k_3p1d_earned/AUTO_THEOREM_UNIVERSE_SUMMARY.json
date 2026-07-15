@@ -1247,7 +1247,7 @@
     "timeline_viewer": "runs/oph_universe_128k_3p1d_earned/universe_timeline/oph_universe_timeline_viewer.html",
     "timeline_payload": "runs/oph_universe_128k_3p1d_earned/universe_timeline/visualization_payload.json",
     "timeline_visualizer_pack": "runs/oph_universe_128k_3p1d_earned/universe_timeline/oph_visualizer_pack_v2.tar.zst",
-    "timeline_visualizer_pack_bytes": 4568085,
+    "timeline_visualizer_pack_bytes": 4567571,
     "timeline_visualizer_pack_under_256m": true,
     "timeline_sidecar_exports": {
       "schema": "oph_universe_visualization_sidecars_v1",

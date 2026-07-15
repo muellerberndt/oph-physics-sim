@@ -141,7 +141,7 @@ def test_object_h3_bulk_viewer_writes_object_cloud(tmp_path: Path):
 
     viewer = Path(summary["viewer_path"])
     assert viewer.exists()
-    assert "OPH Object-H3 Bulk Viewer" in viewer.read_text(encoding="utf-8")
+    assert "OPH Object-H3 Viewer" in viewer.read_text(encoding="utf-8")
     assert summary["object_count"] == 2
     assert summary["theorem_assisted_h3_bulk"] is True
     assert (viewer.parent / "object_h3_bulk_viewer_summary.json").exists()

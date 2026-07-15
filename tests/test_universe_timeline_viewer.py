@@ -105,7 +105,7 @@ def test_small_universe_payload_rejects_stale_unvalidated_receipt_fallback(tmp_p
     assert "finite-edge vibration sublayer is unavailable and must be hidden" in instructions
     assert "Canonical pedagogical cinematic storyboard" in instructions
     assert "Bounded self-reading patches" in instructions
-    assert "Shared records and consensus" in instructions
+    assert "Shared-record gauge views" in instructions
     assert "Enter one observer's 3+1D view" in instructions
     assert "ASSUMED VISUAL LAYER — NOT DERIVED" in instructions
     assert "Defect worldlines styled as matter" in instructions
@@ -1156,7 +1156,7 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     instructions = Path(summary["instructions_path"]).read_text(encoding="utf-8")
     assert "Panel 2 shows one deterministic repair path through the exact finite mini-universe" in instructions
     assert "finiteEdgeStringVibrationSamples` is available" in instructions
-    assert "Objectivity is the agreement carried by shared records" in instructions
+    assert "Independent commit histories require a separate experiment" in instructions
     assert "ASSUMED DEFECT-AS-MATTER STYLING" in instructions
     sidecars = summary["sidecar_exports"]
     assert summary["visualizer_pack"]["under_hard_limit"] is True
@@ -1257,7 +1257,7 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert web_brief_path.exists()
     web_brief = web_brief_path.read_text(encoding="utf-8")
     assert "Canonical pedagogical cinematic storyboard" in web_brief
-    assert "observer-facing H3 consensus chart" in web_brief
+    assert "observer-facing H3 record readout" in web_brief
     assert "COMPUTED / PASSED" in web_brief
     assert "ASSUMED VISUAL LAYER" in web_brief
     assert "Target smooth 60 fps" in web_brief
