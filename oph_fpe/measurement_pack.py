@@ -6,6 +6,10 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
+
 
 def export_measurement_pack(run_dirs: list[Path], out_dir: Path) -> dict[str, Any]:
     roots = [Path(path) for path in run_dirs]
@@ -886,6 +890,11 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
     finite = _first_json(roots, "finite_certificate_report.json")
     finite_transition = _first_json(roots, "finite_repair_transition_matrix_report.json")
     scalar_repair_semigroup = _first_json(roots, "scalar_repair_semigroup_report.json")
+    finite_transition_eligibility = validate_transition_clock_eligibility(finite_transition)
+    scalar_transition_eligibility = validate_transition_clock_eligibility(
+        scalar_repair_semigroup
+    )
+    finite_clock_cmb_eligibility = validate_transition_clock_eligibility(finite_clock_cmb)
     screen_capacity = _first_json(roots, "screen_capacity_closure_report.json")
     capacity_proxy = _first_json(roots, "capacity_readback_proxy_report.json")
     repair_scale = _first_json(roots, "repair_scale_closure_report.json")
@@ -1112,10 +1121,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             finite_clock_cmb.get("measurement_comparable_cmb_curve", False)
         ),
         "finite_repair_clock_cmb_finite_lattice_clock": bool(
-            finite_clock_cmb.get("finite_lattice_clock_derived", False)
+            finite_clock_cmb_eligibility["eligible"]
+            and finite_clock_cmb.get("finite_lattice_clock_derived", False)
         ),
         "finite_repair_clock_cmb_physical_prediction": bool(
-            finite_clock_cmb.get("physical_cmb_prediction", False)
+            finite_clock_cmb_eligibility["eligible"]
+            and finite_clock_cmb.get("physical_cmb_prediction", False)
         ),
         "camb_lcdm_cdm_limit_boltzmann_receipt": bool(
             camb_baseline.get("CDM_LIMIT_BOLTZMANN_RECEIPT", False)
@@ -1488,15 +1499,27 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             and (finite.get("derived_outputs") or {}).get("A_zeta") is not None
         ),
         "finite_transition_matrix_ready": bool(
-            finite_transition.get("finite_transition_matrix_ready", False)
+            finite_transition_eligibility["eligible"]
         ),
         "finite_transition_clock_certified": bool(
-            finite_transition.get("clock_normalization_certified", False)
-            or scalar_repair_semigroup.get("repair_clock_certificate", False)
+            (
+                finite_transition_eligibility["eligible"]
+                and finite_transition.get("clock_normalization_certified", False)
+            )
+            or (
+                scalar_transition_eligibility["eligible"]
+                and scalar_repair_semigroup.get("repair_clock_certificate", False)
+            )
         ),
         "finite_transition_eta_R_finite_lattice_derived": bool(
-            finite_transition.get("eta_R_finite_lattice_derived", False)
-            or scalar_repair_semigroup.get("eta_R_finite_lattice_derived", False)
+            (
+                finite_transition_eligibility["eligible"]
+                and finite_transition.get("eta_R_finite_lattice_derived", False)
+            )
+            or (
+                scalar_transition_eligibility["eligible"]
+                and scalar_repair_semigroup.get("eta_R_finite_lattice_derived", False)
+            )
         ),
         "screen_capacity_observed_branch_available": bool(
             screen_capacity_gates.get("observed_branch_N_scr_readout_available", False)
@@ -1850,10 +1873,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             "physical_cmb_peak_features.csv",
         ),
         "physical_cmb_input_contract_receipt": bool(
-            physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+            finite_transition_eligibility["eligible"]
+            and physical_cmb_input.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
         ),
         "physical_cmb_input_prediction_eligible": bool(
-            physical_cmb_input.get("physical_cmb_prediction_eligible", False)
+            finite_transition_eligibility["eligible"]
+            and physical_cmb_input.get("physical_cmb_prediction_eligible", False)
         ),
         "physical_cmb_input_P_source": physical_cmb_p_source.get("source"),
         "physical_cmb_input_P_source_theorem_side": bool(
@@ -1885,7 +1910,8 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         ),
         "physical_cmb_promotion_audit_written": bool(physical_cmb_promotion),
         "physical_cmb_promotion_ready": bool(
-            physical_cmb_promotion.get("physical_cmb_promotion_ready", False)
+            finite_transition_eligibility["eligible"]
+            and physical_cmb_promotion.get("physical_cmb_promotion_ready", False)
         ),
         "physical_cmb_promotion_official_likelihood_ready": bool(
             physical_cmb_promotion.get("official_likelihood_ready", False)
@@ -1895,7 +1921,8 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
         ),
         "physical_cmb_frontier_written": bool(physical_cmb_frontier),
         "physical_cmb_frontier_ready": bool(
-            physical_cmb_frontier.get("physical_cmb_prediction_ready", False)
+            finite_transition_eligibility["eligible"]
+            and physical_cmb_frontier.get("physical_cmb_prediction_ready", False)
         ),
         "physical_cmb_frontier_gate_count": int(len(physical_cmb_frontier.get("gate_rows") or [])),
         "physical_cmb_frontier_gap_count": int(len(physical_cmb_frontier.get("gate_gap_rows") or [])),
@@ -1963,7 +1990,8 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             physical_cmb_usable_data
         ),
         "physical_cmb_output_prediction_receipt": bool(
-            physical_cmb_output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
+            finite_transition_eligibility["eligible"]
+            and physical_cmb_output.get("PHYSICAL_CMB_PREDICTION_RECEIPT", False)
         ),
         "physical_cmb_output_measurement_comparable_model_count": int(
             physical_cmb_output.get("measurement_comparable_model_count") or 0
@@ -2009,10 +2037,12 @@ def _collect_claims(roots: list[Path]) -> dict[str, Any]:
             cmb_promotion_ledger.get("conditional_physical_scale_bridge_ready", False)
         ),
         "cmb_promotion_conditional_source_ready": bool(
-            cmb_promotion_ledger.get("conditional_physical_cmb_source_ready", False)
+            finite_transition_eligibility["eligible"]
+            and cmb_promotion_ledger.get("conditional_physical_cmb_source_ready", False)
         ),
         "cmb_promotion_oph_native_source_ready": bool(
-            cmb_promotion_ledger.get("oph_native_physical_cmb_source_ready", False)
+            finite_transition_eligibility["eligible"]
+            and cmb_promotion_ledger.get("oph_native_physical_cmb_source_ready", False)
         ),
         "cmb_promotion_oph_native_geometry_ready": bool(
             cmb_promotion_ledger.get("oph_native_geometry_ready", False)

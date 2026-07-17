@@ -21,6 +21,9 @@ from oph_fpe.cosmology.finite_covariant_parent import (
     STRESS_CLOSURE_RECEIPT,
     finite_covariant_collar_packet_parent_report,
 )
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 
 
 def write_physical_cmb_source_readiness_report(run_dirs: list[Path], out_dir: Path) -> dict[str, Any]:
@@ -222,10 +225,13 @@ def build_finite_parent_readiness_summary_from_reports(run_dirs: list[Path]) -> 
     }
     source_hash = _source_hash(reports)
     gamma = _gamma_rec(reports["finite_transition"])
+    transition_eligibility = validate_transition_clock_eligibility(
+        reports["finite_transition"]
+    )
     anomaly_rho = _anomaly_rho(reports["finite_certificate"], reports["b_a_parent"])
     b_a_rows = _array(reports["B_A_kernel"].get("B_A_k_a"))
     transition_ready = bool(
-        reports["finite_transition"].get("finite_transition_matrix_ready", False)
+        transition_eligibility["eligible"]
         and _finite(gamma)
         and (
             reports["finite_transition"].get("eta_R_finite_lattice_derived", False)
@@ -325,6 +331,7 @@ def build_finite_parent_readiness_summary_from_reports(run_dirs: list[Path]) -> 
             "official_likelihood_ready": official_ready,
             "frozen_likelihood_protocol_ready": frozen_ready,
         },
+        "transition_clock_eligibility": transition_eligibility,
     }
     return summary, {
         "existing_parent_report_used": False,

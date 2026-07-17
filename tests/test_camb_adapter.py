@@ -6,8 +6,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import oph_fpe.cosmology.camb_adapter as camb_adapter
 from oph_fpe.cosmology.camb_adapter import (
     compare_camb_tt_to_benchmark,
+    finite_repair_clock_cmb_camb_report,
     official_planck_readiness_report,
     write_camb_lcdm_baseline_report,
     write_finite_repair_clock_cmb_camb_report,
@@ -39,6 +41,71 @@ def test_compare_camb_tt_to_benchmark_reports_real_multipole_metrics():
     assert report["shape_correlation"] > 0.99
     assert report["amplitude_fit_chi2_per_bin"] < report["raw_chi2_per_bin"] + 1.0e-9
     assert len(report["binned_tt_comparison"]) == 6
+
+
+def test_finite_clock_camb_rejects_stale_true_transition_flags(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ell = np.arange(2, 8, dtype=float)
+    model = np.asarray([10.0, 20.0, 40.0, 30.0, 15.0, 8.0])
+    benchmark = [
+        {
+            "ell": float(value),
+            "D_ell": float(amplitude),
+            "minus_dD_ell": 1.0,
+            "plus_dD_ell": 1.0,
+            "best_fit_D_ell": float(amplitude),
+        }
+        for value, amplitude in zip(ell, model, strict=True)
+    ]
+    monkeypatch.setattr(
+        camb_adapter,
+        "selector_elimination_report",
+        lambda **_kwargs: {"cmb_ir_kernel": {"q_IR": 0.25, "ell_IR": 32.0}},
+    )
+    monkeypatch.setattr(
+        camb_adapter,
+        "_run_camb_tt",
+        lambda *_args, **_kwargs: (ell, model),
+    )
+    monkeypatch.setattr(
+        camb_adapter,
+        "_run_camb_tt_custom_power",
+        lambda *_args, **_kwargs: (ell, model),
+    )
+    stale_report = {
+        "finite_transition_matrix_ready": True,
+        "finite_lattice_derived": True,
+        "repair_clock_certificate": True,
+        "clock_normalization_certified": True,
+        "clock_normalization_numeric_match": True,
+        "repair_scale_hypothesis_clock_match": True,
+        "state_count": 2,
+        "transition_count": 48,
+        "primary": {
+            "finite": True,
+            "irreducible": False,
+            "aperiodic": False,
+            "lambda_2": 1.0,
+            "detailed_balance_max_abs_error": 0.0,
+            "n_s_estimate": 1.0,
+            "eta_R_estimate": 0.0,
+            "kappa_rep_estimate": 0.0,
+        },
+    }
+
+    report = finite_repair_clock_cmb_camb_report(stale_report, benchmark)
+
+    finite_input = report["finite_repair_clock_input"]
+    assert finite_input["transition_clock_eligibility"]["eligible"] is False
+    assert finite_input["matrix_ready"] is False
+    assert finite_input["finite_lattice_derived"] is False
+    assert finite_input["repair_clock_certificate"] is False
+    assert finite_input["clock_normalization_certified"] is False
+    assert finite_input["clock_normalization_numeric_match"] is False
+    assert finite_input["repair_scale_hypothesis_clock_match"] is False
+    assert report["finite_lattice_clock_derived"] is False
+    assert report["repair_clock_certificate"] is False
 
 
 def test_write_camb_lcdm_baseline_report_smoke(tmp_path: Path):
@@ -288,7 +355,12 @@ def test_write_finite_repair_clock_cmb_camb_report_smoke(tmp_path: Path):
           "primary": {
             "kappa_rep_estimate": 2.4755067024747386,
             "eta_R_estimate": 0.03201874992042351,
-            "n_s_estimate": 0.9679812500795765
+            "n_s_estimate": 0.9679812500795765,
+            "finite": true,
+            "irreducible": true,
+            "aperiodic": true,
+            "lambda_2": 0.2,
+            "detailed_balance_max_abs_error": 0.0
           },
           "blockers": [
             "finite transition matrix does not yield kappa_rep=e under the declared repair-step time"

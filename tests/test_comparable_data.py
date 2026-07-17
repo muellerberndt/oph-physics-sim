@@ -121,7 +121,7 @@ def test_comparable_data_collects_scalar_repair_semigroup_lane(tmp_path: Path):
     lane = report["measurement_lanes"]["oph_scalar_repair_semigroup"]
 
     assert lane["run_count"] == 1
-    assert lane["finite_lattice_derived_count"] == 1
+    assert lane["finite_lattice_derived_count"] == 0
     assert lane["repair_clock_certificate_count"] == 0
     assert lane["mean_kappa_rep"] == 31.0
     assert lane["source_values"] == ["finite_state_transition_matrix"]
@@ -1163,7 +1163,7 @@ def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
     assert lane["mean_ell_IR"] == 32.0
 
 
-def test_comparable_data_collects_finite_repair_clock_cmb_camb(tmp_path: Path):
+def test_comparable_data_rejects_legacy_finite_clock_claim_but_keeps_curve(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
     _write_json(
@@ -1202,7 +1202,7 @@ def test_comparable_data_collects_finite_repair_clock_cmb_camb(tmp_path: Path):
 
     assert lane["run_count"] == 1
     assert lane["measurement_comparable_curve_count"] == 1
-    assert lane["finite_lattice_clock_derived_count"] == 1
+    assert lane["finite_lattice_clock_derived_count"] == 0
     assert lane["repair_clock_certificate_count"] == 0
     assert lane["physical_cmb_prediction_count"] == 0
     assert lane["mean_n_s"] == 0.9679812500795765

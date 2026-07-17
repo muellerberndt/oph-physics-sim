@@ -10,6 +10,10 @@ from typing import Any
 
 import numpy as np
 
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
+
 
 SOURCE_REPORT_NAMES = (
     "finite_repair_transition_matrix_report.json",
@@ -71,6 +75,7 @@ def frozen_transfer_likelihood_report(
     official_execution = _first_json(roots, "official_likelihood_execution_report.json")
     official_readiness = _first_json(roots, "official_planck_likelihood_readiness_report.json")
     camb_baseline = _first_json(roots, "camb_lcdm_baseline_report.json")
+    finite_transition = _first_json(roots, "finite_repair_transition_matrix_report.json")
     finite_collar = _first_json(roots, "finite_collar_boltzmann_bundle_report.json")
     physical_input_validation = _first_json(roots, "physical_cmb_input_validation.json")
     solver = _solver_contract(cfg, camb_baseline, official_readiness, official_execution)
@@ -94,9 +99,14 @@ def frozen_transfer_likelihood_report(
     )
     blinded_receipt = bool(likelihood["BLINDED_COMPARISON_SETUP_RECEIPT"])
     full_observable_receipt = bool(likelihood["FULL_OBSERVABLE_LIKELIHOOD_RECEIPT"])
-    physical_boltzmann_export_receipt = bool(finite_collar.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False))
+    transition_eligibility = validate_transition_clock_eligibility(finite_transition)
+    physical_boltzmann_export_receipt = bool(
+        transition_eligibility["eligible"]
+        and finite_collar.get("PHYSICAL_BOLTZMANN_EXPORT_CERTIFICATE", False)
+    )
     physical_input_contract_receipt = bool(
-        physical_input_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
+        transition_eligibility["eligible"]
+        and physical_input_validation.get("PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT", False)
     )
     blockers = _unique_strings(
         [
@@ -153,6 +163,7 @@ def frozen_transfer_likelihood_report(
         "upstream_gate_summary": {
             "finite_collar_physical_certificate": physical_boltzmann_export_receipt,
             "physical_cmb_input_contract_receipt": physical_input_contract_receipt,
+            "transition_clock_eligibility": transition_eligibility,
         },
         "FROZEN_SOURCE_MANIFEST_RECEIPT": source_freeze_receipt,
         "SOLVER_ASSUMPTION_PIN_RECEIPT": solver_pin_receipt,

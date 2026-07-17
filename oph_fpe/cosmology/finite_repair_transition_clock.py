@@ -16,6 +16,8 @@ from oph_fpe.cosmology.scalar_repair_semigroup import ScalarRepairSemigroupSpec,
 
 
 DEFAULT_PACKET_FIELDS = ("checkpoint_class", "stable_flag", "s3_sector_class", "repair_load_bucket")
+DETAILED_BALANCE_TOLERANCE = 1.0e-12
+SPECTRAL_GAP_TOLERANCE = 1.0e-12
 DEFAULT_PACKET_FIELD_SWEEP = (
     ("checkpoint", ("checkpoint_class",)),
     ("checkpoint_stable", ("checkpoint_class", "stable_flag")),
@@ -61,6 +63,67 @@ class FiniteRepairTransitionSweepConfig:
     p_value: float = P_STAR
 
 
+def validate_transition_clock_eligibility(report: dict[str, Any] | None) -> dict[str, Any]:
+    """Recompute transition-clock eligibility without trusting cached booleans.
+
+    Historical reports produced before the fail-closed gate can contain
+    ``finite_transition_matrix_ready=true`` even when their primary chain is
+    reducible, periodic, or gapless.  Every consumer must call this validator
+    and use ``eligible`` rather than copying those legacy flags.
+
+    A scalar-semigroup sidecar is accepted only when it embeds the raw primary
+    metadata in ``transition_matrix_certificate``.  Older sidecars lack that
+    evidence and therefore fail closed.
+    """
+
+    source = report if isinstance(report, dict) else {}
+    evidence = source
+    if not isinstance(evidence.get("primary"), dict):
+        certificate = evidence.get("transition_matrix_certificate")
+        evidence = certificate if isinstance(certificate, dict) else {}
+
+    primary = evidence.get("primary")
+    primary = primary if isinstance(primary, dict) else {}
+    state_count = _strict_nonnegative_int(evidence.get("state_count"))
+    transition_count = _strict_nonnegative_int(evidence.get("transition_count"))
+    lambda_2 = _float_or_none(primary.get("lambda_2"))
+    detailed_balance_error = _float_or_none(primary.get("detailed_balance_max_abs_error"))
+
+    checks = {
+        "state_count_at_least_two": state_count is not None and state_count >= 2,
+        "transition_count_positive": transition_count is not None and transition_count > 0,
+        "primary_finite": primary.get("finite") is True,
+        "primary_irreducible": primary.get("irreducible") is True,
+        "primary_aperiodic": primary.get("aperiodic") is True,
+        "primary_spectral_gap": (
+            lambda_2 is not None
+            and 0.0 <= lambda_2 < 1.0 - SPECTRAL_GAP_TOLERANCE
+        ),
+        "primary_detailed_balance": (
+            detailed_balance_error is not None
+            and 0.0 <= detailed_balance_error <= DETAILED_BALANCE_TOLERANCE
+        ),
+    }
+    blockers = [name for name, passed in checks.items() if not passed]
+    return {
+        "schema": "oph_transition_clock_eligibility_v1",
+        "eligible": not blockers,
+        "state_count": state_count,
+        "transition_count": transition_count,
+        "lambda_2": lambda_2,
+        "detailed_balance_max_abs_error": detailed_balance_error,
+        "checks": checks,
+        "blockers": blockers,
+        "legacy_ready_flags_ignored": {
+            "finite_transition_matrix_ready": source.get("finite_transition_matrix_ready"),
+            "finite_lattice_derived": source.get("finite_lattice_derived"),
+            "physical_cmb_eligible_eta_R_empirical": source.get(
+                "physical_cmb_eligible_eta_R_empirical"
+            ),
+        },
+    }
+
+
 def write_finite_repair_transition_clock_report(
     run_dir: Path,
     out_dir: Path,
@@ -99,12 +162,13 @@ def write_finite_repair_transition_clock_report(
     )
     _write_matrix_rows(out_dir / "finite_repair_transition_rows.csv", report)
 
+    eligibility = validate_transition_clock_eligibility(report)
     scalar = scalar_repair_semigroup_report(
         ScalarRepairSemigroupSpec(
             dimension=max(int(report["state_count"]), 2),
             kappa_rep=float(report["primary"]["kappa_rep_estimate"]),
             source="finite_state_transition_matrix",
-            finite_lattice_derived=bool(report["finite_lattice_derived"]),
+            finite_lattice_derived=bool(eligibility["eligible"]),
             matrix_source=str(out_dir / "finite_repair_transition_matrix.npz"),
             p_value=p_value,
         )
@@ -112,7 +176,19 @@ def write_finite_repair_transition_clock_report(
     scalar["transition_matrix_certificate"] = {
         "source_report": str(out_dir / "finite_repair_transition_matrix_report.json"),
         "primary_matrix": report["primary_matrix"],
-        "matrix_ready": bool(report["finite_transition_matrix_ready"]),
+        "state_count": report["state_count"],
+        "transition_count": report["transition_count"],
+        "primary": {
+            "finite": report["primary"].get("finite"),
+            "irreducible": report["primary"].get("irreducible"),
+            "aperiodic": report["primary"].get("aperiodic"),
+            "lambda_2": report["primary"].get("lambda_2"),
+            "detailed_balance_max_abs_error": report["primary"].get(
+                "detailed_balance_max_abs_error"
+            ),
+        },
+        "eligibility": eligibility,
+        "matrix_ready": bool(eligibility["eligible"]),
         "clock_normalization_certified": bool(report["clock_normalization_certified"]),
         "required_repair_step_time_for_kappa_e": report["primary"].get(
             "required_repair_step_time_for_kappa_e"
@@ -122,10 +198,14 @@ def write_finite_repair_transition_clock_report(
         "primary_gamma": report["primary"].get("gamma_continuous"),
     }
     scalar["eligible_for_repair_clock_certificate"] = bool(
-        scalar["eligible_for_repair_clock_certificate"] and report["clock_normalization_certified"]
+        eligibility["eligible"]
+        and scalar["eligible_for_repair_clock_certificate"]
+        and report["clock_normalization_certified"]
     )
     scalar["repair_clock_certificate"] = bool(
-        scalar["repair_clock_certificate"] and report["clock_normalization_certified"]
+        eligibility["eligible"]
+        and scalar["repair_clock_certificate"]
+        and report["clock_normalization_certified"]
     )
     (out_dir / "scalar_repair_semigroup_report.json").write_text(
         json.dumps(scalar, indent=2, default=str),
@@ -301,12 +381,14 @@ def finite_repair_transition_clock_report(
         "reversible_empirical": reversible_summary,
     }
     primary = matrix_summaries[config.primary_matrix]
-    finite_ready = bool(
-        transition_count > 0
-        and len(labels) >= 2
-        and primary.get("finite")
-        and primary.get("lambda_2") is not None
+    eligibility = validate_transition_clock_eligibility(
+        {
+            "state_count": int(len(labels)),
+            "transition_count": int(transition_count),
+            "primary": primary,
+        }
     )
+    finite_ready = bool(eligibility["eligible"])
     rel_error = abs(float(primary["kappa_rep_estimate"]) - target_kappa) / target_kappa if finite_ready else None
     clock_certified = bool(finite_ready and rel_error is not None and rel_error <= 0.05)
     source_status = _clock_normalization_source_status(config.clock_normalization_source)
@@ -338,6 +420,7 @@ def finite_repair_transition_clock_report(
         },
         "matrices": matrix_summaries,
         "primary": primary,
+        "transition_clock_eligibility": eligibility,
         "clock_normalization_candidates": _clock_normalization_candidates(
             Path(run_dir),
             required_step_time=primary.get("required_repair_step_time_for_kappa_e"),
@@ -371,7 +454,6 @@ def finite_repair_transition_clock_report(
             numeric_clock_match,
             source_status,
             primary,
-            config.primary_matrix,
         ),
         "claim_boundary": (
             "Finite observer-visible transition-matrix clock diagnostic. Packet paths are read from "
@@ -386,6 +468,7 @@ def finite_repair_transition_clock_report(
 
 def _sweep_row(fieldset_name: str, report: dict[str, Any]) -> dict[str, Any]:
     primary = report.get("primary", {}) if isinstance(report, dict) else {}
+    eligibility = validate_transition_clock_eligibility(report)
     rel_error = _float_or_none(report.get("relative_error_to_kappa_e"))
     required_step = _float_or_none(primary.get("required_repair_step_time_for_kappa_e"))
     declared_step = _float_or_none(report.get("repair_step_time"))
@@ -403,14 +486,23 @@ def _sweep_row(fieldset_name: str, report: dict[str, Any]) -> dict[str, Any]:
         "clock_normalization_source_status": report.get("clock_normalization_source_status"),
         "state_count": report.get("state_count"),
         "transition_count": report.get("transition_count"),
-        "finite_transition_matrix_ready": bool(report.get("finite_transition_matrix_ready", False)),
-        "finite_lattice_derived": bool(report.get("finite_lattice_derived", False)),
-        "clock_normalization_certified": bool(report.get("clock_normalization_certified", False)),
-        "clock_normalization_numeric_match": bool(report.get("clock_normalization_numeric_match", False)),
-        "repair_scale_hypothesis_clock_match": bool(
-            report.get("repair_scale_hypothesis_clock_match", False)
+        "finite_transition_matrix_ready": bool(eligibility["eligible"]),
+        "finite_lattice_derived": bool(eligibility["eligible"]),
+        "transition_clock_eligibility": eligibility,
+        "clock_normalization_certified": bool(
+            eligibility["eligible"] and report.get("clock_normalization_certified", False)
         ),
-        "repair_clock_certificate": bool(report.get("repair_clock_certificate", False)),
+        "clock_normalization_numeric_match": bool(
+            eligibility["eligible"]
+            and report.get("clock_normalization_numeric_match", False)
+        ),
+        "repair_scale_hypothesis_clock_match": bool(
+            eligibility["eligible"]
+            and report.get("repair_scale_hypothesis_clock_match", False)
+        ),
+        "repair_clock_certificate": bool(
+            eligibility["eligible"] and report.get("repair_clock_certificate", False)
+        ),
         "irreducible": primary.get("irreducible"),
         "aperiodic": primary.get("aperiodic"),
         "lambda_2": primary.get("lambda_2"),
@@ -566,7 +658,11 @@ def _matrix_summary(matrix: np.ndarray, *, delta_p: float, repair_step_time: flo
     kappa = gamma / max(delta_p, 1.0e-30)
     required_dt = gamma * repair_step_time / max(math.e * delta_p, 1.0e-30)
     stationary = _stationary_distribution(matrix)
-    detailed_balance_error = _detailed_balance_error(matrix, stationary)
+    # A reducible chain has no unique stationary law in general.  Comparing the
+    # matrix against whichever unit-eigenvector numpy happens to return can
+    # therefore manufacture a zero detailed-balance residual for an absorbing
+    # class while the full chain is not a valid reversible repair clock.
+    detailed_balance_error = _detailed_balance_error(matrix, stationary) if irreducible else None
     return {
         "finite": bool(np.isfinite(gamma) and np.isfinite(lambda_2)),
         "irreducible": irreducible,
@@ -612,17 +708,22 @@ def _blockers(
     numeric_clock_match: bool,
     source_status: dict[str, Any],
     primary: dict[str, Any],
-    primary_matrix: str,
 ) -> list[str]:
     blockers: list[str] = []
     if not finite_ready:
-        blockers.append("finite transition matrix is missing, degenerate, or numerically invalid")
-    if finite_ready and not primary.get("irreducible", False):
+        blockers.append(
+            "finite transition matrix is not certificate-ready "
+            "(missing, degenerate, nonergodic, or numerically invalid)"
+        )
+    if primary.get("finite") and not primary.get("irreducible", False):
         blockers.append("primary transition matrix is reducible, so it is not a finite repair-matrix certificate")
-    if finite_ready and not primary.get("aperiodic", False):
+    if primary.get("finite") and not primary.get("aperiodic", False):
         blockers.append("primary transition matrix is not certified aperiodic")
-    if primary_matrix == "raw_empirical" and primary.get("detailed_balance_max_abs_error", 0.0) not in (None, 0.0):
-        blockers.append("raw empirical matrix is not a reversible/GNS self-adjoint repair operator")
+    detailed_balance_error = _float_or_none(primary.get("detailed_balance_max_abs_error"))
+    if detailed_balance_error is not None and detailed_balance_error > DETAILED_BALANCE_TOLERANCE:
+        blockers.append(
+            "primary transition matrix is not a reversible/GNS self-adjoint repair operator"
+        )
     if finite_ready and not numeric_clock_match:
         blockers.append("finite transition matrix does not yield kappa_rep=e under the declared repair-step time")
     if finite_ready and numeric_clock_match and not clock_certified:
@@ -773,6 +874,12 @@ def _float_or_none(value: Any) -> float | None:
     except (TypeError, ValueError, IndexError):
         return None
     return result if math.isfinite(result) else None
+
+
+def _strict_nonnegative_int(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return int(value)
 
 
 def _read_yaml(path: Path) -> dict[str, Any]:

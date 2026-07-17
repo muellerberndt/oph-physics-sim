@@ -5,11 +5,11 @@
   "conditional_electroweak": {
     "artifact_present": true,
     "conditional_envelope_GeV": {
-      "MW_pole_gev": [
+      "MW_chart_gev": [
         80.36921677537332,
         80.37741251025889
       ],
-      "MZ_pole_gev": [
+      "MZ_chart_gev": [
         91.18797807794321,
         91.19826930764052
       ],
@@ -26,7 +26,8 @@
     "promotion_blockers": [
       "current_corpus_underdetermination_of_forward_d10_repair_law",
       "d10.same-scheme-anchor-bridge (issue #545)",
-      "source derivation of the selection axioms (issue #521)"
+      "source derivation of the selection axioms (issue #521)",
+      "complete W/Z common-observable scheme map and theory uncertainty"
     ],
     "public_prediction_allowed": false,
     "row_class": "conditional_on_P_and_repair_selection",
@@ -98,7 +99,7 @@
     "reason": "The target-informed weighted-cycle continuation is rejected; this does not falsify finite OPH.",
     "rejection_receipt": true
   },
-  "paper_release_id": "r1534",
+  "paper_release_id": "r1542",
   "physical_particle_prediction_receipt": false,
   "pixel_parameter_profiles": {
     "empirical_hadron_closure": {
@@ -137,9 +138,9 @@
   },
   "source_repository": {
     "checkout_name": "reverse-engineering-reality",
-    "commit": "e6af1459b869616025afed8c751e4938f29da4dd",
+    "commit": "138c92043814738b12b36272b9d4cf84d882aeb0",
     "dirty": true,
-    "untracked_file_count": 13,
-    "worktree_state_sha256": "sha256:e360634c2a87f7c8fa90f30a9ad78eabb6a2de2427cc488036f8e786446a42de"
+    "untracked_file_count": 0,
+    "worktree_state_sha256": "sha256:341e5aa59a1da598771199594720282c576d655b45cdb5203faa0586419b64e9"
   }
 }

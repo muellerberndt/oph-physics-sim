@@ -29,6 +29,9 @@ from oph_fpe.cosmology.finite_covariant_parent import (
     REFINEMENT_CONVERGENCE_RECEIPT,
     STRESS_CLOSURE_RECEIPT,
 )
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 from oph_fpe.cosmology.source_provenance import (
     PROMOTED_CMB_SOURCE_QUANTITIES,
     certify_cmb_source_provenance,
@@ -59,6 +62,9 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         or _first_json(roots, "cosmological_scale_bridge_report.json")
     )
     explicit_source_provenance = _first_json(roots, "cmb_source_provenance_report.json")
+    transition_eligible = bool(
+        validate_transition_clock_eligibility(finite_transition)["eligible"]
+    )
 
     eta_source, eta_value = _eta_R_from_reports(finite_transition, scalar, scale, scalar_quotient)
     gamma_source, gamma_grid = _Gamma_rec_from_reports(finite_transition)
@@ -143,26 +149,44 @@ def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMB
         explicit_recipient_stress_receipt=bool(finite_parent.get(EXPLICIT_RECIPIENT_STRESS_RECEIPT, False)),
         exchange_current_closure_receipt=bool(finite_parent.get(EXCHANGE_CURRENT_CLOSURE_RECEIPT, False)),
         physical_clock_receipt=bool(
-            finite_transition.get("PHYSICAL_CLOCK_RECEIPT", False)
-            or finite_transition.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+            (
+                transition_eligible
+                and (
+                    finite_transition.get("PHYSICAL_CLOCK_RECEIPT", False)
+                    or finite_transition.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
+                )
+            )
             or finite_parent.get("PHYSICAL_CLOCK_RECEIPT", False)
             or finite_parent.get("PHYSICAL_REPAIR_CLOCK_RECEIPT", False)
         ),
         active_fiber_receipt=bool(
             finite_parent.get("ACTIVE_FIBER_RECEIPT", False)
             or finite_parent.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
-            or finite_transition.get("ACTIVE_FIBER_RECEIPT", False)
-            or finite_transition.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+            or (
+                transition_eligible
+                and (
+                    finite_transition.get("ACTIVE_FIBER_RECEIPT", False)
+                    or finite_transition.get("ACTIVE_FIBER_RESPONSE_RECEIPT", False)
+                )
+            )
         ),
         conserved_sector_decomposition_receipt=bool(
             finite_parent.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
-            or finite_transition.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+            or (
+                transition_eligible
+                and finite_transition.get("CONSERVED_SECTOR_DECOMPOSITION_RECEIPT", False)
+            )
         ),
         common_parent_response_pole_receipt=bool(
             finite_parent.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
             or finite_parent.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
-            or finite_transition.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
-            or finite_transition.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+            or (
+                transition_eligible
+                and (
+                    finite_transition.get("COMMON_PARENT_RESPONSE_POLE_RECEIPT", False)
+                    or finite_transition.get("COMMON_PARENT_RESPONSE_RECEIPT", False)
+                )
+            )
         ),
         frozen_likelihood_protocol_receipt=bool(
             finite_parent.get(FROZEN_LIKELIHOOD_PROTOCOL_RECEIPT, False)
@@ -554,15 +578,24 @@ def _eta_R_from_reports(
     scale: dict[str, Any],
     scalar_quotient: dict[str, Any],
 ) -> tuple[str, float | None]:
-    if finite_transition.get("eta_R_finite_lattice_derived", False):
+    transition_eligible = bool(
+        validate_transition_clock_eligibility(finite_transition)["eligible"]
+    )
+    scalar_transition_eligible = bool(
+        validate_transition_clock_eligibility(scalar)["eligible"]
+    )
+    if transition_eligible and finite_transition.get("eta_R_finite_lattice_derived", False):
         return "finite_repair_transition_clock", _float((finite_transition.get("primary") or {}).get("eta_R_estimate"))
     empirical = (finite_transition.get("clock_modes") or {}).get("empirical") or {}
-    if finite_transition.get("eta_R_empirical_finite_lattice_derived", False) or empirical.get(
-        "eta_R_finite_lattice_derived", False
+    if transition_eligible and (
+        finite_transition.get("eta_R_empirical_finite_lattice_derived", False)
+        or empirical.get("eta_R_finite_lattice_derived", False)
     ):
         return "finite_repair_transition_clock", _float(empirical.get("eta_R_value"))
-    if scalar.get("eta_R_finite_lattice_derived", False):
-        return "finite_repair_transition_clock", _float(scalar.get("eta_R"))
+    if scalar_transition_eligible and scalar.get("eta_R_finite_lattice_derived", False):
+        return "finite_repair_transition_clock", _float(
+            (scalar.get("semigroup") or {}).get("eta_R_estimate", scalar.get("eta_R"))
+        )
     params = scale.get("cmb_parameter_readouts") or {}
     if scale.get("scale_compressed_operator_receipt", False) and params.get("eta_R") is not None:
         return "scale_compressed_24_round_finite_ladder", _float(params.get("eta_R"))
@@ -579,7 +612,10 @@ def _Gamma_rec_from_reports(finite_transition: dict[str, Any]) -> tuple[str, np.
     gamma = _float(primary.get("gamma_continuous"))
     if gamma is None:
         return "unknown", None
-    source = "finite_repair_transition_clock" if finite_transition.get("finite_transition_matrix_ready", False) else "diagnostic_proxy"
+    transition_eligible = bool(
+        validate_transition_clock_eligibility(finite_transition)["eligible"]
+    )
+    source = "finite_repair_transition_clock" if transition_eligible else "diagnostic_proxy"
     return source, np.asarray([[0.0, 1.0, gamma]], dtype=float)
 
 

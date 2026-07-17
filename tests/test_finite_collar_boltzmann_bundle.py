@@ -56,6 +56,11 @@ def test_finite_collar_boltzmann_bundle_collects_source_tables_but_blocks_physic
     assert report["B_A_k_a_diagnostic"]["row_count"] == 1
     assert report["rho_A_a_diagnostic"]["row_count"] == 1
     assert report["Gamma_rec_k_a_diagnostic"]["row_count"] == 1
+    assert report["readiness"]["checks"]["finite_transition_matrix_ready"] is False
+    assert (
+        report["Gamma_rec_k_a_diagnostic"]["rows"][0]["finite_transition_matrix_ready"]
+        is False
+    )
     assert report["B_A_k_a_diagnostic"]["diagnostic_blocker"] == "B_A_diagnostic_rows_not_physical_kernel"
     assert "rho_A_eq_diagnostic_rows_not_physical_source" in report["rho_A_a_diagnostic"]["diagnostic_blockers"]
     assert report["Gamma_rec_k_a_diagnostic"]["diagnostic_blocker"] == "Gamma_rec_diagnostic_rows_not_physical_source"
@@ -102,6 +107,7 @@ def test_write_finite_collar_boltzmann_bundle_feeds_comparable_data(tmp_path: Pa
     assert (out / "finite_collar_boltzmann_bundle_report.json").exists()
     assert (out / "finite_collar_B_A_k_a_diagnostic.csv").exists()
     assert written["FINITE_COLLAR_BOLTZMANN_SOURCE_BUNDLE_RECEIPT"] is True
+    assert written["readiness"]["checks"]["finite_transition_matrix_ready"] is False
     assert lane["run_count"] == 1
     assert lane["diagnostic_bundle_receipt_count"] == 1
     assert lane["physical_certificate_count"] == 0

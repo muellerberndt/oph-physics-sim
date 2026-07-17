@@ -76,7 +76,17 @@ def test_physical_cmb_source_readiness_uses_explicit_parent_report(tmp_path: Pat
             "finite_transition_matrix_ready": True,
             "eta_R_finite_lattice_derived": True,
             "finite_lattice_derived": True,
-            "primary": {"eta_R_estimate": 0.035, "gamma_continuous": 0.1},
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "eta_R_estimate": 0.035,
+                "gamma_continuous": 0.1,
+                "finite": True,
+                "irreducible": True,
+                "aperiodic": True,
+                "lambda_2": 0.5,
+                "detailed_balance_max_abs_error": 0.0,
+            },
         },
     )
     _write_json(
@@ -201,6 +211,36 @@ def test_source_readiness_source_hash_ignores_likelihood_side_reports(tmp_path: 
     assert status_a["candidate_artifact_written"] is False
     assert summary["Gamma_rec"] is None
     assert summary_status["readiness_summary_written"] is True
+
+
+def test_source_readiness_rejects_stale_true_transition_flags(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "finite_repair_transition_matrix_report.json",
+        {
+            "finite_transition_matrix_ready": True,
+            "finite_lattice_derived": True,
+            "eta_R_finite_lattice_derived": True,
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "finite": True,
+                "irreducible": False,
+                "aperiodic": False,
+                "lambda_2": 1.0,
+                "detailed_balance_max_abs_error": None,
+                "eta_R_estimate": 0.035,
+                "gamma_continuous": 0.1,
+            },
+        },
+    )
+
+    summary, _status = build_finite_parent_readiness_summary_from_reports([run])
+
+    assert summary["source_gate_status"]["finite_transition_ready"] is False
+    assert summary["transition_clock_eligibility"]["eligible"] is False
+    assert "primary_irreducible" in summary["transition_clock_eligibility"]["blockers"]
 
 
 def _write_json(path: Path, data: dict) -> None:

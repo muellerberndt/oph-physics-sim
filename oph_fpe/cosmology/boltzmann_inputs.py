@@ -7,6 +7,9 @@ from statistics import fmean
 from typing import Any
 
 from oph_fpe.cosmology.anomaly_abundance_selector import CONDITIONAL_SOURCE_STATE
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 
 
 def oph_boltzmann_input_report(
@@ -257,6 +260,7 @@ def _b_a_parent_rows(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _finite_repair_clock_rows(reports: list[dict[str, Any]], a_grid: list[float]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for report_index, report in enumerate(report for report in reports if report):
+        eligibility = validate_transition_clock_eligibility(report)
         primary = report.get("primary", {}) or {}
         gamma = _float_or_none(primary.get("gamma_continuous"))
         lambda_2 = _float_or_none(primary.get("lambda_2"))
@@ -286,11 +290,19 @@ def _finite_repair_clock_rows(reports: list[dict[str, Any]], a_grid: list[float]
                     "primary_matrix": report.get("primary_matrix"),
                     "state_count": report.get("state_count"),
                     "transition_count": report.get("transition_count"),
-                    "finite_transition_matrix_ready": bool(report.get("finite_transition_matrix_ready", False)),
-                    "finite_lattice_derived": bool(report.get("finite_lattice_derived", False)),
-                    "clock_normalization_certified": bool(report.get("clock_normalization_certified", False)),
-                    "repair_clock_certificate": bool(report.get("repair_clock_certificate", False)),
-                    "physical_cmb_prediction": bool(report.get("physical_cmb_prediction", False)),
+                    "finite_transition_matrix_ready": bool(eligibility["eligible"]),
+                    "finite_lattice_derived": bool(eligibility["eligible"]),
+                    "transition_clock_eligibility": eligibility,
+                    "clock_normalization_certified": bool(
+                        eligibility["eligible"]
+                        and report.get("clock_normalization_certified", False)
+                    ),
+                    "repair_clock_certificate": bool(
+                        eligibility["eligible"] and report.get("repair_clock_certificate", False)
+                    ),
+                    "physical_cmb_prediction": bool(
+                        eligibility["eligible"] and report.get("physical_cmb_prediction", False)
+                    ),
                     "source": "finite_repair_transition_matrix_diagnostic",
                 }
             )

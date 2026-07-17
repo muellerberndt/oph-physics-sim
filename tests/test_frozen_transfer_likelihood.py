@@ -36,6 +36,20 @@ def test_frozen_transfer_likelihood_closure_passes_with_complete_frozen_lane(tmp
     run.mkdir()
     _write_source_allowlist(run)
     _write_json(
+        run / "finite_repair_transition_matrix_report.json",
+        {
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "finite": True,
+                "irreducible": True,
+                "aperiodic": True,
+                "lambda_2": 0.5,
+                "detailed_balance_max_abs_error": 0.0,
+            },
+        },
+    )
+    _write_json(
         run / "camb_lcdm_baseline_report.json",
         {
             "CDM_LIMIT_BOLTZMANN_RECEIPT": True,
@@ -114,6 +128,43 @@ def test_frozen_transfer_likelihood_closure_passes_with_complete_frozen_lane(tmp
     assert report["frozen_source_hash"].startswith("sha256:")
     assert (out / "frozen_transfer_likelihood_report.json").exists()
     assert (out / "frozen_source_manifest.csv").exists()
+
+    _write_json(
+        run / "finite_repair_transition_matrix_report.json",
+        {
+            "finite_transition_matrix_ready": True,
+            "finite_lattice_derived": True,
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "finite": True,
+                "irreducible": False,
+                "aperiodic": False,
+                "lambda_2": 1.0,
+                "detailed_balance_max_abs_error": 0.0,
+            },
+        },
+    )
+    stale_report = frozen_transfer_likelihood_report(
+        [run],
+        config=FrozenTransferConfig(
+            solver="CAMB",
+            solver_version_pin="1.5.0",
+            source_plugin_hash=_hash("8"),
+            recombination_assumption="HyRec-compatible CAMB recombination pin",
+            neutrino_assumption="sum_mnu_0.06eV_one_massive_two_massless",
+            tolerance=1.0e-5,
+        ),
+    )
+
+    assert stale_report["FROZEN_PHYSICAL_SPECTRUM_RECEIPT"] is False
+    assert stale_report["FROZEN_TRANSFER_LIKELIHOOD_CLOSURE_RECEIPT"] is False
+    assert "physical_boltzmann_export_not_certified" in stale_report["blockers"]
+    assert "physical_cmb_input_contract_not_certified" in stale_report["blockers"]
+    assert (
+        stale_report["upstream_gate_summary"]["transition_clock_eligibility"]["eligible"]
+        is False
+    )
 
 
 def _write_source_allowlist(run: Path) -> None:

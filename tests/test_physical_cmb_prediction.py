@@ -21,8 +21,23 @@ def test_physical_cmb_input_report_blocks_current_diagnostics(tmp_path: Path):
         run / "finite_repair_transition_matrix_report.json",
         {
             "finite_transition_matrix_ready": True,
-            "eta_R_finite_lattice_derived": False,
-            "primary": {"eta_R_estimate": 0.035, "gamma_continuous": 0.1},
+            "finite_lattice_derived": True,
+            "eta_R_finite_lattice_derived": True,
+            "PHYSICAL_CLOCK_RECEIPT": True,
+            "ACTIVE_FIBER_RECEIPT": True,
+            "CONSERVED_SECTOR_DECOMPOSITION_RECEIPT": True,
+            "COMMON_PARENT_RESPONSE_POLE_RECEIPT": True,
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "finite": True,
+                "irreducible": False,
+                "aperiodic": False,
+                "lambda_2": 1.0,
+                "detailed_balance_max_abs_error": 0.0,
+                "eta_R_estimate": 0.035,
+                "gamma_continuous": 0.1,
+            },
         },
     )
     _write_json(
@@ -49,11 +64,21 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
         {
             "finite_transition_matrix_ready": True,
             "eta_R_finite_lattice_derived": True,
+            "state_count": 2,
+            "transition_count": 48,
             "PHYSICAL_CLOCK_RECEIPT": True,
             "ACTIVE_FIBER_RECEIPT": True,
             "CONSERVED_SECTOR_DECOMPOSITION_RECEIPT": True,
             "COMMON_PARENT_RESPONSE_POLE_RECEIPT": True,
-            "primary": {"eta_R_estimate": 0.035, "gamma_continuous": 0.1},
+            "primary": {
+                "eta_R_estimate": 0.035,
+                "gamma_continuous": 0.1,
+                "finite": True,
+                "irreducible": True,
+                "aperiodic": True,
+                "lambda_2": 0.5,
+                "detailed_balance_max_abs_error": 0.0,
+            },
         },
     )
     _write_json(

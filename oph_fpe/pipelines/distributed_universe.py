@@ -12,6 +12,9 @@ import numpy as np
 import yaml
 
 from oph_fpe.experiments import load_config
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 from oph_fpe.observers.semantic_clock import (
     OBSERVER_KINDS,
     distributed_observer_uid,
@@ -2155,7 +2158,7 @@ def _write_global_finite_cmb_source_reports(
         and len(eta_values) == expected
         and len(gamma_values) == expected
         and all(
-            bool(report.get("finite_transition_matrix_ready", False))
+            bool(validate_transition_clock_eligibility(report)["eligible"])
             and (
                 bool(report.get("eta_R_finite_lattice_derived", False))
                 or bool(report.get("eta_R_empirical_finite_lattice_derived", False))

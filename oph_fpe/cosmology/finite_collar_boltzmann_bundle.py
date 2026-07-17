@@ -9,6 +9,9 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.cosmology.physical_cmb_contract import validate_physical_cmb_contract
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 from oph_fpe.cosmology.physical_cmb_prediction import build_physical_cmb_input_contract
 
 
@@ -202,6 +205,7 @@ def _gamma_rows(reports: list[dict[str, Any]], a_grid: list[float]) -> list[dict
     if not a_grid:
         a_grid = [1.0 / 1100.0, 0.01, 0.1, 1.0]
     for report_index, report in enumerate(reports):
+        eligibility = validate_transition_clock_eligibility(report)
         primary = report.get("primary") or {}
         gamma = _float(primary.get("gamma_continuous"))
         if gamma is None:
@@ -219,8 +223,12 @@ def _gamma_rows(reports: list[dict[str, Any]], a_grid: list[float]) -> list[dict
                     "lambda_2": _float(primary.get("lambda_2")),
                     "eta_R_estimate": _float(primary.get("eta_R_estimate")),
                     "n_s_estimate": _float(primary.get("n_s_estimate")),
-                    "clock_normalization_certified": bool(report.get("clock_normalization_certified", False)),
-                    "finite_transition_matrix_ready": bool(report.get("finite_transition_matrix_ready", False)),
+                    "clock_normalization_certified": bool(
+                        eligibility["eligible"]
+                        and report.get("clock_normalization_certified", False)
+                    ),
+                    "finite_transition_matrix_ready": bool(eligibility["eligible"]),
+                    "transition_clock_eligibility": eligibility,
                     "physical_clock": False,
                 }
             )
@@ -271,7 +279,8 @@ def _readiness(
         "native_repair_generator_receipt": contract_passed,
         "static_dynamic_response_consistency_receipt": contract_passed,
         "finite_transition_matrix_ready": any(
-            bool(report.get("finite_transition_matrix_ready", False)) for report in transition_reports
+            bool(validate_transition_clock_eligibility(report)["eligible"])
+            for report in transition_reports
         ),
         "physical_k_units_calibrated": all(
             bool(row.get("physical_calibration"))

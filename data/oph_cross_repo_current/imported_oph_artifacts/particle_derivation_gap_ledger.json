@@ -124,7 +124,7 @@
     },
     "v_over_E_cell_source": "2.5797040595276223506583341903922018695490035369903290256096683452314630559578761079150341073645683725521032233E-17"
   },
-  "generated_utc": "2026-07-12T03:22:10Z",
+  "generated_utc": "2026-07-12T03:56:19Z",
   "p_trunk": {
     "P": "1.63097210492078846050203640439",
     "alpha_inv": "136.994020662724205139718642793",
@@ -270,11 +270,13 @@
       "trace_lift_claim_label": "no_go_confirmed_new_source_needed"
     },
     {
-      "current_boundary": "The target-free source equations fix the two ordered profile rays but leave their up/down positive spans independent. The compatible fiber is (R_{>0})^2, and its free rescaling action changes the affine sector means and mass textures. The edge path begins at a hand-written transport template and does not select either modulus.",
+      "axiom_level_obstruction_artifact": "particles/runs/flavor/quark_axiom_level_yukawa_moduli_nonidentifiability.json",
+      "axiom_level_obstruction_certified": true,
+      "current_boundary": "The target-free source equations fix the two ordered profile rays but leave their up/down positive spans independent. The compatible fiber is (R_{>0})^2, and its free rescaling action changes the affine sector means and mass textures. The edge path begins at a hand-written transport template and does not select either modulus. The stronger Axioms-1--5 theorem constructs physically inequivalent Yukawa packages with the same MAR score, so the stated MAR order does not break this action.",
       "github_issue": 377,
       "id": "quark.source-spread-identifiability",
       "lane": "Quarks",
-      "next_action": "Keep all numeric quark rows suppressed. Reopen only for two independent source normalizations, or an equivalent source map into (R_{>0})^2, with sector attachment and refinement compatibility.",
+      "next_action": "Keep all numeric quark rows suppressed. With additional axioms excluded, reopen only if a theorem from the existing MaxEnt/refinement data refutes the equal-MAR-score counterfamily and emits both spreads.",
       "obstruction_artifact": "particles/runs/flavor/quark_sigma_source_nonidentifiability_obstruction.json",
       "related_github_issues": [
         379,
@@ -288,7 +290,7 @@
       "title": "Classify the source-only up/down quark spread fiber"
     },
     {
-      "current_boundary": "Finite renormalizations and scale changes preserve physical amplitudes while changing running-mass coordinates, so a source theory cannot select an external subtraction convention without a section. The stored six-row packet mixes light MSbar coordinates at 2 GeV, charm and bottom self-scale coordinates, and a separate top pole extraction coordinate. Its GeV-valued matrices are mass textures, not dimensionless physical Yukawa matrices.",
+      "current_boundary": "Finite renormalizations and scale changes preserve physical amplitudes while changing running-mass coordinates. Declaring an external comparison chart is allowed, but the current source signature also fails to emit the underlying RGI mass vector or six-flavor Yukawa trajectory. The stored six-row packet mixes light MSbar coordinates at 2 GeV, charm and bottom self-scale coordinates, and a separate top pole extraction coordinate. Its GeV-valued matrices are mass textures, not dimensionless physical Yukawa matrices.",
       "github_issue": 381,
       "id": "quark.running-scheme-and-yukawa-normalization",
       "lane": "Quarks",

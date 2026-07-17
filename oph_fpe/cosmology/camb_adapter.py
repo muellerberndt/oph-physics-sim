@@ -13,6 +13,9 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.cosmology.cmb_compare import load_planck_tt_binned
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 from oph_fpe.cosmology.selector_elimination import selector_elimination_report
 from oph_fpe.cosmology.unique_predictions import unique_prediction_gate_report
 
@@ -1032,9 +1035,12 @@ def finite_repair_clock_cmb_camb_report(
     }
     binned_rows = _multi_model_binned_rows(benchmark_rows, model_curves)
     curve_rows = _curve_rows(ell_lcdm, {name: values for name, (_ell, values) in model_curves.items()})
-    finite_matrix_ready = bool(finite_clock_report.get("finite_transition_matrix_ready", False))
-    finite_lattice_derived = bool(finite_clock_report.get("finite_lattice_derived", False))
-    repair_clock_certificate = bool(finite_clock_report.get("repair_clock_certificate", False))
+    transition_eligibility = validate_transition_clock_eligibility(finite_clock_report)
+    finite_matrix_ready = bool(transition_eligibility["eligible"])
+    finite_lattice_derived = finite_matrix_ready
+    repair_clock_certificate = bool(
+        finite_matrix_ready and finite_clock_report.get("repair_clock_certificate", False)
+    )
     selector_receipt = bool(selector_report.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False))
     return {
         "mode": "finite_repair_clock_cmb_camb_transfer_v0",
@@ -1050,15 +1056,19 @@ def finite_repair_clock_cmb_camb_report(
             "kappa_rep": kappa_finite,
             "matrix_ready": finite_matrix_ready,
             "finite_lattice_derived": finite_lattice_derived,
+            "transition_clock_eligibility": transition_eligibility,
             "repair_clock_certificate": repair_clock_certificate,
             "clock_normalization_certified": bool(
-                finite_clock_report.get("clock_normalization_certified", False)
+                finite_matrix_ready
+                and finite_clock_report.get("clock_normalization_certified", False)
             ),
             "clock_normalization_numeric_match": bool(
-                finite_clock_report.get("clock_normalization_numeric_match", False)
+                finite_matrix_ready
+                and finite_clock_report.get("clock_normalization_numeric_match", False)
             ),
             "repair_scale_hypothesis_clock_match": bool(
-                finite_clock_report.get("repair_scale_hypothesis_clock_match", False)
+                finite_matrix_ready
+                and finite_clock_report.get("repair_scale_hypothesis_clock_match", False)
             ),
             "clock_normalization_source": finite_clock_report.get("clock_normalization_source"),
             "clock_normalization_source_status": finite_clock_report.get(
@@ -1095,6 +1105,19 @@ def finite_repair_clock_cmb_camb_report(
             "benchmark_sha256": benchmark_sha256,
             "finite_repair_clock_report_sha256": _sha256_json(finite_clock_report),
             "selector_elimination_target_sha256": _sha256_json(selector_report),
+        },
+        "transition_matrix_certificate": {
+            "state_count": finite_clock_report.get("state_count"),
+            "transition_count": finite_clock_report.get("transition_count"),
+            "primary": {
+                "finite": (finite_clock_report.get("primary") or {}).get("finite"),
+                "irreducible": (finite_clock_report.get("primary") or {}).get("irreducible"),
+                "aperiodic": (finite_clock_report.get("primary") or {}).get("aperiodic"),
+                "lambda_2": (finite_clock_report.get("primary") or {}).get("lambda_2"),
+                "detailed_balance_max_abs_error": (
+                    finite_clock_report.get("primary") or {}
+                ).get("detailed_balance_max_abs_error"),
+            },
         },
         "comparison": comparisons,
         "acoustic_preservation": _acoustic_ratio_summary(ell_lcdm, tt_lcdm, tt_ir),

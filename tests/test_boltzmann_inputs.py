@@ -96,7 +96,11 @@ def test_write_oph_boltzmann_input_report_scans_run_dirs(tmp_path: Path):
             "repair_clock_certificate": False,
             "physical_cmb_prediction": False,
             "primary": {
+                "finite": True,
+                "irreducible": True,
+                "aperiodic": True,
                 "lambda_2": 0.2,
+                "detailed_balance_max_abs_error": 0.0,
                 "gamma_continuous": 0.032,
                 "gamma_discrete_one_minus_lambda2": 0.8,
                 "kappa_rep_estimate": 2.47,
@@ -118,6 +122,7 @@ def test_write_oph_boltzmann_input_report_scans_run_dirs(tmp_path: Path):
     assert report["readiness"]["checks"]["finite_transition_clock_certified"] is False
     assert report["readiness"]["checks"]["anomaly_abundance_source_receipt"] is False
     assert report["finite_repair_clock_diagnostic"]["rows"][0]["Gamma_rec_over_H_diagnostic"] == 0.032
+    assert report["finite_repair_clock_diagnostic"]["rows"][0]["finite_transition_matrix_ready"] is True
     assert (tmp_path / "out" / "oph_boltzmann_input_report.json").exists()
     assert (tmp_path / "out" / "oph_boltzmann_input_report.md").exists()
     assert (tmp_path / "out" / "oph_boltzmann_cdm_limit_rows.csv").exists()

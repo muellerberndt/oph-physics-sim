@@ -1372,13 +1372,13 @@ def test_export_measurement_pack_copies_source_side_cosmology_reports(tmp_path: 
     assert claims["no_g_clock_bridge_G_SI_checksum"] == 6.6743e-11
     assert claims["parent_collar_local_density_receipt"] is True
     assert claims["parent_collar_theorem_grade"] is False
-    assert claims["finite_transition_matrix_ready"] is True
+    assert claims["finite_transition_matrix_ready"] is False
     assert claims["finite_transition_clock_certified"] is False
     assert claims["finite_transition_eta_R_finite_lattice_derived"] is False
     assert claims["boltzmann_input_table_written"] is True
     assert claims["boltzmann_finite_repair_clock_rows_emitted"] is True
     assert claims["finite_repair_clock_cmb_curve_comparable"] is True
-    assert claims["finite_repair_clock_cmb_finite_lattice_clock"] is True
+    assert claims["finite_repair_clock_cmb_finite_lattice_clock"] is False
     assert claims["finite_repair_clock_cmb_physical_prediction"] is False
     assert claims["camb_lcdm_cdm_limit_boltzmann_receipt"] is True
     assert claims["camb_lcdm_oph_anomaly_module_ready"] is False
@@ -1797,6 +1797,67 @@ def test_export_measurement_pack_copies_cmb_promotion_ledger(tmp_path: Path) -> 
     assert report["claims"]["cmb_promotion_current_claim_tier"] == "SPECTRUM_DIAGNOSTIC"
     assert report["claims"]["cmb_promotion_conditional_scale_bridge_ready"] is True
     assert report["claims"]["cmb_promotion_physical_prediction_receipt"] is False
+
+
+def test_measurement_pack_rejects_stale_transition_dependent_physical_claims(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "pack"
+    run.mkdir()
+    _write_json(
+        run / "finite_repair_transition_matrix_report.json",
+        {
+            "finite_transition_matrix_ready": True,
+            "finite_lattice_derived": True,
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "finite": True,
+                "irreducible": False,
+                "aperiodic": False,
+                "lambda_2": 1.0,
+                "detailed_balance_max_abs_error": 0.0,
+            },
+        },
+    )
+    _write_json(
+        run / "physical_cmb_input_report.json",
+        {
+            "PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT": True,
+            "physical_cmb_prediction_eligible": True,
+        },
+    )
+    _write_json(
+        run / "physical_cmb_promotion_audit_report.json",
+        {"physical_cmb_promotion_ready": True},
+    )
+    _write_json(
+        run / "physical_cmb_frontier_report.json",
+        {"physical_cmb_prediction_ready": True},
+    )
+    _write_json(
+        run / "physical_cmb_output_comparison_report.json",
+        {"PHYSICAL_CMB_PREDICTION_RECEIPT": True},
+    )
+    _write_json(
+        run / "cmb_promotion_ledger_report.json",
+        {
+            "conditional_physical_cmb_source_ready": True,
+            "oph_native_physical_cmb_source_ready": True,
+        },
+    )
+
+    claims = export_measurement_pack([run], out)["claims"]
+
+    assert claims["finite_transition_matrix_ready"] is False
+    assert claims["physical_cmb_input_contract_receipt"] is False
+    assert claims["physical_cmb_input_prediction_eligible"] is False
+    assert claims["physical_cmb_promotion_ready"] is False
+    assert claims["physical_cmb_frontier_ready"] is False
+    assert claims["physical_cmb_output_prediction_receipt"] is False
+    assert claims["cmb_promotion_conditional_source_ready"] is False
+    assert claims["cmb_promotion_oph_native_source_ready"] is False
 
 
 def _write_json(path: Path, data: dict) -> None:

@@ -590,7 +590,17 @@ def _write_finite_cmb_sources(run_dir: Path, *, a_zeta: float, eta: float, gamma
         {
             "finite_transition_matrix_ready": True,
             "eta_R_finite_lattice_derived": True,
-            "primary": {"eta_R_estimate": eta, "gamma_continuous": gamma},
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "eta_R_estimate": eta,
+                "gamma_continuous": gamma,
+                "finite": True,
+                "irreducible": True,
+                "aperiodic": True,
+                "lambda_2": 0.5,
+                "detailed_balance_max_abs_error": 0.0,
+            },
         },
     )
     _write_json(

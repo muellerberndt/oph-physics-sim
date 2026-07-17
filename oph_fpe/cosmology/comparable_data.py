@@ -10,6 +10,9 @@ import numpy as np
 
 from oph_fpe.bulk.h3_chart import h3_distance_matrix
 from oph_fpe.bulk.observer_reconstruction import neutral_dimension_report_from_distance
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 
 
 RELEVANT_REPORTS = (
@@ -707,6 +710,12 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         or observer_modular.get("observer_h3_object_population_receipt", False)
         or bulk_proof.get("observer_h3_object_population_receipt", False)
     )
+    scalar_transition_eligibility = validate_transition_clock_eligibility(
+        scalar_repair_semigroup
+    )
+    finite_clock_cmb_eligibility = validate_transition_clock_eligibility(
+        finite_clock_cmb_camb
+    )
 
     row = {
         "run_path": str(run_path),
@@ -1167,16 +1176,19 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "repair_clock_blocker_count": len(repair_clock.get("blockers", [])) if repair_clock else None,
         "scalar_repair_semigroup_written": bool(scalar_repair_semigroup),
         "scalar_repair_semigroup_target_receipt": bool(
-            scalar_repair_semigroup.get("SEMIGROUP_TARGET_RECEIPT", False)
+            scalar_transition_eligibility["eligible"]
+            and scalar_repair_semigroup.get("SEMIGROUP_TARGET_RECEIPT", False)
         ),
         "scalar_repair_semigroup_repair_clock_certificate": bool(
-            scalar_repair_semigroup.get("repair_clock_certificate", False)
+            scalar_transition_eligibility["eligible"]
+            and scalar_repair_semigroup.get("repair_clock_certificate", False)
         ),
         "scalar_repair_semigroup_eligible_for_certificate": bool(
-            scalar_repair_semigroup.get("eligible_for_repair_clock_certificate", False)
+            scalar_transition_eligibility["eligible"]
+            and scalar_repair_semigroup.get("eligible_for_repair_clock_certificate", False)
         ),
         "scalar_repair_semigroup_finite_lattice_derived": bool(
-            scalar_repair_semigroup.get("finite_lattice_derived", False)
+            scalar_transition_eligibility["eligible"]
         ),
         "scalar_repair_semigroup_source": scalar_repair_semigroup.get("source"),
         "scalar_repair_semigroup_dimension": scalar_repair_semigroup.get("dimension"),
@@ -1215,7 +1227,8 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "primary_lambda_2",
         ),
         "scalar_repair_semigroup_transition_clock_certified": bool(
-            _nested(
+            scalar_transition_eligibility["eligible"]
+            and _nested(
                 scalar_repair_semigroup,
                 "transition_matrix_certificate",
                 "clock_normalization_certified",
@@ -2782,16 +2795,19 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             finite_clock_cmb_camb.get("measurement_comparable_cmb_curve", False)
         ),
         "finite_clock_cmb_camb_physical_cmb_prediction": bool(
-            finite_clock_cmb_camb.get("physical_cmb_prediction", False)
+            finite_clock_cmb_eligibility["eligible"]
+            and finite_clock_cmb_camb.get("physical_cmb_prediction", False)
         ),
         "finite_clock_cmb_camb_transfer_receipt": bool(
             finite_clock_cmb_camb.get("screen_camb_transfer_receipt", False)
         ),
         "finite_clock_cmb_camb_finite_lattice_clock_derived": bool(
-            finite_clock_cmb_camb.get("finite_lattice_clock_derived", False)
+            finite_clock_cmb_eligibility["eligible"]
+            and finite_clock_cmb_camb.get("finite_lattice_clock_derived", False)
         ),
         "finite_clock_cmb_camb_repair_clock_certificate": bool(
-            finite_clock_cmb_camb.get("repair_clock_certificate", False)
+            finite_clock_cmb_eligibility["eligible"]
+            and finite_clock_cmb_camb.get("repair_clock_certificate", False)
         ),
         "finite_clock_cmb_camb_clock_numeric_match": bool(
             _nested(

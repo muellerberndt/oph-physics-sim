@@ -3,8 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oph_fpe.cosmology.finite_repair_transition_clock import write_finite_repair_transition_clock_report
-from oph_fpe.cosmology.finite_repair_transition_clock import write_finite_repair_transition_clock_sweep_report
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+    write_finite_repair_transition_clock_report,
+    write_finite_repair_transition_clock_sweep_report,
+)
 from oph_fpe.cosmology.repair_clock import repair_clock_report
 
 
@@ -100,6 +103,170 @@ def test_finite_transition_clock_sweep_reports_best_quotient(tmp_path: Path) -> 
     assert report["physical_cmb_prediction"] is False
     assert (out / "finite_repair_transition_clock_sweep_report.json").exists()
     assert (out / "finite_repair_transition_clock_sweep_rows.csv").exists()
+
+
+def test_reducible_transition_chain_cannot_emit_physical_clock_certificate(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [
+            [0, 0, 0],
+            [1, 1, 1],
+        ],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    assert report["state_count"] == 2
+    assert report["primary"]["irreducible"] is False
+    assert report["primary"]["aperiodic"] is False
+    assert report["primary"]["detailed_balance_max_abs_error"] is None
+    assert report["finite_transition_matrix_ready"] is False
+    assert report["finite_lattice_derived"] is False
+    assert report["repair_clock_empirical_certificate"] is False
+    assert report["eta_R_empirical_finite_lattice_derived"] is False
+    assert report["physical_cmb_eligible_eta_R_empirical"] is False
+    assert any("reducible" in blocker for blocker in report["blockers"])
+    assert any("aperiodic" in blocker for blocker in report["blockers"])
+
+
+def test_periodic_transition_chain_cannot_emit_physical_clock_certificate(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [
+            [0, 1, 0, 1],
+            [1, 0, 1, 0],
+        ],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    assert report["primary"]["irreducible"] is True
+    assert report["primary"]["aperiodic"] is False
+    assert report["primary"]["lambda_2"] == 1.0
+    assert report["finite_transition_matrix_ready"] is False
+    assert report["repair_clock_empirical_certificate"] is False
+    assert report["physical_cmb_eligible_eta_R_empirical"] is False
+    assert any("aperiodic" in blocker for blocker in report["blockers"])
+
+
+def test_nonreversible_transition_chain_cannot_emit_physical_clock_certificate(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [
+            [0, 0, 1, 1, 2, 2, 0, 0],
+        ],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    assert report["primary"]["irreducible"] is True
+    assert report["primary"]["aperiodic"] is True
+    assert report["primary"]["lambda_2"] < 1.0
+    assert report["primary"]["detailed_balance_max_abs_error"] > 1.0e-12
+    assert report["finite_transition_matrix_ready"] is False
+    assert report["repair_clock_empirical_certificate"] is False
+    assert report["physical_cmb_eligible_eta_R_empirical"] is False
+    assert any("reversible/GNS" in blocker for blocker in report["blockers"])
+
+
+def test_cached_true_flags_cannot_override_invalid_transition_chain_metadata() -> None:
+    stale_report = {
+        "finite_transition_matrix_ready": True,
+        "finite_lattice_derived": True,
+        "physical_cmb_eligible_eta_R_empirical": True,
+        "state_count": 2,
+        "transition_count": 48,
+        "primary": {
+            "finite": True,
+            "irreducible": False,
+            "aperiodic": False,
+            "lambda_2": 1.0,
+            "detailed_balance_max_abs_error": None,
+        },
+    }
+
+    eligibility = validate_transition_clock_eligibility(stale_report)
+
+    assert eligibility["eligible"] is False
+    assert eligibility["legacy_ready_flags_ignored"]["finite_transition_matrix_ready"] is True
+    assert "primary_irreducible" in eligibility["blockers"]
+    assert "primary_aperiodic" in eligibility["blockers"]
+    assert "primary_spectral_gap" in eligibility["blockers"]
+    assert "primary_detailed_balance" in eligibility["blockers"]
+
+
+def test_transition_clock_eligibility_accepts_complete_valid_metadata() -> None:
+    eligibility = validate_transition_clock_eligibility(
+        {
+            "state_count": 2,
+            "transition_count": 48,
+            "primary": {
+                "finite": True,
+                "irreducible": True,
+                "aperiodic": True,
+                "lambda_2": 0.5,
+                "detailed_balance_max_abs_error": 0.0,
+            },
+        }
+    )
+
+    assert eligibility["eligible"] is True
+    assert eligibility["blockers"] == []
+
+
+def test_repair_clock_consumer_rejects_legacy_scalar_sidecar_without_raw_evidence(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "scalar_repair_semigroup_report.json").write_text(
+        json.dumps(
+            {
+                "source": "finite_state_transition_matrix",
+                "finite_lattice_derived": True,
+                "eligible_for_repair_clock_certificate": True,
+                "repair_clock_certificate": True,
+                "semigroup_controls_passed": True,
+                "semigroup": {
+                    "kappa_rep_estimate": 2.718281828459045,
+                    "eta_R_estimate": 0.035,
+                },
+                "transition_matrix_certificate": {"matrix_ready": True},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = repair_clock_report([run])
+
+    assert report["summary"]["estimator_count"] == 1
+    assert report["rows"][0]["finite_lattice_derived"] is False
+    assert report["rows"][0]["eligible_for_certificate"] is False
+    assert report["rows"][0]["transition_clock_eligibility"]["eligible"] is False
 
 
 def _write_observer_views(path: Path, paths: list[list[int]]) -> None:

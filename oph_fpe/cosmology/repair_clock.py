@@ -10,6 +10,9 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.cosmology.finite_repair_transition_clock import (
+    validate_transition_clock_eligibility,
+)
 
 
 def repair_clock_report(
@@ -339,7 +342,8 @@ def _scalar_repair_semigroup_rows(
         eta = float(kappa * delta_p)
     rel_error = abs(kappa - target_kappa) / max(abs(target_kappa), 1.0e-30) if kappa is not None else None
     source = report.get("source")
-    finite_lattice_derived = bool(report.get("finite_lattice_derived", False))
+    transition_eligibility = validate_transition_clock_eligibility(report)
+    finite_lattice_derived = bool(transition_eligibility["eligible"])
     eligible = bool(
         report.get("eligible_for_repair_clock_certificate", False)
         and finite_lattice_derived
@@ -351,7 +355,7 @@ def _scalar_repair_semigroup_rows(
         reason = "finite_state_transition_matrix_semigroup_certificate"
     elif source == "declared_euler_repair_time_target":
         reason = "declared Euler repair-time target; algebraic check only, not finite-lattice derived"
-    elif source == "finite_state_transition_matrix" and transition_certificate.get("matrix_ready"):
+    elif source == "finite_state_transition_matrix" and transition_eligibility["eligible"]:
         reason = "finite transition matrix present, but repair-clock normalization is not certified"
     else:
         reason = "scalar semigroup report is not certificate-eligible"
@@ -372,8 +376,12 @@ def _scalar_repair_semigroup_rows(
             "centered_scalar_relaxation": semigroup.get("centered_scalar_relaxation"),
             "contractive_at_t1": semigroup.get("contractive_at_t1"),
             "semigroup_controls_passed": report.get("semigroup_controls_passed"),
-            "transition_matrix_ready": transition_certificate.get("matrix_ready"),
-            "transition_clock_normalization_certified": transition_certificate.get("clock_normalization_certified"),
+            "transition_matrix_ready": bool(transition_eligibility["eligible"]),
+            "transition_clock_eligibility": transition_eligibility,
+            "transition_clock_normalization_certified": bool(
+                transition_eligibility["eligible"]
+                and transition_certificate.get("clock_normalization_certified")
+            ),
             "transition_required_repair_step_time_for_kappa_e": transition_certificate.get(
                 "required_repair_step_time_for_kappa_e"
             ),

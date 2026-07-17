@@ -44,6 +44,12 @@
       "scale": null
     }
   },
+  "external_chart_boundary": {
+    "allowed_role": "After OPH emits an RG-covariant physical trajectory or invariant, MSbar and a reporting scale may be declared as an external comparison chart.",
+    "choosing_MSbar_is_a_physical_axiom": false,
+    "choosing_a_reporting_scale_is_a_physical_axiom": false,
+    "current_blocker": "The physical trajectory/invariant is absent; merely naming a chart cannot supply its boundary data."
+  },
   "forbidden_promotions": [
     "call_a_declared_MSbar_coordinate_source_selected",
     "treat_a_finite_order_matching_scale_as_an_OPH_observable",
@@ -61,7 +67,7 @@
     "source_object": "X(P): source-emitted physical quark data or physical amplitudes",
     "target_action": "nontrivial"
   },
-  "generated_utc": "2026-07-12T03:23:13Z",
+  "generated_utc": "2026-07-13T06:09:33Z",
   "github_issues": [
     381,
     382
@@ -103,6 +109,29 @@
     "A source theory should emit an RG-covariant trajectory, an invariant, or an operational observable.",
     "MSbar and the quoted scales remain external coordinate metadata unless an additional section theorem is emitted."
   ],
+  "physical_rg_dynamics_nondefinability": {
+    "additional_axiom_used": false,
+    "physical_outputs_changed": [
+      "RGI quark mass vector",
+      "Y_u(mu) and Y_d(mu) trajectories",
+      "threshold crossing locations induced by the mass spectrum"
+    ],
+    "same_source_completion_A": "generic admissible normalized Yukawa boundary Y_u,Y_d at mu_source",
+    "same_source_completion_B": "independently rescaled generic admissible Yukawa boundary Y_u'=lambda_u*Y_u, Y_d'=lambda_d*Y_d",
+    "source_RGI_mass_vector_emitted": false,
+    "source_objects_held_fixed": [
+      "Axioms 1--5",
+      "P",
+      "structural Standard-Model sector package",
+      "gauge and anomaly data",
+      "generation count and CP capability",
+      "current target-free D12 homogeneous identities"
+    ],
+    "source_running_v_trajectory_emitted": false,
+    "source_six_flavor_Yukawa_trajectory_emitted": false,
+    "source_threshold_composition_emitted": false,
+    "statement": "The current OPH source signature contains no normalized fermionic/Yukawa effective action, six-flavor matrix RG vector field, running Higgs expectation value, or completed heavy-threshold trajectory. Two completions can therefore agree on every emitted source object while carrying different renormalized Yukawa boundary data and different RGI quark masses. The physical RG trajectory itself, not merely its coordinate chart, is non-definable on the current corpus."
+  },
   "proof_status": "closed_structural_finite_renormalization_nonidentifiability_obstruction",
   "reference_data_policy": {
     "PDG_or_API_quark_rows_consumed": false,
@@ -125,6 +154,7 @@
     "invariant_formula": "log(M_q) = log(m_q^S(mu)) + integral^a_S(mu) gamma_m^S(x)/beta^S(x) dx, with a declared integration normalization",
     "preferred_positive_theorem_target": "Emit the RG-covariant quark trajectory (or its finite-renormalization equivalence class) and only then apply an external declared comparison chart.",
     "required_payload": [
+      "normalized source fermionic/Yukawa effective action",
       "source boundary condition or invariant",
       "beta-function provenance",
       "mass anomalous-dimension provenance",
