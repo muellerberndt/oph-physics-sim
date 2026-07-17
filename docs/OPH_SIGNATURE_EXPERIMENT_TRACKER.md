@@ -40,7 +40,30 @@ empty-source placeholder. Million-patch entries in the historical results log
 record a local run report; they are not earned evidence until the source
 artifacts are committed or hash-pinned with a fetch path.
 
-## 0a. At a glance (updated 2026-07-14, day)
+## Superseding status correction (2026-07-16)
+
+The following rules control every historical entry below:
+
+- The displayed W/Z values are internal running/tree chart coordinates. A
+  physical comparison is `NOT_EVALUABLE` until one fail-closed observable map
+  supplies the renormalized vev and tadpole prescriptions, field content,
+  thresholds, matching/RG order, finite parts, complex-pole and analytic-sheet
+  definitions, gauge/scale receipts, target convention, and theory covariance.
+  Historical percentage differences and measurement-only pulls are retained as
+  arithmetic artifacts only; they are not physical residuals or evidence.
+- MM-01's one-nat/`alpha = 4` line is noncanonical and void as an OPH
+  forecast. The canonical degeneracy relation is `alpha = 4 ln(k)` for integer
+  `k`; `alpha = 4` would require `k = e`. Historical `alpha = 4` computations
+  remain below only as tests of a naive Schwarzschild/direct-line bridge.
+- The later VN-03 covariant rerun completed, but its 29-state raw transition
+  chain was reducible, non-aperiodic, and gapless (`lambda_2 = 1`). The old gate
+  incorrectly certified it. The corrected gate fails closed unless the primary
+  chain is finite, irreducible, aperiodic, has
+  `0 <= lambda_2 < 1 - 1e-12`, and has detailed-balance residual at most
+  `1e-12`. Its TT number is an invalidated internal diagnostic, not a physical
+  OPH CMB verdict.
+
+## 0a. At a glance (updated 2026-07-16)
 
 Done rows first, compared against measurement where a public datum
 exists. Pulls follow the discipline rules of section 0 (measurement-only
@@ -54,14 +77,14 @@ full board in section 1.
 | Scalar tilt n_s = 1 - P/48 | 0.9660215 | Planck 2018: 0.9649(42) | +0.27 sigma |
 | Capacity -> Lambda (EW branch, provenance clean) | Lambda l_P^2 = 2.668e-122 | Planck display 2.845e-122 | +6.6 percent gap; l_star/l_P = 0.969 if exact |
 | Higgs-top criticality relation | m_H(curve at measured m_t) = 125.72 GeV | PDG 125.13(11) | +0.47 percent |
-| Electroweak pair (chart) | M_W 80.330, M_Z 91.119 GeV | PDG 80.3692(133), 91.1880(20) | -0.05 / -0.08 percent (chart, pole packet open) |
+| Electroweak pair (internal chart) | W-chart 80.330, Z-chart 91.119 GeV | No commensurate physical target until CL-03 closes | `NOT_EVALUABLE` physically; the old -0.05/-0.08 percent display is a withdrawn chart-to-lineshape diagnostic |
 | Strong coupling | alpha_s(M_Z) = 0.11834 | world 0.1179(9) | +0.5 sigma |
 | QCD scale | Lambda_QCD(3) = 334.8 [319, 350] MeV | FLAG-class 338(12) MeV | inside interval |
 | Clock-free ratio scoreboard | m_t/m_W 2.1490; m_H/m_t 0.72856; m_p/m_e 1818.4 | 2.1476; 0.72497; 1836.15 | +0.07 / +0.50 / -0.97 percent |
 | Charged-lepton ratio (MCPR lane) | m_mu/m_e 206.7683 | CODATA 206.76828 | 0.09 ppm (declared-model lane) |
 | DK-05 CMB low-l IR filter (executed 07-14) | corpus filter, scale l_IR = 32 | Planck PR3 unbinned TT prefers q 0.13-0.16 at l_IR 24-40, net Delta chi2 -3.9 | corpus scale sits 0.2 chi2 units from the data optimum |
 | Birefringence candidate alpha_U/(2 pi) | 0.37501 deg | Planck+WMAP EB: 0.342 +0.094/-0.091 deg | +0.35 sigma (S1 coincidence, 4 trials declared) |
-| MM-01 ringdown area quantum (naive bridge) | alpha = 4 predicts f_line = 204 Hz (GW150914) | measured f220 = 251 Hz -> alpha_implied 16.0 +/- 2.0 | -5.9 sigma under the naive bridge; 4-nat bundles (alpha_eff 16) match; bridge theorem constrained |
+| MM-01 ringdown area quantum (historical naive bridge) | alpha = 4 predicts f_line = 204 Hz (GW150914) | measured f220 = 251 Hz -> alpha_implied 16.0 +/- 2.0 | `VOID/MISATTRIBUTED` as an OPH forecast: canonical alpha is `4 ln(k)` with integer k, while alpha = 4 implies k = e; the old -5.9-sigma arithmetic is historical only |
 | DK-01 capacity gap vs DESI thawing (mock) | induced drift (w0, wa) = (-1.07, +0.33), freezing | DESI DR2 prefers (-0.72, -1.0), thawing | OPPOSITE direction: gap cannot mimic DESI; (w0,wa)=(-1,0) stance fully exposed |
 | VN-04 screen chirality | turning z: +0.73, -0.17, +0.74, -0.80, -1.48 across runs | null hypothesis 0 | consistent with zero; signs scatter; chirality banned from scalar/holonomy sectors by theorem |
 | Sigma m_nu floor (rank lane, to be stated) | 0.0588 eV | DESI DR2+CMB bound ~0.064 eV | window 0.005 eV: one release cycle decides |
@@ -71,10 +94,10 @@ full board in section 1.
 
 | Row | Size of miss | Candidate explanations, most plausible first |
 |---|---|---|
-| MM-01 ringdown (naive bridge) | -5.9 sigma on GW150914 | (1) The bridge assumption is the weak link: the 220 ringdown mode is a classical resonance, not the quantum transition line; the OPH line would then be a SECONDARY spectral feature at r(a) x f220 (the defined search), and no pull applies to f220 itself. (2) Multi-quantum emission: transitions in 4-nat bundles give alpha_eff = 16, matching the implied 16.0 +/- 2.0; the theorem question becomes why the twelve-port record emits in bundles. (3) The area-entropy normalization (4 l_P^2 per nat) could carry a factor from the port structure; any such factor must come from a theorem, never from fitting this number. |
+| MM-01 ringdown (historical naive bridge) | -5.9 sigma on GW150914 when only the quoted frequency error is propagated | Superseded: this is not an active OPH mismatch or a repair menu. `alpha = 4` is outside the canonical integer-k family because `4 = 4 ln(k)` gives `k = e`. The direct-line/Schwarzschild calculation is preserved as a failed naive bridge; post-hoc four-nat bundles, a secondary line, or a fitted normalization cannot rescue or promote it. A future test must begin with a separately frozen integer-k Kerr transition and full remnant likelihood. |
 | Cassini universal continuation | 19.2 sigma (banked kill) | Established, in-corpus: the universal static extrapolation of the settled-galaxy law is wrong; the law's domain predicate (old, settled, low-acceleration systems) excludes the Solar System. The OPEN part is deriving that predicate from screen coarse-graining instead of declaring it (DK-08); until then the kill bounds any future applicability law (>= 85.6 percent suppression at Saturn). |
 | Capacity -> Lambda | +6.6 percent | (1) Two capacity branches exist (N_CRC_EW = 3.53e122 from the EW hierarchy; N_star ~ 3.31e122 as the de Sitter display) and their 6.7 percent gap IS the Lambda gap; a reconciliation theorem for the two countings would close or expose it. (2) Equivalently l_star = 0.969 l_P: a 3 percent length-calibration question. (3) NOT the nats/bits convention: that would be a 44 percent shift. (4) The measured Lambda display is itself fit-model conditional (evolving-DE fits move it by percent). |
-| W/Z chart | -0.05 / -0.08 percent | Established category: chart coordinates, never poles; the radiative packet (Delta r, Delta kappa, Delta rho) is the declared missing map (CL-03), and its expected size (~0.03 in Delta r) matches the gap scale. Pro round 2: the one-scale repair lands at 80.3905, between the chart and the poles. |
+| W/Z chart | Physical residual undefined | The 80.330/91.119 values and the one-scale 80.3905 repair are internal prescription diagnostics, not masses in the experimental lineshape or complex-pole convention. CL-03 is `NOT_EVALUABLE` until the complete fail-closed observable map and theory covariance exist; no percentage agreement, pull, or landing may be inferred meanwhile. |
 | m_p/m_e (clock-free) | -0.97 percent | The hadron lane enters through an external lattice ratio and the Ward-projected rho_had chain; the miss is attributed to the open hadronic packet (declared QCD truncation), the same object blocking alpha at CODATA precision (C4). A source-side QCD spectral backend (CL-04) is the single fix for both. |
 | m_H/m_t relation | +0.50 percent | Inside the declared band: the 2-loop RG truncation carries +/- 2.1 GeV and the matching scheme +/- 1.9 GeV on m_H; the 3-loop packet is the registered discriminator that shrinks the band and re-tests. |
 | MCPR mu/e ratio | 0.09 ppm fractional, but +3.9 sigma against CODATA precision | The measurement is so precise that even a ppm-scale miss is many sigma: the lane needs its source-side NLO correction (the corrected kinetic-whitening determinant changes the endpoint at exactly this order), and MCPR is a declared-model lane, never yet a source theorem. |
@@ -137,8 +160,8 @@ and gaps with causes and proposed fixes.
 | Particle promotion (P1) | fusion conservation fails; transport receipts hardcoded false | encounter detector counts passers-by (identity fraction decays to random with scale); no covariant common-basepoint transport | redefine fusion as product-worldline continuation (two tubes end, one begins, composed class); implement covariant fusion transport (same playbook as the clock replay); tighten the angular cutoff; deconfinement check for colored candidates |
 | Worldline turning power | z in [-1.5, +0.8], 4-18 usable worldlines | timeline caps events per worldline | raise timeline caps for analysis runs; consume the full cluster catalogs; 64-seed GCP fleet for a proper null band |
 | Screen parity field pairs (e5) | degenerate at 128k and in the local 1M report | bounded e5 profile writes constant freezeout fields | export smoothed/evolution-era fields in e5, or enable raw frames on one analysis run per scale |
-| Physical CMB lane | gates unchanged | screen export ell_max 24 sits below the first Planck bin; source/transfer/likelihood contract open | recover and pin the local 1M freezeout before any `ell_max 96` post-processing; the contract items stay paper-side |
-| Paper-side theorem gaps (DK-06 birefringence emission, DK-08 applicability predicate, MM-01 bridge multiplicity, CL-03 pole packet, CL-04 spectral backend, NT-02 alpha-dot statement, FZ-01 freeze registry) | unchanged by sim data | missing theorems or one-day artifacts | as listed per row in sections 2-8; FZ-01 stays the highest value-per-day action |
+| Physical CMB lane | VN-03 raw clock invalidated; finite-clock gate repaired; physical lane still open | the completed raw chain was nonergodic and gapless; screen export ell_max 24 also sits below the first Planck bin, and source/transfer/likelihood contracts remain open | require the corrected clock gate, recover and pin the local 1M freezeout, and close the physical source/transfer/likelihood contract before scoring |
+| Paper-side theorem gaps (DK-06 birefringence emission, DK-08 applicability predicate, a future canonical integer-k Kerr registration replacing void MM-01, CL-03 physical readout, CL-04 spectral backend, NT-02 alpha-dot statement, FZ-01 freeze registry) | unchanged by sim data | missing theorems or one-day artifacts | as listed per row in sections 2-8; FZ-01 stays the highest value-per-day action |
 
 ## 0. Discipline (applies to every entry)
 
@@ -147,7 +170,9 @@ and gaps with causes and proposed fixes.
   conditional prediction, S4 source-closed prospective prediction. Only
   S3/S4 count as predictions.
 - **Measurement-only pulls.** A sigma quoted without an OPH-side covariance
-  is a measurement-only pull, never a model significance.
+  is a measurement-only pull, never a model significance. It is defined only
+  when theory and target are the same observable in the same convention; the
+  W/Z chart therefore has no pull at all.
 - **Count once.** Correlated descendants of one theorem or one dataset are
   one evidence item. The dependency graph lives at
   `audit-bundles/ROUND2_EXTENDED/oph_round2_dependency_graph.csv`.
@@ -179,7 +204,7 @@ and gaps with causes and proposed fixes.
 | DK-07 | Parity-odd LSS from screen chirality | S1 | BUILD (sim side) | B | days | signed S3-holonomy statistic on runs |
 | DK-08 | Wide binaries + dwarfs + Cassini EFE triangulation | S3 after predicate | GATED (applicability law) | A | weeks | derive settled-domain predicate; freeze verdict |
 | DK-09 | Muon g-2 adjudication via one spectral backend | S3 after backend | GATED (backend precision) | B | weeks | requadrature of rho_EM with g-2 kernel |
-| DK-10 | W-mass split: OPH sides against CDF | S2 today | LIVE (chart level) | B | with CL-03 | close Delta r/kappa/rho packet |
+| DK-10 | W-mass split: internal chart against CDF | diagnostic only | `NOT_EVALUABLE` physically | B | with CL-03 | close the full fail-closed observable map; do not score chart residuals |
 | DK-11 | Quasar dipole excess | none predicted | EXPLORATORY | C | days (sim) | measure reconstruction dipole in sim |
 | DK-12 | JWST early massive galaxies | J0 diagnostic | BUILD (stub exists) | C | days | populate JWST lane from public catalogs |
 | DK-13 | UHECR: Amaterasu, Auger dipole | S4 candidate | GATED (real emission + map) | A | weeks | VN-08 then forward map |
@@ -189,7 +214,7 @@ and gaps with causes and proposed fixes.
 | DK-17 | R(D*) lepton universality | S0 structural | LIVE | C | hours | register fade stance |
 | DK-18 | Gallium/BEST deficit vs exactly-3 | S0 + stub lane | BUILD | C | days | populate `data/gallium/` lane |
 | DK-19 | Cluster lensing offset pattern (Bullet-type) | stated mechanism | BUILD | B | weeks | quantify predicted offset law |
-| MM-01 | Ringdown area-quantum comb (alpha = 4 nat) | S3 after bridge | GATED (Phase-III bridge) | A | days for scan | Foit-Kleban scan on GWTC-3 ringdowns |
+| MM-01 | Historical alpha = 4 ringdown comb | noncanonical diagnostic | `VOID/MISATTRIBUTED` | A | no active scan | retire alpha = 4; any future registration must use integer-k Kerr transitions and a frozen full likelihood |
 | MM-02 | Repair-noise decoupling, 48-order data wall | structural | LIVE (bound) | B | done/theorem | state exact-decoupling theorem |
 | MM-03 | Holographic transverse noise (Holometer) | null, conditional | PASSED-NULL | C | none | park; amplitude law absent |
 | MM-04 | Gravitational entanglement stance (BMV) | THEOREM-TARGET | GATED | B | theorem | derive LOCC vs quantum channel verdict |
@@ -198,14 +223,14 @@ and gaps with causes and proposed fixes.
 | MM-07 | LIV / GW-speed / EP / photon-mass block | S0 block | PASSED-NULL | B | hours | bank as one recovered-structure block |
 | CL-01 | RAR-BTFR closure C = r_B + 2 r_R = 0 | decisive | BUILD | A | 1-2 weeks | matched-galaxy hierarchical pipeline |
 | CL-02 | Rotation-lensing no-slip Delta Sigma(R) | decisive | BUILD | A | weeks | predict KiDS/DES vectors, no halo refit |
-| CL-03 | Electroweak Delta r / Delta kappa / Delta rho packet | decisive | GATED (pole packet) | A | months | one loop-complete self-energy map |
+| CL-03 | Electroweak physical-readout contract | decisive | `NOT_EVALUABLE` pending full map | A | months | complete every vev/tadpole/field/threshold/RG/finite-part/pole/sheet/gauge/scale/target/covariance gate |
 | CL-04 | Single QCD spectral backend (alpha(q), HVP, moments) | decisive | GATED | A | months | one rho_EM(s) for five observables |
 | CL-05 | Capacity two-branch reconciliation + Lambda | decisive | BUILD | A | days | wire N_CRC_EW into sim; kill circular default |
 | CL-06 | Clock-free dimensionless ratio scoreboard | LIVE | LIVE | B | done | freeze the four ratios |
 | CL-07 | Common-basis flavor packet (Y_e, M_nu, Y_u, Y_d) | decisive | GATED | B | months | one scheme, one scale, holdout release |
 | VN-01 | Dimension-drop decisive run (8-12 -> ~3?) | decisive | BUILD | A | days | locality-preserving features + estimator |
 | VN-02 | W5 coefficient measurement vs frozen locus 1.8890 | decisive | BUILD | A | weeks | conditioned-ensemble sim measurement |
-| VN-03 | Gauge-covariant kernel -> CMB TT re-diagnostic | BUILD | BUILD | A | weeks | rerun chi2/bin after K1 fix |
+| VN-03 | Gauge-covariant kernel -> finite-clock CMB diagnostic | internal diagnostic | `COMPLETED / RAW CLOCK INVALIDATED; GATE FIXED` | A | completed 2026-07-16 | raw 29-state chain fails irreducibility, aperiodicity, and spectral-gap gates; only a new frozen eligible primary chain may be scored |
 | VN-04 | Signed parity statistic on freezeout screens | BUILD | BUILD | B | days | oriented S3 correlator + shuffle controls |
 | VN-05 | CMB anomaly report population + icosahedral axes | BUILD | BUILD | B | days | fill stubs; new axes test on Planck alms |
 | VN-06 | Reconstruction source-count dipole | EXPLORATORY | BUILD | C | days | count statistic on reconstructed bulks |
@@ -330,8 +355,9 @@ Newest first. Every entry names the artifact that reproduces it.
   measured optimum, emission far from it is a kill. Artifacts:
   `epic-wins/analysis/dk05_ir_filter_lowell.py`, pinned data at
   `oph-physics-sim/data/measurements/planck2018/COM_PowerSpect_CMB-TT-full_R3.01.txt`.
-- **2026-07-14 · MM-01 harness built and sharpened into a spin-dependent
-  line prediction.** Kerr-corrected transition line
+- **2026-07-14 · MM-01 historical harness built around a noncanonical
+  alpha = 4 bridge (superseded 2026-07-16).** The executed Kerr-corrected
+  transition line was
   2 pi f = 2 Omega_H + (alpha/8 pi) kappa/c. GW150914 pinned
   (M_f = 63.1, z = 0.09, a_f = 0.69, f220 = 251 Hz): implied
   alpha = 16.0 +/- 2.0 under the declared ringdown-equals-transition-line
@@ -341,15 +367,19 @@ Newest first. Every entry names the artifact that reproduces it.
   alpha_implied is a strong function of remnant spin alone (24.5 at
   a = 0.40, 16.6 at 0.66, 6.5 at 0.90, 4.0 at a* = 0.939), so NO constant
   area quantum fits a spin-diverse population through that bridge. The
-  OPH-specific registered form: with alpha = 4 fixed, the horizon
+  historical registered form fixed alpha = 4, so the horizon
   emission line sits at a predictable fraction of the ringdown
   fundamental, f_line/f220 = 0.56 (a = 0.4), 0.79 (0.66), 0.82 (0.69),
   0.91 (0.80), crossing unity at a* = 0.939. Defined experiment: stacked
   search for a secondary spectral feature at r(a_f) x f220 in public LVK
   ringdown residuals; a feature tracking the predicted r(a) curve is an
-  OPH-specific discovery channel, absence at forecast sensitivity
-  constrains the bridge multiplicity. Placeholder event rows stay
-  excluded until GWOSC pinning. Artifact:
+  diagnostic channel, but it is not an OPH-specific forecast: the canonical
+  relation is alpha = 4 ln(k) for integer k, and alpha = 4 implies the
+  inadmissible degeneracy k = e. The entire alpha = 4 registration is
+  `VOID/MISATTRIBUTED`; its numbers remain historical artifacts and cannot be
+  repaired by choosing a multiplicity after seeing the event. Any new test must
+  freeze an integer-k Kerr transition, nuisance model, selection rule, and full
+  likelihood before looking at outcomes. Artifact:
   `epic-wins/analysis/mm01_ringdown_area_quantum_harness.py`.
 - **2026-07-14 · DK-05 EXECUTED (first pass): binned-TT wedge on the IR
   filter.** CAMB spectrum at n_s = 0.9660215 with the corpus filter
@@ -628,13 +658,16 @@ advance of the next data release; that is the point of the docket.
 ### DK-10. W-mass split
 - Anomaly: CDF 2022 (80.4335(94)) vs ATLAS/CMS/LHCb (80.360-80.367),
   mutually exclusive at ~4 sigma.
-- OPH object: chart pair (80.330, 91.119) with the one-scale repair
-  `MW_common_scale = 80.39048` (Pro round 2). Pulls: CDF -4.58, ATLAS24
-  +1.51, CMS24 +3.06, LHCb +1.14. The chart level therefore sides against
-  CDF. The registered statement waits for CL-03 (Delta r/kappa/rho packet)
-  which must emit the physical pole with a band; until then this is a
-  chart-level lean, class S2.
-- Kill: packet closes on the CDF side of 80.40.
+- OPH object: the chart pair (80.330, 91.119) and the one-scale repair
+  `MW_common_scale = 80.39048` (Pro round 2) are internal prescription
+  diagnostics. The historical measurement-only pulls (CDF -4.58, ATLAS24
+  +1.51, CMS24 +3.06, LHCb +1.14) compared noncommensurate objects and are
+  withdrawn as physical pulls. They do not show that OPH sides with or against
+  CDF.
+- Status: `NOT_EVALUABLE` until CL-03 emits a complete physical observable in
+  the same lineshape or complex-pole convention as a frozen target, together
+  with theory covariance. Only that future frozen physical packet can define a
+  kill; no chart-side threshold is active.
 
 ### DK-11. Quasar dipole excess
 - Anomaly: CatWISE quasar number-count dipole exceeds the kinematic
@@ -726,26 +759,19 @@ Where the patch/repair microphysics could surface at laboratory or
 astrophysical scales.
 
 ### MM-01. Ringdown area-quantum comb
-- OPH statement, present in corpus: `S_dS = A/(4 l_P^2) = N_scr`
-  (string_selector:467, 2905) and `l_star == l_P` by construction. One nat
-  of record capacity therefore costs `Delta A = 4 l_P^2`: the horizon area
-  quantum is alpha = 4 in Planck units (nat convention; the bit
-  convention gives 4 ln 2 = 2.773; declare the fork).
-- Consequence (Bekenstein-Mukhanov/Foit-Kleban form): quantized ringdown
-  emission with frequency spacing `delta_f = alpha c^3 / (64 pi^2 G M)`.
-  Computed 2026-07-13: for a 62 Msun remnant delta_f = 20.7 Hz (8.3
-  percent of the 250 Hz fundamental); 150 Msun gives 8.6 Hz. This is a
-  macroscopically observable spacing, and existing Foit-Kleban-style
-  analyses of public LVK data constrain alpha weakly; O4/O5 stacking
-  sharpens it.
-- Gate: the black-hole paper lists horizon discreteness and
-  spectroscopy/ringdown bridges as Phase-III continuations (compact:349),
-  so today this is S1 with the area quantum inherited from stated
-  capacity relations; the bridge theorem (which transitions dominate,
-  selection rules) promotes it to S3.
-- Data: GWTC-3 ringdown posteriors (public), O4/O5 events.
-- Kill: ringdown combs excluded at alpha = 4 once the bridge fixes the
-  emission pattern.
+- Canonical relation: a discrete degeneracy step has `Delta S = ln(k)` for
+  integer `k`, hence `Delta A = 4 l_P^2 ln(k)` and
+  `alpha = 4 ln(k)`. The corpus identity `S_dS = A/(4 l_P^2)` does not by
+  itself select a one-nat transition. Setting `alpha = 4` gives `k = e`, not an
+  allowed integer degeneracy.
+- Historical diagnostic: the old Bekenstein-Mukhanov/Foit-Kleban bridge used
+  `delta_f = alpha c^3 / (64 pi^2 G M)` with alpha = 4. It produced 20.7 Hz
+  for a 62 Msun remnant and 8.6 Hz for 150 Msun. Preserve those arithmetic
+  results, but label the branch `VOID/MISATTRIBUTED` as an OPH forecast.
+- Status: there is no live alpha = 4 prediction, scan, or kill condition. A
+  future eligible registration must start from the canonical integer-k Kerr
+  family and freeze the transition choice, selection effects, remnant
+  covariance, nuisance model, and full likelihood before opening the data.
 
 ### MM-02. Repair noise: the 48-order decoupling wall
 - Corpus status: SILENT on repair-induced diffusion/heating/collapse
@@ -836,13 +862,18 @@ astrophysical scales.
   interpretation. BUILD, weeks.
 
 ### CL-03. Electroweak radiative packet
-- One loop-complete `(Delta r, Delta kappa, Delta rho)` map from OPH
-  two-point functions connecting chart values to poles, widths, line
-  shape, asymmetries, low-Q weak angle, G_F. Numerical hooks from Pro
-  round 2: on-shell shape `s2_OS = 0.22279` vs coordinate `0.23074`
-  needs `kappa = 1.0357`; chart closure gives `Delta r ~ 0.0333` vs
-  representative pole-level `~0.036`: radiative-completion sized, no
-  tens-of-sigma category errors. Resolves DK-10. GATED, months.
+- Required output: one fail-closed physical-readout map from OPH two-point
+  functions to poles, widths, lineshapes, asymmetries, the low-Q weak angle,
+  and G_F. It must declare the renormalized vev and tadpole prescriptions,
+  field content, thresholds, matching/RG order, all finite parts, complex-pole
+  and analytic-sheet definitions, gauge/scale receipts, target release and
+  convention, and theory covariance. Missing or open fields yield
+  `NOT_EVALUABLE`.
+- Historical Pro-round-2 values (`s2_OS = 0.22279`, chart coordinate
+  `0.23074`, `kappa = 1.0357`, chart `Delta r ~ 0.0333`, and representative
+  pole-level `~0.036`) remain internal prescription diagnostics only. Their
+  apparent scale does not establish a physical landing, pull, or accuracy.
+  CL-03 resolves DK-10 only after the complete map passes. GATED, months.
 
 ### CL-04. Single QCD electromagnetic spectral backend
 - One `rho_EM(s)` predicting jointly: Delta alpha_had(q), a_mu^HVP,
@@ -899,12 +930,20 @@ astrophysical scales.
   twelve-port defect record, fit the five invariant coefficients, feed
   the frozen decision harness (locus witness ratio 1.8831 vs MCPR target
   1.88901). Closes or kills the conditioned lepton-shape lane (C3).
-- **VN-03. Gauge-covariant kernel CMB rerun.** After the K1 mismatch fix
-  (label equality ignores gauge, `bw_array.py:313`), recompute the
-  finite-clock TT diagnostic (today chi2/bin 1.417 vs CAMB 0.944,
-  disfavored) and the cmb-lite shape correlation (today -0.754). Whether
-  the disfavored verdict was an artifact of the gauge-blind kernel is an
-  open, answerable question.
+- **VN-03. Gauge-covariant kernel finite-clock rerun: completed, raw clock
+  invalidated, gate fixed.** The later covariant run produced a 29-state raw
+  matrix with 31,744 transitions, but the chain was reducible,
+  non-aperiodic, and gapless (`lambda_2 = 1`). The old predicate nevertheless
+  set finite-clock derivation, empirical-certificate, and physical-CMB
+  eligibility flags true, so its `chi2/bin = 3.509496216` TT result is an
+  invalidated internal diagnostic. It is separate from the older V4
+  `1.41749` diagnostic; neither is promoted to a physical OPH CMB verdict.
+  The repaired predicate requires a finite, irreducible, aperiodic primary
+  chain, `0 <= lambda_2 < 1 - 1e-12`, and detailed-balance residual at most
+  `1e-12`, and propagates failure to downstream certificate and CMB gates.
+  The reversible-matrix replay (`chi2/bin = 1.02355675`) is sensitivity-only,
+  not a post-hoc rescue. Any further score requires a newly frozen eligible
+  primary chain and controlled baseline.
 - **VN-04. Signed parity statistic.** Oriented S3-holonomy correlator
   (transposition = odd class) over freezeout screens with orientation
   shuffles as controls; existing artifacts suffice (holonomy reports,
@@ -1003,7 +1042,7 @@ Rows marked (cond.) freeze together with their named condition.
 | Row | Value | Compare against | Trigger |
 |---|---|---|---|
 | n_s = 1 - P/48 | 0.9660214 | SPT-3G, ACT DR6+, CMB-S4 combined tilt | next combined-likelihood release |
-| W/Z chart pair + s2_OS | 80.330 / 91.119 / 0.22279 | named W releases separately | CL-03 closure |
+| Future W/Z physical readout; current chart diagnostics 80.330 / 91.119 / 0.22279 are ineligible | no physical value frozen | named W/Z release and convention | CL-03 full observable map plus theory covariance; otherwise `NOT_EVALUABLE` |
 | m_H(m_t) criticality relation | 125.72 GeV at measured m_t | PDG m_H | PDG update |
 | alpha_s(M_Z) | 0.11834 | world average | PDG update |
 | Lambda_QCD(3) | 334.8 [319,350] MeV | FLAG | FLAG update |
@@ -1014,7 +1053,7 @@ Rows marked (cond.) freeze together with their named condition.
 | Sigma m_nu (cond. rank lane) | 0.0588 eV, NO | DESI DR3 + CMB | DR3 release |
 | m_bb (cond. rank lane) | 1.5-3.7 meV | LEGEND-1000/nEXO | first results |
 | Proton decay | no signal (tau_gauge = infinity) | Hyper-K | first exposure years |
-| Ringdown area quantum (cond. bridge) | alpha = 4 nat (2.773 bit) | O4/O5 stacked ringdowns | O5 catalog |
+| Future ringdown transition (canonical integer-k Kerr family) | no value frozen; historical alpha = 4 branch is void because it implies k = e | O4/O5 stacked ringdowns | new source-derived transition and full-likelihood registration before data opening |
 | Birefringence (cond. emission theorem) | 0.37501 deg | LiteBIRD, PR4 reanalyses | theorem, then release |
 | Dark-siren H0 | 67.4 +/- 1 | LVK O5 dark sirens | O5 catalog |
 | IR filter (cond. source emission) | (q_IR, t_IR), ell_IR ~ 32 | Planck low-ell likelihood | emission theorem |
@@ -1064,8 +1103,10 @@ Next 90 days, ordered by information per unit effort:
    default demoted to diagnostic, nats convention declared.
 3. **VN-04 + VN-05** (days): parity statistic and anomaly population from
    existing artifacts; icosahedral-axes test on public Planck alms.
-4. **MM-01 ringdown scan** (days): Foit-Kleban alpha = 4 comb against
-   GWTC-3 public posteriors.
+4. **Canonical ringdown registration** (not yet schedulable as a scan): retire
+   the void alpha = 4 comb; derive and freeze one integer-k Kerr transition,
+   nuisance model, selection rule, and full likelihood before using public
+   posteriors.
 5. **DK-01 mock w0-wa fit** (days): does the capacity gap mimic thawing?
 6. **VN-08 UHE real emission** (days): the demo fixture is the single
    most misleading object in the suite if left as is; replace it, then
@@ -1077,7 +1118,8 @@ Next 90 days, ordered by information per unit effort:
 9. **Theorem queue** (standing): fixed-N w-law (DK-01), rank lane
    (DK-02), applicability predicate (DK-08), exact-decoupling (MM-02),
    BMV channel (MM-04), alpha-dot zero (NT-02), theta-bar (NT-11),
-   area-quantum bridge (MM-01), parity emission (DK-06/07), IR-filter
+   canonical integer-k Kerr transition registration replacing void MM-01,
+   parity emission (DK-06/07), IR-filter
    emission (DK-05).
 10. **CL-04 backend + CL-03 packet** (months, parallel): the two objects
     that turn the particle sector from charts into observables.
@@ -1091,8 +1133,10 @@ reports; Pro bundle recompute JSONs.
 
 - alpha_U/(2 pi) = 0.37501 deg; Eskilt-Komatsu beta = 0.342 +0.094/-0.091
   deg; pull +0.35 sigma; 4 expressions tried.
-- Ringdown comb: delta_f = alpha c^3/(64 pi^2 G M); alpha = 4 nat;
-  62 Msun -> 20.7 Hz (8.3 percent of f220); 150 Msun -> 8.6 Hz.
+- Historical void ringdown comb: `delta_f = alpha c^3/(64 pi^2 G M)` at
+  alpha = 4 gave 20.7 Hz for 62 Msun (8.3 percent of f220) and 8.6 Hz for
+  150 Msun. These numbers test only the noncanonical naive bridge;
+  `alpha = 4 ln(k)` with integer k makes alpha = 4 imply k = e.
 - Repair wall: Planck-kick 1.27e28 J; Earth 44 TW -> lambda < 9.7e-67 /s
   per nucleon; one-per-Hubble-time = 2.3e-18 /s.
 - Capacity: Lambda l_P^2 (EW) = 2.668e-122 vs display 2.845e-122 (+6.6
@@ -1101,8 +1145,10 @@ reports; Pro bundle recompute JSONs.
 - Sigma m_nu floor (NO) = 0.0588 eV; m_bb(m1 = 0) = [1.50, 3.70] meV;
   m_beta ~ 8.8 meV.
 - Flyby: 2 omega_E R_E/c = 3.0993e-6 vs Anderson K = 3.099e-6.
-- W repair 80.39048 pulls: CDF -4.58, ATLAS24 +1.51, CMS24 +3.06,
-  LHCb +1.14, PDG(no CDF) +1.60 (measurement-only).
+- Historical W-chart repair 80.39048 measurement-only displays: CDF -4.58,
+  ATLAS24 +1.51, CMS24 +3.06, LHCb +1.14, PDG(no CDF) +1.60. These are
+  withdrawn as physical pulls because the chart and measured lineshape/pole
+  objects are not commensurate; current physical status is `NOT_EVALUABLE`.
 - g-2: OPH backend -3.1 percent vs KNT19 -> a_mu^HVP shift -213e-11 +/-
   ~194e-11.
 - LEP N_nu = 2.9840(82): exact 3 at +1.95 sigma.
