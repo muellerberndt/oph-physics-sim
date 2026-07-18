@@ -278,6 +278,162 @@ def test_repair_clock_consumer_rejects_legacy_scalar_sidecar_without_raw_evidenc
     assert report["rows"][0]["transition_clock_eligibility"]["eligible"] is False
 
 
+def test_derived_clock_candidates_carry_provenance_and_spectral_diagnostic(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [[0, 0, 1, 1, 2, 2, 0, 0]],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    candidates = report["clock_normalization_candidates"]
+    by_name = {candidate["name"]: candidate for candidate in candidates}
+    # #12: every candidate must be provenance-tagged so declared and derived
+    # clocks can be told apart in the report.
+    assert all("provenance" in c and "derived_from_run_data" in c for c in candidates)
+    assert by_name["unit_step"]["provenance"] == "config_declared"
+    assert by_name["unit_step"]["derived_from_run_data"] is False
+    assert all("claim_status" in c for c in candidates)
+    assert all(c["theorem_bound_certified"] is False for c in candidates)
+    # The matrix-derived value is explicitly a spectral-relaxation diagnostic,
+    # never a claimed mixing time or a physical clock binding.
+    relaxation = by_name["transition_matrix_spectral_relaxation_time"]
+    assert relaxation["provenance"] == "matrix_derived"
+    assert relaxation["derived_from_run_data"] is True
+    assert relaxation["claim_status"] == "run_derived_diagnostic"
+    assert relaxation["mixing_time_claimed"] is False
+    assert relaxation["usable_for_physical_clock_binding"] is False
+    assert relaxation["degenerate"] is False
+    assert relaxation["value"] is not None and relaxation["value"] > 0.0
+    provenance = report["clock_normalization_candidate_provenance"]
+    assert provenance["matrix_derived"] == 1
+    assert provenance["run_data_derived"] == 1
+    assert provenance["derived_from_run_data_count"] == 2
+    assert provenance["usable_derived_candidate_count"] == 0
+    assert provenance["theorem_bound_certified_count"] == 0
+
+
+def test_spectral_relaxation_diagnostic_fails_closed_on_gapless_chain(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    # Periodic chain -> abs(lambda_2) == 1.0 -> no finite spectral-relaxation time.
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [
+            [0, 1, 0, 1],
+            [1, 0, 1, 0],
+        ],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    relaxation = next(
+        c for c in report["clock_normalization_candidates"]
+        if c["name"] == "transition_matrix_spectral_relaxation_time"
+    )
+    assert relaxation["degenerate"] is True
+    assert relaxation["value"] is None
+    assert relaxation["mixing_time_claimed"] is False
+    assert "strictly between zero and one" in relaxation["reason"]
+
+
+def test_mean_first_passage_time_candidate_reads_run_histogram(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views_with_first_passage(
+        run / "observer_views.jsonl",
+        paths=[[0, 0, 1, 1, 2, 2, 0, 0]],
+        histogram={"0": 0.5, "2": 0.5},  # normalized mean = 0*0.5 + 2*0.5 = 1.0
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    fpt = next(
+        c for c in report["clock_normalization_candidates"]
+        if c["name"] == "mean_first_passage_time"
+    )
+    assert fpt["provenance"] == "run_data_derived"
+    assert fpt["derived_from_run_data"] is True
+    assert fpt["claim_status"] == "run_derived_diagnostic"
+    assert fpt["usable_for_physical_clock_binding"] is False
+    assert fpt["theorem_bound_certified"] is False
+    assert fpt["degenerate"] is False
+    assert abs(float(fpt["value"]) - 1.0) < 1.0e-9
+
+
+def test_mean_first_passage_time_fails_closed_when_histogram_absent(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(  # no first_passage_time_histogram field written
+        run / "observer_views.jsonl",
+        [[0, 0, 1, 1, 2, 2, 0, 0]],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+    )
+
+    fpt = next(
+        c for c in report["clock_normalization_candidates"]
+        if c["name"] == "mean_first_passage_time"
+    )
+    assert fpt["degenerate"] is True
+    assert fpt["value"] is None
+
+
+def test_cli_declared_step_time_never_certifies_clock(tmp_path: Path) -> None:
+    # Acceptance criterion (#12): no code path may set clock_normalization_certified
+    # from a CLI-declared step time.
+    run = tmp_path / "run"
+    out = tmp_path / "out"
+    run.mkdir()
+    _write_observer_views(
+        run / "observer_views.jsonl",
+        [[0, 0, 1, 1, 2, 2, 0, 0]],
+    )
+
+    report = write_finite_repair_transition_clock_report(
+        run,
+        out,
+        packet_fields=("checkpoint_class",),
+        primary_matrix="raw_empirical",
+        clock_normalization_source="declared_cli_value",
+    )
+
+    assert report["clock_normalization_source_status"]["theorem_grade"] is False
+    assert report["clock_normalization_source_status"]["posthoc_or_cli_declared"] is True
+    assert report["clock_normalization_certified"] is False
+    assert report["repair_clock_certificate"] is False
+
+
 def _write_observer_views(path: Path, paths: list[list[int]]) -> None:
     with path.open("w", encoding="utf-8") as handle:
         for observer_id, values in enumerate(paths):
@@ -295,6 +451,44 @@ def _write_observer_views(path: Path, paths: list[list[int]]) -> None:
                     {
                         "observer_id": observer_id,
                         "transition_history_mean_modal_mass": 1.0,
+                        "transition_history_descriptor": {
+                            "fields": [
+                                "checkpoint_class",
+                                "stable_flag",
+                                "s3_sector_class",
+                                "repair_load_bucket",
+                            ],
+                            "steps": steps,
+                        },
+                    }
+                )
+                + "\n"
+            )
+
+
+def _write_observer_views_with_first_passage(
+    path: Path,
+    *,
+    paths: list[list[int]],
+    histogram: dict[str, float],
+) -> None:
+    with path.open("w", encoding="utf-8") as handle:
+        for observer_id, values in enumerate(paths):
+            steps = [
+                {
+                    "checkpoint_class": value,
+                    "stable_flag": 1,
+                    "s3_sector_class": 1,
+                    "repair_load_bucket": 0,
+                }
+                for value in values
+            ]
+            handle.write(
+                json.dumps(
+                    {
+                        "observer_id": observer_id,
+                        "transition_history_mean_modal_mass": 1.0,
+                        "first_passage_time_histogram": dict(histogram),
                         "transition_history_descriptor": {
                             "fields": [
                                 "checkpoint_class",

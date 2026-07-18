@@ -441,6 +441,14 @@ def finite_repair_transition_clock_report(
         clock_certified=clock_certified,
         numeric_clock_match=numeric_clock_match,
     )
+    clock_candidates = _clock_normalization_candidates(
+        Path(run_dir),
+        required_step_time=primary.get(
+            "required_repair_step_time_for_selected_edge_center"
+        ),
+        primary=primary,
+        observer_path=observer_path,
+    )
     report = {
         "mode": "oph_finite_repair_transition_clock_v1",
         "source_run_dir": str(Path(run_dir)),
@@ -472,10 +480,35 @@ def finite_repair_transition_clock_report(
         "matrices": matrix_summaries,
         "primary": primary,
         "transition_clock_eligibility": eligibility,
-        "clock_normalization_candidates": _clock_normalization_candidates(
-            Path(run_dir),
-            required_step_time=primary.get("required_repair_step_time_for_selected_edge_center"),
-        ),
+        "clock_normalization_candidates": clock_candidates,
+        "clock_normalization_candidate_provenance": {
+            "config_declared": sum(
+                1 for c in clock_candidates if c.get("provenance") == "config_declared"
+            ),
+            "matrix_derived": sum(
+                1 for c in clock_candidates if c.get("provenance") == "matrix_derived"
+            ),
+            "run_data_derived": sum(
+                1 for c in clock_candidates if c.get("provenance") == "run_data_derived"
+            ),
+            "derived_from_run_data_count": sum(
+                1 for c in clock_candidates if c.get("derived_from_run_data")
+            ),
+            "usable_derived_candidate_count": sum(
+                1
+                for c in clock_candidates
+                if c.get("usable_for_physical_clock_binding")
+            ),
+            "theorem_bound_certified_count": sum(
+                1 for c in clock_candidates if c.get("theorem_bound_certified")
+            ),
+            "claim_boundary": (
+                "Declared/configured quantities and run-derived quantities are diagnostics only. "
+                "A derived value becomes usable for physical clock binding only with its stated "
+                "assumptions and antecedent evidence, and certification remains exclusively bound "
+                "to the complete edge-center evidence receipts."
+            ),
+        },
         "relative_error_to_selected_edge_center_kappa": rel_error,
         "relative_error_to_e_diagnostic_control": rel_error_e_diagnostic,
         "clock_normalization_numeric_match": numeric_clock_match,
@@ -841,8 +874,36 @@ def _blockers(
     return blockers
 
 
-def _clock_normalization_candidates(run_dir: Path, *, required_step_time: Any) -> list[dict[str, Any]]:
+def _clock_normalization_candidates(
+    run_dir: Path,
+    *,
+    required_step_time: Any,
+    primary: dict[str, Any] | None = None,
+    observer_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Repair-step-time diagnostics, each tagged with provenance and claim status.
+
+    Three statuses remain distinct:
+
+    * ``config_declared`` -- declared quantities read from ``config.yml``.  These
+      are not derived from the run's dynamics and remain declared diagnostics.
+    * ``matrix_derived`` / ``run_data_derived`` -- computed from the run itself
+      without a CLI-declared step time, but remain run-derived diagnostics here.
+    * theorem-bound certification -- not assigned by this helper.  It is decided
+      only by the edge-center evidence receipts in the report caller.
+
+    Derived candidates are emitted even when degenerate, with ``degenerate=True``
+    and a ``reason``, so the report fails closed *visibly* rather than dropping
+    the diagnostic silently.
+    """
+
     required = _float_or_none(required_step_time)
+
+    def _rel_error(value: float | None) -> float | None:
+        if value is None or required is None:
+            return None
+        return abs(float(value) - required) / max(abs(required), 1.0e-30)
+
     config = _read_yaml(run_dir / "config.yml")
     dynamics = config.get("dynamics", {}) if isinstance(config, dict) else {}
     bw = config.get("bw", {}) if isinstance(config, dict) else {}
@@ -854,7 +915,7 @@ def _clock_normalization_candidates(run_dir: Path, *, required_step_time: Any) -
     bw_time = _float_or_none(times[0]) if isinstance(times, list) and times else _float_or_none(bw.get("transition_response_time"))
     bw_scale = _float_or_none(bw.get("transition_response_scale")) or (2.0 * math.pi)
     bw_s = bw_time * bw_scale if bw_time is not None and bw_scale is not None else None
-    candidates: list[tuple[str, float | None, str]] = [
+    declared: list[tuple[str, float | None, str]] = [
         ("unit_step", 1.0, "one simulator transition-history step"),
         ("record_commit_cycles", commit, "record commit horizon in cycles"),
         ("history_window", history, "observer transition-history window"),
@@ -871,21 +932,183 @@ def _clock_normalization_candidates(run_dir: Path, *, required_step_time: Any) -
             "record commit horizon times history window times BW modular parameter",
         ),
     ]
-    rows = []
-    for name, value, description in candidates:
+    rows: list[dict[str, Any]] = []
+    for name, value, description in declared:
         if value is None or not math.isfinite(float(value)) or float(value) <= 0.0:
             continue
-        rel_error = abs(float(value) - required) / max(abs(required), 1.0e-30) if required is not None else None
         rows.append(
             {
                 "name": name,
                 "value": float(value),
-                "relative_error_to_required": rel_error,
+                "relative_error_to_required": _rel_error(value),
                 "description": description,
+                "provenance": "config_declared",
+                "derived_from_run_data": False,
+                "claim_status": "declared_diagnostic",
+                "usable_for_physical_clock_binding": False,
+                "theorem_bound_certified": False,
+                "degenerate": False,
             }
         )
-    rows.sort(key=lambda row: float("inf") if row["relative_error_to_required"] is None else row["relative_error_to_required"])
+
+    rows.extend(_derived_clock_candidates(primary, observer_path, rel_error=_rel_error))
+
+    # finite (matched) candidates first by relative error; degenerate/None last.
+    rows.sort(
+        key=lambda row: (
+            0 if row.get("relative_error_to_required") is not None else 1,
+            float(row["relative_error_to_required"])
+            if row.get("relative_error_to_required") is not None
+            else float("inf"),
+        )
+    )
     return rows
+
+
+def _derived_clock_candidates(
+    primary: dict[str, Any] | None,
+    observer_path: Path | None,
+    *,
+    rel_error,
+) -> list[dict[str, Any]]:
+    """Step-time diagnostics derived from run dynamics (no CLI declaration).
+
+    #12 asks the report to distinguish run-derived diagnostics from usable,
+    theorem-bound normalization.  Two diagnostics are unambiguous:
+
+    * ``transition_matrix_spectral_relaxation_time`` -- the spectral diagnostic
+      tau = -1/log(abs(lambda_2)).  It is deliberately not labelled a mixing time.
+    * ``mean_first_passage_time`` -- observer-averaged mean of the run's
+      ``first_passage_time_histogram`` (a measured dynamical timescale).
+
+    Neither diagnostic binds the physical clock or satisfies an edge-center
+    receipt by itself.
+    """
+
+    rows: list[dict[str, Any]] = []
+
+    primary = primary or {}
+    lambda_2 = _float_or_none(primary.get("lambda_2"))
+    lambda_2_abs = abs(lambda_2) if lambda_2 is not None else None
+    balance_error = _float_or_none(primary.get("detailed_balance_max_abs_error"))
+    mixing_assumptions = {
+        "finite": primary.get("finite") is True,
+        "irreducible": primary.get("irreducible") is True,
+        "aperiodic": primary.get("aperiodic") is True,
+        "spectral_gap": (
+            lambda_2_abs is not None
+            and 0.0 <= lambda_2_abs < 1.0 - SPECTRAL_GAP_TOLERANCE
+        ),
+        "reversible_or_self_adjoint": (
+            balance_error is not None
+            and 0.0 <= balance_error <= DETAILED_BALANCE_TOLERANCE
+        ),
+    }
+    relaxation: dict[str, Any] = {
+        "name": "transition_matrix_spectral_relaxation_time",
+        "provenance": "matrix_derived",
+        "derived_from_run_data": True,
+        "claim_status": "run_derived_diagnostic",
+        "usable_for_physical_clock_binding": False,
+        "theorem_bound_certified": False,
+        "lambda_2": lambda_2,
+        "lambda_2_abs": lambda_2_abs,
+        "formula": "-1/log(abs(lambda_2))",
+        "mixing_time_claimed": False,
+        "mixing_assumptions": mixing_assumptions,
+        "mixing_assumptions_passed": all(mixing_assumptions.values()),
+        "description": (
+            "spectral relaxation diagnostic of the finite repair transition matrix; "
+            "not a physical clock binding or a claimed mixing time"
+        ),
+    }
+    if (
+        lambda_2_abs is not None
+        and 0.0 < lambda_2_abs < 1.0 - SPECTRAL_GAP_TOLERANCE
+    ):
+        tau = -1.0 / math.log(lambda_2_abs)
+        relaxation.update(
+            value=float(tau),
+            relative_error_to_required=rel_error(tau),
+            degenerate=False,
+        )
+    else:
+        relaxation.update(
+            value=None,
+            relative_error_to_required=None,
+            degenerate=True,
+            reason=(
+                "abs(lambda_2) must lie strictly between zero and one for a finite "
+                "positive spectral-relaxation diagnostic"
+            ),
+        )
+    rows.append(relaxation)
+
+    mean_fpt = _mean_first_passage_time(observer_path)
+    fpt: dict[str, Any] = {
+        "name": "mean_first_passage_time",
+        "provenance": "run_data_derived",
+        "derived_from_run_data": True,
+        "claim_status": "run_derived_diagnostic",
+        "usable_for_physical_clock_binding": False,
+        "theorem_bound_certified": False,
+        "description": (
+            "observer-averaged mean of first_passage_time_histogram in "
+            "observer_views.jsonl; diagnostic only"
+        ),
+    }
+    if mean_fpt is not None and math.isfinite(mean_fpt) and mean_fpt > 0.0:
+        fpt.update(value=float(mean_fpt), relative_error_to_required=rel_error(mean_fpt), degenerate=False)
+    else:
+        fpt.update(
+            value=None,
+            relative_error_to_required=None,
+            degenerate=True,
+            reason="first_passage_time_histogram absent or empty in observer_views.jsonl; fails closed",
+        )
+    rows.append(fpt)
+    return rows
+
+
+def _mean_first_passage_time(observer_path: Path | None) -> float | None:
+    """Observer-averaged mean first-passage time from observer_views.jsonl.
+
+    Each observer view may carry a ``first_passage_time_histogram`` mapping an
+    integer step bin (as a string key) to a probability.  We normalize each
+    observer's histogram, take its mean, and average those observer means.
+    Returns None when no usable histogram is present (caller fails closed).
+    """
+
+    if observer_path is None or not Path(observer_path).exists():
+        return None
+    observer_mean_sum = 0.0
+    observer_count = 0
+    with Path(observer_path).open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            try:
+                view = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            hist = view.get("first_passage_time_histogram")
+            if not isinstance(hist, dict) or not hist:
+                continue
+            mass = 0.0
+            weighted = 0.0
+            for key, prob in hist.items():
+                p = _float_or_none(prob)
+                t = _float_or_none(key)
+                if p is None or t is None or p < 0.0 or t < 0.0:
+                    continue
+                mass += p
+                weighted += t * p
+            if mass > 0.0:
+                observer_mean_sum += weighted / mass
+                observer_count += 1
+    if observer_count == 0:
+        return None
+    return observer_mean_sum / observer_count
 
 
 def _is_strongly_connected(adjacency: np.ndarray) -> bool:
