@@ -395,6 +395,12 @@ def finite_repair_transition_clock_report(
     numeric_clock_match = bool(finite_ready and rel_error is not None and rel_error <= 0.05)
     clock_certified = bool(numeric_clock_match and source_status["theorem_grade"])
     clock_modes = _clock_mode_reports(primary, finite_ready=finite_ready, delta_p=delta_p)
+    clock_candidates = _clock_normalization_candidates(
+        Path(run_dir),
+        required_step_time=primary.get("required_repair_step_time_for_kappa_e"),
+        primary=primary,
+        observer_path=observer_path,
+    )
     report = {
         "mode": "oph_finite_repair_transition_clock_v0",
         "source_run_dir": str(Path(run_dir)),
@@ -421,10 +427,28 @@ def finite_repair_transition_clock_report(
         "matrices": matrix_summaries,
         "primary": primary,
         "transition_clock_eligibility": eligibility,
-        "clock_normalization_candidates": _clock_normalization_candidates(
-            Path(run_dir),
-            required_step_time=primary.get("required_repair_step_time_for_kappa_e"),
-        ),
+        "clock_normalization_candidates": clock_candidates,
+        "clock_normalization_candidate_provenance": {
+            "config_declared": sum(
+                1 for c in clock_candidates if c.get("provenance") == "config_declared"
+            ),
+            "matrix_derived": sum(
+                1 for c in clock_candidates if c.get("provenance") == "matrix_derived"
+            ),
+            "run_data_derived": sum(
+                1 for c in clock_candidates if c.get("provenance") == "run_data_derived"
+            ),
+            "derived_from_run_data_count": sum(
+                1 for c in clock_candidates if c.get("derived_from_run_data")
+            ),
+            "claim_boundary": (
+                "Three-way clock-normalization distinction. config_declared candidates are "
+                "declared quantities read from config.yml and cannot by themselves certify a "
+                "repair clock. matrix_derived / run_data_derived candidates are computed from "
+                "the run's own dynamics with NO CLI-declared step time (evidence). Certification "
+                "additionally requires a theorem-grade predeclared clock source (paper-side theorem)."
+            ),
+        },
         "relative_error_to_kappa_e": rel_error,
         "clock_normalization_numeric_match": numeric_clock_match,
         "repair_scale_hypothesis_clock_match": bool(
@@ -734,8 +758,37 @@ def _blockers(
     return blockers
 
 
-def _clock_normalization_candidates(run_dir: Path, *, required_step_time: Any) -> list[dict[str, Any]]:
+def _clock_normalization_candidates(
+    run_dir: Path,
+    *,
+    required_step_time: Any,
+    primary: dict[str, Any] | None = None,
+    observer_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Repair-step-time candidates, each tagged with its provenance.
+
+    Two kinds of candidate:
+
+    * ``config_declared`` -- declared quantities read from ``config.yml``.  These
+      are NOT derived from the run's dynamics; issue #12 is precisely that a clock
+      normalization resting on such a declaration has no theorem-grade footing.
+    * ``matrix_derived`` / ``run_data_derived`` -- computed from the run itself
+      (the finite transition matrix's spectral gap, and the observed
+      first-passage-time distribution) with NO CLI-declared step time.
+
+    Derived candidates are emitted even when degenerate, with ``degenerate=True``
+    and a ``reason``, so the report fails closed *visibly* rather than dropping
+    the candidate silently.  Certification still additionally requires a
+    theorem-grade predeclared clock source (handled by the caller).
+    """
+
     required = _float_or_none(required_step_time)
+
+    def _rel_error(value: float | None) -> float | None:
+        if value is None or required is None:
+            return None
+        return abs(float(value) - required) / max(abs(required), 1.0e-30)
+
     config = _read_yaml(run_dir / "config.yml")
     dynamics = config.get("dynamics", {}) if isinstance(config, dict) else {}
     bw = config.get("bw", {}) if isinstance(config, dict) else {}
@@ -747,7 +800,7 @@ def _clock_normalization_candidates(run_dir: Path, *, required_step_time: Any) -
     bw_time = _float_or_none(times[0]) if isinstance(times, list) and times else _float_or_none(bw.get("transition_response_time"))
     bw_scale = _float_or_none(bw.get("transition_response_scale")) or (2.0 * math.pi)
     bw_s = bw_time * bw_scale if bw_time is not None and bw_scale is not None else None
-    candidates: list[tuple[str, float | None, str]] = [
+    declared: list[tuple[str, float | None, str]] = [
         ("unit_step", 1.0, "one simulator transition-history step"),
         ("record_commit_cycles", commit, "record commit horizon in cycles"),
         ("history_window", history, "observer transition-history window"),
@@ -764,21 +817,138 @@ def _clock_normalization_candidates(run_dir: Path, *, required_step_time: Any) -
             "record commit horizon times history window times BW modular parameter",
         ),
     ]
-    rows = []
-    for name, value, description in candidates:
+    rows: list[dict[str, Any]] = []
+    for name, value, description in declared:
         if value is None or not math.isfinite(float(value)) or float(value) <= 0.0:
             continue
-        rel_error = abs(float(value) - required) / max(abs(required), 1.0e-30) if required is not None else None
         rows.append(
             {
                 "name": name,
                 "value": float(value),
-                "relative_error_to_required": rel_error,
+                "relative_error_to_required": _rel_error(value),
                 "description": description,
+                "provenance": "config_declared",
+                "derived_from_run_data": False,
             }
         )
-    rows.sort(key=lambda row: float("inf") if row["relative_error_to_required"] is None else row["relative_error_to_required"])
+
+    rows.extend(_derived_clock_candidates(primary, observer_path, rel_error=_rel_error))
+
+    # finite (matched) candidates first by relative error; degenerate/None last.
+    rows.sort(
+        key=lambda row: (
+            0 if row.get("relative_error_to_required") is not None else 1,
+            float(row["relative_error_to_required"])
+            if row.get("relative_error_to_required") is not None
+            else float("inf"),
+        )
+    )
     return rows
+
+
+def _derived_clock_candidates(
+    primary: dict[str, Any] | None,
+    observer_path: Path | None,
+    *,
+    rel_error,
+) -> list[dict[str, Any]]:
+    """Step-time candidates derived from run dynamics (no CLI declaration).
+
+    #12 asks for candidates computed from run data rather than declared.  Two are
+    unambiguous and shipped here; both fail closed when their input is degenerate:
+
+    * ``transition_matrix_mixing_time`` -- relaxation time tau = -1/ln(lambda_2)
+      of the finite repair transition matrix.  A reducible/periodic chain has no
+      spectral gap (lambda_2 -> 1) and therefore no finite mixing time -> the
+      candidate is emitted as degenerate rather than as a fabricated number.
+    * ``mean_first_passage_time`` -- observer-averaged mean of the run's
+      ``first_passage_time_histogram`` (a measured dynamical timescale).
+    """
+
+    rows: list[dict[str, Any]] = []
+
+    lambda_2 = _float_or_none((primary or {}).get("lambda_2"))
+    mixing: dict[str, Any] = {
+        "name": "transition_matrix_mixing_time",
+        "provenance": "matrix_derived",
+        "derived_from_run_data": True,
+        "lambda_2": lambda_2,
+        "description": "relaxation/mixing time tau=-1/ln(lambda_2) of the finite repair transition matrix",
+    }
+    if lambda_2 is not None and 0.0 < lambda_2 < 1.0 - SPECTRAL_GAP_TOLERANCE:
+        tau = -1.0 / math.log(lambda_2)
+        mixing.update(value=float(tau), relative_error_to_required=rel_error(tau), degenerate=False)
+    else:
+        mixing.update(
+            value=None,
+            relative_error_to_required=None,
+            degenerate=True,
+            reason=(
+                "no spectral gap (chain reducible/periodic; lambda_2 >= 1) so the mixing "
+                "time is not finite; fails closed rather than emitting a step time"
+            ),
+        )
+    rows.append(mixing)
+
+    mean_fpt = _mean_first_passage_time(observer_path)
+    fpt: dict[str, Any] = {
+        "name": "mean_first_passage_time",
+        "provenance": "run_data_derived",
+        "derived_from_run_data": True,
+        "description": "observer-averaged mean of first_passage_time_histogram in observer_views.jsonl",
+    }
+    if mean_fpt is not None and math.isfinite(mean_fpt) and mean_fpt > 0.0:
+        fpt.update(value=float(mean_fpt), relative_error_to_required=rel_error(mean_fpt), degenerate=False)
+    else:
+        fpt.update(
+            value=None,
+            relative_error_to_required=None,
+            degenerate=True,
+            reason="first_passage_time_histogram absent or empty in observer_views.jsonl; fails closed",
+        )
+    rows.append(fpt)
+    return rows
+
+
+def _mean_first_passage_time(observer_path: Path | None) -> float | None:
+    """Observer-averaged mean first-passage time from observer_views.jsonl.
+
+    Each observer view may carry a ``first_passage_time_histogram`` mapping an
+    integer step bin (as a string key) to a probability.  We normalize each
+    observer's histogram, take its mean, and average those observer means.
+    Returns None when no usable histogram is present (caller fails closed).
+    """
+
+    if observer_path is None or not Path(observer_path).exists():
+        return None
+    observer_mean_sum = 0.0
+    observer_count = 0
+    with Path(observer_path).open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            try:
+                view = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            hist = view.get("first_passage_time_histogram")
+            if not isinstance(hist, dict) or not hist:
+                continue
+            mass = 0.0
+            weighted = 0.0
+            for key, prob in hist.items():
+                p = _float_or_none(prob)
+                t = _float_or_none(key)
+                if p is None or t is None or p < 0.0:
+                    continue
+                mass += p
+                weighted += t * p
+            if mass > 0.0:
+                observer_mean_sum += weighted / mass
+                observer_count += 1
+    if observer_count == 0:
+        return None
+    return observer_mean_sum / observer_count
 
 
 def _is_strongly_connected(adjacency: np.ndarray) -> bool:
