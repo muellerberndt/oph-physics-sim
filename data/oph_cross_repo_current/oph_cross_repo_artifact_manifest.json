@@ -561,10 +561,31 @@
       "source_tracked": true,
       "status": null,
       "target_relpath": "imported_oph_artifacts/regulator_gluing_evidence_bundle_current.json"
+    },
+    {
+      "artifact": "issue-320-collar-poisson-witness-v1",
+      "byte_count": 19566,
+      "declared_promotion_allowed": null,
+      "epistemic_class": "exact_conditional_counting_witness_not_physical_realization",
+      "format_version": null,
+      "generated_utc": null,
+      "identity_path": [
+        "certificate_id"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "collar_poisson_witness",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:01d77edd9ea7867e27013370a6d580d62c85a54085dc7a09494b5a5f124415e2",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/dark_matter/certificates/collar_poisson_witness_certificate.json",
+      "source_tracked": true,
+      "status": null,
+      "target_relpath": "imported_oph_artifacts/collar_poisson_witness_certificate.json"
     }
   ],
   "claim_boundary": "Imported paper and particle artifacts carry theorem/frontier provenance only. They never promote a simulation receipt; local verifiers must recompute every run-specific hypothesis.",
-  "manifest_payload_sha256": "sha256:f1974c7db597d0ab912291ce6f279942c9214bad9ae410318879b77d0f475fa9",
+  "manifest_payload_sha256": "sha256:1ae58d22807789974e4a222245116ceb29068da2cd9bfe4671be611713cff3cb",
   "missing_required_artifacts": [],
   "paper_release_id": "r1556",
   "run_receipts_promoted_by_import": false,

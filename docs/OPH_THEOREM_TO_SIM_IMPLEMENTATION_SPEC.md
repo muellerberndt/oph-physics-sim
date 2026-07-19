@@ -100,7 +100,8 @@ The current simulator has these stable surfaces:
 - Strict neutral-bulk frontier reports, kept separate from theorem-assisted H3 chart readouts.
 - Screen holonomy clusters, defect timelines, H3 worldline fits, proto-particle reports, and
   particle-likeness diagnostics.
-- An exact A5/icosahedral structural lane and conditional exterior-generation witness, with
+- An exact A5/icosahedral structural lane and conditional exterior-generation witness with an
+  exhaustive 30-row one-Higgs candidate ledger, with
   physical Standard-Model promotion kept separate and fail-closed.
 - An SCR330 source-screen radial lane with Mellin-window, tomography, null-space, quadrature,
   stability, ancestry, and forward-residual receipts behind an E4/E5 firewall.
@@ -235,10 +236,11 @@ Einstein branch entry, or a physical claim.
 
 The retained collar clause is a separate positive-source obligation. Gibbs/state assumptions,
 relative entropy or CMI bounds, a flux conditional expectation, and modular-centralizer or
-diagonal membership do not force it. `COLLAR_CLAUSE_SOURCE_RECEIPT` therefore requires a bounded,
-hash-pinned retained family and an explicit source-derived, refinement-natural factorization of
-every computed cross-cut density through the declared flux basis. The T0/T1/T2 no-go cases are
-mandatory negative controls and never promotion inputs.
+diagonal membership do not force it. The simulator recomputes a bounded, hash-pinned retained-family
+packet and explicit factorization of every supplied cross-cut coordinate through the declared flux
+basis. That earns only `COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT`; caller-created simulation
+derivation nodes are not independently resolved, so `COLLAR_CLAUSE_SOURCE_RECEIPT` remains false.
+The T0/T1/T2 no-go cases are mandatory negative controls and never promotion inputs.
 
 ## Lorentz And H3 Contract
 
@@ -345,8 +347,11 @@ spectrum, both opposite-triplet adjoint restrictions, and the exhaustive no-go f
 point partition of sizes `8+3+1`. That no-go does not contradict the linear-module decomposition.
 
 `A51` is the conditional one-generation witness `Lambda^2(C+W)+Lambda^4(C+W)`: dimensions
-`10+5=15`, the five `Q,u_c,e_c,d_c,L` representation rows and hypercharges, three conditional
-`H=W` invariant lines, five perturbative anomaly cancellations, and even SU(2) Witten parity.
+`10+5=15`, the five `Q,u_c,e_c,d_c,L` representation rows and hypercharges, and an exhaustive
+enumeration of all 15 unordered fermion pairs including diagonals against `H` and `Hdag`.
+Among those 30 representation-level candidates, six are nonabelian singlets and exactly three are
+also hypercharge-neutral invariant lines: `Q-H-u_c`, `Q-Hdag-d_c`, and `L-Hdag-e_c`. The witness
+also recomputes five perturbative anomaly cancellations and even SU(2) Witten parity.
 Neither receipt is `A52`. Physical promotion additionally requires native port-current and weak/load
 maps, refinement and global-form descent, exterior/Higgs selection, family attachment, exclusion of
 extra light sectors, continuum/spin/QFT realization, and the four-dimensional OS/gauge certificate.
@@ -406,21 +411,27 @@ Until then:
 comparable-observation tables. It is measurement-facing but not physical prediction.
 
 The canonical edge-center clock uses the full-collar derivative `P/24`, the orientation half
-`theta=P/48`, `n_s=1-P/48`, and `kappa=P/[48(P-phi)]`. It requires the derivative,
-orientation-half, semigroup-defect, refinement-defect, physical-clock-binding, and clean-source-DAG
-receipts. Euler's number and numerical target matches are diagnostics only. The finite-step survival
-exponent `-log(lambda_2)/Delta t` is a distinct quantity and must not be relabelled as the
-infinitesimal source clock. Standalone packets use
-`schemas/cosmology/edge_center_clock_receipt.schema.json`; copied receipt booleans, invented digest
-strings, cyclic ancestry, and measurement/fit/likelihood ancestors fail closed because both the
-binding payload and source DAG are canonically rehashed.
+`theta=P/48`, `n_s=1-P/48`, and `kappa=P/[48(P-phi)]`. The standalone validator recomputes the
+derivative, orientation-half, semigroup-defect, refinement-defect, clock-binding packet consistency,
+clean-source-DAG, and generative-P packet gates. Euler's number and numerical target matches are
+diagnostics only. The finite-step survival exponent `-log(lambda_2)/Delta t` is a distinct quantity
+and must not be relabelled as the infinitesimal source clock. Standalone packets use
+`schemas/cosmology/edge_center_clock_receipt.schema.json`; copied receipt booleans, mismatched binding
+digests, cyclic ancestry, and measurement/fit/likelihood ancestors fail closed because both the
+binding payload and source DAG are canonically rehashed. Root theorem digests are not externally
+resolved by this validator, so canonical rehashing proves only internal packet consistency. Until a
+resolver independently replays raw finite-run artifacts, `PHYSICAL_CLOCK_BINDING_RECEIPT`,
+`INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT`, `EDGE_CENTER_CLOCK_RECEIPT`, and every downstream physical
+clock promotion remain false.
 
 The SCR330 source-screen contract (`scr330-radial-v2`) computes Mellin windows and derivatives,
 radial projection, unrestricted null-space and finite-window errors, quadrature and stability
 checks, ancestry, and a forward residual. It can emit `SOURCE_DILATION` or
 `RADIAL_TOMOGRAPHY`; `PRIOR_CONTINUATION` never promotes. Its E4 source outputs have no edge back
 from transfer, likelihood, residual, posterior, fit, or observed TT/TE/EE data, and cannot claim an
-E5 observable spectrum.
+E5 observable spectrum. The current E5 firewall contract also cannot promote one: the upstream E4
+receipt, transfer source, solver assumptions, and frozen likelihood must first be independently
+resolved and replayed rather than supplied as digest declarations.
 
 The neutrino lane follows the separate contract in `docs/neutrino_status.md` and
 `schemas/cosmology/neutrino_status.schema.json`. OPH currently has no source-derived neutrino mass

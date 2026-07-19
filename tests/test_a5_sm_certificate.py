@@ -112,10 +112,73 @@ def test_conditional_exterior_generation_fields_and_higgs_lines_are_exact():
     assert package["dual_overlap"] == []
     assert package["disjoint_from_dual"] is True
     assert higgs["conditional_scalar_identification"] == "H=W"
+    assert higgs["fermion_pair_enumeration"] == "unordered_with_repetition"
+    assert higgs["candidate_count"] == 30
+    assert len(higgs["candidate_ledger"]) == 30
+    assert len({row["candidate_id"] for row in higgs["candidate_ledger"]}) == 30
+    assert higgs["exhaustive_candidate_ledger_complete"] is True
+    assert higgs["canonical_invariant_candidate_ids"] == [
+        "Q_H_u_c",
+        "Q_Hdag_d_c",
+        "L_Hdag_e_c",
+    ]
+    assert higgs["nonzero_invariant_candidate_ids"] == [
+        "Q_H_u_c",
+        "Q_Hdag_d_c",
+        "L_Hdag_e_c",
+    ]
+    assert higgs["nonzero_set_equals_three_canonical_channels"] is True
     assert higgs["invariant_line_count"] == 3
     assert higgs["all_channels_exact_singlets"] is True
     assert all(row["hypercharge_sum"] == "0" for row in higgs["channels"].values())
     assert all(row["invariant_line_multiplicity"] == 1 for row in higgs["channels"].values())
+    assert sum(
+        row["invariant_line_multiplicity"] for row in higgs["candidate_ledger"]
+    ) == 3
+    observed_ledger = {
+        row["candidate_id"]: (
+            row["hypercharge_sum"],
+            row["su3_singlet_multiplicity"],
+            row["su2_singlet_multiplicity"],
+            row["invariant_line_multiplicity"],
+        )
+        for row in higgs["candidate_ledger"]
+    }
+    assert observed_ledger == {
+        "Q_H_Q": ("5/6", 0, 0, 0),
+        "Q_Hdag_Q": ("-1/6", 0, 0, 0),
+        "Q_H_L": ("1/6", 0, 0, 0),
+        "Q_Hdag_L": ("-5/6", 0, 0, 0),
+        "Q_H_u_c": ("0", 1, 1, 1),
+        "Q_Hdag_u_c": ("-1", 1, 1, 0),
+        "Q_H_d_c": ("1", 1, 1, 0),
+        "Q_Hdag_d_c": ("0", 1, 1, 1),
+        "Q_H_e_c": ("5/3", 0, 1, 0),
+        "Q_Hdag_e_c": ("2/3", 0, 1, 0),
+        "L_H_L": ("-1/2", 1, 0, 0),
+        "L_Hdag_L": ("-3/2", 1, 0, 0),
+        "L_H_u_c": ("-2/3", 0, 1, 0),
+        "L_Hdag_u_c": ("-5/3", 0, 1, 0),
+        "L_H_d_c": ("1/3", 0, 1, 0),
+        "L_Hdag_d_c": ("-2/3", 0, 1, 0),
+        "L_H_e_c": ("1", 1, 1, 0),
+        "L_Hdag_e_c": ("0", 1, 1, 1),
+        "u_c_H_u_c": ("-5/6", 0, 0, 0),
+        "u_c_Hdag_u_c": ("-11/6", 0, 0, 0),
+        "u_c_H_d_c": ("1/6", 0, 0, 0),
+        "u_c_Hdag_d_c": ("-5/6", 0, 0, 0),
+        "u_c_H_e_c": ("5/6", 0, 0, 0),
+        "u_c_Hdag_e_c": ("-1/6", 0, 0, 0),
+        "d_c_H_d_c": ("7/6", 0, 0, 0),
+        "d_c_Hdag_d_c": ("1/6", 0, 0, 0),
+        "d_c_H_e_c": ("11/6", 0, 0, 0),
+        "d_c_Hdag_e_c": ("5/6", 0, 0, 0),
+        "e_c_H_e_c": ("5/2", 1, 0, 0),
+        "e_c_Hdag_e_c": ("3/2", 1, 0, 0),
+    }
+    assert higgs["fermion_pair_count"] == 15
+    assert higgs["nonabelian_singlet_candidate_count"] == 6
+    assert higgs["hypercharge_neutral_candidate_count"] == 3
 
 
 def test_exterior_anomalies_and_witten_parity_pass_but_physical_gates_stay_false():
@@ -202,6 +265,22 @@ def test_schema_and_independent_verifier_reject_forged_native_fields():
     assert verification["checks"]["payload_hash_matches"] is True
     assert verification["checks"]["native_computation_matches_recomputation"] is False
     assert "native_computation_matches_recomputation" in verification["blockers"]
+
+
+def test_verifier_rejects_rehashed_negative_yukawa_ledger_tampering():
+    report = a5_sm_structural_certificate()
+    forged = copy.deepcopy(report)
+    ledger = forged["native_computation"]["exterior_one_generation_witness"][
+        "one_higgs_invariant_lines"
+    ]["candidate_ledger"]
+    ledger[0]["hypercharge_sum"] = "0"
+    forged["certificate_payload_sha256"] = _payload_hash(forged)
+
+    verification = verify_a5_sm_structural_certificate(forged)
+
+    assert verification["verified"] is False
+    assert verification["checks"]["payload_hash_matches"] is True
+    assert verification["checks"]["native_computation_matches_recomputation"] is False
 
 
 def test_verifier_rejects_physical_promotion_even_with_a_rehashed_payload():

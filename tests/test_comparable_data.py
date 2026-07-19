@@ -1340,7 +1340,7 @@ def test_comparable_data_tracks_selected_finite_clock_without_promoting_open_evi
     assert lane["legacy_nonpromoting_diagnostics"]["artifact_count"] == 0
 
 
-def test_comparable_data_accepts_complete_hash_bound_edge_clock_receipt(tmp_path: Path):
+def test_comparable_data_keeps_hash_bound_edge_clock_packet_nonpromoting(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
     target = edge_center_clock_target(P_SOURCE_MAP)
@@ -1369,8 +1369,57 @@ def test_comparable_data_accepts_complete_hash_bound_edge_clock_receipt(tmp_path
     ]
 
     assert lane["selected_edge_center_branch_count"] == 1
-    assert lane["edge_center_clock_receipt_count"] == 1
+    assert lane["edge_center_clock_receipt_count"] == 0
     assert lane["mean_n_s"] == target.n_s
+
+
+def test_comparable_data_rejects_forged_nested_edge_clock_receipts(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    forged_checks = {
+        f"forged_check_{index}": True
+        for index in range(len(EDGE_CENTER_EVIDENCE_RECEIPTS))
+    }
+    forged_evidence = {
+        "schema": "oph-edge-center-clock-v1",
+        "selected_target": {
+            "selected_branch": "edge_center_orientation_half",
+        },
+        "receipts": {
+            name: True for name in EDGE_CENTER_EVIDENCE_RECEIPTS
+        },
+        "checks": forged_checks,
+        "observed": {
+            "clock_binding_hash_matches": True,
+            "source_dag_hash_matches": True,
+            "source_dag_audit": {"clean": True},
+        },
+        **{name: True for name in EDGE_CENTER_EVIDENCE_RECEIPTS},
+        EDGE_CENTER_CLOCK_RECEIPT: True,
+        "edge_center_clock_evidence_complete": True,
+    }
+    _write_json(
+        run / "finite_repair_clock_cmb_camb_report.json",
+        {
+            "mode": "finite_repair_clock_cmb_camb_transfer_v0",
+            "physical_cmb_prediction": True,
+            "finite_lattice_clock_derived": True,
+            "finite_repair_clock_input": {
+                "selected_branch": "edge_center_orientation_half",
+                "edge_center_clock_evidence": forged_evidence,
+                EDGE_CENTER_CLOCK_RECEIPT: True,
+            },
+        },
+    )
+
+    lane = comparable_data_report([run])["measurement_lanes"][
+        "finite_repair_clock_cmb_camb_transfer"
+    ]
+
+    assert lane["selected_edge_center_branch_count"] == 1
+    assert lane["edge_center_clock_receipt_count"] == 0
+    assert lane["finite_lattice_clock_derived_count"] == 0
+    assert lane["physical_cmb_prediction_count"] == 0
 
 
 def test_comparable_data_collects_inflation_cmb_v05_hard_gates(tmp_path: Path):
@@ -1767,21 +1816,32 @@ def _complete_edge_clock_packet() -> dict[str, object]:
         "semigroup_defect": 0.0,
         "refinement_defect": 0.0,
     }
+    binding_sha256 = canonical_edge_clock_hash(binding)
     source_dag = {
         "nodes": [
             {
                 "id": "full-collar-source",
                 "kind": "source_theorem",
                 "sha256": "sha256:" + "c" * 64,
+            },
+            {
+                "id": "finite_refinement_clock_bundle",
+                "kind": "clock_binding",
+                "sha256": binding_sha256,
+            },
+        ],
+        "edges": [
+            {
+                "from": "full-collar-source",
+                "to": "finite_refinement_clock_bundle",
             }
         ],
-        "edges": [],
     }
     return {
         **{name: True for name in EDGE_CENTER_EVIDENCE_RECEIPTS},
         "pixel_profile": PixelParameterProfile.SOURCE_MAP.value,
         "clock_binding_payload": binding,
-        "clock_binding_sha256": canonical_edge_clock_hash(binding),
+        "clock_binding_sha256": binding_sha256,
         "source_dag": source_dag,
         "source_dag_sha256": canonical_edge_clock_hash(source_dag),
     }

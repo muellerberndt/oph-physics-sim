@@ -51,14 +51,89 @@ def test_lyapunov_descent_receipt_uses_trace_phi_pairs():
 
 def test_boundary_fiber_receipt_requires_unique_extension():
     report = boundary_conditioned_uniqueness_receipt(
+        fiber_rows=[
+            {"record_id": "a", "boundary": {"root": 0}, "sector": "even", "gauge_class": "g0"},
+            {"record_id": "b", "boundary": {"root": 0}, "sector": "even", "gauge_class": "g0"},
+        ],
+        transition_rows=[{"source": "a", "target": "b"}],
+    )
+
+    assert report["BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT"] is True
+    assert report["BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"] is False
+    assert report["complete_fiber_manifest"] is False
+    assert report["external_complete_fiber_manifest_resolved"] is False
+    assert report["claim_level"] == "continuation"
+    assert report["singleton_modulo_gauge"] is True
+    assert report["PHYSICAL_EINSTEIN_BOUNDARY_APPLICATION_RECEIPT"] is False
+    assert report["TREE_PACKET_NET_BOUNDARY_FIBER_THEOREM_PINNED"] is True
+    assert report["pinned_theory_registry_release"] == "r1556@bec81e2d"
+    assert [
+        artifact["artifact_id"] for artifact in report["pinned_theory_artifacts"]
+    ] == [
+        "rer-r1556-boundary-fiber-lean",
+        "rer-r1556-primitives-boundary-theorem-lean",
+        "rer-r1556-rule90-boundary-witness-lean",
+    ]
+
+
+def test_boundary_fiber_single_row_cannot_self_attest_manifest_completeness():
+    report = boundary_conditioned_uniqueness_receipt(
+        fiber_rows=[
+            {
+                "record_id": "selected-subset",
+                "boundary": "b",
+                "sector": "s",
+                "gauge_class": "g0",
+            }
+        ],
+        transition_rows=[
+            {"source": "selected-subset", "target": "selected-subset"}
+        ],
+    )
+
+    assert report["BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT"] is True
+    assert report["BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"] is False
+    assert report["complete_fiber_manifest"] is False
+    assert report["uniqueness_blockers"] == [
+        "external_complete_fiber_manifest_unresolved"
+    ]
+
+
+def test_boundary_fiber_legacy_count_and_coarse_boundary_fail_closed():
+    legacy = boundary_conditioned_uniqueness_receipt(
         boundary_map_preserved=True,
         sector_map_preserved=True,
         consistent_extension_count=1,
-        checked_states=8,
+    )
+    coarse = boundary_conditioned_uniqueness_receipt(
+        fiber_rows=[
+            {"record_id": "a", "boundary": 0, "sector": "s", "gauge_class": "g0"},
+            {"record_id": "b", "boundary": 0, "sector": "s", "gauge_class": "g1"},
+        ],
+        transition_rows=[{"source": "a", "target": "b"}],
     )
 
-    assert report["BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"] is True
-    assert report["claim_level"] == "recovered_core"
+    assert legacy["BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"] is False
+    assert "explicit_consistent_quotient_fiber_missing" in legacy["blockers"]
+    assert coarse["BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"] is False
+    assert "boundary_fiber_not_singleton_modulo_gauge" in coarse["blockers"]
+
+
+def test_boundary_fiber_rejects_invalid_unicode_identifier_without_crashing():
+    report = boundary_conditioned_uniqueness_receipt(
+        fiber_rows=[
+            {
+                "record_id": "\ud800",
+                "boundary": "b",
+                "sector": "s",
+                "gauge_class": "g",
+            }
+        ],
+        transition_rows=[],
+    )
+
+    assert report["BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT"] is False
+    assert "malformed_fiber_rows" in report["blockers"]
 
 
 def test_exact_repair_projection_receipt_rejects_non_projection():
@@ -178,6 +253,100 @@ def test_borel_weil_higgs_carrier_report_writer(tmp_path):
 
 def test_fair_block_certificate_is_conditional_continuation():
     report = fair_block_consensus_certificate(
+        transition_matrix=[[0.8, 0.2], [0.3, 0.7]],
+        initial_distribution=[1.0, 0.0],
+        fair_states=[1],
+        time_horizon_steps=12,
+    )
+
+    assert report["FAIR_BLOCK_CONSENSUS_CERTIFICATE"] is False
+    assert report["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is True
+    assert report["claim_level"] == "continuation"
+    assert report["probability_mode"] == "finite_horizon_expectation"
+    assert report["PERMANENT_SETTLING_RECEIPT"] is False
+    assert 0.0 <= report["expected_fair_occupation_fraction"] <= 1.0
+    assert report["consensus_blockers"] == [
+        "run_bound_fair_state_semantics_and_acceptance_threshold_unavailable"
+    ]
+
+
+def test_fair_block_arithmetic_does_not_certify_negligible_fair_occupation():
+    report = fair_block_consensus_certificate(
+        transition_matrix=[[0.999999, 0.000001], [0.5, 0.5]],
+        initial_distribution=[1.0, 0.0],
+        fair_states=[1],
+        time_horizon_steps=1,
+    )
+
+    assert report["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is True
+    assert report["expected_fair_occupation_fraction"] == 0.0
+    assert report["FAIR_BLOCK_CONSENSUS_CERTIFICATE"] is False
+
+
+def test_fair_block_ragged_or_oversized_kernel_fails_closed():
+    ragged = fair_block_consensus_certificate(
+        transition_matrix=[[1.0], [0.5, 0.5]],
+        initial_distribution=[1.0, 0.0],
+        fair_states=[1],
+        time_horizon_steps=1,
+    )
+    oversized = fair_block_consensus_certificate(
+        transition_matrix=[[1.0]] * 513,
+        initial_distribution=[1.0],
+        fair_states=[0],
+        time_horizon_steps=1,
+    )
+
+    assert ragged["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is False
+    assert oversized["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is False
+
+
+def test_fair_block_rejects_horizon_amplified_row_sum_error():
+    report = fair_block_consensus_certificate(
+        transition_matrix=[[1.0 + 5.0e-13]],
+        initial_distribution=[1.0],
+        fair_states=[0],
+        time_horizon_steps=1_000_000,
+    )
+
+    assert report["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is False
+    assert "markov_kernel_not_row_stochastic" in report["blockers"]
+
+    initial = fair_block_consensus_certificate(
+        transition_matrix=[[1.0]],
+        initial_distribution=[1.0 + 5.0e-13],
+        fair_states=[0],
+        time_horizon_steps=1,
+    )
+    assert initial["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is False
+    assert "initial_distribution_missing_or_invalid" in initial["blockers"]
+
+
+def test_fair_block_cubic_diagnostics_have_an_explicit_work_budget():
+    size = 272
+    report = fair_block_consensus_certificate(
+        transition_matrix=[
+            [1.0 if row == column else 0.0 for column in range(size)]
+            for row in range(size)
+        ],
+        initial_distribution=[1.0] + [0.0] * (size - 1),
+        fair_states=[0],
+        time_horizon_steps=1,
+    )
+
+    assert report["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"] is False
+    assert "stationary_and_contraction_operation_budget_exceeded" in report["blockers"]
+
+
+def test_fair_block_legacy_scalars_reject_float_overflow_without_raising():
+    report = fair_block_consensus_certificate(lambda_contraction=10**400)
+
+    assert report["legacy_declared_constants"]["lambda_contraction"] is None
+    assert report["FAIR_BLOCK_CONSENSUS_CERTIFICATE"] is False
+
+
+def test_fair_block_legacy_constants_and_persistent_noise_claim_fail_closed():
+    report = fair_block_consensus_certificate(
         lambda_contraction=0.8,
         epsilon_noise=0.01,
         beta=2.0,
@@ -186,5 +355,7 @@ def test_fair_block_certificate_is_conditional_continuation():
         active_fraction=0.75,
     )
 
-    assert report["FAIR_BLOCK_CONSENSUS_CERTIFICATE"] is True
-    assert report["claim_level"] == "continuation"
+    assert report["FAIR_BLOCK_CONSENSUS_CERTIFICATE"] is False
+    assert report["legacy_declaration_present"] is True
+    assert report["legacy_declarations_promoted"] is False
+    assert report["ALL_TIME_TUBE_RECEIPT"] is False

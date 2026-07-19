@@ -59,12 +59,15 @@ Physical CMB prediction has a stricter contract: finite OPH sources for amplitud
 
 The canonical edge-center clock uses the full-collar derivative `P/24`, its
 orientation half `theta=P/48`, `n_s=1-P/48`, and
-`kappa=P/[48(P-phi)]`. Seven independent receipts are required: full-collar
-derivative, orientation-half identity, semigroup defect, refinement defect,
-physical clock binding, a clean source DAG, and a declared generative `P`
-profile whose canonical value matches the packet. Euler's number is a legacy
-diagnostic, not the clock target; the finite survival exponent
-`-log(lambda_2)/Delta t` is also a distinct quantity.
+`kappa=P/[48(P-phi)]`. The validator recomputes seven packet-consistency
+gates: full-collar derivative, orientation-half identity, semigroup defect,
+refinement defect, clock-binding packet consistency, a clean source DAG, and a declared
+generative `P` profile whose canonical value matches the packet. Those gates
+do not authenticate their own inputs. A separate independent finite-run replay
+receipt and the physical clock-binding receipt are therefore hard-false;
+consequently `EDGE_CENTER_CLOCK_RECEIPT` stays false even for a hash-consistent packet.
+Euler's number is a legacy diagnostic, not the clock target; the finite
+survival exponent `-log(lambda_2)/Delta t` is also a distinct quantity.
 
 The SCR330 radial source contract is `scr330-radial-v2`. It recomputes Mellin
 windows and derivatives, radial projection, the unrestricted null space,

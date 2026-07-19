@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/finite-markov-fair-block-v2.schema.json",
+  "title": "OPH finite-Markov fair-block arithmetic replay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "mode", "probability_mode",
+    "FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT", "FAIR_BLOCK_CONSENSUS_CERTIFICATE",
+    "PERMANENT_SETTLING_RECEIPT", "ALL_TIME_TUBE_RECEIPT",
+    "RUN_ARTIFACT_BINDING_RECEIPT", "receipt", "time_horizon_steps",
+    "state_count", "estimated_cubic_work", "max_distribution_renormalization", "fair_states", "irreducible",
+    "dobrushin_contraction", "stationary_distribution", "stationary_residual",
+    "stationary_fair_mass", "initial_distribution", "final_distribution",
+    "final_total_variation_to_stationary", "expected_fair_occupation_fraction",
+    "legacy_declared_constants", "legacy_declaration_present",
+    "legacy_declarations_promoted", "blockers", "consensus_blockers",
+    "claim_boundary", "claim_level", "physical_claim", "observable_id",
+    "fit_objective", "receipt_name", "receipt_schema_version", "input_packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": "finite-markov-fair-block-v2"},
+    "mode": {"const": "finite_markov_fair_block_recomputation"},
+    "probability_mode": {"const": "finite_horizon_expectation"},
+    "FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT": {"type": "boolean"},
+    "FAIR_BLOCK_CONSENSUS_CERTIFICATE": {"const": false},
+    "PERMANENT_SETTLING_RECEIPT": {"const": false},
+    "ALL_TIME_TUBE_RECEIPT": {"const": false},
+    "RUN_ARTIFACT_BINDING_RECEIPT": {"const": false},
+    "receipt": {"const": false},
+    "time_horizon_steps": {"type": ["integer", "null"], "minimum": 1, "maximum": 1000000},
+    "state_count": {"type": "integer", "minimum": 0, "maximum": 512},
+    "estimated_cubic_work": {"type": "integer", "minimum": 0},
+    "max_distribution_renormalization": {"type": "number", "minimum": 0},
+    "fair_states": {
+      "type": "array", "uniqueItems": true, "maxItems": 512,
+      "items": {"type": "integer", "minimum": 0, "maximum": 511}
+    },
+    "irreducible": {"type": "boolean"},
+    "dobrushin_contraction": {"$ref": "#/$defs/nullableNonnegative"},
+    "stationary_distribution": {"$ref": "#/$defs/nullableProbabilityVector"},
+    "stationary_residual": {"$ref": "#/$defs/nullableNonnegative"},
+    "stationary_fair_mass": {"$ref": "#/$defs/nullableProbability"},
+    "initial_distribution": {"$ref": "#/$defs/nullableProbabilityVector"},
+    "final_distribution": {"$ref": "#/$defs/nullableProbabilityVector"},
+    "final_total_variation_to_stationary": {"$ref": "#/$defs/nullableProbability"},
+    "expected_fair_occupation_fraction": {"$ref": "#/$defs/nullableProbability"},
+    "legacy_declared_constants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["lambda_contraction", "epsilon_noise", "beta", "lipschitz_L", "block_count", "active_fraction"],
+      "properties": {
+        "lambda_contraction": {"type": ["number", "null"]},
+        "epsilon_noise": {"type": ["number", "null"]},
+        "beta": {"type": ["number", "null"]},
+        "lipschitz_L": {"type": ["number", "null"]},
+        "block_count": {"type": ["integer", "null"]},
+        "active_fraction": {"type": ["number", "null"]}
+      }
+    },
+    "legacy_declaration_present": {"type": "boolean"},
+    "legacy_declarations_promoted": {"const": false},
+    "blockers": {"$ref": "#/$defs/blockers"},
+    "consensus_blockers": {"const": ["run_bound_fair_state_semantics_and_acceptance_threshold_unavailable"]},
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "claim_level": {"const": "continuation"},
+    "physical_claim": {"const": false},
+    "observable_id": {"const": "FAIR_BLOCK_CONSENSUS_CERTIFICATE"},
+    "fit_objective": {"const": "not_applicable"},
+    "receipt_name": {"const": "FAIR_BLOCK_CONSENSUS_CERTIFICATE"},
+    "receipt_schema_version": {"const": "2026-06-06b"},
+    "input_packet_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT": {"const": true}},
+        "required": ["FAIR_BLOCK_MARKOV_RECOMPUTATION_RECEIPT"]
+      },
+      "then": {
+        "properties": {
+          "blockers": {"maxItems": 0}, "irreducible": {"const": true},
+          "state_count": {"minimum": 1}, "fair_states": {"minItems": 1},
+          "dobrushin_contraction": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+          "stationary_distribution": {"type": "array", "minItems": 1},
+          "stationary_residual": {"type": "number", "minimum": 0, "maximum": 1e-10},
+          "stationary_fair_mass": {"type": "number", "minimum": 0, "maximum": 1},
+          "initial_distribution": {"type": "array", "minItems": 1},
+          "final_distribution": {"type": "array", "minItems": 1},
+          "final_total_variation_to_stationary": {"type": "number", "minimum": 0, "maximum": 1},
+          "expected_fair_occupation_fraction": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "nullableNonnegative": {"type": ["number", "null"], "minimum": 0},
+    "nullableProbability": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "nullableProbabilityVector": {
+      "type": ["array", "null"], "maxItems": 512,
+      "items": {"type": "number", "minimum": 0, "maximum": 1}
+    }
+  }
+}

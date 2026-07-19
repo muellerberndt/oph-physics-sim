@@ -862,28 +862,49 @@ def _source_reducers_from_contract(
         ),
         "N_CRC": {
             "mode": "direct_public_record_capacity",
-            "exact_public_record_capacity_evaluator": bool(
-                capacity_gates.get("finite_correctable_public_record_evaluator_implemented", False)
-            ),
-            "complete_terminal_fiber_receipt": bool(
-                capacity_report.get("complete_terminal_fiber_receipt", False)
-            ),
-            "whole_fiber_scalarization_receipt": bool(
-                capacity_report.get("whole_fiber_scalarization_receipt", False)
-            ),
-            "target_free_capacity_producer_receipt": bool(
-                capacity_report.get("target_free_capacity_producer_receipt", False)
-            ),
-            "robust_closure_receipt": bool(capacity_report.get("robust_closure_receipt", False)),
-            "unique_regulator_stable_slack_zero_receipt": bool(
-                capacity_report.get("unique_regulator_stable_slack_zero_receipt", False)
-            ),
-            "horizon_record_saturation_receipt": bool(
-                capacity_report.get("horizon_record_saturation_receipt", False)
-            ),
-            "physical_N_closure_receipt": bool(
-                capacity_report.get("PHYSICAL_N_CLOSURE_RECEIPT", False)
-            ),
+            "exact_public_record_capacity_evaluator": False,
+            "complete_terminal_fiber_receipt": False,
+            "whole_fiber_scalarization_receipt": False,
+            "target_free_capacity_producer_receipt": False,
+            "robust_closure_receipt": False,
+            "unique_regulator_stable_slack_zero_receipt": False,
+            "horizon_record_saturation_receipt": False,
+            "physical_N_closure_receipt": False,
+            "independent_public_record_capacity_recomputation_receipt": False,
+            "legacy_screen_capacity_declarations": {
+                "exact_evaluator": (
+                    capacity_gates.get(
+                        "finite_correctable_public_record_evaluator_implemented"
+                    )
+                    is True
+                ),
+                "complete_terminal_fiber": (
+                    capacity_report.get("complete_terminal_fiber_receipt") is True
+                ),
+                "whole_fiber_scalarization": (
+                    capacity_report.get("whole_fiber_scalarization_receipt") is True
+                ),
+                "target_free_capacity_producer": (
+                    capacity_report.get("target_free_capacity_producer_receipt")
+                    is True
+                ),
+                "robust_closure": (
+                    capacity_report.get("robust_closure_receipt") is True
+                ),
+                "unique_regulator_stable_slack_zero": (
+                    capacity_report.get(
+                        "unique_regulator_stable_slack_zero_receipt"
+                    )
+                    is True
+                ),
+                "horizon_record_saturation": (
+                    capacity_report.get("horizon_record_saturation_receipt") is True
+                ),
+                "physical_N_closure": (
+                    capacity_report.get("PHYSICAL_N_CLOSURE_RECEIPT") is True
+                ),
+            },
+            "legacy_declarations_promoted": False,
         },
     }
     return reducers
@@ -2103,22 +2124,12 @@ def _nonempty_string(value: Any) -> bool:
 def _N_source_from_screen_capacity(screen_capacity: dict[str, Any]) -> str:
     if not screen_capacity:
         return "unknown"
-    if (
-        screen_capacity.get("PHYSICAL_N_CLOSURE_RECEIPT", False)
-        and screen_capacity.get("complete_terminal_fiber_receipt", False)
-        and screen_capacity.get("whole_fiber_scalarization_receipt", False)
-        and screen_capacity.get("target_free_capacity_producer_receipt", False)
-        and screen_capacity.get("robust_closure_receipt", False)
-        and screen_capacity.get("unique_regulator_stable_slack_zero_receipt", False)
-        and screen_capacity.get("horizon_record_saturation_receipt", False)
-        and (screen_capacity.get("readiness_gates") or {}).get(
-            "finite_correctable_public_record_evaluator_implemented", False
-        )
-    ):
-        return "OPH_direct_public_record_capacity"
     observed = screen_capacity.get("observed_branch_normalization") or {}
     gates = screen_capacity.get("readiness_gates") or {}
-    if observed.get("N_CRC") is not None and gates.get("observed_branch_N_scr_readout_available", False):
+    if (
+        observed.get("N_CRC") is not None
+        and gates.get("observed_branch_N_scr_readout_available") is True
+    ):
         return "observed_horizon_comparison"
     return "unknown"
 

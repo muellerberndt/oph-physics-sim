@@ -575,7 +575,12 @@ def _global_halo_exchange_reduction(
     # replayable reciprocal packet/commit primitives.  Self-authored receipt
     # booleans must therefore remain diagnostic and cannot promote D1.
     live_seam_kernel_implemented = False
-    per_cycle = bool(reported_per_cycle and live_seam_kernel_implemented)
+    distributed_online_evidence_recomputed_receipt = False
+    per_cycle = bool(
+        reported_per_cycle
+        and live_seam_kernel_implemented
+        and distributed_online_evidence_recomputed_receipt
+    )
     seam_links = list(seam_readout.get("links") or [])
     frame_rows = _global_halo_replay_frames(seam_links)
     replay_receipt = bool(seam_links and frame_rows)
@@ -602,7 +607,11 @@ def _global_halo_exchange_reduction(
         for key in online_receipt_keys
     }
     online_receipts = {
-        key: bool(value and live_seam_kernel_implemented)
+        key: bool(
+            value
+            and live_seam_kernel_implemented
+            and distributed_online_evidence_recomputed_receipt
+        )
         for key, value in reported_online_receipts.items()
     }
     online_cross_shard_repair = bool(
@@ -616,6 +625,8 @@ def _global_halo_exchange_reduction(
     blockers = []
     if not live_seam_kernel_implemented:
         blockers.append("live_transactional_seam_kernel_not_implemented")
+    if not distributed_online_evidence_recomputed_receipt:
+        blockers.append("distributed_online_evidence_not_independently_recomputed")
     if not per_cycle:
         blockers.append("per_cycle_cross_shard_halo_exchange_receipt_missing")
     if not replay_receipt:
@@ -630,6 +641,9 @@ def _global_halo_exchange_reduction(
         "completed_shard_count": expected,
         "source_report_count": len(reports),
         "live_seam_kernel_implemented": live_seam_kernel_implemented,
+        "distributed_online_evidence_recomputed_receipt": (
+            distributed_online_evidence_recomputed_receipt
+        ),
         "reported_per_cycle_halo_exchange_claim": reported_per_cycle,
         "per_cycle_cross_shard_halo_exchange_receipt": per_cycle,
         "online_cross_shard_overlap_repair_receipt": online_cross_shard_repair,
@@ -759,18 +773,27 @@ def _global_neutral_bulk_reduction(
             "strict_neutral_bulk": False,
             "blockers": [f"global_neutral_bulk_reduction_failed:{type(exc).__name__}:{exc}"],
         }
+    online_evidence_recomputed = _literal_true(
+        halo_exchange.get("distributed_online_evidence_recomputed_receipt")
+    )
     online_halo = _literal_true(halo_exchange.get("per_cycle_cross_shard_halo_exchange_receipt"))
     neutral_ready = bool(
         _literal_true(neutral_report.get("strict_neutral_bulk"))
         or _literal_true(frontier.get("strict_neutral_bulk_ready"))
     )
-    strict_receipt = bool(neutral_ready and cross_shard_overlap_repair_receipt and online_halo)
+    strict_receipt = bool(
+        neutral_ready
+        and cross_shard_overlap_repair_receipt
+        and online_halo
+        and online_evidence_recomputed
+    )
     blockers = _unique_texts(
         list(neutral_report.get("blockers") or [])
         + list(frontier.get("blockers") or [])
         + ([] if observer_views else ["global_observer_views_missing"])
         + ([] if cross_shard_overlap_repair_receipt else ["online_cross_shard_overlap_repair_receipt_missing"])
         + ([] if online_halo else ["per_cycle_cross_shard_halo_exchange_receipt_missing"])
+        + ([] if online_evidence_recomputed else ["distributed_online_evidence_not_independently_recomputed"])
         + ([] if neutral_ready else ["global_strict_neutral_bulk_ready_false"])
     )
     report = {
@@ -787,6 +810,7 @@ def _global_neutral_bulk_reduction(
             halo_exchange.get("seam_metadata_replay_receipt")
         ),
         "per_cycle_cross_shard_halo_exchange_receipt": online_halo,
+        "distributed_online_evidence_recomputed_receipt": online_evidence_recomputed,
         "global_strict_neutral_bulk_ready": neutral_ready,
         "strict_single_global_neutral_bulk_receipt": strict_receipt,
         "strict_neutral_bulk_report_path": str(out_dir / "strict_neutral_bulk_report.json"),
@@ -1771,6 +1795,9 @@ def _distributed_run_pack_contract(
         "distributed_realization_event_certificate_receipt": _literal_true(
             global_carrier.get("distributed_realization_event_certificate_receipt")
         ),
+        "distributed_online_evidence_recomputed_receipt": _literal_true(
+            halo_exchange.get("distributed_online_evidence_recomputed_receipt")
+        ),
         "seam_metadata_replay_receipt": bool(seam_metadata_replay_receipt),
         "online_cross_shard_overlap_repair_receipt": _literal_true(
             halo_exchange.get("online_cross_shard_overlap_repair_receipt")
@@ -1850,6 +1877,7 @@ def _distributed_run_pack_contract(
         gates["all_expected_shards_completed"]
         and gates["global_carrier_contract_receipt"]
         and gates["distributed_realization_event_certificate_receipt"]
+        and gates["distributed_online_evidence_recomputed_receipt"]
         and gates["online_cross_shard_overlap_repair_receipt"]
         and gates["per_cycle_cross_shard_halo_exchange_receipt"]
         and gates["distributed_local_diamond_receipt"]
@@ -1898,6 +1926,7 @@ def _distributed_run_pack_contract(
             "all_expected_shards_completed",
             "global_carrier_contract_receipt",
             "distributed_realization_event_certificate_receipt",
+            "distributed_online_evidence_recomputed_receipt",
             "online_cross_shard_overlap_repair_receipt",
             "per_cycle_cross_shard_halo_exchange_receipt",
             "distributed_local_diamond_receipt",
@@ -2654,7 +2683,11 @@ python3 -m oph_fpe.cli reduce-distributed-oph-universe \\
 def _receipt_summary(shards: list[dict[str, Any]]) -> dict[str, Any]:
     summary: dict[str, Any] = {}
     for key in RECEIPT_KEYS:
-        passed = [row["shard_id"] for row in shards if bool((row.get("final_receipts") or {}).get(key, False))]
+        passed = [
+            row["shard_id"]
+            for row in shards
+            if _literal_true((row.get("final_receipts") or {}).get(key, False))
+        ]
         summary[key] = {
             "passed_count": len(passed),
             "total_completed": len(shards),

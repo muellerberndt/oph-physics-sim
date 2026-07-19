@@ -6,13 +6,97 @@ from oph_fpe.cosmology.source_provenance import (
 )
 
 
-def test_cmb_source_provenance_certificate_accepts_clean_source_graph():
+def test_cmb_source_provenance_holds_physical_n_closed_without_packet_replay():
     cert = certify_cmb_source_provenance(_clean_nodes(), _clean_reducers(), global_checks=_clean_global_checks())
 
-    assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is True
-    assert cert["blockers"] == []
-    assert cert["N_CRC_direct_public_record_capacity_receipt"] is True
+    assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
+    assert cert["N_CRC_direct_public_record_capacity_receipt"] is False
+    assert "N_CRC_direct_public_record_capacity_receipt_missing" in cert["blockers"]
+    assert (
+        cert["N_CRC_status"][
+            "independent_public_record_capacity_recomputation_receipt"
+        ]
+        is False
+    )
 
+
+def test_cmb_source_provenance_rejects_truthy_string_capacity_declarations():
+    reducers = _clean_reducers()
+    reducers["N_CRC"] = {
+        key: "false"
+        for key in (
+            "exact_public_record_capacity_evaluator",
+            "complete_terminal_fiber_receipt",
+            "whole_fiber_scalarization_receipt",
+            "target_free_capacity_producer_receipt",
+            "robust_closure_receipt",
+            "unique_regulator_stable_slack_zero_receipt",
+            "horizon_record_saturation_receipt",
+            "physical_N_closure_receipt",
+        )
+    }
+
+    cert = certify_cmb_source_provenance(
+        _clean_nodes(), reducers, global_checks=_clean_global_checks()
+    )
+
+    assert cert["N_CRC_direct_public_record_capacity_receipt"] is False
+    assert not any(
+        value is True
+        for key, value in cert["N_CRC_status"].items()
+        if key.endswith("receipt")
+    )
+
+
+def test_cmb_source_provenance_rejects_truthy_string_subreceipts() -> None:
+    nodes = _clean_nodes()
+    for node in nodes:
+        node["source_only"] = "false"
+        node["no_cmb_data_used"] = "false"
+    reducers = _clean_reducers()
+    for quantity, reducer in reducers.items():
+        if quantity != "N_CRC":
+            reducer["single_global_source"] = "false"
+    global_checks = _clean_global_checks()
+    global_checks["HERMETIC_READ_SET_RECEIPT"] = "false"
+    global_checks["SOURCE_MODEL_FREEZE_RECEIPT"] = "false"
+
+    cert = certify_cmb_source_provenance(
+        nodes,
+        reducers,
+        global_checks=global_checks,
+    )
+
+    assert cert["TRANSITIVE_SOURCE_ANCESTRY_RECEIPT"] is False
+    assert cert["HERMETIC_READ_SET_RECEIPT"] is False
+    assert cert["SOURCE_MODEL_FREEZE_RECEIPT"] is False
+    assert cert["pooled_source_reducer_receipt"] is False
+
+
+def test_cmb_source_provenance_bounds_long_parent_chains_without_recursion() -> None:
+    nodes = []
+    for index in range(513):
+        nodes.append(
+            {
+                "node_id": f"node-{index}",
+                "quantity": "eta_R" if index == 0 else "intermediate",
+                "source": "finite_lattice",
+                "source_kind": "finite_lattice",
+                "source_only": True,
+                "no_cmb_data_used": True,
+                "parents": [f"node-{index + 1}"] if index < 512 else [],
+            }
+        )
+
+    cert = certify_cmb_source_provenance(
+        nodes,
+        {},
+        global_checks={},
+        required_quantities=("eta_R",),
+    )
+
+    assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
+    assert "provenance_node_budget_exceeded" in cert["blockers"]
 
 def test_cmb_source_provenance_fails_closed_on_no_data_contradiction():
     nodes = _clean_nodes()
@@ -46,6 +130,34 @@ def test_cmb_source_provenance_rejects_measurement_dependent_ancestor():
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
     assert cert["TRANSITIVE_SOURCE_ANCESTRY_RECEIPT"] is False
     assert any("planck_selector" in blocker and "eta_R->planck_selector" in blocker for blocker in cert["blockers"])
+
+
+def test_cmb_source_provenance_rejects_unregistered_clean_looking_ancestor():
+    nodes = _clean_nodes()
+    nodes[0]["parents"] = ["asserted_clean"]
+    nodes.append(
+        {
+            "node_id": "asserted_clean",
+            "quantity": "intermediate",
+            "source": "caller_asserted_clean",
+            "source_kind": "caller_asserted_clean",
+            "source_only": True,
+            "no_cmb_data_used": True,
+            "parents": [],
+        }
+    )
+
+    cert = certify_cmb_source_provenance(
+        nodes,
+        _clean_reducers(),
+        global_checks=_clean_global_checks(),
+    )
+
+    assert cert["TRANSITIVE_SOURCE_ANCESTRY_RECEIPT"] is False
+    assert any(
+        blocker.startswith("unregistered_source_ancestor:asserted_clean")
+        for blocker in cert["blockers"]
+    )
 
 
 def test_cmb_source_provenance_requires_pooled_or_single_global_reducers():

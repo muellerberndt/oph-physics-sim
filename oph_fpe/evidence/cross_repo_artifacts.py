@@ -206,6 +206,13 @@ DEFAULT_ARTIFACT_SPECS: tuple[ArtifactSpec, ...] = (
         "exact_fixed_cutoff_regulator_gluing_witness",
         identity_path=("bundle", "schema"),
     ),
+    ArtifactSpec(
+        "collar_poisson_witness",
+        "code/dark_matter/certificates/collar_poisson_witness_certificate.json",
+        "issue-320-collar-poisson-witness-v1",
+        "exact_conditional_counting_witness_not_physical_realization",
+        identity_path=("certificate_id",),
+    ),
 )
 
 

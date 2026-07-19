@@ -10,12 +10,19 @@
     "receipt",
     "passed",
     "source_eligible",
+    "COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT",
+    "INDEPENDENT_COLLAR_RUN_REPLAY_RECEIPT",
+    "packet_consistency_passed",
     "packet_id",
     "packet_hash",
     "source_dag_hash",
     "computed_source_dag_hash",
     "source_dag_hash_matches",
     "source_dag_clean",
+    "pinned_theory_registry_release",
+    "pinned_theory_registry_complete",
+    "pinned_theory_artifact_ids",
+    "unregistered_lean_node_ids",
     "collar_layer_hash",
     "computed_collar_layer_hash",
     "collar_layer_hash_matches",
@@ -27,7 +34,15 @@
     "left_basis_rank",
     "right_basis_rank",
     "flux_basis_rank",
+    "combined_sector_rank",
+    "declared_sector_rank_sum",
+    "sector_direct_sum_independent",
+    "flux_is_proper_ambient_sector",
+    "basis_conditioning",
+    "basis_numerical_conditioning_passed",
     "retained_density_count",
+    "estimated_linear_algebra_work",
+    "retained_object_semantics",
     "retained_family_complete",
     "family_laws_source_derived",
     "nonvacuous_cross_cut",
@@ -46,14 +61,29 @@
     "schema_version": {"const": "oph-collar-clause-v1"},
     "algorithm": {"const": "bounded-retained-family-flux-factorization-v1"},
     "receipt": {"const": "COLLAR_CLAUSE_SOURCE_RECEIPT"},
-    "passed": {"type": "boolean"},
-    "source_eligible": {"type": "boolean"},
-    "packet_id": {"type": "string", "minLength": 1},
+    "passed": {"const": false},
+    "source_eligible": {"const": false},
+    "COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT": {"type": "boolean"},
+    "INDEPENDENT_COLLAR_RUN_REPLAY_RECEIPT": {"const": false},
+    "packet_consistency_passed": {"type": "boolean"},
+    "packet_id": {"type": "string", "minLength": 1, "maxLength": 256},
     "packet_hash": {"$ref": "#/$defs/hash"},
     "source_dag_hash": {"$ref": "#/$defs/hash"},
     "computed_source_dag_hash": {"$ref": "#/$defs/hash"},
     "source_dag_hash_matches": {"type": "boolean"},
     "source_dag_clean": {"type": "boolean"},
+    "pinned_theory_registry_release": {"const": "r1556@bec81e2d"},
+    "pinned_theory_registry_complete": {"type": "boolean"},
+    "pinned_theory_artifact_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}
+    },
+    "unregistered_lean_node_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}
+    },
     "collar_layer_hash": {"$ref": "#/$defs/hash"},
     "computed_collar_layer_hash": {"$ref": "#/$defs/hash"},
     "collar_layer_hash_matches": {"type": "boolean"},
@@ -62,18 +92,39 @@
     "computed_retained_family_hash": {"$ref": "#/$defs/hash"},
     "retained_family_hash_matches": {"type": "boolean"},
     "ambient_dimension": {"type": "integer", "minimum": 1, "maximum": 256},
-    "left_basis_rank": {"type": "integer", "minimum": 0},
-    "right_basis_rank": {"type": "integer", "minimum": 0},
-    "flux_basis_rank": {"type": "integer", "minimum": 0},
-    "retained_density_count": {"type": "integer", "minimum": 0},
+    "left_basis_rank": {"type": "integer", "minimum": 0, "maximum": 256},
+    "right_basis_rank": {"type": "integer", "minimum": 0, "maximum": 256},
+    "flux_basis_rank": {"type": "integer", "minimum": 0, "maximum": 256},
+    "combined_sector_rank": {"type": "integer", "minimum": 0, "maximum": 256},
+    "declared_sector_rank_sum": {"type": "integer", "minimum": 0, "maximum": 768},
+    "sector_direct_sum_independent": {"type": "boolean"},
+    "flux_is_proper_ambient_sector": {"type": "boolean"},
+    "basis_conditioning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left", "right", "flux", "combined"],
+      "properties": {
+        "left": {"$ref": "#/$defs/basisCondition"},
+        "right": {"$ref": "#/$defs/basisCondition"},
+        "flux": {"$ref": "#/$defs/basisCondition"},
+        "combined": {"$ref": "#/$defs/basisCondition"}
+      }
+    },
+    "basis_numerical_conditioning_passed": {"type": "boolean"},
+    "retained_density_count": {"type": "integer", "minimum": 0, "maximum": 1024},
+    "estimated_linear_algebra_work": {"type": "integer", "minimum": 1, "maximum": 50000000},
+    "retained_object_semantics": {
+      "const": "bounded_real_coordinate_vector_not_verified_density_operator"
+    },
     "retained_family_complete": {"type": "boolean"},
     "family_laws_source_derived": {"type": "boolean"},
     "nonvacuous_cross_cut": {"type": "boolean"},
     "all_support_classifications_match": {"type": "boolean"},
     "all_cross_cut_factor_through_flux": {"type": "boolean"},
-    "tolerance": {"type": "number", "exclusiveMinimum": 0},
+    "tolerance": {"type": "number", "exclusiveMinimum": 0, "maximum": 0.000001},
     "density_results": {
       "type": "array",
+      "maxItems": 1024,
       "items": {"$ref": "#/$defs/densityResult"}
     },
     "state_side_diagnostics": {"$ref": "#/$defs/diagnostics"},
@@ -98,13 +149,33 @@
   },
   "allOf": [
     {
-      "if": {"properties": {"passed": {"const": true}}, "required": ["passed"]},
+      "if": {
+        "properties": {
+          "COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT": {"const": true}
+        },
+        "required": ["COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT"]
+      },
       "then": {
         "properties": {
-          "source_eligible": {"const": true},
+          "packet_consistency_passed": {"const": true},
           "source_dag_hash_matches": {"const": true},
           "source_dag_clean": {"const": true},
+          "pinned_theory_registry_complete": {"const": true},
+          "pinned_theory_artifact_ids": {
+            "const": [
+              "rer-r1556-collar-clause-lean",
+              "rer-r1556-collar-layer-lean",
+              "rer-r1556-collar-modular-t2-lean",
+              "rer-r1556-collar-states-bridge-lean",
+              "rer-r1556-collar-states-lean",
+              "rer-r1556-collar-states-t1-lean"
+            ]
+          },
+          "unregistered_lean_node_ids": {"maxItems": 0},
           "collar_layer_hash_matches": {"const": true},
+          "sector_direct_sum_independent": {"const": true},
+          "flux_is_proper_ambient_sector": {"const": true},
+          "basis_numerical_conditioning_passed": {"const": true},
           "retained_family_hash_matches": {"const": true},
           "retained_family_complete": {"const": true},
           "family_laws_source_derived": {"const": true},
@@ -112,7 +183,9 @@
           "all_support_classifications_match": {"const": true},
           "all_cross_cut_factor_through_flux": {"const": true},
           "mandatory_negative_controls_passed": {"const": true},
-          "blockers": {"maxItems": 0},
+          "blockers": {
+            "const": ["independent_collar_run_artifact_resolution_unavailable"]
+          },
           "density_results": {
             "minItems": 1,
             "contains": {
@@ -149,11 +222,29 @@
       }
     },
     {
-      "if": {"properties": {"source_eligible": {"const": true}}, "required": ["source_eligible"]},
-      "then": {"properties": {"passed": {"const": true}}}
+      "if": {
+        "properties": {"packet_consistency_passed": {"const": true}},
+        "required": ["packet_consistency_passed"]
+      },
+      "then": {
+        "properties": {
+          "COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT": {"const": true}
+        }
+      }
     }
   ],
   "$defs": {
+    "basisCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_singular_value", "maximum_singular_value", "condition_number", "passed"],
+      "properties": {
+        "minimum_singular_value": {"type": "number", "minimum": 0},
+        "maximum_singular_value": {"type": "number", "minimum": 0},
+        "condition_number": {"type": ["number", "null"], "minimum": 1},
+        "passed": {"type": "boolean"}
+      }
+    },
     "hash": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
@@ -166,6 +257,7 @@
       "additionalProperties": false,
       "required": [
         "density_id",
+        "coordinate_semantics",
         "declared_support",
         "computed_support",
         "support_classification_matches",
@@ -183,7 +275,10 @@
         "factor_through_flux"
       ],
       "properties": {
-        "density_id": {"type": "string", "minLength": 1},
+        "density_id": {"type": "string", "minLength": 1, "maxLength": 256},
+        "coordinate_semantics": {
+          "const": "bounded_real_coordinate_vector_not_verified_density_operator"
+        },
         "declared_support": {"enum": ["LEFT", "RIGHT", "CROSS_CUT"]},
         "computed_support": {"enum": ["LEFT", "RIGHT", "BOTH_ONE_SIDED", "CROSS_CUT"]},
         "support_classification_matches": {"type": "boolean"},

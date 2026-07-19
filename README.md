@@ -64,16 +64,21 @@ runs.
 - The exact A5 lane recomputes the faithful 12-point action, the icosahedral
   adjacency spectrum, the `1+3+3'+5` module decomposition, the invariant-point-
   partition no-go, and the conditional 15-state exterior-generation witness.
+  Its v2 certificate exhausts all 15 unordered fermion pairs (including
+  diagonals) against `H` and `Hdag`: exactly three of the 30 representation-
+  level candidates are gauge-invariant lines.
   These are structural certificates; the port-current, refinement, descent,
   family, continuum, and QFT gates keep physical Standard-Model promotion false.
 - The canonical capacity lane now computes finite public record capacity from
   global sections, joint kernels, exact maximum independent sets, complete
   terminal fibres, carrier projections, and robust zero-slack closure. Observed
   horizon values and regulator sizes are comparison inputs, never producers of
-  `N = log M0(U_N)`.
-- The SCR330 radial lane emits source-only dilation/tomography receipts with an
-  explicit null-space and forward-residual audit. It maintains a hard E4/E5
-  firewall: radial source reconstruction cannot promote a TT/TE/EE prediction.
+  `N = log M0(U_N)`; legacy screen-capacity booleans are also rejected by the
+  physical-CMB source path.
+- The SCR330 radial lane emits bounded packet-contract checks for dilation,
+  tomography, null-space, and forward-residual evidence. E4 source promotion
+  and physical TT/TE/EE remain false until their source and transfer artifacts
+  can be independently resolved and replayed.
 
 The living scoreboard, including public-measurement comparisons, is
 `docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md` (at-a-glance tables in
@@ -147,7 +152,8 @@ Eight families of receipt-gated tests. Artifact-by-artifact detail:
   with mirror/shuffle controls (Stokes-scoped) and the defect-worldline
   signed-turning statistic with sign-flip nulls.
 - **Gauge structure and proof packets.** Exact A5/icosahedral action and
-  spectrum certificates, the conditional exterior-generation SM witness,
+  spectrum certificates, the exhaustive conditional exterior-generation SM
+  witness,
   Borel-Weil one-Higgs carrier, Yang-Mills gap certificates, MaxEnt
   I-projection and central-interface MSA receipts, and the fail-closed
   proof-packet audits (`docs/PROOF_PACKET_AUDITS.md`).
@@ -183,6 +189,12 @@ python3 -m oph_fpe.cli edge-center-clock-certificate \
   --evidence path/to/clock_evidence.json --out runs/edge_center_clock.json
 python3 -m oph_fpe.cli collar-clause-certificate \
   --packet path/to/collar_packet.json --out runs/collar_clause.json
+python3 -m oph_fpe.cli collar-poisson-certificate \
+  --packet path/to/collar_poisson_packet.json --out runs/collar_poisson.json
+python3 -m oph_fpe.cli fair-block-certificate \
+  --packet path/to/fair_block_packet.json --out runs/fair_block.json
+python3 -m oph_fpe.cli boundary-fiber-certificate \
+  --packet path/to/boundary_fiber_packet.json --out runs/boundary_fiber.json
 
 python3 -m oph_fpe.cli run-oph-universe \
   --config configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml \

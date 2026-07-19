@@ -1,0 +1,445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph-public-record-capacity-bundle-v1.schema.json",
+  "title": "OPH public-record capacity evaluation bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reference_control",
+    "packet",
+    "evaluation",
+    "reversible_certificate",
+    "physical_N_closure_receipt"
+  ],
+  "properties": {
+    "schema_version": {"const": "oph-public-record-capacity-bundle-v1"},
+    "reference_control": {"type": "boolean"},
+    "packet": {"type": "object"},
+    "evaluation": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {"status": {"type": "string", "minLength": 1}}
+    },
+    "reversible_certificate": {
+      "oneOf": [
+        {"$ref": "#/$defs/strictPositiveReceipt"},
+        {"$ref": "#/$defs/negativeReceipt"}
+      ]
+    },
+    "physical_N_closure_receipt": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"reference_control": {"const": true}},
+        "required": ["reference_control"]
+      },
+      "then": {
+        "properties": {
+          "reversible_certificate": {
+            "properties": {
+              "REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT": {"const": true}
+            },
+            "required": ["REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reversible_certificate": {
+            "properties": {
+              "REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT": {"const": true}
+            },
+            "required": ["REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT"]
+          }
+        },
+        "required": ["reversible_certificate"]
+      },
+      "then": {
+        "properties": {
+          "packet": {"$ref": "#/$defs/referencePacket"},
+          "evaluation": {"$ref": "#/$defs/passEvaluation"},
+          "reversible_certificate": {"$ref": "#/$defs/strictPositiveReceipt"}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32768
+    },
+    "continuationIds": {
+      "const": ["identity", "cyclic_relabel", "orientation_reflection"]
+    },
+    "portId": {
+      "enum": [
+        "north", "south",
+        "upper_0", "upper_1", "upper_2", "upper_3", "upper_4",
+        "lower_0", "lower_1", "lower_2", "lower_3", "lower_4"
+      ]
+    },
+    "portList": {
+      "const": [
+        "north", "south",
+        "upper_0", "upper_1", "upper_2", "upper_3", "upper_4",
+        "lower_0", "lower_1", "lower_2", "lower_3", "lower_4"
+      ]
+    },
+    "recordAlphabet": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^record_(0|[1-9][0-9]?)$"}
+    },
+    "readoutMap": {
+      "type": "object",
+      "minProperties": 2,
+      "maxProperties": 64,
+      "propertyNames": {"pattern": "^record_(0|[1-9][0-9]?)$"},
+      "additionalProperties": {"type": "string", "pattern": "^record_(0|[1-9][0-9]?)$"}
+    },
+    "referenceInterface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interface_id", "left_observer", "right_observer", "left_readout", "right_readout"
+      ],
+      "properties": {
+        "interface_id": {
+          "type": "string",
+          "pattern": "^(north|south|upper_[0-4]|lower_[0-4])--(north|south|upper_[0-4]|lower_[0-4])$"
+        },
+        "left_observer": {"$ref": "#/$defs/portId"},
+        "right_observer": {"$ref": "#/$defs/portId"},
+        "left_readout": {"$ref": "#/$defs/readoutMap"},
+        "right_readout": {"$ref": "#/$defs/readoutMap"}
+      }
+    },
+    "referenceKernel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorized_observers", "continuation_id", "rows"],
+      "properties": {
+        "authorized_observers": {"$ref": "#/$defs/portList"},
+        "continuation_id": {
+          "enum": ["identity", "cyclic_relabel", "orientation_reflection"]
+        },
+        "rows": {
+          "type": "object",
+          "minProperties": 2,
+          "maxProperties": 64,
+          "propertyNames": {"pattern": "^section:v1:"},
+          "additionalProperties": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 64,
+            "propertyNames": {"pattern": "^section:v1:"},
+            "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      }
+    },
+    "referencePacket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "status",
+        "regulator_id",
+        "carrier_type_id",
+        "terminal_id",
+        "capacity_dimension",
+        "observers",
+        "interfaces",
+        "reachability_witnesses",
+        "publicness_policy",
+        "expected_continuation_ids",
+        "receiver_known_continuation_ids",
+        "continuation_manifest_complete",
+        "global_checkpoint_kernels",
+        "local_marginal_consistency_passed",
+        "projection_supports",
+        "self_read_predicate_injected",
+        "supplied_capacity_metadata_read_by_producer",
+        "lambda_used",
+        "ew_bridge_used",
+        "rho_used"
+      ],
+      "properties": {
+        "schema": {"const": "PUBLIC_CHECKPOINT_PACKET/v1-reversible"},
+        "status": {"const": "REFERENCE_CONTROL_NOT_PHYSICAL_RECEIPT"},
+        "regulator_id": {"const": "icosahedral-12-port-reference-r0"},
+        "carrier_type_id": {"const": "public-record-carrier"},
+        "terminal_id": {"const": "icosahedral-reversible-q0"},
+        "capacity_dimension": {"type": "integer", "minimum": 2, "maximum": 64},
+        "observers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "north", "south",
+            "upper_0", "upper_1", "upper_2", "upper_3", "upper_4",
+            "lower_0", "lower_1", "lower_2", "lower_3", "lower_4"
+          ],
+          "properties": {
+            "north": {"$ref": "#/$defs/recordAlphabet"},
+            "south": {"$ref": "#/$defs/recordAlphabet"},
+            "upper_0": {"$ref": "#/$defs/recordAlphabet"},
+            "upper_1": {"$ref": "#/$defs/recordAlphabet"},
+            "upper_2": {"$ref": "#/$defs/recordAlphabet"},
+            "upper_3": {"$ref": "#/$defs/recordAlphabet"},
+            "upper_4": {"$ref": "#/$defs/recordAlphabet"},
+            "lower_0": {"$ref": "#/$defs/recordAlphabet"},
+            "lower_1": {"$ref": "#/$defs/recordAlphabet"},
+            "lower_2": {"$ref": "#/$defs/recordAlphabet"},
+            "lower_3": {"$ref": "#/$defs/recordAlphabet"},
+            "lower_4": {"$ref": "#/$defs/recordAlphabet"}
+          }
+        },
+        "interfaces": {
+          "type": "array",
+          "minItems": 30,
+          "maxItems": 30,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/referenceInterface"}
+        },
+        "reachability_witnesses": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 4096,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4096,
+            "items": {"$ref": "#/$defs/identifier"}
+          }
+        },
+        "publicness_policy": {
+          "const": [[
+            "north", "south",
+            "upper_0", "upper_1", "upper_2", "upper_3", "upper_4",
+            "lower_0", "lower_1", "lower_2", "lower_3", "lower_4"
+          ]]
+        },
+        "expected_continuation_ids": {"$ref": "#/$defs/continuationIds"},
+        "receiver_known_continuation_ids": {"$ref": "#/$defs/continuationIds"},
+        "continuation_manifest_complete": {"const": true},
+        "global_checkpoint_kernels": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/referenceKernel"},
+          "allOf": [
+            {"contains": {"properties": {"continuation_id": {"const": "identity"}}, "required": ["continuation_id"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"continuation_id": {"const": "cyclic_relabel"}}, "required": ["continuation_id"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"continuation_id": {"const": "orientation_reflection"}}, "required": ["continuation_id"]}, "minContains": 1, "maxContains": 1}
+          ]
+        },
+        "local_marginal_consistency_passed": {"const": true},
+        "projection_supports": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 4096,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4096,
+            "uniqueItems": true,
+            "items": {"type": "integer", "minimum": 0, "maximum": 4095}
+          }
+        },
+        "self_read_predicate_injected": {"const": false},
+        "supplied_capacity_metadata_read_by_producer": {"const": false},
+        "lambda_used": {"const": false},
+        "ew_bridge_used": {"const": false},
+        "rho_used": {"const": false}
+      }
+    },
+    "passEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "terminal_id",
+        "public_global_section_count",
+        "reachable_public_sections",
+        "publicness_policy",
+        "expected_continuation_ids",
+        "receiver_known_continuation_ids",
+        "receiver_continuation_knowledge_complete",
+        "canonical_section_id_scheme",
+        "derived_local_marginal_row_count",
+        "positive_joint_output_count",
+        "local_marginal_consistency_recomputed",
+        "legacy_local_marginal_declaration",
+        "legacy_local_marginal_declaration_promoted",
+        "confusability_graph",
+        "independent_set_witness",
+        "independence_number",
+        "exact_zero_error_capacity_M0",
+        "readback_record_count",
+        "readback_nats",
+        "capacity_dimension_D",
+        "input_coordinate_nats_log_D",
+        "dimension_bound_passed",
+        "saturation_passed",
+        "saturation_rank_one_complete",
+        "capacity_slack_nats",
+        "equation"
+      ],
+      "properties": {
+        "status": {"const": "PASS"},
+        "terminal_id": {"const": "icosahedral-reversible-q0"},
+        "public_global_section_count": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "reachable_public_sections": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "publicness_policy": {"type": "array", "minItems": 1, "maxItems": 512},
+        "expected_continuation_ids": {"$ref": "#/$defs/continuationIds"},
+        "receiver_known_continuation_ids": {"$ref": "#/$defs/continuationIds"},
+        "receiver_continuation_knowledge_complete": {"const": true},
+        "canonical_section_id_scheme": {"const": "canonical-json-observer-atom-pairs-v1"},
+        "derived_local_marginal_row_count": {"type": "integer", "minimum": 1},
+        "positive_joint_output_count": {"type": "integer", "minimum": 1},
+        "local_marginal_consistency_recomputed": {"const": true},
+        "legacy_local_marginal_declaration": {"const": true},
+        "legacy_local_marginal_declaration_promoted": {"const": false},
+        "confusability_graph": {"type": "object", "minProperties": 1, "maxProperties": 4096},
+        "independent_set_witness": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/identifier"}
+        },
+        "independence_number": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "exact_zero_error_capacity_M0": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "readback_record_count": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "readback_nats": {"type": "number", "minimum": 0},
+        "capacity_dimension_D": {"type": "integer", "minimum": 2, "maximum": 64},
+        "input_coordinate_nats_log_D": {"type": "number", "minimum": 0},
+        "dimension_bound_passed": {"const": true},
+        "saturation_passed": {"const": true},
+        "saturation_rank_one_complete": {"const": true},
+        "capacity_slack_nats": {"type": "number"},
+        "equation": {"const": "M_0(q)=alpha(G_q); N=log M_0(U_N)"}
+      }
+    },
+    "negativeReceipt": {
+      "type": "object",
+      "required": ["status", "REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT"],
+      "properties": {
+        "status": {"type": "string", "minLength": 1},
+        "REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT": {"const": false},
+        "PHYSICAL_N_CLOSURE_RECEIPT": {"const": false}
+      },
+      "additionalProperties": true
+    },
+    "strictPositiveReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "status",
+        "packet_status",
+        "regulator_id",
+        "port_count",
+        "interface_count",
+        "public_global_section_count",
+        "reachable_public_record_count",
+        "canonical_section_id_scheme",
+        "expected_continuation_ids",
+        "receiver_continuation_knowledge_complete",
+        "local_marginal_consistency_recomputed",
+        "legacy_local_marginal_declaration_promoted",
+        "reference_topology_validated",
+        "canonical_reference_generator_actions_verified",
+        "checkpoint_generator_receipts",
+        "exact_zero_error_capacity_M0",
+        "readback_nats_log_M0",
+        "capacity_dimension_D",
+        "fast_branch_identity",
+        "robust_terminal_saturation",
+        "rank_one_complete",
+        "REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT",
+        "PHYSICAL_N_CLOSURE_RECEIPT",
+        "remaining_physical_obligations",
+        "claim_boundary"
+      ],
+      "properties": {
+        "schema_version": {"const": "oph-public-record-capacity-v1"},
+        "status": {"const": "PASS"},
+        "packet_status": {"const": "REFERENCE_CONTROL_NOT_PHYSICAL_RECEIPT"},
+        "regulator_id": {"const": "icosahedral-12-port-reference-r0"},
+        "port_count": {"const": 12},
+        "interface_count": {"const": 30},
+        "public_global_section_count": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "reachable_public_record_count": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "canonical_section_id_scheme": {"const": "canonical-json-observer-atom-pairs-v1"},
+        "expected_continuation_ids": {"$ref": "#/$defs/continuationIds"},
+        "receiver_continuation_knowledge_complete": {"const": true},
+        "local_marginal_consistency_recomputed": {"const": true},
+        "legacy_local_marginal_declaration_promoted": {"const": false},
+        "reference_topology_validated": {"const": true},
+        "canonical_reference_generator_actions_verified": {"const": true},
+        "checkpoint_generator_receipts": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "continuation_id",
+              "deterministic",
+              "injective",
+              "permutation_of_reachable_records",
+              "receiver_knows_continuation",
+              "canonical_reference_action_matches"
+            ],
+            "properties": {
+              "continuation_id": {"type": "string", "enum": ["identity", "cyclic_relabel", "orientation_reflection"]},
+              "deterministic": {"const": true},
+              "injective": {"const": true},
+              "permutation_of_reachable_records": {"const": true},
+              "receiver_knows_continuation": {"const": true},
+              "canonical_reference_action_matches": {"const": true}
+            }
+          },
+          "allOf": [
+            {"contains": {"properties": {"continuation_id": {"const": "identity"}}, "required": ["continuation_id"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"continuation_id": {"const": "cyclic_relabel"}}, "required": ["continuation_id"]}, "minContains": 1, "maxContains": 1},
+            {"contains": {"properties": {"continuation_id": {"const": "orientation_reflection"}}, "required": ["continuation_id"]}, "minContains": 1, "maxContains": 1}
+          ]
+        },
+        "exact_zero_error_capacity_M0": {"type": "integer", "minimum": 1, "maximum": 4096},
+        "readback_nats_log_M0": {"type": "number", "minimum": 0},
+        "capacity_dimension_D": {"type": "integer", "minimum": 2, "maximum": 64},
+        "fast_branch_identity": {"const": "M_0(q)=|X_reach(q)|"},
+        "robust_terminal_saturation": {"const": true},
+        "rank_one_complete": {"const": true},
+        "REFERENCE_REVERSIBLE_PUBLIC_CHECKPOINT_RECEIPT": {"const": true},
+        "PHYSICAL_N_CLOSURE_RECEIPT": {"const": false},
+        "remaining_physical_obligations": {
+          "const": [
+            "source-derived complete capacity-indexed trial universe and terminal fiber",
+            "unique regulator-stable finite-size slack zero",
+            "independent horizon-record carrier identification"
+          ]
+        },
+        "claim_boundary": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

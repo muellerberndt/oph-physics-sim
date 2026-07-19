@@ -8,8 +8,10 @@ import pytest
 
 from oph_fpe.pipelines.distributed_universe import (
     _distributed_bulk_receipts,
+    _distributed_run_pack_contract,
     _npz_graph_info,
     _npz_state_info,
+    _receipt_summary,
     prepare_distributed_oph_universe,
     reduce_distributed_oph_universe,
 )
@@ -39,6 +41,98 @@ def test_distributed_bulk_receipts_reject_truthy_strings() -> None:
     assert receipts["observer_like_self_reading_system_receipt"] is False
     assert receipts["all_sampled_shards_observer_modular_time_receipt"] is False
     assert receipts["strict_single_global_neutral_bulk_receipt"] is False
+
+
+def test_distributed_receipt_summary_rejects_truthy_strings() -> None:
+    summary = _receipt_summary(
+        [
+            {
+                "shard_id": "forged",
+                "final_receipts": {
+                    "observer_like_self_reading_system_receipt": "false",
+                },
+            }
+        ]
+    )
+
+    assert summary["observer_like_self_reading_system_receipt"]["passed_count"] == 0
+    assert summary["observer_like_self_reading_system_receipt"]["passed_shards"] == []
+
+
+def test_run_pack_contract_rejects_forged_online_receipts_without_replay(
+    tmp_path: Path,
+) -> None:
+    online_receipts = {
+        key: True
+        for key in (
+            "DISTRIBUTED_LOCAL_DIAMOND_RECEIPT",
+            "DISTRIBUTED_REPAIR_COMPLETENESS_RECEIPT",
+            "CYCLE_HOLONOMY_ZERO_OR_CLASSIFIED_RECEIPT",
+            "SELECTED_FIBER_NONTRIVIAL_ELIMINATION_RECEIPT",
+            "SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT",
+            "QUOTIENT_NORMAL_FORM_CANONICAL_HASH_RECEIPT",
+            "FAIR_BLOCK_CONTRACTION_RECEIPT",
+            "SCHEDULE_INDEPENDENT_NORMAL_FORM_RECEIPT",
+            "PARTITION_NATURALITY_RECEIPT",
+        )
+    }
+    global_carrier = {
+        key: True
+        for key in (
+            "global_carrier_contract_receipt",
+            "one_global_carrier_before_partition_receipt",
+            "manifest_declared_global_artifacts_receipt",
+            "partition_map_receipt",
+            "cut_interface_receipt",
+            "stable_global_identity_initial_state_receipt",
+            "global_observer_registry_receipt",
+            "authoritative_owner_projection_receipt",
+            "distributed_realization_event_certificate_receipt",
+        )
+    }
+    report = _distributed_run_pack_contract(
+        manifest={"run_id": "forged"},
+        all_expected_completed=True,
+        federated_receipt=True,
+        seam_metadata_replay_receipt=True,
+        global_carrier=global_carrier,
+        halo_exchange={
+            "online_cross_shard_overlap_repair_receipt": True,
+            "per_cycle_cross_shard_halo_exchange_receipt": True,
+            "reducer_halo_exchange_replay_receipt": True,
+            "required_online_seam_receipts": online_receipts,
+        },
+        neutral_global={"strict_single_global_neutral_bulk_receipt": True},
+        observer_time_global={
+            "global_observer_modular_time_export_receipt": True,
+            "large_visualization_observer_contract_receipt": True,
+        },
+        proto_particle_global={
+            "global_proto_particle_worldline_export_receipt": True,
+            "moving_proto_particle_candidate_receipt": True,
+            "cross_shard_worldline_stitching_receipt": True,
+        },
+        pn_global={
+            "all_shards_local_scale_compressed_pn_witness_receipt": True,
+            "global_capacity_readback_map_receipt": True,
+            "finite_capacity_fixed_point_receipt": True,
+            "global_pn_resonance_receipt": True,
+        },
+        physical_cmb_global={
+            "physical_cmb_input_contract_receipt": True,
+            "physical_cmb_prediction_receipt": True,
+        },
+        visualization_payload_path=tmp_path / "payload.json",
+        out_dir=tmp_path,
+    )
+
+    assert report["gates"]["distributed_online_evidence_recomputed_receipt"] is False
+    assert report["distributed_kernel_scaling_readiness_receipt"] is False
+    assert report["post_run_science_promotion_receipt"] is False
+    assert (
+        "distributed_online_evidence_recomputed_receipt"
+        in report["profile_blockers"]["distributed_kernel_scaling"]
+    )
 
 
 def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path) -> None:

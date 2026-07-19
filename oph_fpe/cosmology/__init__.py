@@ -243,6 +243,14 @@ _EXPORTS = {
         "oph_fpe.cosmology.oph_kernels",
         "B_A_z6_poisson_five_of_seven",
     ),
+    "collar_poisson_counting_certificate": (
+        "oph_fpe.cosmology.collar_poisson",
+        "collar_poisson_counting_certificate",
+    ),
+    "write_collar_poisson_certificate": (
+        "oph_fpe.cosmology.collar_poisson",
+        "write_collar_poisson_certificate",
+    ),
     "B_A_minimal_one_pole": ("oph_fpe.cosmology.oph_kernels", "B_A_minimal_one_pole"),
     "apply_projected_wl_selector": ("oph_fpe.cosmology.oph_kernels", "apply_projected_wl_selector"),
     "compressed_projection_fraction": (

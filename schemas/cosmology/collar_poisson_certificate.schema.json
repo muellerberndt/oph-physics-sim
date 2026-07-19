@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/collar-poisson-counting-v1.schema.json",
+  "title": "OPH collar Poisson-binomial arithmetic replay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "COLLAR_POISSON_COUNTING_RECOMPUTATION_RECEIPT",
+    "DECLARED_INDEPENDENT_BERNOULLI_MODEL", "PHYSICAL_COLLAR_MODEL_REALIZATION_RECEIPT",
+    "PHYSICAL_GALAXY_POISSON_RECEIPT", "RUN_ARTIFACT_BINDING_RECEIPT",
+    "IMPORTED_THEORY_WITNESS_SIMULATION_RECEIPT_ELIGIBLE",
+    "imported_theory_witness_certificate_id", "imported_theory_witness_sha256",
+    "cell_count", "mu_r", "limiting_mean", "delta_r", "p_max", "sum_p_squared",
+    "le_cam_mean_continuity_bound", "mu_r_p_max_plus_delta_bound",
+    "exact_total_variation_computed", "exact_total_variation",
+    "exact_total_variation_within_bound", "cut_sqrt_measure",
+    "lambda_collar_from_declared_limit", "blockers", "claim_boundary",
+    "claim_level", "physical_claim", "observable_id", "fit_objective",
+    "receipt_name", "receipt_schema_version", "input_packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": "collar-poisson-counting-v1"},
+    "COLLAR_POISSON_COUNTING_RECOMPUTATION_RECEIPT": {"type": "boolean"},
+    "DECLARED_INDEPENDENT_BERNOULLI_MODEL": {"type": "boolean"},
+    "PHYSICAL_COLLAR_MODEL_REALIZATION_RECEIPT": {"const": false},
+    "PHYSICAL_GALAXY_POISSON_RECEIPT": {"const": false},
+    "RUN_ARTIFACT_BINDING_RECEIPT": {"const": false},
+    "IMPORTED_THEORY_WITNESS_SIMULATION_RECEIPT_ELIGIBLE": {"const": false},
+    "imported_theory_witness_certificate_id": {"const": "issue-320-collar-poisson-witness-v1"},
+    "imported_theory_witness_sha256": {"const": "sha256:01d77edd9ea7867e27013370a6d580d62c85a54085dc7a09494b5a5f124415e2"},
+    "cell_count": {"type": "integer", "minimum": 0, "maximum": 4097},
+    "mu_r": {"type": "number", "minimum": 0},
+    "limiting_mean": {"$ref": "#/$defs/nullableNonnegative"},
+    "delta_r": {"$ref": "#/$defs/nullableNonnegative"},
+    "p_max": {"type": "number", "minimum": 0, "maximum": 1},
+    "sum_p_squared": {"type": "number", "minimum": 0},
+    "le_cam_mean_continuity_bound": {"$ref": "#/$defs/nullableNonnegative"},
+    "mu_r_p_max_plus_delta_bound": {"$ref": "#/$defs/nullableNonnegative"},
+    "exact_total_variation_computed": {"type": "boolean"},
+    "exact_total_variation": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "exact_total_variation_within_bound": {"type": ["boolean", "null"]},
+    "cut_sqrt_measure": {"$ref": "#/$defs/nullablePositive"},
+    "lambda_collar_from_declared_limit": {"$ref": "#/$defs/nullableNonnegative"},
+    "blockers": {"$ref": "#/$defs/blockers"},
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "claim_level": {"const": "continuation"},
+    "physical_claim": {"const": false},
+    "observable_id": {"const": "COLLAR_POISSON_COUNTING_RECOMPUTATION_RECEIPT"},
+    "fit_objective": {"const": "not_applicable"},
+    "receipt_name": {"const": "COLLAR_POISSON_COUNTING_RECOMPUTATION_RECEIPT"},
+    "receipt_schema_version": {"const": "2026-06-06b"},
+    "input_packet_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"COLLAR_POISSON_COUNTING_RECOMPUTATION_RECEIPT": {"const": true}},
+        "required": ["COLLAR_POISSON_COUNTING_RECOMPUTATION_RECEIPT"]
+      },
+      "then": {
+        "properties": {
+          "DECLARED_INDEPENDENT_BERNOULLI_MODEL": {"const": true},
+          "cell_count": {"minimum": 1, "maximum": 4096},
+          "limiting_mean": {"type": "number", "minimum": 0},
+          "delta_r": {"type": "number", "minimum": 0},
+          "le_cam_mean_continuity_bound": {"type": "number", "minimum": 0},
+          "mu_r_p_max_plus_delta_bound": {"type": "number", "minimum": 0},
+          "blockers": {"maxItems": 0}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "nullableNonnegative": {"type": ["number", "null"], "minimum": 0},
+    "nullablePositive": {"type": ["number", "null"], "exclusiveMinimum": 0}
+  }
+}

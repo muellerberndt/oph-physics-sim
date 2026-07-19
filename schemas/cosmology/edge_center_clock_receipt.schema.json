@@ -9,6 +9,7 @@
     "selected_target",
     "evidence_present",
     "tolerance",
+    "tolerance_profile",
     "observed",
     "checks",
     "receipts",
@@ -17,8 +18,12 @@
     "SEMIGROUP_DEFECT_RECEIPT",
     "REFINEMENT_DEFECT_RECEIPT",
     "PHYSICAL_CLOCK_BINDING_RECEIPT",
+    "CLOCK_BINDING_PACKET_CONSISTENCY_RECEIPT",
     "SOURCE_DAG_CLEAN_RECEIPT",
     "GENERATIVE_PIXEL_PROFILE_RECEIPT",
+    "INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT",
+    "EDGE_CENTER_CLOCK_PACKET_CONSISTENCY_RECEIPT",
+    "legacy_receipt_declarations_promoted",
     "EDGE_CENTER_CLOCK_RECEIPT",
     "edge_center_clock_evidence_complete",
     "missing_receipts",
@@ -29,7 +34,8 @@
     "schema": {"const": "oph-edge-center-clock-v1"},
     "selected_target": {"$ref": "#/$defs/target"},
     "evidence_present": {"type": "boolean"},
-    "tolerance": {"type": "number", "minimum": 0},
+    "tolerance": {"type": "number", "minimum": 0, "maximum": 1e-6},
+    "tolerance_profile": {"$ref": "#/$defs/toleranceProfile"},
     "observed": {"$ref": "#/$defs/observed"},
     "checks": {"$ref": "#/$defs/checks"},
     "receipts": {"$ref": "#/$defs/receipts"},
@@ -37,11 +43,15 @@
     "ORIENTATION_HALF_IDENTITY_RECEIPT": {"type": "boolean"},
     "SEMIGROUP_DEFECT_RECEIPT": {"type": "boolean"},
     "REFINEMENT_DEFECT_RECEIPT": {"type": "boolean"},
-    "PHYSICAL_CLOCK_BINDING_RECEIPT": {"type": "boolean"},
+    "PHYSICAL_CLOCK_BINDING_RECEIPT": {"const": false},
+    "CLOCK_BINDING_PACKET_CONSISTENCY_RECEIPT": {"type": "boolean"},
     "SOURCE_DAG_CLEAN_RECEIPT": {"type": "boolean"},
     "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"type": "boolean"},
-    "EDGE_CENTER_CLOCK_RECEIPT": {"type": "boolean"},
-    "edge_center_clock_evidence_complete": {"type": "boolean"},
+    "INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT": {"const": false},
+    "EDGE_CENTER_CLOCK_PACKET_CONSISTENCY_RECEIPT": {"type": "boolean"},
+    "legacy_receipt_declarations_promoted": {"const": false},
+    "EDGE_CENTER_CLOCK_RECEIPT": {"const": false},
+    "edge_center_clock_evidence_complete": {"const": false},
     "missing_receipts": {
       "type": "array",
       "items": {"enum": [
@@ -51,7 +61,8 @@
         "REFINEMENT_DEFECT_RECEIPT",
         "PHYSICAL_CLOCK_BINDING_RECEIPT",
         "SOURCE_DAG_CLEAN_RECEIPT",
-        "GENERATIVE_PIXEL_PROFILE_RECEIPT"
+        "GENERATIVE_PIXEL_PROFILE_RECEIPT",
+        "INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT"
       ]},
       "uniqueItems": true
     },
@@ -61,26 +72,96 @@
   "allOf": [
     {
       "if": {
-        "properties": {"EDGE_CENTER_CLOCK_RECEIPT": {"const": true}},
-        "required": ["EDGE_CENTER_CLOCK_RECEIPT"]
+        "properties": {
+          "EDGE_CENTER_CLOCK_PACKET_CONSISTENCY_RECEIPT": {"const": true}
+        },
+        "required": ["EDGE_CENTER_CLOCK_PACKET_CONSISTENCY_RECEIPT"]
       },
       "then": {
         "properties": {
-          "edge_center_clock_evidence_complete": {"const": true},
-          "missing_receipts": {"maxItems": 0},
+          "evidence_present": {"const": true},
+          "edge_center_clock_evidence_complete": {"const": false},
+          "missing_receipts": {
+            "const": [
+              "PHYSICAL_CLOCK_BINDING_RECEIPT",
+              "INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT"
+            ]
+          },
           "FULL_COLLAR_DERIVATIVE_P_OVER_24_RECEIPT": {"const": true},
           "ORIENTATION_HALF_IDENTITY_RECEIPT": {"const": true},
           "SEMIGROUP_DEFECT_RECEIPT": {"const": true},
           "REFINEMENT_DEFECT_RECEIPT": {"const": true},
-          "PHYSICAL_CLOCK_BINDING_RECEIPT": {"const": true},
+          "PHYSICAL_CLOCK_BINDING_RECEIPT": {"const": false},
+          "CLOCK_BINDING_PACKET_CONSISTENCY_RECEIPT": {"const": true},
           "SOURCE_DAG_CLEAN_RECEIPT": {"const": true},
-          "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"const": true}
+          "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"const": true},
+          "checks": {
+            "properties": {
+              "full_collar_derivative_equals_P_over_24": {"const": true},
+              "orientation_half_identity": {"const": true},
+              "semigroup_defect_bounded": {"const": true},
+              "refinement_defect_bounded": {"const": true},
+              "clock_binding_packet_consistency": {"const": true},
+              "source_dag_clean_hash_bound": {"const": true},
+              "generative_pixel_profile_bound": {"const": true}
+            }
+          },
+          "receipts": {
+            "properties": {
+              "FULL_COLLAR_DERIVATIVE_P_OVER_24_RECEIPT": {"const": true},
+              "ORIENTATION_HALF_IDENTITY_RECEIPT": {"const": true},
+              "SEMIGROUP_DEFECT_RECEIPT": {"const": true},
+              "REFINEMENT_DEFECT_RECEIPT": {"const": true},
+              "PHYSICAL_CLOCK_BINDING_RECEIPT": {"const": false},
+              "SOURCE_DAG_CLEAN_RECEIPT": {"const": true},
+              "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"const": true}
+            }
+          },
+          "observed": {
+            "properties": {
+              "clock_binding_hash_matches": {"const": true},
+              "source_dag_hash_matches": {"const": true},
+              "source_dag_audit": {
+                "properties": {
+                  "clean": {"const": true},
+                  "binding_node_present": {"const": true},
+                  "binding_node_kind_valid": {"const": true},
+                  "binding_node_hash_matches": {"const": true},
+                  "binding_node_is_leaf": {"const": true},
+                  "root_source_reaches_binding": {"const": true},
+                  "all_nodes_ancestral_to_binding": {"const": true}
+                }
+              },
+              "pixel_provenance": {
+                "required": ["GENERATIVE_PIXEL_PROFILE_RECEIPT"],
+                "properties": {
+                  "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"const": true}
+                }
+              }
+            }
+          }
         }
       }
     }
   ],
   "$defs": {
+    "toleranceProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "default", "maximum"],
+      "properties": {
+        "profile": {"const": "oph-edge-center-clock-defect-profile-v1"},
+        "default": {"const": 1e-12},
+        "maximum": {"const": 1e-6}
+      }
+    },
     "nullableNumber": {"type": ["number", "null"]},
+    "nullableDefect": {
+      "anyOf": [
+        {"type": "null"},
+        {"type": "number", "minimum": 0, "maximum": 1e-6}
+      ]
+    },
     "nullableInteger": {"type": ["integer", "null"]},
     "nullableString": {"type": ["string", "null"]},
     "nullableHash": {
@@ -128,12 +209,30 @@
     "sourceDagAudit": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["clean", "node_count", "edge_count", "source_kinds", "blockers"],
+      "required": [
+        "clean",
+        "node_count",
+        "edge_count",
+        "source_kinds",
+        "binding_node_present",
+        "binding_node_kind_valid",
+        "binding_node_hash_matches",
+        "binding_node_is_leaf",
+        "root_source_reaches_binding",
+        "all_nodes_ancestral_to_binding",
+        "blockers"
+      ],
       "properties": {
         "clean": {"type": "boolean"},
         "node_count": {"type": "integer", "minimum": 0},
         "edge_count": {"type": "integer", "minimum": 0},
         "source_kinds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "binding_node_present": {"type": "boolean"},
+        "binding_node_kind_valid": {"type": "boolean"},
+        "binding_node_hash_matches": {"type": "boolean"},
+        "binding_node_is_leaf": {"type": "boolean"},
+        "root_source_reaches_binding": {"type": "boolean"},
+        "all_nodes_ancestral_to_binding": {"type": "boolean"},
         "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
       }
     },
@@ -159,9 +258,9 @@
       "properties": {
         "full_collar_derivative": {"$ref": "#/$defs/nullableNumber"},
         "orientation_halves": {"$ref": "#/$defs/nullableInteger"},
-        "orientation_half_identity_defect": {"$ref": "#/$defs/nullableNumber"},
-        "semigroup_defect": {"$ref": "#/$defs/nullableNumber"},
-        "refinement_defect": {"$ref": "#/$defs/nullableNumber"},
+        "orientation_half_identity_defect": {"$ref": "#/$defs/nullableDefect"},
+        "semigroup_defect": {"$ref": "#/$defs/nullableDefect"},
+        "refinement_defect": {"$ref": "#/$defs/nullableDefect"},
         "clock_binding_source": {"$ref": "#/$defs/nullableString"},
         "clock_binding_sha256": {"$ref": "#/$defs/nullableHash"},
         "computed_clock_binding_sha256": {"$ref": "#/$defs/nullableHash"},
@@ -181,18 +280,20 @@
         "orientation_half_identity",
         "semigroup_defect_bounded",
         "refinement_defect_bounded",
-        "physical_clock_binding_hash_bound",
+        "clock_binding_packet_consistency",
         "source_dag_clean_hash_bound",
-        "generative_pixel_profile_bound"
+        "generative_pixel_profile_bound",
+        "independent_finite_run_replay"
       ],
       "properties": {
         "full_collar_derivative_equals_P_over_24": {"type": "boolean"},
         "orientation_half_identity": {"type": "boolean"},
         "semigroup_defect_bounded": {"type": "boolean"},
         "refinement_defect_bounded": {"type": "boolean"},
-        "physical_clock_binding_hash_bound": {"type": "boolean"},
+        "clock_binding_packet_consistency": {"type": "boolean"},
         "source_dag_clean_hash_bound": {"type": "boolean"},
-        "generative_pixel_profile_bound": {"type": "boolean"}
+        "generative_pixel_profile_bound": {"type": "boolean"},
+        "independent_finite_run_replay": {"const": false}
       }
     },
     "receipts": {
@@ -205,16 +306,18 @@
         "REFINEMENT_DEFECT_RECEIPT",
         "PHYSICAL_CLOCK_BINDING_RECEIPT",
         "SOURCE_DAG_CLEAN_RECEIPT",
-        "GENERATIVE_PIXEL_PROFILE_RECEIPT"
+        "GENERATIVE_PIXEL_PROFILE_RECEIPT",
+        "INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT"
       ],
       "properties": {
         "FULL_COLLAR_DERIVATIVE_P_OVER_24_RECEIPT": {"type": "boolean"},
         "ORIENTATION_HALF_IDENTITY_RECEIPT": {"type": "boolean"},
         "SEMIGROUP_DEFECT_RECEIPT": {"type": "boolean"},
         "REFINEMENT_DEFECT_RECEIPT": {"type": "boolean"},
-        "PHYSICAL_CLOCK_BINDING_RECEIPT": {"type": "boolean"},
+        "PHYSICAL_CLOCK_BINDING_RECEIPT": {"const": false},
         "SOURCE_DAG_CLEAN_RECEIPT": {"type": "boolean"},
-        "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"type": "boolean"}
+        "GENERATIVE_PIXEL_PROFILE_RECEIPT": {"type": "boolean"},
+        "INDEPENDENT_FINITE_RUN_REPLAY_RECEIPT": {"const": false}
       }
     }
   }

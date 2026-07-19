@@ -20,6 +20,8 @@ from scipy.linalg import eigh, null_space
 from scipy.special import digamma, gammaln, spherical_jn
 
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.evidence.artifact_paths import companion_input_packet_path
+from oph_fpe.evidence.validation import utf8_byte_length
 
 PHI = (1.0 + math.sqrt(5.0)) / 2.0
 
@@ -122,6 +124,15 @@ class DilationReceipt:
 
 SCR330_SCHEMA_VERSION = "scr330-radial-v2"
 SCR330_MAX_NUMERICAL_TOLERANCE = 1.0e-6
+SCR330_MAX_DAG_NODES = 256
+SCR330_MAX_DAG_EDGES = 1024
+SCR330_MAX_PACKET_BYTES = 2_000_000
+SCR330_MAX_JSON_NODES = 100_000
+SCR330_MAX_CONTAINER_ITEMS = 4096
+SCR330_MAX_JSON_DEPTH = 32
+SCR330_MAX_STRING_BYTES = 32_768
+SCR330_MAX_EXTERNAL_BLOCKERS = 256
+SCR330_MAX_BLOCKER_BYTES = 1024
 RADIAL_RECEIPTS = frozenset(
     {
         "SCR330_SOURCE_SHELL_EMBEDDING_RECEIPT",
@@ -165,6 +176,7 @@ _SOURCE_DAG_NODE_KINDS = frozenset(
 _DOWNSTREAM_DAG_NODE_KINDS = frozenset(
     {
         "boltzmann",
+        "camb",
         "class_output",
         "ee_spectrum",
         "foreground",
@@ -179,7 +191,13 @@ _DOWNSTREAM_DAG_NODE_KINDS = frozenset(
 _MEASUREMENT_ID_TOKEN = re.compile(
     r"(?:^|[^a-z0-9])"
     r"(?:act|calibrated|data|fit|likelihood|measurement|measurements|observed|"
-    r"observation|planck|posterior|target|wmap)"
+    r"observation|planck|posterior|residual|target|wmap)"
+    r"(?:$|[^a-z0-9])"
+)
+_DOWNSTREAM_ID_TOKEN = re.compile(
+    r"(?:^|[^a-z0-9])"
+    r"(?:boltzmann|camb|class|ee|foreground|lensing|nuisance|recombination|"
+    r"te|transfer|tt)"
     r"(?:$|[^a-z0-9])"
 )
 
@@ -195,6 +213,55 @@ _LEGACY_RECEIPT_ALIASES = {
     "THIN_SHELL_RADIAL_LIFT": "SCR330_THIN_SHELL_MELLIN_LIFT_RECEIPT",
     "RADIAL_NULL_REPORT": "SCR330_RADIAL_NULL_REPORT",
     "TRANSFER_FIREWALL": "SCR330_TRANSFER_FIREWALL_RECEIPT",
+}
+
+_RECEIPT_PAYLOAD_FIELDS = {
+    "SCR330_SOURCE_SHELL_EMBEDDING_RECEIPT": {
+        "source_embedding_hash",
+        "R_star",
+        "background_curvature_status",
+        "source_shell_embedding",
+    },
+    "SCR330_PHYSICAL_MODE_BASIS_RECEIPT": {
+        "physical_mode_basis_id",
+        "physical_mode_basis_hash",
+        "physical_mode_basis",
+    },
+    "SCR330_RADIAL_DILATION_INTERTWINER_RECEIPT": {
+        "source_embedding_hash",
+        "physical_mode_basis_id",
+        "dilation_intertwiner",
+    },
+    "SCR330_THIN_SHELL_MELLIN_LIFT_RECEIPT": {"mellin_lift"},
+    "SCR330_FINITE_WINDOW_KERNEL_RECEIPT": {"window_hash", "finite_window"},
+    "SCR330_RADIAL_NULL_REPORT": {"radial_svd"},
+    "SCR330_RADIAL_FORWARD_RESIDUAL_RECEIPT": {"forward_residual"},
+    "SCR330_RADIAL_TOMOGRAPHY_RECEIPT": {"radial_tomography"},
+    "SCR330_RADIAL_PROMOTION_RECEIPT": {
+        "radial_branch",
+        "source_embedding_hash",
+        "physical_mode_basis_id",
+        "background_curvature_status",
+        "Z_q",
+        "theta",
+        "A_q",
+        "A_zeta",
+        "k_pivot",
+        "R_star",
+        "radial_svd",
+        "forward_residual",
+        "dilation_intertwiner",
+        "mellin_lift",
+        "finite_window",
+        "radial_tomography",
+    },
+    "SCR330_TRANSFER_FIREWALL_RECEIPT": {
+        "upstream_radial_receipt_hash",
+        "transfer_source_hash",
+        "solver_assumption_hash",
+        "upstream_claim_tier",
+        "no_back_edge_to_E4_source",
+    },
 }
 
 
@@ -929,6 +996,10 @@ def dilation_intertwiner_receipt(
     power = np.asarray(delta_zeta_sq, dtype=float)
     theta = _finite(theta, "theta")
     tolerance = _finite_positive(tolerance, "tolerance")
+    if tolerance > SCR330_MAX_NUMERICAL_TOLERANCE:
+        raise SourceSpectrumInputError(
+            f"tolerance must not exceed {SCR330_MAX_NUMERICAL_TOLERANCE:.0e}"
+        )
     if k_values.ndim != 1 or power.shape != k_values.shape or k_values.size < 3:
         raise SourceSpectrumInputError(
             "k and delta_zeta_sq must be matching vectors with at least three points"
@@ -1021,7 +1092,7 @@ def approximate_dilation_shape_bound(
 def build_radial_receipt(
     *,
     receipt: str,
-    passed: bool,
+    passed: bool | None = None,
     claim_tier: str,
     source_dag: Mapping[str, Any],
     blockers: Iterable[str] = (),
@@ -1036,46 +1107,74 @@ def build_radial_receipt(
     if not isinstance(source_dag, Mapping):
         raise SourceSpectrumInputError("source_dag must be a mapping")
 
-    blocker_set = {str(value) for value in blockers}
-    declared_pass = passed
-    if not isinstance(passed, bool):
-        declared_pass = False
+    canonical = _bounded_canonical_json_bytes(source_dag, "source_dag")
+    if payload is not None:
+        if not isinstance(payload, Mapping):
+            raise SourceSpectrumInputError("payload must be a mapping")
+        _bounded_canonical_json_bytes(payload, "payload")
+
+    blocker_set = _bounded_external_blockers(blockers)
+    legacy_declared_pass = passed if isinstance(passed, bool) else None
+    if passed is not None and not isinstance(passed, bool):
         blocker_set.add("passed_flag_not_boolean")
     if not isinstance(physical_tt_te_ee_claim, bool):
         physical_tt_te_ee_claim = False
         blocker_set.add("physical_tt_te_ee_claim_not_boolean")
-    nodes = source_dag.get("nodes")
-    dag_populated = isinstance(nodes, list) and bool(nodes)
-    clean_ancestry = dag_populated and not _dag_has_blacklisted_ancestor(source_dag)
-    if not dag_populated:
-        blocker_set.add("source_dag_empty_or_invalid")
+    dag_blockers, clean_ancestry, has_downstream_ancestor = _audit_source_dag(
+        source_dag
+    )
+    blocker_set.update(dag_blockers)
     if not clean_ancestry:
         blocker_set.add("measurement_fit_or_likelihood_ancestor")
-    if claim_tier != "E5" and _dag_has_downstream_transfer_ancestor(source_dag):
+    if claim_tier != "E5" and has_downstream_ancestor:
         blocker_set.add("transfer_or_observable_ancestor_before_E5")
-    if physical_tt_te_ee_claim and claim_tier != "E5":
-        blocker_set.add("tt_te_ee_claim_before_E5")
+    physical_claim_requested = physical_tt_te_ee_claim
+    if physical_claim_requested:
+        if claim_tier != "E5":
+            blocker_set.add("tt_te_ee_claim_before_E5")
+        if receipt != "SCR330_TRANSFER_FIREWALL_RECEIPT":
+            blocker_set.add(
+                "physical_tt_te_ee_claim_requires_transfer_firewall_receipt"
+            )
+        blocker_set.add("independent_transfer_artifact_resolution_unavailable")
     if receipt == "SCR330_TRANSFER_FIREWALL_RECEIPT" and claim_tier != "E5":
         blocker_set.add("downstream_transfer_requires_E5")
-    blocker_set.update(_receipt_payload_blockers(receipt, payload))
+    unknown_payload_fields: set[str] = set()
+    if isinstance(payload, Mapping):
+        unknown_payload_fields = set(payload) - _RECEIPT_PAYLOAD_FIELDS[receipt]
+        if unknown_payload_fields:
+            blocker_set.add("receipt_evidence_payload_has_unknown_fields")
+    payload_blockers = _receipt_payload_blockers(receipt, payload)
+    blocker_set.update(payload_blockers)
     if receipt == "SCR330_RADIAL_PROMOTION_RECEIPT":
         if claim_tier != "E4":
             blocker_set.add("radial_primordial_promotion_requires_E4")
 
-    canonical = json.dumps(
-        source_dag, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
+    packet_contract_passed = not blocker_set
+    independent_source_artifact_resolution_receipt = False
+    if receipt == "SCR330_RADIAL_PROMOTION_RECEIPT":
+        blocker_set.add("independent_source_artifact_resolution_unavailable")
+    receipt_passed = not blocker_set
+    verified_physical_claim = False
     result: dict[str, Any] = {
         "schema_version": SCR330_SCHEMA_VERSION,
         "receipt": receipt,
-        "passed": bool(declared_pass and not blocker_set),
+        "passed": receipt_passed,
+        "evidence_status_recomputed": True,
+        "legacy_declared_pass": legacy_declared_pass,
+        "caller_pass_flag_promoted": False,
+        "packet_contract_passed": packet_contract_passed,
+        "independent_source_artifact_resolution_receipt": (
+            independent_source_artifact_resolution_receipt
+        ),
+        "source_promotion_eligible": False,
         "claim_tier": claim_tier,
         "source_dag_hash": "sha256:" + hashlib.sha256(canonical).hexdigest(),
         "no_measurement_fit_likelihood_ancestor": bool(clean_ancestry),
-        "physical_tt_te_ee_claim": bool(physical_tt_te_ee_claim),
+        "physical_tt_te_ee_claim": verified_physical_claim,
         "blockers": sorted(blocker_set),
     }
-    if payload is not None:
+    if payload is not None and not unknown_payload_fields and not payload_blockers:
         result["payload"] = dict(payload)
     return result
 
@@ -1183,6 +1282,8 @@ def _receipt_payload_blockers(
             blockers.add("radial_forward_residual_not_held_out")
         if float(forward["absolute_l2_residual"]) > float(forward["tolerance"]):
             blockers.add("radial_forward_residual_exceeds_tolerance")
+        if float(forward["relative_l2_residual"]) > float(forward["tolerance"]):
+            blockers.add("radial_forward_relative_residual_exceeds_tolerance")
         return blockers
 
     if receipt == "SCR330_RADIAL_TOMOGRAPHY_RECEIPT":
@@ -1208,11 +1309,35 @@ def _receipt_payload_blockers(
 
 def write_radial_receipt(path: Path, **kwargs: Any) -> dict[str, Any]:
     """Build and write one canonical SCR330 receipt."""
-    receipt = build_radial_receipt(**kwargs)
+    normalized_blockers = sorted(
+        _bounded_external_blockers(kwargs.get("blockers", ()))
+    )
+    normalized_kwargs = {**kwargs, "blockers": normalized_blockers}
+    receipt = build_radial_receipt(**normalized_kwargs)
     destination = Path(path)
     if destination.suffix.lower() != ".json":
         destination = destination / "scr330_radial_receipt.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
+    replay_input = {
+        "receipt": kwargs.get("receipt"),
+        "claim_tier": kwargs.get("claim_tier"),
+        "source_dag": kwargs.get("source_dag"),
+        "payload": kwargs.get("payload"),
+        "external_blockers": normalized_blockers,
+        "physical_tt_te_ee_claim_requested": kwargs.get(
+            "physical_tt_te_ee_claim", False
+        ),
+        "legacy_declared_pass": kwargs.get("passed"),
+    }
+    replay_path = companion_input_packet_path(
+        destination,
+        canonical_certificate_filename="scr330_radial_receipt.json",
+        canonical_input_filename="scr330_radial_input_packet.json",
+    )
+    replay_path.write_text(
+        json.dumps(replay_input, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     destination.write_text(
         json.dumps(receipt, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -1223,7 +1348,7 @@ def write_radial_receipt(path: Path, **kwargs: Any) -> dict[str, Any]:
 def build_receipt(
     *,
     receipt: str,
-    claimed_pass: bool,
+    claimed_pass: bool | None = None,
     claim_tier: str,
     source_dag: dict[str, Any],
     blockers: Iterable[str] = (),
@@ -1315,6 +1440,7 @@ def _promotion_payload_blockers(
     elif (
         forward.get("held_out") is not True
         or float(forward["absolute_l2_residual"]) > float(forward["tolerance"])
+        or float(forward["relative_l2_residual"]) > float(forward["tolerance"])
     ):
         blockers.add("radial_forward_residual_not_held_out_or_out_of_tolerance")
 
@@ -1354,7 +1480,7 @@ def _valid_bounded_evidence(
         all(value.get(key) is True for key in required_true)
         and value.get("passed") is True
         and _is_nonnegative_number(residual)
-        and _is_nonnegative_number(tolerance)
+        and _is_frozen_tolerance(tolerance, allow_zero=True)
         and float(residual) <= float(tolerance)
     )
 
@@ -1379,7 +1505,7 @@ def _valid_mellin_lift(value: Any) -> bool:
         and float(strip[1]) >= 4.0
         and _is_positive_number(value.get("A_zeta_over_A_q"))
         and _is_nonnegative_number(residual)
-        and _is_nonnegative_number(tolerance)
+        and _is_frozen_tolerance(tolerance, allow_zero=True)
         and float(residual) <= float(tolerance)
         and value.get("passed") is True
     )
@@ -1402,7 +1528,7 @@ def _valid_finite_window(value: Any) -> bool:
         and bool(bounds)
         and all(_is_nonnegative_number(item) for item in bounds.values())
         and _is_nonnegative_number(error)
-        and _is_nonnegative_number(tolerance)
+        and _is_frozen_tolerance(tolerance, allow_zero=True)
         and float(error) <= float(tolerance)
         and value.get("bound_verified") is True
         and value.get("passed") is True
@@ -1423,7 +1549,7 @@ def _tomography_blockers(value: Any) -> set[str]:
         if value.get(key) is not True:
             blockers.add(f"radial_tomography_not_passed:{key}")
     tolerance = value.get("tolerance")
-    if not _is_nonnegative_number(tolerance):
+    if not _is_frozen_tolerance(tolerance, allow_zero=True):
         blockers.add("radial_tomography_invalid:tolerance")
     for key in ("hankel_unitarity_residual", "off_diagonal_k_leakage"):
         residual = value.get(key)
@@ -1442,32 +1568,73 @@ def _valid_radial_svd(value: Any) -> bool:
     nullity = value.get("nullity")
     singular = value.get("singular_values")
     threshold = value.get("rank_threshold")
-    return bool(
+    if not (
         isinstance(shape, (list, tuple))
         and len(shape) == 2
         and all(_is_positive_integer(item) for item in shape)
         and _is_nonnegative_integer(rank)
         and _is_nonnegative_integer(nullity)
-        and int(rank) + int(nullity) == int(shape[1])
         and isinstance(singular, (list, tuple))
+        and bool(singular)
         and all(_is_nonnegative_number(item) for item in singular)
         and _is_nonnegative_number(threshold)
+    ):
+        return False
+    rows, columns = int(shape[0]), int(shape[1])
+    rank_value = int(rank)
+    singular_values = [float(item) for item in singular]
+    threshold_value = float(threshold)
+    if (
+        rank_value > min(rows, columns)
+        or int(nullity) != columns - rank_value
+        or len(singular_values) != min(rows, columns)
+        or any(
+            left < right
+            for left, right in zip(singular_values, singular_values[1:])
+        )
+        or rank_value
+        != sum(value_item > threshold_value for value_item in singular_values)
+    ):
+        return False
+    condition_number = value.get("condition_number_nonzero")
+    if rank_value == 0:
+        return condition_number is None
+    if not _is_number(condition_number) or float(condition_number) < 1.0:
+        return False
+    expected_condition = singular_values[0] / singular_values[rank_value - 1]
+    return math.isclose(
+        float(condition_number), expected_condition, rel_tol=1.0e-9, abs_tol=1.0e-12
     )
 
 
 def _valid_forward_residual(value: Any) -> bool:
+    if not isinstance(value, Mapping):
+        return False
+    tolerance = value.get("tolerance")
     return bool(
-        isinstance(value, Mapping)
-        and all(
-            _is_nonnegative_number(value.get(key))
-            for key in (
-                "absolute_l2_residual",
-                "relative_l2_residual",
-                "tolerance",
-            )
-        )
+        _is_nonnegative_number(value.get("absolute_l2_residual"))
+        and _is_nonnegative_number(value.get("relative_l2_residual"))
+        and _is_frozen_tolerance(tolerance, allow_zero=True)
         and isinstance(value.get("passed"), bool)
     )
+
+
+def _bounded_external_blockers(values: Iterable[str]) -> set[str]:
+    try:
+        iterator = iter(values)
+    except TypeError as exc:
+        raise SourceSpectrumInputError("blockers must be a bounded string iterable") from exc
+    blockers: set[str] = set()
+    for index, value in enumerate(iterator):
+        if index >= SCR330_MAX_EXTERNAL_BLOCKERS:
+            raise SourceSpectrumInputError("external blocker count exceeds the bounded limit")
+        if not isinstance(value, str) or not value:
+            raise SourceSpectrumInputError("external blockers must be nonempty strings")
+        byte_length = utf8_byte_length(value)
+        if byte_length is None or byte_length > SCR330_MAX_BLOCKER_BYTES:
+            raise SourceSpectrumInputError("external blocker exceeds the byte limit")
+        blockers.add(value)
+    return blockers
 
 
 def _valid_dilation_payload(value: Mapping[str, Any]) -> bool:
@@ -1489,72 +1656,234 @@ def _valid_dilation_payload(value: Mapping[str, Any]) -> bool:
     for key in array_keys[1:]:
         if not all(_is_nonnegative_number(item) for item in value[key]):
             return False
+    tolerance = value.get("tolerance")
+    if not _is_frozen_tolerance(tolerance):
+        return False
+    tolerance_value = float(tolerance)
+    residual_scalars = (
+        value.get("max_absolute_log_residual"),
+        value.get("rms_log_residual", value.get("max_absolute_log_residual")),
+        value.get("off_band_leakage", 0.0),
+    )
     return bool(
         _is_nonnegative_number(value.get("uniform_covariance_norm_bound"))
-        and _is_nonnegative_number(value.get("max_absolute_log_residual"))
-        and _is_positive_number(value.get("tolerance"))
+        and all(
+            _is_nonnegative_number(item) and float(item) <= tolerance_value
+            for item in residual_scalars
+        )
+        and all(
+            float(item) <= tolerance_value
+            for key in array_keys[1:]
+            for item in value[key]
+        )
         and isinstance(value.get("finite_to_continuum_passed"), bool)
         and isinstance(value.get("passed"), bool)
     )
 
 
-def _dag_has_blacklisted_ancestor(dag: Mapping[str, Any]) -> bool:
+def _bounded_canonical_json_bytes(value: Any, field_name: str) -> bytes:
+    pending: list[tuple[Any, int]] = [(value, 0)]
+    node_count = 0
+    while pending:
+        item, depth = pending.pop()
+        node_count += 1
+        if node_count > SCR330_MAX_JSON_NODES:
+            raise SourceSpectrumInputError(f"{field_name} exceeds the JSON node budget")
+        if depth > SCR330_MAX_JSON_DEPTH:
+            raise SourceSpectrumInputError(f"{field_name} exceeds the JSON depth budget")
+        if item is None or isinstance(item, (bool, int)):
+            continue
+        if isinstance(item, float):
+            if not math.isfinite(item):
+                raise SourceSpectrumInputError(f"{field_name} contains a nonfinite number")
+            continue
+        if isinstance(item, str):
+            byte_length = utf8_byte_length(item)
+            if byte_length is None or byte_length > SCR330_MAX_STRING_BYTES:
+                raise SourceSpectrumInputError(f"{field_name} contains an oversized string")
+            continue
+        if isinstance(item, Mapping):
+            if (
+                len(item) > SCR330_MAX_CONTAINER_ITEMS
+                or not all(isinstance(key, str) for key in item)
+                or any(
+                    (key_bytes := utf8_byte_length(key)) is None
+                    or key_bytes > SCR330_MAX_STRING_BYTES
+                    for key in item
+                )
+            ):
+                raise SourceSpectrumInputError(
+                    f"{field_name} contains an invalid or oversized mapping"
+                )
+            pending.extend((child, depth + 1) for child in item.values())
+            continue
+        if isinstance(item, (list, tuple)):
+            if len(item) > SCR330_MAX_CONTAINER_ITEMS:
+                raise SourceSpectrumInputError(
+                    f"{field_name} contains an oversized array"
+                )
+            pending.extend((child, depth + 1) for child in item)
+            continue
+        raise SourceSpectrumInputError(f"{field_name} contains unsupported JSON data")
+    try:
+        encoded = json.dumps(
+            value,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    except (OverflowError, RecursionError, TypeError, UnicodeError, ValueError) as exc:
+        raise SourceSpectrumInputError(
+            f"{field_name} is not canonical JSON data"
+        ) from exc
+    if len(encoded) > SCR330_MAX_PACKET_BYTES:
+        raise SourceSpectrumInputError(f"{field_name} exceeds the packet byte budget")
+    return encoded
+
+
+def _audit_source_dag(
+    dag: Mapping[str, Any],
+) -> tuple[set[str], bool, bool]:
+    """Validate a finite source DAG and classify forbidden ancestry.
+
+    Node kinds are an allowlist, node identifiers are audited independently of
+    their declared kinds, and every declared edge participates in an explicit
+    acyclicity check.  The returned booleans mean ``clean source ancestry`` and
+    ``contains downstream transfer/observable ancestry``, respectively.
+    """
+    if set(dag) != {"nodes", "edges"}:
+        return {"source_dag_fields_invalid"}, False, False
     nodes = dag.get("nodes")
     if not isinstance(nodes, list) or not nodes:
-        return True
-    forbidden = (
+        return {"source_dag_empty_or_invalid"}, False, False
+    if len(nodes) > SCR330_MAX_DAG_NODES:
+        return {"source_dag_node_budget_exceeded"}, False, False
+
+    blockers: set[str] = set()
+    measurement_ancestor = False
+    downstream_ancestor = False
+    forbidden_flags = (
         "measurement",
         "fit",
         "likelihood",
         "posterior",
+        "residual",
         "planck_shape",
         "target_calibrated_proxy",
         "calibrated_to_data",
         "metadata_unknown",
     )
+    node_ids: set[str] = set()
     for node in nodes:
         if not isinstance(node, Mapping):
-            return True
-        if any(bool(node.get(key)) for key in forbidden):
-            return True
-        declared_kinds = {
-            str(node.get(key, "")).strip().lower()
-            for key in ("kind", "source_kind", "type", "role")
-        }
-        if declared_kinds.intersection(forbidden):
-            return True
-    return False
+            blockers.add("source_dag_node_invalid")
+            continue
+        if set(node) != {"id", "kind"}:
+            blockers.add("source_dag_node_fields_invalid")
+        node_id = node.get("id")
+        kind = node.get("kind")
+        if not isinstance(node_id, str) or not node_id.strip():
+            blockers.add("source_dag_node_id_invalid")
+            continue
+        normalized_id = node_id.strip()
+        if normalized_id in node_ids:
+            blockers.add("source_dag_duplicate_node_id")
+        node_ids.add(normalized_id)
+        if not isinstance(kind, str) or not kind.strip():
+            blockers.add("source_dag_node_kind_missing")
+            normalized_kind = ""
+        else:
+            normalized_kind = kind.strip().lower()
+            if normalized_kind not in (
+                _SOURCE_DAG_NODE_KINDS | _DOWNSTREAM_DAG_NODE_KINDS
+            ):
+                blockers.add("source_dag_node_kind_not_allowlisted")
+        if any(alias in node for alias in ("source_kind", "type", "role")):
+            blockers.add("source_dag_noncanonical_kind_field")
+        if (
+            _MEASUREMENT_ID_TOKEN.search(normalized_id.lower()) is not None
+            or any(bool(node.get(key)) for key in forbidden_flags)
+            or normalized_kind
+            in {
+                "measurement",
+                "fit",
+                "likelihood",
+                "posterior",
+                "residual",
+            }
+        ):
+            measurement_ancestor = True
+        if (
+            normalized_kind in _DOWNSTREAM_DAG_NODE_KINDS
+            or _DOWNSTREAM_ID_TOKEN.search(normalized_id.lower()) is not None
+            or any(bool(node.get(key)) for key in _DOWNSTREAM_DAG_NODE_KINDS)
+        ):
+            downstream_ancestor = True
+
+    edges = dag.get("edges", [])
+    adjacency: dict[str, set[str]] = {node_id: set() for node_id in node_ids}
+    if not isinstance(edges, list):
+        blockers.add("source_dag_edges_invalid")
+    elif len(edges) > SCR330_MAX_DAG_EDGES:
+        blockers.add("source_dag_edge_budget_exceeded")
+    else:
+        seen_edges: set[tuple[str, str]] = set()
+        for edge in edges:
+            if not isinstance(edge, Mapping):
+                blockers.add("source_dag_edge_invalid")
+                continue
+            if set(edge) != {"source", "target"}:
+                blockers.add("source_dag_edge_fields_invalid")
+            source = edge.get("source")
+            target = edge.get("target")
+            if not isinstance(source, str) or not isinstance(target, str):
+                blockers.add("source_dag_edge_invalid")
+                continue
+            source = source.strip()
+            target = target.strip()
+            if source not in node_ids or target not in node_ids:
+                blockers.add("source_dag_edge_references_unknown_node")
+                continue
+            pair = (source, target)
+            if pair in seen_edges:
+                blockers.add("source_dag_duplicate_edge")
+                continue
+            seen_edges.add(pair)
+            adjacency[source].add(target)
+
+    indegree = {node_id: 0 for node_id in node_ids}
+    for targets in adjacency.values():
+        for target in targets:
+            indegree[target] += 1
+    ready = [node_id for node_id, degree in indegree.items() if degree == 0]
+    visited = 0
+    while ready:
+        node_id = ready.pop()
+        visited += 1
+        for target in adjacency[node_id]:
+            indegree[target] -= 1
+            if indegree[target] == 0:
+                ready.append(target)
+    if visited != len(node_ids):
+        blockers.add("source_dag_cycle_detected")
+
+    structurally_clean = not any(
+        blocker.startswith("source_dag_") for blocker in blockers
+    )
+    clean_ancestry = structurally_clean and not measurement_ancestor
+    return blockers, clean_ancestry, downstream_ancestor
+
+
+def _dag_has_blacklisted_ancestor(dag: Mapping[str, Any]) -> bool:
+    """Compatibility predicate backed by the canonical source-DAG audit."""
+    blockers, clean_ancestry, _ = _audit_source_dag(dag)
+    return bool(blockers or not clean_ancestry)
 
 
 def _dag_has_downstream_transfer_ancestor(dag: Mapping[str, Any]) -> bool:
-    nodes = dag.get("nodes")
-    if not isinstance(nodes, list):
-        return True
-    downstream = (
-        "transfer_output",
-        "boltzmann",
-        "camb",
-        "class_output",
-        "tt_spectrum",
-        "te_spectrum",
-        "ee_spectrum",
-        "lensing",
-        "recombination",
-        "foreground",
-        "nuisance_parameter",
-    )
-    for node in nodes:
-        if not isinstance(node, Mapping):
-            continue
-        if any(bool(node.get(key)) for key in downstream):
-            return True
-        declared_kinds = {
-            str(node.get(key, "")).strip().lower()
-            for key in ("kind", "source_kind", "type", "role")
-        }
-        if declared_kinds.intersection(downstream):
-            return True
-    return False
+    """Compatibility predicate backed by the canonical source-DAG audit."""
+    _, _, has_downstream = _audit_source_dag(dag)
+    return has_downstream
 
 
 def _dag_has_target_ancestor(dag: dict[str, Any]) -> bool:
@@ -1600,11 +1929,15 @@ def _integer_at_least(value: int, minimum: int, name: str) -> int:
 
 
 def _is_number(value: Any) -> bool:
-    return bool(
-        not isinstance(value, bool)
-        and isinstance(value, (int, float, np.integer, np.floating))
-        and math.isfinite(float(value))
-    )
+    if isinstance(value, bool) or not isinstance(
+        value, (int, float, np.integer, np.floating)
+    ):
+        return False
+    try:
+        numeric = float(value)
+    except (OverflowError, TypeError, ValueError):
+        return False
+    return math.isfinite(numeric)
 
 
 def _is_positive_number(value: Any) -> bool:
@@ -1613,6 +1946,14 @@ def _is_positive_number(value: Any) -> bool:
 
 def _is_nonnegative_number(value: Any) -> bool:
     return _is_number(value) and float(value) >= 0.0
+
+
+def _is_frozen_tolerance(value: Any, *, allow_zero: bool = False) -> bool:
+    if not _is_number(value):
+        return False
+    numeric = float(value)
+    lower_bound_satisfied = numeric >= 0.0 if allow_zero else numeric > 0.0
+    return lower_bound_satisfied and numeric <= SCR330_MAX_NUMERICAL_TOLERANCE
 
 
 def _is_positive_integer(value: Any) -> bool:

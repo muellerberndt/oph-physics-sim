@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from oph_fpe.evidence.validation import utf8_byte_length
+
 
 PROMOTED_CMB_SOURCE_QUANTITIES = (
     "eta_R",
@@ -27,6 +29,10 @@ THEOREM_SIDE_PROVENANCE_SOURCES = {
     "OPH_direct_public_record_capacity",
     "OPH_independent_scale_bridge_supplied",
 }
+
+ALLOWED_TRANSITIVE_SOURCE_KINDS = (
+    FINITE_CMB_PROVENANCE_SOURCES | THEOREM_SIDE_PROVENANCE_SOURCES
+)
 
 FORBIDDEN_SOURCE_KINDS = {
     "diagnostic_proxy",
@@ -59,6 +65,10 @@ POOLED_REDUCER_CHECKS = (
 TRANSITIVE_SOURCE_ANCESTRY_RECEIPT = "TRANSITIVE_SOURCE_ANCESTRY_RECEIPT"
 HERMETIC_READ_SET_RECEIPT = "HERMETIC_READ_SET_RECEIPT"
 SOURCE_MODEL_FREEZE_RECEIPT = "SOURCE_MODEL_FREEZE_RECEIPT"
+MAX_PROVENANCE_NODES = 512
+MAX_PROVENANCE_PARENTS_PER_NODE = 64
+MAX_PROVENANCE_EDGES = 4096
+MAX_PROVENANCE_IDENTIFIER_BYTES = 256
 
 
 def certify_cmb_source_provenance(
@@ -76,13 +86,27 @@ def certify_cmb_source_provenance(
     or likelihood gates have passed.
     """
 
-    global_checks = global_checks or {}
+    global_checks = global_checks if isinstance(global_checks, dict) else {}
+    reducers = reducers if isinstance(reducers, dict) else {}
     blockers: list[str] = []
     node_by_id: dict[str, dict[str, Any]] = {}
     quantity_nodes: dict[str, list[dict[str, Any]]] = {quantity: [] for quantity in required_quantities}
 
-    for index, node in enumerate(nodes):
+    if not isinstance(nodes, list):
+        blockers.append("provenance_nodes_not_a_list")
+        node_rows: list[Any] = []
+    else:
+        node_rows = nodes[:MAX_PROVENANCE_NODES]
+        if len(nodes) > MAX_PROVENANCE_NODES:
+            blockers.append("provenance_node_budget_exceeded")
+    for index, node in enumerate(node_rows):
+        if not isinstance(node, dict):
+            blockers.append(f"invalid_provenance_node:{index}")
+            continue
         node_id = _node_id(node, index)
+        if not _valid_provenance_identifier(node_id):
+            blockers.append(f"invalid_provenance_node_id:{index}")
+            node_id = f"invalid_node_{index}"
         if node_id in node_by_id:
             blockers.append(f"duplicate_provenance_node:{node_id}")
             continue
@@ -115,7 +139,7 @@ def certify_cmb_source_provenance(
         if source_kind in FORBIDDEN_SOURCE_KINDS or str(row.get("source", "")) in FORBIDDEN_SOURCE_KINDS:
             source_ok = False
             blockers.append(f"{quantity}_forbidden_source_kind:{source_kind}")
-        if not bool(row.get("source_only", False)):
+        if row.get("source_only") is not True:
             source_ok = False
             blockers.append(f"{quantity}_not_source_only")
         if not ancestry["source_only"]:
@@ -140,15 +164,29 @@ def certify_cmb_source_provenance(
 
     global_status, global_blockers = _global_likelihood_status(global_checks)
     blockers.extend(global_blockers)
-    hermetic_read_set = bool(global_checks.get(HERMETIC_READ_SET_RECEIPT, global_checks.get("hermetic_read_set_receipt", False)))
-    source_model_freeze = bool(global_checks.get(SOURCE_MODEL_FREEZE_RECEIPT, global_checks.get("source_model_freeze_receipt", False)))
+    hermetic_read_set = (
+        global_checks.get(
+            HERMETIC_READ_SET_RECEIPT,
+            global_checks.get("hermetic_read_set_receipt", False),
+        )
+        is True
+    )
+    source_model_freeze = (
+        global_checks.get(
+            SOURCE_MODEL_FREEZE_RECEIPT,
+            global_checks.get("source_model_freeze_receipt", False),
+        )
+        is True
+    )
     if not hermetic_read_set:
         blockers.append("hermetic_read_set_receipt_missing")
     if not source_model_freeze:
         blockers.append("source_model_freeze_receipt_missing")
 
     blockers = _unique_strings(blockers)
-    reducer_receipt = all(bool(row.get("receipt", False)) for row in reducer_status.values())
+    reducer_receipt = all(
+        row.get("receipt") is True for row in reducer_status.values()
+    )
     receipt = len(blockers) == 0
     return {
         "mode": "cmb_source_provenance_certificate_v0",
@@ -182,29 +220,37 @@ def certify_cmb_source_provenance(
 
 def _graph_blockers(node_by_id: dict[str, dict[str, Any]]) -> list[str]:
     blockers: list[str] = []
-    visiting: set[str] = set()
-    visited: set[str] = set()
-
+    adjacency: dict[str, list[str]] = {}
+    edge_count = 0
     for node_id, node in node_by_id.items():
-        for parent in _parents(node):
+        parents, parent_blockers = _validated_parents(node_id, node)
+        blockers.extend(parent_blockers)
+        adjacency[node_id] = parents
+        edge_count += len(parents)
+        if edge_count > MAX_PROVENANCE_EDGES:
+            blockers.append("provenance_edge_budget_exceeded")
+            return blockers
+        for parent in parents:
             if parent not in node_by_id:
                 blockers.append(f"missing_provenance_parent:{node_id}->{parent}")
-
-    def visit(node_id: str) -> None:
-        if node_id in visited:
-            return
-        if node_id in visiting:
-            blockers.append(f"cyclic_provenance_dependency:{node_id}")
-            return
-        visiting.add(node_id)
-        for parent in _parents(node_by_id[node_id]):
+    indegree = {node_id: 0 for node_id in node_by_id}
+    children = {node_id: [] for node_id in node_by_id}
+    for child, parents in adjacency.items():
+        for parent in parents:
             if parent in node_by_id:
-                visit(parent)
-        visiting.remove(node_id)
-        visited.add(node_id)
-
-    for node_id in node_by_id:
-        visit(node_id)
+                indegree[child] += 1
+                children[parent].append(child)
+    ready = [node_id for node_id, degree in indegree.items() if degree == 0]
+    visited = 0
+    while ready:
+        node_id = ready.pop()
+        visited += 1
+        for child in children[node_id]:
+            indegree[child] -= 1
+            if indegree[child] == 0:
+                ready.append(child)
+    if visited != len(node_by_id):
+        blockers.append("cyclic_provenance_dependency")
     return blockers
 
 
@@ -213,38 +259,45 @@ def _transitive_ancestry_status(node_id: str, node_by_id: dict[str, dict[str, An
     visited: set[str] = set()
     source_only = True
 
-    def visit(current_id: str, path: list[str]) -> None:
-        nonlocal source_only
+    if node_id not in node_by_id:
+        return {"source_only": False, "ancestor_ids": [], "blockers": [f"missing_ancestry_root:{node_id}"]}
+    pending: list[tuple[str, tuple[str, ...]]] = [(node_id, ())]
+    while pending:
+        current_id, path = pending.pop()
         if current_id in visited:
-            return
+            continue
         visited.add(current_id)
         node = node_by_id[current_id]
         local = _local_source_blockers(current_id, node)
         if local:
             source_only = False
-            path_text = "->".join(path + [current_id])
+            path_text = "->".join((*path, current_id))
             blockers.extend(local)
             blockers.extend(f"{blocker}|path:{path_text}" for blocker in local)
         source_kind = str(node.get("source_kind", node.get("source", "")))
         if source_kind in FORBIDDEN_SOURCE_KINDS or str(node.get("source", "")) in FORBIDDEN_SOURCE_KINDS:
             source_only = False
-            blockers.append(f"forbidden_source_ancestor:{current_id}:{source_kind}|path:{'->'.join(path + [current_id])}")
-        if not bool(node.get("source_only", False)):
+            blockers.append(f"forbidden_source_ancestor:{current_id}:{source_kind}|path:{'->'.join((*path, current_id))}")
+        elif source_kind not in ALLOWED_TRANSITIVE_SOURCE_KINDS:
             source_only = False
-            blockers.append(f"ancestor_not_source_only:{current_id}|path:{'->'.join(path + [current_id])}")
-        for parent in _parents(node):
+            blockers.append(
+                f"unregistered_source_ancestor:{current_id}:{source_kind}"
+                f"|path:{'->'.join((*path, current_id))}"
+            )
+        if node.get("source_only") is not True:
+            source_only = False
+            blockers.append(f"ancestor_not_source_only:{current_id}|path:{'->'.join((*path, current_id))}")
+        parents, parent_blockers = _validated_parents(current_id, node)
+        blockers.extend(parent_blockers)
+        for parent in parents:
             if parent in node_by_id:
-                visit(parent, path + [current_id])
-
-    if node_id not in node_by_id:
-        return {"source_only": False, "ancestor_ids": [], "blockers": [f"missing_ancestry_root:{node_id}"]}
-    visit(node_id, [])
+                pending.append((parent, (*path, current_id)))
     return {"source_only": source_only, "ancestor_ids": sorted(visited), "blockers": _unique_strings(blockers)}
 
 
 def _local_source_blockers(node_id: str, node: dict[str, Any]) -> list[str]:
     blockers: list[str] = []
-    no_cmb_data_used = bool(node.get("no_cmb_data_used", False))
+    no_cmb_data_used = node.get("no_cmb_data_used") is True
     measurement_flags = (
         "fit_to_planck",
         "fit_to_measurement",
@@ -254,7 +307,7 @@ def _local_source_blockers(node_id: str, node: dict[str, Any]) -> list[str]:
         "planck_data_used_for_input",
         "uses_measurements_to_set_inputs",
     )
-    measurement_used = any(bool(node.get(flag, False)) for flag in measurement_flags)
+    measurement_used = any(node.get(flag) is True for flag in measurement_flags)
     if no_cmb_data_used and measurement_used:
         blockers.append(f"contradictory_no_data_use_provenance:{node_id}")
     if not no_cmb_data_used:
@@ -287,48 +340,45 @@ def _reducer_status(
                 "mode": reducer.get("mode", "unknown"),
             }
             continue
-        if bool(reducer.get("shard_local_nonlinear_average", False)):
+        if reducer.get("shard_local_nonlinear_average") is True:
             blockers.append(f"{quantity}_shard_local_nonlinear_average_forbidden")
         mode = str(reducer.get("mode", ""))
-        if mode == "single_global_source" and bool(reducer.get("single_global_source", False)):
-            receipt = not bool(reducer.get("shard_local_nonlinear_average", False))
-        elif mode == "pooled_sufficient_statistics" and bool(reducer.get("pooled_sufficient_statistics", False)):
-            missing = [key for key in POOLED_REDUCER_CHECKS if not bool(reducer.get(key, False))]
+        if mode == "single_global_source" and reducer.get("single_global_source") is True:
+            receipt = reducer.get("shard_local_nonlinear_average") is not True
+        elif (
+            mode == "pooled_sufficient_statistics"
+            and reducer.get("pooled_sufficient_statistics") is True
+        ):
+            missing = [key for key in POOLED_REDUCER_CHECKS if reducer.get(key) is not True]
             for key in missing:
                 blockers.append(f"{quantity}_reducer_{key}_missing")
-            receipt = not missing and not bool(reducer.get("shard_local_nonlinear_average", False))
+            receipt = not missing and reducer.get("shard_local_nonlinear_average") is not True
         else:
             receipt = False
             blockers.append(f"{quantity}_source_reducer_not_pooled_or_global")
         status[quantity] = {
             "receipt": receipt,
             "mode": mode or "unknown",
-            "single_global_source": bool(reducer.get("single_global_source", False)),
-            "pooled_sufficient_statistics": bool(reducer.get("pooled_sufficient_statistics", False)),
+            "single_global_source": reducer.get("single_global_source") is True,
+            "pooled_sufficient_statistics": reducer.get("pooled_sufficient_statistics") is True,
         }
     return status, blockers
 
 
 def _n_crc_status(reducer: dict[str, Any]) -> dict[str, Any]:
-    exact_evaluator = bool(reducer.get("exact_public_record_capacity_evaluator", False))
-    complete_fiber = bool(reducer.get("complete_terminal_fiber_receipt", False))
-    common_readback = bool(reducer.get("whole_fiber_scalarization_receipt", False))
-    target_free = bool(reducer.get("target_free_capacity_producer_receipt", False))
-    robust = bool(reducer.get("robust_closure_receipt", False))
-    unique_slack = bool(reducer.get("unique_regulator_stable_slack_zero_receipt", False))
-    horizon_saturation = bool(reducer.get("horizon_record_saturation_receipt", False))
-    physical_n = bool(reducer.get("physical_N_closure_receipt", False))
+    exact_evaluator = reducer.get("exact_public_record_capacity_evaluator") is True
+    complete_fiber = reducer.get("complete_terminal_fiber_receipt") is True
+    common_readback = reducer.get("whole_fiber_scalarization_receipt") is True
+    target_free = reducer.get("target_free_capacity_producer_receipt") is True
+    robust = reducer.get("robust_closure_receipt") is True
+    unique_slack = (
+        reducer.get("unique_regulator_stable_slack_zero_receipt") is True
+    )
+    horizon_saturation = reducer.get("horizon_record_saturation_receipt") is True
+    declared_physical_n = reducer.get("physical_N_closure_receipt") is True
+    independent_recomputation = False
     return {
-        "receipt": bool(
-            exact_evaluator
-            and complete_fiber
-            and common_readback
-            and target_free
-            and robust
-            and unique_slack
-            and horizon_saturation
-            and physical_n
-        ),
+        "receipt": False,
         "exact_public_record_capacity_evaluator": exact_evaluator,
         "complete_terminal_fiber_receipt": complete_fiber,
         "whole_fiber_scalarization_receipt": common_readback,
@@ -336,11 +386,18 @@ def _n_crc_status(reducer: dict[str, Any]) -> dict[str, Any]:
         "robust_closure_receipt": robust,
         "unique_regulator_stable_slack_zero_receipt": unique_slack,
         "horizon_record_saturation_receipt": horizon_saturation,
-        "physical_N_closure_receipt": physical_n,
+        "declared_physical_N_closure_receipt": declared_physical_n,
+        "physical_N_closure_receipt": False,
+        "independent_public_record_capacity_recomputation_receipt": (
+            independent_recomputation
+        ),
+        "legacy_declarations_promoted": False,
         "claim_boundary": (
             "N_CRC is eligible only from a target-free complete public-record terminal fiber "
             "with common M_0=alpha(G_q), robust F_set(D)={D}, a unique regulator-stable slack zero, "
-            "and the independent horizon-record saturation receipt. Consensus or additive counts alone fail."
+            "and the independent horizon-record saturation receipt. The current provenance reader cannot "
+            "resolve and replay a bounded public-checkpoint packet, so legacy closure booleans never promote. "
+            "Consensus or additive counts alone fail."
         ),
     }
 
@@ -376,13 +433,39 @@ def _node_id(node: dict[str, Any], index: int) -> str:
     return str(node.get("node_id") or node.get("id") or node.get("quantity") or f"node_{index}")
 
 
-def _parents(node: dict[str, Any]) -> list[str]:
-    parents = node.get("parents") or []
-    if isinstance(parents, str):
-        return [parents]
-    if isinstance(parents, list):
-        return [str(parent) for parent in parents]
-    return []
+def _validated_parents(
+    node_id: str,
+    node: dict[str, Any],
+) -> tuple[list[str], list[str]]:
+    raw = node.get("parents", [])
+    if isinstance(raw, str):
+        values = [raw]
+    elif isinstance(raw, list):
+        if len(raw) > MAX_PROVENANCE_PARENTS_PER_NODE:
+            return [], [f"provenance_parent_budget_exceeded:{node_id}"]
+        values = raw
+    else:
+        return [], [f"invalid_provenance_parents:{node_id}"]
+    parents: list[str] = []
+    blockers: list[str] = []
+    for value in values:
+        if not isinstance(value, str) or not _valid_provenance_identifier(value):
+            blockers.append(f"invalid_provenance_parent_id:{node_id}")
+            continue
+        parents.append(value)
+    if len(parents) != len(set(parents)):
+        blockers.append(f"duplicate_provenance_parent:{node_id}")
+    return list(dict.fromkeys(parents)), blockers
+
+
+def _valid_provenance_identifier(value: str) -> bool:
+    return bool(
+        isinstance(value, str)
+        and value
+        and value == value.strip()
+        and (byte_length := utf8_byte_length(value)) is not None
+        and byte_length <= MAX_PROVENANCE_IDENTIFIER_BYTES
+    )
 
 
 def _unique_strings(values: list[str]) -> list[str]:

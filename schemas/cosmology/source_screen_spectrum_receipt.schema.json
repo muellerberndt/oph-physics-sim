@@ -8,6 +8,12 @@
     "schema_version",
     "receipt",
     "passed",
+    "evidence_status_recomputed",
+    "legacy_declared_pass",
+    "caller_pass_flag_promoted",
+    "packet_contract_passed",
+    "independent_source_artifact_resolution_receipt",
+    "source_promotion_eligible",
     "claim_tier",
     "source_dag_hash",
     "no_measurement_fit_likelihood_ancestor",
@@ -15,9 +21,7 @@
     "blockers"
   ],
   "properties": {
-    "schema_version": {
-      "const": "scr330-radial-v2"
-    },
+    "schema_version": {"const": "scr330-radial-v2"},
     "receipt": {
       "enum": [
         "SCR330_SOURCE_SHELL_EMBEDDING_RECEIPT",
@@ -32,264 +36,283 @@
         "SCR330_TRANSFER_FIREWALL_RECEIPT"
       ]
     },
-    "passed": {
-      "type": "boolean"
-    },
-    "claim_tier": {
-      "enum": ["E0", "E1", "E2", "E3", "E4", "E5"]
-    },
-    "source_dag_hash": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    },
-    "no_measurement_fit_likelihood_ancestor": {
-      "type": "boolean"
-    },
-    "physical_tt_te_ee_claim": {
-      "type": "boolean"
-    },
+    "passed": {"type": "boolean"},
+    "evidence_status_recomputed": {"const": true},
+    "legacy_declared_pass": {"type": ["boolean", "null"]},
+    "caller_pass_flag_promoted": {"const": false},
+    "packet_contract_passed": {"type": "boolean"},
+    "independent_source_artifact_resolution_receipt": {"const": false},
+    "source_promotion_eligible": {"const": false},
+    "claim_tier": {"enum": ["E0", "E1", "E2", "E3", "E4", "E5"]},
+    "source_dag_hash": {"$ref": "#/$defs/sha256"},
+    "no_measurement_fit_likelihood_ancestor": {"type": "boolean"},
+    "physical_tt_te_ee_claim": {"const": false},
     "blockers": {
       "type": "array",
-      "items": {"type": "string"},
+      "maxItems": 256,
+      "items": {"type": "string", "minLength": 1, "maxLength": 1024},
       "uniqueItems": true
     },
     "payload": {
-      "$ref": "#/$defs/payload"
-    }
-  },
-  "$defs": {
-    "nonnegativeNumberArray": {
-      "type": "array",
-      "items": {"type": "number", "minimum": 0}
-    },
-    "payload": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "properties": {
         "radial_branch": {
-          "enum": [
-            "SOURCE_DILATION",
-            "RADIAL_TOMOGRAPHY",
-            "PRIOR_CONTINUATION"
-          ]
+          "enum": ["SOURCE_DILATION", "RADIAL_TOMOGRAPHY", "PRIOR_CONTINUATION"]
         },
-        "source_embedding_hash": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
-        },
-        "physical_mode_basis_id": {
-          "type": "string",
-          "minLength": 1
-        },
+        "source_embedding_hash": {"$ref": "#/$defs/sha256"},
+        "physical_mode_basis_id": {"type": "string", "minLength": 1},
+        "physical_mode_basis_hash": {"$ref": "#/$defs/sha256"},
         "background_curvature_status": {
-          "enum": [
-            "FlatExact",
-            "FlatAssumed",
-            "OpenCurved",
-            "ClosedCurved",
-            "Unresolved"
-          ]
+          "enum": ["FlatExact", "FlatAssumed", "OpenCurved", "ClosedCurved", "Unresolved"]
         },
         "Z_q": {"type": "number", "exclusiveMinimum": 0},
-        "theta": {
-          "type": "number",
-          "exclusiveMinimum": -2,
-          "exclusiveMaximum": 4
-        },
+        "theta": {"type": "number", "exclusiveMinimum": -2, "exclusiveMaximum": 4},
         "A_q": {"type": "number", "exclusiveMinimum": 0},
         "A_zeta": {"type": "number", "exclusiveMinimum": 0},
         "k_pivot": {"type": "number", "exclusiveMinimum": 0},
         "R_star": {"type": "number", "exclusiveMinimum": 0},
-        "window_hash": {
-          "type": "string",
-          "pattern": "^sha256:[0-9a-f]{64}$"
+        "window_hash": {"$ref": "#/$defs/sha256"},
+        "upstream_radial_receipt_hash": {"$ref": "#/$defs/sha256"},
+        "transfer_source_hash": {"$ref": "#/$defs/sha256"},
+        "solver_assumption_hash": {"$ref": "#/$defs/sha256"},
+        "upstream_claim_tier": {"enum": ["E0", "E1", "E2", "E3", "E4", "E5"]},
+        "no_back_edge_to_E4_source": {"type": "boolean"},
+        "source_shell_embedding": {"$ref": "#/$defs/sourceShellEmbedding"},
+        "physical_mode_basis": {"$ref": "#/$defs/physicalModeBasis"},
+        "dilation_intertwiner": {"$ref": "#/$defs/dilationIntertwiner"},
+        "mellin_lift": {"$ref": "#/$defs/mellinLift"},
+        "finite_window": {"$ref": "#/$defs/finiteWindow"},
+        "radial_svd": {"$ref": "#/$defs/radialSvd"},
+        "forward_residual": {"$ref": "#/$defs/forwardResidual"},
+        "radial_tomography": {"$ref": "#/$defs/radialTomography"}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "boundedResidualArray": {
+      "type": "array",
+      "items": {"type": "number", "minimum": 0, "maximum": 0.000001},
+      "minItems": 1
+    },
+    "sourceShellEmbedding": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["source_derived", "refinement_natural", "max_residual", "tolerance", "passed"],
+      "properties": {
+        "source_derived": {"type": "boolean"},
+        "refinement_natural": {"type": "boolean"},
+        "max_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "passed": {"type": "boolean"}
+      }
+    },
+    "physicalModeBasis": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "source_derived",
+        "gauge_independent",
+        "refinement_converged",
+        "max_residual",
+        "tolerance",
+        "passed"
+      ],
+      "properties": {
+        "source_derived": {"type": "boolean"},
+        "gauge_independent": {"type": "boolean"},
+        "refinement_converged": {"type": "boolean"},
+        "max_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "passed": {"type": "boolean"}
+      }
+    },
+    "dilationIntertwiner": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "scale_ratios",
+        "source_embedding_commutator_norms",
+        "screen_covariance_naturality_residual_norms",
+        "physical_operator_residual_norms",
+        "strong_covariance_cauchy_residuals",
+        "strong_dilation_cauchy_residuals",
+        "uniform_covariance_norm_bound",
+        "finite_to_continuum_passed",
+        "max_absolute_log_residual",
+        "tolerance",
+        "passed"
+      ],
+      "properties": {
+        "scale_ratios": {
+          "type": "array",
+          "items": {"type": "number", "exclusiveMinimum": 0},
+          "minItems": 1
         },
-        "safe_logk_band": {
+        "source_embedding_commutator_norms": {"$ref": "#/$defs/boundedResidualArray"},
+        "screen_covariance_naturality_residual_norms": {"$ref": "#/$defs/boundedResidualArray"},
+        "physical_operator_residual_norms": {"$ref": "#/$defs/boundedResidualArray"},
+        "strong_covariance_cauchy_residuals": {"$ref": "#/$defs/boundedResidualArray"},
+        "strong_dilation_cauchy_residuals": {"$ref": "#/$defs/boundedResidualArray"},
+        "uniform_covariance_norm_bound": {"type": "number", "minimum": 0},
+        "finite_to_continuum_passed": {"type": "boolean"},
+        "off_band_leakage": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "max_absolute_log_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "rms_log_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "tolerance": {"type": "number", "exclusiveMinimum": 0, "maximum": 0.000001},
+        "passed": {"type": "boolean"}
+      }
+    },
+    "mellinLift": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "ell_min",
+        "ell_max",
+        "convergence_strip",
+        "A_zeta_over_A_q",
+        "max_arithmetic_residual",
+        "tolerance",
+        "passed"
+      ],
+      "properties": {
+        "ell_min": {"type": "integer", "minimum": 2},
+        "ell_max": {"type": "integer", "minimum": 2},
+        "convergence_strip": {
           "type": "array",
           "prefixItems": [{"type": "number"}, {"type": "number"}],
           "items": false,
           "minItems": 2,
           "maxItems": 2
         },
-        "dilation_intertwiner": {
+        "A_zeta_over_A_q": {"type": "number", "exclusiveMinimum": 0},
+        "max_arithmetic_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "passed": {"type": "boolean"}
+      }
+    },
+    "finiteWindow": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mean_radius",
+        "variance",
+        "eta_by_ell",
+        "absolute_bound_by_ell",
+        "quadrature_relative_error",
+        "tolerance",
+        "bound_verified",
+        "passed"
+      ],
+      "properties": {
+        "mean_radius": {"type": "number", "exclusiveMinimum": 0},
+        "variance": {"type": "number", "minimum": 0},
+        "eta_by_ell": {
           "type": "object",
-          "additionalProperties": true,
-          "required": [
-            "scale_ratios",
-            "source_embedding_commutator_norms",
-            "screen_covariance_naturality_residual_norms",
-            "physical_operator_residual_norms",
-            "strong_covariance_cauchy_residuals",
-            "strong_dilation_cauchy_residuals",
-            "uniform_covariance_norm_bound",
-            "finite_to_continuum_passed",
-            "max_absolute_log_residual",
-            "tolerance",
-            "passed"
+          "additionalProperties": {"type": "number", "minimum": 0},
+          "minProperties": 1
+        },
+        "absolute_bound_by_ell": {
+          "type": "object",
+          "additionalProperties": {"type": "number", "minimum": 0},
+          "minProperties": 1
+        },
+        "quadrature_relative_error": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "bound_verified": {"type": "boolean"},
+        "passed": {"type": "boolean"}
+      }
+    },
+    "radialSvd": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["shape", "rank", "nullity", "singular_values", "rank_threshold"],
+      "properties": {
+        "shape": {
+          "type": "array",
+          "prefixItems": [
+            {"type": "integer", "minimum": 1},
+            {"type": "integer", "minimum": 1}
           ],
-          "properties": {
-            "scale_ratios": {
-              "type": "array",
-              "items": {"type": "number", "exclusiveMinimum": 0},
-              "minItems": 1
-            },
-            "source_embedding_commutator_norms": {
-              "$ref": "#/$defs/nonnegativeNumberArray",
-              "minItems": 1
-            },
-            "screen_covariance_naturality_residual_norms": {
-              "$ref": "#/$defs/nonnegativeNumberArray",
-              "minItems": 1
-            },
-            "physical_operator_residual_norms": {
-              "$ref": "#/$defs/nonnegativeNumberArray",
-              "minItems": 1
-            },
-            "strong_covariance_cauchy_residuals": {
-              "$ref": "#/$defs/nonnegativeNumberArray",
-              "minItems": 1
-            },
-            "strong_dilation_cauchy_residuals": {
-              "$ref": "#/$defs/nonnegativeNumberArray",
-              "minItems": 1
-            },
-            "uniform_covariance_norm_bound": {
-              "type": "number",
-              "minimum": 0
-            },
-            "finite_to_continuum_passed": {"type": "boolean"},
-            "off_band_leakage": {"type": "number", "minimum": 0},
-            "max_absolute_log_residual": {"type": "number", "minimum": 0},
-            "rms_log_residual": {"type": "number", "minimum": 0},
-            "tolerance": {"type": "number", "exclusiveMinimum": 0},
-            "passed": {"type": "boolean"}
-          }
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
         },
-        "mellin_lift": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "ell_min": {"type": "integer", "minimum": 2},
-            "ell_max": {"type": "integer", "minimum": 2},
-            "convergence_strip": {
-              "type": "array",
-              "prefixItems": [{"type": "number"}, {"type": "number"}],
-              "items": false,
-              "minItems": 2,
-              "maxItems": 2
-            },
-            "A_zeta_over_A_q": {"type": "number", "exclusiveMinimum": 0},
-            "max_arithmetic_residual": {"type": "number", "minimum": 0}
-          }
+        "rank": {"type": "integer", "minimum": 0},
+        "nullity": {"type": "integer", "minimum": 0},
+        "singular_values": {
+          "type": "array",
+          "items": {"type": "number", "minimum": 0},
+          "minItems": 1
         },
-        "finite_window": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "mean_radius": {"type": "number", "exclusiveMinimum": 0},
-            "variance": {"type": "number", "minimum": 0},
-            "eta_by_ell": {
-              "type": "object",
-              "additionalProperties": {"type": "number", "minimum": 0}
-            },
-            "absolute_bound_by_ell": {
-              "type": "object",
-              "additionalProperties": {"type": "number", "minimum": 0}
-            }
-          }
-        },
-        "radial_svd": {
-          "type": "object",
-          "additionalProperties": true,
-          "required": [
-            "shape",
-            "rank",
-            "nullity",
-            "singular_values",
-            "rank_threshold"
-          ],
-          "properties": {
-            "shape": {
-              "type": "array",
-              "prefixItems": [
-                {"type": "integer", "minimum": 1},
-                {"type": "integer", "minimum": 1}
-              ],
-              "items": false,
-              "minItems": 2,
-              "maxItems": 2
-            },
-            "rank": {"type": "integer", "minimum": 0},
-            "nullity": {"type": "integer", "minimum": 0},
-            "singular_values": {
-              "type": "array",
-              "items": {"type": "number", "minimum": 0}
-            },
-            "rank_threshold": {"type": "number", "minimum": 0},
-            "condition_number_nonzero": {"type": "number", "minimum": 1},
-            "right_null_basis_hash": {
-              "type": "string",
-              "pattern": "^sha256:[0-9a-f]{64}$"
-            },
-            "null_basis_hash": {
-              "type": "string",
-              "pattern": "^sha256:[0-9a-f]{64}$"
-            },
-            "resolution_kernel_hash": {
-              "type": "string",
-              "pattern": "^sha256:[0-9a-f]{64}$"
-            }
-          }
-        },
-        "forward_residual": {
-          "type": "object",
-          "additionalProperties": true,
-          "required": [
-            "absolute_l2_residual",
-            "relative_l2_residual",
-            "tolerance",
-            "passed"
-          ],
-          "properties": {
-            "absolute_l2_residual": {"type": "number", "minimum": 0},
-            "relative_l2_residual": {"type": "number", "minimum": 0},
-            "tolerance": {"type": "number", "minimum": 0},
-            "passed": {"type": "boolean"},
-            "held_out": {"type": "boolean"}
-          }
-        },
-        "radial_tomography": {
-          "type": "object",
-          "additionalProperties": true,
-          "required": [
-            "cross_covariance_hash",
-            "hankel_unitarity_residual",
-            "off_diagonal_k_leakage",
-            "positive_multiplication_spectrum",
-            "refinement_converged",
-            "held_out_reconstruction_passed"
-          ],
-          "properties": {
-            "cross_covariance_hash": {
-              "type": "string",
-              "pattern": "^sha256:[0-9a-f]{64}$"
-            },
-            "hankel_unitarity_residual": {"type": "number", "minimum": 0},
-            "off_diagonal_k_leakage": {"type": "number", "minimum": 0},
-            "positive_multiplication_spectrum": {"type": "boolean"},
-            "refinement_converged": {"type": "boolean"},
-            "held_out_reconstruction_passed": {"type": "boolean"}
-          }
-        }
+        "rank_threshold": {"type": "number", "minimum": 0},
+        "condition_number_nonzero": {"type": "number", "minimum": 1},
+        "right_null_basis_hash": {"$ref": "#/$defs/sha256"},
+        "null_basis_hash": {"$ref": "#/$defs/sha256"},
+        "resolution_kernel_hash": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "forwardResidual": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "absolute_l2_residual",
+        "relative_l2_residual",
+        "tolerance",
+        "passed",
+        "held_out"
+      ],
+      "properties": {
+        "absolute_l2_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "relative_l2_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "passed": {"type": "boolean"},
+        "held_out": {"type": "boolean"}
+      }
+    },
+    "radialTomography": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "cross_covariance_hash",
+        "hankel_unitarity_residual",
+        "off_diagonal_k_leakage",
+        "positive_multiplication_spectrum",
+        "refinement_converged",
+        "held_out_reconstruction_passed",
+        "tolerance"
+      ],
+      "properties": {
+        "cross_covariance_hash": {"$ref": "#/$defs/sha256"},
+        "hankel_unitarity_residual": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "off_diagonal_k_leakage": {"type": "number", "minimum": 0, "maximum": 0.000001},
+        "positive_multiplication_spectrum": {"type": "boolean"},
+        "refinement_converged": {"type": "boolean"},
+        "held_out_reconstruction_passed": {"type": "boolean"},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 0.000001}
       }
     }
   },
   "allOf": [
     {
       "if": {
-        "properties": {"passed": {"const": true}},
-        "required": ["passed"]
+        "properties": {"receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"}},
+        "required": ["receipt"]
       },
+      "then": {
+        "properties": {
+          "passed": {"const": false},
+          "source_promotion_eligible": {"const": false},
+          "independent_source_artifact_resolution_receipt": {"const": false}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"passed": {"const": true}}, "required": ["passed"]},
       "then": {
         "required": ["payload"],
         "properties": {
@@ -300,14 +323,308 @@
     },
     {
       "if": {
-        "properties": {
-          "claim_tier": {"enum": ["E0", "E1", "E2", "E3", "E4"]},
-          "passed": {"const": true}
-        },
-        "required": ["claim_tier", "passed"]
+        "properties": {"physical_tt_te_ee_claim": {"const": true}},
+        "required": ["physical_tt_te_ee_claim"]
       },
       "then": {
-        "properties": {"physical_tt_te_ee_claim": {"const": false}}
+        "properties": {
+          "receipt": {"const": "SCR330_TRANSFER_FIREWALL_RECEIPT"},
+          "claim_tier": {"const": "E5"},
+          "passed": {"const": true}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_SOURCE_SHELL_EMBEDDING_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["source_embedding_hash", "R_star", "background_curvature_status", "source_shell_embedding"],
+            "properties": {
+              "background_curvature_status": {"enum": ["FlatExact", "FlatAssumed", "OpenCurved", "ClosedCurved"]},
+              "source_shell_embedding": {
+                "properties": {
+                  "source_derived": {"const": true},
+                  "refinement_natural": {"const": true},
+                  "passed": {"const": true}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_PHYSICAL_MODE_BASIS_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["physical_mode_basis_id", "physical_mode_basis_hash", "physical_mode_basis"],
+            "properties": {
+              "physical_mode_basis": {
+                "properties": {
+                  "source_derived": {"const": true},
+                  "gauge_independent": {"const": true},
+                  "refinement_converged": {"const": true},
+                  "passed": {"const": true}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_DILATION_INTERTWINER_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["source_embedding_hash", "physical_mode_basis_id", "dilation_intertwiner"],
+            "properties": {
+              "dilation_intertwiner": {
+                "properties": {
+                  "finite_to_continuum_passed": {"const": true},
+                  "passed": {"const": true}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_THIN_SHELL_MELLIN_LIFT_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["mellin_lift"],
+            "properties": {"mellin_lift": {"properties": {"passed": {"const": true}}}}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_FINITE_WINDOW_KERNEL_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["window_hash", "finite_window"],
+            "properties": {
+              "finite_window": {
+                "properties": {"bound_verified": {"const": true}, "passed": {"const": true}}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_NULL_REPORT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["radial_svd"],
+            "properties": {
+              "radial_svd": {
+                "required": ["resolution_kernel_hash"],
+                "anyOf": [
+                  {"required": ["right_null_basis_hash"]},
+                  {"required": ["null_basis_hash"]}
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_FORWARD_RESIDUAL_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["forward_residual"],
+            "properties": {
+              "forward_residual": {
+                "properties": {"passed": {"const": true}, "held_out": {"const": true}}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_TOMOGRAPHY_RECEIPT"},
+          "passed": {"const": true}
+        },
+        "required": ["receipt", "passed"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["radial_tomography"],
+            "properties": {
+              "radial_tomography": {
+                "properties": {
+                  "positive_multiplication_spectrum": {"const": true},
+                  "refinement_converged": {"const": true},
+                  "held_out_reconstruction_passed": {"const": true}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
+          "packet_contract_passed": {"const": true}
+        },
+        "required": ["receipt", "packet_contract_passed"]
+      },
+      "then": {
+        "required": ["payload"],
+        "properties": {
+          "claim_tier": {"const": "E4"},
+          "physical_tt_te_ee_claim": {"const": false},
+          "no_measurement_fit_likelihood_ancestor": {"const": true},
+          "blockers": {
+            "const": ["independent_source_artifact_resolution_unavailable"]
+          },
+          "payload": {
+            "required": [
+              "radial_branch",
+              "source_embedding_hash",
+              "physical_mode_basis_id",
+              "background_curvature_status",
+              "Z_q",
+              "theta",
+              "A_q",
+              "A_zeta",
+              "k_pivot",
+              "R_star",
+              "radial_svd",
+              "forward_residual"
+            ],
+            "properties": {
+              "radial_branch": {"enum": ["SOURCE_DILATION", "RADIAL_TOMOGRAPHY"]},
+              "background_curvature_status": {"enum": ["FlatExact", "FlatAssumed", "OpenCurved", "ClosedCurved"]},
+              "radial_svd": {
+                "required": ["resolution_kernel_hash"],
+                "anyOf": [
+                  {"required": ["right_null_basis_hash"]},
+                  {"required": ["null_basis_hash"]}
+                ]
+              },
+              "forward_residual": {
+                "properties": {"passed": {"const": true}, "held_out": {"const": true}}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
+          "packet_contract_passed": {"const": true},
+          "payload": {
+            "properties": {"radial_branch": {"const": "SOURCE_DILATION"}},
+            "required": ["radial_branch"]
+          }
+        },
+        "required": ["receipt", "packet_contract_passed", "payload"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["dilation_intertwiner"],
+            "properties": {
+              "dilation_intertwiner": {
+                "properties": {
+                  "passed": {"const": true},
+                  "finite_to_continuum_passed": {"const": true}
+                }
+              }
+            },
+            "anyOf": [{"required": ["mellin_lift"]}, {"required": ["finite_window"]}]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
+          "packet_contract_passed": {"const": true},
+          "payload": {
+            "properties": {"radial_branch": {"const": "RADIAL_TOMOGRAPHY"}},
+            "required": ["radial_branch"]
+          }
+        },
+        "required": ["receipt", "packet_contract_passed", "payload"]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "required": ["radial_tomography"],
+            "properties": {
+              "radial_tomography": {
+                "properties": {
+                  "positive_multiplication_spectrum": {"const": true},
+                  "refinement_converged": {"const": true},
+                  "held_out_reconstruction_passed": {"const": true}
+                }
+              }
+            }
+          }
+        }
       }
     },
     {
@@ -319,133 +636,19 @@
         "required": ["receipt", "passed"]
       },
       "then": {
-        "properties": {"claim_tier": {"const": "E5"}}
-      }
-    },
-    {
-      "if": {
         "properties": {
-          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
-          "passed": {"const": true}
-        },
-        "required": ["receipt", "passed"]
-      },
-      "then": {
-        "properties": {"claim_tier": {"const": "E4"}},
-        "required": ["payload"]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
-          "payload": {
-            "properties": {"radial_branch": {"const": "PRIOR_CONTINUATION"}},
-            "required": ["radial_branch"]
-          }
-        },
-        "required": ["receipt", "payload"]
-      },
-      "then": {
-        "properties": {"passed": {"const": false}}
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
-          "passed": {"const": true},
-          "payload": {
-            "properties": {"radial_branch": {"const": "SOURCE_DILATION"}},
-            "required": ["radial_branch"]
-          }
-        },
-        "required": ["receipt", "passed", "payload"]
-      },
-      "then": {
-        "properties": {
+          "claim_tier": {"const": "E5"},
           "payload": {
             "required": [
-              "radial_branch",
-              "source_embedding_hash",
-              "physical_mode_basis_id",
-              "background_curvature_status",
-              "Z_q",
-              "theta",
-              "A_q",
-              "A_zeta",
-              "k_pivot",
-              "R_star",
-              "dilation_intertwiner",
-              "radial_svd",
-              "forward_residual"
+              "upstream_radial_receipt_hash",
+              "transfer_source_hash",
+              "solver_assumption_hash",
+              "upstream_claim_tier",
+              "no_back_edge_to_E4_source"
             ],
             "properties": {
-              "background_curvature_status": {
-                "enum": ["FlatExact", "FlatAssumed", "OpenCurved", "ClosedCurved"]
-              },
-              "dilation_intertwiner": {
-                "properties": {
-                  "passed": {"const": true},
-                  "finite_to_continuum_passed": {"const": true}
-                }
-              },
-              "forward_residual": {
-                "properties": {"passed": {"const": true}}
-              }
-            },
-            "anyOf": [
-              {"required": ["mellin_lift"]},
-              {"required": ["finite_window"]}
-            ]
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "receipt": {"const": "SCR330_RADIAL_PROMOTION_RECEIPT"},
-          "passed": {"const": true},
-          "payload": {
-            "properties": {"radial_branch": {"const": "RADIAL_TOMOGRAPHY"}},
-            "required": ["radial_branch"]
-          }
-        },
-        "required": ["receipt", "passed", "payload"]
-      },
-      "then": {
-        "properties": {
-          "payload": {
-            "required": [
-              "radial_branch",
-              "source_embedding_hash",
-              "physical_mode_basis_id",
-              "background_curvature_status",
-              "Z_q",
-              "theta",
-              "A_q",
-              "A_zeta",
-              "k_pivot",
-              "R_star",
-              "radial_tomography",
-              "radial_svd",
-              "forward_residual"
-            ],
-            "properties": {
-              "background_curvature_status": {
-                "enum": ["FlatExact", "FlatAssumed", "OpenCurved", "ClosedCurved"]
-              },
-              "radial_tomography": {
-                "properties": {
-                  "positive_multiplication_spectrum": {"const": true},
-                  "refinement_converged": {"const": true},
-                  "held_out_reconstruction_passed": {"const": true}
-                }
-              },
-              "forward_residual": {
-                "properties": {"passed": {"const": true}}
-              }
+              "upstream_claim_tier": {"const": "E4"},
+              "no_back_edge_to_E4_source": {"const": true}
             }
           }
         }

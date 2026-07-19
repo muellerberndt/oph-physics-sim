@@ -30,8 +30,8 @@ PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT = (
     "PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT"
 )
 
-REPORT_SCHEMA = "oph_a5_twelve_port_structural_certificate_v1"
-VERIFICATION_SCHEMA = "oph_a5_twelve_port_structural_verification_v1"
+REPORT_SCHEMA = "oph_a5_twelve_port_structural_certificate_v2"
+VERIFICATION_SCHEMA = "oph_a5_twelve_port_structural_verification_v2"
 DEFAULT_SCHEMA_PATH = (
     Path(__file__).resolve().parents[2]
     / "schemas"
@@ -124,6 +124,39 @@ _EXTERIOR_CHECK_NAMES = (
     "weak_doublet_count_is_four",
 )
 
+_EXPECTED_ONE_HIGGS_CANDIDATE_SPECS = (
+    ("Q_H_Q", "Q", "H", "Q"),
+    ("Q_Hdag_Q", "Q", "Hdag", "Q"),
+    ("Q_H_L", "Q", "H", "L"),
+    ("Q_Hdag_L", "Q", "Hdag", "L"),
+    ("Q_H_u_c", "Q", "H", "u_c"),
+    ("Q_Hdag_u_c", "Q", "Hdag", "u_c"),
+    ("Q_H_d_c", "Q", "H", "d_c"),
+    ("Q_Hdag_d_c", "Q", "Hdag", "d_c"),
+    ("Q_H_e_c", "Q", "H", "e_c"),
+    ("Q_Hdag_e_c", "Q", "Hdag", "e_c"),
+    ("L_H_L", "L", "H", "L"),
+    ("L_Hdag_L", "L", "Hdag", "L"),
+    ("L_H_u_c", "L", "H", "u_c"),
+    ("L_Hdag_u_c", "L", "Hdag", "u_c"),
+    ("L_H_d_c", "L", "H", "d_c"),
+    ("L_Hdag_d_c", "L", "Hdag", "d_c"),
+    ("L_H_e_c", "L", "H", "e_c"),
+    ("L_Hdag_e_c", "L", "Hdag", "e_c"),
+    ("u_c_H_u_c", "u_c", "H", "u_c"),
+    ("u_c_Hdag_u_c", "u_c", "Hdag", "u_c"),
+    ("u_c_H_d_c", "u_c", "H", "d_c"),
+    ("u_c_Hdag_d_c", "u_c", "Hdag", "d_c"),
+    ("u_c_H_e_c", "u_c", "H", "e_c"),
+    ("u_c_Hdag_e_c", "u_c", "Hdag", "e_c"),
+    ("d_c_H_d_c", "d_c", "H", "d_c"),
+    ("d_c_Hdag_d_c", "d_c", "Hdag", "d_c"),
+    ("d_c_H_e_c", "d_c", "H", "e_c"),
+    ("d_c_Hdag_e_c", "d_c", "Hdag", "e_c"),
+    ("e_c_H_e_c", "e_c", "H", "e_c"),
+    ("e_c_Hdag_e_c", "e_c", "Hdag", "e_c"),
+)
+
 
 def a5_sm_structural_certificate(
     imported_theorem_evidence: Sequence[Mapping[str, Any]] | None = None,
@@ -176,7 +209,9 @@ def a5_sm_structural_certificate(
             "This certificate recomputes exact finite A5, A5/C5 twelve-port, character, "
             "icosahedral-adjacency, Standard-Model-adjoint restriction, and invariant-set "
             "anti-bridge arithmetic, together with the conditional exterior one-generation "
-            "field, hypercharge, invariant-line, anomaly, and weak-parity witness. The "
+            "field and hypercharge rows, an exhaustive 15-unordered-fermion-pair by two-scalar "
+            "ledger whose only three gauge-invariant lines are Q-H-u_c, Q-Hdag-d_c, and "
+            "L-Hdag-e_c, and the anomaly and weak-parity witness. The "
             "character match is an isomorphism of real A5 "
             "modules, not an A5-invariant partition of twelve named ports into 8+3+1 "
             "generators and not a physical port/current map. Imported theorem evidence is "
@@ -443,7 +478,13 @@ def _native_computation() -> dict[str, Any]:
             "invariant_line_count"
         ]
         == 3
-        and exterior["one_higgs_invariant_lines"]["all_channels_exact_singlets"],
+        and exterior["one_higgs_invariant_lines"]["all_channels_exact_singlets"]
+        and exterior["one_higgs_invariant_lines"][
+            "exhaustive_candidate_ledger_complete"
+        ]
+        and exterior["one_higgs_invariant_lines"][
+            "nonzero_set_equals_three_canonical_channels"
+        ],
         "listed_perturbative_anomalies_cancel": exterior["anomalies"]["all_coefficients_zero"],
         "su2_witten_parity_is_even": exterior["anomalies"]["su2_witten_parity_even"],
         "weak_doublet_count_is_four": exterior["weak_doublet_count"][
@@ -775,27 +816,92 @@ def _exterior_one_generation_witness() -> dict[str, Any]:
         "H": {"su3": "1", "su2": "2", "hypercharge": carrier_internal["W"]["hypercharge"]},
         "Hdag": {"su3": "1", "su2": "2", "hypercharge": -carrier_internal["W"]["hypercharge"]},
     }
-    channel_specs = {
-        "Q_H_u_c": ("Q", "H", "u_c"),
-        "Q_Hdag_d_c": ("Q", "Hdag", "d_c"),
-        "L_Hdag_e_c": ("L", "Hdag", "e_c"),
-    }
+    fermion_field_order = ("Q", "L", "u_c", "d_c", "e_c")
+    scalar_order = ("H", "Hdag")
+    canonical_channel_ids = (
+        "Q_H_u_c",
+        "Q_Hdag_d_c",
+        "L_Hdag_e_c",
+    )
+    candidate_ledger: list[dict[str, Any]] = []
+    for left, right in itertools.combinations_with_replacement(
+        fermion_field_order,
+        2,
+    ):
+        for scalar in scalar_order:
+            factors = (
+                fields_internal[left],
+                scalars[scalar],
+                fields_internal[right],
+            )
+            charge_sum = sum(
+                (factor["hypercharge"] for factor in factors),
+                Fraction(0),
+            )
+            su3_multiplicity = _singlet_multiplicity("su3", factors)
+            su2_multiplicity = _singlet_multiplicity("su2", factors)
+            multiplicity = int(
+                charge_sum == 0
+                and su3_multiplicity == 1
+                and su2_multiplicity == 1
+            )
+            candidate_ledger.append(
+                {
+                    "candidate_id": f"{left}_{scalar}_{right}",
+                    "fermion_pair": [left, right],
+                    "scalar": scalar,
+                    "factors": [left, scalar, right],
+                    "hypercharge_sum": _fraction_text(charge_sum),
+                    "su3_singlet_multiplicity": su3_multiplicity,
+                    "su2_singlet_multiplicity": su2_multiplicity,
+                    "invariant_line_multiplicity": multiplicity,
+                }
+            )
+    candidate_by_id = {row["candidate_id"]: row for row in candidate_ledger}
     channels: dict[str, dict[str, Any]] = {}
-    for name, (left, scalar, right) in channel_specs.items():
-        factors = (fields_internal[left], scalars[scalar], fields_internal[right])
-        charge_sum = sum((factor["hypercharge"] for factor in factors), Fraction(0))
-        su3_multiplicity = _singlet_multiplicity("su3", factors)
-        su2_multiplicity = _singlet_multiplicity("su2", factors)
+    for name in canonical_channel_ids:
+        candidate = candidate_by_id[name]
         channels[name] = {
-            "factors": [left, scalar, right],
-            "hypercharge_sum": _fraction_text(charge_sum),
-            "su3_singlet_multiplicity": su3_multiplicity,
-            "su2_singlet_multiplicity": su2_multiplicity,
-            "invariant_line_multiplicity": int(
-                charge_sum == 0 and su3_multiplicity == 1 and su2_multiplicity == 1
-            ),
+            key: value
+            for key, value in candidate.items()
+            if key not in {"candidate_id", "fermion_pair", "scalar"}
         }
-    invariant_line_count = sum(row["invariant_line_multiplicity"] for row in channels.values())
+    nonzero_candidate_ids = [
+        row["candidate_id"]
+        for row in candidate_ledger
+        if row["invariant_line_multiplicity"] > 0
+    ]
+    expected_candidate_count = (
+        math.comb(len(fermion_field_order) + 1, 2) * len(scalar_order)
+    )
+    actual_candidate_specs = tuple(
+        (
+            row["candidate_id"],
+            row["fermion_pair"][0],
+            row["scalar"],
+            row["fermion_pair"][1],
+        )
+        for row in candidate_ledger
+    )
+    exhaustive_candidate_ledger_complete = bool(
+        len(candidate_ledger) == expected_candidate_count == 30
+        and len(candidate_by_id) == len(candidate_ledger)
+        and actual_candidate_specs == _EXPECTED_ONE_HIGGS_CANDIDATE_SPECS
+    )
+    nonzero_set_equals_canonical = set(nonzero_candidate_ids) == set(
+        canonical_channel_ids
+    )
+    invariant_line_count = sum(
+        row["invariant_line_multiplicity"] for row in candidate_ledger
+    )
+    nonabelian_singlet_candidate_count = sum(
+        row["su3_singlet_multiplicity"] == 1
+        and row["su2_singlet_multiplicity"] == 1
+        for row in candidate_ledger
+    )
+    hypercharge_neutral_candidate_count = sum(
+        row["hypercharge_sum"] == "0" for row in candidate_ledger
+    )
 
     color_dimension = {"1": 1, "3": 3, "3bar": 3}
     weak_dimension = {"1": 1, "2": 2}
@@ -867,9 +973,36 @@ def _exterior_one_generation_witness() -> dict[str, Any]:
         },
         "one_higgs_invariant_lines": {
             "conditional_scalar_identification": "H=W",
+            "fermion_pair_enumeration": "unordered_with_repetition",
+            "fermion_field_order": list(fermion_field_order),
+            "scalar_order": list(scalar_order),
+            "fermion_pair_count": math.comb(len(fermion_field_order) + 1, 2),
+            "candidate_count": len(candidate_ledger),
+            "candidate_ids": [row["candidate_id"] for row in candidate_ledger],
+            "candidate_ledger": candidate_ledger,
+            "nonabelian_singlet_candidate_count": (
+                nonabelian_singlet_candidate_count
+            ),
+            "hypercharge_neutral_candidate_count": (
+                hypercharge_neutral_candidate_count
+            ),
             "channels": channels,
+            "canonical_invariant_candidate_ids": list(canonical_channel_ids),
+            "nonzero_invariant_candidate_ids": nonzero_candidate_ids,
+            "exhaustive_candidate_ledger_complete": (
+                exhaustive_candidate_ledger_complete
+            ),
+            "nonzero_set_equals_three_canonical_channels": (
+                nonzero_set_equals_canonical
+            ),
             "invariant_line_count": invariant_line_count,
-            "all_channels_exact_singlets": invariant_line_count == len(channels) == 3,
+            "all_channels_exact_singlets": bool(
+                invariant_line_count == len(channels) == 3
+                and all(
+                    row["invariant_line_multiplicity"] == 1
+                    for row in channels.values()
+                )
+            ),
         },
         "anomalies": {
             "convention": "left_handed_Weyl",
@@ -898,7 +1031,9 @@ def _exterior_one_generation_witness() -> dict[str, Any]:
             "continuum_spin_qft_realized": False,
             "claim_boundary": (
                 "The exact exterior witness is conditional on V=C+W, selection of the "
-                "non-vacuum even package, and H=W. It neither excludes Lambda^0 or other "
+                "non-vacuum even package, and H=W. Its exhaustive 30-row representation ledger "
+                "proves exactly three one-Higgs gauge-invariant lines at this representation "
+                "level. It neither excludes Lambda^0 or other "
                 "anomaly-free sectors nor supplies family descent, continuum QFT, or a "
                 "physical port-load map."
             ),

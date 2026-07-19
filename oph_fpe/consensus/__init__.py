@@ -1,5 +1,11 @@
-from oph_fpe.consensus.boundary_fiber import boundary_conditioned_uniqueness_receipt
-from oph_fpe.consensus.fair_block import fair_block_consensus_certificate
+from oph_fpe.consensus.boundary_fiber import (
+    boundary_conditioned_uniqueness_receipt,
+    write_boundary_fiber_certificate,
+)
+from oph_fpe.consensus.fair_block import (
+    fair_block_consensus_certificate,
+    write_fair_block_certificate,
+)
 from oph_fpe.consensus.lyapunov import lyapunov_descent_receipt
 from oph_fpe.consensus.proof_chain_imports import (
     chi_nu_g10_energy_ledger_report,
@@ -78,4 +84,6 @@ __all__ = [
     "transactional_repair_receipt",
     "transactions_conflict",
     "validation_support",
+    "write_boundary_fiber_certificate",
+    "write_fair_block_certificate",
 ]

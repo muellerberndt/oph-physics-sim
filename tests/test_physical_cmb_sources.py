@@ -193,10 +193,14 @@ def test_physical_cmb_source_readiness_uses_explicit_parent_report(tmp_path: Pat
     assert report["finite_covariant_parent"]["causal_response_receipt"] is True
     assert report["finite_covariant_parent"]["refinement_convergence_receipt"] is True
     assert report["finite_covariant_parent"]["frozen_likelihood_protocol_receipt"] is False
-    assert report["blockers"] == []
-    assert input_report["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is True
-    assert input_report["physical_cmb_prediction_eligible"] is True
+    assert (
+        "finite_collar_boltzmann_missing_physical_cmb_input_contract_passed"
+        in report["blockers"]
+    )
+    assert input_report["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert input_report["physical_cmb_prediction_eligible"] is False
     assert input_report["physical_cmb_prediction"] is False
+    assert "N_CRC_consensus_invariant_receipt_missing" in input_report["blockers"]
 
 
 def test_source_readiness_source_hash_ignores_likelihood_side_reports(tmp_path: Path):

@@ -54,7 +54,7 @@ def test_physical_cmb_input_report_blocks_current_diagnostics(tmp_path: Path):
     assert (out / "physical_cmb_input_contract.json").exists()
 
 
-def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: Path):
+def test_legacy_capacity_booleans_cannot_complete_physical_cmb_input(tmp_path: Path):
     run = tmp_path / "run"
     out = tmp_path / "out"
     run.mkdir()
@@ -137,11 +137,12 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
 
     report = write_physical_cmb_input_report([run], out)
 
-    assert report["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is True
-    assert report["physical_cmb_prediction_eligible"] is True
+    assert report["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert report["physical_cmb_prediction_eligible"] is False
     assert report["physical_cmb_prediction"] is False
-    assert report["blockers"] == []
-    assert report["source_provenance"]["CMB_SOURCE_PROVENANCE_RECEIPT"] is True
+    assert "N_CRC_consensus_invariant_receipt_missing" in report["blockers"]
+    assert report["source_provenance"]["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
+    assert report["contract"]["N_source"] == "unknown"
     assert (out / "cmb_source_provenance_report.json").exists()
 
 

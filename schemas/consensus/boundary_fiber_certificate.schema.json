@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/boundary-fiber-replay-v2.schema.json",
+  "title": "OPH supplied boundary-fiber table replay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "mode", "GENERIC_BOUNDARY_FIBER_THEOREM_AVAILABLE",
+    "TREE_PACKET_NET_BOUNDARY_FIBER_THEOREM_PINNED",
+    "pinned_theory_registry_release", "pinned_theory_artifacts",
+    "BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT",
+    "BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT",
+    "PHYSICAL_EINSTEIN_BOUNDARY_APPLICATION_RECEIPT",
+    "RUN_ARTIFACT_BINDING_RECEIPT", "receipt", "legacy_declaration_present",
+    "legacy_declarations_promoted", "complete_fiber_manifest",
+    "supplied_table_manifest_well_formed", "external_complete_fiber_manifest_resolved",
+    "preservation_recomputed", "boundary_map_preserved", "sector_map_preserved",
+    "singleton_modulo_gauge", "fiber_count", "consistent_record_count",
+    "checked_states", "legacy_declared_checked_states", "multi_gauge_fibers",
+    "malformed_fiber_rows", "duplicate_record_ids", "malformed_transition_rows",
+    "boundary_violation_rows", "sector_violation_rows", "blockers",
+    "uniqueness_blockers", "claim_boundary", "claim_level", "physical_claim",
+    "observable_id", "fit_objective", "receipt_name", "receipt_schema_version",
+    "input_packet_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": "boundary-fiber-replay-v2"},
+    "mode": {"const": "finite_boundary_fiber_quotient_recomputation"},
+    "GENERIC_BOUNDARY_FIBER_THEOREM_AVAILABLE": {"const": true},
+    "TREE_PACKET_NET_BOUNDARY_FIBER_THEOREM_PINNED": {"const": true},
+    "pinned_theory_registry_release": {"const": "r1556@bec81e2d"},
+    "pinned_theory_artifacts": {
+      "const": [
+        {
+          "artifact_id": "rer-r1556-boundary-fiber-lean",
+          "path": "Lean/ObserverPatchHolography/Source/ObserverPatchHolography/BoundaryFiber.lean",
+          "sha256": "sha256:4b009184b992322f71463a7689c890e74ac0b1fe5901080d5c2cb855646689f3"
+        },
+        {
+          "artifact_id": "rer-r1556-primitives-boundary-theorem-lean",
+          "path": "Lean/ObserverPatchHolography/Source/ObserverPatchHolography/Primitives.lean",
+          "sha256": "sha256:5739d15f7e012d068f995d85033a7bfaf61f7b024ab334f418f3b6cae06fa144"
+        },
+        {
+          "artifact_id": "rer-r1556-rule90-boundary-witness-lean",
+          "path": "Lean/ObserverPatchHolography/Source/ObserverPatchHolography/Rule90.lean",
+          "sha256": "sha256:dd217298a7acce9977d20357be19e4b80e030aa4e4f7bc0686f0d5305097e526"
+        }
+      ]
+    },
+    "BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT": {"type": "boolean"},
+    "BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT": {"const": false},
+    "PHYSICAL_EINSTEIN_BOUNDARY_APPLICATION_RECEIPT": {"const": false},
+    "RUN_ARTIFACT_BINDING_RECEIPT": {"const": false},
+    "receipt": {"const": false},
+    "legacy_declaration_present": {"type": "boolean"},
+    "legacy_declarations_promoted": {"const": false},
+    "complete_fiber_manifest": {"const": false},
+    "supplied_table_manifest_well_formed": {"type": "boolean"},
+    "external_complete_fiber_manifest_resolved": {"const": false},
+    "preservation_recomputed": {"type": "boolean"},
+    "boundary_map_preserved": {"type": "boolean"},
+    "sector_map_preserved": {"type": "boolean"},
+    "singleton_modulo_gauge": {"type": "boolean"},
+    "fiber_count": {"type": "integer", "minimum": 0, "maximum": 100000},
+    "consistent_record_count": {"type": "integer", "minimum": 0, "maximum": 100000},
+    "checked_states": {"type": "integer", "minimum": 0, "maximum": 100000},
+    "legacy_declared_checked_states": {"type": ["integer", "null"]},
+    "multi_gauge_fibers": {
+      "type": "array", "maxItems": 100000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["boundary", "sector", "gauge_class_count"],
+        "properties": {
+          "boundary": {"type": "string"}, "sector": {"type": "string"},
+          "gauge_class_count": {"type": "integer", "minimum": 2}
+        }
+      }
+    },
+    "malformed_fiber_rows": {"$ref": "#/$defs/rowIndexes"},
+    "duplicate_record_ids": {
+      "type": "array", "uniqueItems": true, "maxItems": 100000,
+      "items": {"type": "string", "minLength": 1, "maxLength": 256}
+    },
+    "malformed_transition_rows": {"$ref": "#/$defs/transitionIndexes"},
+    "boundary_violation_rows": {"$ref": "#/$defs/transitionIndexes"},
+    "sector_violation_rows": {"$ref": "#/$defs/transitionIndexes"},
+    "blockers": {"$ref": "#/$defs/blockers"},
+    "uniqueness_blockers": {"const": ["external_complete_fiber_manifest_unresolved"]},
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "claim_level": {"const": "continuation"},
+    "physical_claim": {"const": false},
+    "observable_id": {"const": "BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"},
+    "fit_objective": {"const": "not_applicable"},
+    "receipt_name": {"const": "BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"},
+    "receipt_schema_version": {"const": "2026-06-06b"},
+    "input_packet_sha256": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT": {"const": true}},
+        "required": ["BOUNDARY_FIBER_SUPPLIED_TABLE_CONSISTENCY_RECEIPT"]
+      },
+      "then": {
+        "properties": {
+          "supplied_table_manifest_well_formed": {"const": true},
+          "preservation_recomputed": {"const": true},
+          "boundary_map_preserved": {"const": true},
+          "sector_map_preserved": {"const": true},
+          "singleton_modulo_gauge": {"const": true},
+          "consistent_record_count": {"minimum": 1},
+          "blockers": {"maxItems": 0},
+          "multi_gauge_fibers": {"maxItems": 0},
+          "malformed_fiber_rows": {"maxItems": 0},
+          "duplicate_record_ids": {"maxItems": 0},
+          "malformed_transition_rows": {"maxItems": 0},
+          "boundary_violation_rows": {"maxItems": 0},
+          "sector_violation_rows": {"maxItems": 0}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "blockers": {
+      "type": "array", "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "rowIndexes": {
+      "type": "array", "uniqueItems": true, "maxItems": 100000,
+      "items": {"type": "integer", "minimum": 0, "maximum": 99999}
+    },
+    "transitionIndexes": {
+      "type": "array", "uniqueItems": true, "maxItems": 250000,
+      "items": {"type": "integer", "minimum": 0, "maximum": 249999}
+    }
+  }
+}

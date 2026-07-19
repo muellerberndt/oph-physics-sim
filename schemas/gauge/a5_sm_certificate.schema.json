@@ -28,8 +28,8 @@
     "certificate_payload_sha256"
   ],
   "properties": {
-    "schema": {"const": "oph_a5_twelve_port_structural_certificate_v1"},
-    "mode": {"const": "oph_a5_twelve_port_structural_certificate_v1"},
+    "schema": {"const": "oph_a5_twelve_port_structural_certificate_v2"},
+    "mode": {"const": "oph_a5_twelve_port_structural_certificate_v2"},
     "A5_TWELVE_PORT_STRUCTURAL_RECEIPT": {"type": "boolean"},
     "SM_ADJOINT_CHARACTER_MATCH_RECEIPT": {"type": "boolean"},
     "CONDITIONAL_EXTERIOR_ONE_GENERATION_WITNESS_RECEIPT": {"type": "boolean"},
@@ -532,12 +532,83 @@
           "additionalProperties": false,
           "required": [
             "conditional_scalar_identification",
+            "fermion_pair_enumeration",
+            "fermion_field_order",
+            "scalar_order",
+            "fermion_pair_count",
+            "candidate_count",
+            "candidate_ids",
+            "candidate_ledger",
+            "nonabelian_singlet_candidate_count",
+            "hypercharge_neutral_candidate_count",
             "channels",
+            "canonical_invariant_candidate_ids",
+            "nonzero_invariant_candidate_ids",
+            "exhaustive_candidate_ledger_complete",
+            "nonzero_set_equals_three_canonical_channels",
             "invariant_line_count",
             "all_channels_exact_singlets"
           ],
           "properties": {
             "conditional_scalar_identification": {"const": "H=W"},
+            "fermion_pair_enumeration": {"const": "unordered_with_repetition"},
+            "fermion_field_order": {"const": ["Q", "L", "u_c", "d_c", "e_c"]},
+            "scalar_order": {"const": ["H", "Hdag"]},
+            "fermion_pair_count": {"const": 15},
+            "candidate_count": {"const": 30},
+            "candidate_ids": {
+              "const": [
+                "Q_H_Q", "Q_Hdag_Q", "Q_H_L", "Q_Hdag_L",
+                "Q_H_u_c", "Q_Hdag_u_c", "Q_H_d_c", "Q_Hdag_d_c",
+                "Q_H_e_c", "Q_Hdag_e_c", "L_H_L", "L_Hdag_L",
+                "L_H_u_c", "L_Hdag_u_c", "L_H_d_c", "L_Hdag_d_c",
+                "L_H_e_c", "L_Hdag_e_c", "u_c_H_u_c", "u_c_Hdag_u_c",
+                "u_c_H_d_c", "u_c_Hdag_d_c", "u_c_H_e_c", "u_c_Hdag_e_c",
+                "d_c_H_d_c", "d_c_Hdag_d_c", "d_c_H_e_c", "d_c_Hdag_e_c",
+                "e_c_H_e_c", "e_c_Hdag_e_c"
+              ]
+            },
+            "candidate_ledger": {
+              "type": "array",
+              "minItems": 30,
+              "maxItems": 30,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/yukawaCandidate"},
+              "allOf": [
+                {"contains": {"properties": {"candidate_id": {"const": "Q_H_Q"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_Hdag_Q"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_H_L"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_Hdag_L"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_H_u_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_Hdag_u_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_H_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_Hdag_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_H_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "Q_Hdag_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_H_L"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_Hdag_L"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_H_u_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_Hdag_u_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_H_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_Hdag_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_H_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "L_Hdag_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "u_c_H_u_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "u_c_Hdag_u_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "u_c_H_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "u_c_Hdag_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "u_c_H_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "u_c_Hdag_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "d_c_H_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "d_c_Hdag_d_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "d_c_H_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "d_c_Hdag_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "e_c_H_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1},
+                {"contains": {"properties": {"candidate_id": {"const": "e_c_Hdag_e_c"}}, "required": ["candidate_id"]}, "minContains": 1, "maxContains": 1}
+              ]
+            },
+            "nonabelian_singlet_candidate_count": {"const": 6},
+            "hypercharge_neutral_candidate_count": {"const": 3},
             "channels": {
               "type": "object",
               "additionalProperties": false,
@@ -548,8 +619,16 @@
                 "L_Hdag_e_c": {"$ref": "#/$defs/yukawaChannel"}
               }
             },
+            "canonical_invariant_candidate_ids": {
+              "const": ["Q_H_u_c", "Q_Hdag_d_c", "L_Hdag_e_c"]
+            },
+            "nonzero_invariant_candidate_ids": {
+              "const": ["Q_H_u_c", "Q_Hdag_d_c", "L_Hdag_e_c"]
+            },
+            "exhaustive_candidate_ledger_complete": {"const": true},
+            "nonzero_set_equals_three_canonical_channels": {"const": true},
             "invariant_line_count": {"const": 3},
-            "all_channels_exact_singlets": {"type": "boolean"}
+            "all_channels_exact_singlets": {"const": true}
           }
         },
         "anomalies": {
@@ -684,6 +763,40 @@
         "su3_singlet_multiplicity": {"const": 1},
         "su2_singlet_multiplicity": {"const": 1},
         "invariant_line_multiplicity": {"const": 1}
+      }
+    },
+    "yukawaCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "fermion_pair",
+        "scalar",
+        "factors",
+        "hypercharge_sum",
+        "su3_singlet_multiplicity",
+        "su2_singlet_multiplicity",
+        "invariant_line_multiplicity"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "fermion_pair": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"enum": ["Q", "L", "u_c", "d_c", "e_c"]}
+        },
+        "scalar": {"enum": ["H", "Hdag"]},
+        "factors": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "string"}
+        },
+        "hypercharge_sum": {"type": "string", "minLength": 1},
+        "su3_singlet_multiplicity": {"enum": [0, 1]},
+        "su2_singlet_multiplicity": {"enum": [0, 1]},
+        "invariant_line_multiplicity": {"enum": [0, 1]}
       }
     },
     "evidenceLayers": {

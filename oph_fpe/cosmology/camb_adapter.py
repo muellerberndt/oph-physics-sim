@@ -855,9 +855,7 @@ def oph_exact_cmb_camb_report(
             ),
             "kappa_rep_status": selector_report.get("scalar_tilt", {}).get("canonical_kappa_rep_status"),
             "edge_center_clock_evidence": selector_report.get("edge_center_clock_evidence", {}),
-            "EDGE_CENTER_CLOCK_RECEIPT": bool(
-                selector_report.get("EDGE_CENTER_CLOCK_RECEIPT", False)
-            ),
+            "EDGE_CENTER_CLOCK_RECEIPT": False,
         },
         "camb": {
             "lmax": int(lmax),
@@ -887,7 +885,7 @@ def oph_exact_cmb_camb_report(
                 "THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False
             ),
             "SOURCE_PACKET_AUDIT_RECEIPT": selector_report.get("SOURCE_PACKET_AUDIT_RECEIPT", False),
-            "EDGE_CENTER_CLOCK_RECEIPT": selector_report.get("EDGE_CENTER_CLOCK_RECEIPT", False),
+            "EDGE_CENTER_CLOCK_RECEIPT": False,
             "edge_center_clock_evidence": selector_report.get("edge_center_clock_evidence", {}),
             "finite_lattice_derived": selector_report.get("finite_lattice_derived", False),
         },
@@ -1047,7 +1045,13 @@ def finite_repair_clock_cmb_camb_report(
     finite_matrix_ready = bool(transition_eligibility["eligible"])
     finite_lattice_derived = finite_matrix_ready
     edge_center_evidence = finite_clock_report.get("edge_center_clock_evidence", {})
-    edge_center_receipt = bool(finite_clock_report.get("EDGE_CENTER_CLOCK_RECEIPT", False))
+    from oph_fpe.cosmology.edge_center_clock import (
+        independently_replayed_edge_clock_receipt,
+    )
+
+    edge_center_receipt = independently_replayed_edge_clock_receipt(
+        finite_clock_report
+    )
     repair_clock_certificate = bool(
         finite_matrix_ready
         and edge_center_receipt

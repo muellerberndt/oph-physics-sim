@@ -10,11 +10,6 @@ import numpy as np
 
 from oph_fpe.bulk.h3_chart import h3_distance_matrix
 from oph_fpe.bulk.observer_reconstruction import neutral_dimension_report_from_distance
-from oph_fpe.cosmology.edge_center_clock import (
-    EDGE_CENTER_CLOCK_RECEIPT,
-    EDGE_CENTER_CLOCK_SCHEMA,
-    EDGE_CENTER_EVIDENCE_RECEIPTS,
-)
 from oph_fpe.cosmology.finite_repair_transition_clock import (
     validate_transition_clock_eligibility,
 )
@@ -8583,36 +8578,16 @@ def _selects_edge_center_clock(report: dict[str, Any]) -> bool:
 
 
 def _validated_edge_clock_receipt(report: dict[str, Any]) -> bool:
-    """Accept only a complete, internally consistent P/48 evidence receipt."""
+    """Reject persisted edge-clock declarations until raw replay is resolvable.
 
-    if not _selects_edge_center_clock(report):
-        return False
-    evidence = report.get("edge_center_clock_evidence")
-    if not isinstance(evidence, dict):
-        return False
-    receipts = evidence.get("receipts")
-    if not isinstance(receipts, dict):
-        return False
-    checks = evidence.get("checks")
-    observed = evidence.get("observed")
-    source_dag_audit = (
-        observed.get("source_dag_audit") if isinstance(observed, dict) else None
-    )
-    return bool(
-        evidence.get("schema") == EDGE_CENTER_CLOCK_SCHEMA
-        and report.get(EDGE_CENTER_CLOCK_RECEIPT) is True
-        and evidence.get(EDGE_CENTER_CLOCK_RECEIPT) is True
-        and evidence.get("edge_center_clock_evidence_complete") is True
-        and all(receipts.get(name) is True for name in EDGE_CENTER_EVIDENCE_RECEIPTS)
-        and isinstance(checks, dict)
-        and len(checks) == len(EDGE_CENTER_EVIDENCE_RECEIPTS)
-        and all(value is True for value in checks.values())
-        and isinstance(observed, dict)
-        and observed.get("clock_binding_hash_matches") is True
-        and observed.get("source_dag_hash_matches") is True
-        and isinstance(source_dag_audit, dict)
-        and source_dag_audit.get("clean") is True
-    )
+    Report JSON contains the validator's output but not an independently
+    authenticated raw-run artifact. Re-reading nested receipt/check booleans
+    here would let a forged report manufacture the deliberately unavailable
+    independent replay receipt. Branch selection remains visible separately as
+    a nonpromoting diagnostic.
+    """
+
+    return False
 
 
 def _nested(data: dict[str, Any], *keys: str) -> Any:

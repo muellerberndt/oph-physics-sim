@@ -16,20 +16,46 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
+from oph_fpe.evidence.artifact_paths import companion_input_packet_path
 from oph_fpe.evidence.hashes import canonical_json_bytes
+from oph_fpe.evidence.validation import utf8_byte_length
 
 
 SCHEMA_VERSION = "oph-collar-clause-v1"
 ALGORITHM_ID = "bounded-retained-family-flux-factorization-v1"
 RECEIPT_ID = "COLLAR_CLAUSE_SOURCE_RECEIPT"
+PACKET_CONSISTENCY_RECEIPT_ID = "COLLAR_CLAUSE_PACKET_CONSISTENCY_RECEIPT"
+INDEPENDENT_RUN_REPLAY_RECEIPT_ID = "INDEPENDENT_COLLAR_RUN_REPLAY_RECEIPT"
 MAX_AMBIENT_DIMENSION = 256
 MAX_TOLERANCE = 1.0e-6
+MAX_PACKET_BYTES = 2_000_000
+MAX_IDENTIFIER_BYTES = 256
+MAX_SOURCE_ANCESTRY_NODES = 1024
+MAX_RETAINED_COORDINATES = 1024
+MAX_ABS_COORDINATE = 1.0e12
+MAX_COLLAR_LINEAR_WORK = 50_000_000
+MIN_BASIS_SINGULAR_VALUE = 1.0e-8
+MAX_BASIS_SINGULAR_VALUE = 1.0e8
+MAX_BASIS_CONDITION_NUMBER = 1.0e8
+COORDINATE_SEMANTICS = "bounded_real_coordinate_vector_not_verified_density_operator"
+
+# Read-only theory registry pinned during the r1556/bec81e2d sync.  These are
+# raw-file SHA-256 digests, not hashes of caller-created JSON declarations.
+PINNED_COLLAR_THEORY_ARTIFACTS = {
+    "rer-r1556-collar-clause-lean": "sha256:813066e7b9ff34005188624131f6cdfc45f112582bb336fd8a88b359f21814a4",
+    "rer-r1556-collar-layer-lean": "sha256:34405f7e5e3dc094ec25c9afc597d5c6ff3300765f1589258d54087cd19463e2",
+    "rer-r1556-collar-modular-t2-lean": "sha256:515f85fa72c7d16374bd5fc5b885ea082d1b8e608466dbe359c444162315beab",
+    "rer-r1556-collar-states-bridge-lean": "sha256:4440785282b1bcf1768ea801649a7f78964dc08019e8d3090408880cd915cbbc",
+    "rer-r1556-collar-states-lean": "sha256:b9d426c22d5c84198ded6450e57d5d3b36964a1810d9ea95f5b78a76ea819c33",
+    "rer-r1556-collar-states-t1-lean": "sha256:277f3ee8eace4c18d08fc2b588b367476dc81e26c474e9d5e6572f209257254c",
+}
 
 _SHA256_PREFIX = "sha256:"
 _ALLOWED_SOURCE_KINDS = frozenset(
@@ -128,6 +154,12 @@ def verify_collar_clause_packet(
 
     if not isinstance(packet, Mapping):
         raise ValueError("packet must be a mapping")
+    try:
+        packet_bytes = canonical_json_bytes(packet)
+    except (TypeError, UnicodeError, ValueError, RecursionError) as exc:
+        raise ValueError(f"packet must be bounded canonical evidence data: {exc}") from exc
+    if len(packet_bytes) > MAX_PACKET_BYTES:
+        raise ValueError("packet exceeds the bounded byte limit")
     allowed_packet_fields = {
         "packet_id",
         "source_ancestry",
@@ -144,14 +176,19 @@ def verify_collar_clause_packet(
         allowed_packet_fields
     ) or not required_packet_fields.issubset(packet):
         raise ValueError("packet has missing or unknown top-level fields")
+    try:
+        normalized_tolerance = float(tolerance)
+    except (OverflowError, TypeError, ValueError):
+        normalized_tolerance = math.nan
     if (
         isinstance(tolerance, bool)
         or not isinstance(tolerance, (int, float))
-        or not np.isfinite(tolerance)
-        or tolerance <= 0.0
-        or tolerance > MAX_TOLERANCE
+        or not math.isfinite(normalized_tolerance)
+        or normalized_tolerance <= 0.0
+        or normalized_tolerance > MAX_TOLERANCE
     ):
         raise ValueError(f"tolerance must be finite and in (0, {MAX_TOLERANCE}]")
+    tolerance = normalized_tolerance
     if (
         isinstance(max_ambient_dimension, bool)
         or not isinstance(max_ambient_dimension, int)
@@ -163,8 +200,7 @@ def verify_collar_clause_packet(
         )
 
     packet_id = packet.get("packet_id")
-    if not isinstance(packet_id, str) or not packet_id.strip():
-        raise ValueError("packet_id must be a non-empty string")
+    _bounded_identifier(packet_id, "packet_id")
 
     source_ancestry = _source_ancestry(packet.get("source_ancestry"))
     supplied_source_hash = _required_hash(
@@ -173,8 +209,25 @@ def verify_collar_clause_packet(
     computed_source_hash = canonical_evidence_hash(source_ancestry)
     source_hash_matches = supplied_source_hash == computed_source_hash
     source_kinds = {node["kind"] for node in source_ancestry}
-    source_dag_clean = bool(source_ancestry) and source_kinds.issubset(
-        _ALLOWED_SOURCE_KINDS
+    pinned_theory_matches = {
+        node["node_id"]
+        for node in source_ancestry
+        if PINNED_COLLAR_THEORY_ARTIFACTS.get(node["node_id"]) == node["sha256"]
+    }
+    pinned_theory_registry_complete = pinned_theory_matches == set(
+        PINNED_COLLAR_THEORY_ARTIFACTS
+    )
+    unregistered_lean_nodes = [
+        node["node_id"]
+        for node in source_ancestry
+        if node["kind"] in {"lean_theorem", "lean_definition"}
+        and PINNED_COLLAR_THEORY_ARTIFACTS.get(node["node_id"]) != node["sha256"]
+    ]
+    source_dag_clean = (
+        bool(source_ancestry)
+        and source_kinds.issubset(_ALLOWED_SOURCE_KINDS)
+        and not unregistered_lean_nodes
+        and pinned_theory_registry_complete
     )
     source_ids = {node["node_id"] for node in source_ancestry}
 
@@ -199,15 +252,61 @@ def verify_collar_clause_packet(
     flux_basis = _basis(layer["flux_basis"], ambient_dimension, "flux_basis")
     if not left_basis.shape[0] or not right_basis.shape[0] or not flux_basis.shape[0]:
         raise ValueError("left, right, and flux bases must each be non-empty")
+    declared_sector_rank_sum = int(
+        left_basis.shape[0] + right_basis.shape[0] + flux_basis.shape[0]
+    )
+    if declared_sector_rank_sum > ambient_dimension:
+        raise ValueError(
+            "declared left/right/flux sector ranks exceed the ambient dimension"
+        )
+
+    densities = packet.get("retained_densities")
+    if not isinstance(densities, list):
+        raise ValueError("retained_densities must be a list")
+    if len(densities) > min(4 * ambient_dimension, MAX_RETAINED_COORDINATES):
+        raise ValueError("retained_densities exceeds the bounded packet limit")
+    combined_basis = np.vstack((left_basis, right_basis, flux_basis))
+    decomposition_work = sum(
+        _estimated_svd_work(basis)
+        for basis in (left_basis, right_basis, flux_basis, combined_basis)
+    )
+    retained_vector_work = (
+        max(1, len(densities))
+        * ambient_dimension
+        * max(1, 4 * declared_sector_rank_sum)
+    )
+    estimated_linear_work = decomposition_work + retained_vector_work
+    if estimated_linear_work > MAX_COLLAR_LINEAR_WORK:
+        raise ValueError("collar linear-algebra operation budget exceeded")
+
+    basis_analyses = {
+        name: _basis_analysis(basis, tolerance=float(tolerance))
+        for name, basis in (
+            ("left", left_basis),
+            ("right", right_basis),
+            ("flux", flux_basis),
+            ("combined", combined_basis),
+        )
+    }
     for name, basis in (
-        ("left_basis", left_basis),
-        ("right_basis", right_basis),
-        ("flux_basis", flux_basis),
+        ("left", left_basis),
+        ("right", right_basis),
+        ("flux", flux_basis),
     ):
-        if basis.shape[0] > ambient_dimension:
-            raise ValueError(f"{name} has more rows than the ambient dimension")
-        if int(np.linalg.matrix_rank(basis, tol=tolerance)) != basis.shape[0]:
-            raise ValueError(f"{name} rows must be linearly independent")
+        if basis_analyses[name]["rank"] != basis.shape[0]:
+            raise ValueError(f"{name}_basis rows must be linearly independent")
+    combined_sector_rank = int(basis_analyses["combined"]["rank"])
+    sector_direct_sum_independent = bool(
+        combined_sector_rank == declared_sector_rank_sum
+    )
+    flux_is_proper_ambient_sector = bool(flux_basis.shape[0] < ambient_dimension)
+    basis_conditioning = {
+        name: analysis["conditioning"]
+        for name, analysis in basis_analyses.items()
+    }
+    basis_numerical_conditioning_passed = bool(
+        all(metrics["passed"] for metrics in basis_conditioning.values())
+    )
 
     supplied_layer_hash = _required_hash(
         packet.get("collar_layer_hash"), "collar_layer_hash"
@@ -216,11 +315,9 @@ def verify_collar_clause_packet(
     layer_hash_matches = supplied_layer_hash == computed_layer_hash
     flux_basis_hash = canonical_evidence_hash(layer["flux_basis"])
 
-    densities = packet.get("retained_densities")
-    if not isinstance(densities, list):
-        raise ValueError("retained_densities must be a list")
-    if len(densities) > 4 * ambient_dimension:
-        raise ValueError("retained_densities exceeds the bounded packet limit")
+    left_span = basis_analyses["left"]["orthonormal_span"]
+    right_span = basis_analyses["right"]["orthonormal_span"]
+    flux_span = basis_analyses["flux"]["orthonormal_span"]
     family_laws = _required_mapping(packet.get("family_laws"), "family_laws")
     expected_law_fields = set(_FAMILY_BOOLEAN_LAWS) | {"source_derivation_ids"}
     if set(family_laws) != expected_law_fields:
@@ -231,6 +328,9 @@ def verify_collar_clause_packet(
     family_source_ids = _string_list(
         family_laws["source_derivation_ids"], "family_laws.source_derivation_ids"
     )
+    for name in _FAMILY_BOOLEAN_LAWS:
+        if not isinstance(family_laws[name], bool):
+            raise ValueError(f"family_laws.{name} must be boolean")
     family_source_derived = bool(
         family_source_ids
         and source_dag_clean
@@ -270,8 +370,10 @@ def verify_collar_clause_packet(
                 f"retained_densities[{index}] has missing or unknown fields"
             )
         density_id = row["density_id"]
-        if not isinstance(density_id, str) or not density_id.strip():
-            raise ValueError(f"retained_densities[{index}].density_id is invalid")
+        _bounded_identifier(
+            density_id,
+            f"retained_densities[{index}].density_id",
+        )
         if density_id in density_ids:
             raise ValueError(f"duplicate density_id: {density_id}")
         density_ids.add(density_id)
@@ -284,9 +386,9 @@ def verify_collar_clause_packet(
                 f"{density_id}.declared_support must be LEFT, RIGHT, or CROSS_CUT"
             )
 
-        left_residual = _span_residual(vector, left_basis)
-        right_residual = _span_residual(vector, right_basis)
-        flux_residual = _span_residual(vector, flux_basis)
+        left_residual = _span_residual(vector, left_span)
+        right_residual = _span_residual(vector, right_span)
+        flux_residual = _span_residual(vector, flux_span)
         in_left = left_residual <= tolerance
         in_right = right_residual <= tolerance
         cross_cut = not (in_left or in_right)
@@ -317,6 +419,7 @@ def verify_collar_clause_packet(
         density_results.append(
             {
                 "density_id": density_id,
+                "coordinate_semantics": COORDINATE_SEMANTICS,
                 "declared_support": declared_support,
                 "computed_support": computed_support,
                 "support_classification_matches": bool(support_matches),
@@ -335,7 +438,8 @@ def verify_collar_clause_packet(
         row["support_classification_matches"] for row in density_results
     )
     all_cross_cut_factor = nonvacuous_cross_cut and all(
-        row["factor_through_flux"] for row in cross_cut_rows
+        row["factor_through_flux"] and row["numerically_in_flux_span"]
+        for row in cross_cut_rows
     )
 
     controls = collar_clause_negative_controls()
@@ -348,8 +452,18 @@ def verify_collar_clause_packet(
         blockers.append("source_dag_hash_mismatch")
     if not source_dag_clean:
         blockers.append("source_dag_has_non_source_or_empty_ancestry")
+    if not pinned_theory_registry_complete:
+        blockers.append("pinned_collar_theorem_registry_incomplete")
+    if unregistered_lean_nodes:
+        blockers.append("unregistered_or_mismatched_lean_theorem_artifact")
     if not layer_hash_matches:
         blockers.append("collar_layer_hash_mismatch")
+    if not sector_direct_sum_independent:
+        blockers.append("left_right_flux_sectors_not_direct_sum_independent")
+    if not flux_is_proper_ambient_sector:
+        blockers.append("flux_sector_equals_full_ambient_space")
+    if not basis_numerical_conditioning_passed:
+        blockers.append("basis_numerical_conditioning_out_of_bounds")
     if not family_hash_matches:
         blockers.append("retained_family_hash_mismatch")
     if not retained_family_complete:
@@ -363,19 +477,28 @@ def verify_collar_clause_packet(
     if not controls_pass:
         blockers.append("mandatory_T0_T1_T2_negative_controls_failed")
 
-    passed = not blockers
+    packet_consistency_passed = not blockers
+    independent_run_replay = False
+    blockers.append("independent_collar_run_artifact_resolution_unavailable")
     return {
         "schema_version": SCHEMA_VERSION,
         "algorithm": ALGORITHM_ID,
         "receipt": RECEIPT_ID,
-        "passed": bool(passed),
-        "source_eligible": bool(passed),
+        "passed": False,
+        "source_eligible": False,
+        PACKET_CONSISTENCY_RECEIPT_ID: bool(packet_consistency_passed),
+        INDEPENDENT_RUN_REPLAY_RECEIPT_ID: independent_run_replay,
+        "packet_consistency_passed": bool(packet_consistency_passed),
         "packet_id": packet_id,
         "packet_hash": canonical_evidence_hash(packet),
         "source_dag_hash": supplied_source_hash,
         "computed_source_dag_hash": computed_source_hash,
         "source_dag_hash_matches": bool(source_hash_matches),
         "source_dag_clean": bool(source_dag_clean),
+        "pinned_theory_registry_release": "r1556@bec81e2d",
+        "pinned_theory_registry_complete": bool(pinned_theory_registry_complete),
+        "pinned_theory_artifact_ids": sorted(pinned_theory_matches),
+        "unregistered_lean_node_ids": sorted(unregistered_lean_nodes),
         "collar_layer_hash": supplied_layer_hash,
         "computed_collar_layer_hash": computed_layer_hash,
         "collar_layer_hash_matches": bool(layer_hash_matches),
@@ -384,10 +507,20 @@ def verify_collar_clause_packet(
         "computed_retained_family_hash": computed_family_hash,
         "retained_family_hash_matches": bool(family_hash_matches),
         "ambient_dimension": int(ambient_dimension),
-        "left_basis_rank": int(np.linalg.matrix_rank(left_basis, tol=tolerance)),
-        "right_basis_rank": int(np.linalg.matrix_rank(right_basis, tol=tolerance)),
-        "flux_basis_rank": int(np.linalg.matrix_rank(flux_basis, tol=tolerance)),
+        "left_basis_rank": int(basis_analyses["left"]["rank"]),
+        "right_basis_rank": int(basis_analyses["right"]["rank"]),
+        "flux_basis_rank": int(basis_analyses["flux"]["rank"]),
+        "combined_sector_rank": combined_sector_rank,
+        "declared_sector_rank_sum": declared_sector_rank_sum,
+        "sector_direct_sum_independent": sector_direct_sum_independent,
+        "flux_is_proper_ambient_sector": flux_is_proper_ambient_sector,
+        "basis_conditioning": basis_conditioning,
+        "basis_numerical_conditioning_passed": (
+            basis_numerical_conditioning_passed
+        ),
         "retained_density_count": len(density_results),
+        "estimated_linear_algebra_work": estimated_linear_work,
+        "retained_object_semantics": COORDINATE_SEMANTICS,
         "retained_family_complete": bool(retained_family_complete),
         "family_laws_source_derived": bool(family_source_derived),
         "nonvacuous_cross_cut": bool(nonvacuous_cross_cut),
@@ -401,9 +534,14 @@ def verify_collar_clause_packet(
         "mandatory_negative_controls_passed": bool(controls_pass),
         "blockers": blockers,
         "claim_boundary": (
-            "Bounded finite real-coordinate retained-family receipt: every "
-            "computed cross-cut density has an explicit, source-derived, "
+            "Bounded finite real-coordinate retained-family packet check over a direct-sum-independent "
+            "left/right/flux sector presentation: every computed cross-cut coordinate has an explicit, source-derived, "
             "refinement-natural factorization through the declared flux basis. "
+            "Coordinates are not called density operators because Hermiticity, positivity, and unit trace are not encoded or verified. "
+            "The r1556 Lean file digests are resolved against a simulator-pinned registry; this binds the "
+            "abstract theorem layer but does not authenticate caller-supplied simulation-derivation nodes; "
+            "therefore the packet-consistency receipt can pass while the source and independent-run receipts "
+            "remain false. "
             "It does not derive the collar clause from Gibbs states, density "
             "matrices, relative entropy, CMI, a conditional expectation, or a "
             "modular centralizer, and it does not establish a continuum source "
@@ -430,6 +568,15 @@ def write_collar_clause_certificate(
     if destination.suffix.lower() != ".json":
         destination = destination / "collar_clause_certificate.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
+    replay_path = companion_input_packet_path(
+        destination,
+        canonical_certificate_filename="collar_clause_certificate.json",
+        canonical_input_filename="collar_clause_input_packet.json",
+    )
+    replay_path.write_text(
+        json.dumps(packet, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
     destination.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -466,7 +613,7 @@ def _required_hash(value: Any, field_name: str) -> str:
 def _source_ancestry(value: Any) -> list[dict[str, str]]:
     if not isinstance(value, list):
         raise ValueError("source_ancestry must be a list")
-    if len(value) > 1024:
+    if len(value) > MAX_SOURCE_ANCESTRY_NODES:
         raise ValueError("source_ancestry exceeds the bounded packet limit")
     result: list[dict[str, str]] = []
     seen: set[str] = set()
@@ -478,12 +625,15 @@ def _source_ancestry(value: Any) -> list[dict[str, str]]:
             )
         node_id = node["node_id"]
         kind = node["kind"]
-        if not isinstance(node_id, str) or not node_id.strip() or node_id in seen:
+        try:
+            _bounded_identifier(node_id, f"source_ancestry[{index}].node_id")
+        except ValueError as exc:
             raise ValueError(
                 f"source_ancestry[{index}].node_id is invalid or duplicated"
-            )
-        if not isinstance(kind, str) or not kind.strip():
-            raise ValueError(f"source_ancestry[{index}].kind is invalid")
+            ) from exc
+        if node_id in seen:
+            raise ValueError(f"source_ancestry[{index}].node_id is duplicated")
+        _bounded_identifier(kind, f"source_ancestry[{index}].kind")
         seen.add(node_id)
         result.append(
             {
@@ -499,7 +649,11 @@ def _basis(value: Any, dimension: int, field_name: str) -> np.ndarray:
     if not isinstance(value, list) or any(not isinstance(row, list) for row in value):
         raise ValueError(f"{field_name} must be a JSON array of numeric rows")
     if any(
-        len(row) != dimension or any(not _finite_json_number(item) for item in row)
+        len(row) != dimension
+        or any(
+            not _finite_bounded_json_number(item)
+            for item in row
+        )
         for row in value
     ):
         raise ValueError(
@@ -517,7 +671,7 @@ def _vector(value: Any, dimension: int, field_name: str) -> np.ndarray:
     if (
         not isinstance(value, list)
         or len(value) != dimension
-        or any(not _finite_json_number(item) for item in value)
+        or any(not _finite_bounded_json_number(item) for item in value)
     ):
         raise ValueError(
             f"{field_name} must be a finite numeric vector of length {dimension}"
@@ -528,16 +682,60 @@ def _vector(value: Any, dimension: int, field_name: str) -> np.ndarray:
     return array
 
 
-def _span_residual(vector: np.ndarray, basis_rows: np.ndarray) -> float:
-    coefficients, *_ = np.linalg.lstsq(basis_rows.T, vector, rcond=None)
-    return float(np.linalg.norm(coefficients @ basis_rows - vector))
+def _estimated_svd_work(basis: np.ndarray) -> int:
+    rows, columns = basis.shape
+    return int(max(1, rows * columns * min(rows, columns)))
+
+
+def _basis_analysis(basis: np.ndarray, *, tolerance: float) -> dict[str, Any]:
+    """Compute rank, row-span basis, and conditioning from one bounded SVD."""
+
+    try:
+        _, singular_values, right_vectors = np.linalg.svd(
+            basis,
+            full_matrices=False,
+        )
+    except np.linalg.LinAlgError as exc:
+        raise ValueError("collar basis decomposition did not converge") from exc
+    rank = int(np.count_nonzero(singular_values > tolerance))
+    orthonormal_span = right_vectors[:rank].T
+    maximum = float(singular_values[0]) if singular_values.size else 0.0
+    full_row_rank_possible = basis.shape[0] <= basis.shape[1]
+    minimum = (
+        float(singular_values[-1])
+        if singular_values.size and full_row_rank_possible
+        else 0.0
+    )
+    ratio = maximum / minimum if minimum > 0.0 else math.inf
+    condition_number = float(ratio) if np.isfinite(ratio) else None
+    passed = bool(
+        condition_number is not None
+        and MIN_BASIS_SINGULAR_VALUE <= minimum <= MAX_BASIS_SINGULAR_VALUE
+        and MIN_BASIS_SINGULAR_VALUE <= maximum <= MAX_BASIS_SINGULAR_VALUE
+        and condition_number <= MAX_BASIS_CONDITION_NUMBER
+    )
+    return {
+        "rank": rank,
+        "orthonormal_span": orthonormal_span,
+        "conditioning": {
+            "minimum_singular_value": minimum,
+            "maximum_singular_value": maximum,
+            "condition_number": condition_number,
+            "passed": passed,
+        },
+    }
+
+
+def _span_residual(vector: np.ndarray, orthonormal_columns: np.ndarray) -> float:
+    projection = orthonormal_columns @ (orthonormal_columns.T @ vector)
+    return float(np.linalg.norm(projection - vector))
 
 
 def _string_list(value: Any, field_name: str) -> list[str]:
-    if not isinstance(value, list) or any(
-        not isinstance(item, str) or not item.strip() for item in value
-    ):
+    if not isinstance(value, list) or len(value) > MAX_SOURCE_ANCESTRY_NODES:
         raise ValueError(f"{field_name} must be a list of non-empty strings")
+    for item in value:
+        _bounded_identifier(item, f"{field_name} item")
     if len(value) != len(set(value)):
         raise ValueError(f"{field_name} must not contain duplicates")
     return list(value)
@@ -580,7 +778,10 @@ def _factorization_report(
     if (
         not isinstance(witness["flux_coefficients"], list)
         or len(witness["flux_coefficients"]) != flux_basis.shape[0]
-        or any(not _finite_json_number(item) for item in witness["flux_coefficients"])
+        or any(
+            not _finite_bounded_json_number(item)
+            for item in witness["flux_coefficients"]
+        )
     ):
         raise ValueError(
             f"{field_name}.flux_coefficients must be a finite numeric vector of length "
@@ -646,9 +847,25 @@ def _diagnostics(value: Any) -> dict[str, bool]:
     return result
 
 
-def _finite_json_number(value: Any) -> bool:
-    return (
-        not isinstance(value, bool)
-        and isinstance(value, (int, float))
-        and bool(np.isfinite(value))
-    )
+def _bounded_identifier(value: Any, field_name: str) -> str:
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or (byte_length := utf8_byte_length(value)) is None
+        or byte_length > MAX_IDENTIFIER_BYTES
+        or any(ord(character) < 0x20 for character in value)
+    ):
+        raise ValueError(
+            f"{field_name} must be a nonempty bounded string without control characters"
+        )
+    return value
+
+
+def _finite_bounded_json_number(value: Any) -> bool:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        parsed = float(value)
+    except (OverflowError, TypeError, ValueError):
+        return False
+    return math.isfinite(parsed) and abs(parsed) <= MAX_ABS_COORDINATE

@@ -418,9 +418,7 @@ def _scalar_repair_semigroup_rows(
             "centered_scalar_relaxation": semigroup.get("centered_scalar_relaxation"),
             "contractive_at_t1": semigroup.get("contractive_at_t1"),
             "semigroup_controls_passed": report.get("semigroup_controls_passed"),
-            "edge_center_clock_evidence_complete": bool(
-                report.get("EDGE_CENTER_CLOCK_RECEIPT", False)
-            ),
+            "edge_center_clock_evidence_complete": False,
             "transition_matrix_ready": bool(transition_eligibility["eligible"]),
             "transition_clock_eligibility": transition_eligibility,
             "transition_clock_normalization_certified": bool(

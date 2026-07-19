@@ -786,7 +786,6 @@ def main(argv: list[str] | None = None) -> int:
     radial_receipt_parser.add_argument("--payload", default=None, type=Path)
     radial_receipt_parser.add_argument("--receipt", required=True)
     radial_receipt_parser.add_argument("--claim-tier", required=True, choices=("E0", "E1", "E2", "E3", "E4", "E5"))
-    radial_receipt_parser.add_argument("--claimed-pass", action="store_true")
     radial_receipt_parser.add_argument("--physical-tt-te-ee-claim", action="store_true")
     radial_receipt_parser.add_argument("--blocker", action="append", default=[])
 
@@ -807,6 +806,27 @@ def main(argv: list[str] | None = None) -> int:
     collar_clause_parser.add_argument("--out", required=True, type=Path)
     collar_clause_parser.add_argument("--tolerance", default=1.0e-10, type=float)
     collar_clause_parser.add_argument("--max-ambient-dimension", default=256, type=int)
+
+    boundary_fiber_parser = subparsers.add_parser(
+        "boundary-fiber-certificate",
+        help="replay a bounded boundary-fiber table without promoting completeness",
+    )
+    boundary_fiber_parser.add_argument("--packet", required=True, type=Path)
+    boundary_fiber_parser.add_argument("--out", required=True, type=Path)
+
+    fair_block_parser = subparsers.add_parser(
+        "fair-block-certificate",
+        help="replay finite-Markov mixing and occupation arithmetic without consensus promotion",
+    )
+    fair_block_parser.add_argument("--packet", required=True, type=Path)
+    fair_block_parser.add_argument("--out", required=True, type=Path)
+
+    collar_poisson_parser = subparsers.add_parser(
+        "collar-poisson-certificate",
+        help="recompute bounded collar Poisson-binomial arithmetic without physical promotion",
+    )
+    collar_poisson_parser.add_argument("--packet", required=True, type=Path)
+    collar_poisson_parser.add_argument("--out", required=True, type=Path)
     capacity_proxy_parser.add_argument("--max-observer-views", default=4096, type=int)
 
     scale_bridge_parser = subparsers.add_parser(
@@ -2577,16 +2597,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "scr330-radial-receipt":
         from oph_fpe.cosmology.source_screen_spectrum import write_radial_receipt
 
-        source_dag = json.loads(args.source_dag.read_text(encoding="utf-8"))
+        source_dag = _read_bounded_json_file(args.source_dag, max_bytes=2_000_000)
         payload = (
-            json.loads(args.payload.read_text(encoding="utf-8"))
+            _read_bounded_json_file(args.payload, max_bytes=2_000_000)
             if args.payload is not None
             else None
         )
         result = write_radial_receipt(
             args.out,
             receipt=args.receipt,
-            passed=args.claimed_pass,
             claim_tier=args.claim_tier,
             source_dag=source_dag,
             blockers=args.blocker,
@@ -2599,7 +2618,7 @@ def main(argv: list[str] | None = None) -> int:
         from oph_fpe.constants.oph_pixel import P_STAR
         from oph_fpe.cosmology.edge_center_clock import write_edge_center_clock_certificate
 
-        evidence = json.loads(args.evidence.read_text(encoding="utf-8"))
+        evidence = _read_bounded_json_file(args.evidence, max_bytes=2_000_000)
         result = write_edge_center_clock_certificate(
             args.out,
             evidence,
@@ -2611,13 +2630,38 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "collar-clause-certificate":
         from oph_fpe.cosmology.collar_clause import write_collar_clause_certificate
 
-        packet = json.loads(args.packet.read_text(encoding="utf-8"))
+        packet = _read_bounded_json_file(args.packet, max_bytes=2_000_000)
         result = write_collar_clause_certificate(
             args.out,
             packet,
             tolerance=args.tolerance,
             max_ambient_dimension=args.max_ambient_dimension,
         )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "boundary-fiber-certificate":
+        from oph_fpe.consensus.boundary_fiber import (
+            write_boundary_fiber_certificate,
+        )
+
+        packet = _read_bounded_json_file(args.packet, max_bytes=20_000_000)
+        result = write_boundary_fiber_certificate(args.out, packet)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "fair-block-certificate":
+        from oph_fpe.consensus.fair_block import write_fair_block_certificate
+
+        packet = _read_bounded_json_file(args.packet, max_bytes=10_000_000)
+        result = write_fair_block_certificate(args.out, packet)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "collar-poisson-certificate":
+        from oph_fpe.cosmology.collar_poisson import (
+            write_collar_poisson_certificate,
+        )
+
+        packet = _read_bounded_json_file(args.packet, max_bytes=1_000_000)
+        result = write_collar_poisson_certificate(args.out, packet)
         print(json.dumps(result, indent=2, default=str))
         return 0
     if args.command == "scale-bridge-report":
@@ -3628,6 +3672,16 @@ def _csv_values(value: str | None) -> tuple[str, ...]:
     if not value:
         return ()
     return tuple(part.strip() for part in str(value).split(",") if part.strip())
+
+
+def _read_bounded_json_file(path: Path, *, max_bytes: int):
+    if isinstance(max_bytes, bool) or not isinstance(max_bytes, int) or max_bytes <= 0:
+        raise ValueError("max_bytes must be a positive integer")
+    with Path(path).open("rb") as handle:
+        payload = handle.read(max_bytes + 1)
+    if len(payload) > max_bytes:
+        raise ValueError(f"JSON input exceeds the {max_bytes}-byte command limit")
+    return json.loads(payload)
 
 
 def _json_arg(value: str | None):
