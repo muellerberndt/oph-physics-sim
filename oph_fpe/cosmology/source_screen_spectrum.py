@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
@@ -120,6 +121,7 @@ class DilationReceipt:
 
 
 SCR330_SCHEMA_VERSION = "scr330-radial-v2"
+SCR330_MAX_NUMERICAL_TOLERANCE = 1.0e-6
 RADIAL_RECEIPTS = frozenset(
     {
         "SCR330_SOURCE_SHELL_EMBEDDING_RECEIPT",
@@ -133,6 +135,52 @@ RADIAL_RECEIPTS = frozenset(
         "SCR330_RADIAL_PROMOTION_RECEIPT",
         "SCR330_TRANSFER_FIREWALL_RECEIPT",
     }
+)
+
+_SOURCE_DAG_NODE_KINDS = frozenset(
+    {
+        "boundary",
+        "certificate",
+        "clock",
+        "collar",
+        "constant",
+        "embedding",
+        "finite_lattice",
+        "geometry",
+        "kernel",
+        "maxent",
+        "mode_basis",
+        "operator",
+        "parameter",
+        "proof",
+        "radial",
+        "refinement",
+        "release",
+        "simulation",
+        "source",
+        "spectrum",
+        "theorem",
+    }
+)
+_DOWNSTREAM_DAG_NODE_KINDS = frozenset(
+    {
+        "boltzmann",
+        "class_output",
+        "ee_spectrum",
+        "foreground",
+        "lensing",
+        "nuisance_parameter",
+        "recombination",
+        "te_spectrum",
+        "transfer_output",
+        "tt_spectrum",
+    }
+)
+_MEASUREMENT_ID_TOKEN = re.compile(
+    r"(?:^|[^a-z0-9])"
+    r"(?:act|calibrated|data|fit|likelihood|measurement|measurements|observed|"
+    r"observation|planck|posterior|target|wmap)"
+    r"(?:$|[^a-z0-9])"
 )
 
 # Compatibility for the first source-screen draft.  Returned receipts always
@@ -251,8 +299,14 @@ def conformal_precision_eigenvalue(
     if not (-2.0 < theta < 4.0):
         raise SourceSpectrumInputError("theta must lie in (-2, 4)")
     ell_array = np.asarray(ell, dtype=float)
-    if np.any(~np.isfinite(ell_array)) or np.any(ell_array < 2.0):
-        raise SourceSpectrumInputError("ell must be finite and at least two")
+    if (
+        np.any(~np.isfinite(ell_array))
+        or np.any(ell_array < 2.0)
+        or np.any(ell_array != np.floor(ell_array))
+    ):
+        raise SourceSpectrumInputError(
+            "ell must contain finite integer multipoles at least two"
+        )
     values = np.exp(
         gammaln(ell_array + 2.0 + 0.5 * theta)
         - gammaln(ell_array - 0.5 * theta)
@@ -599,14 +653,21 @@ def radial_projection_matrix(
     radial_weights: ArrayLike,
 ) -> NDArray[np.float64]:
     r"""Build ``A_lj = 4*pi*Z_q^2*w_j*|Psi_l(k_j)|^2``."""
-    ell_values = np.asarray(ell, dtype=int)
+    raw_ell_values = np.asarray(ell, dtype=float)
     k_values = np.asarray(k, dtype=float)
     quadrature_weights = np.asarray(dlnk_weights, dtype=float)
     Z_q = _finite_positive(Z_q, "Z_q")
-    if ell_values.ndim != 1 or ell_values.size == 0 or np.any(ell_values < 0):
+    if (
+        raw_ell_values.ndim != 1
+        or raw_ell_values.size == 0
+        or np.any(~np.isfinite(raw_ell_values))
+        or np.any(raw_ell_values < 0)
+        or np.any(raw_ell_values != np.floor(raw_ell_values))
+    ):
         raise SourceSpectrumInputError(
             "ell must be a nonempty vector of nonnegative integers"
         )
+    ell_values = raw_ell_values.astype(int)
     if (
         k_values.ndim != 1
         or quadrature_weights.shape != k_values.shape
