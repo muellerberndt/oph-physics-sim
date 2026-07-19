@@ -9,6 +9,9 @@
       "epistemic_class": "paper_side_finite_regression_fixture",
       "format_version": null,
       "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "geometry_cyclic_cap_net",
       "present": true,
@@ -27,6 +30,9 @@
       "epistemic_class": "paper_side_one_particle_regression_fixture",
       "format_version": null,
       "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "geometry_modular_clock",
       "present": true,
@@ -45,6 +51,9 @@
       "epistemic_class": "paper_side_one_particle_regression_fixture",
       "format_version": null,
       "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "geometry_null_net",
       "present": true,
@@ -63,6 +72,9 @@
       "epistemic_class": "paper_side_finite_regression_fixture",
       "format_version": null,
       "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "geometry_realized_events",
       "present": true,
@@ -81,6 +93,9 @@
       "epistemic_class": "paper_side_finite_regression_fixture",
       "format_version": null,
       "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "geometry_bulk_depth",
       "present": true,
@@ -99,6 +114,9 @@
       "epistemic_class": "paper_side_finite_witness_status",
       "format_version": null,
       "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "einstein_realized_branch",
       "present": true,
@@ -116,12 +134,15 @@
       "declared_promotion_allowed": false,
       "epistemic_class": "rejected_target_informed_candidate_status",
       "format_version": null,
-      "generated_utc": "2026-07-13T06:10:22Z",
+      "generated_utc": "2026-07-18T06:04:31Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "neutrino_lane_closure",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:68594916840991f67af454d1a4c95d4b2209d3994821ff17f45274ae22ef50b8",
+      "sha256": "sha256:e1ccc9fb5176241241eff5fd9c6de1bcc28176b813a78d8559759a2296f242da",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/neutrino/neutrino_lane_closure_contract.json",
       "source_tracked": true,
@@ -135,6 +156,9 @@
       "epistemic_class": "retrospective_rejection_evidence",
       "format_version": null,
       "generated_utc": "2026-07-11T06:25:21Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "neutrino_nufit61_score",
       "present": true,
@@ -153,6 +177,9 @@
       "epistemic_class": "conditional_compare_only_envelope",
       "format_version": null,
       "generated_utc": "2026-07-16T09:07:10Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "conditional_ew_envelope",
       "present": true,
@@ -171,6 +198,9 @@
       "epistemic_class": "conditional_selection_theorem",
       "format_version": null,
       "generated_utc": "2026-07-16T09:07:11Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "d10_repair_selection",
       "present": true,
@@ -189,6 +219,9 @@
       "epistemic_class": "diagnostic_color_transport_contract",
       "format_version": null,
       "generated_utc": "2026-07-16T09:07:11Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "color_amplitude_loop_split",
       "present": true,
@@ -206,12 +239,15 @@
       "declared_promotion_allowed": false,
       "epistemic_class": "empirical_external_data_closure",
       "format_version": 1,
-      "generated_utc": "2026-07-13T06:09:34Z",
+      "generated_utc": "2026-07-18T06:01:48Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "empirical_hadron_spectral_measure",
       "present": true,
       "row_class": "oph_plus_empirical_hadron_closure",
-      "sha256": "sha256:5809026c6e137b389f46901c9b697171cc0c3ca618ad093179101d3aa98c44d7",
+      "sha256": "sha256:72b94228c0e4cb1d2409f324ea5575333db593736a9aea0f8ba5ab487b9e2e42",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/hadron/empirical_ward_projected_spectral_measure.json",
       "source_tracked": true,
@@ -225,6 +261,9 @@
       "epistemic_class": "empirical_external_data_closure",
       "format_version": null,
       "generated_utc": "2026-07-12T02:35:03Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "empirical_thomson_endpoint",
       "present": true,
@@ -243,6 +282,9 @@
       "epistemic_class": "compare_only_scheme_analysis",
       "format_version": null,
       "generated_utc": "2026-07-12T02:18:50Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "anchor_scheme_bridge",
       "present": true,
@@ -261,6 +303,9 @@
       "epistemic_class": "particle_frontier_status",
       "format_version": null,
       "generated_utc": "2026-07-13T04:57:34Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "particle_status_table",
       "present": true,
@@ -274,16 +319,19 @@
     },
     {
       "artifact": "oph_particle_derivation_gap_ledger",
-      "byte_count": 29578,
+      "byte_count": 30153,
       "declared_promotion_allowed": null,
       "epistemic_class": "open_obligation_ledger",
       "format_version": null,
-      "generated_utc": "2026-07-12T03:56:19Z",
+      "generated_utc": "2026-07-18T05:32:25Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "particle_gap_ledger",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:f403fb82b47632616377b62b945474a7eb5227d4e3de02145241e1d649eb661b",
+      "sha256": "sha256:18ab7e14d6c0ba3ba3039b1055a14d4922fdf19302129f518cede6db50fcb8b9",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/status/particle_derivation_gap_ledger.json",
       "source_tracked": true,
@@ -297,6 +345,9 @@
       "epistemic_class": "source_nonidentifiability_no_go",
       "format_version": null,
       "generated_utc": "2026-07-12T02:42:13Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "charged_trace_no_go",
       "present": true,
@@ -314,12 +365,15 @@
       "declared_promotion_allowed": false,
       "epistemic_class": "source_nonidentifiability_no_go",
       "format_version": null,
-      "generated_utc": "2026-07-13T06:09:32Z",
+      "generated_utc": "2026-07-18T06:01:43Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "quark_sigma_no_go",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:fa6ed634eaea88c2ad731469f823cacd28e2c595e7a9b7aa77ce1ffd5a818dec",
+      "sha256": "sha256:f47368bd67ed7f4b4696d761946108a9b91b11c36ebed89bf338c5c3c08f1948",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/flavor/quark_sigma_source_nonidentifiability_obstruction.json",
       "source_tracked": true,
@@ -332,12 +386,15 @@
       "declared_promotion_allowed": null,
       "epistemic_class": "scheme_convention_obstruction",
       "format_version": null,
-      "generated_utc": "2026-07-13T06:09:33Z",
+      "generated_utc": "2026-07-18T06:01:46Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "quark_scheme_obstruction",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:de53e09444c1b391324bb3491a2d8953bfe8876fe9404189f13a8e4ef95cdc9a",
+      "sha256": "sha256:332dd01cce5a5f0415ce057d70cb458d8f84e19917616db6696f1292936f3db3",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/flavor/quark_running_mass_scheme_convention_obstruction.json",
       "source_tracked": true,
@@ -351,6 +408,9 @@
       "epistemic_class": "diagnostic_nonpromoting_engine_status",
       "format_version": null,
       "generated_utc": "2026-07-12T03:01:40Z",
+      "identity_path": [
+        "artifact"
+      ],
       "import_role": "informational_or_diagnostic_only",
       "key": "lattice_engine_status",
       "present": true,
@@ -365,26 +425,156 @@
     {
       "artifact": "oph_lattice_diagnostic_backend_export",
       "epistemic_class": "real_lattice_diagnostic_toy_scale",
+      "identity_path": [
+        "artifact"
+      ],
       "key": "lattice_diagnostic_export",
       "optional": true,
       "present": false,
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/hadron/lattice_diagnostic_backend_export.json",
       "target_relpath": "imported_oph_artifacts/lattice_diagnostic_backend_export.json"
+    },
+    {
+      "artifact": "OPH A5 screen/SM closure certificate v1",
+      "byte_count": 5152,
+      "declared_promotion_allowed": null,
+      "epistemic_class": "exact_conditional_a5_coefficient_module_witness",
+      "format_version": null,
+      "generated_utc": null,
+      "identity_path": [
+        "schema"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "a5_screen_sm_closure",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:c3dba5ed4a9a5b34cc03b6a31eae2ede9f481d9381fbf3ec6c574cd1e0fae6f0",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/a5_closure/a5_screen_sm_closure.json",
+      "source_tracked": true,
+      "status": null,
+      "target_relpath": "imported_oph_artifacts/a5_screen_sm_closure.json"
+    },
+    {
+      "artifact": "OPH conditional exterior Standard-Model completion certificate v1",
+      "byte_count": 4906,
+      "declared_promotion_allowed": null,
+      "epistemic_class": "exact_conditional_exterior_matter_witness",
+      "format_version": null,
+      "generated_utc": null,
+      "identity_path": [
+        "schema"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "a5_exterior_sm_completion",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:a53176a3c77ad4fcd57fb9405e0f89ffc45ca0bfd6452392c1578c552f17f739",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/a5_closure/exterior_sm_completion.json",
+      "source_tracked": true,
+      "status": null,
+      "target_relpath": "imported_oph_artifacts/exterior_sm_completion.json"
+    },
+    {
+      "artifact": "oph_p_global_uniqueness_extension_certificate",
+      "byte_count": 10512,
+      "declared_promotion_allowed": false,
+      "epistemic_class": "declared_map_global_uniqueness_nonpromoting",
+      "format_version": null,
+      "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "p_global_uniqueness_extension",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:55a31f0961b5b2b99a99affc8aca6e4d0065bdf197a8179c7aab1a270236854b",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/P_derivation/runtime/p_global_uniqueness_extension_certificate_2026-07-17.json",
+      "source_tracked": true,
+      "status": null,
+      "target_relpath": "imported_oph_artifacts/p_global_uniqueness_extension_certificate_2026-07-17.json"
+    },
+    {
+      "artifact": "PUBLIC_CHECKPOINT_PACKET/v1-reversible",
+      "byte_count": 944,
+      "declared_promotion_allowed": null,
+      "epistemic_class": "exact_finite_reference_control_not_physical_receipt",
+      "format_version": null,
+      "generated_utc": null,
+      "identity_path": [
+        "artifact"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "reversible_public_checkpoint_control",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:39055104d2ccb94e5cbbafe0c5b8b77fb368688619f717c92749a22dfe5e6b4e",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/capacity_readback/runtime/reversible_public_checkpoint_packet_certificate.json",
+      "source_tracked": true,
+      "status": "PASS",
+      "target_relpath": "imported_oph_artifacts/reversible_public_checkpoint_packet_certificate.json"
+    },
+    {
+      "artifact": "scr330-radial-v2",
+      "byte_count": 888,
+      "declared_promotion_allowed": null,
+      "epistemic_class": "conditional_radial_contract_example_nonpromoting",
+      "format_version": "scr330-radial-v2",
+      "generated_utc": null,
+      "identity_path": [
+        "schema_version"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "scr330_radial_contract_example",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:6272b38d9a3976834155a53e2943fac106ae291c298d49b311ab3678b9f7531a",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/cosmology/example_radial_receipt.json",
+      "source_tracked": true,
+      "status": null,
+      "target_relpath": "imported_oph_artifacts/example_radial_receipt.json"
+    },
+    {
+      "artifact": "oph.regulator_gluing.evidence_bundle/1",
+      "byte_count": 43641,
+      "declared_promotion_allowed": null,
+      "epistemic_class": "exact_fixed_cutoff_regulator_gluing_witness",
+      "format_version": null,
+      "generated_utc": null,
+      "identity_path": [
+        "bundle",
+        "schema"
+      ],
+      "import_role": "informational_or_diagnostic_only",
+      "key": "regulator_gluing_fixed_cutoff",
+      "present": true,
+      "row_class": null,
+      "sha256": "sha256:2ac00598f772318b8270b28609abef42b461cd1c1f9f66ea44f2a7cf68669c34",
+      "simulation_receipt_eligible": false,
+      "source_relpath": "code/regulator_gluing/runs/regulator_gluing_evidence_bundle_current.json",
+      "source_tracked": true,
+      "status": null,
+      "target_relpath": "imported_oph_artifacts/regulator_gluing_evidence_bundle_current.json"
     }
   ],
   "claim_boundary": "Imported paper and particle artifacts carry theorem/frontier provenance only. They never promote a simulation receipt; local verifiers must recompute every run-specific hypothesis.",
-  "manifest_payload_sha256": "sha256:11fcedf77ddcd8d07e4014a87bb457a31220e6b79b1152f474ba18c330479b66",
+  "manifest_payload_sha256": "sha256:f1974c7db597d0ab912291ce6f279942c9214bad9ae410318879b77d0f475fa9",
   "missing_required_artifacts": [],
-  "paper_release_id": "r1542",
+  "paper_release_id": "r1556",
   "run_receipts_promoted_by_import": false,
-  "schema": "oph_cross_repo_artifact_manifest_v1",
+  "schema": "oph_cross_repo_artifact_manifest_v2",
   "source_repository": {
     "checkout_name": "reverse-engineering-reality",
-    "commit": "138c92043814738b12b36272b9d4cf84d882aeb0",
-    "dirty": true,
+    "commit": "bec81e2df36f611ac81b1abaee736234f62d81ff",
+    "dirty": false,
     "untracked_file_count": 0,
-    "worktree_state_sha256": "sha256:341e5aa59a1da598771199594720282c576d655b45cdb5203faa0586419b64e9"
+    "worktree_state_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
-  "source_worktree_clean": false
+  "source_worktree_clean": true
 }

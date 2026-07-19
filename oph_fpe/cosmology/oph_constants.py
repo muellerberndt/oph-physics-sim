@@ -11,7 +11,13 @@ from oph_fpe.cosmology.neutrino_status import (
 
 DEFAULT_R_DS_M = 1.66e26
 DEFAULT_L_PLANCK_M = 1.616e-35
-DEFAULT_N_CRC = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M) ** 2
+DEFAULT_OBSERVED_HORIZON_N_COMPARISON = math.pi * (
+    DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M
+) ** 2
+# Compatibility alias used by historical diagnostics.  It is not an OPH
+# public-record-capacity producer; physical N must come from the exact
+# PUBLIC_CHECKPOINT_PACKET evaluator and its closure receipts.
+DEFAULT_N_CRC = DEFAULT_OBSERVED_HORIZON_N_COMPARISON
 LAMBDA_COLLAR_EXACT_GATE = "UNIFORM_PRODUCT_THICKENING_EXACT"
 
 
@@ -19,13 +25,16 @@ LAMBDA_COLLAR_EXACT_GATE = "UNIFORM_PRODUCT_THICKENING_EXACT"
 class OPHConstants:
     """Constants shared by OPH cosmology diagnostic lanes.
 
-    These are target/readout constants. They do not by themselves close the
-    finite-lattice derivation gate for B_A(k,a), neutrino masses, or a physical
-    Boltzmann likelihood.
+    These are comparison/readout constants.  In particular, ``N_CRC`` defaults
+    to an observed-horizon comparison and cannot define public-record capacity.
+    They do not by themselves close the finite-lattice derivation gate for
+    B_A(k,a), neutrino masses, physical N, or a physical Boltzmann likelihood.
     """
 
     P: float = P_STAR
     N_CRC: float = DEFAULT_N_CRC
+    N_CRC_source: str = "observed_horizon_comparison"
+    N_CRC_producer_eligible: bool = False
     pi_wl: float = 5.0 / 7.0
     conventional_camb_sum_mnu_eV: float = CONVENTIONAL_CAMB_SUM_MNU_EV
     N_eff: float = 3.044
@@ -104,6 +113,13 @@ class OPHConstants:
         return {
             "P": float(self.P),
             "N_CRC": float(self.N_CRC),
+            "N_CRC_source": self.N_CRC_source,
+            "N_CRC_producer_eligible": bool(self.N_CRC_producer_eligible),
+            "N_CRC_contract": (
+                "comparison only; physical N requires exact target-free public-record "
+                "capacity, complete-fiber scalarization, robust closure, unique "
+                "regulator-stable slack zero, and horizon-record saturation"
+            ),
             "N_patch_bare_ratio": self.N_patch_bare_ratio,
             "Lambda_lP2": self.Lambda_lP2,
             "P_cell_count_for_N_CRC": self.P_cell_count_for_N_CRC,

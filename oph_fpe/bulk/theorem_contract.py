@@ -70,7 +70,10 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     refinement = _read_json(root / "strict_neutral_bulk_frontier_report.json")
     einstein = _read_json(root / "einstein_branch_entry_report.json")
     explicit_einstein_bridge_manifest = _read_json(root / "einstein_bridge_manifest.json")
-    einstein_bridge = explicit_einstein_bridge_manifest or einstein_bridge_manifest_report(root)
+    # A persisted manifest is a cache/display artifact, not producer evidence.
+    # Always replay the theorem-tagged sidecars so neither an old aggregate
+    # report nor a hand-edited manifest can promote branch entry.
+    einstein_bridge = einstein_bridge_manifest_report(root)
     issue308_bw = _read_issue308_bw_certificate(root)
     issue309_h3 = _read_issue309_cap_normal_h3_chart(root)
     issue310_h3loc = _read_issue310_modular_response_h3_localization(root)
@@ -207,7 +210,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     }
     legacy_einstein_branch_entry = bool(einstein_issue_503 and all(einstein_child_gates.values()))
     manifest_child_gates = einstein_bridge.get("einstein_branch_entry_child_gates")
-    if use_einstein_bridge_manifest and isinstance(manifest_child_gates, dict):
+    if isinstance(manifest_child_gates, dict):
         einstein_child_gates = {name: _literal_true(value) for name, value in manifest_child_gates.items()}
         einstein_e1_null_stress = bool(einstein_child_gates.get("E1_null_generator_stress_charge", False))
         einstein_e2_entropy = bool(einstein_child_gates.get("E2_fixed_cap_entropy_stationarity", False))
@@ -228,16 +231,12 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "einstein_bridge_run_receipts_receipt",
         "all_required_receipts_theorem_tagged",
     )
-    einstein_branch_entry = (
-        _truthy_any(
-            einstein_bridge,
-            OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
-            EINSTEIN_BRANCH_ENTRY_RECEIPT,
-            "einstein_branch_entry_contract_receipt",
-            "einstein_branch_entry_receipt",
-        )
-        if use_einstein_bridge_manifest
-        else legacy_einstein_branch_entry
+    einstein_branch_entry = _truthy_any(
+        einstein_bridge,
+        OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+        EINSTEIN_BRANCH_ENTRY_RECEIPT,
+        "einstein_branch_entry_contract_receipt",
+        "einstein_branch_entry_receipt",
     )
 
     stages = {
@@ -424,26 +423,15 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "E0_einstein_branch_entry_umbrella": _stage(
             einstein_branch_entry,
-            (
-                "E0 OPH5 Einstein bridge manifest is theorem-discharged and all required run "
-                "sidecar receipts are theorem-tagged"
-                if use_einstein_bridge_manifest
-                else "legacy issue #503 umbrella is closed and all Einstein branch-entry child gates E1-E6 pass"
-            ),
-            missing=(
-                list(einstein_bridge.get("einstein_branch_entry_blockers") or einstein_bridge.get("blockers") or [])
-                if use_einstein_bridge_manifest
-                else [
-                    name
-                    for name, passed in {
-                        "issue_503_closed_receipt": einstein_issue_503,
-                        **einstein_child_gates,
-                    }.items()
-                    if not passed
-                ]
+            "E0 OPH5 Einstein bridge dependencies and independently replayed, theorem-tagged run sidecars",
+            missing=list(
+                einstein_bridge.get("einstein_branch_entry_blockers")
+                or einstein_bridge.get("blockers")
+                or []
             ),
             details={
                 "manifest_written": use_einstein_bridge_manifest,
+                "manifest_recomputed_from_sidecars": True,
                 "manifest_receipt": bool(
                     einstein_bridge.get(OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT, False)
                 ),
@@ -454,6 +442,14 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
                 "legacy_issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
                 "legacy_issue_503_status": einstein.get("issue_503_status", "open_or_unreported"),
                 "legacy_source_report_written": bool(einstein),
+                "legacy_aggregate_branch_entry_ignored": legacy_einstein_branch_entry,
+                "persisted_manifest_branch_entry_ignored": _truthy_any(
+                    explicit_einstein_bridge_manifest,
+                    OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+                    EINSTEIN_BRANCH_ENTRY_RECEIPT,
+                    "einstein_branch_entry_contract_receipt",
+                    "einstein_branch_entry_receipt",
+                ),
                 "child_gate_issue_map": {
                     "E1_null_generator_stress_charge": "#19",
                     "E2_fixed_cap_entropy_stationarity": "#20",

@@ -11,7 +11,7 @@ def test_cmb_source_provenance_certificate_accepts_clean_source_graph():
 
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is True
     assert cert["blockers"] == []
-    assert cert["N_CRC_consensus_invariant_receipt"] is True
+    assert cert["N_CRC_direct_public_record_capacity_receipt"] is True
 
 
 def test_cmb_source_provenance_fails_closed_on_no_data_contradiction():
@@ -58,7 +58,7 @@ def test_cmb_source_provenance_requires_pooled_or_single_global_reducers():
     assert "B_A_k_a_source_reducer_not_pooled_or_global" in cert["blockers"]
 
 
-def test_cmb_source_provenance_blocks_additive_N_CRC_without_disjoint_schema():
+def test_cmb_source_provenance_blocks_counts_without_direct_public_record_receipt():
     reducers = _clean_reducers()
     reducers["N_CRC"] = {
         "mode": "additive_capacity",
@@ -70,7 +70,7 @@ def test_cmb_source_provenance_blocks_additive_N_CRC_without_disjoint_schema():
     cert = certify_cmb_source_provenance(_clean_nodes(), reducers, global_checks=_clean_global_checks())
 
     assert cert["CMB_SOURCE_PROVENANCE_RECEIPT"] is False
-    assert "N_CRC_not_consensus_invariant_or_additive_disjoint" in cert["blockers"]
+    assert "N_CRC_direct_public_record_capacity_receipt_missing" in cert["blockers"]
 
 
 def _clean_nodes() -> list[dict]:
@@ -82,7 +82,7 @@ def _clean_nodes() -> list[dict]:
         "ell_IR": "scale_compressed_24_round_finite_ladder",
         "B_A_k_a": "parent_collar_finite_difference",
         "rho_A_a": "finite_lattice",
-        "N_CRC": "OPH_screen_capacity_branch_predeclared",
+        "N_CRC": "OPH_direct_public_record_capacity",
     }
     return [
         {
@@ -111,10 +111,15 @@ def _clean_reducers() -> dict[str, dict]:
         for quantity in PROMOTED_CMB_SOURCE_QUANTITIES
     }
     reducers["N_CRC"] = {
-        "mode": "consensus_invariant",
-        "consensus_invariant": True,
-        "additive_capacity_schema": False,
-        "disjoint_coverage_receipt": False,
+        "mode": "direct_public_record_capacity",
+        "exact_public_record_capacity_evaluator": True,
+        "complete_terminal_fiber_receipt": True,
+        "whole_fiber_scalarization_receipt": True,
+        "target_free_capacity_producer_receipt": True,
+        "robust_closure_receipt": True,
+        "unique_regulator_stable_slack_zero_receipt": True,
+        "horizon_record_saturation_receipt": True,
+        "physical_N_closure_receipt": True,
     }
     return reducers
 

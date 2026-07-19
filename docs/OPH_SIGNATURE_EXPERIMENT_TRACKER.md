@@ -883,21 +883,19 @@ astrophysical scales.
   GATED, months; highest-leverage particle-side object.
 
 ### CL-05. Capacity reconciliation and the Lambda inversion
-- Finding (2026-07-13 sim survey): the sim's live `DEFAULT_N_CRC` is
-  CIRCULAR, built from the observed de Sitter radius
-  (`oph_constants.py:12-14`, N ~ 3.31e122). The non-circular EW value
-  `N_CRC_EW = 3.5323546226929906e122` derives from P and alpha_U alone
-  (observers:607-620 explicitly avoids G, Lambda, H0) and sits unwired in
-  imported ledger metadata. The two differ by 6.7 percent, which IS the
-  +6.6 percent Lambda gap.
-- Actions: (1) wire N_CRC_EW into the sim constants and label the
-  de Sitter readout branch circular-diagnostic; (2) declare nats and the
-  horizon convention (Pro round 2 section 7); (3) register
-  `Lambda l_P^2 = 3 pi / N_CRC_EW = 2.668e-122` vs the Planck display
-  2.845e-122 as the standing +6.6 percent test; (4) the reconciliation
-  theorem for the 6.7 percent branch gap is a first-class research
-  object: closing it makes Lambda a parameter-free EW-side prediction
-  spanning 122 orders of magnitude. Days for (1)-(3).
+- Corrected 2026-07-19: neither the observed de Sitter value nor the
+  electroweak value is a producer for public-record capacity. Both remain
+  typed downstream comparisons. The canonical finite producer is
+  `M_0(q)=alpha(G_q)` from a target-free `PUBLIC_CHECKPOINT_PACKET`, followed
+  by complete-terminal-fiber scalarization, robust `F_set(D)={D}` closure, a
+  unique regulator-stable zero of `s(D)=log D-log M_0(D)`, and an independent
+  horizon-record saturation receipt.
+- The observed and EW values still differ by about 6.7 percent and their
+  implied `Lambda l_P^2` values remain useful comparison diagnostics. The gap
+  cannot be advertised as a parameter-free Lambda prediction unless both are
+  independently connected to the source-derived physical N by the named
+  receipts. BUILD: source a complete physical packet/fiber and refinement
+  family before rerunning the inversion comparison.
 
 ### CL-06. Clock-free dimensionless ratio scoreboard
 - Ratios of independently derived lanes need no clock: m_t/m_W = 2.1490
@@ -1162,9 +1160,12 @@ reports; Pro bundle recompute JSONs.
    `PLANTED_COEFFICIENT_RECOVERY_ONLY`; the falsification catalog's B1
    description ("cleanest prospective object") overstated it. Two builds
    (VN-08 + forward map) precede any registered UHE test.
-2. **Sim live N_CRC is circular.** `oph_constants.DEFAULT_N_CRC =
-   pi (R_dS/l_P)^2` uses the observed de Sitter radius; the non-circular
-   `N_CRC_EW` sits unwired in `data/oph_cross_repo_current/imported_oph_artifacts/particle_derivation_gap_ledger.json:82`.
+2. **Observed and EW N values are comparison-only.** The historical
+   `oph_constants.DEFAULT_N_CRC = pi (R_dS/l_P)^2` uses the observed de Sitter
+   radius, while `N_CRC_EW` is an electroweak-side construction. Neither may
+   produce physical N. The exact producer is the target-free public-record
+   capacity evaluator plus complete-fiber, robust-closure, unique-slack, and
+   horizon-saturation receipts.
 3. **Flyby count is 12**, all `OD_REPLAY_PENDING` (earlier notes said 9).
 4. **Unification-scale fork.** The papers carry `M_U = 1.20665e16 GeV`
    (string selector) and `M_U(P) = E_P e^{-2 pi} P^{1/6}` (fine

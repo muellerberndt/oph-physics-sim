@@ -3,10 +3,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from oph_fpe.constants.oph_pixel import P_SOURCE_MAP, PixelParameterProfile
 from oph_fpe.cosmology.comparable_data import comparable_data_report, write_comparable_data_package
+from oph_fpe.cosmology.edge_center_clock import (
+    EDGE_CENTER_CLOCK_RECEIPT,
+    EDGE_CENTER_EVIDENCE_RECEIPTS,
+    canonical_edge_clock_hash,
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 
 
-def test_comparable_data_collects_maxent_green_source(tmp_path: Path):
+def test_comparable_data_demotes_legacy_maxent_green_source_claim(tmp_path: Path):
     run = tmp_path / "maxent"
     run.mkdir()
     _write_json(
@@ -43,14 +51,53 @@ def test_comparable_data_collects_maxent_green_source(tmp_path: Path):
     lane = report["measurement_lanes"]["oph_maxent_green_screen_source"]
 
     assert lane["run_count"] == 1
-    assert lane["source_receipt_count"] == 1
+    assert lane["selected_edge_center_branch_count"] == 0
+    assert lane["edge_center_clock_receipt_count"] == 0
+    assert lane["source_receipt_count"] == 0
+    assert lane["legacy_source_receipt_diagnostic_count"] == 1
     assert lane["repair_clock_certificate_count"] == 0
     assert lane["finite_lattice_derived_count"] == 0
     assert lane["physical_cmb_prediction_count"] == 0
-    assert lane["mean_n_s"] == 0.964841143031
+    assert lane["mean_n_s"] is None
+    assert lane["legacy_nonpromoting_diagnostics"]["mean_n_s"] == 0.964841143031
+    assert lane["legacy_nonpromoting_diagnostics"]["promoting"] is False
 
 
-def test_comparable_data_collects_repair_clock_kappa_audit(tmp_path: Path):
+def test_comparable_data_keeps_maxent_kappa_override_nonpromoting(tmp_path: Path):
+    run = tmp_path / "maxent-override"
+    run.mkdir()
+    _write_json(
+        run / "maxent_green_spectrum_report.json",
+        {
+            "mode": "oph_maxent_green_screen_source_v0",
+            "fractional_repair_tilt": {
+                "selected_branch": "edge_center_orientation_half",
+                "selected_theorem_target": False,
+                "kappa_rep_source": "diagnostic_override",
+                "kappa_rep": 9.0,
+                "eta_R": 0.12,
+                "n_s": 0.88,
+            },
+            "edge_center_clock_evidence": validate_edge_center_clock_evidence(),
+            EDGE_CENTER_CLOCK_RECEIPT: False,
+            "MAXENT_GREEN_SOURCE_RECEIPT": False,
+            "physical_cmb_prediction": False,
+        },
+    )
+
+    lane = comparable_data_report([run])["measurement_lanes"][
+        "oph_maxent_green_screen_source"
+    ]
+
+    assert lane["selected_edge_center_branch_count"] == 0
+    assert lane["edge_center_clock_receipt_count"] == 0
+    assert lane["mean_eta_R"] is None
+    assert lane["mean_n_s"] is None
+    assert lane["legacy_nonpromoting_diagnostics"]["mean_eta_R"] == 0.12
+    assert lane["legacy_nonpromoting_diagnostics"]["mean_n_s"] == 0.88
+
+
+def test_comparable_data_keeps_legacy_e_repair_clock_nonpromoting(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
     _write_json(
@@ -88,12 +135,16 @@ def test_comparable_data_collects_repair_clock_kappa_audit(tmp_path: Path):
     assert lane["finite_repair_clock_certificate_count"] == 0
     assert lane["eta_R_finite_lattice_derived_count"] == 0
     assert lane["mean_estimator_count"] == 6.0
-    assert lane["mean_median_kappa_rep"] == 0.42
-    assert lane["target_kappa_rep"] == 2.718281828459045
+    assert lane["selected_edge_center_branch_count"] == 0
+    assert lane["mean_median_kappa_rep"] is None
+    assert lane["target_kappa_rep"] is None
+    assert lane["legacy_nonpromoting_diagnostics"]["mean_median_kappa_rep"] == 0.42
+    assert lane["legacy_nonpromoting_diagnostics"]["target_kappa_rep"] == 2.718281828459045
+    assert lane["legacy_nonpromoting_diagnostics"]["promoting"] is False
     assert lane["physical_cmb_prediction"] is False
 
 
-def test_comparable_data_collects_scalar_repair_semigroup_lane(tmp_path: Path):
+def test_comparable_data_keeps_legacy_scalar_semigroup_nonpromoting(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
     _write_json(
@@ -123,7 +174,11 @@ def test_comparable_data_collects_scalar_repair_semigroup_lane(tmp_path: Path):
     assert lane["run_count"] == 1
     assert lane["finite_lattice_derived_count"] == 0
     assert lane["repair_clock_certificate_count"] == 0
-    assert lane["mean_kappa_rep"] == 31.0
+    assert lane["selected_edge_center_branch_count"] == 0
+    assert lane["mean_kappa_rep"] is None
+    assert lane["legacy_nonpromoting_diagnostics"]["mean_kappa_rep"] == 31.0
+    assert lane["legacy_nonpromoting_diagnostics"]["mean_eta_R"] == 0.4
+    assert lane["legacy_nonpromoting_diagnostics"]["promoting"] is False
     assert lane["source_values"] == ["finite_state_transition_matrix"]
 
 
@@ -1046,7 +1101,7 @@ def test_comparable_data_collects_oph_inflation_cmb_camb_transfer(tmp_path: Path
                 "CAMB_OPH_IR_chi2_ell2_29": 16.65364090607876,
             },
             "measurement_comparable_cmb_curve": True,
-            "physical_cmb_prediction": False,
+            "physical_cmb_prediction": True,
             "screen_camb_transfer_receipt": True,
         },
     )
@@ -1058,6 +1113,7 @@ def test_comparable_data_collects_oph_inflation_cmb_camb_transfer(tmp_path: Path
     assert lane["measurement_comparable_curve_count"] == 1
     assert lane["transfer_receipt_count"] == 1
     assert lane["physical_cmb_prediction_count"] == 0
+    assert lane["unpromoted_physical_claim_diagnostic_count"] == 1
     assert lane["mean_n_s"] == 0.9660214956374176
     assert lane["mean_p48_ir_chi2_per_bin"] == 1.36
     assert lane["mean_lowell_oph_ir_chi2"] == 16.65364090607876
@@ -1066,16 +1122,20 @@ def test_comparable_data_collects_oph_inflation_cmb_camb_transfer(tmp_path: Path
 def test_comparable_data_collects_oph_exact_cmb_camb_transfer(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
+    target = edge_center_clock_target()
+    pending_evidence = validate_edge_center_clock_evidence()
     _write_json(
         run / "oph_exact_cmb_camb_report.json",
         {
             "mode": "oph_exact_cmb_camb_transfer_v1",
             "oph_exact_input": {
-                "n_s": 0.964841143031,
-                "eta_R": 0.035158856969,
+                "n_s": target.n_s,
+                "eta_R": target.theta,
                 "q_IR": 0.25,
                 "ell_IR": 32.0,
                 "N_frz_proxy": 1089,
+                "edge_center_clock_evidence": pending_evidence,
+                EDGE_CENTER_CLOCK_RECEIPT: False,
             },
             "comparison": {
                 "camb_lcdm_powerlaw": {
@@ -1099,7 +1159,7 @@ def test_comparable_data_collects_oph_exact_cmb_camb_transfer(tmp_path: Path):
                 "official_likelihood_execution_ready": False,
             },
             "measurement_comparable_cmb_curve": True,
-            "physical_cmb_prediction": False,
+            "physical_cmb_prediction": True,
             "screen_camb_transfer_receipt": True,
         },
     )
@@ -1111,7 +1171,11 @@ def test_comparable_data_collects_oph_exact_cmb_camb_transfer(tmp_path: Path):
     assert lane["measurement_comparable_curve_count"] == 1
     assert lane["transfer_receipt_count"] == 1
     assert lane["official_likelihood_ready_count"] == 0
-    assert lane["mean_n_s"] == 0.964841143031
+    assert lane["selected_edge_center_branch_count"] == 1
+    assert lane["edge_center_clock_receipt_count"] == 0
+    assert lane["physical_cmb_prediction_count"] == 0
+    assert lane["mean_n_s"] == target.n_s
+    assert lane["mean_eta_R"] == target.theta
     assert lane["mean_q_IR"] == 0.25
     assert lane["mean_ell_IR"] == 32.0
     assert lane["mean_ir_chi2_per_bin"] == 1.31
@@ -1120,6 +1184,7 @@ def test_comparable_data_collects_oph_exact_cmb_camb_transfer(tmp_path: Path):
 def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
+    target = edge_center_clock_target()
     _write_json(
         run / "oph_cmb_selector_elimination_report.json",
         {
@@ -1130,9 +1195,10 @@ def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
                 "eta_R_reduced_to_repair_clock_certificate": True,
             },
             "scalar_tilt": {
-                "n_s": 0.964841143031,
-                "eta_R": 0.035158856969,
-                "canonical_kappa_rep_status": "certificate_pending",
+                "selected_branch": "edge_center_orientation_half",
+                "n_s": target.n_s,
+                "eta_R": target.theta,
+                "canonical_kappa_rep_status": "selected_theorem_target_evidence_pending",
             },
             "cmb_ir_kernel": {
                 "q_IR": 0.25,
@@ -1144,8 +1210,8 @@ def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
             },
             "THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT": True,
             "SOURCE_PACKET_AUDIT_RECEIPT": True,
-            "finite_lattice_derived": False,
-            "physical_cmb_prediction": False,
+            "finite_lattice_derived": True,
+            "physical_cmb_prediction": True,
         },
     )
 
@@ -1158,7 +1224,12 @@ def test_comparable_data_collects_cmb_selector_elimination(tmp_path: Path):
     assert lane["q_IR_selector_removed_count"] == 1
     assert lane["ell_IR_selector_removed_count"] == 1
     assert lane["eta_R_repair_clock_reduction_count"] == 1
+    assert lane["selected_edge_center_branch_count"] == 1
+    assert lane["edge_center_clock_receipt_count"] == 0
     assert lane["finite_lattice_derived_count"] == 0
+    assert lane["physical_cmb_prediction_count"] == 0
+    assert lane["mean_n_s"] == target.n_s
+    assert lane["mean_eta_R"] == target.theta
     assert lane["mean_q_IR"] == 0.25
     assert lane["mean_ell_IR"] == 32.0
 
@@ -1175,7 +1246,7 @@ def test_comparable_data_rejects_legacy_finite_clock_claim_but_keeps_curve(tmp_p
             "finite_lattice_clock_derived": True,
             "repair_clock_certificate": False,
             "selector_ir_theory_side": True,
-            "physical_cmb_prediction": False,
+            "physical_cmb_prediction": True,
             "finite_repair_clock_input": {
                 "n_s": 0.9679812500795765,
                 "eta_R": 0.03201874992042351,
@@ -1205,10 +1276,101 @@ def test_comparable_data_rejects_legacy_finite_clock_claim_but_keeps_curve(tmp_p
     assert lane["finite_lattice_clock_derived_count"] == 0
     assert lane["repair_clock_certificate_count"] == 0
     assert lane["physical_cmb_prediction_count"] == 0
-    assert lane["mean_n_s"] == 0.9679812500795765
-    assert lane["mean_kappa_rep"] == 2.4755067024747386
-    assert lane["mean_scalar_shape_correlation"] == 0.998
-    assert lane["mean_ir_chi2_per_bin"] == 1.2
+    assert lane["selected_edge_center_branch_count"] == 0
+    assert lane["edge_center_clock_receipt_count"] == 0
+    assert lane["mean_n_s"] is None
+    assert lane["mean_kappa_rep"] is None
+    assert lane["mean_scalar_shape_correlation"] is None
+    legacy = lane["legacy_nonpromoting_diagnostics"]
+    assert legacy["mean_n_s"] == 0.9679812500795765
+    assert legacy["mean_kappa_rep"] == 2.4755067024747386
+    assert legacy["mean_scalar_shape_correlation"] == 0.998
+    assert legacy["mean_ir_chi2_per_bin"] == 1.2
+    assert legacy["promoting"] is False
+
+
+def test_comparable_data_tracks_selected_finite_clock_without_promoting_open_evidence(
+    tmp_path: Path,
+):
+    run = tmp_path / "run"
+    run.mkdir()
+    target = edge_center_clock_target()
+    pending_evidence = validate_edge_center_clock_evidence()
+    _write_json(
+        run / "finite_repair_clock_cmb_camb_report.json",
+        {
+            "mode": "finite_repair_clock_cmb_camb_transfer_v0",
+            "measurement_comparable_cmb_curve": True,
+            "screen_camb_transfer_receipt": True,
+            "finite_lattice_clock_derived": True,
+            "repair_clock_certificate": True,
+            "physical_cmb_prediction": True,
+            "finite_repair_clock_input": {
+                "source_mode": "oph_finite_repair_transition_clock_v1",
+                "n_s": target.n_s,
+                "eta_R": target.theta,
+                "kappa_rep": target.kappa_rep,
+                "edge_center_clock_evidence": pending_evidence,
+                EDGE_CENTER_CLOCK_RECEIPT: True,
+            },
+            "selector_ir_input": {"q_IR": 0.25, "ell_IR": 32.0},
+            "comparison": {
+                "camb_lcdm_powerlaw": {"shape_correlation": 0.999},
+                "finite_repair_clock_scalar_tilt": {"shape_correlation": 0.998},
+                "finite_repair_clock_plus_selector_ir": {
+                    "shape_correlation": 0.997,
+                    "amplitude_fit_chi2_per_bin": 1.2,
+                },
+            },
+        },
+    )
+
+    lane = comparable_data_report([run])["measurement_lanes"][
+        "finite_repair_clock_cmb_camb_transfer"
+    ]
+
+    assert lane["selected_edge_center_branch_count"] == 1
+    assert lane["edge_center_clock_receipt_count"] == 0
+    assert lane["finite_lattice_clock_derived_count"] == 0
+    assert lane["repair_clock_certificate_count"] == 0
+    assert lane["physical_cmb_prediction_count"] == 0
+    assert lane["mean_n_s"] == target.n_s
+    assert lane["mean_eta_R"] == target.theta
+    assert lane["mean_kappa_rep"] == target.kappa_rep
+    assert lane["legacy_nonpromoting_diagnostics"]["artifact_count"] == 0
+
+
+def test_comparable_data_accepts_complete_hash_bound_edge_clock_receipt(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    target = edge_center_clock_target(P_SOURCE_MAP)
+    evidence = validate_edge_center_clock_evidence(
+        _complete_edge_clock_packet(),
+        P=P_SOURCE_MAP,
+    )
+    _write_json(
+        run / "finite_repair_clock_cmb_camb_report.json",
+        {
+            "mode": "finite_repair_clock_cmb_camb_transfer_v0",
+            "measurement_comparable_cmb_curve": True,
+            "physical_cmb_prediction": False,
+            "finite_repair_clock_input": {
+                "n_s": target.n_s,
+                "eta_R": target.theta,
+                "kappa_rep": target.kappa_rep,
+                "edge_center_clock_evidence": evidence,
+                EDGE_CENTER_CLOCK_RECEIPT: True,
+            },
+        },
+    )
+
+    lane = comparable_data_report([run])["measurement_lanes"][
+        "finite_repair_clock_cmb_camb_transfer"
+    ]
+
+    assert lane["selected_edge_center_branch_count"] == 1
+    assert lane["edge_center_clock_receipt_count"] == 1
+    assert lane["mean_n_s"] == target.n_s
 
 
 def test_comparable_data_collects_inflation_cmb_v05_hard_gates(tmp_path: Path):
@@ -1593,6 +1755,36 @@ def test_comparable_data_collects_control_quotient_spatial_3d_candidate(tmp_path
     assert lane["control_quotient_coordinate_mean_best_3d_mle_dim"] == 3.02
     assert lane["control_quotient_coordinate_mean_best_3d_s2_leakage_corr"] == 0.023
     assert lane["control_quotient_coordinate_best_3d_s2_leakage_pass_count"] == 1
+
+
+def _complete_edge_clock_packet() -> dict[str, object]:
+    target = edge_center_clock_target(P_SOURCE_MAP)
+    binding = {
+        "clock_binding_source": "finite_refinement_clock_bundle",
+        "full_collar_derivative": target.full_collar_derivative,
+        "orientation_halves": 2,
+        "orientation_half_identity_defect": 0.0,
+        "semigroup_defect": 0.0,
+        "refinement_defect": 0.0,
+    }
+    source_dag = {
+        "nodes": [
+            {
+                "id": "full-collar-source",
+                "kind": "source_theorem",
+                "sha256": "sha256:" + "c" * 64,
+            }
+        ],
+        "edges": [],
+    }
+    return {
+        **{name: True for name in EDGE_CENTER_EVIDENCE_RECEIPTS},
+        "pixel_profile": PixelParameterProfile.SOURCE_MAP.value,
+        "clock_binding_payload": binding,
+        "clock_binding_sha256": canonical_edge_clock_hash(binding),
+        "source_dag": source_dag,
+        "source_dag_sha256": canonical_edge_clock_hash(source_dag),
+    }
 
 
 def _write_json(path: Path, data: dict) -> None:

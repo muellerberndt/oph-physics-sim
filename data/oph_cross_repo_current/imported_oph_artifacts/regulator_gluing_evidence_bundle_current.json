@@ -1,0 +1,1845 @@
+{
+  "bundle": {
+    "schema": "oph.regulator_gluing.evidence_bundle/1",
+    "issue": "#529 (paper audit 003)",
+    "arithmetic": "gaussian_rational_exact",
+    "gate": "Every overlap map is displayed; each is verified as an invertible *-isomorphism on its declared chart-change domain; every triple-overlap composition law is verified, strictly or as a central 2-cocycle with the Cech identity on quadruples; a bare finite interface projection is rejected with structured reasons.",
+    "witnesses": [
+      {
+        "name": "strict_cocycle_witness",
+        "model": "quantum_regulator_datum",
+        "description": "Patches A, B, C carry M_2(C); patch D carries M_4(C). Rechartings A<-B, B<-C, A<-C are Ad_X, Ad_Z, Ad_XZ with the strict law U_AB U_BC = U_AC. Recharting A<-D is the declared *-isomorphism from the subalgebra M_2 (x) 1 of M_4(C) onto M_2(C).",
+        "patches": [
+          {
+            "id": "A",
+            "hilbert_dim": 2
+          },
+          {
+            "id": "B",
+            "hilbert_dim": 2
+          },
+          {
+            "id": "C",
+            "hilbert_dim": 2
+          },
+          {
+            "id": "D",
+            "hilbert_dim": 4
+          }
+        ],
+        "overlaps": [
+          {
+            "edge": [
+              "A",
+              "B"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "A",
+                "B"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "B",
+              "C"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "B",
+                "C"
+              ],
+              "matrix": [
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "A",
+              "C"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "A",
+                "C"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "A",
+              "D"
+            ],
+            "chart_change_domain": {
+              "type": "generated_subalgebra",
+              "generators": [
+                [
+                  [
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ]
+                  ]
+                ]
+              ]
+            },
+            "recharting": {
+              "type": "algebra_isomorphism",
+              "direction": [
+                "A",
+                "D"
+              ],
+              "generator_images": [
+                [
+                  [
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        ],
+        "triples": [
+          {
+            "patches": [
+              "A",
+              "B",
+              "C"
+            ],
+            "law": "strict"
+          }
+        ],
+        "quadruples": []
+      },
+      {
+        "name": "central_defect_witness",
+        "model": "quantum_regulator_datum",
+        "description": "Patches P, Q, R, S carry M_2(C). The pair rechartings compose up to central unit scalars z_PQR = i, z_QRS = -i, z_PQS = -i, z_PRS = i; the alternating product over the quadruple equals 1, which is the central-extension 2-cocycle identity.",
+        "patches": [
+          {
+            "id": "P",
+            "hilbert_dim": 2
+          },
+          {
+            "id": "Q",
+            "hilbert_dim": 2
+          },
+          {
+            "id": "R",
+            "hilbert_dim": 2
+          },
+          {
+            "id": "S",
+            "hilbert_dim": 2
+          }
+        ],
+        "overlaps": [
+          {
+            "edge": [
+              "P",
+              "Q"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "P",
+                "Q"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "Q",
+              "R"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "Q",
+                "R"
+              ],
+              "matrix": [
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "P",
+              "R"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "P",
+                "R"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "1"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "-1"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "R",
+              "S"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "R",
+                "S"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "Q",
+              "S"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "Q",
+                "S"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "1"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "-1"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          },
+          {
+            "edge": [
+              "P",
+              "S"
+            ],
+            "chart_change_domain": {
+              "type": "full_matrix_algebra",
+              "hilbert_dim": 2
+            },
+            "recharting": {
+              "type": "unitary",
+              "direction": [
+                "P",
+                "S"
+              ],
+              "matrix": [
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ]
+              ]
+            }
+          }
+        ],
+        "triples": [
+          {
+            "patches": [
+              "P",
+              "Q",
+              "R"
+            ],
+            "law": "central",
+            "expected_defect": [
+              "0",
+              "1"
+            ]
+          },
+          {
+            "patches": [
+              "Q",
+              "R",
+              "S"
+            ],
+            "law": "central",
+            "expected_defect": [
+              "0",
+              "-1"
+            ]
+          },
+          {
+            "patches": [
+              "P",
+              "Q",
+              "S"
+            ],
+            "law": "central",
+            "expected_defect": [
+              "0",
+              "-1"
+            ]
+          },
+          {
+            "patches": [
+              "P",
+              "R",
+              "S"
+            ],
+            "law": "central",
+            "expected_defect": [
+              "0",
+              "1"
+            ]
+          }
+        ],
+        "quadruples": [
+          [
+            "P",
+            "Q",
+            "R",
+            "S"
+          ]
+        ]
+      }
+    ],
+    "countermodel": {
+      "name": "bare_interface_projection_countermodel",
+      "model": "classical_patch_net",
+      "description": "S_i = {0,1,2,3} and S_j = {0,1} both project onto the one-bit interface I_e = {0,1}; pi_i is many-to-one. The patch net is overlap consistent and supplies no recharting map.",
+      "patches": [
+        {
+          "id": "i",
+          "states": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "id": "j",
+          "states": [
+            0,
+            1
+          ]
+        }
+      ],
+      "interfaces": [
+        {
+          "edge": [
+            "i",
+            "j"
+          ],
+          "alphabet": [
+            0,
+            1
+          ],
+          "projections": {
+            "i": [
+              0,
+              1,
+              0,
+              1
+            ],
+            "j": [
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "expected": "reject"
+    }
+  },
+  "report": {
+    "schema": "oph.regulator_gluing.evidence_bundle/1",
+    "issue": "#529 (paper audit 003)",
+    "accepted": true,
+    "witness_reports": [
+      {
+        "name": "strict_cocycle_witness",
+        "passed": true,
+        "overlaps": [
+          {
+            "edge": [
+              "A",
+              "B"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "A",
+                "B"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "B",
+              "C"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "B",
+                "C"
+              ],
+              "matrix": [
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "A",
+              "C"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "A",
+                "C"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "A",
+              "D"
+            ],
+            "checks": [
+              {
+                "name": "domain_is_star_subalgebra",
+                "passed": true
+              },
+              {
+                "name": "image_is_star_subalgebra",
+                "passed": true
+              },
+              {
+                "name": "linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "preserves_product",
+                "passed": true
+              },
+              {
+                "name": "preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "algebra_isomorphism",
+              "direction": [
+                "A",
+                "D"
+              ],
+              "generator_images": [
+                [
+                  [
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "1",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "0",
+                      "0"
+                    ]
+                  ],
+                  [
+                    [
+                      "0",
+                      "0"
+                    ],
+                    [
+                      "1",
+                      "0"
+                    ]
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          }
+        ],
+        "triples": [
+          {
+            "patches": [
+              "A",
+              "B",
+              "C"
+            ],
+            "law": "strict",
+            "reasons": [],
+            "checks": [
+              {
+                "name": "strict_cocycle_UijUjk=Uik",
+                "passed": true
+              }
+            ],
+            "passed": true
+          }
+        ],
+        "quadruples": [],
+        "reasons": []
+      },
+      {
+        "name": "central_defect_witness",
+        "passed": true,
+        "overlaps": [
+          {
+            "edge": [
+              "P",
+              "Q"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "P",
+                "Q"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "Q",
+              "R"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "Q",
+                "R"
+              ],
+              "matrix": [
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "P",
+              "R"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "P",
+                "R"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "1"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "-1"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "R",
+              "S"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "R",
+                "S"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "1",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "Q",
+              "S"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "Q",
+                "S"
+              ],
+              "matrix": [
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "1"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "-1"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          },
+          {
+            "edge": [
+              "P",
+              "S"
+            ],
+            "checks": [
+              {
+                "name": "unitarity_U*U=I",
+                "passed": true
+              },
+              {
+                "name": "unitarity_UU*=I",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_linear_bijection_on_domain",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_product",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_adjoint",
+                "passed": true
+              },
+              {
+                "name": "Ad_U_preserves_unit",
+                "passed": true
+              }
+            ],
+            "reasons": [],
+            "displayed_map": {
+              "type": "unitary",
+              "direction": [
+                "P",
+                "S"
+              ],
+              "matrix": [
+                [
+                  [
+                    "1",
+                    "0"
+                  ],
+                  [
+                    "0",
+                    "0"
+                  ]
+                ],
+                [
+                  [
+                    "0",
+                    "0"
+                  ],
+                  [
+                    "-1",
+                    "0"
+                  ]
+                ]
+              ]
+            },
+            "passed": true
+          }
+        ],
+        "triples": [
+          {
+            "patches": [
+              "P",
+              "Q",
+              "R"
+            ],
+            "law": "central",
+            "reasons": [],
+            "checks": [
+              {
+                "name": "defect_is_central_scalar",
+                "passed": true
+              },
+              {
+                "name": "defect_has_unit_modulus",
+                "passed": true
+              },
+              {
+                "name": "defect_matches_declared_cocycle",
+                "passed": true
+              }
+            ],
+            "measured_defect": [
+              "0",
+              "1"
+            ],
+            "passed": true
+          },
+          {
+            "patches": [
+              "Q",
+              "R",
+              "S"
+            ],
+            "law": "central",
+            "reasons": [],
+            "checks": [
+              {
+                "name": "defect_is_central_scalar",
+                "passed": true
+              },
+              {
+                "name": "defect_has_unit_modulus",
+                "passed": true
+              },
+              {
+                "name": "defect_matches_declared_cocycle",
+                "passed": true
+              }
+            ],
+            "measured_defect": [
+              "0",
+              "-1"
+            ],
+            "passed": true
+          },
+          {
+            "patches": [
+              "P",
+              "Q",
+              "S"
+            ],
+            "law": "central",
+            "reasons": [],
+            "checks": [
+              {
+                "name": "defect_is_central_scalar",
+                "passed": true
+              },
+              {
+                "name": "defect_has_unit_modulus",
+                "passed": true
+              },
+              {
+                "name": "defect_matches_declared_cocycle",
+                "passed": true
+              }
+            ],
+            "measured_defect": [
+              "0",
+              "-1"
+            ],
+            "passed": true
+          },
+          {
+            "patches": [
+              "P",
+              "R",
+              "S"
+            ],
+            "law": "central",
+            "reasons": [],
+            "checks": [
+              {
+                "name": "defect_is_central_scalar",
+                "passed": true
+              },
+              {
+                "name": "defect_has_unit_modulus",
+                "passed": true
+              },
+              {
+                "name": "defect_matches_declared_cocycle",
+                "passed": true
+              }
+            ],
+            "measured_defect": [
+              "0",
+              "1"
+            ],
+            "passed": true
+          }
+        ],
+        "quadruples": [
+          {
+            "patches": [
+              "P",
+              "Q",
+              "R",
+              "S"
+            ],
+            "checks": [
+              {
+                "name": "cech_2cocycle_identity",
+                "passed": true
+              }
+            ],
+            "measured_product": [
+              "1",
+              "0"
+            ],
+            "passed": true,
+            "reasons": []
+          }
+        ],
+        "reasons": []
+      }
+    ],
+    "countermodel_report": {
+      "name": "bare_interface_projection_countermodel",
+      "passed": false,
+      "reasons": [
+        {
+          "code": "NO_RECHARTING_MAP",
+          "detail": "overlap ['i', 'j']: interface projections pi_{i,e}, pi_{j,e} supply no algebra map; the quantum regulator gluing datum is a declared input and is absent here",
+          "edge": [
+            "i",
+            "j"
+          ]
+        },
+        {
+          "code": "STATE_SPACE_BIJECTION_IMPOSSIBLE",
+          "detail": "overlap ['i', 'j']: |S_i| = 4 versus |S_j| = 2; no invertible recharting exists",
+          "edge": [
+            "i",
+            "j"
+          ]
+        },
+        {
+          "code": "ALGEBRA_DIMENSION_MISMATCH",
+          "detail": "overlap ['i', 'j']: dim M_4(C) = 16 versus dim M_2(C) = 4; no *-isomorphism M_4(C) -> M_2(C) exists",
+          "edge": [
+            "i",
+            "j"
+          ]
+        },
+        {
+          "code": "MANY_TO_ONE_PROJECTION",
+          "detail": "overlap ['i', 'j']: pi_{i,e} = [0, 1, 0, 1] is many-to-one, so no chart-change inverse exists on the interface fibers",
+          "edge": [
+            "i",
+            "j"
+          ]
+        }
+      ]
+    },
+    "negative_gate_holds": true
+  }
+}

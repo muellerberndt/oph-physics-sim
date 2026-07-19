@@ -114,7 +114,16 @@ def test_physical_cmb_input_report_can_pass_only_with_finite_sources(tmp_path: P
     )
     _write_json(
         run / "screen_capacity_closure_report.json",
-        {"SCREEN_CAPACITY_CLOSURE_RECEIPT": True},
+        {
+            "PHYSICAL_N_CLOSURE_RECEIPT": True,
+            "complete_terminal_fiber_receipt": True,
+            "whole_fiber_scalarization_receipt": True,
+            "target_free_capacity_producer_receipt": True,
+            "robust_closure_receipt": True,
+            "unique_regulator_stable_slack_zero_receipt": True,
+            "horizon_record_saturation_receipt": True,
+            "readiness_gates": {"finite_correctable_public_record_evaluator_implemented": True},
+        },
     )
     _write_json(run / "strict_neutral_bulk_report.json", {"strict_neutral_bulk": True, "freezeout_cycle": 24})
     _write_json(
@@ -446,7 +455,7 @@ def test_physical_cmb_input_report_labels_observed_screen_capacity(tmp_path: Pat
     report = write_physical_cmb_input_report([run], out)
     contract = json.loads((out / "physical_cmb_input_contract.json").read_text())
 
-    assert contract["N_source"] == "OPH_screen_capacity_observed_branch_readout"
+    assert contract["N_source"] == "observed_horizon_comparison"
     assert report["physical_cmb_prediction"] is False
 
 
@@ -580,7 +589,7 @@ def _write_clean_source_provenance(run: Path) -> None:
         "ell_IR": "scale_compressed_24_round_finite_ladder",
         "B_A_k_a": "parent_collar_finite_difference",
         "rho_A_a": "finite_lattice",
-        "N_CRC": "OPH_screen_capacity_branch_predeclared",
+        "N_CRC": "OPH_direct_public_record_capacity",
     }
     nodes = [
         {
@@ -609,10 +618,15 @@ def _write_clean_source_provenance(run: Path) -> None:
         for quantity in sources
     }
     reducers["N_CRC"] = {
-        "mode": "consensus_invariant",
-        "consensus_invariant": True,
-        "additive_capacity_schema": False,
-        "disjoint_coverage_receipt": False,
+        "mode": "direct_public_record_capacity",
+        "exact_public_record_capacity_evaluator": True,
+        "complete_terminal_fiber_receipt": True,
+        "whole_fiber_scalarization_receipt": True,
+        "target_free_capacity_producer_receipt": True,
+        "robust_closure_receipt": True,
+        "unique_regulator_stable_slack_zero_receipt": True,
+        "horizon_record_saturation_receipt": True,
+        "physical_N_closure_receipt": True,
     }
     _write_json(
         run / "cmb_source_provenance_report.json",

@@ -16,9 +16,10 @@ of the consistency stack (`reverse-engineering-reality/docs/CONSISTENCY_STACK.md
 a companion-repo file). The simulator's open items — strict neutral bulk,
 Einstein branch entry, physical particles, physical CMB — sit on C5 and
 downstream rows. The simulator emits no ledger-row closures; closure verdicts
-live only in `reverse-engineering-reality/docs/CLOSURE_LEDGER.md`. The companion
-repo's generator program executed its first full round on 2026-07-14; the
-simulator's open items are unchanged.
+live only in `reverse-engineering-reality/docs/CLOSURE_LEDGER.md`. The simulator
+syncs those theorem surfaces through hash-pinned, nonpromoting imports and
+native recomputation receipts. The current drift audit and exact claim boundary
+matrix are in `docs/THEORY_SYNC_AUDIT_2026-07-19.md`.
 
 The package name is `OPH-FPE`: Observer-Patch Fundamental Physics Emergence.
 
@@ -29,7 +30,7 @@ see `docs/RUN_OUTPUTS_AND_VISUALIZATION.md` and
 
 The working surface includes finite consensus receipts, observer record algebra, support-visible BW/KMS and H3 chart diagnostics, theorem-assisted H3 object population, strict neutral-bulk frontiers, screen-level CMB diagnostics, finite cosmology certificate gates, defect and proto-particle assays, scale/capacity audits, viewer exports, and handoff bundles.
 
-## Status (2026-07-14)
+## Status (2026-07-19)
 
 Local execution reports cover 4k, 16k, 64k, 128k (32,000 observers), 256k,
 and 1,048,576 patches with 64,000 materialized observers. The populated
@@ -60,6 +61,19 @@ runs.
 - Strict neutral bulk and the Einstein branch-entry gates E1-E6 stay
   false with executable blockers; the 4k/16k/64k/256k refinement ladder
   and the bw_2pi blocker resolution feed the next audit pass.
+- The exact A5 lane recomputes the faithful 12-point action, the icosahedral
+  adjacency spectrum, the `1+3+3'+5` module decomposition, the invariant-point-
+  partition no-go, and the conditional 15-state exterior-generation witness.
+  These are structural certificates; the port-current, refinement, descent,
+  family, continuum, and QFT gates keep physical Standard-Model promotion false.
+- The canonical capacity lane now computes finite public record capacity from
+  global sections, joint kernels, exact maximum independent sets, complete
+  terminal fibres, carrier projections, and robust zero-slack closure. Observed
+  horizon values and regulator sizes are comparison inputs, never producers of
+  `N = log M0(U_N)`.
+- The SCR330 radial lane emits source-only dilation/tomography receipts with an
+  explicit null-space and forward-residual audit. It maintains a hard E4/E5
+  firewall: radial source reconstruction cannot promote a TT/TE/EE prediction.
 
 The living scoreboard, including public-measurement comparisons, is
 `docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md` (at-a-glance tables in
@@ -132,10 +146,11 @@ Eight families of receipt-gated tests. Artifact-by-artifact detail:
 - **Parity and chirality diagnostics.** Cross-gradient pseudo-scalar
   with mirror/shuffle controls (Stokes-scoped) and the defect-worldline
   signed-turning statistic with sign-flip nulls.
-- **Gauge structure and proof packets.** Borel-Weil one-Higgs carrier,
-  Yang-Mills gap certificates, MaxEnt I-projection and central-interface
-  MSA receipts, and the fail-closed proof-packet audits
-  (`docs/PROOF_PACKET_AUDITS.md`).
+- **Gauge structure and proof packets.** Exact A5/icosahedral action and
+  spectrum certificates, the conditional exterior-generation SM witness,
+  Borel-Weil one-Higgs carrier, Yang-Mills gap certificates, MaxEnt
+  I-projection and central-interface MSA receipts, and the fail-closed
+  proof-packet audits (`docs/PROOF_PACKET_AUDITS.md`).
 - **Messengers and transients.** UHE coefficient emission with
   no-UHE-data-use scans and common-source locks; compact-transient
   receipt ladders for FRBs and old-host sources.
@@ -157,6 +172,17 @@ python3 -m oph_fpe.cli run --config configs/e0_z2_patchnet.yml --out-dir runs
 python3 -m oph_fpe.cli run-array --config configs/e1_s3_modular_screen_4k.yml --out-dir runs
 python3 -m oph_fpe.cli run-bw-array --config configs/e1_s3_state_modular_screen_4k.yml --out-dir runs
 python3 -m oph_fpe.cli run-bw-array --config configs/e2_kms_freezeout_cl_screen_64k.yml --out-dir runs
+
+python3 -m oph_fpe.cli public-record-capacity --out runs/public_record_capacity
+python3 -m oph_fpe.cli a5-sm-structural-certificate --out runs/a5_sm_certificate.json
+python3 -m oph_fpe.cli scr330-radial-receipt \
+  --source-dag path/to/source_dag.json \
+  --receipt SCR330_RADIAL_NULL_REPORT --claim-tier E3 \
+  --out runs/scr330_radial_receipt.json
+python3 -m oph_fpe.cli edge-center-clock-certificate \
+  --evidence path/to/clock_evidence.json --out runs/edge_center_clock.json
+python3 -m oph_fpe.cli collar-clause-certificate \
+  --packet path/to/collar_packet.json --out runs/collar_clause.json
 
 python3 -m oph_fpe.cli run-oph-universe \
   --config configs/e4_shared_observer_bulk_256k_observers4096_theorem.yml \

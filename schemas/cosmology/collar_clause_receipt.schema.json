@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph-collar-clause-v1.schema.json",
+  "title": "OPH bounded collar-clause source receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "algorithm",
+    "receipt",
+    "passed",
+    "source_eligible",
+    "packet_id",
+    "packet_hash",
+    "source_dag_hash",
+    "computed_source_dag_hash",
+    "source_dag_hash_matches",
+    "source_dag_clean",
+    "collar_layer_hash",
+    "computed_collar_layer_hash",
+    "collar_layer_hash_matches",
+    "flux_basis_hash",
+    "retained_family_hash",
+    "computed_retained_family_hash",
+    "retained_family_hash_matches",
+    "ambient_dimension",
+    "left_basis_rank",
+    "right_basis_rank",
+    "flux_basis_rank",
+    "retained_density_count",
+    "retained_family_complete",
+    "family_laws_source_derived",
+    "nonvacuous_cross_cut",
+    "all_support_classifications_match",
+    "all_cross_cut_factor_through_flux",
+    "tolerance",
+    "density_results",
+    "state_side_diagnostics",
+    "diagnostics_used_for_promotion",
+    "mandatory_negative_controls",
+    "mandatory_negative_controls_passed",
+    "blockers",
+    "claim_boundary"
+  ],
+  "properties": {
+    "schema_version": {"const": "oph-collar-clause-v1"},
+    "algorithm": {"const": "bounded-retained-family-flux-factorization-v1"},
+    "receipt": {"const": "COLLAR_CLAUSE_SOURCE_RECEIPT"},
+    "passed": {"type": "boolean"},
+    "source_eligible": {"type": "boolean"},
+    "packet_id": {"type": "string", "minLength": 1},
+    "packet_hash": {"$ref": "#/$defs/hash"},
+    "source_dag_hash": {"$ref": "#/$defs/hash"},
+    "computed_source_dag_hash": {"$ref": "#/$defs/hash"},
+    "source_dag_hash_matches": {"type": "boolean"},
+    "source_dag_clean": {"type": "boolean"},
+    "collar_layer_hash": {"$ref": "#/$defs/hash"},
+    "computed_collar_layer_hash": {"$ref": "#/$defs/hash"},
+    "collar_layer_hash_matches": {"type": "boolean"},
+    "flux_basis_hash": {"$ref": "#/$defs/hash"},
+    "retained_family_hash": {"$ref": "#/$defs/hash"},
+    "computed_retained_family_hash": {"$ref": "#/$defs/hash"},
+    "retained_family_hash_matches": {"type": "boolean"},
+    "ambient_dimension": {"type": "integer", "minimum": 1, "maximum": 256},
+    "left_basis_rank": {"type": "integer", "minimum": 0},
+    "right_basis_rank": {"type": "integer", "minimum": 0},
+    "flux_basis_rank": {"type": "integer", "minimum": 0},
+    "retained_density_count": {"type": "integer", "minimum": 0},
+    "retained_family_complete": {"type": "boolean"},
+    "family_laws_source_derived": {"type": "boolean"},
+    "nonvacuous_cross_cut": {"type": "boolean"},
+    "all_support_classifications_match": {"type": "boolean"},
+    "all_cross_cut_factor_through_flux": {"type": "boolean"},
+    "tolerance": {"type": "number", "exclusiveMinimum": 0},
+    "density_results": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/densityResult"}
+    },
+    "state_side_diagnostics": {"$ref": "#/$defs/diagnostics"},
+    "diagnostics_used_for_promotion": {"const": false},
+    "mandatory_negative_controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["T0_STATE_SIDE", "T1_EFLUX", "T2_MODULAR"],
+      "properties": {
+        "T0_STATE_SIDE": {"$ref": "#/$defs/control"},
+        "T1_EFLUX": {"$ref": "#/$defs/control"},
+        "T2_MODULAR": {"$ref": "#/$defs/control"}
+      }
+    },
+    "mandatory_negative_controls_passed": {"type": "boolean"},
+    "blockers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "claim_boundary": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"passed": {"const": true}}, "required": ["passed"]},
+      "then": {
+        "properties": {
+          "source_eligible": {"const": true},
+          "source_dag_hash_matches": {"const": true},
+          "source_dag_clean": {"const": true},
+          "collar_layer_hash_matches": {"const": true},
+          "retained_family_hash_matches": {"const": true},
+          "retained_family_complete": {"const": true},
+          "family_laws_source_derived": {"const": true},
+          "nonvacuous_cross_cut": {"const": true},
+          "all_support_classifications_match": {"const": true},
+          "all_cross_cut_factor_through_flux": {"const": true},
+          "mandatory_negative_controls_passed": {"const": true},
+          "blockers": {"maxItems": 0},
+          "density_results": {
+            "minItems": 1,
+            "contains": {
+              "type": "object",
+              "properties": {"cross_cut": {"const": true}},
+              "required": ["cross_cut"]
+            },
+            "minContains": 1,
+            "items": {
+              "allOf": [
+                {"$ref": "#/$defs/densityResult"},
+                {
+                  "if": {
+                    "properties": {"cross_cut": {"const": true}},
+                    "required": ["cross_cut"]
+                  },
+                  "then": {
+                    "properties": {
+                      "support_classification_matches": {"const": true},
+                      "numerically_in_flux_span": {"const": true},
+                      "explicit_factorization_present": {"const": true},
+                      "factorization_basis_matches": {"const": true},
+                      "factorization_hash_matches": {"const": true},
+                      "factorization_source_derived": {"const": true},
+                      "factorization_refinement_natural": {"const": true},
+                      "factor_through_flux": {"const": true}
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"source_eligible": {"const": true}}, "required": ["source_eligible"]},
+      "then": {"properties": {"passed": {"const": true}}}
+    }
+  ],
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "nullableNumber": {
+      "type": ["number", "null"]
+    },
+    "densityResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "density_id",
+        "declared_support",
+        "computed_support",
+        "support_classification_matches",
+        "cross_cut",
+        "left_span_residual",
+        "right_span_residual",
+        "flux_span_residual",
+        "numerically_in_flux_span",
+        "explicit_factorization_present",
+        "factorization_basis_matches",
+        "factorization_hash_matches",
+        "factorization_source_derived",
+        "factorization_refinement_natural",
+        "factorization_residual",
+        "factor_through_flux"
+      ],
+      "properties": {
+        "density_id": {"type": "string", "minLength": 1},
+        "declared_support": {"enum": ["LEFT", "RIGHT", "CROSS_CUT"]},
+        "computed_support": {"enum": ["LEFT", "RIGHT", "BOTH_ONE_SIDED", "CROSS_CUT"]},
+        "support_classification_matches": {"type": "boolean"},
+        "cross_cut": {"type": "boolean"},
+        "left_span_residual": {"type": "number", "minimum": 0},
+        "right_span_residual": {"type": "number", "minimum": 0},
+        "flux_span_residual": {"type": "number", "minimum": 0},
+        "numerically_in_flux_span": {"type": "boolean"},
+        "explicit_factorization_present": {"type": "boolean"},
+        "factorization_basis_matches": {"type": "boolean"},
+        "factorization_hash_matches": {"type": "boolean"},
+        "factorization_source_derived": {"type": "boolean"},
+        "factorization_refinement_natural": {"type": "boolean"},
+        "factorization_residual": {"$ref": "#/$defs/nullableNumber"},
+        "factor_through_flux": {"type": "boolean"}
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "density_matrices_valid",
+        "gibbs_family_realized",
+        "relative_entropy_nonnegative",
+        "cmi_zero_or_bounded",
+        "conditional_expectation_exists",
+        "conditional_expectation_kills_nonflux",
+        "modular_centralizer_contains_retained",
+        "modular_diagonal_constraint"
+      ],
+      "properties": {
+        "density_matrices_valid": {"type": "boolean"},
+        "gibbs_family_realized": {"type": "boolean"},
+        "relative_entropy_nonnegative": {"type": "boolean"},
+        "cmi_zero_or_bounded": {"type": "boolean"},
+        "conditional_expectation_exists": {"type": "boolean"},
+        "conditional_expectation_kills_nonflux": {"type": "boolean"},
+        "modular_centralizer_contains_retained": {"type": "boolean"},
+        "modular_diagonal_constraint": {"type": "boolean"}
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "theorem",
+        "attempted_basis",
+        "explicit_cross_cut_flux_factorization",
+        "would_promote",
+        "rejected"
+      ],
+      "properties": {
+        "theorem": {"type": "string", "minLength": 1},
+        "attempted_basis": {"type": "string", "minLength": 1},
+        "explicit_cross_cut_flux_factorization": {"const": false},
+        "would_promote": {"const": false},
+        "rejected": {"const": true}
+      }
+    }
+  }
+}

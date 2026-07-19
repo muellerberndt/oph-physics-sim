@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 from pathlib import Path
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants
+from oph_fpe.cosmology.edge_center_clock import edge_center_clock_target
 from oph_fpe.cosmology.cmb_derivation import write_cmb_parameter_derivation_report
 from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.unique_predictions import (
@@ -18,10 +18,10 @@ from oph_fpe.cosmology.unique_predictions import (
 def test_unique_prediction_gate_computes_alpha_linked_targets(tmp_path: Path):
     report = unique_prediction_gate_report()
     pixel = OPHPixelConstants()
-    expected_eta = math.e * pixel.alpha_from_P * pixel.sqrt_pi
+    target = edge_center_clock_target(pixel.P)
 
-    assert math.isclose(report["scalar_tilt"]["eta_R"], expected_eta)
-    assert abs(report["scalar_tilt"]["n_s"] - 0.964841143031) < 2.0e-12
+    assert report["scalar_tilt"]["eta_R"] == target.theta
+    assert report["scalar_tilt"]["n_s"] == target.n_s
     assert report["cmb_ir_kernel"]["q_IR"] == 0.25
     assert report["cmb_ir_kernel"]["ell_IR"] == 32.0
     assert report["cmb_ir_kernel"]["N_frz_proxy"] == 1089
@@ -29,7 +29,11 @@ def test_unique_prediction_gate_computes_alpha_linked_targets(tmp_path: Path):
     assert report["selector_elimination_v1_5"]["ell_IR_selector_removed"] is False
     assert report["selector_elimination_v1_5"]["eta_R_reduced_to_repair_clock_certificate"] is True
     assert report["selector_elimination_v1_5"]["theorem_side_receipt"] is False
-    assert report["scalar_tilt"]["canonical_kappa_rep_status"] == "certificate_pending"
+    assert report["scalar_tilt"]["canonical_kappa_rep_status"] == (
+        "selected_theorem_target_evidence_pending"
+    )
+    assert report["pixel_provenance"]["GENERATIVE_PIXEL_PROFILE_RECEIPT"] is False
+    assert "Euler's number is a nonpromoting diagnostic control" in report["claim_boundary"]
     assert abs(report["parity_envelope"]["predicted_R_OE_TT_2_29"] - 1.2160638411338078) < 1e-12
     assert abs(report["parity_envelope"]["unweighted_envelope_R_OE_2_29_debug"] - parity_odd_even_ratio(range(2, 30))) < 1e-12
     cosmology_constants = OPHConstants().as_jsonable()

@@ -43,7 +43,9 @@ def test_screen_capacity_report_keeps_regulator_separate():
     assert report["readiness_gates"]["capacity_readback_map_from_terminal_records_implemented"] is False
     assert report["readiness_gates"]["N_CRC_fixed_point_solved_from_finite_simulator"] is False
     assert report["physical_cmb_prediction"] is False
-    assert report["active_capacity_requirements"]["capacity_variable"] == "entropy_capacity_N_not_raw_Hilbert_dimension"
+    assert report["active_capacity_requirements"]["capacity_variable"] == "D=dim(H_cap), M_0=multiplicative code size, N=log(M_0)"
+    assert report["producer_firewall"]["observed_horizon_radius_may_define_capacity"] is False
+    assert report["readiness_gates"]["finite_correctable_public_record_evaluator_implemented"] is True
 
 
 def test_direct_n_crc_input_is_declared_capacity_not_patch_count():
@@ -52,7 +54,8 @@ def test_direct_n_crc_input_is_declared_capacity_not_patch_count():
     observed = report["observed_branch_normalization"]
     constants = OPHScreenCapacityConstants(n_crc=n_crc)
 
-    assert observed["input_mode"] == "direct_N_CRC_closure_input"
+    assert observed["input_mode"] == "declared_N_comparison"
+    assert observed["producer_eligible"] is False
     assert observed["N_CRC"] == n_crc
     assert observed["N_scr_entropy_capacity"] == n_crc
     assert observed["N_patch_bare_radius_squared_ratio"] == n_crc / math.pi
@@ -61,7 +64,7 @@ def test_direct_n_crc_input_is_declared_capacity_not_patch_count():
     assert observed["constants"]["N_cells_if_tiled_by_local_P_cells"] == constants.physical_cell_count
     assert report["regulator_scale_comparison"][0]["patch_count"] == 1024
     assert report["regulator_scale_comparison"][0]["fraction_of_observed_N_scr"] < 1.0e-118
-    assert report["readiness_gates"]["banach_contraction_certificate_implemented"] is False
+    assert report["readiness_gates"]["unique_regulator_stable_slack_zero_certified"] is False
 
 
 def test_write_screen_capacity_report(tmp_path: Path):

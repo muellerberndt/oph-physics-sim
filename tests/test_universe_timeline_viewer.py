@@ -6,6 +6,7 @@ import numpy as np
 from oph_fpe.viz import write_universe_timeline_bundle
 from oph_fpe.viz.universe_timeline_viewer import (
     _consensus_bulk_payload,
+    _einstein_branch_entry_visualization_payload,
     _effective_string_theory_payload,
     _observer_modular_time_payload,
     _read_proto_particle_candidates,
@@ -13,6 +14,34 @@ from oph_fpe.viz.universe_timeline_viewer import (
     _visualization_instructions,
     _write_full_screen_field_bin,
 )
+
+
+def test_einstein_visualization_ignores_forged_aggregate_receipts(tmp_path: Path):
+    forged = {
+        "einstein_branch_entry_contract_receipt": True,
+        "einstein_branch_entry_receipt": True,
+        "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": True,
+        "EINSTEIN_BRANCH_ENTRY_RECEIPT": True,
+    }
+    (tmp_path / "einstein_bridge_manifest.json").write_text(
+        json.dumps(forged),
+        encoding="utf-8",
+    )
+    (tmp_path / "finite_oph_theorem_contract_report.json").write_text(
+        json.dumps(forged),
+        encoding="utf-8",
+    )
+    (tmp_path / "einstein_branch_entry_report.json").write_text(
+        json.dumps({**forged, "issue_503_status": "closed"}),
+        encoding="utf-8",
+    )
+
+    payload = _einstein_branch_entry_visualization_payload(tmp_path)
+
+    assert payload["receipts"]["einstein_branch_entry_receipt"] is False
+    assert payload["persistedManifestBranchEntryIgnored"] is True
+    assert payload["legacyAggregateBranchEntryIgnored"] is True
+    assert "sphere_fold" in payload["blockers"]
 
 
 def test_consensus_bulk_payload_without_pack_is_schema_complete_and_fail_closed():

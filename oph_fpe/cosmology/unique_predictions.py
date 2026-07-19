@@ -9,7 +9,12 @@ from typing import Any
 
 import numpy as np
 
-from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.constants.oph_pixel import (
+    OPHPixelConstants,
+    P_STAR,
+    PixelParameterProfile,
+    pixel_value_provenance,
+)
 from oph_fpe.cosmology.oph_constants import OPHConstants
 from oph_fpe.cosmology.neutrino_status import neutrino_mass_status
 from oph_fpe.cosmology.oph_screen_power import DEFAULT_D_STAR_MPC, DEFAULT_K0_MPC
@@ -34,6 +39,7 @@ def unique_prediction_gate_report(
     source_dir: Path | None = None,
     *,
     P: float = P_STAR,
+    P_profile: str | PixelParameterProfile | None = PixelParameterProfile.MEASURED_COMPARISON,
     include_rejected_weighted_cycle_benchmark: bool = False,
 ) -> dict[str, Any]:
     """Return the current OPH-only public-comparison prediction gate.
@@ -46,6 +52,7 @@ def unique_prediction_gate_report(
 
     selector_report = selector_elimination_report(source_dir, P=float(P))
     pixel = OPHPixelConstants(P=float(P))
+    pixel_provenance = pixel_value_provenance(float(P), P_profile)
     oph_constants = OPHConstants(P=float(P))
     eta_r = float(selector_report["scalar_tilt"]["eta_R"])
     n_s = float(selector_report["scalar_tilt"]["n_s"])
@@ -91,6 +98,7 @@ def unique_prediction_gate_report(
     report = {
         "mode": "oph_unique_prediction_gate_v0_9",
         "oph_constants": pixel.as_jsonable(),
+        "pixel_provenance": pixel_provenance,
         "source_files": files,
         "scalar_tilt": {
             "formula": "n_s = 1 - kappa_rep * alpha(0) * sqrt(pi)",
@@ -181,12 +189,15 @@ def unique_prediction_gate_report(
             "Current OPH-only prediction gate imported from local cosmology notes and recomputed from OPH "
             "constants. In the v1.5 selector-elimination surface, q_IR=1/4 and ell_IR=32 are theorem-side "
             "target counts rather than fit selectors; eta_R is reduced to the single repair-clock certificate "
-            "kappa_rep=e. The scalar tilt, IR/parity anomaly templates, and compressed dark-sector rows are "
+            "for the edge-center orientation half, theta=P/48 and "
+            "kappa_rep=(P/48)/(P-phi). Euler's number is a nonpromoting diagnostic control. "
+            "The scalar tilt, IR/parity anomaly templates, and compressed dark-sector rows are "
             "comparable to public measurements. OPH currently has no source-derived neutrino mass prediction; "
             "the 0.06 eV neutrino input is a conventional CAMB reference, while the old weighted-cycle row is a "
             "rejected retrospective benchmark available only by explicit opt-in. The remaining rows stay "
             "target/readout lanes until "
-            "the finite OPH lattice derives kappa_rep, validates the finite-register IR/covariance certificates, "
+            "the finite OPH lattice derives kappa_rep from a declared generative P profile, validates the "
+            "finite-register IR/covariance certificates, "
             "derives parity covariance and anomaly kernels from state-derived cap/collar microphysics, and "
             "passes official likelihood/map-space tests."
         ),

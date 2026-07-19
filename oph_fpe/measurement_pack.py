@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -2276,9 +2277,17 @@ def _copy_visualization_sidecars(roots: list[Path], out: Path, exported: dict[st
         for name, meta in files.items():
             if not isinstance(meta, dict):
                 continue
-            source = _resolve_visualization_sidecar_path(manifest_path, meta.get("path"))
+            source = _resolve_visualization_sidecar_path(
+                manifest_path,
+                meta.get("path"),
+                allowed_root=Path(root),
+            )
             if source is None or not source.exists() or not source.is_file():
                 continue
+            expected_sha256 = meta.get("sha256")
+            if isinstance(expected_sha256, str) and expected_sha256:
+                if expected_sha256.removeprefix("sha256:") != _sha256_file(source):
+                    continue
             target = out / source.name
             _copy_export_file(source, target)
             meta["path"] = source.name
@@ -2291,18 +2300,25 @@ def _copy_visualization_sidecars(roots: list[Path], out: Path, exported: dict[st
         return
 
 
-def _resolve_visualization_sidecar_path(manifest_path: Path, value: Any) -> Path | None:
+def _resolve_visualization_sidecar_path(
+    manifest_path: Path,
+    value: Any,
+    *,
+    allowed_root: Path,
+) -> Path | None:
     if not value:
         return None
     raw = Path(str(value))
-    candidates = [raw]
-    if not raw.is_absolute():
-        candidates.append(manifest_path.parent / raw)
-        candidates.append(manifest_path.parent / raw.name)
+    candidates = [raw] if raw.is_absolute() else [manifest_path.parent / raw, manifest_path.parent / raw.name]
+    root = Path(allowed_root).resolve()
     for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return candidates[-1] if candidates else None
+        try:
+            resolved = candidate.resolve(strict=True)
+        except (OSError, RuntimeError):
+            continue
+        if resolved.is_relative_to(root) and resolved.is_file():
+            return resolved
+    return None
 
 
 def _first_existing(*paths: Path) -> Path | None:
@@ -2318,6 +2334,14 @@ def _copy_export_file(path: Path, target: Path) -> None:
     if source.resolve() == destination.resolve():
         return
     shutil.copy2(source, destination)
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _write_cmb_screen_cl(roots: list[Path], target: Path) -> None:

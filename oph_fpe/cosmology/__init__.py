@@ -306,6 +306,22 @@ _EXPORTS = {
         "oph_fpe.cosmology.screen_capacity",
         "write_capacity_readback_proxy_report",
     ),
+    "build_public_record_reference_packet": (
+        "oph_fpe.cosmology.public_record_capacity",
+        "build_reference_packet",
+    ),
+    "evaluate_public_record_terminal": (
+        "oph_fpe.cosmology.public_record_capacity",
+        "evaluate_terminal",
+    ),
+    "evaluate_public_record_terminal_fiber": (
+        "oph_fpe.cosmology.public_record_capacity",
+        "evaluate_terminal_fiber",
+    ),
+    "write_public_record_capacity_report": (
+        "oph_fpe.cosmology.public_record_capacity",
+        "write_public_record_capacity_report",
+    ),
     "ScaleBridgeInputs": (
         "oph_fpe.cosmology.scale_bridge",
         "ScaleBridgeInputs",
@@ -509,6 +525,110 @@ _EXPORTS = {
     "screen_cl": ("oph_fpe.cosmology.screen_spectrum", "screen_cl"),
     "screen_d_ell": ("oph_fpe.cosmology.screen_spectrum", "screen_d_ell"),
     "red_tilt_slope_check": ("oph_fpe.cosmology.screen_spectrum", "red_tilt_slope_check"),
+    "source_edge_center_tilt": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "edge_center_tilt",
+    ),
+    "source_amplitude_from_samples": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "source_amplitude_from_samples",
+    ),
+    "primordial_amplitude_from_screen": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "primordial_amplitude_from_screen",
+    ),
+    "source_screen_cl": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "screen_cl",
+    ),
+    "source_thin_shell_cl": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "thin_shell_cl",
+    ),
+    "source_radial_kernel_matrix": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "radial_kernel_matrix",
+    ),
+    "source_radial_null_space": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "radial_null_space",
+    ),
+    "source_family_forward_residual": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "source_family_forward_residual",
+    ),
+    "source_spectrum_receipt": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "build_receipt",
+    ),
+    "mellin_spherical_bessel_square": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "mellin_spherical_bessel_square",
+    ),
+    "derivative_mellin_norm": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "derivative_mellin_norm",
+    ),
+    "finite_window_stability_bound": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "finite_window_stability_bound",
+    ),
+    "radial_projection_matrix": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "radial_projection_matrix",
+    ),
+    "minimum_prior_continuation": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "minimum_prior_continuation",
+    ),
+    "dilation_intertwiner_receipt": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "dilation_intertwiner_receipt",
+    ),
+    "approximate_dilation_shape_bound": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "approximate_dilation_shape_bound",
+    ),
+    "build_radial_receipt": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "build_radial_receipt",
+    ),
+    "write_radial_receipt": (
+        "oph_fpe.cosmology.source_screen_spectrum",
+        "write_radial_receipt",
+    ),
+    "edge_center_clock_target": (
+        "oph_fpe.cosmology.edge_center_clock",
+        "edge_center_clock_target",
+    ),
+    "validate_edge_center_clock_evidence": (
+        "oph_fpe.cosmology.edge_center_clock",
+        "validate_edge_center_clock_evidence",
+    ),
+    "canonical_edge_clock_hash": (
+        "oph_fpe.cosmology.edge_center_clock",
+        "canonical_edge_clock_hash",
+    ),
+    "write_edge_center_clock_certificate": (
+        "oph_fpe.cosmology.edge_center_clock",
+        "write_edge_center_clock_certificate",
+    ),
+    "verify_collar_clause_packet": (
+        "oph_fpe.cosmology.collar_clause",
+        "verify_collar_clause_packet",
+    ),
+    "write_collar_clause_certificate": (
+        "oph_fpe.cosmology.collar_clause",
+        "write_collar_clause_certificate",
+    ),
+    "collar_clause_negative_controls": (
+        "oph_fpe.cosmology.collar_clause",
+        "collar_clause_negative_controls",
+    ),
+    "canonical_collar_evidence_hash": (
+        "oph_fpe.cosmology.collar_clause",
+        "canonical_evidence_hash",
+    ),
     "maxent_green_spectrum_report": (
         "oph_fpe.cosmology.maxent_green_spectrum",
         "maxent_green_spectrum_report",

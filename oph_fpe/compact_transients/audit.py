@@ -19,8 +19,18 @@ from oph_fpe.compact_transients.receipts import (
 
 def compact_transient_audit_report(receipts: dict[str, Any] | None = None) -> dict[str, Any]:
     merged = conditional_cr2_receipts()
-    if receipts:
-        merged.update({str(key): bool(value) for key, value in receipts.items()})
+    caller_assertions = (
+        {str(key): bool(value) for key, value in receipts.items()} if receipts else {}
+    )
+    # Unverified JSON booleans may make the audit stricter, but may never open a
+    # gate.  Positive CR3/CR4 receipts require independently validated producer
+    # artifacts; this audit currently has no such producer binding.
+    for key, value in caller_assertions.items():
+        if not value:
+            merged[key] = False
+    ignored_positive_assertions = sorted(
+        key for key, value in caller_assertions.items() if value and not merged.get(key, False)
+    )
     promotion = promotion_audit(merged)
     error_ledger = {
         "epsilon_mu": None,
@@ -45,8 +55,11 @@ def compact_transient_audit_report(receipts: dict[str, Any] | None = None) -> di
         "strongest_allowed_claim": promotion["allowed_claim_label"],
         "first_blocked_gate": promotion["first_blocked_gate"],
         "promotion_allowed": promotion["CR_READY"],
-        "physical_claim": promotion["CR_READY"],
+        "physical_claim": False,
         "cr_ready": promotion["CR_READY"],
+        "caller_receipt_assertions": dict(sorted(caller_assertions.items())),
+        "ignored_unverified_positive_receipt_assertions": ignored_positive_assertions,
+        "caller_receipt_assertions_can_only_downgrade": True,
         "readiness_gates": dict(sorted(merged.items())),
         "promotion_audit": promotion,
         "error_ledger": error_ledger,
@@ -78,6 +91,8 @@ def compact_transient_audit_report(receipts: dict[str, Any] | None = None) -> di
             "frozen controls, refinement, hashes, and held-out likelihood. CR4 remains blocked "
             "until compact source action, emission microphysics, physical clock, old-host FRB "
             "source law, and black-hole genealogy prior are OPH-derived without target leakage."
+            " Caller-supplied receipt booleans are unverified diagnostics and can only close gates; "
+            "they cannot promote CR3/CR4 or a physical claim."
         ),
     }
 

@@ -8,6 +8,10 @@ from typing import Any
 
 from oph_fpe.claims import CONTINUATION, COSMOLOGY_PERTURBATION_RECEIPT, with_claim_metadata
 from oph_fpe.constants.oph_pixel import P_STAR, OPHPixelConstants
+from oph_fpe.cosmology.edge_center_clock import (
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 from oph_fpe.cosmology.spatial_curvature import (
     DensitySource,
     GeometryBranch,
@@ -35,16 +39,28 @@ def screen_spectrum_prediction(
     null until scalar-release-energy and screen-to-primordial lift receipts pass.
     """
 
-    theta_oph = float(P) / 48.0
-    lambda_collar = math.exp(-float(P) / 24.0)
+    clock_target = edge_center_clock_target(float(P))
+    clock_evidence = validate_edge_center_clock_evidence(P=float(P))
+    theta_oph = clock_target.theta
+    lambda_collar = math.exp(-clock_target.full_collar_derivative)
     a_q_cmi_upper_bound = 4.0 * math.log(2.0) * float(epsilon_star_bits)
     ns = 1.0 - theta_oph
     return {
         "mode": "oph_screen_green_spectrum_conditional_target",
         "P": float(P),
+        "selected_clock_branch": "edge_center_orientation_half",
+        "full_collar_derivative_target": clock_target.full_collar_derivative,
+        "orientation_halves": clock_target.orientation_halves,
         "lambda_collar": float(lambda_collar),
         "theta_OPH": float(theta_oph),
+        "eta_R": float(theta_oph),
         "n_s": float(ns),
+        "kappa_rep": clock_target.kappa_rep,
+        "kappa_rep_formula": "(P/48)/(P-phi)",
+        "e_diagnostic_control": clock_target.as_jsonable()["diagnostic_controls"]["e"],
+        "edge_center_clock_evidence": clock_evidence,
+        **clock_evidence["receipts"],
+        "EDGE_CENTER_CLOCK_RECEIPT": clock_evidence["EDGE_CENTER_CLOCK_RECEIPT"],
         "planck_n_s_target": PLANCK_NS_TARGET,
         "planck_n_s_sigma": PLANCK_NS_SIGMA,
         "n_s_pull_vs_planck": float((ns - PLANCK_NS_TARGET) / PLANCK_NS_SIGMA),
@@ -61,9 +77,12 @@ def screen_spectrum_prediction(
         "primordial_power_law": None,
         "screen_to_primordial_lift_receipt": False,
         "claim_boundary": (
-            "Conditional scalar screen-spectrum target. The tilt target is theorem-side until a finite "
-            "operator/clock certificate passes; CMI gives only an A_q upper bound; A_zeta remains null "
-            "until the radial lift receipt passes."
+            "Conditional scalar screen-spectrum target. The selected clock is the edge-center orientation "
+            "half theta=P/48 with kappa_rep=(P/48)/(P-phi); Euler's number is a named nonpromoting diagnostic "
+            "control. The full-collar, orientation-half, semigroup/refinement, physical-clock-binding, and "
+            "source-DAG receipts remain open, as does the generative P-profile receipt for the compatibility "
+            "P default. CMI gives only an A_q upper bound, and A_zeta remains null until the radial lift "
+            "receipt passes."
         ),
     }
 
@@ -200,7 +219,11 @@ def inflation_cmb_bridge_report(source_dir: Path | None = None) -> dict[str, Any
         "cmb_success_ladder": cmb,
         "inflation_replacement_modules": {
             "flatness": "clock-slice Levi-Civita holonomy identifies flatness; selection remains direct/CMH/assumption-gated",
-            "spectrum": "legacy screen Green target n_s=1-P/48 plus current unique target n_s=1-e*alpha(0)*sqrt(pi)",
+            "spectrum": (
+                "selected edge-center target n_s=1-P/48 with kappa_rep=(P/48)/(P-phi); "
+                "the historical Euler branch and compatibility-P endpoint are nonpromoting controls unless "
+                "the declared generative P-profile receipt passes"
+            ),
             "amplitude": "scalar release energy and radial lift certificates pending; no derived A_zeta",
             "transfer": "standard photon-baryon Boltzmann transfer with an OPH anomaly stress component",
             "hot_start": "hot MaxEnt release state, not inflaton reheating",

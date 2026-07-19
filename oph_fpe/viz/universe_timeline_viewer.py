@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+from oph_fpe.bulk.einstein_bridge import einstein_bridge_manifest_report
 from oph_fpe.bulk.theorem_contract import _validated_finite_consensus_replay
 from oph_fpe.core.graph import fibonacci_sphere_points
 from oph_fpe.evidence.bundle import strict_jsonable
@@ -3894,7 +3895,8 @@ def _visible_proto_worldline_sightings(
             peripheral_sightings.append(sighting)
         else:
             nominal_sightings.append(sighting)
-    sort_key = lambda item: (
+    def sort_key(item: dict[str, Any]) -> tuple[float, float, str]:
+        return (
             -float((item.get("observerLocalReadout") or {}).get("visibilityScore") or 0.0),
             float((item.get("observerLocalReadout") or {}).get("range") or 0.0),
             str(item.get("worldlineId")),
@@ -6190,7 +6192,6 @@ def _consensus_bulk_payload(
         object_summary = _read_json(consensus_pack_dir / "plots" / "object_h3_bulk_viewer_summary.json")
     object_report = _read_json(consensus_pack_dir / "observer_chart_object_h3_report.json")
     observer_experience = _read_json(consensus_pack_dir / "observer_modular_experience_report.json")
-    paper_3d = _read_json(consensus_pack_dir / "paper_3d_bulk_chart_report.json")
     objects = _read_h3_objects(consensus_pack_dir, readout_dir, max_objects=max_objects)
     neutral_objects = _read_neutral_object_candidates(consensus_pack_dir, max_objects=max_objects)
     neutral_object_report = _read_json(consensus_pack_dir / "strict_neutral_object_bulk_report.json")
@@ -8707,54 +8708,45 @@ def _einstein_branch_entry_visualization_payload(run_dir: Path | None) -> dict[s
     manifest_path = Path(run_dir) / "einstein_bridge_manifest.json" if run_dir is not None else None
     contract = _read_json(contract_path) if contract_path is not None else {}
     branch = _read_json(branch_path) if branch_path is not None else {}
-    manifest = _read_json(manifest_path) if manifest_path is not None else {}
-    use_manifest = bool(manifest)
-    receipt = (
-        bool(
-            manifest.get("einstein_branch_entry_contract_receipt", False)
-            or manifest.get("einstein_branch_entry_receipt", False)
-            or manifest.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
-            or manifest.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
-        )
-        if use_manifest
-        else bool(
-            contract.get("einstein_branch_entry_contract_receipt", False)
-            or contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
-            or branch.get("einstein_branch_entry_contract_receipt", False)
-            or branch.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
-        )
+    persisted_manifest = _read_json(manifest_path) if manifest_path is not None else {}
+    manifest = einstein_bridge_manifest_report(Path(run_dir)) if run_dir is not None else {}
+    use_manifest = bool(persisted_manifest)
+    receipt = bool(
+        manifest.get("einstein_branch_entry_contract_receipt", False)
+        or manifest.get("einstein_branch_entry_receipt", False)
+        or manifest.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+        or manifest.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
     )
     blockers = list(
-        (
-            manifest.get("einstein_branch_entry_blockers")
-            or manifest.get("blockers")
-            or []
-        )
-        if use_manifest
-        else contract.get("einstein_branch_entry_blockers")
-        or branch.get("blockers")
-        or [
-            "E0_einstein_branch_entry_umbrella",
-            "E1_null_generator_stress_charge",
-            "E2_fixed_cap_entropy_stationarity",
-            "E3_small_ball_area_bridge",
-            "E4_all_timelike_tensor_upgrade",
-            "E5_lambda_constancy_conservation",
-            "E6_newton_coupling_forbidden_input_audit",
-        ]
+        manifest.get("einstein_branch_entry_blockers")
+        or manifest.get("blockers")
+        or []
     )
-    child_gates = manifest.get("einstein_branch_entry_child_gates") if use_manifest else contract.get(
-        "einstein_branch_entry_child_gates"
-    )
+    if not receipt and "E0_einstein_branch_entry_umbrella" not in blockers:
+        blockers.insert(0, "E0_einstein_branch_entry_umbrella")
+    child_gates = manifest.get("einstein_branch_entry_child_gates")
     if not isinstance(child_gates, dict):
-        child_gates = branch.get("child_gates") if isinstance(branch.get("child_gates"), dict) else {}
+        child_gates = {}
     return {
         "schema": "oph_einstein_branch_entry_visualization_gate_v1",
-        "written": bool(contract) or bool(branch) or bool(manifest),
+        "written": bool(contract) or bool(branch) or bool(persisted_manifest),
         "source": str(contract_path) if contract_path is not None else None,
         "branchEntryReportSource": str(branch_path) if branch_path is not None else None,
         "einsteinBridgeManifestSource": str(manifest_path) if manifest_path is not None else None,
         "manifestWritten": use_manifest,
+        "manifestRecomputedFromSidecars": bool(run_dir is not None),
+        "persistedManifestBranchEntryIgnored": bool(
+            persisted_manifest.get("einstein_branch_entry_contract_receipt", False)
+            or persisted_manifest.get("einstein_branch_entry_receipt", False)
+            or persisted_manifest.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+            or persisted_manifest.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
+        ),
+        "legacyAggregateBranchEntryIgnored": bool(
+            contract.get("einstein_branch_entry_contract_receipt", False)
+            or contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1", False)
+            or branch.get("einstein_branch_entry_contract_receipt", False)
+            or branch.get("EINSTEIN_BRANCH_ENTRY_RECEIPT", False)
+        ),
         "issue": 503,
         "legacyIssue": 503,
         "legacyIssueUrl": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",

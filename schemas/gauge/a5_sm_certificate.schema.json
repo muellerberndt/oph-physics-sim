@@ -1,0 +1,889 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/gauge/a5_sm_certificate.schema.json",
+  "title": "OPH exact A5 twelve-port structural certificate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mode",
+    "A5_TWELVE_PORT_STRUCTURAL_RECEIPT",
+    "SM_ADJOINT_CHARACTER_MATCH_RECEIPT",
+    "CONDITIONAL_EXTERIOR_ONE_GENERATION_WITNESS_RECEIPT",
+    "NO_INVARIANT_PORT_PARTITION_8_3_1_RECEIPT",
+    "PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT",
+    "receipt",
+    "checks",
+    "native_computation",
+    "evidence_layers",
+    "physical_promotion",
+    "blockers",
+    "claim_boundary",
+    "receipt_schema_version",
+    "claim_level",
+    "receipt_name",
+    "observable_id",
+    "fit_objective",
+    "physical_claim",
+    "certificate_payload_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "oph_a5_twelve_port_structural_certificate_v1"},
+    "mode": {"const": "oph_a5_twelve_port_structural_certificate_v1"},
+    "A5_TWELVE_PORT_STRUCTURAL_RECEIPT": {"type": "boolean"},
+    "SM_ADJOINT_CHARACTER_MATCH_RECEIPT": {"type": "boolean"},
+    "CONDITIONAL_EXTERIOR_ONE_GENERATION_WITNESS_RECEIPT": {"type": "boolean"},
+    "NO_INVARIANT_PORT_PARTITION_8_3_1_RECEIPT": {"type": "boolean"},
+    "PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT": {"const": false},
+    "receipt": {"type": "boolean"},
+    "checks": {"$ref": "#/$defs/checks"},
+    "native_computation": {"$ref": "#/$defs/nativeComputation"},
+    "evidence_layers": {"$ref": "#/$defs/evidenceLayers"},
+    "physical_promotion": {"$ref": "#/$defs/physicalPromotion"},
+    "blockers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "receipt_schema_version": {"type": "string", "minLength": 1},
+    "claim_level": {"const": "continuation"},
+    "receipt_name": {"const": "A5_TWELVE_PORT_STRUCTURAL_RECEIPT"},
+    "observable_id": {"const": "a5_c5_twelve_port_structural_closure"},
+    "fit_objective": {"const": "exact_finite_structural_identity_without_physical_promotion"},
+    "physical_claim": {"const": false},
+    "certificate_payload_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "$defs": {
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a5_has_60_even_permutations",
+        "a5_is_closed_with_identity_and_inverses",
+        "a5_element_order_profile_is_1_15_20_24",
+        "a5_conjugacy_class_profile_is_1_15_20_12_12",
+        "h5_is_order_five_subgroup",
+        "a5_over_h5_has_twelve_cosets",
+        "coset_action_is_a_homomorphism",
+        "coset_action_is_transitive",
+        "base_stabilizer_is_h5_of_order_five",
+        "orbit_stabilizer_is_60_equals_12_times_5",
+        "coset_action_is_faithful",
+        "permutation_character_is_12_0_0_2_2",
+        "a5_character_table_is_orthonormal_and_complete",
+        "port_character_decomposes_as_1_3_3prime_5",
+        "port_character_is_multiplicity_free",
+        "icosahedral_orbital_graph_is_5_regular_connected",
+        "icosahedral_adjacency_characteristic_polynomial_matches",
+        "icosahedral_adjacency_minimal_polynomial_annihilates",
+        "icosahedral_spectrum_has_ranks_1_3_3_5",
+        "sm_adjoint_character_matches_port_module",
+        "no_invariant_8_3_1_port_partition",
+        "exterior_carrier_trace_is_balanced",
+        "exterior_package_dimension_is_15",
+        "exterior_field_dimensions_and_hypercharges_match",
+        "exterior_package_is_chiral_at_representation_level",
+        "three_one_higgs_invariant_lines",
+        "listed_perturbative_anomalies_cancel",
+        "su2_witten_parity_is_even",
+        "weak_doublet_count_is_four"
+      ],
+      "properties": {
+        "a5_has_60_even_permutations": {"type": "boolean"},
+        "a5_is_closed_with_identity_and_inverses": {"type": "boolean"},
+        "a5_element_order_profile_is_1_15_20_24": {"type": "boolean"},
+        "a5_conjugacy_class_profile_is_1_15_20_12_12": {"type": "boolean"},
+        "h5_is_order_five_subgroup": {"type": "boolean"},
+        "a5_over_h5_has_twelve_cosets": {"type": "boolean"},
+        "coset_action_is_a_homomorphism": {"type": "boolean"},
+        "coset_action_is_transitive": {"type": "boolean"},
+        "base_stabilizer_is_h5_of_order_five": {"type": "boolean"},
+        "orbit_stabilizer_is_60_equals_12_times_5": {"type": "boolean"},
+        "coset_action_is_faithful": {"type": "boolean"},
+        "permutation_character_is_12_0_0_2_2": {"type": "boolean"},
+        "a5_character_table_is_orthonormal_and_complete": {"type": "boolean"},
+        "port_character_decomposes_as_1_3_3prime_5": {"type": "boolean"},
+        "port_character_is_multiplicity_free": {"type": "boolean"},
+        "icosahedral_orbital_graph_is_5_regular_connected": {"type": "boolean"},
+        "icosahedral_adjacency_characteristic_polynomial_matches": {"type": "boolean"},
+        "icosahedral_adjacency_minimal_polynomial_annihilates": {"type": "boolean"},
+        "icosahedral_spectrum_has_ranks_1_3_3_5": {"type": "boolean"},
+        "sm_adjoint_character_matches_port_module": {"type": "boolean"},
+        "no_invariant_8_3_1_port_partition": {"type": "boolean"},
+        "exterior_carrier_trace_is_balanced": {"type": "boolean"},
+        "exterior_package_dimension_is_15": {"type": "boolean"},
+        "exterior_field_dimensions_and_hypercharges_match": {"type": "boolean"},
+        "exterior_package_is_chiral_at_representation_level": {"type": "boolean"},
+        "three_one_higgs_invariant_lines": {"type": "boolean"},
+        "listed_perturbative_anomalies_cancel": {"type": "boolean"},
+        "su2_witten_parity_is_even": {"type": "boolean"},
+        "weak_doublet_count_is_four": {"type": "boolean"}
+      }
+    },
+    "nativeComputation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a5_group",
+        "h5_coset_action",
+        "character_theory",
+        "icosahedral_adjacency",
+        "invariant_partition_antibridge",
+        "exterior_one_generation_witness"
+      ],
+      "properties": {
+        "a5_group": {"$ref": "#/$defs/a5Group"},
+        "h5_coset_action": {"$ref": "#/$defs/h5CosetAction"},
+        "character_theory": {"$ref": "#/$defs/characterTheory"},
+        "icosahedral_adjacency": {"$ref": "#/$defs/adjacency"},
+        "invariant_partition_antibridge": {"$ref": "#/$defs/antibridge"},
+        "exterior_one_generation_witness": {"$ref": "#/$defs/exteriorWitness"}
+      }
+    },
+    "a5Group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "presentation",
+        "order",
+        "identity",
+        "element_order_counts",
+        "conjugacy_classes",
+        "canonical_group_sha256"
+      ],
+      "properties": {
+        "presentation": {"const": "even_permutations_of_five_letters"},
+        "order": {"const": 60},
+        "identity": {"const": [0, 1, 2, 3, 4]},
+        "element_order_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["1", "2", "3", "5"],
+          "properties": {
+            "1": {"const": 1},
+            "2": {"const": 15},
+            "3": {"const": 20},
+            "5": {"const": 24}
+          }
+        },
+        "conjugacy_classes": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {"$ref": "#/$defs/conjugacyClass"}
+        },
+        "canonical_group_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "conjugacyClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "element_order",
+        "size",
+        "representative",
+        "fixed_cosets",
+        "fixed_count_constant_on_class"
+      ],
+      "properties": {
+        "label": {"enum": ["1A", "2A", "3A", "5A", "5B"]},
+        "element_order": {"enum": [1, 2, 3, 5]},
+        "size": {"enum": [1, 12, 15, 20]},
+        "representative": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {"type": "integer", "minimum": 0, "maximum": 4}
+        },
+        "fixed_cosets": {"enum": [0, 2, 12]},
+        "fixed_count_constant_on_class": {"type": "boolean"}
+      }
+    },
+    "h5CosetAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generator",
+        "subgroup_order",
+        "coset_count",
+        "action_transitive",
+        "base_vertex",
+        "base_stabilizer_order",
+        "base_stabilizer_equals_h5",
+        "kernel_order",
+        "faithful",
+        "orbit_stabilizer_identity",
+        "permutation_character",
+        "canonical_action_sha256"
+      ],
+      "properties": {
+        "generator": {"const": [1, 2, 3, 4, 0]},
+        "subgroup_order": {"const": 5},
+        "coset_count": {"const": 12},
+        "action_transitive": {"type": "boolean"},
+        "base_vertex": {"type": "integer", "minimum": 0, "maximum": 11},
+        "base_stabilizer_order": {"const": 5},
+        "base_stabilizer_equals_h5": {"type": "boolean"},
+        "kernel_order": {"const": 1},
+        "faithful": {"type": "boolean"},
+        "orbit_stabilizer_identity": {"const": "60=12*5"},
+        "permutation_character": {"const": [12, 0, 0, 2, 2]},
+        "canonical_action_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "characterTheory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class_order",
+        "class_sizes",
+        "irreducible_character_table",
+        "character_table_gram_matrix",
+        "character_table_checks",
+        "port_module",
+        "sm_adjoint_match"
+      ],
+      "properties": {
+        "class_order": {"const": ["1A", "2A", "3A", "5A", "5B"]},
+        "class_sizes": {"const": [1, 15, 20, 12, 12]},
+        "irreducible_character_table": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["1", "3", "3prime", "4", "5"],
+          "properties": {
+            "1": {"$ref": "#/$defs/characterRow"},
+            "3": {"$ref": "#/$defs/characterRow"},
+            "3prime": {"$ref": "#/$defs/characterRow"},
+            "4": {"$ref": "#/$defs/characterRow"},
+            "5": {"$ref": "#/$defs/characterRow"}
+          }
+        },
+        "character_table_gram_matrix": {"type": "object"},
+        "character_table_checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["orthonormal", "dimension_squares_sum", "dimension_squares_sum_to_60"],
+          "properties": {
+            "orthonormal": {"type": "boolean"},
+            "dimension_squares_sum": {"const": 60},
+            "dimension_squares_sum_to_60": {"type": "boolean"}
+          }
+        },
+        "port_module": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["character", "decomposition", "dimension", "multiplicity_free"],
+          "properties": {
+            "character": {"const": ["12", "0", "0", "2", "2"]},
+            "decomposition": {"$ref": "#/$defs/decomposition"},
+            "dimension": {"const": 12},
+            "multiplicity_free": {"type": "boolean"}
+          }
+        },
+        "sm_adjoint_match": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["assignments", "both_opposite_triplet_assignments_match", "semantic_boundary"],
+          "properties": {
+            "assignments": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {"$ref": "#/$defs/smAssignment"}
+            },
+            "both_opposite_triplet_assignments_match": {"type": "boolean"},
+            "semantic_boundary": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "characterRow": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "decomposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["1", "3", "3prime", "4", "5"],
+      "properties": {
+        "1": {"type": "integer", "minimum": 0},
+        "3": {"type": "integer", "minimum": 0},
+        "3prime": {"type": "integer", "minimum": 0},
+        "4": {"type": "integer", "minimum": 0},
+        "5": {"type": "integer", "minimum": 0}
+      }
+    },
+    "smAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "su3_defining_triplet",
+        "su3_adjoint_character",
+        "su3_adjoint_decomposition",
+        "su3_adjoint_dimension",
+        "su2_adjoint_triplet",
+        "u1_adjoint_irrep",
+        "sm_adjoint_character",
+        "sm_adjoint_dimension",
+        "matches_port_character"
+      ],
+      "properties": {
+        "su3_defining_triplet": {"enum": ["3", "3prime"]},
+        "su3_adjoint_character": {"$ref": "#/$defs/characterRow"},
+        "su3_adjoint_decomposition": {"$ref": "#/$defs/decomposition"},
+        "su3_adjoint_dimension": {"const": 8},
+        "su2_adjoint_triplet": {"enum": ["3", "3prime"]},
+        "u1_adjoint_irrep": {"const": "1"},
+        "sm_adjoint_character": {"const": ["12", "0", "0", "2", "2"]},
+        "sm_adjoint_dimension": {"const": 12},
+        "matches_port_character": {"type": "boolean"}
+      }
+    },
+    "adjacency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "construction",
+        "selected_orbital_seed_vertex",
+        "stabilizer_orbit_sizes",
+        "vertex_count",
+        "edge_count",
+        "degree_sequence",
+        "connected",
+        "a5_invariant",
+        "triangle_count",
+        "distance_layer_profiles",
+        "canonical_edge_sha256",
+        "characteristic_polynomial",
+        "minimal_polynomial",
+        "spectrum",
+        "canonical_rank_sequence",
+        "triplet_assignment_boundary"
+      ],
+      "properties": {
+        "construction": {"const": "lexicographically_first_valency_five_H5_suborbit_graph"},
+        "selected_orbital_seed_vertex": {"type": "integer", "minimum": 0, "maximum": 11},
+        "stabilizer_orbit_sizes": {"const": [1, 1, 5, 5]},
+        "vertex_count": {"const": 12},
+        "edge_count": {"const": 30},
+        "degree_sequence": {"const": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]},
+        "connected": {"type": "boolean"},
+        "a5_invariant": {"type": "boolean"},
+        "triangle_count": {"const": 20},
+        "distance_layer_profiles": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {"type": "integer", "minimum": 0}
+          }
+        },
+        "canonical_edge_sha256": {"$ref": "#/$defs/sha256"},
+        "characteristic_polynomial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["variable", "coefficients_descending", "factorization", "factorization_verified"],
+          "properties": {
+            "variable": {"const": "x"},
+            "coefficients_descending": {
+              "type": "array",
+              "minItems": 13,
+              "maxItems": 13,
+              "items": {"type": "integer"}
+            },
+            "factorization": {"const": "(x-5)(x+1)^5(x^2-5)^3"},
+            "factorization_verified": {"type": "boolean"}
+          }
+        },
+        "minimal_polynomial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["polynomial", "annihilator_max_abs_entry", "annihilator_is_zero"],
+          "properties": {
+            "polynomial": {"const": "(x-5)(x+1)(x^2-5)"},
+            "annihilator_max_abs_entry": {"type": "integer", "minimum": 0},
+            "annihilator_is_zero": {"type": "boolean"}
+          }
+        },
+        "spectrum": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["5", "sqrt(5)", "-sqrt(5)", "-1"],
+          "properties": {
+            "5": {"const": 1},
+            "sqrt(5)": {"const": 3},
+            "-sqrt(5)": {"const": 3},
+            "-1": {"const": 5}
+          }
+        },
+        "canonical_rank_sequence": {"const": [1, 3, 3, 5]},
+        "triplet_assignment_boundary": {"type": "string", "minLength": 1}
+      }
+    },
+    "antibridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enumerated_subset_count",
+        "invariant_subset_size_counts",
+        "proper_nonempty_invariant_subset_exists",
+        "invariant_8_3_1_set_partition_exists",
+        "no_go_verified",
+        "linear_module_8_3_1_decomposition_exists",
+        "distinction"
+      ],
+      "properties": {
+        "enumerated_subset_count": {"const": 4096},
+        "invariant_subset_size_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["0", "12"],
+          "properties": {
+            "0": {"const": 1},
+            "12": {"const": 1}
+          }
+        },
+        "proper_nonempty_invariant_subset_exists": {"const": false},
+        "invariant_8_3_1_set_partition_exists": {"const": false},
+        "no_go_verified": {"type": "boolean"},
+        "linear_module_8_3_1_decomposition_exists": {"type": "boolean"},
+        "distinction": {"type": "string", "minLength": 1}
+      }
+    },
+    "exteriorWitness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "carrier",
+        "matter_package",
+        "one_higgs_invariant_lines",
+        "anomalies",
+        "weak_doublet_count",
+        "selection_boundary"
+      ],
+      "properties": {
+        "status": {"const": "conditional_exact_representation_witness"},
+        "carrier": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["definition", "summands", "trace_balance", "trace_balanced"],
+          "properties": {
+            "definition": {"const": "V=C+W"},
+            "summands": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["C", "W"],
+              "properties": {
+                "C": {"$ref": "#/$defs/carrierSummand"},
+                "W": {"$ref": "#/$defs/carrierSummand"}
+              }
+            },
+            "trace_balance": {"const": "0"},
+            "trace_balanced": {"type": "boolean"}
+          }
+        },
+        "matter_package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "definition",
+            "lambda2_dimension",
+            "lambda4_dimension",
+            "complex_dimension",
+            "fields",
+            "field_dimension_sum",
+            "field_signature_matches_canonical_generation",
+            "dual_overlap",
+            "disjoint_from_dual"
+          ],
+          "properties": {
+            "definition": {"const": "M1=Lambda^2(C+W)+Lambda^4(C+W)"},
+            "lambda2_dimension": {"const": 10},
+            "lambda4_dimension": {"const": 5},
+            "complex_dimension": {"const": 15},
+            "fields": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["Q", "u_c", "e_c", "d_c", "L"],
+              "properties": {
+                "Q": {"$ref": "#/$defs/exteriorField"},
+                "u_c": {"$ref": "#/$defs/exteriorField"},
+                "e_c": {"$ref": "#/$defs/exteriorField"},
+                "d_c": {"$ref": "#/$defs/exteriorField"},
+                "L": {"$ref": "#/$defs/exteriorField"}
+              }
+            },
+            "field_dimension_sum": {"const": 15},
+            "field_signature_matches_canonical_generation": {"type": "boolean"},
+            "dual_overlap": {"type": "array", "items": {"type": "object"}},
+            "disjoint_from_dual": {"type": "boolean"}
+          }
+        },
+        "one_higgs_invariant_lines": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "conditional_scalar_identification",
+            "channels",
+            "invariant_line_count",
+            "all_channels_exact_singlets"
+          ],
+          "properties": {
+            "conditional_scalar_identification": {"const": "H=W"},
+            "channels": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["Q_H_u_c", "Q_Hdag_d_c", "L_Hdag_e_c"],
+              "properties": {
+                "Q_H_u_c": {"$ref": "#/$defs/yukawaChannel"},
+                "Q_Hdag_d_c": {"$ref": "#/$defs/yukawaChannel"},
+                "L_Hdag_e_c": {"$ref": "#/$defs/yukawaChannel"}
+              }
+            },
+            "invariant_line_count": {"const": 3},
+            "all_channels_exact_singlets": {"type": "boolean"}
+          }
+        },
+        "anomalies": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "convention",
+            "coefficients",
+            "all_coefficients_zero",
+            "su2_witten_doublet_count",
+            "su2_witten_parity_mod_2",
+            "su2_witten_parity_even"
+          ],
+          "properties": {
+            "convention": {"const": "left_handed_Weyl"},
+            "coefficients": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "SU3_cubed",
+                "SU3_squared_U1",
+                "SU2_squared_U1",
+                "gravity_squared_U1",
+                "U1_cubed"
+              ],
+              "properties": {
+                "SU3_cubed": {"const": "0"},
+                "SU3_squared_U1": {"const": "0"},
+                "SU2_squared_U1": {"const": "0"},
+                "gravity_squared_U1": {"const": "0"},
+                "U1_cubed": {"const": "0"}
+              }
+            },
+            "all_coefficients_zero": {"type": "boolean"},
+            "su2_witten_doublet_count": {"const": 4},
+            "su2_witten_parity_mod_2": {"const": 0},
+            "su2_witten_parity_even": {"type": "boolean"}
+          }
+        },
+        "weak_doublet_count": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "colored_Q_copies",
+            "lepton_L_copies",
+            "multiplicity_per_generation",
+            "conditional_beta_EW",
+            "physical_load_identification"
+          ],
+          "properties": {
+            "colored_Q_copies": {"const": 3},
+            "lepton_L_copies": {"const": 1},
+            "multiplicity_per_generation": {"const": 4},
+            "conditional_beta_EW": {"const": 4},
+            "physical_load_identification": {"const": false}
+          }
+        },
+        "selection_boundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "full_even_exterior_dimension_including_lambda0",
+            "vacuum_singlet_excluded_by_computation",
+            "other_anomaly_free_light_sectors_excluded",
+            "package_selected_by_native_dynamics",
+            "H_equals_W_selected_by_native_dynamics",
+            "physical_family_attachment",
+            "continuum_spin_qft_realized",
+            "claim_boundary"
+          ],
+          "properties": {
+            "full_even_exterior_dimension_including_lambda0": {"const": 16},
+            "vacuum_singlet_excluded_by_computation": {"const": false},
+            "other_anomaly_free_light_sectors_excluded": {"const": false},
+            "package_selected_by_native_dynamics": {"const": false},
+            "H_equals_W_selected_by_native_dynamics": {"const": false},
+            "physical_family_attachment": {"const": false},
+            "continuum_spin_qft_realized": {"const": false},
+            "claim_boundary": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "carrierSummand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dimension", "su3", "su2", "hypercharge"],
+      "properties": {
+        "dimension": {"type": "integer", "minimum": 1},
+        "su3": {"enum": ["1", "3", "3bar"]},
+        "su2": {"enum": ["1", "2"]},
+        "hypercharge": {"type": "string", "minLength": 1}
+      }
+    },
+    "exteriorField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "exterior_degree",
+        "c_power",
+        "w_power",
+        "su3",
+        "su2",
+        "dimension",
+        "hypercharge"
+      ],
+      "properties": {
+        "origin": {"type": "string", "minLength": 1},
+        "exterior_degree": {"enum": [2, 4]},
+        "c_power": {"type": "integer", "minimum": 0, "maximum": 3},
+        "w_power": {"type": "integer", "minimum": 0, "maximum": 2},
+        "su3": {"enum": ["1", "3", "3bar"]},
+        "su2": {"enum": ["1", "2"]},
+        "dimension": {"type": "integer", "minimum": 1},
+        "hypercharge": {"type": "string", "minLength": 1}
+      }
+    },
+    "yukawaChannel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factors",
+        "hypercharge_sum",
+        "su3_singlet_multiplicity",
+        "su2_singlet_multiplicity",
+        "invariant_line_multiplicity"
+      ],
+      "properties": {
+        "factors": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "string"}},
+        "hypercharge_sum": {"const": "0"},
+        "su3_singlet_multiplicity": {"const": 1},
+        "su2_singlet_multiplicity": {"const": 1},
+        "invariant_line_multiplicity": {"const": 1}
+      }
+    },
+    "evidenceLayers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native_exact_computation", "imported_theorem_evidence"],
+      "properties": {
+        "native_exact_computation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "method",
+            "depends_on_imported_theorem_evidence",
+            "simulation_receipt_eligible",
+            "receipt"
+          ],
+          "properties": {
+            "producer": {"const": "oph_fpe.gauge.a5_sm_certificate"},
+            "method": {"const": "exact_integer_permutation_coset_character_matrix_and_fractional_exterior_arithmetic"},
+            "depends_on_imported_theorem_evidence": {"const": false},
+            "simulation_receipt_eligible": {"const": true},
+            "receipt": {"type": "boolean"}
+          }
+        },
+        "imported_theorem_evidence": {"$ref": "#/$defs/importedEvidence"}
+      }
+    },
+    "importedEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provided_count",
+        "records",
+        "all_well_formed",
+        "simulation_receipts_promoted_by_import",
+        "used_for_native_computation"
+      ],
+      "properties": {
+        "provided_count": {"type": "integer", "minimum": 0},
+        "records": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/importedRecord"}
+        },
+        "all_well_formed": {"type": "boolean"},
+        "simulation_receipts_promoted_by_import": {"const": false},
+        "used_for_native_computation": {"const": false}
+      }
+    },
+    "importedRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "source_commit",
+        "content_sha256",
+        "theorems",
+        "declared_verification_status",
+        "hash_format_valid",
+        "well_formed",
+        "evidence_class",
+        "simulation_receipt_eligible",
+        "used_for_native_receipts"
+      ],
+      "properties": {
+        "source": {"type": "string"},
+        "source_commit": {"type": ["string", "null"]},
+        "content_sha256": {"type": ["string", "null"]},
+        "theorems": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "declared_verification_status": {"type": "string", "minLength": 1},
+        "hash_format_valid": {"type": "boolean"},
+        "well_formed": {"type": "boolean"},
+        "evidence_class": {"const": "imported_theorem_provenance_only"},
+        "simulation_receipt_eligible": {"const": false},
+        "used_for_native_receipts": {"const": false}
+      }
+    },
+    "physicalPromotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "strongest_allowed_claim",
+        "gate_status",
+        "open_gate_descriptions",
+        "blockers",
+        "promotion_allowed",
+        "physical_port_current_identification",
+        "physical_standard_model_derivation",
+        "reason"
+      ],
+      "properties": {
+        "strongest_allowed_claim": {"const": "exact_finite_structural_certificate_only"},
+        "gate_status": {"$ref": "#/$defs/gateStatus"},
+        "open_gate_descriptions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "UD12_SOURCE_RECEIPT",
+            "RP_A5_SOURCE_SELECTOR_RECEIPT",
+            "PORT_CURRENT_INNER_RECEIPT",
+            "PORT_REFINEMENT_INTERTWINER_RECEIPT",
+            "BLOCK_DETERMINANT_BALANCE_RECEIPT",
+            "PORT_SPIN_LIFT_RECEIPT",
+            "AXIS_CENTER_DESCENT_RECEIPT",
+            "MAR_MATTER_REALIZATION_RECEIPT",
+            "EXTERIOR_PACKAGE_SELECTION_RECEIPT",
+            "HIGGS_SCALAR_SELECTION_RECEIPT",
+            "A5_FAMILY_ATTACHMENT_RECEIPT",
+            "A5_FAMILY_DESCENT_RECEIPT",
+            "PORT_WEAK_INTERTWINER_RECEIPT",
+            "PORT_LOAD_TRACE_RECEIPT",
+            "CONTINUUM_LIMIT_RECEIPT",
+            "SPIN_QFT_REALIZATION_RECEIPT",
+            "NO_EXTRA_LIGHT_SECTOR_RECEIPT"
+          ],
+          "properties": {
+            "UD12_SOURCE_RECEIPT": {"type": "string", "minLength": 1},
+            "RP_A5_SOURCE_SELECTOR_RECEIPT": {"type": "string", "minLength": 1},
+            "PORT_CURRENT_INNER_RECEIPT": {"type": "string", "minLength": 1},
+            "PORT_REFINEMENT_INTERTWINER_RECEIPT": {"type": "string", "minLength": 1},
+            "BLOCK_DETERMINANT_BALANCE_RECEIPT": {"type": "string", "minLength": 1},
+            "PORT_SPIN_LIFT_RECEIPT": {"type": "string", "minLength": 1},
+            "AXIS_CENTER_DESCENT_RECEIPT": {"type": "string", "minLength": 1},
+            "MAR_MATTER_REALIZATION_RECEIPT": {"type": "string", "minLength": 1},
+            "EXTERIOR_PACKAGE_SELECTION_RECEIPT": {"type": "string", "minLength": 1},
+            "HIGGS_SCALAR_SELECTION_RECEIPT": {"type": "string", "minLength": 1},
+            "A5_FAMILY_ATTACHMENT_RECEIPT": {"type": "string", "minLength": 1},
+            "A5_FAMILY_DESCENT_RECEIPT": {"type": "string", "minLength": 1},
+            "PORT_WEAK_INTERTWINER_RECEIPT": {"type": "string", "minLength": 1},
+            "PORT_LOAD_TRACE_RECEIPT": {"type": "string", "minLength": 1},
+            "CONTINUUM_LIMIT_RECEIPT": {"type": "string", "minLength": 1},
+            "SPIN_QFT_REALIZATION_RECEIPT": {"type": "string", "minLength": 1},
+            "NO_EXTRA_LIGHT_SECTOR_RECEIPT": {"type": "string", "minLength": 1}
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "promotion_allowed": {"const": false},
+        "physical_port_current_identification": {"const": false},
+        "physical_standard_model_derivation": {"const": false},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "gateStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "FINITE_A5_STRUCTURAL_RECEIPT",
+        "SM_ADJOINT_MODULE_CHARACTER_MATCH",
+        "INVARIANT_SET_8_3_1_ANTIBRIDGE",
+        "CONDITIONAL_EXTERIOR_ONE_GENERATION_WITNESS",
+        "UD12_SOURCE_RECEIPT",
+        "RP_A5_SOURCE_SELECTOR_RECEIPT",
+        "PORT_CURRENT_INNER_RECEIPT",
+        "PORT_REFINEMENT_INTERTWINER_RECEIPT",
+        "BLOCK_DETERMINANT_BALANCE_RECEIPT",
+        "PORT_SPIN_LIFT_RECEIPT",
+        "AXIS_CENTER_DESCENT_RECEIPT",
+        "MAR_MATTER_REALIZATION_RECEIPT",
+        "EXTERIOR_PACKAGE_SELECTION_RECEIPT",
+        "HIGGS_SCALAR_SELECTION_RECEIPT",
+        "A5_FAMILY_ATTACHMENT_RECEIPT",
+        "A5_FAMILY_DESCENT_RECEIPT",
+        "PORT_WEAK_INTERTWINER_RECEIPT",
+        "PORT_LOAD_TRACE_RECEIPT",
+        "CONTINUUM_LIMIT_RECEIPT",
+        "SPIN_QFT_REALIZATION_RECEIPT",
+        "NO_EXTRA_LIGHT_SECTOR_RECEIPT"
+      ],
+      "properties": {
+        "FINITE_A5_STRUCTURAL_RECEIPT": {"type": "boolean"},
+        "SM_ADJOINT_MODULE_CHARACTER_MATCH": {"type": "boolean"},
+        "INVARIANT_SET_8_3_1_ANTIBRIDGE": {"type": "boolean"},
+        "CONDITIONAL_EXTERIOR_ONE_GENERATION_WITNESS": {"type": "boolean"},
+        "UD12_SOURCE_RECEIPT": {"const": false},
+        "RP_A5_SOURCE_SELECTOR_RECEIPT": {"const": false},
+        "PORT_CURRENT_INNER_RECEIPT": {"const": false},
+        "PORT_REFINEMENT_INTERTWINER_RECEIPT": {"const": false},
+        "BLOCK_DETERMINANT_BALANCE_RECEIPT": {"const": false},
+        "PORT_SPIN_LIFT_RECEIPT": {"const": false},
+        "AXIS_CENTER_DESCENT_RECEIPT": {"const": false},
+        "MAR_MATTER_REALIZATION_RECEIPT": {"const": false},
+        "EXTERIOR_PACKAGE_SELECTION_RECEIPT": {"const": false},
+        "HIGGS_SCALAR_SELECTION_RECEIPT": {"const": false},
+        "A5_FAMILY_ATTACHMENT_RECEIPT": {"const": false},
+        "A5_FAMILY_DESCENT_RECEIPT": {"const": false},
+        "PORT_WEAK_INTERTWINER_RECEIPT": {"const": false},
+        "PORT_LOAD_TRACE_RECEIPT": {"const": false},
+        "CONTINUUM_LIMIT_RECEIPT": {"const": false},
+        "SPIN_QFT_REALIZATION_RECEIPT": {"const": false},
+        "NO_EXTRA_LIGHT_SECTOR_RECEIPT": {"const": false}
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

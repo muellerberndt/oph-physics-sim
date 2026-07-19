@@ -7,9 +7,25 @@ summary lives in the README; the living experiment status lives in
 
 ## Screen, scale, and capacity
 
-`P` is carried as the local pixel/cell closure value. In finite screen runs it normalizes cell area, cell entropy `P/4`, cap capacity, and residual weights.
+`P` is typed by derivation profile. The source-map value is
+`alpha_source^-1 = 136.99483517741294`; the gauge-width value is
+`alpha_gauge^-1 = 137.03566013694658`. The measured endpoint
+`137.035999177` is comparison-only and is rejected by generative reducers.
+Legacy configuration aliases remain readable only for artifact replay.
 
-`N_CRC` is carried as the global screen-capacity closure value. Regulator patch counts such as `4096`, `65536`, `262144`, and `1048576` are sampling counts unless a dedicated capacity readback map and terminal normal-form enumerator close the finite capacity gate.
+The canonical capacity quantity is `N = log M0(U_N)`. At a finite stage,
+`M0(q)=alpha(G_q)`: global sections and source-supplied joint kernels define a
+compound confusability graph, and an exact maximum independent set gives the
+public readback-record count. Promotion additionally requires an enumerated
+complete terminal fibre, carrier projection, agreement of the whole fibre
+under scalarization, robust closure `F_set(D)={D}`, and a unique
+regulator-stable zero-slack solution. A greatest fixed point is not a uniqueness
+receipt. The 12-port/30-interface reversible packet is a control only.
+
+Observed horizon radii, measured `Lambda`, electroweak targets, supplied
+labels/decimals, and regulator patch counts cannot produce `N`. They may be
+recorded only as comparison fields. The physical horizon-capacity gate remains
+false until a native terminal fibre and unique stable slack-zero closure exist.
 
 The scale reports write dimensionless-invariant and independent-bridge receipts. `finite_simulator_derived_G_SI` remains false without an accepted dimensionful scale bridge and finite capacity proof.
 
@@ -40,6 +56,23 @@ observer records, object population, and neutral-bulk gates.
 Screen-level angular spectra are measurement-facing diagnostics. They are useful for seed/control studies and viewer payloads.
 
 Physical CMB prediction has a stricter contract: finite OPH sources for amplitude, scalar quotient, IR selectors, finite-collar kernels, recovery rates, Boltzmann handoff, CMB1 custom-parent CDM-limit regression, Standard-Model-off control regression, frozen solver assumptions, blinded comparison setup, and official full-observable likelihood execution. Those gates are reported by the frozen transfer/likelihood closure, physical CMB frontier, and promotion-audit outputs for each concrete run.
+
+The canonical edge-center clock uses the full-collar derivative `P/24`, its
+orientation half `theta=P/48`, `n_s=1-P/48`, and
+`kappa=P/[48(P-phi)]`. Seven independent receipts are required: full-collar
+derivative, orientation-half identity, semigroup defect, refinement defect,
+physical clock binding, a clean source DAG, and a declared generative `P`
+profile whose canonical value matches the packet. Euler's number is a legacy
+diagnostic, not the clock target; the finite survival exponent
+`-log(lambda_2)/Delta t` is also a distinct quantity.
+
+The SCR330 radial source contract is `scr330-radial-v2`. It recomputes Mellin
+windows and derivatives, radial projection, the unrestricted null space,
+finite-window error, quadrature and stability, source ancestry, and the forward
+residual. `SOURCE_DILATION` and `RADIAL_TOMOGRAPHY` are the only theorem-facing
+source modes; `PRIOR_CONTINUATION` never promotes. E4 radial receipts cannot be
+reported as E5 TT/TE/EE predictions, and transfer or likelihood artifacts have
+no edge back into the source DAG.
 
 Related commands include:
 

@@ -536,7 +536,7 @@ def main(argv: list[str] | None = None) -> int:
 
     repair_clock_parser = subparsers.add_parser(
         "repair-clock-report",
-        help="audit whether finite repair traces derive the OPH kappa_rep=e scalar clock",
+        help="audit whether finite repair traces realize the selected OPH P/48 edge-center clock",
     )
     repair_clock_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
     repair_clock_parser.add_argument("--include", nargs="*", default=[], type=Path)
@@ -552,15 +552,25 @@ def main(argv: list[str] | None = None) -> int:
 
     scalar_semigroup_parser = subparsers.add_parser(
         "scalar-repair-semigroup",
-        help="write the scalar repair-semigroup gap audit used by the exact OPH CMB kappa clock",
+        help="write the scalar repair-semigroup audit for the selected OPH P/48 edge-center clock",
     )
     scalar_semigroup_parser.add_argument("--out", required=True, type=Path)
     scalar_semigroup_parser.add_argument("--dimension", default=33, type=int)
-    scalar_semigroup_parser.add_argument("--kappa-rep", default=2.718281828459045, type=float)
+    scalar_semigroup_parser.add_argument(
+        "--kappa-rep",
+        default=None,
+        type=float,
+        help="diagnostic override; omitted selects kappa=(P/48)/(P-phi)",
+    )
     scalar_semigroup_parser.add_argument(
         "--source",
-        default="declared_euler_repair_time_target",
-        choices=["declared_euler_repair_time_target", "finite_state_transition_matrix", "external_theorem_certificate"],
+        default="declared_edge_center_p_over_48_target",
+        choices=[
+            "declared_edge_center_p_over_48_target",
+            "declared_euler_repair_time_target",
+            "finite_state_transition_matrix",
+            "external_theorem_certificate",
+        ],
     )
     scalar_semigroup_parser.add_argument("--finite-lattice-derived", action="store_true")
     scalar_semigroup_parser.add_argument("--matrix-source", default=None)
@@ -704,16 +714,24 @@ def main(argv: list[str] | None = None) -> int:
 
     screen_capacity_parser = subparsers.add_parser(
         "screen-capacity-report",
-        help="write OPH cosmic record/screen-capacity closure readout and regulator-scale comparison",
+        help="write comparison-only horizon normalization and public-record-capacity contract status",
     )
     screen_capacity_parser.add_argument("--out", required=True, type=Path)
     screen_capacity_parser.add_argument(
         "--n-crc",
         default=None,
         type=float,
-        help="direct OPH global screen-capacity closure value; if omitted, use R_dS/l_P readout",
+        help=(
+            "declared N comparison value only (never a capacity producer); if omitted, use the "
+            "observed-horizon R_dS/l_P comparison"
+        ),
     )
-    screen_capacity_parser.add_argument("--r-ds-m", default=1.66e26, type=float)
+    screen_capacity_parser.add_argument(
+        "--r-ds-m",
+        default=1.66e26,
+        type=float,
+        help="observed-horizon radius for a nonpromoting downstream comparison",
+    )
     screen_capacity_parser.add_argument("--planck-length-m", default=1.616e-35, type=float)
     screen_capacity_parser.add_argument(
         "--regulator-patch-counts",
@@ -723,7 +741,7 @@ def main(argv: list[str] | None = None) -> int:
 
     capacity_proxy_parser = subparsers.add_parser(
         "capacity-readback-proxy-report",
-        help="write finite-regulator proxy rows for the OPH F(N) capacity readback audit",
+        help="write legacy finite count proxies beside the exact M_0 public-record evaluator",
     )
     capacity_proxy_parser.add_argument("--run-dir", required=True, nargs="+", type=Path)
     capacity_proxy_parser.add_argument("--out", required=True, type=Path)
@@ -732,8 +750,63 @@ def main(argv: list[str] | None = None) -> int:
         "--n-crc",
         default=None,
         type=float,
-        help="global OPH capacity value used only for finite-regulator fraction reporting",
+        help="comparison-only N value used solely for finite-regulator fraction reporting",
     )
+
+    public_capacity_parser = subparsers.add_parser(
+        "public-record-capacity",
+        help="recompute exact M_0=alpha(G) from a PUBLIC_CHECKPOINT_PACKET",
+    )
+    public_capacity_parser.add_argument("--out", required=True, type=Path)
+    public_capacity_parser.add_argument(
+        "--packet",
+        default=None,
+        type=Path,
+        help="source packet JSON; omit to emit the nonphysical reversible twelve-port control",
+    )
+    public_capacity_parser.add_argument(
+        "--capacity-dimension",
+        default=4,
+        type=int,
+        help="carrier dimension for the bundled reversible control",
+    )
+
+    a5_parser = subparsers.add_parser(
+        "a5-sm-structural-certificate",
+        help="recompute exact A5/C5 twelve-port and conditional SM structural witnesses",
+    )
+    a5_parser.add_argument("--out", required=True, type=Path)
+
+    radial_receipt_parser = subparsers.add_parser(
+        "scr330-radial-receipt",
+        help="emit one fail-closed scr330-radial-v2 source/diagnostic receipt",
+    )
+    radial_receipt_parser.add_argument("--out", required=True, type=Path)
+    radial_receipt_parser.add_argument("--source-dag", required=True, type=Path)
+    radial_receipt_parser.add_argument("--payload", default=None, type=Path)
+    radial_receipt_parser.add_argument("--receipt", required=True)
+    radial_receipt_parser.add_argument("--claim-tier", required=True, choices=("E0", "E1", "E2", "E3", "E4", "E5"))
+    radial_receipt_parser.add_argument("--claimed-pass", action="store_true")
+    radial_receipt_parser.add_argument("--physical-tt-te-ee-claim", action="store_true")
+    radial_receipt_parser.add_argument("--blocker", action="append", default=[])
+
+    edge_clock_parser = subparsers.add_parser(
+        "edge-center-clock-certificate",
+        help="validate a hash-bound P/48 edge-center clock evidence packet",
+    )
+    edge_clock_parser.add_argument("--evidence", required=True, type=Path)
+    edge_clock_parser.add_argument("--out", required=True, type=Path)
+    edge_clock_parser.add_argument("--p-value", default=None, type=float)
+    edge_clock_parser.add_argument("--tolerance", default=1.0e-12, type=float)
+
+    collar_clause_parser = subparsers.add_parser(
+        "collar-clause-certificate",
+        help="verify explicit retained cross-cut factorization through a collar flux basis",
+    )
+    collar_clause_parser.add_argument("--packet", required=True, type=Path)
+    collar_clause_parser.add_argument("--out", required=True, type=Path)
+    collar_clause_parser.add_argument("--tolerance", default=1.0e-10, type=float)
+    collar_clause_parser.add_argument("--max-ambient-dimension", default=256, type=int)
     capacity_proxy_parser.add_argument("--max-observer-views", default=4096, type=int)
 
     scale_bridge_parser = subparsers.add_parser(
@@ -746,7 +819,10 @@ def main(argv: list[str] | None = None) -> int:
         "--n-star",
         default=None,
         type=float,
-        help="OPH capacity N for dimensionless P/N invariants; defaults to screen_capacity.DEFAULT_N_CRC",
+        help=(
+            "comparison-only N for dimensionless P/N readouts; the default is the observed-horizon "
+            "compatibility value and cannot produce physical capacity"
+        ),
     )
     scale_bridge_parser.add_argument(
         "--lambda-star-m2",
@@ -998,7 +1074,10 @@ def main(argv: list[str] | None = None) -> int:
         "--n-crc",
         default=None,
         type=float,
-        help="direct OPH global screen-capacity value; defaults to screen_capacity.DEFAULT_N_CRC",
+        help=(
+            "comparison-only N used by the declared repair-depth ansatz; defaults to the observed-horizon "
+            "compatibility value and never produces physical public-record capacity"
+        ),
     )
     repair_scale_parser.add_argument("--repair-rounds", default=24, type=int)
     repair_scale_parser.add_argument(
@@ -1561,7 +1640,11 @@ def main(argv: list[str] | None = None) -> int:
     galaxy_static_parser.add_argument("--lambda-initial", default=1.0, type=float)
     galaxy_static_parser.add_argument("--min-points", default=12, type=int)
     galaxy_static_parser.add_argument("--min-galaxies", default=1, type=int)
-    galaxy_static_parser.add_argument("--diagnostic-only", action="store_true")
+    galaxy_static_parser.add_argument(
+        "--diagnostic-only",
+        action="store_true",
+        help="deprecated compatibility flag; the continuation fit is always nonpromoting",
+    )
 
     viewer_parser = subparsers.add_parser("run-viewer", help="write a standalone OPH receipt HTML viewer")
     viewer_parser.add_argument("--run-dir", required=True, type=Path)
@@ -2475,6 +2558,68 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "public-record-capacity":
+        from oph_fpe.cosmology.public_record_capacity import write_public_record_capacity_report
+
+        result = write_public_record_capacity_report(
+            args.out,
+            packet_path=args.packet,
+            capacity_dimension=args.capacity_dimension,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "a5-sm-structural-certificate":
+        from oph_fpe.gauge.a5_sm_certificate import write_a5_sm_structural_certificate
+
+        result = write_a5_sm_structural_certificate(args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "scr330-radial-receipt":
+        from oph_fpe.cosmology.source_screen_spectrum import write_radial_receipt
+
+        source_dag = json.loads(args.source_dag.read_text(encoding="utf-8"))
+        payload = (
+            json.loads(args.payload.read_text(encoding="utf-8"))
+            if args.payload is not None
+            else None
+        )
+        result = write_radial_receipt(
+            args.out,
+            receipt=args.receipt,
+            passed=args.claimed_pass,
+            claim_tier=args.claim_tier,
+            source_dag=source_dag,
+            blockers=args.blocker,
+            physical_tt_te_ee_claim=args.physical_tt_te_ee_claim,
+            payload=payload,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "edge-center-clock-certificate":
+        from oph_fpe.constants.oph_pixel import P_STAR
+        from oph_fpe.cosmology.edge_center_clock import write_edge_center_clock_certificate
+
+        evidence = json.loads(args.evidence.read_text(encoding="utf-8"))
+        result = write_edge_center_clock_certificate(
+            args.out,
+            evidence,
+            P=P_STAR if args.p_value is None else args.p_value,
+            tolerance=args.tolerance,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "collar-clause-certificate":
+        from oph_fpe.cosmology.collar_clause import write_collar_clause_certificate
+
+        packet = json.loads(args.packet.read_text(encoding="utf-8"))
+        result = write_collar_clause_certificate(
+            args.out,
+            packet,
+            tolerance=args.tolerance,
+            max_ambient_dimension=args.max_ambient_dimension,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
     if args.command == "scale-bridge-report":
         from oph_fpe.constants.oph_pixel import P_STAR
         from oph_fpe.cosmology.scale_bridge import ScaleBridgeInputs, write_scale_bridge_report
@@ -3279,7 +3424,7 @@ def main(argv: list[str] | None = None) -> int:
             lambda_initial=args.lambda_initial,
             min_points=args.min_points,
             min_galaxies=args.min_galaxies,
-            physical_claim=not bool(args.diagnostic_only),
+            physical_claim=False,
         )
         write_static_galaxy_measurement_outputs(dataset, result, args.out_dir)
         print(json.dumps(result, indent=2, default=str))

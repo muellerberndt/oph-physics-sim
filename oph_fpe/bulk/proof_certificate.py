@@ -23,7 +23,6 @@ from oph_fpe.claims import (
     FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
-    OBJECT_BULK_POPULATION_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
     OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
@@ -89,7 +88,9 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
     finite_contract_report = _independently_recomputed_finite_contract(root)
     einstein_branch_report = _read_json(root / "einstein_branch_entry_report.json")
     explicit_einstein_bridge_manifest = _read_json(root / "einstein_bridge_manifest.json")
-    einstein_bridge_manifest = explicit_einstein_bridge_manifest or einstein_bridge_manifest_report(root)
+    # Recompute from validated theorem-tagged sidecars on every audit.  The
+    # persisted manifest and aggregate branch report remain diagnostics only.
+    einstein_bridge_manifest = einstein_bridge_manifest_report(root)
     use_einstein_bridge_manifest = bool(explicit_einstein_bridge_manifest)
     observer_modular_experience = _read_json(root / "observer_modular_experience_report.json")
     object_chart_name, object_chart = _best_object_chart_report(root)
@@ -437,27 +438,11 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         EINSTEIN_BRANCH_ENTRY_RECEIPT,
         "einstein_branch_entry_contract_receipt",
     )
-    einstein_branch_entry = (
-        manifest_einstein_branch_entry if use_einstein_bridge_manifest else legacy_einstein_branch_entry
-    )
+    einstein_branch_entry = manifest_einstein_branch_entry
     einstein_branch_blockers = list(
-        (
-            einstein_bridge_manifest.get("einstein_branch_entry_blockers")
-            or einstein_bridge_manifest.get("blockers")
-            or []
-        )
-        if use_einstein_bridge_manifest
-        else finite_contract_report.get("einstein_branch_entry_blockers")
-        or einstein_branch_report.get("blockers")
-        or [
-            "E0_einstein_branch_entry_umbrella",
-            "E1_null_generator_stress_charge",
-            "E2_fixed_cap_entropy_stationarity",
-            "E3_small_ball_area_bridge",
-            "E4_all_timelike_tensor_upgrade",
-            "E5_lambda_constancy_conservation",
-            "E6_newton_coupling_forbidden_input_audit",
-        ]
+        einstein_bridge_manifest.get("einstein_branch_entry_blockers")
+        or einstein_bridge_manifest.get("blockers")
+        or []
     )
     production_gravity = False
     physical_gravity_prediction = False
@@ -1089,6 +1074,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "written": bool(finite_contract_report) or bool(einstein_branch_report) or use_einstein_bridge_manifest,
             "receipt": einstein_branch_entry,
             "manifest_written": use_einstein_bridge_manifest,
+            "manifest_recomputed_from_sidecars": True,
             "manifest_receipt": _truthy(
                 einstein_bridge_manifest,
                 OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
@@ -1099,11 +1085,17 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "legacy_issue": 503,
             "legacy_issue_url": "https://github.com/FloatingPragma/observer-patch-holography/issues/503",
             "legacy_source_report_written": bool(einstein_branch_report),
+            "legacy_aggregate_branch_entry_ignored": legacy_einstein_branch_entry,
+            "persisted_manifest_branch_entry_ignored": _truthy_any(
+                explicit_einstein_bridge_manifest,
+                OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
+                EINSTEIN_BRANCH_ENTRY_RECEIPT,
+                "einstein_branch_entry_contract_receipt",
+                "einstein_branch_entry_receipt",
+            ),
             "blockers": einstein_branch_blockers,
-            "child_gates": (
-                einstein_bridge_manifest.get("einstein_branch_entry_child_gates", {})
-                if use_einstein_bridge_manifest
-                else finite_contract_report.get("einstein_branch_entry_child_gates", {})
+            "child_gates": einstein_bridge_manifest.get(
+                "einstein_branch_entry_child_gates", {}
             ),
             "provenance_tags": dict(einstein_bridge_manifest.get("provenanceTags") or {}),
             "required_receipt_files": list(einstein_bridge_manifest.get("requiredReceiptFiles") or []),

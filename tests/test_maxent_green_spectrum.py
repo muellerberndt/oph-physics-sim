@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants
+from oph_fpe.cosmology.edge_center_clock import edge_center_clock_target
 from oph_fpe.cosmology.maxent_green_spectrum import (
     maxent_green_spectrum_report,
     write_maxent_green_spectrum_report,
@@ -14,7 +14,7 @@ from oph_fpe.cosmology.maxent_green_spectrum import (
 def test_maxent_green_spectrum_encodes_paper_source_without_physical_claim():
     report = maxent_green_spectrum_report(patch_count=4096, ell_max=32, primordial_k_count=8)
     pixel = OPHPixelConstants()
-    expected_eta = math.e * (pixel.P - pixel.phi)
+    target = edge_center_clock_target(pixel.P)
 
     assert report["MAXENT_GREEN_SOURCE_RECEIPT"] is False
     assert report["maxent_inverse_laplacian"]["eta0_flat_D_ell_receipt"] is True
@@ -26,10 +26,33 @@ def test_maxent_green_spectrum_encodes_paper_source_without_physical_claim():
     assert report["selector_elimination_v1_5"]["theorem_side_receipt"] is False
     assert report["selector_elimination_v1_5"]["q_IR_selector_removed"] is False
     assert report["selector_elimination_v1_5"]["ell_IR_selector_removed"] is False
-    assert math.isclose(report["fractional_repair_tilt"]["eta_R"], expected_eta)
-    assert abs(report["fractional_repair_tilt"]["n_s"] - 0.964841143031) < 2.0e-12
+    assert report["fractional_repair_tilt"]["eta_R"] == target.theta
+    assert report["fractional_repair_tilt"]["n_s"] == target.n_s
+    assert report["fractional_repair_tilt"]["kappa_rep"] == target.kappa_rep
+    assert report["fractional_repair_tilt"]["kappa_rep_source"] == (
+        "selected_edge_center_p_over_48_target"
+    )
+    assert report["fractional_repair_tilt"]["e_diagnostic_control"]["promoting"] is False
     assert report["fractional_repair_tilt"]["repair_clock_certificate"] is False
+    assert report["EDGE_CENTER_CLOCK_RECEIPT"] is False
     assert report["finite_lattice_derived"] is False
+    assert report["physical_cmb_prediction"] is False
+
+
+def test_maxent_kappa_override_is_explicitly_nonselected():
+    report = maxent_green_spectrum_report(
+        patch_count=4096,
+        ell_max=32,
+        primordial_k_count=8,
+        kappa_rep=9.0,
+    )
+    tilt = report["fractional_repair_tilt"]
+
+    assert tilt["selected_branch"] == "diagnostic_kappa_override"
+    assert tilt["selected_theorem_target"] is False
+    assert tilt["kappa_rep_source"] == "diagnostic_override"
+    assert "not the selected P/48 target" in tilt["formula"]
+    assert report["MAXENT_GREEN_SOURCE_RECEIPT"] is False
     assert report["physical_cmb_prediction"] is False
 
 

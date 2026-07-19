@@ -13,16 +13,19 @@ from oph_fpe.constants.oph_pixel import P_STAR, total_entropy_capacity
 DEFAULT_R_DS_M = 1.66e26
 DEFAULT_L_PLANCK_M = 1.616e-35
 DEFAULT_REGULATOR_PATCH_COUNTS = (4_096, 65_536, 262_144, 1_048_576)
-DEFAULT_N_CRC = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M) ** 2
+DEFAULT_OBSERVED_HORIZON_N_COMPARISON = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PLANCK_M) ** 2
+# Backward-compatible numeric alias.  This value is an observed-horizon
+# comparison, never a direct public-record capacity producer.
+DEFAULT_N_CRC = DEFAULT_OBSERVED_HORIZON_N_COMPARISON
 
 
 @dataclass(frozen=True)
 class OPHScreenCapacityConstants:
-    """Global capacity closure value, separate from finite regulator patch count."""
+    """Typed capacity comparison, separate from finite regulator patch count."""
 
     n_crc: float = DEFAULT_N_CRC
     p_value: float = P_STAR
-    source: str = "observed_branch_public"
+    source: str = "observed_horizon_comparison"
 
     @property
     def n_patch_bare_ratio(self) -> float:
@@ -79,12 +82,12 @@ def screen_capacity_closure_report(
     regulator_patch_counts: tuple[int, ...] = DEFAULT_REGULATOR_PATCH_COUNTS,
 ) -> dict[str, Any]:
     if n_crc is None:
-        input_mode = "observed_de_sitter_radius_readout"
+        input_mode = "observed_horizon_comparison"
         n_patch = bare_horizon_area_ratio(radius_m, planck_length_m)
         n_scr = entropy_capacity_from_radius(radius_m, planck_length_m)
         r_ds_m = float(radius_m)
     else:
-        input_mode = "direct_N_CRC_closure_input"
+        input_mode = "declared_N_comparison"
         n_scr = float(n_crc)
         n_patch = n_scr / math.pi
         r_ds_m = math.sqrt(n_patch) * float(planck_length_m)
@@ -98,18 +101,28 @@ def screen_capacity_closure_report(
     physical_cells = physical_cells_for_entropy_capacity(n_scr, p_value)
     return {
         "mode": "oph_screen_capacity_closure_v0",
-        "source": "observers_are_all_you_need.tex cosmic record-capacity closure",
+        "contract_version": "pro5-public-record-capacity-v1",
+        "source": "typed downstream horizon comparison plus exact finite public-record evaluator",
         "closure_equations": {
-            "cosmic_record_closure": "N_CRC = F(N_CRC)",
-            "readback_map": "F(N)=Cap_read(Obs(nf(U_N)))",
-            "active_capacity": "N_CRC = log dim Z_boundary^act after predictive quotient",
+            "finite_terminal_capacity": "M_0(q)=alpha(G_q)",
+            "set_valued_readback": "F_set,r,0(D)={M_0(q):q in complete terminal fiber Omega_tilde(r,D)}",
+            "whole_fiber_scalarization": "N=log M_0(U_N) only when the complete nonempty fiber has one common value",
+            "robust_closure": "F_set,r,0(D)={D}",
+            "finite_size_slack": "s_r(D)=log(D)-log(M_0,r(D))",
+            "unique_physical_selector": "one regulator-stable zero of s(D), not greatest-fixed-point order theory",
             "lambda_readout": "Lambda_CRC * l_P^2 = 3*pi / N_CRC",
             "dimensionless_lambda_readout": "Lambda_CRC * ell_star^2 = 3*pi / N_CRC",
-            "count_density_selector": "N_star = MAR argmax_N [log|Omega_N^sc| - N]",
-            "pressure_certificate": "ell'(N_star)=0 with ell''<0, or Banach contraction for F",
+        },
+        "producer_firewall": {
+            "observed_horizon_radius_may_define_capacity": False,
+            "measured_Lambda_may_define_capacity": False,
+            "electroweak_bridge_may_define_capacity": False,
+            "operational_resolution_may_define_capacity": False,
+            "supplied_capacity_label_may_enter_packet_predicate": False,
         },
         "observed_branch_normalization": {
             "input_mode": input_mode,
+            "producer_eligible": False,
             "R_dS_m": r_ds_m,
             "planck_length_m": float(planck_length_m),
             "N_CRC": n_scr,
@@ -126,15 +139,13 @@ def screen_capacity_closure_report(
             "constants": capacity.as_dict(),
         },
         "active_capacity_requirements": {
-            "capacity_variable": "entropy_capacity_N_not_raw_Hilbert_dimension",
-            "active_edge_center_algebra": "Z_boundary^act = Z_boundary^raw / predictive-equivalence",
-            "predictive_equivalence": (
-                "central record labels are identified when they induce the same future observer-accessible "
-                "probability law under same-interface continuations"
-            ),
-            "observer_sector": "Obs(nf(U_N)) must select stable self-reading observer-supporting terminal normal forms",
-            "readback_value": "Cap_read returns the active horizon record capacity reconstructed by observers",
-            "finite_regulator_status": "not implemented here; finite patch counts remain numerical regulators",
+            "capacity_variable": "D=dim(H_cap), M_0=multiplicative code size, N=log(M_0)",
+            "record_atoms": "total local/interface atom readout maps and compatible public global sections",
+            "endogenous_reachability": "nonempty semantic histories that do not read a target or supplied D label",
+            "joint_checkpoints": "complete source-supplied global kernels; local marginals never determine the joint kernel",
+            "decoder": "maximum independent set of the compound confusability graph",
+            "whole_fiber": "complete nonempty terminal fiber before scalarization",
+            "finite_regulator_status": "exact evaluator implemented; physical source packet and unique-slack law remain open",
         },
         "regulator_scale_comparison": [
             {
@@ -147,15 +158,20 @@ def screen_capacity_closure_report(
         ],
         "readiness_gates": {
             "local_P_cell_capacity_available": True,
-            "N_CRC_closure_value_declared": True,
+            "N_CRC_closure_value_declared": False,
             "observed_branch_N_scr_readout_available": True,
+            "observed_branch_is_comparison_only": True,
+            "finite_correctable_public_record_evaluator_implemented": True,
+            "reference_reversible_12_port_packet_certified": True,
             "active_edge_center_predictive_quotient_implemented": False,
             "observer_supporting_terminal_sector_implemented": False,
             "capacity_readback_map_from_terminal_records_implemented": False,
             "F_N_readback_map_implemented": False,
-            "count_density_normal_form_enumerator_implemented": False,
-            "banach_contraction_certificate_implemented": False,
-            "pressure_certificate_implemented": False,
+            "source_derived_complete_terminal_fiber_implemented": False,
+            "whole_fiber_scalar_readback_implemented": False,
+            "robust_closure_F_set_equals_D_certified": False,
+            "unique_regulator_stable_slack_zero_certified": False,
+            "horizon_record_saturation_receipt": False,
             "N_CRC_fixed_point_solved_from_finite_simulator": False,
             "Lambda_from_finite_simulator_record_closure": False,
             "independent_scale_bridge_supplied": False,
@@ -165,16 +181,17 @@ def screen_capacity_closure_report(
         "simulation_relevance": (
             "This closure is globally relevant to cosmology and capacity normalization. It should not be "
             "used to reinterpret ordinary finite run patch counts as physical horizon capacity. Current "
-            "64k/256k/1M runs remain numerical regulators unless a dedicated readback map F(N) and "
-            "self-closure normal-form enumeration are implemented."
+            "64k/256k/1M runs remain numerical regulators. The exact finite evaluator consumes "
+            "PUBLIC_CHECKPOINT_PACKET evidence, but no source-derived complete physical packet/fiber or "
+            "unique regulator-stable slack zero is currently emitted."
         ),
         "physical_cmb_prediction": False,
         "physical_matter_power_prediction": False,
         "claim_boundary": (
-            "Observed-branch screen-capacity closure report. Computes the de Sitter entropy-capacity "
-            "normalization and dimensionless Lambda*l_P^2 readout from the paper equations, but does not "
-            "solve the OPH readback fixed point from simulator data and does not supply an independent "
-            "dimensionful scale bridge for G_SI."
+            "Comparison-only horizon normalization plus Pro5 contract status. The observed radius or a "
+            "declared N cannot produce public-record capacity. Physical N requires a source-derived complete "
+            "packet/fiber, common M_0=alpha(G_q), and a unique regulator-stable slack zero; the horizon and "
+            "electroweak identifications are independent downstream receipts."
         ),
     }
 
@@ -198,12 +215,11 @@ def capacity_readback_proxy_report(
     n_crc: float = DEFAULT_N_CRC,
     max_observer_views: int = 4096,
 ) -> dict[str, Any]:
-    """Summarize finite-run proxies relevant to the OPH F(N) capacity readback.
+    """Summarize legacy finite-run counts beside the exact M_0 evaluator.
 
     This is deliberately diagnostic. It reads finite regulator outputs and
-    estimates active-record/terminal-sector proxy counts, but it does not
-    implement the edge-center predictive quotient, terminal normal-form
-    enumerator, or the N_CRC fixed-point solver.
+    estimates counts only.  Counts are not a substitute for a joint checkpoint
+    kernel, compound confusability graph, or maximum-independent-set decoder.
     """
 
     candidates = _capacity_candidate_dirs([Path(path) for path in run_dirs])
@@ -232,9 +248,9 @@ def capacity_readback_proxy_report(
         "terminal_normal_form_enumerator_implemented": False,
         "capacity_readback_map_from_terminal_records_implemented": False,
         "F_N_readback_map_implemented": False,
-        "count_density_normal_form_enumerator_implemented": False,
-        "banach_contraction_certificate_implemented": False,
-        "pressure_certificate_implemented": False,
+        "finite_correctable_public_record_evaluator_implemented": True,
+        "source_derived_complete_terminal_fiber_implemented": False,
+        "unique_regulator_stable_slack_zero_certified": False,
         "N_CRC_fixed_point_solved_from_finite_simulator": False,
     }
     return {
@@ -258,9 +274,8 @@ def capacity_readback_proxy_report(
         "strict_neutral_bulk": False,
         "claim_boundary": (
             "Finite capacity-readback proxy only. Rows summarize emitted finite-regulator observer/object "
-            "support and count-density proxy quantities. They do not implement Cap_read(Obs(nf(U_N))), "
-            "the active edge-center predictive quotient, terminal normal-form enumeration, or the "
-            "N_CRC=F(N_CRC) fixed-point proof."
+            "support and count proxies. They do not provide PUBLIC_CHECKPOINT_PACKET joint kernels, "
+            "M_0(q)=alpha(G_q), whole-fiber scalarization, or the unique regulator-stable slack zero."
         ),
     }
 

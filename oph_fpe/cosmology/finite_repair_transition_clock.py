@@ -6,12 +6,18 @@ import math
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 import yaml
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.cosmology.edge_center_clock import (
+    E_DIAGNOSTIC_KAPPA,
+    EdgeCenterClockTarget,
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 from oph_fpe.cosmology.scalar_repair_semigroup import ScalarRepairSemigroupSpec, scalar_repair_semigroup_report
 
 
@@ -50,6 +56,7 @@ class FiniteRepairTransitionClockConfig:
     weight_field: str = "transition_history_mean_modal_mass"
     min_transition_count: int = 1
     p_value: float = P_STAR
+    clock_evidence: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -135,6 +142,7 @@ def write_finite_repair_transition_clock_report(
     weight_field: str = "transition_history_mean_modal_mass",
     min_transition_count: int = 1,
     p_value: float = P_STAR,
+    clock_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     report, matrices = finite_repair_transition_clock_report(
         run_dir,
@@ -146,6 +154,7 @@ def write_finite_repair_transition_clock_report(
             weight_field=weight_field,
             min_transition_count=min_transition_count,
             p_value=p_value,
+            clock_evidence=clock_evidence,
         ),
     )
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -171,6 +180,7 @@ def write_finite_repair_transition_clock_report(
             finite_lattice_derived=bool(eligibility["eligible"]),
             matrix_source=str(out_dir / "finite_repair_transition_matrix.npz"),
             p_value=p_value,
+            clock_evidence=clock_evidence,
         )
     )
     scalar["transition_matrix_certificate"] = {
@@ -190,10 +200,14 @@ def write_finite_repair_transition_clock_report(
         "eligibility": eligibility,
         "matrix_ready": bool(eligibility["eligible"]),
         "clock_normalization_certified": bool(report["clock_normalization_certified"]),
-        "required_repair_step_time_for_kappa_e": report["primary"].get(
-            "required_repair_step_time_for_kappa_e"
+        "required_repair_step_time_for_selected_edge_center": report["primary"].get(
+            "required_repair_step_time_for_selected_edge_center"
+        ),
+        "repair_step_time_for_e_diagnostic_control": report["primary"].get(
+            "repair_step_time_for_e_diagnostic_control"
         ),
         "clock_normalization_candidates": report.get("clock_normalization_candidates", []),
+        "edge_center_clock_evidence": report.get("edge_center_clock_evidence", {}),
         "primary_lambda_2": report["primary"].get("lambda_2"),
         "primary_gamma": report["primary"].get("gamma_continuous"),
     }
@@ -293,21 +307,25 @@ def finite_repair_transition_clock_sweep_report(
         row
         for row in rows
         if row.get("finite_transition_matrix_ready")
-        and _float_or_none(row.get("relative_error_to_kappa_e")) is not None
+        and _float_or_none(row.get("relative_error_to_selected_edge_center_kappa")) is not None
     ]
-    finite_rows.sort(key=lambda row: float(row["relative_error_to_kappa_e"]))
+    finite_rows.sort(key=lambda row: float(row["relative_error_to_selected_edge_center_kappa"]))
     certified_rows = [row for row in finite_rows if row.get("repair_clock_certificate")]
-    target = OPHPixelConstants(P=float(config.p_value))
+    target = edge_center_clock_target(float(config.p_value))
     return {
-        "mode": "oph_finite_repair_transition_clock_sweep_v0",
+        "mode": "oph_finite_repair_transition_clock_sweep_v1",
         "source_run_dir": str(Path(run_dir)),
         "target": {
-            "required_kappa_rep": math.e,
-            "required_eta_R": float(math.e * (target.P - target.phi)),
-            "required_n_s": float(1.0 - math.e * (target.P - target.phi)),
+            "selected_branch": "edge_center_orientation_half",
+            "required_kappa_rep": target.kappa_rep,
+            "required_eta_R": target.theta,
+            "required_n_s": target.n_s,
+            "full_collar_derivative_target": target.full_collar_derivative,
+            "orientation_halves": target.orientation_halves,
             "P": float(target.P),
             "phi": float(target.phi),
-            "delta_P": float(target.P - target.phi),
+            "delta_P": target.delta_P,
+            "e_diagnostic_control": target.as_jsonable()["diagnostic_controls"]["e"],
         },
         "inputs": {
             "packet_fieldset_count": len(config.packet_fieldsets),
@@ -339,8 +357,9 @@ def finite_repair_transition_clock_sweep_report(
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "Finite repair-clock quotient sweep over observer-visible transition-history packet fields. "
-            "It may identify a better finite diagnostic quotient, but a physical CMB prediction still "
-            "requires a predeclared quotient/clock theorem and the full finite CMB input contract."
+            "It may identify a finite diagnostic quotient closer to the selected P/48 edge-center target, "
+            "but search cannot supply the full-collar, orientation-half, semigroup/refinement, clock-binding, "
+            "or source-DAG evidence receipts required for promotion."
         ),
     }
 
@@ -367,13 +386,22 @@ def finite_repair_transition_clock_report(
     raw = _row_stochastic(counts)
     reversible = _reversible_projection(counts)
     pixel = OPHPixelConstants(P=float(config.p_value))
-    delta_p = float(pixel.P - pixel.phi)
-    target_kappa = math.e
-    target_eta = float(target_kappa * delta_p)
-    raw_summary = _matrix_summary(raw, delta_p=delta_p, repair_step_time=config.repair_step_time)
+    clock_target = edge_center_clock_target(float(config.p_value))
+    clock_evidence = validate_edge_center_clock_evidence(
+        config.clock_evidence,
+        P=float(config.p_value),
+    )
+    delta_p = clock_target.delta_P
+    target_kappa = clock_target.kappa_rep
+    target_eta = clock_target.theta
+    raw_summary = _matrix_summary(
+        raw,
+        target=clock_target,
+        repair_step_time=config.repair_step_time,
+    )
     reversible_summary = _matrix_summary(
         reversible,
-        delta_p=delta_p,
+        target=clock_target,
         repair_step_time=config.repair_step_time,
     )
     matrix_summaries = {
@@ -390,13 +418,31 @@ def finite_repair_transition_clock_report(
     )
     finite_ready = bool(eligibility["eligible"])
     rel_error = abs(float(primary["kappa_rep_estimate"]) - target_kappa) / target_kappa if finite_ready else None
-    clock_certified = bool(finite_ready and rel_error is not None and rel_error <= 0.05)
+    rel_error_e_diagnostic = (
+        abs(float(primary["kappa_rep_estimate"]) - E_DIAGNOSTIC_KAPPA) / E_DIAGNOSTIC_KAPPA
+        if finite_ready
+        else None
+    )
     source_status = _clock_normalization_source_status(config.clock_normalization_source)
     numeric_clock_match = bool(finite_ready and rel_error is not None and rel_error <= 0.05)
-    clock_certified = bool(numeric_clock_match and source_status["theorem_grade"])
-    clock_modes = _clock_mode_reports(primary, finite_ready=finite_ready, delta_p=delta_p)
+    e_diagnostic_match = bool(
+        finite_ready
+        and rel_error_e_diagnostic is not None
+        and rel_error_e_diagnostic <= 0.05
+    )
+    clock_certified = bool(
+        numeric_clock_match
+        and clock_evidence["edge_center_clock_evidence_complete"]
+    )
+    clock_modes = _clock_mode_reports(
+        primary,
+        finite_ready=finite_ready,
+        target=clock_target,
+        clock_certified=clock_certified,
+        numeric_clock_match=numeric_clock_match,
+    )
     report = {
-        "mode": "oph_finite_repair_transition_clock_v0",
+        "mode": "oph_finite_repair_transition_clock_v1",
         "source_run_dir": str(Path(run_dir)),
         "observer_views_path": str(observer_path),
         "packet_fields": list(config.packet_fields),
@@ -411,42 +457,54 @@ def finite_repair_transition_clock_report(
         "state_count": int(len(labels)),
         "state_labels": [json.dumps(label, sort_keys=True) for label in labels],
         "target": {
+            "selected_branch": "edge_center_orientation_half",
+            "formula": "rho_full=P/24; theta=rho_full/2=P/48; kappa_rep=theta/(P-phi)",
             "required_kappa_rep": target_kappa,
             "required_eta_R": target_eta,
-            "required_n_s": 1.0 - target_eta,
+            "required_n_s": clock_target.n_s,
+            "full_collar_derivative_target": clock_target.full_collar_derivative,
+            "orientation_halves": clock_target.orientation_halves,
             "P": float(pixel.P),
             "phi": float(pixel.phi),
             "delta_P": delta_p,
+            "e_diagnostic_control": clock_target.as_jsonable()["diagnostic_controls"]["e"],
         },
         "matrices": matrix_summaries,
         "primary": primary,
         "transition_clock_eligibility": eligibility,
         "clock_normalization_candidates": _clock_normalization_candidates(
             Path(run_dir),
-            required_step_time=primary.get("required_repair_step_time_for_kappa_e"),
+            required_step_time=primary.get("required_repair_step_time_for_selected_edge_center"),
         ),
-        "relative_error_to_kappa_e": rel_error,
+        "relative_error_to_selected_edge_center_kappa": rel_error,
+        "relative_error_to_e_diagnostic_control": rel_error_e_diagnostic,
         "clock_normalization_numeric_match": numeric_clock_match,
-        "repair_scale_hypothesis_clock_match": bool(
-            numeric_clock_match and source_status["hypothesis_side"]
-        ),
+        "edge_center_target_numeric_match": numeric_clock_match,
+        "e_diagnostic_numeric_match": e_diagnostic_match,
         "finite_transition_matrix_ready": finite_ready,
+        "finite_transition_matrix_derived": finite_ready,
+        "finite_step_survival_exponent_derived": finite_ready,
         "finite_lattice_derived": finite_ready,
+        "edge_center_clock_evidence": clock_evidence,
+        **clock_evidence["receipts"],
+        "EDGE_CENTER_CLOCK_RECEIPT": clock_evidence["EDGE_CENTER_CLOCK_RECEIPT"],
         "clock_normalization_certified": clock_certified,
         "repair_clock_certificate": clock_certified,
         "eta_R_finite_lattice_derived": clock_certified,
         "clock_modes": clock_modes,
-        "repair_clock_empirical_certificate": bool(clock_modes["empirical"]["clock_normalization_certified"]),
-        "repair_clock_e_hypothesis_certificate": bool(
-            clock_modes["e_hypothesis"]["clock_normalization_certified"]
-        ),
-        "repair_clock_crc48_hypothesis_certificate": bool(
-            clock_modes["crc48_hypothesis"]["clock_normalization_certified"]
-        ),
-        "eta_R_empirical_finite_lattice_derived": bool(clock_modes["empirical"]["eta_R_finite_lattice_derived"]),
-        "physical_cmb_eligible_eta_R_empirical": bool(
-            clock_modes["empirical"]["eta_R_finite_lattice_derived"]
-        ),
+        "repair_clock_edge_center_certificate": clock_certified,
+        "repair_clock_empirical_certificate": False,
+        "repair_clock_e_diagnostic_certificate": False,
+        "eta_R_empirical_finite_lattice_derived": False,
+        "physical_cmb_eligible_eta_R_empirical": False,
+        "finite_step_survival": {
+            "lambda_2": primary.get("lambda_2"),
+            "exponent_per_declared_step": primary.get("finite_step_survival_exponent"),
+            "declared_step_time": float(config.repair_step_time),
+            "distinct_from_full_collar_derivative": True,
+            "satisfies_full_collar_derivative_receipt": False,
+            "promoting": False,
+        },
         "physical_cmb_prediction": False,
         "blockers": _blockers(
             finite_ready,
@@ -454,13 +512,15 @@ def finite_repair_transition_clock_report(
             numeric_clock_match,
             source_status,
             primary,
+            clock_evidence,
         ),
         "claim_boundary": (
             "Finite observer-visible transition-matrix clock diagnostic. Packet paths are read from "
             "observer_views.jsonl and projected to a declared support-visible quotient alphabet. The report "
-            "is finite-lattice-derived as a transition-matrix diagnostic, but it certifies the exact CMB "
-            "repair clock only if the primary matrix yields kappa_rep=e under a theorem-grade predeclared "
-            "repair-step time. Hypothesis-side clock matches are reported separately."
+            "derives a finite-step survival exponent, which remains distinct from the full-collar derivative. "
+            "The selected clock is theta=P/48 with kappa_rep=(P/48)/(P-phi), and it can certify only when "
+            "all explicit edge-center evidence receipts pass. Euler's number is a named nonpromoting "
+            "diagnostic control only."
         ),
     }
     return report, {"counts": counts, "raw_empirical": raw, "reversible_empirical": reversible}
@@ -469,8 +529,8 @@ def finite_repair_transition_clock_report(
 def _sweep_row(fieldset_name: str, report: dict[str, Any]) -> dict[str, Any]:
     primary = report.get("primary", {}) if isinstance(report, dict) else {}
     eligibility = validate_transition_clock_eligibility(report)
-    rel_error = _float_or_none(report.get("relative_error_to_kappa_e"))
-    required_step = _float_or_none(primary.get("required_repair_step_time_for_kappa_e"))
+    rel_error = _float_or_none(report.get("relative_error_to_selected_edge_center_kappa"))
+    required_step = _float_or_none(primary.get("required_repair_step_time_for_selected_edge_center"))
     declared_step = _float_or_none(report.get("repair_step_time"))
     declared_vs_required = (
         abs(declared_step - required_step) / max(abs(required_step), 1.0e-30)
@@ -496,10 +556,6 @@ def _sweep_row(fieldset_name: str, report: dict[str, Any]) -> dict[str, Any]:
             eligibility["eligible"]
             and report.get("clock_normalization_numeric_match", False)
         ),
-        "repair_scale_hypothesis_clock_match": bool(
-            eligibility["eligible"]
-            and report.get("repair_scale_hypothesis_clock_match", False)
-        ),
         "repair_clock_certificate": bool(
             eligibility["eligible"] and report.get("repair_clock_certificate", False)
         ),
@@ -510,8 +566,14 @@ def _sweep_row(fieldset_name: str, report: dict[str, Any]) -> dict[str, Any]:
         "kappa_rep_estimate": primary.get("kappa_rep_estimate"),
         "eta_R_estimate": primary.get("eta_R_estimate"),
         "n_s_estimate": primary.get("n_s_estimate"),
-        "relative_error_to_kappa_e": rel_error,
-        "required_repair_step_time_for_kappa_e": required_step,
+        "relative_error_to_selected_edge_center_kappa": rel_error,
+        "relative_error_to_e_diagnostic_control": report.get(
+            "relative_error_to_e_diagnostic_control"
+        ),
+        "required_repair_step_time_for_selected_edge_center": required_step,
+        "repair_step_time_for_e_diagnostic_control": primary.get(
+            "repair_step_time_for_e_diagnostic_control"
+        ),
         "declared_step_relative_error_to_required": declared_vs_required,
         "detailed_balance_max_abs_error": primary.get("detailed_balance_max_abs_error"),
         "top_abs_eigenvalues": primary.get("top_abs_eigenvalues"),
@@ -534,47 +596,69 @@ def _clock_normalization_source_status(source: str) -> dict[str, Any]:
         "theorem_grade": bool(theorem_grade),
         "hypothesis_side": bool(hypothesis_side),
         "posthoc_or_cli_declared": bool(not theorem_grade and not hypothesis_side),
+        "sufficient_for_clock_binding_receipt": False,
         "claim_boundary": (
-            "Only theorem_grade clock sources may close the exact repair-clock certificate. "
-            "Hypothesis-side and CLI-declared sources may support diagnostics but cannot by "
-            "themselves make a physical CMB prediction."
+            "A source label alone never closes the physical clock-binding receipt. Even a theorem-grade "
+            "label requires a hash-bound evidence bundle and a clean source DAG; hypothesis-side and "
+            "CLI-declared sources remain diagnostics."
         ),
     }
 
 
-def _clock_mode_reports(primary: dict[str, Any], *, finite_ready: bool, delta_p: float) -> dict[str, dict[str, Any]]:
+def _clock_mode_reports(
+    primary: dict[str, Any],
+    *,
+    finite_ready: bool,
+    target: EdgeCenterClockTarget,
+    clock_certified: bool,
+    numeric_clock_match: bool,
+) -> dict[str, dict[str, Any]]:
     kappa = _float_or_none(primary.get("kappa_rep_estimate"))
     eta = _float_or_none(primary.get("eta_R_estimate"))
-    empirical_certified = bool(finite_ready and kappa is not None and eta is not None)
-    e_certified = bool(empirical_certified and abs(float(kappa) - math.e) / math.e <= 0.05)
-    crc_eta = float(P_STAR / 48.0)
     return {
         "empirical": {
             "clock_mode": "empirical",
-            "clock_normalization_certified": empirical_certified,
-            "eta_R_finite_lattice_derived": empirical_certified,
+            "clock_normalization_certified": False,
+            "eta_R_finite_lattice_derived": False,
+            "finite_step_survival_exponent_derived": bool(
+                finite_ready and kappa is not None and eta is not None
+            ),
             "eta_R_hypothesis": False,
             "kappa_rep_value": kappa,
             "eta_R_value": eta,
-            "claim_boundary": "Finite-derived empirical transition-clock value; not constrained to kappa_rep=e.",
+            "promoting": False,
+            "claim_boundary": (
+                "Finite-derived survival-exponent diagnostic. It is not the source full-collar derivative "
+                "and cannot promote eta_R without the edge-center evidence bundle."
+            ),
         },
-        "e_hypothesis": {
-            "clock_mode": "e_hypothesis",
-            "clock_normalization_certified": e_certified,
-            "eta_R_finite_lattice_derived": False,
-            "eta_R_hypothesis": True,
-            "kappa_rep_value": math.e if e_certified else kappa,
-            "eta_R_value": float(math.e * delta_p),
-            "claim_boundary": "Euler repair-clock hypothesis; retains old exact OPH kappa_rep=e certificate semantics.",
+        "edge_center_selected": {
+            "clock_mode": "edge_center_selected",
+            "clock_normalization_certified": bool(clock_certified),
+            "eta_R_finite_lattice_derived": bool(clock_certified),
+            "eta_R_hypothesis": False,
+            "numeric_match": bool(numeric_clock_match),
+            "kappa_rep_value": target.kappa_rep,
+            "eta_R_value": target.theta,
+            "n_s_value": target.n_s,
+            "selected_theorem_target": True,
+            "claim_boundary": (
+                "Selected theorem target theta=P/48. Numerical proximity is insufficient; all full-collar, "
+                "orientation-half, semigroup/refinement, clock-binding, and source-DAG receipts must pass."
+            ),
         },
-        "crc48_hypothesis": {
-            "clock_mode": "crc48_hypothesis",
-            "clock_normalization_certified": bool(finite_ready),
+        "e_diagnostic": {
+            "clock_mode": "e_diagnostic",
+            "clock_normalization_certified": False,
             "eta_R_finite_lattice_derived": False,
-            "eta_R_hypothesis": True,
-            "kappa_rep_value": float(crc_eta / max(delta_p, 1.0e-30)),
-            "eta_R_value": crc_eta,
-            "claim_boundary": "CRC-48/P/48 hypothesis branch; prediction outputs must be labeled hypothesis-side.",
+            "eta_R_hypothesis": False,
+            "kappa_rep_value": E_DIAGNOSTIC_KAPPA,
+            "eta_R_value": float(E_DIAGNOSTIC_KAPPA * target.delta_P),
+            "selected": False,
+            "required": False,
+            "canonical": False,
+            "promoting": False,
+            "claim_boundary": "Euler's number is retained only as a named nonpromoting diagnostic control.",
         },
     }
 
@@ -645,7 +729,12 @@ def _reversible_projection(counts: np.ndarray) -> np.ndarray:
     return _row_stochastic(symmetric)
 
 
-def _matrix_summary(matrix: np.ndarray, *, delta_p: float, repair_step_time: float) -> dict[str, Any]:
+def _matrix_summary(
+    matrix: np.ndarray,
+    *,
+    target: EdgeCenterClockTarget,
+    repair_step_time: float,
+) -> dict[str, Any]:
     if matrix.size == 0:
         return {"finite": False, "lambda_2": None, "gamma_continuous": None}
     row_error = float(np.max(np.abs(matrix.sum(axis=1) - 1.0))) if matrix.shape[0] else 0.0
@@ -655,8 +744,13 @@ def _matrix_summary(matrix: np.ndarray, *, delta_p: float, repair_step_time: flo
     sorted_abs = sorted((float(abs(value)) for value in vals), reverse=True)
     lambda_2 = sorted_abs[1] if len(sorted_abs) > 1 else 0.0
     gamma = -math.log(max(float(lambda_2), 1.0e-12)) / float(repair_step_time)
-    kappa = gamma / max(delta_p, 1.0e-30)
-    required_dt = gamma * repair_step_time / max(math.e * delta_p, 1.0e-30)
+    kappa = gamma / max(target.delta_P, 1.0e-30)
+    required_dt = gamma * repair_step_time / max(target.theta, 1.0e-30)
+    e_diagnostic_dt = (
+        gamma
+        * repair_step_time
+        / max(E_DIAGNOSTIC_KAPPA * target.delta_P, 1.0e-30)
+    )
     stationary = _stationary_distribution(matrix)
     # A reducible chain has no unique stationary law in general.  Comparing the
     # matrix against whichever unit-eigenvector numpy happens to return can
@@ -670,11 +764,16 @@ def _matrix_summary(matrix: np.ndarray, *, delta_p: float, repair_step_time: flo
         "row_sum_max_abs_error": row_error,
         "lambda_2": float(lambda_2),
         "gamma_continuous": float(gamma),
+        "finite_step_survival_factor": float(lambda_2),
+        "finite_step_survival_exponent": float(gamma),
+        "finite_step_survival_exponent_is_full_collar_derivative": False,
+        "finite_step_survival_exponent_is_promoting": False,
         "gamma_discrete_one_minus_lambda2": float(1.0 - lambda_2),
         "kappa_rep_estimate": float(kappa),
-        "eta_R_estimate": float(kappa * delta_p),
-        "n_s_estimate": float(1.0 - kappa * delta_p),
-        "required_repair_step_time_for_kappa_e": float(required_dt),
+        "eta_R_estimate": float(kappa * target.delta_P),
+        "n_s_estimate": float(1.0 - kappa * target.delta_P),
+        "required_repair_step_time_for_selected_edge_center": float(required_dt),
+        "repair_step_time_for_e_diagnostic_control": float(e_diagnostic_dt),
         "stationary_min": float(np.min(stationary)) if stationary.size else None,
         "stationary_max": float(np.max(stationary)) if stationary.size else None,
         "detailed_balance_max_abs_error": detailed_balance_error,
@@ -708,6 +807,7 @@ def _blockers(
     numeric_clock_match: bool,
     source_status: dict[str, Any],
     primary: dict[str, Any],
+    clock_evidence: dict[str, Any],
 ) -> list[str]:
     blockers: list[str] = []
     if not finite_ready:
@@ -725,12 +825,19 @@ def _blockers(
             "primary transition matrix is not a reversible/GNS self-adjoint repair operator"
         )
     if finite_ready and not numeric_clock_match:
-        blockers.append("finite transition matrix does not yield kappa_rep=e under the declared repair-step time")
+        blockers.append(
+            "finite-step survival exponent does not match the selected edge-center "
+            "kappa_rep=(P/48)/(P-phi) under the declared repair-step time"
+        )
     if finite_ready and numeric_clock_match and not clock_certified:
-        if source_status.get("hypothesis_side"):
-            blockers.append("repair-scale hypothesis clock matches kappa_rep=e tolerance but is not theorem-grade")
-        else:
-            blockers.append("declared clock matches kappa_rep=e tolerance but source is not theorem-grade")
+        blockers.append(
+            "numerical agreement with the selected P/48 target is nonpromoting until the complete "
+            "edge-center clock evidence bundle passes"
+        )
+    for receipt in clock_evidence.get("missing_receipts", []):
+        blockers.append(f"missing edge-center clock evidence: {receipt}")
+    if source_status.get("hypothesis_side"):
+        blockers.append("legacy repair-scale hypothesis label is diagnostic and cannot bind the physical clock")
     return blockers
 
 
@@ -811,10 +918,16 @@ def _write_matrix_rows(path: Path, report: dict[str, Any]) -> None:
                 "matrix": name,
                 "lambda_2": summary.get("lambda_2"),
                 "gamma_continuous": summary.get("gamma_continuous"),
+                "finite_step_survival_exponent": summary.get(
+                    "finite_step_survival_exponent"
+                ),
                 "kappa_rep_estimate": summary.get("kappa_rep_estimate"),
                 "eta_R_estimate": summary.get("eta_R_estimate"),
-                "required_repair_step_time_for_kappa_e": summary.get(
-                    "required_repair_step_time_for_kappa_e"
+                "required_repair_step_time_for_selected_edge_center": summary.get(
+                    "required_repair_step_time_for_selected_edge_center"
+                ),
+                "repair_step_time_for_e_diagnostic_control": summary.get(
+                    "repair_step_time_for_e_diagnostic_control"
                 ),
                 "detailed_balance_max_abs_error": summary.get("detailed_balance_max_abs_error"),
             }
@@ -843,8 +956,10 @@ def _write_sweep_rows(path: Path, rows: list[dict[str, Any]]) -> None:
         "kappa_rep_estimate",
         "eta_R_estimate",
         "n_s_estimate",
-        "relative_error_to_kappa_e",
-        "required_repair_step_time_for_kappa_e",
+        "relative_error_to_selected_edge_center_kappa",
+        "relative_error_to_e_diagnostic_control",
+        "required_repair_step_time_for_selected_edge_center",
+        "repair_step_time_for_e_diagnostic_control",
         "declared_step_relative_error_to_required",
         "detailed_balance_max_abs_error",
         "blockers",

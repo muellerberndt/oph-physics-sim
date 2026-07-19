@@ -23,8 +23,7 @@ FINITE_CMB_SOURCES = {
 
 THEOREM_SIDE_SOURCES = {
     "OPH_pixel_branch_predeclared",
-    "OPH_screen_capacity_branch_predeclared",
-    "OPH_screen_capacity_observed_branch_readout",
+    "OPH_direct_public_record_capacity",
     "OPH_independent_scale_bridge_supplied",
 }
 
@@ -144,6 +143,9 @@ def validate_physical_cmb_contract(contract: PhysicalCMBInputContract) -> dict[s
 
     if not bool(contract.N_CRC_consensus_invariant_receipt):
         blockers.append("N_CRC_consensus_invariant_receipt_missing")
+
+    if str(contract.N_source) != "OPH_direct_public_record_capacity":
+        blockers.append("N_CRC_not_direct_public_record_capacity")
 
     if not bool(contract.global_likelihood_reduction_receipt):
         blockers.append("global_likelihood_reduction_receipt_missing")

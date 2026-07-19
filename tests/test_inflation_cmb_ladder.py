@@ -4,6 +4,11 @@ import math
 from pathlib import Path
 
 from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.edge_center_clock import (
+    EDGE_CENTER_CLOCK_RECEIPT,
+    EDGE_CENTER_EVIDENCE_RECEIPTS,
+    edge_center_clock_target,
+)
 from oph_fpe.cosmology.inflation_cmb_ladder import (
     cmb_success_ladder_report,
     flat_sector_selection_report,
@@ -14,10 +19,20 @@ from oph_fpe.cosmology.inflation_cmb_ladder import (
 
 def test_screen_spectrum_prediction_keeps_amplitude_and_lift_gated():
     report = screen_spectrum_prediction()
+    target = edge_center_clock_target()
 
+    assert report["selected_clock_branch"] == "edge_center_orientation_half"
+    assert math.isclose(report["full_collar_derivative_target"], P_STAR / 24.0)
+    assert report["orientation_halves"] == 2
     assert math.isclose(report["theta_OPH"], P_STAR / 48.0)
+    assert math.isclose(report["eta_R"], target.theta)
     assert math.isclose(report["n_s"], 1.0 - P_STAR / 48.0)
+    assert math.isclose(report["kappa_rep"], target.kappa_rep)
     assert abs(report["n_s"] - 0.9660214956) < 1.0e-9
+    assert report[EDGE_CENTER_CLOCK_RECEIPT] is False
+    assert all(report[name] is False for name in EDGE_CENTER_EVIDENCE_RECEIPTS)
+    assert report["e_diagnostic_control"]["promoting"] is False
+    assert report["e_diagnostic_control"]["selected"] is False
     assert math.isclose(report["A_q_cmi_upper_bound"], 4.0 * math.log(2.0) * 3.61e-11)
     assert report["A_q_energy"] is None
     assert report["A_zeta"] is None

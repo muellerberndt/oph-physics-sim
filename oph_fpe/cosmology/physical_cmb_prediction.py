@@ -32,10 +32,7 @@ from oph_fpe.cosmology.finite_covariant_parent import (
 from oph_fpe.cosmology.finite_repair_transition_clock import (
     validate_transition_clock_eligibility,
 )
-from oph_fpe.cosmology.source_provenance import (
-    PROMOTED_CMB_SOURCE_QUANTITIES,
-    certify_cmb_source_provenance,
-)
+from oph_fpe.cosmology.source_provenance import certify_cmb_source_provenance
 
 
 def build_physical_cmb_input_contract(run_dirs: list[Path]) -> tuple[PhysicalCMBInputContract, dict[str, Any]]:
@@ -843,6 +840,8 @@ def _source_reducers_from_contract(
     sources: dict[str, dict[str, Any]],
     report_counts: dict[str, int],
 ) -> dict[str, dict[str, Any]]:
+    capacity_report = sources.get("screen_capacity_closure_report") or {}
+    capacity_gates = capacity_report.get("readiness_gates") or {}
     reducers = {
         "eta_R": _source_reducer_row(
             "eta_R", contract.eta_R_source, "finite_transition_matrix_report", sources, report_counts
@@ -862,10 +861,29 @@ def _source_reducers_from_contract(
             "rho_A_a", contract.rho_A_source, "finite_certificate_report", sources, report_counts
         ),
         "N_CRC": {
-            "mode": "consensus_invariant",
-            "consensus_invariant": contract.N_source in THEOREM_SIDE_SOURCES,
-            "additive_capacity_schema": False,
-            "disjoint_coverage_receipt": False,
+            "mode": "direct_public_record_capacity",
+            "exact_public_record_capacity_evaluator": bool(
+                capacity_gates.get("finite_correctable_public_record_evaluator_implemented", False)
+            ),
+            "complete_terminal_fiber_receipt": bool(
+                capacity_report.get("complete_terminal_fiber_receipt", False)
+            ),
+            "whole_fiber_scalarization_receipt": bool(
+                capacity_report.get("whole_fiber_scalarization_receipt", False)
+            ),
+            "target_free_capacity_producer_receipt": bool(
+                capacity_report.get("target_free_capacity_producer_receipt", False)
+            ),
+            "robust_closure_receipt": bool(capacity_report.get("robust_closure_receipt", False)),
+            "unique_regulator_stable_slack_zero_receipt": bool(
+                capacity_report.get("unique_regulator_stable_slack_zero_receipt", False)
+            ),
+            "horizon_record_saturation_receipt": bool(
+                capacity_report.get("horizon_record_saturation_receipt", False)
+            ),
+            "physical_N_closure_receipt": bool(
+                capacity_report.get("PHYSICAL_N_CLOSURE_RECEIPT", False)
+            ),
         },
     }
     return reducers
@@ -1591,7 +1609,9 @@ def _physical_cmb_next_steps(blockers: list[str]) -> list[dict[str, str]]:
             "Remove contradictory provenance such as no_cmb_data_used together with fit_to_planck."
         ),
         "N_CRC_consensus_invariant_receipt_missing": (
-            "Treat N_CRC as a consensus invariant unless an additive capacity schema proves disjoint coverage."
+            "Supply the direct public-record-capacity receipt: exact target-free M_0=alpha(G_q), "
+            "a complete terminal fiber with one common readback, robust closure, a unique "
+            "regulator-stable slack zero, and independent horizon-record saturation."
         ),
         "global_likelihood_reduction_receipt_missing": (
             "Use global official-likelihood and CDM-limit reductions, not shard-local any() rollups."
@@ -1654,9 +1674,12 @@ def _physical_cmb_frontier_gate_rows(
             "detail": "nonlinear CMB input estimates are global, not shard-local averages",
         },
         {
-            "gate": "N_CRC_consensus_invariant",
+            "gate": "N_CRC_direct_public_record_capacity",
             "passed": bool(contract.N_CRC_consensus_invariant_receipt),
-            "detail": "N_CRC is not additively combined without a disjoint-capacity proof",
+            "detail": (
+                "N_CRC comes from the exact target-free public-record evaluator and complete-fiber "
+                "closure; observed-horizon, electroweak, and count reductions are comparison-only"
+            ),
         },
         {
             "gate": "finite_theorem_A_zeta",
@@ -1859,7 +1882,7 @@ def _physical_cmb_frontier_gap_rows(
             "current_evidence": (
                 f"receipt={status('source_provenance').get('receipt')}; "
                 f"pooled={status('source_provenance').get('pooled_source_reducer_receipt')}; "
-                f"N_CRC={status('source_provenance').get('N_CRC_consensus_invariant_receipt')}"
+                f"N_CRC_direct={status('source_provenance').get('N_CRC_direct_public_record_capacity_receipt')}"
             ),
             "action_surface": "cmb_source_provenance_report",
             "blockers": [
@@ -2080,14 +2103,23 @@ def _nonempty_string(value: Any) -> bool:
 def _N_source_from_screen_capacity(screen_capacity: dict[str, Any]) -> str:
     if not screen_capacity:
         return "unknown"
-    if screen_capacity.get("screen_capacity_closure_receipt", False) or screen_capacity.get(
-        "SCREEN_CAPACITY_CLOSURE_RECEIPT", False
+    if (
+        screen_capacity.get("PHYSICAL_N_CLOSURE_RECEIPT", False)
+        and screen_capacity.get("complete_terminal_fiber_receipt", False)
+        and screen_capacity.get("whole_fiber_scalarization_receipt", False)
+        and screen_capacity.get("target_free_capacity_producer_receipt", False)
+        and screen_capacity.get("robust_closure_receipt", False)
+        and screen_capacity.get("unique_regulator_stable_slack_zero_receipt", False)
+        and screen_capacity.get("horizon_record_saturation_receipt", False)
+        and (screen_capacity.get("readiness_gates") or {}).get(
+            "finite_correctable_public_record_evaluator_implemented", False
+        )
     ):
-        return "OPH_screen_capacity_branch_predeclared"
+        return "OPH_direct_public_record_capacity"
     observed = screen_capacity.get("observed_branch_normalization") or {}
     gates = screen_capacity.get("readiness_gates") or {}
     if observed.get("N_CRC") is not None and gates.get("observed_branch_N_scr_readout_available", False):
-        return "OPH_screen_capacity_observed_branch_readout"
+        return "observed_horizon_comparison"
     return "unknown"
 
 

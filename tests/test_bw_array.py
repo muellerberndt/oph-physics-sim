@@ -1246,7 +1246,8 @@ def test_e3_cosmo_proxy_compact_profile_suppresses_debug_payloads(tmp_path: Path
     assert theorem["exact_repair_projection"]["EXACT_REPAIR_EQUALS_PROJECTION_RECEIPT"] is True
     assert theorem["finite_settle_diagnostic"]["FINITE_SETTLE_DIAGNOSTIC_RECEIPT"] is True
     assert theorem["finite_consensus_theorem"]["FINITE_CONSENSUS_THEOREM_RECEIPT"] is False
-    assert theorem["sm_quotient_gate"]["SM_QUOTIENT_GATE_RECEIPT"] is True
+    assert theorem["sm_quotient_gate"]["SM_QUOTIENT_GATE_RECEIPT"] is False
+    assert theorem["sm_quotient_gate"]["legacy_default_candidate_request_ignored"] is False
     assert cl_report["output_profile"] == "compact"
     assert cl_report["claim_level"] == "proxy"
     assert proxy["mode"] == "OPH_COSMO_PROXY_V0"

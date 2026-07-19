@@ -57,6 +57,31 @@ def test_static_galaxy_report_fits_direct_rar_rows(tmp_path: Path):
     assert report["btfr_prediction_from_rar_fit"]["predicted_slope_logM_vs_logV"] == 4.0
     assert "abs_slope_delta" in report["btfr_prediction_from_rar_fit"]
     assert report["holdout_validation"]["usable"] is False
+    assert report["physical_claim"] is False
+
+
+def test_static_galaxy_caller_label_cannot_promote_physical_claim(tmp_path: Path):
+    csv_path = tmp_path / "rar.csv"
+    gb = np.logspace(-13, -9, 24)
+    go = rar_curve(gb, a0_oph=1.2e-10, lambda_collar=1.0)
+    csv_path.write_text(
+        "galaxy,g_baryon,g_observed\n"
+        + "\n".join(
+            f"G{idx % 4},{left:.12e},{right:.12e}"
+            for idx, (left, right) in enumerate(zip(gb, go, strict=True))
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = static_galaxy_measurement_report(
+        load_static_galaxy_dataset(csv_path),
+        physical_claim=True,
+    )
+
+    assert report["STATIC_GALAXY_RAR_BTFR_RECEIPT"] is True
+    assert report["physical_claim"] is False
+    assert report["caller_physical_claim_request_ignored"] is True
 
 
 def test_static_galaxy_receipt_uses_companion_measurement_support_for_aggregate_rar(tmp_path: Path):

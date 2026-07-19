@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oph_fpe.bulk.einstein_bridge import RECEIPT_SPECS, write_einstein_bridge_manifest
+from oph_fpe.bulk.einstein_bridge import (
+    EINSTEIN_SIDECAR_SCHEMA,
+    RECEIPT_SPECS,
+    write_einstein_bridge_manifest,
+)
 from oph_fpe.bulk.proof_certificate import bulk_proof_certificate, write_bulk_proof_certificate
 from oph_fpe.cosmology.comparable_data import comparable_data_report
 from tests.test_theorem_contract import _write_computed_consensus_replay
@@ -15,7 +19,14 @@ def _write_json(path: Path, data: dict) -> None:
 
 def _write_all_einstein_bridge_sidecars(run: Path) -> None:
     for spec in RECEIPT_SPECS:
-        _write_json(run / spec.file_name, {spec.keys[0]: True})
+        _write_json(
+            run / spec.file_name,
+            {
+                "schema_version": EINSTEIN_SIDECAR_SCHEMA,
+                "theorem_tag": spec.theorem_tag,
+                spec.keys[0]: True,
+            },
+        )
 
 
 def _canonical_refinement_receipt() -> dict:
@@ -395,9 +406,7 @@ def test_bulk_proof_certificate_keeps_gravity_closed_after_branch_entry_without_
     assert report["production_gravity_receipt"] is False
     assert report["physical_gravity_prediction"] is False
     assert report["proof_tiers"]["G2_production_gravity"]["passed"] is False
-    assert "E0_einstein_branch_entry_umbrella" in report["proof_tiers"]["G2_production_gravity"][
-        "blockers"
-    ]
+    assert "null_stress" in report["proof_tiers"]["G2_production_gravity"]["blockers"]
 
 
 def test_bulk_proof_certificate_uses_einstein_bridge_manifest(tmp_path: Path):
@@ -420,6 +429,26 @@ def test_bulk_proof_certificate_uses_einstein_bridge_manifest(tmp_path: Path):
     assert "production_source_stress_bridge_missing" in report["proof_tiers"]["G2_production_gravity"][
         "blockers"
     ]
+
+
+def test_bulk_proof_certificate_ignores_forged_einstein_manifest(tmp_path: Path):
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "einstein_bridge_manifest.json",
+        {
+            "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": True,
+            "EINSTEIN_BRANCH_ENTRY_RECEIPT": True,
+            "einstein_branch_entry_receipt": True,
+        },
+    )
+
+    report = bulk_proof_certificate(run)
+
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["einstein_branch_entry_summary"][
+        "persisted_manifest_branch_entry_ignored"
+    ] is True
 
 
 def test_bulk_proof_certificate_splits_c0a_settle_from_c0b_consensus(tmp_path: Path):

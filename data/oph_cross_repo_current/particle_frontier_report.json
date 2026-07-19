@@ -99,7 +99,7 @@
     "reason": "The target-informed weighted-cycle continuation is rejected; this does not falsify finite OPH.",
     "rejection_receipt": true
   },
-  "paper_release_id": "r1542",
+  "paper_release_id": "r1556",
   "physical_particle_prediction_receipt": false,
   "pixel_parameter_profiles": {
     "empirical_hadron_closure": {
@@ -138,9 +138,9 @@
   },
   "source_repository": {
     "checkout_name": "reverse-engineering-reality",
-    "commit": "138c92043814738b12b36272b9d4cf84d882aeb0",
-    "dirty": true,
+    "commit": "bec81e2df36f611ac81b1abaee736234f62d81ff",
+    "dirty": false,
     "untracked_file_count": 0,
-    "worktree_state_sha256": "sha256:341e5aa59a1da598771199594720282c576d655b45cdb5203faa0586419b64e9"
+    "worktree_state_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }
 }

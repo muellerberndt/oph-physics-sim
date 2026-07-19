@@ -19,6 +19,7 @@ from oph_fpe.cosmology.camb_adapter import (
     write_oph_screen_camb_report,
     write_scale_compressed_cmb_camb_report,
 )
+from oph_fpe.cosmology.edge_center_clock import edge_center_clock_target
 from oph_fpe.cosmology.selector_elimination import ir_kernel
 
 
@@ -103,7 +104,6 @@ def test_finite_clock_camb_rejects_stale_true_transition_flags(
     assert finite_input["repair_clock_certificate"] is False
     assert finite_input["clock_normalization_certified"] is False
     assert finite_input["clock_normalization_numeric_match"] is False
-    assert finite_input["repair_scale_hypothesis_clock_match"] is False
     assert report["finite_lattice_clock_derived"] is False
     assert report["repair_clock_certificate"] is False
 
@@ -315,12 +315,14 @@ def test_write_oph_exact_cmb_camb_report_smoke(tmp_path: Path):
     assert report["mode"] == "oph_exact_cmb_camb_transfer_v1"
     assert report["measurement_comparable_cmb_curve"] is True
     assert report["physical_cmb_prediction"] is False
-    assert abs(report["oph_exact_input"]["n_s"] - 0.964841143031) < 2.0e-12
+    assert report["oph_exact_input"]["n_s"] == edge_center_clock_target().n_s
     assert report["oph_exact_input"]["q_IR"] == 0.25
     assert report["oph_exact_input"]["ell_IR"] == 32.0
     assert report["oph_exact_input"]["selector_elimination_theorem_receipt"] is False
     assert report["oph_exact_input"]["selector_elimination_source_audit_receipt"] is True
+    assert report["oph_exact_input"]["EDGE_CENTER_CLOCK_RECEIPT"] is False
     assert report["selector_elimination_v1_5"]["SOURCE_PACKET_AUDIT_RECEIPT"] is True
+    assert report["selector_elimination_v1_5"]["EDGE_CENTER_CLOCK_RECEIPT"] is False
     assert report["comparison"]["oph_exact_ir_v10"]["usable"] is True
     assert report["source_files"]["all_core_files_present"] is True
     assert report["source_files"]["selector_v1_5_core_files_present"] is True
@@ -363,7 +365,7 @@ def test_write_finite_repair_clock_cmb_camb_report_smoke(tmp_path: Path):
             "detailed_balance_max_abs_error": 0.0
           },
           "blockers": [
-            "finite transition matrix does not yield kappa_rep=e under the declared repair-step time"
+            "finite-step survival exponent does not match the selected edge-center target"
           ]
         }
         """,
@@ -389,7 +391,8 @@ def test_write_finite_repair_clock_cmb_camb_report_smoke(tmp_path: Path):
     assert (tmp_path / "out" / "finite_repair_clock_cmb_tt_curves.csv").exists()
     assert report["mode"] == "finite_repair_clock_cmb_camb_transfer_v0"
     assert report["measurement_comparable_cmb_curve"] is True
-    assert report["finite_lattice_clock_derived"] is True
+    assert report["finite_transition_matrix_derived"] is True
+    assert report["finite_lattice_clock_derived"] is False
     assert report["repair_clock_certificate"] is False
     assert report["physical_cmb_prediction"] is False
     assert report["finite_repair_clock_input"]["n_s"] == 0.9679812500795765
@@ -440,11 +443,11 @@ def test_write_official_planck_readiness_report_records_configured_path(
 def _write_selector_status_csv(path: Path) -> None:
     rows = [
         {
-            "old_selector": "S1: eta_R = e alpha sqrt(pi)",
-            "v1_5_status": "not free, but still requires the repair-clock normalization theorem/certificate",
-            "replacement": "repair clock",
-            "what_is_closed": "alpha dependence",
-            "what_remains": "kappa_rep=e",
+            "old_selector": "S1: eta_R = P/48 from edge-center orientation half",
+            "v1_5_status": "edge-center target selected; repair-clock evidence remains open",
+            "replacement": "eta_R=P/48",
+            "what_is_closed": "selected target formula",
+            "what_remains": "full-collar and orientation-half receipts",
         },
         {
             "old_selector": "S2: q_IR = 1/4 from four equipotent sectors",

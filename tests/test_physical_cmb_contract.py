@@ -57,6 +57,16 @@ def test_valid_physical_cmb_contract_passes_only_with_finite_sources():
     assert validation["blockers"] == []
 
 
+def test_physical_cmb_contract_rejects_legacy_or_observed_N_source_even_with_flags():
+    contract = _valid_contract()
+    contract.N_source = "OPH_screen_capacity_observed_branch_readout"
+
+    validation = validate_physical_cmb_contract(contract)
+
+    assert validation["PHYSICAL_CMB_INPUT_CONTRACT_RECEIPT"] is False
+    assert "N_CRC_not_direct_public_record_capacity" in validation["blockers"]
+
+
 def test_physical_cmb_contract_rejects_nonpositive_rho_A_column():
     contract = _valid_contract()
     contract.rho_A_a = np.asarray([[0.5, -0.2], [1.0, 0.1]])
@@ -269,7 +279,7 @@ def _valid_contract() -> PhysicalCMBInputContract:
     return PhysicalCMBInputContract(
         no_data_use_receipt=True,
         P_source="OPH_pixel_branch_predeclared",
-        N_source="OPH_screen_capacity_branch_predeclared",
+        N_source="OPH_direct_public_record_capacity",
         eta_R_source="finite_repair_transition_clock",
         eta_R_value=0.035,
         A_zeta_source=finite,

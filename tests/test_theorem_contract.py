@@ -5,7 +5,11 @@ from pathlib import Path
 
 import numpy as np
 
-from oph_fpe.bulk.einstein_bridge import RECEIPT_SPECS, write_einstein_bridge_manifest
+from oph_fpe.bulk.einstein_bridge import (
+    EINSTEIN_SIDECAR_SCHEMA,
+    RECEIPT_SPECS,
+    write_einstein_bridge_manifest,
+)
 from oph_fpe.bulk.theorem_contract import finite_oph_theorem_contract_report
 from oph_fpe.claims import (
     CAP_NORMAL_H3_CHART_RECEIPT,
@@ -28,7 +32,14 @@ def _write_json(path: Path, payload: dict) -> None:
 
 def _write_all_einstein_bridge_sidecars(run: Path) -> None:
     for spec in RECEIPT_SPECS:
-        _write_json(run / spec.file_name, {spec.keys[0]: True})
+        _write_json(
+            run / spec.file_name,
+            {
+                "schema_version": EINSTEIN_SIDECAR_SCHEMA,
+                "theorem_tag": spec.theorem_tag,
+                spec.keys[0]: True,
+            },
+        )
 
 
 def _write_computed_bridge_reports(run: Path, *, include_localization: bool = True) -> None:
@@ -386,6 +397,43 @@ def test_einstein_bridge_manifest_is_fail_closed_when_sidecars_are_missing(
     ]
 
 
+def test_einstein_bridge_ignores_legacy_true_flags_without_valid_sidecars(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "einstein_branch_entry_report.json",
+        {key: True for spec in RECEIPT_SPECS for key in spec.keys},
+    )
+
+    manifest = write_einstein_bridge_manifest(run)
+
+    assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert all(row["receipt"] is False for row in manifest["receiptRows"])
+    assert all(row["legacyReceiptValueIgnored"] is True for row in manifest["receiptRows"])
+
+
+def test_einstein_bridge_rejects_wrong_theorem_tag(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_all_einstein_bridge_sidecars(run)
+    first = RECEIPT_SPECS[0]
+    _write_json(
+        run / first.file_name,
+        {
+            "schema_version": EINSTEIN_SIDECAR_SCHEMA,
+            "theorem_tag": "WRONG_THEOREM",
+            first.keys[0]: True,
+        },
+    )
+
+    manifest = write_einstein_bridge_manifest(run)
+    row = next(item for item in manifest["receiptRows"] if item["name"] == first.name)
+
+    assert row["receipt"] is False
+    assert row["theoremTagValid"] is False
+    assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+
+
 def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
@@ -448,7 +496,7 @@ def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp
     assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
 
 
-def test_einstein_branch_entry_contract_requires_issue_503_and_child_gates(tmp_path: Path) -> None:
+def test_einstein_branch_entry_ignores_legacy_issue_503_aggregate(tmp_path: Path) -> None:
     run = tmp_path / "run"
     run.mkdir()
     _write_json(
@@ -466,11 +514,38 @@ def test_einstein_branch_entry_contract_requires_issue_503_and_child_gates(tmp_p
 
     report = finite_oph_theorem_contract_report(run)
 
-    assert report["einstein_branch_entry_contract_receipt"] is True
-    assert report["OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1"] is True
-    assert report["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is True
-    assert report["einstein_branch_entry_blockers"] == []
-    assert all(report["einstein_branch_entry_child_gates"].values())
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1"] is False
+    assert report["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
+    assert report["stages"]["E0_einstein_branch_entry_umbrella"]["details"][
+        "legacy_aggregate_branch_entry_ignored"
+    ] is True
+    assert "null_stress" in report["stages"]["E0_einstein_branch_entry_umbrella"][
+        "missing_or_blocking_evidence"
+    ]
+
+
+def test_einstein_branch_entry_ignores_forged_persisted_manifest(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_json(
+        run / "einstein_bridge_manifest.json",
+        {
+            "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": True,
+            "EINSTEIN_BRANCH_ENTRY_RECEIPT": True,
+            "einstein_branch_entry_receipt": True,
+            "einstein_branch_entry_child_gates": {
+                "E1_null_generator_stress_charge": True,
+            },
+        },
+    )
+
+    report = finite_oph_theorem_contract_report(run)
+
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["stages"]["E0_einstein_branch_entry_umbrella"]["details"][
+        "persisted_manifest_branch_entry_ignored"
+    ] is True
 
 
 def test_einstein_branch_entry_child_gate_blocks_even_when_issue_closed(tmp_path: Path) -> None:

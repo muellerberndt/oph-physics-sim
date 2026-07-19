@@ -128,7 +128,7 @@ h3_support_profiles:
 
 theorem_core:
   projection_sample: 256
-  include_default_sm_candidate: true
+  include_default_sm_candidate: false
 
 cosmology:
   output_profile: compact

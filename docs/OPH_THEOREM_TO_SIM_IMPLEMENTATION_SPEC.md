@@ -25,6 +25,10 @@ C0a  finite_settle_diagnostic
 C0b  finite_consensus_theorem_receipt
 R0   finite_record_readback_surface
 R1   observer_checkpoint_restoration_receipt
+N0   finite_public_record_capacity_receipt
+N1   complete_terminal_fibre_scalarization_receipt
+N2   unique_regulator_stable_zero_slack_receipt
+N3   physical_horizon_capacity_receipt
 L0   bw_kms_branch_replay_receipt
 L1   endogenous_cap_state_receipt
 L2   endogenous_modular_generator_receipt
@@ -53,8 +57,14 @@ G2   production_gravity_receipt
 CMB0 screen_cmb_diagnostic_receipt
 CMB1 finite_primordial_source_kernel_receipt
 CMB2 physical_cmb_prediction_receipt
-G0   finite_gauge_candidate_sieve
+SCR0 source_screen_radial_diagnostic_receipt
+SCR1 source_dilation_or_tomography_receipt
+SCR2 physical_sky_transfer_receipt
+G0   finite_gauge_target_conformance_diagnostic
 G1   four_dimensional_os_gauge_certificate
+A50  exact_a5_icosahedral_structural_receipt
+A51  conditional_exterior_sm_witness_receipt
+A52  physical_standard_model_from_screen_receipt
 BH0  finite_horizon_record_repair_diagnostic_receipt
 BH1  black_hole_physical_evaporation_bridge_receipt
 BH2  black_hole_qnm_radiative_bridge_receipt
@@ -77,6 +87,9 @@ The current simulator has these stable surfaces:
 - Finite patch/screen runs with `Z2`, `S3`, and clock-group fixtures.
 - A small exact finite-consensus harness under `tools/verify_small_universe.py` and
   `configs/sou_v1_icosa12.yml`.
+- An exact finite public-record-capacity evaluator: global sections and source-supplied joint
+  kernels, compound-graph maximum independent sets, complete terminal fibres, carrier projection,
+  scalarization, robust fixed-point closure, and the unique zero-slack gate.
 - Screen microphysics reports for local pixel scale, port budget, support-visible S2 cellulation,
   edge-sector heat-kernel diagnostics, central-record/Born diagnostics, and observer checkpoint
   restoration.
@@ -87,6 +100,10 @@ The current simulator has these stable surfaces:
 - Strict neutral-bulk frontier reports, kept separate from theorem-assisted H3 chart readouts.
 - Screen holonomy clusters, defect timelines, H3 worldline fits, proto-particle reports, and
   particle-likeness diagnostics.
+- An exact A5/icosahedral structural lane and conditional exterior-generation witness, with
+  physical Standard-Model promotion kept separate and fail-closed.
+- An SCR330 source-screen radial lane with Mellin-window, tomography, null-space, quadrature,
+  stability, ancestry, and forward-residual receipts behind an E4/E5 firewall.
 - Screen-level CMB and comparable-observation diagnostics, with physical-CMB promotion gates
   closed unless finite source, transfer, and likelihood receipts pass.
 - Leech/moonshine endpoint bridge audits for the fine-structure hadronic endpoint gap, with the
@@ -133,6 +150,13 @@ These are hard boundaries:
   diagnostic, not production gravity. `G2` requires `E0`, and `E0` requires
   `einstein_bridge_manifest.json` plus all theorem-tagged bridge sidecar receipts.
 - Screen `C_l` and CMB-lite curves are `CMB0` diagnostics, not `CMB2`.
+- A measured horizon radius, measured cosmological constant, electroweak target, supplied decimal,
+  or regulator patch count cannot produce `N`. `N0-N2` require the exact public-record evaluator;
+  the 12-port/30-interface packet is a reversible control, not a physical horizon capacity proof.
+- A radial SCR330 source receipt is `SCR0/SCR1`, never `SCR2` or `CMB2`. Prior continuation can
+  stabilize an inverse problem but cannot promote a source theorem, transfer function, or sky
+  spectrum.
+- Matching the SM target tuple is a conformance diagnostic, not `A50`, `A51`, or `A52`.
 - A Leech, c=24, or moonshine artifact is not a fine-structure prediction unless it emits the
   OPH-QCD hadronic backend from source data: QCD quotient ensemble, source QCD parameter map,
   Euclidean slab/vacuum transfer, hadronic Hilbert quotient, Ward-normalized current ledger,
@@ -208,6 +232,13 @@ two-point clustering, a fitted correlation length from the same rows, the local 
 or a caller pass flag cannot satisfy this contract. The output claim level is
 `branch_instantiation_sanity`; it never promotes a CMI value to modular source charge, stress,
 Einstein branch entry, or a physical claim.
+
+The retained collar clause is a separate positive-source obligation. Gibbs/state assumptions,
+relative entropy or CMI bounds, a flux conditional expectation, and modular-centralizer or
+diagonal membership do not force it. `COLLAR_CLAUSE_SOURCE_RECEIPT` therefore requires a bounded,
+hash-pinned retained family and an explicit source-derived, refinement-natural factorization of
+every computed cross-cut density through the declared flux basis. The T0/T1/T2 no-go cases are
+mandatory negative controls and never promotion inputs.
 
 ## Lorentz And H3 Contract
 
@@ -307,9 +338,19 @@ hash mismatches, dirty source provenance, and caller-supplied top-level pass fla
 `docs/particle_promotion_evidence_v1.schema.json`; audit a run with
 `oph-fpe particle-promotion-contract --run-dir <run>`.
 
-Gauge and Standard Model claims are not supplied by toy `S3` sectors. `G0` may sieve finite
-candidate packets. `G1` requires a four-dimensional OS/gauge certificate and must remain separate
-from visualization labels.
+Gauge and Standard Model claims are not supplied by toy `S3` sectors or by caller-injected target
+tuples. `A50` exactly recomputes the 60-element A5 group, its faithful transitive action on 12
+cosets, permutation character `(12,0,0,2,2)=1+3+3'+5`, the invariant icosahedral graph and its
+spectrum, both opposite-triplet adjoint restrictions, and the exhaustive no-go for an invariant
+point partition of sizes `8+3+1`. That no-go does not contradict the linear-module decomposition.
+
+`A51` is the conditional one-generation witness `Lambda^2(C+W)+Lambda^4(C+W)`: dimensions
+`10+5=15`, the five `Q,u_c,e_c,d_c,L` representation rows and hypercharges, three conditional
+`H=W` invariant lines, five perturbative anomaly cancellations, and even SU(2) Witten parity.
+Neither receipt is `A52`. Physical promotion additionally requires native port-current and weak/load
+maps, refinement and global-form descent, exterior/Higgs selection, family attachment, exclusion of
+extra light sectors, continuum/spin/QFT realization, and the four-dimensional OS/gauge certificate.
+Legacy `G0` target matching is explicitly nonpromoting.
 
 Effective string visualization starts at `S0`: finite edge cycles, repair-history ribbons,
 collar/defect tracks, and H3 proto-worldlines may be rendered as an edge-string/worldsheet
@@ -347,6 +388,10 @@ only when the manifest has all required theorem-tagged sidecars:
 - `newton_forbidden_input_receipt.json`
 - `einstein_residual_receipt.json`
 
+Each sidecar must be present, use the receipt schema, carry the expected theorem tag, and set its
+own accepted key to the literal boolean `true`. Aggregate or legacy manifest booleans cannot stand
+in for a missing, malformed, or wrongly tagged sidecar.
+
 `G2` production gravity requires `E0` plus the relevant matter/source and metric-solution receipts.
 Until then:
 
@@ -359,6 +404,23 @@ Until then:
 
 `CMB0` covers screen-level angular spectra, CMB-lite shape comparisons, CMB anomaly diagnostics, and
 comparable-observation tables. It is measurement-facing but not physical prediction.
+
+The canonical edge-center clock uses the full-collar derivative `P/24`, the orientation half
+`theta=P/48`, `n_s=1-P/48`, and `kappa=P/[48(P-phi)]`. It requires the derivative,
+orientation-half, semigroup-defect, refinement-defect, physical-clock-binding, and clean-source-DAG
+receipts. Euler's number and numerical target matches are diagnostics only. The finite-step survival
+exponent `-log(lambda_2)/Delta t` is a distinct quantity and must not be relabelled as the
+infinitesimal source clock. Standalone packets use
+`schemas/cosmology/edge_center_clock_receipt.schema.json`; copied receipt booleans, invented digest
+strings, cyclic ancestry, and measurement/fit/likelihood ancestors fail closed because both the
+binding payload and source DAG are canonically rehashed.
+
+The SCR330 source-screen contract (`scr330-radial-v2`) computes Mellin windows and derivatives,
+radial projection, unrestricted null-space and finite-window errors, quadrature and stability
+checks, ancestry, and a forward residual. It can emit `SOURCE_DILATION` or
+`RADIAL_TOMOGRAPHY`; `PRIOR_CONTINUATION` never promotes. Its E4 source outputs have no edge back
+from transfer, likelihood, residual, posterior, fit, or observed TT/TE/EE data, and cannot claim an
+E5 observable spectrum.
 
 The neutrino lane follows the separate contract in `docs/neutrino_status.md` and
 `schemas/cosmology/neutrino_status.schema.json`. OPH currently has no source-derived neutrino mass

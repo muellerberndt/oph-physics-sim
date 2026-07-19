@@ -82,8 +82,28 @@ def test_sm_candidate_sieve_checks_visible_low_energy_gates():
         "xy_gauge_bosons": 0,
     })
 
-    assert report["SM_QUOTIENT_GATE_RECEIPT"] is True
+    assert report["SM_TARGET_CONFORMANCE_DIAGNOSTIC"] is True
+    assert report["SM_QUOTIENT_GATE_RECEIPT"] is False
+    assert report["PHYSICAL_STANDARD_MODEL_FROM_SCREEN_RECEIPT"] is False
     assert report["claim_level"] == "continuation"
+
+
+def test_sm_target_diagnostic_rejects_stringified_or_malformed_counts_without_raising():
+    report = standard_model_candidate_sieve(
+        {
+            "G_phys": "(SU(3)xSU(2)xU(1))/Z6",
+            "hypercharge_lattice": "exact",
+            "Nc": "3",
+            "Ng": object(),
+            "higgs_doublets": True,
+            "light_chiral_exotics": "0",
+            "extra_low_scale_u1": None,
+            "xy_gauge_bosons": [],
+        }
+    )
+
+    assert report["SM_TARGET_CONFORMANCE_DIAGNOSTIC"] is False
+    assert report["receipt"] is False
 
 
 def test_borel_weil_higgs_carrier_receipt_is_carrier_only():

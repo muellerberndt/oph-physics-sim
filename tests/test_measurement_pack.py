@@ -392,6 +392,30 @@ def test_export_measurement_pack_copies_bulk_and_comparable_receipts(tmp_path: P
     assert manifest["files"]["observers_full_json"]["path"] == "observers_full_4.json"
 
 
+def test_visualization_manifest_cannot_export_a_path_outside_the_run(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    timeline = run / "universe_timeline"
+    timeline.mkdir(parents=True)
+    secret = tmp_path / "outside-secret.txt"
+    secret.write_text("must not be copied", encoding="utf-8")
+    (timeline / "visualization_export_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "oph_universe_visualization_sidecars_v1",
+                "files": {"escape": {"path": str(secret), "written": True}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "pack"
+
+    export_measurement_pack([run], out)
+
+    assert not (out / secret.name).exists()
+    copied = json.loads((out / "visualization_export_manifest.json").read_text(encoding="utf-8"))
+    assert copied["files"]["escape"]["path"] == str(secret)
+
+
 def test_export_measurement_pack_regenerates_combined_bulk_certificate(tmp_path: Path) -> None:
     h3_run = tmp_path / "h3_run"
     h3_run.mkdir()

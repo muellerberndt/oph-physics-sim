@@ -5,10 +5,12 @@ import json
 import pytest
 
 from oph_fpe.constants.oph_pixel import (
+    ALPHA_INV_GAUGE_WIDTH_MAP,
     ALPHA_INV_SOURCE_CANDIDATE,
     PIXEL_MODE_SOURCE_CANDIDATE,
     P_STAR,
     P_SOURCE_CANDIDATE,
+    P_GAUGE_WIDTH_MAP,
     OPHPixelConstants,
     PixelParameterProfile,
     cap_area_planck,
@@ -16,6 +18,8 @@ from oph_fpe.constants.oph_pixel import (
     equal_cell_entropy,
     pixel_constants_for_profile,
     pixel_parameter_profile,
+    pixel_value_provenance,
+    require_generative_pixel_profile,
     scale_factor_from_patch_count,
     screen_radius_planck,
 )
@@ -74,6 +78,32 @@ def test_pixel_parameter_profiles_keep_empirical_and_measured_branches_out_of_co
     assert source.epistemic_profile == "source_candidate"
     with pytest.raises(ValueError, match="interval-valued"):
         pixel_constants_for_profile(PixelParameterProfile.EMPIRICAL_HADRON_CLOSURE)
+    with pytest.raises(ValueError, match="comparison-only"):
+        require_generative_pixel_profile(PixelParameterProfile.MEASURED_COMPARISON)
+
+
+def test_source_and_gauge_width_maps_are_distinct_typed_profiles():
+    source = pixel_constants_for_profile(PixelParameterProfile.SOURCE_MAP)
+    gauge = pixel_constants_for_profile(PixelParameterProfile.GAUGE_WIDTH_MAP)
+
+    assert source.P == P_SOURCE_CANDIDATE
+    assert gauge.P == P_GAUGE_WIDTH_MAP
+    assert source.P != gauge.P
+    assert isclose(gauge.alpha_inverse_from_P, ALPHA_INV_GAUGE_WIDTH_MAP, rel_tol=1e-12)
+    assert require_generative_pixel_profile(PixelParameterProfile.SOURCE_MAP).generative_receipt_allowed
+
+
+def test_numeric_p_requires_matching_generative_profile_for_receipts():
+    measured = pixel_value_provenance(P_STAR, PixelParameterProfile.MEASURED_COMPARISON)
+    undeclared = pixel_value_provenance(P_STAR, None)
+    source = pixel_value_provenance(P_SOURCE_CANDIDATE, PixelParameterProfile.SOURCE_MAP)
+    mismatch = pixel_value_provenance(P_STAR, PixelParameterProfile.SOURCE_MAP)
+
+    assert measured["GENERATIVE_PIXEL_PROFILE_RECEIPT"] is False
+    assert "pixel_profile_is_comparison_only" in measured["blockers"]
+    assert undeclared["GENERATIVE_PIXEL_PROFILE_RECEIPT"] is False
+    assert source["GENERATIVE_PIXEL_PROFILE_RECEIPT"] is True
+    assert mismatch["GENERATIVE_PIXEL_PROFILE_RECEIPT"] is False
 
 
 def test_pixel_scale_rejects_implicit_interval_profile():

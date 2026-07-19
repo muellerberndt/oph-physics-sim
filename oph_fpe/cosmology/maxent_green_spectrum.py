@@ -5,12 +5,16 @@ import json
 import math
 from pathlib import Path
 from statistics import fmean
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 
 from oph_fpe.claims import QUANTITATIVE_BRANCH, SCREEN_PROXY_CMB_RECEIPT, with_claim_metadata
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.cosmology.edge_center_clock import (
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 from oph_fpe.cosmology.oph_screen_power import (
     DEFAULT_A_S,
     DEFAULT_D_STAR_MPC,
@@ -34,6 +38,7 @@ def maxent_green_spectrum_report(
     primordial_k_count: int = 256,
     primordial_k_min: float = 1.0e-4,
     primordial_k_max: float = 1.0,
+    clock_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Write the paper-side MaxEnt Green-spectrum source law as a finite receipt.
 
@@ -51,9 +56,11 @@ def maxent_green_spectrum_report(
         raise ValueError("patch_count must be positive")
     selector = selector_elimination_report(source_dir, P=float(P))
     pixel = OPHPixelConstants(P=float(P))
-    canonical_kappa = math.e if kappa_rep is None else float(kappa_rep)
-    delta_p = float(pixel.P - pixel.phi)
-    eta_r = float(canonical_kappa * delta_p)
+    clock_target = edge_center_clock_target(float(P))
+    evidence_report = validate_edge_center_clock_evidence(clock_evidence, P=float(P))
+    effective_kappa = clock_target.kappa_rep if kappa_rep is None else float(kappa_rep)
+    delta_p = clock_target.delta_P
+    eta_r = float(effective_kappa * delta_p)
     n_s = float(1.0 - eta_r)
     q_ir = float(selector["cmb_ir_kernel"]["q_IR"])
     ell_ir = float(selector["cmb_ir_kernel"]["ell_IR"])
@@ -69,12 +76,15 @@ def maxent_green_spectrum_report(
     audit = _spectrum_audit(rows, eta_r=eta_r)
     finite_capacity = _finite_regulator_capacity(int(patch_count), int(ell_max), n_frz=n_frz)
     repair_clock_certificate = bool(
-        selector.get("scalar_tilt", {}).get("canonical_kappa_rep_status") == "certificate_passed"
+        kappa_rep is None
+        and evidence_report["edge_center_clock_evidence_complete"]
+        and math.isclose(eta_r, clock_target.theta, rel_tol=1.0e-12, abs_tol=1.0e-12)
     )
     theorem_source_receipt = bool(
         audit["eta0_flat_D_ell_receipt"]
         and selector.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False)
         and finite_capacity["bandlimit_for_ir_receipt"]
+        and repair_clock_certificate
     )
     params = OPHScreenPowerParams(
         A_chi=float(amplitude),
@@ -107,19 +117,36 @@ def maxent_green_spectrum_report(
             "eta0_fit_eta_R": audit["eta0_fit_eta_R"],
         },
         "fractional_repair_tilt": {
-            "selected_branch": "repair_clock",
+            "selected_branch": (
+                "edge_center_orientation_half"
+                if kappa_rep is None
+                else "diagnostic_kappa_override"
+            ),
             "power_or_amplitude_semantics": "power",
-            "formula": "eta_R = kappa_rep * alpha(0) * sqrt(pi) = kappa_rep * (P - phi)",
-            "kappa_rep": canonical_kappa,
-            "kappa_rep_source": "canonical_e_target" if kappa_rep is None else "cli_override",
+            "formula": (
+                "eta_R=theta=(P/24)/2=P/48=kappa_rep*(P-phi)"
+                if kappa_rep is None
+                else "eta_R=kappa_rep*(P-phi); diagnostic override, not the selected P/48 target"
+            ),
+            "kappa_rep": effective_kappa,
+            "kappa_rep_source": (
+                "selected_edge_center_p_over_48_target" if kappa_rep is None else "diagnostic_override"
+            ),
+            "selected_theorem_target": kappa_rep is None,
             "repair_clock_certificate": repair_clock_certificate,
             "delta_P": delta_p,
             "eta_R": eta_r,
             "n_s": n_s,
+            "full_collar_derivative_target": clock_target.full_collar_derivative,
+            "orientation_halves": clock_target.orientation_halves,
+            "e_diagnostic_control": clock_target.as_jsonable()["diagnostic_controls"]["e"],
             "fit_eta_R_from_generated_spectrum": audit["tilted_fit_eta_R"],
             "fit_n_s_from_generated_spectrum": audit["tilted_fit_n_s"],
             "fit_eta_R_abs_error": audit["tilted_fit_eta_R_abs_error"],
         },
+        "edge_center_clock_evidence": evidence_report,
+        **evidence_report["receipts"],
+        "EDGE_CENTER_CLOCK_RECEIPT": evidence_report["EDGE_CENTER_CLOCK_RECEIPT"],
         "selector_elimination_v1_5": {
             "q_IR": q_ir,
             "ell_IR": ell_ir,
@@ -178,7 +205,9 @@ def maxent_green_spectrum_report(
         "primordial_spectrum_derived": False,
         "SCREEN_TO_PRIMORDIAL_LIFT_RECEIPT": False,
         "remaining_certificates": [
-            "finite scalar repair-clock certificate kappa_rep=e",
+            "finite full-collar derivative=P/24 and orientation-half identity",
+            "semigroup/refinement defect bounds on a common source family",
+            "physical clock binding and clean source DAG receipts",
             "finite normal-form scalar X_r emitted without CMB-target tuning",
             "finite freezeout branch emits q_IR=1/4 and ell_IR=32 from observer records",
             "parity/BipoSH angular covariance derived in a_lm space with masks",
@@ -188,9 +217,9 @@ def maxent_green_spectrum_report(
         "claim_boundary": (
             "Paper-side finite-screen CMB source certificate. It verifies the MaxEnt Green-spectrum "
             "covariance and selector-eliminated q_IR/ell_IR target as a reproducible finite operator "
-            "readout. The exact eta_R value uses the canonical kappa_rep=e target but the finite "
-            "repair-clock certificate is still pending, so this is not a physical CMB prediction and "
-            "not a final finite-lattice derivation."
+            "readout. The selected scalar target is the edge-center orientation half theta=P/48, but "
+            "its finite evidence bundle is still pending. Euler's number is only a named diagnostic "
+            "control, so this is not a physical CMB prediction or final finite-lattice derivation."
         ),
     }
     report = with_claim_metadata(
@@ -220,6 +249,7 @@ def write_maxent_green_spectrum_report(
     primordial_k_count: int = 256,
     primordial_k_min: float = 1.0e-4,
     primordial_k_max: float = 1.0,
+    clock_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = maxent_green_spectrum_report(
         source_dir,
@@ -232,6 +262,7 @@ def write_maxent_green_spectrum_report(
         primordial_k_count=primordial_k_count,
         primordial_k_min=primordial_k_min,
         primordial_k_max=primordial_k_max,
+        clock_evidence=clock_evidence,
     )
     rows = list(report.pop("_rows"))
     primordial_rows = list(report.pop("_primordial_rows"))

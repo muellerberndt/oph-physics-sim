@@ -80,10 +80,33 @@ def test_source_dirty_state_is_recorded_but_does_not_change_import_role(tmp_path
     _write(source / "untracked-note.txt", "working tree change")
 
     manifest = import_cross_repo_artifacts(source, destination, specs=specs)
+    verified = verify_cross_repo_artifact_manifest(destination)
 
     assert manifest["source_repository"]["dirty"] is True
     assert manifest["source_worktree_clean"] is False
     assert manifest["run_receipts_promoted_by_import"] is False
+    assert verified["verified"] is False
+    assert "source_worktree_not_clean" in verified["blockers"]
+
+
+def test_import_supports_schema_identity_without_fabricating_artifact_field(tmp_path: Path):
+    source = tmp_path / "research"
+    destination = tmp_path / "run"
+    _json(source / "artifact.json", {"schema": "conditional-witness/v1", "passed": True})
+    spec = ArtifactSpec(
+        "schema_identity",
+        "artifact.json",
+        "conditional-witness/v1",
+        "conditional_nonpromoting",
+        identity_path=("schema",),
+    )
+    _init_git(source)
+
+    manifest = import_cross_repo_artifacts(source, destination, specs=(spec,))
+
+    assert manifest["artifacts"][0]["artifact"] == "conditional-witness/v1"
+    assert manifest["artifacts"][0]["identity_path"] == ["schema"]
+    assert manifest["artifacts"][0]["simulation_receipt_eligible"] is False
 
 
 def test_manifest_verifier_fails_when_required_artifact_is_missing(tmp_path: Path):

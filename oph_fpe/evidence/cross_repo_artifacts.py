@@ -15,10 +15,10 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 
-MANIFEST_SCHEMA = "oph_cross_repo_artifact_manifest_v1"
+MANIFEST_SCHEMA = "oph_cross_repo_artifact_manifest_v2"
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,7 @@ class ArtifactSpec:
     epistemic_class: str
     destination_relpath: str | None = None
     optional: bool = False
+    identity_path: tuple[str, ...] = ("artifact",)
 
     @property
     def target_relpath(self) -> str:
@@ -165,6 +166,46 @@ DEFAULT_ARTIFACT_SPECS: tuple[ArtifactSpec, ...] = (
         "real_lattice_diagnostic_toy_scale",
         optional=True,
     ),
+    ArtifactSpec(
+        "a5_screen_sm_closure",
+        "code/a5_closure/a5_screen_sm_closure.json",
+        "OPH A5 screen/SM closure certificate v1",
+        "exact_conditional_a5_coefficient_module_witness",
+        identity_path=("schema",),
+    ),
+    ArtifactSpec(
+        "a5_exterior_sm_completion",
+        "code/a5_closure/exterior_sm_completion.json",
+        "OPH conditional exterior Standard-Model completion certificate v1",
+        "exact_conditional_exterior_matter_witness",
+        identity_path=("schema",),
+    ),
+    ArtifactSpec(
+        "p_global_uniqueness_extension",
+        "code/P_derivation/runtime/p_global_uniqueness_extension_certificate_2026-07-17.json",
+        "oph_p_global_uniqueness_extension_certificate",
+        "declared_map_global_uniqueness_nonpromoting",
+    ),
+    ArtifactSpec(
+        "reversible_public_checkpoint_control",
+        "code/capacity_readback/runtime/reversible_public_checkpoint_packet_certificate.json",
+        "PUBLIC_CHECKPOINT_PACKET/v1-reversible",
+        "exact_finite_reference_control_not_physical_receipt",
+    ),
+    ArtifactSpec(
+        "scr330_radial_contract_example",
+        "code/cosmology/example_radial_receipt.json",
+        "scr330-radial-v2",
+        "conditional_radial_contract_example_nonpromoting",
+        identity_path=("schema_version",),
+    ),
+    ArtifactSpec(
+        "regulator_gluing_fixed_cutoff",
+        "code/regulator_gluing/runs/regulator_gluing_evidence_bundle_current.json",
+        "oph.regulator_gluing.evidence_bundle/1",
+        "exact_fixed_cutoff_regulator_gluing_witness",
+        identity_path=("bundle", "schema"),
+    ),
 )
 
 
@@ -190,7 +231,7 @@ def import_cross_repo_artifacts(
             continue
         raw = source.read_bytes()
         payload = _json_object(raw, source)
-        artifact_id = payload.get("artifact")
+        artifact_id = _nested_identity(payload, spec.identity_path)
         if artifact_id != spec.expected_artifact:
             raise ValueError(
                 f"artifact id mismatch for {spec.key}: expected {spec.expected_artifact!r}, got {artifact_id!r}"
@@ -205,6 +246,7 @@ def import_cross_repo_artifacts(
             {
                 "key": spec.key,
                 "artifact": artifact_id,
+                "identity_path": list(spec.identity_path),
                 "source_relpath": spec.source_relpath,
                 "target_relpath": spec.target_relpath,
                 "sha256": digest,
@@ -257,6 +299,8 @@ def verify_cross_repo_artifact_manifest(root: Path) -> dict[str, Any]:
         blockers.append("manifest_schema_invalid")
     if manifest.get("all_required_artifacts_present") is not True:
         blockers.append("required_artifacts_missing")
+    if manifest.get("source_worktree_clean") is not True:
+        blockers.append("source_worktree_not_clean")
     missing_required = manifest.get("missing_required_artifacts")
     if not isinstance(missing_required, list) or missing_required:
         blockers.append("missing_required_artifact_ledger_nonempty_or_invalid")
@@ -330,6 +374,7 @@ def _missing_row(spec: ArtifactSpec) -> dict[str, Any]:
     return {
         "key": spec.key,
         "artifact": spec.expected_artifact,
+        "identity_path": list(spec.identity_path),
         "source_relpath": spec.source_relpath,
         "target_relpath": spec.target_relpath,
         "epistemic_class": spec.epistemic_class,
@@ -347,6 +392,15 @@ def _json_object(raw: bytes, path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"artifact must be a JSON object: {path}")
     return payload
+
+
+def _nested_identity(payload: Mapping[str, Any], path: tuple[str, ...]) -> Any:
+    value: Any = payload
+    for key in path:
+        if not isinstance(value, Mapping):
+            return None
+        value = value.get(key)
+    return value
 
 
 def _declared_promotion_allowed(payload: dict[str, Any]) -> bool | None:

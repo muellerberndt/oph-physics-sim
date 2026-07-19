@@ -47,6 +47,8 @@ PROVENANCE_TAGS: dict[str, str] = {
     "Lambda": "D6_NCRC_CLOSURE",
 }
 
+EINSTEIN_SIDECAR_SCHEMA = "oph-einstein-bridge-sidecar-v1"
+
 
 @dataclass(frozen=True)
 class ReceiptSpec:
@@ -227,17 +229,27 @@ def write_einstein_bridge_manifest(run_dir: Path, out: Path | None = None) -> di
 def _receipt_row(root: Path, legacy: dict[str, Any], spec: ReceiptSpec) -> dict[str, Any]:
     path = root / spec.file_name
     payload = _read_json(path)
-    receipt = _truthy_any(payload, *spec.keys) or _truthy_any(legacy, *spec.keys)
+    written = bool(payload)
+    schema_valid = payload.get("schema_version") == EINSTEIN_SIDECAR_SCHEMA
+    theorem_tag_valid = payload.get("theorem_tag") == spec.theorem_tag
+    sidecar_value = _truthy_any(payload, *spec.keys)
+    receipt = bool(written and schema_valid and theorem_tag_valid and sidecar_value)
+    legacy_value = _truthy_any(legacy, *spec.keys)
     return {
         "name": spec.name,
         "file": spec.file_name,
         "path": str(path),
-        "written": bool(payload),
+        "written": written,
         "receipt": receipt,
         "theoremTag": spec.theorem_tag,
+        "schemaVersion": payload.get("schema_version"),
+        "schemaValid": schema_valid,
+        "theoremTagValid": theorem_tag_valid,
+        "sidecarReceiptValue": sidecar_value,
+        "legacyReceiptValueIgnored": legacy_value,
         "requiredForBranchEntry": spec.required_for_branch_entry,
         "acceptedKeys": list(spec.keys),
-        "source": "sidecar" if payload else "legacy_einstein_branch_entry_report" if receipt else "missing",
+        "source": "validated_sidecar" if receipt else "invalid_sidecar" if written else "missing",
     }
 
 

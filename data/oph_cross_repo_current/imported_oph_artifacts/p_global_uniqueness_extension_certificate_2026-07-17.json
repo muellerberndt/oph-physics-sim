@@ -1,0 +1,201 @@
+{
+  "artifact": "oph_p_global_uniqueness_extension_certificate",
+  "backend": "mpmath.iv binary interval arithmetic with outward rounding on every elementary operation; private MPIntervalContext/MPContext instances; interval constraint propagation on the declared closure equations",
+  "claim_boundary": "The certificate classifies the fixed-point set of both declared readout maps on their maximal analytic domain, for the declared numerical maps at the stated representation cutoffs (edge-sum tail majorants extend every enclosure to the infinite-cutoff sums). It certifies that every fixed point lies inside the declared physical interval and composes with the 2026-07-14 existence and at-most-one certificates to exactly one fixed point per map on the maximal domain. The declared one-loop RG/matching conventions, the tree-level m_Z closure, the Stage-5 continuation masses, and the exact one-loop kernel are certified as declared numerical structure, not as physical endpoint theorems. This is not an exact fine-structure derivation; the stage-3 landing verdict of closure row CL-1 is unchanged, and public claims remain tied to the declared physical interval.",
+  "claim_status": "maximal_domain_uniqueness_extension_for_declared_closure_maps",
+  "composition_inputs": {
+    "at_most_one_certificate": "runtime/p_global_uniqueness_certificate_2026-07-14.json",
+    "at_most_one_on_declared_interval_all_modes": true,
+    "existence_certificate": "runtime/p_interval_contraction_certificate_2026-07-14.json",
+    "existence_on_declared_interval_all_modes": true
+  },
+  "conclusion": {
+    "every_fixed_point_in_declared_interval_all_modes": true,
+    "exactly_one_fixed_point_on_maximal_domain_all_modes": true,
+    "statement": "each declared readout map has exactly one fixed point on its maximal analytic domain, the certified fixed point inside alpha in [0.005, 0.01] (alpha_inv in [100, 200]); the exterior fixed-point set is empty"
+  },
+  "consumer_policy": {
+    "default_thomson_endpoint_allowed": false,
+    "hidden_external_alpha_allowed": false,
+    "may_feed_compare_or_audit_surfaces": true,
+    "may_feed_live_particle_predictions": false
+  },
+  "date": "2026-07-17",
+  "declared_maps": {
+    "thomson_structured_running": "alpha -> 1/(alpha_em^-1(m_Z^2;P) + Delta_Th(P)) with P = phi + alpha*sqrt(pi); Delta_Th is the internal Stage-5 structured Thomson continuation with the exact one-loop fermion kernel and quark screening factor 1 - N_c*alpha_3(m_Z;P)/pi",
+    "thomson_structured_running_plus_gauge_width": "alpha -> 1/(alpha_em^-1(m_Z^2;P) + Delta_Th(P) + alpha_U(P)) with P = phi + alpha*sqrt(pi); the closure-ledger CL-2 mixed map that adds the finite-screen unified gauge width alpha_U(P) to the inverse-alpha readout"
+  },
+  "envelope_lemma": {
+    "a3_inv_global": {
+      "hi": "50.0000000000000000000000000000000000000007347",
+      "lo": "4.0"
+    },
+    "alpha_inv_readout_floor": "40.8900607845",
+    "case_su3_nonpositive": {
+      "assumption": "1/a3 <= 0",
+      "identity_lower_bound": "4.17888544141",
+      "ln_dim3_max": "13.5325785196",
+      "p_cap": "63.2257975572",
+      "refuted": true,
+      "variant_note": "finite-cutoff variant refuted by the weighted-mean cap ellbar3 <= ln(dim_max); the infinite-cutoff edge sums are divergent there, outside the analytic domain by the t3 > 0 positivity condition"
+    },
+    "case_su3_subcritical": {
+      "assumption": "0 < 1/a3 < 4",
+      "identity_lower_bound": "4.79606566336",
+      "p_cap": "9.09553429134",
+      "refuted": true,
+      "su3_ellbar_cap_at_pi_sq": "1.2703093e-5"
+    },
+    "coupling_inverse_bounds": {
+      "a1_inv": {
+        "hi": "102.521131220325460803731641912929739471374033",
+        "lo": "12.5"
+      },
+      "a2_inv": {
+        "hi": "57.9577471545947667884441881686257181017238282",
+        "lo": "12.5"
+      },
+      "aY_inv": {
+        "hi": "170.868552033875768006219403188216232452294464",
+        "lo": "20.8333333333333333333333333333333333333330884"
+      }
+    },
+    "delta_thomson_global": {
+      "hi": "10.0472238156015466446306101970035161038044189",
+      "lo": "7.55672745114216009929553575655447872041209665"
+    },
+    "fixed_point_alpha_cap": "0.0244558208233",
+    "mz_closure_identity": "1/a3 = 1/(4u) + 3 - (1/pi)ln P - (3/2pi)ln 2 + (3/4pi)ln(4pi(a2+aY)) at the selected m_Z root",
+    "p_global": {
+      "hi": "39.1182134953309841533559988319203762945105665",
+      "lo": "0.153529554724008613009432338065009473823134979"
+    },
+    "screening_global": {
+      "hi": "0.980901406828972559707733948395298276555871059",
+      "lo": "0.761267585362156996346674354941228456948302145"
+    },
+    "statement": "every point of the maximal domain satisfies 1/a3 >= 4, P inside p_global, and alpha_inv >= alpha_inv_readout_floor > 0; every fixed point of either readout map satisfies 0 < alpha <= fixed_point_alpha_cap",
+    "su2_ellbar_numerator_cap": "2.2738709",
+    "t2_window": {
+      "hi": "3.15827340834859475802703711996036836330052009",
+      "lo": "0.681158594709588700545325298144738988753101723"
+    },
+    "t3_global": {
+      "hi": "9.86960440108935861883449099987615113531400475",
+      "lo": "0.789568352087148689506759279990092090825072626"
+    },
+    "window_L": {
+      "hi": "50",
+      "lo": "0"
+    },
+    "window_u": {
+      "hi": "0.08",
+      "lo": "0.02"
+    }
+  },
+  "exact_alpha_promoted": false,
+  "excluded_nonphysical_fixed_points": [],
+  "exterior_classification": "empty: no fixed point of either declared readout map exists outside the declared physical interval anywhere on the maximal analytic domain; the sweep excludes every window-consistent candidate by m_Z-window infeasibility or a certified alpha/readout gap",
+  "inner_root_scope": "the sweep quantifies over every window-consistent inner-root pair (alpha_U, m_Z), so the exterior exclusion holds for any root selection inside the declared windows, in particular for the declared scan-and-bisect selection; inside the declared physical interval the composed uniqueness statement carries the inner-root scope of the 2026-07-14 certificates",
+  "iv_dps": 40,
+  "maximal_domain": {
+    "certified_alpha_outer_bound": {
+      "hi": "0.624500761979",
+      "lo": "-0.577627576208"
+    },
+    "conditions": [
+      "P = phi + alpha*sqrt(pi) > 0 (branch points of ln P and 1/sqrt(P) at P = 0, i.e. alpha = -phi/sqrt(pi) = -0.91287...)",
+      "alpha_U in [0.02, 0.08]: declared pixel-closure scan window (paper_math.solve_alpha_u_from_p)",
+      "L = ln(mu_U/m_Z) in [0, 50]: declared m_Z log-grid window (paper_math.solve_mz_fixed_point_tree)",
+      "t2 = 4*pi^2*alpha_2(m_Z) > 0: SU(2) edge-sum convergence; implied by the window bounds (1/a2 >= 1/0.08)",
+      "t3 = 4*pi^2*alpha_3(m_Z) > 0: SU(3) edge-sum convergence for the infinite-cutoff sums; the envelope lemma certifies 1/a3 >= 4 on the domain, so the SU(3) coupling stays below the Landau pole",
+      "sqrt arguments positive: 4*pi*(a2 + aY) > 0 in the m_Z tree closure and the kernel arguments a_f = mzv2/(16 c_f^2) > 0; implied by the window bounds",
+      "implicit-root nondegeneracy: the m_Z residual derivative h_m and the pixel residual derivative R_u are nonzero at the selected roots (real-analyticity by the implicit function theorem; interval-verified along the 2026-07-14 certificates on the declared interval)",
+      "alpha_inv != 0: certified globally by the envelope readout floor"
+    ],
+    "description": "alpha values where the declared chain evaluates: P > 0, the pixel-closure residual selects a root alpha_U inside the declared scan window, the tree-level m_Z closure selects a root inside the declared log-grid window, the implicit-root denominators are nonzero, the edge sums converge, and the inverse-alpha readout is nonzero",
+    "located_edges": {
+      "alpha_left_edge": {
+        "first_undefined": "-0.55937500",
+        "last_defined": "-0.55781250"
+      },
+      "alpha_right_edge": {
+        "first_undefined": "0.41367187",
+        "last_defined": "0.41250000"
+      },
+      "method": "point bisection of the declared scan semantics (41-point pixel window grid, 260-point m_Z log-grid window); located values are display quantities, the certified outer bound is the sweep hull",
+      "resolution": "0.002"
+    },
+    "note": "the certified outer bound is a superset projection: every domain point of either map has alpha inside it; the located edges are point-probe values under the declared grid semantics"
+  },
+  "outer_equation": "P = phi + alpha*sqrt(pi)",
+  "pixel_window_sweep": {
+    "conclusion": {
+      "certified": true,
+      "statement": "every window-consistent fixed-point candidate of either readout map has alpha inside the handoff hull, which lies inside the declared physical interval [0.005, 0.01]"
+    },
+    "domain_alpha_outer_hull": {
+      "hi": "0.624500761979",
+      "lo": "-0.577627576208"
+    },
+    "exceptional_set": [],
+    "handoff_alpha_hull": {
+      "hi": "0.00987850762623",
+      "lo": "0.00547672981047"
+    },
+    "handoff_window": {
+      "hi": "0.0099",
+      "lo": "0.0051"
+    },
+    "subdivision": {
+      "depth_cap": 12,
+      "eval_budget": 1200,
+      "initial_pieces": 60,
+      "kernel_subdivision_pieces": 24,
+      "map_evaluations": 96,
+      "max_depth_used": 6,
+      "propagation_iterations": 6,
+      "total_pieces": 78
+    },
+    "verdict_blocks": [
+      {
+        "pieces": 8,
+        "u_hi": "0.028000000000000000000",
+        "u_lo": "0.020000000000000000000",
+        "verdict": "excluded_mz_window_infeasible"
+      },
+      {
+        "pieces": 19,
+        "u_hi": "0.041062500000000000000",
+        "u_lo": "0.028000000000000000000",
+        "verdict": "excluded_fixed_point_gap_both_modes"
+      },
+      {
+        "pieces": 3,
+        "u_hi": "0.041156250000000000000",
+        "u_lo": "0.041062500000000000000",
+        "verdict": "handoff_physical_interval"
+      },
+      {
+        "pieces": 48,
+        "u_hi": "0.080000000000000000000",
+        "u_lo": "0.041156250000000000000",
+        "verdict": "excluded_fixed_point_gap_both_modes"
+      }
+    ],
+    "verdict_counts": {
+      "excluded_fixed_point_gap_both_modes": 67,
+      "excluded_mz_window_infeasible": 8,
+      "handoff_physical_interval": 3
+    },
+    "window_u": {
+      "hi": "0.08",
+      "lo": "0.02"
+    }
+  },
+  "point_dps": 40,
+  "promotion_allowed": false,
+  "protocol_stage": "maximal-domain supplement to the global uniqueness certificate (proof spine GAP-A7); see docs/PROOF_SPINE.md",
+  "su2_cutoff": 120,
+  "su3_cutoff": 90
+}

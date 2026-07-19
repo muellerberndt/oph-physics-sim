@@ -1,0 +1,199 @@
+{
+  "schema": "OPH A5 screen/SM closure certificate v1",
+  "vertex_module": {
+    "character": [
+      "12",
+      "0",
+      "0",
+      "2",
+      "2"
+    ],
+    "decomposition": {
+      "1": 1,
+      "3": 1,
+      "3prime": 1,
+      "5": 1
+    },
+    "sm_adjoint_character": [
+      "12",
+      "0",
+      "0",
+      "2",
+      "2"
+    ],
+    "exact_match": true
+  },
+  "cell_orbit_modules": {
+    "vertices_A5_over_C5": {
+      "1": 1,
+      "3": 1,
+      "3prime": 1,
+      "5": 1
+    },
+    "edges_A5_over_C2": {
+      "1": 1,
+      "3": 1,
+      "3prime": 1,
+      "4": 2,
+      "5": 3
+    },
+    "faces_A5_over_C3": {
+      "1": 1,
+      "3": 1,
+      "3prime": 1,
+      "4": 2,
+      "5": 1
+    },
+    "flags_regular_A5": {
+      "1": 1,
+      "3": 3,
+      "3prime": 3,
+      "4": 4,
+      "5": 5
+    }
+  },
+  "stabilizer_restrictions": {
+    "1": {
+      "C2_trivial": 1,
+      "C2_sign": 0,
+      "C3_trivial": 1,
+      "C3_omega": 0,
+      "C3_omega2": 0,
+      "C5_trivial": 1
+    },
+    "3": {
+      "C2_trivial": 1,
+      "C2_sign": 2,
+      "C3_trivial": 1,
+      "C3_omega": 1,
+      "C3_omega2": 1,
+      "C5_trivial": 1
+    },
+    "3prime": {
+      "C2_trivial": 1,
+      "C2_sign": 2,
+      "C3_trivial": 1,
+      "C3_omega": 1,
+      "C3_omega2": 1,
+      "C5_trivial": 1
+    },
+    "4": {
+      "C2_trivial": 2,
+      "C2_sign": 2,
+      "C3_trivial": 2,
+      "C3_omega": 1,
+      "C3_omega2": 1,
+      "C5_trivial": 0
+    },
+    "5": {
+      "C2_trivial": 3,
+      "C2_sign": 2,
+      "C3_trivial": 1,
+      "C3_omega": 2,
+      "C3_omega2": 2,
+      "C5_trivial": 1
+    }
+  },
+  "generation_bridge": {
+    "theorem": "A nontrivial face-C3 phase extended to a dimension-minimal irreducible linear A5 carrier forces dimension 3 (3 or 3').",
+    "minimal_dimension": 3,
+    "minimal_irreps": [
+      "3",
+      "3prime"
+    ],
+    "CKM_phase_count_at_Ng_3": 1,
+    "physical_gate": "derive a quotient-visible face-phase-to-family attachment"
+  },
+  "compact_lie_trichotomy": [
+    {
+      "center_irreps": [
+        "1"
+      ],
+      "center_dim": 1,
+      "semisimple_irreps": [
+        "3",
+        "3prime",
+        "5"
+      ],
+      "semisimple_dim": 11,
+      "viable": true,
+      "lie_type": "su(3)+su(2)+u(1)",
+      "reason": "the only compact semisimple dimension-11 type is A2+A1"
+    },
+    {
+      "center_irreps": [
+        "1",
+        "5"
+      ],
+      "center_dim": 6,
+      "semisimple_irreps": [
+        "3",
+        "3prime"
+      ],
+      "semisimple_dim": 6,
+      "viable": true,
+      "lie_type": "su(2)+su(2)+u(1)^6",
+      "reason": "the only compact semisimple dimension-6 type is A1+A1"
+    },
+    {
+      "center_irreps": [
+        "1",
+        "3",
+        "3prime",
+        "5"
+      ],
+      "center_dim": 12,
+      "semisimple_irreps": [],
+      "semisimple_dim": 0,
+      "viable": true,
+      "lie_type": "u(1)^12",
+      "reason": "all of P12 is central"
+    }
+  ],
+  "coefficient_rank5_noncentral_corollary": {
+    "theorem": "For a group-level A5 action on the compact coefficient algebra, noncentrality of its W5 summand selects su(3)+su(2)+u(1).",
+    "proof_summary": "the other two viable compact outcomes place the W5 coefficient summand in the center",
+    "physical_gate": "A5-COMMON-ACTION plus a source-derived W5 current commutator; PORT-CURRENT-INNER is the stronger route"
+  },
+  "degree2_kinetic_relations": [
+    {
+      "color_eigenvalue": "-sqrt(5)",
+      "weak_eigenvalue": "sqrt(5)",
+      "color_coherence_condition": "{b: c + sqrt(5)*c}",
+      "relation": "k1 = 3*k2 - 2*k3"
+    },
+    {
+      "color_eigenvalue": "sqrt(5)",
+      "weak_eigenvalue": "-sqrt(5)",
+      "color_coherence_condition": "{b: -sqrt(5)*c + c}",
+      "relation": "k1 = 3*k2 - 2*k3"
+    }
+  ],
+  "higgs_missing_four_audit": {
+    "dimension_identity": "P12 + 4 has dimensions 1+3+3+4+5 = 16",
+    "physical_identification": "REJECTED_WITHOUT_NONCOMMUTING_EXTENSION",
+    "reason": "the real A5 irrep 4 has End_A5(4)=R, so no A5-invariant complex structure exists for a commuting U(1) hypercharge action"
+  },
+  "theorem_scope": {
+    "exact_here": "conditional finite A5 vertex module and compact coefficient-algebra classification",
+    "exact_companion_constructions": [
+      "u(3)+so(3) coefficient bracket",
+      "trace-balanced block integration under coefficient 1/2",
+      "six-axis lattice quotient isomorphic to Z6"
+    ],
+    "physical_gates": [
+      "UD12 and RP-A5 source the finite selector",
+      "PORT-CURRENT-INNER supplies a full-rank compact skew-adjoint commutator-closed current algebra with inner A5 action",
+      "BLOCK-DETERMINANT-BALANCE, PORT-SPIN-LIFT, and AXIS-CENTER-DESCENT identify the physical group and quotient",
+      "MAR supplies the matter, hypercharge, and faithful tensor-kernel premises"
+    ]
+  },
+  "claim_boundary": {
+    "proved_here": "finite A5 arithmetic and conditional coefficient-algebra classification",
+    "work_in_progress": [
+      "physical current realization and refinement intertwining",
+      "physical block/axis descent and MAR matter realization",
+      "face-phase family attachment and gauge kinetic operator"
+    ]
+  }
+}

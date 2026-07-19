@@ -301,6 +301,9 @@ def test_distributed_reducer_reduces_finite_cmb_inputs_across_shards(tmp_path: P
     )
     assert capacity["observed_branch_normalization"]["N_CRC"] == pytest.approx(1000.0)
     assert capacity["observed_branch_normalization"]["N_CRC_additive_sum_diagnostic"] == pytest.approx(2000.0)
+    assert capacity["observed_branch_normalization"]["producer_eligible"] is False
+    assert capacity["readiness_gates"]["N_CRC_consensus_invariant"] is False
+    assert capacity["PHYSICAL_N_CLOSURE_RECEIPT"] is False
     assert capacity["readiness_gates"]["additive_capacity_schema_declared"] is False
 
 

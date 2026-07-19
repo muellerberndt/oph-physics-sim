@@ -4,11 +4,16 @@ import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.cosmology.edge_center_clock import (
+    E_DIAGNOSTIC_KAPPA,
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 
 
 @dataclass(frozen=True)
@@ -23,11 +28,12 @@ class ScalarRepairSemigroupSpec:
     """
 
     dimension: int = 33
-    kappa_rep: float = math.e
-    source: str = "declared_euler_repair_time_target"
+    kappa_rep: float | None = None
+    source: str = "declared_edge_center_p_over_48_target"
     finite_lattice_derived: bool = False
     matrix_source: str | None = None
     p_value: float = P_STAR
+    clock_evidence: Mapping[str, Any] | None = None
 
 
 def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None) -> dict[str, Any]:
@@ -35,10 +41,16 @@ def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None
     if spec.dimension < 2:
         raise ValueError("dimension must be at least 2")
     pixel = OPHPixelConstants(P=float(spec.p_value))
-    delta_p = float(pixel.P - pixel.phi)
-    target_kappa = math.e
-    target_gap = float(target_kappa * delta_p)
-    declared_gap = float(spec.kappa_rep * delta_p)
+    clock_target = edge_center_clock_target(float(spec.p_value))
+    clock_evidence = validate_edge_center_clock_evidence(
+        spec.clock_evidence,
+        P=float(spec.p_value),
+    )
+    delta_p = clock_target.delta_P
+    target_kappa = clock_target.kappa_rep
+    selected_kappa = target_kappa if spec.kappa_rep is None else float(spec.kappa_rep)
+    target_gap = clock_target.theta
+    declared_gap = float(selected_kappa * delta_p)
     projector = _centered_projector(spec.dimension)
     generator = declared_gap * projector
     eigvals = np.linalg.eigvalsh(generator)
@@ -47,9 +59,16 @@ def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None
     constants_zero = bool(abs(float(eigvals[0])) < 1.0e-10)
     centered_scalar = bool(nonzero.size == spec.dimension - 1 and float(np.std(nonzero)) < 1.0e-10)
     contractive = bool(np.all(np.exp(-eigvals) <= 1.0 + 1.0e-12))
-    relative_error = abs(float(spec.kappa_rep) - target_kappa) / target_kappa
-    controls = _wrong_kappa_controls(delta_p=delta_p, target_gap=target_gap)
-    semigroup_controls_passed = bool(controls["target_gap_beats_wrong_kappas"])
+    relative_error = abs(float(selected_kappa) - target_kappa) / target_kappa
+    relative_error_e_diagnostic = (
+        abs(float(selected_kappa) - E_DIAGNOSTIC_KAPPA) / E_DIAGNOSTIC_KAPPA
+    )
+    controls = _kappa_controls(
+        delta_p=delta_p,
+        target_gap=target_gap,
+        target_kappa=target_kappa,
+    )
+    semigroup_controls_passed = bool(controls["selected_target_is_closest"])
     matrix_audit = _matrix_source_audit(spec.matrix_source)
     eligible = bool(
         spec.finite_lattice_derived
@@ -59,39 +78,50 @@ def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None
         and centered_scalar
         and contractive
         and relative_error <= 0.05
+        and clock_evidence["edge_center_clock_evidence_complete"]
     )
     report = {
-        "mode": "oph_scalar_repair_semigroup_gap_audit_v0",
+        "mode": "oph_scalar_repair_semigroup_gap_audit_v1",
         "source": spec.source,
         "matrix_source": spec.matrix_source,
         "matrix_source_audit": matrix_audit,
         "dimension": int(spec.dimension),
         "centered_subspace_dimension": int(spec.dimension - 1),
         "target": {
-            "formula": "eta_R = kappa_rep * (P - phi)",
+            "formula": "eta_R=theta=(P/24)/2=P/48=kappa_rep*(P-phi)",
+            "selected_branch": "edge_center_orientation_half",
             "required_kappa_rep": target_kappa,
             "required_gap": target_gap,
             "required_eta_R": target_gap,
-            "required_n_s": 1.0 - target_gap,
+            "required_n_s": clock_target.n_s,
+            "full_collar_derivative_target": clock_target.full_collar_derivative,
+            "orientation_halves": clock_target.orientation_halves,
             "P": float(pixel.P),
             "phi": float(pixel.phi),
             "delta_P": delta_p,
+            "e_diagnostic_control": clock_target.as_jsonable()["diagnostic_controls"]["e"],
         },
         "semigroup": {
             "generator_form": "L_scalar = kappa_rep * (P - phi) * (I - E_constants)",
             "constant_mode_zero": constants_zero,
             "centered_scalar_relaxation": centered_scalar,
             "centered_gap": centered_gap,
-            "kappa_rep_estimate": float(spec.kappa_rep),
-            "eta_R_estimate": float(spec.kappa_rep * delta_p),
-            "n_s_estimate": float(1.0 - spec.kappa_rep * delta_p),
+            "kappa_rep_estimate": float(selected_kappa),
+            "eta_R_estimate": float(selected_kappa * delta_p),
+            "n_s_estimate": float(1.0 - selected_kappa * delta_p),
             "contractive_at_t1": contractive,
             "eigenvalue_min": float(np.min(eigvals)),
             "eigenvalue_max": float(np.max(eigvals)),
-            "relative_error_to_kappa_e": float(relative_error),
+            "relative_error_to_selected_edge_center_kappa": float(relative_error),
+            "relative_error_to_e_diagnostic_control": float(relative_error_e_diagnostic),
+            "constructed_semigroup_defect": float(np.std(nonzero)) if nonzero.size else None,
+            "constructed_semigroup_defect_is_source_receipt": False,
         },
         "controls": controls,
         "semigroup_controls_passed": semigroup_controls_passed,
+        "edge_center_clock_evidence": clock_evidence,
+        **clock_evidence["receipts"],
+        "EDGE_CENTER_CLOCK_RECEIPT": clock_evidence["EDGE_CENTER_CLOCK_RECEIPT"],
         "finite_lattice_derived": bool(spec.finite_lattice_derived),
         "eligible_for_repair_clock_certificate": eligible,
         "repair_clock_certificate": eligible,
@@ -101,9 +131,10 @@ def scalar_repair_semigroup_report(spec: ScalarRepairSemigroupSpec | None = None
         "claim_class": "COMPUTER_ASSISTED_THEOREM" if eligible else "DIAGNOSTIC_PROXY",
         "claim_boundary": (
             "Scalar repair-semigroup gap audit for the exact OPH CMB branch. "
-            "A declared Euler target is diagnostic only. Certificate eligibility requires a loaded "
-            "finite transition matrix artifact, finite_lattice_derived=true, and independent clock "
-            "normalization; caller-supplied kappa values are never theorem receipts."
+            "The selected target is the P/48 edge-center orientation half. Certificate eligibility "
+            "requires a loaded finite transition matrix plus the full-collar derivative, orientation-half, "
+            "semigroup/refinement, physical-clock-binding, and source-DAG receipts. Euler's number is "
+            "reported only as a named nonpromoting diagnostic control."
         ),
     }
     return report
@@ -113,11 +144,12 @@ def write_scalar_repair_semigroup_report(
     out_dir: Path,
     *,
     dimension: int = 33,
-    kappa_rep: float = math.e,
-    source: str = "declared_euler_repair_time_target",
+    kappa_rep: float | None = None,
+    source: str = "declared_edge_center_p_over_48_target",
     finite_lattice_derived: bool = False,
     matrix_source: str | None = None,
     p_value: float = P_STAR,
+    clock_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = scalar_repair_semigroup_report(
         ScalarRepairSemigroupSpec(
@@ -127,6 +159,7 @@ def write_scalar_repair_semigroup_report(
             finite_lattice_derived=finite_lattice_derived,
             matrix_source=matrix_source,
             p_value=p_value,
+            clock_evidence=clock_evidence,
         )
     )
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -143,12 +176,13 @@ def _centered_projector(dimension: int) -> np.ndarray:
     return np.eye(dimension, dtype=np.float64) - (one @ one.T) / float(dimension)
 
 
-def _wrong_kappa_controls(*, delta_p: float, target_gap: float) -> dict[str, Any]:
+def _kappa_controls(*, delta_p: float, target_gap: float, target_kappa: float) -> dict[str, Any]:
     candidates = {
-        "wrong_1x": 1.0,
-        "wrong_pi": math.pi,
-        "wrong_2pi": 2.0 * math.pi,
-        "correct_e": math.e,
+        "selected_edge_center_target": float(target_kappa),
+        "diagnostic_e": E_DIAGNOSTIC_KAPPA,
+        "diagnostic_1x": 1.0,
+        "diagnostic_pi": math.pi,
+        "diagnostic_2pi": 2.0 * math.pi,
     }
     rows = []
     for name, kappa in candidates.items():
@@ -165,8 +199,12 @@ def _wrong_kappa_controls(*, delta_p: float, target_gap: float) -> dict[str, Any
     return {
         "rows": rows,
         "best_control": best["name"],
-        "target_gap_beats_wrong_kappas": best["name"] == "correct_e",
-        "claim_boundary": "Diagnostic target comparison only; this control does not certify the source of kappa_rep.",
+        "selected_target_is_closest": best["name"] == "selected_edge_center_target",
+        "e_is_nonpromoting_diagnostic": True,
+        "claim_boundary": (
+            "Diagnostic target comparison only; even an exact hit on the selected edge-center value "
+            "does not certify the source of kappa_rep."
+        ),
     }
 
 

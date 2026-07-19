@@ -80,7 +80,7 @@ def static_galaxy_measurement_report(
     lambda_initial: float = 1.0,
     min_points: int = 12,
     min_galaxies: int = 1,
-    physical_claim: bool = True,
+    physical_claim: bool = False,
 ) -> dict[str, Any]:
     rar = _rar_arrays(dataset)
     btfr = _btfr_arrays(dataset)
@@ -199,7 +199,8 @@ def static_galaxy_measurement_report(
         "btfr": btfr_report,
         "btfr_prediction_from_rar_fit": btfr_prediction,
         "holdout_validation": holdout_validation,
-        "physical_claim": bool(physical_claim and receipt),
+        "physical_claim": False,
+        "caller_physical_claim_request_ignored": bool(physical_claim),
         "bridge_prediction_boundary": (
             "Tier-1 OPH-CET static-galaxy bridge: the OPH continuation law is calibrated on RAR "
             "acceleration rows with free a0 and lambda_collar, then checked against the BTFR table "
@@ -215,7 +216,7 @@ def static_galaxy_measurement_report(
         report,
         claim_level=CONTINUATION,
         receipt=STATIC_GALAXY_RAR_BTFR_RECEIPT,
-        physical_claim=bool(physical_claim and receipt),
+        physical_claim=False,
         observable_id="external_static_galaxy_dataset",
         fit_objective="shared_a0_lambda_rar_fit",
     )
@@ -319,7 +320,7 @@ def write_static_galaxy_measurement_report(
     lambda_initial: float = 1.0,
     min_points: int = 12,
     min_galaxies: int = 1,
-    physical_claim: bool = True,
+    physical_claim: bool = False,
 ) -> dict[str, Any]:
     dataset = load_static_galaxy_dataset(dataset_path)
     report = static_galaxy_measurement_report(

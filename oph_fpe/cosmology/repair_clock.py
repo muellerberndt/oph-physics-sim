@@ -5,11 +5,15 @@ import json
 import math
 from pathlib import Path
 from statistics import median
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 
-from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.constants.oph_pixel import P_STAR
+from oph_fpe.cosmology.edge_center_clock import (
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 from oph_fpe.cosmology.finite_repair_transition_clock import (
     validate_transition_clock_eligibility,
 )
@@ -23,20 +27,21 @@ def repair_clock_report(
     cycle_time_normalization: float | None = None,
     r2_threshold: float = 0.85,
     relative_tolerance: float = 0.05,
+    clock_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Audit whether finite runs derive the paper-side kappa_rep=e clock.
+    """Audit whether finite runs realize the selected edge-center clock.
 
-    The exact OPH CMB v1.5 branch has reduced the scalar tilt to
-    eta_R = kappa_rep * (P - phi), with the remaining finite-regulator
-    certificate being kappa_rep=e. This audit intentionally does not promote
-    arbitrary trace fits to theorem-grade evidence. A mismatch-trace fit is
-    certificate-eligible only when a repair-time normalization is declared.
+    The selected theorem target is the orientation half of the full-collar
+    derivative: eta_R=theta=P/48 and kappa_rep=(P/48)/(P-phi). This audit does
+    not promote trace fits or finite-step survival exponents to the source
+    derivative. The explicit edge-center evidence bundle must also pass.
     """
 
-    pixel = OPHPixelConstants(P=float(P))
-    delta_p = float(pixel.P - pixel.phi)
-    target_kappa = math.e
-    target_eta = float(target_kappa * delta_p)
+    target = edge_center_clock_target(float(P))
+    evidence_report = validate_edge_center_clock_evidence(clock_evidence, P=float(P))
+    delta_p = target.delta_P
+    target_kappa = target.kappa_rep
+    target_eta = target.theta
     candidates = _find_candidate_dirs(run_dirs)
     rows: list[dict[str, Any]] = []
     for run_dir in candidates:
@@ -82,17 +87,30 @@ def repair_clock_report(
     passed = [row for row in eligible if row.get("passed")]
     kappa_values = [float(row["kappa_rep_estimate"]) for row in rows if _finite(row.get("kappa_rep_estimate"))]
     eta_values = [float(row["eta_R_estimate"]) for row in rows if _finite(row.get("eta_R_estimate"))]
-    blockers = _repair_clock_blockers(rows, eligible, passed, cycle_time_normalization)
+    clock_certificate = bool(
+        len(passed) >= 3 and evidence_report["edge_center_clock_evidence_complete"]
+    )
+    blockers = _repair_clock_blockers(
+        rows,
+        eligible,
+        passed,
+        cycle_time_normalization,
+        evidence_report,
+    )
     report = {
-        "mode": "oph_repair_clock_kappa_audit_v0",
+        "mode": "oph_repair_clock_kappa_audit_v1",
         "target": {
-            "formula": "eta_R = kappa_rep * alpha(0) * sqrt(pi) = kappa_rep * (P - phi)",
+            "formula": "rho_full=P/24; eta_R=theta=rho_full/2=P/48=kappa_rep*(P-phi)",
+            "selected_branch": "edge_center_orientation_half",
             "required_kappa_rep": target_kappa,
             "required_eta_R": target_eta,
-            "required_n_s": 1.0 - target_eta,
-            "P": float(pixel.P),
-            "phi": float(pixel.phi),
+            "required_n_s": target.n_s,
+            "full_collar_derivative_target": target.full_collar_derivative,
+            "orientation_halves": target.orientation_halves,
+            "P": target.P,
+            "phi": target.phi,
             "delta_P": delta_p,
+            "e_diagnostic_control": target.as_jsonable()["diagnostic_controls"]["e"],
         },
         "inputs": {
             "run_roots": [str(Path(path)) for path in run_dirs],
@@ -111,23 +129,35 @@ def repair_clock_report(
             "median_n_s_estimate": (1.0 - median(eta_values)) if eta_values else None,
             "target_kappa_rep": target_kappa,
             "target_eta_R": target_eta,
-            "target_n_s": 1.0 - target_eta,
+            "target_n_s": target.n_s,
         },
         "rows": rows,
-        "finite_repair_clock_certificate": bool(len(passed) >= 3),
-        "repair_clock_certificate": bool(len(passed) >= 3),
-        "eta_R_finite_lattice_derived": bool(len(passed) >= 3),
+        "edge_center_clock_evidence": evidence_report,
+        **evidence_report["receipts"],
+        "EDGE_CENTER_CLOCK_RECEIPT": evidence_report["EDGE_CENTER_CLOCK_RECEIPT"],
+        "finite_repair_clock_certificate": clock_certificate,
+        "repair_clock_certificate": clock_certificate,
+        "eta_R_finite_lattice_derived": clock_certificate,
         "physical_cmb_prediction": False,
         "blockers": blockers,
         "claim_boundary": (
             "Finite kappa_rep repair-clock audit for the exact OPH CMB scalar-tilt branch. "
             "Rows marked ineligible are diagnostic only: they may fit finite traces, Shape witness "
             "proxies, or target-selected fossil spectra, but they do not by themselves prove that the "
-            "finite OPH lattice realizes the scalar repair semigroup with kappa_rep=e."
+            "finite OPH lattice realizes the P/48 edge-center clock. Euler's number remains a named "
+            "nonpromoting diagnostic control."
         ),
     }
     if out_dir is not None:
-        write_repair_clock_report(run_dirs, out_dir, P=P, cycle_time_normalization=cycle_time_normalization)
+        write_repair_clock_report(
+            run_dirs,
+            out_dir,
+            P=P,
+            cycle_time_normalization=cycle_time_normalization,
+            r2_threshold=r2_threshold,
+            relative_tolerance=relative_tolerance,
+            clock_evidence=clock_evidence,
+        )
     return report
 
 
@@ -139,6 +169,7 @@ def write_repair_clock_report(
     cycle_time_normalization: float | None = None,
     r2_threshold: float = 0.85,
     relative_tolerance: float = 0.05,
+    clock_evidence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     report = repair_clock_report(
         run_dirs,
@@ -146,6 +177,7 @@ def write_repair_clock_report(
         cycle_time_normalization=cycle_time_normalization,
         r2_threshold=r2_threshold,
         relative_tolerance=relative_tolerance,
+        clock_evidence=clock_evidence,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "repair_clock_certificate_report.json").write_text(
@@ -221,10 +253,12 @@ def _mismatch_trace_rows(
             "source_file": str(path),
             "eligible_for_certificate": eligible,
             "passed": passed,
+            "quantity_semantics": "finite_trace_decay_exponent_diagnostic",
+            "is_full_collar_derivative": False,
             "reason": "ok" if eligible else "diagnostic_only_missing_or_low_quality_repair_time_normalization",
             "sample_count": int(np.count_nonzero(mask)),
             "cycle_time_normalization": cycle_time_normalization,
-            "required_cycle_time_for_kappa_e": required_dt,
+            "required_cycle_time_for_selected_edge_center": required_dt,
             "slope": float(slope),
             "intercept": float(intercept),
             "fit_r2": float(r2),
@@ -233,7 +267,7 @@ def _mismatch_trace_rows(
             "n_s_estimate": 1.0 - eta,
             "target_kappa_rep": target_kappa,
             "target_eta_R": target_eta,
-            "relative_error_to_kappa_e": float(rel_error),
+            "relative_error_to_selected_edge_center_kappa": float(rel_error),
         }
     ]
 
@@ -265,6 +299,8 @@ def _shape_certificate_rows(
                 "source_row": idx,
                 "eligible_for_certificate": False,
                 "passed": False,
+                "quantity_semantics": "shape_witness_proxy_diagnostic",
+                "is_full_collar_derivative": False,
                 "reason": "Shape substrate witness proxy; not a finite OPH scalar repair-clock certificate",
                 "sample_count": None,
                 "delta_P_source": source.get("delta_P"),
@@ -275,7 +311,7 @@ def _shape_certificate_rows(
                 "n_s_estimate": (1.0 - eta) if eta is not None else None,
                 "target_kappa_rep": target_kappa,
                 "target_eta_R": target_eta,
-                "relative_error_to_kappa_e": rel_error,
+                "relative_error_to_selected_edge_center_kappa": rel_error,
                 "relative_tolerance": relative_tolerance,
             }
         )
@@ -307,6 +343,8 @@ def _fossil_spectrum_rows(
             "source_file": str(path),
             "eligible_for_certificate": False,
             "passed": False,
+            "quantity_semantics": "target_closeness_diagnostic",
+            "is_full_collar_derivative": False,
             "reason": "target-closeness diagnostic; not an objective repair-clock semigroup fit",
             "field": best.get("field"),
             "cycle": best.get("cycle"),
@@ -315,7 +353,7 @@ def _fossil_spectrum_rows(
             "n_s_estimate": (1.0 - eta) if eta is not None else None,
             "target_kappa_rep": target_kappa,
             "target_eta_R": target_eta,
-            "relative_error_to_kappa_e": rel_error,
+            "relative_error_to_selected_edge_center_kappa": rel_error,
             "relative_tolerance": relative_tolerance,
             "best_beats_same_field_controls": report.get("best_beats_same_field_controls"),
         }
@@ -353,8 +391,10 @@ def _scalar_repair_semigroup_rows(
     passed = bool(eligible and rel_error is not None and rel_error <= relative_tolerance)
     if eligible:
         reason = "finite_state_transition_matrix_semigroup_certificate"
+    elif source == "declared_edge_center_p_over_48_target":
+        reason = "declared P/48 edge-center target; algebraic check only, not finite-lattice derived"
     elif source == "declared_euler_repair_time_target":
-        reason = "declared Euler repair-time target; algebraic check only, not finite-lattice derived"
+        reason = "legacy Euler diagnostic control; nonpromoting and not finite-lattice derived"
     elif source == "finite_state_transition_matrix" and transition_eligibility["eligible"]:
         reason = "finite transition matrix present, but repair-clock normalization is not certified"
     else:
@@ -369,6 +409,8 @@ def _scalar_repair_semigroup_rows(
             "finite_lattice_derived": finite_lattice_derived,
             "eligible_for_certificate": eligible,
             "passed": passed,
+            "quantity_semantics": "finite_step_survival_semigroup_diagnostic",
+            "is_full_collar_derivative": False,
             "reason": reason,
             "dimension": report.get("dimension"),
             "centered_subspace_dimension": report.get("centered_subspace_dimension"),
@@ -376,14 +418,20 @@ def _scalar_repair_semigroup_rows(
             "centered_scalar_relaxation": semigroup.get("centered_scalar_relaxation"),
             "contractive_at_t1": semigroup.get("contractive_at_t1"),
             "semigroup_controls_passed": report.get("semigroup_controls_passed"),
+            "edge_center_clock_evidence_complete": bool(
+                report.get("EDGE_CENTER_CLOCK_RECEIPT", False)
+            ),
             "transition_matrix_ready": bool(transition_eligibility["eligible"]),
             "transition_clock_eligibility": transition_eligibility,
             "transition_clock_normalization_certified": bool(
                 transition_eligibility["eligible"]
                 and transition_certificate.get("clock_normalization_certified")
             ),
-            "transition_required_repair_step_time_for_kappa_e": transition_certificate.get(
-                "required_repair_step_time_for_kappa_e"
+            "transition_required_repair_step_time_for_selected_edge_center": transition_certificate.get(
+                "required_repair_step_time_for_selected_edge_center"
+            ),
+            "transition_repair_step_time_for_e_diagnostic_control": transition_certificate.get(
+                "repair_step_time_for_e_diagnostic_control"
             ),
             "transition_primary_lambda_2": transition_certificate.get("primary_lambda_2"),
             "transition_primary_gamma": transition_certificate.get("primary_gamma"),
@@ -393,7 +441,7 @@ def _scalar_repair_semigroup_rows(
             "n_s_estimate": (1.0 - eta) if eta is not None else None,
             "target_kappa_rep": target_kappa,
             "target_eta_R": target_eta,
-            "relative_error_to_kappa_e": rel_error,
+            "relative_error_to_selected_edge_center_kappa": rel_error,
             "relative_tolerance": relative_tolerance,
         }
     ]
@@ -452,6 +500,7 @@ def _repair_clock_blockers(
     eligible: list[dict[str, Any]],
     passed: list[dict[str, Any]],
     cycle_time_normalization: float | None,
+    clock_evidence: dict[str, Any],
 ) -> list[str]:
     blockers: list[str] = []
     if not rows:
@@ -462,7 +511,9 @@ def _repair_clock_blockers(
     if not eligible:
         blockers.append("no estimator rows are theorem-grade eligible")
     if eligible and len(passed) < 3:
-        blockers.append("fewer than three eligible estimators pass kappa_rep=e tolerance")
+        blockers.append(
+            "fewer than three eligible estimators match the selected edge-center kappa tolerance"
+        )
     if any(row.get("estimator") == "fossil_spectrum_best_target_closeness" for row in rows):
         blockers.append("fossil-spectrum eta fits are target-closeness diagnostics, not repair-clock derivations")
     if any(row.get("estimator") == "shape_phi_trace_proxy" for row in rows):
@@ -474,7 +525,10 @@ def _repair_clock_blockers(
         and not row.get("transition_clock_normalization_certified")
         for row in rows
     ):
-        blockers.append("finite transition-matrix rows do not yield kappa_rep=e under their declared repair-step time")
+        blockers.append(
+            "finite transition-matrix rows do not match kappa_rep=(P/48)/(P-phi) under their "
+            "declared repair-step time"
+        )
     elif any(
         row.get("estimator") == "scalar_repair_semigroup_gap" and not row.get("eligible_for_certificate")
         for row in rows
@@ -482,6 +536,8 @@ def _repair_clock_blockers(
         blockers.append(
             "scalar repair-semigroup rows are target/algebra diagnostics unless sourced from a finite transition matrix"
         )
+    for receipt in clock_evidence.get("missing_receipts", []):
+        blockers.append(f"missing edge-center clock evidence: {receipt}")
     return blockers
 
 

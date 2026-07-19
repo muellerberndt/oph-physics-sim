@@ -1013,7 +1013,6 @@ def _write_global_carrier_artifacts(
     patch_count_per_shard = int(patch_count_per_shard)
     observers_per_shard = int(observers_per_shard)
     total_nodes = shard_count * patch_count_per_shard
-    total_observers = shard_count * observers_per_shard
 
     nodes = np.arange(total_nodes, dtype=np.int64)
     owners = nodes // max(patch_count_per_shard, 1)
@@ -2205,7 +2204,7 @@ def _write_global_finite_cmb_source_reports(
         or bool(report.get("CDM_LIMIT_BOLTZMANN_RECEIPT", False))
         for report in compressed_likelihood_reports + camb_baseline_reports
     )
-    observed_screen_capacity_ready = bool(n_values)
+    observed_screen_capacity_comparison_available = bool(n_values)
     local_component_rollups = {
         "finite_repair_transition_clock_local_rollup": transition_ready,
         "finite_certificate_local_rollup": finite_certificate_ready,
@@ -2230,7 +2229,12 @@ def _write_global_finite_cmb_source_reports(
         "B_A_kernel_global_reduction": ba_ready,
         "scale_compressed_scalar_global_reduction": scale_ready,
         "neutral_or_scale_freezeout_global_reduction": bool(strict_neutral_ready or scale_ready),
-        "screen_capacity_global_readout": observed_screen_capacity_ready,
+        # Compatibility key is deliberately false: shard-local/observed N
+        # values are comparison readouts, not public-record-capacity producers.
+        "screen_capacity_global_readout": False,
+        "screen_capacity_global_comparison_available": (
+            observed_screen_capacity_comparison_available
+        ),
         "global_pooled_sufficient_statistics_receipt": global_pooled_sufficient_statistics_ready,
         "official_likelihood_ready": official_likelihood_ready,
         "cdm_limit_regression_passed": cdm_limit_regression_passed,
@@ -2357,6 +2361,8 @@ def _write_global_finite_cmb_source_reports(
         {
             "mode": "distributed_screen_capacity_closure_reduction_v0",
             "observed_branch_normalization": {
+                "source": "distributed_observed_horizon_comparison",
+                "producer_eligible": False,
                 "N_CRC": _consensus_or_none(n_values),
                 "N_CRC_shard_mean": _mean_or_none(n_values),
                 "N_CRC_shard_std": _std_or_none(n_values),
@@ -2365,15 +2371,26 @@ def _write_global_finite_cmb_source_reports(
             },
             "readiness_gates": {
                 "observed_branch_N_scr_readout_available": bool(_consensus_or_none(n_values) is not None),
-                "N_CRC_consensus_invariant": bool(_consensus_or_none(n_values) is not None),
+                "observed_branch_is_comparison_only": True,
+                "N_CRC_consensus_invariant": False,
+                "N_CRC_consensus_invariant_receipt": False,
+                "finite_correctable_public_record_evaluator_implemented": False,
                 "additive_capacity_schema_declared": False,
             },
+            "PHYSICAL_N_CLOSURE_RECEIPT": False,
+            "complete_terminal_fiber_receipt": False,
+            "whole_fiber_scalarization_receipt": False,
+            "target_free_capacity_producer_receipt": False,
+            "robust_closure_receipt": False,
+            "unique_regulator_stable_slack_zero_receipt": False,
+            "horizon_record_saturation_receipt": False,
             "shard_count": expected,
             "source_report_count": len(screen_capacity_reports),
             "claim_boundary": (
-                "Screen capacity closure reduction treats N_CRC as a consensus invariant by default. The "
-                "additive sum is diagnostic only unless shard reports declare non-overlapping coverage and an "
-                "additive capacity schema."
+                "Distributed observed/shard N values are comparison-only. Consensus equality or an additive "
+                "sum cannot produce physical public-record capacity. That requires an exact target-free "
+                "complete terminal fiber, whole-fiber scalarization, robust closure, a unique regulator-stable "
+                "slack zero, and an independent horizon-record saturation receipt."
             ),
         },
     )

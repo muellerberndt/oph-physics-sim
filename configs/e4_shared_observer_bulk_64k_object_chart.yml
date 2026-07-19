@@ -443,7 +443,7 @@ h3_modular_response:
 
 theorem_core:
   projection_sample: 512
-  include_default_sm_candidate: true
+  include_default_sm_candidate: false
   consensus_replay:
     enabled: true
     schedule_replays: 16

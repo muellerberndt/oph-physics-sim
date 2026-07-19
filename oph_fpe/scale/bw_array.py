@@ -6011,27 +6011,23 @@ def _theorem_core_receipts(
         tolerance=float(theorem_cfg.get("projection_tolerance", 1e-10)),
     )
     sm_candidate = theorem_cfg.get("sm_candidate", (config.get("gauge", {}) or {}).get("sm_candidate"))
-    if sm_candidate is None and theorem_cfg.get("include_default_sm_candidate", False):
-        sm_candidate = {
-            "G_phys": "(SU(3)xSU(2)xU(1))/Z6",
-            "hypercharge_lattice": "exact",
-            "Nc": 3,
-            "Ng": 3,
-            "higgs_doublets": 1,
-            "light_chiral_exotics": 0,
-            "extra_low_scale_u1": 0,
-            "xy_gauge_bosons": 0,
-        }
+    legacy_default_requested = bool(theorem_cfg.get("include_default_sm_candidate", False))
     sm_gate = (
         standard_model_candidate_sieve(dict(sm_candidate))
         if sm_candidate is not None
         else {
-            "mode": "finite_mar_standard_model_candidate_sieve",
+            "mode": "standard_model_target_conformance_diagnostic",
             "enabled": False,
             "receipt": False,
             "SM_QUOTIENT_GATE_RECEIPT": False,
+            "SM_TARGET_CONFORMANCE_DIAGNOSTIC": False,
+            "PHYSICAL_STANDARD_MODEL_FROM_SCREEN_RECEIPT": False,
+            "legacy_default_candidate_request_ignored": legacy_default_requested,
             "claim_level": "continuation",
-            "claim_boundary": "no declared candidate supplied; SM quotient gate was not evaluated",
+            "claim_boundary": (
+                "No explicit comparison candidate supplied. The legacy include_default_sm_candidate "
+                "flag is intentionally ignored because injecting the target cannot produce a receipt."
+            ),
         }
     )
     report = {
@@ -6051,7 +6047,8 @@ def _theorem_core_receipts(
             "fast finite theorem-instantiation bundle. C0a/final settling is diagnostic only. "
             "C0b finite consensus requires theorem-phase replay evidence and fails closed when "
             "that evidence is absent. The Lyapunov and projection receipts are fixed-cutoff "
-            "recovered-core checks; the SM quotient gate is a declared continuation candidate sieve when supplied"
+            "recovered-core checks. The SM target-conformance diagnostic is never a derivation receipt; "
+            "A5 structural witnesses and physical screen gates are evaluated separately."
         ),
     }
     return with_claim_metadata(

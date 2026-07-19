@@ -64,7 +64,7 @@ def test_compact_transient_default_is_cr2_not_physical_promotion(tmp_path):
     assert (tmp_path / "compact_transient_audit_report.md").exists()
 
 
-def test_compact_transient_can_promote_to_cr3_but_not_cr4():
+def test_compact_transient_unverified_positive_overrides_cannot_promote_to_cr3():
     report = compact_transient_audit_report(
         {
             "CONTROL_MODEL_RECEIPT": True,
@@ -73,9 +73,23 @@ def test_compact_transient_can_promote_to_cr3_but_not_cr4():
         }
     )
 
-    assert report["claim"] == "CR3_FROZEN_PHYSICAL_PREDICTION"
-    assert report["promotion_allowed"] is True
-    assert report["first_blocked_gate"] == "COMPACT_SOURCE_ACTION_DERIVED_RECEIPT"
+    assert report["claim"] == "CR2_CONDITIONAL_PHENOMENOLOGY"
+    assert report["promotion_allowed"] is False
+    assert report["physical_claim"] is False
+    assert report["first_blocked_gate"] == "CONTROLS"
+    assert report["ignored_unverified_positive_receipt_assertions"] == [
+        "CONTROL_MODEL_RECEIPT",
+        "FROZEN_HASHES_RECEIPT",
+        "REFINEMENT_STABILITY_RECEIPT",
+    ]
+
+
+def test_compact_transient_caller_receipts_can_only_downgrade():
+    report = compact_transient_audit_report({"COMPACT_SOURCE_LAW_RECEIPT": False})
+
+    assert report["claim"] == "CR1_QUOTIENT_DIAGNOSTIC"
+    assert report["readiness_gates"]["COMPACT_SOURCE_LAW_RECEIPT"] is False
+    assert report["caller_receipt_assertions_can_only_downgrade"] is True
 
 
 def test_compact_history_and_detection_helpers():

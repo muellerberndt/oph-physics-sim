@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from oph_fpe.cosmology.edge_center_clock import edge_center_clock_target
 from oph_fpe.cosmology.finite_repair_transition_clock import (
     validate_transition_clock_eligibility,
     write_finite_repair_transition_clock_report,
@@ -36,10 +37,18 @@ def test_finite_repair_transition_clock_writes_matrix_and_scalar_report(tmp_path
     assert report["transition_count"] == 9
     assert report["primary"]["lambda_2"] is not None
     assert report["clock_modes"]["empirical"]["clock_mode"] == "empirical"
-    assert report["clock_modes"]["e_hypothesis"]["clock_mode"] == "e_hypothesis"
-    assert report["clock_modes"]["crc48_hypothesis"]["clock_mode"] == "crc48_hypothesis"
-    assert report["repair_clock_empirical_certificate"] is True
-    assert report["eta_R_empirical_finite_lattice_derived"] is True
+    assert report["clock_modes"]["edge_center_selected"]["clock_mode"] == "edge_center_selected"
+    assert report["clock_modes"]["e_diagnostic"]["clock_mode"] == "e_diagnostic"
+    assert report["clock_modes"]["e_diagnostic"]["promoting"] is False
+    assert report["repair_clock_empirical_certificate"] is False
+    assert report["eta_R_empirical_finite_lattice_derived"] is False
+    assert report["finite_step_survival_exponent_derived"] is True
+    assert report["finite_step_survival"]["distinct_from_full_collar_derivative"] is True
+    assert report["repair_clock_edge_center_certificate"] is False
+    assert report["EDGE_CENTER_CLOCK_RECEIPT"] is False
+    target = edge_center_clock_target()
+    assert report["target"]["required_eta_R"] == target.theta
+    assert report["target"]["required_kappa_rep"] == target.kappa_rep
     assert (out / "finite_repair_transition_matrix.npz").exists()
     assert (out / "finite_repair_transition_matrix_report.json").exists()
     assert (out / "scalar_repair_semigroup_report.json").exists()
@@ -252,8 +261,8 @@ def test_repair_clock_consumer_rejects_legacy_scalar_sidecar_without_raw_evidenc
                 "repair_clock_certificate": True,
                 "semigroup_controls_passed": True,
                 "semigroup": {
-                    "kappa_rep_estimate": 2.718281828459045,
-                    "eta_R_estimate": 0.035,
+                    "kappa_rep_estimate": 2.627023712627471,
+                    "eta_R_estimate": 0.033978504362582485,
                 },
                 "transition_matrix_certificate": {"matrix_ready": True},
             }

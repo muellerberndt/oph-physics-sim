@@ -24,8 +24,7 @@ FINITE_CMB_PROVENANCE_SOURCES = {
 
 THEOREM_SIDE_PROVENANCE_SOURCES = {
     "OPH_pixel_branch_predeclared",
-    "OPH_screen_capacity_branch_predeclared",
-    "OPH_screen_capacity_observed_branch_readout",
+    "OPH_direct_public_record_capacity",
     "OPH_independent_scale_bridge_supplied",
 }
 
@@ -41,6 +40,11 @@ FORBIDDEN_SOURCE_KINDS = {
     "posterior_selected",
     "fitted_parameter",
     "shard_local_average",
+    "observed_horizon_comparison",
+    "OPH_screen_capacity_observed_branch_readout",
+    "OPH_screen_capacity_branch_predeclared",
+    "electroweak_bridge_comparison",
+    "operational_resolution_comparison",
 }
 
 POOLED_REDUCER_CHECKS = (
@@ -132,7 +136,7 @@ def certify_cmb_source_provenance(
 
     n_crc_status = reducer_status.get("N_CRC") or _n_crc_status({})
     if not n_crc_status["receipt"]:
-        blockers.append("N_CRC_not_consensus_invariant_or_additive_disjoint")
+        blockers.append("N_CRC_direct_public_record_capacity_receipt_missing")
 
     global_status, global_blockers = _global_likelihood_status(global_checks)
     blockers.extend(global_blockers)
@@ -155,6 +159,9 @@ def certify_cmb_source_provenance(
         SOURCE_MODEL_FREEZE_RECEIPT: source_model_freeze,
         "pooled_source_reducer_receipt": reducer_receipt,
         "contradiction_free_provenance_receipt": contradiction_free,
+        "N_CRC_direct_public_record_capacity_receipt": n_crc_status["receipt"],
+        # Compatibility field consumed by the older physical-CMB dataclass.
+        # Its semantics are now the strict direct-public-record receipt above.
         "N_CRC_consensus_invariant_receipt": n_crc_status["receipt"],
         "global_likelihood_reduction_receipt": global_status["receipt"],
         "blockers": blockers,
@@ -166,9 +173,9 @@ def certify_cmb_source_provenance(
         "claim_boundary": (
             "Source-provenance receipt for promoted CMB inputs. It certifies a source-only "
             "dependency DAG and global pooled reducers for eta_R, Gamma_rec, A_zeta, q_IR, "
-            "ell_IR, B_A(k,a), rho_A(a), and N_CRC. It rejects contradictory no-data-use "
-            "metadata and shard-local nonlinear averages; it does not run the Boltzmann or "
-            "likelihood prediction."
+            "ell_IR, B_A(k,a), and rho_A(a). N_CRC additionally requires a target-free, "
+            "complete public-record fiber with common M_0=alpha(G_q) and robust closure. "
+            "Observed-horizon, electroweak, and operational-resolution comparisons cannot be producers."
         ),
     }
 
@@ -257,7 +264,7 @@ def _local_source_blockers(node_id: str, node: dict[str, Any]) -> list[str]:
 
 def _source_allowed_for_quantity(quantity: str, source: str) -> bool:
     if quantity == "N_CRC":
-        return source in FINITE_CMB_PROVENANCE_SOURCES or source in THEOREM_SIDE_PROVENANCE_SOURCES
+        return source == "OPH_direct_public_record_capacity"
     return source in FINITE_CMB_PROVENANCE_SOURCES
 
 
@@ -303,19 +310,37 @@ def _reducer_status(
 
 
 def _n_crc_status(reducer: dict[str, Any]) -> dict[str, Any]:
-    consensus = bool(reducer.get("consensus_invariant", False))
-    additive_disjoint = bool(
-        reducer.get("additive_capacity_schema", False)
-        and reducer.get("disjoint_coverage_receipt", False)
-    )
+    exact_evaluator = bool(reducer.get("exact_public_record_capacity_evaluator", False))
+    complete_fiber = bool(reducer.get("complete_terminal_fiber_receipt", False))
+    common_readback = bool(reducer.get("whole_fiber_scalarization_receipt", False))
+    target_free = bool(reducer.get("target_free_capacity_producer_receipt", False))
+    robust = bool(reducer.get("robust_closure_receipt", False))
+    unique_slack = bool(reducer.get("unique_regulator_stable_slack_zero_receipt", False))
+    horizon_saturation = bool(reducer.get("horizon_record_saturation_receipt", False))
+    physical_n = bool(reducer.get("physical_N_closure_receipt", False))
     return {
-        "receipt": bool(consensus or additive_disjoint),
-        "consensus_invariant": consensus,
-        "additive_capacity_schema": bool(reducer.get("additive_capacity_schema", False)),
-        "disjoint_coverage_receipt": bool(reducer.get("disjoint_coverage_receipt", False)),
+        "receipt": bool(
+            exact_evaluator
+            and complete_fiber
+            and common_readback
+            and target_free
+            and robust
+            and unique_slack
+            and horizon_saturation
+            and physical_n
+        ),
+        "exact_public_record_capacity_evaluator": exact_evaluator,
+        "complete_terminal_fiber_receipt": complete_fiber,
+        "whole_fiber_scalarization_receipt": common_readback,
+        "target_free_capacity_producer_receipt": target_free,
+        "robust_closure_receipt": robust,
+        "unique_regulator_stable_slack_zero_receipt": unique_slack,
+        "horizon_record_saturation_receipt": horizon_saturation,
+        "physical_N_closure_receipt": physical_n,
         "claim_boundary": (
-            "N_CRC is treated as a consensus invariant unless an additive capacity schema "
-            "proves disjoint coverage before any summation."
+            "N_CRC is eligible only from a target-free complete public-record terminal fiber "
+            "with common M_0=alpha(G_q), robust F_set(D)={D}, a unique regulator-stable slack zero, "
+            "and the independent horizon-record saturation receipt. Consensus or additive counts alone fail."
         ),
     }
 

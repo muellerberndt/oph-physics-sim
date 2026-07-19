@@ -81,9 +81,9 @@
   "electroweak_hierarchy": {
     "N_CRC_EW": "3.5323546226929906511187512962330547600462096590942035604238177731136802717148740820434110040644403858228611984E+122",
     "artifact_path": "particles/hierarchy",
-    "boundary": "This certificate closes the selected local P -> alpha_U -> v/E_star hierarchy lane, the local/global resonance bridge, and the Higgs naturality defect epsilon_H=0. Separate non-promoted gates are the public Thomson endpoint transport, theorem-grade W/Z promotion, charged-lepton absolute masses, source-only hadron masses, Strong CP, and the full no-G clock stack for SI gravity.",
+    "boundary": "The selected local P -> alpha_U -> v/E_star lane and the Higgs naturality defect epsilon_H=0 are exact on their declared branches. The local/global resonance bridge is exact under the screen premises listed in work_in_progress_receipts. Separate non-promoted gates are the public Thomson endpoint transport, theorem-grade W/Z promotion, charged-lepton absolute masses, source-only hadron masses, Strong CP, and the full no-G clock stack for SI gravity.",
     "bridge_residual": "0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    "claim_status": "closed_local_global_hierarchy_and_naturality_certificate",
+    "claim_status": "exact_conditional_local_global_hierarchy_and_closed_naturality_certificate",
     "dag_forbidden_paths": [],
     "derivative_interval": {
       "lower": "-10.995767998506369371985481516028357811043316285244607",
@@ -97,7 +97,7 @@
     "ew_capacity_status": "closed_bridge_refined_global_capacity_fixed_point_certificate",
     "exists": true,
     "fixed_point_residual_x": "0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    "full_theorem_grade_resonance_promoted": true,
+    "full_theorem_grade_resonance_promoted": false,
     "interval": {
       "lower": "0.041123336195630494",
       "upper": "0.041125336195630496"
@@ -107,8 +107,9 @@
       "upper": "0.041124336672706466103571496781875444719601176485634484342812958790445912366833206"
     },
     "krawczyk_interior": true,
-    "local_global_resonance_status": "closed_full_local_global_hierarchy_resonance",
-    "may_feed_local_hierarchy_claim": true,
+    "local_global_resonance_status": "exact_conditional_local_global_hierarchy_resonance",
+    "may_feed_conditional_local_hierarchy_claim": true,
+    "may_feed_local_hierarchy_claim": false,
     "may_feed_naturality_claim": true,
     "public_endpoint_branch": {
       "P": "1.630968209403959324879279847782648941",
@@ -116,18 +117,21 @@
       "log10_E_star_over_v": "16.69465286086613",
       "v_over_E_star": "2.0199803239725553e-17"
     },
-    "remaining_promotion_gates": [],
     "source_audit_branch": {
-      "P": "1.63097209569432901817967892561191884270169",
-      "alpha_U": "0.04112424744557487",
-      "v_over_E_star": "2.0198114150099223e-17"
+      "P": "1.63097209585889737696451390350695562847912625483895268486516",
+      "alpha_U": "0.04112424744181668514088993388965971943770774203135879",
+      "v_over_E_star": "2.019811407857633059133742618267014853993e-17"
     },
-    "v_over_E_cell_source": "2.5797040595276223506583341903922018695490035369903290256096683452314630559578761079150341073645683725521032233E-17"
+    "v_over_E_cell_source": "2.5797040595276223506583341903922018695490035369903290256096683452314630559578761079150341073645683725521032233E-17",
+    "work_in_progress_receipts": [
+      "source production of the unit cost, inverse pairing, and D-optimal selector",
+      "HIERARCHY-SCREEN-READOUT: identify log(E_cell/v)=Gamma_screen and attach it to the alpha_U/B_EW branch"
+    ]
   },
-  "generated_utc": "2026-07-12T03:56:19Z",
+  "generated_utc": "2026-07-18T05:32:25Z",
   "p_trunk": {
-    "P": "1.63097210492078846050203640439",
-    "alpha_inv": "136.994020662724205139718642793",
+    "P": "1.630972172289734415925897501373482673022655099072161516985001733211109918232723345616738572172898702297689609012",
+    "alpha_inv": "136.9940258961185127104409023920559579278278595210377402655367838643416163059458987723160506837823465289198011341",
     "artifact_path": "P_derivation/runtime/p_closure_trunk_current.json",
     "claim_status": "compressed_candidate_trunk_not_final_particle_root",
     "exists": true,
@@ -259,7 +263,7 @@
       "github_issue": 546,
       "id": "charged.determinant-normalization-transport",
       "lane": "Charged leptons",
-      "next_action": "Keep charged masses suppressed. Under the no-new-axiom rule, reopen only if an already-declared determinant-sensitive source observable is exhibited that breaks the kappa countermodel; the gate still flips only when N_det has the certified singleton interval [0,0].",
+      "next_action": "Keep charged masses suppressed. Under the no-new-axiom rule, reopen only if an declared determinant-sensitive source observable is exhibited that breaks the kappa countermodel; the gate flips only when N_det has the certified singleton interval [0,0].",
       "status": "closed_current_corpus_charged_end_to_end_no_go",
       "target_surfaces": [
         "code/particles/leptons/derive_charged_trace_lift.py",
@@ -413,7 +417,7 @@
       "title": "Repair-tuple selection beneath the free quadratic family"
     },
     {
-      "current_boundary": "The anchor scheme-bridge analysis (runtime/anchor_scheme_bridge_current.json) identifies the certified anchor gap as the hadronic and higher-order running deficit of the OPH one-loop unification anchor: the standard reference value alpha^-1(m_Z) = 128.939 (5-flavor on-shell) minus the OPH one-loop anchor 128.308 is 0.631, at the lower edge of the certified interval [0.649, 0.855]. The anchor-exactness no-go (route B) is false: the anchor is a one-loop value with an understood deficit, not a source-chain failure. A same-scheme bridge (route A) that fills the deficit needs the measured hadronic running (empirical class, already carried by the payload) or the OPH source hadronic spectral measure.",
+      "current_boundary": "The anchor scheme-bridge analysis (runtime/anchor_scheme_bridge_current.json) identifies the certified anchor gap as the hadronic and higher-order running deficit of the OPH one-loop unification anchor: the standard reference value alpha^-1(m_Z) = 128.939 (5-flavor on-shell) minus the OPH one-loop anchor 128.308 is 0.631, at the lower edge of the certified interval [0.649, 0.855]. The anchor-exactness no-go (route B) is false: the anchor is a one-loop value with an understood deficit, not a source-chain failure. A same-scheme bridge (route A) that fills the deficit needs the measured hadronic running (empirical class, carried by the payload) or the OPH source hadronic spectral measure.",
       "github_issue": 545,
       "id": "d10.same-scheme-anchor-bridge",
       "lane": "P closure / D10 electromagnetic endpoint",

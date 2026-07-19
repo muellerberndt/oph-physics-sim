@@ -23,6 +23,10 @@ def test_oph_constants_five_of_seven_values():
     constants = OPHConstants()
 
     assert constants.N_CRC > 1.0e122
+    assert constants.N_CRC_source == "observed_horizon_comparison"
+    assert constants.N_CRC_producer_eligible is False
+    assert constants.as_jsonable()["N_CRC_producer_eligible"] is False
+    assert "comparison only" in str(constants.as_jsonable()["N_CRC_contract"])
     assert constants.N_patch_bare_ratio == constants.N_CRC / math.pi
     assert constants.Lambda_lP2 == 3.0 * math.pi / constants.N_CRC
     assert constants.P_cell_count_for_N_CRC == 4.0 * constants.N_CRC / constants.P

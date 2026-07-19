@@ -10,6 +10,11 @@ import numpy as np
 
 from oph_fpe.bulk.h3_chart import h3_distance_matrix
 from oph_fpe.bulk.observer_reconstruction import neutral_dimension_report_from_distance
+from oph_fpe.cosmology.edge_center_clock import (
+    EDGE_CENTER_CLOCK_RECEIPT,
+    EDGE_CENTER_CLOCK_SCHEMA,
+    EDGE_CENTER_EVIDENCE_RECEIPTS,
+)
 from oph_fpe.cosmology.finite_repair_transition_clock import (
     validate_transition_clock_eligibility,
 )
@@ -343,9 +348,15 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         screen_camb = standalone_report
     if standalone_report.get("mode") == "oph_maxent_green_screen_source_v0":
         maxent_green = standalone_report
-    if standalone_report.get("mode") == "oph_repair_clock_kappa_audit_v0":
+    if standalone_report.get("mode") in {
+        "oph_repair_clock_kappa_audit_v0",
+        "oph_repair_clock_kappa_audit_v1",
+    }:
         repair_clock = standalone_report
-    if standalone_report.get("mode") == "oph_scalar_repair_semigroup_gap_audit_v0":
+    if standalone_report.get("mode") in {
+        "oph_scalar_repair_semigroup_gap_audit_v0",
+        "oph_scalar_repair_semigroup_gap_audit_v1",
+    }:
         scalar_repair_semigroup = standalone_report
     if standalone_report.get("mode") == "oph_fossil_spectrum_time_resolved_diagnostic_v0":
         fossil_spectrum = standalone_report
@@ -715,6 +726,51 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
     )
     finite_clock_cmb_eligibility = validate_transition_clock_eligibility(
         finite_clock_cmb_camb
+    )
+    maxent_edge_clock_receipt = _validated_edge_clock_receipt(maxent_green)
+    repair_edge_clock_receipt = _validated_edge_clock_receipt(repair_clock)
+    scalar_edge_clock_receipt = _validated_edge_clock_receipt(scalar_repair_semigroup)
+    selector_edge_clock_receipt = _validated_edge_clock_receipt(selector_elimination)
+    exact_edge_clock_receipt = _validated_edge_clock_receipt(
+        exact_cmb_camb.get("oph_exact_input", {}) if isinstance(exact_cmb_camb, dict) else {}
+    )
+    finite_camb_edge_clock_receipt = _validated_edge_clock_receipt(
+        finite_clock_cmb_camb.get("finite_repair_clock_input", {})
+        if isinstance(finite_clock_cmb_camb, dict)
+        else {}
+    )
+    maxent_selected_edge_clock = _selects_edge_center_clock(maxent_green)
+    repair_selected_edge_clock = _selects_edge_center_clock(repair_clock)
+    scalar_selected_edge_clock = _selects_edge_center_clock(scalar_repair_semigroup)
+    inflation_screen = (
+        inflation_cmb_bridge.get("screen_spectrum_prediction", {})
+        if isinstance(inflation_cmb_bridge, dict)
+        else {}
+    )
+    inflation_selected_edge_clock = _selects_edge_center_clock(inflation_screen)
+    inflation_edge_clock_receipt = _validated_edge_clock_receipt(inflation_screen)
+    selector_selected_edge_clock = _selects_edge_center_clock(selector_elimination)
+    exact_clock_input = (
+        exact_cmb_camb.get("oph_exact_input", {})
+        if isinstance(exact_cmb_camb, dict)
+        else {}
+    )
+    exact_selected_edge_clock = _selects_edge_center_clock(exact_clock_input)
+    finite_clock_input = (
+        finite_clock_cmb_camb.get("finite_repair_clock_input", {})
+        if isinstance(finite_clock_cmb_camb, dict)
+        else {}
+    )
+    finite_camb_selected_edge_clock = _selects_edge_center_clock(finite_clock_input)
+    selected_edge_step_time = _nested(
+        scalar_repair_semigroup,
+        "transition_matrix_certificate",
+        "required_repair_step_time_for_selected_edge_center",
+    )
+    legacy_e_step_time = _nested(
+        scalar_repair_semigroup,
+        "transition_matrix_certificate",
+        "required_repair_step_time_for_kappa_e",
     )
 
     row = {
@@ -1118,7 +1174,16 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         ),
         "oph_screen_camb_physical_cmb_prediction": bool(screen_camb.get("physical_cmb_prediction", False)),
         "oph_maxent_green_written": bool(maxent_green),
-        "oph_maxent_green_receipt": bool(maxent_green.get("MAXENT_GREEN_SOURCE_RECEIPT", False)),
+        "oph_maxent_green_selected_edge_center_branch": maxent_selected_edge_clock,
+        "oph_maxent_green_edge_center_clock_receipt": maxent_edge_clock_receipt,
+        "oph_maxent_green_receipt": bool(
+            maxent_edge_clock_receipt
+            and maxent_green.get("MAXENT_GREEN_SOURCE_RECEIPT", False)
+        ),
+        "oph_maxent_green_legacy_source_receipt_diagnostic": bool(
+            maxent_green.get("MAXENT_GREEN_SOURCE_RECEIPT", False)
+            and not maxent_edge_clock_receipt
+        ),
         "oph_maxent_green_flat_green_receipt": bool(
             _nested(maxent_green, "maxent_inverse_laplacian", "eta0_flat_D_ell_receipt")
         ),
@@ -1129,7 +1194,8 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             _nested(maxent_green, "selector_elimination_v1_5", "source_packet_audit_receipt")
         ),
         "oph_maxent_green_repair_clock_certificate": bool(
-            _nested(maxent_green, "fractional_repair_tilt", "repair_clock_certificate")
+            maxent_edge_clock_receipt
+            and _nested(maxent_green, "fractional_repair_tilt", "repair_clock_certificate")
         ),
         "oph_maxent_green_bandlimit_for_ir": bool(
             _nested(maxent_green, "finite_regulator", "bandlimit_for_ir_receipt")
@@ -1139,8 +1205,26 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         ),
         "oph_maxent_green_patch_count": _nested(maxent_green, "finite_regulator", "patch_count"),
         "oph_maxent_green_ell_max": _nested(maxent_green, "screen_spectrum", "ell_max"),
-        "oph_maxent_green_eta_R": _nested(maxent_green, "fractional_repair_tilt", "eta_R"),
-        "oph_maxent_green_n_s": _nested(maxent_green, "fractional_repair_tilt", "n_s"),
+        "oph_maxent_green_eta_R": (
+            _nested(maxent_green, "fractional_repair_tilt", "eta_R")
+            if maxent_selected_edge_clock
+            else None
+        ),
+        "oph_maxent_green_n_s": (
+            _nested(maxent_green, "fractional_repair_tilt", "n_s")
+            if maxent_selected_edge_clock
+            else None
+        ),
+        "oph_maxent_green_legacy_eta_R_diagnostic": (
+            _nested(maxent_green, "fractional_repair_tilt", "eta_R")
+            if maxent_green and not maxent_selected_edge_clock
+            else None
+        ),
+        "oph_maxent_green_legacy_n_s_diagnostic": (
+            _nested(maxent_green, "fractional_repair_tilt", "n_s")
+            if maxent_green and not maxent_selected_edge_clock
+            else None
+        ),
         "oph_maxent_green_fit_eta_R_error": _nested(
             maxent_green,
             "fractional_repair_tilt",
@@ -1152,40 +1236,123 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "oph_maxent_green_mean_F_IR_ell2_29": _nested(maxent_green, "screen_spectrum", "mean_F_IR_ell2_29"),
         "oph_maxent_green_F_IR_ell2": _nested(maxent_green, "screen_spectrum", "F_IR_ell2"),
         "oph_maxent_green_F_IR_ell32": _nested(maxent_green, "screen_spectrum", "F_IR_ell32"),
-        "oph_maxent_green_finite_lattice_derived": bool(maxent_green.get("finite_lattice_derived", False)),
-        "oph_maxent_green_physical_cmb_prediction": bool(maxent_green.get("physical_cmb_prediction", False)),
-        "repair_clock_written": bool(repair_clock),
-        "repair_clock_certificate": bool(repair_clock.get("repair_clock_certificate", False)),
-        "repair_clock_finite_certificate": bool(repair_clock.get("finite_repair_clock_certificate", False)),
-        "repair_clock_eta_finite_lattice_derived": bool(
-            repair_clock.get("eta_R_finite_lattice_derived", False)
+        "oph_maxent_green_finite_lattice_derived": bool(
+            maxent_selected_edge_clock
+            and maxent_edge_clock_receipt
+            and maxent_green.get("finite_lattice_derived", False)
         ),
-        "repair_clock_physical_cmb_prediction": bool(repair_clock.get("physical_cmb_prediction", False)),
+        "oph_maxent_green_physical_cmb_prediction": bool(
+            maxent_selected_edge_clock
+            and maxent_edge_clock_receipt
+            and maxent_green.get("MAXENT_GREEN_SOURCE_RECEIPT", False)
+            and maxent_green.get("physical_cmb_prediction", False)
+        ),
+        "repair_clock_written": bool(repair_clock),
+        "repair_clock_selected_edge_center_branch": repair_selected_edge_clock,
+        "repair_clock_edge_center_clock_receipt": repair_edge_clock_receipt,
+        "repair_clock_certificate": bool(
+            repair_edge_clock_receipt
+            and repair_clock.get("repair_clock_certificate", False)
+        ),
+        "repair_clock_finite_certificate": bool(
+            repair_edge_clock_receipt
+            and repair_clock.get("finite_repair_clock_certificate", False)
+        ),
+        "repair_clock_legacy_certificate_claim_diagnostic": bool(
+            not repair_edge_clock_receipt
+            and (
+                repair_clock.get("repair_clock_certificate", False)
+                or repair_clock.get("finite_repair_clock_certificate", False)
+            )
+        ),
+        "repair_clock_eta_finite_lattice_derived": bool(
+            repair_edge_clock_receipt
+            and repair_clock.get("eta_R_finite_lattice_derived", False)
+        ),
+        "repair_clock_physical_cmb_prediction": bool(
+            repair_selected_edge_clock
+            and repair_edge_clock_receipt
+            and repair_clock.get("repair_clock_certificate", False)
+            and repair_clock.get("physical_cmb_prediction", False)
+        ),
         "repair_clock_candidate_run_count": _nested(repair_clock, "inputs", "candidate_run_count"),
         "repair_clock_estimator_count": _nested(repair_clock, "summary", "estimator_count"),
         "repair_clock_eligible_estimator_count": _nested(repair_clock, "summary", "eligible_estimator_count"),
         "repair_clock_passed_estimator_count": _nested(repair_clock, "summary", "passed_estimator_count"),
-        "repair_clock_median_kappa_rep": _nested(repair_clock, "summary", "median_kappa_rep_estimate"),
-        "repair_clock_median_eta_R": _nested(repair_clock, "summary", "median_eta_R_estimate"),
-        "repair_clock_median_n_s": _nested(repair_clock, "summary", "median_n_s_estimate"),
-        "repair_clock_target_kappa_rep": _nested(repair_clock, "target", "required_kappa_rep"),
-        "repair_clock_target_eta_R": _nested(repair_clock, "target", "required_eta_R"),
+        "repair_clock_median_kappa_rep": (
+            _nested(repair_clock, "summary", "median_kappa_rep_estimate")
+            if repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_median_eta_R": (
+            _nested(repair_clock, "summary", "median_eta_R_estimate")
+            if repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_median_n_s": (
+            _nested(repair_clock, "summary", "median_n_s_estimate")
+            if repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_target_kappa_rep": (
+            _nested(repair_clock, "target", "required_kappa_rep")
+            if repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_target_eta_R": (
+            _nested(repair_clock, "target", "required_eta_R")
+            if repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_legacy_median_kappa_rep_diagnostic": (
+            _nested(repair_clock, "summary", "median_kappa_rep_estimate")
+            if repair_clock and not repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_legacy_median_eta_R_diagnostic": (
+            _nested(repair_clock, "summary", "median_eta_R_estimate")
+            if repair_clock and not repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_legacy_target_kappa_rep_diagnostic": (
+            _nested(repair_clock, "target", "required_kappa_rep")
+            if repair_clock and not repair_selected_edge_clock
+            else None
+        ),
+        "repair_clock_legacy_target_eta_R_diagnostic": (
+            _nested(repair_clock, "target", "required_eta_R")
+            if repair_clock and not repair_selected_edge_clock
+            else None
+        ),
         "repair_clock_cycle_time_normalization_declared": bool(
             _nested(repair_clock, "inputs", "cycle_time_normalization_declared")
         ),
         "repair_clock_blocker_count": len(repair_clock.get("blockers", [])) if repair_clock else None,
         "scalar_repair_semigroup_written": bool(scalar_repair_semigroup),
+        "scalar_repair_semigroup_selected_edge_center_branch": scalar_selected_edge_clock,
+        "scalar_repair_semigroup_edge_center_clock_receipt": scalar_edge_clock_receipt,
         "scalar_repair_semigroup_target_receipt": bool(
             scalar_transition_eligibility["eligible"]
+            and scalar_edge_clock_receipt
             and scalar_repair_semigroup.get("SEMIGROUP_TARGET_RECEIPT", False)
         ),
         "scalar_repair_semigroup_repair_clock_certificate": bool(
             scalar_transition_eligibility["eligible"]
+            and scalar_edge_clock_receipt
             and scalar_repair_semigroup.get("repair_clock_certificate", False)
         ),
         "scalar_repair_semigroup_eligible_for_certificate": bool(
             scalar_transition_eligibility["eligible"]
+            and scalar_edge_clock_receipt
             and scalar_repair_semigroup.get("eligible_for_repair_clock_certificate", False)
+        ),
+        "scalar_repair_semigroup_legacy_certificate_claim_diagnostic": bool(
+            not scalar_edge_clock_receipt
+            and (
+                scalar_repair_semigroup.get("SEMIGROUP_TARGET_RECEIPT", False)
+                or scalar_repair_semigroup.get("repair_clock_certificate", False)
+                or scalar_repair_semigroup.get("eligible_for_repair_clock_certificate", False)
+            )
         ),
         "scalar_repair_semigroup_finite_lattice_derived": bool(
             scalar_transition_eligibility["eligible"]
@@ -1193,33 +1360,60 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "scalar_repair_semigroup_source": scalar_repair_semigroup.get("source"),
         "scalar_repair_semigroup_dimension": scalar_repair_semigroup.get("dimension"),
         "scalar_repair_semigroup_centered_dim": scalar_repair_semigroup.get("centered_subspace_dimension"),
-        "scalar_repair_semigroup_kappa_rep": _nested(
-            scalar_repair_semigroup,
-            "semigroup",
-            "kappa_rep_estimate",
+        "scalar_repair_semigroup_kappa_rep": (
+            _nested(scalar_repair_semigroup, "semigroup", "kappa_rep_estimate")
+            if scalar_selected_edge_clock
+            else None
         ),
-        "scalar_repair_semigroup_eta_R": _nested(
-            scalar_repair_semigroup,
-            "semigroup",
-            "eta_R_estimate",
+        "scalar_repair_semigroup_eta_R": (
+            _nested(scalar_repair_semigroup, "semigroup", "eta_R_estimate")
+            if scalar_selected_edge_clock
+            else None
         ),
-        "scalar_repair_semigroup_n_s": _nested(
-            scalar_repair_semigroup,
-            "semigroup",
-            "n_s_estimate",
+        "scalar_repair_semigroup_n_s": (
+            _nested(scalar_repair_semigroup, "semigroup", "n_s_estimate")
+            if scalar_selected_edge_clock
+            else None
         ),
-        "scalar_repair_semigroup_centered_gap": _nested(
-            scalar_repair_semigroup,
-            "semigroup",
-            "centered_gap",
+        "scalar_repair_semigroup_centered_gap": (
+            _nested(scalar_repair_semigroup, "semigroup", "centered_gap")
+            if scalar_selected_edge_clock
+            else None
+        ),
+        "scalar_repair_semigroup_legacy_kappa_rep_diagnostic": (
+            _nested(scalar_repair_semigroup, "semigroup", "kappa_rep_estimate")
+            if scalar_repair_semigroup and not scalar_selected_edge_clock
+            else None
+        ),
+        "scalar_repair_semigroup_legacy_eta_R_diagnostic": (
+            _nested(scalar_repair_semigroup, "semigroup", "eta_R_estimate")
+            if scalar_repair_semigroup and not scalar_selected_edge_clock
+            else None
+        ),
+        "scalar_repair_semigroup_legacy_n_s_diagnostic": (
+            _nested(scalar_repair_semigroup, "semigroup", "n_s_estimate")
+            if scalar_repair_semigroup and not scalar_selected_edge_clock
+            else None
+        ),
+        "scalar_repair_semigroup_legacy_centered_gap_diagnostic": (
+            _nested(scalar_repair_semigroup, "semigroup", "centered_gap")
+            if scalar_repair_semigroup and not scalar_selected_edge_clock
+            else None
         ),
         "scalar_repair_semigroup_controls_passed": bool(
-            scalar_repair_semigroup.get("semigroup_controls_passed", False)
+            scalar_selected_edge_clock
+            and scalar_repair_semigroup.get("semigroup_controls_passed", False)
         ),
-        "scalar_repair_semigroup_transition_required_step_time": _nested(
-            scalar_repair_semigroup,
-            "transition_matrix_certificate",
-            "required_repair_step_time_for_kappa_e",
+        "scalar_repair_semigroup_transition_required_step_time_selected_edge_center": (
+            selected_edge_step_time if scalar_selected_edge_clock else None
+        ),
+        "scalar_repair_semigroup_legacy_e_step_time_diagnostic": legacy_e_step_time,
+        "scalar_repair_semigroup_step_time_semantics": (
+            "selected_edge_center_target"
+            if scalar_selected_edge_clock and selected_edge_step_time is not None
+            else "legacy_e_nonpromoting_diagnostic"
+            if legacy_e_step_time is not None
+            else None
         ),
         "scalar_repair_semigroup_transition_primary_lambda_2": _nested(
             scalar_repair_semigroup,
@@ -1228,6 +1422,7 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         ),
         "scalar_repair_semigroup_transition_clock_certified": bool(
             scalar_transition_eligibility["eligible"]
+            and scalar_edge_clock_receipt
             and _nested(
                 scalar_repair_semigroup,
                 "transition_matrix_certificate",
@@ -1277,15 +1472,33 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "cmb_fossil_bridge_ell_ir": _nested(cmb_fossil_bridge, "parameters", "ell_ir"),
         "oph_inflation_cmb_bridge_written": bool(inflation_cmb_bridge),
         "oph_inflation_cmb_bridge_physical_cmb_prediction": bool(
-            inflation_cmb_bridge.get("physical_cmb_prediction", False)
+            inflation_selected_edge_clock
+            and inflation_edge_clock_receipt
+            and inflation_cmb_bridge.get("physical_cmb_prediction", False)
         ),
-        "oph_inflation_cmb_n_s": _nested(inflation_cmb_bridge, "screen_spectrum_prediction", "n_s"),
-        "oph_inflation_cmb_theta_OPH": _nested(
-            inflation_cmb_bridge, "screen_spectrum_prediction", "theta_OPH"
+        "oph_inflation_cmb_selected_edge_center_branch": inflation_selected_edge_clock,
+        "oph_inflation_cmb_edge_center_clock_receipt": inflation_edge_clock_receipt,
+        "oph_inflation_cmb_n_s": (
+            inflation_screen.get("n_s") if inflation_selected_edge_clock else None
+        ),
+        "oph_inflation_cmb_theta_OPH": (
+            inflation_screen.get("theta_OPH") if inflation_selected_edge_clock else None
+        ),
+        "oph_inflation_cmb_legacy_n_s_diagnostic": (
+            inflation_screen.get("n_s")
+            if inflation_screen and not inflation_selected_edge_clock
+            else None
+        ),
+        "oph_inflation_cmb_legacy_theta_OPH_diagnostic": (
+            inflation_screen.get("theta_OPH")
+            if inflation_screen and not inflation_selected_edge_clock
+            else None
         ),
         "oph_inflation_cmb_A_zeta": _nested(inflation_cmb_bridge, "screen_spectrum_prediction", "A_zeta"),
-        "oph_inflation_cmb_n_s_pull": _nested(
-            inflation_cmb_bridge, "screen_spectrum_prediction", "n_s_pull_vs_planck"
+        "oph_inflation_cmb_n_s_pull": (
+            inflation_screen.get("n_s_pull_vs_planck")
+            if inflation_selected_edge_clock
+            else None
         ),
         "oph_inflation_cmb_Omega_K": _nested(
             inflation_cmb_bridge, "flat_sector_selection", "selected_Omega_K"
@@ -2593,7 +2806,8 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "oph_inflation_cmb_camb_curve_comparable": bool(
             inflation_cmb_camb.get("measurement_comparable_cmb_curve", False)
         ),
-        "oph_inflation_cmb_camb_physical_cmb_prediction": bool(
+        "oph_inflation_cmb_camb_physical_cmb_prediction": False,
+        "oph_inflation_cmb_camb_unpromoted_physical_claim_diagnostic": bool(
             inflation_cmb_camb.get("physical_cmb_prediction", False)
         ),
         "oph_inflation_cmb_camb_transfer_receipt": bool(
@@ -2675,6 +2889,8 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "CAMB_OPH_IR_chi2_ell2_29",
         ),
         "oph_selector_elimination_written": bool(selector_elimination),
+        "oph_selector_selected_edge_center_branch": selector_selected_edge_clock,
+        "oph_selector_edge_center_clock_receipt": selector_edge_clock_receipt,
         "oph_selector_elimination_theorem_receipt": bool(
             selector_elimination.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT")
             or selector_elimination.get("theorem_side_receipt")
@@ -2692,18 +2908,53 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             or selector_elimination.get("ell_IR_selector_removed")
         ),
         "oph_selector_eta_R_reduced_to_repair_clock": bool(
-            _nested(selector_elimination, "selector_elimination", "eta_R_reduced_to_repair_clock_certificate")
-            or selector_elimination.get("eta_R_reduced_to_repair_clock_certificate")
+            selector_selected_edge_clock
+            and (
+                _nested(
+                    selector_elimination,
+                    "selector_elimination",
+                    "eta_R_reduced_to_repair_clock_certificate",
+                )
+                or selector_elimination.get("eta_R_reduced_to_repair_clock_certificate")
+            )
         ),
-        "oph_selector_finite_lattice_derived": bool(selector_elimination.get("finite_lattice_derived", False)),
-        "oph_selector_physical_cmb_prediction": bool(selector_elimination.get("physical_cmb_prediction", False)),
+        "oph_selector_finite_lattice_derived": bool(
+            selector_selected_edge_clock
+            and selector_edge_clock_receipt
+            and selector_elimination.get("finite_lattice_derived", False)
+        ),
+        "oph_selector_physical_cmb_prediction": bool(
+            selector_selected_edge_clock
+            and selector_edge_clock_receipt
+            and selector_elimination.get("physical_cmb_prediction", False)
+        ),
         "oph_selector_n_s": (
             _nested(selector_elimination, "scalar_tilt", "n_s")
-            or _nested(exact_cmb_camb, "oph_exact_input", "n_s")
+            if selector_selected_edge_clock
+            else exact_clock_input.get("n_s")
+            if exact_selected_edge_clock
+            else None
         ),
         "oph_selector_eta_R": (
             _nested(selector_elimination, "scalar_tilt", "eta_R")
-            or _nested(exact_cmb_camb, "oph_exact_input", "eta_R")
+            if selector_selected_edge_clock
+            else exact_clock_input.get("eta_R")
+            if exact_selected_edge_clock
+            else None
+        ),
+        "oph_selector_legacy_n_s_diagnostic": (
+            _nested(selector_elimination, "scalar_tilt", "n_s")
+            if selector_elimination and not selector_selected_edge_clock
+            else exact_clock_input.get("n_s")
+            if exact_clock_input and not exact_selected_edge_clock
+            else None
+        ),
+        "oph_selector_legacy_eta_R_diagnostic": (
+            _nested(selector_elimination, "scalar_tilt", "eta_R")
+            if selector_elimination and not selector_selected_edge_clock
+            else exact_clock_input.get("eta_R")
+            if exact_clock_input and not exact_selected_edge_clock
+            else None
         ),
         "oph_selector_q_IR": (
             _nested(selector_elimination, "cmb_ir_kernel", "q_IR")
@@ -2723,19 +2974,41 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "exact_ir_kernel_csv_audit",
             "max_abs_error",
         ),
-        "oph_selector_kappa_rep_status": _nested(selector_elimination, "scalar_tilt", "canonical_kappa_rep_status"),
+        "oph_selector_kappa_rep_status": (
+            _nested(selector_elimination, "scalar_tilt", "canonical_kappa_rep_status")
+            if selector_selected_edge_clock
+            else None
+        ),
         "oph_exact_cmb_camb_written": bool(exact_cmb_camb),
+        "oph_exact_cmb_camb_selected_edge_center_branch": exact_selected_edge_clock,
+        "oph_exact_cmb_camb_edge_center_clock_receipt": exact_edge_clock_receipt,
         "oph_exact_cmb_camb_curve_comparable": bool(
             exact_cmb_camb.get("measurement_comparable_cmb_curve", False)
         ),
         "oph_exact_cmb_camb_physical_cmb_prediction": bool(
-            exact_cmb_camb.get("physical_cmb_prediction", False)
+            exact_selected_edge_clock
+            and exact_edge_clock_receipt
+            and exact_cmb_camb.get("physical_cmb_prediction", False)
         ),
         "oph_exact_cmb_camb_transfer_receipt": bool(
             exact_cmb_camb.get("screen_camb_transfer_receipt", False)
         ),
-        "oph_exact_cmb_camb_n_s": _nested(exact_cmb_camb, "oph_exact_input", "n_s"),
-        "oph_exact_cmb_camb_eta_R": _nested(exact_cmb_camb, "oph_exact_input", "eta_R"),
+        "oph_exact_cmb_camb_n_s": (
+            exact_clock_input.get("n_s") if exact_selected_edge_clock else None
+        ),
+        "oph_exact_cmb_camb_eta_R": (
+            exact_clock_input.get("eta_R") if exact_selected_edge_clock else None
+        ),
+        "oph_exact_cmb_camb_legacy_n_s_diagnostic": (
+            exact_clock_input.get("n_s")
+            if exact_clock_input and not exact_selected_edge_clock
+            else None
+        ),
+        "oph_exact_cmb_camb_legacy_eta_R_diagnostic": (
+            exact_clock_input.get("eta_R")
+            if exact_clock_input and not exact_selected_edge_clock
+            else None
+        ),
         "oph_exact_cmb_camb_q_IR": _nested(exact_cmb_camb, "oph_exact_input", "q_IR"),
         "oph_exact_cmb_camb_ell_IR": _nested(exact_cmb_camb, "oph_exact_input", "ell_IR"),
         "oph_exact_cmb_camb_N_frz_proxy": _nested(exact_cmb_camb, "oph_exact_input", "N_frz_proxy"),
@@ -2745,17 +3018,35 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "camb_lcdm_powerlaw",
             "shape_correlation",
         ),
-        "oph_exact_cmb_camb_scalar_shape_correlation": _nested(
-            exact_cmb_camb,
-            "comparison",
-            "oph_exact_scalar_tilt",
-            "shape_correlation",
+        "oph_exact_cmb_camb_scalar_shape_correlation": (
+            _nested(
+                exact_cmb_camb,
+                "comparison",
+                "oph_exact_scalar_tilt",
+                "shape_correlation",
+            )
+            if exact_selected_edge_clock
+            else None
         ),
-        "oph_exact_cmb_camb_ir_shape_correlation": _nested(
-            exact_cmb_camb,
-            "comparison",
-            "oph_exact_ir_v10",
-            "shape_correlation",
+        "oph_exact_cmb_camb_ir_shape_correlation": (
+            _nested(exact_cmb_camb, "comparison", "oph_exact_ir_v10", "shape_correlation")
+            if exact_selected_edge_clock
+            else None
+        ),
+        "oph_exact_cmb_camb_legacy_scalar_shape_correlation_diagnostic": (
+            _nested(
+                exact_cmb_camb,
+                "comparison",
+                "oph_exact_scalar_tilt",
+                "shape_correlation",
+            )
+            if exact_cmb_camb and not exact_selected_edge_clock
+            else None
+        ),
+        "oph_exact_cmb_camb_legacy_ir_shape_correlation_diagnostic": (
+            _nested(exact_cmb_camb, "comparison", "oph_exact_ir_v10", "shape_correlation")
+            if exact_cmb_camb and not exact_selected_edge_clock
+            else None
         ),
         "oph_exact_cmb_camb_lcdm_chi2_per_bin": _nested(
             exact_cmb_camb,
@@ -2763,17 +3054,45 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "camb_lcdm_powerlaw",
             "amplitude_fit_chi2_per_bin",
         ),
-        "oph_exact_cmb_camb_scalar_chi2_per_bin": _nested(
-            exact_cmb_camb,
-            "comparison",
-            "oph_exact_scalar_tilt",
-            "amplitude_fit_chi2_per_bin",
+        "oph_exact_cmb_camb_scalar_chi2_per_bin": (
+            _nested(
+                exact_cmb_camb,
+                "comparison",
+                "oph_exact_scalar_tilt",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if exact_selected_edge_clock
+            else None
         ),
-        "oph_exact_cmb_camb_ir_chi2_per_bin": _nested(
-            exact_cmb_camb,
-            "comparison",
-            "oph_exact_ir_v10",
-            "amplitude_fit_chi2_per_bin",
+        "oph_exact_cmb_camb_ir_chi2_per_bin": (
+            _nested(
+                exact_cmb_camb,
+                "comparison",
+                "oph_exact_ir_v10",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if exact_selected_edge_clock
+            else None
+        ),
+        "oph_exact_cmb_camb_legacy_scalar_chi2_per_bin_diagnostic": (
+            _nested(
+                exact_cmb_camb,
+                "comparison",
+                "oph_exact_scalar_tilt",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if exact_cmb_camb and not exact_selected_edge_clock
+            else None
+        ),
+        "oph_exact_cmb_camb_legacy_ir_chi2_per_bin_diagnostic": (
+            _nested(
+                exact_cmb_camb,
+                "comparison",
+                "oph_exact_ir_v10",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if exact_cmb_camb and not exact_selected_edge_clock
+            else None
         ),
         "oph_exact_cmb_camb_acoustic_mean_abs_delta": _nested(
             exact_cmb_camb,
@@ -2791,11 +3110,15 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "official_likelihood_execution_ready",
         ),
         "finite_clock_cmb_camb_written": bool(finite_clock_cmb_camb),
+        "finite_clock_cmb_camb_selected_edge_center_branch": finite_camb_selected_edge_clock,
+        "finite_clock_cmb_camb_edge_center_clock_receipt": finite_camb_edge_clock_receipt,
         "finite_clock_cmb_camb_curve_comparable": bool(
             finite_clock_cmb_camb.get("measurement_comparable_cmb_curve", False)
         ),
         "finite_clock_cmb_camb_physical_cmb_prediction": bool(
             finite_clock_cmb_eligibility["eligible"]
+            and finite_camb_selected_edge_clock
+            and finite_camb_edge_clock_receipt
             and finite_clock_cmb_camb.get("physical_cmb_prediction", False)
         ),
         "finite_clock_cmb_camb_transfer_receipt": bool(
@@ -2803,27 +3126,26 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         ),
         "finite_clock_cmb_camb_finite_lattice_clock_derived": bool(
             finite_clock_cmb_eligibility["eligible"]
+            and finite_camb_edge_clock_receipt
             and finite_clock_cmb_camb.get("finite_lattice_clock_derived", False)
         ),
         "finite_clock_cmb_camb_repair_clock_certificate": bool(
             finite_clock_cmb_eligibility["eligible"]
+            and finite_camb_edge_clock_receipt
             and finite_clock_cmb_camb.get("repair_clock_certificate", False)
         ),
         "finite_clock_cmb_camb_clock_numeric_match": bool(
-            _nested(
-                finite_clock_cmb_camb,
-                "finite_repair_clock_input",
-                "clock_normalization_numeric_match",
-            )
+            finite_camb_selected_edge_clock
+            and finite_clock_input.get("clock_normalization_numeric_match", False)
         ),
-        "finite_clock_cmb_camb_repair_scale_hypothesis_match": bool(
+        "finite_clock_cmb_camb_legacy_repair_scale_hypothesis_diagnostic": bool(
             _nested(
                 finite_clock_cmb_camb,
                 "finite_repair_clock_input",
                 "repair_scale_hypothesis_clock_match",
             )
         ),
-        "finite_clock_cmb_camb_clock_source_theorem_grade": bool(
+        "finite_clock_cmb_camb_clock_source_theorem_grade_label_diagnostic": bool(
             _nested(
                 finite_clock_cmb_camb,
                 "finite_repair_clock_input",
@@ -2839,20 +3161,29 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
         "finite_clock_cmb_camb_selector_ir_theory_side": bool(
             finite_clock_cmb_camb.get("selector_ir_theory_side", False)
         ),
-        "finite_clock_cmb_camb_n_s": _nested(
-            finite_clock_cmb_camb,
-            "finite_repair_clock_input",
-            "n_s",
+        "finite_clock_cmb_camb_n_s": (
+            finite_clock_input.get("n_s") if finite_camb_selected_edge_clock else None
         ),
-        "finite_clock_cmb_camb_eta_R": _nested(
-            finite_clock_cmb_camb,
-            "finite_repair_clock_input",
-            "eta_R",
+        "finite_clock_cmb_camb_eta_R": (
+            finite_clock_input.get("eta_R") if finite_camb_selected_edge_clock else None
         ),
-        "finite_clock_cmb_camb_kappa_rep": _nested(
-            finite_clock_cmb_camb,
-            "finite_repair_clock_input",
-            "kappa_rep",
+        "finite_clock_cmb_camb_kappa_rep": (
+            finite_clock_input.get("kappa_rep") if finite_camb_selected_edge_clock else None
+        ),
+        "finite_clock_cmb_camb_legacy_n_s_diagnostic": (
+            finite_clock_input.get("n_s")
+            if finite_clock_input and not finite_camb_selected_edge_clock
+            else None
+        ),
+        "finite_clock_cmb_camb_legacy_eta_R_diagnostic": (
+            finite_clock_input.get("eta_R")
+            if finite_clock_input and not finite_camb_selected_edge_clock
+            else None
+        ),
+        "finite_clock_cmb_camb_legacy_kappa_rep_diagnostic": (
+            finite_clock_input.get("kappa_rep")
+            if finite_clock_input and not finite_camb_selected_edge_clock
+            else None
         ),
         "finite_clock_cmb_camb_q_IR": _nested(finite_clock_cmb_camb, "selector_ir_input", "q_IR"),
         "finite_clock_cmb_camb_ell_IR": _nested(finite_clock_cmb_camb, "selector_ir_input", "ell_IR"),
@@ -2862,17 +3193,45 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "camb_lcdm_powerlaw",
             "shape_correlation",
         ),
-        "finite_clock_cmb_camb_scalar_shape_correlation": _nested(
-            finite_clock_cmb_camb,
-            "comparison",
-            "finite_repair_clock_scalar_tilt",
-            "shape_correlation",
+        "finite_clock_cmb_camb_scalar_shape_correlation": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_scalar_tilt",
+                "shape_correlation",
+            )
+            if finite_camb_selected_edge_clock
+            else None
         ),
-        "finite_clock_cmb_camb_ir_shape_correlation": _nested(
-            finite_clock_cmb_camb,
-            "comparison",
-            "finite_repair_clock_plus_selector_ir",
-            "shape_correlation",
+        "finite_clock_cmb_camb_ir_shape_correlation": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_plus_selector_ir",
+                "shape_correlation",
+            )
+            if finite_camb_selected_edge_clock
+            else None
+        ),
+        "finite_clock_cmb_camb_legacy_scalar_shape_correlation_diagnostic": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_scalar_tilt",
+                "shape_correlation",
+            )
+            if finite_clock_cmb_camb and not finite_camb_selected_edge_clock
+            else None
+        ),
+        "finite_clock_cmb_camb_legacy_ir_shape_correlation_diagnostic": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_plus_selector_ir",
+                "shape_correlation",
+            )
+            if finite_clock_cmb_camb and not finite_camb_selected_edge_clock
+            else None
         ),
         "finite_clock_cmb_camb_lcdm_chi2_per_bin": _nested(
             finite_clock_cmb_camb,
@@ -2880,17 +3239,45 @@ def _extract_run_row(run_path: Path) -> dict[str, Any]:
             "camb_lcdm_powerlaw",
             "amplitude_fit_chi2_per_bin",
         ),
-        "finite_clock_cmb_camb_scalar_chi2_per_bin": _nested(
-            finite_clock_cmb_camb,
-            "comparison",
-            "finite_repair_clock_scalar_tilt",
-            "amplitude_fit_chi2_per_bin",
+        "finite_clock_cmb_camb_scalar_chi2_per_bin": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_scalar_tilt",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if finite_camb_selected_edge_clock
+            else None
         ),
-        "finite_clock_cmb_camb_ir_chi2_per_bin": _nested(
-            finite_clock_cmb_camb,
-            "comparison",
-            "finite_repair_clock_plus_selector_ir",
-            "amplitude_fit_chi2_per_bin",
+        "finite_clock_cmb_camb_ir_chi2_per_bin": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_plus_selector_ir",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if finite_camb_selected_edge_clock
+            else None
+        ),
+        "finite_clock_cmb_camb_legacy_scalar_chi2_per_bin_diagnostic": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_scalar_tilt",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if finite_clock_cmb_camb and not finite_camb_selected_edge_clock
+            else None
+        ),
+        "finite_clock_cmb_camb_legacy_ir_chi2_per_bin_diagnostic": (
+            _nested(
+                finite_clock_cmb_camb,
+                "comparison",
+                "finite_repair_clock_plus_selector_ir",
+                "amplitude_fit_chi2_per_bin",
+            )
+            if finite_clock_cmb_camb and not finite_camb_selected_edge_clock
+            else None
         ),
         "finite_clock_cmb_camb_acoustic_mean_abs_delta": _nested(
             finite_clock_cmb_camb,
@@ -4237,7 +4624,16 @@ def _maxent_green_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     usable = [row for row in rows if row.get("oph_maxent_green_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1 for row in usable if row.get("oph_maxent_green_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("oph_maxent_green_edge_center_clock_receipt")
+        ),
         "source_receipt_count": sum(1 for row in usable if row.get("oph_maxent_green_receipt")),
+        "legacy_source_receipt_diagnostic_count": sum(
+            1 for row in usable if row.get("oph_maxent_green_legacy_source_receipt_diagnostic")
+        ),
         "flat_green_receipt_count": sum(1 for row in usable if row.get("oph_maxent_green_flat_green_receipt")),
         "ir_theorem_receipt_count": sum(1 for row in usable if row.get("oph_maxent_green_ir_receipt")),
         "source_packet_audit_count": sum(1 for row in usable if row.get("oph_maxent_green_source_packet_audit")),
@@ -4264,12 +4660,33 @@ def _maxent_green_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_N_frz_proxy": _mean(row.get("oph_maxent_green_N_frz_proxy") for row in usable),
         "mean_F_IR_ell2": _mean(row.get("oph_maxent_green_F_IR_ell2") for row in usable),
         "mean_F_IR_ell32": _mean(row.get("oph_maxent_green_F_IR_ell32") for row in usable),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1
+                for row in usable
+                if not row.get("oph_maxent_green_selected_edge_center_branch")
+            ),
+            "mean_eta_R": _mean(
+                row.get("oph_maxent_green_legacy_eta_R_diagnostic") for row in usable
+            ),
+            "mean_n_s": _mean(
+                row.get("oph_maxent_green_legacy_n_s_diagnostic") for row in usable
+            ),
+            "source_receipt_claim_count": sum(
+                1
+                for row in usable
+                if row.get("oph_maxent_green_legacy_source_receipt_diagnostic")
+            ),
+            "promoting": False,
+        },
         "physical_cmb_prediction": False,
         "interpretation": (
             "Paper-side finite-screen CMB source certificate. This lane verifies the MaxEnt "
             "inverse-Laplacian screen covariance, selector-eliminated q_IR/ell_IR target, and a CAMB/CLASS "
-            "primordial-table scaffold. The finite repair-clock certificate kappa_rep=e, finite freezeout "
-            "emission, parity/BipoSH covariance, and official likelihood gates remain separate."
+            "primordial-table scaffold. The selected clock target is theta=P/48 with "
+            "kappa_rep=(P/48)/(P-phi). Full-collar/orientation-half, semigroup/refinement, clock-binding, "
+            "source-DAG, finite-freezeout, parity/BipoSH, and official-likelihood gates remain separate; "
+            "legacy Euler receipts are retained only as nonpromoting diagnostics."
         ),
     }
 
@@ -4278,12 +4695,21 @@ def _repair_clock_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     usable = [row for row in rows if row.get("repair_clock_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1 for row in usable if row.get("repair_clock_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("repair_clock_edge_center_clock_receipt")
+        ),
         "finite_repair_clock_certificate_count": sum(
             1 for row in usable if row.get("repair_clock_finite_certificate")
         ),
         "repair_clock_certificate_count": sum(1 for row in usable if row.get("repair_clock_certificate")),
         "eta_R_finite_lattice_derived_count": sum(
             1 for row in usable if row.get("repair_clock_eta_finite_lattice_derived")
+        ),
+        "legacy_certificate_claim_diagnostic_count": sum(
+            1 for row in usable if row.get("repair_clock_legacy_certificate_claim_diagnostic")
         ),
         "cycle_time_normalization_declared_count": sum(
             1 for row in usable if row.get("repair_clock_cycle_time_normalization_declared")
@@ -4299,13 +4725,37 @@ def _repair_clock_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_median_n_s": _mean(row.get("repair_clock_median_n_s") for row in usable),
         "target_kappa_rep": _first_non_null(row.get("repair_clock_target_kappa_rep") for row in usable),
         "target_eta_R": _first_non_null(row.get("repair_clock_target_eta_R") for row in usable),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1 for row in usable if not row.get("repair_clock_selected_edge_center_branch")
+            ),
+            "mean_median_kappa_rep": _mean(
+                row.get("repair_clock_legacy_median_kappa_rep_diagnostic") for row in usable
+            ),
+            "mean_median_eta_R": _mean(
+                row.get("repair_clock_legacy_median_eta_R_diagnostic") for row in usable
+            ),
+            "target_kappa_rep": _first_non_null(
+                row.get("repair_clock_legacy_target_kappa_rep_diagnostic") for row in usable
+            ),
+            "target_eta_R": _first_non_null(
+                row.get("repair_clock_legacy_target_eta_R_diagnostic") for row in usable
+            ),
+            "certificate_claim_count": sum(
+                1
+                for row in usable
+                if row.get("repair_clock_legacy_certificate_claim_diagnostic")
+            ),
+            "promoting": False,
+        },
         "mean_blocker_count": _mean(row.get("repair_clock_blocker_count") for row in usable),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Finite repair-clock audit for the exact OPH CMB scalar tilt eta_R=kappa_rep*(P-phi). "
-            "This is the remaining dynamic certificate after q_IR and ell_IR selector elimination. "
-            "Diagnostic trace fits are kept visible, but the lane does not certify a physical CMB "
-            "prediction unless theorem-grade eligible rows derive kappa_rep=e under declared controls."
+            "Finite repair-clock audit for the selected edge-center scalar tilt "
+            "eta_R=P/48=kappa_rep*(P-phi). Trace fits and finite-step survival exponents remain "
+            "diagnostic until the full-collar, orientation-half, semigroup/refinement, clock-binding, "
+            "and source-DAG receipts pass. Historical Euler certificate claims remain visible only as "
+            "nonpromoting diagnostics."
         ),
     }
 
@@ -4314,6 +4764,14 @@ def _scalar_repair_semigroup_summary(rows: list[dict[str, Any]]) -> dict[str, An
     usable = [row for row in rows if row.get("scalar_repair_semigroup_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1
+            for row in usable
+            if row.get("scalar_repair_semigroup_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("scalar_repair_semigroup_edge_center_clock_receipt")
+        ),
         "semigroup_target_receipt_count": sum(
             1 for row in usable if row.get("scalar_repair_semigroup_target_receipt")
         ),
@@ -4325,6 +4783,9 @@ def _scalar_repair_semigroup_summary(rows: list[dict[str, Any]]) -> dict[str, An
         ),
         "finite_lattice_derived_count": sum(
             1 for row in usable if row.get("scalar_repair_semigroup_finite_lattice_derived")
+        ),
+        "legacy_certificate_claim_diagnostic_count": sum(
+            1 for row in usable if row.get("scalar_repair_semigroup_legacy_certificate_claim_diagnostic")
         ),
         "source_values": sorted(
             {
@@ -4342,8 +4803,48 @@ def _scalar_repair_semigroup_summary(rows: list[dict[str, Any]]) -> dict[str, An
         "controls_passed_count": sum(
             1 for row in usable if row.get("scalar_repair_semigroup_controls_passed")
         ),
-        "mean_required_repair_step_time_for_kappa_e": _mean(
-            row.get("scalar_repair_semigroup_transition_required_step_time") for row in usable
+        "mean_required_repair_step_time_for_selected_edge_center": _mean(
+            row.get("scalar_repair_semigroup_transition_required_step_time_selected_edge_center")
+            for row in usable
+        ),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1
+                for row in usable
+                if not row.get("scalar_repair_semigroup_selected_edge_center_branch")
+            ),
+            "mean_kappa_rep": _mean(
+                row.get("scalar_repair_semigroup_legacy_kappa_rep_diagnostic")
+                for row in usable
+            ),
+            "mean_eta_R": _mean(
+                row.get("scalar_repair_semigroup_legacy_eta_R_diagnostic") for row in usable
+            ),
+            "mean_n_s": _mean(
+                row.get("scalar_repair_semigroup_legacy_n_s_diagnostic") for row in usable
+            ),
+            "mean_centered_gap": _mean(
+                row.get("scalar_repair_semigroup_legacy_centered_gap_diagnostic")
+                for row in usable
+            ),
+            "artifact_count_with_kappa_e_step_time": sum(
+                1
+                for row in usable
+                if row.get("scalar_repair_semigroup_legacy_e_step_time_diagnostic") is not None
+            ),
+            "mean_step_time_for_kappa_e": _mean(
+                row.get("scalar_repair_semigroup_legacy_e_step_time_diagnostic")
+                for row in usable
+            ),
+            "certificate_claim_count": sum(
+                1
+                for row in usable
+                if row.get("scalar_repair_semigroup_legacy_certificate_claim_diagnostic")
+            ),
+            "promoting": False,
+        },
+        "step_time_semantics_counts": _count_values(
+            row.get("scalar_repair_semigroup_step_time_semantics") for row in usable
         ),
         "mean_primary_lambda_2": _mean(
             row.get("scalar_repair_semigroup_transition_primary_lambda_2") for row in usable
@@ -4353,10 +4854,11 @@ def _scalar_repair_semigroup_summary(rows: list[dict[str, Any]]) -> dict[str, An
         ),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Scalar repair-semigroup gap lane for the exact OPH CMB clock. A declared Euler target "
-            "only checks the algebraic route to kappa_rep=e. A finite support-visible transition "
-            "matrix is stronger, but it still certifies the CMB clock only if its declared repair-step "
-            "normalization yields kappa_rep=e under the report controls."
+            "Scalar repair-semigroup gap lane for the selected P/48 edge-center clock. A finite "
+            "support-visible transition matrix supplies a survival-exponent diagnostic, not the "
+            "full-collar derivative. Promotion requires the complete edge-center evidence bundle. "
+            "Historical kappa=e step-time fields are parsed only into an explicitly nonpromoting "
+            "legacy diagnostic block."
         ),
     }
 
@@ -4419,6 +4921,12 @@ def _oph_inflation_cmb_bridge_summary(rows: list[dict[str, Any]]) -> dict[str, A
     usable = [row for row in rows if row.get("oph_inflation_cmb_bridge_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1 for row in usable if row.get("oph_inflation_cmb_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("oph_inflation_cmb_edge_center_clock_receipt")
+        ),
         "v04_diagnostic_available_count": sum(1 for row in usable if row.get("oph_inflation_cmb_v04_available")),
         "physical_cmb_prediction_count": sum(
             1 for row in usable if row.get("oph_inflation_cmb_bridge_physical_cmb_prediction")
@@ -4427,6 +4935,20 @@ def _oph_inflation_cmb_bridge_summary(rows: list[dict[str, Any]]) -> dict[str, A
         "mean_theta_OPH": _mean(row.get("oph_inflation_cmb_theta_OPH") for row in usable),
         "mean_A_zeta": _mean(row.get("oph_inflation_cmb_A_zeta") for row in usable),
         "mean_n_s_pull_vs_planck": _mean(row.get("oph_inflation_cmb_n_s_pull") for row in usable),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1
+                for row in usable
+                if not row.get("oph_inflation_cmb_selected_edge_center_branch")
+            ),
+            "mean_n_s": _mean(
+                row.get("oph_inflation_cmb_legacy_n_s_diagnostic") for row in usable
+            ),
+            "mean_theta_OPH": _mean(
+                row.get("oph_inflation_cmb_legacy_theta_OPH_diagnostic") for row in usable
+            ),
+            "promoting": False,
+        },
         "mean_Omega_K": _mean(row.get("oph_inflation_cmb_Omega_K") for row in usable),
         "mean_Omega_A0_plus_Omega_K0": _mean(
             row.get("oph_inflation_cmb_Omega_A0_plus_Omega_K0") for row in usable
@@ -4468,10 +4990,11 @@ def _oph_inflation_cmb_bridge_summary(rows: list[dict[str, Any]]) -> dict[str, A
         ),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Continuation bridge imported from the Pro CMB/inflation notes. It supplies P/48 screen-spectrum "
-            "numbers, zero-holonomy flat-sector bookkeeping, and measured Planck low-ell/CAMB diagnostic "
-            "ladders including v0.5 TT/TE/EE hard-gate proxies. It is not a finite-lattice derivation of "
-            "those numbers and not an official Planck likelihood."
+            "Continuation bridge for the selected edge-center target n_s=1-P/48 with "
+            "kappa_rep=(P/48)/(P-phi). The target stays conditional on the complete edge-center evidence "
+            "bundle; historical clock branches are retained only as nonpromoting diagnostics. The bridge "
+            "also carries zero-holonomy flat-sector bookkeeping and measured Planck low-ell/CAMB diagnostic "
+            "ladders, not a finite-lattice derivation or official Planck likelihood."
         ),
     }
 
@@ -4528,6 +5051,11 @@ def _oph_inflation_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any
         "transfer_receipt_count": sum(1 for row in usable if row.get("oph_inflation_cmb_camb_transfer_receipt")),
         "physical_cmb_prediction_count": sum(
             1 for row in usable if row.get("oph_inflation_cmb_camb_physical_cmb_prediction")
+        ),
+        "unpromoted_physical_claim_diagnostic_count": sum(
+            1
+            for row in usable
+            if row.get("oph_inflation_cmb_camb_unpromoted_physical_claim_diagnostic")
         ),
         "mean_n_s": _mean(row.get("oph_inflation_cmb_camb_n_s") for row in usable),
         "mean_A_zeta": _mean(row.get("oph_inflation_cmb_camb_A_zeta") for row in usable),
@@ -4587,6 +5115,12 @@ def _selector_elimination_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     usable = [row for row in rows if row.get("oph_selector_elimination_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1 for row in usable if row.get("oph_selector_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("oph_selector_edge_center_clock_receipt")
+        ),
         "theorem_side_receipt_count": sum(
             1 for row in usable if row.get("oph_selector_elimination_theorem_receipt")
         ),
@@ -4608,15 +5142,30 @@ def _selector_elimination_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_eta_R": _mean(row.get("oph_selector_eta_R") for row in usable),
         "mean_q_IR": _mean(row.get("oph_selector_q_IR") for row in usable),
         "mean_ell_IR": _mean(row.get("oph_selector_ell_IR") for row in usable),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1
+                for row in usable
+                if not row.get("oph_selector_selected_edge_center_branch")
+            ),
+            "mean_n_s": _mean(
+                row.get("oph_selector_legacy_n_s_diagnostic") for row in usable
+            ),
+            "mean_eta_R": _mean(
+                row.get("oph_selector_legacy_eta_R_diagnostic") for row in usable
+            ),
+            "promoting": False,
+        },
         "kappa_rep_status_counts": _counts(
             row.get("oph_selector_kappa_rep_status") for row in usable if row.get("oph_selector_kappa_rep_status")
         ),
         "physical_cmb_prediction": False,
         "interpretation": (
             "v1.5 OPH-CMB selector-elimination lane. q_IR and ell_IR are counted as theorem-side target "
-            "derivations when their receipts pass; eta_R is only reduced to a repair-clock certificate "
-            "until the finite lattice derives kappa_rep=e. This lane strengthens the exact target branch "
-            "but does not by itself make the CAMB curve a physical finite-lattice CMB prediction."
+            "derivations when their receipts pass. The selected scalar target is eta_R=P/48 with "
+            "kappa_rep=(P/48)/(P-phi), but it remains conditional until the complete edge-center clock "
+            "evidence bundle passes. Historical Euler targets are nonpromoting diagnostics. This lane does "
+            "not by itself make the CAMB curve a physical finite-lattice CMB prediction."
         ),
     }
 
@@ -4625,6 +5174,12 @@ def _oph_exact_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     usable = [row for row in rows if row.get("oph_exact_cmb_camb_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1 for row in usable if row.get("oph_exact_cmb_camb_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("oph_exact_cmb_camb_edge_center_clock_receipt")
+        ),
         "measurement_comparable_curve_count": sum(
             1 for row in usable if row.get("oph_exact_cmb_camb_curve_comparable")
         ),
@@ -4656,11 +5211,41 @@ def _oph_exact_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_scalar_chi2_per_bin": _mean(row.get("oph_exact_cmb_camb_scalar_chi2_per_bin") for row in usable),
         "mean_ir_chi2_per_bin": _mean(row.get("oph_exact_cmb_camb_ir_chi2_per_bin") for row in usable),
         "mean_acoustic_abs_delta": _mean(row.get("oph_exact_cmb_camb_acoustic_mean_abs_delta") for row in usable),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1
+                for row in usable
+                if not row.get("oph_exact_cmb_camb_selected_edge_center_branch")
+            ),
+            "mean_n_s": _mean(
+                row.get("oph_exact_cmb_camb_legacy_n_s_diagnostic") for row in usable
+            ),
+            "mean_eta_R": _mean(
+                row.get("oph_exact_cmb_camb_legacy_eta_R_diagnostic") for row in usable
+            ),
+            "mean_scalar_shape_correlation": _mean(
+                row.get("oph_exact_cmb_camb_legacy_scalar_shape_correlation_diagnostic")
+                for row in usable
+            ),
+            "mean_ir_shape_correlation": _mean(
+                row.get("oph_exact_cmb_camb_legacy_ir_shape_correlation_diagnostic")
+                for row in usable
+            ),
+            "mean_scalar_chi2_per_bin": _mean(
+                row.get("oph_exact_cmb_camb_legacy_scalar_chi2_per_bin_diagnostic")
+                for row in usable
+            ),
+            "mean_ir_chi2_per_bin": _mean(
+                row.get("oph_exact_cmb_camb_legacy_ir_chi2_per_bin_diagnostic")
+                for row in usable
+            ),
+            "promoting": False,
+        },
         "physical_cmb_prediction": False,
         "interpretation": (
             "Native CAMB TT transfer for the exact OPH CMB target branch updated with the v1.5 "
             "selector-elimination receipts: q_IR and ell_IR are theorem-side target counts, while "
-            "n_s still depends on the pending kappa_rep=e repair-clock certificate. This is "
+            "n_s=1-P/48 still depends on the pending edge-center clock evidence bundle. This is "
             "measurement-comparable Boltzmann output, but remains a target/continuation diagnostic until "
             "finite lattice derivation and official Planck likelihood/map-space gates pass."
         ),
@@ -4671,6 +5256,12 @@ def _finite_repair_clock_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[st
     usable = [row for row in rows if row.get("finite_clock_cmb_camb_written")]
     return {
         "run_count": len(usable),
+        "selected_edge_center_branch_count": sum(
+            1 for row in usable if row.get("finite_clock_cmb_camb_selected_edge_center_branch")
+        ),
+        "edge_center_clock_receipt_count": sum(
+            1 for row in usable if row.get("finite_clock_cmb_camb_edge_center_clock_receipt")
+        ),
         "measurement_comparable_curve_count": sum(
             1 for row in usable if row.get("finite_clock_cmb_camb_curve_comparable")
         ),
@@ -4684,11 +5275,15 @@ def _finite_repair_clock_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[st
         "clock_numeric_match_count": sum(
             1 for row in usable if row.get("finite_clock_cmb_camb_clock_numeric_match")
         ),
-        "repair_scale_hypothesis_match_count": sum(
-            1 for row in usable if row.get("finite_clock_cmb_camb_repair_scale_hypothesis_match")
+        "legacy_repair_scale_hypothesis_diagnostic_count": sum(
+            1
+            for row in usable
+            if row.get("finite_clock_cmb_camb_legacy_repair_scale_hypothesis_diagnostic")
         ),
-        "clock_source_theorem_grade_count": sum(
-            1 for row in usable if row.get("finite_clock_cmb_camb_clock_source_theorem_grade")
+        "clock_source_theorem_grade_label_diagnostic_count": sum(
+            1
+            for row in usable
+            if row.get("finite_clock_cmb_camb_clock_source_theorem_grade_label_diagnostic")
         ),
         "clock_source_counts": _counts(
             row.get("finite_clock_cmb_camb_clock_source") for row in usable
@@ -4721,12 +5316,45 @@ def _finite_repair_clock_cmb_camb_summary(rows: list[dict[str, Any]]) -> dict[st
         "mean_acoustic_abs_delta": _mean(
             row.get("finite_clock_cmb_camb_acoustic_mean_abs_delta") for row in usable
         ),
+        "legacy_nonpromoting_diagnostics": {
+            "artifact_count": sum(
+                1
+                for row in usable
+                if not row.get("finite_clock_cmb_camb_selected_edge_center_branch")
+            ),
+            "mean_n_s": _mean(
+                row.get("finite_clock_cmb_camb_legacy_n_s_diagnostic") for row in usable
+            ),
+            "mean_eta_R": _mean(
+                row.get("finite_clock_cmb_camb_legacy_eta_R_diagnostic") for row in usable
+            ),
+            "mean_kappa_rep": _mean(
+                row.get("finite_clock_cmb_camb_legacy_kappa_rep_diagnostic") for row in usable
+            ),
+            "mean_scalar_shape_correlation": _mean(
+                row.get("finite_clock_cmb_camb_legacy_scalar_shape_correlation_diagnostic")
+                for row in usable
+            ),
+            "mean_ir_shape_correlation": _mean(
+                row.get("finite_clock_cmb_camb_legacy_ir_shape_correlation_diagnostic")
+                for row in usable
+            ),
+            "mean_scalar_chi2_per_bin": _mean(
+                row.get("finite_clock_cmb_camb_legacy_scalar_chi2_per_bin_diagnostic")
+                for row in usable
+            ),
+            "mean_ir_chi2_per_bin": _mean(
+                row.get("finite_clock_cmb_camb_legacy_ir_chi2_per_bin_diagnostic")
+                for row in usable
+            ),
+            "promoting": False,
+        },
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Native CAMB TT transfer using the finite transition-matrix repair clock emitted by the simulator. "
-            "This is the strongest current simulator-derived CMB curve lane: n_s comes from finite repair data. "
-            "It remains non-physical until the exact repair-clock certificate, selector finite-register "
-            "certificate, physical source/k calibration, and official likelihood gates pass."
+            "Native CAMB TT transfer using a finite transition-matrix survival exponent as a diagnostic for "
+            "the selected P/48 edge-center branch. The exponent is not the full-collar derivative. Promotion "
+            "requires the complete edge-center evidence bundle, selector finite-register certificate, physical "
+            "source/k calibration, and official likelihood gates. Legacy clock curves remain nonpromoting."
         ),
     }
 
@@ -4767,9 +5395,10 @@ def _oph_unique_prediction_summary(rows: list[dict[str, Any]]) -> dict[str, Any]
         ),
         "physical_cmb_prediction": False,
         "interpretation": (
-            "Current v0.9 OPH-only public-comparison lane: alpha-linked scalar tilt, exact IR kernel, "
-            "parity envelope, and compressed dark-sector rows. There is no OPH-derived neutrino mass "
-            "prediction; neutrino transfer diagnostics use a separate conventional 0.06 eV baseline."
+            "Current OPH-only public-comparison lane: selected edge-center target n_s=1-P/48, exact IR "
+            "kernel, parity envelope, and compressed dark-sector rows. The scalar target remains pending "
+            "the complete edge-center evidence bundle. There is no OPH-derived neutrino mass prediction; "
+            "neutrino transfer diagnostics use a separate conventional 0.06 eV baseline."
         ),
     }
 
@@ -6684,7 +7313,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- finite transition-clock n_s: {_fmt(scalar_semigroup.get('mean_n_s'))}",
         f"- finite transition-clock kappa_rep: {_fmt(scalar_semigroup.get('mean_kappa_rep'))}",
         f"- finite transition-clock certified count: {scalar_semigroup.get('transition_clock_certified_count')}",
-        f"- finite transition required repair-step time for kappa=e: {_fmt(scalar_semigroup.get('mean_required_repair_step_time_for_kappa_e'))}",
+        f"- finite transition required repair-step time for selected P/48 clock: {_fmt(scalar_semigroup.get('mean_required_repair_step_time_for_selected_edge_center'))}",
+        f"- legacy clock diagnostics (nonpromoting): {scalar_semigroup.get('legacy_nonpromoting_diagnostics')}",
         f"- screen Planck-lite best shape correlation: {_fmt(planck.get('mean_best_shape_correlation'))}",
         f"- physical CMB prediction: {report['physical_cmb_prediction']}",
         "",
@@ -7081,6 +7711,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "## OPH MaxEnt Green-Spectrum Source",
         "",
         f"- source reports: {maxent_green['run_count']}",
+        f"- selected P/48 branch reports: {maxent_green['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {maxent_green['edge_center_clock_receipt_count']}",
         f"- source receipts: {maxent_green['source_receipt_count']}",
         f"- flat-Green receipts: {maxent_green['flat_green_receipt_count']}",
         f"- IR theorem receipts: {maxent_green['ir_theorem_receipt_count']}",
@@ -7097,11 +7729,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean N_frz proxy: {_fmt(maxent_green['mean_N_frz_proxy'])}",
         f"- mean F_IR(ell=2): {_fmt(maxent_green['mean_F_IR_ell2'])}",
         f"- mean F_IR(ell=32): {_fmt(maxent_green['mean_F_IR_ell32'])}",
+        f"- legacy clock diagnostics (nonpromoting): {maxent_green['legacy_nonpromoting_diagnostics']}",
         f"- interpretation: {maxent_green['interpretation']}",
         "",
         "## OPH Repair-Clock Kappa Audit",
         "",
         f"- repair-clock reports: {repair_clock['run_count']}",
+        f"- selected P/48 branch reports: {repair_clock['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {repair_clock['edge_center_clock_receipt_count']}",
         f"- finite repair-clock certificates: {repair_clock['finite_repair_clock_certificate_count']}",
         f"- eta_R finite-lattice-derived reports: {repair_clock['eta_R_finite_lattice_derived_count']}",
         f"- cycle-time normalization declared reports: {repair_clock['cycle_time_normalization_declared_count']}",
@@ -7114,11 +7749,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean median eta_R estimate: {_fmt(repair_clock['mean_median_eta_R'])}",
         f"- target eta_R: {_fmt(repair_clock['target_eta_R'])}",
         f"- mean blocker count: {_fmt(repair_clock['mean_blocker_count'])}",
+        f"- legacy clock diagnostics (nonpromoting): {repair_clock['legacy_nonpromoting_diagnostics']}",
         f"- interpretation: {repair_clock['interpretation']}",
         "",
         "## OPH Scalar Repair-Semigroup Gap",
         "",
         f"- semigroup reports: {scalar_semigroup['run_count']}",
+        f"- selected P/48 branch reports: {scalar_semigroup['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {scalar_semigroup['edge_center_clock_receipt_count']}",
         f"- algebraic target receipts: {scalar_semigroup['semigroup_target_receipt_count']}",
         f"- repair-clock certificates: {scalar_semigroup['repair_clock_certificate_count']}",
         f"- eligible certificate reports: {scalar_semigroup['eligible_for_certificate_count']}",
@@ -7131,7 +7769,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean n_s: {_fmt(scalar_semigroup['mean_n_s'])}",
         f"- mean centered gap: {_fmt(scalar_semigroup['mean_centered_gap'])}",
         f"- mean primary lambda_2: {_fmt(scalar_semigroup['mean_primary_lambda_2'])}",
-        f"- mean required repair-step time for kappa=e: {_fmt(scalar_semigroup['mean_required_repair_step_time_for_kappa_e'])}",
+        f"- mean required repair-step time for selected P/48 clock: {_fmt(scalar_semigroup['mean_required_repair_step_time_for_selected_edge_center'])}",
+        f"- legacy clock diagnostics (nonpromoting): {scalar_semigroup['legacy_nonpromoting_diagnostics']}",
         f"- transition clock certified reports: {scalar_semigroup['transition_clock_certified_count']}",
         f"- controls-passed reports: {scalar_semigroup['controls_passed_count']}",
         f"- interpretation: {scalar_semigroup['interpretation']}",
@@ -7139,6 +7778,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "## OPH Inflation/CMB Bridge",
         "",
         f"- bridge reports: {inflation_cmb['run_count']}",
+        f"- selected P/48 branch reports: {inflation_cmb['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {inflation_cmb['edge_center_clock_receipt_count']}",
         f"- v0.4 public-data diagnostic reports: {inflation_cmb['v04_diagnostic_available_count']}",
         f"- physical-CMB prediction reports: {inflation_cmb['physical_cmb_prediction_count']}",
         f"- mean n_s = 1 - P/48: {_fmt(inflation_cmb['mean_n_s'])}",
@@ -7162,6 +7803,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- v0.5 TT high-ell delta chi2, ell=30..1200: {_fmt(inflation_cmb['mean_v05_TT_high_ell_delta_chi2_30_1200'])}",
         f"- v0.5 combined TT+TE+EE low-ell delta chi2: {_fmt(inflation_cmb['mean_v05_combined_lowell_delta_chi2'])}",
         f"- v0.5 pressure/not-yet-run gate count: {_fmt(inflation_cmb['mean_v05_pressure_point_count'])}",
+        f"- legacy clock diagnostics (nonpromoting): {inflation_cmb['legacy_nonpromoting_diagnostics']}",
         f"- interpretation: {inflation_cmb['interpretation']}",
         "",
         "## OPH Inflation Certificate Stack",
@@ -7437,6 +8079,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- measurement-comparable curve reports: {inflation_cmb_camb['measurement_comparable_curve_count']}",
         f"- transfer receipts: {inflation_cmb_camb['transfer_receipt_count']}",
         f"- physical-CMB prediction reports: {inflation_cmb_camb['physical_cmb_prediction_count']}",
+        f"- unpromoted raw physical-claim diagnostics: {inflation_cmb_camb['unpromoted_physical_claim_diagnostic_count']}",
         f"- mean n_s: {_fmt(inflation_cmb_camb['mean_n_s'])}",
         f"- mean A_zeta: {_fmt(inflation_cmb_camb['mean_A_zeta'])}",
         f"- mean q_IR: {_fmt(inflation_cmb_camb['mean_q_IR'])}",
@@ -7461,6 +8104,8 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "## OPH CMB Selector Elimination v1.5",
         "",
         f"- selector-elimination reports: {selector_elimination['run_count']}",
+        f"- selected P/48 branch reports: {selector_elimination['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {selector_elimination['edge_center_clock_receipt_count']}",
         f"- theorem-side receipts: {selector_elimination['theorem_side_receipt_count']}",
         f"- source-packet audit receipts: {selector_elimination['source_packet_audit_receipt_count']}",
         f"- q_IR selector-removed count: {selector_elimination['q_IR_selector_removed_count']}",
@@ -7475,11 +8120,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean q_IR: {_fmt(selector_elimination['mean_q_IR'])}",
         f"- mean ell_IR: {_fmt(selector_elimination['mean_ell_IR'])}",
         f"- kappa_rep status counts: {selector_elimination['kappa_rep_status_counts']}",
+        f"- legacy clock diagnostics (nonpromoting): {selector_elimination['legacy_nonpromoting_diagnostics']}",
         f"- interpretation: {selector_elimination['interpretation']}",
         "",
         "## OPH Exact CMB CAMB Transfer",
         "",
         f"- CAMB transfer reports: {exact_cmb_camb['run_count']}",
+        f"- selected P/48 branch reports: {exact_cmb_camb['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {exact_cmb_camb['edge_center_clock_receipt_count']}",
         f"- measurement-comparable curve reports: {exact_cmb_camb['measurement_comparable_curve_count']}",
         f"- transfer receipts: {exact_cmb_camb['transfer_receipt_count']}",
         f"- physical-CMB prediction reports: {exact_cmb_camb['physical_cmb_prediction_count']}",
@@ -7499,11 +8147,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean exact scalar chi2/bin: {_fmt(exact_cmb_camb['mean_scalar_chi2_per_bin'])}",
         f"- mean exact IR chi2/bin: {_fmt(exact_cmb_camb['mean_ir_chi2_per_bin'])}",
         f"- mean acoustic |delta|: {_fmt(exact_cmb_camb['mean_acoustic_abs_delta'])}",
+        f"- legacy clock diagnostics (nonpromoting): {exact_cmb_camb['legacy_nonpromoting_diagnostics']}",
         f"- interpretation: {exact_cmb_camb['interpretation']}",
         "",
         "## Finite Repair-Clock CMB CAMB Transfer",
         "",
         f"- CAMB transfer reports: {finite_clock_cmb['run_count']}",
+        f"- selected P/48 branch reports: {finite_clock_cmb['selected_edge_center_branch_count']}",
+        f"- complete edge-center clock receipts: {finite_clock_cmb['edge_center_clock_receipt_count']}",
         f"- measurement-comparable curve reports: {finite_clock_cmb['measurement_comparable_curve_count']}",
         f"- transfer receipts: {finite_clock_cmb['transfer_receipt_count']}",
         f"- finite-lattice clock reports: {finite_clock_cmb['finite_lattice_clock_derived_count']}",
@@ -7520,6 +8171,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
         f"- mean finite-clock scalar chi2/bin: {_fmt(finite_clock_cmb['mean_scalar_chi2_per_bin'])}",
         f"- mean finite-clock IR chi2/bin: {_fmt(finite_clock_cmb['mean_ir_chi2_per_bin'])}",
         f"- mean acoustic |delta|: {_fmt(finite_clock_cmb['mean_acoustic_abs_delta'])}",
+        f"- legacy clock diagnostics (nonpromoting): {finite_clock_cmb['legacy_nonpromoting_diagnostics']}",
         f"- interpretation: {finite_clock_cmb['interpretation']}",
         "",
         "## OPH Unique Prediction Gate v0.9",
@@ -7906,6 +8558,60 @@ def _cmb_lite_report_score(report: dict[str, Any]) -> tuple[float, float, float,
         -best_overlap_rmse,
         best_positive_corr,
         -best_unconstrained_rmse + 1.0e-6 * benchmark_rows + 1.0e-9 * ell_max,
+    )
+
+
+def _selects_edge_center_clock(report: dict[str, Any]) -> bool:
+    if not isinstance(report, dict):
+        return False
+    fractional_tilt = report.get("fractional_repair_tilt")
+    if isinstance(fractional_tilt, dict):
+        return bool(
+            fractional_tilt.get("selected_branch") == "edge_center_orientation_half"
+            and fractional_tilt.get("selected_theorem_target") is True
+            and fractional_tilt.get("kappa_rep_source")
+            == "selected_edge_center_p_over_48_target"
+        )
+    branches = (
+        report.get("selected_branch"),
+        report.get("selected_clock_branch"),
+        _nested(report, "target", "selected_branch"),
+        _nested(report, "scalar_tilt", "selected_branch"),
+        _nested(report, "edge_center_clock_evidence", "selected_target", "selected_branch"),
+    )
+    return any(branch == "edge_center_orientation_half" for branch in branches)
+
+
+def _validated_edge_clock_receipt(report: dict[str, Any]) -> bool:
+    """Accept only a complete, internally consistent P/48 evidence receipt."""
+
+    if not _selects_edge_center_clock(report):
+        return False
+    evidence = report.get("edge_center_clock_evidence")
+    if not isinstance(evidence, dict):
+        return False
+    receipts = evidence.get("receipts")
+    if not isinstance(receipts, dict):
+        return False
+    checks = evidence.get("checks")
+    observed = evidence.get("observed")
+    source_dag_audit = (
+        observed.get("source_dag_audit") if isinstance(observed, dict) else None
+    )
+    return bool(
+        evidence.get("schema") == EDGE_CENTER_CLOCK_SCHEMA
+        and report.get(EDGE_CENTER_CLOCK_RECEIPT) is True
+        and evidence.get(EDGE_CENTER_CLOCK_RECEIPT) is True
+        and evidence.get("edge_center_clock_evidence_complete") is True
+        and all(receipts.get(name) is True for name in EDGE_CENTER_EVIDENCE_RECEIPTS)
+        and isinstance(checks, dict)
+        and len(checks) == len(EDGE_CENTER_EVIDENCE_RECEIPTS)
+        and all(value is True for value in checks.values())
+        and isinstance(observed, dict)
+        and observed.get("clock_binding_hash_matches") is True
+        and observed.get("source_dag_hash_matches") is True
+        and isinstance(source_dag_audit, dict)
+        and source_dag_audit.get("clean") is True
     )
 
 

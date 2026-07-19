@@ -36,14 +36,18 @@ def test_finite_horizon_record_diagnostic_does_not_promote_page_or_qnm(tmp_path:
 
     report = black_hole_bridge_status_report(BlackHoleBridgeInputs(source_artifact=artifact))
 
-    assert report["FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT"] is True
+    assert report["FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT"] is False
     assert report["BLACK_HOLE_PHYSICAL_EVAPORATION_BRIDGE_RECEIPT"] is False
     assert report["BLACK_HOLE_PHYSICAL_PAGE_CURVE_RECEIPT"] is False
     assert report["BLACK_HOLE_QNM_RADIATIVE_BRIDGE_RECEIPT"] is False
     assert report["physical_claims"]["physical_page_time_claim"] is False
+    assert report["declared_readiness_gate_assertions"]["finite_horizon_record"] == {
+        name: True for name in FINITE_HORIZON_RECORD_GATES
+    }
+    assert "caller_gate_assertions_are_not_independent_receipts" in report["blockers"]
 
 
-def test_complete_physical_bridge_artifact_passes_physical_receipts(tmp_path: Path) -> None:
+def test_complete_caller_authored_artifact_cannot_pass_physical_receipts(tmp_path: Path) -> None:
     artifact = tmp_path / "complete.json"
     gates = {
         **{name: True for name in FINITE_HORIZON_RECORD_GATES},
@@ -67,11 +71,13 @@ def test_complete_physical_bridge_artifact_passes_physical_receipts(tmp_path: Pa
         BlackHoleBridgeInputs(source_artifact=artifact),
     )
 
-    assert report["BLACK_HOLE_PHYSICAL_EVAPORATION_BRIDGE_RECEIPT"] is True
-    assert report["BLACK_HOLE_PHYSICAL_PAGE_CURVE_RECEIPT"] is True
-    assert report["BLACK_HOLE_QNM_RADIATIVE_BRIDGE_RECEIPT"] is True
-    assert report["BLACK_HOLE_PHYSICAL_SIMULATION_RECEIPT"] is True
-    assert report["physical_claims"]["black_hole_information_problem_solved"] is True
+    assert report["BLACK_HOLE_PHYSICAL_EVAPORATION_BRIDGE_RECEIPT"] is False
+    assert report["BLACK_HOLE_PHYSICAL_PAGE_CURVE_RECEIPT"] is False
+    assert report["BLACK_HOLE_QNM_RADIATIVE_BRIDGE_RECEIPT"] is False
+    assert report["BLACK_HOLE_PHYSICAL_SIMULATION_RECEIPT"] is False
+    assert report["physical_claims"]["black_hole_information_problem_solved"] is False
+    assert report["independent_gate_verifier_available"] is False
+    assert report["caller_positive_gate_assertions_ignored"]
     assert (tmp_path / "out" / "black_hole_bridge_status_report.json").exists()
     assert (tmp_path / "out" / "black_hole_bridge_status_report.md").exists()
 
@@ -89,7 +95,7 @@ def test_forbidden_target_dependency_blocks_physical_promotion(tmp_path: Path) -
 
     report = black_hole_bridge_status_report(BlackHoleBridgeInputs(source_artifact=artifact))
 
-    assert report["FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT"] is True
+    assert report["FINITE_HORIZON_RECORD_REPAIR_DIAGNOSTIC_RECEIPT"] is False
     assert report["BLACK_HOLE_PHYSICAL_EVAPORATION_BRIDGE_RECEIPT"] is False
     assert report["BLACK_HOLE_QNM_RADIATIVE_BRIDGE_RECEIPT"] is False
     assert "target_leakage_or_forbidden_dependency:uses_target_qnm_frequency" in report["blockers"]

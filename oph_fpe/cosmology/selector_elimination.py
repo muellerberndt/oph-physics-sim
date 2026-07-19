@@ -10,6 +10,10 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.constants.oph_pixel import OPHPixelConstants, P_STAR
+from oph_fpe.cosmology.edge_center_clock import (
+    edge_center_clock_target,
+    validate_edge_center_clock_evidence,
+)
 from oph_fpe.cosmology.oph_screen_power import DEFAULT_D_STAR_MPC
 
 
@@ -41,18 +45,20 @@ def selector_elimination_report(
 ) -> dict[str, Any]:
     """Return the v1.5 selector-elimination receipt for the exact OPH CMB branch.
 
-    The report distinguishes theorem-side target closure from finite-lattice
+    The report distinguishes the selected theorem target from finite-lattice
     derivation. The IR kernel parameters are derived from the affine zero-mode
-    and visible-covariance-rank arguments. The red-tilt branch is reduced to a
-    single finite repair-clock certificate, kappa_rep=e, which current lattice
-    runs have not yet derived.
+    and visible-covariance-rank arguments. The selected red-tilt branch is the
+    edge-center orientation half, theta=P/48. Its finite evidence bundle remains
+    open; Euler's number is retained only as a nonpromoting diagnostic control.
     """
 
     pixel = OPHPixelConstants(P=float(P))
-    delta_p = pixel.alpha_from_P * pixel.sqrt_pi
-    kappa_rep = math.e
-    eta_r = kappa_rep * delta_p
-    n_s = 1.0 - eta_r
+    clock_target = edge_center_clock_target(float(P))
+    clock_evidence = validate_edge_center_clock_evidence(P=float(P))
+    delta_p = clock_target.delta_P
+    kappa_rep = clock_target.kappa_rep
+    eta_r = clock_target.theta
+    n_s = clock_target.n_s
 
     l0_dim = 1
     l1_dim = 3
@@ -108,7 +114,10 @@ def selector_elimination_report(
             "harmonic_capacity_slots": harmonic_capacity,
             "eta_R_free_selector_removed": False,
             "eta_R_reduced_to_repair_clock_certificate": eta_reduced,
-            "remaining_eta_R_certificate": "derive_or_measure kappa_rep=e from finite-patch scalar repair semigroup",
+            "remaining_eta_R_certificate": (
+                "emit full-collar derivative=P/24, prove the orientation-half identity, and close "
+                "semigroup/refinement, physical-clock-binding, and source-DAG receipts"
+            ),
             "semantic_type_boundary": {
                 "eta_R": "TEMPORAL_REPAIR_GAP",
                 "theta": "SPATIAL_RG_EIGENEXPONENT",
@@ -117,15 +126,27 @@ def selector_elimination_report(
             },
         },
         "scalar_tilt": {
-            "formula": "eta_R = kappa_rep * alpha(0) * sqrt(pi) = kappa_rep * (P - phi)",
+            "formula": "eta_R = theta = (P/24)/2 = P/48 = kappa_rep * (P - phi)",
+            "selected_branch": "edge_center_orientation_half",
+            "selected_theta": eta_r,
+            "selected_n_s": n_s,
+            "selected_kappa_rep": kappa_rep,
+            "selected_kappa_rep_formula": "(P/48)/(P-phi)",
             "canonical_kappa_rep": kappa_rep,
-            "canonical_kappa_rep_status": "certificate_pending",
+            "canonical_kappa_rep_status": "selected_theorem_target_evidence_pending",
             "delta_P": delta_p,
             "eta_R": eta_r,
             "n_s": n_s,
             "alpha_from_P": pixel.alpha_from_P,
             "alpha_inverse_from_P": pixel.alpha_inverse_from_P,
+            "full_collar_derivative_target": clock_target.full_collar_derivative,
+            "orientation_halves": clock_target.orientation_halves,
+            "e_diagnostic_control": clock_target.as_jsonable()["diagnostic_controls"]["e"],
+            "repair_clock_certificate": False,
         },
+        "edge_center_clock_evidence": clock_evidence,
+        **clock_evidence["receipts"],
+        "EDGE_CENTER_CLOCK_RECEIPT": clock_evidence["EDGE_CENTER_CLOCK_RECEIPT"],
         "cmb_ir_kernel": {
             "formula": "F_IR(ell)=1-q_IR*exp[-t_IR ell(ell+1)]",
             "q_IR": q_ir,
@@ -145,7 +166,10 @@ def selector_elimination_report(
         "finite_lattice_derived": False,
         "physical_cmb_prediction": False,
         "remaining_certificates": [
-            "finite-patch scalar repair-clock normalization kappa_rep=e",
+            "finite full-collar generator derivative equals P/24",
+            "orientation-half identity maps the full collar to theta=P/48",
+            "semigroup and refinement defects are bounded on the same source family",
+            "physical clock binding and clean source DAG receipts",
             "finite harmonic readout and weighted quadrature for the IR source",
             "uniform affine covariance theorem for q_IR=1/4",
             "IR semigroup time source receipt for t_IR",
@@ -239,12 +263,31 @@ def _audit_status_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     statuses = {str(row.get("old_selector", "")).strip(): str(row.get("v1_5_status", "")).lower() for row in rows}
     q_status = statuses.get("S2: q_IR = 1/4 from four equipotent sectors", "")
     ell_status = statuses.get("S3: ell_IR = 32", "")
-    eta_status = statuses.get("S1: eta_R = e alpha sqrt(pi)", "")
+    eta_row = next(
+        (
+            row
+            for row in rows
+            if str(row.get("old_selector", "")).startswith("S1:")
+            and "eta_R" in str(row.get("old_selector", ""))
+        ),
+        {},
+    )
+    eta_text = " ".join(str(value) for value in eta_row.values()).lower()
+    selected_edge_center_target = bool("p/48" in eta_text or "edge-center" in eta_text)
+    legacy_e_target = bool(
+        "eta_r = e" in eta_text
+        or "kappa_rep=e" in eta_text
+        or "kappa_rep = e" in eta_text
+    )
     return {
         "row_count": len(rows),
         "q_ir_selector_removed": "removed as selector" in q_status,
         "ell_ir_selector_removed": "removed as selector" in ell_status,
-        "eta_r_reduced_to_repair_clock_certificate": "repair-clock" in eta_status,
+        "eta_r_reduced_to_repair_clock_certificate": bool(
+            selected_edge_center_target and not legacy_e_target
+        ),
+        "eta_r_selected_edge_center_target": selected_edge_center_target,
+        "legacy_e_target_rejected": legacy_e_target,
     }
 
 

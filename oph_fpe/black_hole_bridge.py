@@ -70,11 +70,32 @@ def black_hole_bridge_status_report(
     artifact, artifact_meta, load_error = _load_artifact(bridge_inputs.source_artifact)
 
     gate_sources = artifact.get("readiness_gates") if isinstance(artifact.get("readiness_gates"), dict) else artifact
-    finite_gates = _gate_status(gate_sources, FINITE_HORIZON_RECORD_GATES)
-    evaporation_gates = _gate_status(gate_sources, PHYSICAL_EVAPORATION_GATES)
-    page_gates = _gate_status(gate_sources, PAGE_CURVE_GATES)
-    qnm_gates = _gate_status(gate_sources, QNM_RADIATIVE_GATES)
+    # The legacy v0 artifact contains only caller-authored booleans.  Keep
+    # those assertions visible for migration diagnostics, but do not mistake
+    # them for independently verified receipts.  No producer/verifier for the
+    # black-hole gates exists in this repository yet, so every physical gate
+    # must fail closed.
+    declared_finite_gates = _gate_status(gate_sources, FINITE_HORIZON_RECORD_GATES)
+    declared_evaporation_gates = _gate_status(gate_sources, PHYSICAL_EVAPORATION_GATES)
+    declared_page_gates = _gate_status(gate_sources, PAGE_CURVE_GATES)
+    declared_qnm_gates = _gate_status(gate_sources, QNM_RADIATIVE_GATES)
+    finite_gates = {name: False for name in FINITE_HORIZON_RECORD_GATES}
+    evaporation_gates = {name: False for name in PHYSICAL_EVAPORATION_GATES}
+    page_gates = {name: False for name in PAGE_CURVE_GATES}
+    qnm_gates = {name: False for name in QNM_RADIATIVE_GATES}
     forbidden = [key for key in FORBIDDEN_PROMOTION_KEYS if _candidate_bool(artifact, key)]
+
+    declared_positive_assertions = sorted(
+        name
+        for gates in (
+            declared_finite_gates,
+            declared_evaporation_gates,
+            declared_page_gates,
+            declared_qnm_gates,
+        )
+        for name, asserted in gates.items()
+        if asserted
+    )
 
     finite_receipt = all(finite_gates.values())
     evaporation_receipt = finite_receipt and all(evaporation_gates.values()) and not forbidden
@@ -98,9 +119,12 @@ def black_hole_bridge_status_report(
     if not qnm_receipt:
         blockers.extend(f"qnm_gate_missing:{name}" for name, passed in qnm_gates.items() if not passed)
     blockers.extend(f"target_leakage_or_forbidden_dependency:{key}" for key in forbidden)
+    if declared_positive_assertions:
+        blockers.append("caller_gate_assertions_are_not_independent_receipts")
+    blockers.append("independent_black_hole_gate_verifier_unavailable")
 
     report = {
-        "mode": "black_hole_bridge_status_contract_v0",
+        "mode": "black_hole_bridge_status_contract_v1_fail_closed",
         "source": bridge_inputs.source,
         "source_artifact": artifact_meta,
         "BLACK_HOLE_BRIDGE_STATUS_CONTRACT_RECEIPT": True,
@@ -126,10 +150,19 @@ def black_hole_bridge_status_report(
             "qnm_radiative": qnm_gates,
             "forbidden_dependencies_absent": not forbidden,
         },
+        "declared_readiness_gate_assertions": {
+            "finite_horizon_record": declared_finite_gates,
+            "physical_evaporation": declared_evaporation_gates,
+            "page_curve": declared_page_gates,
+            "qnm_radiative": declared_qnm_gates,
+        },
+        "caller_positive_gate_assertions_ignored": declared_positive_assertions,
+        "independent_gate_verifier_available": False,
         "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "Finite horizon/collar records are diagnostic unless the independent physical "
-            "evaporation and radiative bridge gates pass in this report."
+            "Legacy artifact booleans are declaration-only and cannot open a receipt. "
+            "Finite horizon/collar, evaporation, Page-curve, and radiative claims remain "
+            "closed until independently recomputable gate producers and verifiers exist."
         ),
     }
     return with_claim_metadata(

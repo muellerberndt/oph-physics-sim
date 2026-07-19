@@ -854,6 +854,10 @@ def oph_exact_cmb_camb_report(
                 selector_report.get("SOURCE_PACKET_AUDIT_RECEIPT", False)
             ),
             "kappa_rep_status": selector_report.get("scalar_tilt", {}).get("canonical_kappa_rep_status"),
+            "edge_center_clock_evidence": selector_report.get("edge_center_clock_evidence", {}),
+            "EDGE_CENTER_CLOCK_RECEIPT": bool(
+                selector_report.get("EDGE_CENTER_CLOCK_RECEIPT", False)
+            ),
         },
         "camb": {
             "lmax": int(lmax),
@@ -883,6 +887,8 @@ def oph_exact_cmb_camb_report(
                 "THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False
             ),
             "SOURCE_PACKET_AUDIT_RECEIPT": selector_report.get("SOURCE_PACKET_AUDIT_RECEIPT", False),
+            "EDGE_CENTER_CLOCK_RECEIPT": selector_report.get("EDGE_CENTER_CLOCK_RECEIPT", False),
+            "edge_center_clock_evidence": selector_report.get("edge_center_clock_evidence", {}),
             "finite_lattice_derived": selector_report.get("finite_lattice_derived", False),
         },
         "official_planck_likelihood_readiness": official_readiness,
@@ -913,8 +919,9 @@ def oph_exact_cmb_camb_report(
         "claim_boundary": (
             "CAMB TT transfer for the exact OPH-CMB scalar target branch updated to the v1.5 selector-elimination "
             "surface: q_IR=1/4 follows the affine zero-mode reserve and ell_IR=32 follows the dodecahedral "
-            "visible-covariance rank. The red tilt uses the canonical repair-clock branch "
-            "n_s=1-e*alpha(0)*sqrt(pi), but kappa_rep=e is still a finite-patch repair-clock certificate. "
+            "visible-covariance rank. The selected red tilt is the edge-center orientation-half target "
+            "n_s=1-P/48 with kappa_rep=(P/48)/(P-phi). Its full-collar, orientation-half, semigroup/refinement, "
+            "clock-binding, and source-DAG evidence receipts remain open; Euler's number is diagnostic only. "
             "This is an organic Boltzmann-transfer diagnostic inside OPH-FPE, but it is not yet a finite-lattice "
             "derivation, not a masked map-space parity/BipoSH likelihood, and not an official Planck clik "
             "likelihood run."
@@ -970,10 +977,11 @@ def finite_repair_clock_cmb_camb_report(
     """Run CAMB from the simulator-derived finite repair-clock scalar tilt.
 
     This is intentionally separate from the exact OPH target branch. It uses the
-    empirical finite transition matrix output as the scalar tilt source, then
+    empirical finite transition matrix output as a scalar-tilt diagnostic, then
     optionally overlays the selector-elimination IR kernel as a theory-side
     diagnostic. That gives a measurement-facing curve from actual simulator data
-    without silently promoting it to the certified kappa_rep=e branch.
+    without silently promoting its finite-step survival exponent to the selected
+    P/48 edge-center branch.
     """
 
     baseline = baseline_params or LambdaCDMParameters()
@@ -1038,8 +1046,12 @@ def finite_repair_clock_cmb_camb_report(
     transition_eligibility = validate_transition_clock_eligibility(finite_clock_report)
     finite_matrix_ready = bool(transition_eligibility["eligible"])
     finite_lattice_derived = finite_matrix_ready
+    edge_center_evidence = finite_clock_report.get("edge_center_clock_evidence", {})
+    edge_center_receipt = bool(finite_clock_report.get("EDGE_CENTER_CLOCK_RECEIPT", False))
     repair_clock_certificate = bool(
-        finite_matrix_ready and finite_clock_report.get("repair_clock_certificate", False)
+        finite_matrix_ready
+        and edge_center_receipt
+        and finite_clock_report.get("repair_clock_certificate", False)
     )
     selector_receipt = bool(selector_report.get("THEOREM_SIDE_SELECTOR_ELIMINATION_RECEIPT", False))
     return {
@@ -1055,20 +1067,20 @@ def finite_repair_clock_cmb_camb_report(
             "eta_R": eta_finite,
             "kappa_rep": kappa_finite,
             "matrix_ready": finite_matrix_ready,
-            "finite_lattice_derived": finite_lattice_derived,
+            "finite_lattice_derived": repair_clock_certificate,
+            "finite_transition_matrix_derived": finite_lattice_derived,
             "transition_clock_eligibility": transition_eligibility,
+            "edge_center_clock_evidence": edge_center_evidence,
+            "EDGE_CENTER_CLOCK_RECEIPT": edge_center_receipt,
             "repair_clock_certificate": repair_clock_certificate,
             "clock_normalization_certified": bool(
                 finite_matrix_ready
+                and edge_center_receipt
                 and finite_clock_report.get("clock_normalization_certified", False)
             ),
             "clock_normalization_numeric_match": bool(
                 finite_matrix_ready
                 and finite_clock_report.get("clock_normalization_numeric_match", False)
-            ),
-            "repair_scale_hypothesis_clock_match": bool(
-                finite_matrix_ready
-                and finite_clock_report.get("repair_scale_hypothesis_clock_match", False)
             ),
             "clock_normalization_source": finite_clock_report.get("clock_normalization_source"),
             "clock_normalization_source_status": finite_clock_report.get(
@@ -1124,7 +1136,8 @@ def finite_repair_clock_cmb_camb_report(
         "binned_tt_comparison": binned_rows,
         "tt_curve_rows": curve_rows,
         "measurement_comparable_cmb_curve": True,
-        "finite_lattice_clock_derived": finite_lattice_derived,
+        "finite_transition_matrix_derived": finite_lattice_derived,
+        "finite_lattice_clock_derived": repair_clock_certificate,
         "repair_clock_certificate": repair_clock_certificate,
         "selector_ir_theory_side": selector_receipt,
         "official_planck_likelihood_run": False,
@@ -1132,10 +1145,11 @@ def finite_repair_clock_cmb_camb_report(
         "physical_cmb_prediction": False,
         "claim_boundary": (
             "CAMB TT transfer using the simulator-derived finite transition-matrix repair clock for "
-            "the scalar tilt. The finite clock is actual simulator data when finite_lattice_derived is true. "
+            "a scalar-tilt diagnostic. The transition matrix and its finite-step survival exponent are actual "
+            "simulator data when finite_transition_matrix_derived is true, but they are not the full-collar derivative. "
             "The selector IR overlay remains theory-side unless its own finite-register certificate closes. "
             "This is measurement-comparable simulator output, but not a physical CMB prediction until "
-            "kappa_rep=e/repair-clock, physical k/source, official likelihood, and no-data-use gates pass."
+            "the P/48 edge-center evidence, physical k/source, official likelihood, and no-data-use gates pass."
         ),
     }
 
@@ -1321,6 +1335,7 @@ def _run_camb_tt(params: LambdaCDMParameters, lmax: int) -> tuple[np.ndarray, np
         mnu=float(params.mnu),
         omk=float(params.omk),
         tau=float(params.tau),
+        YHe=_camb_bbn_helium_scalar(camb, float(params.ombh2)),
     )
     camb_params.InitPower.set_params(As=float(params.As), ns=float(params.ns))
     camb_params.set_for_lmax(int(lmax), lens_potential_accuracy=1)
@@ -1351,6 +1366,7 @@ def _run_camb_tt_custom_power(
         mnu=float(params.mnu),
         omk=float(params.omk),
         tau=float(params.tau),
+        YHe=_camb_bbn_helium_scalar(camb, float(params.ombh2)),
     )
     camb_params.set_initial_power_function(
         power_fn,
@@ -1366,6 +1382,20 @@ def _run_camb_tt_custom_power(
     d_ell_tt = np.asarray(powers["total"][:, 0], dtype=float)
     ell = np.arange(d_ell_tt.shape[0], dtype=float)
     return ell[2 : int(lmax) + 1], d_ell_tt[2 : int(lmax) + 1]
+
+
+def _camb_bbn_helium_scalar(camb_module: Any, ombh2: float) -> float:
+    """Normalize CAMB BBN predictor output across NumPy/CAMB versions.
+
+    CAMB 1.6.6 can return a one-element ndarray under NumPy 2.5, while its
+    ctypes-backed ``YHe`` field requires a scalar.  The value and BBN model are
+    unchanged; this adapter only enforces the public scalar contract.
+    """
+    raw = camb_module.bbn.get_predictor().Y_He(float(ombh2), 0.0)
+    values = np.asarray(raw, dtype=float).reshape(-1)
+    if values.size != 1 or not np.isfinite(values[0]) or not 0.0 < values[0] < 1.0:
+        raise RuntimeError("CAMB BBN predictor did not return one finite helium mass fraction")
+    return float(values[0])
 
 
 def _oph_p48_ir_power(
@@ -1872,7 +1902,6 @@ def _finite_repair_clock_cmb_markdown_report(report: dict[str, Any]) -> str:
         f"- repair-clock certificate: {finite.get('repair_clock_certificate')}",
         f"- clock normalization certified: {finite.get('clock_normalization_certified')}",
         f"- clock normalization numeric match: {finite.get('clock_normalization_numeric_match')}",
-        f"- repair-scale hypothesis clock match: {finite.get('repair_scale_hypothesis_clock_match')}",
         f"- clock normalization source: {finite.get('clock_normalization_source')}",
         f"- source mode: {finite.get('source_mode')}",
         f"- primary matrix: {finite.get('primary_matrix')}",
