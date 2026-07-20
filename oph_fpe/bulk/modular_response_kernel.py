@@ -10,6 +10,7 @@ from scipy.spatial import cKDTree
 
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, lambda_cap
 from oph_fpe.bulk.record_to_h3 import DEFAULT_RECORD_FIELDS
+from oph_fpe.claims import CANDIDATE_SCALE_INTERVENTION_INVARIANCE_RECEIPT
 from oph_fpe.cache.geometry_cache import GeometryCache
 from oph_fpe.gauge.covariant_overlap import (
     GAUGE_COVARIANT_OVERLAP_SCHEMA,
@@ -107,6 +108,7 @@ def modular_response_kernel(
     max_full_graph_simulations: int | None = None,
     full_graph_budget_policy: str = "skip_if_exceeded",
     full_graph_n_jobs: int = 1,
+    freeze_candidate_interventions: bool = True,
     perturb_seed: int = 1,
 ) -> dict[str, Any]:
     """Build the support-visible modular response tensor for H3 fitting.
@@ -165,6 +167,7 @@ def modular_response_kernel(
             max_full_graph_simulations=max_full_graph_simulations,
             full_graph_budget_policy=str(full_graph_budget_policy),
             full_graph_n_jobs=int(full_graph_n_jobs),
+            freeze_candidate_interventions=bool(freeze_candidate_interventions),
             seed=int(perturb_seed),
         )
     if normalized_mode == "object_transition":
@@ -263,6 +266,10 @@ def kernel_json_summary(kernel: dict[str, Any]) -> dict[str, Any]:
         "raw_response_summary": kernel.get("raw_response_summary", {}),
         "transform_report": kernel.get("transform_report", {}),
         "controls": kernel.get("controls", {}),
+        "event_row_ids": list(kernel.get("event_row_ids", [])),
+        "geometry_control_event_row_ids": dict(
+            kernel.get("geometry_control_event_row_ids", {})
+        ),
         "perturb_resettle_report": kernel.get("perturb_resettle_report", {}),
         "geometry_cache": kernel.get("geometry_cache", {}),
         "claim_boundary": kernel.get("claim_boundary"),
@@ -574,6 +581,7 @@ def _perturb_resettle_transition_kernel(
     max_full_graph_simulations: int | None,
     full_graph_budget_policy: str,
     full_graph_n_jobs: int,
+    freeze_candidate_interventions: bool,
     seed: int,
 ) -> dict[str, Any]:
     packet_fields = _object_packet_fields(
@@ -664,7 +672,8 @@ def _perturb_resettle_transition_kernel(
     supports = [_valid_support(view.get("support_nodes", []), points.shape[0]) for view in patch_views]
     feature_types = _normalized_transition_feature_types(transition_feature_types)
     feature_rows = _object_transition_feature_rows(caps, times, packet_fields, feature_types)
-    raw_matrix = _perturb_resettle_matrix(
+    source_intervention_scale = 1.0 if freeze_candidate_interventions else float(transport_scale)
+    raw_matrix, primary_intervention_rows = _perturb_resettle_matrix(
         points,
         caps,
         raw_fields,
@@ -675,6 +684,7 @@ def _perturb_resettle_transition_kernel(
         feature_types,
         times=times,
         scale=float(transport_scale),
+        intervention_scale=source_intervention_scale,
         transition_observables=transition_observables,
         transition_bins=int(transition_bins),
         record_family_modulus=int(record_family_modulus),
@@ -691,19 +701,22 @@ def _perturb_resettle_transition_kernel(
     no_perturb = np.zeros_like(raw_matrix)
     s2_boundary = _object_s2_boundary_matrix(points, caps, supports, weights, feature_rows)
     wrong_scale_controls: dict[str, np.ndarray] = {}
-    scale_matrix_cache: list[tuple[float, np.ndarray]] = [(float(transport_scale), raw_matrix)]
+    scale_matrix_cache: list[tuple[float, np.ndarray, list[dict[str, Any]]]] = [
+        (float(transport_scale), raw_matrix, primary_intervention_rows)
+    ]
+    wrong_scale_intervention_audit: dict[str, Any] = {}
     for wrong_scale in scale_values:
         label = _scale_label(float(wrong_scale))
         cached_matrix = next(
             (
-                matrix_value
-                for cached_scale, matrix_value in scale_matrix_cache
+                (matrix_value, audit_rows)
+                for cached_scale, matrix_value, audit_rows in scale_matrix_cache
                 if _same_probe_scale(float(wrong_scale), cached_scale)
             ),
             None,
         )
         if cached_matrix is None:
-            cached_matrix = _perturb_resettle_matrix(
+            cached_matrix, cached_audit_rows = _perturb_resettle_matrix(
                 points,
                 caps,
                 raw_fields,
@@ -714,6 +727,11 @@ def _perturb_resettle_transition_kernel(
                 feature_types,
                 times=times,
                 scale=float(wrong_scale),
+                intervention_scale=(
+                    source_intervention_scale
+                    if freeze_candidate_interventions
+                    else float(wrong_scale)
+                ),
                 transition_observables=transition_observables,
                 transition_bins=int(transition_bins),
                 record_family_modulus=int(record_family_modulus),
@@ -727,8 +745,35 @@ def _perturb_resettle_transition_kernel(
                 n_jobs=effective_n_jobs,
                 seed=int(seed),
             )
-            scale_matrix_cache.append((float(wrong_scale), cached_matrix))
+            scale_matrix_cache.append((float(wrong_scale), cached_matrix, cached_audit_rows))
+        else:
+            cached_matrix, cached_audit_rows = cached_matrix
+        audit_matches_primary = bool(cached_audit_rows == primary_intervention_rows)
+        wrong_scale_intervention_audit[label] = {
+            "event_count": len(cached_audit_rows),
+            "intervention_rows_match_primary": audit_matches_primary,
+        }
         wrong_scale_controls[label] = cached_matrix
+    candidate_scale_intervention_invariance_receipt = bool(
+        freeze_candidate_interventions
+        and primary_intervention_rows
+        and all(
+            row.get("intervention_rows_match_primary", False)
+            for row in wrong_scale_intervention_audit.values()
+        )
+    )
+    target_free_selection_modes = {
+        "source_random",
+        "uniform_random",
+        "collar_random",
+    }
+    target_free_source_intervention_receipt = bool(
+        str(perturb_budget_mode).lower()
+        in {"fixed", "fixed_collar_fraction", "fixed_fraction"}
+        and str(perturb_selection_mode).lower().replace("-", "_")
+        in target_free_selection_modes
+    )
+    event_row_ids = _response_event_row_ids(feature_rows)
     matrix, transformed_controls, transform_report = _transform_with_controls(
         raw_matrix,
         {
@@ -761,6 +806,11 @@ def _perturb_resettle_transition_kernel(
         "shuffled_observer_labels_control": shuffled_observers,
         "no_modular_flow_control": transformed_controls.get("no_modular_flow_control", np.zeros_like(matrix)),
         "wrong_scale_controls": wrong_controls,
+        "event_row_ids": event_row_ids,
+        "geometry_control_event_row_ids": {"S2": event_row_ids},
+        "wrong_scale_event_row_ids": {
+            label: event_row_ids for label in wrong_controls
+        },
         "feature_rows": feature_rows,
         "observer_ids": [int(view.get("observer_id", index)) for index, view in enumerate(patch_views)],
         "observer_axes": [[float(value) for value in np.asarray(view.get("axis"), dtype=float)] for view in patch_views],
@@ -808,10 +858,32 @@ def _perturb_resettle_transition_kernel(
             "fixed_perturb_fraction": float(fixed_perturb_fraction) if fixed_perturb_fraction is not None else None,
             "perturb_selection_mode": str(perturb_selection_mode),
             "transition_readout_mode": str(transition_readout_mode),
+            "freeze_candidate_interventions": bool(freeze_candidate_interventions),
+            "source_intervention_scale": float(source_intervention_scale),
+            CANDIDATE_SCALE_INTERVENTION_INVARIANCE_RECEIPT: (
+                candidate_scale_intervention_invariance_receipt
+            ),
+            "candidate_scale_intervention_invariance_receipt": (
+                candidate_scale_intervention_invariance_receipt
+            ),
+            "TARGET_FREE_SOURCE_INTERVENTION_RECEIPT": (
+                target_free_source_intervention_receipt
+            ),
+            "primary_intervention_rows": primary_intervention_rows,
+            "wrong_scale_intervention_audit": wrong_scale_intervention_audit,
+            "candidate_scale_effect_scope": (
+                ["transported_support_readout"]
+                if str(transition_readout_mode)
+                in {"transported_support", "transported_support_delta", "cap_transported_support"}
+                else []
+            ),
             "graph_edge_count": int(graph["left"].size),
             "claim_boundary": (
-                "finite cap/collar perturb-resettle surrogate: perturb boundary/collar edge packets, "
-                "run local overlap repair, then read observer packet transitions"
+                "Finite cap/collar perturb-resettle surrogate. In the default frozen mode, all "
+                "normalization candidates reuse byte-identical intervention-support hashes and RNG "
+                "seeds; candidate scale may affect only an explicitly labelled transported-support "
+                "readout. Legacy candidate-dependent interventions require an explicit opt-out and "
+                "cannot pass the physical campaign preflight."
             ),
         },
         "geometry_cache": {"mode": "not_used_by_perturb_resettle", "point_count": int(points.shape[0])},
@@ -835,6 +907,7 @@ def _perturb_resettle_matrix(
     *,
     times: list[float] | tuple[float, ...],
     scale: float,
+    intervention_scale: float | None = None,
     transition_observables: list[str] | tuple[str, ...],
     transition_bins: int,
     record_family_modulus: int,
@@ -847,7 +920,7 @@ def _perturb_resettle_matrix(
     repairs_per_step: int,
     n_jobs: int = 1,
     seed: int,
-) -> np.ndarray:
+) -> tuple[np.ndarray, list[dict[str, Any]]]:
     points = np.asarray(points, dtype=float)
     readout_mode = str(transition_readout_mode)
     tree: cKDTree | None = None
@@ -859,9 +932,11 @@ def _perturb_resettle_matrix(
         for time_index, time_value in enumerate(times)
     ]
 
+    source_scale = float(scale) if intervention_scale is None else float(intervention_scale)
+
     def probe_columns(
         job: tuple[int, int, RoundCap, float],
-    ) -> list[np.ndarray]:
+    ) -> tuple[list[np.ndarray], dict[str, Any]]:
         cap_index, time_index, cap, time_value = job
         transported_supports = (
             [
@@ -882,7 +957,7 @@ def _perturb_resettle_matrix(
                 cap,
                 raw_fields,
                 graph,
-                scale=float(scale),
+                scale=source_scale,
                 time_value=time_value,
                 perturb_strength=float(perturb_strength),
                 perturb_budget_mode=str(perturb_budget_mode),
@@ -937,17 +1012,27 @@ def _perturb_resettle_matrix(
             local_columns.extend(
                 _transition_feature_columns(feature_values, feature_types, class_count)
             )
-        return local_columns
+        return local_columns, {
+            "cap_index": int(cap_index),
+            "time_index": int(time_index),
+            "time": float(time_value),
+            "source_intervention_scale": source_scale,
+            "intervention_support_hash": post_raw.get("_intervention_support_hash"),
+            "probe_rng_stream_schema": post_raw.get("_probe_rng_stream_schema"),
+        }
 
     columns: list[np.ndarray] = []
+    intervention_rows: list[dict[str, Any]] = []
     effective_n_jobs = min(max(1, int(n_jobs)), max(1, len(jobs)))
-    for local_columns in _bounded_ordered_thread_map(
+    for local_columns, intervention_row in _bounded_ordered_thread_map(
         probe_columns,
         jobs,
         max_workers=effective_n_jobs,
     ):
         columns.extend(local_columns)
-    return np.vstack(columns).T if columns else np.zeros((len(supports), 0), dtype=float)
+        intervention_rows.append(intervention_row)
+    matrix = np.vstack(columns).T if columns else np.zeros((len(supports), 0), dtype=float)
+    return matrix, intervention_rows
 
 
 def _simulate_cap_collar_perturb_resettle(
@@ -1254,6 +1339,9 @@ def _modular_selected_edges(
     mids = points[left[selected_edges]] + points[right[selected_edges]]
     mids = mids / np.maximum(np.linalg.norm(mids, axis=1, keepdims=True), 1e-12)
     normalized_mode = str(mode).lower().replace("-", "_")
+    if normalized_mode in {"source_random", "uniform_random", "collar_random"}:
+        order = rng.choice(selected_edges.size, size=int(count), replace=False)
+        return selected_edges[np.sort(order)]
     if normalized_mode in {
         "lambda_collar_generator",
         "modular_collar_generator",
@@ -1899,6 +1987,27 @@ def _object_transition_feature_rows(
                             }
                         )
     return rows
+
+
+def _response_event_row_ids(feature_rows: list[dict[str, Any]]) -> list[str]:
+    """Return immutable identifiers for response-event feature columns."""
+
+    identifiers: list[str] = []
+    for row in feature_rows:
+        payload = "|".join(
+            [
+                str(int(row.get("cap_index", -1))),
+                str(int(row.get("time_index", -1))),
+                format(float(row.get("time", 0.0)), ".17g"),
+                str(row.get("observable", row.get("field", "unknown"))),
+                str(row.get("feature_type", "scalar")),
+                str(row.get("source_class")),
+                str(row.get("target_class")),
+            ]
+        )
+        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        identifiers.append(f"oph-response-event-v1:{digest}")
+    return identifiers
 
 
 def _object_transition_matrix(

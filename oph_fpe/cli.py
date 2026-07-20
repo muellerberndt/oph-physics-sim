@@ -127,6 +127,18 @@ def main(argv: list[str] | None = None) -> int:
     bw_array_parser.add_argument("--config", required=True, type=Path)
     bw_array_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
 
+    physical_h3_preflight_parser = subparsers.add_parser(
+        "physical-h3-kms-preflight",
+        help="fail-closed audit before any physical H3/KMS campaign",
+    )
+    physical_h3_preflight_parser.add_argument(
+        "--source",
+        required=True,
+        type=Path,
+        help="config, preflight bundle, or completed run directory",
+    )
+    physical_h3_preflight_parser.add_argument("--out", required=True, type=Path)
+
     universe_parser = subparsers.add_parser(
         "run-oph-universe",
         help="run the canonical theorem-following OPH universe pipeline",
@@ -1957,6 +1969,14 @@ def main(argv: list[str] | None = None) -> int:
         result = run_bw_array_config(load_config(args.config), args.out_dir)
         print(json.dumps(result, indent=2, default=str))
         return 0
+    if args.command == "physical-h3-kms-preflight":
+        from oph_fpe.bulk.physical_h3_kms_preflight import (
+            write_physical_h3_kms_preflight_report,
+        )
+
+        result = write_physical_h3_kms_preflight_report(args.source, args.out)
+        print(json.dumps(result, indent=2, default=str))
+        return 0 if result.get("PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT", False) else 2
     if args.command == "run-oph-universe":
         from oph_fpe.pipelines import run_oph_universe_pipeline
 

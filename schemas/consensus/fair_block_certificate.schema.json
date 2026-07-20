@@ -67,7 +67,7 @@
     "observable_id": {"const": "FAIR_BLOCK_CONSENSUS_CERTIFICATE"},
     "fit_objective": {"const": "not_applicable"},
     "receipt_name": {"const": "FAIR_BLOCK_CONSENSUS_CERTIFICATE"},
-    "receipt_schema_version": {"const": "2026-06-06b"},
+    "receipt_schema_version": {"const": "2026-07-20a"},
     "input_packet_sha256": {"$ref": "#/$defs/hash"}
   },
   "allOf": [

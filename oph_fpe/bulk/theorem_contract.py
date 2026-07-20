@@ -12,6 +12,7 @@ import yaml
 
 from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
+    CAP_INTERIOR_MODULAR_HAMILTONIAN_RECEIPT,
     CAP_NORMAL_H3_CHART_RECEIPT,
     EINSTEIN_ALL_TIMELIKE_TENSOR_UPGRADE_RECEIPT,
     EINSTEIN_BRANCH_ENTRY_RECEIPT,
@@ -25,10 +26,12 @@ from oph_fpe.claims import (
     EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT,
     FINITE_CONSENSUS_THEOREM_RECEIPT,
     ISSUE_308_BW_CERTIFICATE_RECEIPT,
+    INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT,
     MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
     OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
+    PRIME_GEOMETRIC_CAP_STATE_RECEIPT,
     with_claim_metadata,
 )
 from oph_fpe.bulk.bw_certificate_308 import issue308_bw_certificate_report
@@ -1222,12 +1225,21 @@ def _validated_endogenous_modular_generator(state_bw: dict[str, Any]) -> bool:
     median = _finite_number(state_bw.get("median"))
     return bool(
         state_bw.get("mode") == "state_derived_modular_probe"
+        and state_bw.get("state_mode") == "prime_geometric_cap_state"
         and _strict_int(row_count, minimum=1)
         and median is not None
         and _literal_true(state_bw.get("endogenous_modular_generator"))
         and _literal_true(state_bw.get("endogenous_generator_non_degenerate"))
         and _literal_true(state_bw.get("ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"))
         and _literal_true(state_bw.get("endogenous_modular_generator_receipt"))
+        and _literal_true(state_bw.get(PRIME_GEOMETRIC_CAP_STATE_RECEIPT))
+        and _literal_true(state_bw.get(CAP_INTERIOR_MODULAR_HAMILTONIAN_RECEIPT))
+        and _literal_true(state_bw.get("noncommutative_cap_algebra_receipt"))
+        and _literal_true(state_bw.get("faithful_cap_state_receipt"))
+        and state_bw.get("cap_algebra_scope")
+        == "overlap_generated_prime_geometric_noncommutative_cap_interior"
+        and state_bw.get("modular_generator_definition") == "K_C=-log(rho_C)"
+        and not list(state_bw.get("forbidden_bw_target_field_families_used") or [])
         and not _literal_true(state_bw.get("direct_transition_automorphism"))
         and not _literal_true(state_bw.get("declared_cap_flow_generator"))
         and not _literal_true(state_bw.get("declared_transition_response_density"))
@@ -1255,6 +1267,13 @@ def _validated_kms_clock_fit(state_bw: dict[str, Any]) -> bool:
         and _literal_true(clock.get("enabled"))
         and _literal_true(clock.get("receipt"))
         and _literal_true(clock.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT"))
+        and _literal_true(state_bw.get(INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT))
+        and _literal_true(clock.get(INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT))
+        and clock.get("geometric_parameter_source") == "ordered_bw_frame_source_derived"
+        and clock.get("candidate_scales") == ["1x", "pi", "2pi", "4pi"]
+        and _literal_true(clock.get("full_center_minimization_receipt"))
+        and not _literal_true(clock.get("geometry_target_contains_pi"))
+        and not _literal_true(clock.get("cross_ratio_construction_contains_2pi"))
         and clock.get("clock_fit_selection_policy")
         == "predeclared_informative_nonstatic_carriers_else_nonstatic_carriers_no_pass_shopping"
         and _strict_int(clock.get("valid_row_count"), minimum=1)

@@ -12,9 +12,12 @@ from oph_fpe.claims import (
     BRANCH_INSTANTIATION_SANITY,
     BW_KMS_BRANCH_INSTANTIATION_RECEIPT,
     BW_KMS_BRANCH_REPLAY_RECEIPT,
+    CAP_INTERIOR_MODULAR_HAMILTONIAN_RECEIPT,
     DEMO,
     ENDOGENOUS_MODULAR_GENERATOR_RECEIPT,
+    INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
+    PRIME_GEOMETRIC_CAP_STATE_RECEIPT,
     with_claim_metadata,
 )
 from oph_fpe.algebra.maxent_cap_state import maxent_record_operator_cap_state
@@ -1360,7 +1363,16 @@ def _state_summary(
     perturb_response_kernel = state_mode in PERTURB_RESPONSE_KERNEL_STATE_MODES
     maxent_record_operator = state_mode in MAXENT_RECORD_OPERATOR_STATE_MODES
     koopman_generator = state_mode in KOOPMAN_GENERATOR_STATE_MODES
-    endogenous_generator = bool(not direct_automorphism and not declared_cap_flow and not declared_response_density)
+    surrogate_endogenous_generator = bool(
+        not direct_automorphism and not declared_cap_flow and not declared_response_density
+    )
+    # None of the currently implemented state modes constructs the paper's
+    # reduced faithful state on the noncommutative, overlap-generated prime
+    # geometric cap algebra.  Record MaxEnt and history Koopman lanes remain
+    # useful diagnostics, but cannot be promoted to the BW L2 hypothesis.
+    prime_geometric_cap_state_receipt = False
+    cap_interior_modular_hamiltonian_receipt = False
+    endogenous_generator = False
     not_applicable_controls: list[str] = []
     gate_control_reports = dict(control_reports)
     if (direct_automorphism or declared_response_density) and "shuffled_observables" in gate_control_reports:
@@ -1399,10 +1411,15 @@ def _state_summary(
     inferred_clock_fit = inferred_clock_fit or {"enabled": False, "receipt": False}
     finite_generator_rows = bool(rows and np.isfinite(float(median)))
     clock_response_degenerate = bool(inferred_clock_fit.get("response_degenerate", False))
-    endogenous_modular_generator_receipt = bool(
-        endogenous_generator
+    surrogate_generator_diagnostic_receipt = bool(
+        surrogate_endogenous_generator
         and finite_generator_rows
         and not clock_response_degenerate
+    )
+    endogenous_modular_generator_receipt = bool(
+        prime_geometric_cap_state_receipt
+        and cap_interior_modular_hamiltonian_receipt
+        and surrogate_generator_diagnostic_receipt
     )
     kms_geometric_clock_fit_receipt = bool(inferred_clock_fit.get("receipt", False))
     summary = {
@@ -1421,11 +1438,13 @@ def _state_summary(
         "density_inverse_temperature": float(density_inverse_temperature),
         "generator_scale": float(generator_scale),
         "endogenous_modular_generator": endogenous_generator,
+        "surrogate_endogenous_modular_generator": surrogate_endogenous_generator,
+        "SURROGATE_MODULAR_GENERATOR_DIAGNOSTIC_RECEIPT": surrogate_generator_diagnostic_receipt,
         "endogenous_generator_non_degenerate": bool(endogenous_modular_generator_receipt),
         "endogenous_generator_receipt_boundary": (
-            "L2 only: the modular generator is finite and observer-record/cap-state derived. "
-            "It does not certify the 2*pi KMS/BW clock; that is the separate L3 "
-            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT gate."
+            "Fail-closed L2 gate. A finite record-history, response-density, or Koopman matrix is "
+            "only a surrogate diagnostic. L2 additionally requires a reduced faithful state on "
+            "the noncommutative prime-geometric cap algebra and K_C=-log(rho_C) on cap interior."
         ),
         "declared_cap_flow_generator": declared_cap_flow,
         "declared_transition_response_density": declared_response_density,
@@ -1438,6 +1457,14 @@ def _state_summary(
         ENDOGENOUS_MODULAR_GENERATOR_RECEIPT: endogenous_modular_generator_receipt,
         "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT": endogenous_modular_generator_receipt,
         "endogenous_modular_generator_receipt": endogenous_modular_generator_receipt,
+        PRIME_GEOMETRIC_CAP_STATE_RECEIPT: prime_geometric_cap_state_receipt,
+        CAP_INTERIOR_MODULAR_HAMILTONIAN_RECEIPT: cap_interior_modular_hamiltonian_receipt,
+        "paper_bw_target_eligible_state_mode": False,
+        "paper_bw_state_blockers": [
+            "missing_noncommutative_prime_geometric_cap_algebra",
+            "missing_reduced_faithful_prime_geometric_cap_state",
+            "record_history_surrogate_not_equivalent_to_cap_interior_modular_flow",
+        ],
         "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": kms_geometric_clock_fit_receipt,
         "kms_geometric_clock_fit_receipt": kms_geometric_clock_fit_receipt,
         "direct_transition_automorphism": direct_automorphism,
@@ -1450,15 +1477,15 @@ def _state_summary(
             if declared_response_density
             else "declared_cap_flow_graph_generator_scaled"
             if declared_cap_flow
-            else "endogenous_repair_affinity_response_density_log"
+            else "surrogate_repair_affinity_response_density_log"
             if repair_response_density
-            else "endogenous_perturb_remeasure_response_density_log"
+            else "surrogate_perturb_remeasure_response_density_log"
             if perturb_response_density
-            else "endogenous_perturb_remeasure_response_kernel_log"
+            else "surrogate_perturb_remeasure_response_kernel_log"
             if perturb_response_kernel
-            else "endogenous_maxent_record_operator_state"
+            else "surrogate_maxent_record_operator_state"
             if maxent_record_operator
-            else "endogenous_history_koopman_generator_state"
+            else "surrogate_history_koopman_generator_state"
             if koopman_generator
             else "bw_normalized_finite_state_generator"
             if math.isclose(float(generator_scale), 2.0 * math.pi)
@@ -1478,8 +1505,9 @@ def _state_summary(
             "counts directly as M M^T instead of forcing a permutation assignment. maxent_record_operator_state "
             "constructs rho_C from observer record/history operators without the geometric flow target. "
             "history_koopman_generator_state infers a unitary transition generator from observer-visible "
-            "history features without lambda_C or H3 input. These are current "
-            "endogenous finite-regulator probes, not completed continuum BW proofs. None of these lanes is "
+            "history features without lambda_C or H3 input. These are finite-regulator surrogate "
+            "diagnostics, not the source cap-algebra modular object. In particular, target absence does "
+            "not prove equivalence to a noncommutative prime-geometric cap state. None of these lanes is "
             "an unregularized type-I density proof, a 3D bulk claim, or a completed continuum BW proof"
         ),
         "median": median,
@@ -1569,7 +1597,10 @@ def _inferred_modular_clock_fit(
             "enabled": False,
             "not_applicable": True,
             "receipt": False,
+            "diagnostic_fit_receipt": False,
+            INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT: False,
             "state_mode": state_mode,
+            "blockers": ["declared_or_direct_state_lane_not_independent"],
             "claim_boundary": (
                 "not run for declared/direct BW lanes. L3 requires a clock coefficient inferred "
                 "from an endogenous observer-record cap state, not from a supplied geometric flow."
@@ -1686,10 +1717,17 @@ def _inferred_modular_clock_fit(
         return {
             "enabled": True,
             "receipt": False,
+            "diagnostic_fit_receipt": False,
+            "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": False,
+            INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT: False,
             "mode": "inferred_modular_clock_fit",
             "row_count": int(len(rows)),
             "distinct_time_count": int(distinct_time_count),
-            "blockers": ["requires_at_least_three_nonzero_modular_times"],
+            "blockers": [
+                "requires_at_least_three_nonzero_modular_times",
+                "missing_independent_source_geometric_parameter",
+                "state_mode_not_prime_geometric_cap_modular_flow",
+            ],
             "rows": rows[:128],
             "claim_boundary": (
                 "finite inferred-clock audit. It searches continuously over cap-flow coefficient "
@@ -1728,9 +1766,15 @@ def _inferred_modular_clock_fit(
         and informative_clock_carrier_fit.get("distinct_time_count", 0) >= 3
     )
     selected_fit = informative_clock_carrier_fit if informative_ready else clock_carrier_fit
-    receipt = bool(selected_fit.get("receipt", False))
+    diagnostic_receipt = bool(selected_fit.get("receipt", False))
+    # This fit compares a record/history surrogate against the analytic cap
+    # transport implemented by this module.  It does not independently derive
+    # the ordered BW-frame rapidity parameter from the simulated source, and
+    # therefore cannot select the physical 2*pi normalization.
+    independent_geometric_parameter_receipt = False
+    receipt = False
     blockers: list[str] = []
-    if not receipt:
+    if not diagnostic_receipt:
         blockers.extend(
             f"all_rows:{blocker}" for blocker in list(all_row_fit.get("blockers") or [])
         )
@@ -1742,11 +1786,20 @@ def _inferred_modular_clock_fit(
             f"informative_clock_carrier_rows:{blocker}"
             for blocker in list(informative_clock_carrier_fit.get("blockers") or [])
         )
+    blockers.extend(
+        [
+            "missing_independent_source_geometric_parameter",
+            "analytic_lambda_cap_target_is_not_source_derived_bw_frame_flow",
+            "state_mode_not_prime_geometric_cap_modular_flow",
+        ]
+    )
     return {
         "enabled": True,
         "receipt": receipt,
+        "diagnostic_fit_receipt": diagnostic_receipt,
         "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT": receipt,
         "kms_geometric_clock_fit_receipt": receipt,
+        INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT: independent_geometric_parameter_receipt,
         "mode": "inferred_modular_clock_fit",
         "selected_clock_fit": selected_fit.get("fit_label"),
         "clock_fit_selection_policy": (
@@ -1777,14 +1830,16 @@ def _inferred_modular_clock_fit(
         "blockers": blockers,
         "rows": rows[:128],
         "claim_boundary": (
-            "finite inferred-clock audit. The fit searches over cap-flow parameter s without naming "
-            "2*pi, fits s_hat(t)=kappa*t+b from endogenous modular transport, and only afterward "
-            "compares kappa to 1, pi, 2*pi, and 4*pi. Static rows whose own known-scale diagnostic "
+            "finite surrogate-clock diagnostic. The numerical fit searches over analytic cap-flow "
+            "parameter s without naming 2*pi, fits s_hat(t)=kappa*t+b from record/history transport, "
+            "and only afterward compares kappa to 1, pi, 2*pi, and 4*pi. Static rows whose own known-scale diagnostic "
             "selects zero flow are retained in all_row_fit but excluded from clock_carrier_fit, so "
             "invariant repair/readout observables cannot dominate the KMS clock estimate. Rows also "
             "report target-free known-scale contrast and gap diagnostics, so nearly flat residual "
-            "landscapes are visible rather than treated as strong clock evidence. Passing this is still "
-            "finite-regulator evidence, not a continuum theorem proof."
+            "landscapes are visible rather than treated as strong evidence. Even a diagnostic fit at "
+            "2*pi cannot raise KMS_GEOMETRIC_CLOCK_FIT_RECEIPT: lambda_cap here is an analytic evaluator "
+            "target, not an independently source-derived ordered-BW-frame rapidity flow, and the input "
+            "state is not the prime-geometric cap modular state."
         ),
     }
 

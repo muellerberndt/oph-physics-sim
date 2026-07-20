@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import numpy as np
@@ -26,7 +27,36 @@ def test_array_screen_smoke_writes_dimension_report(tmp_path: Path):
 
     assert result["final_phi"] >= 0
     assert result["dimensions"]["distance_source"] == "array_modular_lift_record_history"
-    assert (Path(result["path"]) / "verifier_receipts.jsonl").exists()
+    run_path = Path(result["path"])
+    assert (run_path / "verifier_receipts.jsonl").exists()
+    assert (run_path / "echosahedral_patch_state_report.json").exists()
+    assert (run_path / "echosahedral_patch_state.npz").exists()
+    state_report = json.loads(
+        (run_path / "echosahedral_patch_state_report.json").read_text(encoding="utf-8")
+    )
+    state_artifact = np.load(run_path / "echosahedral_patch_state.npz")
+    assert state_report["ECHOSAHEDRAL_PATCH_STATE_INSTANTIATION_RECEIPT"] is True
+    assert state_report["RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT"] is True
+    assert state_report["record_signature_binding"]["local_frame_gauge_quotient"] is True
+    assert state_report["record_signature_binding"]["final_token_recomputation_match"] is True
+    assert state_report["PHYSICAL_STANDARD_MODEL_EMERGENCE_RECEIPT"] is False
+    assert state_artifact["patch_port_state"].shape == (256, 12)
+    assert state_artifact["record_signature"].shape == (256,)
+    assert state_artifact["canonical_record_port_state"].shape == (256, 12)
+    assert state_artifact["port_names"].tolist() == [f"P{index}" for index in range(12)]
+    assert np.array_equal(
+        state_artifact["patch_port_state"][
+            state_artifact["edge_left"], state_artifact["left_port"]
+        ],
+        state_artifact["routed_left_state"],
+    )
+    assert np.array_equal(
+        state_artifact["patch_port_state"][
+            state_artifact["edge_right"], state_artifact["right_port"]
+        ],
+        state_artifact["routed_right_state"],
+    )
+    assert result["echosahedral_patch_state"]["receipt"] is True
 
 
 def test_repair_budget_schedule_is_gradual_and_traceable():

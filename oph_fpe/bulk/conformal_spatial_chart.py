@@ -11,11 +11,16 @@ from oph_fpe.bulk.cap_geometry import RoundCap
 from oph_fpe.bulk.cap_normals import cap_gram_matrix, cap_normal_report
 from oph_fpe.bulk.h3_chart import h3_chart_report
 from oph_fpe.bulk.lorentz_algebra import lorentz_algebra_report
-from oph_fpe.claims import PAPER_THEOREM_3D_BULK_CHART_RECEIPT
+from oph_fpe.claims import (
+    EVENT_MANIFOLD_3P1D_RECEIPT,
+    H3_FRAME_FIBER_CHART_RECEIPT,
+    PAPER_THEOREM_3D_BULK_CHART_RECEIPT,
+)
 from oph_fpe.core.graph import fibonacci_sphere_points
 
 
 def conformal_h3_spatial_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
+    """Construct the H3 observer-frame fiber (legacy name retained for API compatibility)."""
     normal_report = cap_normal_report(caps)
     chart_report = h3_chart_report(caps)
     algebra_report = lorentz_algebra_report()
@@ -39,19 +44,32 @@ def conformal_h3_spatial_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
             "max": float(np.max(finite_gram)) if finite_gram.size else None,
         },
         "conformal_h3_spatial_chart_receipt": receipt,
+        H3_FRAME_FIBER_CHART_RECEIPT: receipt,
+        "h3_frame_fiber_chart_receipt": receipt,
         "lorentz_algebra_receipt": bool(algebra_report.get("lorentz_algebra_receipt", False)),
+        "observer_frame_fiber": chart_report.get("homogeneous_space", "SO+(3,1)/SO(3)"),
+        "frame_fiber_dimension_derivation": chart_report.get(
+            "spatial_dimension_derivation",
+            "dim SO+(3,1)-dim SO(3)=6-3=3",
+        ),
+        # Compatibility fields.  They describe the dimension of the H3 frame
+        # orbit, not a reconstructed event-position space.
         "spatial_homogeneous_space": chart_report.get("homogeneous_space", "SO+(3,1)/SO(3)"),
         "spatial_dimension_derivation": chart_report.get(
             "spatial_dimension_derivation",
             "dim SO+(3,1)-dim SO(3)=6-3=3",
         ),
+        EVENT_MANIFOLD_3P1D_RECEIPT: False,
         "record_populated_h3_receipt": False,
         "defect_localized_in_h3_receipt": False,
         "claim_boundary": (
-            "constructs the canonical 3D H3 spatial chart from the S2 cap/conformal Lorentz branch. "
+            "Constructs the canonical three-dimensional H3 observer-frame/velocity fiber from the "
+            "S2 cap/conformal Lorentz branch. H3=SO+(3,1)/SO(3) is not an event-position base: "
+            "a frame point plus a clock value does not determine spatial position. "
             "The receipt tier is legacy chart-level; the issue #309 theorem-aligned receipt is "
             "CAP_NORMAL_H3_CHART_RECEIPT, recomputed from primitive null-section, cap-normal, "
-            "Lorentz-equivariance, and H3-sheet fields. Populated spatial-bulk, neutral bulk, "
+            "Lorentz-equivariance, and H3-sheet fields. Event positions require a separate translation/"
+            "position construction and semantic event receipts. Populated event bulk, neutral bulk, "
             "particle, and CMB prediction claims require separate gates."
         ),
     }
@@ -64,13 +82,13 @@ def paper_theorem_3d_bulk_chart_report(
     neutral_report: dict[str, Any] | None = None,
     state_bw_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Report the paper-side 3D spatial chart receipt separately from neutral reconstruction.
+    """Separate the H3 frame fiber from a 3+1-dimensional event manifold.
 
     OPH's Lorentz/3D branch is a cap-chart theorem surface: round caps on the
     support-visible S2 chart carry BW-normalized modular flow and Conf+(S2)
-    gives SO+(3,1). The spatial chart is H3 = SO+(3,1)/SO(3), whose dimension
-    is the rank of the boost orbit, not a fitted dimension of a finite observer
-    point cloud.
+    gives SO+(3,1). H3 = SO+(3,1)/SO(3) is the future-timelike observer-frame
+    fiber, whose dimension is the rank of the boost orbit. It is not by itself
+    a spatial/event-position chart.
     """
     h3_chart = conformal_chart_report.get("h3_chart_report", {})
     algebra = conformal_chart_report.get("lorentz_algebra_report", {})
@@ -108,6 +126,10 @@ def paper_theorem_3d_bulk_chart_report(
     )
     object_report = observer_chart_object_report or {}
     neutral = neutral_report or {}
+    event_manifold_receipt = bool(
+        neutral.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
+        or neutral.get("event_manifold_3p1d_receipt", False)
+    )
     localized_object_precursor = bool(
         object_report.get("localized_object_precursor_receipt", False)
         or object_report.get("localized_nonboundary_object_precursor_receipt", False)
@@ -128,7 +150,7 @@ def paper_theorem_3d_bulk_chart_report(
         object_report.get("localized_nonboundary_bulk_population_receipt", False)
         and neutral.get("bulk_3d_established", False)
     )
-    chart_receipt_pass = bool(
+    frame_fiber_receipt = bool(
         chart_receipt
         and lorentz_receipt
         and bw_2pi_receipt
@@ -136,6 +158,7 @@ def paper_theorem_3d_bulk_chart_report(
         and spatial_dimension == 3
         and chart_dimension == 3
     )
+    chart_receipt_pass = bool(frame_fiber_receipt and event_manifold_receipt)
     assumed_chart_receipt = bool(
         chart_receipt
         and lorentz_receipt
@@ -148,7 +171,13 @@ def paper_theorem_3d_bulk_chart_report(
         "mode": "paper_theorem_3d_bulk_chart",
         PAPER_THEOREM_3D_BULK_CHART_RECEIPT: chart_receipt_pass,
         "paper_theorem_3d_bulk_chart_receipt": chart_receipt_pass,
-        "paper_theorem_object_populated_chart_precursor_receipt": bool(chart_receipt_pass and object_precursor),
+        H3_FRAME_FIBER_CHART_RECEIPT: frame_fiber_receipt,
+        "h3_frame_fiber_chart_receipt": frame_fiber_receipt,
+        EVENT_MANIFOLD_3P1D_RECEIPT: event_manifold_receipt,
+        "event_manifold_3p1d_receipt": event_manifold_receipt,
+        "paper_theorem_object_populated_chart_precursor_receipt": bool(
+            frame_fiber_receipt and object_precursor
+        ),
         "paper_theorem_neutral_populated_bulk_receipt": bool(chart_receipt_pass and populated_bulk),
         "chart_level_conformal_lorentz_receipt": chart_receipt,
         "bw_2pi_cap_flow_receipt": bw_2pi_receipt,
@@ -192,7 +221,10 @@ def paper_theorem_3d_bulk_chart_report(
                 "requires the separate finite cap-normal BWRec audit."
             ),
             "lorentz_group": "Conf+(S2) ~= PSL(2,C) ~= SO+(3,1).",
-            "spatial_chart": "The 3D spatial chart is H3 = SO+(3,1)/SO(3), with dimension 6-3=3.",
+            "observer_frame_fiber": (
+                "The 3D future-timelike observer-frame fiber is H3 = SO+(3,1)/SO(3), "
+                "with dimension 6-3=3; it is not the event-position base."
+            ),
             "cap_normal_h3_chart": (
                 "Issue #309 chart certification requires CAP_NORMAL_H3_CHART_RECEIPT: q(Omega)=(1,Omega), "
                 "n_C=(cot(alpha),csc(alpha)c), signed cap incidence, n_gC=Lambda_g n_C, and H3 future-sheet checks."
@@ -203,9 +235,11 @@ def paper_theorem_3d_bulk_chart_report(
             ),
         },
         "claim_boundary": (
-            "This is the paper-side 3D spatial chart receipt: S2 cap/conformal geometry plus "
-            "a computed finite modular-clock receipt yields the SO+(3,1) Lorentz branch and "
-            "the H3 spatial chart of dimension 3. The receipt tier is chart-level; issue #309 "
+            "This report now types H3 as the future-timelike observer-frame fiber. S2 cap/conformal "
+            "geometry plus a computed finite modular-clock receipt can yield the SO+(3,1) Lorentz "
+            "branch and a three-dimensional H3 frame fiber, but cannot by itself yield a spatial "
+            "event-position base or 3+1D event manifold. PAPER_THEOREM_3D_BULK_CHART_RECEIPT stays "
+            "closed until an independent semantic event/translation construction is supplied. Issue #309 "
             "primitive-field chart certification uses CAP_NORMAL_H3_CHART_RECEIPT. A declared "
             "2pi target is reported only as SIMULATION_ASSUMED_* visualization data. BW3 finite "
             "cap-net evidence, populated third-person bulk, particle, "

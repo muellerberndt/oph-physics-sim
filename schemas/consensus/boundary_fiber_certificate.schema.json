@@ -93,7 +93,7 @@
     "observable_id": {"const": "BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"},
     "fit_objective": {"const": "not_applicable"},
     "receipt_name": {"const": "BOUNDARY_CONDITIONED_UNIQUENESS_RECEIPT"},
-    "receipt_schema_version": {"const": "2026-06-06b"},
+    "receipt_schema_version": {"const": "2026-07-20a"},
     "input_packet_sha256": {"$ref": "#/$defs/hash"}
   },
   "allOf": [

@@ -74,7 +74,9 @@ def test_state_derived_bw_report_accepts_maxent_record_operator_state() -> None:
 
     assert report["state_mode"] == "maxent_record_operator_state"
     assert report["maxent_record_operator_state"] is True
-    assert report["endogenous_modular_generator"] is True
-    assert report["normalization_source"] == "endogenous_maxent_record_operator_state"
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
+    assert report["PRIME_GEOMETRIC_CAP_STATE_RECEIPT"] is False
+    assert report["normalization_source"] == "surrogate_maxent_record_operator_state"
     assert report["rows"][0]["generator_source"] == "maxent_record_operator_state"
     assert np.isfinite(report["median"])

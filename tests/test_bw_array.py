@@ -158,6 +158,9 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "harmonic_time_trace.npz").exists()
     assert (run_path / "harmonic_time_trace_report.json").exists()
     assert (run_path / "screen_evolution_frames.npz").exists()
+    assert (run_path / "echosahedral_patch_state_report.json").exists()
+    assert (run_path / "echosahedral_patch_state.npz").exists()
+    assert (run_path / "source_dynamics_repair_record_observer_report.json").exists()
 
     bw_report = json.loads((run_path / "bw_report.json").read_text(encoding="utf-8"))
     cap_report = json.loads((run_path / "cap_geometry_report.json").read_text(encoding="utf-8"))
@@ -184,10 +187,48 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     checkpoint = json.loads((run_path / "observer_checkpoint_restoration_report.json").read_text(encoding="utf-8"))
     theorem = json.loads((run_path / "theorem_core_receipts.json").read_text(encoding="utf-8"))
     experience = json.loads((run_path / "observer_modular_experience_report.json").read_text(encoding="utf-8"))
+    patch_state_report = json.loads(
+        (run_path / "echosahedral_patch_state_report.json").read_text(encoding="utf-8")
+    )
+    source_contract = json.loads(
+        (run_path / "source_dynamics_repair_record_observer_report.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    patch_state = np.load(run_path / "echosahedral_patch_state.npz")
 
     assert bw_report["rows"][0]["weight_measure"] == "cell_entropy_capacity"
     assert isclose(bw_report["rows"][0]["target_scale"], 2.0 * pi)
     assert isclose(bw_report["rows"][0]["sim_scale"], 2.0 * pi)
+    assert patch_state_report["ECHOSAHEDRAL_PATCH_STATE_INSTANTIATION_RECEIPT"] is True
+    assert patch_state_report["RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT"] is True
+    assert patch_state_report["record_signature_binding"]["local_frame_gauge_quotient"] is True
+    assert patch_state_report["record_signature_binding"]["final_token_recomputation_match"] is True
+    assert patch_state_report["PHYSICAL_STANDARD_MODEL_EMERGENCE_RECEIPT"] is False
+    assert patch_state["patch_port_state"].shape == (512, 12)
+    assert patch_state["record_signature"].shape == (512,)
+    assert patch_state["canonical_record_port_state"].shape == (512, 12)
+    assert np.array_equal(
+        patch_state["patch_port_state"][
+            patch_state["edge_left"], patch_state["left_port"]
+        ],
+        patch_state["routed_left_state"],
+    )
+    assert np.array_equal(
+        patch_state["patch_port_state"][
+            patch_state["edge_right"], patch_state["right_port"]
+        ],
+        patch_state["routed_right_state"],
+    )
+    assert source_contract["schema_version"] == "oph_source_repair_record_observer_contract_v2"
+    assert source_contract["PATCH_LOCAL_STATE_RECEIPT"] is True
+    assert source_contract["PATCH_ALL_PORT_READBACK_RECEIPT"] is True
+    assert source_contract["RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT"] is True
+    assert source_contract["source_architecture"]["local_state_factor_count"] == 12
+    assert source_contract["source_architecture"]["local_state_dimension"] == 6**12
+    assert manifest["echosahedral_patch_federation_state"][
+        "PHYSICAL_A5_PORT_EMERGENCE_RECEIPT"
+    ] is False
 
     assert bw_report["rows"][0]["cap_area_planck"] > 0.0
     assert bw_report["rows"][0]["cap_entropy_capacity"] > 0.0

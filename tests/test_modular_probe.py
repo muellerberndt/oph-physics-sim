@@ -300,7 +300,8 @@ def test_state_derived_bw_report_accepts_history_transition_kernel():
     )
 
     assert report["state_mode"] == "history_transition_kernel"
-    assert report["endogenous_modular_generator"] is True
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
     assert report["row_count"] == 4
     assert report["rows"][0]["matrix_element_count"] == 32 * 32
     assert np.isfinite(report["median"])
@@ -379,10 +380,12 @@ def test_endogenous_generator_receipt_is_separate_from_2pi_clock():
         seed=15,
     )
 
-    assert report["endogenous_modular_generator"] is True
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
+    assert report["ENDOGENOUS_MODULAR_GENERATOR_RECEIPT"] is False
     assert "ENDOGENOUS_MODULAR_GENERATOR_RECEIPT" in report
     assert "KMS_GEOMETRIC_CLOCK_FIT_RECEIPT" in report
-    assert report["endogenous_generator_receipt_boundary"].startswith("L2 only")
+    assert report["endogenous_generator_receipt_boundary"].startswith("Fail-closed L2 gate")
 
 
 def test_collar_operator_system_density_is_positive_finite():
@@ -488,7 +491,8 @@ def test_state_derived_bw_report_accepts_collar_operator_system():
     )
 
     assert report["state_mode"] == "collar_operator_system"
-    assert report["endogenous_modular_generator"] is True
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
     assert report["row_count"] == 4
     assert np.isfinite(report["median"])
     assert report["state_selected_scale_label"] in {"1x", "2pi"}
@@ -843,8 +847,9 @@ def test_state_derived_bw_report_accepts_repair_affinity_response_density_log():
 
     assert report["state_mode"] == "repair_affinity_response_density_log"
     assert report["repair_affinity_response_density"] is True
-    assert report["endogenous_modular_generator"] is True
-    assert report["normalization_source"] == "endogenous_repair_affinity_response_density_log"
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
+    assert report["normalization_source"] == "surrogate_repair_affinity_response_density_log"
     assert report["rows"][0]["generator_source"] == "repair_affinity_response_density_log"
     assert report["generator_scale_audit"]["enabled"] is True
     assert report["row_count"] == 4
@@ -953,8 +958,9 @@ def test_state_derived_bw_report_accepts_perturb_remeasure_response_density_log(
 
     assert report["state_mode"] == "perturb_remeasure_response_density_log"
     assert report["perturb_remeasure_response_density"] is True
-    assert report["endogenous_modular_generator"] is True
-    assert report["normalization_source"] == "endogenous_perturb_remeasure_response_density_log"
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
+    assert report["normalization_source"] == "surrogate_perturb_remeasure_response_density_log"
     assert report["rows"][0]["generator_source"] == "perturb_remeasure_response_density_log"
     assert report["generator_scale_audit"]["enabled"] is True
     assert report["row_count"] == 2
@@ -1029,8 +1035,9 @@ def test_state_derived_bw_report_accepts_perturb_remeasure_response_kernel_log()
 
     assert report["state_mode"] == "perturb_remeasure_response_kernel_log"
     assert report["perturb_remeasure_response_kernel"] is True
-    assert report["endogenous_modular_generator"] is True
-    assert report["normalization_source"] == "endogenous_perturb_remeasure_response_kernel_log"
+    assert report["endogenous_modular_generator"] is False
+    assert report["surrogate_endogenous_modular_generator"] is True
+    assert report["normalization_source"] == "surrogate_perturb_remeasure_response_kernel_log"
     assert report["rows"][0]["generator_source"] == "perturb_remeasure_response_kernel_log"
     assert report["generator_scale_audit"]["enabled"] is True
     assert report["row_count"] == 2

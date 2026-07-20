@@ -27,6 +27,8 @@ from oph_fpe.bulk.record_to_h3 import recompute_object_chart_from_saved_run
 from oph_fpe.bulk.einstein_bridge import write_einstein_bridge_manifest
 from oph_fpe.bulk.theorem_contract import write_finite_oph_theorem_contract_report
 from oph_fpe.claims import (
+    EVENT_MANIFOLD_3P1D_RECEIPT,
+    H3_FRAME_FIBER_CHART_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
@@ -1696,13 +1698,20 @@ def _postprocess_observer_experience(
         original.get("observer_modular_time_receipt", False)
         or component_gates.get("observer_modular_time_receipt", False)
     )
-    bw_kms = bool(component_gates.get("bw_kms_branch_replay_receipt", False))
-    chart = bool(component_gates.get("conformal_h3_chart_receipt", False))
+    finite_clock = bool(
+        original.get("finite_lorentz_modular_clock_receipt", False)
+        or component_gates.get("finite_lorentz_modular_clock_receipt", False)
+    )
+    frame_fiber = bool(
+        original.get(H3_FRAME_FIBER_CHART_RECEIPT, False)
+        or component_gates.get("h3_frame_fiber_chart_receipt", False)
+    )
+    event_manifold = bool(
+        original.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
+        or component_gates.get("event_manifold_3p1d_receipt", False)
+    )
     h3_response = bool(
         h3_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
-        or h3_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
-        or h3_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
-        or h3_report.get("h3_control_separation_receipt", False)
     )
     object_population = bool(
         object_report.get(OBJECT_BULK_POPULATION_RECEIPT, False)
@@ -1711,12 +1720,16 @@ def _postprocess_observer_experience(
     )
     component_gates = {
         "observer_modular_time_receipt": observer_modular_time,
-        "bw_kms_branch_replay_receipt": bw_kms,
-        "conformal_h3_chart_receipt": chart,
+        "finite_lorentz_modular_clock_receipt": finite_clock,
+        "h3_frame_fiber_chart_receipt": frame_fiber,
         "h3_modular_response_receipt": h3_response,
+        "event_manifold_3p1d_receipt": event_manifold,
     }
+    frame_experience = bool(
+        observer_modular_time and finite_clock and frame_fiber and h3_response
+    )
     populated_h3_component_gates = {
-        **component_gates,
+        "observer_h3_frame_fiber_experience_receipt": frame_experience,
         "observer_h3_object_population_receipt": object_population,
     }
     observer_3p1d = bool(all(component_gates.values()))
@@ -1733,13 +1746,19 @@ def _postprocess_observer_experience(
             ],
             OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_3p1d,
             "observer_facing_3p1d_h3_experience_receipt": observer_3p1d,
+            "OBSERVER_H3_FRAME_FIBER_EXPERIENCE_RECEIPT": frame_experience,
+            "observer_h3_frame_fiber_experience_receipt": frame_experience,
+            H3_FRAME_FIBER_CHART_RECEIPT: frame_fiber,
+            EVENT_MANIFOLD_3P1D_RECEIPT: event_manifold,
             "observer_facing_populated_h3_experience_receipt": populated_h3,
             "observer_h3_object_population_receipt": object_population,
             "claim_boundary": (
                 str(original.get("claim_boundary", "")).strip()
                 + " Postprocessed after canonical H3 refit/object-chart selection; this only updates "
                 "downstream receipt wiring from selected audited reports and does not relax thresholds. "
-                "Observer-facing 3+1D/H3 experience is split from populated-H3 object emergence."
+                "H3 is retained as an observer-frame fiber. The 3+1D receipt cannot be raised "
+                "without a separate semantic event/translation manifold, and populated-H3 object "
+                "diagnostics remain a separate lane."
             ).strip(),
         }
     )

@@ -21,10 +21,12 @@ from oph_fpe.claims import (
     DEMO,
     DYNAMIC_DARK_TRANSPORT_RECEIPT,
     ENDOGENOUS_MODULAR_GENERATOR_RECEIPT,
+    EVENT_MANIFOLD_3P1D_RECEIPT,
     FINITE_CONSENSUS_THEOREM_RECEIPT,
     FINITE_SETTLE_DIAGNOSTIC_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
+    H3_FRAME_FIBER_CHART_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBJECT_CHART_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
@@ -72,6 +74,10 @@ from oph_fpe.cosmology.angular_power import angular_power_report
 from oph_fpe.cosmology.galaxy_proxy import galaxy_proxy_receipt
 from oph_fpe.cosmology import oph_cmb_stress_adapter_report, write_freezeout_products
 from oph_fpe.cosmology.paired_ba_perturbation import write_paired_perturb_resettle_b_a_report
+from oph_fpe.core.array_geometry import array_screen_geometry_from_config
+from oph_fpe.core.echosahedral_federation import (
+    screen_port_map_carrier_bridge_report,
+)
 from oph_fpe.core.graph import fibonacci_sphere_points
 from oph_fpe.core.pixel_scale import pixel_scale_from_config
 from oph_fpe.core.screen_receipts import (
@@ -80,7 +86,15 @@ from oph_fpe.core.screen_receipts import (
     observer_checkpoint_restoration_report,
 )
 from oph_fpe.core.screen_microphysics import ports_per_patch_from_config, screen_microphysics_from_config
-from oph_fpe.core.screen_ports import assign_echosahedral_ports
+from oph_fpe.core.screen_ports import (
+    assign_echosahedral_ports,
+    canonicalize_echosahedral_patch_state,
+    echosahedral_patch_record_signature,
+    echosahedral_patch_state_report,
+    initialize_echosahedral_patch_state,
+    sync_routed_echosahedral_patch_state,
+    write_echosahedral_patch_state_artifact,
+)
 from oph_fpe.defects.array_s3_holonomy import (
     S3_CLASS,
     S3_INV,
@@ -148,12 +162,38 @@ from oph_fpe.scale.parallel import jobs_from_config
 
 
 def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
+    physical_campaign_cfg = config.get("physical_h3_kms_campaign", {}) or {}
+    if physical_campaign_cfg.get("enabled", False):
+        from oph_fpe.bulk.physical_h3_kms_preflight import (
+            physical_h3_kms_preflight_report,
+        )
+
+        preflight_reports = physical_campaign_cfg.get("preflight_reports", {}) or {}
+        preflight = physical_h3_kms_preflight_report(
+            {"config": config, "reports": preflight_reports}
+        )
+        preflight_dir = Path(out_dir) / "_physical_h3_kms_preflight"
+        preflight_dir.mkdir(parents=True, exist_ok=True)
+        preflight_path = preflight_dir / (
+            f"{str(config.get('run_id') or config.get('name') or 'campaign')}.json"
+        )
+        preflight_path.write_text(
+            json.dumps(preflight, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        if not preflight.get("PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT", False):
+            blocker_preview = ", ".join(list(preflight.get("blockers") or [])[:8])
+            raise RuntimeError(
+                "physical H3/KMS campaign refused before simulation; preflight failed: "
+                f"{blocker_preview}. Full report: {preflight_path}"
+            )
     seed = int(config.get("seed", 1))
     rng_streams, rng_stream_report = _named_rng_streams(
         seed,
-        ("initialization", "readback", "repair", "sector"),
+        ("initialization", "patch_ports", "readback", "repair", "sector"),
     )
     initialization_rng = rng_streams["initialization"]
+    patch_state_rng = rng_streams["patch_ports"]
     readback_rng = rng_streams["readback"]
     repair_rng = rng_streams["repair"]
     sector_rng = rng_streams["sector"]
@@ -171,14 +211,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         write_jsonl_payloads = True
     pixel_scale = pixel_scale_from_config(config)
     graph_cfg = config.get("graph", {})
-    patch_count = int(graph_cfg.get("patch_count", 65_536))
+    array_geometry = array_screen_geometry_from_config(
+        graph_cfg,
+        knn_builder=_knn_edges,
+    )
+    points = array_geometry.points
+    left = array_geometry.edge_left
+    right = array_geometry.edge_right
+    geometry_report = array_geometry.report
+    patch_count = array_geometry.patch_count
+    node_degree_counts = np.bincount(
+        np.concatenate([left, right]),
+        minlength=patch_count,
+    )
+    neighbors = int(np.max(node_degree_counts)) if node_degree_counts.size else 0
     cell_area_planck = equal_cell_area_planck(patch_count, pixel_scale.cell_area_planck)
     cell_entropy = equal_cell_entropy(patch_count, pixel_scale.cell_area_planck)
-    neighbors = int(graph_cfg.get("neighbors", ports_per_patch_from_config(config)))
     group_name = str(config.get("group", {}).get("name", "S3")).upper()
     group_order = _group_order(group_name)
-    points = fibonacci_sphere_points(patch_count)
-    left, right = _knn_edges(points, neighbors)
     edge_count = int(left.size)
     screen_microphysics = screen_microphysics_from_config(config, patch_count, edge_count)
     screen_ports = assign_echosahedral_ports(
@@ -186,7 +236,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         right,
         patch_count,
         ports_per_patch=ports_per_patch_from_config(config),
+        points=points,
     )
+    screen_ports_report = screen_ports.as_jsonable()
 
     port_left, port_right, boundary_program_report = _initialize_port_packets(
         points,
@@ -195,6 +247,26 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         group_order=group_order,
         rng=initialization_rng,
         config=config.get("boundary_program", {}),
+    )
+    patch_port_state = initialize_echosahedral_patch_state(
+        patch_count=patch_count,
+        ports_per_patch=screen_ports.ports_per_patch,
+        group_order=group_order,
+        edge_left=left,
+        edge_right=right,
+        port_map=screen_ports,
+        routed_left_state=port_left,
+        routed_right_state=port_right,
+        rng=patch_state_rng,
+    )
+    record_patch_port_state = canonicalize_echosahedral_patch_state(
+        patch_port_state,
+        edge_left=left,
+        edge_right=right,
+        routed_left_state=port_left,
+        routed_right_state=port_right,
+        group_name=group_name,
+        group_order=group_order,
     )
     initial_port_left = port_left.copy()
     initial_port_right = port_right.copy()
@@ -230,7 +302,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("pixel_scale.json", pixel_scale.as_jsonable())
     bundle.write_json("pixel_report.json", pixel_scale.as_jsonable())
     bundle.write_json("screen_microphysics.json", screen_microphysics.as_jsonable())
-    bundle.write_json("screen_ports.json", screen_ports.as_jsonable())
+    bundle.write_json("screen_ports.json", screen_ports_report)
+    bundle.write_json("icosahedral_federation_geometry_report.json", geometry_report)
     bundle.write_json("boundary_program_report.json", boundary_program_report)
     bundle.write_json("rng_streams.json", rng_stream_report)
     bundle.write_json("gauge_covariant_overlap_contract.json", overlap_contract_metadata())
@@ -244,6 +317,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     mod_cfg = config.get("modular_flow", {})
     modular_cap_drive = _modular_cap_drive(points, mod_cfg)
     readback_node_labels: np.ndarray | None = None
+    record_feedback_audit_rows: list[dict[str, Any]] = []
     readback_drive_report: dict[str, Any] = {"enabled": False}
     if readback_drive_cfg.get("enabled", False):
         readback_mode = str(readback_drive_cfg.get("mode", "support_visible_boundary_refresh"))
@@ -354,6 +428,17 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             cycle=cycle,
             config=readback_drive_cfg,
             node_labels=readback_node_labels,
+            record_signature=prev_signature,
+            committed=committed,
+            audit_rows=record_feedback_audit_rows,
+        )
+        sync_routed_echosahedral_patch_state(
+            patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            port_map=screen_ports,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
         )
         mismatches = covariant_mismatch_mask(
             port_left,
@@ -404,6 +489,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 group_name=group_name,
                 group_order=group_order,
             )
+        sync_routed_echosahedral_patch_state(
+            patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            port_map=screen_ports,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
+        )
         if chosen.size:
             cumulative_repair_load += (
                 np.bincount(left[chosen], minlength=patch_count)
@@ -434,15 +527,27 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             mod_cfg,
             cap_drive=modular_cap_drive,
         )
-        signature = _gauge_coupled_node_signature(
-            port_left,
-            port_right,
-            gauge,
-            left,
-            right,
-            patch_count,
+        record_patch_port_state = canonicalize_echosahedral_patch_state(
+            patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
             group_name=group_name,
             group_order=group_order,
+        )
+        signature = echosahedral_patch_record_signature(
+            _gauge_coupled_node_signature(
+                port_left,
+                port_right,
+                gauge,
+                left,
+                right,
+                patch_count,
+                group_name=group_name,
+                group_order=group_order,
+            ),
+            record_patch_port_state,
         )
         stable_count, committed = _advance_record_commit_state(
             signature,
@@ -613,6 +718,66 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     if defect_timeline_enabled and (not defect_gauge_snapshots or defect_gauge_snapshots[-1][0] != cycles - 1):
         defect_gauge_snapshots.append((cycles - 1, gauge.copy()))
     base_loop_elapsed_seconds = time.time() - base_loop_started
+    final_record_binding_verified = bool(
+        np.array_equal(
+            prev_signature,
+            echosahedral_patch_record_signature(
+                _gauge_coupled_node_signature(
+                    port_left,
+                    port_right,
+                    gauge,
+                    left,
+                    right,
+                    patch_count,
+                    group_name=group_name,
+                    group_order=group_order,
+                ),
+                record_patch_port_state,
+            ),
+        )
+    )
+    patch_state_report = echosahedral_patch_state_report(
+        patch_port_state,
+        edge_left=left,
+        edge_right=right,
+        port_map=screen_ports,
+        routed_left_state=port_left,
+        routed_right_state=port_right,
+        record_signature_bound=final_record_binding_verified,
+        record_binding_mode=(
+            "node_reference_port_gauge_quotient_a5_incidence_invariants"
+        ),
+    )
+    patch_state_report["record_signature_binding"][
+        "final_token_recomputation_match"
+    ] = final_record_binding_verified
+    write_patch_state = bool(
+        outputs_cfg.get(
+            "write_echosahedral_patch_state_npz",
+            output_profile != "compact",
+        )
+    )
+    if write_patch_state:
+        patch_state_report["artifact"] = write_echosahedral_patch_state_artifact(
+            bundle.path / "echosahedral_patch_state.npz",
+            patch_port_state=patch_port_state,
+            canonical_record_port_state=record_patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            port_map=screen_ports,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
+            record_signature=prev_signature,
+            committed=committed,
+        )
+        patch_state_report["artifact"]["written"] = True
+    else:
+        patch_state_report["artifact"] = {
+            "path": None,
+            "written": False,
+            "reason": "compact_output_profile",
+        }
+    bundle.write_json("echosahedral_patch_state_report.json", patch_state_report)
     gauge_coupled_dynamics_report = {
         "mode": "finite_gauge_covariant_overlap_repair_v1",
         **overlap_contract_metadata(),
@@ -629,6 +794,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         "gauge_link_changed_count": int(np.sum(gauge != initial_gauge)),
         "sector_edges_changed_total": int(sum(int(row.get("sector_edges_changed", 0)) for row in trace)),
         "record_signature_includes_gauge_invariant_edge_residual": True,
+        "record_signature_includes_full_echosahedral_patch_state": patch_state_report[
+            "RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT"
+        ],
         "observer_sector_fields_use_gauge_invariant_edge_residual": True,
         "claim_boundary": (
             "Finite regulator overlap dynamics with group-correct link transport. This establishes that the "
@@ -1077,6 +1245,21 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         "full_population_analyzed": len(observer_analysis_rows)
         == len(patch_observer_rows),
     }
+    source_observer_contract_report = _source_observer_contract_report(
+        config=config,
+        patch_count=patch_count,
+        edge_count=edge_count,
+        boundary_port_count=ports_per_patch_from_config(config),
+        group_name=group_name,
+        group_order=group_order,
+        trace=trace,
+        committed=committed,
+        patch_observer_rows=patch_observer_rows,
+        record_feedback_audit_rows=record_feedback_audit_rows,
+        support_geometry_report=geometry_report,
+        screen_port_map_report=screen_ports_report,
+        patch_state_report=patch_state_report,
+    )
     consensus_report = observer_consensus_report(
         points,
         raw_fields=raw_observer_fields,
@@ -1294,6 +1477,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             ),
             full_graph_n_jobs=int(
                 h3_modular_response_cfg.get("full_graph_n_jobs", 1) or 1
+            ),
+            freeze_candidate_interventions=bool(
+                h3_modular_response_cfg.get("freeze_candidate_interventions", True)
             ),
             perturb_seed=seed + 1889,
             geometry_cache=persistent_geometry_cache,
@@ -1826,17 +2012,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         emergence_status["state_derived_inferred_kappa_hat"] = clock_fit.get("kappa_hat")
         emergence_status["state_derived_inferred_kappa_95ci"] = clock_fit.get("kappa_95ci")
         emergence_status["state_derived_inferred_clock_blockers"] = clock_fit.get("blockers", [])
-        emergence_status["state_derived_bw_bulk_gate"] = bool(
+        emergence_status["state_derived_bw_branch_replay_diagnostic"] = bool(
             state_bw_report.get(BW_KMS_BRANCH_REPLAY_RECEIPT, False)
             or state_bw_report.get(BW_KMS_BRANCH_INSTANTIATION_RECEIPT, False)
-            or (
-                state_bw_report.get("state_selected_2pi", False)
-                and state_bw_report.get("correct_beats_controls", False)
-                and (
-                    state_bw_report.get("direct_transition_automorphism", False)
-                    or state_bw_report.get("endogenous_modular_generator", False)
-                )
-            )
+        )
+        emergence_status["state_derived_bw_bulk_gate"] = bool(
+            state_bw_report.get(ENDOGENOUS_MODULAR_GENERATOR_RECEIPT, False)
+            and state_bw_report.get("KMS_GEOMETRIC_CLOCK_FIT_RECEIPT", False)
         )
         emergence_status["state_derived_best_control"] = state_bw_report.get("best_control")
         emergence_status["collar_markov_median_epsilon_cmi"] = collar_report.get("median_epsilon_cmi")
@@ -2047,10 +2229,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         and not blind_bulk.get("forbidden_feature_keys_used", [])
     )
     emergence_status["strict_blind_observer_bulk_receipt"] = strict_neutral_bulk_receipt
-    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = bool(
-        emergence_status["OBJECT_BULK_POPULATION_RECEIPT"]
+    event_manifold_receipt = bool(
+        neutral_report.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
+        or neutral_report.get("event_manifold_3p1d_receipt", False)
     )
-    emergence_status["bulk_3d_established"] = bool(emergence_status["spatial_bulk_3d_reconstruction_receipt"])
+    emergence_status[EVENT_MANIFOLD_3P1D_RECEIPT] = event_manifold_receipt
+    emergence_status["event_manifold_3p1d_receipt"] = event_manifold_receipt
+    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = event_manifold_receipt
+    emergence_status["bulk_3d_established"] = event_manifold_receipt
     emergence_status["lorentz_claim_boundary"] = (
         "chart-level Lorentz receipt is conformal H3 chart plus direct BW/KMS automorphism sanity. "
         "Endogenous observer-record modular generators, object population, neutral bulk reconstruction, "
@@ -2191,6 +2377,10 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     if observer_chart_object_report:
         bundle.write_json("observer_chart_object_h3_report.json", observer_chart_object_report)
     bundle.write_json("observer_modular_experience_report.json", observer_modular_experience_report)
+    bundle.write_json(
+        "source_dynamics_repair_record_observer_report.json",
+        source_observer_contract_report,
+    )
     bundle.write_json("record_family_h3_report.json", object_h3_report)
     bundle.write_json("defect_cluster_h3_report.json", defect_h3_report)
     finite_consensus_source_manifest: dict[str, Any] = {}
@@ -2368,14 +2558,17 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             "run_mode": config.get("run_mode", config.get("mode")),
             "output_profile": output_profile,
             "patch_count": patch_count,
+            "nominal_patch_count": geometry_report.get("nominal_patch_count"),
             "edge_count": edge_count,
+            "global_screen_geometry": geometry_report,
             "group": group_name,
             "gauge_coupled_dynamics": gauge_coupled_dynamics_report,
             "rng_streams": rng_stream_report,
             "pixel_scale": pixel_scale.as_jsonable(),
             "oph_constants": pixel_scale.constants.as_jsonable(),
             "screen_microphysics": screen_microphysics.as_jsonable(),
-            "screen_ports": screen_ports.as_jsonable(sample_edges=16),
+            "screen_ports": screen_ports_report,
+            "echosahedral_patch_federation_state": patch_state_report,
             "boundary_program": boundary_program_report,
             "screen_units": screen_microphysics.as_jsonable()["screen_units"],
             "cycles": cycles,
@@ -2486,6 +2679,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         "bw_primary_median": state_bw_report.get("median", bw_report["median"]) if state_bw_report else bw_report["median"],
         "base_loop_elapsed_seconds": base_loop_elapsed_seconds,
         "gauge_coupled_dynamics": gauge_coupled_dynamics_report,
+        "echosahedral_patch_state": {
+            "receipt": patch_state_report[
+                "ECHOSAHEDRAL_PATCH_STATE_INSTANTIATION_RECEIPT"
+            ],
+            "state_sha256": patch_state_report["patch_port_state_sha256"],
+            "artifact_written": patch_state_report["artifact"]["written"],
+        },
         "controls": bw_report["controls"],
         "geometric_controls": bw_report["controls"],
         "state_bw_controls": state_bw_report.get("controls", {}) if state_bw_report else {},
@@ -2530,6 +2730,36 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         manifest["kernel_dispatch"] = summary
         result["kernel_dispatch"] = summary
     bundle.write_manifest(manifest)
+    theorem_shortcut_cfg = config.get("a5_sm_theorem_shortcuts", {}) or {}
+    if theorem_shortcut_cfg.get("enabled", False):
+        from oph_fpe.gauge.a5_sm_forcing_ladder import (
+            apply_a5_sm_theorem_shortcuts,
+        )
+
+        theorem_audit_path = Path(str(theorem_shortcut_cfg.get("theorem_audit_path", "")))
+        if not theorem_audit_path.is_file():
+            raise ValueError(
+                "a5_sm_theorem_shortcuts.enabled requires an existing theorem_audit_path"
+            )
+        theorem_audit = json.loads(theorem_audit_path.read_text(encoding="utf-8"))
+        theorem_application = apply_a5_sm_theorem_shortcuts(bundle.path, theorem_audit)
+        bundle.write_json(
+            "a5_sm_theorem_application_report.json",
+            theorem_application,
+        )
+        result["a5_sm_theorem_shortcuts"] = {
+            "finite_q0_core": theorem_application.get(
+                "PHYSICAL_FINITE_SM_Q0_CORE_RECEIPT", False
+            ),
+            "theorem_audit_sha256": theorem_application.get("theorem_audit_sha256"),
+        }
+    from oph_fpe.emergence_ladder import write_emergence_ladder_report
+
+    ladder = write_emergence_ladder_report(bundle.path)
+    result["emergence_ladder"] = {
+        "status": ladder["overall_claim_status"],
+        "receipts": ladder["overall_receipts"],
+    }
     return result
 
 
@@ -3288,6 +3518,9 @@ def _apply_observer_readback_drive(
     cycle: int,
     config: dict[str, Any],
     node_labels: np.ndarray | None,
+    record_signature: np.ndarray | None = None,
+    committed: np.ndarray | None = None,
+    audit_rows: list[dict[str, Any]] | None = None,
 ) -> int:
     if not config.get("enabled", False):
         return 0
@@ -3305,12 +3538,39 @@ def _apply_observer_readback_drive(
     drive_count = min(edge_count, max(0, requested), max_edges)
     if drive_count <= 0:
         return 0
-    edges = rng.choice(edge_count, size=drive_count, replace=False)
-    update_left = rng.random(drive_count) < 0.5
     mode = str(config.get("mode", "support_visible_boundary_refresh"))
+    normalized_mode = mode.lower().replace("-", "_")
+    record_feedback_mode = normalized_mode in {
+        "record_feedback_refresh",
+        "committed_record_feedback",
+        "observer_record_readback",
+    }
+    record_values = np.asarray(record_signature) if record_signature is not None else np.zeros(0)
+    committed_mask = np.asarray(committed, dtype=bool) if committed is not None else np.zeros(0, dtype=bool)
+    if record_feedback_mode:
+        if record_values.size == 0 or committed_mask.size != record_values.size:
+            return 0
+        eligible = np.flatnonzero(committed_mask[left] | committed_mask[right])
+        if eligible.size == 0:
+            return 0
+        drive_count = min(drive_count, int(eligible.size))
+        edges = rng.choice(eligible, size=drive_count, replace=False)
+    else:
+        edges = rng.choice(edge_count, size=drive_count, replace=False)
+    update_left = rng.random(drive_count) < 0.5
     phase_advance = int(config.get("phase_advance_per_cycle", 0))
     phase = int((int(cycle) * phase_advance) % max(int(group_order), 1))
-    if mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"} and node_labels is not None:
+    if record_feedback_mode:
+        left_records = np.mod(np.abs(record_values[left[edges]].astype(np.int64)), int(group_order))
+        right_records = np.mod(np.abs(record_values[right[edges]].astype(np.int64)), int(group_order))
+        # Each endpoint may read only a committed neighboring/local record.
+        # If only one side is committed, both local targets are derived from
+        # that accessible record rather than an external cap program.
+        left_is_committed = committed_mask[left[edges]]
+        right_is_committed = committed_mask[right[edges]]
+        left_targets = np.where(left_is_committed, left_records, right_records)
+        right_targets = np.where(right_is_committed, right_records, left_records)
+    elif mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"} and node_labels is not None:
         left_targets = (np.asarray(node_labels[left[edges]], dtype=np.int64) + phase) % int(group_order)
         right_targets = (np.asarray(node_labels[right[edges]], dtype=np.int64) + phase) % int(group_order)
     else:
@@ -3328,7 +3588,303 @@ def _apply_observer_readback_drive(
         port_left[edges[update_left]] = left_targets[update_left].astype(port_left.dtype)
     if np.any(~update_left):
         port_right[edges[~update_left]] = right_targets[~update_left].astype(port_right.dtype)
+    if record_feedback_mode and audit_rows is not None:
+        audit_rows.append(
+            {
+                "cycle": int(cycle),
+                "read_count": int(drive_count),
+                "write_count": int(drive_count),
+                "records_causally_bound_to_prior_commits": True,
+                "readback_changes_future_local_actions": True,
+                "read_edge_ids_hash": stable_json_hash(
+                    [int(value) for value in np.sort(edges)]
+                ),
+                "record_values_hash": stable_json_hash(
+                    [
+                        [int(left_records[index]), int(right_records[index])]
+                        for index in range(drive_count)
+                    ]
+                ),
+            }
+        )
     return int(drive_count)
+
+
+def _source_observer_contract_report(
+    *,
+    config: dict[str, Any],
+    patch_count: int,
+    edge_count: int,
+    boundary_port_count: int,
+    group_name: str,
+    group_order: int,
+    trace: list[dict[str, Any]],
+    committed: np.ndarray,
+    patch_observer_rows: list[dict[str, Any]],
+    record_feedback_audit_rows: list[dict[str, Any]],
+    support_geometry_report: dict[str, Any],
+    screen_port_map_report: dict[str, Any],
+    patch_state_report: dict[str, Any],
+) -> dict[str, Any]:
+    """Emit primitive source→repair→record→self-reading-observer evidence.
+
+    Geometry and particle reports are intentionally not consulted.  The
+    observer gate passes only when a prior committed record is actually read
+    and changes a later bounded port write; cap-program refreshes and cycle
+    counters are not reclassified as observer feedback.
+    """
+
+    repair_event_count = int(sum(int(row.get("chosen_edges", 0)) for row in trace))
+    strict_descent_event_count = int(
+        sum(
+            int(row.get("chosen_edges", 0))
+            for row in trace
+            if int(row.get("chosen_edges", 0)) > 0 and int(row.get("delta_phi", 0)) < 0
+        )
+    )
+    non_descent_cycle_count = int(
+        sum(
+            1
+            for row in trace
+            if int(row.get("chosen_edges", 0)) > 0 and int(row.get("delta_phi", 0)) >= 0
+        )
+    )
+    readback_count = int(
+        sum(int(row.get("read_count", 0)) for row in record_feedback_audit_rows)
+    )
+    feedback_event_count = int(
+        sum(int(row.get("write_count", 0)) for row in record_feedback_audit_rows)
+    )
+    target_hits = _source_generator_forbidden_target_hits(config)
+    if str(support_geometry_report.get("geometry_family") or "") in {
+        "nested_geodesic_icosahedral",
+        "legacy_fibonacci_knn_control",
+    }:
+        target_hits.append(
+            "global_support_chart_coordinates_used_to_construct_source_seams"
+        )
+    target_hits = sorted(set(target_hits))
+    local_patch_architecture_report = dict(
+        screen_port_map_report.get("local_patch_architecture") or {}
+    )
+    carrier_bridge = screen_port_map_carrier_bridge_report(screen_port_map_report)
+    local_echosahedral_receipt = bool(
+        local_patch_architecture_report.get(
+            "ECHOSAHEDRAL_LOCAL_PATCH_ARCHITECTURE_RECEIPT"
+        )
+        is True
+        and int(local_patch_architecture_report.get("port_count", 0))
+        == int(boundary_port_count)
+        == 12
+    )
+    patch_state_receipt = bool(
+        patch_state_report.get("ECHOSAHEDRAL_PATCH_STATE_INSTANTIATION_RECEIPT")
+        is True
+        and int(patch_state_report.get("patch_count", 0)) == int(patch_count)
+        and int(patch_state_report.get("ports_per_patch", 0))
+        == int(boundary_port_count)
+        == 12
+    )
+    all_port_record_binding = bool(
+        patch_state_receipt
+        and patch_state_report.get(
+            "RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT"
+        )
+        is True
+    )
+    source_architecture = {
+        "bounded_patch_system": bool(patch_count > 0 and edge_count > 0),
+        "simulation_native_source": True,
+        "carrier_count": int(patch_count),
+        "local_state_factor_count": int(boundary_port_count),
+        "local_state_dimension": int(max(group_order, 1) ** max(boundary_port_count, 0)),
+        "materialized_local_state_coordinate_count": int(
+            patch_state_report.get("materialized_local_port_state_count", 0)
+        ),
+        "boundary_port_count": int(boundary_port_count),
+        "group_name": str(group_name),
+        "carrier_family": "federated_echosahedral_patch_system",
+        "one_local_echosahedron_per_carrier": local_echosahedral_receipt,
+        "carrier_is_not_support_chart_cell": False,
+        "carrier_is_not_primitive_observer": False,
+        "carrier_support_conflation_present": True,
+        "local_patch_template_hash": local_patch_architecture_report.get(
+            "template_hash"
+        ),
+        "patch_port_state_sha256": patch_state_report.get(
+            "patch_port_state_sha256"
+        ),
+        "all_local_port_readout_maps_materialized": patch_state_report.get(
+            "all_port_coordinate_readout_maps_materialized"
+        )
+        is True,
+        "all_local_port_states_bound_into_records": all_port_record_binding,
+        "source_architecture_hash": stable_json_hash(
+            {
+                "schema": "oph-bounded-self-reading-echosahedral-patch-source-v2",
+                "carrier_count": int(patch_count),
+                "edge_count": int(edge_count),
+                "boundary_port_count": int(boundary_port_count),
+                "group_name": str(group_name),
+                "group_order": int(group_order),
+                "local_patch_template_hash": local_patch_architecture_report.get(
+                    "template_hash"
+                ),
+                "local_state_factor_count": int(boundary_port_count),
+            }
+        ),
+    }
+    repair_dynamics = {
+        "local_update_rule": True,
+        "uses_only_local_state_and_ports": True,
+        "target_free_rule": True,
+        "repair_event_count": repair_event_count,
+        "strict_descent_repair_event_count": strict_descent_event_count,
+        "non_descent_repair_cycle_count": non_descent_cycle_count,
+        "nonlocal_write_count": 0,
+        "repair_rule_hash": stable_json_hash(
+            {
+                "mismatch": GAUGE_COVARIANT_OVERLAP_SCHEMA,
+                "move": "bounded_covariant_port_pair_repair",
+                "group": str(group_name),
+                "dynamics": config.get("dynamics", {}),
+            }
+        ),
+        "repair_event_log_hash": stable_json_hash(
+            [
+                {
+                    "cycle": int(row.get("cycle", -1)),
+                    "phi_before": int(row.get("phi_before", 0)),
+                    "phi_after": int(row.get("phi", 0)),
+                    "chosen_edges": int(row.get("chosen_edges", 0)),
+                }
+                for row in trace
+            ]
+        ),
+    }
+    feedback_passed = bool(
+        readback_count > 0
+        and feedback_event_count > 0
+        and record_feedback_audit_rows
+        and all(
+            row.get("records_causally_bound_to_prior_commits") is True
+            and row.get("readback_changes_future_local_actions") is True
+            for row in record_feedback_audit_rows
+        )
+    )
+    record_observer = {
+        "observer_count": int(len(patch_observer_rows)),
+        "committed_record_count": int(np.sum(np.asarray(committed, dtype=bool))),
+        "readback_count": readback_count,
+        "feedback_event_count": feedback_event_count,
+        "readback_changes_future_local_actions": feedback_passed,
+        "records_causally_bound_to_writes": feedback_passed,
+        "orphan_read_count": 0,
+        "record_readback_feedback_log_hash": (
+            stable_json_hash(record_feedback_audit_rows)
+            if record_feedback_audit_rows
+            else None
+        ),
+        "record_feedback_audit_rows": record_feedback_audit_rows,
+        "external_cap_refresh_is_observer_feedback": False,
+    }
+    return {
+        "schema_version": "oph_source_repair_record_observer_contract_v2",
+        "mode": "source_dynamics_repair_record_observer_contract",
+        "SOURCE_PATCH_ARCHITECTURE_RECEIPT": False,
+        "PATCH_LOCAL_STATE_RECEIPT": patch_state_receipt,
+        "PATCH_PORT_BOUNDARY_RECEIPT": local_echosahedral_receipt,
+        "PATCH_READBACK_RECEIPT": bool(
+            patch_state_receipt
+            and patch_state_report.get("PATCH_ALL_PORT_READBACK_RECEIPT") is True
+        ),
+        "PATCH_ALL_PORT_READBACK_RECEIPT": bool(
+            patch_state_receipt
+            and patch_state_report.get("PATCH_ALL_PORT_READBACK_RECEIPT") is True
+        ),
+        "RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT": all_port_record_binding,
+        "ECHOSAHEDRAL_LOCAL_PATCH_ARCHITECTURE_RECEIPT": local_echosahedral_receipt,
+        "ECHOSAHEDRAL_CARRIER_CONFORMANCE": carrier_bridge[
+            "ECHOSAHEDRAL_CARRIER_CONFORMANCE"
+        ],
+        "FEDERATION_SEWING_RECEIPT": carrier_bridge["FEDERATION_SEWING_RECEIPT"],
+        "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": carrier_bridge[
+            "CARRIER_QUOTIENT_INVARIANCE_RECEIPT"
+        ],
+        "CARRIER_REFINEMENT_NATURALITY_RECEIPT": carrier_bridge[
+            "CARRIER_REFINEMENT_NATURALITY_RECEIPT"
+        ],
+        "TRANSACTION_VALIDATION_COMPLETE_READ_CONFLICT_SET_RECEIPT": False,
+        "UNION_PAYLOAD_ATOMIC_REVALIDATION_RECEIPT": False,
+        "GAUGE_COVARIANT_OVERLAP_MISMATCH_RECEIPT": bool(edge_count > 0),
+        "LOCAL_REPAIR_DYNAMICS_RECEIPT": bool(repair_event_count > 0),
+        "SEAM_REPAIR_DESCENT_RECEIPT": bool(
+            repair_event_count > 0 and non_descent_cycle_count == 0
+        ),
+        "SEAM_ATOMIC_COMMIT_RECEIPT": bool(repair_event_count > 0),
+        "RECORD_COMMIT_RECEIPT": bool(record_observer["committed_record_count"] > 0),
+        "RECORD_READ_AFTER_WRITE_RECEIPT": feedback_passed,
+        "OBSERVER_SELF_READING_RECORD_LOOP_RECEIPT": feedback_passed,
+        "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": feedback_passed,
+        "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT": feedback_passed,
+        "source_generator_target_free": not target_hits,
+        "source_forbidden_target_hits": target_hits,
+        "source_architecture": source_architecture,
+        "local_patch_architecture": local_patch_architecture_report,
+        "two_level_carrier_federation_bridge": carrier_bridge,
+        "patch_federation_state": patch_state_report,
+        "repair_dynamics": repair_dynamics,
+        "record_observer": record_observer,
+        "claim_boundary": (
+            "Diagnostic simulator-native source/repair/record audit. The current production path "
+            "still uses a global support-chart cell as each carrier node and uses those coordinates "
+            "to choose seams, so the four carrier-level source receipts deliberately remain false. "
+            "A self-reading observer requires "
+            "a committed record to be read and to cause a later bounded port write. External cap-net "
+            "refresh, worker/cycle time, record correlation without feedback, and downstream H3/SM/"
+            "gravity fits cannot satisfy this gate. Strict confluence and theorem promotion remain "
+            "separate receipts."
+        ),
+    }
+
+
+def _source_generator_forbidden_target_hits(config: dict[str, Any]) -> list[str]:
+    source_subset = {
+        "graph": config.get("graph", {}),
+        "group": config.get("group", {}),
+        "boundary_program": config.get("boundary_program", {}),
+        "dynamics": config.get("dynamics", {}),
+        "modular_flow": config.get("modular_flow", {}),
+        "sector_repair": (config.get("defects", {}) or {}).get("sector_repair", {}),
+    }
+    forbidden = (
+        "h3",
+        "kms",
+        "2pi",
+        "lorentz",
+        "einstein",
+        "standard_model",
+        "cap_net",
+        "transition_response_scale",
+        "profile_time_scale",
+    )
+    hits: list[str] = []
+
+    def visit(value: Any, path: str) -> None:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                visit(child, f"{path}.{key}" if path else str(key))
+            return
+        if isinstance(value, (list, tuple)):
+            for index, child in enumerate(value):
+                visit(child, f"{path}[{index}]")
+            return
+        material = f"{path}={value}".lower().replace("-", "_")
+        if any(token in material for token in forbidden):
+            hits.append(material)
+
+    visit(source_subset, "source")
+    return sorted(set(hits))
 
 
 def _int_histogram(values: np.ndarray) -> dict[str, int]:
@@ -4323,42 +4879,49 @@ def _observer_modular_experience_report(
             or (state_bw_report.get("inferred_modular_clock_fit") or {}).get("receipt", False)
         )
     )
-    lorentz_clock_receipt = bool(branch_replay_receipt or finite_lorentz_modular_clock_receipt)
-    chart_receipt = bool(
-        conformal_chart_report.get("conformal_h3_spatial_chart_receipt", False)
-        or paper_3d_chart_report.get(PAPER_THEOREM_3D_BULK_CHART_RECEIPT, False)
-        or paper_3d_chart_report.get("paper_theorem_3d_bulk_chart_receipt", False)
+    # Declared/direct branch replay remains a calibration diagnostic.  It may
+    # never substitute for the independently derived L2/L3 physical clock.
+    lorentz_clock_receipt = finite_lorentz_modular_clock_receipt
+    frame_fiber_chart_receipt = bool(
+        conformal_chart_report.get(H3_FRAME_FIBER_CHART_RECEIPT, False)
+        or conformal_chart_report.get("h3_frame_fiber_chart_receipt", False)
+        or paper_3d_chart_report.get(H3_FRAME_FIBER_CHART_RECEIPT, False)
+        or paper_3d_chart_report.get("h3_frame_fiber_chart_receipt", False)
     )
     h3_response_receipt = bool(
         h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
-        or h3_modular_fit_report.get("MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT", False)
-        or h3_modular_fit_report.get("modular_response_h3_candidate_receipt", False)
-        or h3_modular_fit_report.get(H3_RESPONSE_CONTROL_SEPARATION_RECEIPT, False)
-        or h3_modular_fit_report.get("h3_control_separation_receipt", False)
+    )
+    event_manifold_receipt = bool(
+        paper_3d_chart_report.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
+        or paper_3d_chart_report.get("event_manifold_3p1d_receipt", False)
     )
     object_population_receipt = bool(
         observer_chart_object_report.get(OBJECT_BULK_POPULATION_RECEIPT, False)
         or observer_chart_object_report.get("OBJECT_H3_NONBOUNDARY_POPULATION_RECEIPT", False)
         or observer_chart_object_report.get("observer_chart_bulk_population_receipt", False)
     )
-    observer_3p1d_experience_receipt = bool(
+    observer_h3_frame_fiber_experience_receipt = bool(
         observer_modular_time_receipt
         and lorentz_clock_receipt
-        and chart_receipt
+        and frame_fiber_chart_receipt
         and h3_response_receipt
     )
+    observer_3p1d_experience_receipt = bool(
+        observer_h3_frame_fiber_experience_receipt and event_manifold_receipt
+    )
     populated_h3_experience_receipt = bool(
-        observer_3p1d_experience_receipt
+        observer_h3_frame_fiber_experience_receipt
         and object_population_receipt
     )
     component_gates = {
         "observer_modular_time_receipt": observer_modular_time_receipt,
-        "bw_kms_branch_replay_receipt": lorentz_clock_receipt,
-        "conformal_h3_chart_receipt": chart_receipt,
+        "finite_lorentz_modular_clock_receipt": lorentz_clock_receipt,
+        "h3_frame_fiber_chart_receipt": frame_fiber_chart_receipt,
         "h3_modular_response_receipt": h3_response_receipt,
+        "event_manifold_3p1d_receipt": event_manifold_receipt,
     }
     populated_h3_component_gates = {
-        **component_gates,
+        "observer_h3_frame_fiber_experience_receipt": observer_h3_frame_fiber_experience_receipt,
         "observer_h3_object_population_receipt": object_population_receipt,
     }
     blockers = [name for name, passed in component_gates.items() if not passed]
@@ -4370,6 +4933,10 @@ def _observer_modular_experience_report(
         "observer_modular_time_receipt": observer_modular_time_receipt,
         OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT: observer_3p1d_experience_receipt,
         "observer_facing_3p1d_h3_experience_receipt": observer_3p1d_experience_receipt,
+        "OBSERVER_H3_FRAME_FIBER_EXPERIENCE_RECEIPT": observer_h3_frame_fiber_experience_receipt,
+        "observer_h3_frame_fiber_experience_receipt": observer_h3_frame_fiber_experience_receipt,
+        H3_FRAME_FIBER_CHART_RECEIPT: frame_fiber_chart_receipt,
+        EVENT_MANIFOLD_3P1D_RECEIPT: event_manifold_receipt,
         "observer_facing_populated_h3_experience_receipt": populated_h3_experience_receipt,
         "observer_h3_object_population_receipt": object_population_receipt,
         "declared_bw_kms_branch_replay_receipt": branch_replay_receipt,
@@ -4397,10 +4964,11 @@ def _observer_modular_experience_report(
             for row in patch_rows[: min(16, len(patch_rows))]
         ],
         "claim_boundary": (
-            "Observer-facing modular-time and H3 experience receipt. The modular-time subreceipt is "
-            "observer-local. The 3+1D/H3 experience receipt additionally requires either declared BW/KMS "
-            "branch replay or the finite endogenous L2/L3 modular-clock receipt, the conformal H3 chart, "
-            "and H3 modular-response evidence. Non-boundary "
+            "Observer-facing modular-time and H3 frame-fiber diagnostic. Declared BW/KMS branch replay "
+            "is reported but cannot satisfy the clock gate. The H3 frame-fiber experience requires the "
+            "strict finite L2/L3 modular clock, the H3 future-timelike frame fiber, and strict H3 response "
+            "evidence. The legacy 3+1D receipt additionally requires an independently constructed semantic "
+            "event/translation manifold; H3 plus time is not an event position. Non-boundary "
             "observer object population is reported separately as observer_facing_populated_h3_experience_receipt; "
             "it is not part of the paper-side D3 observer-facing chart claim and is not chart-blind strict neutral bulk."
         ),

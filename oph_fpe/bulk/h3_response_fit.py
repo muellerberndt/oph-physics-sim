@@ -18,6 +18,7 @@ from oph_fpe.bulk.observer_reconstruction import neutral_dimension_report_from_d
 from oph_fpe.bulk.record_to_h3 import fit_response_profiles_to_h3
 from oph_fpe.claims import (
     DEMO,
+    H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT,
     H3_RESPONSE_CANDIDATE_RECEIPT,
     H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
     with_claim_metadata,
@@ -58,6 +59,7 @@ def modular_response_h3_report(
     blind_feature_selection: bool = False,
 ) -> dict[str, Any]:
     matrix = np.asarray(kernel.get("matrix", np.zeros((0, 0))), dtype=float)
+    geometry_family_controls = _geometry_family_control_report(kernel, matrix)
     feature_rows = list(kernel.get("feature_rows", []))
     if matrix.size == 0 or not feature_rows or not caps:
         return with_claim_metadata(
@@ -66,6 +68,8 @@ def modular_response_h3_report(
                 "MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT": False,
                 H3_RESPONSE_CONTROL_SEPARATION_RECEIPT: False,
                 H3_RESPONSE_CANDIDATE_RECEIPT: False,
+                H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT: False,
+                "geometry_family_controls": geometry_family_controls,
                 "h3_bulk_candidate_receipt": False,
                 "reason": "empty_kernel_or_caps",
                 "claim_boundary": "empty modular response H3 fit; no bulk claim",
@@ -122,6 +126,10 @@ def modular_response_h3_report(
             control_fit_mode=str(control_fit_mode),
         )
         report["feature_selection"] = feature_selection_report
+        report[H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT] = bool(
+            geometry_family_controls[H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT]
+        )
+        report["geometry_family_controls"] = geometry_family_controls
         report["inference_protocol"] = {
             "blind_feature_selection": bool(blind_feature_selection),
             "equal_target_control_candidate_capacity": True,
@@ -171,6 +179,10 @@ def modular_response_h3_report(
         H3_RESPONSE_CONTROL_SEPARATION_RECEIPT: receipt,
         "h3_control_separation_receipt": receipt,
         H3_RESPONSE_CANDIDATE_RECEIPT: receipt,
+        H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT: bool(
+            geometry_family_controls[H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT]
+        ),
+        "geometry_family_controls": geometry_family_controls,
         "h3_bulk_candidate_receipt": receipt,
         "observer_ids": [int(value) for value in kernel.get("observer_ids", range(matrix.shape[0]))],
         "observer_count": int(matrix.shape[0]),
@@ -214,6 +226,66 @@ def modular_response_h3_report(
         observable_id="support_visible_modular_response_kernel",
         fit_objective="heldout_h3_response_beats_controls",
     )
+
+
+def _geometry_family_control_report(
+    kernel: dict[str, Any],
+    matrix: np.ndarray,
+) -> dict[str, Any]:
+    """Audit H3/S2/E3/E4 controls without synthesizing missing competitors.
+
+    The four models must consume the same frozen event rows. Shape equality is
+    necessary but not sufficient, so promotion also requires explicit primary
+    and per-control event-row identifiers. Existing kernels do not yet emit E3
+    or E4 and therefore correctly fail this physical-campaign gate.
+    """
+
+    primary = np.asarray(matrix, dtype=float)
+    controls = dict(kernel.get("geometry_controls") or {})
+    values = {
+        "S2": kernel.get("s2_boundary_control", controls.get("S2")),
+        "E3": kernel.get("e3_euclidean_control", controls.get("E3")),
+        "E4": kernel.get("e4_euclidean_control", controls.get("E4")),
+    }
+    primary_row_ids = list(kernel.get("event_row_ids") or [])
+    control_row_ids = dict(kernel.get("geometry_control_event_row_ids") or {})
+    rows: dict[str, Any] = {}
+    for label, value in values.items():
+        array = np.asarray(value, dtype=float) if value is not None else np.zeros((0, 0))
+        shape_match = bool(array.shape == primary.shape and primary.size > 0)
+        finite = bool(shape_match and np.all(np.isfinite(array)))
+        ids_match = bool(
+            primary_row_ids
+            and list(control_row_ids.get(label) or []) == primary_row_ids
+        )
+        rows[label] = {
+            "present": value is not None,
+            "shape": list(array.shape),
+            "shape_matches_primary": shape_match,
+            "finite": finite,
+            "event_row_ids_match_primary": ids_match,
+        }
+    receipt = bool(
+        primary.size
+        and np.all(np.isfinite(primary))
+        and all(row["finite"] and row["event_row_ids_match_primary"] for row in rows.values())
+    )
+    return {
+        "mode": "h3_s2_e3_e4_same_frozen_event_rows_audit",
+        H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT: receipt,
+        "primary_shape": list(primary.shape),
+        "primary_event_row_id_count": len(primary_row_ids),
+        "controls": rows,
+        "blockers": [
+            f"{label.lower()}_control_missing_or_not_same_frozen_rows"
+            for label, row in rows.items()
+            if not (row["finite"] and row["event_row_ids_match_primary"])
+        ],
+        "claim_boundary": (
+            "Physical geometry selection requires H3, S2, E3, and E4 models of equal capacity "
+            "evaluated on the same immutable event-row identifiers. Missing controls fail closed."
+        ),
+    }
 
 
 def _select_fit_features(
@@ -1582,35 +1654,41 @@ def _h3_response_stage_gates(
     no_perturbation = _metric_value(control_reports.get("no_perturbation", {}), "heldout_normalized_rmse")
     shuffled = _metric_value(control_reports.get("shuffled_response", {}), "heldout_normalized_rmse")
     s2 = _metric_value(s2_report, "heldout_normalized_rmse")
+    required_controls_present = bool(
+        np.isfinite(no_perturbation)
+        and np.isfinite(shuffled)
+        and np.isfinite(s2)
+    )
     signal_gate = bool(
+        required_controls_present
+        and
         np.isfinite(h3_ev)
         and h3_ev > float(min_explained_variance)
         and np.isfinite(h3_nrmse)
         and (
-            not np.isfinite(no_perturbation)
-            or h3_nrmse < no_perturbation - float(control_margin)
+            h3_nrmse < no_perturbation - float(control_margin)
         )
         and (
-            not np.isfinite(shuffled)
-            or h3_nrmse < shuffled - float(control_margin)
+            h3_nrmse < shuffled - float(control_margin)
         )
     )
     geometry_gate = bool(
         np.isfinite(h3_nrmse)
-        and (
-            not np.isfinite(s2)
-            or h3_nrmse < s2 - float(geometry_margin)
-        )
+        and np.isfinite(s2)
+        and h3_nrmse < s2 - float(geometry_margin)
     )
     wrong_scores = {
         str(label): _metric_value(report, "heldout_normalized_rmse")
         for label, report in wrong_scale_reports.items()
     }
+    wrong_scale_controls_complete = bool(
+        wrong_scores and all(np.isfinite(score) for score in wrong_scores.values())
+    )
     aggregate_wrong_gate = bool(
-        not wrong_scores
-        or all(
+        wrong_scale_controls_complete
+        and all(
             np.isfinite(h3_nrmse)
-            and (not np.isfinite(score) or h3_nrmse < score - float(wrong_scale_margin))
+            and h3_nrmse < score - float(wrong_scale_margin)
             for score in wrong_scores.values()
         )
     )
@@ -1618,22 +1696,32 @@ def _h3_response_stage_gates(
     if raw_material_fraction is None:
         raw_material_fraction = wrong_scale_feature_audit.get("wrong_scale_win_fraction")
     raw_material_fraction_value = (
-        float(raw_material_fraction) if raw_material_fraction is not None else 0.0
+        float(raw_material_fraction) if raw_material_fraction is not None else float("nan")
     )
     material_gate_metric = "material_wrong_scale_advantage_energy_fraction"
     material_gate_value = wrong_scale_feature_audit.get(material_gate_metric)
     if material_gate_value is None:
         material_gate_metric = "material_wrong_scale_win_fraction"
         material_gate_value = raw_material_fraction_value
-    material_gate_value = float(material_gate_value) if material_gate_value is not None else 0.0
-    feature_gate = bool(material_gate_value < float(max_material_wrong_fraction))
+    material_gate_value = float(material_gate_value) if material_gate_value is not None else float("nan")
+    feature_audit_complete = bool(
+        wrong_scale_feature_audit.get("eligible", False)
+        and int(wrong_scale_feature_audit.get("audited_feature_count", 0) or 0) > 0
+        and np.isfinite(material_gate_value)
+    )
+    feature_gate = bool(
+        feature_audit_complete and material_gate_value < float(max_material_wrong_fraction)
+    )
     control_separation_receipt = bool(signal_gate and geometry_gate and aggregate_wrong_gate)
     receipt = bool(control_separation_receipt and feature_gate)
     return {
         "mode": "staged_h3_response_candidate_gate",
         "signal_gate": signal_gate,
+        "required_controls_present": required_controls_present,
         "geometry_gate": geometry_gate,
+        "wrong_scale_controls_complete": wrong_scale_controls_complete,
         "aggregate_wrong_scale_gate": aggregate_wrong_gate,
+        "wrong_scale_feature_audit_complete": feature_audit_complete,
         "material_feature_gate": feature_gate,
         "intermediate_control_separation_receipt": control_separation_receipt,
         H3_RESPONSE_CONTROL_SEPARATION_RECEIPT: control_separation_receipt,
@@ -1646,9 +1734,13 @@ def _h3_response_stage_gates(
         "wrong_scale_normalized_rmse": {
             label: score if np.isfinite(score) else None for label, score in wrong_scores.items()
         },
-        "material_wrong_scale_win_fraction": raw_material_fraction_value,
+        "material_wrong_scale_win_fraction": (
+            raw_material_fraction_value if np.isfinite(raw_material_fraction_value) else None
+        ),
         "material_wrong_scale_gate_metric": material_gate_metric,
-        "material_wrong_scale_gate_value": material_gate_value,
+        "material_wrong_scale_gate_value": (
+            material_gate_value if np.isfinite(material_gate_value) else None
+        ),
         "material_wrong_scale_advantage_energy_fraction": wrong_scale_feature_audit.get(
             "material_wrong_scale_advantage_energy_fraction"
         ),
@@ -1663,7 +1755,9 @@ def _h3_response_stage_gates(
             "max_material_wrong_fraction": float(max_material_wrong_fraction),
         },
         "claim_boundary": (
-            "staged internal gate for H3 response candidates. It first checks that the response model "
+            "Fail-closed staged internal gate for H3 response candidates. Missing, malformed, or "
+            "nonfinite S2, no-perturbation, shuffled, wrong-scale, or feature-audit controls fail; "
+            "absence is never treated as a win. It first checks that the response model "
             "has positive heldout signal, then checks H3-vs-S2 geometry, aggregate wrong-normalization "
             "separation, and material wrong-scale residual advantage. Raw per-feature wrong-scale wins "
             "remain reported as red flags, but the strict material gate is keyed to residual-energy "

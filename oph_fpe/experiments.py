@@ -175,6 +175,8 @@ def run_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
         "final_phi": net.total_phi(),
         "bundle_files": sorted(path.name for path in bundle.path.iterdir()),
     }
+    if graph.graph:
+        manifest["graph_metadata"] = dict(graph.graph)
     result = {"run_id": run_id, "path": str(bundle.path), "final_phi": net.total_phi(), "dimensions": dimensions}
     if kernel_dispatch:
         summary = kernel_dispatch_manifest_summary(kernel_dispatch)
@@ -266,6 +268,7 @@ def _run_controls(config: dict[str, Any], graph: nx.Graph, seed: int) -> dict[st
 
 def _graph_json(graph: nx.Graph) -> dict[str, Any]:
     return {
+        "graph_metadata": dict(graph.graph),
         "nodes": list(graph.nodes),
         "node_attrs": {
             str(node): {"screen_xyz": graph.nodes[node].get("screen_xyz")}

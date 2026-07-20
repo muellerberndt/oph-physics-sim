@@ -146,7 +146,9 @@ def test_paper_theorem_chart_accepts_finite_lorentz_modular_clock():
         state_bw,
     )
 
-    assert report["paper_theorem_3d_bulk_chart_receipt"] is True
+    assert report["paper_theorem_3d_bulk_chart_receipt"] is False
+    assert report["H3_FRAME_FIBER_CHART_RECEIPT"] is True
+    assert report["EVENT_MANIFOLD_3P1D_RECEIPT"] is False
     assert report["declared_bw_2pi_cap_flow_receipt"] is False
     assert report["finite_lorentz_modular_clock_receipt"] is True
     assert report["bw_2pi_cap_flow_source"] == "finite_endogenous_l2_l3_modular_clock"

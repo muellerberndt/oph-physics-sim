@@ -339,6 +339,16 @@ def test_perturb_resettle_transition_kernel_uses_graph_state():
     assert kernel["perturb_resettle_report"]["perturb_budget_mode"] == "fixed_collar_fraction"
     assert kernel["perturb_resettle_report"]["transition_readout_mode"] == "same_support"
     assert np.allclose(kernel["wrong_scale_controls"]["2pi"], kernel["matrix"])
+    assert np.allclose(kernel["wrong_scale_controls"]["1x"], kernel["matrix"])
+    assert np.allclose(kernel["wrong_scale_controls"]["pi"], kernel["matrix"])
+    assert kernel["perturb_resettle_report"][
+        "CANDIDATE_SCALE_INTERVENTION_INVARIANCE_RECEIPT"
+    ] is True
+    assert all(
+        row["intervention_rows_match_primary"]
+        for row in kernel["perturb_resettle_report"]["wrong_scale_intervention_audit"].values()
+    )
+    assert len(kernel["event_row_ids"]) == kernel["matrix"].shape[1]
     assert kernel["raw_response_summary"]["std"] > 0.0
     assert kernel["response_summary"]["std"] > 0.0
 
@@ -833,7 +843,8 @@ def test_modular_response_h3_feature_selection_filters_dead_columns():
     assert report["feature_selection"]["original_feature_count"] == matrix.shape[1] + 20
     assert report["feature_selection"]["selected_feature_count"] == 24
     assert report["feature_count"] == 24
-    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
+    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is False
+    assert report["h3_response_stage_gates"]["wrong_scale_controls_complete"] is False
 
 
 def test_h3_feature_exclusion_applies_to_none_mode():
@@ -1187,7 +1198,8 @@ def test_modular_response_kernel_cache_roundtrips_and_refits(tmp_path):
     )
 
     assert out.exists()
-    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
+    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is False
+    assert report["h3_response_stage_gates"]["wrong_scale_controls_complete"] is False
     assert report["kernel_cache"]["observer_count"] == 24
 
 
@@ -1222,8 +1234,8 @@ def test_h3_refit_seed_ensemble_reports_robustness(tmp_path):
 
     assert report["mode"] == "h3_refit_seed_ensemble"
     assert report["seed_count"] == 3
-    assert report["receipt_count"] >= 1
-    assert report["h3_response_seed_robust_receipt"] is True
+    assert report["receipt_count"] == 0
+    assert report["h3_response_seed_robust_receipt"] is False
     assert report["physical_claim"] is False
 
 
@@ -1332,7 +1344,8 @@ def test_joint_h3_fit_can_use_deterministic_candidate_ball():
     assert report["h3_fit"]["candidate_count"] == 1025
     assert report["control_fits"]["shuffled_response"]["candidate_count"] == 1025
     assert report["h3_fit"]["assignment_unique_count"] > 0
-    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is True
+    assert report["MODULAR_RESPONSE_KERNEL_TO_H3_RECEIPT"] is False
+    assert report["h3_response_stage_gates"]["wrong_scale_controls_complete"] is False
 
 
 def test_blind_feature_selection_uses_metadata_and_source_order_only():

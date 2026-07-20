@@ -23,6 +23,12 @@ class MaxEntCapStateResult:
     converged: bool
 
     def as_jsonable(self) -> dict[str, Any]:
+        diagnostic_receipt = bool(
+            self.trace_error < 1.0e-10
+            and self.min_eigenvalue > -1.0e-10
+            and self.dual_residual < 1.0e-5
+            and self.geometry_dependency_count == 0
+        )
         return {
             "mode": "maxent_record_operator_state",
             "operator_count": int(self.operator_count),
@@ -34,16 +40,28 @@ class MaxEntCapStateResult:
             "geometry_dependency_count": int(self.geometry_dependency_count),
             "iterations": int(self.iterations),
             "converged": bool(self.converged),
-            "MAXENT_RECORD_OPERATOR_CAP_STATE_RECEIPT": bool(
-                self.trace_error < 1.0e-10
-                and self.min_eigenvalue > -1.0e-10
-                and self.dual_residual < 1.0e-5
-                and self.geometry_dependency_count == 0
-            ),
+            "MAXENT_RECORD_OPERATOR_CAP_STATE_RECEIPT": diagnostic_receipt,
+            "RECORD_HISTORY_MAXENT_SURROGATE_DIAGNOSTIC_RECEIPT": diagnostic_receipt,
+            # The paper's BW target is the reduced faithful state on the
+            # overlap-generated prime geometric cap algebra.  This builder
+            # deliberately consumes record, pointer and repair-history fields,
+            # so a numerically valid density matrix is not that object.
+            "PRIME_GEOMETRIC_CAP_STATE_RECEIPT": False,
+            "CAP_INTERIOR_MODULAR_HAMILTONIAN_RECEIPT": False,
+            "cap_algebra_scope": "observer_record_pointer_repair_history_surrogate",
+            "paper_bw_target_eligible": False,
+            "forbidden_bw_target_field_families_used": [
+                "record",
+                "pointer_or_commit",
+                "repair_history",
+            ],
             "claim_boundary": (
-                "finite MaxEnt cap state from observer-visible record/history operators. "
-                "Cap support selection is external to this builder; no cap tangent, H3 "
-                "coordinate, lambda_C target, or declared 2*pi flow enters rho_C."
+                "Finite record/history MaxEnt surrogate only. Cap support selection is external, "
+                "and the operator family includes central record, commit/pointer, and repair fields. "
+                "It therefore cannot instantiate the paper's overlap-generated noncommutative "
+                "prime-geometric cap algebra, its reduced faithful rho_C, or K_C=-log(rho_C). "
+                "No cap tangent, H3 coordinate, lambda_C target, or declared 2*pi flow enters this "
+                "surrogate, but target absence alone does not make it BW-eligible."
             ),
         }
 

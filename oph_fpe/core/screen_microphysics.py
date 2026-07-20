@@ -10,7 +10,10 @@ from oph_fpe.constants.oph_pixel import (
     total_entropy_capacity,
 )
 from oph_fpe.core.pixel_scale import PixelScale, pixel_scale_from_config
-from oph_fpe.core.screen_ports import echosahedral_port_names
+from oph_fpe.core.screen_ports import (
+    echosahedral_patch_architecture_report,
+    echosahedral_port_names,
+)
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,9 @@ class ScreenMicrophysics:
         total_area = total_area_planck(self.patch_count, self.pixel_scale.cell_area_planck)
         total_entropy = total_entropy_capacity(self.patch_count, self.pixel_scale.cell_area_planck)
         physical_mode = self.screen_units_mode == "physical_cell_toy_universe"
+        local_architecture = echosahedral_patch_architecture_report(
+            self.ports_per_patch
+        )
         return {
             "chart": self.chart,
             "carrier": self.carrier,
@@ -80,6 +86,19 @@ class ScreenMicrophysics:
             "ports_per_patch": self.ports_per_patch,
             "port_names": echosahedral_port_names(self.ports_per_patch),
             "port_budget": self.port_budget,
+            "federation_architecture": {
+                "cell_count": self.patch_count,
+                "local_body_per_cell": "echosahedral_patch",
+                "local_template_reused_by_all_cells": True,
+                "local_patch_architecture": local_architecture,
+                "ECHOSAHEDRAL_FEDERATION_ARCHITECTURE_RECEIPT": bool(
+                    self.patch_count > 0
+                    and local_architecture[
+                        "ECHOSAHEDRAL_LOCAL_PATCH_ARCHITECTURE_RECEIPT"
+                    ]
+                    is True
+                ),
+            },
             "routed_port_fraction": self.routed_port_fraction,
             "pixel_scale": self.pixel_scale.as_jsonable(),
             "cell_area": self.cell_area,

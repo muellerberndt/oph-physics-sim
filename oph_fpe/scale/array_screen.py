@@ -6,13 +6,22 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import yaml
 from scipy.spatial import cKDTree
 
 from oph_fpe.bulk.modular_lift import point_cloud_dimension_report
+from oph_fpe.core.array_geometry import array_screen_geometry_from_config
 from oph_fpe.core.graph import fibonacci_sphere_points
 from oph_fpe.core.pixel_scale import pixel_scale_from_config
 from oph_fpe.core.screen_microphysics import ports_per_patch_from_config, screen_microphysics_from_config
+from oph_fpe.core.screen_ports import (
+    assign_echosahedral_ports,
+    canonicalize_echosahedral_patch_state,
+    echosahedral_patch_record_signature,
+    echosahedral_patch_state_report,
+    initialize_echosahedral_patch_state,
+    sync_routed_echosahedral_patch_state,
+    write_echosahedral_patch_state_artifact,
+)
 from oph_fpe.dynamics import dispatch_configured_kernels, kernel_dispatch_manifest_summary
 from oph_fpe.evidence import RunBundle
 from oph_fpe.evidence.hashes import CANONICAL_HASH_SCHEMA, stable_json_hash
@@ -29,18 +38,55 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     rng = np.random.default_rng(seed)
     pixel_scale = pixel_scale_from_config(config)
     graph_cfg = config.get("graph", {})
-    patch_count = int(graph_cfg.get("patch_count", 65536))
-    neighbors = int(graph_cfg.get("neighbors", ports_per_patch_from_config(config)))
+    array_geometry = array_screen_geometry_from_config(
+        graph_cfg,
+        knn_builder=_knn_edges,
+    )
+    points = array_geometry.points
+    left = array_geometry.edge_left
+    right = array_geometry.edge_right
+    geometry_report = array_geometry.report
+    patch_count = array_geometry.patch_count
     group_name = str(config.get("group", {}).get("name", "S3")).upper()
     group_order = _group_order(group_name)
-    points = fibonacci_sphere_points(patch_count)
-    left, right = _knn_edges(points, neighbors)
     edge_count = int(left.size)
     screen_microphysics = screen_microphysics_from_config(config, patch_count, edge_count)
+    screen_ports = assign_echosahedral_ports(
+        left,
+        right,
+        patch_count,
+        ports_per_patch=ports_per_patch_from_config(config),
+        points=points,
+    )
 
     port_left = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
     port_right = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
     gauge = rng.integers(0, group_order, size=edge_count, dtype=np.int16)
+    patch_state_rng = np.random.default_rng(
+        np.random.SeedSequence(
+            [int(seed) & 0xFFFFFFFF, (int(seed) >> 32) & 0xFFFFFFFF, 0x4543484F, 0x504F5254]
+        )
+    )
+    patch_port_state = initialize_echosahedral_patch_state(
+        patch_count=patch_count,
+        ports_per_patch=screen_ports.ports_per_patch,
+        group_order=group_order,
+        edge_left=left,
+        edge_right=right,
+        port_map=screen_ports,
+        routed_left_state=port_left,
+        routed_right_state=port_right,
+        rng=patch_state_rng,
+    )
+    record_patch_port_state = canonicalize_echosahedral_patch_state(
+        patch_port_state,
+        edge_left=left,
+        edge_right=right,
+        routed_left_state=port_left,
+        routed_right_state=port_right,
+        group_name=group_name,
+        group_order=group_order,
+    )
     modular_depth = rng.random(patch_count, dtype=np.float64)
     modular_time = np.zeros(patch_count, dtype=np.float64)
     # Record stability can legitimately outlive an int16 counter in long
@@ -58,6 +104,8 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     bundle.write_json("pixel_scale.json", pixel_scale.as_jsonable())
     bundle.write_json("pixel_report.json", pixel_scale.as_jsonable())
     bundle.write_json("screen_microphysics.json", screen_microphysics.as_jsonable())
+    bundle.write_json("screen_ports.json", screen_ports.as_jsonable())
+    bundle.write_json("icosahedral_federation_geometry_report.json", geometry_report)
 
     dyn = config.get("dynamics", {})
     cycles = int(dyn.get("cycles", 64))
@@ -95,6 +143,14 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
                 group_name=group_name,
                 group_order=group_order,
             )
+        sync_routed_echosahedral_patch_state(
+            patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            port_map=screen_ports,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
+        )
         mismatches_after = covariant_mismatch_mask(
             port_left,
             port_right,
@@ -131,7 +187,19 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
             mod_cfg,
             cap_drive=modular_cap_drive,
         )
-        signature = _node_signature(port_left, port_right, left, right, patch_count)
+        record_patch_port_state = canonicalize_echosahedral_patch_state(
+            patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        signature = echosahedral_patch_record_signature(
+            _node_signature(port_left, port_right, left, right, patch_count),
+            record_patch_port_state,
+        )
         stable_count, committed = _advance_record_commit_state(
             signature,
             prev_signature,
@@ -175,6 +243,63 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     dimensions["screen_patch_count"] = patch_count
     dimensions["modular_samples"] = len(depth_samples)
 
+    final_record_binding_verified = bool(
+        np.array_equal(
+            prev_signature,
+            echosahedral_patch_record_signature(
+                _node_signature(port_left, port_right, left, right, patch_count),
+                record_patch_port_state,
+            ),
+        )
+    )
+    patch_state_report = echosahedral_patch_state_report(
+        patch_port_state,
+        edge_left=left,
+        edge_right=right,
+        port_map=screen_ports,
+        routed_left_state=port_left,
+        routed_right_state=port_right,
+        record_signature_bound=final_record_binding_verified,
+        record_binding_mode=(
+            "node_reference_port_gauge_quotient_a5_incidence_invariants"
+        ),
+    )
+    patch_state_report["record_signature_binding"][
+        "final_token_recomputation_match"
+    ] = final_record_binding_verified
+    outputs_cfg = {
+        **dict(config.get("output", {}) or {}),
+        **dict(config.get("outputs", {}) or {}),
+    }
+    output_profile = str(outputs_cfg.get("profile", "evidence"))
+    write_patch_state = bool(
+        outputs_cfg.get(
+            "write_echosahedral_patch_state_npz",
+            output_profile != "compact",
+        )
+    )
+    if write_patch_state:
+        patch_state_report["artifact"] = write_echosahedral_patch_state_artifact(
+            bundle.path / "echosahedral_patch_state.npz",
+            patch_port_state=patch_port_state,
+            canonical_record_port_state=record_patch_port_state,
+            edge_left=left,
+            edge_right=right,
+            port_map=screen_ports,
+            routed_left_state=port_left,
+            routed_right_state=port_right,
+            record_signature=prev_signature,
+            committed=committed,
+        )
+        patch_state_report["artifact"]["written"] = True
+    else:
+        patch_state_report["artifact"] = {
+            "path": None,
+            "written": False,
+            "reason": "compact_output_profile",
+        }
+    bundle.write_json("echosahedral_patch_state_report.json", patch_state_report)
+
     _write_csv(bundle.path / "mismatch_trace.csv", trace)
     bundle.write_jsonl("verifier_receipts.jsonl", repair_receipts)
     bundle.write_json("dimension_report.json", dimensions)
@@ -199,23 +324,64 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
         "engine": "array_screen",
         "claim_boundary": config.get("claim_boundary"),
         "patch_count": patch_count,
+        "nominal_patch_count": geometry_report.get("nominal_patch_count"),
         "edge_count": edge_count,
+        "global_screen_geometry": geometry_report,
         "group": group_name,
         "gauge_covariant_overlap": overlap_contract_metadata(),
         "pixel_scale": pixel_scale.as_jsonable(),
         "oph_constants": pixel_scale.constants.as_jsonable(),
         "screen_microphysics": screen_microphysics.as_jsonable(),
+        "screen_ports": screen_ports.as_jsonable(sample_edges=16),
+        "echosahedral_patch_federation_state": patch_state_report,
         "screen_units": screen_microphysics.as_jsonable()["screen_units"],
         "cycles": cycles,
         "final_phi": int(trace[-1]["phi"]),
         "dimension_report": dimensions,
     }
-    result = {"run_id": run_id, "path": str(bundle.path), "final_phi": int(trace[-1]["phi"]), "dimensions": dimensions}
+    result = {
+        "run_id": run_id,
+        "path": str(bundle.path),
+        "final_phi": int(trace[-1]["phi"]),
+        "dimensions": dimensions,
+        "echosahedral_patch_state": {
+            "receipt": patch_state_report[
+                "ECHOSAHEDRAL_PATCH_STATE_INSTANTIATION_RECEIPT"
+            ],
+            "state_sha256": patch_state_report["patch_port_state_sha256"],
+            "artifact_written": patch_state_report["artifact"]["written"],
+        },
+    }
     if kernel_dispatch:
         summary = kernel_dispatch_manifest_summary(kernel_dispatch)
         manifest["kernel_dispatch"] = summary
         result["kernel_dispatch"] = summary
     bundle.write_manifest(manifest)
+    theorem_shortcut_cfg = config.get("a5_sm_theorem_shortcuts", {}) or {}
+    if theorem_shortcut_cfg.get("enabled", False):
+        from oph_fpe.gauge.a5_sm_forcing_ladder import apply_a5_sm_theorem_shortcuts
+
+        theorem_audit_path = Path(str(theorem_shortcut_cfg.get("theorem_audit_path", "")))
+        if not theorem_audit_path.is_file():
+            raise ValueError(
+                "a5_sm_theorem_shortcuts.enabled requires an existing theorem_audit_path"
+            )
+        theorem_audit = json.loads(theorem_audit_path.read_text(encoding="utf-8"))
+        theorem_application = apply_a5_sm_theorem_shortcuts(bundle.path, theorem_audit)
+        bundle.write_json("a5_sm_theorem_application_report.json", theorem_application)
+        result["a5_sm_theorem_shortcuts"] = {
+            "finite_q0_core": theorem_application.get(
+                "PHYSICAL_FINITE_SM_Q0_CORE_RECEIPT", False
+            ),
+            "theorem_audit_sha256": theorem_application.get("theorem_audit_sha256"),
+        }
+    from oph_fpe.emergence_ladder import write_emergence_ladder_report
+
+    ladder = write_emergence_ladder_report(bundle.path)
+    result["emergence_ladder"] = {
+        "status": ladder["overall_claim_status"],
+        "receipts": ladder["overall_receipts"],
+    }
     return result
 
 

@@ -79,9 +79,13 @@ def test_oph_universe_postprocess_splits_3p1d_from_populated_h3():
     report = _postprocess_observer_experience(
         {
             "observer_modular_time_receipt": True,
+            "finite_lorentz_modular_clock_receipt": True,
+            "H3_FRAME_FIBER_CHART_RECEIPT": True,
+            "EVENT_MANIFOLD_3P1D_RECEIPT": False,
             "component_gates": {
-                "bw_kms_branch_replay_receipt": True,
-                "conformal_h3_chart_receipt": True,
+                "finite_lorentz_modular_clock_receipt": True,
+                "h3_frame_fiber_chart_receipt": True,
+                "event_manifold_3p1d_receipt": False,
             },
         },
         {
@@ -92,10 +96,11 @@ def test_oph_universe_postprocess_splits_3p1d_from_populated_h3():
         },
     )
 
-    assert report["observer_facing_3p1d_h3_experience_receipt"] is True
-    assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is True
+    assert report["observer_facing_3p1d_h3_experience_receipt"] is False
+    assert report["observer_h3_frame_fiber_experience_receipt"] is True
+    assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
     assert report["observer_facing_populated_h3_experience_receipt"] is False
-    assert report["blockers"] == []
+    assert report["blockers"] == ["event_manifold_3p1d_receipt"]
     assert report["populated_h3_experience_blockers"] == ["observer_h3_object_population_receipt"]
 
 

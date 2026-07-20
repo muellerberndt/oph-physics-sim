@@ -7,6 +7,12 @@ import networkx as nx
 import numpy as np
 from scipy.spatial import cKDTree
 
+from oph_fpe.core.icosahedral import (
+    geodesic_icosahedral_graph,
+    resolve_icosahedral_level,
+    supported_icosahedral_count,
+)
+
 
 def build_patch_graph(config: dict, seed: int) -> nx.Graph:
     family = config.get("family", "cycle")
@@ -28,19 +34,42 @@ def build_patch_graph(config: dict, seed: int) -> nx.Graph:
         degree = int(config.get("degree", 6))
         rewire = float(config.get("rewire_probability", 0.02))
         graph = nx.watts_strogatz_graph(patch_count, degree, rewire, seed=seed)
-    elif family == "subdivided_icosahedral_screen":
-        # MVP regulator: a quasi-screen triangulation surrogate without 3D coordinates.
-        side = max(4, round(math.sqrt(patch_count)))
-        graph = nx.triangular_lattice_graph(side, side, with_positions=False)
-        graph = nx.convert_node_labels_to_integers(graph)
-        if graph.number_of_nodes() > patch_count:
-            graph = graph.subgraph(range(patch_count)).copy()
-            graph = nx.convert_node_labels_to_integers(graph)
-        while graph.number_of_nodes() < patch_count:
-            node = graph.number_of_nodes()
-            graph.add_node(node)
-            anchor = int(rng.integers(0, node))
-            graph.add_edge(node, anchor)
+    elif family in {
+        "subdivided_icosahedral_screen",
+        "nested_geodesic_icosahedral",
+        "geodesic_icosahedral_refinement",
+    }:
+        patch_basis = str(config.get("patch_basis", config.get("node_basis", "cells")))
+        if patch_basis not in {"cells", "vertices"}:
+            raise ValueError("icosahedral patch_basis must be 'cells' or 'vertices'")
+        nominal_patch_count = config.get("nominal_patch_count")
+        if "refinement_level" in config:
+            level = int(config["refinement_level"])
+            expected_count = supported_icosahedral_count(level, patch_basis)
+            if "patch_count" in config and int(config["patch_count"]) != expected_count:
+                raise ValueError(
+                    f"refinement_level={level} with patch_basis={patch_basis!r} has "
+                    f"exactly {expected_count} patches, not {int(config['patch_count'])}; "
+                    "use nominal_patch_count for a campaign budget label"
+                )
+        elif "patch_count" in config or "nodes" in config:
+            policy = str(config.get("patch_count_policy", "exact"))
+            level, count_mapping = resolve_icosahedral_level(
+                patch_count,
+                patch_basis=patch_basis,
+                policy=policy,
+            )
+            if not count_mapping["exact_supported_count"] and nominal_patch_count is None:
+                nominal_patch_count = patch_count
+        else:
+            level = 0
+        graph = geodesic_icosahedral_graph(
+            level,
+            patch_basis=patch_basis,
+            nominal_patch_count=(
+                None if nominal_patch_count is None else int(nominal_patch_count)
+            ),
+        )
     elif family in {"fibonacci_sphere", "spherical_knn_screen"}:
         neighbors = int(config.get("neighbors", config.get("degree", 8)))
         graph = _fibonacci_sphere_graph(patch_count, neighbors)
