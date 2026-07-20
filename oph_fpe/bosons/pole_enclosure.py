@@ -38,7 +38,12 @@ def pole_enclosure_receipt(
     """Count a polynomial determinant zero inside a circular Rouché contour."""
 
     full = _as_coefficients(determinant_coefficients)
-    reference = full.copy() if reference_coefficients is None else _as_coefficients(reference_coefficients)
+    reference_defaulted_to_full = reference_coefficients is None
+    reference = (
+        full.copy()
+        if reference_defaulted_to_full
+        else _as_coefficients(reference_coefficients)
+    )
     if contour_radius <= 0.0 or contour_samples < 32:
         raise ValueError("pole contour requires positive radius and at least 32 samples")
     center = complex(float(contour_center[0]), float(contour_center[1]))
@@ -71,11 +76,11 @@ def pole_enclosure_receipt(
         mass = float(square_root.real)
         width = float(-2.0 * square_root.imag)
 
-    promoted = bool(
-        source_block_receipt
-        and physical_sheet_verified
-        and nonzero_residue_verified
-        and uncertainty_bound_present
+    declared_candidate = bool(
+        source_block_receipt is True
+        and physical_sheet_verified is True
+        and nonzero_residue_verified is True
+        and uncertainty_bound_present is True
         and unique_zero
         and simple_zero
         and lower_half_plane
@@ -95,6 +100,16 @@ def pole_enclosure_receipt(
         blockers.append("simple_pole_not_verified")
     if selected is not None and not lower_half_plane:
         blockers.append("selected_square_root_not_on_physical_lower_half_plane")
+    if reference_defaulted_to_full:
+        blockers.append("forbidden_reference_equals_full_kernel_fallback")
+    blockers.extend(
+        [
+            "polynomial_kernel_is_wzh0_synthetic_control",
+            "sampled_contour_has_no_continuous_interval_bound",
+            "matrix_laurent_and_physical_current_amplitude_not_verified",
+            "artifact_resolving_pole_checker_not_implemented",
+        ]
+    )
 
     return {
         "schema": "oph_wzh_pole_enclosure_receipt_v1",
@@ -107,6 +122,7 @@ def pole_enclosure_receipt(
         "maximum_perturbation_modulus": maximum_delta,
         "rouche_margin": rouche_margin,
         "rouche_pass": rouche_pass,
+        "reference_defaulted_to_full_kernel": reference_defaulted_to_full,
         "zero_count": len(inside),
         "reference_zero_count": len(reference_inside),
         "unique_simple_zero": bool(unique_zero and simple_zero),
@@ -116,11 +132,14 @@ def pole_enclosure_receipt(
         "width_coordinate": width,
         "mass_convention": "s_B=(M_B-i*Gamma_B/2)^2",
         "numerical_zero_control_receipt": bool(unique_zero and simple_zero),
-        "physical_pole_receipt": promoted,
-        "promotion_allowed": promoted,
-        "blockers": blockers,
+        "declared_candidate_conditions_met": declared_candidate,
+        "physical_pole_receipt": False,
+        "promotion_allowed": False,
+        "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "A numerical determinant zero is a control result. Physical pole promotion also "
-            "requires a source BRST block, physical sheet, residue, and uncertainty receipts."
+            "This polynomial/sampled-contour result is an unconditionally "
+            "nonpromoting WZH0 numerical control. A physical W/Z pole requires an "
+            "analytic complex-ball kernel, continuous contour proof, matrix Laurent "
+            "data, and the same pole in a BRST-invariant current amplitude."
         ),
     }

@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/string_vacuum_observable_targets_v1.schema.json",
+  "title": "OPH string-vacuum observable target registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "artifact",
+    "schema_version",
+    "registry_id",
+    "registry_version",
+    "status",
+    "complete",
+    "common_scheme",
+    "promotion_allowed",
+    "frozen_before_candidate_evaluation",
+    "rows",
+    "rank_eligible_row_ids",
+    "rank_forbidden_row_ids",
+    "compare_only_inputs_not_targets",
+    "blockers"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "artifact": {"const": "oph_string_observable_target_registry"},
+    "schema_version": {"const": 1},
+    "registry_id": {"const": "oph_string_observable_targets"},
+    "registry_version": {"const": 1},
+    "status": {"const": "OPEN_INCOMPLETE"},
+    "complete": {"const": false},
+    "common_scheme": {"const": false},
+    "promotion_allowed": {"const": false},
+    "frozen_before_candidate_evaluation": {"const": true},
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/row"}
+    },
+    "rank_eligible_row_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "rank_forbidden_row_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "compare_only_inputs_not_targets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "blockers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "$defs": {
+    "decimal": {
+      "type": "string",
+      "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lower", "upper"],
+      "properties": {
+        "lower": {"$ref": "#/$defs/decimal"},
+        "upper": {"$ref": "#/$defs/decimal"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "path", "json_pointer"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "json_pointer": {"type": "string", "minLength": 1}
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_id",
+        "comparison_value",
+        "role",
+        "rank_eligible",
+        "units",
+        "scheme",
+        "scale",
+        "observable_definition_status",
+        "acceptance_interval",
+        "covariance_artifact_id",
+        "claim_status",
+        "source"
+      ],
+      "properties": {
+        "row_id": {"type": "string", "minLength": 1},
+        "comparison_value": {"$ref": "#/$defs/decimal"},
+        "role": {"enum": ["promoted_oph_target", "candidate_only"]},
+        "rank_eligible": {"type": "boolean"},
+        "units": {"type": "string", "minLength": 1},
+        "scheme": {"type": ["string", "null"]},
+        "scale": {"type": ["string", "null"]},
+        "observable_definition_status": {"enum": ["FROZEN", "OPEN"]},
+        "acceptance_interval": {
+          "oneOf": [{"$ref": "#/$defs/interval"}, {"type": "null"}]
+        },
+        "covariance_artifact_id": {"type": ["string", "null"]},
+        "claim_status": {"type": "string", "minLength": 1},
+        "source": {"$ref": "#/$defs/source"}
+      }
+    }
+  }
+}

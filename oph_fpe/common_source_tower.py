@@ -42,6 +42,12 @@ SOURCE_TOWER_REFINEMENT_COMMUTATION_RECEIPT = (
 SOURCE_TOWER_CROSS_SOURCE_SPLICE_REJECTION_RECEIPT = (
     "SOURCE_TOWER_CROSS_SOURCE_SPLICE_REJECTION_RECEIPT"
 )
+ARRAY_CHANNEL_REALIZATION_DIAGNOSTIC_RECEIPT = (
+    "ARRAY_CHANNEL_REALIZATION_DIAGNOSTIC_RECEIPT"
+)
+DECLARED_TARGET_PATH_FIREWALL_DIAGNOSTIC_RECEIPT = (
+    "DECLARED_TARGET_PATH_FIREWALL_DIAGNOSTIC_RECEIPT"
+)
 
 C0_RECEIPT_KEYS = frozenset(
     {
@@ -324,21 +330,34 @@ def verify_common_domain_source_tower(
     provenance_receipt = bool(
         not store.blockers and provenance["passed"] is True
     )
-    no_target_receipt = bool(
+    declared_no_target_receipt = bool(
         provenance_receipt and no_target["passed"] is True
     )
+    # A manifest DAG plus a token scan can reject declared target paths, but it
+    # cannot establish semantic noninterference of arbitrary generator code
+    # (encoded constants, aliases, or target-derived matrices).  Keep the
+    # physical no-target receipt false until generator dependencies are replayed
+    # under a stronger code/provenance firewall.
+    no_target_receipt = False
     refinement_receipt = bool(
         provenance_receipt and refinement["passed"] is True
     )
     splice_receipt = bool(
         provenance_receipt and splices["passed"] is True
     )
-    realization_receipt = bool(
-        provenance_receipt and realization["passed"] is True
+    array_realization_receipt = bool(
+        provenance_receipt
+        and realization.get("array_channel_contract_passed") is True
     )
+    # The legacy N x 12 channel test below verifies typed numerical arrows, but
+    # it does not reconstruct an EchosahedralFederation, its seams/collars,
+    # higher overlaps, records, checkpoints, or quotient transition law.  Keep
+    # the physical realization receipt false until a replayed federation bundle
+    # and those channel-specific preservation maps are bound into this manifest.
+    realization_receipt = False
     common_receipt = bool(
         provenance_receipt
-        and no_target_receipt
+        and declared_no_target_receipt
         and provenance["required_roles_share_one_source"] is True
         and provenance["all_required_readouts_reconstructed"] is True
     )
@@ -350,6 +369,10 @@ def verify_common_domain_source_tower(
             + refinement["blockers"]
             + splices["blockers"]
             + realization["blockers"]
+            + [
+                "generator_code_dependency_firewall_not_bound",
+                "encoded_or_aliased_target_noninterference_not_proved",
+            ]
         )
     )
     report = {
@@ -371,6 +394,10 @@ def verify_common_domain_source_tower(
         "cross_source_splice_controls": splices,
         "echosahedral_abstract_realization": realization,
         COMMON_DOMAIN_SOURCE_TOWER_RECEIPT: common_receipt,
+        ARRAY_CHANNEL_REALIZATION_DIAGNOSTIC_RECEIPT: array_realization_receipt,
+        DECLARED_TARGET_PATH_FIREWALL_DIAGNOSTIC_RECEIPT: (
+            declared_no_target_receipt
+        ),
         ECHOSAHEDRAL_TO_ABSTRACT_PATCH_NET_REALIZATION_RECEIPT: realization_receipt,
         SOURCE_TOWER_PROVENANCE_GRAPH_RECEIPT: provenance_receipt,
         SOURCE_TOWER_NO_TARGET_PATH_RECEIPT: no_target_receipt,
@@ -387,9 +414,14 @@ def verify_common_domain_source_tower(
         "blockers": blockers,
         "claim_boundary": (
             "Issue-572 finite common-domain provenance and commuting-map verification. "
-            "It authenticates one typed simulator source tower under the pinned built-in "
-            "evaluator threat model; it is not an Einstein equation, continuum, gravity, "
-            "or Standard-Model promotion receipt. Origin claims beyond local hashes require "
+            "It authenticates one typed array/readout source tower under the pinned built-in "
+            "evaluator threat model. The N-by-12 channel diagnostic is not a physical "
+            "EchosahedralFederation realization: seams, collars, higher overlaps, semantic "
+            "records/checkpoints, and quotient dynamics must be independently replayed and "
+            "bound first. The declared target-path diagnostic likewise does not prove "
+            "semantic noninterference of arbitrary generator code. It is not an Einstein "
+            "equation, continuum, gravity, or "
+            "Standard-Model promotion receipt. Origin claims beyond local hashes require "
             "signed build/transparency attestation."
         ),
     }
@@ -1295,9 +1327,16 @@ def _verify_realization(
     blockers.extend(gauge["blockers"])
     blockers.extend(schedule["blockers"])
     blockers.extend(lookalike["blockers"])
+    array_channel_contract_passed = not blockers
+    physical_blockers = [
+        "typed_echosahedral_federation_bundle_not_bound",
+        "seam_collar_and_higher_overlap_preservation_not_replayed",
+        "record_checkpoint_and_quotient_transition_preservation_not_replayed",
+    ]
     return {
-        "passed": not blockers,
-        "blockers": blockers,
+        "passed": False,
+        "array_channel_contract_passed": array_channel_contract_passed,
+        "blockers": [*blockers, *physical_blockers],
         "patch_count": patch_count,
         "ports_per_patch": ports,
         "materialized_local_port_coordinate_count": (
@@ -1307,6 +1346,11 @@ def _verify_realization(
         "gauge_relabeling_control": gauge,
         "repair_schedule_control": schedule,
         "typed_arrow_lookalike_control": lookalike,
+        "claim_boundary": (
+            "The verified N-by-12 arrays and typed arrows are a numerical channel "
+            "realization diagnostic only. They do not instantiate or preserve the typed "
+            "carrier federation required by the physical realization receipt."
+        ),
     }
 
 
@@ -1986,6 +2030,8 @@ def _incomplete_report(*, blocker: str, manifest_path: str | None) -> dict[str, 
         "issue": 572,
         "manifest_path": manifest_path,
         COMMON_DOMAIN_SOURCE_TOWER_RECEIPT: False,
+        ARRAY_CHANNEL_REALIZATION_DIAGNOSTIC_RECEIPT: False,
+        DECLARED_TARGET_PATH_FIREWALL_DIAGNOSTIC_RECEIPT: False,
         ECHOSAHEDRAL_TO_ABSTRACT_PATCH_NET_REALIZATION_RECEIPT: False,
         SOURCE_TOWER_PROVENANCE_GRAPH_RECEIPT: False,
         SOURCE_TOWER_NO_TARGET_PATH_RECEIPT: False,

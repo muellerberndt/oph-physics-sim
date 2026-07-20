@@ -22,7 +22,7 @@ from oph_fpe.bulk.quotient_geometry import (
     quotient_geometry_certificate,
 )
 from oph_fpe.evidence.hashes import stable_json_hash
-from oph_fpe.observers.subjective import deterministic_observer_analysis_indices
+from oph_fpe.observers.sampling import deterministic_observer_analysis_indices
 
 
 STRICT_NEUTRAL_SOURCE_SCHEMA = "strict_neutral_bulk_source_v1"

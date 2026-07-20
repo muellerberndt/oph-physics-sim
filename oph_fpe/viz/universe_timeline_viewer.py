@@ -9,7 +9,7 @@ import math
 from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import numpy as np
 
@@ -21,6 +21,12 @@ from oph_fpe.simulation_assumptions import (
     manifest_assumptions_pass,
     revalidate_simulation_assumption_manifest,
     simulation_assumption_manifest,
+)
+from oph_fpe.viz.screen_a5_ladder import (
+    a5_to_standard_model_view_contract,
+    build_screen_a5_ladder_payload,
+    demo_universe_view_contract,
+    screen_geometry_view_contract,
 )
 
 
@@ -71,6 +77,9 @@ def write_universe_timeline_bundle(
     write_pack: bool = True,
     pack_max_bytes: int = 256_000_000,
     pack_target_bytes: int = 128_000_000,
+    screen_a5_demo_config: Mapping[str, Any] | None = None,
+    screen_a5_physical_receipt_snapshot: Mapping[str, Any] | None = None,
+    screen_h3_kms_physical_snapshot: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Write a compact OPH universe visualization bundle.
 
@@ -108,6 +117,9 @@ def write_universe_timeline_bundle(
         max_observers=max_observers,
         max_objective_observer_views=detailed_camera_cap,
         max_h3_objects=max_h3_objects,
+        screen_a5_demo_config=screen_a5_demo_config,
+        screen_a5_physical_receipt_snapshot=screen_a5_physical_receipt_snapshot,
+        screen_h3_kms_physical_snapshot=screen_h3_kms_physical_snapshot,
     )
     payload = strict_jsonable(payload)
     _remove_stale_count_suffixed_exports(output_path)
@@ -171,6 +183,19 @@ def write_universe_timeline_bundle(
         "objective_observer_view_count": len(payload["observerModularTime"].get("objectiveObserverViews", [])),
         "detailed_camera_cap": detailed_camera_cap,
         "h3_object_count": len(payload["consensusBulk"]["objects"]),
+        "screen_a5_demo_enabled": bool(
+            payload.get("screenA5Ladder", {})
+            .get("demoControls", {})
+            .get("enabled", False)
+        ),
+        "screen_a5_forced_stage_count": len(
+            payload.get("screenA5Ladder", {}).get("a5ToSm", {}).get("forcedStageIds", [])
+        ),
+        "screen_a5_demo_universe_enabled": bool(
+            payload.get("screenA5Ladder", {})
+            .get("demoUniverse", {})
+            .get("enabled", False)
+        ),
         "neutral_object_candidate_count": len(payload["consensusBulk"].get("neutralObjectCandidates", [])),
         "proto_particle_candidate_worldline_count": len(
             payload["consensusBulk"].get("protoParticleCandidates", {}).get("worldlines", [])
@@ -2480,6 +2505,9 @@ def build_universe_timeline_payload(
     max_observers: int,
     max_objective_observer_views: int | None,
     max_h3_objects: int,
+    screen_a5_demo_config: Mapping[str, Any] | None = None,
+    screen_a5_physical_receipt_snapshot: Mapping[str, Any] | None = None,
+    screen_h3_kms_physical_snapshot: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     assumption_manifest, assumption_manifest_source = _load_simulation_assumption_manifest(
         Path(observer_run_dir),
@@ -2504,6 +2532,12 @@ def build_universe_timeline_payload(
         max_objective_observer_views=max_objective_observer_views,
     )
     screen_payload = _screen_payload(Path(observer_run_dir), max_points=max_screen_points)
+    screen_a5_ladder = build_screen_a5_ladder_payload(
+        physical_receipt_snapshot=screen_a5_physical_receipt_snapshot,
+        physical_h3_kms_snapshot=screen_h3_kms_physical_snapshot,
+        demo_config=screen_a5_demo_config,
+        federation_carrier_count=max(1, len(screen_payload.get("points", []))),
+    )
     bulk_payload = _consensus_bulk_payload(
         Path(consensus_pack_dir) if consensus_pack_dir is not None else None,
         Path(consensus_readout_dir) if consensus_readout_dir is not None else None,
@@ -2555,6 +2589,11 @@ def build_universe_timeline_payload(
         pn_silence_payload=pn_silence_payload,
         diagnostic_run_dir=Path(consensus_pack_dir) if consensus_pack_dir is not None else Path(observer_run_dir),
     )
+    visualization_views["screenGeometry"] = screen_geometry_view_contract(screen_a5_ladder)
+    visualization_views["a5ToStandardModel"] = a5_to_standard_model_view_contract(
+        screen_a5_ladder
+    )
+    visualization_views["demoUniverse"] = demo_universe_view_contract(screen_a5_ladder)
     emergent_curved_spacetime_payload = _emergent_curved_spacetime_payload(
         visualization_views=visualization_views,
         bulk_payload=bulk_payload,
@@ -2651,6 +2690,7 @@ def build_universe_timeline_payload(
         "simulationAssumptions": simulation_assumption_payload,
         "smallUniverse": small_payload,
         "screen": screen_payload,
+        "screenA5Ladder": screen_a5_ladder,
         "subjectiveObserverCameras": subjective_cameras,
         "observerModularTime": observer_payload,
         "consensusBulk": bulk_payload,
@@ -7664,8 +7704,11 @@ def _visualization_render_data_payload(
                 "auditable repair timing."
             ),
             "viewOrder": [
+                "screenGeometry",
                 "fluctuatingQuantumVacuum",
                 "observerCamera",
+                "a5ToStandardModel",
+                "demoUniverse",
                 "emergentCurvedSpacetime",
                 "effectiveStringTheory",
                 "silenceToObservation",
@@ -8839,7 +8882,8 @@ def _string_vacuum_selector_visualization_payload(
             "string_vacuum_selector_visualization_receipt": True,
             "effective_edge_string_diagnostic_view": selector_receipt,
             "encoded_structural_audit_data_receipt": True,
-            "bd_operator_safe_candidate_selected_in_encoded_audit": True,
+            "bd_operator_safe_candidate_selected_in_encoded_audit": False,
+            "bd_operator_safe_candidate_structural_full_score_receipt": True,
             "finite_consensus_theorem_receipt": bool(finite_consensus_receipt),
             "observer_facing_consensus_3d_bulk_readout_receipt": bool(observer_facing_bulk_receipt),
             "particle_matter_receipt": bool(particle_matter_receipt),
@@ -8870,10 +8914,11 @@ def _string_vacuum_selector_visualization_payload(
             "OPH-native string vacuum promotion",
         ],
         "claimBoundary": (
-            "String-vacuum selector visualization data from the OPH paper gate stack. The encoded "
-            "structural sieve selects the operator-safe BD witness inside its declared audit rows, "
-            "but the simulator does not emit critical-edge, BD cohomology, threshold, moduli-locking, "
-            "or global uniqueness certificates."
+            "String-vacuum selector visualization data from the OPH paper gate stack. The "
+            "operator-safe BD row has the only full structural score in the declared audit, but its "
+            "selection is retracted by the open threshold and failed moduli-locking gates. The "
+            "simulator does not emit critical-edge, BD cohomology, stability, threshold, augmented "
+            "isolation, or catalogue-coverage certificates."
         ),
     }
 
@@ -9126,8 +9171,10 @@ def _string_selector_candidate_rows() -> list[dict[str, Any]]:
             "candidate": "BD_{n=1,+}^{SU(5),Z2}",
             "scoreNumerator": 9,
             "scoreDenominator": 9,
-            "selected": True,
-            "verdict": "Selected operator-safe candidate in the encoded structural audit.",
+            "selected": False,
+            "structuralFullScore": True,
+            "selectionStatus": "RETRACTED_BY_MODULI_LOCKING_GATE",
+            "verdict": "Unique structural full-score row; not a selected string vacuum.",
         },
         {
             "candidate": "BD_{n=2}^{SU(5),Z2}",

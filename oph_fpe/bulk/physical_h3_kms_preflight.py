@@ -23,13 +23,18 @@ import hashlib
 import math
 import re
 from enum import Enum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 import yaml
 
 from oph_fpe.claims import PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT
-from oph_fpe.bulk.bw_native_preflight import native_bw01_bw08_report
+from oph_fpe.bulk.bw_native_preflight import native_bw_pair_report
+from oph_fpe.bulk.physical_h3_kms_prerun import (
+    REGISTERED_HISTORICAL_16K_SOURCE_SEED,
+    REGISTERED_HISTORICAL_CAMPAIGN_SHA256,
+    REGISTERED_HISTORICAL_RECEIPT_BYTE_SHA256,
+)
 
 SCHEMA_VERSION = "oph_physical_h3_kms_preflight_v3"
 DEFAULT_INSTRUMENT_VERSION = "physical-h3-kms-v2"
@@ -64,6 +69,15 @@ class CellStatus(str, Enum):
     INCOMPLETE = "INCOMPLETE"
     VALID_FAIL = "VALID_FAIL"
     VALID_PASS = "VALID_PASS"
+
+
+class GateStatus(str, Enum):
+    """Admission-gate state, kept separate from a scientific outcome."""
+
+    NOT_EVALUATED = "NOT_EVALUATED"
+    BLOCKED = "BLOCKED"
+    INSTRUMENT_INVALID = "INSTRUMENT_INVALID"
+    PASS = "PASS"
 
 _REPORT_FILE_CANDIDATES: dict[str, tuple[str, ...]] = {
     "source_observer": (
@@ -109,7 +123,44 @@ _REPORT_FILE_CANDIDATES: dict[str, tuple[str, ...]] = {
         "campaign_manifest.json",
         "receipt_ladder_report.json",
     ),
+    "federation_bundle": (
+        "echosahedral_federation_instrument_bundle.json",
+    ),
+    "repair_receipt": (
+        "transactional_repair_replay_envelope.json",
+        "transactional_repair_receipt.json",
+    ),
+    "operational_observer": (
+        "operational_observer_verification.json",
+    ),
+    "common_source": (
+        "common_domain_source_tower_verification.json",
+    ),
+    "artifact_replay": (
+        "physical_h3_kms_replay_verification.json",
+    ),
 }
+_REPLAY_BOUND_PREFLIGHT_EXPORTS = (
+    "config",
+    "source_observer",
+    "refinement",
+    "prime_geometric_state",
+    "independent_geometry",
+    "native_bw",
+    "candidate_interventions",
+    "geometry_controls",
+    "semantic_event",
+    "campaign",
+)
+_REPLAY_BOUND_NOT_EVALUATED_STAGES = (
+    "P1_nested_refinement_and_expectations",
+    "P2_prime_geometric_cap_state",
+    "P3_independent_geometric_parameter",
+    "P4_native_bw01_bw08",
+    "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
+    "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+    "P8_frozen_multiseed_four_rung_campaign",
+)
 
 _ALLOWED_REFINEMENT_FAMILIES = {
     "nested_geodesic_icosahedral",
@@ -157,6 +208,11 @@ def physical_h3_kms_preflight_report(
     """
 
     config, evidence, provenance = _load_bundle(source, reports)
+    # Replay admission is computed before stage interpretation so only the
+    # content-addressed, independently recomputed postrun ledger can downgrade a
+    # diagnostic construction to physical NOT_EVALUATED. Caller-authored
+    # ``measurement_status`` fields never enter this path.
+    artifact_admission = _physical_artifact_admission(config, provenance, evidence)
     stages = {
         "P0_source_dynamics_repair_record_observer": _source_observer_stage(
             config, _report(evidence, "source_observer")
@@ -186,6 +242,27 @@ def physical_h3_kms_preflight_report(
             config, _report(evidence, "campaign")
         ),
     }
+    stage_report_names = {
+        "P0_source_dynamics_repair_record_observer": "source_observer",
+        "P1_nested_refinement_and_expectations": "refinement",
+        "P2_prime_geometric_cap_state": "prime_geometric_state",
+        "P3_independent_geometric_parameter": "independent_geometry",
+        "P4_native_bw01_bw08": "native_bw",
+        "P5_frozen_candidate_interventions": "candidate_interventions",
+        "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage": "geometry_controls",
+        "P7_semantic_event_e1_e4_and_frame_fiber_separation": "semantic_event",
+        "P8_frozen_multiseed_four_rung_campaign": "campaign",
+    }
+    # A diagnostic checker may enumerate missing fields, but absence is not a
+    # measured failure and not a malformed artifact. Keep it NOT_EVALUATED.
+    for stage_name, report_name in stage_report_names.items():
+        if not _mapping(evidence.get(report_name)):
+            stages[stage_name]["gate_status"] = GateStatus.NOT_EVALUATED.value
+            stages[stage_name]["scientific_status"] = CellStatus.NOT_EVALUATED.value
+            stages[stage_name]["evidence"]["scientific_outcome"] = (
+                CellStatus.NOT_EVALUATED.value
+            )
+    _apply_replay_bound_epistemics(stages, evidence, artifact_admission)
     diagnostic_blockers = [
         f"{stage_name}:{blocker}"
         for stage_name, stage in stages.items()
@@ -194,7 +271,6 @@ def physical_h3_kms_preflight_report(
     diagnostic_contract_passed = bool(
         stages and all(stage["passed"] for stage in stages.values())
     )
-    artifact_admission = _physical_artifact_admission(provenance)
     blockers = [
         *diagnostic_blockers,
         *(f"artifact_admission:{item}" for item in artifact_admission["blockers"]),
@@ -206,12 +282,14 @@ def physical_h3_kms_preflight_report(
     scientific_failures = [
         f"{stage_name}:{failure}"
         for stage_name, stage in stages.items()
+        if stage.get("gate_status") != GateStatus.NOT_EVALUATED.value
         for failure in _sequence(_mapping(stage.get("evidence")).get("scientific_failures"))
     ]
     hard_blockers = list(
         dict.fromkeys(
             hard_blocker
             for stage in stages.values()
+            if stage.get("gate_status") != GateStatus.NOT_EVALUATED.value
             for hard_blocker in _sequence(stage.get("hard_blockers"))
         )
     )
@@ -261,6 +339,35 @@ def physical_h3_kms_preflight_report(
         and campaign_evidence.get("stable_failure_rule_satisfied") is True
     )
     dependency_graph = _dependency_graph(stages, receipt)
+    stage_gate_summary = {
+        status.value: sum(
+            stage.get("gate_status") == status.value for stage in stages.values()
+        )
+        for status in GateStatus
+    }
+    realized_report_names = {
+        name
+        for name in (
+            "source_observer",
+            "refinement",
+            "prime_geometric_state",
+            "independent_geometry",
+            "native_bw",
+            "candidate_interventions",
+            "geometry_controls",
+            "semantic_event",
+            "campaign",
+        )
+        if _mapping(evidence.get(name))
+    }
+    if receipt:
+        gate_status = GateStatus.PASS.value
+    elif campaign_status == CellStatus.INSTRUMENT_INVALID.value:
+        gate_status = GateStatus.INSTRUMENT_INVALID.value
+    elif not realized_report_names:
+        gate_status = GateStatus.NOT_EVALUATED.value
+    else:
+        gate_status = GateStatus.BLOCKED.value
     return {
         "schema": SCHEMA_VERSION,
         "schema_version": SCHEMA_VERSION,
@@ -272,6 +379,7 @@ def physical_h3_kms_preflight_report(
         "reported_campaign_cell_aggregate_status": reported_campaign_status,
         "diagnostic_campaign_status": diagnostic_campaign_status,
         "verdict": "GO" if receipt else "NO_GO",
+        "gate_status": gate_status,
         PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT: receipt,
         "physical_h3_kms_preflight_receipt": receipt,
         "diagnostic_contract_passed": diagnostic_contract_passed,
@@ -281,16 +389,20 @@ def physical_h3_kms_preflight_report(
         "retirement_counting_allowed": retirement_counting_allowed,
         "diagnostic_outputs_allowed": True,
         "stages": stages,
+        "stage_gate_summary": stage_gate_summary,
+        "realized_report_names": sorted(realized_report_names),
         "blockers": blockers,
         "blocker_count": len(blockers),
         "hard_blockers": hard_blockers,
         "scientific_failures": scientific_failures,
+        # Never infer a scientific pass merely from an empty failure list.
+        # The campaign replay must supply the exact aggregate cell status.
         "scientific_outcome": (
-            CellStatus.INCOMPLETE.value
+            CellStatus.INSTRUMENT_INVALID.value
+            if campaign_status == CellStatus.INSTRUMENT_INVALID.value
+            else CellStatus.INCOMPLETE.value
             if not receipt
-            else CellStatus.VALID_FAIL.value
-            if scientific_failures
-            else CellStatus.VALID_PASS.value
+            else campaign_status
         ),
         "required_clock_candidates": list(REQUIRED_CLOCK_LABELS),
         "required_geometry_models": list(REQUIRED_GEOMETRY_MODELS),
@@ -315,8 +427,250 @@ def physical_h3_kms_preflight_report(
     }
 
 
-def _physical_artifact_admission(provenance: Mapping[str, Any]) -> dict[str, Any]:
-    """Fail closed until the complete campaign-cell replay chain is integrated.
+def _load_replay_bound_stage_epistemics(
+    manifest_path: Path,
+    replay_result: Mapping[str, Any],
+) -> tuple[dict[str, Any], bool]:
+    """Load the exact postrun epistemic ledger already admitted by disk replay.
+
+    The replay verifier proves that ``postrun_report.json`` is an exact
+    recomputation.  This second, small byte check binds the ledger consumed by
+    preflight to the same manifest descriptor and closes a possible TOCTOU gap.
+    No ledger supplied through the public mapping API reaches this function.
+    """
+
+    required_replay_receipts = (
+        "REPLAY_MANIFEST_VERIFICATION_RECEIPT",
+        "PRE_SOURCE_FREEZE_REPLAY_RECEIPT",
+        "HISTORICAL_16K_ARCHIVE_BYTE_REPLAY_RECEIPT",
+        "POSTRUN_REPORT_EXACT_REPLAY_RECEIPT",
+        "SOURCE_CAPTURE_REPLAY_RECEIPT",
+        "SINGLE_BUNDLE_COMMITMENT_RECEIPT",
+        "NUMERICAL_RUNTIME_REPLAY_RECEIPT",
+    )
+    if any(replay_result.get(name) is not True for name in required_replay_receipts):
+        return {}, False
+    try:
+        manifest_bytes = manifest_path.read_bytes()
+        if replay_result.get("manifest_byte_sha256") != (
+            "sha256:" + hashlib.sha256(manifest_bytes).hexdigest()
+        ):
+            return {}, False
+        manifest = json.loads(
+            manifest_bytes.decode("utf-8", errors="strict"),
+            parse_constant=lambda token: (_ for _ in ()).throw(
+                ValueError(f"nonfinite JSON constant: {token}")
+            ),
+        )
+        artifacts = _mapping(_mapping(manifest).get("artifacts"))
+        descriptor = _mapping(artifacts.get("postrun_report"))
+        relative_raw = descriptor.get("path")
+        if not isinstance(relative_raw, str) or not relative_raw:
+            return {}, False
+        relative = PurePosixPath(relative_raw)
+        if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+            return {}, False
+        bundle_root = manifest_path.parent.resolve()
+        postrun_path = manifest_path.parent.joinpath(*relative.parts)
+        if postrun_path.is_symlink() or not postrun_path.is_file():
+            return {}, False
+        resolved = postrun_path.resolve()
+        if not resolved.is_relative_to(bundle_root):
+            return {}, False
+        postrun_bytes = postrun_path.read_bytes()
+        if descriptor.get("byte_count") != len(postrun_bytes):
+            return {}, False
+        if descriptor.get("byte_sha256") != (
+            "sha256:" + hashlib.sha256(postrun_bytes).hexdigest()
+        ):
+            return {}, False
+        postrun = json.loads(
+            postrun_bytes.decode("utf-8", errors="strict"),
+            parse_constant=lambda token: (_ for _ in ()).throw(
+                ValueError(f"nonfinite JSON constant: {token}")
+            ),
+        )
+    except (OSError, UnicodeDecodeError, ValueError, json.JSONDecodeError):
+        return {}, False
+
+    ledger = _mapping(_mapping(postrun).get("stage_epistemics"))
+    expected_stage_ids = {
+        *_REPLAY_BOUND_NOT_EVALUATED_STAGES,
+        "P5_frozen_candidate_interventions",
+    }
+    if set(ledger) != expected_stage_ids:
+        return {}, False
+    for stage_id in _REPLAY_BOUND_NOT_EVALUATED_STAGES:
+        row = _mapping(ledger.get(stage_id))
+        reasons = [
+            str(value)
+            for value in _sequence(row.get("not_evaluated_reasons"))
+            if str(value)
+        ]
+        structural = _mapping(row.get("structural_receipt"))
+        instrument = _mapping(row.get("instrument_receipt"))
+        sensitivity = _mapping(row.get("sensitivity_receipt"))
+        if not (
+            row.get("measurement_status") == CellStatus.NOT_EVALUATED.value
+            and row.get("physical_gate_eligible") is False
+            and not _sequence(row.get("scientific_failures"))
+            and reasons
+            and structural.get("scope") == "artifact_integrity_only"
+            and structural.get("status") in {"COMPLETE", "INCOMPLETE"}
+            and structural.get("physical_claim") is False
+            and instrument.get("scope") == "independent_physical_producer"
+            and instrument.get("status") == "MISSING_REQUIRED_PRODUCER"
+            and instrument.get("physical_claim") is False
+            and sensitivity.get("physical_gate_eligible") is False
+        ):
+            return {}, False
+    return ledger, True
+
+
+def _mark_stage_physical_not_evaluated(
+    stage: dict[str, Any],
+    assessment: Mapping[str, Any],
+) -> None:
+    """Quarantine structural diagnostics outside physical pass/fail status."""
+
+    row = _mapping(assessment)
+    reasons = list(
+        dict.fromkeys(
+            str(value)
+            for value in _sequence(row.get("not_evaluated_reasons"))
+            if str(value)
+        )
+    )
+    prior_evidence = _mapping(stage.get("evidence"))
+    prior_scientific = [
+        str(value) for value in _sequence(prior_evidence.get("scientific_failures"))
+    ]
+    sensitivity = _mapping(row.get("sensitivity_receipt"))
+    diagnostic_findings = list(
+        dict.fromkeys(
+            [
+                *prior_scientific,
+                *(
+                    str(value)
+                    for value in _sequence(sensitivity.get("diagnostic_findings"))
+                ),
+            ]
+        )
+    )
+    prior_blockers = [str(value) for value in _sequence(stage.get("blockers"))]
+    prior_hard_blockers = [
+        str(value) for value in _sequence(stage.get("hard_blockers"))
+    ]
+    prior_evidence.update(
+        {
+            "scientific_outcome": CellStatus.NOT_EVALUATED.value,
+            "scientific_failures": [],
+            "physical_gate_eligible": False,
+            "not_evaluated_reasons": reasons,
+            "structural_receipt": _mapping(row.get("structural_receipt")),
+            "instrument_receipt": _mapping(row.get("instrument_receipt")),
+            "sensitivity_receipt": sensitivity,
+            "diagnostic_findings": diagnostic_findings,
+            "diagnostic_blockers": prior_blockers,
+            "diagnostic_hard_blockers": prior_hard_blockers,
+            "epistemic_status_source": "content_addressed_exact_postrun_replay",
+        }
+    )
+    stage.update(
+        {
+            "passed": False,
+            "gate_status": GateStatus.NOT_EVALUATED.value,
+            "scientific_status": CellStatus.NOT_EVALUATED.value,
+            "scientific_failure_count": 0,
+            "blockers": [
+                f"physical_measurement_not_evaluated:{reason}" for reason in reasons
+            ],
+            # A missing producer is not a malformed instrument and must never
+            # become an instrument-invalid or retirement-counting condition.
+            "hard_blockers": [],
+            "evidence": prior_evidence,
+        }
+    )
+
+
+def _apply_replay_bound_epistemics(
+    stages: dict[str, dict[str, Any]],
+    evidence: Mapping[str, Any],
+    artifact_admission: Mapping[str, Any],
+) -> None:
+    ledger_bound = (
+        artifact_admission.get("replay_bound_postrun_stage_epistemics_receipt")
+        is True
+    )
+    ledger = _mapping(
+        artifact_admission.get("replay_bound_postrun_stage_epistemics")
+    )
+    if ledger_bound:
+        for stage_id in _REPLAY_BOUND_NOT_EVALUATED_STAGES:
+            _mark_stage_physical_not_evaluated(
+                stages[stage_id], _mapping(ledger.get(stage_id))
+            )
+
+    # P0's local source/repair/observer mechanics can be structurally replayed
+    # while the physical carrier-to-support realization theorem remains absent.
+    # Honor that distinction only when this exact source export was reconstructed
+    # by the registered source replay and byte-matched to the top-level report.
+    export_rows = _mapping(artifact_admission.get("preflight_export_hash_rows"))
+    source_export_exact = _mapping(export_rows.get("source_observer")).get("exact") is True
+    source_report = _report(evidence, "source_observer")
+    explicit_source_gap = bool(
+        artifact_admission.get("registered_source_capture_replay_bound") is True
+        and source_export_exact
+        and source_report.get("INDEPENDENT_SUPPORT_REGULATOR_RECEIPT") is True
+        and source_report.get("CARRIER_REFINEMENT_NATURALITY_RECEIPT") is False
+        and source_report.get("carrier_refinement_naturality_status")
+        == CellStatus.NOT_EVALUATED.value
+        and source_report.get("PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT")
+        is False
+        and source_report.get("physical_federation_status")
+        == CellStatus.NOT_EVALUATED.value
+        and source_report.get("CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT") is False
+        and source_report.get("carrier_to_support_realization_status")
+        == CellStatus.NOT_EVALUATED.value
+    )
+    if explicit_source_gap:
+        p0 = stages["P0_source_dynamics_repair_record_observer"]
+        _mark_stage_physical_not_evaluated(
+            p0,
+            {
+                "not_evaluated_reasons": [
+                    "physical_echosahedral_federation_realization_not_established",
+                    "carrier_to_support_chart_realization_not_established",
+                    "carrier_refinement_naturality_not_established",
+                ],
+                "structural_receipt": {
+                    "scope": "artifact_integrity_only",
+                    "status": "COMPLETE" if p0.get("passed") is True else "INCOMPLETE",
+                    "artifact_hash": _canonical_sha256(source_report),
+                    "physical_claim": False,
+                },
+                "instrument_receipt": {
+                    "scope": "independent_physical_producer",
+                    "status": "MISSING_REQUIRED_PRODUCER",
+                    "physical_claim": False,
+                },
+                "sensitivity_receipt": {
+                    "scope": "not_applicable",
+                    "status": "NOT_RUN",
+                    "artifact_hash": None,
+                    "physical_gate_eligible": False,
+                    "diagnostic_findings": [],
+                },
+            },
+        )
+
+
+def _physical_artifact_admission(
+    config: Mapping[str, Any],
+    provenance: Mapping[str, Any],
+    evidence: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Admit only a complete registered campaign-cell replay chain.
 
     The stage functions below are useful contract diagnostics, but their inputs
     are ordinary mappings.  A mapping can repeat a correctly named boolean
@@ -326,34 +680,336 @@ def _physical_artifact_admission(provenance: Mapping[str, Any]) -> dict[str, Any
 
     Registered replay exists for several lower-level artifacts elsewhere in the
     package (federation, repair, and common-source contracts).  The physical
-    H3/KMS gate nevertheless remains false until *all* campaign-cell producers,
-    including controls and scientific outcome predicates, are replayed and
-    bound to one source/family commitment.  This explicit false receipt is the
-    safe integration boundary; it must not be replaced by a configuration flag.
+    H3/KMS gate remains unearned until *all* campaign-cell producers, including
+    controls and scientific outcome predicates, are replayed and bound to one
+    source/family commitment.  Absence is reported as ``NOT_EVALUATED`` rather
+    than as a scientific failure.  No configuration flag can discharge it.
     """
 
+    from oph_fpe.common_source_tower import verify_common_source_tower_report_file
+    from oph_fpe.core.echosahedral_federation import (
+        verify_reference_federation_instrument_bundle,
+    )
+    from oph_fpe.observers.operational_verifier import (
+        FINITE_RECEIPT_KEYS as OBSERVER_RECEIPT_KEYS,
+        verify_operational_observer_manifest,
+    )
+    from oph_fpe.repair import verify_repair_replay_envelope
+
+    from oph_fpe.bulk.physical_h3_kms_replay import (
+        replay_physical_h3_kms_bundle,
+    )
+
     source_kind = str(provenance.get("source_kind") or "unknown")
-    return {
-        "schema": "oph.physical_h3_kms.artifact_admission.v1",
-        "source_kind": source_kind,
-        "fixture_or_unregistered_report_input": source_kind
-        in {"mapping_bundle", "mapping_config", "file", "run_directory", "unknown"},
-        "registered_federation_replay_bound": False,
-        "registered_transaction_replay_bound": False,
-        "registered_observer_replay_bound": False,
-        "registered_common_source_replay_bound": False,
-        "per_cell_control_artifacts_replayed": False,
-        "per_cell_scientific_predicates_recomputed": False,
-        "single_bundle_commitment_verified": False,
-        "PHYSICAL_ARTIFACT_REPLAY_ADMISSION_RECEIPT": False,
-        "blockers": [
-            "complete_registered_artifact_replay_chain_not_implemented",
-            "per_cell_status_is_not_recomputed_from_primitive_artifacts",
+    loaded_reports = _mapping(provenance.get("loaded_reports"))
+    federation_result = verify_reference_federation_instrument_bundle(
+        _mapping(evidence.get("federation_bundle"))
+    )
+    repair_result = verify_repair_replay_envelope(
+        _mapping(evidence.get("repair_receipt"))
+    )
+
+    observer_result: dict[str, Any] = {}
+    observer_report_exact_replay = False
+    observer_report_path = loaded_reports.get("operational_observer")
+    observer_report = _mapping(evidence.get("operational_observer"))
+    if isinstance(observer_report_path, str) and observer_report:
+        manifest_name = observer_report.get("manifest_path")
+        manifest_relative = Path(manifest_name) if isinstance(manifest_name, str) else None
+        if (
+            manifest_relative is not None
+            and not manifest_relative.is_absolute()
+            and ".." not in manifest_relative.parts
+            and len(manifest_relative.parts) == 1
+        ):
+            recomputed_observer = verify_operational_observer_manifest(
+                Path(observer_report_path).parent / manifest_relative
+            )
+            try:
+                observer_report_exact_replay = json.dumps(
+                    observer_report,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                ) == json.dumps(
+                    recomputed_observer,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                )
+            except (TypeError, ValueError):
+                observer_report_exact_replay = False
+            if observer_report_exact_replay:
+                observer_result = recomputed_observer
+
+    common_source_result: dict[str, Any] = {}
+    common_source_path = loaded_reports.get("common_source")
+    if isinstance(common_source_path, str):
+        common_source_result = verify_common_source_tower_report_file(
+            common_source_path
+        )
+
+    federation_bound = bool(
+        federation_result.get("INSTRUMENT_BUNDLE_SCHEMA_RECEIPT") is True
+        and federation_result.get("ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID")
+        is True
+    )
+    transaction_bound = bool(
+        repair_result.get("REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT") is True
+        and repair_result.get("REPAIR_ARTIFACT_INTEGRITY_RECEIPT") is True
+        and repair_result.get("TRANSACTIONAL_REPAIR_RECEIPT") is True
+    )
+    observer_bound = bool(
+        observer_result
+        and observer_report_exact_replay
+        and all(observer_result.get(key) is True for key in OBSERVER_RECEIPT_KEYS)
+    )
+    common_source_bound = common_source_result.get("passed") is True
+    # The physical admission decision is reconstructed from a fixed on-disk
+    # manifest location.  A caller-authored mapping carrying correctly named
+    # booleans is never evidence.  The stored replay report, when present, is
+    # compared byte-semantically with the fresh replay but does not replace it.
+    replay_result: dict[str, Any] = {}
+    replay_manifest_path: Path | None = None
+    replay_manifest_candidates: list[Path] = []
+    run_directory_raw = provenance.get("run_directory")
+    if source_kind == "run_directory" and isinstance(run_directory_raw, str):
+        run_directory = Path(run_directory_raw)
+        replay_manifest_candidates = [
+            candidate
+            for candidate in (
+                run_directory / "replay_bundle" / "replay_manifest.json",
+                run_directory / "replay_manifest.json",
+            )
+            if candidate.is_file() and not candidate.is_symlink()
+        ]
+        if len(replay_manifest_candidates) == 1:
+            replay_manifest_path = replay_manifest_candidates[0]
+            replay_result = replay_physical_h3_kms_bundle(replay_manifest_path)
+
+    stored_replay_report = _mapping(evidence.get("artifact_replay"))
+    stored_replay_report_exact = False
+    if replay_result and stored_replay_report:
+        try:
+            stored_replay_report_exact = json.dumps(
+                stored_replay_report,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ) == json.dumps(
+                replay_result,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            )
+        except (TypeError, ValueError):
+            stored_replay_report_exact = False
+
+    replay_bound_stage_epistemics: dict[str, Any] = {}
+    postrun_stage_epistemics_bound = False
+    if replay_manifest_path is not None:
+        (
+            replay_bound_stage_epistemics,
+            postrun_stage_epistemics_bound,
+        ) = _load_replay_bound_stage_epistemics(
+            replay_manifest_path,
+            replay_result,
+        )
+
+    per_cell_control_artifacts_replayed = bool(
+        replay_result.get("PER_CELL_CONTROL_ARTIFACTS_REPLAY_RECEIPT") is True
+    )
+    per_cell_scientific_predicates_recomputed = bool(
+        replay_result.get("PER_CELL_SCIENTIFIC_PREDICATES_RECOMPUTED_RECEIPT")
+        is True
+    )
+    single_bundle_commitment_verified = bool(
+        replay_result.get("SINGLE_BUNDLE_COMMITMENT_RECEIPT") is True
+    )
+    replay_manifest_verified = bool(
+        replay_result.get("REPLAY_MANIFEST_VERIFICATION_RECEIPT") is True
+    )
+    source_capture_replayed = bool(
+        replay_result.get("SOURCE_CAPTURE_REPLAY_RECEIPT") is True
+    )
+    pre_source_freeze_replayed = bool(
+        replay_result.get("PRE_SOURCE_FREEZE_REPLAY_RECEIPT") is True
+    )
+    historical_archive_replayed = bool(
+        replay_result.get("HISTORICAL_16K_ARCHIVE_BYTE_REPLAY_RECEIPT") is True
+    )
+    numerical_runtime_replayed = bool(
+        replay_result.get("NUMERICAL_RUNTIME_REPLAY_RECEIPT") is True
+    )
+    expected_export_hashes = _mapping(
+        replay_result.get("preflight_export_hashes")
+    )
+    loaded_export_values = {
+        "config": config,
+        **{
+            name: _report(evidence, name)
+            for name in _REPLAY_BOUND_PREFLIGHT_EXPORTS
+            if name != "config"
+        },
+    }
+    export_hash_rows = {
+        name: {
+            "expected_sha256": expected_export_hashes.get(name),
+            "loaded_sha256": _canonical_sha256(loaded_export_values[name]),
+            "exact": bool(
+                _strict_sha256(expected_export_hashes.get(name))
+                and expected_export_hashes.get(name)
+                == _canonical_sha256(loaded_export_values[name])
+            ),
+        }
+        for name in _REPLAY_BOUND_PREFLIGHT_EXPORTS
+    }
+    preflight_export_projection_verified = bool(
+        replay_result.get("PREFLIGHT_EXPORT_PROJECTION_RECEIPT") is True
+        and set(expected_export_hashes) == set(_REPLAY_BOUND_PREFLIGHT_EXPORTS)
+    )
+    top_level_preflight_exports_exact = bool(
+        preflight_export_projection_verified
+        and all(row["exact"] for row in export_hash_rows.values())
+    )
+    receipt = bool(
+        replay_manifest_verified
+        and pre_source_freeze_replayed
+        and historical_archive_replayed
+        and numerical_runtime_replayed
+        and source_capture_replayed
+        and per_cell_control_artifacts_replayed
+        and per_cell_scientific_predicates_recomputed
+        and single_bundle_commitment_verified
+        and postrun_stage_epistemics_bound
+        and preflight_export_projection_verified
+        and top_level_preflight_exports_exact
+        and (not stored_replay_report or stored_replay_report_exact)
+    )
+    replay_present = replay_manifest_path is not None
+    admission_status = (
+        GateStatus.PASS.value
+        if receipt
+        else GateStatus.BLOCKED.value
+        if replay_present
+        else GateStatus.NOT_EVALUATED.value
+    )
+    blockers: list[str] = []
+    for passed, blocker in (
+        (replay_manifest_verified, "registered_replay_manifest_not_verified"),
+        (pre_source_freeze_replayed, "pre_source_freeze_not_replayed"),
+        (historical_archive_replayed, "historical_16k_archive_not_replayed"),
+        (numerical_runtime_replayed, "numerical_runtime_not_replayed"),
+        (source_capture_replayed, "registered_source_capture_not_replayed"),
+        (
+            per_cell_control_artifacts_replayed,
+            "per_cell_control_artifacts_not_replayed",
+        ),
+        (
+            per_cell_scientific_predicates_recomputed,
+            "per_cell_scientific_predicates_not_recomputed",
+        ),
+        (
+            single_bundle_commitment_verified,
             "single_source_and_campaign_family_commitment_not_verified",
-        ],
+        ),
+        (
+            postrun_stage_epistemics_bound,
+            "replay_bound_postrun_stage_epistemics_not_verified",
+        ),
+        (
+            preflight_export_projection_verified,
+            "replayed_preflight_export_projection_not_verified",
+        ),
+        (
+            top_level_preflight_exports_exact,
+            "top_level_preflight_exports_not_exact_replay_projections",
+        ),
+    ):
+        if not passed:
+            blockers.append(blocker)
+    if len(replay_manifest_candidates) > 1:
+        blockers.append("multiple_registered_replay_manifests_found")
+    if stored_replay_report and not stored_replay_report_exact:
+        blockers.append("stored_replay_report_is_not_exact_fresh_replay")
+    blockers.extend(
+        f"top_level_preflight_export_mismatch:{name}"
+        for name, row in export_hash_rows.items()
+        if preflight_export_projection_verified and not row["exact"]
+    )
+    return {
+        "schema": "oph.physical_h3_kms.artifact_admission.v2",
+        "gate_status": admission_status,
+        "source_kind": source_kind,
+        "fixture_or_unregistered_report_input": not receipt,
+        "replay_manifest_path": (
+            str(replay_manifest_path) if replay_manifest_path is not None else None
+        ),
+        "stored_replay_report_exact": stored_replay_report_exact,
+        "registered_federation_replay_bound": federation_bound,
+        "registered_transaction_replay_bound": transaction_bound,
+        "registered_observer_replay_bound": observer_bound,
+        "registered_common_source_replay_bound": common_source_bound,
+        "registered_source_capture_replay_bound": source_capture_replayed,
+        "replay_bound_postrun_stage_epistemics_receipt": (
+            postrun_stage_epistemics_bound
+        ),
+        "replay_bound_postrun_stage_epistemics": replay_bound_stage_epistemics,
+        "registered_replay_summaries": {
+            "federation": {
+                key: federation_result.get(key)
+                for key in (
+                    "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT",
+                    "STRUCTURAL_FEDERATION_SEWING_RECEIPT",
+                    "HIGHER_OVERLAP_COCYCLE_RECEIPT",
+                    "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID",
+                )
+            },
+            "transaction": {
+                key: repair_result.get(key)
+                for key in (
+                    "REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT",
+                    "REPAIR_ARTIFACT_INTEGRITY_RECEIPT",
+                    "COMPLETE_READ_SET_RECEIPT",
+                    "CONFLICT_COMPONENT_SUPPORT_RECEIPT",
+                    "ATOMIC_UNION_REVALIDATION_RECEIPT",
+                    "TRANSACTIONAL_REPAIR_RECEIPT",
+                )
+            },
+            "observer": {
+                "stored_report_exact_replay": observer_report_exact_replay,
+                "receipt": observer_result.get("receipt"),
+                "verification_report_sha256": observer_result.get(
+                    "verification_report_sha256"
+                ),
+            },
+            "common_source": {
+                "passed": common_source_result.get("passed"),
+                "blockers": common_source_result.get("blockers", []),
+            },
+        },
+        "replay_manifest_verified": replay_manifest_verified,
+        "pre_source_freeze_replayed": pre_source_freeze_replayed,
+        "historical_16k_archive_replayed": historical_archive_replayed,
+        "numerical_runtime_replayed": numerical_runtime_replayed,
+        "source_capture_replayed": source_capture_replayed,
+        "per_cell_control_artifacts_replayed": per_cell_control_artifacts_replayed,
+        "per_cell_scientific_predicates_recomputed": (
+            per_cell_scientific_predicates_recomputed
+        ),
+        "single_bundle_commitment_verified": single_bundle_commitment_verified,
+        "preflight_export_projection_verified": (
+            preflight_export_projection_verified
+        ),
+        "top_level_preflight_exports_exact": top_level_preflight_exports_exact,
+        "preflight_export_hash_rows": export_hash_rows,
+        "PHYSICAL_ARTIFACT_REPLAY_ADMISSION_RECEIPT": receipt,
+        "blockers": blockers,
         "claim_boundary": (
-            "This fail-closed gate prevents ordinary dictionaries, JSON booleans, and declared "
-            "cell statuses from authorizing physical promotion or branch retirement."
+            "This replay-derived fail-closed gate prevents ordinary dictionaries, JSON "
+            "booleans, and declared cell statuses from authorizing physical promotion or "
+            "branch retirement. Missing replay is NOT_EVALUATED, not an observed physical "
+            "failure."
         ),
     }
 
@@ -421,7 +1077,7 @@ def _load_bundle(
 def _load_first(root: Path, names: Sequence[str]) -> tuple[dict[str, Any], Path | None]:
     for name in names:
         path = root / name
-        if path.is_file():
+        if path.is_file() and not path.is_symlink():
             return _read_structured_file(path), path
     return {}, None
 
@@ -454,7 +1110,6 @@ def _source_observer_stage(config: Mapping[str, Any], report: Mapping[str, Any])
         "ECHOSAHEDRAL_CARRIER_CONFORMANCE",
         "FEDERATION_SEWING_RECEIPT",
         "CARRIER_QUOTIENT_INVARIANCE_RECEIPT",
-        "CARRIER_REFINEMENT_NATURALITY_RECEIPT",
     )
     missing_architecture_receipts = [
         name for name in architecture_receipts if report.get(name) is not True
@@ -575,6 +1230,25 @@ def _source_observer_stage(config: Mapping[str, Any], report: Mapping[str, Any])
             "readback_count": _integer(observer.get("readback_count")),
             "feedback_event_count": _integer(observer.get("feedback_event_count")),
             "source_forbidden_target_hits": forbidden_hits,
+            "independent_support_regulator_receipt": report.get(
+                "INDEPENDENT_SUPPORT_REGULATOR_RECEIPT"
+            ),
+            "carrier_refinement_naturality_receipt": report.get(
+                "CARRIER_REFINEMENT_NATURALITY_RECEIPT"
+            ),
+            "carrier_refinement_naturality_status": report.get(
+                "carrier_refinement_naturality_status"
+            ),
+            "physical_federation_realization_receipt": report.get(
+                "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"
+            ),
+            "physical_federation_status": report.get("physical_federation_status"),
+            "carrier_to_support_realization_receipt": report.get(
+                "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"
+            ),
+            "carrier_to_support_realization_status": report.get(
+                "carrier_to_support_realization_status"
+            ),
         },
         hard_blockers=("source_observer_contract_missing",) if blockers else (),
     )
@@ -901,6 +1575,62 @@ def _candidate_intervention_stage(
     ):
         blockers.append("report_candidate_invariance_aggregate_hash_mismatch")
 
+    # The current registered source deliberately does not reinterpret a port
+    # intensity delta as modular time.  Until it emits independently sourced
+    # (t_modular, s_geometric) pairs, the 2pi comparison has not happened.
+    # Preserve the structural candidate-pair audit above, but do not translate
+    # empty fit fields or conservative false placeholders into physics
+    # failures.
+    if report.get("measurement_status") == CellStatus.NOT_EVALUATED.value:
+        pair_contract = _mapping(report.get("typed_clock_pair_contract"))
+        reasons = [
+            str(value)
+            for value in _sequence(report.get("not_evaluated_reasons"))
+        ]
+        if pair_contract.get("available") is not False:
+            blockers.append("typed_clock_pair_availability_contract_malformed")
+        if pair_contract.get("intensity_delta_used_as_modular_time") is not False:
+            blockers.append("intensity_delta_was_reinterpreted_as_modular_time")
+        if pair_contract.get("one_field_synthesized_from_the_other") is not False:
+            blockers.append("clock_pair_field_was_synthesized_from_its_partner")
+        blockers.append("independent_modular_time_geometric_flow_pair_missing")
+        stage = _stage(
+            blockers,
+            {
+                "candidate_labels": sorted(rows),
+                "candidate_intervention_rows_identical": bool(
+                    intervention_rows and len(set(intervention_rows)) == 1
+                ),
+                "candidate_heldout_rows_identical": bool(
+                    heldout_rows and len(set(heldout_rows)) == 1
+                ),
+                "candidate_packets_identical": bool(
+                    packet_hashes and len(set(packet_hashes)) == 1
+                ),
+                "candidate_trajectories_identical": bool(
+                    trajectory_hashes and len(set(trajectory_hashes)) == 1
+                ),
+                "candidate_responses_identical": bool(
+                    response_hashes and len(set(response_hashes)) == 1
+                ),
+                "candidate_invariance_aggregate_hash": (
+                    report_aggregate_hash or None
+                ),
+                "typed_clock_pair_contract": pair_contract,
+                "not_evaluated_reasons": reasons,
+                "continuous_clock_fit_passed": False,
+                "discrete_clock_comparison_passed": False,
+                "scientific_outcome": CellStatus.NOT_EVALUATED.value,
+                "scientific_failures": [],
+                "source_intervention_target_free": report.get(
+                    "source_intervention_target_free"
+                )
+                is True,
+            },
+        )
+        stage["gate_status"] = GateStatus.NOT_EVALUATED.value
+        return stage
+
     continuous = _mapping(report.get("continuous_clock_fit"))
     interval = [_finite_number(value) for value in _sequence(continuous.get("fitted_kappa_interval"))]
     if len(interval) != 2 or any(value is None for value in interval):
@@ -992,6 +1722,13 @@ def _candidate_intervention_stage(
         or "heldout_event_row_ids" in value
         for value in blockers
     )
+    scientific_status = (
+        CellStatus.NOT_EVALUATED.value
+        if blockers
+        else CellStatus.VALID_FAIL.value
+        if scientific_failures
+        else CellStatus.VALID_PASS.value
+    )
     return _stage(
         blockers,
         {
@@ -1007,19 +1744,21 @@ def _candidate_intervention_stage(
                 aggregate_hashes and len(set(aggregate_hashes)) == 1
             ),
             "candidate_invariance_aggregate_hash": report_aggregate_hash or None,
-            "continuous_clock_fit_passed": not any(
-                value.startswith("continuous_clock_")
-                for value in scientific_failures
+            "continuous_clock_fit_passed": bool(
+                not blockers
+                and not any(
+                    value.startswith("continuous_clock_")
+                    for value in scientific_failures
+                )
             ),
-            "discrete_clock_comparison_passed": not any(
-                value.startswith("discrete_clock_")
-                for value in scientific_failures
+            "discrete_clock_comparison_passed": bool(
+                not blockers
+                and not any(
+                    value.startswith("discrete_clock_")
+                    for value in scientific_failures
+                )
             ),
-            "scientific_outcome": (
-                CellStatus.VALID_FAIL.value
-                if scientific_failures
-                else CellStatus.VALID_PASS.value
-            ),
+            "scientific_outcome": scientific_status,
             "scientific_failures": scientific_failures,
             "config_likely_scale_dependent_intervention": likely_scale_dependent,
             "source_intervention_target_free": report.get(
@@ -1035,7 +1774,7 @@ def _candidate_intervention_stage(
 
 
 def _native_bw_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> dict[str, Any]:
-    """Require a native, primitive-derived BW01--BW08 payload.
+    """Require a native six-clause FiniteCapBW plus MGNS-1 payload.
 
     The underlying verifier owns every numerical pass predicate.  This stage
     cannot be satisfied by a producer-supplied clause Boolean or by an archived
@@ -1043,7 +1782,23 @@ def _native_bw_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> di
     """
 
     del config
-    verification = native_bw01_bw08_report(report)
+    if not report:
+        return _stage(
+            ["native_bw01_bw08_payload_missing"],
+            {
+                "native_payload_conformance_receipt": False,
+                "native_payload_receipt": False,
+                "scientific_outcome": CellStatus.NOT_EVALUATED.value,
+                "scientific_failures": [],
+                "failed_clause_ids": [],
+                "antecedent_hash": None,
+                "required_clause_ids": [],
+                "clauses": {},
+                "recomputed_issue308_tier": None,
+            },
+            hard_blockers=["bw_native_payload_missing"],
+        )
+    verification = native_bw_pair_report(report)
     conformance_receipt = (
         verification.get("native_payload_conformance_receipt") is True
     )
@@ -1057,9 +1812,9 @@ def _native_bw_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> di
         blockers = ["native_bw01_bw08_payload_did_not_conform"]
     clause_rows = _mapping(verification.get("clauses"))
     failed_clause_ids = {
-        clause_id
-        for clause_id in (f"BW{index:02d}" for index in range(1, 9))
-        if _mapping(clause_rows.get(clause_id)).get("passed") is not True
+        str(clause_id)
+        for clause_id in _sequence(verification.get("required_clause_ids"))
+        if _mapping(clause_rows.get(str(clause_id))).get("passed") is not True
     }
     hard_blockers = ["bw_native_payload_missing"] if not conformance_receipt else []
     return _stage(
@@ -1073,6 +1828,19 @@ def _native_bw_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> di
             "antecedent_hash": verification.get("antecedent_hash"),
             "required_clause_ids": verification.get("required_clause_ids", []),
             "clauses": verification.get("clauses", {}),
+            "mgns1": verification.get("mgns1", {}),
+            "finite_cap_bw_certificate_receipt": verification.get(
+                "finite_cap_bw_certificate_receipt"
+            )
+            is True,
+            "mgns1_certificate_receipt": verification.get("mgns1_certificate_receipt")
+            is True,
+            "same_tower_inputs_receipt": verification.get("same_tower_inputs_receipt")
+            is True,
+            "support_visible_bw_theorem_applicable": verification.get(
+                "support_visible_bw_theorem_applicable"
+            )
+            is True,
             "recomputed_issue308_tier": verification.get("recomputed_issue308_tier"),
         },
         hard_blockers=hard_blockers,
@@ -1151,6 +1919,10 @@ def _geometry_control_stage(
         control_blockers.append("geometry_thresholds_not_prefrozen")
     if not _strict_sha256(paired.get("calibration_artifact_hash")):
         control_blockers.append("geometry_calibration_artifact_hash_missing")
+    if paired.get("physical_threshold_calibration_receipt") is not True:
+        control_blockers.append(
+            "geometry_physical_threshold_calibration_receipt_missing"
+        )
     if (
         all(value is not None for value in scores)
         and geometry_margin is not None
@@ -1168,6 +1940,10 @@ def _geometry_control_stage(
     leverage_blockers: list[str] = []
     if leverage.get("calibration_source") != "independent_synthetic_power_suite":
         leverage_blockers.append("curvature_power_calibration_not_independent")
+    if leverage.get("physical_threshold_calibration_receipt") is not True:
+        leverage_blockers.append(
+            "curvature_physical_threshold_calibration_receipt_missing"
+        )
     if leverage.get("frozen_before_physical_campaign") is not True:
         leverage_blockers.append("curvature_power_calibration_not_prefrozen")
     for field in ("calibration_hash", "registered_analysis_hash"):
@@ -1216,6 +1992,13 @@ def _geometry_control_stage(
         hard_blockers.append("geometry_control_missing_or_nonfinite")
     if leverage_blockers:
         hard_blockers.append("curvature_leverage_missing")
+    scientific_status = (
+        CellStatus.NOT_EVALUATED.value
+        if blockers
+        else CellStatus.VALID_FAIL.value
+        if scientific_failures
+        else CellStatus.VALID_PASS.value
+    )
     return _stage(
         blockers,
         {
@@ -1226,18 +2009,14 @@ def _geometry_control_stage(
             },
             "matched_effective_model_capacity": bool(capacities and len(set(capacities)) == 1),
             "all_scores_finite": bool(scores and all(value is not None for value in scores)),
-            "scientific_outcome": (
-                CellStatus.VALID_FAIL.value
-                if scientific_failures
-                else CellStatus.VALID_PASS.value
-            ),
+            "scientific_outcome": scientific_status,
             "scientific_failures": scientific_failures,
             "paired_geometry_comparison": {
                 "frozen_h3_win_margin": geometry_margin,
                 "paired_uncertainty_upper_bound": geometry_uncertainty,
             },
             "curvature_leverage": {
-                "passed": not leverage_blockers,
+                "passed": bool(not blockers and not leverage_blockers),
                 "blockers": leverage_blockers,
                 "curvature_radius_source": radius_source or None,
                 "calibrated_power": power,
@@ -1537,43 +2316,57 @@ def _semantic_event_stage(
         hard_blockers.append("event_manifold_e1_e4_missing")
     if dag_blockers:
         hard_blockers.append("semantic_event_dag_missing")
+    scientific_status = (
+        CellStatus.NOT_EVALUATED.value
+        if blockers
+        else CellStatus.VALID_FAIL.value
+        if scientific_failures
+        else CellStatus.VALID_PASS.value
+    )
+
+    def clause_passed(clause: Mapping[str, Any], prefix: str) -> bool:
+        return bool(
+            clause
+            and not any(prefix in value for value in blockers)
+            and not any(prefix in value for value in scientific_failures)
+        )
+
     return _stage(
         blockers,
         {
             "event_clause_names": sorted(clauses),
             "event_clause_status": {
-                "EVENT_E1_POPULATION": not any(
-                    "EVENT_E1" in value for value in scientific_failures
-                ),
-                "EVENT_E2_SEPARATION": not any(
-                    "EVENT_E2" in value for value in scientific_failures
-                ),
-                "EVENT_E3_RANK_FOUR": not any(
-                    "EVENT_E3" in value for value in scientific_failures
-                ),
-                "EVENT_E4_POINCARE_COCYCLE": not any(
-                    "EVENT_E4" in value for value in scientific_failures
-                ),
+                "EVENT_E1_POPULATION": clause_passed(e1, "EVENT_E1"),
+                "EVENT_E2_SEPARATION": clause_passed(e2, "EVENT_E2"),
+                "EVENT_E3_RANK_FOUR": clause_passed(e3, "EVENT_E3"),
+                "EVENT_E4_POINCARE_COCYCLE": clause_passed(e4, "EVENT_E4"),
             },
-            "semantic_event_dag_passed": not dag_blockers,
-            "scientific_outcome": (
-                CellStatus.VALID_FAIL.value
-                if scientific_failures
-                else CellStatus.VALID_PASS.value
-            ),
+            "semantic_event_dag_passed": bool(dag and not dag_blockers),
+            "scientific_outcome": scientific_status,
             "scientific_failures": scientific_failures,
-            "heldout_quadratic_cone_passed": not any(
-                "quadratic" in value or "cone" in value
-                for value in scientific_failures
+            "heldout_quadratic_cone_passed": bool(
+                cone
+                and not any("quadratic" in value or "cone" in value for value in blockers)
+                and not any(
+                    "quadratic" in value or "cone" in value
+                    for value in scientific_failures
+                )
             ),
-            "stable_causality_passed": not any(
-                "stable_causality" in value for value in scientific_failures
+            "stable_causality_passed": bool(
+                causality
+                and not any("stable_causality" in value for value in blockers)
+                and not any(
+                    "stable_causality" in value for value in scientific_failures
+                )
             ),
-            "record_cauchy_completion_passed": not any(
-                "cauchy" in value
-                or "record_germ_completion" in value
-                or "open_image" in value
-                for value in scientific_failures
+            "record_cauchy_completion_passed": bool(
+                completion
+                and not any(
+                    "cauchy" in value
+                    or "record_germ_completion" in value
+                    or "open_image" in value
+                    for value in (*blockers, *scientific_failures)
+                )
             ),
             "h3_role": report.get("h3_role"),
             "event_base_role": report.get("event_base_role"),
@@ -1584,6 +2377,36 @@ def _semantic_event_stage(
 
 
 def _campaign_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> dict[str, Any]:
+    if not report:
+        return _stage(
+            ["frozen_campaign_manifest_missing"],
+            {
+                "seeds": [],
+                "rungs": [],
+                "carrier_counts": [],
+                "required_carrier_counts": list(REQUIRED_CARRIER_COUNTS),
+                "replicate_ids": [],
+                "run_matrix_count": 0,
+                "expected_run_matrix_count": 0,
+                "single_protocol_hash": False,
+                "instrument_version": None,
+                "campaign_id": None,
+                "campaign_family_hash": None,
+                "computed_campaign_family_hash": None,
+                "campaign_status": CellStatus.INCOMPLETE.value,
+                "scientific_outcome": CellStatus.NOT_EVALUATED.value,
+                "cell_status_counts": {
+                    status.value: 0 for status in CellStatus
+                },
+                "stable_failure_rule_satisfied": False,
+                "decisive_rungs": [],
+                "stable_failure_modes": [],
+                "config_seed": _integer(config.get("seed")),
+                "config_rung": _integer(
+                    _mapping(config.get("source_federation")).get("carrier_count")
+                ),
+            },
+        )
     blockers: list[str] = []
     family_blockers: list[str] = []
     instrument_version = str(report.get("instrument_version") or "")
@@ -1611,13 +2434,48 @@ def _campaign_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> dic
     if tuple(control_set.get("geometry_models", ())) != REQUIRED_GEOMETRY_MODELS:
         family_blockers.append("family_geometry_control_set_mismatch")
     archive_boundary = _mapping(family_contract.get("archive_boundary"))
-    if archive_boundary != {
+    expected_archive_fields = {
         "archived_instrument_status": "FROZEN_NO_RETUNE",
         "archived_16k_failure_preserved": True,
         "new_instrument_is_distinct_family": True,
         "archived_outcomes_used_for_threshold_selection": False,
-    }:
+        "historical_16k_joint_independent_receipt": False,
+        "historical_stable_branch_failure_established": False,
+    }
+    if any(
+        archive_boundary.get(key) != value
+        for key, value in expected_archive_fields.items()
+    ):
         family_blockers.append("archived_16k_no_retune_boundary_mismatch")
+    if set(archive_boundary) != {
+        *expected_archive_fields,
+        "historical_receipt_byte_sha256",
+        "historical_campaign_sha256",
+        "historical_16k_source_seed",
+        "historical_16k_rung",
+    }:
+        family_blockers.append("archived_16k_commitment_field_set_mismatch")
+    if not _strict_sha256(archive_boundary.get("historical_receipt_byte_sha256")):
+        family_blockers.append("archived_16k_receipt_hash_missing_or_malformed")
+    elif (
+        archive_boundary.get("historical_receipt_byte_sha256")
+        != REGISTERED_HISTORICAL_RECEIPT_BYTE_SHA256
+    ):
+        family_blockers.append("archived_16k_receipt_hash_mismatch")
+    historical_campaign_sha = archive_boundary.get("historical_campaign_sha256")
+    if not isinstance(historical_campaign_sha, str) or re.fullmatch(
+        r"[0-9a-f]{64}", historical_campaign_sha
+    ) is None:
+        family_blockers.append("archived_16k_campaign_hash_missing_or_malformed")
+    elif historical_campaign_sha != REGISTERED_HISTORICAL_CAMPAIGN_SHA256:
+        family_blockers.append("archived_16k_campaign_hash_mismatch")
+    if (
+        _integer(archive_boundary.get("historical_16k_source_seed"))
+        != REGISTERED_HISTORICAL_16K_SOURCE_SEED
+    ):
+        family_blockers.append("archived_16k_source_seed_missing")
+    if _integer(archive_boundary.get("historical_16k_rung")) != 16_384:
+        family_blockers.append("archived_16k_rung_mismatch")
 
     rung_scaling_laws = _mapping(family_contract.get("rung_scaling_laws"))
     if rung_scaling_laws.get("carrier_count") != "exact_federation_cardinality":
@@ -1762,6 +2620,8 @@ def _campaign_stage(config: Mapping[str, Any], report: Mapping[str, Any]) -> dic
         and retirement_rule.get("same_predeclared_failure_mode_required") is True
         and retirement_rule.get("all_cells_powered_and_complete_required") is True
         and retirement_rule.get("frozen_before_first_run") is True
+        and retirement_rule.get("failure_mode_derivation")
+        == "verified_predicate_set_sha256_v1"
     )
 
     config_seed = _integer(config.get("seed"))
@@ -1925,8 +2785,17 @@ def _stage(
     hard_blockers: Sequence[str] = (),
 ) -> dict[str, Any]:
     unique_blockers = list(dict.fromkeys(str(value) for value in blockers))
+    scientific_failures = _sequence(evidence.get("scientific_failures"))
+    declared_scientific_status = str(
+        evidence.get("scientific_outcome") or CellStatus.NOT_EVALUATED.value
+    )
     return {
         "passed": not unique_blockers,
+        "gate_status": (
+            GateStatus.BLOCKED.value if unique_blockers else GateStatus.PASS.value
+        ),
+        "scientific_status": declared_scientific_status,
+        "scientific_failure_count": len(scientific_failures),
         "blockers": unique_blockers,
         "hard_blockers": list(dict.fromkeys(str(value) for value in hard_blockers)),
         "evidence": dict(evidence),

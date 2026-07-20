@@ -42,11 +42,13 @@ BWRec_r = (
 )
 ```
 
-Use `python3 -m oph_fpe.cli issue-308-bw-certificate --source <BWRec_r.json> --out <report.json>`
-to recompute BW0-BW3 from primitive fields. A renderer cap, fitted boost, finite cap-ID
-permutation, or numerical coefficient near `2*pi` is not a BW theorem receipt. BW3 requires the
-primitive fields and a passing refinement error envelope; the audit ignores producer-supplied
-`bw_passed` or `tier` booleans.
+Use `python3 -m oph_fpe.cli issue-308-bw-certificate --source <bw-pair.json> --out <report.json>`
+to recompute the six-clause finite cap certificate and the separate `MGNS1Rec_r`
+package. The finite certificate receives tier `FC0` through `FC3`. `FC3` alone
+does not make BW applicable. The applicability receipt requires complete
+`MGNS-1`, independent source artifacts, and an exact tower ID/hash match. A
+repeated-rho diagnostic fails `MGNS-1`. The audit ignores producer-supplied
+pass and tier booleans.
 
 [Issue #309](https://github.com/FloatingPragma/observer-patch-holography/issues/309) is represented by `CAP_NORMAL_H3_CHART_RECEIPT`. It recomputes
 `q(Omega)=(1,Omega)`, `n_C=(cot(alpha), csc(alpha) c)`, boundary incidence,

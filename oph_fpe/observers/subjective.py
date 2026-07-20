@@ -11,6 +11,7 @@ from scipy.sparse import csr_matrix
 
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights
 from oph_fpe.constants.oph_pixel import cap_area_planck, cap_entropy_capacity
+from oph_fpe.observers.sampling import deterministic_observer_analysis_indices
 
 
 LOCALITY_PACKET_FIELDS = (
@@ -344,36 +345,6 @@ def _attach_measured_overlap_correspondences(
                 "S2-derived patch adjacency and therefore cannot establish emergent chart-blind geometry"
             ),
         }
-
-
-def deterministic_observer_analysis_indices(
-    observer_ids: np.ndarray | list[int],
-    *,
-    max_observers: int | None,
-) -> np.ndarray:
-    """Return a deterministic, nested observer-population subsample.
-
-    The rank is a fixed SplitMix64 permutation of the materialized observer ID.
-    Selecting the lowest ranks makes smaller analysis caps strict subsets of
-    larger caps while avoiding the screen-latitude bias of first-row slicing.
-    Full-population behavior is unchanged whenever the cap is absent or large
-    enough to include every materialized observer.
-    """
-
-    ids = np.asarray(observer_ids, dtype=np.int64).reshape(-1)
-    count = int(ids.size)
-    if max_observers is None or int(max_observers) >= count:
-        return np.arange(count, dtype=np.int64)
-    limit = max(0, int(max_observers))
-    if limit == 0:
-        return np.zeros(0, dtype=np.int64)
-    with np.errstate(over="ignore"):
-        rank = ids.astype(np.uint64) + np.uint64(0x9E3779B97F4A7C15)
-        rank = (rank ^ (rank >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
-        rank = (rank ^ (rank >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
-        rank = rank ^ (rank >> np.uint64(31))
-    order = np.lexsort((np.arange(count, dtype=np.int64), rank))
-    return np.sort(order[:limit].astype(np.int64, copy=False))
 
 
 def _carrier_graph_neighborhoods(

@@ -22,6 +22,10 @@ run artifacts under `runs/`; mutable progress lives in GitHub issues
 - `OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: theorem-to-code and
   claim-promotion contract.
 - `CLAIM_LANES.md`: lane-by-lane contracts.
+- `STRING_VACUUM_SELECTION_RECEIPT_CONTRACT.md`: fail-closed candidate and
+  catalogue evidence contract for the string-vacuum lane.
+- `STRING_VACUUM_SIMULATOR_TARGETS.md`: canonical observable registry,
+  receipt targets, dependency scopes, and replay commands for that lane.
 - `PROOF_PACKET_AUDITS.md`: fail-closed proof-packet audits and
   Lean-mirrored fixtures.
 - `SIMULATION_ASSUMPTION_POLICY.md`: assumed-bridge visualization lane.

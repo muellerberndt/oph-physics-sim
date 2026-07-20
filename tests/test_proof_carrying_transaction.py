@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from fractions import Fraction
+import copy
 
 import pytest
 
@@ -15,9 +16,11 @@ from oph_fpe.repair.transaction import (
     Snapshot,
     TransactionalRepairEngine,
     TransitionKind,
+    build_repair_replay_envelope,
     conflict_components,
     proposals_conflict,
     verify_repair_receipt_artifact,
+    verify_repair_replay_envelope,
 )
 
 
@@ -674,7 +677,7 @@ def test_register_and_nested_mapping_keys_are_never_lossily_coerced() -> None:
         _collar("bad", reads=(1,), writes=("x",))  # type: ignore[arg-type]
 
 
-def test_serialized_artifact_verifier_recomputes_receipt_booleans_and_hashes() -> None:
+def test_serialized_receipt_is_diagnostic_only_even_when_self_consistent() -> None:
     engine = TransactionalRepairEngine({"x": 2}, mismatch_evaluator=_absolute_mismatch)
     receipt = engine.commit(
         _strict(
@@ -686,11 +689,14 @@ def test_serialized_artifact_verifier_recomputes_receipt_booleans_and_hashes() -
         )
     )
     report = verify_repair_receipt_artifact(receipt.as_dict())
-    assert report["REPAIR_ARTIFACT_INTEGRITY_RECEIPT"]
-    assert report["COMPLETE_READ_SET_RECEIPT"]
-    assert report["CONFLICT_COMPONENT_SUPPORT_RECEIPT"]
-    assert report["ATOMIC_UNION_REVALIDATION_RECEIPT"]
-    assert report["TRANSACTIONAL_REPAIR_RECEIPT"]
+    assert report[
+        "REPAIR_RECEIPT_SERIALIZATION_SELF_CONSISTENCY_DIAGNOSTIC_RECEIPT"
+    ]
+    assert not report["REPAIR_ARTIFACT_INTEGRITY_RECEIPT"]
+    assert not report["COMPLETE_READ_SET_RECEIPT"]
+    assert not report["CONFLICT_COMPONENT_SUPPORT_RECEIPT"]
+    assert not report["ATOMIC_UNION_REVALIDATION_RECEIPT"]
+    assert not report["TRANSACTIONAL_REPAIR_RECEIPT"]
     assert report["commit_id"] == receipt.commit_id
 
     forged = receipt.as_dict()
@@ -699,7 +705,143 @@ def test_serialized_artifact_verifier_recomputes_receipt_booleans_and_hashes() -
     forged["TRANSACTIONAL_REPAIR_RECEIPT"] = True
     forged_report = verify_repair_receipt_artifact(forged)
     assert not forged_report["REPAIR_ARTIFACT_INTEGRITY_RECEIPT"]
+    assert not forged_report[
+        "REPAIR_RECEIPT_SERIALIZATION_SELF_CONSISTENCY_DIAGNOSTIC_RECEIPT"
+    ]
     assert not forged_report["TRANSACTIONAL_REPAIR_RECEIPT"]
+
+
+def _zero_replay_expression() -> dict[str, object]:
+    return {"terms": [], "constant": 0, "transform": "identity"}
+
+
+def _strict_replay_envelope() -> dict[str, object]:
+    components = {
+        name: _zero_replay_expression()
+        for name in ("record", "sector", "holonomy", "local_constraint")
+    }
+    components["overlap"] = {
+        "terms": [{"register": "x", "coefficient": 1}],
+        "constant": 0,
+        "transform": "absolute",
+    }
+    mismatch_evaluator = {
+        "kind": "exact_affine_ledger_v1",
+        "components": components,
+        "physical_auxiliary": {},
+    }
+    collar = {
+        "collar_id": "replay-collar",
+        "visible_read_set": ["x"],
+        "writable_registers": ["x"],
+        "protected_boundary": [],
+        "sector_registers": [],
+        "record_registers": [],
+        "checkpoint_registers": [],
+        "interior_registers": ["x"],
+        "carrier_ids": [],
+        "seam_ids": [],
+        "forbidden_target_fields": [],
+    }
+    proposal = {
+        "proposal_id": "primitive-replay",
+        "transition_kind": "STRICT_REPAIR",
+        "proposal_class": "EXACT_SPLICE",
+        "collar": collar,
+        "declared_read_set": ["x"],
+        "recovery": {"kind": "literal_updates_v1", "updates": {"x": 1}},
+        "inverse_updates": {},
+        "source_parameters": {"derivation": "frozen local splice"},
+        "parent_event_ids": [],
+    }
+    return build_repair_replay_envelope(
+        initial_state={"x": 2},
+        initial_versions={"x": 0},
+        mismatch_evaluator=mismatch_evaluator,
+        proposals=[proposal],
+    )
+
+
+def test_primitive_replay_envelope_reconstructs_the_transaction() -> None:
+    envelope = _strict_replay_envelope()
+    report = verify_repair_replay_envelope(envelope)
+    assert report["REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT"]
+    assert report["REPAIR_ARTIFACT_INTEGRITY_RECEIPT"]
+    assert report["COMPLETE_READ_SET_RECEIPT"]
+    assert report["CONFLICT_COMPONENT_SUPPORT_RECEIPT"]
+    assert report["ATOMIC_UNION_REVALIDATION_RECEIPT"]
+    assert report["TRANSACTIONAL_REPAIR_RECEIPT"]
+    assert report["transition_kind"] == "STRICT_REPAIR"
+    assert report["pre_state"] == {"x": 2}
+    assert report["post_state"] == {"x": 1}
+
+
+def test_replay_rejects_coherent_receipt_when_primitive_prestate_disagrees() -> None:
+    envelope = _strict_replay_envelope()
+    forged = copy.deepcopy(envelope)
+    forged["initial_state"]["x"] = 99
+    report = verify_repair_replay_envelope(forged)
+    assert not report["REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT"]
+    assert not report["REPAIR_ARTIFACT_INTEGRITY_RECEIPT"]
+    assert not report["TRANSACTIONAL_REPAIR_RECEIPT"]
+    assert "expected_receipt_is_not_exact_replay_output" in report["failure_reasons"]
+
+
+def test_record_commit_requires_append_replay_and_has_its_own_receipt() -> None:
+    components = {
+        name: _zero_replay_expression()
+        for name in (
+            "record",
+            "sector",
+            "holonomy",
+            "overlap",
+            "local_constraint",
+        )
+    }
+    envelope = build_repair_replay_envelope(
+        initial_state={"records": []},
+        initial_versions={"records": 0},
+        mismatch_evaluator={
+            "kind": "exact_affine_ledger_v1",
+            "components": components,
+            "physical_auxiliary": {},
+        },
+        proposals=[
+            {
+                "proposal_id": "record-0",
+                "transition_kind": "RECORD_COMMIT",
+                "proposal_class": "EXACT_SPLICE",
+                "collar": {
+                    "collar_id": "record-collar",
+                    "visible_read_set": ["records"],
+                    "writable_registers": ["records"],
+                    "protected_boundary": [],
+                    "sector_registers": [],
+                    "record_registers": ["records"],
+                    "checkpoint_registers": [],
+                    "interior_registers": [],
+                    "carrier_ids": [],
+                    "seam_ids": [],
+                    "forbidden_target_fields": [],
+                },
+                "declared_read_set": ["records"],
+                "recovery": {
+                    "kind": "append_literal_v1",
+                    "register": "records",
+                    "value": {"record_id": "r0", "value": 7},
+                },
+                "inverse_updates": {},
+                "source_parameters": {"source": "stable readback"},
+                "parent_event_ids": [],
+            }
+        ],
+    )
+    report = verify_repair_replay_envelope(envelope)
+    assert report["REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT"]
+    assert report["REPLAYED_TRANSITION_RECEIPT"]
+    assert report["RECORD_COMMIT_REPLAY_RECEIPT"]
+    assert not report["TRANSACTIONAL_REPAIR_RECEIPT"]
+    assert report["semantic_record_event_id"]
 
 
 def test_rejected_receipt_cannot_be_promoted_by_flipping_serialized_flags() -> None:

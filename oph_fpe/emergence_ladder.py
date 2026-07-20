@@ -2,9 +2,11 @@
 
 The simulator has many independently produced reports.  This module does not
 infer a theorem from a suggestive diagnostic and does not rerun any numerical
-fit.  It indexes *boolean, named* receipts already present in a run directory,
-then evaluates a typed dependency DAG.  Missing, non-boolean, false, or
-contradictory evidence cannot promote a downstream claim.
+fit.  It admits evidence only through a registry of independent artifact
+verifiers, then evaluates a typed dependency DAG.  A caller-authored JSON
+boolean is never ladder evidence, even when its key exactly matches a canonical
+receipt name.  Missing, verifier-rejected, false, or contradictory evidence
+cannot promote a downstream claim.
 
 Three separation rules are encoded in the graph itself:
 
@@ -33,11 +35,24 @@ from oph_fpe.common_source_tower import (
     REPORT_ARTIFACT_TYPE as COMMON_SOURCE_REPORT_ARTIFACT_TYPE,
     verify_common_source_tower_report_file,
 )
+from oph_fpe.core.echosahedral_federation import (
+    verify_reference_federation_instrument_bundle,
+)
+from oph_fpe.observers.operational_verifier import (
+    FINITE_RECEIPT_KEYS as OPERATIONAL_OBSERVER_RECEIPT_KEYS,
+    OBSERVER_ARTIFACT_INTEGRITY_RECEIPT,
+    REPORT_ARTIFACT_TYPE as OPERATIONAL_OBSERVER_REPORT_ARTIFACT_TYPE,
+    verify_operational_observer_manifest,
+)
+from oph_fpe.repair.transaction import (
+    REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE,
+    verify_repair_replay_envelope,
+)
 
 
-EMERGENCE_LADDER_SCHEMA_VERSION = "oph.emergence-ladder/1.0.0"
+EMERGENCE_LADDER_SCHEMA_VERSION = "oph.emergence-ladder/2.0.0"
 EMERGENCE_LADDER_SCHEMA_URI = (
-    "https://floatingpragma.io/schemas/oph-emergence-ladder-1.0.0.schema.json"
+    "https://floatingpragma.io/schemas/oph-emergence-ladder-2.0.0.schema.json"
 )
 EMERGENCE_LADDER_ARTIFACT_TYPE = "OPH_EMERGENCE_LADDER_AUDIT"
 DEFAULT_REPORT_NAME = "emergence_ladder_report.json"
@@ -85,25 +100,35 @@ def _requirement(
 STAGE_SPECS: tuple[StageSpec, ...] = (
     StageSpec(
         "A0",
-        "Bounded source-patch architecture",
+        "Typed bounded echosahedral federation",
         "observer_repair",
         "source_architecture",
         (),
         (
             _requirement(
-                "bounded_patch_architecture",
-                "SOURCE_PATCH_ARCHITECTURE_RECEIPT",
-                "bounded, simulation-native source patches are instantiated",
+                "repair_primitive_replay_envelope",
+                "REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT",
+                "the repair is reconstructed from its exact pre-state, versions, evaluator, collar, and proposals",
+            ),
+            _requirement(
+                "canonical_federation_bundle",
+                "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT",
+                "the bounded federation is reconstructed from the canonical shared-template instrument bundle",
+            ),
+            _requirement(
+                "carrier_conformance",
+                "ECHOSAHEDRAL_CARRIER_CONFORMANCE",
+                "every instantiated carrier has the exact 12/30/20 antipode and A5 incidence contract",
+            ),
+            _requirement(
+                "federation_sewing",
+                "FEDERATION_SEWING_RECEIPT",
+                "typed seams, external boundaries, and connected observer supports sew consistently",
             ),
             _requirement(
                 "local_state",
                 "PATCH_LOCAL_STATE_RECEIPT",
                 "each patch has finite local state",
-            ),
-            _requirement(
-                "ports_and_boundaries",
-                "PATCH_PORT_BOUNDARY_RECEIPT",
-                "patch ports and boundaries are explicit",
             ),
             _requirement(
                 "readback",
@@ -130,56 +155,140 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
     ),
     StageSpec(
         "A2",
-        "Local transactional repair",
+        "Proof-carrying local transactional repair",
         "observer_repair",
         "repair_dynamics",
         ("A1",),
         (
             _requirement(
-                "strict_descent",
-                "SEAM_REPAIR_DESCENT_RECEIPT",
-                "accepted local repair moves strictly descend the frozen mismatch functional",
+                "repair_artifact_integrity",
+                "REPAIR_ARTIFACT_INTEGRITY_RECEIPT",
+                "the canonical repair artifact is independently reconstructed from primitive fields",
             ),
             _requirement(
-                "atomic_commit",
-                "SEAM_ATOMIC_COMMIT_RECEIPT",
-                "multi-endpoint repair commits are atomic",
+                "complete_read_set",
+                "COMPLETE_READ_SET_RECEIPT",
+                "proposal and mismatch evaluation reads are completely traced to one snapshot",
             ),
             _requirement(
-                "same_boundary_confluence",
-                "SAME_BOUNDARY_MULTISTART_CONFLUENCE_RECEIPT",
-                "same-boundary multistarts have a certified common quotient normal form",
+                "conflict_component_support",
+                "CONFLICT_COMPONENT_SUPPORT_RECEIPT",
+                "the complete read/write conflict component is reconstructed",
+            ),
+            _requirement(
+                "atomic_union_revalidation",
+                "ATOMIC_UNION_REVALIDATION_RECEIPT",
+                "the union update is revalidated atomically against the frozen mismatch ledger",
+            ),
+            _requirement(
+                "transactional_repair",
+                "TRANSACTIONAL_REPAIR_RECEIPT",
+                "a nonheuristic strict repair transaction commits under the exact transition contract",
             ),
         ),
-        "Local repair closure does not itself construct records, observers, or geometry.",
+        "One verified finite repair transaction does not establish obstruction freedom, confluence, records, observers, or geometry.",
+    ),
+    StageSpec(
+        "A2O",
+        "Boundary-fiber obstruction and ambiguity audit",
+        "observer_repair",
+        "obstruction_classification",
+        ("A2",),
+        (
+            _requirement(
+                "complete_boundary_fiber_classification",
+                "COMPLETE_BOUNDARY_FIBER_CLASSIFICATION_RECEIPT",
+                "every in-scope boundary fiber is classified as unrealizable, unique, ambiguous, or unknown by a complete exact exhaustor",
+            ),
+            _requirement(
+                "higher_overlap_holonomy",
+                "HIGHER_OVERLAP_HOLONOMY_AUDIT_RECEIPT",
+                "cycle and higher-overlap holonomy are audited before repair",
+            ),
+            _requirement(
+                "no_unresolved_obstruction",
+                "NO_UNRESOLVED_REPAIR_OBSTRUCTION_RECEIPT",
+                "no nonzero physical obstruction is hidden by a preferred representative",
+            ),
+            _requirement(
+                "no_ambiguous_or_unknown_fibers",
+                "NO_AMBIGUOUS_OR_UNKNOWN_BOUNDARY_FIBERS_RECEIPT",
+                "every physically promoted boundary fiber has a unique quotient extension",
+            ),
+        ),
+        "AMBIGUOUS and UNKNOWN are valid scientific outputs but cannot be promoted as unique repaired states.",
+    ),
+    StageSpec(
+        "A2Q",
+        "Quotient lumpability and schedule-independent normal form",
+        "observer_repair",
+        "quotient_dynamics",
+        ("A2O",),
+        (
+            _requirement(
+                "carrier_quotient_invariance",
+                "CARRIER_QUOTIENT_INVARIANCE_RECEIPT",
+                "the finite carrier contract is invariant under an independently supplied equivalent presentation",
+            ),
+            _requirement(
+                "full_dynamical_quotient_invariance",
+                "FULL_DYNAMICAL_QUOTIENT_INVARIANCE_RECEIPT",
+                "repair dynamics and semantic outputs descend to the declared quotient",
+            ),
+            _requirement(
+                "probability_lumpability",
+                "EXACT_QUOTIENT_PROBABILITY_LUMPABILITY_RECEIPT",
+                "all representatives induce the same exact quotient probability kernel",
+            ),
+            _requirement(
+                "rate_lumpability",
+                "EXACT_QUOTIENT_RATE_LUMPABILITY_RECEIPT",
+                "all representatives induce the same exact quotient rate kernel",
+            ),
+            _requirement(
+                "quotient_repair_confluence",
+                "QUOTIENT_REPAIR_CONFLUENCE_RECEIPT",
+                "complete multistart repair paths terminate in one quotient normal form independently of schedule",
+            ),
+        ),
+        "Presentation-level agreement or one sampled schedule cannot establish quotient dynamics or a physical normal form.",
     ),
     StageSpec(
         "A3",
         "Central causal record layer",
         "observer_repair",
         "record_causality",
-        ("A2",),
+        ("A2Q",),
         (
             _requirement(
-                "central_records",
-                "CENTRAL_RECORD_ALGEBRA_RECEIPT",
-                "committed observer-facing records form the central event algebra",
+                "observer_artifact_integrity",
+                "OBSERVER_ARTIFACT_INTEGRITY_RECEIPT",
+                "all primitive operational-observer artifacts are present and independently rehashed",
             ),
             _requirement(
-                "record_commit",
-                "RECORD_COMMIT_RECEIPT",
-                "record writes cross the declared stability/commit boundary",
+                "observer_contract_binding",
+                "OBSERVER_CONTRACT_BINDING_RECEIPT",
+                "source, transaction, evaluator, configuration, seed, and evidence share one replayed contract binding",
             ),
             _requirement(
-                "read_after_write",
-                "RECORD_READ_AFTER_WRITE_RECEIPT",
-                "every counted read has a causally prior committed write",
-                "E2_READ_AFTER_WRITE_RECEIPT",
+                "observer_source_firewall",
+                "OBSERVER_SOURCE_FIREWALL_RECEIPT",
+                "the operational source and evaluator pass the target and runtime-metadata firewall",
             ),
             _requirement(
-                "checkpoint_continuation",
-                "CHECKPOINT_CONTINUATION_RECEIPT",
-                "checkpoint restore preserves the observer-facing continuation",
+                "record_commit_replay",
+                "A3_RECORD_COMMIT_REPLAY_RECEIPT",
+                "every stable observer-facing record commit is replayed from the semantic trace",
+            ),
+            _requirement(
+                "read_after_write_ancestry",
+                "A3_READ_AFTER_WRITE_ANCESTRY_RECEIPT",
+                "every counted read has a causally prior committed write in the semantic DAG",
+            ),
+            _requirement(
+                "readback_prediction_control",
+                "A3_READBACK_PREDICTION_CONTROL_RECEIPT",
+                "record readback predicts held-out outcomes above its frozen shuffled control",
             ),
         ),
         "A classical central record surface is not a noncommutative modular cap algebra.",
@@ -192,14 +301,29 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
         ("A3",),
         (
             _requirement(
-                "observer_instantiation",
-                "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT",
-                "bounded observer-like systems are instantiated",
+                "connected_observer_support",
+                "A4_CONNECTED_OBSERVER_SUPPORT_RECEIPT",
+                "the observer token is supported on a connected carrier subfederation",
             ),
             _requirement(
-                "causal_readback_feedback_loop",
-                "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT",
-                "readback and committed records causally change later local repair actions",
+                "bounded_interface",
+                "A4_BOUNDED_INTERFACE_RECEIPT",
+                "the observer support exposes a finite bounded interface",
+            ),
+            _requirement(
+                "feedback_ablation",
+                "A4_FEEDBACK_ABLATION_RECEIPT",
+                "ablating record feedback changes later local actions under the frozen control",
+            ),
+            _requirement(
+                "checkpoint_continuation_replay",
+                "A4_CHECKPOINT_CONTINUATION_REPLAY_RECEIPT",
+                "checkpoint restoration exactly replays the committed observer continuation",
+            ),
+            _requirement(
+                "operational_self_reading_observer",
+                "OPERATIONAL_SELF_READING_OBSERVER_RECEIPT",
+                "all finite operational self-reading clauses pass in one replayed evidence bundle",
             ),
         ),
         "An operational observer does not by bare consensus imply geometry or a physical clock.",
@@ -265,6 +389,11 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
                 "a5_equivariance",
                 "A5_EQUIVARIANT_REFINEMENT_RECEIPT",
                 "all refinement maps intertwine the exact order-60 orientation-preserving A5 action",
+            ),
+            _requirement(
+                "carrier_refinement_naturality",
+                "CARRIER_REFINEMENT_NATURALITY_RECEIPT",
+                "carrier embeddings, coarse maps, seam laws, and quotient maps form a natural refinement system",
             ),
         ),
         "A5 is upstream structure for the SM spine, never a Standard Model receipt by itself.",
@@ -644,7 +773,7 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
         "Derived twelve-port icosahedral A5 orbit",
         "standard_model",
         "sm_o_port_theorem_transform",
-        ("SM0",),
+        ("SM0", "A5"),
         (
             _requirement(
                 "port_theorem_application",
@@ -770,7 +899,7 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
         "Physical carrier, clock, category, deck, and line laws",
         "standard_model",
         "sm_global_source_laws",
-        ("SM3", "G2"),
+        ("SM3",),
         (
             _requirement(
                 "minimal_carrier",
@@ -783,9 +912,9 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
                 "a primitive determinant volume and oriented central clock are physically read",
             ),
             _requirement(
-                "clock_intertwiner",
-                "BW_TO_CENTRAL_VOLUME_CLOCK_INTERTWINER_RECEIPT",
-                "the volume clock is bound downstream to the independent BW/KMS 2pi clock",
+                "source_derived_volume_clock",
+                "SOURCE_DERIVED_CENTRAL_ORIENTED_VOLUME_CLOCK_RECEIPT",
+                "the central oriented volume clock is independently derived from the SM-branch source and is not imported from BW/KMS normalization",
             ),
             _requirement(
                 "complete_category",
@@ -809,7 +938,7 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
                 "the current output integrates into the same physical carrier and refinement system",
             ),
         ),
-        "Using a stipulated primitive 2pi volume clock upstream of G2 would be circular and is forbidden.",
+        "The SM reversible-current/A5 branch is independent of the BW/KMS geometry branch; a later joint measurement may compare their clocks but cannot supply either source law.",
     ),
     StageSpec(
         "SM5",
@@ -999,6 +1128,9 @@ EMERGENCE_LADDER_JSON_SCHEMA: dict[str, Any] = {
                 "scanned_report_paths",
                 "ignored_self_artifacts",
                 "input_errors",
+                "registered_artifacts",
+                "unadmitted_json_reports",
+                "source_commitment_bindings",
             ],
         },
         "dag": {
@@ -1052,6 +1184,15 @@ EMERGENCE_LADDER_JSON_SCHEMA: dict[str, Any] = {
                 "passed",
                 "blockers",
                 "source_report_paths",
+                "closure_source_report_paths",
+                "artifact_verifier_ids",
+                "closure_artifact_verifier_ids",
+                "source_bindings",
+                "closure_source_bindings",
+                "common_source_binding_required_paths",
+                "closure_common_source_binding_required_paths",
+                "common_source_binding_required",
+                "common_source_binding_verified",
                 "evidence",
             ],
             "properties": {
@@ -1074,6 +1215,30 @@ EMERGENCE_LADDER_JSON_SCHEMA: dict[str, Any] = {
                     "type": "array",
                     "items": {"type": "string"},
                 },
+                "closure_source_report_paths": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "artifact_verifier_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "closure_artifact_verifier_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "source_bindings": {"type": "object"},
+                "closure_source_bindings": {"type": "object"},
+                "common_source_binding_required_paths": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "closure_common_source_binding_required_paths": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "common_source_binding_required": {"type": "boolean"},
+                "common_source_binding_verified": {"type": "boolean"},
                 "evidence": {"type": "object"},
             },
         },
@@ -1084,9 +1249,104 @@ EMERGENCE_LADDER_JSON_SCHEMA: dict[str, Any] = {
 @dataclass(frozen=True)
 class _Observation:
     key: str
-    value: Any
+    value: bool
     report_path: str
     json_pointer: str
+    verifier_id: str
+    source_commitment: str | None
+    requires_common_source_binding: bool
+
+
+@dataclass(frozen=True)
+class ArtifactVerifierSpec:
+    """Public description of one admissible artifact-verifier route."""
+
+    verifier_id: str
+    marker_field: str
+    marker_value: str
+    admitted_receipt_keys: frozenset[str]
+    integrity_receipt_key: str
+    common_source_semantic_roles: frozenset[str]
+    requires_common_source_binding: bool
+
+
+COMMON_SOURCE_VERIFIER_ID = "typed_common_source_tower_replay_v1"
+FEDERATION_VERIFIER_ID = "canonical_echosahedral_federation_bundle_v1"
+REPAIR_VERIFIER_ID = "proof_carrying_transaction_replay_v1"
+OPERATIONAL_OBSERVER_VERIFIER_ID = "operational_observer_report_replay_v1"
+
+FEDERATION_ADMITTED_RECEIPT_KEYS = frozenset(
+    {
+        "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT",
+        "ECHOSAHEDRAL_CARRIER_CONFORMANCE",
+        "FEDERATION_SEWING_RECEIPT",
+        "CARRIER_QUOTIENT_INVARIANCE_RECEIPT",
+        "CARRIER_REFINEMENT_NATURALITY_RECEIPT",
+        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT",
+        "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID",
+    }
+)
+REPAIR_ADMITTED_RECEIPT_KEYS = frozenset(
+    {
+        "REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT",
+        "REPAIR_ARTIFACT_INTEGRITY_RECEIPT",
+        "COMPLETE_READ_SET_RECEIPT",
+        "CONFLICT_COMPONENT_SUPPORT_RECEIPT",
+        "ATOMIC_UNION_REVALIDATION_RECEIPT",
+        "TRANSACTIONAL_REPAIR_RECEIPT",
+    }
+)
+
+ARTIFACT_VERIFIER_REGISTRY: tuple[ArtifactVerifierSpec, ...] = (
+    ArtifactVerifierSpec(
+        verifier_id=COMMON_SOURCE_VERIFIER_ID,
+        marker_field="artifact_type",
+        marker_value=COMMON_SOURCE_REPORT_ARTIFACT_TYPE,
+        admitted_receipt_keys=frozenset(C0_RECEIPT_KEYS),
+        integrity_receipt_key="passed",
+        common_source_semantic_roles=frozenset(),
+        requires_common_source_binding=False,
+    ),
+    ArtifactVerifierSpec(
+        verifier_id=FEDERATION_VERIFIER_ID,
+        marker_field="schema",
+        marker_value="oph.echosahedral_federation.instrument_bundle.v1",
+        admitted_receipt_keys=FEDERATION_ADMITTED_RECEIPT_KEYS,
+        integrity_receipt_key="INSTRUMENT_BUNDLE_SCHEMA_RECEIPT",
+        common_source_semantic_roles=frozenset({"authoritative_presentation"}),
+        requires_common_source_binding=False,
+    ),
+    ArtifactVerifierSpec(
+        verifier_id=REPAIR_VERIFIER_ID,
+        marker_field="artifact_type",
+        marker_value=REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE,
+        admitted_receipt_keys=REPAIR_ADMITTED_RECEIPT_KEYS,
+        integrity_receipt_key="REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT",
+        common_source_semantic_roles=frozenset({"repair_log"}),
+        requires_common_source_binding=False,
+    ),
+    ArtifactVerifierSpec(
+        verifier_id=OPERATIONAL_OBSERVER_VERIFIER_ID,
+        marker_field="artifact_type",
+        marker_value=OPERATIONAL_OBSERVER_REPORT_ARTIFACT_TYPE,
+        admitted_receipt_keys=frozenset(OPERATIONAL_OBSERVER_RECEIPT_KEYS),
+        integrity_receipt_key=OBSERVER_ARTIFACT_INTEGRITY_RECEIPT,
+        common_source_semantic_roles=frozenset(),
+        requires_common_source_binding=True,
+    ),
+)
+
+_VERIFIER_BY_ID = {spec.verifier_id: spec for spec in ARTIFACT_VERIFIER_REGISTRY}
+
+
+@dataclass(frozen=True)
+class _JsonCandidate:
+    path: Path
+    report_path: str
+    raw: bytes
+    sha256: str
+    payload: Any
+    verifier_id: str | None
 
 
 def canonical_receipt_keys() -> tuple[str, ...]:
@@ -1100,16 +1360,14 @@ def canonical_receipt_keys() -> tuple[str, ...]:
 
 
 def audit_emergence_ladder(run_dir: str | Path) -> dict[str, Any]:
-    """Read named receipts under ``run_dir`` and evaluate the strict DAG.
+    """Replay registered artifacts under ``run_dir`` and evaluate the DAG.
 
-    JSON files are scanned recursively.  A receipt is accepted only when every
-    occurrence of every present equivalent key is the JSON boolean ``true``.
-    Mixed true/false copies are contradictory and fail closed.  Integers,
-    strings, and other truthy values are not booleans and are rejected.
-    Previously written ladder audits and schema files are ignored so that an
-    audit can never certify itself on a second pass.  The six C0 receipts are
-    an exception to generic name scanning: they are admitted only from an
-    exact common-source verifier artifact whose manifest is replayed here.
+    Every JSON file is inventoried, but only an exact marker in
+    :data:`ARTIFACT_VERIFIER_REGISTRY` selects a verifier.  Only the explicit
+    allowlist of booleans returned by that verifier is admitted.  Nested or
+    top-level booleans in all other JSON are retained as unadmitted diagnostics.
+    Previously written ladder audits and schema files are ignored so an audit
+    can never certify itself on a second pass.
     """
 
     root = Path(run_dir)
@@ -1257,6 +1515,34 @@ def validate_emergence_ladder_report(report: Mapping[str, Any]) -> list[str]:
             errors.append(f"{spec.stage_id}:passed_not_boolean")
         if stage.get("passed") is True and stage.get("claim_status") != "computed":
             errors.append(f"{spec.stage_id}:passed_without_computed_status")
+        if not isinstance(stage.get("common_source_binding_required"), bool):
+            errors.append(f"{spec.stage_id}:binding_required_not_boolean")
+        if not isinstance(stage.get("common_source_binding_verified"), bool):
+            errors.append(f"{spec.stage_id}:binding_verified_not_boolean")
+        if (
+            stage.get("passed") is True
+            and stage.get("common_source_binding_verified") is not True
+        ):
+            errors.append(f"{spec.stage_id}:passed_without_common_source_binding")
+        closure_paths = stage.get("closure_source_report_paths")
+        closure_bindings = stage.get("closure_source_bindings")
+        if not isinstance(closure_paths, list) or not isinstance(
+            closure_bindings, Mapping
+        ):
+            errors.append(f"{spec.stage_id}:closure_source_binding_shape_invalid")
+        elif closure_paths != sorted(closure_bindings):
+            errors.append(f"{spec.stage_id}:closure_source_binding_paths_mismatch")
+        closure_required_paths = stage.get(
+            "closure_common_source_binding_required_paths"
+        )
+        if not isinstance(closure_required_paths, list) or not all(
+            isinstance(value, str) for value in closure_required_paths
+        ):
+            errors.append(f"{spec.stage_id}:required_binding_paths_invalid")
+        elif isinstance(closure_paths, list):
+            expected_required = bool(len(closure_paths) > 1 or closure_required_paths)
+            if stage.get("common_source_binding_required") is not expected_required:
+                errors.append(f"{spec.stage_id}:binding_required_recompute_mismatch")
         for dependency in spec.dependencies:
             upstream = stages.get(dependency)
             if stage.get("passed") is True and (
@@ -1290,11 +1576,13 @@ def validate_emergence_ladder_report(report: Mapping[str, Any]) -> list[str]:
 def _index_run_reports(
     root: Path,
 ) -> tuple[dict[str, list[_Observation]], dict[str, Any]]:
-    index: dict[str, list[_Observation]] = {}
+    candidates: list[_JsonCandidate] = []
     scanned: list[str] = []
     ignored: list[str] = []
     errors: list[str] = []
     hashes: dict[str, str] = {}
+    unadmitted: list[dict[str, Any]] = []
+    registered_rows: list[dict[str, Any]] = []
     common_source_rows: list[dict[str, Any]] = []
     for path in sorted(root.rglob("*.json")):
         if not path.is_file() or path.is_symlink():
@@ -1302,8 +1590,8 @@ def _index_run_reports(
         relative = path.relative_to(root).as_posix()
         try:
             raw = path.read_bytes()
-            payload = json.loads(raw)
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            payload = _strict_json_loads(raw)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"{relative}:unreadable_json:{type(exc).__name__}")
             continue
         if _is_self_artifact(payload):
@@ -1311,52 +1599,367 @@ def _index_run_reports(
             continue
         scanned.append(relative)
         hashes[relative] = hashlib.sha256(raw).hexdigest()
-        if (
-            isinstance(payload, Mapping)
-            and payload.get("artifact_type") == COMMON_SOURCE_REPORT_ARTIFACT_TYPE
-        ):
-            validation = verify_common_source_tower_report_file(path)
-            validation_blockers = list(validation.get("blockers") or [])
-            row = {
-                "report_path": relative,
-                "passed": validation.get("passed") is True,
+        verifier_id = _select_artifact_verifier(payload)
+        candidates.append(
+            _JsonCandidate(
+                path=path,
+                report_path=relative,
+                raw=raw,
+                sha256=hashes[relative],
+                payload=payload,
+                verifier_id=verifier_id,
+            )
+        )
+
+    index: dict[str, list[_Observation]] = {}
+    # A verified common-source report authenticates the exact byte hashes of
+    # its declared artifacts.  This gives later registry entries the only
+    # admissible route to a common bundle commitment.
+    commitment_bindings_by_artifact_sha: dict[
+        str, set[tuple[str, str, str]]
+    ] = {}
+    verified_common_report_commitments: dict[str, set[str]] = {}
+    for candidate in candidates:
+        if candidate.verifier_id != COMMON_SOURCE_VERIFIER_ID:
+            continue
+        validation = verify_common_source_tower_report_file(candidate.path)
+        validation_blockers = list(validation.get("blockers") or [])
+        recomputed = validation.get("recomputed_report")
+        commitment = (
+            recomputed.get("computed_bundle_commitment")
+            if isinstance(recomputed, Mapping)
+            else None
+        )
+        if not isinstance(commitment, str) or not commitment:
+            commitment = None
+        passed = validation.get("passed") is True
+        admitted_commitment = commitment if passed else None
+        row = {
+            "registry_id": COMMON_SOURCE_VERIFIER_ID,
+            "report_path": candidate.report_path,
+            "integrity_receipt_key": "passed",
+            "passed": passed,
+            "source_commitment": admitted_commitment,
+            "admitted_receipt_keys": sorted(C0_RECEIPT_KEYS) if passed else [],
+            "blockers": validation_blockers,
+        }
+        common_source_rows.append(
+            {
+                "report_path": candidate.report_path,
+                "passed": passed,
                 "blockers": validation_blockers,
             }
-            common_source_rows.append(row)
-            if validation.get("passed") is True:
-                recomputed = validation.get("recomputed_report")
-                if not isinstance(recomputed, Mapping):
-                    errors.append(
-                        f"{relative}:common_source_verifier_missing_recomputed_report"
-                    )
-                else:
-                    for key in sorted(C0_RECEIPT_KEYS):
-                        index.setdefault(key, []).append(
-                            _Observation(
-                                key=key,
-                                value=recomputed.get(key),
-                                report_path=relative,
-                                json_pointer=f"/{_pointer_escape(key)}",
-                            )
-                        )
-            else:
-                if validation_blockers:
-                    errors.extend(
-                        f"{relative}:common_source_verification_failed:{blocker}"
-                        for blocker in validation_blockers
-                    )
-                else:
-                    errors.append(f"{relative}:common_source_verification_failed")
-        for key, value, pointer in _walk_named_values(payload):
-            if key in C0_RECEIPT_KEYS:
+        )
+        registered_rows.append(row)
+        if not passed:
+            suffixes = validation_blockers or ["unspecified"]
+            errors.extend(
+                f"{candidate.report_path}:common_source_verification_failed:{item}"
+                for item in suffixes
+            )
+            continue
+        if not isinstance(recomputed, Mapping) or commitment is None:
+            errors.append(
+                f"{candidate.report_path}:common_source_verifier_missing_commitment"
+            )
+            continue
+        verified_common_report_commitments.setdefault(candidate.sha256, set()).add(
+            commitment
+        )
+        for key in sorted(C0_RECEIPT_KEYS):
+            value = recomputed.get(key)
+            if type(value) is not bool:
+                errors.append(
+                    f"{candidate.report_path}:verifier_non_boolean_output:{key}"
+                )
                 continue
             index.setdefault(key, []).append(
                 _Observation(
                     key=key,
                     value=value,
-                    report_path=relative,
-                    json_pointer=pointer,
+                    report_path=candidate.report_path,
+                    json_pointer=f"/recomputed_report/{_pointer_escape(key)}",
+                    verifier_id=COMMON_SOURCE_VERIFIER_ID,
+                    source_commitment=commitment,
+                    requires_common_source_binding=False,
                 )
+            )
+        verification = recomputed.get("artifact_verification")
+        verification_rows = (
+            verification.get("rows") if isinstance(verification, Mapping) else None
+        )
+        if isinstance(verification_rows, list):
+            for artifact_row in verification_rows:
+                if not isinstance(artifact_row, Mapping):
+                    continue
+                actual = _normalize_sha256(artifact_row.get("actual_sha256"))
+                semantic_role = artifact_row.get("semantic_role")
+                artifact_id = artifact_row.get("artifact_id")
+                if (
+                    actual is not None
+                    and artifact_row.get("passed") is True
+                    and isinstance(semantic_role, str)
+                    and isinstance(artifact_id, str)
+                ):
+                    commitment_bindings_by_artifact_sha.setdefault(
+                        actual, set()
+                    ).add((commitment, semantic_role, artifact_id))
+
+    federation_verifications = {
+        candidate.report_path: verify_reference_federation_instrument_bundle(
+            candidate.payload
+        )
+        for candidate in candidates
+        if candidate.verifier_id == FEDERATION_VERIFIER_ID
+    }
+    valid_federation_hashes = {
+        candidate.sha256
+        for candidate in candidates
+        if candidate.verifier_id == FEDERATION_VERIFIER_ID
+        and all(
+            federation_verifications[candidate.report_path].get(key) is True
+            for key in (
+                "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT",
+                "ECHOSAHEDRAL_CARRIER_CONFORMANCE",
+                "FEDERATION_SEWING_RECEIPT",
+            )
+        )
+    }
+    repair_verifications = {
+        candidate.report_path: verify_repair_replay_envelope(candidate.payload)
+        for candidate in candidates
+        if candidate.verifier_id == REPAIR_VERIFIER_ID
+    }
+    valid_repair_hashes = {
+        candidate.sha256
+        for candidate in candidates
+        if candidate.verifier_id == REPAIR_VERIFIER_ID
+        and repair_verifications[candidate.report_path].get(
+            "REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT"
+        )
+        is True
+    }
+
+    for candidate in candidates:
+        if candidate.verifier_id is None:
+            unadmitted.append(_unadmitted_json_row(candidate))
+            continue
+        if candidate.verifier_id == COMMON_SOURCE_VERIFIER_ID:
+            continue
+        spec = _VERIFIER_BY_ID[candidate.verifier_id]
+        if candidate.verifier_id == FEDERATION_VERIFIER_ID:
+            verification = federation_verifications[candidate.report_path]
+            blocker_values = verification.get("blockers") or []
+        elif candidate.verifier_id == REPAIR_VERIFIER_ID:
+            verification = repair_verifications[candidate.report_path]
+            blocker_values = verification.get("failure_reasons") or []
+        elif candidate.verifier_id == OPERATIONAL_OBSERVER_VERIFIER_ID:
+            replay = _replay_operational_observer_report(candidate)
+            recomputed_observer = replay.get("recomputed_report")
+            if not isinstance(recomputed_observer, Mapping):
+                recomputed_observer = {}
+            verification = {
+                key: (
+                    recomputed_observer.get(key)
+                    if replay.get("passed") is True
+                    else False
+                )
+                for key in spec.admitted_receipt_keys
+            }
+            blocker_values = [
+                *(replay.get("blockers") or []),
+                *(recomputed_observer.get("blockers") or []),
+            ]
+        else:  # pragma: no cover - registry and dispatcher are defined together
+            raise RuntimeError(f"unhandled verifier: {candidate.verifier_id}")
+        integrity = verification.get(spec.integrity_receipt_key)
+        if type(integrity) is not bool:
+            errors.append(
+                f"{candidate.report_path}:verifier_non_boolean_output:"
+                f"{spec.integrity_receipt_key}"
+            )
+            integrity = False
+        observer_parent_binding: dict[str, Any] | None = None
+        if candidate.verifier_id == OPERATIONAL_OBSERVER_VERIFIER_ID:
+            contract = (
+                recomputed_observer.get("contract_binding")
+                if isinstance(recomputed_observer, Mapping)
+                else None
+            )
+            source_parent_sha = _normalize_sha256(
+                contract.get("source_bundle_receipt_hash")
+                if isinstance(contract, Mapping)
+                else None
+            )
+            repair_parent_sha = _normalize_sha256(
+                contract.get("canonical_repair_artifact_hash")
+                if isinstance(contract, Mapping)
+                else None
+            )
+            federation_parent_sha = _normalize_sha256(
+                contract.get("federation_bundle_receipt_hash")
+                if isinstance(contract, Mapping)
+                else None
+            )
+            source_parent_commitments = (
+                verified_common_report_commitments.get(source_parent_sha, set())
+                if source_parent_sha is not None
+                else set()
+            )
+            repair_parent_rows = (
+                commitment_bindings_by_artifact_sha.get(
+                    repair_parent_sha, set()
+                )
+                if repair_parent_sha is not None
+                else set()
+            )
+            repair_role_bindings = {
+                row for row in repair_parent_rows if row[1] == "repair_log"
+            }
+            repair_parent_commitments = {row[0] for row in repair_role_bindings}
+            federation_parent_rows = (
+                commitment_bindings_by_artifact_sha.get(
+                    federation_parent_sha, set()
+                )
+                if federation_parent_sha is not None
+                else set()
+            )
+            federation_role_bindings = {
+                row
+                for row in federation_parent_rows
+                if row[1] == "authoritative_presentation"
+            }
+            federation_parent_commitments = {
+                row[0] for row in federation_role_bindings
+            }
+            role_bindings = repair_role_bindings | federation_role_bindings
+            source_commitment = None
+            if replay.get("passed") is not True or integrity is not True:
+                binding_status = "observer_report_replay_or_integrity_failed"
+            elif source_parent_sha is None or not source_parent_commitments:
+                binding_status = "observer_source_parent_is_not_verified_c0_report"
+            elif (
+                repair_parent_sha is None
+                or repair_parent_sha not in valid_repair_hashes
+            ):
+                binding_status = "observer_repair_parent_is_not_verified_repair"
+            elif (
+                federation_parent_sha is None
+                or federation_parent_sha not in valid_federation_hashes
+            ):
+                binding_status = "observer_federation_parent_is_not_verified_bundle"
+            elif not repair_parent_commitments:
+                binding_status = "observer_repair_parent_not_bound_as_repair_log"
+            elif not federation_parent_commitments:
+                binding_status = (
+                    "observer_federation_parent_not_bound_as_authoritative_presentation"
+                )
+            elif (
+                len(source_parent_commitments) != 1
+                or len(repair_parent_commitments) != 1
+                or len(federation_parent_commitments) != 1
+            ):
+                binding_status = "observer_parent_commitment_is_ambiguous"
+            elif not (
+                source_parent_commitments
+                == repair_parent_commitments
+                == federation_parent_commitments
+            ):
+                binding_status = "observer_parent_commitments_disagree"
+            else:
+                source_commitment = next(iter(source_parent_commitments))
+                binding_status = "observer_parents_bound_to_verified_common_source"
+            observer_parent_binding = {
+                "source_bundle_receipt_sha256": source_parent_sha,
+                "canonical_repair_artifact_sha256": repair_parent_sha,
+                "federation_bundle_receipt_sha256": federation_parent_sha,
+                "source_parent_commitments": sorted(source_parent_commitments),
+                "repair_parent_commitments": sorted(repair_parent_commitments),
+                "federation_parent_commitments": sorted(
+                    federation_parent_commitments
+                ),
+                "repair_parent_is_verified_repair": bool(
+                    repair_parent_sha in valid_repair_hashes
+                    if repair_parent_sha is not None
+                    else False
+                ),
+                "federation_parent_is_verified_bundle": bool(
+                    federation_parent_sha in valid_federation_hashes
+                    if federation_parent_sha is not None
+                    else False
+                ),
+            }
+        else:
+            all_hash_bindings = commitment_bindings_by_artifact_sha.get(
+                candidate.sha256, set()
+            )
+            role_bindings = {
+                row
+                for row in all_hash_bindings
+                if row[1] in spec.common_source_semantic_roles
+            }
+            commitments = {row[0] for row in role_bindings}
+            source_commitment = (
+                next(iter(commitments)) if len(commitments) == 1 else None
+            )
+            if len(commitments) > 1:
+                binding_status = "ambiguous_multiple_source_commitments"
+            elif all_hash_bindings and not role_bindings:
+                binding_status = "hash_bound_under_wrong_semantic_role"
+            elif source_commitment is None:
+                binding_status = "not_bound_by_verified_common_source_manifest"
+            else:
+                binding_status = "bound_by_verified_common_source_manifest"
+        admitted_keys: list[str] = []
+        for key in sorted(spec.admitted_receipt_keys):
+            value = verification.get(key)
+            if type(value) is not bool:
+                errors.append(
+                    f"{candidate.report_path}:verifier_non_boolean_output:{key}"
+                )
+                continue
+            admitted_keys.append(key)
+            index.setdefault(key, []).append(
+                _Observation(
+                    key=key,
+                    value=value,
+                    report_path=candidate.report_path,
+                    json_pointer=f"/verifier_output/{_pointer_escape(key)}",
+                    verifier_id=spec.verifier_id,
+                    source_commitment=source_commitment,
+                    requires_common_source_binding=(
+                        spec.requires_common_source_binding
+                    ),
+                )
+            )
+        blockers = [str(value) for value in blocker_values]
+        registered_rows.append(
+            {
+                "registry_id": spec.verifier_id,
+                "report_path": candidate.report_path,
+                "integrity_receipt_key": spec.integrity_receipt_key,
+                "passed": integrity is True,
+                "source_commitment": source_commitment,
+                "source_binding_status": binding_status,
+                "requires_common_source_binding": (
+                    spec.requires_common_source_binding
+                ),
+                "observer_parent_binding": observer_parent_binding,
+                "expected_common_source_semantic_roles": sorted(
+                    spec.common_source_semantic_roles
+                ),
+                "matched_common_source_artifact_ids": sorted(
+                    row[2] for row in role_bindings
+                ),
+                "admitted_receipt_keys": admitted_keys,
+                "blockers": blockers,
+            }
+        )
+        if integrity is not True:
+            suffixes = blockers or ["integrity_receipt_false"]
+            errors.extend(
+                f"{candidate.report_path}:{spec.verifier_id}_failed:{item}"
+                for item in suffixes
             )
     digest = hashlib.sha256()
     for relative in scanned:
@@ -1371,8 +1974,136 @@ def _index_run_reports(
         "report_sha256": hashes,
         "inventory_sha256": digest.hexdigest(),
         "common_source_tower_reports": common_source_rows,
+        "registered_artifacts": registered_rows,
+        "unadmitted_json_reports": unadmitted,
+        "source_commitment_bindings": {
+            row["report_path"]: row.get("source_commitment")
+            for row in registered_rows
+        },
     }
     return index, inventory
+
+
+def _select_artifact_verifier(payload: Any) -> str | None:
+    if not isinstance(payload, Mapping):
+        return None
+    matches = [
+        spec.verifier_id
+        for spec in ARTIFACT_VERIFIER_REGISTRY
+        if payload.get(spec.marker_field) == spec.marker_value
+    ]
+    if len(matches) > 1:
+        # No current marker set overlaps.  Treat future overlap as unregistered
+        # rather than choosing an order-dependent verifier.
+        return None
+    return matches[0] if matches else None
+
+
+def _strict_json_loads(raw: bytes) -> Any:
+    def pairs_hook(pairs: Sequence[tuple[str, Any]]) -> dict[str, Any]:
+        result: dict[str, Any] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate_json_key:{key}")
+            result[key] = value
+        return result
+
+    def reject_constant(value: str) -> Any:
+        raise ValueError(f"nonfinite_json_constant:{value}")
+
+    return json.loads(raw, object_pairs_hook=pairs_hook, parse_constant=reject_constant)
+
+
+def _replay_operational_observer_report(
+    candidate: _JsonCandidate,
+) -> dict[str, Any]:
+    """Replay the sibling manifest and type-strictly compare its full report."""
+
+    payload = candidate.payload
+    blockers: list[str] = []
+    if not isinstance(payload, Mapping):
+        return {
+            "passed": False,
+            "blockers": ["observer_report_root_must_be_object"],
+            "recomputed_report": None,
+        }
+    manifest_name = payload.get("manifest_path")
+    if not isinstance(manifest_name, str) or not manifest_name:
+        return {
+            "passed": False,
+            "blockers": ["observer_report_manifest_path_missing"],
+            "recomputed_report": None,
+        }
+    relative = Path(manifest_name)
+    if relative.is_absolute() or ".." in relative.parts or len(relative.parts) != 1:
+        return {
+            "passed": False,
+            "blockers": ["observer_report_manifest_path_unsafe"],
+            "recomputed_report": None,
+        }
+    manifest_path = candidate.path.parent / relative
+    recomputed = verify_operational_observer_manifest(manifest_path)
+    try:
+        stored_bytes = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        ).encode("utf-8")
+        recomputed_bytes = json.dumps(
+            recomputed,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        ).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        blockers.append(f"observer_report_not_canonical_json:{type(exc).__name__}")
+    else:
+        if stored_bytes != recomputed_bytes:
+            blockers.append("stored_observer_report_not_exact_verifier_output")
+    return {
+        "passed": not blockers,
+        "blockers": blockers,
+        "recomputed_report": recomputed,
+    }
+
+
+def _normalize_sha256(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    candidate = value.removeprefix("sha256:")
+    if len(candidate) != 64 or candidate.lower() != candidate:
+        return None
+    try:
+        int(candidate, 16)
+    except ValueError:
+        return None
+    return candidate
+
+
+def _unadmitted_json_row(candidate: _JsonCandidate) -> dict[str, Any]:
+    receipt_claims = [
+        {
+            "receipt_key": key,
+            "value": value,
+            "json_pointer": pointer,
+        }
+        for key, value, pointer in _walk_named_values(candidate.payload)
+        if key.endswith("_RECEIPT") and type(value) is bool
+    ]
+    payload = candidate.payload
+    return {
+        "report_path": candidate.report_path,
+        "schema": payload.get("schema") if isinstance(payload, Mapping) else None,
+        "artifact_type": (
+            payload.get("artifact_type") if isinstance(payload, Mapping) else None
+        ),
+        "claimed_receipt_booleans": receipt_claims,
+        "admitted": False,
+        "reason": "no_exact_artifact_verifier_registry_match",
+    }
 
 
 def _is_self_artifact(payload: Any) -> bool:
@@ -1416,16 +2147,74 @@ def _evaluate_stage(
     evidence: dict[str, dict[str, Any]] = {}
     evidence_blockers: list[str] = []
     source_paths: set[str] = set()
+    verifier_ids: set[str] = set()
+    source_bindings: dict[str, str | None] = {}
+    required_binding_paths: set[str] = set()
     any_missing = False
     all_evidence_passed = True
     for requirement in spec.requirements:
         result = _evaluate_requirement(requirement, observations)
         evidence[requirement.requirement_id] = result
         source_paths.update(result["source_report_paths"])
+        verifier_ids.update(result["artifact_verifier_ids"])
+        source_bindings.update(result["source_bindings"])
+        required_binding_paths.update(
+            result["required_common_source_binding_paths"]
+        )
         evidence_blockers.extend(result["blockers"])
         any_missing = any_missing or result["claim_status"] == "missing"
         all_evidence_passed = all_evidence_passed and result["passed"] is True
-    passed = bool(not dependency_blockers and all_evidence_passed)
+    closure_bindings = dict(source_bindings)
+    closure_verifier_ids = set(verifier_ids)
+    closure_required_binding_paths = set(required_binding_paths)
+    for dependency in spec.dependencies:
+        upstream = prior_stages.get(dependency, {})
+        upstream_bindings = upstream.get("closure_source_bindings", {})
+        if isinstance(upstream_bindings, Mapping):
+            for path, commitment in upstream_bindings.items():
+                existing = closure_bindings.get(str(path), commitment)
+                closure_bindings[str(path)] = (
+                    commitment if existing == commitment else None
+                )
+        upstream_verifiers = upstream.get("closure_artifact_verifier_ids", [])
+        if isinstance(upstream_verifiers, list):
+            closure_verifier_ids.update(
+                value for value in upstream_verifiers if isinstance(value, str)
+            )
+        upstream_required_paths = upstream.get(
+            "closure_common_source_binding_required_paths", []
+        )
+        if isinstance(upstream_required_paths, list):
+            closure_required_binding_paths.update(
+                value for value in upstream_required_paths if isinstance(value, str)
+            )
+    binding_required = bool(
+        len(closure_bindings) > 1 or closure_required_binding_paths
+    )
+    unbound_paths = sorted(
+        path for path, commitment in closure_bindings.items() if commitment is None
+    )
+    bound_commitments = {
+        commitment
+        for commitment in closure_bindings.values()
+        if isinstance(commitment, str)
+    }
+    binding_blockers: list[str] = []
+    if binding_required and unbound_paths:
+        binding_blockers.append(
+            "common_source_commitment_unbound:" + ",".join(unbound_paths)
+        )
+    if binding_required and len(bound_commitments) > 1:
+        binding_blockers.append("common_source_commitment_mismatch")
+    binding_verified = bool(
+        not binding_required
+        or (not unbound_paths and len(bound_commitments) == 1)
+    )
+    passed = bool(
+        not dependency_blockers
+        and not binding_blockers
+        and all_evidence_passed
+    )
     if passed:
         claim_status = "computed"
     elif any_missing:
@@ -1440,8 +2229,21 @@ def _evaluate_stage(
         "dependencies": list(spec.dependencies),
         "claim_status": claim_status,
         "passed": passed,
-        "blockers": sorted(set(dependency_blockers + evidence_blockers)),
+        "blockers": sorted(
+            set(dependency_blockers + binding_blockers + evidence_blockers)
+        ),
         "source_report_paths": sorted(source_paths),
+        "closure_source_report_paths": sorted(closure_bindings),
+        "artifact_verifier_ids": sorted(verifier_ids),
+        "closure_artifact_verifier_ids": sorted(closure_verifier_ids),
+        "source_bindings": dict(sorted(source_bindings.items())),
+        "closure_source_bindings": dict(sorted(closure_bindings.items())),
+        "common_source_binding_required_paths": sorted(required_binding_paths),
+        "closure_common_source_binding_required_paths": sorted(
+            closure_required_binding_paths
+        ),
+        "common_source_binding_required": binding_required,
+        "common_source_binding_verified": binding_verified,
         "evidence": evidence,
         "claim_boundary": spec.claim_boundary,
     }
@@ -1466,6 +2268,9 @@ def _evaluate_requirement(
             "passed": False,
             "observations": [],
             "source_report_paths": [],
+            "artifact_verifier_ids": [],
+            "source_bindings": {},
+            "required_common_source_binding_paths": [],
             "blockers": [
                 f"missing_receipt:{requirement.requirement_id}:expected_one_of={expected}"
             ],
@@ -1478,6 +2283,11 @@ def _evaluate_requirement(
             "value_type": type(row.value).__name__,
             "report_path": row.report_path,
             "json_pointer": row.json_pointer,
+            "artifact_verifier_id": row.verifier_id,
+            "source_commitment": row.source_commitment,
+            "requires_common_source_binding": (
+                row.requires_common_source_binding
+            ),
         }
         for row in rows
     ]
@@ -1504,6 +2314,18 @@ def _evaluate_requirement(
         "passed": passed,
         "observations": serialized_rows,
         "source_report_paths": sorted({row.report_path for row in rows}),
+        "artifact_verifier_ids": sorted({row.verifier_id for row in rows}),
+        "source_bindings": {
+            row.report_path: row.source_commitment
+            for row in sorted(rows, key=lambda item: item.report_path)
+        },
+        "required_common_source_binding_paths": sorted(
+            {
+                row.report_path
+                for row in rows
+                if row.requires_common_source_binding
+            }
+        ),
         "blockers": sorted(set(blockers)),
     }
 
@@ -1521,10 +2343,18 @@ def _policy_checks() -> dict[str, bool]:
     sm0_requirement_ids = {item.requirement_id for item in sm0.requirements}
     sm1_requirement_ids = {item.requirement_id for item in sm1.requirements}
     semantic_ids = {requirement.requirement_id for requirement in g4.requirements}
+    admitted_registry_keys = {
+        key
+        for verifier in ARTIFACT_VERIFIER_REGISTRY
+        for key in verifier.admitted_receipt_keys
+    }
+    sm4_receipt_keys = {
+        key for requirement in sm4.requirements for key in requirement.receipt_keys
+    }
     return {
         "A5_NECESSARY_BUT_NOT_SUFFICIENT_FOR_SM": bool(
             sm0.dependencies == ("C0",)
-            and sm1.dependencies == ("SM0",)
+            and sm1.dependencies == ("SM0", "A5")
             and "physical_port_output" in sm1_requirement_ids
             and len(sm0_requirement_ids) >= 7
             and OVERALL_TERMINALS["OPH_STANDARD_MODEL_EMERGENCE_LADDER_RECEIPT"]
@@ -1536,12 +2366,12 @@ def _policy_checks() -> dict[str, bool]:
             and sm1.stage_type.endswith("theorem_transform")
             and sm7.stage_type.endswith("theorem_transform")
         ),
-        "VOLUME_CLOCK_IS_DOWNSTREAM_OF_INDEPENDENT_2PI": bool(
-            sm4.dependencies == ("SM3", "G2")
-            and any(
-                requirement.requirement_id == "clock_intertwiner"
-                for requirement in sm4.requirements
-            )
+        "SM_AND_BW_CLOCK_BRANCHES_ARE_INDEPENDENT": bool(
+            sm4.dependencies == ("SM3",)
+            and "SOURCE_DERIVED_CENTRAL_ORIENTED_VOLUME_CLOCK_RECEIPT"
+            in sm4_receipt_keys
+            and "BW_TO_CENTRAL_VOLUME_CLOCK_INTERTWINER_RECEIPT"
+            not in sm4_receipt_keys
         ),
         "SM_Q0_Q1_Q2_Q3_Q4_TIERS_DO_NOT_COLLAPSE": bool(
             STAGE_BY_ID["SM8"].dependencies == ("SM7",)
@@ -1577,6 +2407,39 @@ def _policy_checks() -> dict[str, bool]:
         "TARGET_CONFORMANCE_DIAGNOSTICS_ARE_NOT_PRIMITIVE_RECEIPTS": all(
             "TARGET_CONFORMANCE_DIAGNOSTIC" not in key
             for key in canonical_receipt_keys()
+        ),
+        "ONLY_REGISTERED_VERIFIER_OUTPUTS_ARE_ADMITTED": bool(
+            admitted_registry_keys
+            == (
+                set(C0_RECEIPT_KEYS)
+                | set(FEDERATION_ADMITTED_RECEIPT_KEYS)
+                | set(REPAIR_ADMITTED_RECEIPT_KEYS)
+                | set(OPERATIONAL_OBSERVER_RECEIPT_KEYS)
+            )
+            and {item.verifier_id for item in ARTIFACT_VERIFIER_REGISTRY}
+            == {
+                COMMON_SOURCE_VERIFIER_ID,
+                FEDERATION_VERIFIER_ID,
+                REPAIR_VERIFIER_ID,
+                OPERATIONAL_OBSERVER_VERIFIER_ID,
+            }
+        ),
+        "RECORDS_AND_OBSERVERS_FOLLOW_QUOTIENT_REPAIR": bool(
+            STAGE_BY_ID["A2O"].dependencies == ("A2",)
+            and STAGE_BY_ID["A2Q"].dependencies == ("A2O",)
+            and STAGE_BY_ID["A3"].dependencies == ("A2Q",)
+            and STAGE_BY_ID["A4"].dependencies == ("A3",)
+        ),
+        "A5_REQUIRES_CARRIER_REFINEMENT_NATURALITY": any(
+            requirement.requirement_id == "carrier_refinement_naturality"
+            and requirement.receipt_keys
+            == ("CARRIER_REFINEMENT_NATURALITY_RECEIPT",)
+            for requirement in STAGE_BY_ID["A5"].requirements
+        ),
+        "OPERATIONAL_OBSERVER_REQUIRES_COMMON_SOURCE_BINDING": bool(
+            _VERIFIER_BY_ID[
+                OPERATIONAL_OBSERVER_VERIFIER_ID
+            ].requires_common_source_binding
         ),
     }
 

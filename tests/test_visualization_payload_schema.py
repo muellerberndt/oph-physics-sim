@@ -27,6 +27,7 @@ def test_universe_timeline_visualization_schema_is_standalone_json():
         "simulationAssumptions",
         "smallUniverse",
         "screen",
+        "screenA5Ladder",
         "subjectiveObserverCameras",
         "observerModularTime",
         "consensusBulk",

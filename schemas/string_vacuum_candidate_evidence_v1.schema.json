@@ -1,0 +1,432 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/string_vacuum_candidate_evidence_v1.schema.json",
+  "title": "OPH string-vacuum candidate evidence packet v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "artifact",
+    "schema_version",
+    "candidate",
+    "provenance",
+    "artifacts",
+    "presentation_and_quotient",
+    "constraint_registry",
+    "target_registry",
+    "gates",
+    "stability",
+    "augmented_system",
+    "flat_directions",
+    "blockers",
+    "producer_classification"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "artifact": {"const": "oph_string_vacuum_candidate_evidence"},
+    "schema_version": {"const": 1},
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "presentation_id",
+        "oph_equivalence_class_id",
+        "candidate_class_id",
+        "theory_family",
+        "branch_definition_sha256",
+        "branch_definition_artifact_id"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "presentation_id": {"type": "string", "minLength": 1},
+        "oph_equivalence_class_id": {"type": "string", "minLength": 1},
+        "candidate_class_id": {"type": "string", "minLength": 1},
+        "theory_family": {"type": "string", "minLength": 1},
+        "branch_definition_sha256": {"$ref": "#/$defs/sha256"},
+        "branch_definition_artifact_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "producer_commit",
+        "verifier_commit",
+        "source_dirty",
+        "dependency_lock_sha256",
+        "dependency_lock_artifact_id",
+        "environment_sha256",
+        "environment_artifact_id",
+        "source_freeze_sha256",
+        "source_freeze_artifact_id",
+        "target_registry_sha256",
+        "arithmetic",
+        "discovery_randomness",
+        "replay_argv"
+      ],
+      "properties": {
+        "run_id": {"type": "string", "minLength": 1},
+        "producer_commit": {"type": "string", "pattern": "^[0-9a-f]{7,64}$"},
+        "verifier_commit": {"type": "string", "pattern": "^[0-9a-f]{7,64}$"},
+        "source_dirty": {"type": "boolean"},
+        "dependency_lock_sha256": {"$ref": "#/$defs/sha256"},
+        "dependency_lock_artifact_id": {"type": "string", "minLength": 1},
+        "environment_sha256": {"$ref": "#/$defs/sha256"},
+        "environment_artifact_id": {"type": "string", "minLength": 1},
+        "source_freeze_sha256": {"$ref": "#/$defs/sha256"},
+        "source_freeze_artifact_id": {"type": "string", "minLength": 1},
+        "target_registry_sha256": {"$ref": "#/$defs/sha256"},
+        "arithmetic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["backend", "precision_bits", "rounding"],
+          "properties": {
+            "backend": {"type": "string", "minLength": 1},
+            "precision_bits": {"type": "integer", "minimum": 53},
+            "rounding": {"const": "outward"}
+          }
+        },
+        "discovery_randomness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["used", "seed_manifest_sha256", "certification_role"],
+          "properties": {
+            "used": {"type": "boolean"},
+            "seed_manifest_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+            "certification_role": {"const": "discovery_only"}
+          }
+        },
+        "replay_argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/artifactRow"}
+    },
+    "presentation_and_quotient": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prequotient_dimension_real",
+        "physical_coordinate_ids",
+        "coordinate_registry_sha256",
+        "coordinate_registry_artifact_id",
+        "removed_redundancies",
+        "quotient_descent_proof_artifact_id",
+        "duality_canonicalization_artifact_id"
+      ],
+      "properties": {
+        "prequotient_dimension_real": {"type": "integer", "minimum": 0},
+        "physical_coordinate_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "coordinate_registry_sha256": {"$ref": "#/$defs/sha256"},
+        "coordinate_registry_artifact_id": {"type": "string", "minLength": 1},
+        "removed_redundancies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["direction_id", "kind", "classification", "meaning", "evidence_artifact_id"],
+            "properties": {
+              "direction_id": {"type": "string", "minLength": 1},
+              "kind": {"enum": ["gauge", "diffeomorphism", "bundle_isomorphism", "basis", "scheme", "duality"]},
+              "classification": {"const": "OPH_INVISIBLE_QUOTIENTED"},
+              "meaning": {"type": "string", "minLength": 1},
+              "evidence_artifact_id": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "quotient_descent_proof_artifact_id": {"type": ["string", "null"]},
+        "duality_canonicalization_artifact_id": {"type": ["string", "null"]}
+      }
+    },
+    "constraint_registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complete", "frozen_before_solve", "registry_sha256", "rows"],
+      "properties": {
+        "complete": {"type": "boolean"},
+        "frozen_before_solve": {"type": "boolean"},
+        "registry_sha256": {"$ref": "#/$defs/sha256"},
+        "rows": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["constraint_id", "kind", "definition_artifact_id"],
+            "properties": {
+              "constraint_id": {"type": "string", "minLength": 1},
+              "kind": {
+                "enum": [
+                  "string_consistency",
+                  "anomaly_bianchi_tadpole",
+                  "vacuum_stationarity",
+                  "stability_boundary",
+                  "operator_safety",
+                  "spectrum",
+                  "matching",
+                  "decoupling",
+                  "other_physical"
+                ]
+              },
+              "definition_artifact_id": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "target_registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_id",
+        "registry_version",
+        "authority",
+        "precommit_artifact_id",
+        "complete",
+        "common_scheme",
+        "source_frozen_before_target_load",
+        "rows"
+      ],
+      "properties": {
+        "registry_id": {"type": "string", "minLength": 1},
+        "registry_version": {"type": "integer", "minimum": 1},
+        "authority": {"const": "code_owned_allowlisted_registry"},
+        "precommit_artifact_id": {"type": "string", "minLength": 1},
+        "complete": {"type": "boolean"},
+        "common_scheme": {"type": "boolean"},
+        "source_frozen_before_target_load": {"type": "boolean"},
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "row_id",
+              "role",
+              "required_for_candidate_pass",
+              "units",
+              "scheme",
+              "scale",
+              "target_interval",
+              "covariance_artifact_id"
+            ],
+            "properties": {
+              "row_id": {"type": "string", "minLength": 1},
+              "role": {"enum": ["promoted_oph_target", "empirical_acceptance", "candidate_only", "diagnostic"]},
+              "required_for_candidate_pass": {"type": "boolean"},
+              "units": {"type": "string", "minLength": 1},
+              "scheme": {"type": "string", "minLength": 1},
+              "scale": {"type": "string", "minLength": 1},
+              "target_interval": {"$ref": "#/$defs/interval"},
+              "covariance_artifact_id": {"type": ["string", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "critical_edge_cft",
+        "full_cohomology",
+        "operator_safety_realization",
+        "superpotential_safety",
+        "anomaly_bianchi_tadpole",
+        "vacuum_stability",
+        "heavy_spectrum",
+        "low_energy_continuation",
+        "common_scheme_thresholds",
+        "complete_target_match",
+        "physical_quotient_descent",
+        "source_target_separation",
+        "augmented_local_isolation"
+      ],
+      "properties": {
+        "critical_edge_cft": {"$ref": "#/$defs/gate"},
+        "full_cohomology": {"$ref": "#/$defs/gate"},
+        "operator_safety_realization": {"$ref": "#/$defs/gate"},
+        "superpotential_safety": {"$ref": "#/$defs/gate"},
+        "anomaly_bianchi_tadpole": {"$ref": "#/$defs/gate"},
+        "vacuum_stability": {"$ref": "#/$defs/gate"},
+        "heavy_spectrum": {"$ref": "#/$defs/gate"},
+        "low_energy_continuation": {"$ref": "#/$defs/gate"},
+        "common_scheme_thresholds": {"$ref": "#/$defs/gate"},
+        "complete_target_match": {"$ref": "#/$defs/gate"},
+        "physical_quotient_descent": {"$ref": "#/$defs/gate"},
+        "source_target_separation": {"$ref": "#/$defs/gate"},
+        "augmented_local_isolation": {"$ref": "#/$defs/gate"}
+      }
+    },
+    "stability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "background_class",
+        "stationarity_residual_intervals",
+        "physical_hessian_lower_bound",
+        "stability_threshold",
+        "stability_criterion",
+        "control_parameters_artifact_id",
+        "evidence_artifact_id"
+      ],
+      "properties": {
+        "background_class": {"enum": ["MINKOWSKI", "DE_SITTER", "ANTI_DE_SITTER", "NOT_SUPPLIED"]},
+        "stationarity_residual_intervals": {
+          "oneOf": [
+            {"type": "array", "items": {"$ref": "#/$defs/interval"}},
+            {"type": "null"}
+          ]
+        },
+        "physical_hessian_lower_bound": {"oneOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+        "stability_threshold": {"oneOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+        "stability_criterion": {"enum": ["POSITIVE_PHYSICAL_HESSIAN", "BREITENLOHNER_FREEDMAN", "NOT_SUPPLIED"]},
+        "control_parameters_artifact_id": {"type": ["string", "null"]},
+        "evidence_artifact_id": {"type": ["string", "null"]}
+      }
+    },
+    "augmented_system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "coordinate_order_sha256",
+        "row_order_sha256",
+        "row_registry_sha256",
+        "all_row_ids",
+        "row_registry",
+        "selected_square_row_ids",
+        "box",
+        "center",
+        "residual_interval_at_center",
+        "jacobian_interval",
+        "preconditioner",
+        "enclosure_proof_artifact_id",
+        "full_system_closure"
+      ],
+      "properties": {
+        "status": {"enum": ["SUPPLIED", "NOT_SUPPLIED"]},
+        "coordinate_order_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "row_order_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "row_registry_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "all_row_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "row_registry": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["row_id", "source_kind", "source_row_id"],
+            "properties": {
+              "row_id": {"type": "string", "minLength": 1},
+              "source_kind": {"enum": ["completion_constraint", "precommitted_target"]},
+              "source_row_id": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "selected_square_row_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "box": {"oneOf": [{"type": "array", "items": {"$ref": "#/$defs/interval"}}, {"type": "null"}]},
+        "center": {"oneOf": [{"type": "array", "items": {"$ref": "#/$defs/rational"}}, {"type": "null"}]},
+        "residual_interval_at_center": {"oneOf": [{"type": "array", "items": {"$ref": "#/$defs/interval"}}, {"type": "null"}]},
+        "jacobian_interval": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {"type": "array", "items": {"$ref": "#/$defs/interval"}}
+            },
+            {"type": "null"}
+          ]
+        },
+        "preconditioner": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {"type": "array", "items": {"$ref": "#/$defs/rational"}}
+            },
+            {"type": "null"}
+          ]
+        },
+        "enclosure_proof_artifact_id": {"type": ["string", "null"]},
+        "full_system_closure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "evidence_artifact_id"],
+          "properties": {
+            "method": {"enum": ["selected_rows_generate_full_system", "independent_exact_full_solution", "not_supplied"]},
+            "evidence_artifact_id": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+    "flat_directions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["direction_id", "classification", "proof_level", "physical_meaning", "basis_vector", "evidence_artifact_id"],
+        "properties": {
+          "direction_id": {"type": "string", "minLength": 1},
+          "classification": {"enum": ["OPH_INVISIBLE_QUOTIENTED", "STABILIZED", "VISIBLE_FLAT", "UNCLASSIFIED"]},
+          "proof_level": {"enum": ["GROUP_ORBIT", "MASS_BOUND", "EXACT_CURVE", "CONSTANT_RANK", "INFINITESIMAL_ONLY"]},
+          "physical_meaning": {"type": "string", "minLength": 1},
+          "basis_vector": {"type": "array", "items": {"$ref": "#/$defs/rational"}},
+          "evidence_artifact_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "producer_classification": {"enum": ["SEARCH_FOUND_CANDIDATE", "EVIDENCE_COMPLETE", "INCOMPLETE"]}
+  },
+  "$defs": {
+    "rational": {
+      "type": "string",
+      "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lower", "upper"],
+      "properties": {
+        "lower": {"$ref": "#/$defs/rational"},
+        "upper": {"$ref": "#/$defs/rational"}
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_artifact_ids", "blockers"],
+      "properties": {
+        "status": {"enum": ["PASS", "FAIL", "OPEN"]},
+        "evidence_artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "blockers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "artifactRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "path", "sha256", "format", "semantic_role"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "format": {"enum": ["json", "npz", "text", "proof", "other"]},
+        "semantic_role": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

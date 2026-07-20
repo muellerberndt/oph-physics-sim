@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "forceAllStages": true,
+  "stages": {},
+  "frozenTargets": {
+    "clock_normalization": {
+      "label": "2pi",
+      "numericValue": 6.283185307179586
+    },
+    "gauge_lie_algebra": "su(3)+su(2)+u(1)",
+    "global_gauge_form": "(SU(3)xSU(2)xU(1))/Z6",
+    "generation_count": 3,
+    "scalar_doublet_count": 1,
+    "demo_atom_census_count": 4096
+  }
+}

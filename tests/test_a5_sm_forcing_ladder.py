@@ -72,17 +72,18 @@ def test_verified_theorems_without_physical_hypotheses_do_not_promote(tmp_path: 
     assert report["LEAN_NO_GO_USED_FOR_POSITIVE_PROMOTION"] is False
 
 
-def test_theorem_shortcuts_promote_only_derived_nodes_after_all_hypotheses(tmp_path: Path):
+def test_caller_booleans_cannot_discharge_theorem_hypotheses(tmp_path: Path):
     _write_receipts(tmp_path, {name: True for name in _primitive_hypotheses()})
 
     report = apply_a5_sm_theorem_shortcuts(tmp_path, _synthetic_theorem_audit())
 
-    assert all(row["passed"] is True for row in report["transforms"].values())
-    assert report["A5_PORT_SELECTOR_THEOREM_APPLICATION_RECEIPT"] is True
-    assert report["PHYSICAL_SM_LIE_CURRENT_ALGEBRA_RECEIPT"] is True
-    assert report["PHYSICAL_LOCAL_SM_LIE_CURRENT_FIBER_RECEIPT"] is True
-    assert report["PHYSICAL_Z6_GLOBAL_FORM_AND_LATTICE_RECEIPT"] is True
-    assert report["PHYSICAL_FINITE_SM_Q0_CORE_RECEIPT"] is True
+    assert all(row["passed"] is False for row in report["transforms"].values())
+    assert report["A5_PORT_SELECTOR_THEOREM_APPLICATION_RECEIPT"] is False
+    assert report["PHYSICAL_SM_LIE_CURRENT_ALGEBRA_RECEIPT"] is False
+    assert report["PHYSICAL_LOCAL_SM_LIE_CURRENT_FIBER_RECEIPT"] is False
+    assert report["PHYSICAL_Z6_GLOBAL_FORM_AND_LATTICE_RECEIPT"] is False
+    assert report["PHYSICAL_FINITE_SM_Q0_CORE_RECEIPT"] is False
+    assert report["source_inventory"]["registered_physical_source_verifier_count"] == 0
     assert report["Q1_CLASSICAL_REGULATOR_RECEIPT"] is False
     assert report["Q4_CONTINUUM_RECEIPT"] is False
 
@@ -94,7 +95,7 @@ def test_one_false_physical_source_law_blocks_all_downstream_transforms(tmp_path
 
     report = apply_a5_sm_theorem_shortcuts(tmp_path, _synthetic_theorem_audit())
 
-    assert report["transforms"]["O_PORT"]["passed"] is True
+    assert report["transforms"]["O_PORT"]["passed"] is False
     assert report["transforms"]["O_CURRENT"]["passed"] is False
     assert report["transforms"]["O_GLOBAL"]["passed"] is False
     assert report["transforms"]["O_SMCORE_Q0"]["passed"] is False

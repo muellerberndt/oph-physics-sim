@@ -1,4 +1,22 @@
 from oph_fpe.core.graph import build_patch_graph
+from oph_fpe.core.echosahedral_dynamics import (
+    LocalRecurrentCarrierState,
+    initialize_local_recurrent_carriers,
+    local_a5_dynamics_report,
+    propagate_local_recurrent_carriers,
+)
+from oph_fpe.core.echosahedral_federation import (
+    EchosahedralCarrier,
+    EchosahedralFederation,
+    ExternalBoundaryBundle,
+    InterfaceAlgebraBinding,
+    ObserverSupport,
+    SeamBundle,
+    federation_sewing_report,
+    reference_echosahedral_carrier,
+    reference_federation_instrument_bundle,
+    verify_reference_federation_instrument_bundle,
+)
 from oph_fpe.core.array_geometry import ArrayScreenGeometry, array_screen_geometry_from_config
 from oph_fpe.core.icosahedral import (
     GeodesicIcosahedralLevel,
@@ -40,6 +58,13 @@ __all__ = [
     "GeodesicIcosahedralTower",
     "UnsupportedIcosahedralPatchCount",
     "ArrayScreenGeometry",
+    "EchosahedralCarrier",
+    "EchosahedralFederation",
+    "ExternalBoundaryBundle",
+    "InterfaceAlgebraBinding",
+    "LocalRecurrentCarrierState",
+    "ObserverSupport",
+    "SeamBundle",
     "array_screen_geometry_from_config",
     "build_patch_graph",
     "build_geodesic_icosahedral_tower",
@@ -48,8 +73,11 @@ __all__ = [
     "icosahedral_a5_equivariance_report",
     "icosahedral_a5_port_permutations",
     "icosahedral_defect_port_report",
+    "initialize_local_recurrent_carriers",
     "icosahedral_count_bracket",
     "nominal_campaign_rung_mapping",
+    "federation_sewing_report",
+    "local_a5_dynamics_report",
     "pixel_scale_from_config",
     "screen_microphysics_from_config",
     "echosahedral_patch_architecture_report",
@@ -62,5 +90,9 @@ __all__ = [
     "ReferenceDiagonalA5Intertwiner",
     "reference_diagonal_a5_intertwiner",
     "reference_diagonal_a5_intertwiner_report",
+    "reference_echosahedral_carrier",
+    "reference_federation_instrument_bundle",
+    "propagate_local_recurrent_carriers",
     "supported_icosahedral_count",
+    "verify_reference_federation_instrument_bundle",
 ]

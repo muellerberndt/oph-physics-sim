@@ -103,6 +103,42 @@ def _two_carrier_federation() -> EchosahedralFederation:
     )
 
 
+def _chain_federation(size: int) -> EchosahedralFederation:
+    carriers = tuple(
+        reference_echosahedral_carrier(f"c{index}") for index in range(size)
+    )
+    seams = tuple(
+        SeamBundle(
+            seam_id=f"s{index}-{index + 1}",
+            left_carrier_id=f"c{index}",
+            right_carrier_id=f"c{index + 1}",
+            left_ports=(1,),
+            right_ports=(0,),
+            left_to_right_ports=(0,),
+            right_to_left_ports=(1,),
+            left_to_right_orientation=(-1,),
+            right_to_left_orientation=(-1,),
+            collar_kind="single_port",
+            interface_algebra=_binding(),
+        )
+        for index in range(size - 1)
+    )
+    boundaries = []
+    for index, carrier in enumerate(carriers):
+        used_ports = set()
+        if index:
+            used_ports.add(0)
+        if index + 1 < size:
+            used_ports.add(1)
+        boundaries.extend(_external_components(carrier, used_ports, f"b{index}"))
+    return EchosahedralFederation(
+        federation_id=f"chain-{size}",
+        carriers=carriers,
+        seams=seams,
+        external_boundaries=tuple(boundaries),
+    )
+
+
 def test_reference_carrier_exactly_certifies_12_30_20_antipode_and_a5() -> None:
     carrier = reference_echosahedral_carrier("cell")
     report = echosahedral_carrier_conformance_report(carrier)
@@ -513,3 +549,184 @@ def test_bundle_cli_can_require_sewing_but_source_tier_stays_failed(
     assert main([str(path), "--require", "source"]) == 1
     source_output = json.loads(capsys.readouterr().out)
     assert source_output["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
+
+
+def test_reference_carriers_share_one_immutable_template_and_one_local_audit() -> None:
+    left = reference_echosahedral_carrier("left-shared")
+    right = reference_echosahedral_carrier("right-shared")
+
+    assert left is not right
+    assert left.port_names is right.port_names
+    assert left.port_coordinates is right.port_coordinates
+    assert left.edges is right.edges
+    assert left.faces is right.faces
+    assert left.antipode is right.antipode
+    assert left.a5_actions is right.a5_actions
+
+    federation = _chain_federation(130)
+    report = federation_sewing_report(federation)
+    summary = report["carrier_conformance_summary"]
+
+    assert report["FEDERATION_SEWING_RECEIPT"] is True
+    assert report["carrier_count"] == 130
+    assert report["exact_source_carrier_count"] == 130
+    assert report["support_regulator_count"] is None
+    assert report["carrier_count_is_support_regulator_count"] is False
+    assert summary["unique_structural_presentation_count"] == 1
+    assert summary["local_conformance_audit_count"] == 1
+    assert summary["shared_reference_template_carrier_count"] == 130
+    assert summary["shared_reference_template_conformance_verified_once"] is True
+
+
+def test_large_report_is_bounded_but_hashes_every_verified_row() -> None:
+    federation = _chain_federation(130)
+    report = federation_sewing_report(federation)
+
+    assert report["report_detail_limit"] == 64
+    assert len(report["carrier_conformance"]) == 64
+    assert report["carrier_conformance_summary"]["carrier_reports_truncated"] is True
+    assert len(report["seams"]) == 64
+    assert report["seam_rows_reported_count"] == 64
+    assert report["seam_rows_truncated"] is True
+    assert report["seam_count"] == 129
+    assert report["seam_rows_sha256"].startswith("sha256:")
+    assert len(report["external_boundaries"]) == 64
+    assert report["external_boundary_rows_truncated"] is True
+
+    late_seams = list(federation.seams)
+    late_binding = replace(
+        late_seams[-1].interface_algebra,
+        right_interface_algebra_sha256=interface_algebra_sha256(
+            {"late_unsampled_corruption": True}
+        ),
+    )
+    late_seams[-1] = replace(late_seams[-1], interface_algebra=late_binding)
+    failed = federation_sewing_report(replace(federation, seams=tuple(late_seams)))
+
+    assert failed["seam_rows_sha256"] != report["seam_rows_sha256"]
+    assert failed["FEDERATION_SEWING_RECEIPT"] is False
+    assert failed["seam_failure_examples"]
+    assert failed["seam_failure_examples"][0]["seam_id"] == late_seams[-1].seam_id
+
+
+def test_late_carrier_defect_and_dangling_port_cannot_hide_beyond_report_limit() -> (
+    None
+):
+    federation = _chain_federation(130)
+    carriers = list(federation.carriers)
+    broken_edges = list(carriers[-1].edges)
+    broken_edges[0] = (0, carriers[-1].antipode[0])
+    carriers[-1] = replace(carriers[-1], edges=tuple(broken_edges))
+    malformed = federation_sewing_report(replace(federation, carriers=tuple(carriers)))
+
+    assert malformed["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is False
+    assert (
+        malformed["carrier_conformance_summary"]["unique_structural_presentation_count"]
+        == 2
+    )
+    assert any(
+        row["conforming"] is False
+        for row in malformed["carrier_conformance_summary"]["structural_class_examples"]
+    )
+
+    missing_late_boundary = federation_sewing_report(
+        replace(federation, external_boundaries=federation.external_boundaries[:-1])
+    )
+    assert missing_late_boundary["FEDERATION_SEWING_RECEIPT"] is False
+    assert missing_late_boundary["undeclared_dangling_port_count"] > 0
+    assert missing_late_boundary["undeclared_dangling_ports"]
+
+
+def test_schema_hash_binding_is_not_promoted_to_algebra_or_higher_overlap() -> None:
+    report = federation_sewing_report(_two_carrier_federation())
+    seam = report["seams"][0]
+
+    assert seam["interface_schema_hashes_agree"] is True
+    assert seam["INTERFACE_SCHEMA_HASH_BINDING_RECEIPT"] is True
+    assert seam["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is False
+    assert seam["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is False
+    assert seam["FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT"] is False
+    assert report["INTERFACE_SCHEMA_HASH_BINDING_RECEIPT"] is True
+    assert report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is False
+    assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is False
+    assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is False
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
+
+
+def test_compact_bundle_rejects_count_type_and_embedded_template_forgery() -> None:
+    bundle = reference_federation_instrument_bundle(_two_carrier_federation())
+
+    wrong_count = copy.deepcopy(bundle)
+    wrong_count["exact_source_carrier_count"] += 1
+    assert (
+        verify_reference_federation_instrument_bundle(wrong_count)[
+            "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"
+        ]
+        is False
+    )
+
+    coerced_id = copy.deepcopy(bundle)
+    coerced_id["carrier_ids"][0] = 0
+    assert (
+        verify_reference_federation_instrument_bundle(coerced_id)[
+            "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"
+        ]
+        is False
+    )
+
+    coerced_endpoint = copy.deepcopy(bundle)
+    coerced_endpoint["seams"][0]["left_carrier_id"] = 0
+    assert (
+        verify_reference_federation_instrument_bundle(coerced_endpoint)[
+            "INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"
+        ]
+        is False
+    )
+
+    embedded_coordinates = copy.deepcopy(bundle)
+    embedded_coordinates["carriers"] = [{"port_coordinates": bundle["carrier_ids"]}]
+    failed = verify_reference_federation_instrument_bundle(embedded_coordinates)
+    assert failed["INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"] is False
+    assert "per-carrier local template fields are forbidden" in failed["parse_error"]
+
+
+def test_typed_runtime_corruption_fails_closed_without_bool_or_string_coercion() -> (
+    None
+):
+    carrier = reference_echosahedral_carrier("malformed")
+    malformed_edges = list(carrier.edges)
+    malformed_edges[0] = (0, "not-an-integer")
+    local = echosahedral_carrier_conformance_report(
+        replace(carrier, edges=tuple(malformed_edges))
+    )
+    assert local["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is False
+    assert any(
+        blocker.startswith("malformed_carrier_presentation:")
+        for blocker in local["blockers"]
+    )
+
+    federation = _two_carrier_federation()
+    bool_port = replace(
+        federation.seams[0],
+        left_ports=(True,),
+        right_to_left_ports=(True,),
+    )
+    report = federation_sewing_report(replace(federation, seams=(bool_port,)))
+    assert report["FEDERATION_SEWING_RECEIPT"] is False
+    assert (
+        "seam_port_and_orientation_arrays_must_be_exact_integer_tuples"
+        in report["seams"][0]["blockers"]
+    )
+
+    bool_boundary = replace(federation.external_boundaries[0], ports=(False,))
+    report = federation_sewing_report(
+        replace(
+            federation,
+            external_boundaries=(bool_boundary,) + federation.external_boundaries[1:],
+        )
+    )
+    assert report["FEDERATION_SEWING_RECEIPT"] is False
+    assert (
+        "external_boundary_ports_must_be_an_exact_integer_tuple"
+        in report["external_boundaries"][0]["blockers"]
+    )

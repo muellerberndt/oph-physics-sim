@@ -38,6 +38,9 @@ def build_wzh_campaign_report(
     repository_root: Path = REPOSITORY_ROOT,
     generated_utc: str | None = None,
 ) -> dict[str, Any]:
+    jsonschema.Draft202012Validator(
+        json.loads(CONFIG_SCHEMA.read_text(encoding="utf-8"))
+    ).validate(config)
     paper_inputs = {
         name: _load_artifact_reference(
             value,
@@ -80,25 +83,23 @@ def build_wzh_campaign_report(
         coordinate_unit = block_config["coordinate_unit"]
         mass_coordinate = poles[boson]["mass_coordinate"]
         width_coordinate = poles[boson]["width_coordinate"]
-        mass_gev = width_gev = None
-        physical_readout_attached = False
+        diagnostic_mass_gev = diagnostic_width_gev = None
         if mass_coordinate is not None and width_coordinate is not None:
             if coordinate_unit == "GeV_squared":
-                mass_gev = mass_coordinate
-                width_gev = width_coordinate
-                physical_readout_attached = True
+                diagnostic_mass_gev = mass_coordinate
+                diagnostic_width_gev = width_coordinate
             elif (
                 coordinate_unit == "dimensionless_E_star_squared"
-                and clock["source_clock_receipt"]
                 and clock["E_star_GeV"] is not None
             ):
-                mass_gev = mass_coordinate * clock["E_star_GeV"]
-                width_gev = width_coordinate * clock["E_star_GeV"]
-                physical_readout_attached = True
+                diagnostic_mass_gev = mass_coordinate * clock["E_star_GeV"]
+                diagnostic_width_gev = width_coordinate * clock["E_star_GeV"]
         poles[boson]["coordinate_unit"] = coordinate_unit
-        poles[boson]["physical_readout_attached"] = physical_readout_attached
-        poles[boson]["M_GeV"] = mass_gev
-        poles[boson]["Gamma_GeV"] = width_gev
+        poles[boson]["diagnostic_display_M_GeV"] = diagnostic_mass_gev
+        poles[boson]["diagnostic_display_Gamma_GeV"] = diagnostic_width_gev
+        poles[boson]["physical_readout_attached"] = False
+        poles[boson]["M_GeV"] = None
+        poles[boson]["Gamma_GeV"] = None
 
     source_root = bool(
         config["source_root"].get("verified", False)
@@ -150,8 +151,30 @@ def build_wzh_campaign_report(
             provenance.get("prospective_claim_freeze", False) and provenance_packet_verified
         ),
     }
-    promotion_allowed = all(gates.values())
+    # The v1 sidecars and numerical controls are a specification/diagnostic
+    # surface.  They contain caller-authored booleans and hash-shaped strings,
+    # but there is no production resolver which binds those declarations to the
+    # exact runtime subject and independently replays the scientific checks.
+    # Keep the legacy gate calculations visible for debugging, while making it
+    # impossible for this compatibility backend to self-promote.
+    gates.update(
+        {
+            "runtime_subject_binding": False,
+            "artifact_resolving_independent_checker": False,
+            "physical_current_amplitudes": False,
+            "target_firewall": False,
+            "production_aggregate_verifier": False,
+        }
+    )
+    promotion_allowed = False
     blockers = [name for name, passed in gates.items() if not passed]
+    blockers.extend(
+        [
+            "legacy_v1_caller_claims_are_diagnostic_only",
+            "wzh0_polynomial_and_affine_controls_are_nonpromoting",
+        ]
+    )
+    blockers = sorted(set(blockers))
 
     report = {
         "schema": "oph_wzh_source_closure_receipt_v1",
@@ -178,16 +201,15 @@ def build_wzh_campaign_report(
         "pole_enclosures": poles,
         "promotion_gates": gates,
         "promotion_allowed": promotion_allowed,
-        "overall_status": (
-            "full_source_only_wzh_pole_packet"
-            if promotion_allowed
-            else "diagnostic_backend_source_packets_incomplete"
-        ),
+        "overall_status": "WZH0_SYNTHETIC_CONTROL_SPECIFICATION_ONLY_NONPROMOTING",
         "blockers": blockers,
         "claim_boundary": (
-            "Finite numerical controls do not promote W/Z/H masses. Promotion requires one "
-            "same-branch root, source clock, validated D10 and D11 certificates, frozen RG "
-            "packet, BRST-complete pole receipts, uncertainty, and prospective provenance."
+            "This v1 backend is unconditionally nonpromoting. Its polynomial kernels, "
+            "sampled contour checks, affine RG transport, generic gap, caller booleans, "
+            "and trusted sidecars are WZH0 synthetic/diagnostic controls only. Physical "
+            "promotion requires a separate artifact-resolving aggregate verifier with "
+            "runtime-subject binding, independent scientific replay, physical-current "
+            "amplitudes, a target firewall, and one coherent parent/hash family."
         ),
     }
     jsonschema.Draft202012Validator(
@@ -245,13 +267,52 @@ def _load_artifact_reference(
             "hash_matches_expected": False,
             "payload": None,
         }
-    path = Path(value)
-    if not path.is_absolute():
-        path = repository_root / path
+    declared = Path(value)
+    root = Path(repository_root).resolve(strict=True)
+    if declared.is_absolute() or ".." in declared.parts:
+        return {
+            "path": str(declared),
+            "present": False,
+            "path_contained": False,
+            "sha256": None,
+            "expected_sha256": expected_sha256,
+            "hash_matches_expected": False,
+            "payload": None,
+            "blocker": "artifact_reference_must_be_bundle_relative_without_parent_traversal",
+        }
+    cursor = root
+    for part in declared.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            return {
+                "path": str(declared),
+                "present": False,
+                "path_contained": False,
+                "sha256": None,
+                "expected_sha256": expected_sha256,
+                "hash_matches_expected": False,
+                "payload": None,
+                "blocker": "artifact_reference_contains_symlink_component",
+            }
+    try:
+        path = cursor.resolve(strict=True)
+        path.relative_to(root)
+    except (FileNotFoundError, ValueError):
+        return {
+            "path": str(declared),
+            "present": False,
+            "path_contained": False,
+            "sha256": None,
+            "expected_sha256": expected_sha256,
+            "hash_matches_expected": False,
+            "payload": None,
+            "blocker": "artifact_reference_missing_or_outside_bundle_root",
+        }
     if not path.is_file():
         return {
             "path": str(path),
             "present": False,
+            "path_contained": False,
             "sha256": None,
             "expected_sha256": expected_sha256,
             "hash_matches_expected": False,
@@ -265,6 +326,7 @@ def _load_artifact_reference(
     return {
         "path": str(path),
         "present": True,
+        "path_contained": True,
         "sha256": actual_sha256,
         "expected_sha256": expected_sha256,
         "hash_matches_expected": expected_sha256 is not None and actual_sha256 == expected_sha256,

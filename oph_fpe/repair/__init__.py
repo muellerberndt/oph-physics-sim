@@ -10,6 +10,9 @@ from .transaction import (
     ProposalFootprint,
     ProposalClass,
     ProposalValidation,
+    REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE,
+    REPAIR_REPLAY_ENVELOPE_SCHEMA,
+    REPAIR_REPLAY_VERIFIER_VERSION,
     RegisterSnapshot,
     RepairCollar,
     RepairCommitReceipt,
@@ -19,10 +22,12 @@ from .transaction import (
     TransactionalRepairEngine,
     TransitionKind,
     VerificationCheck,
+    build_repair_replay_envelope,
     conflict_components,
     prepare_proposal,
     proposals_conflict,
     verify_repair_receipt_artifact,
+    verify_repair_replay_envelope,
 )
 
 __all__ = [
@@ -30,6 +35,9 @@ __all__ = [
     "ProposalFootprint",
     "ProposalClass",
     "ProposalValidation",
+    "REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE",
+    "REPAIR_REPLAY_ENVELOPE_SCHEMA",
+    "REPAIR_REPLAY_VERIFIER_VERSION",
     "RegisterSnapshot",
     "RepairCollar",
     "RepairCommitReceipt",
@@ -39,8 +47,10 @@ __all__ = [
     "TransactionalRepairEngine",
     "TransitionKind",
     "VerificationCheck",
+    "build_repair_replay_envelope",
     "conflict_components",
     "prepare_proposal",
     "proposals_conflict",
     "verify_repair_receipt_artifact",
+    "verify_repair_replay_envelope",
 ]

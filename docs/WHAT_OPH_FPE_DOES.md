@@ -78,6 +78,14 @@ shared-record consistency, and proto-particle assays. Strict neutral bulk, the
 full finite Lorentz contract, Einstein branch entry, production particles,
 production gravity, and physical CMB carry false or open receipts.
 
+The string-vacuum lane is an ingestion and verification contract. OPH-FPE has
+no compactification, stabilization, massive-spectrum, or string-threshold
+solver. `STRING_VACUUM_SELECTION_RECEIPT_CONTRACT.md` specifies the external
+artifacts, augmented rank/isolation proof, branch coverage, and catalogue
+evidence required for that lane. `STRING_VACUUM_SIMULATOR_TARGETS.md` fixes the
+machine-readable observable values, receipt dependency ladder, failure scopes,
+and replay targets. Its scientific promotion gates remain false.
+
 OPH-FPE’s useful output is an auditable map from local observer rules to the
 claims they support, with each missing bridge left visible.
 

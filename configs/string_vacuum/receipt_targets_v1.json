@@ -1,0 +1,672 @@
+{
+  "$schema": "../../schemas/string_vacuum_receipt_targets_v1.schema.json",
+  "artifact": "oph_string_vacuum_receipt_target_registry",
+  "schema_version": 1,
+  "lane": "string_vacuum_selection",
+  "producer_boundary": "The simulator verifies replayable primitive artifacts from external string-geometry, vacuum, spectrum, threshold, and verified-numerics producers. It is not itself a string compactification solver.",
+  "status_policy": {
+    "positive_value": true,
+    "nonpositive_values": ["FAIL", "INCONCLUSIVE", "INVALID", false],
+    "producer_labels_are_hints_only": true,
+    "dependency_failure_demotes": true,
+    "cli_zero_exit_requires": [
+      "candidate_status=PASS",
+      "catalogue_status=SELECTED_WITHIN_DECLARED_CATALOGUE"
+    ]
+  },
+  "target_row_policy": {
+    "registry_frozen_before_candidate_evaluation": true,
+    "required_metadata": [
+      "row_id",
+      "role",
+      "units",
+      "scheme",
+      "scale",
+      "target_interval",
+      "covariance_artifact_id",
+      "required_for_candidate_pass"
+    ],
+    "rank_admissible_roles": ["promoted_oph_target", "empirical_acceptance"],
+    "rank_forbidden_roles": ["candidate_only", "diagnostic"],
+    "candidate_only_rows_may_be_acceptance_tests": true,
+    "registry_identity_fields": ["registry_id", "registry_version", "registry_sha256"],
+    "registry_authority": "code_owned_allowlisted_registry",
+    "canonical_numeric_values": "separately_versioned_precommitted_registry_not_candidate_selected"
+  },
+  "receipt_aliases": {
+    "CRITICAL_EDGE_CFT_RECEIPT": "STRING_CRITICAL_EDGE_CFT_RECEIPT",
+    "BD_FULL_COHOMOLOGY_CERTIFICATE_RECEIPT": "STRING_FULL_MASSLESS_SECTOR_RECEIPT",
+    "BD_Z4R_COMPACTIFICATION_REALIZATION_RECEIPT": "STRING_OPERATOR_SAFETY_REALIZATION_RECEIPT",
+    "BD_SUPERPOTENTIAL_SAFETY_RECEIPT": "STRING_SUPERPOTENTIAL_SAFETY_RECEIPT",
+    "BD_THRESHOLD_SPECTRUM_CERTIFICATE_RECEIPT": "STRING_THRESHOLD_SPECTRUM_RECEIPT",
+    "BD_COMPLETED_PHYSICAL_SLICE_RECEIPT": "STRING_COMPLETED_PHYSICAL_SLICE_RECEIPT",
+    "BD_MODULI_LOCKING_CERTIFICATE_RECEIPT": "STRING_MODULI_LOCKING_RECEIPT"
+  },
+  "instance_binding_policy": {
+    "candidate_subject_paths": [
+      "candidate.candidate_id",
+      "candidate.oph_equivalence_class_id",
+      "candidate.branch_definition_sha256",
+      "provenance.source_freeze_sha256",
+      "provenance.target_registry_sha256",
+      "constraint_registry.registry_sha256",
+      "receipt_target_registry_sha256"
+    ],
+    "catalogue_subject_paths": [
+      "catalogue_id",
+      "declared_scope_sha256",
+      "equivalence_partition.relation_definition_sha256",
+      "receipt_target_registry_sha256"
+    ]
+  },
+  "targets": [
+    {
+      "receipt_id": "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "structural_integrity",
+      "report_locator": "contract_integrity_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "strict_candidate_schema",
+        "branch_definition",
+        "source_freeze",
+        "coordinate_registry",
+        "constraint_registry",
+        "target_registry",
+        "quotient_descent",
+        "duality_canonicalization"
+      ],
+      "pass_rule": "Every schema, registry, hash binding, artifact reference, row binding, flat-direction classification, and structural invariant passes with no integrity blocker.",
+      "failure_effect": "Candidate status is INVALID and every scientific aggregate receipt is false.",
+      "failure_scope": "structural_packet",
+      "claim_boundary": "Structural packet integrity only; it does not establish any string-physics gate.",
+      "implementation_state": "implemented_structural_replay"
+    },
+    {
+      "receipt_id": "STRING_ARTIFACT_HASH_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "structural_integrity",
+      "report_locator": "artifact_hash_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": ["content_addressed_regular_files"],
+      "pass_rule": "Every referenced artifact is a size-bounded regular file below the bundle root, is not a symlink, and matches its declared SHA-256 digest.",
+      "failure_effect": "Contract integrity and all candidate promotion receipts are false.",
+      "failure_scope": "structural_packet",
+      "claim_boundary": "Byte identity and path safety only; a hash does not prove scientific meaning.",
+      "implementation_state": "implemented_structural_replay"
+    },
+    {
+      "receipt_id": "STRING_OPH_TARGET_REGISTRY_BINDING_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "structural_integrity",
+      "report_locator": "oph_target_registry_binding_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": ["source_target_separation"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "code_owned_observable_target_registry",
+        "target_registry_precommitment",
+        "target_registry_hash_binding"
+      ],
+      "pass_rule": "The packet target rows match an allowlisted registry ID, version, and hash frozen before candidate evaluation, and the code-owned source-target-separation verifier passes.",
+      "failure_effect": "Target matching and every rank-based selection receipt remain false.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "Registry identity and precommitment only; it does not prove that a candidate matches the target.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_INTERVAL_CONTRACTION_ALGEBRA_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "algebraic_certificate",
+      "report_locator": "interval_contraction_algebra_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "rational_box",
+        "residual_interval",
+        "jacobian_interval",
+        "rational_preconditioner",
+        "full_system_closure"
+      ],
+      "pass_rule": "The exact-rational verifier proves an invertible preconditioner, contraction norm below one, strict Krawczyk image containment, and closure of the selected square rows to the full zero system.",
+      "failure_effect": "Physical local isolation, moduli locking, and the local string-vacuum witness remain false.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "Exact interval algebra conditional on the producer enclosures; physical enclosure semantics require a code-owned verifier.",
+      "implementation_state": "implemented_exact_algebra"
+    },
+    {
+      "receipt_id": "STRING_EVALUATOR_ENCLOSURE_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "algebraic_certificate",
+      "report_locator": "evaluator_enclosure_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": ["augmented_local_isolation"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "physical_evaluator_source",
+        "outward_rounded_residual_enclosures",
+        "outward_rounded_jacobian_enclosures",
+        "evaluator_enclosure_replay"
+      ],
+      "pass_rule": "A code-owned primitive verifier proves that every supplied residual and Jacobian interval encloses the frozen physical evaluator on the entire source box.",
+      "failure_effect": "Exact interval algebra remains conditional and cannot promote physical isolation.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "Evaluator enclosure only; existence and contraction require separate receipts.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_FULL_SYSTEM_CLOSURE_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "algebraic_certificate",
+      "report_locator": "full_system_closure_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT",
+        "STRING_EVALUATOR_ENCLOSURE_RECEIPT"
+      ],
+      "semantic_gate_ids": ["augmented_local_isolation"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "selected_square_row_registry",
+        "full_zero_system_registry",
+        "closure_identity_or_full_solution_proof"
+      ],
+      "pass_rule": "The selected square subsystem is proved to generate the full physical zero system, or every omitted required row has an independent exact identity or full-solution proof.",
+      "failure_effect": "A contracted subsystem cannot establish a physical root of the full equations.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "Closure of equations only; it does not prove the supplied intervals are valid or contractive.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_FLAT_DIRECTION_CLASSIFICATION_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "local_selection",
+      "report_locator": "flat_direction_classification_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT"
+      ],
+      "semantic_gate_ids": ["vacuum_stability", "physical_quotient_descent"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "kernel_basis_or_constant_rank_family",
+        "physical_meaning_ledger",
+        "stability_or_quotient_proof_per_direction"
+      ],
+      "pass_rule": "Every residual direction is independently classified as stabilized or OPH-invisible, with no visible or unclassified direction and no infinitesimal-only claim promoted to a flat family.",
+      "failure_effect": "Moduli locking and local witness receipts remain false.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "Direction classification only; target matching and existence remain separate.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_PHYSICAL_LOCAL_ISOLATION_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "local_selection",
+      "report_locator": "physical_local_isolation_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT",
+        "STRING_INTERVAL_CONTRACTION_ALGEBRA_RECEIPT",
+        "STRING_EVALUATOR_ENCLOSURE_RECEIPT",
+        "STRING_FULL_SYSTEM_CLOSURE_RECEIPT"
+      ],
+      "semantic_gate_ids": ["augmented_local_isolation"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "primitive_evaluator_enclosure_proof",
+        "typed_augmented_row_registry"
+      ],
+      "pass_rule": "Contract integrity, interval contraction, and the code-owned augmented-local-isolation semantic verifier all pass.",
+      "failure_effect": "No physical existence or local-isolation claim is emitted.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "One certified quotient-chart box only; branch-global and catalogue uniqueness remain separate.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_CRITICAL_EDGE_CFT_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_CRITICAL_EDGE_CFT_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": ["critical_edge_cft"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "worldsheet_operator_algebra",
+        "central_charge_ledger",
+        "modular_invariance",
+        "level_matching",
+        "brst_no_ghost"
+      ],
+      "pass_rule": "A code-owned verifier replays the complete critical-edge CFT, GSO, modular, level-matching, and BRST consistency checks.",
+      "failure_effect": "Retracts the candidate critical-string lift only.",
+      "failure_scope": "critical_string_lift",
+      "claim_boundary": "Does not establish a compactification, stable vacuum, or low-energy match.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_FULL_MASSLESS_SECTOR_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_FULL_MASSLESS_SECTOR_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": ["full_cohomology"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "geometry_bundle_wilson_line_definition",
+        "cohomology_complexes",
+        "equivariant_projection",
+        "representation_multiplicity_ledger"
+      ],
+      "pass_rule": "The exact massless cohomology, indices, equivariant projections, representations, Higgs multiplicity, generations, and exotic exclusions are independently replayed.",
+      "failure_effect": "Retracts the named BD geometric witness.",
+      "failure_scope": "massless_sector",
+      "claim_boundary": "Massless-sector certificate only; it is not the heavy spectrum or stabilized vacuum.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_OPERATOR_SAFETY_REALIZATION_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_OPERATOR_SAFETY_REALIZATION_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": ["operator_safety_realization"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "compactification_symmetry_action",
+        "discrete_anomaly_ledger",
+        "field_charge_registry"
+      ],
+      "pass_rule": "The safety symmetry is realized on the same compactification and its action, charges, and anomaly conditions are independently replayed.",
+      "failure_effect": "Retracts the operator-safe BD extension.",
+      "failure_scope": "operator_safety",
+      "claim_boundary": "An abstract MSSM charge assignment is insufficient without geometric realization.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_SUPERPOTENTIAL_SAFETY_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_SUPERPOTENTIAL_SAFETY_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_OPERATOR_SAFETY_REALIZATION_RECEIPT"
+      ],
+      "semantic_gate_ids": ["superpotential_safety"],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "perturbative_superpotential",
+        "nonperturbative_operator_audit",
+        "dangerous_operator_suppression_bounds"
+      ],
+      "pass_rule": "All required Yukawa and Weinberg terms pass, and every forbidden or suppressed baryon-, lepton-, R-parity-, dimension-five-, and mu-term channel is replayed at the declared perturbative order.",
+      "failure_effect": "Retracts operator-safe candidate status.",
+      "failure_scope": "operator_safety",
+      "claim_boundary": "Operator selection does not establish masses, thresholds, or vacuum stability.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_THRESHOLD_SPECTRUM_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_THRESHOLD_SPECTRUM_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": [
+        "anomaly_bianchi_tadpole",
+        "heavy_spectrum",
+        "low_energy_continuation",
+        "common_scheme_thresholds"
+      ],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "visible_hidden_five_brane_spectrum",
+        "kk_winding_oscillator_tail_bound",
+        "normalized_yukawas",
+        "matching_scale_registry",
+        "rg_and_decoupling_map",
+        "threshold_error_budget"
+      ],
+      "pass_rule": "The complete threshold-relevant spectrum and certified tail, normalized couplings, common-scheme matching, RG flow, breaking or nonsupersymmetric continuation, and decoupling map all pass.",
+      "failure_effect": "No low-energy compatibility or threshold claim is emitted.",
+      "failure_scope": "threshold_low_energy",
+      "claim_boundary": "Displayed target-side proxy numbers never satisfy this receipt.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_COMPLETED_PHYSICAL_SLICE_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_COMPLETED_PHYSICAL_SLICE_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_PACKET_CONTRACT_INTEGRITY_RECEIPT",
+        "STRING_ARTIFACT_HASH_RECEIPT"
+      ],
+      "semantic_gate_ids": [
+        "anomaly_bianchi_tadpole",
+        "vacuum_stability",
+        "physical_quotient_descent"
+      ],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "completed_constraint_registry",
+        "stationarity_enclosures",
+        "physical_hessian_or_bf_margin",
+        "control_parameter_bounds",
+        "quotient_descent_proof"
+      ],
+      "pass_rule": "The completed constraint locus, physical quotient, stationary point, route-appropriate scalar stability margin, and effective-field-theory control bounds all pass.",
+      "failure_effect": "The candidate has no certified physical vacuum slice.",
+      "failure_scope": "physical_vacuum",
+      "claim_boundary": "Stability does not by itself prove observable identifiability or target matching.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_MODULI_LOCKING_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "local_selection",
+      "report_locator": "receipts.STRING_MODULI_LOCKING_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_COMPLETED_PHYSICAL_SLICE_RECEIPT",
+        "STRING_OPH_TARGET_REGISTRY_BINDING_RECEIPT",
+        "STRING_PHYSICAL_LOCAL_ISOLATION_RECEIPT",
+        "STRING_EVALUATOR_ENCLOSURE_RECEIPT",
+        "STRING_INTERVAL_CONTRACTION_ALGEBRA_RECEIPT",
+        "STRING_FULL_SYSTEM_CLOSURE_RECEIPT",
+        "STRING_FLAT_DIRECTION_CLASSIFICATION_RECEIPT"
+      ],
+      "semantic_gate_ids": [
+        "complete_target_match",
+        "source_target_separation",
+        "augmented_local_isolation"
+      ],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "precommitted_target_registry",
+        "source_target_dependency_dag",
+        "constraint_and_target_jacobian_enclosures",
+        "flat_direction_classification"
+      ],
+      "pass_rule": "The completed stable physical slice passes, the target is source-independent and matched, and exact interval replay proves full constraint-augmented transverse rank and local isolation with no visible or unclassified flat direction.",
+      "failure_effect": "Retracts selected-candidate status while leaving the structural BD row and recovered OPH core unchanged.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "Local target isolation only; no branch or catalogue uniqueness follows.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_CANDIDATE_CONSISTENCY_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "candidate_physics",
+      "report_locator": "receipts.STRING_CANDIDATE_CONSISTENCY_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_CRITICAL_EDGE_CFT_RECEIPT",
+        "STRING_FULL_MASSLESS_SECTOR_RECEIPT",
+        "STRING_OPERATOR_SAFETY_REALIZATION_RECEIPT",
+        "STRING_SUPERPOTENTIAL_SAFETY_RECEIPT",
+        "STRING_THRESHOLD_SPECTRUM_RECEIPT",
+        "STRING_COMPLETED_PHYSICAL_SLICE_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": ["target_independent_candidate_physics_bundle"],
+      "pass_rule": "Every target-independent worldsheet, compactification, safety, anomaly, vacuum, spectrum, threshold, continuation, and quotient gate passes.",
+      "failure_effect": "The candidate is not a physically consistent local string vacuum, independent of OPH target matching.",
+      "failure_scope": "physical_vacuum",
+      "claim_boundary": "Candidate consistency only; it does not establish OPH target matching or selection.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "LOCAL_OPH_STRING_VACUUM_WITNESS_RECEIPT",
+      "report_scope": "candidate",
+      "claim_tier": "local_selection",
+      "report_locator": "receipts.LOCAL_OPH_STRING_VACUUM_WITNESS_RECEIPT",
+      "machine_rule": "candidate_status_pass",
+      "dependencies": [
+        "STRING_CANDIDATE_CONSISTENCY_RECEIPT",
+        "STRING_MODULI_LOCKING_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": ["complete_candidate_evidence_bundle"],
+      "pass_rule": "Every candidate semantic gate, structural dependency, stability check, interval-isolation check, target row, and declared blocker passes; candidate_status is PASS.",
+      "failure_effect": "No local OPH-correct string-vacuum witness is emitted.",
+      "failure_scope": "local_string_selection",
+      "claim_boundary": "One local candidate witness; it is not comparative or globally unique.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_CATALOGUE_ENUMERATION_RECEIPT",
+      "report_scope": "catalogue",
+      "claim_tier": "catalogue_selection",
+      "report_locator": "catalogue_enumeration_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": ["catalogue_enumeration"],
+      "required_artifact_classes": ["scope_definition", "enumeration_proof"],
+      "pass_rule": "A code-owned verifier proves that every candidate in the declared scope is represented.",
+      "failure_effect": "Comparative uniqueness remains inconclusive.",
+      "failure_scope": "catalogue_string_selection",
+      "claim_boundary": "Coverage is limited to the declared scope unless an unrestricted reduction theorem also passes.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_EQUIVALENCE_PARTITION_RECEIPT",
+      "report_scope": "catalogue",
+      "claim_tier": "catalogue_selection",
+      "report_locator": "equivalence_partition_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": ["equivalence_partition"],
+      "required_artifact_classes": [
+        "oph_equivalence_relation",
+        "duality_canonicalization",
+        "partition_proof"
+      ],
+      "pass_rule": "A code-owned verifier proves a complete, nonoverlapping partition into physical OPH-equivalence classes, including declared dualities.",
+      "failure_effect": "Presentation duplicates or missed dual descriptions block uniqueness.",
+      "failure_scope": "catalogue_string_selection",
+      "claim_boundary": "Equivalence classification only; it does not prove any candidate passes.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_CANDIDATE_REPLAY_RECEIPT",
+      "report_scope": "branch",
+      "claim_tier": "structural_integrity",
+      "report_locator": "branch_rows[*].candidate_replay_receipt",
+      "machine_rule": "all_candidate_reports_replayed",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "candidate_evidence_packets",
+        "candidate_verification_reports"
+      ],
+      "pass_rule": "Every candidate evidence packet is hash-verified, independently re-evaluated, and byte-for-byte consistent with its supplied verification report.",
+      "failure_effect": "Catalogue status is INCONCLUSIVE.",
+      "failure_scope": "catalogue_string_selection",
+      "claim_boundary": "Replay consistency only; PASS, FAIL, and INCONCLUSIVE remain scientific outcomes of each candidate verifier.",
+      "implementation_state": "implemented_structural_replay"
+    },
+    {
+      "receipt_id": "STRING_BRANCH_GLOBAL_COVERAGE_RECEIPT",
+      "report_scope": "branch",
+      "claim_tier": "branch_selection",
+      "report_locator": "branch_rows[*].branch_domain_coverage_receipt",
+      "machine_rule": "all_branch_domains_covered",
+      "dependencies": ["STRING_CANDIDATE_REPLAY_RECEIPT"],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": ["branch_domain_coverage"],
+      "required_artifact_classes": [
+        "validated_chart_box_cover",
+        "boundary_and_singular_strata_ledger",
+        "discrete_completion_ledger",
+        "noncompact_tail_bounds"
+      ],
+      "pass_rule": "Every catalogue row has semantically verified PASS branch coverage. FAIL or INCONCLUSIVE coverage blocks selection and cannot suppress a passing candidate.",
+      "failure_effect": "Comparative uniqueness remains inconclusive.",
+      "failure_scope": "branch_string_selection",
+      "claim_boundary": "Global only on each declared branch, not across an undeclared candidate universe.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_BRANCH_VERDICT_REPLAY_RECEIPT",
+      "report_scope": "branch",
+      "claim_tier": "branch_selection",
+      "report_locator": "branch_rows[*].branch_verdict_replay_receipt",
+      "machine_rule": "all_branch_verdicts_terminal",
+      "dependencies": [
+        "STRING_CANDIDATE_REPLAY_RECEIPT",
+        "STRING_BRANCH_GLOBAL_COVERAGE_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": ["branch_verdict_replay"],
+      "required_artifact_classes": [
+        "per_box_root_verdict_ledger",
+        "boundary_and_singular_verdicts",
+        "discrete_completion_verdicts",
+        "tail_verdicts"
+      ],
+      "pass_rule": "Every covered box, boundary, singular stratum, discrete completion, and noncompact tail has a replayed terminal PASS or FAIL verdict; any unresolved cell blocks the receipt.",
+      "failure_effect": "No branch can be excluded or selected globally.",
+      "failure_scope": "branch_string_selection",
+      "claim_boundary": "Terminal branch-cell verdicts only; catalogue enumeration and equivalence remain separate.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "STRING_BRANCH_GLOBAL_UNIQUENESS_RECEIPT",
+      "report_scope": "branch",
+      "claim_tier": "branch_selection",
+      "report_locator": "branch_rows[*].branch_global_uniqueness_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "STRING_BRANCH_GLOBAL_COVERAGE_RECEIPT",
+        "STRING_BRANCH_VERDICT_REPLAY_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": ["branch_verdict_replay"],
+      "required_artifact_classes": ["unique_passing_root_or_equivalence_class_ledger"],
+      "pass_rule": "On a passing branch, exactly one target-matching physical equivalence class remains after every other branch cell receives a terminal exclusion verdict.",
+      "failure_effect": "A local witness cannot be promoted to branch-global uniqueness.",
+      "failure_scope": "branch_string_selection",
+      "claim_boundary": "Uniqueness on one declared branch only.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "COMPARATIVE_UNIQUENESS_CERTIFICATE_RECEIPT",
+      "report_scope": "catalogue",
+      "claim_tier": "catalogue_selection",
+      "report_locator": "COMPARATIVE_UNIQUENESS_CERTIFICATE_RECEIPT",
+      "machine_rule": "exactly_one_equivalence_class_passes",
+      "dependencies": [
+        "STRING_CATALOGUE_ENUMERATION_RECEIPT",
+        "STRING_EQUIVALENCE_PARTITION_RECEIPT",
+        "STRING_CANDIDATE_REPLAY_RECEIPT",
+        "STRING_BRANCH_GLOBAL_COVERAGE_RECEIPT",
+        "STRING_BRANCH_VERDICT_REPLAY_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": ["complete_catalogue_evidence_bundle"],
+      "pass_rule": "The declared catalogue and equivalence partition are complete, every candidate and branch result is terminal and replayed, no region is unresolved, and exactly one physical equivalence class passes.",
+      "failure_effect": "No catalogue-relative string selection is emitted.",
+      "failure_scope": "catalogue_string_selection",
+      "claim_boundary": "Selection is only within the semantically verified declared catalogue scope.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    },
+    {
+      "receipt_id": "STRING_UNRESTRICTED_UNIVERSE_COVERAGE_RECEIPT",
+      "report_scope": "catalogue",
+      "claim_tier": "unrestricted_selection",
+      "report_locator": "unrestricted_string_universe_coverage_receipt",
+      "machine_rule": "literal_true",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": ["unrestricted_reduction"],
+      "required_artifact_classes": ["unrestricted_reduction_theorem"],
+      "pass_rule": "A code-owned verifier proves that every eligible string presentation is represented in the declared catalogue up to the verified physical equivalence relation.",
+      "failure_effect": "The result remains catalogue-relative.",
+      "failure_scope": "unrestricted_string_selection",
+      "claim_boundary": "This is the extra proof needed to extend catalogue selection to the declared unrestricted string universe.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "OPH_CORE_STRING_SELECTOR_INDEPENDENCE_RECEIPT",
+      "report_scope": "catalogue",
+      "claim_tier": "structural_integrity",
+      "report_locator": "selector_independence_receipt",
+      "machine_rule": "selector_failure_independent_of_oph_core",
+      "dependencies": [],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": [
+        "claim_dependency_dag",
+        "string_selector_failure_scope_proof"
+      ],
+      "pass_rule": "The replayed claim DAG has no dependency path from any string-selector receipt into the recovered OPH-core receipts, and every selector failure effect is scoped to the string continuation.",
+      "failure_effect": "The simulator may report string-selector results but cannot certify their claimed independence from the OPH core.",
+      "failure_scope": "claim_dependency_boundary",
+      "claim_boundary": "Claim-scope independence only; it does not make any string candidate pass.",
+      "implementation_state": "requires_code_owned_semantic_verifier"
+    },
+    {
+      "receipt_id": "OPH_NATIVE_STRING_VACUUM_RECEIPT",
+      "report_scope": "catalogue",
+      "claim_tier": "unrestricted_selection",
+      "report_locator": "OPH_NATIVE_STRING_VACUUM_RECEIPT",
+      "machine_rule": "literal_true",
+      "dependencies": [
+        "COMPARATIVE_UNIQUENESS_CERTIFICATE_RECEIPT",
+        "STRING_UNRESTRICTED_UNIVERSE_COVERAGE_RECEIPT"
+      ],
+      "semantic_gate_ids": [],
+      "catalogue_proof_ids": [],
+      "required_artifact_classes": ["complete_unrestricted_selection_bundle"],
+      "pass_rule": "Exactly one physical OPH-equivalence class passes a complete catalogue and the unrestricted reduction theorem is semantically verified.",
+      "failure_effect": "No claim to the correct or globally selected string theory is emitted; narrower receipts retain their own scope.",
+      "failure_scope": "unrestricted_string_selection",
+      "claim_boundary": "Selects a physical equivalence class, not a unique perturbative presentation, and does not alter the recovered OPH core if false.",
+      "implementation_state": "implemented_aggregate_requires_semantic_verifiers"
+    }
+  ]
+}

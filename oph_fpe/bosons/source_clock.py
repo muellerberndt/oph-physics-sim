@@ -69,9 +69,9 @@ def source_clock_receipt(
         scale_interval_gev = [value / GEV_JOULE for value in scale_interval_joule]
 
     source_frequency_eligible = frequency_role in {"unit_convention", "source_emitted"}
-    promoted = bool(
-        source_packet_verified
-        and no_target_ancestry
+    declared_candidate = bool(
+        source_packet_verified is True
+        and no_target_ancestry is True
         and source_frequency_eligible
         and self_adjoint
         and positive_gap
@@ -90,6 +90,13 @@ def source_clock_receipt(
         blockers.append("clock_gap_not_strictly_positive_under_perturbation")
     if not labels_isolated:
         blockers.append("clock_level_labels_not_isolated")
+    blockers.extend(
+        [
+            "finite_matrix_gap_is_only_a_wzh0_numeric_primitive",
+            "operational_source_clock_envelope_not_replayed",
+            "runtime_subject_and_same_root_binding_not_verified",
+        ]
+    )
 
     return {
         "schema": "oph_wzh_source_clock_receipt_v1",
@@ -108,11 +115,16 @@ def source_clock_receipt(
         "E_star_interval_joule": scale_interval_joule,
         "E_star_GeV": central_scale_gev,
         "E_star_interval_GeV": scale_interval_gev,
-        "source_clock_receipt": promoted,
-        "promotion_allowed": promoted,
-        "blockers": blockers,
+        "declared_candidate_conditions_met": declared_candidate,
+        "finite_gap_numerical_control_receipt": bool(
+            self_adjoint and positive_gap and labels_isolated
+        ),
+        "source_clock_receipt": False,
+        "promotion_allowed": False,
+        "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "The spectral calculation is numerical. E_star is source-eligible only when the "
-            "dimensionless Hamiltonian packet and no-target ancestry are independently certified."
+            "The gap and unit conversion are WZH0 numerical primitives. This helper "
+            "cannot promote an operational source clock from caller flags; a resolved "
+            "same-root clock/transition packet and independent verifier are required."
         ),
     }

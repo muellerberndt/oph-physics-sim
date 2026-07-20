@@ -30,7 +30,7 @@ see `docs/RUN_OUTPUTS_AND_VISUALIZATION.md` and
 
 The working surface includes finite consensus receipts, observer record algebra, support-visible BW/KMS and H3 chart diagnostics, theorem-assisted H3 object population, strict neutral-bulk frontiers, screen-level CMB diagnostics, finite cosmology certificate gates, defect and proto-particle assays, scale/capacity audits, viewer exports, and handoff bundles.
 
-## Status (2026-07-19)
+## Status (2026-07-20)
 
 Local execution reports cover 4k, 16k, 64k, 128k (32,000 observers), 256k,
 and 1,048,576 patches with 64,000 materialized observers. The populated
@@ -41,13 +41,19 @@ results are local, unpinned observations until their artifacts are committed
 or hash-pinned with a fetch path; scale claims cite the 64k and 128k earned
 runs.
 
-- The observer 3+1D experience receipt is earned under the gauge-covariant
-  sector-replay contract: all four component gates pass at 4k with zero
-  overrides. The 2 pi KMS clock gate passes at 4k, 16k, and 64k on the
-  `kms_collar_transport_response` source, whose scale normalization defaults
-  to 2 pi; the endogenous perturb-remeasure probe selected pi without
-  discrimination (scores near 0.93-1.01), so gate repair is open work. Receipts
-  certified before 2026-07-14 used the pre-covariant probe and are superseded.
+- The current audited physical H3/KMS instrument is fail-closed.  Its fresh 4k
+  v7 acceptance cell passes all 31 replay booleans (21 top-level instrument
+  receipts plus ten artifact-byte receipts), exact fresh-process replay, and
+  independent family reduction.  P0--P8 are 0 pass, 9 not evaluated, and 0
+  valid scientific failures; the reducer sees 1/12 cells and reports
+  `ready_for_64k=false`.  Promotion, scale authorization, and retirement are
+  false.  The previously reported 3+1D and `2*pi` results are legacy diagnostic
+  receipts: `kms_collar_transport_response` embeds a `2*pi` normalization and
+  is not the independent modular/geometric clock pair required by the physical
+  campaign.  The endogenous perturb-remeasure probe selected `pi` without
+  discrimination (scores near 0.93--1.01).  See
+  `docs/PHYSICAL_H3_KMS_THEORY_CODE_AUDIT_2026-07-20.md` and the workspace
+  `survival-proof-4/status.md`.
 - The observer mutual-agreement certificate records self-consistency of the
   shared record under hash-frame conjugation: every evaluated pair re-gauges
   at defect 0.0 from 4k through the 128k earned run (1M pending artifacts, per
@@ -424,6 +430,35 @@ NUMEXPR_NUM_THREADS=1 \
 python3 -m oph_fpe.cli run-bw-sweep --configs configs/e1_s3_state_modular_screen_4k.yml --seeds 1,2,3,4 --out-dir runs
 ```
 
+Physical H3/KMS campaign cells additionally freeze the numerical stack and
+reject a mismatch before source evolution.  Use the project virtual
+environment and all five caps:
+
+```bash
+OMP_NUM_THREADS=1 \
+OPENBLAS_NUM_THREADS=1 \
+MKL_NUM_THREADS=1 \
+VECLIB_MAXIMUM_THREADS=1 \
+NUMEXPR_NUM_THREADS=1 \
+.venv/bin/python -m oph_fpe.bulk.physical_h3_kms_campaign \
+  ../survival-proof-4/outputs/run_4k_acceptance_20260720_v7 \
+  --rung 4096 --execute-physical-cell
+```
+
+Reduce one or more exact cell bundles independently with:
+
+```bash
+.venv/bin/python -m oph_fpe.bulk.physical_h3_kms_aggregate \
+  ../survival-proof-4/outputs/physical_h3_kms_family_aggregate_v7.json \
+  ../survival-proof-4/outputs/run_4k_acceptance_20260720_v7
+```
+
+These commands prove instrument/replay/reducer acceptance only.  The physical
+launcher refuses every rung above 4k unless repeated
+`--prerequisite-run-dir` arguments supply all lower-rung cells and fresh family
+reduction marks the requested rung ready.  The current aggregate does not
+authorize a 16k or 64k physical launch.
+
 ## Key Documentation
 
 Status and experiments:
@@ -445,6 +480,12 @@ Contracts and lanes:
   claim-promotion contract.
 - `docs/CLAIM_LANES.md`: lane-by-lane contracts (screen/scale, BW/H3/bulk,
   CMB, defects, positive geometry, W/Z/H).
+- `docs/STRING_VACUUM_SELECTION_RECEIPT_CONTRACT.md`: candidate, augmented
+  rank/isolation, branch-coverage, and catalogue receipt requirements for the
+  fail-closed string-vacuum lane.
+- `docs/STRING_VACUUM_SIMULATOR_TARGETS.md`: canonical observable values,
+  machine-readable receipt targets, dependency scopes, promotion rules, and
+  simulator replay commands for the string-vacuum lane.
 - `docs/PROOF_PACKET_AUDITS.md`: fail-closed proof-packet audits
   (issues #307, #308, #309, #310, #361) and Lean-mirrored fixtures.
 - `docs/SIMULATION_ASSUMPTION_POLICY.md`: the assumed-bridge visualization

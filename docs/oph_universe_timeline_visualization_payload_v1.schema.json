@@ -16,6 +16,7 @@
     "simulationAssumptions",
     "smallUniverse",
     "screen",
+    "screenA5Ladder",
     "subjectiveObserverCameras",
     "observerModularTime",
     "consensusBulk",
@@ -62,6 +63,9 @@
     },
     "screen": {
       "$ref": "#/$defs/screen"
+    },
+    "screenA5Ladder": {
+      "$ref": "#/$defs/screenA5Ladder"
     },
     "subjectiveObserverCameras": {
       "type": "array",
@@ -491,6 +495,37 @@
         }
       }
     },
+    "screenA5Ladder": {
+      "type": "object",
+      "description": "Exact local icosahedral/A5 renderer data plus an isolated, nonpromoting demo ladder.",
+      "additionalProperties": true,
+      "required": [
+        "schema",
+        "epistemicStatus",
+        "localCarrier",
+        "federation",
+        "observerRepairBridge",
+        "a5ToSm",
+        "clockSeparation",
+        "demoUniverse",
+        "demoControls",
+        "receipts",
+        "claimBoundary"
+      ],
+      "properties": {
+        "schema": {"const": "oph.screen-a5-visualization-ladder/1.0.0"},
+        "epistemicStatus": {"const": "VISUALIZATION_CONTRACT"},
+        "localCarrier": {"$ref": "#/$defs/openObject"},
+        "federation": {"$ref": "#/$defs/openObject"},
+        "observerRepairBridge": {"$ref": "#/$defs/openObject"},
+        "a5ToSm": {"$ref": "#/$defs/openObject"},
+        "clockSeparation": {"$ref": "#/$defs/openObject"},
+        "demoUniverse": {"$ref": "#/$defs/openObject"},
+        "demoControls": {"$ref": "#/$defs/openObject"},
+        "receipts": {"$ref": "#/$defs/receiptMap"},
+        "claimBoundary": {"type": "string"}
+      }
+    },
     "visualizationViews": {
       "type": "object",
       "description": "First-class view contracts for web visualizers. These views name the intended panels and the payload fields that support them without promoting closed receipts.",
@@ -500,6 +535,9 @@
       "required": [
         "fluctuatingQuantumVacuum",
         "observerCamera",
+        "screenGeometry",
+        "a5ToStandardModel",
+        "demoUniverse",
         "emergentCurvedSpacetime",
         "effectiveStringTheory"
       ],
@@ -508,6 +546,15 @@
           "$ref": "#/$defs/visualizationView"
         },
         "observerCamera": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "screenGeometry": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "a5ToStandardModel": {
+          "$ref": "#/$defs/visualizationView"
+        },
+        "demoUniverse": {
           "$ref": "#/$defs/visualizationView"
         },
         "emergentCurvedSpacetime": {

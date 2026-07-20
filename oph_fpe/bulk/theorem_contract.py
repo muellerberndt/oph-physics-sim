@@ -25,13 +25,16 @@ from oph_fpe.claims import (
     EINSTEIN_NULL_STRESS_CHARGE_RECEIPT,
     EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT,
     FINITE_CONSENSUS_THEOREM_RECEIPT,
+    BW_SAME_TOWER_INPUTS_RECEIPT,
     ISSUE_308_BW_CERTIFICATE_RECEIPT,
     INDEPENDENT_GEOMETRIC_CLOCK_PARAMETER_RECEIPT,
+    MGNS1_CERTIFICATE_RECEIPT,
     MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
     OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
     OPH_EINSTEIN_BRIDGE_MANIFEST_RECEIPT,
     OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
     PRIME_GEOMETRIC_CAP_STATE_RECEIPT,
+    SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT,
     with_claim_metadata,
 )
 from oph_fpe.bulk.bw_certificate_308 import issue308_bw_certificate_report
@@ -94,7 +97,16 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     h3_gates = h3.get("h3_response_stage_gates") or {}
     wrong_scale = h3.get("wrong_scale_feature_audit") or {}
     object_blockers = list(object_chart.get("blockers") or [])
-    issue308_receipt = _literal_true(issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT))
+    finite_cap_bw_receipt = _literal_true(
+        issue308_bw.get(ISSUE_308_BW_CERTIFICATE_RECEIPT)
+    )
+    mgns1_receipt = _literal_true(issue308_bw.get(MGNS1_CERTIFICATE_RECEIPT))
+    bw_same_tower_receipt = _literal_true(
+        issue308_bw.get(BW_SAME_TOWER_INPUTS_RECEIPT)
+    )
+    support_visible_bw_theorem_applicable = _literal_true(
+        issue308_bw.get(SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT)
+    )
     issue309_receipt = _literal_true(issue309_h3.get(CAP_NORMAL_H3_CHART_RECEIPT))
     issue310_receipt = _literal_true(issue310_h3loc.get(MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT))
 
@@ -118,18 +130,18 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         chart=chart,
     )
     support_visible_bw_covariance = bool(
-        issue308_receipt
+        support_visible_bw_theorem_applicable
         and _literal_true(h3_gates.get("signal_gate"))
         and _literal_true(h3_gates.get("geometry_gate"))
         and _literal_true(h3_gates.get("aggregate_wrong_scale_gate"))
         and _literal_true(h3_gates.get("material_feature_gate"))
     )
     ordered_cut_pair_rigidity = bool(
-        issue308_receipt
+        finite_cap_bw_receipt
         and issue309_receipt
         and _issue308_clause_passed(issue308_bw, "C2_bw_frame")
         and _issue308_clause_passed(issue308_bw, "C3_prime_support_visible_cap_net")
-        and _issue308_clause_passed(issue308_bw, "C6_geometric_rigidity")
+        and _issue308_clause_passed(issue308_bw, "C4_geometric_support_flow")
     )
     local_lorentz_algebra = lorentz_algebra_report()
     lorentz_algebra_closure = bool(
@@ -359,15 +371,29 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             },
         ),
         "T308_finite_cap_bw_certificate": _stage(
-            issue308_receipt,
-            "issue #308 BW3 is recomputed from primitive finite cap-net certificate fields",
+            support_visible_bw_theorem_applicable,
+            (
+                "support-visible BW consumes a six-clause FiniteCapBWCertificate and an "
+                "independently complete MGNS-1 package on the same tower"
+            ),
             missing=[
                 name
                 for name, row in (issue308_bw.get("clauses") or {}).items()
                 if isinstance(row, dict) and not row.get("passed", False)
-            ],
+            ]
+            + list((issue308_bw.get("mgns1") or {}).get("missing_or_blocking_evidence") or [])
+            + list(
+                (issue308_bw.get("same_tower_input_pair") or {}).get(
+                    "missing_or_blocking_evidence"
+                )
+                or []
+            ),
             details={
-                "tier": issue308_bw.get("tier", "BW0"),
+                "tier": issue308_bw.get("tier", "FC0"),
+                "finite_cap_receipt": finite_cap_bw_receipt,
+                "mgns1_receipt": mgns1_receipt,
+                "same_tower_receipt": bw_same_tower_receipt,
+                "theorem_applicable": support_visible_bw_theorem_applicable,
                 "source_report_written": bool(issue308_bw),
             },
         ),
@@ -694,17 +720,38 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "provenance_tags": dict(einstein_bridge.get("provenanceTags") or {}),
         },
         "issue_308_bw_certificate": {
-            "receipt": issue308_receipt,
-            "tier": issue308_bw.get("tier", "BW0"),
+            "receipt": support_visible_bw_theorem_applicable,
+            "finite_cap_receipt": finite_cap_bw_receipt,
+            "mgns1_receipt": mgns1_receipt,
+            "same_tower_receipt": bw_same_tower_receipt,
+            "theorem_applicable": support_visible_bw_theorem_applicable,
+            "tier": issue308_bw.get("tier", "FC0"),
             "report_written": bool(issue308_bw),
             "nonclaims": dict(issue308_bw.get("nonclaims") or {}),
-            "primary_blockers": [
-                name
-                for name, row in (issue308_bw.get("clauses") or {}).items()
-                if isinstance(row, dict) and not row.get("passed", False)
-            ][:6],
+            "primary_blockers": (
+                [
+                    name
+                    for name, row in (issue308_bw.get("clauses") or {}).items()
+                    if isinstance(row, dict) and not row.get("passed", False)
+                ]
+                + list(
+                    (issue308_bw.get("mgns1") or {}).get(
+                        "missing_or_blocking_evidence"
+                    )
+                    or []
+                )
+                + list(
+                    (issue308_bw.get("same_tower_input_pair") or {}).get(
+                        "missing_or_blocking_evidence"
+                    )
+                    or []
+                )
+            )[:6],
         },
-        ISSUE_308_BW_CERTIFICATE_RECEIPT: issue308_receipt,
+        ISSUE_308_BW_CERTIFICATE_RECEIPT: finite_cap_bw_receipt,
+        MGNS1_CERTIFICATE_RECEIPT: mgns1_receipt,
+        BW_SAME_TOWER_INPUTS_RECEIPT: bw_same_tower_receipt,
+        SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT: support_visible_bw_theorem_applicable,
         "issue_308_finite_cap_bw_certificate_receipt": _literal_true(
             issue308_bw.get("issue_308_finite_cap_bw_certificate_receipt")
         ),
@@ -746,9 +793,9 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "boundaries, readback, records, feedback/repair moves, and public evidence bundles. The "
             "legacy finite Lorentz/modular L-lane stops at support-visible BW covariance, cut-pair "
             "rigidity diagnostics, Lorentz algebra closure, and an endogenous finite KMS clock fit. "
-            "The issue #308 BW3 theorem receipt is stricter: it requires primitive cap-normal, frame, "
-            "support-order, held-out cross-ratio, mixed-GNS, geometric KMS, wrong-scale, and envelope "
-            "fields. The paper-geometric diagnostic may use the declared theorem chart, but its "
+            "The issue #308 theorem gate is stricter: its six-clause finite cap-flow certificate "
+            "must be paired with an independently complete MGNS-1 algebra-state certificate on "
+            "the same tower. The paper-geometric diagnostic may use the declared theorem chart, but its "
             "computed contract still requires issue #308/#309 and L7 refinement receipts. The "
             "separate SIMULATION_ASSUMED_* tier may complete a renderer scene from an explicit "
             "assumption manifest; it never changes these computed receipts. The "

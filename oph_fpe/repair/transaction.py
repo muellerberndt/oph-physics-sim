@@ -32,6 +32,18 @@ State: TypeAlias = Mapping[RegisterRef, Any]
 
 REPAIR_CONTRACT_VERSION = "repair-contract-r1"
 REPAIR_VERIFIER_VERSION = "oph-fpe-transaction-verifier-v1"
+REPAIR_REPLAY_ENVELOPE_SCHEMA = "oph.repair.replay-envelope.v1"
+REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE = "TRANSACTIONAL_REPAIR_REPLAY_ENVELOPE"
+REPAIR_REPLAY_VERIFIER_VERSION = "oph-fpe-primitive-replay-verifier-v1"
+
+_REPAIR_REPLAY_SCOPE = "finite primitive transactional-repair replay"
+_REPAIR_REPLAY_NONCLAIMS = [
+    "physical source provenance",
+    "probability or vacuum selection",
+    "H3 or event geometry",
+    "KMS clock normalization",
+    "continuum or Standard Model emergence",
+]
 
 
 class TransitionKind(str, Enum):
@@ -1213,20 +1225,19 @@ def _canonical_ref_tuple(value: Any, *, field_name: str) -> tuple[str, ...]:
     return result
 
 
-def verify_repair_receipt_artifact(
+def _verify_repair_receipt_self_consistency(
     artifact: RepairCommitReceipt | Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Independently recompute the canonical serialized receipt invariants.
+    """Recompute invariants that are internal to a serialized receipt.
 
     The verifier deliberately ignores caller-authored receipt booleans until it
     has rebuilt dependency completeness, conflict edges/support, exact descent,
     event taxonomy, aggregate hashes, and the commit ID from primitive fields.
 
-    This is an integrity/contract verifier, not a signature or physical-source
-    attestation.  A promotion gate must require both
-    ``REPAIR_ARTIFACT_INTEGRITY_RECEIPT`` and ``TRANSACTIONAL_REPAIR_RECEIPT``
-    from this return value, never similarly named fields from an arbitrary JSON
-    mapping.
+    Crucially, this function has no pre-state, version map, mismatch evaluator,
+    collar, or executable proposal.  It can therefore detect isolated receipt
+    corruption but cannot establish that the described transition happened.
+    It is private so no promotion registry can accidentally admit it.
     """
 
     raw = artifact.as_dict() if isinstance(artifact, RepairCommitReceipt) else artifact
@@ -1545,8 +1556,8 @@ def verify_repair_receipt_artifact(
             failures.append(f"artifact is not canonically hashable: {exc}")
     integrity = not failures and derived is not None
     return {
-        "schema": "oph_repair_artifact_verification_v1",
-        "receipt_type": "TRANSACTIONAL_REPAIR_ARTIFACT_VERIFICATION",
+        "schema": "oph_repair_receipt_self_consistency_diagnostic_v1",
+        "receipt_type": "TRANSACTIONAL_REPAIR_RECEIPT_SELF_CONSISTENCY_DIAGNOSTIC",
         "REPAIR_ARTIFACT_INTEGRITY_RECEIPT": integrity,
         "COMPLETE_READ_SET_RECEIPT": bool(
             integrity and derived and derived.COMPLETE_READ_SET_RECEIPT
@@ -1564,6 +1575,580 @@ def verify_repair_receipt_artifact(
         "artifact_hash": artifact_hash,
         "failure_reasons": failures,
         "verifier_version": REPAIR_VERIFIER_VERSION,
+    }
+
+
+def verify_repair_receipt_artifact(
+    artifact: RepairCommitReceipt | Mapping[str, Any],
+) -> dict[str, Any]:
+    """Run the non-promotional serialized-receipt consistency diagnostic.
+
+    A receipt is an output of the transaction engine, not a replay input.  Its
+    hashes, checks, and booleans can be coauthored into a mutually consistent
+    but fictitious transition.  Consequently this compatibility entry point
+    never emits a promotion-capable repair receipt.  Use
+    :func:`verify_repair_replay_envelope` with primitive inputs instead.
+    """
+
+    diagnostic = _verify_repair_receipt_self_consistency(artifact)
+    self_consistent = bool(
+        diagnostic.get("REPAIR_ARTIFACT_INTEGRITY_RECEIPT") is True
+    )
+    return {
+        "schema": "oph_repair_receipt_diagnostic_verification_v2",
+        "receipt_type": "TRANSACTIONAL_REPAIR_RECEIPT_DIAGNOSTIC_VERIFICATION",
+        "REPAIR_RECEIPT_SERIALIZATION_SELF_CONSISTENCY_DIAGNOSTIC_RECEIPT": (
+            self_consistent
+        ),
+        "REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT": False,
+        "REPAIR_ARTIFACT_INTEGRITY_RECEIPT": False,
+        "COMPLETE_READ_SET_RECEIPT": False,
+        "CONFLICT_COMPONENT_SUPPORT_RECEIPT": False,
+        "ATOMIC_UNION_REVALIDATION_RECEIPT": False,
+        "TRANSACTIONAL_REPAIR_RECEIPT": False,
+        "RECORD_COMMIT_REPLAY_RECEIPT": False,
+        "commit_id": diagnostic.get("commit_id"),
+        "artifact_hash": diagnostic.get("artifact_hash"),
+        "failure_reasons": list(diagnostic.get("failure_reasons", [])),
+        "promotion_blockers": ["primitive_replay_envelope_required"],
+        "verifier_version": REPAIR_REPLAY_VERIFIER_VERSION,
+    }
+
+
+_REPLAY_ENVELOPE_FIELDS = frozenset(
+    {
+        "schema",
+        "artifact_type",
+        "replay_verifier_version",
+        "initial_state",
+        "initial_versions",
+        "mismatch_evaluator",
+        "proposals",
+        "expected_receipt",
+        "expected_post_state",
+        "expected_versions_after",
+        "scope",
+        "nonclaims",
+    }
+)
+_REPLAY_PROPOSAL_FIELDS = frozenset(
+    {
+        "proposal_id",
+        "transition_kind",
+        "proposal_class",
+        "collar",
+        "declared_read_set",
+        "recovery",
+        "inverse_updates",
+        "source_parameters",
+        "parent_event_ids",
+    }
+)
+_REPLAY_COLLAR_FIELDS = frozenset(
+    {
+        "collar_id",
+        "visible_read_set",
+        "writable_registers",
+        "protected_boundary",
+        "sector_registers",
+        "record_registers",
+        "checkpoint_registers",
+        "interior_registers",
+        "carrier_ids",
+        "seam_ids",
+        "forbidden_target_fields",
+    }
+)
+_REPLAY_LEDGER_COMPONENTS = frozenset(
+    {"record", "sector", "holonomy", "overlap", "local_constraint"}
+)
+
+
+def _require_exact_mapping_fields(
+    value: Any, expected: frozenset[str], *, field_name: str
+) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise TypeError(f"{field_name} must be an object")
+    if set(value) != expected:
+        raise ValueError(f"{field_name} has missing or unexpected fields")
+    _validate_register_mapping(value, name=field_name)
+    return value
+
+
+def _validate_plain_json(value: Any, *, field_name: str) -> None:
+    if value is None or type(value) in {str, bool, int}:
+        return
+    if type(value) is float:
+        if not math.isfinite(value):
+            raise ValueError(f"{field_name} contains a non-finite float")
+        return
+    if type(value) is list:
+        for index, item in enumerate(value):
+            _validate_plain_json(item, field_name=f"{field_name}[{index}]")
+        return
+    if type(value) is dict:
+        _validate_register_mapping(value, name=field_name)
+        for key, item in value.items():
+            _validate_plain_json(item, field_name=f"{field_name}.{key}")
+        return
+    raise TypeError(
+        f"{field_name} must be a plain JSON value, received {type(value).__name__}"
+    )
+
+
+def _signed_fraction_from_replay(value: Any, *, field_name: str) -> Fraction:
+    if isinstance(value, bool):
+        raise TypeError(f"{field_name} must be an exact number, not bool")
+    if isinstance(value, int):
+        return Fraction(value)
+    if not isinstance(value, Mapping) or set(value) != {"numerator", "denominator"}:
+        raise TypeError(
+            f"{field_name} must be an integer or exact numerator/denominator object"
+        )
+    numerator = value["numerator"]
+    denominator = value["denominator"]
+    if (
+        isinstance(numerator, bool)
+        or not isinstance(numerator, int)
+        or isinstance(denominator, bool)
+        or not isinstance(denominator, int)
+        or denominator <= 0
+    ):
+        raise TypeError(f"{field_name} has invalid exact integer components")
+    result = Fraction(numerator, denominator)
+    if dict(value) != _fraction_json(result):
+        raise ValueError(f"{field_name} is not a reduced canonical fraction")
+    return result
+
+
+def _parse_replay_expression(
+    value: Any, *, field_name: str
+) -> tuple[tuple[tuple[str, Fraction], ...], Fraction, str]:
+    expression = _require_exact_mapping_fields(
+        value,
+        frozenset({"terms", "constant", "transform"}),
+        field_name=field_name,
+    )
+    raw_terms = expression["terms"]
+    if not isinstance(raw_terms, list):
+        raise TypeError(f"{field_name}.terms must be an array")
+    terms: list[tuple[str, Fraction]] = []
+    for index, raw_term in enumerate(raw_terms):
+        term = _require_exact_mapping_fields(
+            raw_term,
+            frozenset({"register", "coefficient"}),
+            field_name=f"{field_name}.terms[{index}]",
+        )
+        register = term["register"]
+        if not isinstance(register, str) or not register:
+            raise TypeError(f"{field_name}.terms[{index}].register is invalid")
+        terms.append(
+            (
+                register,
+                _signed_fraction_from_replay(
+                    term["coefficient"],
+                    field_name=f"{field_name}.terms[{index}].coefficient",
+                ),
+            )
+        )
+    if terms != sorted(terms, key=lambda item: item[0]):
+        raise ValueError(f"{field_name}.terms must be sorted by register")
+    if len({register for register, _ in terms}) != len(terms):
+        raise ValueError(f"{field_name}.terms contains duplicate registers")
+    transform = expression["transform"]
+    if transform not in {"identity", "absolute"}:
+        raise ValueError(f"{field_name}.transform is not allowlisted")
+    constant = _signed_fraction_from_replay(
+        expression["constant"], field_name=f"{field_name}.constant"
+    )
+    return tuple(terms), constant, str(transform)
+
+
+def _build_replay_mismatch_evaluator(spec: Any) -> MismatchEvaluator:
+    raw = _require_exact_mapping_fields(
+        spec,
+        frozenset({"kind", "components", "physical_auxiliary"}),
+        field_name="mismatch_evaluator",
+    )
+    if raw["kind"] != "exact_affine_ledger_v1":
+        raise ValueError("mismatch_evaluator.kind is not allowlisted")
+    components = _require_exact_mapping_fields(
+        raw["components"],
+        _REPLAY_LEDGER_COMPONENTS,
+        field_name="mismatch_evaluator.components",
+    )
+    parsed_components = {
+        name: _parse_replay_expression(
+            components[name], field_name=f"mismatch_evaluator.components.{name}"
+        )
+        for name in sorted(_REPLAY_LEDGER_COMPONENTS)
+    }
+    auxiliaries = raw["physical_auxiliary"]
+    if not isinstance(auxiliaries, Mapping):
+        raise TypeError("mismatch_evaluator.physical_auxiliary must be an object")
+    _validate_register_mapping(
+        auxiliaries, name="mismatch_evaluator.physical_auxiliary"
+    )
+    parsed_auxiliaries = {
+        name: _parse_replay_expression(
+            expression,
+            field_name=f"mismatch_evaluator.physical_auxiliary.{name}",
+        )
+        for name, expression in sorted(auxiliaries.items())
+    }
+
+    def evaluate_expression(
+        state: State,
+        expression: tuple[tuple[tuple[str, Fraction], ...], Fraction, str],
+    ) -> Fraction:
+        terms, constant, transform = expression
+        result = constant
+        for register, coefficient in terms:
+            result += coefficient * _signed_fraction_from_replay(
+                state[register], field_name=f"state.{register}"
+            )
+        return abs(result) if transform == "absolute" else result
+
+    def evaluator(state: State, _collar: RepairCollar) -> MismatchLedger:
+        values = {
+            name: evaluate_expression(state, expression)
+            for name, expression in parsed_components.items()
+        }
+        return MismatchLedger(
+            record=values["record"],
+            sector=values["sector"],
+            holonomy=values["holonomy"],
+            overlap=values["overlap"],
+            local_constraint=values["local_constraint"],
+            physical_auxiliary={
+                name: evaluate_expression(state, expression)
+                for name, expression in parsed_auxiliaries.items()
+            },
+        )
+
+    return evaluator
+
+
+def _parse_replay_collar(value: Any, *, field_name: str) -> RepairCollar:
+    raw = _require_exact_mapping_fields(
+        value, _REPLAY_COLLAR_FIELDS, field_name=field_name
+    )
+    collar_id = raw["collar_id"]
+    if not isinstance(collar_id, str) or not collar_id:
+        raise TypeError(f"{field_name}.collar_id must be a non-empty string")
+
+    def refs(name: str) -> frozenset[str]:
+        return frozenset(
+            _canonical_ref_tuple(raw[name], field_name=f"{field_name}.{name}")
+        )
+
+    return RepairCollar(
+        collar_id=collar_id,
+        visible_read_set=refs("visible_read_set"),
+        writable_registers=refs("writable_registers"),
+        protected_boundary=refs("protected_boundary"),
+        sector_registers=refs("sector_registers"),
+        record_registers=refs("record_registers"),
+        checkpoint_registers=refs("checkpoint_registers"),
+        interior_registers=refs("interior_registers"),
+        carrier_ids=refs("carrier_ids"),
+        seam_ids=refs("seam_ids"),
+        forbidden_target_fields=refs("forbidden_target_fields"),
+    )
+
+
+def _build_replay_recovery(value: Any, *, field_name: str) -> ProposalBuilder:
+    if not isinstance(value, Mapping):
+        raise TypeError(f"{field_name} must be an object")
+    kind = value.get("kind")
+    if kind == "literal_updates_v1":
+        raw = _require_exact_mapping_fields(
+            value,
+            frozenset({"kind", "updates"}),
+            field_name=field_name,
+        )
+        updates = raw["updates"]
+        if not isinstance(updates, Mapping):
+            raise TypeError(f"{field_name}.updates must be an object")
+        _validate_register_mapping(updates, name=f"{field_name}.updates")
+        _validate_plain_json(updates, field_name=f"{field_name}.updates")
+
+        def literal_recovery(_state: State) -> Mapping[str, Any]:
+            return copy.deepcopy(dict(updates))
+
+        return literal_recovery
+    if kind == "append_literal_v1":
+        raw = _require_exact_mapping_fields(
+            value,
+            frozenset({"kind", "register", "value"}),
+            field_name=field_name,
+        )
+        register = raw["register"]
+        if not isinstance(register, str) or not register:
+            raise TypeError(f"{field_name}.register must be a non-empty string")
+        appended_value = raw["value"]
+        _validate_plain_json(appended_value, field_name=f"{field_name}.value")
+
+        def append_recovery(state: State) -> Mapping[str, Any]:
+            current = state[register]
+            if type(current) is not list:
+                raise TypeError("append_literal_v1 requires a list-valued register")
+            return {register: [*current, copy.deepcopy(appended_value)]}
+
+        return append_recovery
+    raise ValueError(f"{field_name}.kind is not allowlisted")
+
+
+def _instantiate_repair_replay(
+    *,
+    initial_state: Mapping[str, Any],
+    initial_versions: Mapping[str, Any],
+    mismatch_evaluator_spec: Any,
+    proposal_specs: Any,
+) -> tuple[RepairCommitReceipt, dict[str, Any], dict[str, int]]:
+    if not isinstance(initial_state, Mapping) or not initial_state:
+        raise TypeError("initial_state must be a non-empty object")
+    _validate_register_mapping(initial_state, name="initial_state")
+    _validate_plain_json(initial_state, field_name="initial_state")
+    if not isinstance(initial_versions, Mapping):
+        raise TypeError("initial_versions must be an object")
+    _validate_register_mapping(initial_versions, name="initial_versions")
+    if set(initial_versions) != set(initial_state):
+        raise ValueError("initial_versions must cover exactly initial_state")
+    versions: dict[str, int] = {}
+    for register, version in initial_versions.items():
+        if isinstance(version, bool) or not isinstance(version, int) or version < 0:
+            raise TypeError("initial_versions values must be non-negative integers")
+        versions[register] = version
+    evaluator = _build_replay_mismatch_evaluator(mismatch_evaluator_spec)
+    engine = TransactionalRepairEngine(
+        dict(initial_state), mismatch_evaluator=evaluator, versions=versions
+    )
+    if not isinstance(proposal_specs, list) or not proposal_specs:
+        raise TypeError("proposals must be a non-empty array")
+    parsed_rows: list[tuple[str, RepairProposal]] = []
+    for index, raw_proposal in enumerate(proposal_specs):
+        field_name = f"proposals[{index}]"
+        proposal = _require_exact_mapping_fields(
+            raw_proposal, _REPLAY_PROPOSAL_FIELDS, field_name=field_name
+        )
+        proposal_id = proposal["proposal_id"]
+        if not isinstance(proposal_id, str) or not proposal_id:
+            raise TypeError(f"{field_name}.proposal_id must be a non-empty string")
+        declared_reads = _canonical_ref_tuple(
+            proposal["declared_read_set"],
+            field_name=f"{field_name}.declared_read_set",
+        )
+        inverse_updates = proposal["inverse_updates"]
+        source_parameters = proposal["source_parameters"]
+        if not isinstance(inverse_updates, Mapping):
+            raise TypeError(f"{field_name}.inverse_updates must be an object")
+        if not isinstance(source_parameters, Mapping):
+            raise TypeError(f"{field_name}.source_parameters must be an object")
+        _validate_register_mapping(
+            inverse_updates, name=f"{field_name}.inverse_updates"
+        )
+        _validate_register_mapping(
+            source_parameters, name=f"{field_name}.source_parameters"
+        )
+        _validate_plain_json(
+            inverse_updates, field_name=f"{field_name}.inverse_updates"
+        )
+        _validate_plain_json(
+            source_parameters, field_name=f"{field_name}.source_parameters"
+        )
+        parent_event_ids = _canonical_ref_tuple(
+            proposal["parent_event_ids"],
+            field_name=f"{field_name}.parent_event_ids",
+        )
+        parsed_rows.append(
+            (
+                proposal_id,
+                engine.prepare(
+                    proposal_id=proposal_id,
+                    transition_kind=TransitionKind(proposal["transition_kind"]),
+                    proposal_class=ProposalClass(proposal["proposal_class"]),
+                    collar=_parse_replay_collar(
+                        proposal["collar"], field_name=f"{field_name}.collar"
+                    ),
+                    declared_read_set=declared_reads,
+                    recovery=_build_replay_recovery(
+                        proposal["recovery"], field_name=f"{field_name}.recovery"
+                    ),
+                    inverse_updates=dict(inverse_updates),
+                    source_parameters=dict(source_parameters),
+                    parent_event_ids=parent_event_ids,
+                ),
+            )
+        )
+    if [proposal_id for proposal_id, _ in parsed_rows] != sorted(
+        proposal_id for proposal_id, _ in parsed_rows
+    ):
+        raise ValueError("proposals must be sorted by proposal_id")
+    proposals = [proposal for _, proposal in parsed_rows]
+    if len(conflict_components(proposals)) != 1:
+        raise ValueError("replay envelope must contain exactly one conflict component")
+    receipts = engine.commit_batch(proposals)
+    if len(receipts) != 1:
+        raise RuntimeError("primitive replay did not produce exactly one receipt")
+    return receipts[0], engine.state, engine.versions
+
+
+def build_repair_replay_envelope(
+    *,
+    initial_state: Mapping[str, Any],
+    initial_versions: Mapping[str, int],
+    mismatch_evaluator: Mapping[str, Any],
+    proposals: list[Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Create the canonical replay envelope from primitive transaction inputs."""
+
+    receipt, post_state, versions_after = _instantiate_repair_replay(
+        initial_state=initial_state,
+        initial_versions=initial_versions,
+        mismatch_evaluator_spec=mismatch_evaluator,
+        proposal_specs=proposals,
+    )
+    envelope = {
+        "schema": REPAIR_REPLAY_ENVELOPE_SCHEMA,
+        "artifact_type": REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE,
+        "replay_verifier_version": REPAIR_REPLAY_VERIFIER_VERSION,
+        "initial_state": copy.deepcopy(dict(initial_state)),
+        "initial_versions": dict(initial_versions),
+        "mismatch_evaluator": copy.deepcopy(dict(mismatch_evaluator)),
+        "proposals": copy.deepcopy(proposals),
+        "expected_receipt": receipt.as_dict(),
+        "expected_post_state": post_state,
+        "expected_versions_after": versions_after,
+        "scope": _REPAIR_REPLAY_SCOPE,
+        "nonclaims": list(_REPAIR_REPLAY_NONCLAIMS),
+    }
+    _validate_plain_json(envelope, field_name="replay_envelope")
+    return envelope
+
+
+def verify_repair_replay_envelope(artifact: Mapping[str, Any]) -> dict[str, Any]:
+    """Reconstruct a transaction from primitive inputs and compare every output."""
+
+    failures: list[str] = []
+    receipt: RepairCommitReceipt | None = None
+    post_state: dict[str, Any] | None = None
+    versions_after: dict[str, int] | None = None
+    raw_expected: Mapping[str, Any] | None = None
+    artifact_hash: str | None = None
+    try:
+        raw = _require_exact_mapping_fields(
+            artifact, _REPLAY_ENVELOPE_FIELDS, field_name="replay_envelope"
+        )
+        _validate_plain_json(raw, field_name="replay_envelope")
+        artifact_hash = _stable_hash(raw)
+        if raw["schema"] != REPAIR_REPLAY_ENVELOPE_SCHEMA:
+            raise ValueError("unexpected replay envelope schema")
+        if raw["artifact_type"] != REPAIR_REPLAY_ENVELOPE_ARTIFACT_TYPE:
+            raise ValueError("unexpected replay envelope artifact type")
+        if raw["replay_verifier_version"] != REPAIR_REPLAY_VERIFIER_VERSION:
+            raise ValueError("unexpected replay verifier version")
+        if raw["scope"] != _REPAIR_REPLAY_SCOPE:
+            raise ValueError("replay envelope scope is noncanonical")
+        if raw["nonclaims"] != _REPAIR_REPLAY_NONCLAIMS:
+            raise ValueError("replay envelope nonclaims are noncanonical")
+        receipt, post_state, versions_after = _instantiate_repair_replay(
+            initial_state=raw["initial_state"],
+            initial_versions=raw["initial_versions"],
+            mismatch_evaluator_spec=raw["mismatch_evaluator"],
+            proposal_specs=raw["proposals"],
+        )
+        raw_expected = raw["expected_receipt"]
+        if not isinstance(raw_expected, Mapping):
+            raise TypeError("expected_receipt must be an object")
+        diagnostic = _verify_repair_receipt_self_consistency(raw_expected)
+        if diagnostic.get("REPAIR_ARTIFACT_INTEGRITY_RECEIPT") is not True:
+            failures.extend(
+                f"expected_receipt:{reason}"
+                for reason in diagnostic.get("failure_reasons", [])
+            )
+        if _canonical(raw_expected) != _canonical(receipt.as_dict()):
+            failures.append("expected_receipt_is_not_exact_replay_output")
+        expected_post_state = raw["expected_post_state"]
+        if not isinstance(expected_post_state, Mapping):
+            raise TypeError("expected_post_state must be an object")
+        if _canonical(expected_post_state) != _canonical(post_state):
+            failures.append("expected_post_state_is_not_exact_replay_output")
+        expected_versions_after = raw["expected_versions_after"]
+        if not isinstance(expected_versions_after, Mapping):
+            raise TypeError("expected_versions_after must be an object")
+        if _canonical(expected_versions_after) != _canonical(versions_after):
+            failures.append("expected_versions_after_is_not_exact_replay_output")
+    except (KeyError, RuntimeError, TypeError, ValueError, ZeroDivisionError) as exc:
+        failures.append(str(exc))
+        if artifact_hash is None and isinstance(artifact, Mapping):
+            try:
+                artifact_hash = _stable_hash(artifact)
+            except (TypeError, ValueError):
+                pass
+
+    integrity = not failures and receipt is not None
+    replayed_transition = bool(
+        integrity and receipt and receipt.committed and receipt.all_checks_passed
+    )
+    record_commit = bool(
+        replayed_transition
+        and receipt
+        and receipt.transition_kind is TransitionKind.RECORD_COMMIT
+        and receipt.semantic_record_written
+    )
+    pre_state = (
+        copy.deepcopy(dict(artifact.get("initial_state", {})))
+        if isinstance(artifact, Mapping)
+        and isinstance(artifact.get("initial_state"), Mapping)
+        else None
+    )
+    state_changes: dict[str, dict[str, Any]] = {}
+    if integrity and pre_state is not None and post_state is not None:
+        for register in sorted(set(pre_state) | set(post_state)):
+            if (
+                register not in pre_state
+                or register not in post_state
+                or not _same_value(pre_state[register], post_state[register])
+            ):
+                state_changes[register] = {
+                    "before": copy.deepcopy(pre_state.get(register)),
+                    "after": copy.deepcopy(post_state.get(register)),
+                }
+    return {
+        "schema": "oph_repair_primitive_replay_verification_v1",
+        "receipt_type": "TRANSACTIONAL_REPAIR_PRIMITIVE_REPLAY_VERIFICATION",
+        "REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT": integrity,
+        "REPAIR_ARTIFACT_INTEGRITY_RECEIPT": integrity,
+        "COMPLETE_READ_SET_RECEIPT": bool(
+            integrity and receipt and receipt.COMPLETE_READ_SET_RECEIPT
+        ),
+        "CONFLICT_COMPONENT_SUPPORT_RECEIPT": bool(
+            integrity and receipt and receipt.CONFLICT_COMPONENT_SUPPORT_RECEIPT
+        ),
+        "ATOMIC_UNION_REVALIDATION_RECEIPT": bool(
+            integrity and receipt and receipt.ATOMIC_UNION_REVALIDATION_RECEIPT
+        ),
+        "REPLAYED_TRANSITION_RECEIPT": replayed_transition,
+        "TRANSACTIONAL_REPAIR_RECEIPT": bool(
+            integrity and receipt and receipt.TRANSACTIONAL_REPAIR_RECEIPT
+        ),
+        "RECORD_COMMIT_REPLAY_RECEIPT": record_commit,
+        "transition_kind": (
+            receipt.transition_kind.value if receipt is not None else None
+        ),
+        "semantic_record_event_id": (
+            receipt.semantic_record_event_id if receipt is not None else None
+        ),
+        "commit_id": receipt.commit_id if receipt is not None else None,
+        "receipt": receipt.as_dict() if receipt is not None else None,
+        "pre_state": pre_state,
+        "post_state": post_state,
+        "versions_after": versions_after,
+        "state_changes": state_changes,
+        "artifact_hash": artifact_hash,
+        "failure_reasons": failures,
+        "verifier_version": REPAIR_REPLAY_VERIFIER_VERSION,
     }
 
 

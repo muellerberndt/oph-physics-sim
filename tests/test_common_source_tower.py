@@ -9,7 +9,10 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.common_source_tower import (
+    ARRAY_CHANNEL_REALIZATION_DIAGNOSTIC_RECEIPT,
     C0_RECEIPT_KEYS,
+    COMMON_DOMAIN_SOURCE_TOWER_RECEIPT,
+    DECLARED_TARGET_PATH_FIREWALL_DIAGNOSTIC_RECEIPT,
     DEFAULT_MANIFEST_NAME,
     ECHOSAHEDRAL_TO_ABSTRACT_PATCH_NET_REALIZATION_RECEIPT,
     MANIFEST_SCHEMA,
@@ -508,18 +511,26 @@ def _rewrite_manifest(path: Path, manifest: dict[str, Any]) -> None:
     )
 
 
-def test_valid_typed_source_tower_recomputes_every_c0_receipt(tmp_path: Path) -> None:
+def test_valid_array_source_tower_stops_before_physical_federation_realization(
+    tmp_path: Path,
+) -> None:
     manifest_path, _ = _write_valid_fixture(tmp_path)
 
     report = verify_common_domain_source_tower(manifest_path)
 
-    assert report["receipt"] is True
-    assert all(report[key] is True for key in C0_RECEIPT_KEYS)
+    assert report["receipt"] is False
+    assert report[COMMON_DOMAIN_SOURCE_TOWER_RECEIPT] is True
+    assert report[ARRAY_CHANNEL_REALIZATION_DIAGNOSTIC_RECEIPT] is True
+    assert report[DECLARED_TARGET_PATH_FIREWALL_DIAGNOSTIC_RECEIPT] is True
+    assert report[SOURCE_TOWER_NO_TARGET_PATH_RECEIPT] is False
+    assert report[ECHOSAHEDRAL_TO_ABSTRACT_PATCH_NET_REALIZATION_RECEIPT] is False
     assert report["artifact_verification"]["all_declared_hashes_recomputed"] is True
     assert report["provenance"]["required_roles_share_one_source"] is True
     assert "graph" not in report["provenance"]
     assert len(report["refinement_commutation"]["rows"]) == 8
     realization = report["echosahedral_abstract_realization"]
+    assert realization["passed"] is False
+    assert realization["array_channel_contract_passed"] is True
     assert realization["materialized_local_port_coordinate_count"] == 20 * 12
     assert realization["gauge_relabeling_control"]["generated_group_order"] == 60
     assert realization["repair_schedule_control"]["enumerated_schedule_count"] == 2
@@ -531,12 +542,12 @@ def test_written_report_is_replayed_and_exactly_compared(tmp_path: Path) -> None
     report_path = tmp_path / "verified.json"
     report = write_common_domain_source_tower_report(manifest_path, report_path)
 
-    assert verify_common_source_tower_report(
-        report, report_path=report_path
-    )["passed"] is True
+    validation = verify_common_source_tower_report(report, report_path=report_path)
+    assert validation["passed"] is False
+    assert "typed_echosahedral_federation_bundle_not_bound" in validation["blockers"]
 
     tampered = copy.deepcopy(report)
-    tampered["receipt"] = False
+    tampered[COMMON_DOMAIN_SOURCE_TOWER_RECEIPT] = False
     validation = verify_common_source_tower_report(tampered, report_path=report_path)
     assert validation["passed"] is False
     assert "stored_report_not_exact_verifier_output" in validation["blockers"]
@@ -686,13 +697,13 @@ def test_emergence_ladder_c0_requires_replayed_verifier_artifact(
 
     forged = audit_emergence_ladder(forged_dir)
 
-    assert forged["dag"]["stages"]["A4"]["passed"] is True
+    assert forged["dag"]["stages"]["A4"]["passed"] is False
     assert forged["dag"]["stages"]["C0"]["passed"] is False
 
     valid_dir = tmp_path / "valid"
     manifest_path, _ = _write_valid_fixture(valid_dir)
     report_path = valid_dir / "source_tower_verification.json"
-    write_common_domain_source_tower_report(manifest_path, report_path)
+    source_report = write_common_domain_source_tower_report(manifest_path, report_path)
     (valid_dir / "observer_receipts.json").write_text(
         json.dumps({"receipts": {key: True for key in observer_keys}}),
         encoding="utf-8",
@@ -701,12 +712,11 @@ def test_emergence_ladder_c0_requires_replayed_verifier_artifact(
     verified = audit_emergence_ladder(valid_dir)
 
     c0 = verified["dag"]["stages"]["C0"]
-    assert c0["passed"] is True
-    assert c0["source_report_paths"] == ["source_tower_verification.json"]
+    assert c0["passed"] is False
     assert verified["source_inventory"]["common_source_tower_reports"] == [
         {
             "report_path": "source_tower_verification.json",
-            "passed": True,
-            "blockers": [],
+            "passed": False,
+            "blockers": source_report["blockers"],
         }
     ]

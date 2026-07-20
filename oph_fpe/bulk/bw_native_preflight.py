@@ -1,10 +1,10 @@
-"""Strict native BW01--BW08 payload verifier for the physical campaign.
+"""Strict native finite-cap plus MGNS-1 payload verifier.
 
 The input is deliberately a bundle of primitive simulator artifacts, not a
-bundle of producer supplied pass flags.  Each of the eight paper clauses has
-an exact field contract and an independently hashed primitive payload.  The
-numerical predicates are recomputed by the existing issue-308 verifier and
-are exposed here under the unambiguous BW01--BW08 names.
+bundle of producer supplied pass flags. Each of the six finite-cap clauses and
+the separate MGNS-1 package have exact, independently hashed field contracts.
+Support-visible BW is applicable only when both certificates pass on the same
+tower.
 """
 
 from __future__ import annotations
@@ -14,11 +14,19 @@ import json
 import re
 from typing import Any, Mapping, Sequence
 
-from oph_fpe.bulk.bw_certificate_308 import issue308_bw_certificate_report
-from oph_fpe.claims import ISSUE_308_BW_CERTIFICATE_RECEIPT
+from oph_fpe.bulk.bw_certificate_308 import (
+    MGNS1_REQUIRED_FIELDS,
+    issue308_bw_certificate_report,
+)
+from oph_fpe.claims import (
+    BW_SAME_TOWER_INPUTS_RECEIPT,
+    ISSUE_308_BW_CERTIFICATE_RECEIPT,
+    MGNS1_CERTIFICATE_RECEIPT,
+    SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT,
+)
 
-BW_NATIVE_SCHEMA_VERSION = "oph_bw_native_payload_v1"
-REQUIRED_BW_CLAUSE_IDS = tuple(f"BW{index:02d}" for index in range(1, 9))
+BW_NATIVE_SCHEMA_VERSION = "oph_bw_native_finite_cap_mgns1_payload_v2"
+REQUIRED_BW_CLAUSE_IDS = tuple(f"C{index}" for index in range(1, 7))
 
 _TOP_LEVEL_KEYS = {
     "schema_version",
@@ -26,6 +34,7 @@ _TOP_LEVEL_KEYS = {
     "source_kind",
     "antecedent_hash",
     "clauses",
+    "mgns1",
 }
 _CLAUSE_KEYS = {"antecedent_hash", "primitive_artifact_hash", "primitive_fields"}
 _FORBIDDEN_ASSERTION_KEYS = {
@@ -37,11 +46,14 @@ _FORBIDDEN_ASSERTION_KEYS = {
     "receipt",
 }
 
-# The overlap between BW01/BW02 (cap_normal) and BW03/BW05
-# (support_covariance_residual_T) is intentional.  Duplicate primitive fields
-# must be byte-equivalent across clauses or the aggregate is invalid.
+# The overlap between C1 and C2 for ``cap_normal`` is intentional. Duplicate
+# primitive fields must be byte-equivalent across clauses.
 BW_PRIMITIVE_FIELD_CONTRACT: dict[str, tuple[str, ...]] = {
-    "BW01": (
+    "C1": (
+        "finite_cap_source_role",
+        "finite_cap_source_artifact_hash",
+        "finite_cap_tower_id",
+        "finite_cap_tower_hash",
         "cap_normal",
         "cap_normal_norm_residual",
         "cap_orientation",
@@ -52,7 +64,7 @@ BW_PRIMITIVE_FIELD_CONTRACT: dict[str, tuple[str, ...]] = {
         "point_mesh_error",
         "refinement_normal_error",
     ),
-    "BW02": (
+    "C2": (
         "cap_normal",
         "frame_p_minus",
         "frame_p_plus",
@@ -61,7 +73,7 @@ BW_PRIMITIVE_FIELD_CONTRACT: dict[str, tuple[str, ...]] = {
         "frame_ordering",
         "frame_orientation_witness",
     ),
-    "BW03": (
+    "C3": (
         "cap_inclusion_matrix",
         "strict_inclusion_margin",
         "order_refinement_error",
@@ -71,21 +83,7 @@ BW_PRIMITIVE_FIELD_CONTRACT: dict[str, tuple[str, ...]] = {
         "support_kernel_residual",
         "sector_scope",
     ),
-    "BW04": (
-        "test_tower_id",
-        "test_tower_hash",
-        "state_embedding_residual",
-        "regularizer_eta",
-        "physical_reference_trace_distance",
-        "fixed_local_modular_bound_T",
-    ),
-    "BW05": (
-        "mixed_gns_cauchy_residual_T",
-        "negative_time_residual_T",
-        "matrix_element_residual_T",
-        "support_covariance_residual_T",
-    ),
-    "BW06": (
+    "C4": (
         "flow_identity_residual",
         "flow_group_residual_T",
         "flow_inverse_residual_T",
@@ -97,12 +95,15 @@ BW_PRIMITIVE_FIELD_CONTRACT: dict[str, tuple[str, ...]] = {
         "cross_ratio_anchor_condition",
         "orientation_witness",
     ),
-    "BW07": (
+    "C5": (
         "geometric_parameter_convention",
+        "kms_comparison_state_id",
+        "kms_comparison_state_hash",
+        "kms_matrix_element_residual_T",
         "kms_strip_bound",
         "kms_residual_beta_2pi",
     ),
-    "BW08": (
+    "C6": (
         "geometric_flow_nontrivial",
         "wrong_beta_interval",
         "wrong_beta_gap_delta",
@@ -116,14 +117,12 @@ BW_PRIMITIVE_FIELD_CONTRACT: dict[str, tuple[str, ...]] = {
 }
 
 _ISSUE308_TO_BW = {
-    "BW01": "C1_cap_normal_refinement",
-    "BW02": "C2_bw_frame",
-    "BW03": "C3_prime_support_visible_cap_net",
-    "BW04": "C4_modular_reference_tower",
-    "BW05": "C5_mixed_gns_and_support_covariance",
-    "BW06": "C6_geometric_rigidity",
-    "BW07": "C7_geometric_2pi_kms",
-    "BW08": "C8_wrong_normalization_and_nontriviality",
+    "C1": "C1_cap_normal_refinement",
+    "C2": "C2_bw_frame",
+    "C3": "C3_prime_support_visible_cap_net",
+    "C4": "C4_geometric_support_flow",
+    "C5": "C5_geometric_2pi_kms_comparison",
+    "C6": "C6_wrong_normalization_and_nontriviality",
 }
 
 
@@ -140,8 +139,8 @@ def canonical_payload_hash(value: Any) -> str:
     return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
-def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]:
-    """Recompute the eight native BW clauses from exact primitive payloads.
+def native_bw_pair_report(payload: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Recompute the six finite-cap clauses and the separate MGNS-1 package.
 
     Caller-provided pass/tier/receipt fields are schema violations.  Missing,
     extra, replay-derived, fixture-derived, unhashed, or antecedent-mismatched
@@ -172,7 +171,7 @@ def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]
     clauses = dict(raw_clauses) if isinstance(raw_clauses, Mapping) else {}
     if set(clauses) != set(REQUIRED_BW_CLAUSE_IDS):
         conformance_blockers.append(
-            "native_bw_clause_key_set_must_be_exactly_bw01_through_bw08"
+            "native_finite_cap_clause_key_set_must_be_exactly_c1_through_c6"
         )
 
     merged_fields: dict[str, Any] = {}
@@ -217,12 +216,40 @@ def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]
         }
         conformance_blockers.extend(f"{clause_id}:{item}" for item in row_blockers)
 
-    issue308 = issue308_bw_certificate_report({"BWRec_r": merged_fields})
+    raw_mgns1 = raw.get("mgns1")
+    mgns1_wrapper = dict(raw_mgns1) if isinstance(raw_mgns1, Mapping) else {}
+    mgns1_blockers: list[str] = []
+    if set(mgns1_wrapper) != _CLAUSE_KEYS:
+        mgns1_blockers.append("mgns1_wrapper_key_set_mismatch")
+    if str(mgns1_wrapper.get("antecedent_hash") or "") != antecedent_hash or not _strict_sha256(
+        mgns1_wrapper.get("antecedent_hash")
+    ):
+        mgns1_blockers.append("mgns1_antecedent_hash_mismatch")
+    mgns1_fields = (
+        dict(mgns1_wrapper.get("primitive_fields"))
+        if isinstance(mgns1_wrapper.get("primitive_fields"), Mapping)
+        else {}
+    )
+    if set(mgns1_fields) != set(MGNS1_REQUIRED_FIELDS):
+        mgns1_blockers.append("mgns1_primitive_field_key_set_mismatch")
+    supplied_mgns1_hash = str(mgns1_wrapper.get("primitive_artifact_hash") or "")
+    computed_mgns1_hash = None
+    try:
+        computed_mgns1_hash = canonical_payload_hash(mgns1_fields)
+    except (TypeError, ValueError):
+        mgns1_blockers.append("mgns1_primitive_fields_not_canonical_json")
+    if not _strict_sha256(supplied_mgns1_hash) or supplied_mgns1_hash != computed_mgns1_hash:
+        mgns1_blockers.append("mgns1_primitive_artifact_hash_mismatch")
+    conformance_blockers.extend(mgns1_blockers)
+
+    issue308 = issue308_bw_certificate_report(
+        {"BWRec_r": merged_fields, "MGNS1Rec_r": mgns1_fields}
+    )
     recomputed: dict[str, dict[str, Any]] = {}
     for clause_id in REQUIRED_BW_CLAUSE_IDS:
         source_row = dict(issue308.get("clauses", {}).get(_ISSUE308_TO_BW[clause_id], {}))
         numerical_pass = source_row.get("passed") is True
-        if clause_id == "BW08":
+        if clause_id == "C6":
             numerical_pass = numerical_pass and issue308.get("error_envelope", {}).get("passed") is True
         passed = bool(wrapper_status[clause_id]["wrapper_valid"] and numerical_pass)
         recomputed[clause_id] = {
@@ -232,7 +259,7 @@ def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]
             "numerical_evidence": source_row,
             **(
                 {"error_envelope": issue308.get("error_envelope", {})}
-                if clause_id == "BW08"
+                if clause_id == "C6"
                 else {}
             ),
         }
@@ -240,6 +267,21 @@ def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]
             scientific_failures.append(
                 f"{clause_id}:recomputed_clause_predicates_failed"
             )
+
+    mgns1_numerical_pass = issue308.get(MGNS1_CERTIFICATE_RECEIPT) is True
+    mgns1_status = {
+        "wrapper_valid": not mgns1_blockers,
+        "blockers": sorted(set(mgns1_blockers)),
+        "primitive_artifact_hash": supplied_mgns1_hash or None,
+        "primitive_field_names": sorted(mgns1_fields),
+        "passed": bool(not mgns1_blockers and mgns1_numerical_pass),
+        "numerical_predicates_recomputed": True,
+        "numerical_evidence": issue308.get("mgns1", {}),
+    }
+    if not mgns1_numerical_pass:
+        scientific_failures.append("MGNS1:recomputed_certificate_predicates_failed")
+    if issue308.get(BW_SAME_TOWER_INPUTS_RECEIPT) is not True:
+        scientific_failures.append("PAIR:finite_cap_and_mgns1_not_independent_same_tower_inputs")
 
     conformance_blockers = list(dict.fromkeys(conformance_blockers))
     scientific_failures = list(dict.fromkeys(scientific_failures))
@@ -249,15 +291,29 @@ def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]
         conformance_receipt
         and not scientific_failures
         and issue308.get(ISSUE_308_BW_CERTIFICATE_RECEIPT) is True
+        and issue308.get(MGNS1_CERTIFICATE_RECEIPT) is True
+        and issue308.get(BW_SAME_TOWER_INPUTS_RECEIPT) is True
+        and issue308.get(SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT) is True
         and all(row["passed"] for row in recomputed.values())
     )
     return {
-        "schema_version": "oph_bw_native_verification_v1",
+        "schema_version": "oph_bw_native_finite_cap_mgns1_verification_v2",
         "source_schema_version": raw.get("schema_version"),
         "antecedent_hash": antecedent_hash or None,
         "native_payload_conformance_receipt": conformance_receipt,
         "native_payload_receipt": receipt,
         "clauses": recomputed,
+        "mgns1": mgns1_status,
+        "finite_cap_bw_certificate_receipt": issue308.get(
+            ISSUE_308_BW_CERTIFICATE_RECEIPT
+        )
+        is True,
+        "mgns1_certificate_receipt": issue308.get(MGNS1_CERTIFICATE_RECEIPT) is True,
+        "same_tower_inputs_receipt": issue308.get(BW_SAME_TOWER_INPUTS_RECEIPT) is True,
+        "support_visible_bw_theorem_applicable": issue308.get(
+            SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT
+        )
+        is True,
         "required_clause_ids": list(REQUIRED_BW_CLAUSE_IDS),
         "conformance_blockers": conformance_blockers,
         "scientific_failures": scientific_failures,
@@ -272,13 +328,18 @@ def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]
         "ignored_producer_pass_flags": False,
         "recomputed_issue308_tier": issue308.get("tier"),
         "claim_boundary": (
-            "BW01--BW08 are recomputed from exact, hashed native primitive artifacts. "
-            "Producer pass flags, fixtures, replay, missing clauses, extra clauses, and "
-            "antecedent mismatches cannot satisfy the conformance gate. A complete, "
-            "well-provenanced payload whose recomputed clause predicate is false is a "
-            "VALID_FAIL scientific outcome, not an invalid instrument."
+            "C1-C6 certify only finite geometry, support flow, and normalization. The separate "
+            "MGNS-1 payload certifies the modular algebra-state representation. The support-visible "
+            "BW theorem is applicable only when both pass with distinct source artifacts on one "
+            "tower. Repeated-rho diagnostics cannot satisfy MGNS-1."
         ),
     }
+
+
+def native_bw01_bw08_report(payload: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Compatibility entry point for callers using the former function name."""
+
+    return native_bw_pair_report(payload)
 
 
 def _forbidden_assertion_paths(value: Any, path: str = "$") -> list[str]:
@@ -316,5 +377,6 @@ __all__ = [
     "BW_PRIMITIVE_FIELD_CONTRACT",
     "REQUIRED_BW_CLAUSE_IDS",
     "canonical_payload_hash",
+    "native_bw_pair_report",
     "native_bw01_bw08_report",
 ]

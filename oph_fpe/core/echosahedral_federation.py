@@ -23,7 +23,7 @@ import json
 import math
 from pathlib import Path
 import re
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Iterable, Literal, Mapping, Sequence
 
 import networkx as nx
 import numpy as np
@@ -54,12 +54,26 @@ BoundaryCondition = Literal[
 _SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _PORT_COUNT = 12
 _REFERENCE_CARRIER_TEMPLATE_ID = "__shared_regular_icosahedron_template__"
+_REFERENCE_STRUCTURE_TOKEN = "shared_regular_icosahedron_12_30_20_a5_v1"
 _REPORT_DETAIL_LIMIT = 64
 _CARDINALITY_SEMANTICS = (
     "exact_declared_finite_source_carrier_cardinality_separate_from_support_regulator"
 )
 _INTERFACE_HASH_CHECK_SCOPE = (
     "content_addressed_schema_identity_only_no_algebra_map_or_higher_overlap_proof"
+)
+_EMBEDDED_LOCAL_TEMPLATE_FIELDS = frozenset(
+    {
+        "port_coordinates",
+        "hidden_port_coordinates",
+        "port_names",
+        "local_port_names",
+        "edges",
+        "faces",
+        "antipode",
+        "a5_actions",
+        "local_a5_frame",
+    }
 )
 
 HIDDEN_PRESENTATION_FIELDS = frozenset(
@@ -242,13 +256,17 @@ def echosahedral_carrier_conformance_report(
     local audit instead of populating a cache with ID-distinguished copies.
     """
 
-    normalized = replace(carrier, carrier_id=_REFERENCE_CARRIER_TEMPLATE_ID)
-    report = copy.deepcopy(
-        _echosahedral_carrier_conformance_cached(normalized, tolerance)
-    )
-    identifier_valid = bool(
-        isinstance(carrier.carrier_id, str) and carrier.carrier_id
-    )
+    try:
+        if _uses_shared_reference_template(carrier):
+            report = copy.deepcopy(_shared_reference_conformance_cached(tolerance))
+        else:
+            normalized = replace(carrier, carrier_id=_REFERENCE_CARRIER_TEMPLATE_ID)
+            report = copy.deepcopy(
+                _echosahedral_carrier_conformance_cached(normalized, tolerance)
+            )
+    except (IndexError, OverflowError, TypeError, ValueError) as exc:
+        report = _malformed_carrier_conformance_report(carrier, exc)
+    identifier_valid = bool(isinstance(carrier.carrier_id, str) and carrier.carrier_id)
     report["carrier_id"] = carrier.carrier_id
     report["carrier_identifier_valid"] = identifier_valid
     if not identifier_valid:
@@ -258,6 +276,39 @@ def echosahedral_carrier_conformance_report(
         report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] = False
         report["ECHOSAHEDRAL_CARRIER_CONFORMANCE_RECEIPT"] = False
     return report
+
+
+def _malformed_carrier_conformance_report(
+    carrier: EchosahedralCarrier, exc: Exception
+) -> dict[str, Any]:
+    """Emit a stable fail-closed row when a typed carrier is malformed at runtime."""
+
+    blocker = f"malformed_carrier_presentation:{type(exc).__name__}"
+    return {
+        "schema": "oph.echosahedral_carrier.conformance.v1",
+        "carrier_id": carrier.carrier_id,
+        "carrier_identifier_valid": bool(
+            isinstance(carrier.carrier_id, str) and carrier.carrier_id
+        ),
+        "port_count": None,
+        "edge_count": None,
+        "face_count": None,
+        "hidden_presentation_coordinates": True,
+        "hidden_coordinates_eligible_for_promoted_geometry": False,
+        "structural_class_sha256": interface_algebra_sha256(
+            {
+                "schema": "oph.echosahedral_carrier.malformed.v1",
+                "exception_type": type(exc).__name__,
+            }
+        ),
+        "blockers": [blocker],
+        "ECHOSAHEDRAL_CARRIER_CONFORMANCE": False,
+        "ECHOSAHEDRAL_CARRIER_CONFORMANCE_RECEIPT": False,
+        "LOCAL_RESPONSE_1_3_3PRIME_5_DECOMPOSITION_RECEIPT": False,
+        "claim_boundary": (
+            "Malformed runtime presentation data cannot earn local conformance."
+        ),
+    }
 
 
 @lru_cache(maxsize=512)
@@ -481,166 +532,492 @@ def _echosahedral_carrier_conformance_cached(
     }
 
 
+@lru_cache(maxsize=16)
+def _shared_reference_conformance_cached(tolerance: float) -> dict[str, Any]:
+    """Cache the canonical audit by tolerance without rehashing its large tuples."""
+
+    return _echosahedral_carrier_conformance_cached(
+        _reference_echosahedral_carrier_template(), tolerance
+    )
+
+
+class _BoundedBlockerLedger:
+    """Count every blocker while retaining only bounded distinct examples."""
+
+    def __init__(self, limit: int = _REPORT_DETAIL_LIMIT) -> None:
+        self.limit = limit
+        self.occurrence_count = 0
+        self._examples: list[str] = []
+        self._seen_examples: set[str] = set()
+
+    def add(self, blocker: str) -> None:
+        self.occurrence_count += 1
+        if blocker not in self._seen_examples and len(self._examples) < self.limit:
+            self._seen_examples.add(blocker)
+            self._examples.append(blocker)
+
+    def extend(self, blockers: Sequence[str]) -> None:
+        for blocker in blockers:
+            self.add(str(blocker))
+
+    @property
+    def examples(self) -> list[str]:
+        return sorted(self._examples)
+
+    @property
+    def truncated(self) -> bool:
+        return self.occurrence_count > len(self._examples)
+
+
+class _CanonicalRowDigest:
+    """Incrementally bind all verified rows without retaining them in a report."""
+
+    def __init__(self) -> None:
+        self._hasher = hashlib.sha256()
+        self.row_count = 0
+
+    def update(self, row: Mapping[str, Any]) -> None:
+        encoded = json.dumps(
+            row, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+        ).encode("utf-8")
+        self._hasher.update(len(encoded).to_bytes(8, "big"))
+        self._hasher.update(encoded)
+        self.row_count += 1
+
+    def hexdigest(self) -> str:
+        return "sha256:" + self._hasher.hexdigest()
+
+
+class _DisjointSet:
+    """Small streaming connectivity audit for the carrier seam graph."""
+
+    def __init__(self, nodes: Iterable[str]) -> None:
+        self.parent = {node: node for node in nodes}
+        self.rank = {node: 0 for node in nodes}
+        self.component_count = len(self.parent)
+
+    def find(self, node: str) -> str:
+        parent = self.parent[node]
+        while parent != self.parent[parent]:
+            self.parent[parent] = self.parent[self.parent[parent]]
+            parent = self.parent[parent]
+        while node != parent:
+            next_node = self.parent[node]
+            self.parent[node] = parent
+            node = next_node
+        return parent
+
+    def union(self, left: str, right: str) -> None:
+        left_root = self.find(left)
+        right_root = self.find(right)
+        if left_root == right_root:
+            return
+        if self.rank[left_root] < self.rank[right_root]:
+            left_root, right_root = right_root, left_root
+        self.parent[right_root] = left_root
+        if self.rank[left_root] == self.rank[right_root]:
+            self.rank[left_root] += 1
+        self.component_count -= 1
+
+
+def _carrier_structural_key(carrier: EchosahedralCarrier) -> EchosahedralCarrier:
+    """Return an exact hashable presentation key with identity removed."""
+
+    return replace(carrier, carrier_id=_REFERENCE_CARRIER_TEMPLATE_ID)
+
+
+def _uses_shared_reference_template(carrier: EchosahedralCarrier) -> bool:
+    """Recognize the O(1) canonical shared-template representation."""
+
+    template = _reference_echosahedral_carrier_template()
+    return bool(
+        carrier.port_names is template.port_names
+        and carrier.port_coordinates is template.port_coordinates
+        and carrier.edges is template.edges
+        and carrier.faces is template.faces
+        and carrier.antipode is template.antipode
+        and carrier.a5_actions is template.a5_actions
+    )
+
+
 def federation_sewing_report(
     federation: EchosahedralFederation,
 ) -> dict[str, Any]:
-    """Validate typed seams, explicit dangling boundaries, and supports."""
+    """Validate a finite federation with bounded, content-bound diagnostics.
 
-    blockers: list[str] = []
+    Validation still visits every carrier, seam, boundary and observer support,
+    but repeated carrier presentations are audited once and output rows are
+    bounded.  Twelve-bit occupancy masks replace the former 12N endpoint set.
+    Consequently a valid 256k-carrier input does not create a 256k-entry local
+    report or a three-million-tuple ``all_ports`` allocation.
+    """
+
+    blockers = _BoundedBlockerLedger()
     carrier_by_id: dict[str, EchosahedralCarrier] = {}
     carrier_reports: dict[str, dict[str, Any]] = {}
-    for carrier in federation.carriers:
-        if carrier.carrier_id in carrier_by_id:
-            blockers.append(f"duplicate_carrier_id:{carrier.carrier_id}")
-        carrier_by_id[carrier.carrier_id] = carrier
-        carrier_reports[carrier.carrier_id] = echosahedral_carrier_conformance_report(
-            carrier
-        )
-    if not federation.carriers:
-        blockers.append("federation_has_no_carriers")
-    carrier_conformance = bool(
-        federation.carriers
-        and len(carrier_by_id) == len(federation.carriers)
-        and all(
-            report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"]
-            for report in carrier_reports.values()
-        )
-    )
+    structure_audits: dict[Any, dict[str, Any]] = {}
+    structure_counts: dict[Any, int] = {}
+    structure_first_ids: dict[Any, str] = {}
+    reference_structure = _REFERENCE_STRUCTURE_TOKEN
+    shared_reference_template_carrier_count = 0
+    every_carrier_conforms = True
 
-    seam_ids: set[str] = set()
+    for carrier_index, carrier in enumerate(federation.carriers):
+        identifier_valid = bool(
+            isinstance(carrier.carrier_id, str) and carrier.carrier_id
+        )
+        display_id = str(carrier.carrier_id)
+        if not identifier_valid:
+            blockers.add(f"invalid_carrier_id:{display_id}")
+        elif carrier.carrier_id in carrier_by_id:
+            blockers.add(f"duplicate_carrier_id:{carrier.carrier_id}")
+        else:
+            carrier_by_id[carrier.carrier_id] = carrier
+
+        structure: Any
+        if _uses_shared_reference_template(carrier):
+            structure = _REFERENCE_STRUCTURE_TOKEN
+            audit_carrier = _reference_echosahedral_carrier_template()
+        else:
+            audit_carrier = _carrier_structural_key(carrier)
+            try:
+                hash(audit_carrier)
+                structure = audit_carrier
+            except TypeError:
+                structure = ("malformed_unhashable_presentation", carrier_index)
+        if structure not in structure_audits:
+            structure_audits[structure] = echosahedral_carrier_conformance_report(
+                audit_carrier
+            )
+            structure_counts[structure] = 0
+            structure_first_ids[structure] = display_id
+        structure_counts[structure] += 1
+        if structure == reference_structure:
+            shared_reference_template_carrier_count += 1
+        structural_report = structure_audits[structure]
+        carrier_conforms = bool(
+            identifier_valid and structural_report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"]
+        )
+        every_carrier_conforms = every_carrier_conforms and carrier_conforms
+        if not carrier_conforms:
+            for item in structural_report["blockers"] or ["carrier_identifier_invalid"]:
+                blockers.add(f"carrier:{display_id}:{item}")
+
+        if len(carrier_reports) < _REPORT_DETAIL_LIMIT:
+            example = copy.deepcopy(structural_report)
+            example["carrier_id"] = carrier.carrier_id
+            example["carrier_identifier_valid"] = identifier_valid
+            if not identifier_valid:
+                example["blockers"] = sorted(
+                    set(example["blockers"]) | {"carrier_id_must_be_nonempty_string"}
+                )
+                example["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] = False
+                example["ECHOSAHEDRAL_CARRIER_CONFORMANCE_RECEIPT"] = False
+            report_key = (
+                carrier.carrier_id
+                if identifier_valid and carrier.carrier_id not in carrier_reports
+                else f"entry:{len(carrier_reports)}:{display_id}"
+            )
+            carrier_reports[report_key] = example
+
+    if not federation.carriers:
+        blockers.add("federation_has_no_carriers")
+        every_carrier_conforms = False
+    exact_carrier_cardinality = bool(
+        federation.carriers and len(carrier_by_id) == len(federation.carriers)
+    )
+    carrier_conformance = bool(exact_carrier_cardinality and every_carrier_conforms)
+    structure_examples: list[dict[str, Any]] = []
+    for structure, report in structure_audits.items():
+        if len(structure_examples) == _REPORT_DETAIL_LIMIT:
+            break
+        structure_examples.append(
+            {
+                "first_carrier_id": structure_first_ids[structure],
+                "carrier_count": structure_counts[structure],
+                "structural_class_sha256": report["structural_class_sha256"],
+                "conforming": report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"],
+                "blockers": report["blockers"],
+            }
+        )
+    reference_audit = structure_audits.get(reference_structure)
+    carrier_summary = {
+        "schema": "oph.echosahedral_federation.carrier_conformance_summary.v1",
+        "verification_mode": "exact_structural_deduplication_with_bounded_examples",
+        "carrier_entry_count": len(federation.carriers),
+        "unique_carrier_id_count": len(carrier_by_id),
+        "unique_structural_presentation_count": len(structure_audits),
+        "local_conformance_audit_count": len(structure_audits),
+        "shared_reference_template_carrier_count": (
+            shared_reference_template_carrier_count
+        ),
+        "shared_reference_template_conformance_verified_once": bool(
+            shared_reference_template_carrier_count
+            and reference_audit is not None
+            and reference_audit["ECHOSAHEDRAL_CARRIER_CONFORMANCE"]
+        ),
+        "carrier_report_example_count": len(carrier_reports),
+        "carrier_reports_truncated": (len(federation.carriers) > len(carrier_reports)),
+        "structural_class_examples": structure_examples,
+        "structural_class_examples_truncated": (
+            len(structure_audits) > len(structure_examples)
+        ),
+        "all_carriers_conform": carrier_conformance,
+    }
+
     seam_rows: list[dict[str, Any]] = []
-    occupied_ports: set[tuple[str, int]] = set()
-    carrier_graph = nx.Graph()
-    carrier_graph.add_nodes_from(carrier_by_id)
+    seam_failure_examples: list[dict[str, Any]] = []
+    seam_digest = _CanonicalRowDigest()
+    all_seams_pass = True
+    all_interface_schema_hashes_agree = bool(federation.seams)
+    occupied_masks: dict[str, int] = {}
+    unknown_port_examples: list[dict[str, Any]] = []
+    unknown_port_reference_count = 0
+    connectivity = _DisjointSet(carrier_by_id)
     seam_by_id: dict[str, SeamBundle] = {}
     for seam in federation.seams:
         row = _seam_bundle_report(seam, carrier_by_id)
-        seam_rows.append(row)
-        if not seam.seam_id or seam.seam_id in seam_ids:
-            blockers.append(f"duplicate_or_empty_seam_id:{seam.seam_id}")
-        seam_ids.add(seam.seam_id)
-        seam_by_id[seam.seam_id] = seam
+        all_interface_schema_hashes_agree = bool(
+            all_interface_schema_hashes_agree
+            and row["endpoint_interface_algebra_hashes_agree"]
+        )
+        seam_digest.update(row)
+        if len(seam_rows) < _REPORT_DETAIL_LIMIT:
+            seam_rows.append(row)
         if not row["SEAM_BUNDLE_RECEIPT"]:
-            blockers.extend(f"seam:{seam.seam_id}:{item}" for item in row["blockers"])
+            all_seams_pass = False
+            if len(seam_failure_examples) < _REPORT_DETAIL_LIMIT:
+                seam_failure_examples.append(row)
+        if not seam.seam_id or seam.seam_id in seam_by_id:
+            blockers.add(f"duplicate_or_empty_seam_id:{seam.seam_id}")
+        seam_by_id.setdefault(seam.seam_id, seam)
+        if not row["SEAM_BUNDLE_RECEIPT"]:
+            blockers.extend([f"seam:{seam.seam_id}:{item}" for item in row["blockers"]])
         if (
             seam.left_carrier_id in carrier_by_id
             and seam.right_carrier_id in carrier_by_id
         ):
-            carrier_graph.add_edge(
-                seam.left_carrier_id, seam.right_carrier_id, seam_id=seam.seam_id
-            )
+            connectivity.union(seam.left_carrier_id, seam.right_carrier_id)
         for carrier_id, ports in (
-            (seam.left_carrier_id, seam.left_ports),
-            (seam.right_carrier_id, seam.right_ports),
+            (seam.left_carrier_id, row["left_ports"]),
+            (seam.right_carrier_id, row["right_ports"]),
         ):
-            for port in ports:
-                endpoint = (carrier_id, int(port))
-                if endpoint in occupied_ports:
-                    blockers.append(
+            for raw_port in ports:
+                if type(raw_port) is not int:
+                    unknown_port_reference_count += 1
+                    if len(unknown_port_examples) < _REPORT_DETAIL_LIMIT:
+                        unknown_port_examples.append(
+                            {
+                                "carrier_id": str(carrier_id),
+                                "port": repr(raw_port),
+                                "source": "seam_noninteger",
+                            }
+                        )
+                    continue
+                port = raw_port
+                if carrier_id not in carrier_by_id or not 0 <= port < _PORT_COUNT:
+                    unknown_port_reference_count += 1
+                    if len(unknown_port_examples) < _REPORT_DETAIL_LIMIT:
+                        unknown_port_examples.append(
+                            {"carrier_id": carrier_id, "port": port, "source": "seam"}
+                        )
+                    continue
+                bit = 1 << port
+                prior = occupied_masks.get(carrier_id, 0)
+                if prior & bit:
+                    blockers.add(
                         f"local_port_used_by_more_than_one_seam:{carrier_id}:P{port}"
                     )
-                occupied_ports.add(endpoint)
+                occupied_masks[carrier_id] = prior | bit
 
     boundary_ids: set[str] = set()
     boundary_rows: list[dict[str, Any]] = []
-    declared_external_ports: set[tuple[str, int]] = set()
+    boundary_failure_examples: list[dict[str, Any]] = []
+    boundary_digest = _CanonicalRowDigest()
+    all_boundaries_pass = True
+    declared_external_masks: dict[str, int] = {}
     for boundary in federation.external_boundaries:
         row = _external_boundary_report(boundary, carrier_by_id)
-        boundary_rows.append(row)
+        boundary_digest.update(row)
+        if len(boundary_rows) < _REPORT_DETAIL_LIMIT:
+            boundary_rows.append(row)
+        if not row["EXPLICIT_EXTERNAL_BOUNDARY_RECEIPT"]:
+            all_boundaries_pass = False
+            if len(boundary_failure_examples) < _REPORT_DETAIL_LIMIT:
+                boundary_failure_examples.append(row)
         if not boundary.boundary_id or boundary.boundary_id in boundary_ids:
-            blockers.append(
+            blockers.add(
                 f"duplicate_or_empty_external_boundary_id:{boundary.boundary_id}"
             )
         boundary_ids.add(boundary.boundary_id)
         if not row["EXPLICIT_EXTERNAL_BOUNDARY_RECEIPT"]:
             blockers.extend(
-                f"boundary:{boundary.boundary_id}:{item}" for item in row["blockers"]
+                [f"boundary:{boundary.boundary_id}:{item}" for item in row["blockers"]]
             )
-        for port in boundary.ports:
-            endpoint = (boundary.carrier_id, int(port))
-            if endpoint in declared_external_ports:
-                blockers.append(
-                    f"local_port_declared_external_more_than_once:{boundary.carrier_id}:P{port}"
+        for raw_port in row["ports"]:
+            if type(raw_port) is not int:
+                unknown_port_reference_count += 1
+                if len(unknown_port_examples) < _REPORT_DETAIL_LIMIT:
+                    unknown_port_examples.append(
+                        {
+                            "carrier_id": str(boundary.carrier_id),
+                            "port": repr(raw_port),
+                            "source": "boundary_noninteger",
+                        }
+                    )
+                continue
+            port = raw_port
+            carrier_id = boundary.carrier_id
+            if carrier_id not in carrier_by_id or not 0 <= port < _PORT_COUNT:
+                unknown_port_reference_count += 1
+                if len(unknown_port_examples) < _REPORT_DETAIL_LIMIT:
+                    unknown_port_examples.append(
+                        {"carrier_id": carrier_id, "port": port, "source": "boundary"}
+                    )
+                continue
+            bit = 1 << port
+            prior = declared_external_masks.get(carrier_id, 0)
+            if prior & bit:
+                blockers.add(
+                    f"local_port_declared_external_more_than_once:{carrier_id}:P{port}"
                 )
-            if endpoint in occupied_ports:
-                blockers.append(
-                    f"sewn_port_also_declared_external:{boundary.carrier_id}:P{port}"
-                )
-            declared_external_ports.add(endpoint)
+            if occupied_masks.get(carrier_id, 0) & bit:
+                blockers.add(f"sewn_port_also_declared_external:{carrier_id}:P{port}")
+            declared_external_masks[carrier_id] = prior | bit
 
-    all_ports = {
-        (carrier_id, port)
-        for carrier_id in carrier_by_id
-        for port in range(_PORT_COUNT)
-    }
-    dangling_ports = sorted(all_ports - occupied_ports - declared_external_ports)
-    unknown_declared_ports = sorted(
-        (occupied_ports | declared_external_ports) - all_ports
-    )
-    if dangling_ports:
-        blockers.append("dangling_ports_lack_explicit_external_boundary_declaration")
-    if unknown_declared_ports:
-        blockers.append("seam_or_boundary_references_unknown_local_port")
+    full_mask = (1 << _PORT_COUNT) - 1
+    dangling_port_count = 0
+    dangling_port_examples: list[dict[str, Any]] = []
+    for carrier_id in carrier_by_id:
+        declared = occupied_masks.get(carrier_id, 0) | declared_external_masks.get(
+            carrier_id, 0
+        )
+        missing = full_mask & ~declared
+        dangling_port_count += missing.bit_count()
+        if missing and len(dangling_port_examples) < _REPORT_DETAIL_LIMIT:
+            for port in range(_PORT_COUNT):
+                if missing & (1 << port):
+                    dangling_port_examples.append(
+                        {"carrier_id": carrier_id, "port": port}
+                    )
+                    if len(dangling_port_examples) == _REPORT_DETAIL_LIMIT:
+                        break
+    if dangling_port_count:
+        blockers.add("dangling_ports_lack_explicit_external_boundary_declaration")
+    if unknown_port_reference_count:
+        blockers.add("seam_or_boundary_references_unknown_local_port")
 
     federation_connected = bool(
-        carrier_graph.number_of_nodes() == 1
-        or (carrier_graph.number_of_nodes() > 1 and nx.is_connected(carrier_graph))
+        len(carrier_by_id) == 1
+        or (len(carrier_by_id) > 1 and connectivity.component_count == 1)
     )
     if not federation_connected:
-        blockers.append("intercarrier_seam_graph_is_disconnected")
+        blockers.add("intercarrier_seam_graph_is_disconnected")
 
-    observer_rows = [
-        observer_support_report(support, carrier_by_id, seam_by_id)
-        for support in federation.observer_supports
-    ]
-    observer_tokens = [
-        support.observer_token for support in federation.observer_supports
-    ]
-    if len(set(observer_tokens)) != len(observer_tokens):
-        blockers.append("duplicate_observer_token")
-    for row in observer_rows:
+    observer_rows: list[dict[str, Any]] = []
+    observer_failure_examples: list[dict[str, Any]] = []
+    observer_digest = _CanonicalRowDigest()
+    all_observers_pass = True
+    observer_tokens: set[str] = set()
+    for support in federation.observer_supports:
+        row = observer_support_report(support, carrier_by_id, seam_by_id)
+        observer_digest.update(row)
+        if len(observer_rows) < _REPORT_DETAIL_LIMIT:
+            observer_rows.append(row)
+        if support.observer_token in observer_tokens:
+            blockers.add("duplicate_observer_token")
+        observer_tokens.add(support.observer_token)
         if not row["CONNECTED_OBSERVER_SUPPORT_RECEIPT"]:
+            all_observers_pass = False
+            if len(observer_failure_examples) < _REPORT_DETAIL_LIMIT:
+                observer_failure_examples.append(row)
             blockers.extend(
-                f"observer:{row['observer_token']}:{item}" for item in row["blockers"]
+                [f"observer:{row['observer_token']}:{item}" for item in row["blockers"]]
             )
 
     passed = bool(
         carrier_conformance
-        and not blockers
-        and all(row["SEAM_BUNDLE_RECEIPT"] for row in seam_rows)
-        and all(row["EXPLICIT_EXTERNAL_BOUNDARY_RECEIPT"] for row in boundary_rows)
-        and all(row["CONNECTED_OBSERVER_SUPPORT_RECEIPT"] for row in observer_rows)
+        and blockers.occurrence_count == 0
+        and all_seams_pass
+        and all_boundaries_pass
+        and all_observers_pass
+    )
+    sewn_port_count = sum(mask.bit_count() for mask in occupied_masks.values())
+    external_port_count = sum(
+        mask.bit_count() for mask in declared_external_masks.values()
     )
     return {
         "schema": "oph.echosahedral_federation.sewing.v1",
         "federation_id": federation.federation_id,
-        "cardinality_semantics": "finite_carrier_regulator_count_only",
+        "cardinality_semantics": _CARDINALITY_SEMANTICS,
         "carrier_count": len(federation.carriers),
+        "exact_source_carrier_count": (
+            len(federation.carriers) if exact_carrier_cardinality else None
+        ),
+        "carrier_count_is_exact_declared_federation_cardinality": (
+            exact_carrier_cardinality
+        ),
+        "support_regulator_count": None,
+        "carrier_count_is_support_regulator_count": False,
         "carrier_count_is_support_chart_cell_count": False,
         "carrier_count_is_screen_entropy_capacity_N_star": False,
         "carrier_count_is_primitive_observer_count": False,
         "seam_count": len(federation.seams),
         "external_boundary_bundle_count": len(federation.external_boundaries),
         "observer_support_count": len(federation.observer_supports),
-        "sewn_local_port_count": len(occupied_ports),
-        "declared_external_local_port_count": len(declared_external_ports),
-        "undeclared_dangling_ports": [
-            {"carrier_id": carrier_id, "port": port}
-            for carrier_id, port in dangling_ports
-        ],
+        "sewn_local_port_count": sewn_port_count,
+        "declared_external_local_port_count": external_port_count,
+        "undeclared_dangling_port_count": dangling_port_count,
+        "undeclared_dangling_ports": dangling_port_examples,
+        "undeclared_dangling_port_examples_truncated": (
+            dangling_port_count > len(dangling_port_examples)
+        ),
+        "unknown_local_port_reference_count": unknown_port_reference_count,
+        "unknown_local_port_reference_examples": unknown_port_examples,
         "carrier_conformance": carrier_reports,
+        "carrier_conformance_summary": carrier_summary,
         "seams": seam_rows,
+        "seam_rows_sha256": seam_digest.hexdigest(),
+        "seam_rows_reported_count": len(seam_rows),
+        "seam_rows_truncated": len(federation.seams) > len(seam_rows),
+        "seam_failure_examples": seam_failure_examples,
         "external_boundaries": boundary_rows,
+        "external_boundary_rows_sha256": boundary_digest.hexdigest(),
+        "external_boundary_rows_reported_count": len(boundary_rows),
+        "external_boundary_rows_truncated": (
+            len(federation.external_boundaries) > len(boundary_rows)
+        ),
+        "external_boundary_failure_examples": boundary_failure_examples,
         "observer_supports": observer_rows,
+        "observer_support_rows_sha256": observer_digest.hexdigest(),
+        "observer_support_rows_reported_count": len(observer_rows),
+        "observer_support_rows_truncated": (
+            len(federation.observer_supports) > len(observer_rows)
+        ),
+        "observer_support_failure_examples": observer_failure_examples,
+        "report_detail_limit": _REPORT_DETAIL_LIMIT,
+        "federation_carrier_graph_component_count": connectivity.component_count,
         "federation_carrier_graph_connected": federation_connected,
-        "blockers": sorted(set(blockers)),
+        "blocker_occurrence_count": blockers.occurrence_count,
+        "blockers": blockers.examples,
+        "blocker_examples_truncated": blockers.truncated,
         "ECHOSAHEDRAL_CARRIER_CONFORMANCE": carrier_conformance,
+        "STRUCTURAL_FEDERATION_SEWING_RECEIPT": passed,
         "FEDERATION_SEWING_RECEIPT": passed,
+        "INTERFACE_SCHEMA_HASH_BINDING_RECEIPT": (all_interface_schema_hashes_agree),
+        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
+        "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": False,
+        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
         "claim_boundary": (
-            "Carrier cardinality is only a finite regulator parameter. It is not an "
-            "S2 chart-cell count, N_star, primitive-observer count, H3-point count, "
-            "or event count. Sewing certifies typed local interfaces only."
+            "carrier_count is the exact cardinality of the declared finite source "
+            "federation when the ID receipt passes; it is separate from every support "
+            "regulator, S2 chart-cell count, N_star, observer count, H3-point count, "
+            "and event count. Sewing checks port bijections, orientations, boundary "
+            "coverage, and content-addressed schema identity. Equal schema hashes do "
+            "not prove interface algebra homomorphisms, higher-overlap cocycles, a "
+            "physical source realization, or any emergent geometry."
         ),
     }
 
@@ -668,36 +1045,57 @@ def observer_support_report(
     if not _is_sha256(support.checkpoint_cut_sha256):
         blockers.append("invalid_checkpoint_cut_sha256")
 
-    graph = nx.Graph()
-    graph.add_nodes_from(support.carrier_ids)
+    support_carrier_ids = set(support.carrier_ids)
+    connectivity = _DisjointSet(support_carrier_ids)
     for seam_id in support.visible_seam_ids:
         seam = seam_by_id.get(seam_id)
         if seam is None:
             continue
         endpoints = {seam.left_carrier_id, seam.right_carrier_id}
-        if not endpoints <= set(support.carrier_ids):
+        if not endpoints <= support_carrier_ids:
             blockers.append("visible_seam_leaves_observer_carrier_support")
             continue
-        graph.add_edge(seam.left_carrier_id, seam.right_carrier_id)
+        connectivity.union(seam.left_carrier_id, seam.right_carrier_id)
     connected = bool(
-        graph.number_of_nodes() == 1
-        or (graph.number_of_nodes() > 1 and nx.is_connected(graph))
+        len(support_carrier_ids) == 1
+        or (len(support_carrier_ids) > 1 and connectivity.component_count == 1)
     )
     if not connected:
         blockers.append("observer_carrier_support_is_disconnected")
     passed = not blockers
+    sorted_carrier_ids = sorted(support.carrier_ids)
+    sorted_seam_ids = sorted(support.visible_seam_ids)
+    carrier_digest = _CanonicalRowDigest()
+    for carrier_id in sorted_carrier_ids:
+        carrier_digest.update({"carrier_id": carrier_id})
+    seam_digest = _CanonicalRowDigest()
+    for seam_id in sorted_seam_ids:
+        seam_digest.update({"seam_id": seam_id})
     return {
         "schema": "oph.echosahedral_federation.observer_support.v1",
         "observer_token": support.observer_token,
-        "carrier_ids": sorted(support.carrier_ids),
-        "visible_seam_ids": sorted(support.visible_seam_ids),
+        "carrier_ids": sorted_carrier_ids[:_REPORT_DETAIL_LIMIT],
+        "carrier_ids_sha256": carrier_digest.hexdigest(),
+        "carrier_ids_truncated": len(sorted_carrier_ids) > _REPORT_DETAIL_LIMIT,
+        "visible_seam_ids": sorted_seam_ids[:_REPORT_DETAIL_LIMIT],
+        "visible_seam_ids_sha256": seam_digest.hexdigest(),
+        "visible_seam_ids_truncated": len(sorted_seam_ids) > _REPORT_DETAIL_LIMIT,
         "carrier_count": len(support.carrier_ids),
+        "visible_seam_count": len(support.visible_seam_ids),
         "one_carrier_support_allowed": True,
         "connected": connected,
         "blockers": sorted(set(blockers)),
         "CONNECTED_OBSERVER_SUPPORT_RECEIPT": passed,
         "OBSERVER_EQUALS_ONE_CARRIER_ASSUMPTION": False,
     }
+
+
+def _runtime_exact_int_tuple(value: Any) -> tuple[tuple[int, ...], bool]:
+    """Reject Python bool/string coercions at the typed-runtime boundary."""
+
+    if not isinstance(value, tuple) or not all(type(item) is int for item in value):
+        return (), False
+    return value, True
 
 
 def _seam_bundle_report(
@@ -715,10 +1113,26 @@ def _seam_bundle_report(
         blockers.append("unknown_left_carrier")
     if right is None:
         blockers.append("unknown_right_carrier")
-    left_ports = tuple(int(port) for port in seam.left_ports)
-    right_ports = tuple(int(port) for port in seam.right_ports)
-    forward = tuple(int(port) for port in seam.left_to_right_ports)
-    backward = tuple(int(port) for port in seam.right_to_left_ports)
+    left_ports, left_ports_exact = _runtime_exact_int_tuple(seam.left_ports)
+    right_ports, right_ports_exact = _runtime_exact_int_tuple(seam.right_ports)
+    forward, forward_exact = _runtime_exact_int_tuple(seam.left_to_right_ports)
+    backward, backward_exact = _runtime_exact_int_tuple(seam.right_to_left_ports)
+    forward_orientation, forward_orientation_exact = _runtime_exact_int_tuple(
+        seam.left_to_right_orientation
+    )
+    backward_orientation, backward_orientation_exact = _runtime_exact_int_tuple(
+        seam.right_to_left_orientation
+    )
+    exact_integer_arrays = bool(
+        left_ports_exact
+        and right_ports_exact
+        and forward_exact
+        and backward_exact
+        and forward_orientation_exact
+        and backward_orientation_exact
+    )
+    if not exact_integer_arrays:
+        blockers.append("seam_port_and_orientation_arrays_must_be_exact_integer_tuples")
     bundle_sizes_valid = bool(
         left_ports
         and len(left_ports) == len(set(left_ports))
@@ -755,19 +1169,16 @@ def _seam_bundle_report(
         blockers.append("forward_reverse_gluing_composition_is_not_identity")
 
     orientation_valid = bool(
-        len(seam.left_to_right_orientation) == len(left_ports)
-        and len(seam.right_to_left_orientation) == len(right_ports)
-        and all(sign == -1 for sign in seam.left_to_right_orientation)
-        and all(sign == -1 for sign in seam.right_to_left_orientation)
+        exact_integer_arrays
+        and len(forward_orientation) == len(left_ports)
+        and len(backward_orientation) == len(right_ports)
+        and all(sign == -1 for sign in forward_orientation)
+        and all(sign == -1 for sign in backward_orientation)
     )
     orientation_inverse_composition = False
     if orientation_valid and bijection_valid:
-        forward_sign = dict(
-            zip(left_ports, seam.left_to_right_orientation, strict=True)
-        )
-        backward_sign = dict(
-            zip(right_ports, seam.right_to_left_orientation, strict=True)
-        )
+        forward_sign = dict(zip(left_ports, forward_orientation, strict=True))
+        backward_sign = dict(zip(right_ports, backward_orientation, strict=True))
         forward_map = dict(zip(left_ports, forward, strict=True))
         backward_map = dict(zip(right_ports, backward, strict=True))
         orientation_inverse_composition = bool(
@@ -824,7 +1235,7 @@ def _seam_bundle_report(
             binding.right_interface_algebra_sha256,
         )
     )
-    algebra_preserved = bool(
+    schema_hashes_agree = bool(
         hashes_valid
         and binding.interface_algebra_sha256
         == binding.left_interface_algebra_sha256
@@ -834,7 +1245,7 @@ def _seam_bundle_report(
         blockers.append("empty_interface_algebra_id")
     if not hashes_valid:
         blockers.append("invalid_interface_algebra_sha256")
-    if not algebra_preserved:
+    if not schema_hashes_agree:
         blockers.append("endpoint_interface_algebra_hashes_do_not_agree")
 
     passed = not blockers
@@ -862,9 +1273,22 @@ def _seam_bundle_report(
         ),
         "interface_algebra_id": binding.interface_algebra_id,
         "interface_algebra_sha256": binding.interface_algebra_sha256,
-        "endpoint_interface_algebra_hashes_agree": algebra_preserved,
+        "interface_hash_check_scope": _INTERFACE_HASH_CHECK_SCOPE,
+        "interface_schema_hashes_agree": schema_hashes_agree,
+        # Compatibility alias.  This means hash equality only; it is not a
+        # mathematical assertion that an algebra map has been constructed.
+        "endpoint_interface_algebra_hashes_agree": schema_hashes_agree,
         "blockers": sorted(set(blockers)),
         "SEAM_BUNDLE_RECEIPT": passed,
+        "INTERFACE_SCHEMA_HASH_BINDING_RECEIPT": schema_hashes_agree,
+        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
+        "FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT": False,
+        "claim_boundary": (
+            "The endpoint hashes bind byte-identical declared schemas only. No "
+            "interface algebra homomorphism, composition law, associator, triple-"
+            "overlap cocycle, or higher-overlap coherence has been supplied."
+        ),
     }
 
 
@@ -874,11 +1298,13 @@ def _external_boundary_report(
 ) -> dict[str, Any]:
     blockers: list[str] = []
     carrier = carrier_by_id.get(boundary.carrier_id)
-    ports = tuple(int(port) for port in boundary.ports)
+    ports, ports_exact = _runtime_exact_int_tuple(boundary.ports)
     if not boundary.boundary_id:
         blockers.append("empty_boundary_id")
     if carrier is None:
         blockers.append("unknown_boundary_carrier")
+    if not ports_exact:
+        blockers.append("external_boundary_ports_must_be_an_exact_integer_tuple")
     if not ports or len(ports) != len(set(ports)):
         blockers.append("external_boundary_ports_must_be_nonempty_and_unique")
     if any(port < 0 or port >= _PORT_COUNT for port in ports):
@@ -1118,14 +1544,22 @@ def echosahedral_federation_receipt(
     )
     refinement_receipt = bool(refinement["CARRIER_REFINEMENT_NATURALITY_RECEIPT"])
     source_instrument_valid = bool(
-        carrier_receipt and sewing_receipt and quotient_receipt and refinement_receipt
+        carrier_receipt
+        and sewing_receipt
+        and quotient_receipt
+        and refinement_receipt
+        and sewing["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"]
+        and sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
     )
     return {
         "schema": "oph.echosahedral_federation.parent_receipts.v1",
         "instrument_scope": "finite_two_level_echosahedral_carrier_federation_contract",
         "federation_id": federation.federation_id,
-        "cardinality_semantics": "carrier_count_is_regulator_cardinality_not_support_chart_discretization",
+        "cardinality_semantics": _CARDINALITY_SEMANTICS,
         "carrier_count": len(federation.carriers),
+        "exact_source_carrier_count": sewing["exact_source_carrier_count"],
+        "support_regulator_count": None,
+        "carrier_count_is_support_regulator_count": False,
         "support_chart_cell_count": None,
         "carrier_to_support_chart_realization": "unproved",
         "sewing": sewing,
@@ -1136,6 +1570,10 @@ def echosahedral_federation_receipt(
         "FEDERATION_SEWING_RECEIPT": sewing_receipt,
         "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": quotient_receipt,
         "CARRIER_REFINEMENT_NATURALITY_RECEIPT": refinement_receipt,
+        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
+        "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": False,
+        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
         "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID": source_instrument_valid,
         "S2_SUPPORT_CHART_EMERGENCE_RECEIPT": False,
@@ -1144,10 +1582,13 @@ def echosahedral_federation_receipt(
         "BW_KMS_CLOCK_RECEIPT": False,
         "PHYSICAL_H3_KMS_EMERGENCE_RECEIPT": False,
         "claim_boundary": (
-            "These parent receipts stop at the finite carrier contract. Carrier count "
-            "is not an S2 chart-cell count, N_star, observer count, H3-point count, or "
-            "event count. S2, H3, events, BW/KMS, the 2pi normalization, and a "
-            "carrier-to-support realization must be earned by downstream receipts."
+            "These parent receipts stop at the declared finite carrier contract. "
+            "carrier_count is its exact source-federation cardinality when unique IDs "
+            "verify, and remains separate from the support regulator, S2 chart-cell "
+            "count, N_star, observer count, H3-point count, and event count. Schema "
+            "hash equality does not prove interface algebra maps or higher overlaps. "
+            "Those facts, physical source realization, S2, H3, events, BW/KMS, and "
+            "the 2pi normalization require independent downstream receipts."
         ),
     }
 
@@ -1174,7 +1615,16 @@ def reference_federation_instrument_bundle(
     return {
         "schema": "oph.echosahedral_federation.instrument_bundle.v1",
         "federation_id": federation.federation_id,
+        "cardinality_semantics": _CARDINALITY_SEMANTICS,
+        "exact_source_carrier_count": len(federation.carriers),
+        "support_regulator_count": None,
         "local_carrier_template": "regular_icosahedron_12_30_20_antipode_a5_v1",
+        "local_carrier_template_structural_class_sha256": (
+            echosahedral_carrier_conformance_report(
+                _reference_echosahedral_carrier_template()
+            )["structural_class_sha256"]
+        ),
+        "interface_hash_check_scope": _INTERFACE_HASH_CHECK_SCOPE,
         "carrier_ids": [carrier.carrier_id for carrier in federation.carriers],
         "seams": [
             {
@@ -1235,6 +1685,8 @@ def verify_reference_federation_instrument_bundle(
     """Parse and verify the compact JSON-facing carrier instrument bundle."""
 
     try:
+        if not isinstance(bundle, Mapping):
+            raise TypeError("instrument bundle must be an object")
         if bundle.get("schema") != "oph.echosahedral_federation.instrument_bundle.v1":
             raise ValueError("instrument bundle schema mismatch")
         if (
@@ -1242,9 +1694,57 @@ def verify_reference_federation_instrument_bundle(
             != "regular_icosahedron_12_30_20_antipode_a5_v1"
         ):
             raise ValueError("unknown local carrier template")
-        carrier_ids = tuple(str(value) for value in bundle["carrier_ids"])
+        expected_template_hash = echosahedral_carrier_conformance_report(
+            _reference_echosahedral_carrier_template()
+        )["structural_class_sha256"]
+        if (
+            bundle.get(
+                "local_carrier_template_structural_class_sha256",
+                expected_template_hash,
+            )
+            != expected_template_hash
+        ):
+            raise ValueError("local carrier template structural hash mismatch")
+        if bundle.get("interface_hash_check_scope", _INTERFACE_HASH_CHECK_SCOPE) != (
+            _INTERFACE_HASH_CHECK_SCOPE
+        ):
+            raise ValueError("interface_hash_check_scope mismatch")
+        federation_id = bundle["federation_id"]
+        if not isinstance(federation_id, str) or not federation_id:
+            raise ValueError("federation_id must be a nonempty string")
+        raw_carrier_ids = bundle["carrier_ids"]
+        if isinstance(raw_carrier_ids, (str, bytes)) or not isinstance(
+            raw_carrier_ids, Sequence
+        ):
+            raise TypeError("carrier_ids must be an array of strings")
+        carrier_ids = tuple(raw_carrier_ids)
+        if not all(isinstance(value, str) and value for value in carrier_ids):
+            raise TypeError("carrier_ids must contain only nonempty strings")
         if not carrier_ids or len(set(carrier_ids)) != len(carrier_ids):
             raise ValueError("carrier_ids must be nonempty and unique")
+        declared_count = bundle.get("exact_source_carrier_count", len(carrier_ids))
+        if type(declared_count) is not int or declared_count != len(carrier_ids):
+            raise ValueError("exact_source_carrier_count does not match carrier_ids")
+        declared_semantics = bundle.get("cardinality_semantics", _CARDINALITY_SEMANTICS)
+        if declared_semantics != _CARDINALITY_SEMANTICS:
+            raise ValueError("cardinality_semantics mismatch")
+        support_regulator_count = bundle.get("support_regulator_count")
+        if support_regulator_count is not None:
+            raise ValueError(
+                "support_regulator_count must remain separate and null in this bundle"
+            )
+        instrument_surface = {
+            key: value for key, value in bundle.items() if key != "promoted_payload"
+        }
+        embedded_template_fields = sorted(
+            _recursive_mapping_keys(instrument_surface)
+            & _EMBEDDED_LOCAL_TEMPLATE_FIELDS
+        )
+        if embedded_template_fields:
+            raise ValueError(
+                "per-carrier local template fields are forbidden:"
+                + ",".join(embedded_template_fields)
+            )
         carriers = tuple(reference_echosahedral_carrier(value) for value in carrier_ids)
         seams = tuple(_seam_from_bundle_row(row) for row in bundle.get("seams", ()))
         boundaries = tuple(
@@ -1256,7 +1756,7 @@ def verify_reference_federation_instrument_bundle(
             for row in bundle.get("observer_supports", ())
         )
         federation = EchosahedralFederation(
-            federation_id=str(bundle["federation_id"]),
+            federation_id=federation_id,
             carriers=carriers,
             seams=seams,
             external_boundaries=boundaries,
@@ -1275,13 +1775,29 @@ def verify_reference_federation_instrument_bundle(
             "FEDERATION_SEWING_RECEIPT": False,
             "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": False,
             "CARRIER_REFINEMENT_NATURALITY_RECEIPT": False,
+            "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
+            "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
+            "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": False,
+            "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
             "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
             "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID": False,
         }
     report = dict(report)
     report["bundle_schema"] = bundle["schema"]
+    report["cardinality_semantics"] = _CARDINALITY_SEMANTICS
+    report["exact_source_carrier_count"] = len(carrier_ids)
+    report["support_regulator_count"] = None
     report["shared_template_encoded_once"] = True
     report["per_carrier_coordinate_tables_embedded"] = False
+    report["shared_template_conformance_verified_once"] = bool(
+        report["sewing"]["carrier_conformance_summary"][
+            "shared_reference_template_conformance_verified_once"
+        ]
+    )
+    report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] = False
+    report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] = False
+    report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] = False
+    report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] = False
     report["INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"] = True
     return report
 
@@ -1624,14 +2140,30 @@ def _port_subset_connected(carrier: EchosahedralCarrier, ports: Sequence[int]) -
     port_set = {int(port) for port in ports}
     if not port_set or not port_set <= set(range(_PORT_COUNT)):
         return False
-    graph = nx.Graph()
-    graph.add_nodes_from(port_set)
-    graph.add_edges_from(
-        (left, right)
-        for left, right in carrier.edges
-        if left in port_set and right in port_set
+    pending = [next(iter(port_set))]
+    visited: set[int] = set()
+    while pending:
+        port = pending.pop()
+        if port in visited:
+            continue
+        visited.add(port)
+        for left, right in carrier.edges:
+            if left == port and right in port_set and right not in visited:
+                pending.append(right)
+            elif right == port and left in port_set and left not in visited:
+                pending.append(left)
+    return visited == port_set
+
+
+@lru_cache(maxsize=1)
+def _reference_incidence_sets() -> tuple[
+    frozenset[tuple[int, int]], frozenset[tuple[int, int, int]]
+]:
+    template = _reference_echosahedral_carrier_template()
+    return (
+        frozenset(tuple(sorted(edge)) for edge in template.edges),
+        frozenset(tuple(sorted(face)) for face in template.faces),
     )
-    return graph.number_of_nodes() == 1 or nx.is_connected(graph)
 
 
 def _collar_kind_matches(
@@ -1643,8 +2175,11 @@ def _collar_kind_matches(
     port_set = set(port_tuple)
     if not port_tuple or not port_set <= set(range(_PORT_COUNT)):
         return False
-    edge_set = {tuple(sorted(edge)) for edge in carrier.edges}
-    face_set = {tuple(sorted(face)) for face in carrier.faces}
+    if _uses_shared_reference_template(carrier):
+        edge_set, face_set = _reference_incidence_sets()
+    else:
+        edge_set = frozenset(tuple(sorted(edge)) for edge in carrier.edges)
+        face_set = frozenset(tuple(sorted(face)) for face in carrier.faces)
     if collar_kind == "single_port":
         return len(port_tuple) == 1
     if collar_kind == "antipodal_pair":
@@ -1706,65 +2241,76 @@ def _relabel_carrier(
 def _quotient_visible_contract_payload(
     federation: EchosahedralFederation,
 ) -> dict[str, Any]:
-    carrier_rows = []
-    for carrier in federation.carriers:
+    """Return compact digests of the quotient-visible contract rows."""
+
+    carrier_digest = _CanonicalRowDigest()
+    for carrier in sorted(federation.carriers, key=lambda item: item.carrier_id):
         report = echosahedral_carrier_conformance_report(carrier)
-        carrier_rows.append(
+        carrier_digest.update(
             {
                 "carrier_id": carrier.carrier_id,
                 "structural_class_sha256": report["structural_class_sha256"],
                 "conforming": report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"],
             }
         )
-    seam_rows = [
-        {
-            "seam_id": seam.seam_id,
-            "endpoint_carrier_ids": sorted(
-                (seam.left_carrier_id, seam.right_carrier_id)
-            ),
-            "collar_kind": seam.collar_kind,
-            "bundle_size": len(seam.left_ports),
-            "orientation_reversing": bool(
-                all(sign == -1 for sign in seam.left_to_right_orientation)
-                and all(sign == -1 for sign in seam.right_to_left_orientation)
-            ),
-            "interface_algebra_id": seam.interface_algebra.interface_algebra_id,
-            "interface_algebra_sha256": seam.interface_algebra.interface_algebra_sha256,
-        }
-        for seam in federation.seams
-    ]
-    boundary_rows = [
-        {
-            "boundary_id": boundary.boundary_id,
-            "carrier_id": boundary.carrier_id,
-            "port_count": len(boundary.ports),
-            "boundary_condition": boundary.boundary_condition,
-            "boundary_algebra_sha256": boundary.boundary_algebra_sha256,
-        }
-        for boundary in federation.external_boundaries
-    ]
-    observer_rows = [
-        {
-            "observer_token": support.observer_token,
-            "carrier_ids": sorted(support.carrier_ids),
-            "visible_seam_ids": sorted(support.visible_seam_ids),
-            "record_algebra_sha256": support.record_algebra_sha256,
-            "checkpoint_cut_sha256": support.checkpoint_cut_sha256,
-        }
-        for support in federation.observer_supports
-    ]
+    seam_digest = _CanonicalRowDigest()
+    for seam in sorted(federation.seams, key=lambda item: item.seam_id):
+        seam_digest.update(
+            {
+                "seam_id": seam.seam_id,
+                "endpoint_carrier_ids": sorted(
+                    (seam.left_carrier_id, seam.right_carrier_id)
+                ),
+                "collar_kind": seam.collar_kind,
+                "bundle_size": len(seam.left_ports),
+                "orientation_reversing": bool(
+                    all(sign == -1 for sign in seam.left_to_right_orientation)
+                    and all(sign == -1 for sign in seam.right_to_left_orientation)
+                ),
+                "interface_algebra_id": seam.interface_algebra.interface_algebra_id,
+                "interface_algebra_sha256": seam.interface_algebra.interface_algebra_sha256,
+            }
+        )
+    boundary_digest = _CanonicalRowDigest()
+    for boundary in sorted(
+        federation.external_boundaries, key=lambda item: item.boundary_id
+    ):
+        boundary_digest.update(
+            {
+                "boundary_id": boundary.boundary_id,
+                "carrier_id": boundary.carrier_id,
+                "port_count": len(boundary.ports),
+                "boundary_condition": boundary.boundary_condition,
+                "boundary_algebra_sha256": boundary.boundary_algebra_sha256,
+            }
+        )
+    observer_digest = _CanonicalRowDigest()
+    for support in sorted(
+        federation.observer_supports, key=lambda item: item.observer_token
+    ):
+        observer_digest.update(
+            {
+                "observer_token": support.observer_token,
+                "carrier_ids": sorted(support.carrier_ids),
+                "visible_seam_ids": sorted(support.visible_seam_ids),
+                "record_algebra_sha256": support.record_algebra_sha256,
+                "checkpoint_cut_sha256": support.checkpoint_cut_sha256,
+            }
+        )
     return {
         "schema": "oph.echosahedral_federation.quotient_visible_contract.v1",
         "federation_id": federation.federation_id,
-        "cardinality_semantics": "finite_carrier_regulator_count_only",
-        "carriers": sorted(carrier_rows, key=lambda row: row["carrier_id"]),
-        "seams": sorted(seam_rows, key=lambda row: row["seam_id"]),
-        "external_boundaries": sorted(
-            boundary_rows, key=lambda row: row["boundary_id"]
-        ),
-        "observer_supports": sorted(
-            observer_rows, key=lambda row: row["observer_token"]
-        ),
+        "cardinality_semantics": _CARDINALITY_SEMANTICS,
+        "exact_source_carrier_count": len(federation.carriers),
+        "support_regulator_count": None,
+        "carrier_row_count": carrier_digest.row_count,
+        "carrier_rows_sha256": carrier_digest.hexdigest(),
+        "seam_row_count": seam_digest.row_count,
+        "seam_rows_sha256": seam_digest.hexdigest(),
+        "external_boundary_row_count": boundary_digest.row_count,
+        "external_boundary_rows_sha256": boundary_digest.hexdigest(),
+        "observer_support_row_count": observer_digest.row_count,
+        "observer_support_rows_sha256": observer_digest.hexdigest(),
     }
 
 
@@ -1794,9 +2340,18 @@ def _walk_payload_values(value: Any, path: str = "$") -> list[tuple[str, Any]]:
 def _find_hidden_coordinate_values(
     payload: Mapping[str, Any], carriers: Sequence[EchosahedralCarrier]
 ) -> list[str]:
+    # Canonical 256k carriers share one tuple by identity. Deduplicate on that
+    # O(1) identity before computing the comparatively expensive value signature.
+    coordinate_tables_by_identity: dict[
+        int, tuple[tuple[float, float, float], ...]
+    ] = {}
+    for carrier in carriers:
+        coordinate_tables_by_identity.setdefault(
+            id(carrier.port_coordinates), carrier.port_coordinates
+        )
     reference_signatures = {
-        _coordinate_set_signature(np.asarray(carrier.port_coordinates, dtype=float))
-        for carrier in carriers
+        _coordinate_set_signature(np.asarray(coordinates, dtype=float))
+        for coordinates in coordinate_tables_by_identity.values()
     }
     leaks: list[str] = []
     for path, value in _walk_payload_values(payload):
@@ -1822,7 +2377,12 @@ def _coordinate_set_signature(coordinates: np.ndarray) -> tuple[tuple[float, ...
 def _find_hidden_port_label_values(
     payload: Mapping[str, Any], carriers: Sequence[EchosahedralCarrier]
 ) -> list[str]:
-    label_sets = {frozenset(carrier.port_names) for carrier in carriers}
+    label_tables_by_identity: dict[int, tuple[str, ...]] = {}
+    for carrier in carriers:
+        label_tables_by_identity.setdefault(id(carrier.port_names), carrier.port_names)
+    label_sets = {
+        frozenset(port_names) for port_names in label_tables_by_identity.values()
+    }
     leaks: list[str] = []
     for path, value in _walk_payload_values(payload):
         if not isinstance(value, (list, tuple)):
@@ -1834,57 +2394,88 @@ def _find_hidden_port_label_values(
 
 
 def _seam_from_bundle_row(row: Mapping[str, Any]) -> SeamBundle:
+    if not isinstance(row, Mapping):
+        raise TypeError("seam row must be an object")
     binding = row["interface_algebra"]
     if not isinstance(binding, Mapping):
         raise TypeError("interface_algebra must be an object")
     return SeamBundle(
-        seam_id=str(row["seam_id"]),
-        left_carrier_id=str(row["left_carrier_id"]),
-        right_carrier_id=str(row["right_carrier_id"]),
-        left_ports=tuple(int(value) for value in row["left_ports"]),
-        right_ports=tuple(int(value) for value in row["right_ports"]),
-        left_to_right_ports=tuple(int(value) for value in row["left_to_right_ports"]),
-        right_to_left_ports=tuple(int(value) for value in row["right_to_left_ports"]),
-        left_to_right_orientation=tuple(
-            int(value) for value in row["left_to_right_orientation"]
-        ),
-        right_to_left_orientation=tuple(
-            int(value) for value in row["right_to_left_orientation"]
-        ),
-        collar_kind=str(row["collar_kind"]),
+        seam_id=_bundle_string(row, "seam_id"),
+        left_carrier_id=_bundle_string(row, "left_carrier_id"),
+        right_carrier_id=_bundle_string(row, "right_carrier_id"),
+        left_ports=_bundle_int_tuple(row, "left_ports"),
+        right_ports=_bundle_int_tuple(row, "right_ports"),
+        left_to_right_ports=_bundle_int_tuple(row, "left_to_right_ports"),
+        right_to_left_ports=_bundle_int_tuple(row, "right_to_left_ports"),
+        left_to_right_orientation=_bundle_int_tuple(row, "left_to_right_orientation"),
+        right_to_left_orientation=_bundle_int_tuple(row, "right_to_left_orientation"),
+        collar_kind=_bundle_string(row, "collar_kind"),
         interface_algebra=InterfaceAlgebraBinding(
-            interface_algebra_id=str(binding["interface_algebra_id"]),
-            interface_algebra_sha256=str(binding["interface_algebra_sha256"]),
-            left_interface_algebra_sha256=str(binding["left_interface_algebra_sha256"]),
-            right_interface_algebra_sha256=str(
-                binding["right_interface_algebra_sha256"]
+            interface_algebra_id=_bundle_string(binding, "interface_algebra_id"),
+            interface_algebra_sha256=_bundle_string(
+                binding, "interface_algebra_sha256"
+            ),
+            left_interface_algebra_sha256=_bundle_string(
+                binding, "left_interface_algebra_sha256"
+            ),
+            right_interface_algebra_sha256=_bundle_string(
+                binding, "right_interface_algebra_sha256"
             ),
         ),
     )
 
 
 def _boundary_from_bundle_row(row: Mapping[str, Any]) -> ExternalBoundaryBundle:
+    if not isinstance(row, Mapping):
+        raise TypeError("external boundary row must be an object")
     return ExternalBoundaryBundle(
-        boundary_id=str(row["boundary_id"]),
-        carrier_id=str(row["carrier_id"]),
-        ports=tuple(int(value) for value in row["ports"]),
-        boundary_condition=str(row["boundary_condition"]),
-        boundary_algebra_sha256=str(row["boundary_algebra_sha256"]),
+        boundary_id=_bundle_string(row, "boundary_id"),
+        carrier_id=_bundle_string(row, "carrier_id"),
+        ports=_bundle_int_tuple(row, "ports"),
+        boundary_condition=_bundle_string(row, "boundary_condition"),
+        boundary_algebra_sha256=_bundle_string(row, "boundary_algebra_sha256"),
     )
 
 
 def _observer_from_bundle_row(row: Mapping[str, Any]) -> ObserverSupport:
+    if not isinstance(row, Mapping):
+        raise TypeError("observer support row must be an object")
     return ObserverSupport(
-        observer_token=str(row["observer_token"]),
-        carrier_ids=frozenset(str(value) for value in row["carrier_ids"]),
-        visible_seam_ids=frozenset(str(value) for value in row["visible_seam_ids"]),
-        record_algebra_sha256=str(row["record_algebra_sha256"]),
-        checkpoint_cut_sha256=str(row["checkpoint_cut_sha256"]),
+        observer_token=_bundle_string(row, "observer_token"),
+        carrier_ids=frozenset(_bundle_string_tuple(row, "carrier_ids")),
+        visible_seam_ids=frozenset(_bundle_string_tuple(row, "visible_seam_ids")),
+        record_algebra_sha256=_bundle_string(row, "record_algebra_sha256"),
+        checkpoint_cut_sha256=_bundle_string(row, "checkpoint_cut_sha256"),
     )
 
 
+def _bundle_string(row: Mapping[str, Any], key: str) -> str:
+    value = row[key]
+    if not isinstance(value, str):
+        raise TypeError(f"{key} must be a string")
+    return value
+
+
+def _bundle_int_tuple(row: Mapping[str, Any], key: str) -> tuple[int, ...]:
+    value = row[key]
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        raise TypeError(f"{key} must be an integer array")
+    if not all(type(item) is int for item in value):
+        raise TypeError(f"{key} must contain exact integers")
+    return tuple(value)
+
+
+def _bundle_string_tuple(row: Mapping[str, Any], key: str) -> tuple[str, ...]:
+    value = row[key]
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        raise TypeError(f"{key} must be a string array")
+    if not all(isinstance(item, str) for item in value):
+        raise TypeError(f"{key} must contain only strings")
+    return tuple(value)
+
+
 def _is_sha256(value: str) -> bool:
-    return bool(_SHA256_RE.fullmatch(str(value)))
+    return bool(isinstance(value, str) and _SHA256_RE.fullmatch(value))
 
 
 if __name__ == "__main__":

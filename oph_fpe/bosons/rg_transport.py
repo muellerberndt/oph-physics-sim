@@ -70,6 +70,10 @@ def piecewise_affine_rg_receipt(
         matching_bound = float(np.linalg.norm(matching_matrix, ord=2))
         local_factor = matching_bound * math.exp(lipschitz * abs(t1 - t0))
         local_error = float(segment.get("truncation_error_bound", 0.0))
+        if not math.isfinite(local_error) or local_error < 0.0:
+            raise ValueError(
+                "RG truncation error bounds must be finite and nonnegative"
+            )
         accumulated_error = local_factor * accumulated_error + local_error
         amplification *= local_factor
         rows.append(
@@ -90,7 +94,12 @@ def piecewise_affine_rg_receipt(
         current_scale = end_scale
 
     frozen_convention = scheme != "unspecified" and loop_order != "unspecified"
-    promoted = bool(source_packet_verified and same_branch and frozen_convention and all_success)
+    declared_candidate = bool(
+        source_packet_verified is True
+        and same_branch is True
+        and frozen_convention
+        and all_success
+    )
     blockers = []
     if not source_packet_verified:
         blockers.append("rg_source_packet_not_verified")
@@ -100,6 +109,13 @@ def piecewise_affine_rg_receipt(
         blockers.append("rg_scheme_or_loop_order_not_frozen")
     if not all_success:
         blockers.append("rg_numerical_transport_failed")
+    blockers.extend(
+        [
+            "affine_rg_solver_is_wzh0_numerical_control",
+            "nonlinear_sm_beta_and_threshold_packet_not_replayed",
+            "runtime_subject_and_matching_remainder_not_bound",
+        ]
+    )
 
     return {
         "schema": "oph_wzh_rg_transport_receipt_v1",
@@ -113,11 +129,14 @@ def piecewise_affine_rg_receipt(
         "source_to_output_amplification_bound": amplification,
         "integrated_error_bound": accumulated_error,
         "numerical_transport_success": all_success,
-        "rg_matching_receipt": promoted,
-        "promotion_allowed": promoted,
-        "blockers": blockers,
+        "affine_rg_numerical_control_receipt": all_success,
+        "declared_candidate_conditions_met": declared_candidate,
+        "rg_matching_receipt": False,
+        "promotion_allowed": False,
+        "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "The solver proves deterministic transport for the supplied affine packet; it does "
-            "not derive the physical beta functions, thresholds, matching maps, or scheme."
+            "The affine solver is an unconditionally nonpromoting WZH0 control. It "
+            "does not derive or replay the nonlinear SM beta functions, active census, "
+            "threshold maps, Jacobians, deterministic remainders, or source matching."
         ),
     }

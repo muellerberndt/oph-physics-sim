@@ -594,13 +594,13 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "L_full_oph_lorentz_finite_contract": _tier(
             OPH_LORENTZ_THEOREM_FINITE_CONTRACT_RECEIPT,
             finite_lorentz_contract,
-            "Legacy finite Lorentz contract audits observer-record modular diagnostics; issue #308 BW3 is the stricter finite cap-normal certificate receipt.",
+            "Legacy finite Lorentz contract audits observer-record modular diagnostics; issue #308 requires the six-clause finite cap certificate and independent same-tower MGNS-1.",
             blockers=finite_contract_report.get("primary_blockers", []),
         ),
         "L_branch_paper_geometric_lorentz_contract": _tier(
             "PAPER_GEOMETRIC_BRANCH_LORENTZ_CONTRACT_RECEIPT",
             paper_geometric_branch_contract,
-            "Paper-geometric branch contract uses the declared BW-framed theorem chart, without promoting the endogenous finite clock diagnostic or a BW3 finite certificate.",
+            "Paper-geometric branch contract uses the declared BW-framed theorem chart, without promoting the endogenous finite clock diagnostic or an unpaired finite cap certificate.",
             blockers=finite_contract_report.get("paper_geometric_branch_primary_blockers", []),
         ),
         "B_full_paper_faithful_observer_spacetime": _tier(
@@ -1109,7 +1109,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "screen_role": "S2 is the observer-facing cap/symmetry chart, not a raw point-cloud proof of dimension.",
             "lorentz_route": (
                 "support-visible BW-framed cap automorphism with s=2*pi*t gives "
-                "Conf+(S2) ~= SO+(3,1); finite BW3 evidence is the separate issue #308 BWRec audit, "
+                "Conf+(S2) ~= SO+(3,1); BW evidence is the separate issue #308 finite-cap/MGNS-1 pair audit, "
                 "issue #309 cap-normal H3 chart evidence is CAP_NORMAL_H3_CHART_RECEIPT, and "
                 "issue #310 record-populated H3 localization evidence is "
                 "MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT."

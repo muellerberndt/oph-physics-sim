@@ -23,7 +23,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 THEOREM_AUDIT_SCHEMA_VERSION = "oph.a5-sm-theorem-evidence/1.0.0"
-THEOREM_APPLICATION_SCHEMA_VERSION = "oph.a5-sm-theorem-application/1.0.0"
+THEOREM_APPLICATION_SCHEMA_VERSION = "oph.a5-sm-theorem-application/2.0.0"
 THEOREM_AUDIT_ARTIFACT_TYPE = "OPH_A5_SM_THEOREM_EVIDENCE_AUDIT"
 THEOREM_APPLICATION_ARTIFACT_TYPE = "OPH_A5_SM_THEOREM_APPLICATION"
 
@@ -93,8 +93,6 @@ TRANSFORMS: tuple[TheoremTransform, ...] = (
             "PHYSICAL_SM_LIE_CURRENT_ALGEBRA_RECEIPT",
             "MINIMAL_SUFFICIENT_PUBLIC_CARRIER_RECEIPT",
             "ORIENTED_PRIMITIVE_VOLUME_CLOCK_RECEIPT",
-            "BW_TO_CENTRAL_VOLUME_CLOCK_INTERTWINER_RECEIPT",
-            "BW_KMS_DIRECT_2PI_RECEIPT",
             "COMPLETE_PUBLIC_TENSOR_CATEGORY_RECEIPT",
             "PHYSICAL_PORT_LOOP_COCYCLE_COFINAL_DESCENT_RECEIPT",
             "UV_DEFECT_POLARIZATION_RECEIPT",
@@ -104,7 +102,7 @@ TRANSFORMS: tuple[TheoremTransform, ...] = (
             "A5_Z6_GLOBAL_FORM_THEOREM_APPLICATION_RECEIPT",
             "PHYSICAL_Z6_GLOBAL_FORM_AND_LATTICE_RECEIPT",
         ),
-        "Derives the 3+2 carrier weights and Z6 kernel only after the independently selected 2pi clock and physical deck/line laws.",
+        "Derives the 3+2 carrier weights and Z6 kernel only after an independently source-derived oriented primitive volume clock and physical deck/line laws. The gauge branch does not consume the BW/KMS geometry branch.",
     ),
     TheoremTransform(
         "O_SMCORE_Q0",
@@ -412,7 +410,7 @@ def apply_a5_sm_theorem_shortcuts(
     if not root.is_dir():
         raise ValueError(f"run directory does not exist: {root}")
     audit_errors = validate_theorem_audit(theorem_audit)
-    observations, source_inventory = _index_boolean_receipts(root)
+    observations, source_inventory = _index_admitted_source_receipts(root)
     derived: dict[str, bool] = {}
     transform_rows: dict[str, dict[str, Any]] = {}
     theorems = theorem_audit.get("theorems", {})
@@ -484,7 +482,8 @@ def apply_a5_sm_theorem_shortcuts(
         "Q4_CONTINUUM_RECEIPT": False,
         "claim_boundary": (
             "A true conclusion means only that a verified conditional theorem was "
-            "applied to independently true, hash-indexed run receipts. No theorem "
+            "applied to source receipts recomputed by registered primitive-artifact "
+            "verifiers. Ordinary JSON booleans are inventoried but never admitted. No theorem "
             "shortcut manufactured a source law or empirical observation."
         ),
     }
@@ -607,9 +606,18 @@ def _dag_is_acyclic(
     return visited == len(nodes)
 
 
-def _index_boolean_receipts(
+def _index_admitted_source_receipts(
     root: Path,
 ) -> tuple[dict[str, list[tuple[bool | object, str, str]]], dict[str, Any]]:
+    """Inventory JSON without treating names or booleans as physical evidence.
+
+    There is not yet an admission-grade verifier for the raw reciprocal-current,
+    deck/category, Spin/exchange, pole, scalar, family, or 1PI source packets.
+    Until those typed verifiers exist, the only honest registry is empty.  The
+    theorem layer may verify implications, but it cannot manufacture their
+    physical antecedents from a dictionary containing correctly spelled keys.
+    """
+
     observations: dict[str, list[tuple[bool | object, str, str]]] = {}
     paths: list[str] = []
     hashes: dict[str, str] = {}
@@ -628,9 +636,16 @@ def _index_boolean_receipts(
             continue
         paths.append(relative)
         hashes[relative] = hashlib.sha256(raw).hexdigest()
-        for key, value, pointer in _walk_values(payload):
-            observations.setdefault(key, []).append((value, relative, pointer))
-    return observations, {"report_paths": paths, "report_sha256": hashes}
+    return observations, {
+        "report_paths": paths,
+        "report_sha256": hashes,
+        "unadmitted_report_paths": paths,
+        "registered_physical_source_verifier_count": 0,
+        "admission_policy": (
+            "ordinary JSON fields and booleans cannot discharge physical theorem "
+            "hypotheses; a typed primitive-artifact verifier is required"
+        ),
+    }
 
 
 def _walk_values(payload: Any, pointer: str = "") -> Iterable[tuple[str, Any, str]]:
@@ -653,14 +668,14 @@ def _evaluate_boolean_receipt(
     passed = bool(rows and all(type(value) is bool and value is True for value, _, _ in rows))
     blockers: list[str] = []
     if not rows:
-        blockers.append("missing")
+        blockers.append("missing_registered_verified_artifact")
     if any(type(value) is not bool for value, _, _ in rows):
         blockers.append("non_boolean")
     if any(type(value) is bool and value is False for value, _, _ in rows):
         blockers.append("false_or_contradictory")
     return {
         "passed": passed,
-        "source": "run_receipt",
+        "source": "registered_artifact_verifier",
         "observations": [
             {"value": value, "report_path": path, "json_pointer": pointer}
             for value, path, pointer in rows

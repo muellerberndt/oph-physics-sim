@@ -164,14 +164,36 @@ from oph_fpe.scale.parallel import jobs_from_config
 def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     physical_campaign_cfg = config.get("physical_h3_kms_campaign", {}) or {}
     if physical_campaign_cfg.get("enabled", False):
-        from oph_fpe.bulk.physical_h3_kms_preflight import (
-            physical_h3_kms_preflight_report,
-        )
-
-        preflight_reports = physical_campaign_cfg.get("preflight_reports", {}) or {}
-        preflight = physical_h3_kms_preflight_report(
-            {"config": config, "reports": preflight_reports}
-        )
+        # This array engine predates the target-blind physical source-capture
+        # contract.  In particular it constructs its microscopic graph from
+        # the global support chart.  It must therefore never run the *postrun*
+        # P0--P8 checker as a supposed preregistration gate: at this point no
+        # RNG state, trajectory, observer record, control fit, or event sample
+        # exists yet.  That old lifecycle turned missing postrun artifacts into
+        # the misleading appearance of nine failed physics stages.
+        #
+        # Physical campaigns now use physical_h3_kms_campaign, whose order is
+        # static preregistration -> target-blind source capture -> postrun
+        # derivation -> content-addressed replay.  Keeping this refusal here is
+        # a runner/ontology invariant, not a hard-coded scientific outcome.
+        preflight = {
+            "schema": "oph.physical-h3-kms.legacy-runner-refusal.v1",
+            "runner": "oph_fpe.scale.bw_array.run_bw_array_config",
+            "admission_status": "INSTRUMENT_INVALID",
+            "scientific_status": "NOT_EVALUATED",
+            "numerical_evolution_started": False,
+            "random_source_state_materialized": False,
+            "PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT": False,
+            "blockers": [
+                "legacy_support_chart_array_is_not_the_registered_target_blind_source"
+            ],
+            "required_runner": "oph_fpe.bulk.physical_h3_kms_campaign",
+            "claim_boundary": (
+                "This refusal says that the legacy array architecture is not the "
+                "registered physical source instrument. It is not an H3, KMS, or "
+                "emergence failure."
+            ),
+        }
         preflight_dir = Path(out_dir) / "_physical_h3_kms_preflight"
         preflight_dir.mkdir(parents=True, exist_ok=True)
         preflight_path = preflight_dir / (
@@ -181,12 +203,12 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             json.dumps(preflight, indent=2, sort_keys=True),
             encoding="utf-8",
         )
-        if not preflight.get("PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT", False):
-            blocker_preview = ", ".join(list(preflight.get("blockers") or [])[:8])
-            raise RuntimeError(
-                "physical H3/KMS campaign refused before simulation; preflight failed: "
-                f"{blocker_preview}. Full report: {preflight_path}"
-            )
+        raise RuntimeError(
+            "physical H3/KMS campaign cannot run through the legacy support-chart "
+            "array engine; use oph_fpe.bulk.physical_h3_kms_campaign. This is an "
+            "instrument refusal, not a scientific failure. "
+            f"Full report: {preflight_path}"
+        )
     seed = int(config.get("seed", 1))
     rng_streams, rng_stream_report = _named_rng_streams(
         seed,

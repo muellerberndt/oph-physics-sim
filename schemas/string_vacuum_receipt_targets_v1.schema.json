@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/string_vacuum_receipt_targets_v1.schema.json",
+  "title": "OPH string-vacuum simulator receipt-target registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "artifact",
+    "schema_version",
+    "lane",
+    "producer_boundary",
+    "status_policy",
+    "target_row_policy",
+    "receipt_aliases",
+    "instance_binding_policy",
+    "targets"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "artifact": {"const": "oph_string_vacuum_receipt_target_registry"},
+    "schema_version": {"const": 1},
+    "lane": {"const": "string_vacuum_selection"},
+    "producer_boundary": {"type": "string", "minLength": 1},
+    "status_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positive_value",
+        "nonpositive_values",
+        "producer_labels_are_hints_only",
+        "dependency_failure_demotes",
+        "cli_zero_exit_requires"
+      ],
+      "properties": {
+        "positive_value": {"const": true},
+        "nonpositive_values": {
+          "type": "array",
+          "const": ["FAIL", "INCONCLUSIVE", "INVALID", false]
+        },
+        "producer_labels_are_hints_only": {"const": true},
+        "dependency_failure_demotes": {"const": true},
+        "cli_zero_exit_requires": {
+          "type": "array",
+          "const": ["candidate_status=PASS", "catalogue_status=SELECTED_WITHIN_DECLARED_CATALOGUE"]
+        }
+      }
+    },
+    "target_row_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_frozen_before_candidate_evaluation",
+        "required_metadata",
+        "rank_admissible_roles",
+        "rank_forbidden_roles",
+        "candidate_only_rows_may_be_acceptance_tests",
+        "registry_identity_fields",
+        "registry_authority",
+        "canonical_numeric_values"
+      ],
+      "properties": {
+        "registry_frozen_before_candidate_evaluation": {"const": true},
+        "required_metadata": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "rank_admissible_roles": {
+          "type": "array",
+          "const": ["promoted_oph_target", "empirical_acceptance"]
+        },
+        "rank_forbidden_roles": {
+          "type": "array",
+          "const": ["candidate_only", "diagnostic"]
+        },
+        "candidate_only_rows_may_be_acceptance_tests": {"const": true},
+        "registry_identity_fields": {
+          "type": "array",
+          "const": ["registry_id", "registry_version", "registry_sha256"]
+        },
+        "registry_authority": {"const": "code_owned_allowlisted_registry"},
+        "canonical_numeric_values": {
+          "const": "separately_versioned_precommitted_registry_not_candidate_selected"
+        }
+      }
+    },
+    "receipt_aliases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[A-Z0-9_]+_RECEIPT$"
+      }
+    },
+    "instance_binding_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_subject_paths", "catalogue_subject_paths"],
+      "properties": {
+        "candidate_subject_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "catalogue_subject_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/target"}
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt_id",
+        "report_scope",
+        "claim_tier",
+        "report_locator",
+        "machine_rule",
+        "dependencies",
+        "semantic_gate_ids",
+        "catalogue_proof_ids",
+        "required_artifact_classes",
+        "pass_rule",
+        "failure_effect",
+        "failure_scope",
+        "claim_boundary",
+        "implementation_state"
+      ],
+      "properties": {
+        "receipt_id": {"type": "string", "pattern": "^[A-Z0-9_]+_RECEIPT$"},
+        "report_scope": {"enum": ["candidate", "branch", "catalogue"]},
+        "claim_tier": {
+          "enum": [
+            "structural_integrity",
+            "algebraic_certificate",
+            "candidate_physics",
+            "local_selection",
+            "branch_selection",
+            "catalogue_selection",
+            "unrestricted_selection"
+          ]
+        },
+        "report_locator": {"type": "string", "minLength": 1},
+        "machine_rule": {
+          "enum": [
+            "literal_true",
+            "candidate_status_pass",
+            "all_candidate_reports_replayed",
+            "all_branch_domains_covered",
+            "all_branch_verdicts_terminal",
+            "exactly_one_equivalence_class_passes",
+            "selector_failure_independent_of_oph_core"
+          ]
+        },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z0-9_]+_RECEIPT$"}
+        },
+        "semantic_gate_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "catalogue_proof_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "required_artifact_classes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "pass_rule": {"type": "string", "minLength": 1},
+        "failure_effect": {"type": "string", "minLength": 1},
+        "failure_scope": {
+          "enum": [
+            "structural_packet",
+            "critical_string_lift",
+            "massless_sector",
+            "operator_safety",
+            "threshold_low_energy",
+            "physical_vacuum",
+            "local_string_selection",
+            "branch_string_selection",
+            "catalogue_string_selection",
+            "unrestricted_string_selection",
+            "claim_dependency_boundary"
+          ]
+        },
+        "claim_boundary": {"type": "string", "minLength": 1},
+        "implementation_state": {
+          "enum": [
+            "implemented_structural_replay",
+            "implemented_exact_algebra",
+            "implemented_aggregate_requires_semantic_verifiers",
+            "requires_code_owned_semantic_verifier"
+          ]
+        }
+      }
+    }
+  }
+}

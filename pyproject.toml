@@ -25,6 +25,7 @@ viz = ["plotly>=5.0"]
 
 [project.scripts]
 oph-fpe = "oph_fpe.cli:main"
+oph-string-vacuum = "oph_fpe.string_vacuum.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["oph_fpe*", "oph_universe*", "oph_fractional*"]

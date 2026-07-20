@@ -1,0 +1,114 @@
+{
+  "$schema": "../../schemas/string_vacuum_observable_targets_v1.schema.json",
+  "artifact": "oph_string_observable_target_registry",
+  "schema_version": 1,
+  "registry_id": "oph_string_observable_targets",
+  "registry_version": 1,
+  "status": "OPEN_INCOMPLETE",
+  "complete": false,
+  "common_scheme": false,
+  "promotion_allowed": false,
+  "frozen_before_candidate_evaluation": true,
+  "rows": [
+    {
+      "row_id": "oph.alpha2_mz",
+      "comparison_value": "0.03377843630219015",
+      "role": "promoted_oph_target",
+      "rank_eligible": true,
+      "units": "dimensionless",
+      "scheme": null,
+      "scale": "m_Z",
+      "observable_definition_status": "OPEN",
+      "acceptance_interval": null,
+      "covariance_artifact_id": null,
+      "claim_status": "declared_D10_surface_coordinate",
+      "source": {
+        "repository": "reverse-engineering-reality",
+        "path": "code/particles/runs/calibration/d10_ew_forward_transmutation_certificate.json",
+        "json_pointer": "/source_only_reconstruction/alpha2_mz"
+      }
+    },
+    {
+      "row_id": "oph.alphaY_mz",
+      "comparison_value": "0.010131601067241624",
+      "role": "promoted_oph_target",
+      "rank_eligible": true,
+      "units": "dimensionless",
+      "scheme": null,
+      "scale": "m_Z",
+      "observable_definition_status": "OPEN",
+      "acceptance_interval": null,
+      "covariance_artifact_id": null,
+      "claim_status": "declared_D10_surface_coordinate",
+      "source": {
+        "repository": "reverse-engineering-reality",
+        "path": "code/particles/runs/calibration/d10_ew_forward_transmutation_certificate.json",
+        "json_pointer": "/source_only_reconstruction/alphaY_mz"
+      }
+    },
+    {
+      "row_id": "oph.v_gev",
+      "comparison_value": "246.76711732749683",
+      "role": "promoted_oph_target",
+      "rank_eligible": true,
+      "units": "GeV",
+      "scheme": null,
+      "scale": "electroweak_vacuum",
+      "observable_definition_status": "OPEN",
+      "acceptance_interval": null,
+      "covariance_artifact_id": null,
+      "claim_status": "declared_D10_surface_coordinate",
+      "source": {
+        "repository": "reverse-engineering-reality",
+        "path": "code/particles/runs/calibration/d10_ew_forward_transmutation_certificate.json",
+        "json_pointer": "/source_only_reconstruction/v_from_source_transmutation_gev"
+      }
+    },
+    {
+      "row_id": "comparison.mH_pole_gev",
+      "comparison_value": "125.1995304097179",
+      "role": "candidate_only",
+      "rank_eligible": false,
+      "units": "GeV",
+      "scheme": "pole",
+      "scale": "mass_shell",
+      "observable_definition_status": "OPEN",
+      "acceptance_interval": null,
+      "covariance_artifact_id": null,
+      "claim_status": "candidate_only_not_promoted",
+      "source": {
+        "repository": "reverse-engineering-reality",
+        "path": "code/particles/runs/calibration/d11_live_exact_split_pair_theorem.json",
+        "json_pointer": "/exact_split_pair/mH_gev"
+      }
+    },
+    {
+      "row_id": "comparison.mt_pole_gev",
+      "comparison_value": "172.3523553288312",
+      "role": "candidate_only",
+      "rank_eligible": false,
+      "units": "GeV",
+      "scheme": "pole",
+      "scale": "mass_shell",
+      "observable_definition_status": "OPEN",
+      "acceptance_interval": null,
+      "covariance_artifact_id": null,
+      "claim_status": "candidate_only_not_promoted",
+      "source": {
+        "repository": "reverse-engineering-reality",
+        "path": "code/particles/runs/calibration/d11_live_exact_split_pair_theorem.json",
+        "json_pointer": "/exact_split_pair/mt_pole_gev"
+      }
+    }
+  ],
+  "rank_eligible_row_ids": ["oph.alpha2_mz", "oph.alphaY_mz", "oph.v_gev"],
+  "rank_forbidden_row_ids": ["comparison.mH_pole_gev", "comparison.mt_pole_gev"],
+  "compare_only_inputs_not_targets": ["alpha3_mz", "m_Z"],
+  "blockers": [
+    "common_running_scheme_not_frozen",
+    "observable_definition_artifacts_not_frozen",
+    "acceptance_intervals_not_supplied",
+    "joint_covariance_or_acceptance_rule_not_supplied",
+    "target_registry_precommitment_semantic_verifier_not_implemented"
+  ]
+}

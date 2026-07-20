@@ -1039,9 +1039,14 @@ def test_universe_timeline_viewer_writes_payload_html_and_briefs(tmp_path: Path)
     assert selector["receipts"]["string_vacuum_selector_visualization_receipt"] is True
     assert selector["receipts"]["critical_edge_cft_receipt"] is False
     assert selector["receipts"]["global_singleton_string_vacuum_receipt"] is False
-    selected_candidate = next(row for row in selector["encodedCandidateSieve"] if row["selected"])
-    assert selected_candidate["candidate"] == "BD_{n=1,+}^{SU(5),Z2}"
-    assert selected_candidate["scoreNumerator"] == 9
+    assert not any(row["selected"] for row in selector["encodedCandidateSieve"])
+    structural_full_score = next(
+        row for row in selector["encodedCandidateSieve"] if row.get("structuralFullScore")
+    )
+    assert structural_full_score["candidate"] == "BD_{n=1,+}^{SU(5),Z2}"
+    assert structural_full_score["scoreNumerator"] == 9
+    assert structural_full_score["selectionStatus"] == "RETRACTED_BY_MODULI_LOCKING_GATE"
+    assert selector["receipts"]["bd_operator_safe_candidate_selected_in_encoded_audit"] is False
     assert len(selector["criticalEdgeCertificateGates"]) == 9
     assert len(selector["operatorSafetyTable"]) == 10
     assert parsed["visualizationViews"]["effectiveStringTheory"]["receipts"][

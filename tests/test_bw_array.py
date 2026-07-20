@@ -3,6 +3,7 @@ from math import isclose, pi
 
 import json
 import numpy as np
+import pytest
 
 from oph_fpe.experiments import load_config
 from oph_fpe.scale.bw_array import (
@@ -35,6 +36,28 @@ from oph_fpe.scale.bw_array import (
 )
 from oph_fpe.gauge.covariant_overlap import gauge_invariant_edge_residual, transform_local_frames
 from oph_fpe.viz.universe_timeline_viewer import _read_proto_particle_candidates
+
+
+def test_legacy_array_refuses_physical_campaign_before_rng(
+    tmp_path: Path,
+) -> None:
+    config = {
+        "run_id": "must-not-start",
+        "seed": 123,
+        "physical_h3_kms_campaign": {"enabled": True},
+    }
+
+    with pytest.raises(RuntimeError, match="instrument refusal, not a scientific failure"):
+        run_bw_array_config(config, tmp_path)
+
+    refusal_path = (
+        tmp_path / "_physical_h3_kms_preflight" / "must-not-start.json"
+    )
+    refusal = json.loads(refusal_path.read_text(encoding="utf-8"))
+    assert refusal["admission_status"] == "INSTRUMENT_INVALID"
+    assert refusal["scientific_status"] == "NOT_EVALUATED"
+    assert refusal["random_source_state_materialized"] is False
+    assert refusal["numerical_evolution_started"] is False
 
 
 def test_repair_fraction_per_cycle_scales_with_patch_count():

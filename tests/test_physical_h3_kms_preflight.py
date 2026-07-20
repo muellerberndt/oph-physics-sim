@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 from copy import deepcopy
 from pathlib import Path
 
+import oph_fpe.bulk.physical_h3_kms_preflight as preflight_module
+from oph_fpe.bulk.bw_certificate_308 import MGNS1_REQUIRED_FIELDS
 from oph_fpe.bulk.bw_native_preflight import (
     BW_NATIVE_SCHEMA_VERSION,
     BW_PRIMITIVE_FIELD_CONTRACT,
@@ -20,6 +23,12 @@ from oph_fpe.bulk.physical_h3_kms_preflight import (
     REQUIRED_RUNGS,
     physical_h3_kms_preflight_report,
 )
+from oph_fpe.bulk.physical_h3_kms_prerun import (
+    REGISTERED_HISTORICAL_16K_SOURCE_SEED,
+    REGISTERED_HISTORICAL_CAMPAIGN_SHA256,
+    REGISTERED_HISTORICAL_RECEIPT_BYTE_SHA256,
+)
+from oph_fpe.repair import build_repair_replay_envelope
 
 SUPPORT_REGULATOR_CELL_COUNTS = (5_120, 20_480, 81_920, 327_680)
 
@@ -33,6 +42,10 @@ def _primitive_bwrec() -> dict:
     boundary_z = 0.1 / spatial_normal
     boundary_x = math.sqrt(1.0 - boundary_z**2)
     return {
+        "finite_cap_source_role": "geometric_support_flow",
+        "finite_cap_source_artifact_hash": f"sha256:{'1' * 64}",
+        "finite_cap_tower_id": "tower-v1",
+        "finite_cap_tower_hash": f"sha256:{'2' * 64}",
         "cap_normal": [0.1, 0.0, 0.0, spatial_normal],
         "cap_normal_norm_residual": 0.0,
         "cap_orientation": "interior_positive",
@@ -56,15 +69,6 @@ def _primitive_bwrec() -> dict:
         "support_covariance_residual_T": 1.0e-7,
         "support_kernel_residual": 0.0,
         "sector_scope": "PRIME_GEOMETRIC_SUPPORT_VISIBLE",
-        "test_tower_id": "tower-v1",
-        "test_tower_hash": _hash("tower"),
-        "state_embedding_residual": 0.0,
-        "regularizer_eta": 1.0e-5,
-        "physical_reference_trace_distance": 0.0,
-        "fixed_local_modular_bound_T": 1.0e-7,
-        "mixed_gns_cauchy_residual_T": 1.0e-7,
-        "negative_time_residual_T": 1.0e-7,
-        "matrix_element_residual_T": 1.0e-7,
         "flow_identity_residual": 0.0,
         "flow_group_residual_T": 1.0e-7,
         "flow_inverse_residual_T": 1.0e-7,
@@ -76,6 +80,9 @@ def _primitive_bwrec() -> dict:
         "cross_ratio_anchor_condition": 3.0,
         "orientation_witness": True,
         "geometric_parameter_convention": "h_C(z) -> e^{-s} h_C(z)",
+        "kms_comparison_state_id": "finite-state-r128",
+        "kms_comparison_state_hash": f"sha256:{'6' * 64}",
+        "kms_matrix_element_residual_T": 1.0e-7,
         "kms_strip_bound": 10.0,
         "kms_residual_beta_2pi": 1.0e-7,
         "geometric_flow_nontrivial": True,
@@ -87,6 +94,39 @@ def _primitive_bwrec() -> dict:
         "error_envelope_samples": [1.0e-5, 5.0e-7],
         "error_envelope_refinement_levels": [64, 128],
         "error_envelope_refinement_witness": True,
+    }
+
+
+def _primitive_mgns1() -> dict:
+    return {
+        "certificate_kind": "MGNS-1",
+        "source_role": "algebra_state_tower",
+        "source_artifact_hash": f"sha256:{'4' * 64}",
+        "tower_id": "tower-v1",
+        "tower_hash": f"sha256:{'2' * 64}",
+        "fixed_local_algebra_ids": ["A64", "A128"],
+        "fine_to_coarse_embedding_residual_T": 1.0e-7,
+        "state_restriction_residual_T": 1.0e-7,
+        "expectation_idempotence_residual_T": 1.0e-7,
+        "expectation_state_preservation_residual_T": 1.0e-7,
+        "comparison_map_isometry_residual_T": 1.0e-7,
+        "cyclic_vector_residual_T": 1.0e-7,
+        "separating_vector_margin": 0.1,
+        "state_vector_compatibility_residual_T": 1.0e-7,
+        "density_matrix_trace_residual_T": 1.0e-7,
+        "regularizer_eta": 1.0e-5,
+        "regularization_schedule": [1.0e-3, 1.0e-4],
+        "state_ids_by_level": ["finite-state-r64", "finite-state-r128"],
+        "state_fingerprints_by_level": [f"sha256:{'5' * 64}", f"sha256:{'6' * 64}"],
+        "mixed_gns_cauchy_residual_T": 1.0e-7,
+        "negative_time_residual_T": 1.0e-7,
+        "matrix_element_residual_T": 1.0e-7,
+        "modular_identity_residual": 1.0e-7,
+        "modular_group_residual_T": 1.0e-7,
+        "modular_inverse_residual_T": 1.0e-7,
+        "modular_support_covariance_residual_T": 1.0e-7,
+        "cap_family_uniformity_bound_T": 1.0e-7,
+        "cofinal_cauchy_modulus_T": 1.0e-7,
     }
 
 
@@ -107,7 +147,73 @@ def _native_bw_payload() -> dict:
         "source_kind": "physical_source_generation",
         "antecedent_hash": antecedent_hash,
         "clauses": clauses,
+        "mgns1": {
+            "antecedent_hash": antecedent_hash,
+            "primitive_artifact_hash": canonical_payload_hash(_primitive_mgns1()),
+            "primitive_fields": _primitive_mgns1(),
+        },
     }
+
+
+def test_native_bw_fixture_tracks_exact_finite_cap_and_mgns1_contract() -> None:
+    finite_cap_fields = {
+        field_name
+        for field_names in BW_PRIMITIVE_FIELD_CONTRACT.values()
+        for field_name in field_names
+    }
+
+    assert set(_primitive_bwrec()) == finite_cap_fields
+    assert set(_primitive_mgns1()) == set(MGNS1_REQUIRED_FIELDS)
+
+
+def _repair_replay_envelope() -> dict:
+    zero = {"terms": [], "constant": 0, "transform": "identity"}
+    components = {
+        name: dict(zero)
+        for name in ("record", "sector", "holonomy", "local_constraint")
+    }
+    components["overlap"] = {
+        "terms": [{"register": "x", "coefficient": 1}],
+        "constant": 0,
+        "transform": "absolute",
+    }
+    return build_repair_replay_envelope(
+        initial_state={"x": 2},
+        initial_versions={"x": 0},
+        mismatch_evaluator={
+            "kind": "exact_affine_ledger_v1",
+            "components": components,
+            "physical_auxiliary": {},
+        },
+        proposals=[
+            {
+                "proposal_id": "preflight-repair",
+                "transition_kind": "STRICT_REPAIR",
+                "proposal_class": "EXACT_SPLICE",
+                "collar": {
+                    "collar_id": "preflight-collar",
+                    "visible_read_set": ["x"],
+                    "writable_registers": ["x"],
+                    "protected_boundary": [],
+                    "sector_registers": [],
+                    "record_registers": [],
+                    "checkpoint_registers": [],
+                    "interior_registers": ["x"],
+                    "carrier_ids": [],
+                    "seam_ids": [],
+                    "forbidden_target_fields": [],
+                },
+                "declared_read_set": ["x"],
+                "recovery": {
+                    "kind": "literal_updates_v1",
+                    "updates": {"x": 1},
+                },
+                "inverse_updates": {},
+                "source_parameters": {},
+                "parent_event_ids": [],
+            }
+        ],
+    )
 
 
 def _conforming_bundle() -> dict:
@@ -216,12 +322,21 @@ def _conforming_bundle() -> dict:
             "archived_16k_failure_preserved": True,
             "new_instrument_is_distinct_family": True,
             "archived_outcomes_used_for_threshold_selection": False,
+            "historical_receipt_byte_sha256": (
+                REGISTERED_HISTORICAL_RECEIPT_BYTE_SHA256
+            ),
+            "historical_campaign_sha256": REGISTERED_HISTORICAL_CAMPAIGN_SHA256,
+            "historical_16k_source_seed": REGISTERED_HISTORICAL_16K_SOURCE_SEED,
+            "historical_16k_rung": 16_384,
+            "historical_16k_joint_independent_receipt": False,
+            "historical_stable_branch_failure_established": False,
         },
         "retirement_rule": {
             "decisive_rungs": [16_384, 65_536, 262_144],
             "same_predeclared_failure_mode_required": True,
             "all_cells_powered_and_complete_required": True,
             "frozen_before_first_run": True,
+            "failure_mode_derivation": "verified_predicate_set_sha256_v1",
         },
     }
     family_hash = canonical_payload_hash(family_contract)
@@ -419,12 +534,14 @@ def _conforming_bundle() -> dict:
                     "frozen_h3_win_margin": 0.05,
                     "paired_uncertainty_upper_bound": 0.02,
                     "thresholds_frozen_before_physical_campaign": True,
+                    "physical_threshold_calibration_receipt": True,
                     "calibration_artifact_hash": _hash(
                         "paired-geometry-calibration"
                     ),
                 },
                 "curvature_leverage": {
                     "calibration_source": "independent_synthetic_power_suite",
+                    "physical_threshold_calibration_receipt": True,
                     "frozen_before_physical_campaign": True,
                     "calibration_hash": _hash("curvature-power-calibration"),
                     "registered_analysis_hash": _hash("curvature-analysis"),
@@ -552,12 +669,234 @@ def _conforming_bundle() -> dict:
     }
 
 
+def _replay_bound_not_evaluated_ledger() -> dict:
+    stage_ids = (
+        "P1_nested_refinement_and_expectations",
+        "P2_prime_geometric_cap_state",
+        "P3_independent_geometric_parameter",
+        "P4_native_bw01_bw08",
+        "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
+        "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+        "P8_frozen_multiseed_four_rung_campaign",
+    )
+    ledger = {
+        stage_id: {
+            "measurement_status": CellStatus.NOT_EVALUATED.value,
+            "physical_gate_eligible": False,
+            "not_evaluated_reasons": [f"{stage_id}_independent_producer_missing"],
+            "scientific_failures": [],
+            "structural_receipt": {
+                "scope": "artifact_integrity_only",
+                "status": "COMPLETE",
+                "artifact_hash": _hash(f"structure:{stage_id}"),
+                "physical_claim": False,
+            },
+            "instrument_receipt": {
+                "scope": "independent_physical_producer",
+                "status": "MISSING_REQUIRED_PRODUCER",
+                "physical_claim": False,
+            },
+            "sensitivity_receipt": {
+                "scope": "diagnostic_sensitivity_only",
+                "status": "COMPLETE",
+                "artifact_hash": _hash(f"sensitivity:{stage_id}"),
+                "physical_gate_eligible": False,
+                "diagnostic_findings": [f"{stage_id}_diagnostic_predicate_false"],
+            },
+        }
+        for stage_id in stage_ids
+    }
+    ledger["P5_frozen_candidate_interventions"] = {
+        "measurement_status": CellStatus.NOT_EVALUATED.value
+    }
+    return ledger
+
+
+def _trusted_epistemic_admission(ledger: dict) -> dict:
+    return {
+        "gate_status": "PASS",
+        "PHYSICAL_ARTIFACT_REPLAY_ADMISSION_RECEIPT": True,
+        "blockers": [],
+        "replay_bound_postrun_stage_epistemics_receipt": True,
+        "replay_bound_postrun_stage_epistemics": ledger,
+        "registered_source_capture_replay_bound": True,
+        "preflight_export_hash_rows": {
+            "source_observer": {"exact": True},
+        },
+    }
+
+
+def test_replay_bound_epistemics_quarantine_diagnostics_from_science(
+    monkeypatch,
+) -> None:
+    ledger = _replay_bound_not_evaluated_ledger()
+    monkeypatch.setattr(
+        preflight_module,
+        "_physical_artifact_admission",
+        lambda config, provenance, evidence: _trusted_epistemic_admission(ledger),
+    )
+
+    report = physical_h3_kms_preflight_report(_conforming_bundle())
+
+    for stage_id in preflight_module._REPLAY_BOUND_NOT_EVALUATED_STAGES:
+        stage = report["stages"][stage_id]
+        assert stage["passed"] is False
+        assert stage["gate_status"] == "NOT_EVALUATED"
+        assert stage["scientific_status"] == CellStatus.NOT_EVALUATED.value
+        assert stage["scientific_failure_count"] == 0
+        assert stage["hard_blockers"] == []
+        assert stage["evidence"]["scientific_failures"] == []
+        assert stage["evidence"]["diagnostic_findings"]
+        assert stage["evidence"]["epistemic_status_source"] == (
+            "content_addressed_exact_postrun_replay"
+        )
+    assert report["scientific_failures"] == []
+    campaign_stage = report["stages"]["P8_frozen_multiseed_four_rung_campaign"]
+    assert campaign_stage["gate_status"] == "NOT_EVALUATED"
+    assert campaign_stage["passed"] is False
+    assert report["campaign_status"] == CellStatus.INCOMPLETE.value
+    assert report["physical_promotion_allowed"] is False
+    assert report["retirement_counting_allowed"] is False
+
+
+def test_replay_bound_source_gap_keeps_p0_structural_diagnostics_visible(
+    monkeypatch,
+) -> None:
+    ledger = _replay_bound_not_evaluated_ledger()
+    monkeypatch.setattr(
+        preflight_module,
+        "_physical_artifact_admission",
+        lambda config, provenance, evidence: _trusted_epistemic_admission(ledger),
+    )
+    bundle = _conforming_bundle()
+    source = bundle["reports"]["source_observer"]
+    source.update(
+        {
+            "INDEPENDENT_SUPPORT_REGULATOR_RECEIPT": True,
+            "CARRIER_REFINEMENT_NATURALITY_RECEIPT": False,
+            "carrier_refinement_naturality_status": "NOT_EVALUATED",
+            "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
+            "physical_federation_status": "NOT_EVALUATED",
+            "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
+            "carrier_to_support_realization_status": "NOT_EVALUATED",
+        }
+    )
+
+    report = physical_h3_kms_preflight_report(bundle)
+    p0 = report["stages"]["P0_source_dynamics_repair_record_observer"]
+
+    assert p0["gate_status"] == "NOT_EVALUATED"
+    assert p0["scientific_status"] == CellStatus.NOT_EVALUATED.value
+    assert p0["scientific_failure_count"] == 0
+    assert p0["hard_blockers"] == []
+    assert p0["evidence"]["dependency_status"] == {
+        "SOURCE_PATCH_ARCHITECTURE": True,
+        "LOCAL_REPAIR_DYNAMICS": True,
+        "OBSERVER_SELF_READING_RECORD_LOOP": True,
+        "SOURCE_GENERATOR_TARGET_FREE": True,
+    }
+    assert p0["evidence"]["structural_receipt"]["status"] == "COMPLETE"
+    assert set(p0["evidence"]["not_evaluated_reasons"]) == {
+        "physical_echosahedral_federation_realization_not_established",
+        "carrier_to_support_chart_realization_not_established",
+        "carrier_refinement_naturality_not_established",
+    }
+    assert report["scientific_failures"] == []
+    assert report["retirement_counting_allowed"] is False
+
+
+def test_stage_epistemics_loader_requires_manifest_bound_postrun_bytes(
+    tmp_path: Path,
+) -> None:
+    ledger = _replay_bound_not_evaluated_ledger()
+    postrun_bytes = (
+        json.dumps(
+            {"stage_epistemics": ledger},
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+        + b"\n"
+    )
+    artifact = tmp_path / "artifacts" / "postrun_report.json"
+    artifact.parent.mkdir()
+    artifact.write_bytes(postrun_bytes)
+    manifest = {
+        "artifacts": {
+            "postrun_report": {
+                "path": "artifacts/postrun_report.json",
+                "byte_sha256": "sha256:" + hashlib.sha256(postrun_bytes).hexdigest(),
+                "byte_count": len(postrun_bytes),
+            }
+        }
+    }
+    manifest_bytes = json.dumps(
+        manifest, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    manifest_path = tmp_path / "replay_manifest.json"
+    manifest_path.write_bytes(manifest_bytes)
+    replay_result = {
+        "manifest_byte_sha256": "sha256:"
+        + hashlib.sha256(manifest_bytes).hexdigest(),
+        "REPLAY_MANIFEST_VERIFICATION_RECEIPT": True,
+        "PRE_SOURCE_FREEZE_REPLAY_RECEIPT": True,
+        "HISTORICAL_16K_ARCHIVE_BYTE_REPLAY_RECEIPT": True,
+        "POSTRUN_REPORT_EXACT_REPLAY_RECEIPT": True,
+        "SOURCE_CAPTURE_REPLAY_RECEIPT": True,
+        "SINGLE_BUNDLE_COMMITMENT_RECEIPT": True,
+        "NUMERICAL_RUNTIME_REPLAY_RECEIPT": True,
+    }
+
+    loaded, bound = preflight_module._load_replay_bound_stage_epistemics(
+        manifest_path, replay_result
+    )
+    assert bound is True
+    assert loaded == ledger
+
+    artifact.write_bytes(postrun_bytes + b" ")
+    loaded, bound = preflight_module._load_replay_bound_stage_epistemics(
+        manifest_path, replay_result
+    )
+    assert bound is False
+    assert loaded == {}
+
+
+def test_caller_authored_not_evaluated_ledger_is_not_trusted() -> None:
+    bundle = _conforming_bundle()
+    bundle["reports"]["stage_epistemics"] = _replay_bound_not_evaluated_ledger()
+    bundle["reports"]["geometry_controls"]["measurement_status"] = (
+        CellStatus.NOT_EVALUATED.value
+    )
+    bundle["reports"]["semantic_event"]["measurement_status"] = (
+        CellStatus.NOT_EVALUATED.value
+    )
+
+    report = physical_h3_kms_preflight_report(bundle)
+
+    assert report["artifact_replay_admission"][
+        "replay_bound_postrun_stage_epistemics_receipt"
+    ] is False
+    assert report["stages"]["P1_nested_refinement_and_expectations"][
+        "gate_status"
+    ] == "PASS"
+    assert report["stages"]["P4_native_bw01_bw08"]["gate_status"] == "PASS"
+    assert report["stages"][
+        "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage"
+    ]["gate_status"] == "PASS"
+    assert report["stages"][
+        "P7_semantic_event_e1_e4_and_frame_fiber_separation"
+    ]["gate_status"] == "PASS"
+    assert report["physical_promotion_allowed"] is False
+    assert report["retirement_counting_allowed"] is False
+
+
 def test_conforming_synthetic_bundle_is_diagnostic_only_and_cannot_self_admit() -> None:
     report = physical_h3_kms_preflight_report(_conforming_bundle())
 
     assert report[PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT] is False
     assert report["schema"] == "oph_physical_h3_kms_preflight_v3"
     assert report["verdict"] == "NO_GO"
+    assert report["gate_status"] == "BLOCKED"
     assert report["campaign_status"] == CellStatus.INCOMPLETE.value
     assert report["physical_promotion_allowed"] is False
     assert report["retirement_counting_allowed"] is False
@@ -565,11 +904,15 @@ def test_conforming_synthetic_bundle_is_diagnostic_only_and_cannot_self_admit() 
     assert report["artifact_replay_admission"][
         "PHYSICAL_ARTIFACT_REPLAY_ADMISSION_RECEIPT"
     ] is False
+    assert report["artifact_replay_admission"]["gate_status"] == "NOT_EVALUATED"
     assert any(
         blocker.startswith("artifact_admission:") for blocker in report["blockers"]
     )
     assert report["hard_blockers"] == []
     assert all(stage["passed"] for stage in report["stages"].values())
+    assert all(
+        stage["gate_status"] == "PASS" for stage in report["stages"].values()
+    )
     assert report["stages"]["P4_native_bw01_bw08"]["evidence"][
         "native_payload_receipt"
     ] is True
@@ -586,6 +929,25 @@ def test_conforming_synthetic_bundle_is_diagnostic_only_and_cannot_self_admit() 
     ]["EVENT_MANIFOLD_3P1D_RECEIPT"]
 
 
+def test_caller_authored_replay_booleans_cannot_self_admit() -> None:
+    bundle = deepcopy(_conforming_bundle())
+    bundle["reports"]["artifact_replay"] = {
+        "REPLAY_MANIFEST_VERIFICATION_RECEIPT": True,
+        "SOURCE_CAPTURE_REPLAY_RECEIPT": True,
+        "PER_CELL_CONTROL_ARTIFACTS_REPLAY_RECEIPT": True,
+        "PER_CELL_SCIENTIFIC_PREDICATES_RECOMPUTED_RECEIPT": True,
+        "SINGLE_BUNDLE_COMMITMENT_RECEIPT": True,
+    }
+
+    report = physical_h3_kms_preflight_report(bundle)
+    admission = report["artifact_replay_admission"]
+    assert admission["PHYSICAL_ARTIFACT_REPLAY_ADMISSION_RECEIPT"] is False
+    assert admission["replay_manifest_path"] is None
+    assert admission["registered_source_capture_replay_bound"] is False
+    assert "registered_replay_manifest_not_verified" in admission["blockers"]
+    assert "stored_replay_report_is_not_exact_fresh_replay" in admission["blockers"]
+
+
 def test_candidate_specific_response_matrix_fails_closed() -> None:
     bundle = deepcopy(_conforming_bundle())
     candidate = bundle["reports"]["candidate_interventions"]["candidates"]["4pi"]
@@ -595,16 +957,18 @@ def test_candidate_specific_response_matrix_fails_closed() -> None:
 
     stage = report["stages"]["P5_frozen_candidate_interventions"]
     assert report[PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT] is False
+    assert report["gate_status"] == "INSTRUMENT_INVALID"
     assert report["campaign_status"] == CellStatus.INSTRUMENT_INVALID.value
     assert report["physical_promotion_allowed"] is False
     assert report["retirement_counting_allowed"] is False
+    assert stage["gate_status"] == "BLOCKED"
     assert stage["passed"] is False
     assert "candidate_raw_response_hashes_differ" in stage["blockers"]
 
 
-def test_native_bw_requires_exact_bw01_bw08_and_rejects_caller_pass_flag() -> None:
+def test_native_bw_requires_exact_finite_cap_mgns_pair_and_rejects_caller_pass_flag() -> None:
     bundle = deepcopy(_conforming_bundle())
-    bundle["reports"]["native_bw"]["clauses"]["BW08"]["passed"] = True
+    bundle["reports"]["native_bw"]["clauses"]["C6"]["passed"] = True
 
     report = physical_h3_kms_preflight_report(bundle)
 
@@ -617,18 +981,18 @@ def test_native_bw_requires_exact_bw01_bw08_and_rejects_caller_pass_flag() -> No
 
 def test_native_bw_clause_deletion_fails_the_aggregate() -> None:
     bundle = deepcopy(_conforming_bundle())
-    del bundle["reports"]["native_bw"]["clauses"]["BW06"]
+    del bundle["reports"]["native_bw"]["clauses"]["C4"]
 
     report = physical_h3_kms_preflight_report(bundle)
 
     stage = report["stages"]["P4_native_bw01_bw08"]
     assert stage["passed"] is False
-    assert any("exactly_bw01_through_bw08" in value for value in stage["blockers"])
+    assert any("exactly_c1_through_c6" in value for value in stage["blockers"])
 
 
 def test_native_bw_recomputed_negative_is_valid_fail_not_invalid_instrument() -> None:
     bundle = deepcopy(_conforming_bundle())
-    row = bundle["reports"]["native_bw"]["clauses"]["BW07"]
+    row = bundle["reports"]["native_bw"]["clauses"]["C5"]
     row["primitive_fields"]["kms_residual_beta_2pi"] = 100.0
     row["primitive_artifact_hash"] = canonical_payload_hash(row["primitive_fields"])
 
@@ -642,6 +1006,37 @@ def test_native_bw_recomputed_negative_is_valid_fail_not_invalid_instrument() ->
     assert report[PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT] is False
     assert report["scientific_outcome"] == CellStatus.INCOMPLETE.value
     assert report["physical_promotion_allowed"] is False
+
+
+def test_native_bw_repeated_rho_diagnostic_cannot_satisfy_mgns1() -> None:
+    bundle = deepcopy(_conforming_bundle())
+    row = bundle["reports"]["native_bw"]["mgns1"]
+    repeated = f"sha256:{'5' * 64}"
+    row["primitive_fields"]["state_fingerprints_by_level"] = [repeated, repeated]
+    row["primitive_artifact_hash"] = canonical_payload_hash(row["primitive_fields"])
+
+    report = physical_h3_kms_preflight_report(bundle)
+
+    stage = report["stages"]["P4_native_bw01_bw08"]
+    assert stage["evidence"]["finite_cap_bw_certificate_receipt"] is True
+    assert stage["evidence"]["mgns1_certificate_receipt"] is False
+    assert stage["evidence"]["support_visible_bw_theorem_applicable"] is False
+    assert stage["evidence"]["scientific_outcome"] == CellStatus.VALID_FAIL.value
+
+
+def test_native_bw_pair_must_bind_both_inputs_to_one_tower() -> None:
+    bundle = deepcopy(_conforming_bundle())
+    row = bundle["reports"]["native_bw"]["mgns1"]
+    row["primitive_fields"]["tower_id"] = "tower-v2"
+    row["primitive_artifact_hash"] = canonical_payload_hash(row["primitive_fields"])
+
+    report = physical_h3_kms_preflight_report(bundle)
+
+    stage = report["stages"]["P4_native_bw01_bw08"]
+    assert stage["evidence"]["finite_cap_bw_certificate_receipt"] is True
+    assert stage["evidence"]["mgns1_certificate_receipt"] is True
+    assert stage["evidence"]["same_tower_inputs_receipt"] is False
+    assert stage["evidence"]["support_visible_bw_theorem_applicable"] is False
 
 
 def test_complete_wrong_clock_result_is_valid_fail_not_invalid_instrument() -> None:
@@ -817,12 +1212,26 @@ def test_current_16k_config_is_rejected_before_an_important_campaign() -> None:
     report = physical_h3_kms_preflight_report(config)
 
     assert report[PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT] is False
+    assert report["gate_status"] == "NOT_EVALUATED"
+    assert all(
+        stage["gate_status"] == "NOT_EVALUATED"
+        for stage in report["stages"].values()
+    )
+    assert all(
+        stage["scientific_status"] == CellStatus.NOT_EVALUATED.value
+        for stage in report["stages"].values()
+    )
+    assert report["scientific_outcome"] == CellStatus.INCOMPLETE.value
+    assert report["realized_report_names"] == []
     source = report["stages"]["P0_source_dynamics_repair_record_observer"]
     refinement = report["stages"]["P1_nested_refinement_and_expectations"]
     state = report["stages"]["P2_prime_geometric_cap_state"]
     native_bw = report["stages"]["P4_native_bw01_bw08"]
     interventions = report["stages"]["P5_frozen_candidate_interventions"]
     campaign = report["stages"]["P8_frozen_multiseed_four_rung_campaign"]
+    semantic = report["stages"][
+        "P7_semantic_event_e1_e4_and_frame_fiber_separation"
+    ]
     assert "SOURCE_PATCH_ARCHITECTURE_dependency_not_discharged" in source["blockers"]
     assert "support_regulator_config_is_missing_or_not_icosahedral" in refinement[
         "blockers"
@@ -830,9 +1239,9 @@ def test_current_16k_config_is_rejected_before_an_important_campaign() -> None:
     assert "configured_state_mode_is_record_history_or_declared_surrogate" in state["blockers"]
     assert native_bw["passed"] is False
     assert "source_intervention_not_proven_target_free" in interventions["blockers"]
-    assert "at_least_three_frozen_independent_source_seeds_required" in campaign["blockers"]
-    assert "frozen_rungs_must_be_4k_16k_64k_256k" in campaign["blockers"]
-    assert "bw_native_payload_missing" in report["hard_blockers"]
+    assert campaign["blockers"] == ["frozen_campaign_manifest_missing"]
+    assert not any(semantic["evidence"]["event_clause_status"].values())
+    assert report["hard_blockers"] == []
     assert report["physical_promotion_allowed"] is False
     assert report["retirement_counting_allowed"] is False
 
@@ -882,3 +1291,27 @@ def test_source_federation_and_support_regulator_must_be_separate_configs() -> N
     assert "support_regulator_config_is_missing_or_not_icosahedral" in refinement[
         "blockers"
     ]
+
+
+def test_preflight_admits_only_primitive_replayed_repair_artifacts() -> None:
+    envelope_bundle = deepcopy(_conforming_bundle())
+    envelope = _repair_replay_envelope()
+    envelope_bundle["reports"]["repair_receipt"] = envelope
+
+    replayed = physical_h3_kms_preflight_report(envelope_bundle)
+    assert replayed["artifact_replay_admission"][
+        "registered_transaction_replay_bound"
+    ] is True
+    assert replayed[PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT] is False
+
+    raw_receipt_bundle = deepcopy(_conforming_bundle())
+    raw_receipt_bundle["reports"]["repair_receipt"] = envelope[
+        "expected_receipt"
+    ]
+    rejected = physical_h3_kms_preflight_report(raw_receipt_bundle)
+    assert rejected["artifact_replay_admission"][
+        "registered_transaction_replay_bound"
+    ] is False
+    assert rejected["artifact_replay_admission"]["registered_replay_summaries"][
+        "transaction"
+    ]["REPAIR_REPLAY_ENVELOPE_INTEGRITY_RECEIPT"] is False

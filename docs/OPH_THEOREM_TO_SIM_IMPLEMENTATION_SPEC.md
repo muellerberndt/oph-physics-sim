@@ -246,11 +246,17 @@ The T0/T1/T2 no-go cases are mandatory negative controls and never promotion inp
 
 The paper-route Lorentz/H3 claim is layered:
 
-- `BWRec_r`: the issue #308 finite cap-normal BW receipt object
-  `(CapNormal_r, Frame_r, Order_r, Support_r, CrossRatio_r, Matrix_r, KMS_r, Error_r)`.
-  It is audited by `issue-308-bw-certificate` and emits exactly one of `BW0`, `BW1`, `BW2`, or
-  `BW3`. The BW3 tier is recomputed from primitive fields and a passing refinement envelope; it
-  must not trust caller-provided `bw_passed` or `tier` booleans.
+- `FiniteCapBWRec_r`: the issue #308 six-clause geometric/support-flow/
+  normalization object. It emits `FC0` through `FC3` after primitive-field and
+  refinement-envelope recomputation.
+- `MGNS1Rec_r`: the independent modular algebra-state object. It carries the
+  common comparison maps, compatible state/vector data, compact-time modular
+  residuals, inverse/group-law control, modular support covariance,
+  cap-family uniformity, and cofinal Cauchy modulus. Repeated copies of one
+  state across levels do not satisfy this object.
+- `SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT`: true exactly when `FC3` and
+  complete `MGNS-1` pass with distinct source artifacts and matching tower IDs
+  and hashes. Caller-provided pass or tier booleans are ignored.
 - `CAP_NORMAL_H3_CHART_RECEIPT`: the issue #309 cap-normal H3 chart receipt. It recomputes
   `q(Omega)=(1,Omega)`, analytic or globally certified round-cap normals
   `n_C=(cot(alpha),csc(alpha)c)`, the signed boundary incidence rule,
@@ -277,8 +283,9 @@ The paper-route Lorentz/H3 claim is layered:
 - `H1`: observer-local readouts experience the H3 chart through visible records and modular time.
 - `H1b`: persistent observer objects populate the H3 chart under controls.
 
-Only the conjunction of the relevant `L` receipts plus a BW3 issue #308 certificate should be
-presented as a theorem-aligned finite cap-net BW receipt. Only a passing
+Only the conjunction of the relevant `L` receipts plus the issue #308
+same-tower finite-cap/`MGNS-1` pair should be presented as a theorem-aligned
+finite cap-net BW receipt. Only a passing
 `CAP_NORMAL_H3_CHART_RECEIPT` should be presented as the issue #309 chart theorem receipt. Only a
 passing `MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT` should be presented as the issue #310
 record-populated observer-facing H3 localization receipt. `H0/H1` alone are useful paper-route

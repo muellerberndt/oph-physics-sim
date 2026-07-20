@@ -77,11 +77,15 @@ def block_structure_receipt(
     roots = np.polynomial.polynomial.polyroots(determinant)
     photon_factor = bool(block_kind == "neutral" and abs(determinant[0]) <= tolerance)
     identities = bool(
-        ward_identity_verified
-        and slavnov_taylor_verified
-        and nielsen_identity_verified
+        ward_identity_verified is True
+        and slavnov_taylor_verified is True
+        and nielsen_identity_verified is True
     )
-    promoted = bool(source_kernel_verified and identities and (block_kind != "neutral" or photon_factor))
+    declared_candidate = bool(
+        source_kernel_verified is True
+        and identities
+        and (block_kind != "neutral" or photon_factor)
+    )
     blockers = []
     if not source_kernel_verified:
         blockers.append("source_two_point_kernel_not_verified")
@@ -89,6 +93,13 @@ def block_structure_receipt(
         blockers.append("brst_ward_nielsen_identity_packet_incomplete")
     if block_kind == "neutral" and not photon_factor:
         blockers.append("ward_protected_photon_factor_not_verified")
+    blockers.extend(
+        [
+            "matrix_polynomial_backend_is_wzh0_synthetic_control",
+            "caller_identity_flags_are_nonpromoting",
+            "artifact_resolving_brst_checker_not_implemented",
+        ]
+    )
     return {
         "schema": "oph_wzh_brst_block_receipt_v1",
         "block_id": block_id,
@@ -100,11 +111,17 @@ def block_structure_receipt(
         "ward_photon_factor_at_s_zero": photon_factor,
         "source_kernel_verified": bool(source_kernel_verified),
         "identity_packet_verified": identities,
-        "brst_block_receipt": promoted,
-        "promotion_allowed": promoted,
-        "blockers": blockers,
+        "declared_candidate_conditions_met": declared_candidate,
+        "matrix_polynomial_control_receipt": bool(
+            coefficients.size and np.all(np.isfinite(coefficients))
+        ),
+        "brst_block_receipt": False,
+        "promotion_allowed": False,
+        "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "A matrix polynomial is a physical inverse two-point block only after its source, "
-            "BRST/Ward/Slavnov-Taylor, Nielsen, sheet, residue, and refinement receipts pass."
+            "This matrix-polynomial path is an unconditionally nonpromoting WZH0 "
+            "control. Caller declarations cannot certify a physical inverse two-point "
+            "block; production requires resolved analytic kernels and an independent "
+            "BRST/Ward/Slavnov-Taylor/Nielsen checker."
         ),
     }

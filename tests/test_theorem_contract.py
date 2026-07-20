@@ -21,7 +21,7 @@ from oph_fpe.scale.bw_array import (
     _computed_array_replay_consensus_certificate,
     _write_finite_consensus_source_artifact,
 )
-from tests.test_bw_certificate_308 import _primitive_bwrec
+from tests.test_bw_certificate_308 import _primitive_bwrec, _primitive_mgns1
 from tests.test_cap_normal_h3_chart_309 import _primitive_chart
 from tests.test_modular_response_h3_localization_310 import _payload as _localization_payload
 
@@ -45,7 +45,7 @@ def _write_all_einstein_bridge_sidecars(run: Path) -> None:
 def _write_computed_bridge_reports(run: Path, *, include_localization: bool = True) -> None:
     _write_json(
         run / "bw_rec_308.json",
-        {"BWRec_r": _primitive_bwrec()},
+        {"BWRec_r": _primitive_bwrec(), "MGNS1Rec_r": _primitive_mgns1()},
     )
     _write_json(
         run / "cap_normal_h3_chart_source.json",

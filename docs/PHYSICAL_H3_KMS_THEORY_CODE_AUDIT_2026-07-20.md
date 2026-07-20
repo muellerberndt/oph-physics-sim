@@ -54,25 +54,31 @@ modular automorphism. A matrix built by placing classical records into rows and
 columns does not become the paper's cap algebra merely because it is
 non-diagonal.
 
-### 2. The finite BW certificate is an eight-clause tower object
+### 2. BW consumes two independent certificates on one tower
 
-The complete `FiniteCapBWCertificate` is enumerated at compact-paper lines
-`3793-3821`. It requires:
+`FiniteCapBWCertificate` contains six geometric, support-flow, and
+normalization clauses:
 
 - cap and point meshes, nondegenerate radii, incidence, unit normals, and
   refinement compatibility;
 - ordered, separated, oriented BW frame points;
 - cap algebras with isotony, support-order separation, and a faithful
   support-action quotient;
-- an exact modular-compatible reference tower and compact-time regularized
-  bound;
-- mixed-GNS Cauchy and support-covariance residuals, including both signs of
-  time;
 - identity, inverse, group law, equicontinuity, held-out complex cross-ratios,
   and an orientation witness;
-- an independently parameterized geometric KMS strip residual at `2*pi`;
+- an independently parameterized geometric KMS strip residual at `2*pi`,
+  evaluated against an explicitly identified finite state;
 - nontriviality and either a wrong-beta gap or a noncentral generator-distance
   bound.
+
+The complete modular algebra-state representation is a different input,
+`MGNS-1`. It carries the reference tower, embeddings, state restrictions,
+state-preserving expectations, common comparison maps, compatible state and
+vector data, regularization, inverse-time and group-law control, modular
+support covariance, cap-family uniformity, and a cofinal Cauchy modulus. The
+two inputs must have independent source artifacts and identical tower IDs and
+hashes. Repeating one density matrix across support levels is a diagnostic and
+does not satisfy `MGNS-1`.
 
 The same definition explicitly states that bare finite OPH consensus does not
 imply this certificate (`3822-3826`). The consensus paper agrees: bare consensus
@@ -80,12 +86,10 @@ does not supply a null cone, round-cap support chart, conformal transport, time
 orientation, or H3 observer-frame space
 (`paper/reality_as_consensus_protocol.tex:237-245`).
 
-The simulator's issue-308 module is a useful verifier: it recomputes C1-C8 and
-ignores caller pass flags
-(`oph_fpe/bulk/bw_certificate_308.py:34-108`). However, the main simulation
-pipeline does not construct a simulator-native `BWRec_r`; the verifier is
-normally exercised on supplied payloads or test fixtures. A verifier without a
-producer does not instantiate the branch.
+The issue-308 module recomputes finite C1-C6 and `MGNS-1` independently. It
+emits theorem applicability only when both pass on the same tower. Caller pass
+flags are ignored. The physical pipeline has no complete source-native
+`MGNS-1` producer, so its repeated-state M4 diagnostic cannot promote BW.
 
 ### 3. `2*pi` must be selected against an independent geometric clock
 
@@ -328,7 +332,7 @@ The resulting bridge audit is:
 | Operational observer -> stable record/event tower | The screen paper distinguishes abstract record, physical support, and carrier (`109-129`) and gives conditional checkpoint continuation, not automatic record identity across every implementation. | Conditional only; implementation equivalence and continuation need explicit maps and error bounds (`152-168`). | Observer rows are treated as a record algebra without carrier/support equivalence, predictive control, or checkpoint-transport evidence. | Missing typed carrier-to-record and refinement-lineage receipts. |
 | Consensus/records -> prime geometric algebra | The compact paper defines the prime geometric subnet by excluding record, pointer, repair, and auxiliary layers (`3680-3714`). | A quotient/producer is attempted, but its theorem invokes a nonexistent mixed-GNS Cauchy clause (`4564-4588` versus MaxEnt axiom `971-998`). Records do not themselves become the geometric algebra. | Record/repair features feed the MaxEnt state and Koopman generator. | Type error and missing producer; observer records and geometric cap algebra must fork and meet only through an explicit response channel. |
 | Prime geometric algebra -> multiscale modular object | Faithful cap states, embeddings, state-preserving conditional expectations, mixed-GNS convergence, and compatible nested states are required (`4249-4272`). | Conditional; the cited producer premise is incomplete. | The new icosahedral module supplies exact nested mesh/cell lineage and a state-preserving **commutative area scaffold**, but production still uses Fibonacci points and no finite detail algebra/state tower exists. | Geometric prerequisite partially implemented; paper-level modular tower not instantiated. A nominal rung label is not a certificate. |
-| Modular object -> BW normalization and `2*pi` | An independently derived geometric parameter `s` and all C1-C8 clauses are required (`3785-3826`); KMS alone cannot choose `2*pi` (`3846-3849`). | Conditional finite certificate only. The cross-ratio construction may already insert `2*pi` (`4452-4482`). | The history-Koopman scale fit competes against labels, declared replay supplies a parallel branch, and candidate scale changes intervention generation. | Current clock failure is real for that surrogate, but the surrogate is not a faithful test of the theorem object. |
+| Modular object -> BW normalization and `2*pi` | The theorem consumes finite C1-C6 plus independent complete same-tower `MGNS-1`; KMS alone cannot choose `2*pi`. | Conditional on both source-bound inputs. | The history-Koopman scale fit and repeated-state M4 construction are diagnostics, not `MGNS-1`. | The surrogate result does not test the paired theorem object. |
 | BW -> Lorentz/H3 frame kinematics | Cap-normal rigidity and Lorentz algebra yield H3 as the future-unit-timelike **frame fiber** (`6832-6852`, `7067-7087`). | Conditional on the BW/rigidity/refinement receipts. | H3 is implemented and promoted as a spatial/bulk chart. | The chart may be a frame-kinematics diagnostic; it is not an event base or spatial slice. |
 | Frame fiber + records -> localized record germs | The H3 localization theorem requires point-local factorization, positive observability, fixed calibration, finite-net coverage, and residual minimization (`5644-5691`). | Conditional; it explicitly does not derive point locality, mixture resolution, neutral bulk, stress, or Einstein entry. | H3 response-fit/object-population flags are accepted with post-hoc response coordinates and incomplete controls. | Missing localization premises and equal-footing alternative-geometry tests. |
 | Localized records -> semantic spacetime events | The compact paper requires event population, separation, rank-four response frame, and Poincare overlap cocycles (`6920-6942`). | Only conditionally, and the text still lacks a clean source-derived translation/position producer: it first uses H3 in event boxes (`6867-6983`) and later says H3 is fiber-only (`7067-7087`). | `B3_observer_facing_3p1d_experience` is promoted from modular time plus H3 chart/response (`theorem_contract.py` baseline `407-410`, `514-536`). | Unjustified jump. H3 dimension three plus a clock is not a 3+1D event manifold (`7180-7212`). |
@@ -344,6 +348,41 @@ from `dim H3 = 3` (`11750-11767`), while its theorem and countermodel sections
 correctly say H3 is frame-fiber data and its dimension alone implies no event
 base (`7067-7087`, `7180-7212`). The latter, more cautious statement must govern
 the simulator contract.
+
+### Downstream quantitative particle/pole continuation
+
+The later strict-one-loop pole work closes a conditional evaluator layer, not
+the missing source producer. Given a coherent, order-matched renormalized
+packet, the pole theorems can soundly isolate simple complex zeros and convert
+them into convention-labelled mass/width readouts. Nothing in that implication
+constructs the packet from the finite carrier federation.
+
+The missing bridge must be typed explicitly:
+
+```text
+Echosahedral quotient source
+  -> quotient-visible source moments
+  -> independently defined EFT moment map with an inverse-modulus certificate
+  -> field-census/scheme/RG/threshold matching
+  -> canonical source Higgs action and common-mask FJ coordinate
+  -> licensed deterministic or stochastic source law
+  -> BRST/BV-complete kernels and continuous-domain identity certificate
+  -> physical-cohomology pole with nonzero current overlap
+  -> dimensionless readout
+  -> absolute units only after an operational source clock
+```
+
+This creates two noninterchangeable simulator lanes. Imported, explicitly
+labelled Standard Model inputs may validate the strict-one-loop engine, but
+they cannot enter the OPH-native provenance lane. A deterministic enclosure is
+not a covariance, a finite gauge grid is not a functional Nielsen proof unless
+the dependence has a certified finite polynomial/basis bound, and a
+determinant zero is not a physical particle without BRST-cohomology and
+physical-current-overlap checks.
+
+This extension does not change the H3/KMS verdict. It reinforces the same
+architectural rule: a correct downstream theorem/evaluator cannot manufacture
+its upstream source object.
 
 ### Proposed typed DAG/stage contract
 
@@ -594,8 +633,9 @@ all of the following:
 6. **Prime cap state:** explicit noncommutative `A_geo(C)`, faithful `rho_C`,
    `K_C=-log rho_C`, and a forbidden-field audit excluding record/pointer/repair
    auxiliaries.
-7. **BW C1-C8:** simulator-native primitive fields, with the issue-308 verifier
-   replayed from saved artifacts.
+7. **BW input pair:** simulator-native finite C1-C6 primitives and a separate
+   complete `MGNS-1` package, bound to independent source artifacts on the same
+   tower and replayed through the issue-308 verifier.
 8. **Independent geometry:** ordered frames, oriented cross-ratios, and `s`
    derived without `pi`, candidate labels, or modular target data.
 9. **Frozen intervention:** byte-identical intervention support, side, dose,
@@ -833,7 +873,7 @@ Echosahedral federation
 
 common tower + independent state/cap producer
   -> noncommutative prime cap tower
-  -> native BW01..BW08 certificate and independent 2pi clock
+  -> native finite C1..C6 certificate plus independent same-tower MGNS-1
   -> Lorentz/H3 frame fiber
   -> semantic E1..E4 + held-out quadratic event cone
   -> event metric/connection
@@ -856,6 +896,83 @@ common-source trunk; neither is downstream of the other.  In particular, A5
 does not prove H3/KMS, and H3 does not prove the Standard Model.
 
 ## Integration status
+
+### Exact source-instantiation audit
+
+A second pass over the new target-blind source path found that deterministic
+replay alone was not enough to make its outputs physical measurements.  Before
+the source hardening described below, the implementation had six additional
+load-bearing defects:
+
+1. The frozen plan declared repair cycles, repair density, record-commit
+   cycles, checkpoint cadence, prediction control, and feedback behavior, but
+   the runtime projection omitted those fields and executed one full seam
+   sweep.
+2. Propagation evolved a normalized complex `C^12` carrier state while repair
+   changed a detached real-intensity array.  The cap-state producer consumed
+   the former, whereas observers and geometry consumed the latter, so there
+   was no single committed terminal state or verified lift between them.
+3. The transaction receipt checked only disjoint writes and nonincreasing
+   mismatch.  It did not establish snapshot/version binding, strict descent,
+   dependency-complete conflict components, atomic union revalidation,
+   idempotence, or schedule invariance.
+4. Observer prediction called the same function on the same record twice,
+   ablation changed a hash-domain label rather than a physical action, and
+   checkpoint replay regenerated the full deterministic log instead of
+   restoring a committed prefix and continuing.
+5. Semantic event identity included sequence and presentation labels, so it
+   was not invariant under schedule changes or local A5 port relabeling.
+6. The exact local carrier was genuinely icosahedral, but the federation was a
+   one-dimensional path using only ports 0 and 1.  The other ports were merely
+   external declarations, not an all-port carrier federation.
+
+The same pass also classified the then-current P1--P7 outputs.  Repeating one
+`M4` state at every refinement level, reshaping the first sixteen amplitudes
+into a Gibbs matrix, recomputing a cross-ratio from the values used to define
+it, defining `U(s)=exp(i s K)` from `K=-log(rho)`, generating curvature-power
+data from the H3 feature family, and manufacturing event coordinates from
+record order are useful software sensitivity fixtures.  None is an
+independent physical producer.  They must therefore report `NOT_EVALUATED`,
+not `VALID_PASS` or a branch-retiring `VALID_FAIL`.
+
+This gives the correct interpretation of the nine-stage count while the
+repairs are being integrated:
+
+| Count | Meaning |
+|---:|---|
+| 0/9 | independently certified physical stages |
+| 0/9 | decisive scientific failures eligible for retirement |
+| 9/9 | incomplete or `NOT_EVALUATED` physical stages |
+
+The frozen-plan validator, byte commitments, deterministic source replay, and
+postrun recomputation can still pass as **instrument receipts**.  Those are
+reported separately and never promoted into the table above.
+
+### Acceptance implementation result (v7)
+
+A fresh 4k acceptance cell now exercises that separation end to end.  It binds
+the source plan, code bundle, exact historical receipt, source artifacts,
+postrun artifacts, and a standalone numerical-runtime descriptor before source
+evolution.  The descriptor covers the Python implementation/ABI/compiler,
+NumPy build/SIMD/BLAS metadata, SciPy, platform and floating ABI, plus fixed
+single-thread caps for OpenMP, OpenBLAS, MKL, Accelerate, and NumExpr.
+
+Fresh-process replay through the bound project `.venv` passes every instrument
+receipt.  Replaying with system Python is rejected before source recomputation
+with explicit Python/NumPy/SciPy mismatch reasons.  The accepted cell is still
+scientifically `INCOMPLETE`: P0--P8 are 0 `PASS`, 9 `NOT_EVALUATED`, and 0
+valid scientific failures.  There are no artifact-admission or hard blockers.
+Accordingly this closes an ordinary reproducibility defect, not any missing
+physical-producer theorem.
+
+The independent family reducer then fresh-replays each supplied cell, derives
+P0--P7 from verifier evidence, checks the P8 instrument contract without
+trusting its producer-authored aggregate result, rejects mixed families and
+forged failure modes, and recomputes rung readiness and retirement.  For v7 it
+reports one observed cell out of twelve, eight observed stages
+`NOT_EVALUATED`, P8 `NOT_EVALUATED`, and `ready_for_64k=false`.  The physical
+launcher now requires that replay-derived readiness before any 16k, 64k, or
+256k output directory or source RNG can be created.
 
 As of this audit snapshot, the working tree contains strict finite scaffolds for
 the local 12/30/20 carrier and A5 action, typed federation seams/collars and

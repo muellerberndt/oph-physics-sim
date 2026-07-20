@@ -51,7 +51,7 @@
         "prospective_claim_freeze"
       ]
     },
-    "promotion_allowed": {"type": "boolean"},
+    "promotion_allowed": {"const": false},
     "overall_status": {"type": "string", "minLength": 1},
     "blockers": {"type": "array", "items": {"type": "string"}},
     "claim_boundary": {"type": "string", "minLength": 1}

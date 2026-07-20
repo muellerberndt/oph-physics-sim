@@ -2,10 +2,18 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any, Mapping
 
-from oph_fpe.claims import BRANCH_INSTANTIATION_SANITY, ISSUE_308_BW_CERTIFICATE_RECEIPT, with_claim_metadata
+from oph_fpe.claims import (
+    BRANCH_INSTANTIATION_SANITY,
+    BW_SAME_TOWER_INPUTS_RECEIPT,
+    ISSUE_308_BW_CERTIFICATE_RECEIPT,
+    MGNS1_CERTIFICATE_RECEIPT,
+    SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT,
+    with_claim_metadata,
+)
 
 
 DEFAULT_THRESHOLDS = {
@@ -30,6 +38,37 @@ _IGNORED_PASS_KEYS = {
     "tier",
 }
 
+MGNS1_REQUIRED_FIELDS = (
+    "certificate_kind",
+    "source_role",
+    "source_artifact_hash",
+    "tower_id",
+    "tower_hash",
+    "fixed_local_algebra_ids",
+    "fine_to_coarse_embedding_residual_T",
+    "state_restriction_residual_T",
+    "expectation_idempotence_residual_T",
+    "expectation_state_preservation_residual_T",
+    "comparison_map_isometry_residual_T",
+    "cyclic_vector_residual_T",
+    "separating_vector_margin",
+    "state_vector_compatibility_residual_T",
+    "density_matrix_trace_residual_T",
+    "regularizer_eta",
+    "regularization_schedule",
+    "state_ids_by_level",
+    "state_fingerprints_by_level",
+    "mixed_gns_cauchy_residual_T",
+    "negative_time_residual_T",
+    "matrix_element_residual_T",
+    "modular_identity_residual",
+    "modular_group_residual_T",
+    "modular_inverse_residual_T",
+    "modular_support_covariance_residual_T",
+    "cap_family_uniformity_bound_T",
+    "cofinal_cauchy_modulus_T",
+)
+
 
 def issue308_bw_certificate_report(
     payload: Mapping[str, Any],
@@ -51,51 +90,64 @@ def issue308_bw_certificate_report(
         "C1_cap_normal_refinement": _cap_normal_refinement(fields, limits),
         "C2_bw_frame": _bw_frame(fields, limits),
         "C3_prime_support_visible_cap_net": _prime_support_visible_cap_net(fields, limits),
-        "C4_modular_reference_tower": _modular_reference_tower(fields, limits),
-        "C5_mixed_gns_and_support_covariance": _mixed_gns_and_support_covariance(fields, limits),
-        "C6_geometric_rigidity": _geometric_rigidity(fields, limits),
-        "C7_geometric_2pi_kms": _geometric_2pi_kms(fields, limits),
-        "C8_wrong_normalization_and_nontriviality": _wrong_normalization(fields, limits),
+        "C4_geometric_support_flow": _geometric_rigidity(fields, limits),
+        "C5_geometric_2pi_kms_comparison": _geometric_2pi_kms(fields, limits),
+        "C6_wrong_normalization_and_nontriviality": _wrong_normalization(fields, limits),
     }
     envelope = _error_envelope(fields, limits)
     clause_pass = all(row["passed"] for row in clauses.values())
     any_evidence = any(row["evidence_present"] for row in clauses.values()) or envelope["evidence_present"]
 
     if clause_pass and envelope["passed"]:
-        tier = "BW3"
+        tier = "FC3"
     elif clause_pass or (sum(1 for row in clauses.values() if row["passed"]) >= 6 and envelope["evidence_present"]):
-        tier = "BW2"
+        tier = "FC2"
     elif any_evidence:
-        tier = "BW1"
+        tier = "FC1"
     else:
-        tier = "BW0"
+        tier = "FC0"
 
-    receipt = tier == "BW3"
+    finite_cap_receipt = tier == "FC3"
+    mgns1 = _mgns1_certificate(_mgns1_fields(payload), limits)
+    same_tower = _same_tower_input_pair(fields, _mgns1_fields(payload), mgns1)
+    theorem_applicable = bool(
+        finite_cap_receipt
+        and mgns1[MGNS1_CERTIFICATE_RECEIPT]
+        and same_tower[BW_SAME_TOWER_INPUTS_RECEIPT]
+    )
     report = {
-        "mode": "issue_308_finite_cap_bw_certificate_audit",
+        "mode": "issue_308_finite_cap_bw_and_mgns1_pair_audit",
         "tier": tier,
-        ISSUE_308_BW_CERTIFICATE_RECEIPT: receipt,
-        "issue_308_finite_cap_bw_certificate_receipt": receipt,
+        ISSUE_308_BW_CERTIFICATE_RECEIPT: finite_cap_receipt,
+        "issue_308_finite_cap_bw_certificate_receipt": finite_cap_receipt,
+        MGNS1_CERTIFICATE_RECEIPT: mgns1[MGNS1_CERTIFICATE_RECEIPT],
+        BW_SAME_TOWER_INPUTS_RECEIPT: same_tower[BW_SAME_TOWER_INPUTS_RECEIPT],
+        SUPPORT_VISIBLE_BW_THEOREM_APPLICABLE_RECEIPT: theorem_applicable,
+        "support_visible_bw_theorem_applicable": theorem_applicable,
         "clauses": clauses,
         "error_envelope": envelope,
+        "mgns1": mgns1,
+        "same_tower_input_pair": same_tower,
         "primitive_field_count": len(fields),
         "ignored_caller_pass_fields": ignored,
         "promotion_tiers": {
-            "BW0": "visual or finite diagnostic",
-            "BW1": "one-regulator finite hypothesis witness",
-            "BW2": "refinement-compatible certificate sequence with vanishing-envelope evidence",
-            "BW3": "Theorem 308 finite cap-net BW certificate applicable",
+            "FC0": "no finite cap-flow certificate evidence",
+            "FC1": "partial finite cap-flow evidence",
+            "FC2": "six finite clauses or their refinement envelope remain incomplete",
+            "FC3": "complete FiniteCapBWCertificate only",
         },
         "nonclaims": {
             "bare_finite_consensus_implies_cap_bw_certificate": False,
+            "finite_cap_certificate_alone_implies_bw": False,
+            "repeated_rho_diagnostic_is_mgns1": False,
             "canonical_h3_reconstruction": False,
             "record_populated_h3": False,
         },
         "claim_boundary": (
-            "Issue #308 closes only FiniteCapBWCertificate => support-visible BW_S2. A renderer "
-            "cap, fitted boost, finite cap-ID permutation, or coefficient near 2*pi is not a BW3 "
-            "receipt. BW3 is recomputed from primitive cap-normal, frame, support-order, cross-ratio, "
-            "mixed-GNS, geometric KMS, wrong-scale, and error-envelope fields."
+            "FiniteCapBWCertificate contains only the six geometric, support-flow, orientation, "
+            "continuity, KMS-comparison, and normalization clauses. Support-visible BW is theorem-"
+            "applicable only when a separately verified complete MGNS-1 algebra-state package is "
+            "bound to the same tower. A repeated-rho diagnostic is not MGNS-1."
         ),
     }
     return with_claim_metadata(
@@ -121,11 +173,27 @@ def write_issue308_bw_certificate_report(source: Path | Mapping[str, Any], out: 
 
 
 def _primitive_fields(payload: Mapping[str, Any]) -> dict[str, Any]:
-    for key in ("BWRec_r", "bw_rec", "bwrec", "issue_308_primitive_fields"):
+    for key in (
+        "FiniteCapBWRec_r",
+        "finite_cap_bw_rec",
+        "BWRec_r",
+        "bw_rec",
+        "bwrec",
+        "issue_308_primitive_fields",
+    ):
         value = payload.get(key)
         if isinstance(value, Mapping):
             return dict(value)
-    return {key: value for key, value in payload.items() if key not in _IGNORED_PASS_KEYS}
+    excluded = {*_IGNORED_PASS_KEYS, "MGNS1Rec_r", "mgns1", "mgns1_rec"}
+    return {key: value for key, value in payload.items() if key not in excluded}
+
+
+def _mgns1_fields(payload: Mapping[str, Any]) -> dict[str, Any]:
+    for key in ("MGNS1Rec_r", "mgns1", "mgns1_rec"):
+        value = payload.get(key)
+        if isinstance(value, Mapping):
+            return dict(value)
+    return {}
 
 
 def _cap_normal_refinement(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
@@ -263,41 +331,186 @@ def _prime_support_visible_cap_net(fields: Mapping[str, Any], limits: Mapping[st
     )
 
 
-def _modular_reference_tower(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
-    missing = []
+def _mgns1_certificate(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
+    missing: list[str] = []
+    algebra_ids = fields.get("fixed_local_algebra_ids")
+    algebra_ids_valid = bool(
+        isinstance(algebra_ids, (list, tuple))
+        and len(algebra_ids) >= 2
+        and all(isinstance(value, str) and value.strip() for value in algebra_ids)
+        and len(set(algebra_ids)) == len(algebra_ids)
+    )
+    if not algebra_ids_valid:
+        missing.append("fixed_local_algebra_ids")
+
+    fingerprints = fields.get("state_fingerprints_by_level")
+    fingerprints_valid = bool(
+        isinstance(fingerprints, (list, tuple))
+        and len(fingerprints) >= 2
+        and all(_strict_sha256(value) for value in fingerprints)
+    )
+    repeated_rho = bool(fingerprints_valid and len(set(fingerprints)) == 1)
+    if not fingerprints_valid:
+        missing.append("state_fingerprints_by_level")
+    if repeated_rho:
+        missing.append("repeated_state_across_levels_is_diagnostic_not_mgns1")
+
+    state_ids = fields.get("state_ids_by_level")
+    state_ids_valid = bool(
+        isinstance(state_ids, (list, tuple))
+        and fingerprints_valid
+        and len(state_ids) == len(fingerprints)
+        and all(isinstance(value, str) and value.strip() for value in state_ids)
+        and len(set(state_ids)) == len(state_ids)
+    )
+    if not state_ids_valid:
+        missing.append("state_ids_by_level")
+
+    schedule_valid = _strict_regularization_schedule(fields.get("regularization_schedule"))
+    if not schedule_valid:
+        missing.append("regularization_schedule")
+
     checks = {
-        "test_tower_id": _nonempty_string(fields, "test_tower_id", missing),
-        "test_tower_hash": _nonempty_string(fields, "test_tower_hash", missing),
-        "state_embedding_residual": _le_abs(fields, "state_embedding_residual", limits["residual_tol"], missing),
+        "certificate_kind": fields.get("certificate_kind") == "MGNS-1",
+        "source_role": fields.get("source_role") == "algebra_state_tower",
+        "source_artifact_hash": _strict_sha256(fields.get("source_artifact_hash")),
+        "tower_id": _nonempty_string(fields, "tower_id", missing),
+        "tower_hash": _strict_sha256(fields.get("tower_hash")),
+        "fixed_local_algebra_ids": algebra_ids_valid,
+        "fine_to_coarse_embedding_residual_T": _le_abs(
+            fields, "fine_to_coarse_embedding_residual_T", limits["residual_tol"], missing
+        ),
+        "state_restriction_residual_T": _le_abs(
+            fields, "state_restriction_residual_T", limits["residual_tol"], missing
+        ),
+        "expectation_idempotence_residual_T": _le_abs(
+            fields, "expectation_idempotence_residual_T", limits["residual_tol"], missing
+        ),
+        "expectation_state_preservation_residual_T": _le_abs(
+            fields, "expectation_state_preservation_residual_T", limits["residual_tol"], missing
+        ),
+        "comparison_map_isometry_residual_T": _le_abs(
+            fields, "comparison_map_isometry_residual_T", limits["residual_tol"], missing
+        ),
+        "cyclic_vector_residual_T": _le_abs(
+            fields, "cyclic_vector_residual_T", limits["residual_tol"], missing
+        ),
+        "separating_vector_margin": _ge(
+            fields, "separating_vector_margin", limits["support_margin_min"], missing
+        ),
+        "state_vector_compatibility_residual_T": _le_abs(
+            fields, "state_vector_compatibility_residual_T", limits["residual_tol"], missing
+        ),
+        "density_matrix_trace_residual_T": _le_abs(
+            fields, "density_matrix_trace_residual_T", limits["residual_tol"], missing
+        ),
         "regularizer_eta": _positive(fields, "regularizer_eta", missing),
-        "physical_reference_trace_distance": _le_abs(
-            fields, "physical_reference_trace_distance", limits["residual_tol"], missing
-        ),
-        "fixed_local_modular_bound_T": _le_abs(
-            fields, "fixed_local_modular_bound_T", limits["residual_tol"], missing
-        ),
-    }
-    return _stage(all(checks.values()) and not missing, "refinement-compatible modular reference tower", missing, checks)
-
-
-def _mixed_gns_and_support_covariance(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
-    missing = []
-    checks = {
+        "regularization_schedule": schedule_valid,
+        "state_ids_by_level": state_ids_valid,
+        "state_fingerprints_by_level": bool(fingerprints_valid and not repeated_rho),
         "mixed_gns_cauchy_residual_T": _le_abs(
             fields, "mixed_gns_cauchy_residual_T", limits["residual_tol"], missing
         ),
-        "negative_time_residual_T": _le_abs(fields, "negative_time_residual_T", limits["residual_tol"], missing),
-        "matrix_element_residual_T": _le_abs(fields, "matrix_element_residual_T", limits["residual_tol"], missing),
-        "support_covariance_residual_T": _le_abs(
-            fields, "support_covariance_residual_T", limits["residual_tol"], missing
+        "negative_time_residual_T": _le_abs(
+            fields, "negative_time_residual_T", limits["residual_tol"], missing
+        ),
+        "matrix_element_residual_T": _le_abs(
+            fields, "matrix_element_residual_T", limits["residual_tol"], missing
+        ),
+        "modular_identity_residual": _le_abs(
+            fields, "modular_identity_residual", limits["residual_tol"], missing
+        ),
+        "modular_group_residual_T": _le_abs(
+            fields, "modular_group_residual_T", limits["residual_tol"], missing
+        ),
+        "modular_inverse_residual_T": _le_abs(
+            fields, "modular_inverse_residual_T", limits["residual_tol"], missing
+        ),
+        "modular_support_covariance_residual_T": _le_abs(
+            fields, "modular_support_covariance_residual_T", limits["residual_tol"], missing
+        ),
+        "cap_family_uniformity_bound_T": _le_abs(
+            fields, "cap_family_uniformity_bound_T", limits["residual_tol"], missing
+        ),
+        "cofinal_cauchy_modulus_T": _le_abs(
+            fields, "cofinal_cauchy_modulus_T", limits["residual_tol"], missing
         ),
     }
-    return _stage(
-        all(checks.values()) and not missing,
-        "quadratic mixed-GNS convergence with inverse-time and support-covariance control",
-        missing,
-        checks,
+    for key in ("certificate_kind", "source_role", "source_artifact_hash", "tower_hash"):
+        if not checks[key]:
+            missing.append(key)
+    passed = bool(set(fields) == set(MGNS1_REQUIRED_FIELDS) and all(checks.values()) and not missing)
+    if set(fields) != set(MGNS1_REQUIRED_FIELDS):
+        missing.append("mgns1_primitive_field_key_set_mismatch")
+    return {
+        MGNS1_CERTIFICATE_RECEIPT: passed,
+        "passed": passed,
+        "evidence_present": bool(fields),
+        "meaning": (
+            "complete modular algebra-state representation with comparison maps, compact-time "
+            "control, support covariance, cap-family uniformity, and a cofinal Cauchy modulus"
+        ),
+        "missing_or_blocking_evidence": sorted(set(missing)),
+        "details": {
+            **checks,
+            "repeated_rho_diagnostic": repeated_rho,
+            "required_primitive_fields": list(MGNS1_REQUIRED_FIELDS),
+        },
+    }
+
+
+def _same_tower_input_pair(
+    finite_fields: Mapping[str, Any],
+    mgns_fields: Mapping[str, Any],
+    mgns_report: Mapping[str, Any],
+) -> dict[str, Any]:
+    finite_tower_id = finite_fields.get("finite_cap_tower_id")
+    finite_tower_hash = finite_fields.get("finite_cap_tower_hash")
+    finite_source_hash = finite_fields.get("finite_cap_source_artifact_hash")
+    mgns_tower_id = mgns_fields.get("tower_id")
+    mgns_tower_hash = mgns_fields.get("tower_hash")
+    mgns_source_hash = mgns_fields.get("source_artifact_hash")
+    state_ids = mgns_fields.get("state_ids_by_level")
+    state_hashes = mgns_fields.get("state_fingerprints_by_level")
+    comparison_state_pairs = set(
+        zip(state_ids, state_hashes)
+        if isinstance(state_ids, (list, tuple))
+        and isinstance(state_hashes, (list, tuple))
+        and len(state_ids) == len(state_hashes)
+        else ()
     )
+    comparison_state_id = finite_fields.get("kms_comparison_state_id")
+    comparison_state_hash = finite_fields.get("kms_comparison_state_hash")
+    comparison_state_bound = bool(
+        isinstance(comparison_state_id, str)
+        and _strict_sha256(comparison_state_hash)
+        and (comparison_state_id, comparison_state_hash) in comparison_state_pairs
+    )
+    checks = {
+        "finite_cap_source_role": finite_fields.get("finite_cap_source_role")
+        == "geometric_support_flow",
+        "finite_cap_source_artifact_hash": _strict_sha256(finite_source_hash),
+        "finite_cap_tower_id": isinstance(finite_tower_id, str) and bool(finite_tower_id.strip()),
+        "finite_cap_tower_hash": _strict_sha256(finite_tower_hash),
+        "mgns1_complete": mgns_report.get(MGNS1_CERTIFICATE_RECEIPT) is True,
+        "tower_id_equal": finite_tower_id == mgns_tower_id,
+        "tower_hash_equal": finite_tower_hash == mgns_tower_hash,
+        "kms_comparison_state_bound_to_mgns1": comparison_state_bound,
+        "independent_source_artifacts": bool(
+            _strict_sha256(finite_source_hash)
+            and _strict_sha256(mgns_source_hash)
+            and finite_source_hash != mgns_source_hash
+        ),
+    }
+    passed = all(checks.values())
+    return {
+        BW_SAME_TOWER_INPUTS_RECEIPT: passed,
+        "passed": passed,
+        "checks": checks,
+        "finite_cap_tower_id": finite_tower_id,
+        "mgns1_tower_id": mgns_tower_id,
+        "missing_or_blocking_evidence": sorted(key for key, value in checks.items() if not value),
+    }
 
 
 def _geometric_rigidity(fields: Mapping[str, Any], limits: Mapping[str, float]) -> dict[str, Any]:
@@ -333,12 +546,26 @@ def _geometric_2pi_kms(fields: Mapping[str, Any], limits: Mapping[str, float]) -
         missing.append("geometric_parameter_convention")
     checks = {
         "geometric_parameter_convention": convention_ok,
+        "kms_comparison_state_id": _nonempty_string(
+            fields, "kms_comparison_state_id", missing
+        ),
+        "kms_comparison_state_hash": _strict_sha256(
+            fields.get("kms_comparison_state_hash")
+        ),
+        "kms_matrix_element_residual_T": _le_abs(
+            fields, "kms_matrix_element_residual_T", limits["residual_tol"], missing
+        ),
         "kms_strip_bound": _le_abs(fields, "kms_strip_bound", limits["strip_bound_max"], missing),
         "kms_residual_beta_2pi": _le_abs(fields, "kms_residual_beta_2pi", limits["residual_tol"], missing),
     }
+    if not checks["kms_comparison_state_hash"]:
+        missing.append("kms_comparison_state_hash")
     return _stage(
         all(checks.values()) and not missing,
-        "independently normalized geometric 2pi-KMS strip residual",
+        (
+            "independently normalized geometric 2pi-KMS comparison against an explicitly "
+            "identified finite state; this clause does not certify its algebra-state tower"
+        ),
         missing,
         checks,
     )
@@ -621,6 +848,20 @@ def _number(value: Any) -> float | None:
     if not math.isfinite(number):
         return None
     return number
+
+
+def _strict_sha256(value: Any) -> bool:
+    return bool(re.fullmatch(r"sha256:[0-9a-f]{64}", str(value or "")))
+
+
+def _strict_regularization_schedule(value: Any) -> bool:
+    if not isinstance(value, (list, tuple)) or len(value) < 2:
+        return False
+    parsed = [_number(item) for item in value]
+    if any(item is None or item <= 0.0 for item in parsed):
+        return False
+    numbers = [float(item) for item in parsed if item is not None]
+    return all(numbers[index + 1] < numbers[index] for index in range(len(numbers) - 1))
 
 
 def _read_json(path: Path) -> dict[str, Any]:

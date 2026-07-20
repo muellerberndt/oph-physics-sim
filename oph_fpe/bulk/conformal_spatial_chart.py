@@ -217,8 +217,8 @@ def paper_theorem_3d_bulk_chart_report(
             "screen_net": "Axiom Screen Net: physical data is organized on a horizon screen S2 carrying local algebras.",
             "bw_normalization": (
                 "The issue #308 theorem target is sigma_t = alpha_{lambda_C_hat(2*pi*t)} on a "
-                "BW-framed support-visible cap pair. This chart report records the paper route; BW3 "
-                "requires the separate finite cap-normal BWRec audit."
+                "BW-framed support-visible cap pair. The theorem requires a six-clause finite cap "
+                "certificate and an independent complete MGNS-1 package on the same tower."
             ),
             "lorentz_group": "Conf+(S2) ~= PSL(2,C) ~= SO+(3,1).",
             "observer_frame_fiber": (
@@ -235,14 +235,14 @@ def paper_theorem_3d_bulk_chart_report(
             ),
         },
         "claim_boundary": (
-            "This report now types H3 as the future-timelike observer-frame fiber. S2 cap/conformal "
+            "This report types H3 as the future-timelike observer-frame fiber. S2 cap/conformal "
             "geometry plus a computed finite modular-clock receipt can yield the SO+(3,1) Lorentz "
             "branch and a three-dimensional H3 frame fiber, but cannot by itself yield a spatial "
             "event-position base or 3+1D event manifold. PAPER_THEOREM_3D_BULK_CHART_RECEIPT stays "
             "closed until an independent semantic event/translation construction is supplied. Issue #309 "
             "primitive-field chart certification uses CAP_NORMAL_H3_CHART_RECEIPT. A declared "
-            "2pi target is reported only as SIMULATION_ASSUMED_* visualization data. BW3 finite "
-            "cap-net evidence, populated third-person bulk, particle, "
+            "2pi target is reported only as SIMULATION_ASSUMED_* visualization data. The issue #308 "
+            "finite-cap/MGNS-1 pair, cap-net evidence, populated third-person bulk, particle, "
             "and physical CMB claims require separate gates."
         ),
     }

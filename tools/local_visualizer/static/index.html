@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>OPH Local Visualizer</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">⬡</span>
+      <div>
+        <h1>OPH finite observer-patch visualizer</h1>
+        <p id="run-title">Loading local payload…</p>
+      </div>
+    </div>
+    <div class="mode-box" aria-label="Epistemic display mode">
+      <button id="receipt-mode" class="mode-button active" type="button" aria-pressed="true">Receipt mode</button>
+      <button id="demo-mode" class="mode-button" type="button" aria-pressed="false">DEMO_ASSUMPTION</button>
+    </div>
+    <div id="immutable-guard" class="guard-pill" role="status">SCALE CAMPAIGN: LOCKED FALSE</div>
+  </header>
+
+  <div id="demo-banner" class="demo-banner hidden" role="status">
+    <strong>DEMO ASSUMPTION — NOT A RECEIPT</strong>
+    <span>PHYSICAL RECEIPTS UNCHANGED · post-exposure display only</span>
+  </div>
+
+  <main class="app-shell">
+    <nav id="view-tabs" class="view-tabs" aria-label="Visualizer views"></nav>
+
+    <section class="workspace">
+      <article class="scene-card">
+        <div class="scene-heading">
+          <div>
+            <p id="view-kicker" class="kicker"></p>
+            <h2 id="view-title"></h2>
+            <p id="view-summary" class="summary"></p>
+          </div>
+          <div id="view-status" class="status-stack" aria-live="polite"></div>
+        </div>
+        <canvas id="scene" aria-label="Selected finite visualization scene"></canvas>
+        <p id="render-disclosure" class="render-disclosure">
+          Windowed renderer: only the selected visible chunk is drawn. Census entries remain addressable by stable index.
+        </p>
+      </article>
+
+      <aside class="control-column">
+        <section class="panel">
+          <h3>Visible census window</h3>
+          <label for="census-kind">Census</label>
+          <select id="census-kind"></select>
+          <div class="inline-controls">
+            <label for="census-start">Start index
+              <input id="census-start" type="number" min="0" step="1" value="0">
+            </label>
+            <label for="census-count">Visible count
+              <input id="census-count" type="number" min="1" max="1000" step="1" value="120">
+            </label>
+          </div>
+          <button id="load-window" type="button">Load visible chunk</button>
+          <p id="census-readout" class="fine-print"></p>
+        </section>
+
+        <section id="demo-controls" class="panel hidden">
+          <div class="panel-title-row">
+            <h3>Display-only assumptions</h3>
+            <button id="reset-demo" class="quiet-button" type="button">Reset</button>
+          </div>
+          <label class="toggle-row">
+            <input id="force-all" type="checkbox">
+            <span>Force all missing display stages</span>
+          </label>
+          <div id="stage-toggles" class="stage-toggles"></div>
+          <p class="fine-print">These controls exist only in browser memory. They never call a simulator endpoint.</p>
+        </section>
+
+        <section class="panel">
+          <h3>Selection and evidence</h3>
+          <dl id="selection-details" class="details-list"></dl>
+        </section>
+
+        <section class="panel clock-panel">
+          <h3>Three clocks — never substituted</h3>
+          <ol id="clock-strip"></ol>
+        </section>
+      </aside>
+    </section>
+
+    <section class="lower-grid">
+      <article class="panel">
+        <div class="panel-title-row">
+          <h3>Physical vs display status</h3>
+          <span class="tiny-lock">promotion_allowed = false</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Stage</th><th>Physical</th><th>Display</th><th>Boundary</th></tr></thead>
+            <tbody id="stage-table"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title-row">
+          <h3>Manifested data pages</h3>
+          <span id="manifest-status" class="fine-print"></span>
+        </div>
+        <label for="sidecar-select">Sidecar</label>
+        <select id="sidecar-select"></select>
+        <div class="inline-controls">
+          <label for="row-offset">Row offset
+            <input id="row-offset" type="number" min="0" step="1" value="0">
+          </label>
+          <label for="row-limit">Rows
+            <input id="row-limit" type="number" min="1" max="2000" step="1" value="100">
+          </label>
+        </div>
+        <button id="load-sidecar" type="button">Fetch one page</button>
+        <pre id="sidecar-preview" tabindex="0">No page loaded.</pre>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <p id="claim-boundary">Loading claim boundary…</p>
+    <p>Local read-only instrument · no CDN · no scientific receipt mutation · no campaign endpoint</p>
+  </footer>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

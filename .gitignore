@@ -40,6 +40,5 @@ temp/
 *.log
 *.jsonl
 
-# Curated, immutable earned-run snapshots are intentionally repository-visible.
-!data/earned_runs/
-!data/earned_runs/**
+# Empirical run outputs are retained locally or in receipt archives, not in Git.
+data/earned_runs/

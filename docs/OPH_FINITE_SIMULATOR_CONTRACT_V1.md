@@ -262,7 +262,7 @@ The geometry/gravity branch is:
 ```text
 common source + independent state producer
   -> noncommutative prime geometric cap tower
-  -> native finite BW01..BW08
+  -> native finite BW C1..C6 plus independent same-tower MGNS-1
   -> independent {1, pi, 2*pi, 4*pi} clock comparison
   -> H3 timelike-frame fiber
   -> semantic event E1..E4 + held-out Lorentz-cone reconstruction
@@ -284,6 +284,14 @@ common source + target-free screen selector + A5 transport
 The exact A5 classifier may be reused when its source hypotheses are replayed;
 Lean or analytic proofs remove the need to numerically rediscover the theorem.
 They do not prove that the simulator produced the theorem's hypotheses.
+
+The local twelve-port A5 object has two admissible origins which must be
+labelled separately. A literal Echosahedron hardware contract may provide it as
+a carrier premise, including faithful readback action and refinement
+persistence. Alternatively, a source-derived geometry branch must prove the
+calibrated-risk, complete-settlement, atomic-defect, positional-risk, and
+refinement hypotheses before applying its selector theorem. The hardware route
+does not count as a derivation of the icosahedron from generic repair data.
 
 There is no edge from an H3 fit to the Standard Model, from A5 carrier geometry
 to a physical gauge current, from consensus to a cap state, or from a frame
@@ -327,10 +335,22 @@ as `DERIVES`, `REFINES`, `CALIBRATES`, `COMPARES_TO`, and `VALIDATES`.
 
 Implemented finite scaffolds include exact local icosahedral/A5 carrier
 incidence, typed federation seams and observer supports, a strict geodesic
-support-regulator tower, target-blind reversible local A5 dynamics, a replayed
-common-source verifier, modular-gearing no-go firewalls, and a strict H3/KMS
-campaign preflight. The transaction, ontology, obstruction, and lumpability
-modules are being hardened against the rules above.
+support-regulator tower, target-blind reversible local A5 dynamics, exact
+proof-carrying repair transactions, canonical state/record/observer/clock
+ontology, finite obstruction/fiber classifiers, exact quotient-lumpability
+oracles, a replayed common-source diagnostic, modular-gearing no-go firewalls,
+and a strict H3/KMS campaign diagnostic. Transaction receipts independently
+recompute complete dependency reads, conflict-component support, exact
+union-level descent, event taxonomy, and commit identity.
+
+These scaffolds do not yet compose into a physical source instrument. In
+particular, the common-source verifier's legacy `N x 12` array-arrow check is
+now explicitly only an array-channel diagnostic: it cannot emit the physical
+Echosahedral-to-abstract realization receipt without a bound typed federation,
+seams/collars/higher overlaps, semantic record/checkpoint preservation, and
+quotient transition preservation. Its declared target-path scan is likewise
+not a proof of semantic target noninterference for arbitrary generator code.
+The physical receipts for both claims therefore remain false.
 
 The existing production `bw_array` source still conflates support-chart cells
 with microscopic carriers and therefore fails the carrier realization and
@@ -339,4 +359,3 @@ native cap/BW producer, independent clock producer, semantic event base, and
 full physical A5 current producer are also absent. Consequently no important
 4k/16k/64k/256k campaign is authorized by this contract, and no emergence
 branch may be retired from the archived runs.
-
