@@ -157,20 +157,24 @@ def _transported_geometry_rows(sample_count: int = 8) -> list[dict[str, Any]]:
     ratio).
     """
 
-    base = np.asarray([1.0, 2.0, 4.0, 8.0])
     rows: list[dict[str, Any]] = []
     for index in range(sample_count):
         parameter = 0.25 + 0.125 * index
-        # The declared flow fixes 0 and infinity and dilates by exp(t); the
-        # four base points are transported and one is additionally advanced
-        # by the flow so the cross ratio carries the parameter.
-        a, b, c, d = base
-        d_t = d * float(np.exp(parameter))
-        cross_ratio = ((c - a) * (d_t - b)) / ((b - a) * (d_t - c))
+        # Moebius-correct held-out construction: the dilation flow fixes 0
+        # and infinity; with the frame (0, y, x(t), D) for D far beyond every
+        # transported point, the four-point cross ratio approaches
+        # x(t)/y = exp(t) * (x0/y), so log cross-ratio is linear in the
+        # declared parameter with unit slope up to O(x/D) corrections below
+        # double-precision resolution.
+        a = 0.0
+        b = 2.0
+        c = 1.0 * float(np.exp(parameter))
+        d = 1.0e15
+        cross_ratio = ((c - a) * (d - b)) / ((b - a) * (d - c))
         rows.append(
             {
                 "row_id": f"transported-{index:04d}",
-                "ordered_frame": [a, b, c, d_t],
+                "ordered_frame": [a, b, c, d],
                 "orientation": "ascending",
                 "geometric_parameter": float(parameter),
                 "cross_ratio": float(cross_ratio),

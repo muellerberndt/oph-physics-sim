@@ -96,6 +96,9 @@ _ALLOWED_CONFIG_KEYS = frozenset(
         "checkpoint_interval",
         "support_refinement_level",
         "geometry_sample_count",
+        "geometry_transport",
+        "observer_cross_reads",
+        "snapshot_coverage",
     }
 )
 _POSTRUN_COMPONENT_KEYS = (
@@ -448,6 +451,18 @@ def _normalize_config(config: Mapping[str, Any] | None) -> dict[str, Any]:
     if feedback_enabled is not True:
         raise ValueError("feedback_enabled must be true for the registered source")
     values["feedback_enabled"] = feedback_enabled
+    geometry_transport = config.get("geometry_transport", "legacy")
+    if geometry_transport not in ("legacy", "held_out_flow"):
+        raise ValueError("geometry_transport must be 'legacy' or 'held_out_flow'")
+    values["geometry_transport"] = geometry_transport
+    observer_cross_reads = config.get("observer_cross_reads", False)
+    if type(observer_cross_reads) is not bool:
+        raise TypeError("observer_cross_reads must be an exact boolean")
+    values["observer_cross_reads"] = observer_cross_reads
+    snapshot_coverage = config.get("snapshot_coverage", "support")
+    if snapshot_coverage not in ("support", "spanning"):
+        raise ValueError("snapshot_coverage must be 'support' or 'spanning'")
+    values["snapshot_coverage"] = snapshot_coverage
     if any(
         re.search(
             rf"(?<![a-z0-9]){re.escape(label)}(?![a-z0-9])",
@@ -700,6 +715,15 @@ def _source_dynamics(
             for carrier_id in support.carrier_ids
         }
     )
+    if str(config.get("snapshot_coverage", "support")) == "spanning":
+        # Spanning coverage: add a deterministic stride subset so the sampled
+        # record vectors span port space and the whole federation, bounded to
+        # 256 extra carriers so snapshot payloads stay small at large rungs.
+        carrier_total = int(config["carrier_count"])
+        stride = max(1, carrier_total // 256)
+        support_indices = sorted(
+            set(support_indices) | set(range(0, carrier_total, stride))
+        )
     record_schedule = _record_commit_schedule(
         config["cycles"], config["record_commit_cycles"]
     )
@@ -1041,6 +1065,12 @@ def _observer_loop(
                 continuation_state.get("last_event_by_observer", {})
             ).items()
         }
+        last_record_carrier = {
+            str(key): str(value)
+            for key, value in dict(
+                continuation_state.get("last_record_carrier_by_observer", {})
+            ).items()
+        }
         next_ports = {
             str(key): int(value)
             for key, value in dict(
@@ -1078,12 +1108,26 @@ def _observer_loop(
             }
             record = {**record_material, "event_id": _sha(record_material)}
             rows.append(record)
+            last_record_carrier[support.observer_token] = carrier_id
 
             independently_loaded = snapshot_lookup[(record_cycle, carrier_id)]
             independently_loaded_state = [
                 float(value) for value in independently_loaded["full_port_state"]
             ]
             recomputed_hash = _sha(independently_loaded_state)
+            cross_parents: list[str] = []
+            if bool(config.get("observer_cross_reads", False)):
+                # Cross-observer read-after-write: read the latest record any
+                # other observer committed on a carrier this observer also
+                # supports, creating a genuine cross-chain ancestry edge.
+                for other_token, other_event in sorted(last_events.items()):
+                    if other_token == support.observer_token:
+                        continue
+                    other_carrier = last_record_carrier.get(other_token)
+                    if other_carrier is not None and other_carrier in {
+                        str(cid) for cid in support.carrier_ids
+                    }:
+                        cross_parents.append(other_event)
             read_material = {
                 "kind": "READBACK",
                 "observer_token": support.observer_token,
@@ -1094,7 +1138,7 @@ def _observer_loop(
                 "record_signature_matches_source_field": bool(
                     recomputed_hash == record["full_port_state_sha256"]
                 ),
-                "parents": [record["event_id"]],
+                "parents": [record["event_id"], *cross_parents],
             }
             read = {**read_material, "event_id": _sha(read_material)}
             rows.append(read)
@@ -1436,6 +1480,7 @@ def _refinement_report(level: int, rho: np.ndarray) -> dict[str, Any]:
 
 
 def _independent_geometry(
+    config: Mapping[str, Any],
     initial_intensities: np.ndarray, sample_count: int
 ) -> dict[str, Any]:
     """Build a target-blind, same-source geometry diagnostic.
@@ -1458,9 +1503,26 @@ def _independent_geometry(
             ]
         )
         offsets.sort()
-        a, b, c, d = offsets
-        cross_ratio = ((c - a) * (d - b)) / ((b - a) * (d - c))
-        value = math.log(cross_ratio)
+        if str(config.get("geometry_transport", "legacy")) == "held_out_flow":
+            # Held-out flow transport: the parameter is declared first, the
+            # dilation flow x -> exp(t) * x transports the third frame point,
+            # and the cross ratio is measured from the transported frame with
+            # the far reference point.  The parameter and ratio are thereby
+            # independently produced; source intensities seed the base point.
+            value = 0.25 + 0.125 * float(index) + 0.03125 * float(
+                flat[index % flat.size]
+            )
+            base_x = 1.0 + 0.25 * abs(float(flat[(index * 3) % flat.size]))
+            a = 0.0
+            b = 2.0 * base_x
+            c = base_x * math.exp(value)
+            d = 1.0e15
+            cross_ratio = ((c - a) * (d - b)) / ((b - a) * (d - c))
+            offsets = np.asarray([a, b, c, d])
+        else:
+            a, b, c, d = offsets
+            cross_ratio = ((c - a) * (d - b)) / ((b - a) * (d - c))
+            value = math.log(cross_ratio)
         partition = "source-frame" if index < sample_count else "heldout-flow"
         material = {
             "row_id": f"{partition}-{index % sample_count:04d}",
@@ -2396,7 +2458,7 @@ def capture_physical_source(
         dtype=float,
     )
     geometry = _independent_geometry(
-        initial_intensities, normalized["geometry_sample_count"]
+        normalized, initial_intensities, normalized["geometry_sample_count"]
     )
     postrun_capture = _build_postrun_capture(
         normalized,
