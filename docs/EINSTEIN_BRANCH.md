@@ -186,10 +186,17 @@ and with the cone margin still negative:
 | 4 (v2) | 144 | (1,1) | negative |
 | 16 (v2) | 576 | (1,3) | negative |
 | 32 (v2) | 3456 | (1,2) | negative |
+| 128 (v1 fixed capture, 16384 carriers, dense supports) | 2304 | (1,3) | negative |
 
 Reading: Einstein spacetime behaves as an effective many-observer
 description, and dense cross-observer record reading is the mechanism that
-merges causal cones. A stable `(1,3)` with positive margin needs a better
+merges causal cones. The strongest row is the last: with the three audited
+capture defects fixed (cross-observer reads, spanning snapshots, held-out
+geometry transport), the REAL v1 repair dynamics at a 16384-carrier
+federation with 128 densely packed observers produces 348 cross-observer
+ancestry edges and a held-out form with Lorentzian inertia (1,3). At the
+same scale the coupling spread falls to 0.19 (from 0.68 at small cutoff),
+trending toward the zero-spread symmetric limit the Lean theorem fixes. A stable `(1,3)` with positive margin needs a better
 event chart and denser overlap schedules, tracked in #595.
 
 ## Audited v1 simulator findings that affect results
