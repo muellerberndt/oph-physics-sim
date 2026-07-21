@@ -190,14 +190,28 @@ and with the cone margin still negative:
 
 Reading: Einstein spacetime behaves as an effective many-observer
 description, and dense cross-observer record reading is the mechanism that
-merges causal cones. The strongest row is the last: with the three audited
-capture defects fixed (cross-observer reads, spanning snapshots, held-out
-geometry transport), the REAL v1 repair dynamics at a 16384-carrier
-federation with 128 densely packed observers produces 348 cross-observer
-ancestry edges and a held-out form with Lorentzian inertia (1,3). At the
-same scale the coupling spread falls to 0.19 (from 0.68 at small cutoff),
-trending toward the zero-spread symmetric limit the Lean theorem fixes. A stable `(1,3)` with positive margin needs a better
-event chart and denser overlap schedules, tracked in #595.
+merges causal cones. The convergence ladder
+(`scripts/einstein_convergence_ladder.py`, artifacts in
+`data/einstein_convergence/`) measures this at scale on the fixed v1
+capture:
+
+| Carriers | Observers | Support | Cross edges | Inertia | Cone margin | Spread |
+| --- | --- | --- | --- | --- | --- | --- |
+| 16,384 | 128 | 96 | 348 | (1,3) | -5.62 | 0.1875 |
+| 65,536 | 256 | 96 | 312 | (1,3) | -3.22 | 0.1860 |
+| 262,144 | 512 | 96 | 312 | (2,2) | -2.49 | 0.1766 |
+| 262,144 | 512 | 384 | 1,062 | (1,3) | -1.41 | 0.1766 |
+
+At constant cross-observer coupling density the held-out signature is
+Lorentzian `(1,3)` at every rung and the cone margin halves per rung:
+geometric convergence toward the Einstein cone, with the coupling spread
+monotone down. The unscaled 256k row is the density control: stagnant
+coupling degrades the signature to `(2,2)`, so coupling DENSITY, not carrier
+count, is the control variable. Chain depth (`observer_samples`) must be
+held constant across rungs; shortening chains flips the timelike direction.
+Extrapolating the measured halving puts the margin zero crossing in the low
+millions of carriers; that extrapolation is a projection, not a measurement,
+and the positive-margin run is tracked in #595.
 
 ## Audited v1 simulator findings that affect results
 
