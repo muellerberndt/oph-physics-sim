@@ -14,8 +14,11 @@ from oph_fpe.cosmology.repair_scale_closure import (
 from oph_fpe.cosmology.scale_bridge import ScaleBridgeInputs, scale_bridge_report
 from oph_fpe.cosmology.screen_capacity import (
     DEFAULT_N_CRC,
+    N_CRC_EW_COMPARISON_PIXEL,
+    N_CRC_EW_FORWARD_CLOSURE_POINT,
     capacity_readback_proxy_report,
     screen_capacity_closure_report,
+    source_derived_n_crc_ew_jsonable,
 )
 
 
@@ -202,6 +205,24 @@ def pn_resonance_report(
                 "capacity/source certificate is supplied."
             ),
         },
+        "source_derived_ew_sidecar": {
+            "source_derived_N_CRC_EW": source_derived_n_crc_ew_jsonable(DEFAULT_N_CRC),
+            "selected_N_over_N_CRC_EW": {
+                "comparison_pixel": n_used / N_CRC_EW_COMPARISON_PIXEL,
+                "forward_closure_point": n_used / N_CRC_EW_FORWARD_CLOSURE_POINT,
+            },
+            "log_residual_selected_vs_N_CRC_EW": {
+                "comparison_pixel": math.log(n_used / N_CRC_EW_COMPARISON_PIXEL),
+                "forward_closure_point": math.log(n_used / N_CRC_EW_FORWARD_CLOSURE_POINT),
+            },
+            "claim_boundary": (
+                "Source-derived electroweak-branch capacity sidecar. Values are the "
+                "non-circular N_CRC_EW branches imported from the cross-repo gap ledger, "
+                "branch-tagged comparison_pixel and forward_closure_point; they are not "
+                "the quarantined observed-horizon comparison and not a finite-simulator "
+                "capacity fixed point."
+            ),
+        },
         "repair_depth_ansatz_sidecar": {
             "formula": "N_repair=|g'(P)|^(-2m)",
             "N_implied_by_declared_repair_depth_ansatz": repair_n,
@@ -331,6 +352,7 @@ def _fmt(value: Any) -> str:
 def _markdown_report(report: dict[str, Any]) -> str:
     bridge = report["paper_bridge_relation"]
     observed = report["observed_branch_sidecar"]
+    source_ew = report["source_derived_ew_sidecar"]
     repair = report["repair_depth_ansatz_sidecar"]
     gates = report["readiness_gates"]
     return "\n".join(
@@ -356,6 +378,14 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "",
             f"- selected/default N_CRC: `{_fmt(observed['selected_N_over_default_N_CRC'])}`",
             f"- observed-display compatible: `{str(observed['observed_display_compatible']).lower()}`",
+            (
+                "- selected/source-derived N_CRC_EW (comparison_pixel): "
+                f"`{_fmt(source_ew['selected_N_over_N_CRC_EW']['comparison_pixel'])}`"
+            ),
+            (
+                "- selected/source-derived N_CRC_EW (forward_closure_point): "
+                f"`{_fmt(source_ew['selected_N_over_N_CRC_EW']['forward_closure_point'])}`"
+            ),
             f"- repair ansatz N: `{_fmt(repair['N_implied_by_declared_repair_depth_ansatz'])}`",
             f"- repair capacity relative error: `{_fmt(repair['capacity_relative_error_repair_vs_selected'])}`",
             f"- repair contraction relative error: `{_fmt(repair['contraction_relative_error_vs_selected_N'])}`",

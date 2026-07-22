@@ -294,6 +294,26 @@ _EXPORTS = {
         "oph_fpe.cosmology.screen_capacity",
         "DEFAULT_N_CRC",
     ),
+    "SOURCE_DERIVED_N_CRC_EW": (
+        "oph_fpe.cosmology.screen_capacity",
+        "SOURCE_DERIVED_N_CRC_EW",
+    ),
+    "N_CRC_EW_COMPARISON_PIXEL": (
+        "oph_fpe.cosmology.screen_capacity",
+        "N_CRC_EW_COMPARISON_PIXEL",
+    ),
+    "N_CRC_EW_FORWARD_CLOSURE_POINT": (
+        "oph_fpe.cosmology.screen_capacity",
+        "N_CRC_EW_FORWARD_CLOSURE_POINT",
+    ),
+    "source_derived_screen_capacity_constants": (
+        "oph_fpe.cosmology.screen_capacity",
+        "source_derived_screen_capacity_constants",
+    ),
+    "source_derived_n_crc_ew_jsonable": (
+        "oph_fpe.cosmology.oph_constants",
+        "source_derived_n_crc_ew_jsonable",
+    ),
     "OPHScreenCapacityConstants": (
         "oph_fpe.cosmology.screen_capacity",
         "OPHScreenCapacityConstants",

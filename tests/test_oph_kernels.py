@@ -43,6 +43,60 @@ def test_oph_constants_five_of_seven_values():
     assert abs(constants.S8_projected_wl - 0.7900242005) < 1.0e-9
 
 
+def test_source_derived_n_crc_ew_block_is_branch_tagged_and_provenance_pinned():
+    from oph_fpe.cosmology.oph_constants import (
+        N_CRC_EW_COMPARISON_PIXEL,
+        N_CRC_EW_COMPARISON_PIXEL_PROVENANCE,
+        N_CRC_EW_FORWARD_CLOSURE_POINT,
+        N_CRC_EW_FORWARD_CLOSURE_POINT_PROVENANCE,
+        SOURCE_DERIVED_N_CRC_EW,
+        SOURCE_DERIVED_N_CRC_EW_ARTIFACT,
+        source_derived_n_crc_ew_jsonable,
+    )
+
+    assert abs(N_CRC_EW_COMPARISON_PIXEL - 3.5323546226929906e122) / 3.5323546226929906e122 < 1e-15
+    assert abs(N_CRC_EW_FORWARD_CLOSURE_POINT - 3.5321315434189358e122) / 3.5321315434189358e122 < 1e-15
+    assert SOURCE_DERIVED_N_CRC_EW == N_CRC_EW_COMPARISON_PIXEL
+    assert "particle_derivation_gap_ledger.json" in SOURCE_DERIVED_N_CRC_EW_ARTIFACT
+    assert "electroweak_hierarchy.N_CRC_EW" in N_CRC_EW_COMPARISON_PIXEL_PROVENANCE
+    assert "source_audit_branch" in N_CRC_EW_FORWARD_CLOSURE_POINT_PROVENANCE
+
+    block = source_derived_n_crc_ew_jsonable()
+    assert block["producer_eligible"] is True
+    assert block["distinct_from_observed_horizon_comparison"] is True
+    assert block["default_branch"] == "comparison_pixel"
+    branches = block["branches"]
+    assert branches["comparison_pixel"]["value"] == N_CRC_EW_COMPARISON_PIXEL
+    assert branches["forward_closure_point"]["value"] == N_CRC_EW_FORWARD_CLOSURE_POINT
+    for branch in ("comparison_pixel", "forward_closure_point"):
+        assert branches[branch]["provenance"]
+        ratio = block["ratio_source_derived_over_observed_horizon"][branch]
+        assert 1.06 < ratio < 1.07
+
+
+def test_oph_constants_jsonable_carries_source_derived_ew_capacity_and_ratio():
+    constants = OPHConstants()
+    payload = constants.as_jsonable()
+
+    # Quarantined observed-horizon comparison stays untouched.
+    assert payload["N_CRC_producer_eligible"] is False
+    assert payload["N_CRC_source"] == "observed_horizon_comparison"
+
+    block = payload["source_derived_N_CRC_EW"]
+    assert block["source"] == "source_derived_electroweak_bridge"
+    assert block["producer_eligible"] is True
+    ratio = block["ratio_source_derived_over_observed_horizon"]["comparison_pixel"]
+    assert ratio == block["branches"]["comparison_pixel"]["value"] / constants.N_CRC
+    # JSON round-trip.
+    import json
+
+    replay = json.loads(json.dumps(payload))
+    assert (
+        replay["source_derived_N_CRC_EW"]["branches"]["forward_closure_point"]["value"]
+        == block["branches"]["forward_closure_point"]["value"]
+    )
+
+
 def test_z6_poisson_kernel_windows_and_saturation():
     constants = OPHConstants()
 

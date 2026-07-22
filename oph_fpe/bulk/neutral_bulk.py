@@ -1038,11 +1038,37 @@ def strict_neutral_bulk_report(
         "refinement": refinement or {},
         "strict_neutral_bulk": bool(receipt["strict_neutral_bulk"]),
         "primary_features": [
+            # Locality-preserving packet features: hash fields excluded,
+            # midrank-calibrated, produced per observer support.
+            "locality_preserving_packet_feature_vector",
+            # Measured cross-observer overlap correspondences
+            # (literal_support_intersection_v1); the geometry channel stays
+            # zero unless cross-observer measurement provenance is attached.
+            "measured_overlap_correspondences",
+            # Producer-receipt-gated paired perturb-resettle measurement; the
+            # channel stays zero without the paired producer receipt.
+            "paired_perturbation_response_tensor",
+        ],
+        "primary_feature_notes": {
+            "locality_preserving_packet_feature_vector": (
+                "local_packet channel; gauge-invariant repair readbacks with hash "
+                "fields excluded and midrank calibration"
+            ),
+            "measured_overlap_correspondences": (
+                "overlap_correspondence channel; literal cross-observer support-set "
+                "intersections, schema literal_support_intersection_v1"
+            ),
+            "paired_perturbation_response_tensor": (
+                "perturbation_response_tensor channel; enters the geometry only "
+                "with paired_perturbation_response_producer_receipt True"
+            ),
+        },
+        "legacy_diagnostic_features": [
             "record_transition_hist",
             "record_signature_hist",
             "object_packet_hist",
             "boundary_packet_hash_hist",
-            "overlap_correspondence_hist",
+            "overlap_correspondence_hist_self_synthesized",
             "counterfactual_hist",
             "checkpoint_transition_hist",
             "sector_transition_hist",
@@ -1050,11 +1076,27 @@ def strict_neutral_bulk_report(
             "repair_response_hist",
             "repair_response_spectrum",
             "repair_current_tensor",
-            "perturbation_response_tensor",
+            "perturbation_response_tensor_repackaged",
             "first_passage_response_hist",
             "persistence_features",
             "scalar_readout_features",
         ],
+        "legacy_diagnostic_feature_notes": {
+            "boundary_packet_hash_hist": (
+                "hash-token histogram; nearby physical packets need not land in "
+                "nearby token bins, so it stays non-claim-bearing"
+            ),
+            "overlap_correspondence_hist_self_synthesized": (
+                "legacy overlap_correspondence_histogram payloads are "
+                "observer-self-synthesized, not cross-observer measurements; they "
+                "remain exported for negative comparison only"
+            ),
+            "perturbation_response_tensor_repackaged": (
+                "legacy perturbation-response summaries repackage row statistics "
+                "and are not a perturb-resettle measurement; only the paired "
+                "producer-receipt tensor is primary"
+            ),
+        },
         "diagnostic_only_features": [
             "modular_response_hist",
             "prime_geometric_modular_spectrum",

@@ -256,6 +256,19 @@ def main(argv: list[str] | None = None) -> int:
     h3_stitch_parser.add_argument("--out", required=True, type=Path)
     h3_stitch_parser.add_argument("--tolerance", default=1.0e-9, type=float)
 
+    h3_stitch_producer_parser = subparsers.add_parser(
+        "h3-worldline-stitch-producer",
+        help=(
+            "fail-closed producer lane for oph_h3_worldline_stitch_primitives_v1: "
+            "inventories measured cross-shard inputs and writes a missing-inputs "
+            "report; emits no primitives artifact unless every input is measured"
+        ),
+    )
+    h3_stitch_producer_parser.add_argument("--left-run-dir", required=True, type=Path)
+    h3_stitch_producer_parser.add_argument("--right-run-dir", required=True, type=Path)
+    h3_stitch_producer_parser.add_argument("--manifest", default=None, type=Path)
+    h3_stitch_producer_parser.add_argument("--out", required=True, type=Path)
+
     h3_refit_parser = subparsers.add_parser("h3-refit", help="refit cached modular-response kernel into H3")
     h3_refit_parser.add_argument("--run-dir", required=True, type=Path)
     h3_refit_parser.add_argument("--out", default=None, type=Path)
@@ -2120,6 +2133,19 @@ def main(argv: list[str] | None = None) -> int:
             args.source,
             args.out,
             tolerance=args.tolerance,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "h3-worldline-stitch-producer":
+        from oph_fpe.bulk.h3_worldline_stitch_producer import (
+            write_h3_worldline_stitch_producer_report,
+        )
+
+        result = write_h3_worldline_stitch_producer_report(
+            args.left_run_dir,
+            args.right_run_dir,
+            args.out,
+            manifest_path=args.manifest,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0

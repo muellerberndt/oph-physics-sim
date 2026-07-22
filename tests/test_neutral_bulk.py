@@ -776,6 +776,34 @@ def test_current_rank3_candidate_not_strict_without_refinement():
     assert "support-visible S2/H3 chart" in report["chart_boundary"]
 
 
+def test_primary_features_are_locality_preserving_and_legacy_lanes_are_demoted():
+    report = strict_neutral_bulk_report(
+        [_observer_view(i, records=[i, i + 1], checkpoints=[i], sectors=[i % 3], repairs=[i % 5]) for i in range(8)],
+        refinement={},
+    )
+
+    primary = report["primary_features"]
+    assert primary == [
+        "locality_preserving_packet_feature_vector",
+        "measured_overlap_correspondences",
+        "paired_perturbation_response_tensor",
+    ]
+    # Legacy hash-token/self-synthesized/repackaged lanes are demoted, not deleted.
+    legacy = report["legacy_diagnostic_features"]
+    assert "boundary_packet_hash_hist" in legacy
+    assert "overlap_correspondence_hist_self_synthesized" in legacy
+    assert "perturbation_response_tensor_repackaged" in legacy
+    for name in primary:
+        assert name not in legacy
+    notes = report["legacy_diagnostic_feature_notes"]
+    assert "self-synthesized" in notes["overlap_correspondence_hist_self_synthesized"]
+    assert "not a perturb-resettle measurement" in notes["perturbation_response_tensor_repackaged"]
+    assert "hash-token" in notes["boundary_packet_hash_hist"]
+    primary_notes = report["primary_feature_notes"]
+    assert "literal_support_intersection_v1" in primary_notes["measured_overlap_correspondences"]
+    assert "hash" in primary_notes["locality_preserving_packet_feature_vector"]
+
+
 def test_shuffled_neutral_control_report_emits_run_specific_controls():
     observer_views = [
         _observer_view(

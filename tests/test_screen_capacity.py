@@ -122,3 +122,33 @@ def test_write_capacity_readback_proxy_report(tmp_path: Path):
     assert (tmp_path / "proxy" / "capacity_readback_proxy_report.json").exists()
     assert (tmp_path / "proxy" / "capacity_readback_proxy_report.md").exists()
     assert (tmp_path / "proxy" / "capacity_readback_proxy_rows.csv").exists()
+
+
+def test_source_derived_screen_capacity_constants_expose_ew_branches():
+    from oph_fpe.cosmology.screen_capacity import (
+        N_CRC_EW_COMPARISON_PIXEL,
+        N_CRC_EW_FORWARD_CLOSURE_POINT,
+        SOURCE_DERIVED_N_CRC_EW,
+        source_derived_screen_capacity_constants,
+    )
+
+    default = source_derived_screen_capacity_constants()
+    assert default.n_crc == N_CRC_EW_COMPARISON_PIXEL
+    assert default.n_crc == SOURCE_DERIVED_N_CRC_EW
+    assert default.source == "source_derived_electroweak_bridge:comparison_pixel"
+
+    forward = source_derived_screen_capacity_constants("forward_closure_point")
+    assert forward.n_crc == N_CRC_EW_FORWARD_CLOSURE_POINT
+    assert forward.source == "source_derived_electroweak_bridge:forward_closure_point"
+    assert forward.n_crc < default.n_crc
+
+    as_dict = default.as_dict()
+    assert as_dict["source"] == "source_derived_electroweak_bridge:comparison_pixel"
+    assert as_dict["Lambda_lP2"] == 3.0 * math.pi / default.n_crc
+
+    try:
+        source_derived_screen_capacity_constants("no_such_branch")
+    except ValueError as error:
+        assert "no_such_branch" in str(error)
+    else:
+        raise AssertionError("unknown branch must be rejected")

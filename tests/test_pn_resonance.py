@@ -103,3 +103,36 @@ def test_measurement_pack_copies_pn_resonance_receipt(tmp_path: Path):
     assert pack["claims"]["pn_resonance_written"] is True
     assert pack["claims"]["pn_resonance_numeric_replay"] is True
     assert pack["claims"]["pn_resonance_receipt"] is False
+
+
+def test_pn_resonance_emits_branch_tagged_source_derived_ew_sidecar():
+    import math
+
+    from oph_fpe.cosmology.screen_capacity import (
+        N_CRC_EW_COMPARISON_PIXEL,
+        N_CRC_EW_FORWARD_CLOSURE_POINT,
+    )
+
+    report = pn_resonance_report()
+    sidecar = report["source_derived_ew_sidecar"]
+    selected = report["paper_bridge_relation"]["selected_N_star"]
+
+    block = sidecar["source_derived_N_CRC_EW"]
+    assert block["producer_eligible"] is True
+    assert block["default_branch"] == "comparison_pixel"
+    assert set(block["branches"]) == {"comparison_pixel", "forward_closure_point"}
+    for branch in ("comparison_pixel", "forward_closure_point"):
+        assert block["branches"][branch]["provenance"]
+        assert 1.06 < block["ratio_source_derived_over_observed_horizon"][branch] < 1.07
+
+    ratios = sidecar["selected_N_over_N_CRC_EW"]
+    assert ratios["comparison_pixel"] == selected / N_CRC_EW_COMPARISON_PIXEL
+    assert ratios["forward_closure_point"] == selected / N_CRC_EW_FORWARD_CLOSURE_POINT
+    logs = sidecar["log_residual_selected_vs_N_CRC_EW"]
+    assert logs["comparison_pixel"] == math.log(selected / N_CRC_EW_COMPARISON_PIXEL)
+    # The default selected branch replays the comparison-pixel bridge value.
+    assert abs(logs["comparison_pixel"]) < 1.0e-10
+
+    # The observed-horizon sidecar stays intact next to the source-derived one.
+    observed = report["observed_branch_sidecar"]
+    assert observed["DEFAULT_N_CRC"] < N_CRC_EW_FORWARD_CLOSURE_POINT

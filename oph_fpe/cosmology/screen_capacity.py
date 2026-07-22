@@ -9,6 +9,16 @@ from pathlib import Path
 from typing import Any
 
 from oph_fpe.constants.oph_pixel import P_STAR, total_entropy_capacity
+from oph_fpe.cosmology.oph_constants import (
+    N_CRC_EW_COMPARISON_PIXEL,
+    N_CRC_EW_COMPARISON_PIXEL_PROVENANCE,
+    N_CRC_EW_FORWARD_CLOSURE_POINT,
+    N_CRC_EW_FORWARD_CLOSURE_POINT_PROVENANCE,
+    SOURCE_DERIVED_N_CRC_EW,
+    SOURCE_DERIVED_N_CRC_EW_DEFAULT_BRANCH,
+    SOURCE_DERIVED_N_CRC_EW_SOURCE,
+    source_derived_n_crc_ew_jsonable,
+)
 
 DEFAULT_R_DS_M = 1.66e26
 DEFAULT_L_PLANCK_M = 1.616e-35
@@ -17,6 +27,40 @@ DEFAULT_OBSERVED_HORIZON_N_COMPARISON = math.pi * (DEFAULT_R_DS_M / DEFAULT_L_PL
 # Backward-compatible numeric alias.  This value is an observed-horizon
 # comparison, never a direct public-record capacity producer.
 DEFAULT_N_CRC = DEFAULT_OBSERVED_HORIZON_N_COMPARISON
+
+_SOURCE_DERIVED_EW_BRANCH_VALUES = {
+    "comparison_pixel": (N_CRC_EW_COMPARISON_PIXEL, N_CRC_EW_COMPARISON_PIXEL_PROVENANCE),
+    "forward_closure_point": (
+        N_CRC_EW_FORWARD_CLOSURE_POINT,
+        N_CRC_EW_FORWARD_CLOSURE_POINT_PROVENANCE,
+    ),
+}
+
+
+def source_derived_screen_capacity_constants(
+    branch: str = SOURCE_DERIVED_N_CRC_EW_DEFAULT_BRANCH,
+    *,
+    p_value: float = P_STAR,
+) -> "OPHScreenCapacityConstants":
+    """Typed capacity constants on the source-derived electroweak branch.
+
+    The value is the non-circular N_CRC_EW imported from the cross-repo gap
+    ledger, branch-tagged as ``comparison_pixel`` or ``forward_closure_point``.
+    This is a source-side replay constant, not the quarantined observed-horizon
+    comparison and not a finite-simulator capacity fixed point.
+    """
+
+    if branch not in _SOURCE_DERIVED_EW_BRANCH_VALUES:
+        raise ValueError(
+            f"unknown source-derived N_CRC_EW branch: {branch!r}; "
+            f"expected one of {sorted(_SOURCE_DERIVED_EW_BRANCH_VALUES)}"
+        )
+    value, _provenance = _SOURCE_DERIVED_EW_BRANCH_VALUES[branch]
+    return OPHScreenCapacityConstants(
+        n_crc=value,
+        p_value=p_value,
+        source=f"{SOURCE_DERIVED_N_CRC_EW_SOURCE}:{branch}",
+    )
 
 
 @dataclass(frozen=True)
