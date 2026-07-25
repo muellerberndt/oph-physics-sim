@@ -50,7 +50,12 @@ def test_e0_run_can_attach_positive_geometry_kernel_dispatch(tmp_path: Path):
     config["run_id"] = "test_e0_kernel_dispatch"
     config["graph"] = dict(config["graph"], patch_count=12)
     config["dynamics"] = dict(config["dynamics"], cycles=4, repairs_per_cycle=6, record_commit_cycles=2)
-    config["kernels"] = {"positive_geometry": {"enabled": True}}
+    config["kernels"] = {
+        "positive_geometry": {
+            "enabled": True,
+            "pgk_root": str(tmp_path / "missing-plugin"),
+        }
+    }
 
     result = run_config(config, tmp_path)
     run_path = Path(result["path"])
@@ -60,7 +65,14 @@ def test_e0_run_can_attach_positive_geometry_kernel_dispatch(tmp_path: Path):
     assert (run_path / "positive_geometry_kernel_report.json").exists()
     assert result["kernel_dispatch"]["routing_decision"] == "generic_oph_repair_with_kernel_receipts"
     assert result["kernel_dispatch"]["effective_acceleration_enabled"] is False
-    assert manifest["kernel_dispatch"]["positive_geometry"]["dispatch_status"] == "geometry_certified_diagnostic_only"
+    assert (
+        manifest["kernel_dispatch"]["positive_geometry"]["dispatch_status"]
+        == "exact_generic_fallback"
+    )
+    assert (
+        manifest["kernel_dispatch"]["positive_geometry"]["native_verdict"]
+        == "DECLARED_PLUGIN_UNAVAILABLE"
+    )
     assert manifest["kernel_dispatch"]["physical_observables_changed"] is False
     assert manifest["source_provenance"]["simulator"]["commit"] == manifest["git_commit"]
     assert manifest["source_provenance"]["simulator"]["worktree_state_sha256"].startswith("sha256:")

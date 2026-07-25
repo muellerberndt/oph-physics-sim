@@ -10,8 +10,16 @@ from oph_fpe.measurement_pack import export_measurement_pack
 
 
 def test_positive_geometry_dispatch_writes_fail_closed_receipts(tmp_path: Path):
+    missing_root = tmp_path / "missing-plugin"
     report = dispatch_configured_kernels(
-        {"kernels": {"positive_geometry": {"enabled": True}}},
+        {
+            "kernels": {
+                "positive_geometry": {
+                    "enabled": True,
+                    "pgk_root": missing_root,
+                }
+            }
+        },
         tmp_path,
         engine="unit_test",
     )
@@ -25,8 +33,8 @@ def test_positive_geometry_dispatch_writes_fail_closed_receipts(tmp_path: Path):
     assert report["generic_repair_executed"] is True
     assert report["effective_acceleration_enabled"] is False
     assert report["physical_observables_changed"] is False
-    assert positive_geometry["dispatch_status"] == "geometry_certified_diagnostic_only"
-    assert positive_geometry["native_verdict"] == "CERTIFIED_NATIVE_BACKEND_NOT_ENABLED"
+    assert positive_geometry["dispatch_status"] == "exact_generic_fallback"
+    assert positive_geometry["native_verdict"] == "DECLARED_PLUGIN_UNAVAILABLE"
     assert positive_geometry["fallback_required"] is True
 
     summary = kernel_dispatch_manifest_summary(report)
@@ -42,18 +50,28 @@ def test_positive_geometry_dispatch_fails_closed_on_bad_manifest(tmp_path: Path)
     )
     positive_geometry = report["kernels"]["positive_geometry"]
 
-    assert positive_geometry["dispatch_status"] == "fail_closed_error"
+    assert positive_geometry["dispatch_status"] == "exact_generic_fallback"
+    assert positive_geometry["native_verdict"] == "DECLARED_PLUGIN_UNAVAILABLE"
     assert positive_geometry["fallback_required"] is True
     assert positive_geometry["effective_acceleration_enabled"] is False
-    assert (tmp_path / "positive_geometry_kernel_error.json").exists()
+    assert not (tmp_path / "positive_geometry_kernel_error.json").exists()
+    assert (tmp_path / "positive_geometry_kernel_receipt.json").exists()
     assert (tmp_path / "kernel_dispatch_report.json").exists()
 
 
 def test_measurement_pack_copies_kernel_dispatch_receipt(tmp_path: Path):
     run = tmp_path / "run"
     run.mkdir()
+    missing_root = tmp_path / "missing-plugin"
     dispatch_configured_kernels(
-        {"kernels": {"positive_geometry": {"enabled": True}}},
+        {
+            "kernels": {
+                "positive_geometry": {
+                    "enabled": True,
+                    "pgk_root": missing_root,
+                }
+            }
+        },
         run,
         engine="unit_test",
     )

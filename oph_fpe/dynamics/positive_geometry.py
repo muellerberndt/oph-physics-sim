@@ -47,6 +47,12 @@ def positive_geometry_kernel_report(
     root = Path(pgk_root) if pgk_root is not None else default_pgk_root()
     manifest = Path(manifest_path) if manifest_path is not None else default_pgk_manifest()
     runtime_path = root / "kernel_runtime.py"
+    if not runtime_path.is_file() or not manifest.is_file():
+        return _unavailable_plugin_report(
+            runtime_path=runtime_path,
+            manifest_path=manifest,
+            source=source,
+        )
     runtime = _load_kernel_runtime(runtime_path)
     manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
     receipt = runtime.check_manifest(copy.deepcopy(manifest_payload), registry=registry)
@@ -117,6 +123,75 @@ def positive_geometry_kernel_report(
             "but it is not promoted to a trusted OPH scattering readout unless host-registered "
             "sector recognition, quotient compiler, readout equivalence, and event-commit gates pass. "
             "Manifest status strings cannot self-promote a result."
+        ),
+    }
+
+
+def _unavailable_plugin_report(
+    *,
+    runtime_path: Path,
+    manifest_path: Path,
+    source: str,
+) -> dict[str, Any]:
+    missing = [
+        str(path)
+        for path in (runtime_path, manifest_path)
+        if not path.is_file()
+    ]
+    receipt = {
+        "verdict": "DECLARED_PLUGIN_UNAVAILABLE",
+        "fallback_action": "EXACT_GENERIC",
+        "errors": [f"missing declared plugin input: {path}" for path in missing],
+        "gates": {},
+    }
+    gates = {
+        "PGK_manifest_loaded": manifest_path.is_file(),
+        "PGK_native_checker_available": runtime_path.is_file(),
+        "PGK_structural_checks_passed": False,
+        "PGK_geometry_certified": False,
+        "PGK_sector_recognition_certified": False,
+        "PGK_quotient_compiler_certified": False,
+        "PGK_readout_equivalence_certified": False,
+        "PGK_resource_accounting_certified": False,
+        "PGK_fail_closed_reproducibility_certified": False,
+        "PGK_event_commit_certified": False,
+        "PGK_failed_gates_present": False,
+        "PGK_open_gates_present": True,
+        "PGK_acceleration_enabled": False,
+        "PGK_fallback_exact_generic": True,
+        "trusted_oph_scattering_readout": False,
+        "generic_oph_repair_fallback_required": True,
+    }
+    return {
+        "mode": "oph_positive_geometry_kernel_integration_v2",
+        "source": source,
+        "kernel_constitution": {
+            "doctrine": "declared external plugin with fail-closed fallback",
+            "runtime": str(runtime_path),
+            "manifest_path": str(manifest_path),
+            "fallback_path": "generic OPH repair",
+            "manifest_status_strings_authoritative": False,
+        },
+        "sector": {
+            "sector_id": None,
+            "theory_tag": None,
+            "native_object": None,
+            "physical_OPH_sector_recognized": False,
+            "n": None,
+            "k": None,
+            "m": None,
+            "loop_order": None,
+            "geometry_family": None,
+        },
+        "receipt": receipt,
+        "readiness_gates": gates,
+        "execution_mode": "EXACT_GENERIC_FALLBACK",
+        "trusted_acceleration_enabled": False,
+        "physical_prediction": False,
+        "claim_boundary": (
+            "The positive-geometry SDK is a declared external plugin input. "
+            "An absent runtime or manifest cannot promote acceleration, "
+            "scattering, neutral-bulk, or physical-prediction receipts."
         ),
     }
 
