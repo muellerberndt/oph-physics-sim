@@ -397,8 +397,10 @@ discharge is recorded in `einstein_bridge_manifest.json` via
 `RemainderControl=LEMMA_E0_6`, `AllTimelikeCoverage=LEMMA_E0_7`,
 `StressClosure=PROPOSITION_E2`, and `Lambda=D6_NCRC_CLOSURE`.
 
-The run-specific branch-entry receipt remains fail-closed. `EINSTEIN_BRANCH_ENTRY_RECEIPT` is true
-only when the manifest has all required theorem-tagged sidecars:
+The retained run-specific sidecars are declared compatibility inputs. No
+registered primitive producer and independent resolver emit them, so
+`EINSTEIN_BRANCH_ENTRY_RECEIPT` remains false even when all files contain
+positive booleans:
 
 - `sphere_fold_receipt.json`
 - `bw_receipt.json`
@@ -413,9 +415,12 @@ only when the manifest has all required theorem-tagged sidecars:
 - `newton_forbidden_input_receipt.json`
 - `einstein_residual_receipt.json`
 
-Each sidecar must be present, use the receipt schema, carry the expected theorem tag, and set its
-own accepted key to the literal boolean `true`. Aggregate or legacy manifest booleans cannot stand
-in for a missing, malformed, or wrongly tagged sidecar.
+The manifest records schema, theorem-tag, and declared-value diagnostics for
+each sidecar, but marks every row `DECLARED_INPUT_NONPROMOTING`. The E1
+null-stress, E3 small-ball-area, and E5 lambda-constancy rows carry the stronger
+`NO_PRODUCER_NOT_TESTABLE` classification. Aggregate, legacy, or sidecar
+booleans cannot stand in for a registered producer plus an independent
+resolver.
 
 `G2` production gravity requires `E0` plus the relevant matter/source and metric-solution receipts.
 Until then:

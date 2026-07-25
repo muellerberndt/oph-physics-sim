@@ -10,6 +10,7 @@ A missing physical producer is reported as `NOT_TESTABLE`. Declared inputs and l
 |---|---|---|---|---|---|---|
 | `WZH_V1_DECLARATIONS` | WZH0--WZH4 legacy W/Z/H gate inputs | `oph_fpe/bosons/pipeline.py` | `none` | `DECLARED_INPUT_NONPROMOTING` | `NONPROMOTING` | `tests/test_wzh_source_closure_backend.py` |
 | `E1_NULL_STRESS` | EINSTEIN_NULL_STRESS_CHARGE_RECEIPT (E1) | `oph_fpe/bulk/einstein_bridge.py` | `none` | `NO_PRODUCER_NOT_TESTABLE` | `NOT_TESTABLE` | `tests/test_paper_side_realized_branch.py; tests/test_theorem_contract.py` |
+| `E0_BRIDGE_SIDECARS` | E0 theorem-tagged run-sidecar compatibility format | `oph_fpe/bulk/einstein_bridge.py` | `none` | `DECLARED_INPUT_NONPROMOTING` | `NONPROMOTING` | `tests/test_theorem_contract.py; tests/test_bulk_proof_certificate.py` |
 | `E3_SMALL_BALL_AREA` | EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT (E3) | `oph_fpe/bulk/einstein_bridge.py` | `none` | `NO_PRODUCER_NOT_TESTABLE` | `NOT_TESTABLE` | `tests/test_paper_side_realized_branch.py; tests/test_theorem_contract.py` |
 | `E5_LAMBDA_CONSTANCY` | EINSTEIN_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT (E5) | `oph_fpe/bulk/einstein_bridge.py` | `none` | `NO_PRODUCER_NOT_TESTABLE` | `NOT_TESTABLE` | `tests/test_paper_side_realized_branch.py; tests/test_theorem_contract.py` |
 | `COMMON_SOURCE_TOWER` | COMMON_DOMAIN_SOURCE_TOWER_RECEIPT | `oph_fpe/common_source_tower.py` | `oph_fpe/bulk/einstein_tower_producer.py` | `PRODUCED_NONPROMOTING` | `NOT_ATTAINED` | `tests/test_einstein_tower_producer.py` |
@@ -25,6 +26,7 @@ A missing physical producer is reported as `NOT_TESTABLE`. Declared inputs and l
 
 - `WZH_V1_DECLARATIONS`: Caller booleans remain visible only inside the v1 diagnostic. promotion_allowed is hard-false and the report names the missing runtime resolver and independent scientific checker.
 - `E1_NULL_STRESS`: The typed source tower exposes null-charge and stress readouts, but no primitive producer emits the theorem-tagged E1 sidecar.
+- `E0_BRIDGE_SIDECARS`: All twelve legacy sidecars are caller-supplied declarations. Schema, tag, and value diagnostics remain visible, but no sidecar boolean can promote a child gate or branch entry.
 - `E3_SMALL_BALL_AREA`: No primitive producer emits the theorem-tagged small-ball-area sidecar; manifest or legacy booleans cannot substitute for it.
 - `E5_LAMBDA_CONSTANCY`: No primitive producer emits the theorem-tagged lambda-closure sidecar; a declared capacity or configured Lambda is not evidence.
 - `COMMON_SOURCE_TOWER`: All thirteen typed role readouts are source-produced and replayed. The generator firewall and federation binding remain pinned false, so this does not manufacture E1, E3, E5, or gravity receipts.

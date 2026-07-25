@@ -57,6 +57,7 @@ class ReceiptSpec:
     theorem_tag: str
     keys: tuple[str, ...]
     required_for_branch_entry: bool = True
+    producer_classification: str = "DECLARED_INPUT_NONPROMOTING"
 
 
 RECEIPT_SPECS: tuple[ReceiptSpec, ...] = (
@@ -77,6 +78,7 @@ RECEIPT_SPECS: tuple[ReceiptSpec, ...] = (
         "null_stress_receipt.json",
         "THEOREM_5_2G",
         (EINSTEIN_NULL_STRESS_CHARGE_RECEIPT, "null_generator_stress_charge_receipt"),
+        producer_classification="NO_PRODUCER_NOT_TESTABLE",
     ),
     ReceiptSpec(
         "bounded_interval",
@@ -95,6 +97,7 @@ RECEIPT_SPECS: tuple[ReceiptSpec, ...] = (
         "small_ball_area_receipt.json",
         "STANDARD_GEOMETRY_AFTER_GEOMREAD",
         (EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT, "small_ball_area_bridge_receipt"),
+        producer_classification="NO_PRODUCER_NOT_TESTABLE",
     ),
     ReceiptSpec(
         "remainder_control",
@@ -124,6 +127,7 @@ RECEIPT_SPECS: tuple[ReceiptSpec, ...] = (
         "lambda_closure_receipt.json",
         "D6_NCRC_CLOSURE",
         (EINSTEIN_LAMBDA_CONSTANCY_CONSERVATION_RECEIPT, "lambda_constancy_conservation_receipt"),
+        producer_classification="NO_PRODUCER_NOT_TESTABLE",
     ),
     ReceiptSpec(
         "newton_forbidden_input_audit",
@@ -146,9 +150,10 @@ RECEIPT_SPECS: tuple[ReceiptSpec, ...] = (
 def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
     """Build the E0 Einstein bridge manifest from run sidecar receipts.
 
-    The E0 theorem provenance is static paper provenance. The run-specific
-    branch-entry receipt is stricter: every required sidecar must be present and
-    theorem-tagged before visuals may be promoted beyond diagnostics.
+    The E0 theorem provenance is static paper provenance. The retained
+    run-sidecar format is declaration-only because no registered producer and
+    independent resolver emit these files. Sidecar booleans therefore cannot
+    promote branch entry.
     """
 
     root = Path(run_dir)
@@ -210,9 +215,10 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
             "compatibilityOnly": True,
         },
         "claimBoundary": (
-            "The E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. A concrete "
-            "simulation run still needs each theorem-tagged sidecar receipt before the Einstein branch "
-            "entry receipt is true. Curved-spacetime visuals remain diagnostics while any receipt row is open."
+            "The E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. "
+            "The retained run sidecars are declared inputs and cannot promote a simulation "
+            "receipt. Branch entry remains false until each required row has a registered "
+            "producer and independent resolver. Curved-spacetime visuals remain diagnostics."
         ),
     }
 
@@ -233,7 +239,7 @@ def _receipt_row(root: Path, legacy: dict[str, Any], spec: ReceiptSpec) -> dict[
     schema_valid = payload.get("schema_version") == EINSTEIN_SIDECAR_SCHEMA
     theorem_tag_valid = payload.get("theorem_tag") == spec.theorem_tag
     sidecar_value = _truthy_any(payload, *spec.keys)
-    receipt = bool(written and schema_valid and theorem_tag_valid and sidecar_value)
+    receipt = False
     legacy_value = _truthy_any(legacy, *spec.keys)
     return {
         "name": spec.name,
@@ -246,10 +252,19 @@ def _receipt_row(root: Path, legacy: dict[str, Any], spec: ReceiptSpec) -> dict[
         "schemaValid": schema_valid,
         "theoremTagValid": theorem_tag_valid,
         "sidecarReceiptValue": sidecar_value,
+        "sidecarReceiptValueIgnored": sidecar_value,
         "legacyReceiptValueIgnored": legacy_value,
+        "producerClassification": spec.producer_classification,
+        "promotionEligible": False,
         "requiredForBranchEntry": spec.required_for_branch_entry,
         "acceptedKeys": list(spec.keys),
-        "source": "validated_sidecar" if receipt else "invalid_sidecar" if written else "missing",
+        "source": (
+            "declared_input_nonpromoting"
+            if written and schema_valid and theorem_tag_valid
+            else "invalid_sidecar"
+            if written
+            else "missing"
+        ),
     }
 
 

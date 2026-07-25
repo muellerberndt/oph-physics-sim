@@ -372,7 +372,7 @@ def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_
     assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
 
 
-def test_einstein_bridge_manifest_promotes_branch_entry_when_all_sidecars_pass(
+def test_einstein_bridge_manifest_never_promotes_from_declared_sidecars(
     tmp_path: Path,
 ) -> None:
     run = tmp_path / "run"
@@ -383,13 +383,25 @@ def test_einstein_bridge_manifest_promotes_branch_entry_when_all_sidecars_pass(
     report = finite_oph_theorem_contract_report(run)
 
     assert manifest["EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT"] is True
-    assert manifest["EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT"] is True
-    assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is True
+    assert manifest["EINSTEIN_BRIDGE_RUN_RECEIPTS_RECEIPT"] is False
+    assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
     assert manifest["provenanceTags"]["BoundedInterval"] == "LEMMA_E0_5"
+    assert all(row["promotionEligible"] is False for row in manifest["receiptRows"])
+    assert all(
+        row["source"] == "declared_input_nonpromoting"
+        for row in manifest["receiptRows"]
+    )
+    assert {
+        row["name"]
+        for row in manifest["receiptRows"]
+        if row["producerClassification"] == "NO_PRODUCER_NOT_TESTABLE"
+    } == {"null_stress", "small_ball_area", "lambda_closure"}
     assert report["einstein_bridge_manifest_written"] is True
-    assert report["einstein_branch_entry_contract_receipt"] is True
-    assert report["einstein_branch_entry_blockers"] == []
-    assert all(report["einstein_branch_entry_child_gates"].values())
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert "E0_einstein_branch_entry_umbrella" in report[
+        "einstein_branch_entry_blockers"
+    ]
+    assert not any(report["einstein_branch_entry_child_gates"].values())
 
 
 def test_einstein_bridge_manifest_is_fail_closed_when_sidecars_are_missing(

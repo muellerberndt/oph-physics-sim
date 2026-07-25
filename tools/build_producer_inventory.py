@@ -70,6 +70,20 @@ ROWS = (
         ),
     ),
     InventoryRow(
+        row_id="E0_BRIDGE_SIDECARS",
+        receipt_or_gate="E0 theorem-tagged run-sidecar compatibility format",
+        verifier="oph_fpe/bulk/einstein_bridge.py",
+        producer=None,
+        producer_status="DECLARED_INPUT_NONPROMOTING",
+        public_status="NONPROMOTING",
+        evidence="tests/test_theorem_contract.py; tests/test_bulk_proof_certificate.py",
+        boundary=(
+            "All twelve legacy sidecars are caller-supplied declarations. "
+            "Schema, tag, and value diagnostics remain visible, but no sidecar "
+            "boolean can promote a child gate or branch entry."
+        ),
+    ),
+    InventoryRow(
         row_id="E3_SMALL_BALL_AREA",
         receipt_or_gate="EINSTEIN_SMALL_BALL_AREA_BRIDGE_RECEIPT (E3)",
         verifier="oph_fpe/bulk/einstein_bridge.py",

@@ -409,7 +409,9 @@ def test_bulk_proof_certificate_keeps_gravity_closed_after_branch_entry_without_
     assert "null_stress" in report["proof_tiers"]["G2_production_gravity"]["blockers"]
 
 
-def test_bulk_proof_certificate_uses_einstein_bridge_manifest(tmp_path: Path):
+def test_bulk_proof_certificate_keeps_declared_einstein_sidecars_nonpromoting(
+    tmp_path: Path,
+):
     run = tmp_path / "run"
     run.mkdir()
     _write_all_einstein_bridge_sidecars(run)
@@ -417,16 +419,16 @@ def test_bulk_proof_certificate_uses_einstein_bridge_manifest(tmp_path: Path):
 
     report = bulk_proof_certificate(run)
 
-    assert report["einstein_branch_entry_contract_receipt"] is True
-    assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is True
+    assert report["einstein_branch_entry_contract_receipt"] is False
+    assert report["proof_tiers"]["E0_einstein_branch_entry_contract"]["passed"] is False
     assert report["einstein_branch_entry_summary"]["manifest_written"] is True
     assert report["einstein_branch_entry_summary"]["theorem_e0_dependency_discharge_receipt"] is True
-    assert report["einstein_branch_entry_summary"]["einstein_bridge_run_receipts_receipt"] is True
+    assert report["einstein_branch_entry_summary"]["einstein_bridge_run_receipts_receipt"] is False
     assert report["einstein_branch_entry_summary"]["provenance_tags"]["AllTimelikeCoverage"] == (
         "LEMMA_E0_7"
     )
     assert report["production_gravity_receipt"] is False
-    assert "production_source_stress_bridge_missing" in report["proof_tiers"]["G2_production_gravity"][
+    assert "null_stress" in report["proof_tiers"]["G2_production_gravity"][
         "blockers"
     ]
 
