@@ -6989,9 +6989,10 @@ def _strict_neutral_theory_alignment_report(
         "required_channels": rows,
         "evidence_gaps": gaps,
         "claim_boundary": (
-            "H2 strict-neutral bulk needs chart-blind local observer evidence: local boundary/port packet "
-            "hashes, overlap correspondences, record/checkpoint order, transition counts by port pair and "
-            "lag, perturbation/repair response tensors, first-passage observables, and quotient-safe controls. "
+            "H2 strict-neutral bulk needs chart-blind local observer evidence: locality-preserving "
+            "boundary/port packet observables (never hash buckets as metric coordinates), measured overlap "
+            "correspondences, record/checkpoint order, transition counts by port pair and lag, "
+            "perturbation/repair response tensors, first-passage observables, and quotient-safe controls. "
             "A geometric fit is diagnostic until these channels and the quotient geometry contract are present."
         ),
     }

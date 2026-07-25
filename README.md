@@ -67,6 +67,10 @@ runs.
 - Strict neutral bulk and the Einstein branch-entry gates E1-E6 stay
   false with executable blockers; the 4k/16k/64k/256k refinement ladder
   and the bw_2pi blocker resolution feed the next audit pass.
+- The generated [Phase-0 verifier/producer inventory](docs/PRODUCER_INVENTORY.md)
+  makes each audited producer gap explicit. Missing physical producers are
+  `NOT_TESTABLE`; declared-input, inventory-only, and retired compatibility
+  lanes are nonpromoting rather than silently "pending."
 - The exact A5 lane recomputes the faithful 12-point action, the icosahedral
   adjacency spectrum, the `1+3+3'+5` module decomposition, the invariant-point-
   partition no-go, and the conditional 15-state exterior-generation witness.
@@ -409,6 +413,9 @@ Compact pointers; contracts and prose in `docs/CLAIM_LANES.md`.
   `GEOMETRY_CERTIFIED_BACKEND_NOT_ENABLED`.
 - W/Z/H backend: hash-pinned theorem artifacts, synthetic diagnostic
   config; see `docs/WZH_NUMERICAL_BACKEND.md`.
+- Producer coverage: the generated Phase-0 audit table is
+  `docs/PRODUCER_INVENTORY.md`;
+  `python tools/build_producer_inventory.py --check` is its drift gate.
 
 ## Cloud And Reproducibility
 

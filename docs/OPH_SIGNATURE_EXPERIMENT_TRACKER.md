@@ -156,7 +156,7 @@ and gaps with causes and proposed fixes.
 | 2 pi clock strength at scale | selected, score 0.691 -> 0.304 -> 0.0 | probe budgets (basis size, repairs per source, steps) fixed while the patch count grew 256x | scale `probe_repairs_per_source`/`max_basis` with patch count; add a score-vs-budget sweep at 4k; longer post-commit tail (256-cycle temporal ladder) |
 | Einstein bw_2pi blocker | open despite the replay fix | the bridge reads the L3 `KMS_GEOMETRIC_CLOCK_FIT_RECEIPT` (geometric clock FIT), stronger than the L0 branch replay | more informative clock carriers (26-39 rows today): longer tails, more cycles, carrier-row selection tuning; then the fit either passes or its failure is a physics statement |
 | Einstein E1/E3/E5 (null stress, small-ball area, lambda constancy) | producers absent | verifier-without-producer | write the three producers against the finite-collar stress objects; E6 is a bookkeeping audit once inputs exist |
-| Strict neutral bulk / effective 4D | ladder incomplete; rank-3 unstable; independent selector false | 256k rung interrupted (resume in flight); rank estimators still consume hash-token features that destroy locality; measured-overlap gate has no producer | finish the 256k sweep, run the four-rung audit; replace hash-token features with locality-preserving packet features (H2 audit item); wire the agreement certificate into `measured_overlap_geometry_receipt`; ancestry-split refinement batches |
+| Strict neutral bulk / effective 4D | ladder incomplete; rank-3 unstable; independent selector false | the hash-token lane is retired from the default claim-bearing geometry; locality-preserving packets and literal measured overlaps are emitted, but both inherit the S2-built support carrier and are therefore marked `strict_neutral_eligible=false`; the paired perturb-resettle producer and a replacement non-hash refinement run are absent | produce a chart-blind support carrier and paired perturb-resettle tensors, then rerun the 4k/16k/64k/256k audit with ancestry-split batches; old hash-token dimensions remain retired diagnostics |
 | Particle promotion (P1) | fusion conservation fails; transport receipts hardcoded false | encounter detector counts passers-by (identity fraction decays to random with scale); no covariant common-basepoint transport | redefine fusion as product-worldline continuation (two tubes end, one begins, composed class); implement covariant fusion transport (same playbook as the clock replay); tighten the angular cutoff; deconfinement check for colored candidates |
 | Worldline turning power | z in [-1.5, +0.8], 4-18 usable worldlines | timeline caps events per worldline | raise timeline caps for analysis runs; consume the full cluster catalogs; 64-seed GCP fleet for a proper null band |
 | Screen parity field pairs (e5) | degenerate at 128k and in the local 1M report | bounded e5 profile writes constant freezeout fields | export smoothed/evolution-era fields in e5, or enable raw frames on one analysis run per scale |
@@ -915,15 +915,19 @@ astrophysical scales.
 
 ### Von Neumann (classical)
 
-- **VN-01. Dimension drop.** Replace hash-token record features with
-  locality-preserving packet features, add the real perturb-resettle
-  channel, rerun the spectral/volume-growth/correlation estimators
-  (`bulk/dimensions.py`, walk lengths 1-12). Current runs store a stub
-  (`dimension_report.json: not_computed_for_bw_primary_path`). The
-  decisive question: does the measured dimension move from 8-12 to ~3?
-  A yes opens the 3D-bulk path; a stable no at increasing scale is
-  evidence against 3D emergence in this dynamics. Highest-information
-  computational experiment in the program.
+- **VN-01. Dimension drop: hash-token claim path retired; replacement run
+  still open.** The default H2 geometry now uses locality-preserving packet
+  features, literal cross-observer overlap correspondences, and only
+  producer-receipt-gated paired perturbation tensors. Hash-token histograms
+  remain readable solely to replay old artifacts and have zero default
+  claim weight. Current supports still descend from the S2 screen adjacency,
+  so their provenance is `strict_neutral_eligible=false`, and no real paired
+  perturb-resettle producer exists. The old dimension 8--12 is therefore a
+  retired hash-feature diagnostic, not a result to carry forward. Produce the
+  chart-blind carrier and paired response lane, then rerun the
+  spectral/volume-growth/correlation estimators (`bulk/dimensions.py`, walk
+  lengths 1--12). A replacement near 3 opens the 3D-bulk path; a stable
+  non-3 result at increasing scale is evidence against 3D emergence.
 - **VN-02. W5 coefficients from dynamics.** Umbrella-sample the
   twelve-port defect record, fit the five invariant coefficients, feed
   the frozen decision harness (locus witness ratio 1.8831 vs MCPR target
