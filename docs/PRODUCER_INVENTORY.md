@@ -8,6 +8,7 @@ A missing physical producer is reported as `NOT_TESTABLE`. Declared inputs and l
 
 | ID | Receipt or gate | Verifier | Producer | Producer status | Public status | Evidence |
 |---|---|---|---|---|---|---|
+| `CHARGED_RESPONSE_ARTIFACT` | oph.charged_response_semantic_artifact.v1 (#599 source binding) | `tests/test_charged_response.py` | `oph_fpe/core/charged_response.py` | `PRODUCED` | `TESTABLE` | `tests/test_charged_response.py` |
 | `WZH_V1_DECLARATIONS` | WZH0--WZH4 legacy W/Z/H gate inputs | `oph_fpe/bosons/pipeline.py` | `none` | `DECLARED_INPUT_NONPROMOTING` | `NONPROMOTING` | `tests/test_wzh_source_closure_backend.py` |
 | `E1_NULL_STRESS` | EINSTEIN_NULL_STRESS_CHARGE_RECEIPT (E1) | `oph_fpe/bulk/einstein_bridge.py` | `none` | `NO_PRODUCER_NOT_TESTABLE` | `NOT_TESTABLE` | `tests/test_paper_side_realized_branch.py; tests/test_theorem_contract.py` |
 | `E0_BRIDGE_SIDECARS` | E0 theorem-tagged run-sidecar compatibility format | `oph_fpe/bulk/einstein_bridge.py` | `none` | `DECLARED_INPUT_NONPROMOTING` | `NONPROMOTING` | `tests/test_theorem_contract.py; tests/test_bulk_proof_certificate.py` |
@@ -24,6 +25,7 @@ A missing physical producer is reported as `NOT_TESTABLE`. Declared inputs and l
 
 ## Claim boundaries
 
+- `CHARGED_RESPONSE_ARTIFACT`: The producer measures the charged sector structure, signed response channels, oriented frame, and defect-port refinement persistence of the certified twelve-port carrier in exact Q(sqrt5) arithmetic, bound to the propagated dynamics. The paper-side port-current certificate in reverse-engineering-reality independently recomputes every exact claim before consuming the artifact.
 - `WZH_V1_DECLARATIONS`: Caller booleans remain visible only inside the v1 diagnostic. promotion_allowed is hard-false and the report names the missing runtime resolver and independent scientific checker.
 - `E1_NULL_STRESS`: The typed source tower exposes null-charge and stress readouts, but no primitive producer emits the theorem-tagged E1 sidecar.
 - `E0_BRIDGE_SIDECARS`: All twelve legacy sidecars are caller-supplied declarations. Schema, tag, and value diagnostics remain visible, but no sidecar boolean can promote a child gate or branch entry.

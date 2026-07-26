@@ -43,6 +43,24 @@ class InventoryRow:
 
 ROWS = (
     InventoryRow(
+        row_id="CHARGED_RESPONSE_ARTIFACT",
+        receipt_or_gate="oph.charged_response_semantic_artifact.v1 (#599 source binding)",
+        verifier="tests/test_charged_response.py",
+        producer="oph_fpe/core/charged_response.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence="tests/test_charged_response.py",
+        boundary=(
+            "The producer measures the charged sector structure, signed "
+            "response channels, oriented frame, and defect-port refinement "
+            "persistence of the certified twelve-port carrier in exact "
+            "Q(sqrt5) arithmetic, bound to the propagated dynamics. The "
+            "paper-side port-current certificate in "
+            "reverse-engineering-reality independently recomputes every "
+            "exact claim before consuming the artifact."
+        ),
+    ),
+    InventoryRow(
         row_id="WZH_V1_DECLARATIONS",
         receipt_or_gate="WZH0--WZH4 legacy W/Z/H gate inputs",
         verifier="oph_fpe/bosons/pipeline.py",
