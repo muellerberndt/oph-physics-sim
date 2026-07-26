@@ -612,37 +612,55 @@ def _apply_replay_bound_epistemics(
             )
 
     # P0's local source/repair/observer mechanics can be structurally replayed
-    # while the physical carrier-to-support realization theorem remains absent.
-    # Honor that distinction only when this exact source export was reconstructed
-    # by the registered source replay and byte-matched to the top-level report.
+    # while any absent physical carrier-to-support realization bridge keeps
+    # the stage out of physical pass/fail status.  Honor that distinction only
+    # when this exact source export was reconstructed by the registered source
+    # replay and byte-matched to the top-level report, and quarantine exactly
+    # the bridge receipts the source report leaves unestablished.
     export_rows = _mapping(artifact_admission.get("preflight_export_hash_rows"))
     source_export_exact = _mapping(export_rows.get("source_observer")).get("exact") is True
     source_report = _report(evidence, "source_observer")
+    source_bridge_rows = (
+        (
+            "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT",
+            "physical_federation_status",
+            "physical_echosahedral_federation_realization_not_established",
+        ),
+        (
+            "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT",
+            "carrier_to_support_realization_status",
+            "carrier_to_support_chart_realization_not_established",
+        ),
+        (
+            "CARRIER_REFINEMENT_NATURALITY_RECEIPT",
+            "carrier_refinement_naturality_status",
+            "carrier_refinement_naturality_not_established",
+        ),
+    )
+    source_bridge_rows_declared = all(
+        source_report.get(receipt_key) in (True, False)
+        and isinstance(source_report.get(status_key), str)
+        and source_report.get(status_key)
+        for receipt_key, status_key, _reason in source_bridge_rows
+    )
+    open_source_bridge_reasons = [
+        reason
+        for receipt_key, _status_key, reason in source_bridge_rows
+        if source_report.get(receipt_key) is not True
+    ]
     explicit_source_gap = bool(
         artifact_admission.get("registered_source_capture_replay_bound") is True
         and source_export_exact
         and source_report.get("INDEPENDENT_SUPPORT_REGULATOR_RECEIPT") is True
-        and source_report.get("CARRIER_REFINEMENT_NATURALITY_RECEIPT") is False
-        and source_report.get("carrier_refinement_naturality_status")
-        == CellStatus.NOT_EVALUATED.value
-        and source_report.get("PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT")
-        is False
-        and source_report.get("physical_federation_status")
-        == CellStatus.NOT_EVALUATED.value
-        and source_report.get("CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT") is False
-        and source_report.get("carrier_to_support_realization_status")
-        == CellStatus.NOT_EVALUATED.value
+        and source_bridge_rows_declared
+        and open_source_bridge_reasons
     )
     if explicit_source_gap:
         p0 = stages["P0_source_dynamics_repair_record_observer"]
         _mark_stage_physical_not_evaluated(
             p0,
             {
-                "not_evaluated_reasons": [
-                    "physical_echosahedral_federation_realization_not_established",
-                    "carrier_to_support_chart_realization_not_established",
-                    "carrier_refinement_naturality_not_established",
-                ],
+                "not_evaluated_reasons": open_source_bridge_reasons,
                 "structural_receipt": {
                     "scope": "artifact_integrity_only",
                     "status": "COMPLETE" if p0.get("passed") is True else "INCOMPLETE",

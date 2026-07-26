@@ -2568,9 +2568,15 @@ def capture_physical_source(
         ),
         "CARRIER_REFINEMENT_NATURALITY_RECEIPT": False,
         "carrier_refinement_naturality_status": "NOT_EVALUATED",
-        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
+        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": bool(
+            sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
+        ),
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
-        "physical_federation_status": "NOT_EVALUATED",
+        "physical_federation_status": (
+            "STRUCTURAL_INTERFACE_ALGEBRA_AND_COCYCLE_SEWING_REALIZED"
+            if sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
+            else "BLOCKED_BY_INTERFACE_ALGEBRA_SEWING_CHECKS"
+        ),
         "carrier_to_support_realization_status": "NOT_EVALUATED",
         "TRANSACTION_VALIDATION_COMPLETE_READ_CONFLICT_SET_RECEIPT": transaction_complete,
         "UNION_PAYLOAD_ATOMIC_REVALIDATION_RECEIPT": transaction_complete,

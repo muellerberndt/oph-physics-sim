@@ -697,10 +697,15 @@ def test_postrun_separates_diagnostics_from_physical_measurements(
     assert reports["postrun_scientific_failures"] == []
     assert reports["postrun_not_evaluated_reasons"]
     assert {
-        "physical_echosahedral_federation_realization_not_established",
         "carrier_to_support_chart_realization_not_established",
         "carrier_refinement_naturality_not_established",
     }.issubset(reports["postrun_not_evaluated_reasons"])
+    # The interface-algebra sewing realization is computed on the captured
+    # federation, so it stops appearing as an open physical-source gap.
+    assert (
+        "physical_echosahedral_federation_realization_not_established"
+        not in reports["postrun_not_evaluated_reasons"]
+    )
     audit = physical_h3_kms_preflight_report(
         {"config": source["config"], "reports": {**source["reports"], **reports}}
     )
@@ -718,7 +723,6 @@ def test_p0_physical_source_gaps_are_part_of_cell_completion(
 ) -> None:
     source = deepcopy(artifacts["source"])
     expected = {
-        "physical_echosahedral_federation_realization_not_established",
         "carrier_to_support_chart_realization_not_established",
         "carrier_refinement_naturality_not_established",
     }

@@ -235,6 +235,69 @@ ROWS = (
         ),
     ),
     InventoryRow(
+        row_id="CARRIER_REFINEMENT_NATURALITY",
+        receipt_or_gate=(
+            "CARRIER_REFINEMENT_NATURALITY_RECEIPT / "
+            "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT (#596)"
+        ),
+        verifier="tests/test_echosahedral_federation.py",
+        producer="oph_fpe/core/echosahedral_federation.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence="tests/test_echosahedral_federation.py",
+        boundary=(
+            "The producer recomputes the finite natural transformation "
+            "between the twelve-port reference carrier and the exact geodesic "
+            "tower through level two: defect-vertex embedding, "
+            "state-preserving coarse graining, A5 seam-law naturality, "
+            "quotient commutation, and the composite chart realization. It "
+            "selects no physical support chart and carries no H3, event, BW, "
+            "or KMS claim."
+        ),
+    ),
+    InventoryRow(
+        row_id="FEDERATION_INTERFACE_ALGEBRA_SEWING",
+        receipt_or_gate=(
+            "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT / "
+            "HIGHER_OVERLAP_COCYCLE_RECEIPT / "
+            "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT (#596)"
+        ),
+        verifier="tests/test_echosahedral_federation.py",
+        producer="oph_fpe/core/echosahedral_federation.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence="tests/test_echosahedral_federation.py",
+        boundary=(
+            "Exact finite checks on the typed seams: the orientation-reversing "
+            "collar bijection induces a verified finite matrix-algebra "
+            "isomorphism, and every composable seam triangle composes to the "
+            "identity with vacuous triple overlaps reported by count. The "
+            "realization receipt is the conjunction with structural sewing "
+            "and implies no emergent geometry."
+        ),
+    ),
+    InventoryRow(
+        row_id="PHASE_REPAIR_BRIDGE",
+        receipt_or_gate=(
+            "PHASE_LOCK_MEASUREMENT_RECEIPT / "
+            "PHASE_INDUCED_REPAIR_ACCEPTANCE_RECEIPT / "
+            "PHASE_REPAIR_CONFLUENCE_RECEIPT (#596)"
+        ),
+        verifier="tests/test_phase_repair_bridge.py",
+        producer="oph_fpe/consensus/phase_repair_bridge.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence="tests/test_phase_repair_bridge.py",
+        boundary=(
+            "Finite carrier-level bridge: circular phase dispersion is "
+            "measured on one propagated batch, induced repairs are typed "
+            "strict-descent transactions, and confluence is a "
+            "schedule-independence witness with an atomic diamond check. The "
+            "phase register is dimensionless with no physical clock "
+            "normalization and no KMS claim."
+        ),
+    ),
+    InventoryRow(
         row_id="K1_GAUGE_COVARIANT_MISMATCH",
         receipt_or_gate="K1 production mismatch and perturb/resettle replay",
         verifier="oph_fpe/gauge/covariant_overlap.py",

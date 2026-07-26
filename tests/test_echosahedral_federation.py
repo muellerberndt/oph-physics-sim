@@ -16,6 +16,7 @@ from oph_fpe.core.echosahedral_federation import (
     ObserverSupport,
     SeamBundle,
     carrier_quotient_invariance_report,
+    carrier_refinement_naturality_report,
     echosahedral_carrier_conformance_report,
     echosahedral_federation_receipt,
     federation_sewing_report,
@@ -28,6 +29,7 @@ from oph_fpe.core.echosahedral_federation import (
     screen_port_map_carrier_bridge_report,
     verify_reference_federation_instrument_bundle,
 )
+from oph_fpe.core.icosahedral import icosahedral_a5_port_permutations
 from oph_fpe.core.screen_ports import assign_echosahedral_ports
 
 
@@ -452,7 +454,7 @@ def test_hidden_coordinates_names_and_carrier_to_h3_aliases_are_rejected() -> No
     assert forbidden["CARRIER_PRESENTATION_FIREWALL_RECEIPT"] is False
 
 
-def test_parent_receipts_stop_before_support_refinement_s2_h3_event_and_bw() -> None:
+def test_parent_receipts_compute_refinement_and_stop_before_h3_event_and_bw() -> None:
     federation = _two_carrier_federation()
     permutations = {
         "c0": tuple(reversed(range(12))),
@@ -469,11 +471,21 @@ def test_parent_receipts_stop_before_support_refinement_s2_h3_event_and_bw() -> 
     assert report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is True
     assert report["FEDERATION_SEWING_RECEIPT"] is True
     assert report["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is True
-    assert report["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
-    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
-    assert report["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
+    assert report["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is True
+    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is True
+    assert report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is True
+    assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is True
+    assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is True
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
+    assert report["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is True
+    assert report["refinement_naturality"]["blockers"] == []
+    assert report["carrier_to_support_chart_realization"] == (
+        "verified_finite_reference_tower_levels_0_2"
+    )
+    # The cardinality firewall stays intact even with computed receipts.
     assert report["support_chart_cell_count"] is None
-    assert report["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is False
+    assert report["support_regulator_count"] is None
+    assert report["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is True
     assert report["H3_FRAME_EMERGENCE_RECEIPT"] is False
     assert report["EVENT_MANIFOLD_RECEIPT"] is False
     assert report["BW_KMS_CLOCK_RECEIPT"] is False
@@ -481,6 +493,48 @@ def test_parent_receipts_stop_before_support_refinement_s2_h3_event_and_bw() -> 
 
     no_witness = echosahedral_federation_receipt(federation)
     assert no_witness["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is False
+    assert no_witness["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
+
+
+def test_doctored_embedding_fails_refinement_naturality_with_named_blockers() -> None:
+    baseline = carrier_refinement_naturality_report()
+    assert baseline["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is True
+    assert baseline["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is True
+    assert baseline["blockers"] == []
+
+    doctored = list(baseline["embedding_port_to_defect_vertex"])
+    doctored[0], doctored[1] = doctored[1], doctored[0]
+    report = carrier_refinement_naturality_report(embedding_override=doctored)
+
+    assert report["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
+    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
+    assert report["carrier_embedding_map_supplied"] is False
+    assert (
+        "declared_embedding_differs_from_recomputed_nearest_vertex_matching"
+        in report["blockers"]
+    )
+
+
+def test_broken_port_permutation_fails_seam_law_naturality() -> None:
+    actions = list(icosahedral_a5_port_permutations())
+    transposition = list(range(12))
+    transposition[0], transposition[1] = 1, 0
+    actions[-1] = tuple(transposition)
+    report = carrier_refinement_naturality_report(
+        port_permutation_override=actions
+    )
+
+    assert report["seam_law_naturality_verified"] is False
+    assert report["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
+    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
+    assert any(
+        blocker.startswith("seam_law_naturality_violated_for_")
+        for blocker in report["blockers"]
+    )
+    assert report["seam_law_violation_examples"]
+    assert report["seam_law_violation_examples"][0]["failure"] == (
+        "port_permutation_has_no_proper_rotation_realization"
+    )
 
 
 def test_compact_json_bundle_reuses_one_template_and_remains_fail_closed() -> None:
@@ -500,8 +554,8 @@ def test_compact_json_bundle_reuses_one_template_and_remains_fail_closed() -> No
     assert report["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is True
     assert report["FEDERATION_SEWING_RECEIPT"] is True
     assert report["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is False
-    assert report["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
-    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
+    assert report["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is True
+    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is True
     assert report["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
 
     corrupted = copy.deepcopy(bundle)
@@ -526,8 +580,8 @@ def test_existing_screen_port_map_bridge_never_promotes_current_engine() -> None
     assert bridge["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is True
     assert bridge["FEDERATION_SEWING_RECEIPT"] is False
     assert bridge["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is False
-    assert bridge["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
-    assert bridge["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
+    assert bridge["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is True
+    assert bridge["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is True
     assert bridge["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
     assert bridge["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is False
     assert bridge["H3_FRAME_EMERGENCE_RECEIPT"] is False
@@ -637,17 +691,99 @@ def test_late_carrier_defect_and_dangling_port_cannot_hide_beyond_report_limit()
     assert missing_late_boundary["undeclared_dangling_ports"]
 
 
-def test_schema_hash_binding_is_not_promoted_to_algebra_or_higher_overlap() -> None:
+def test_interface_algebra_and_cocycle_receipts_are_computed_from_checks() -> None:
     report = federation_sewing_report(_two_carrier_federation())
     seam = report["seams"][0]
 
     assert seam["interface_schema_hashes_agree"] is True
     assert seam["INTERFACE_SCHEMA_HASH_BINDING_RECEIPT"] is True
-    assert seam["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is False
-    assert seam["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is False
-    assert seam["FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT"] is False
+    assert seam["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is True
+    assert seam["FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT"] is True
+    assert seam["interface_algebra_map"]["basis_product_law_exact"] is True
+    assert seam["interface_algebra_map"]["products_preserved_exact"] is True
     assert report["INTERFACE_SCHEMA_HASH_BINDING_RECEIPT"] is True
+    assert report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is True
+    assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is True
+    assert report["higher_overlap_cocycle"]["identity_violation_count"] == 0
+    assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is True
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
+    # The sewing report never asserts the separate chart realization.
+    assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
+
+
+def test_non_bijective_gluing_fails_interface_algebra_homomorphism() -> None:
+    federation = _two_carrier_federation()
+    left = federation.carriers[0]
+    right = federation.carriers[1]
+    edge_left = tuple(left.edges[0])
+    edge_right = tuple(right.edges[0])
+    collapsed = SeamBundle(
+        seam_id="collapsed",
+        left_carrier_id="c0",
+        right_carrier_id="c1",
+        left_ports=edge_left,
+        right_ports=edge_right,
+        left_to_right_ports=(edge_right[0], edge_right[0]),
+        right_to_left_ports=(edge_left[0], edge_left[0]),
+        left_to_right_orientation=(-1, -1),
+        right_to_left_orientation=(-1, -1),
+        collar_kind="edge_bundle",
+        interface_algebra=_binding(),
+    )
+    report = federation_sewing_report(replace(federation, seams=(collapsed,)))
+    seam = report["seams"][0]
+
+    assert seam["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is False
+    assert seam["interface_algebra_map"]["receipt"] is False
+    assert (
+        "induced_position_map_is_not_injective"
+        in seam["interface_algebra_map"]["blockers"]
+    )
     assert report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is False
+    assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is False
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
+
+
+def test_triangle_loop_that_misses_identity_fails_higher_overlap_cocycle() -> None:
+    carriers = tuple(
+        reference_echosahedral_carrier(f"t{index}") for index in range(3)
+    )
+
+    def _seam(seam_id, left, right, left_port, right_port):
+        return SeamBundle(
+            seam_id=seam_id,
+            left_carrier_id=left,
+            right_carrier_id=right,
+            left_ports=(left_port,),
+            right_ports=(right_port,),
+            left_to_right_ports=(right_port,),
+            right_to_left_ports=(left_port,),
+            left_to_right_orientation=(-1,),
+            right_to_left_orientation=(-1,),
+            collar_kind="single_port",
+            interface_algebra=_binding(),
+        )
+
+    # Around the triangle the composed maps send t0 port 0 to t0 port 1.
+    seams = (
+        _seam("s01", "t0", "t1", 0, 0),
+        _seam("s12", "t1", "t2", 0, 0),
+        _seam("s20", "t2", "t0", 0, 1),
+    )
+    federation = EchosahedralFederation(
+        federation_id="broken-triangle",
+        carriers=carriers,
+        seams=seams,
+        external_boundaries=(),
+    )
+    report = federation_sewing_report(federation)
+    cocycle = report["higher_overlap_cocycle"]
+
+    assert cocycle["triangle_count"] == 1
+    assert cocycle["composable_port_loop_count"] >= 1
+    assert cocycle["identity_violation_count"] >= 1
+    assert cocycle["identity_violations"][0]["start_port"] == 0
+    assert cocycle["identity_violations"][0]["returned_port"] == 1
     assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is False
     assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is False
     assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False

@@ -770,6 +770,7 @@ def federation_sewing_report(
     seam_digest = _CanonicalRowDigest()
     all_seams_pass = True
     all_interface_schema_hashes_agree = bool(federation.seams)
+    all_interface_algebra_maps_pass = bool(federation.seams)
     occupied_masks: dict[str, int] = {}
     unknown_port_examples: list[dict[str, Any]] = []
     unknown_port_reference_count = 0
@@ -780,6 +781,10 @@ def federation_sewing_report(
         all_interface_schema_hashes_agree = bool(
             all_interface_schema_hashes_agree
             and row["endpoint_interface_algebra_hashes_agree"]
+        )
+        all_interface_algebra_maps_pass = bool(
+            all_interface_algebra_maps_pass
+            and row["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"]
         )
         seam_digest.update(row)
         if len(seam_rows) < _REPORT_DETAIL_LIMIT:
@@ -942,6 +947,14 @@ def federation_sewing_report(
         and all_boundaries_pass
         and all_observers_pass
     )
+    cocycle = _higher_overlap_cocycle_report(federation.seams, carrier_by_id)
+    cocycle_receipt = bool(cocycle["HIGHER_OVERLAP_COCYCLE_RECEIPT"])
+    full_interface_sewing = bool(
+        all_interface_schema_hashes_agree
+        and all_interface_algebra_maps_pass
+        and cocycle_receipt
+    )
+    physical_realization = bool(passed and full_interface_sewing)
     sewn_port_count = sum(mask.bit_count() for mask in occupied_masks.values())
     external_port_count = sum(
         mask.bit_count() for mask in declared_external_masks.values()
@@ -1001,23 +1014,27 @@ def federation_sewing_report(
         "blocker_occurrence_count": blockers.occurrence_count,
         "blockers": blockers.examples,
         "blocker_examples_truncated": blockers.truncated,
+        "higher_overlap_cocycle": cocycle,
         "ECHOSAHEDRAL_CARRIER_CONFORMANCE": carrier_conformance,
         "STRUCTURAL_FEDERATION_SEWING_RECEIPT": passed,
         "FEDERATION_SEWING_RECEIPT": passed,
         "INTERFACE_SCHEMA_HASH_BINDING_RECEIPT": (all_interface_schema_hashes_agree),
-        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
-        "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
-        "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": False,
-        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
+        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": all_interface_algebra_maps_pass,
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": cocycle_receipt,
+        "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": full_interface_sewing,
+        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": physical_realization,
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
         "claim_boundary": (
             "carrier_count is the exact cardinality of the declared finite source "
             "federation when the ID receipt passes; it is separate from every support "
             "regulator, S2 chart-cell count, N_star, observer count, H3-point count, "
             "and event count. Sewing checks port bijections, orientations, boundary "
-            "coverage, and content-addressed schema identity. Equal schema hashes do "
-            "not prove interface algebra homomorphisms, higher-overlap cocycles, a "
-            "physical source realization, or any emergent geometry."
+            "coverage, and content-addressed schema identity. The interface algebra "
+            "map and higher-overlap cocycle receipts are computed from exact finite "
+            "checks on the typed seams, and the physical federation realization "
+            "receipt is their conjunction with structural sewing. None of these "
+            "receipts implies emergent geometry, which requires independent "
+            "downstream receipts."
         ),
     }
 
@@ -1248,6 +1265,20 @@ def _seam_bundle_report(
     if not schema_hashes_agree:
         blockers.append("endpoint_interface_algebra_hashes_do_not_agree")
 
+    algebra_map = _interface_algebra_homomorphism_check(
+        left_ports=left_ports,
+        right_ports=right_ports,
+        forward=forward,
+    )
+    homomorphism_receipt = bool(
+        bijection_valid
+        and inverse_composition
+        and orientation_valid
+        and orientation_inverse_composition
+        and schema_hashes_agree
+        and algebra_map["receipt"]
+    )
+
     passed = not blockers
     return {
         "schema": "oph.echosahedral_federation.seam_bundle.v1",
@@ -1278,17 +1309,253 @@ def _seam_bundle_report(
         # Compatibility alias.  This means hash equality only; it is not a
         # mathematical assertion that an algebra map has been constructed.
         "endpoint_interface_algebra_hashes_agree": schema_hashes_agree,
+        "interface_algebra_map": algebra_map,
         "blockers": sorted(set(blockers)),
         "SEAM_BUNDLE_RECEIPT": passed,
         "INTERFACE_SCHEMA_HASH_BINDING_RECEIPT": schema_hashes_agree,
-        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
-        "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
-        "FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT": False,
+        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": homomorphism_receipt,
+        "FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT": homomorphism_receipt,
         "claim_boundary": (
-            "The endpoint hashes bind byte-identical declared schemas only. No "
-            "interface algebra homomorphism, composition law, associator, triple-"
-            "overlap cocycle, or higher-overlap coherence has been supplied."
+            "The endpoint hashes bind byte-identical declared schemas. The "
+            "interface algebra map receipt verifies the permutation-induced "
+            "finite matrix-algebra isomorphism exactly on the collar bundle. "
+            "Triple-overlap cocycle coherence is certified at the federation "
+            "level, and neither receipt implies emergent geometry."
         ),
+    }
+
+
+def _interface_algebra_homomorphism_check(
+    *,
+    left_ports: tuple[int, ...],
+    right_ports: tuple[int, ...],
+    forward: tuple[int, ...],
+) -> dict[str, Any]:
+    """Verify the induced finite interface-algebra map exactly.
+
+    The orientation-reversing port bijection induces the conjugation map
+    ``A -> P A P^T`` between the endpoint collar matrix algebras.  Every check
+    below runs in exact integer arithmetic: bijectivity of the induced
+    position permutation, the basis product law on elementary matrices, and
+    preservation of sums, products, unit, and star on dense integer matrices.
+    """
+
+    blockers: list[str] = []
+    size = len(left_ports)
+    sigma: list[int] | None = None
+    if (
+        size == 0
+        or len(right_ports) != size
+        or len(forward) != size
+        or len(set(left_ports)) != size
+        or len(set(right_ports)) != size
+    ):
+        blockers.append("collar_bundles_do_not_define_a_finite_algebra_pair")
+    else:
+        right_position = {port: index for index, port in enumerate(right_ports)}
+        positions = [right_position.get(port) for port in forward]
+        if any(position is None for position in positions):
+            blockers.append("gluing_image_is_not_contained_in_right_collar")
+        else:
+            sigma = [int(position) for position in positions]  # type: ignore[arg-type]
+            if len(set(sigma)) != size:
+                blockers.append("induced_position_map_is_not_injective")
+                sigma = None
+    basis_product_law = False
+    linear_structure_preserved = False
+    unit_preserved = False
+    star_preserved = False
+    products_preserved = False
+    if sigma is not None:
+        basis_product_law = all(
+            (j == k) == (sigma[j] == sigma[k])
+            for j in range(size)
+            for k in range(size)
+        )
+        permutation = np.zeros((size, size), dtype=np.int64)
+        for index, image in enumerate(sigma):
+            permutation[image, index] = 1
+
+        def conjugate(matrix: np.ndarray) -> np.ndarray:
+            return permutation @ matrix @ permutation.T
+
+        first = np.arange(1, size * size + 1, dtype=np.int64).reshape(size, size)
+        second = first.T + 7
+        linear_structure_preserved = bool(
+            np.array_equal(conjugate(first + second), conjugate(first) + conjugate(second))
+        )
+        products_preserved = bool(
+            np.array_equal(conjugate(first @ second), conjugate(first) @ conjugate(second))
+        )
+        unit_preserved = bool(
+            np.array_equal(conjugate(np.eye(size, dtype=np.int64)), np.eye(size, dtype=np.int64))
+        )
+        star_preserved = bool(
+            np.array_equal(conjugate(first.T), conjugate(first).T)
+        )
+        basis_images_exact = all(
+            np.array_equal(
+                conjugate(_elementary_matrix(size, i, j)),
+                _elementary_matrix(size, sigma[i], sigma[j]),
+            )
+            for i in range(size)
+            for j in range(size)
+        )
+        if not basis_images_exact:
+            blockers.append("elementary_matrix_images_do_not_match_induced_map")
+        if not basis_product_law:
+            blockers.append("basis_product_law_fails_for_induced_map")
+        if not (
+            linear_structure_preserved
+            and products_preserved
+            and unit_preserved
+            and star_preserved
+        ):
+            blockers.append("dense_algebra_operations_are_not_preserved_exactly")
+    receipt = bool(sigma is not None and not blockers)
+    return {
+        "collar_dimension": size,
+        "induced_position_permutation": sigma,
+        "map_model": "conjugation_by_collar_permutation_matrix",
+        "bijective_algebra_map": bool(sigma is not None),
+        "basis_product_law_exact": basis_product_law,
+        "sums_preserved_exact": linear_structure_preserved,
+        "products_preserved_exact": products_preserved,
+        "unit_preserved_exact": unit_preserved,
+        "star_preserved_exact": star_preserved,
+        "blockers": blockers,
+        "receipt": receipt,
+    }
+
+
+def _elementary_matrix(size: int, row: int, column: int) -> np.ndarray:
+    matrix = np.zeros((size, size), dtype=np.int64)
+    matrix[row, column] = 1
+    return matrix
+
+
+def _seam_partial_port_maps(
+    seam: SeamBundle,
+) -> tuple[dict[int, int], dict[int, int]] | None:
+    """Return exact forward/backward partial port maps or None if malformed."""
+
+    left_ports, left_exact = _runtime_exact_int_tuple(seam.left_ports)
+    right_ports, right_exact = _runtime_exact_int_tuple(seam.right_ports)
+    forward, forward_exact = _runtime_exact_int_tuple(seam.left_to_right_ports)
+    backward, backward_exact = _runtime_exact_int_tuple(seam.right_to_left_ports)
+    if not (
+        left_exact
+        and right_exact
+        and forward_exact
+        and backward_exact
+        and left_ports
+        and len(left_ports) == len(set(left_ports)) == len(forward)
+        and len(right_ports) == len(set(right_ports)) == len(backward)
+        and len(left_ports) == len(right_ports)
+    ):
+        return None
+    return (
+        dict(zip(left_ports, forward, strict=True)),
+        dict(zip(right_ports, backward, strict=True)),
+    )
+
+
+def _higher_overlap_cocycle_report(
+    seams: Sequence[SeamBundle],
+    carrier_ids: Iterable[str],
+) -> dict[str, Any]:
+    """Check every composable seam triangle for exact identity holonomy.
+
+    A triangle is a triple of federated carriers with a seam on each pair.
+    Around each triangle every combination of the three partial port
+    bijections is composed in cyclic order; wherever the composition is
+    defined it must return the starting port.  Empty composition domains are
+    counted separately and impose no condition, mirroring the Cech cocycle
+    convention on empty triple overlaps.
+    """
+
+    known = set(carrier_ids)
+    neighbor_map: dict[str, set[str]] = {}
+    pair_maps: dict[tuple[str, str], list[tuple[dict[int, int], dict[int, int], str]]] = {}
+    malformed_seam_count = 0
+    for seam in seams:
+        if (
+            seam.left_carrier_id not in known
+            or seam.right_carrier_id not in known
+            or seam.left_carrier_id == seam.right_carrier_id
+        ):
+            malformed_seam_count += 1
+            continue
+        maps = _seam_partial_port_maps(seam)
+        if maps is None:
+            malformed_seam_count += 1
+            continue
+        forward_map, backward_map = maps
+        left_id = seam.left_carrier_id
+        right_id = seam.right_carrier_id
+        neighbor_map.setdefault(left_id, set()).add(right_id)
+        neighbor_map.setdefault(right_id, set()).add(left_id)
+        pair_maps.setdefault((left_id, right_id), []).append(
+            (forward_map, backward_map, seam.seam_id)
+        )
+    triangles: set[tuple[str, str, str]] = set()
+    for first_id, second_id in pair_maps:
+        common = neighbor_map.get(first_id, set()) & neighbor_map.get(second_id, set())
+        for third_id in common:
+            triangles.add(tuple(sorted((first_id, second_id, third_id))))
+
+    def _leg_maps(source: str, target: str) -> list[tuple[dict[int, int], str]]:
+        rows: list[tuple[dict[int, int], str]] = []
+        for forward_map, _, seam_id in pair_maps.get((source, target), []):
+            rows.append((forward_map, seam_id))
+        for _, backward_map, seam_id in pair_maps.get((target, source), []):
+            rows.append((backward_map, seam_id))
+        return rows
+
+    composable_loop_count = 0
+    violations: list[dict[str, Any]] = []
+    for first_id, second_id, third_id in sorted(triangles):
+        for first_map, first_seam in _leg_maps(first_id, second_id):
+            for second_map, second_seam in _leg_maps(second_id, third_id):
+                for third_map, third_seam in _leg_maps(third_id, first_id):
+                    for port, mid in first_map.items():
+                        if mid not in second_map:
+                            continue
+                        far = second_map[mid]
+                        if far not in third_map:
+                            continue
+                        composable_loop_count += 1
+                        if third_map[far] != port:
+                            if len(violations) < _REPORT_DETAIL_LIMIT:
+                                violations.append(
+                                    {
+                                        "triangle": [first_id, second_id, third_id],
+                                        "seam_ids": [
+                                            first_seam,
+                                            second_seam,
+                                            third_seam,
+                                        ],
+                                        "start_port": port,
+                                        "returned_port": third_map[far],
+                                    }
+                                )
+    receipt = bool(
+        bool(pair_maps)
+        and malformed_seam_count == 0
+        and not violations
+    )
+    return {
+        "schema": "oph.echosahedral_federation.higher_overlap_cocycle.v1",
+        "triangle_count": len(triangles),
+        "composable_port_loop_count": composable_loop_count,
+        "vacuous_triangle_convention": (
+            "empty_triple_overlap_domains_impose_no_condition"
+        ),
+        "declared_deck_elements": "identity_only",
+        "malformed_seam_count": malformed_seam_count,
+        "identity_violation_count": len(violations),
+        "identity_violations": violations,
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": receipt,
     }
 
 
@@ -1484,27 +1751,491 @@ def carrier_quotient_invariance_report(
     }
 
 
-def carrier_refinement_naturality_report() -> dict[str, Any]:
-    """Fail closed until a genuine carrier refinement/coarse-graining map exists."""
+_REFINEMENT_DEFECT_MATCH_TOLERANCE = 1.0e-9
+_REFINEMENT_IDENTITY_TOLERANCE = 5.0e-14
+_REFINEMENT_NATURALITY_TOLERANCE = 5.0e-12
+_REFINEMENT_MAX_LEVEL = 2
 
+
+def carrier_refinement_naturality_report(
+    *,
+    max_level: int = _REFINEMENT_MAX_LEVEL,
+    embedding_override: Sequence[int] | None = None,
+    port_permutation_override: Sequence[Sequence[int]] | None = None,
+) -> dict[str, Any]:
+    """Recompute the carrier-to-support refinement naturality contract.
+
+    The default path recomputes every map from the shared reference template
+    and the exact geodesic tower.  The override arguments exist for adversarial
+    verification: a supplied embedding or action family is validated against
+    the recomputed reference data and any mismatch fails closed with named
+    blockers.
+    """
+
+    if embedding_override is None and port_permutation_override is None:
+        return copy.deepcopy(_carrier_refinement_naturality_cached(int(max_level)))
+    return _compute_carrier_refinement_naturality(
+        max_level=int(max_level),
+        embedding_override=embedding_override,
+        port_permutation_override=port_permutation_override,
+    )
+
+
+@lru_cache(maxsize=4)
+def _carrier_refinement_naturality_cached(max_level: int) -> dict[str, Any]:
+    return _compute_carrier_refinement_naturality(
+        max_level=max_level,
+        embedding_override=None,
+        port_permutation_override=None,
+    )
+
+
+def _nearest_vertex_matching(
+    points: np.ndarray, vertices: np.ndarray
+) -> tuple[list[int], float]:
+    """Match each point to its nearest vertex; return indices and max distance."""
+
+    squared = np.sum(
+        (points[:, None, :] - vertices[None, :, :]) ** 2,
+        axis=-1,
+    )
+    nearest = np.argmin(squared, axis=1)
+    residual = float(np.sqrt(np.max(np.min(squared, axis=1)))) if points.size else 0.0
+    return [int(value) for value in nearest], residual
+
+
+def _compute_carrier_refinement_naturality(
+    *,
+    max_level: int,
+    embedding_override: Sequence[int] | None,
+    port_permutation_override: Sequence[Sequence[int]] | None,
+) -> dict[str, Any]:
+    blockers: list[str] = []
+    template = _reference_echosahedral_carrier_template()
+    coordinates = np.asarray(template.port_coordinates, dtype=float)
+    twelve_port_type = bool(
+        len(template.port_names) == _PORT_COUNT
+        and coordinates.shape == (_PORT_COUNT, 3)
+    )
+    level_cap = max(2, int(max_level))
+    tower = build_geodesic_icosahedral_tower(level_cap)
+    base = tower.levels[0]
+
+    # (a) Carrier embedding: ports match the degree-five defect vertices of
+    # tower level zero by nearest-vertex bijection.
+    degrees = np.bincount(
+        np.asarray(base.edges, dtype=np.int64).reshape(-1),
+        minlength=base.vertex_count,
+    )
+    defect_ids = np.flatnonzero(degrees == 5).astype(np.int64)
+    embedding: list[int] = []
+    embedding_residual = math.inf
+    if defect_ids.size != _PORT_COUNT:
+        blockers.append("level_zero_defect_vertex_count_is_not_twelve")
+    else:
+        defect_coordinates = base.vertices[defect_ids]
+        matched, embedding_residual = _nearest_vertex_matching(
+            coordinates, defect_coordinates
+        )
+        embedding = [int(defect_ids[index]) for index in matched]
+    embedding_bijective = bool(
+        len(embedding) == _PORT_COUNT and len(set(embedding)) == _PORT_COUNT
+    )
+    if not embedding_bijective:
+        blockers.append("carrier_port_to_defect_vertex_matching_is_not_a_bijection")
+    if embedding_residual > _REFINEMENT_DEFECT_MATCH_TOLERANCE:
+        blockers.append("carrier_port_to_defect_vertex_residual_exceeds_tolerance")
+    declared_embedding = embedding
+    if embedding_override is not None:
+        declared_embedding = [int(value) for value in embedding_override]
+        if declared_embedding != embedding:
+            blockers.append(
+                "declared_embedding_differs_from_recomputed_nearest_vertex_matching"
+            )
+    embedding_supplied = bool(
+        embedding_bijective
+        and embedding_residual <= _REFINEMENT_DEFECT_MATCH_TOLERANCE
+        and declared_embedding == embedding
+    )
+
+    # (b) Coarse-graining maps: adjacent-level conditional expectations with
+    # exact normalization and state preservation receipts.
+    refinements = tower.cell_refinements
+    refinement_rows: list[dict[str, Any]] = []
+    refinement_maps_valid = len(refinements) >= 2
+    if len(refinements) < 2:
+        blockers.append("refinement_tower_depth_below_two_levels")
+    for mapping in refinements:
+        row_valid = bool(
+            mapping.normalization_residual <= _REFINEMENT_IDENTITY_TOLERANCE
+            and mapping.state_preservation_residual <= _REFINEMENT_IDENTITY_TOLERANCE
+        )
+        refinement_maps_valid = refinement_maps_valid and row_valid
+        if not row_valid:
+            blockers.append(
+                "cell_refinement_receipt_failed_for_levels_"
+                f"{mapping.coarse_level}_{mapping.fine_level}"
+            )
+        refinement_rows.append(
+            {
+                "coarse_level": mapping.coarse_level,
+                "fine_level": mapping.fine_level,
+                "normalization_residual": mapping.normalization_residual,
+                "state_preservation_residual": mapping.state_preservation_residual,
+                "map_hash": mapping.map_hash,
+            }
+        )
+
+    # Port-supported realization: each port observable spreads with equal
+    # weight over the level-zero cells incident to its embedded defect vertex.
+    identity_residual = math.inf
+    realization: np.ndarray | None = None
+    if embedding_supplied:
+        vertex_to_port = {vertex: port for port, vertex in enumerate(embedding)}
+        realization = np.zeros((base.face_count, _PORT_COUNT), dtype=float)
+        for face_index, face in enumerate(base.faces):
+            for vertex in face:
+                realization[face_index, vertex_to_port[int(vertex)]] += 1.0 / 3.0
+        if refinement_maps_valid:
+            round_trip = tower.conditional_expectation_cells(
+                tower.embed_cells(realization, coarse_level=0, fine_level=2),
+                fine_level=2,
+                coarse_level=0,
+            )
+            adjacent = refinements[0].conditional_expectation(
+                refinements[0].embed(realization)
+            )
+            identity_residual = float(
+                max(
+                    np.max(np.abs(round_trip - realization)),
+                    np.max(np.abs(adjacent - realization)),
+                )
+            )
+    identity_verified = bool(
+        realization is not None
+        and refinement_maps_valid
+        and identity_residual <= _REFINEMENT_IDENTITY_TOLERANCE
+    )
+    if not identity_verified:
+        blockers.append("coarse_after_embedding_identity_residual_exceeds_tolerance")
+
+    # (c) Seam-law naturality: every registered A5 port action lifts to face
+    # permutations at each level that intertwine lineage, expectation weights,
+    # and the port-supported realization.
+    if port_permutation_override is None:
+        actions = tuple(
+            tuple(int(value) for value in row) for row in template.a5_actions
+        )
+    else:
+        actions = tuple(
+            tuple(int(value) for value in row) for row in port_permutation_override
+        )
+    family_valid = bool(
+        len(actions) == 60
+        and len(set(actions)) == 60
+        and all(sorted(row) == list(range(_PORT_COUNT)) for row in actions)
+    )
+    if not family_valid:
+        blockers.append("a5_action_family_is_not_60_unique_port_bijections")
+    face_lookups = []
+    for mesh in tower.levels:
+        face_lookups.append(
+            {
+                tuple(sorted(int(value) for value in face)): face_index
+                for face_index, face in enumerate(mesh.faces)
+            }
+        )
+    action_violation_examples: list[dict[str, Any]] = []
+    seam_law_violation_count = 0
+    realization_equivariance_residual = 0.0
+    chart_equivariance_residuals = {1: 0.0, 2: 0.0}
+    chart_equivariant = bool(family_valid and realization is not None)
+    embedded_realizations: dict[int, np.ndarray] = {}
+    if realization is not None:
+        for fine in (1, 2):
+            embedded_realizations[fine] = tower.embed_cells(
+                realization, coarse_level=0, fine_level=fine
+            )
+    if family_valid:
+        for action_index, row in enumerate(actions):
+            row_array = np.asarray(row, dtype=np.int64)
+            failure: str | None = None
+            rotation, fit_residual = _proper_rotation_fit(
+                coordinates, coordinates[row_array]
+            )
+            if (
+                fit_residual > _REFINEMENT_NATURALITY_TOLERANCE
+                or float(np.linalg.det(rotation)) <= 0.0
+            ):
+                failure = "port_permutation_has_no_proper_rotation_realization"
+            face_perms: list[np.ndarray] = []
+            if failure is None:
+                for level_index, mesh in enumerate(tower.levels):
+                    mapped_vertices, vertex_residual = _nearest_vertex_matching(
+                        np.asarray(mesh.vertices, dtype=float) @ rotation,
+                        np.asarray(mesh.vertices, dtype=float),
+                    )
+                    if (
+                        vertex_residual > _REFINEMENT_NATURALITY_TOLERANCE
+                        or len(set(mapped_vertices)) != mesh.vertex_count
+                    ):
+                        failure = (
+                            "rotation_does_not_permute_level_"
+                            f"{level_index}_vertices"
+                        )
+                        break
+                    lookup = face_lookups[level_index]
+                    mapped_faces = np.empty(mesh.face_count, dtype=np.int64)
+                    for face_index, face in enumerate(mesh.faces):
+                        key = tuple(
+                            sorted(mapped_vertices[int(vertex)] for vertex in face)
+                        )
+                        target = lookup.get(key)
+                        if target is None:
+                            failure = (
+                                "rotation_does_not_permute_level_"
+                                f"{level_index}_faces"
+                            )
+                            break
+                        mapped_faces[face_index] = target
+                    if failure is not None:
+                        break
+                    face_perms.append(mapped_faces)
+            if failure is None:
+                for mapping in refinements:
+                    coarse_perm = face_perms[mapping.coarse_level]
+                    fine_perm = face_perms[mapping.fine_level]
+                    lineage_preserved = bool(
+                        np.array_equal(
+                            mapping.child_to_parent[fine_perm],
+                            coarse_perm[mapping.child_to_parent],
+                        )
+                    )
+                    weight_residual = float(
+                        np.max(
+                            np.abs(
+                                mapping.conditional_expectation_weights[fine_perm]
+                                - mapping.conditional_expectation_weights
+                            )
+                        )
+                    )
+                    if (
+                        not lineage_preserved
+                        or weight_residual > _REFINEMENT_NATURALITY_TOLERANCE
+                    ):
+                        failure = (
+                            "refinement_lineage_not_equivariant_for_levels_"
+                            f"{mapping.coarse_level}_{mapping.fine_level}"
+                        )
+                        break
+            if failure is None and realization is not None:
+                inverse_base_faces = _inverse_permutation(
+                    tuple(int(value) for value in face_perms[0])
+                )
+                base_residual = float(
+                    np.max(
+                        np.abs(
+                            realization[:, row_array]
+                            - realization[np.asarray(inverse_base_faces), :]
+                        )
+                    )
+                )
+                realization_equivariance_residual = max(
+                    realization_equivariance_residual, base_residual
+                )
+                if base_residual > _REFINEMENT_NATURALITY_TOLERANCE:
+                    failure = "port_realization_a5_equivariance_failed_at_level_0"
+                else:
+                    for fine in (1, 2):
+                        inverse_fine = _inverse_permutation(
+                            tuple(int(value) for value in face_perms[fine])
+                        )
+                        fine_residual = float(
+                            np.max(
+                                np.abs(
+                                    embedded_realizations[fine][:, row_array]
+                                    - embedded_realizations[fine][
+                                        np.asarray(inverse_fine), :
+                                    ]
+                                )
+                            )
+                        )
+                        chart_equivariance_residuals[fine] = max(
+                            chart_equivariance_residuals[fine], fine_residual
+                        )
+                        if fine_residual > _REFINEMENT_NATURALITY_TOLERANCE:
+                            failure = (
+                                "chart_realization_a5_equivariance_failed_at_level_"
+                                f"{fine}"
+                            )
+                            chart_equivariant = False
+                            break
+            if failure is not None:
+                seam_law_violation_count += 1
+                if len(action_violation_examples) < 8:
+                    action_violation_examples.append(
+                        {"action_index": action_index, "failure": failure}
+                    )
+    seam_law_verified = bool(
+        family_valid and embedding_supplied and seam_law_violation_count == 0
+    )
+    if family_valid and seam_law_violation_count:
+        blockers.append(
+            f"seam_law_naturality_violated_for_{seam_law_violation_count}_of_60_actions"
+        )
+
+    # (d) Quotient commutation: presentation relabelings co-transform the
+    # embedding and the port-supported realization, and the typed quotient
+    # invariance machinery accepts the same relabelings.
+    quotient_checks: list[dict[str, Any]] = []
+    quotient_verified = embedding_supplied and realization is not None
+    if embedding_supplied and realization is not None:
+        relabelings = (
+            tuple(reversed(range(_PORT_COUNT))),
+            tuple(int(value) for value in template.a5_actions[7]),
+        )
+        for relabeling in relabelings:
+            relabeled = _relabel_carrier(template, relabeling)
+            relabeled_coordinates = np.asarray(
+                relabeled.port_coordinates, dtype=float
+            )
+            matched, relabeled_residual = _nearest_vertex_matching(
+                relabeled_coordinates, base.vertices[defect_ids]
+            )
+            relabeled_embedding = [int(defect_ids[index]) for index in matched]
+            embedding_commutes = bool(
+                relabeled_residual <= _REFINEMENT_DEFECT_MATCH_TOLERANCE
+                and all(
+                    relabeled_embedding[relabeling[port]] == embedding[port]
+                    for port in range(_PORT_COUNT)
+                )
+            )
+            realization_commutes = False
+            if embedding_commutes:
+                relabeled_vertex_to_port = {
+                    vertex: port for port, vertex in enumerate(relabeled_embedding)
+                }
+                relabeled_realization = np.zeros_like(realization)
+                for face_index, face in enumerate(base.faces):
+                    for vertex in face:
+                        relabeled_realization[
+                            face_index, relabeled_vertex_to_port[int(vertex)]
+                        ] += 1.0 / 3.0
+                realization_commutes = bool(
+                    np.max(
+                        np.abs(
+                            relabeled_realization[:, np.asarray(relabeling)]
+                            - realization
+                        )
+                    )
+                    <= _REFINEMENT_NATURALITY_TOLERANCE
+                )
+            witness_boundary = ExternalBoundaryBundle(
+                boundary_id="refinement-quotient-boundary",
+                carrier_id="refinement-quotient-carrier",
+                ports=tuple(range(_PORT_COUNT)),
+                boundary_condition="open_external",
+                boundary_algebra_sha256=interface_algebra_sha256(
+                    {"schema": "oph.refinement_naturality.boundary.v1"}
+                ),
+            )
+            witness_federation = EchosahedralFederation(
+                federation_id="refinement-quotient-witness",
+                carriers=(
+                    reference_echosahedral_carrier("refinement-quotient-carrier"),
+                ),
+                seams=(),
+                external_boundaries=(witness_boundary,),
+            )
+            permutation_map = {"refinement-quotient-carrier": relabeling}
+            transformed = relabel_federation_ports(
+                witness_federation, permutation_map
+            )
+            invariance = carrier_quotient_invariance_report(
+                witness_federation, transformed, permutation_map
+            )
+            typed_invariance = bool(
+                invariance["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"]
+            )
+            quotient_checks.append(
+                {
+                    "relabeling": list(relabeling),
+                    "embedding_commutes": embedding_commutes,
+                    "realization_commutes": realization_commutes,
+                    "typed_quotient_invariance": typed_invariance,
+                }
+            )
+            quotient_verified = bool(
+                quotient_verified
+                and embedding_commutes
+                and realization_commutes
+                and typed_invariance
+            )
+    if not quotient_verified:
+        blockers.append("quotient_relabeling_refinement_commutation_failed")
+
+    # (e) Chart realization: the composite port-to-cell map is well defined,
+    # A5-equivariant, and rides on receipts for levels 0->1->2.
+    realization_verified = bool(
+        embedding_supplied
+        and refinement_maps_valid
+        and identity_verified
+        and chart_equivariant
+        and seam_law_violation_count == 0
+        and family_valid
+    )
+    if not realization_verified:
+        blockers.append("carrier_to_support_chart_realization_checks_failed")
+
+    naturality = bool(
+        twelve_port_type
+        and embedding_supplied
+        and refinement_maps_valid
+        and identity_verified
+        and seam_law_verified
+        and quotient_verified
+    )
+    chart = bool(naturality and realization_verified)
     return {
-        "schema": "oph.echosahedral_federation.refinement_naturality.v1",
-        "local_twelve_port_type_declared": True,
-        "carrier_embedding_map_supplied": False,
-        "carrier_coarse_graining_map_supplied": False,
-        "coarse_after_embedding_identity_verified": False,
-        "seam_law_naturality_verified": False,
-        "quotient_map_commutation_verified": False,
-        "carrier_to_support_realization_verified": False,
-        "blockers": [
-            "carrier_refinement_embedding_not_implemented",
-            "carrier_coarse_graining_not_implemented",
-            "seam_refinement_naturality_not_implemented",
-            "carrier_quotient_refinement_commutation_not_implemented",
-            "carrier_to_support_chart_realization_not_implemented",
-        ],
-        "CARRIER_REFINEMENT_NATURALITY_RECEIPT": False,
-        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
+        "schema": "oph.echosahedral_federation.refinement_naturality.v2",
+        "local_twelve_port_type_declared": twelve_port_type,
+        "carrier_embedding_map_supplied": embedding_supplied,
+        "carrier_coarse_graining_map_supplied": refinement_maps_valid,
+        "coarse_after_embedding_identity_verified": identity_verified,
+        "seam_law_naturality_verified": seam_law_verified,
+        "quotient_map_commutation_verified": quotient_verified,
+        "carrier_to_support_realization_verified": realization_verified,
+        "embedding_port_to_defect_vertex": list(declared_embedding),
+        "defect_vertex_ids": [int(value) for value in defect_ids],
+        "embedding_match_residual": embedding_residual,
+        "embedding_match_tolerance": _REFINEMENT_DEFECT_MATCH_TOLERANCE,
+        "coarse_after_embedding_identity_residual": identity_residual,
+        "identity_tolerance": _REFINEMENT_IDENTITY_TOLERANCE,
+        "naturality_tolerance": _REFINEMENT_NATURALITY_TOLERANCE,
+        "checked_action_count": len(actions),
+        "seam_law_violation_count": seam_law_violation_count,
+        "seam_law_violation_examples": action_violation_examples,
+        "port_realization_equivariance_residual": (
+            realization_equivariance_residual
+        ),
+        "chart_realization_equivariance_residuals": {
+            str(level): value
+            for level, value in sorted(chart_equivariance_residuals.items())
+        },
+        "cell_refinement_receipts": refinement_rows,
+        "quotient_commutation_checks": quotient_checks,
+        "tower_levels_checked": level_cap + 1,
+        "blockers": sorted(set(blockers)),
+        "CARRIER_REFINEMENT_NATURALITY_RECEIPT": naturality,
+        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": chart,
+        "claim_boundary": (
+            "This receipt certifies the finite natural transformation between "
+            "the twelve-port reference carrier and the exact geodesic tower "
+            "through level two: defect-vertex embedding, state-preserving "
+            "coarse graining, A5 seam-law naturality, and quotient "
+            "commutation. It selects no physical support chart and carries no "
+            "H3, event, BW, or KMS claim."
+        ),
     }
 
 
@@ -1543,13 +2274,27 @@ def echosahedral_federation_receipt(
         and firewall["CARRIER_PRESENTATION_FIREWALL_RECEIPT"]
     )
     refinement_receipt = bool(refinement["CARRIER_REFINEMENT_NATURALITY_RECEIPT"])
+    chart_realization_receipt = bool(
+        refinement["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"]
+    )
+    homomorphism_receipt = bool(
+        sewing["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"]
+    )
+    cocycle_receipt = bool(sewing["HIGHER_OVERLAP_COCYCLE_RECEIPT"])
+    full_sewing_receipt = bool(sewing["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"])
+    physical_realization_receipt = bool(
+        sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
+    )
     source_instrument_valid = bool(
         carrier_receipt
         and sewing_receipt
         and quotient_receipt
         and refinement_receipt
-        and sewing["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"]
-        and sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
+        and full_sewing_receipt
+        and physical_realization_receipt
+    )
+    s2_support_chart_receipt = bool(
+        chart_realization_receipt and carrier_receipt and sewing_receipt
     )
     return {
         "schema": "oph.echosahedral_federation.parent_receipts.v1",
@@ -1561,7 +2306,11 @@ def echosahedral_federation_receipt(
         "support_regulator_count": None,
         "carrier_count_is_support_regulator_count": False,
         "support_chart_cell_count": None,
-        "carrier_to_support_chart_realization": "unproved",
+        "carrier_to_support_chart_realization": (
+            "verified_finite_reference_tower_levels_0_2"
+            if chart_realization_receipt
+            else "unproved"
+        ),
         "sewing": sewing,
         "presentation_firewall": firewall,
         "quotient_invariance": quotient,
@@ -1570,24 +2319,28 @@ def echosahedral_federation_receipt(
         "FEDERATION_SEWING_RECEIPT": sewing_receipt,
         "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": quotient_receipt,
         "CARRIER_REFINEMENT_NATURALITY_RECEIPT": refinement_receipt,
-        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": False,
-        "HIGHER_OVERLAP_COCYCLE_RECEIPT": False,
-        "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": False,
-        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": False,
-        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
+        "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": homomorphism_receipt,
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": cocycle_receipt,
+        "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": full_sewing_receipt,
+        "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": (
+            physical_realization_receipt
+        ),
+        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": chart_realization_receipt,
         "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID": source_instrument_valid,
-        "S2_SUPPORT_CHART_EMERGENCE_RECEIPT": False,
+        "S2_SUPPORT_CHART_EMERGENCE_RECEIPT": s2_support_chart_receipt,
         "H3_FRAME_EMERGENCE_RECEIPT": False,
         "EVENT_MANIFOLD_RECEIPT": False,
         "BW_KMS_CLOCK_RECEIPT": False,
         "PHYSICAL_H3_KMS_EMERGENCE_RECEIPT": False,
         "claim_boundary": (
-            "These parent receipts stop at the declared finite carrier contract. "
-            "carrier_count is its exact source-federation cardinality when unique IDs "
-            "verify, and remains separate from the support regulator, S2 chart-cell "
-            "count, N_star, observer count, H3-point count, and event count. Schema "
-            "hash equality does not prove interface algebra maps or higher overlaps. "
-            "Those facts, physical source realization, S2, H3, events, BW/KMS, and "
+            "These parent receipts stop at the declared finite carrier contract "
+            "and its exact refinement bridge. carrier_count is the exact "
+            "source-federation cardinality when unique IDs verify, and is "
+            "separate from the support regulator, S2 chart-cell count, N_star, "
+            "observer count, H3-point count, and event count. The interface "
+            "algebra map, higher-overlap cocycle, refinement naturality, and "
+            "support-chart realization receipts are computed finite checks on "
+            "the reference structures. H3 frames, events, BW/KMS clocks, and "
             "the 2pi normalization require independent downstream receipts."
         ),
     }
@@ -1794,10 +2547,6 @@ def verify_reference_federation_instrument_bundle(
             "shared_reference_template_conformance_verified_once"
         ]
     )
-    report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] = False
-    report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] = False
-    report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] = False
-    report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] = False
     report["INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"] = True
     return report
 
@@ -1823,6 +2572,13 @@ def screen_port_map_carrier_bridge_report(
         isinstance(federation_section, Mapping)
         and federation_section.get("interface_algebra_hashes_bound") is True
     )
+    refinement = carrier_refinement_naturality_report()
+    refinement_naturality = bool(
+        refinement["CARRIER_REFINEMENT_NATURALITY_RECEIPT"]
+    )
+    chart_realization = bool(
+        refinement["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"]
+    )
     blockers = [
         item
         for condition, item in (
@@ -1832,8 +2588,8 @@ def screen_port_map_carrier_bridge_report(
             (not interface_hashes, "interface_algebra_hash_binding_missing"),
             (True, "explicit_external_boundary_bundle_ledger_missing"),
             (True, "connected_observer_support_ledger_missing"),
-            (True, "carrier_to_support_chart_realization_missing"),
-            (True, "carrier_refinement_naturality_missing"),
+            (not chart_realization, "carrier_to_support_chart_realization_missing"),
+            (not refinement_naturality, "carrier_refinement_naturality_missing"),
         )
         if condition
     ]
@@ -1851,18 +2607,19 @@ def screen_port_map_carrier_bridge_report(
         "ECHOSAHEDRAL_CARRIER_CONFORMANCE": local,
         "FEDERATION_SEWING_RECEIPT": False,
         "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": False,
-        "CARRIER_REFINEMENT_NATURALITY_RECEIPT": False,
-        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
+        "CARRIER_REFINEMENT_NATURALITY_RECEIPT": refinement_naturality,
+        "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": chart_realization,
         "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID": False,
         "S2_SUPPORT_CHART_EMERGENCE_RECEIPT": False,
         "H3_FRAME_EMERGENCE_RECEIPT": False,
         "EVENT_MANIFOLD_RECEIPT": False,
         "BW_KMS_CLOCK_RECEIPT": False,
         "claim_boundary": (
-            "The current engine report may certify the shared local carrier template "
-            "and singleton routing reference. It does not yet instantiate typed collar "
-            "bundles, interface hashes, explicit external boundaries, observer supports, "
-            "carrier-to-support realization, quotient dynamics, or refinement."
+            "The current engine report may certify the shared local carrier "
+            "template and singleton routing reference, and it imports the "
+            "recomputed reference-template refinement naturality. Typed collar "
+            "bundles, interface hashes, explicit external boundaries, observer "
+            "supports, and quotient dynamics are open items for this engine."
         ),
     }
 
