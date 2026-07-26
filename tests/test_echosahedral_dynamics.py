@@ -5,11 +5,13 @@ import math
 import numpy as np
 import pytest
 
+import oph_fpe.core.echosahedral_dynamics as dynamics
 from oph_fpe.core.echosahedral_dynamics import (
     initialize_local_recurrent_carriers,
     local_a5_dynamics_report,
     local_port_statistics,
     propagate_local_recurrent_carriers,
+    reference_impulse_readback_report,
     reference_icosahedral_coupling,
 )
 
@@ -61,6 +63,31 @@ def test_local_dynamics_is_a5_equivariant_but_does_not_select_2pi() -> None:
     assert sorted(
         row["multiplicity"] for row in report["coupling_spectrum"]
     ) == [1, 3, 3, 5]
+
+def test_target_blind_impulse_readback_uniquely_recovers_antipode_filter() -> None:
+    report = reference_impulse_readback_report()
+
+    assert report["diameter"] == 3
+    assert report["source_count"] == 12
+    assert report["recurrence_steps"] == [0, 1, 2, 3]
+    assert report["homogeneous_filter_coefficients"] == ["1", "-1/2", "-2/5", "1/10"]
+    assert report["unique_solution_rank"] == 4
+    assert report["unique_farthest_port_per_source"] is True
+    assert report["nearer_shells_cancelled"] is True
+    assert report["target_labels_used"] is False
+    assert report["downstream_labels_used"] is False
+
+
+def test_impulse_readback_fails_on_non_icosahedral_recurrence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cycle = np.zeros((12, 12), dtype=np.int64)
+    for index in range(12):
+        cycle[index, (index + 1) % 12] = 1
+        cycle[(index + 1) % 12, index] = 1
+    monkeypatch.setattr(dynamics, "_reference_adjacency", lambda: cycle)
+    with pytest.raises(ValueError, match="diameter drifted"):
+        reference_impulse_readback_report()
 
 
 def test_recurrence_step_is_not_preloaded_with_a_clock_candidate() -> None:

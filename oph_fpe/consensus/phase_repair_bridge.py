@@ -224,6 +224,7 @@ def induced_phase_repair_transactions(
     phases: Sequence[float],
     *,
     mismatch_threshold: float = _DEFAULT_MISMATCH_THRESHOLD,
+    candidate_pairs: Sequence[Sequence[int]] | None = None,
 ) -> dict[str, Any]:
     """Induce typed repair transactions for over-threshold carrier pairs.
 
@@ -241,11 +242,36 @@ def induced_phase_repair_transactions(
     if len(values) < 2:
         raise ValueError("repair induction requires at least two carriers")
     state = phase_state_registers(values)
+    if candidate_pairs is None:
+        admissible_pairs = tuple(
+            (i, j)
+            for i in range(len(values))
+            for j in range(i + 1, len(values))
+        )
+        candidate_pair_source = "complete_pair_graph"
+    else:
+        normalized_pairs: set[tuple[int, int]] = set()
+        for raw_pair in candidate_pairs:
+            if len(raw_pair) != 2:
+                raise ValueError("candidate repair pairs must have length two")
+            left, right = (int(raw_pair[0]), int(raw_pair[1]))
+            if (
+                left == right
+                or left < 0
+                or right < 0
+                or left >= len(values)
+                or right >= len(values)
+            ):
+                raise ValueError("candidate repair pair is outside the carrier batch")
+            normalized_pairs.add(tuple(sorted((left, right))))
+        if not normalized_pairs:
+            raise ValueError("candidate repair pair set must be nonempty")
+        admissible_pairs = tuple(sorted(normalized_pairs))
+        candidate_pair_source = "declared_federation_seams"
     candidates = sorted(
         (
             (circular_phase_mismatch(values[i], values[j]), i, j)
-            for i in range(len(values))
-            for j in range(i + 1, len(values))
+            for i, j in admissible_pairs
             if circular_phase_mismatch(values[i], values[j]) > threshold
         ),
         key=lambda row: (-row[0], row[1], row[2]),
@@ -281,6 +307,8 @@ def induced_phase_repair_transactions(
     return {
         "schema": "oph.phase_repair_bridge.induced_repairs.v1",
         "mismatch_threshold": threshold,
+        "candidate_pair_source": candidate_pair_source,
+        "candidate_pairs": [list(pair) for pair in admissible_pairs],
         "state": state,
         "matched_pairs": [list(pair) for pair in matched],
         "over_threshold_pair_count": len(candidates),
@@ -417,6 +445,9 @@ def phase_repair_bridge_report(
     coupling_strength: float = _DEFAULT_COUPLING_STRENGTH,
     mismatch_threshold: float = _DEFAULT_MISMATCH_THRESHOLD,
     initial_phases: Sequence[float] | None = None,
+    candidate_pairs: Sequence[Sequence[int]] | None = None,
+    carrier_ids: Sequence[str] | None = None,
+    federation_bundle_sha256: str | None = None,
 ) -> dict[str, Any]:
     """Run the full bridge: measurement, induced repair, and confluence."""
 
@@ -432,6 +463,7 @@ def phase_repair_bridge_report(
     induction = induced_phase_repair_transactions(
         lock["terminal_phases"],
         mismatch_threshold=mismatch_threshold,
+        candidate_pairs=candidate_pairs,
     )
     confluence = phase_repair_confluence_report(
         induction["state"],
@@ -453,11 +485,23 @@ def phase_repair_bridge_report(
         and confluence["every_accepted_repair_strictly_descends"]
         and mismatch_after < mismatch_before
     )
+    carrier_binding_valid = bool(
+        carrier_ids is not None
+        and len(carrier_ids) == int(carrier_count)
+        and len(set(carrier_ids)) == int(carrier_count)
+        and all(isinstance(item, str) and item for item in carrier_ids)
+        and isinstance(federation_bundle_sha256, str)
+        and federation_bundle_sha256.startswith("sha256:")
+        and len(federation_bundle_sha256) == 71
+        and induction["candidate_pair_source"] == "declared_federation_seams"
+    )
     return {
         "schema": "oph.phase_repair_bridge.report.v1",
         "phase_lock_measurement": lock,
         "induced_repairs": {
             "mismatch_threshold": induction["mismatch_threshold"],
+            "candidate_pair_source": induction["candidate_pair_source"],
+            "candidate_pairs": induction["candidate_pairs"],
             "matched_pairs": induction["matched_pairs"],
             "over_threshold_pair_count": induction["over_threshold_pair_count"],
             "proposal_rows": induction["proposal_rows"],
@@ -466,6 +510,8 @@ def phase_repair_bridge_report(
         },
         "confluence": confluence,
         "terminal_state_hash": terminal_hash,
+        "carrier_ids": [] if carrier_ids is None else list(carrier_ids),
+        "federation_bundle_sha256": federation_bundle_sha256,
         "PHASE_LOCK_MEASUREMENT_RECEIPT": bool(
             lock["PHASE_LOCK_MEASUREMENT_RECEIPT"]
         ),
@@ -473,6 +519,7 @@ def phase_repair_bridge_report(
         "PHASE_REPAIR_CONFLUENCE_RECEIPT": bool(
             confluence["PHASE_REPAIR_CONFLUENCE_RECEIPT"]
         ),
+        "FEDERATION_PHASE_TO_REPAIR_BINDING_RECEIPT": carrier_binding_valid,
         "BW_KMS_CLOCK_RECEIPT": False,
         "PHYSICAL_2PI_CLOCK_SELECTION_RECEIPT": False,
         "claim_boundary": CLAIM_BOUNDARY,

@@ -93,7 +93,10 @@ def test_capture_is_deterministic_replayable_and_has_real_local_activity() -> No
     assert source["SUPPORT_REGULATOR_STRUCTURAL_DIAGNOSTIC_RECEIPT"]
     assert source["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
     assert source["carrier_refinement_naturality_status"] == "NOT_EVALUATED"
-    assert source["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
+    # The all-port matching has no declared nonempty triple restriction.  It
+    # remains a valid structural federation but cannot borrow the separate
+    # incidence-nerve producer's physical/nonvacuous receipt.
+    assert source["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
     assert source["physical_federation_status"] == (
         "STRUCTURAL_INTERFACE_ALGEBRA_AND_COCYCLE_SEWING_REALIZED"
     )
@@ -660,14 +663,14 @@ def test_capture_keeps_constructed_p1_p3_diagnostics_fail_closed() -> None:
     )
     p0 = preflight["stages"]["P0_source_dynamics_repair_record_observer"]
     # The local carrier/repair/observer instrument is structurally complete
-    # and the interface-algebra sewing realization is computed, while the
-    # distinct carrier-to-support bridge stays an explicit NOT_EVALUATED
-    # field.  A mapping fixture cannot promote either.
+    # while both its nonvacuous physical-federation realization and the
+    # distinct carrier-to-support bridge stay explicit NOT_EVALUATED/open
+    # fields.  A mapping fixture cannot promote either.
     assert p0["passed"]
     assert p0["gate_status"] == "PASS"
     assert p0["scientific_status"] == "NOT_EVALUATED"
     assert p0["evidence"]["carrier_refinement_naturality_receipt"] is False
-    assert p0["evidence"]["physical_federation_realization_receipt"] is True
+    assert p0["evidence"]["physical_federation_realization_receipt"] is False
     assert p0["evidence"]["carrier_to_support_realization_receipt"] is False
     refinement = preflight["stages"][
         "P1_nested_refinement_and_expectations"

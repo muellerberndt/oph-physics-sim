@@ -17,14 +17,17 @@ from oph_fpe.core.echosahedral_federation import (
     SeamBundle,
     carrier_quotient_invariance_report,
     carrier_refinement_naturality_report,
+    controlled_oriented_s2_limit_report,
     echosahedral_carrier_conformance_report,
     echosahedral_federation_receipt,
+    finite_matrix_interface_algebra_schema,
     federation_sewing_report,
     interface_algebra_sha256,
     main,
     presentation_firewall_report,
     reference_echosahedral_carrier,
     reference_federation_instrument_bundle,
+    reference_incidence_nerve_federation,
     relabel_federation_ports,
     screen_port_map_carrier_bridge_report,
     verify_reference_federation_instrument_bundle,
@@ -33,19 +36,20 @@ from oph_fpe.core.icosahedral import icosahedral_a5_port_permutations
 from oph_fpe.core.screen_ports import assign_echosahedral_ports
 
 
-INTERFACE_HASH = interface_algebra_sha256(
-    {"algebra": "finite_overlap_visible_matrix_star_algebra", "dimension": 4}
-)
 RECORD_HASH = interface_algebra_sha256({"algebra": "record", "version": 1})
 CHECKPOINT_HASH = interface_algebra_sha256({"algebra": "checkpoint", "version": 1})
 
 
-def _binding() -> InterfaceAlgebraBinding:
+def _binding(matrix_size: int = 1) -> InterfaceAlgebraBinding:
+    interface_id = "I_overlap_v1"
+    interface_hash = interface_algebra_sha256(
+        finite_matrix_interface_algebra_schema(interface_id, matrix_size)
+    )
     return InterfaceAlgebraBinding(
-        interface_algebra_id="I_overlap_v1",
-        interface_algebra_sha256=INTERFACE_HASH,
-        left_interface_algebra_sha256=INTERFACE_HASH,
-        right_interface_algebra_sha256=INTERFACE_HASH,
+        interface_algebra_id=interface_id,
+        interface_algebra_sha256=interface_hash,
+        left_interface_algebra_sha256=interface_hash,
+        right_interface_algebra_sha256=interface_hash,
     )
 
 
@@ -64,7 +68,7 @@ def _external_components(carrier, used_ports: set[int], prefix: str):
             carrier_id=carrier.carrier_id,
             ports=tuple(sorted(component)),
             boundary_condition="open_external",
-            boundary_algebra_sha256=INTERFACE_HASH,
+            boundary_algebra_sha256=_binding().interface_algebra_sha256,
         )
         for index, component in enumerate(nx.connected_components(graph))
     )
@@ -233,7 +237,7 @@ def test_antipodal_edge_and_face_collar_types_are_explicitly_checked() -> None:
             left_to_right_orientation=(-1,) * len(left_ports),
             right_to_left_orientation=(-1,) * len(right_ports),
             collar_kind=kind,
-            interface_algebra=_binding(),
+            interface_algebra=_binding(len(left_ports)),
         )
         federation = EchosahedralFederation(
             federation_id=f"typed-{index}",
@@ -475,9 +479,10 @@ def test_parent_receipts_compute_refinement_and_stop_before_h3_event_and_bw() ->
     assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is True
     assert report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is True
     assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is True
+    assert report["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"] is False
     assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is True
-    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
-    assert report["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is True
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
+    assert report["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
     assert report["refinement_naturality"]["blockers"] == []
     assert report["carrier_to_support_chart_realization"] == (
         "verified_finite_reference_tower_levels_0_2"
@@ -485,7 +490,7 @@ def test_parent_receipts_compute_refinement_and_stop_before_h3_event_and_bw() ->
     # The cardinality firewall stays intact even with computed receipts.
     assert report["support_chart_cell_count"] is None
     assert report["support_regulator_count"] is None
-    assert report["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is True
+    assert report["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is False
     assert report["H3_FRAME_EMERGENCE_RECEIPT"] is False
     assert report["EVENT_MANIFOLD_RECEIPT"] is False
     assert report["BW_KMS_CLOCK_RECEIPT"] is False
@@ -704,11 +709,40 @@ def test_interface_algebra_and_cocycle_receipts_are_computed_from_checks() -> No
     assert report["INTERFACE_SCHEMA_HASH_BINDING_RECEIPT"] is True
     assert report["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"] is True
     assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is True
+    assert report["HIGHER_OVERLAP_COCYCLE_CONDITION_RECEIPT"] is True
+    assert report["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"] is False
     assert report["higher_overlap_cocycle"]["identity_violation_count"] == 0
     assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is True
-    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
     # The sewing report never asserts the separate chart realization.
     assert report["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
+
+
+def test_equal_opaque_hashes_do_not_bind_the_checked_interface_algebra() -> None:
+    federation = _two_carrier_federation()
+    opaque = "sha256:" + "0" * 64
+    binding = replace(
+        federation.seams[0].interface_algebra,
+        interface_algebra_sha256=opaque,
+        left_interface_algebra_sha256=opaque,
+        right_interface_algebra_sha256=opaque,
+    )
+    report = federation_sewing_report(
+        replace(
+            federation,
+            seams=(replace(federation.seams[0], interface_algebra=binding),),
+        )
+    )
+    seam = report["seams"][0]
+
+    assert seam["interface_schema_hashes_agree"] is True
+    assert seam["interface_schema_hash_binds_checked_algebra"] is False
+    assert seam["FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT"] is False
+    assert (
+        "interface_algebra_hash_does_not_bind_checked_matrix_algebra"
+        in seam["blockers"]
+    )
+    assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is False
 
 
 def test_non_bijective_gluing_fails_interface_algebra_homomorphism() -> None:
@@ -728,7 +762,7 @@ def test_non_bijective_gluing_fails_interface_algebra_homomorphism() -> None:
         left_to_right_orientation=(-1, -1),
         right_to_left_orientation=(-1, -1),
         collar_kind="edge_bundle",
-        interface_algebra=_binding(),
+        interface_algebra=_binding(2),
     )
     report = federation_sewing_report(replace(federation, seams=(collapsed,)))
     seam = report["seams"][0]
@@ -787,6 +821,199 @@ def test_triangle_loop_that_misses_identity_fails_higher_overlap_cocycle() -> No
     assert report["HIGHER_OVERLAP_COCYCLE_RECEIPT"] is False
     assert report["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"] is False
     assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
+
+
+def test_coherent_triangle_supplies_a_nonvacuous_cocycle_witness() -> None:
+    carriers = tuple(
+        reference_echosahedral_carrier(f"w{index}") for index in range(3)
+    )
+
+    def _seam(seam_id: str, left: str, right: str) -> SeamBundle:
+        return SeamBundle(
+            seam_id=seam_id,
+            left_carrier_id=left,
+            right_carrier_id=right,
+            left_ports=(0,),
+            right_ports=(0,),
+            left_to_right_ports=(0,),
+            right_to_left_ports=(0,),
+            left_to_right_orientation=(-1,),
+            right_to_left_orientation=(-1,),
+            collar_kind="single_port",
+            interface_algebra=_binding(),
+        )
+
+    federation = EchosahedralFederation(
+        federation_id="coherent-triangle-control",
+        carriers=carriers,
+        seams=(
+            _seam("w01", "w0", "w1"),
+            _seam("w12", "w1", "w2"),
+            _seam("w20", "w2", "w0"),
+        ),
+        # Port reuse deliberately makes this only a cocycle control, not a
+        # positive physical federation-sewing fixture.
+        external_boundaries=(),
+    )
+    report = federation_sewing_report(federation)
+    cocycle = report["higher_overlap_cocycle"]
+
+    assert cocycle["triangle_count"] == 1
+    assert cocycle["composable_port_loop_count"] >= 1
+    assert cocycle["identity_violation_count"] == 0
+    assert cocycle["HIGHER_OVERLAP_COCYCLE_CONDITION_RECEIPT"] is True
+    # Graph adjacency plus matching raw labels is not itself a declaration
+    # that the three collars have a common nonempty algebra restriction.
+    assert cocycle["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"] is False
+    assert report["FEDERATION_SEWING_RECEIPT"] is False
+
+
+def test_source_incidence_nerve_is_nonvacuous_and_respects_port_ownership() -> None:
+    federation = reference_incidence_nerve_federation()
+    report = federation_sewing_report(federation)
+    cocycle = report["higher_overlap_cocycle"]
+
+    assert len(federation.carriers) == 12
+    assert len(federation.seams) == 30
+    assert len(federation.triple_overlaps) == 20
+    endpoint_owners = [
+        (seam.left_carrier_id, seam.left_ports[0])
+        for seam in federation.seams
+    ] + [
+        (seam.right_carrier_id, seam.right_ports[0])
+        for seam in federation.seams
+    ]
+    assert len(endpoint_owners) == len(set(endpoint_owners))
+    assert report["FEDERATION_SEWING_RECEIPT"] is True
+    assert report["CONNECTED_OBSERVER_SUPPORT_WITNESS"] is True
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
+    assert cocycle["triangle_count"] == 20
+    assert cocycle["declared_nonempty_triple_overlap_count"] == 20
+    assert cocycle["valid_declared_triple_overlap_count"] == 20
+    assert cocycle["composable_triple_restriction_algebra_loop_count"] == 20
+    assert cocycle["identity_violation_count"] == 0
+    assert cocycle["HIGHER_OVERLAP_COCYCLE_CONDITION_RECEIPT"] is True
+    assert cocycle["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"] is True
+    assert all(
+        row["matrix_unit_identity_composition_exact"]
+        for row in report["triple_overlaps"]
+    )
+
+
+def test_incidence_nerve_has_controlled_oriented_s2_limit_on_same_tower() -> None:
+    federation = reference_incidence_nerve_federation()
+    support = controlled_oriented_s2_limit_report(federation, max_level=3)
+
+    assert support["carrier_to_base_vertex_bijection"] is True
+    assert support["source_edge_nerve_exact"] is True
+    assert support["source_oriented_face_nerve_exact"] is True
+    assert support["nerve_simplex_counts"] == {
+        "vertices": 12,
+        "edges": 30,
+        "oriented_faces": 20,
+    }
+    assert support["analytic_contraction_factor"] < 1.0
+    assert support["analytic_all_levels_contraction_proved"] is True
+    assert support["mesh_bound_tends_to_zero"] is True
+    assert support["computed_prefix_mesh_bounds_verified"] is True
+    assert support["computed_prefix_outward_oriented"] is True
+    assert support["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"] is True
+
+    permutations = {
+        carrier.carrier_id: tuple(reversed(range(12)))
+        for carrier in federation.carriers
+    }
+    equivalent = relabel_federation_ports(federation, permutations)
+    parent = echosahedral_federation_receipt(
+        federation,
+        equivalent_presentation=equivalent,
+        presentation_port_permutations=permutations,
+    )
+    assert parent["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is True
+    assert parent["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is True
+    assert parent["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"] is True
+    assert parent["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is True
+    assert parent["H3_FRAME_EMERGENCE_RECEIPT"] is False
+    assert parent["BW_KMS_CLOCK_RECEIPT"] is False
+
+
+def test_incidence_nerve_negative_controls_fail_closed() -> None:
+    federation = reference_incidence_nerve_federation()
+
+    missing_face = replace(
+        federation, triple_overlaps=federation.triple_overlaps[:-1]
+    )
+    support = controlled_oriented_s2_limit_report(missing_face)
+    parent = echosahedral_federation_receipt(missing_face)
+    assert support["source_oriented_face_nerve_exact"] is False
+    assert support["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"] is False
+    assert parent["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is False
+    assert parent["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
+
+    first = federation.triple_overlaps[0]
+    corrupted_hash = replace(
+        first,
+        restriction_algebra_sha256=interface_algebra_sha256(
+            {"corrupted": "triple restriction"}
+        ),
+    )
+    corrupted = replace(
+        federation,
+        triple_overlaps=(corrupted_hash, *federation.triple_overlaps[1:]),
+    )
+    corrupted_report = federation_sewing_report(corrupted)
+    assert corrupted_report["FEDERATION_SEWING_RECEIPT"] is False
+    assert (
+        corrupted_report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
+        is False
+    )
+    assert (
+        "triple_restriction_hash_does_not_bind_canonical_M1_algebra"
+        in corrupted_report["triple_overlap_failure_examples"][0]["blockers"]
+    )
+
+    wrong_seams = replace(
+        first,
+        oriented_seam_ids=(
+            federation.triple_overlaps[1].oriented_seam_ids[0],
+            first.oriented_seam_ids[1],
+            first.oriented_seam_ids[2],
+        ),
+    )
+    misidentified = replace(
+        federation,
+        triple_overlaps=(wrong_seams, *federation.triple_overlaps[1:]),
+    )
+    misidentified_report = federation_sewing_report(misidentified)
+    assert misidentified_report["FEDERATION_SEWING_RECEIPT"] is False
+    assert misidentified_report[
+        "NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"
+    ] is False
+
+
+def test_incidence_nerve_bundle_round_trip_binds_the_common_tower() -> None:
+    bundle = reference_federation_instrument_bundle(
+        reference_incidence_nerve_federation()
+    )
+    report = verify_reference_federation_instrument_bundle(bundle)
+
+    assert bundle["presentation_relabeling_witness"] == (
+        "reverse_every_local_port_order_v1"
+    )
+    assert report["INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"] is True
+    assert report["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is True
+    assert report["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"] is True
+    assert report["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
+    assert report["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"] is True
+    assert report["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is True
+    assert report["S2_SUPPORT_CHART_EMERGENCE_RECEIPT"] is True
+
+    corrupted = copy.deepcopy(bundle)
+    corrupted["support_tower_binding"]["carrier_to_base_vertex"][0][1] = 1
+    failed = verify_reference_federation_instrument_bundle(corrupted)
+    assert failed["INSTRUMENT_BUNDLE_SCHEMA_RECEIPT"] is True
+    assert failed["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"] is False
+    assert failed["ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID"] is False
 
 
 def test_compact_bundle_rejects_count_type_and_embedded_template_forgery() -> None:

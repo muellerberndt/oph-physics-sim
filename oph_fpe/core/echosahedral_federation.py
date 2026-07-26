@@ -60,7 +60,7 @@ _CARDINALITY_SEMANTICS = (
     "exact_declared_finite_source_carrier_cardinality_separate_from_support_regulator"
 )
 _INTERFACE_HASH_CHECK_SCOPE = (
-    "content_addressed_schema_identity_only_no_algebra_map_or_higher_overlap_proof"
+    "content_addressed_canonical_checked_matrix_schema_no_higher_overlap_proof"
 )
 _EMBEDDED_LOCAL_TEMPLATE_FIELDS = frozenset(
     {
@@ -189,6 +189,39 @@ class ObserverSupport:
 
 
 @dataclass(frozen=True)
+class TripleOverlapBundle:
+    """One explicitly sourced nonempty three-chart overlap.
+
+    ``oriented_carrier_ids`` lists the charts in positive cyclic order and
+    ``oriented_seam_ids`` lists the corresponding pairwise overlaps
+    ``(01, 12, 20)``.  Each pairwise collar restricts to the same canonical
+    matrix algebra on the triple overlap.  In the incidence-nerve producer
+    below that algebra is ``M_1(C)``: the three restriction maps are therefore
+    the unique unital star homomorphisms and their composite is exactly the
+    identity.  The explicit bundle matters because a triangle in the carrier
+    adjacency graph alone does not say that the three pairwise overlaps have
+    a nonempty common restriction.
+    """
+
+    overlap_id: str
+    oriented_carrier_ids: tuple[str, str, str]
+    oriented_seam_ids: tuple[str, str, str]
+    restriction_algebra_id: str
+    restriction_algebra_sha256: str
+
+
+@dataclass(frozen=True)
+class SupportTowerBinding:
+    """Source-visible simplicial map from federation nerve to support tower."""
+
+    geometry_family: str
+    carrier_to_base_vertex: tuple[tuple[str, int], ...]
+    orientation: str
+    refinement_rule: str
+    source_incidence_sha256: str
+
+
+@dataclass(frozen=True)
 class EchosahedralFederation:
     """Carrier set, typed seams, external boundary, and observer supports."""
 
@@ -197,6 +230,8 @@ class EchosahedralFederation:
     seams: tuple[SeamBundle, ...]
     external_boundaries: tuple[ExternalBoundaryBundle, ...]
     observer_supports: tuple[ObserverSupport, ...] = ()
+    triple_overlaps: tuple[TripleOverlapBundle, ...] = ()
+    support_tower_binding: SupportTowerBinding | None = None
 
 
 def interface_algebra_sha256(schema: Mapping[str, Any] | Sequence[Any] | str) -> str:
@@ -206,6 +241,30 @@ def interface_algebra_sha256(schema: Mapping[str, Any] | Sequence[Any] | str) ->
         schema, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def finite_matrix_interface_algebra_schema(
+    interface_algebra_id: str, matrix_size: int
+) -> dict[str, Any]:
+    """Canonical schema for the matrix algebra actually checked on a seam.
+
+    The seam homomorphism verifier below proves conjugation on ``M_n(C)``,
+    where ``n`` is the collar-port count.  Binding only three equal opaque
+    hashes did not establish that the hashed object was this algebra (or even
+    that the hash had a preimage available to the verifier).  The canonical
+    schema makes the checked algebra and its dimension part of the hash
+    preimage.
+    """
+
+    size = int(matrix_size)
+    if size <= 0:
+        raise ValueError("matrix_size must be positive")
+    return {
+        "schema": "oph.finite-interface-matrix-star-algebra.v1",
+        "interface_algebra_id": str(interface_algebra_id),
+        "scalar_field": "complex",
+        "matrix_size": size,
+    }
 
 
 @lru_cache(maxsize=1)
@@ -242,6 +301,162 @@ def reference_echosahedral_carrier(carrier_id: str) -> EchosahedralCarrier:
     if not isinstance(carrier_id, str) or not carrier_id:
         raise ValueError("carrier_id must be a nonempty string")
     return replace(_reference_echosahedral_carrier_template(), carrier_id=carrier_id)
+
+
+def _reference_incidence_sha256() -> str:
+    """Bind the oriented incidence data used by the federation-nerve producer."""
+
+    template = _reference_echosahedral_carrier_template()
+    return interface_algebra_sha256(
+        {
+            "schema": "oph.echosahedral_oriented_incidence.v1",
+            "port_count": len(template.port_names),
+            "edges": [list(edge) for edge in sorted(template.edges)],
+            "oriented_faces": [list(face) for face in template.faces],
+            "antipode": list(template.antipode),
+        }
+    )
+
+
+def reference_incidence_nerve_federation() -> EchosahedralFederation:
+    """Derive a nonvacuous federation cover from the carrier incidence itself.
+
+    There is one chart carrier for each of the twelve source ports, one
+    pairwise seam for each of the thirty source edges, and one declared triple
+    restriction for each of the twenty oriented source faces.  For an edge
+    ``{u,v}``, chart ``u`` spends local port ``v`` and chart ``v`` spends local
+    port ``u``.  Every seam endpoint is consequently owned exactly once.
+
+    This is the nerve of the certified oriented icosahedral boundary, not an
+    SM-shaped or target-labelled cover.  The construction is deterministic
+    from the already-audited ``(12,30,20)`` incidence packet.
+    """
+
+    template = _reference_echosahedral_carrier_template()
+    carrier_ids = tuple(f"incidence-chart-{index:02d}" for index in range(_PORT_COUNT))
+    carriers = tuple(reference_echosahedral_carrier(item) for item in carrier_ids)
+    interface_id = "incidence-nerve-scalar-restriction-v1"
+    interface_hash = interface_algebra_sha256(
+        finite_matrix_interface_algebra_schema(interface_id, 1)
+    )
+    binding = InterfaceAlgebraBinding(
+        interface_algebra_id=interface_id,
+        interface_algebra_sha256=interface_hash,
+        left_interface_algebra_sha256=interface_hash,
+        right_interface_algebra_sha256=interface_hash,
+    )
+
+    def seam_id(left: int, right: int) -> str:
+        low, high = sorted((int(left), int(right)))
+        return f"incidence-seam-{low:02d}-{high:02d}"
+
+    seams = tuple(
+        SeamBundle(
+            seam_id=seam_id(left, right),
+            left_carrier_id=carrier_ids[left],
+            right_carrier_id=carrier_ids[right],
+            left_ports=(right,),
+            right_ports=(left,),
+            left_to_right_ports=(left,),
+            right_to_left_ports=(right,),
+            left_to_right_orientation=(-1,),
+            right_to_left_orientation=(-1,),
+            collar_kind="single_port",
+            interface_algebra=binding,
+        )
+        for left, right in sorted(template.edges)
+    )
+    triple_overlaps = tuple(
+        TripleOverlapBundle(
+            overlap_id=f"incidence-face-{face_index:02d}",
+            oriented_carrier_ids=tuple(carrier_ids[index] for index in face),
+            oriented_seam_ids=(
+                seam_id(face[0], face[1]),
+                seam_id(face[1], face[2]),
+                seam_id(face[2], face[0]),
+            ),
+            restriction_algebra_id=interface_id,
+            restriction_algebra_sha256=interface_hash,
+        )
+        for face_index, face in enumerate(template.faces)
+    )
+
+    neighbors: dict[int, set[int]] = {index: set() for index in range(_PORT_COUNT)}
+    for left, right in template.edges:
+        neighbors[left].add(right)
+        neighbors[right].add(left)
+    boundary_hash = interface_algebra_sha256(
+        {
+            "schema": "oph.incidence_nerve.external_boundary.v1",
+            "source_incidence_sha256": _reference_incidence_sha256(),
+        }
+    )
+    external_boundaries: list[ExternalBoundaryBundle] = []
+    for carrier_index, carrier in enumerate(carriers):
+        remaining = set(range(_PORT_COUNT)) - neighbors[carrier_index]
+        graph = nx.Graph()
+        graph.add_nodes_from(remaining)
+        graph.add_edges_from(
+            (left, right)
+            for left, right in carrier.edges
+            if left in remaining and right in remaining
+        )
+        for component_index, component in enumerate(
+            sorted(
+                (tuple(sorted(item)) for item in nx.connected_components(graph)),
+                key=lambda item: (item[0], len(item), item),
+            )
+        ):
+            external_boundaries.append(
+                ExternalBoundaryBundle(
+                    boundary_id=(
+                        f"incidence-boundary-{carrier_index:02d}-"
+                        f"{component_index:02d}"
+                    ),
+                    carrier_id=carrier.carrier_id,
+                    ports=component,
+                    boundary_condition="open_external",
+                    boundary_algebra_sha256=boundary_hash,
+                )
+            )
+
+    record_hash = interface_algebra_sha256(
+        {
+            "schema": "oph.incidence_nerve.observer_record.v1",
+            "source_incidence_sha256": _reference_incidence_sha256(),
+        }
+    )
+    checkpoint_hash = interface_algebra_sha256(
+        {
+            "schema": "oph.incidence_nerve.observer_checkpoint.v1",
+            "source_incidence_sha256": _reference_incidence_sha256(),
+        }
+    )
+    observer = ObserverSupport(
+        observer_token="incidence-nerve-observer",
+        carrier_ids=frozenset(carrier_ids),
+        visible_seam_ids=frozenset(seam.seam_id for seam in seams),
+        record_algebra_sha256=record_hash,
+        checkpoint_cut_sha256=checkpoint_hash,
+    )
+    support_binding = SupportTowerBinding(
+        geometry_family="nested_geodesic_icosahedral",
+        carrier_to_base_vertex=tuple(
+            (carrier_id, index) for index, carrier_id in enumerate(carrier_ids)
+        ),
+        orientation="source_oriented_faces_outward",
+        refinement_rule="normalized_edge_midpoint_four_child",
+        source_incidence_sha256=_reference_incidence_sha256(),
+    )
+    return EchosahedralFederation(
+        federation_id="source-derived-incidence-nerve-v1",
+        carriers=carriers,
+        seams=seams,
+        external_boundaries=tuple(external_boundaries),
+        observer_supports=(observer,),
+        triple_overlaps=triple_overlaps,
+        support_tower_binding=support_binding,
+    )
 
 
 def echosahedral_carrier_conformance_report(
@@ -835,6 +1050,33 @@ def federation_sewing_report(
                     )
                 occupied_masks[carrier_id] = prior | bit
 
+    triple_overlap_ids: set[str] = set()
+    triple_overlap_rows: list[dict[str, Any]] = []
+    triple_overlap_all_rows: list[dict[str, Any]] = []
+    triple_overlap_failure_examples: list[dict[str, Any]] = []
+    triple_overlap_digest = _CanonicalRowDigest()
+    all_triple_overlaps_pass = True
+    for overlap in federation.triple_overlaps:
+        row = _triple_overlap_report(overlap, carrier_by_id, seam_by_id)
+        triple_overlap_all_rows.append(row)
+        triple_overlap_digest.update(row)
+        if len(triple_overlap_rows) < _REPORT_DETAIL_LIMIT:
+            triple_overlap_rows.append(row)
+        if not overlap.overlap_id or overlap.overlap_id in triple_overlap_ids:
+            blockers.add(f"duplicate_or_empty_triple_overlap_id:{overlap.overlap_id}")
+            all_triple_overlaps_pass = False
+        triple_overlap_ids.add(overlap.overlap_id)
+        if not row["TRIPLE_OVERLAP_RESTRICTION_RECEIPT"]:
+            all_triple_overlaps_pass = False
+            if len(triple_overlap_failure_examples) < _REPORT_DETAIL_LIMIT:
+                triple_overlap_failure_examples.append(row)
+            blockers.extend(
+                [
+                    f"triple_overlap:{overlap.overlap_id}:{item}"
+                    for item in row["blockers"]
+                ]
+            )
+
     boundary_ids: set[str] = set()
     boundary_rows: list[dict[str, Any]] = []
     boundary_failure_examples: list[dict[str, Any]] = []
@@ -944,17 +1186,30 @@ def federation_sewing_report(
         carrier_conformance
         and blockers.occurrence_count == 0
         and all_seams_pass
+        and all_triple_overlaps_pass
         and all_boundaries_pass
         and all_observers_pass
     )
-    cocycle = _higher_overlap_cocycle_report(federation.seams, carrier_by_id)
+    cocycle = _higher_overlap_cocycle_report(
+        federation.seams,
+        carrier_by_id,
+        explicit_triple_rows=triple_overlap_all_rows,
+    )
     cocycle_receipt = bool(cocycle["HIGHER_OVERLAP_COCYCLE_RECEIPT"])
+    nonvacuous_cocycle_witness = bool(
+        cocycle["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"]
+    )
     full_interface_sewing = bool(
         all_interface_schema_hashes_agree
         and all_interface_algebra_maps_pass
         and cocycle_receipt
     )
-    physical_realization = bool(passed and full_interface_sewing)
+    physical_realization = bool(
+        passed
+        and full_interface_sewing
+        and nonvacuous_cocycle_witness
+        and federation.observer_supports
+    )
     sewn_port_count = sum(mask.bit_count() for mask in occupied_masks.values())
     external_port_count = sum(
         mask.bit_count() for mask in declared_external_masks.values()
@@ -976,6 +1231,7 @@ def federation_sewing_report(
         "carrier_count_is_screen_entropy_capacity_N_star": False,
         "carrier_count_is_primitive_observer_count": False,
         "seam_count": len(federation.seams),
+        "declared_triple_overlap_count": len(federation.triple_overlaps),
         "external_boundary_bundle_count": len(federation.external_boundaries),
         "observer_support_count": len(federation.observer_supports),
         "sewn_local_port_count": sewn_port_count,
@@ -994,6 +1250,13 @@ def federation_sewing_report(
         "seam_rows_reported_count": len(seam_rows),
         "seam_rows_truncated": len(federation.seams) > len(seam_rows),
         "seam_failure_examples": seam_failure_examples,
+        "triple_overlaps": triple_overlap_rows,
+        "triple_overlap_rows_sha256": triple_overlap_digest.hexdigest(),
+        "triple_overlap_rows_reported_count": len(triple_overlap_rows),
+        "triple_overlap_rows_truncated": (
+            len(federation.triple_overlaps) > len(triple_overlap_rows)
+        ),
+        "triple_overlap_failure_examples": triple_overlap_failure_examples,
         "external_boundaries": boundary_rows,
         "external_boundary_rows_sha256": boundary_digest.hexdigest(),
         "external_boundary_rows_reported_count": len(boundary_rows),
@@ -1021,6 +1284,13 @@ def federation_sewing_report(
         "INTERFACE_SCHEMA_HASH_BINDING_RECEIPT": (all_interface_schema_hashes_agree),
         "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": all_interface_algebra_maps_pass,
         "HIGHER_OVERLAP_COCYCLE_RECEIPT": cocycle_receipt,
+        "HIGHER_OVERLAP_COCYCLE_CONDITION_RECEIPT": cocycle_receipt,
+        "NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS": (
+            nonvacuous_cocycle_witness
+        ),
+        "CONNECTED_OBSERVER_SUPPORT_WITNESS": bool(
+            federation.observer_supports and all_observers_pass
+        ),
         "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": full_interface_sewing,
         "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": physical_realization,
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
@@ -1030,9 +1300,12 @@ def federation_sewing_report(
             "regulator, S2 chart-cell count, N_star, observer count, H3-point count, "
             "and event count. Sewing checks port bijections, orientations, boundary "
             "coverage, and content-addressed schema identity. The interface algebra "
-            "map and higher-overlap cocycle receipts are computed from exact finite "
-            "checks on the typed seams, and the physical federation realization "
-            "receipt is their conjunction with structural sewing. None of these "
+            "map and higher-overlap cocycle condition are computed from exact finite "
+            "checks on the typed seams. A separate nonvacuous witness records whether "
+            "the declared cover contains a composable seam triangle; absence of one "
+            "does not falsify the logical Cech condition, but it cannot promote "
+            "the physical federation realization receipt: that receipt also "
+            "requires a nonvacuous seam-triangle witness. None of these "
             "receipts implies emergent geometry, which requires independent "
             "downstream receipts."
         ),
@@ -1258,12 +1531,26 @@ def _seam_bundle_report(
         == binding.left_interface_algebra_sha256
         == binding.right_interface_algebra_sha256
     )
+    checked_schema: dict[str, Any] | None = None
+    checked_schema_sha256: str | None = None
+    schema_hash_binds_checked_algebra = False
+    if binding.interface_algebra_id and left_ports:
+        checked_schema = finite_matrix_interface_algebra_schema(
+            binding.interface_algebra_id, len(left_ports)
+        )
+        checked_schema_sha256 = interface_algebra_sha256(checked_schema)
+        schema_hash_binds_checked_algebra = bool(
+            schema_hashes_agree
+            and binding.interface_algebra_sha256 == checked_schema_sha256
+        )
     if not binding.interface_algebra_id:
         blockers.append("empty_interface_algebra_id")
     if not hashes_valid:
         blockers.append("invalid_interface_algebra_sha256")
     if not schema_hashes_agree:
         blockers.append("endpoint_interface_algebra_hashes_do_not_agree")
+    if not schema_hash_binds_checked_algebra:
+        blockers.append("interface_algebra_hash_does_not_bind_checked_matrix_algebra")
 
     algebra_map = _interface_algebra_homomorphism_check(
         left_ports=left_ports,
@@ -1275,7 +1562,7 @@ def _seam_bundle_report(
         and inverse_composition
         and orientation_valid
         and orientation_inverse_composition
-        and schema_hashes_agree
+        and schema_hash_binds_checked_algebra
         and algebra_map["receipt"]
     )
 
@@ -1304,8 +1591,13 @@ def _seam_bundle_report(
         ),
         "interface_algebra_id": binding.interface_algebra_id,
         "interface_algebra_sha256": binding.interface_algebra_sha256,
+        "checked_interface_algebra_schema": checked_schema,
+        "checked_interface_algebra_schema_sha256": checked_schema_sha256,
         "interface_hash_check_scope": _INTERFACE_HASH_CHECK_SCOPE,
         "interface_schema_hashes_agree": schema_hashes_agree,
+        "interface_schema_hash_binds_checked_algebra": (
+            schema_hash_binds_checked_algebra
+        ),
         # Compatibility alias.  This means hash equality only; it is not a
         # mathematical assertion that an algebra map has been constructed.
         "endpoint_interface_algebra_hashes_agree": schema_hashes_agree,
@@ -1316,7 +1608,8 @@ def _seam_bundle_report(
         "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": homomorphism_receipt,
         "FULL_INTERFACE_ALGEBRA_SEAM_RECEIPT": homomorphism_receipt,
         "claim_boundary": (
-            "The endpoint hashes bind byte-identical declared schemas. The "
+            "The endpoint hashes bind the canonical schema of the matrix "
+            "algebra actually checked on this collar. The "
             "interface algebra map receipt verifies the permutation-induced "
             "finite matrix-algebra isomorphism exactly on the collar bundle. "
             "Triple-overlap cocycle coherence is certified at the federation "
@@ -1460,9 +1753,171 @@ def _seam_partial_port_maps(
     )
 
 
+def _triple_overlap_report(
+    overlap: TripleOverlapBundle,
+    carrier_by_id: Mapping[str, EchosahedralCarrier],
+    seam_by_id: Mapping[str, SeamBundle],
+) -> dict[str, Any]:
+    """Verify an explicit common restriction of three pairwise seam algebras."""
+
+    blockers: list[str] = []
+    carriers = overlap.oriented_carrier_ids
+    seam_ids = overlap.oriented_seam_ids
+    exact_shapes = bool(
+        isinstance(carriers, tuple)
+        and len(carriers) == 3
+        and all(isinstance(item, str) and item for item in carriers)
+        and len(set(carriers)) == 3
+        and isinstance(seam_ids, tuple)
+        and len(seam_ids) == 3
+        and all(isinstance(item, str) and item for item in seam_ids)
+        and len(set(seam_ids)) == 3
+    )
+    if not overlap.overlap_id:
+        blockers.append("empty_triple_overlap_id")
+    if not exact_shapes:
+        blockers.append("triple_overlap_requires_three_distinct_ordered_carriers_and_seams")
+    if any(carrier_id not in carrier_by_id for carrier_id in carriers):
+        blockers.append("triple_overlap_references_unknown_carrier")
+    if any(seam_id not in seam_by_id for seam_id in seam_ids):
+        blockers.append("triple_overlap_references_unknown_seam")
+
+    canonical_schema: dict[str, Any] | None = None
+    canonical_hash: str | None = None
+    restriction_hash_binds_checked_algebra = False
+    if overlap.restriction_algebra_id:
+        canonical_schema = finite_matrix_interface_algebra_schema(
+            overlap.restriction_algebra_id, 1
+        )
+        canonical_hash = interface_algebra_sha256(canonical_schema)
+        restriction_hash_binds_checked_algebra = bool(
+            overlap.restriction_algebra_sha256 == canonical_hash
+        )
+    else:
+        blockers.append("empty_triple_restriction_algebra_id")
+    if not _is_sha256(overlap.restriction_algebra_sha256):
+        blockers.append("invalid_triple_restriction_algebra_sha256")
+    if not restriction_hash_binds_checked_algebra:
+        blockers.append("triple_restriction_hash_does_not_bind_canonical_M1_algebra")
+
+    directed_legs: list[dict[str, Any]] = []
+    pairwise_restrictions_valid = exact_shapes
+    if exact_shapes:
+        for index, seam_id in enumerate(seam_ids):
+            source = carriers[index]
+            target = carriers[(index + 1) % 3]
+            seam = seam_by_id.get(seam_id)
+            source_port: int | None = None
+            target_port: int | None = None
+            leg_valid = False
+            if seam is not None:
+                maps = _seam_partial_port_maps(seam)
+                if (
+                    maps is not None
+                    and seam.interface_algebra.interface_algebra_id
+                    == overlap.restriction_algebra_id
+                    and seam.interface_algebra.interface_algebra_sha256
+                    == overlap.restriction_algebra_sha256
+                    and len(seam.left_ports) == len(seam.right_ports) == 1
+                ):
+                    forward, backward = maps
+                    if (
+                        seam.left_carrier_id == source
+                        and seam.right_carrier_id == target
+                    ):
+                        source_port = next(iter(forward))
+                        target_port = forward[source_port]
+                        leg_valid = True
+                    elif (
+                        seam.right_carrier_id == source
+                        and seam.left_carrier_id == target
+                    ):
+                        source_port = next(iter(backward))
+                        target_port = backward[source_port]
+                        leg_valid = True
+            if not leg_valid:
+                blockers.append(
+                    f"triple_restriction_leg_{index}_does_not_match_named_seam"
+                )
+                pairwise_restrictions_valid = False
+            directed_legs.append(
+                {
+                    "seam_id": seam_id,
+                    "source_carrier_id": source,
+                    "target_carrier_id": target,
+                    "source_port": source_port,
+                    "target_port": target_port,
+                    "restriction_to_common_M1_exact": leg_valid,
+                }
+            )
+
+    local_restriction_pairs: list[dict[str, Any]] = []
+    if len(directed_legs) == 3:
+        for index, carrier_id in enumerate(carriers):
+            incoming = directed_legs[(index - 1) % 3]["target_port"]
+            outgoing = directed_legs[index]["source_port"]
+            local_restriction_pairs.append(
+                {
+                    "carrier_id": carrier_id,
+                    "incoming_seam_port": incoming,
+                    "outgoing_seam_port": outgoing,
+                    "common_scalar_restriction": bool(
+                        incoming is not None and outgoing is not None
+                    ),
+                }
+            )
+    local_common_restrictions_valid = bool(
+        len(local_restriction_pairs) == 3
+        and all(row["common_scalar_restriction"] for row in local_restriction_pairs)
+    )
+    if exact_shapes and not local_common_restrictions_valid:
+        blockers.append("local_pairwise_collars_lack_common_triple_restrictions")
+
+    # M_1(C) has one matrix unit.  Every unital complex star-homomorphism
+    # fixes it, so six alternating seam/local restriction maps send E_00
+    # exactly back to E_00.  This is an algebra cocycle, not a comparison of
+    # unrelated local integer port labels.
+    identity_composition = bool(
+        exact_shapes
+        and pairwise_restrictions_valid
+        and local_common_restrictions_valid
+        and restriction_hash_binds_checked_algebra
+    )
+    if exact_shapes and not identity_composition:
+        blockers.append("triple_overlap_algebra_composition_is_not_identity")
+    receipt = not blockers
+    return {
+        "schema": "oph.echosahedral_federation.triple_overlap.v1",
+        "overlap_id": overlap.overlap_id,
+        "oriented_carrier_ids": list(carriers),
+        "oriented_seam_ids": list(seam_ids),
+        "restriction_algebra_id": overlap.restriction_algebra_id,
+        "restriction_algebra_sha256": overlap.restriction_algebra_sha256,
+        "checked_restriction_algebra_schema": canonical_schema,
+        "checked_restriction_algebra_schema_sha256": canonical_hash,
+        "restriction_hash_binds_checked_algebra": (
+            restriction_hash_binds_checked_algebra
+        ),
+        "directed_seam_restrictions": directed_legs,
+        "local_common_restriction_pairs": local_restriction_pairs,
+        "matrix_unit_count": 1,
+        "matrix_unit_identity_composition_exact": identity_composition,
+        "blockers": sorted(set(blockers)),
+        "TRIPLE_OVERLAP_RESTRICTION_RECEIPT": receipt,
+        "EXACT_IDENTITY_COCYCLE_ON_TRIPLE_RESTRICTION": identity_composition,
+        "claim_boundary": (
+            "This verifies a declared nonempty common M_1(C) restriction of "
+            "three typed pairwise collars. It does not infer a triple overlap "
+            "from carrier-graph adjacency alone."
+        ),
+    }
+
+
 def _higher_overlap_cocycle_report(
     seams: Sequence[SeamBundle],
     carrier_ids: Iterable[str],
+    *,
+    explicit_triple_rows: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     """Check every composable seam triangle for exact identity holonomy.
 
@@ -1539,15 +1994,39 @@ def _higher_overlap_cocycle_report(
                                         "returned_port": third_map[far],
                                     }
                                 )
-    receipt = bool(
-        bool(pair_maps)
+    inferred_cocycle_condition = bool(
+        pair_maps
         and malformed_seam_count == 0
         and not violations
+    )
+    explicit_triple_count = len(explicit_triple_rows)
+    valid_explicit_triple_count = sum(
+        row.get("TRIPLE_OVERLAP_RESTRICTION_RECEIPT") is True
+        and row.get("EXACT_IDENTITY_COCYCLE_ON_TRIPLE_RESTRICTION") is True
+        for row in explicit_triple_rows
+    )
+    explicit_triples_valid = bool(
+        valid_explicit_triple_count == explicit_triple_count
+    )
+    cocycle_condition = bool(
+        inferred_cocycle_condition and explicit_triples_valid
+    )
+    positive_triangle_witness = bool(
+        cocycle_condition
+        and explicit_triple_count > 0
+        and valid_explicit_triple_count == explicit_triple_count
     )
     return {
         "schema": "oph.echosahedral_federation.higher_overlap_cocycle.v1",
         "triangle_count": len(triangles),
         "composable_port_loop_count": composable_loop_count,
+        "composable_triple_restriction_algebra_loop_count": (
+            valid_explicit_triple_count
+        ),
+        "declared_nonempty_triple_overlap_count": explicit_triple_count,
+        "valid_declared_triple_overlap_count": valid_explicit_triple_count,
+        "inferred_port_label_cocycle_condition": inferred_cocycle_condition,
+        "positive_triangle_witness": positive_triangle_witness,
         "vacuous_triangle_convention": (
             "empty_triple_overlap_domains_impose_no_condition"
         ),
@@ -1555,7 +2034,11 @@ def _higher_overlap_cocycle_report(
         "malformed_seam_count": malformed_seam_count,
         "identity_violation_count": len(violations),
         "identity_violations": violations,
-        "HIGHER_OVERLAP_COCYCLE_RECEIPT": receipt,
+        "HIGHER_OVERLAP_COCYCLE_CONDITION_RECEIPT": cocycle_condition,
+        "NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS": positive_triangle_witness,
+        # Compatibility alias: this is the logical Cech condition, which is
+        # vacuously true when the declared cover has no triple overlap.
+        "HIGHER_OVERLAP_COCYCLE_RECEIPT": cocycle_condition,
     }
 
 
@@ -1779,6 +2262,238 @@ def carrier_refinement_naturality_report(
         embedding_override=embedding_override,
         port_permutation_override=port_permutation_override,
     )
+
+
+def controlled_oriented_s2_limit_report(
+    federation: EchosahedralFederation,
+    *,
+    max_level: int = 3,
+) -> dict[str, Any]:
+    """Verify that one source-incidence nerve has controlled oriented-S2 limit.
+
+    The source-side assertion is a simplicial one: carriers, seams, and
+    declared nonempty triple restrictions must map bijectively to the
+    vertices, edges, and outward faces of the certified icosahedral boundary.
+    The support-side assertion uses normalized edge-midpoint subdivision.
+
+    If ``delta_n`` is the largest geodesic edge at level ``n``, a child edge
+    joining an old endpoint to a midpoint has length at most ``delta_n/2``.
+    For an edge joining two normalized midpoints, the normalization inequality
+
+        ||u/||u|| - v/||v|||| <= 2 ||u-v|| / (||u|| + ||v||)
+
+    gives ``2 asin(tan(delta_n/2)/2)``.  On
+    ``[0, delta_0]``, with ``delta_0 = acos(1/sqrt(5))``, elementary
+    monotonicity/concavity bounds give this quantity at most
+    ``(3/4) delta_n``.  Hence ``delta_n <= delta_0 (3/4)^n -> 0``.  Every
+    level is an outward-oriented Euler-two spherical triangulation, so the
+    controlled limit is the oriented unit two-sphere.
+    """
+
+    blockers: list[str] = []
+    binding = federation.support_tower_binding
+    binding_present = binding is not None
+    if binding is None:
+        blockers.append("source_support_tower_binding_missing")
+        binding_rows: tuple[tuple[str, int], ...] = ()
+    else:
+        binding_rows = binding.carrier_to_base_vertex
+        if binding.geometry_family != "nested_geodesic_icosahedral":
+            blockers.append("support_geometry_family_mismatch")
+        if binding.orientation != "source_oriented_faces_outward":
+            blockers.append("support_orientation_contract_mismatch")
+        if binding.refinement_rule != "normalized_edge_midpoint_four_child":
+            blockers.append("support_refinement_rule_mismatch")
+        if binding.source_incidence_sha256 != _reference_incidence_sha256():
+            blockers.append("support_source_incidence_hash_mismatch")
+
+    map_exact = bool(
+        isinstance(binding_rows, tuple)
+        and len(binding_rows) == _PORT_COUNT
+        and all(
+            isinstance(row, tuple)
+            and len(row) == 2
+            and isinstance(row[0], str)
+            and row[0]
+            and type(row[1]) is int
+            for row in binding_rows
+        )
+    )
+    carrier_to_vertex = dict(binding_rows) if map_exact else {}
+    carrier_ids = {carrier.carrier_id for carrier in federation.carriers}
+    map_bijective = bool(
+        map_exact
+        and len(carrier_to_vertex) == _PORT_COUNT
+        and set(carrier_to_vertex) == carrier_ids
+        and set(carrier_to_vertex.values()) == set(range(_PORT_COUNT))
+    )
+    if not map_bijective:
+        blockers.append("carrier_to_base_vertex_map_is_not_a_bijection")
+
+    template = _reference_echosahedral_carrier_template()
+    expected_edges = {tuple(sorted(edge)) for edge in template.edges}
+    observed_edges: set[tuple[int, int]] = set()
+    seam_source_law = map_bijective
+    if map_bijective:
+        for seam in federation.seams:
+            if (
+                seam.left_carrier_id not in carrier_to_vertex
+                or seam.right_carrier_id not in carrier_to_vertex
+            ):
+                seam_source_law = False
+                continue
+            left_vertex = carrier_to_vertex[seam.left_carrier_id]
+            right_vertex = carrier_to_vertex[seam.right_carrier_id]
+            observed_edges.add(tuple(sorted((left_vertex, right_vertex))))
+            if not (
+                seam.left_ports == (right_vertex,)
+                and seam.right_ports == (left_vertex,)
+                and seam.left_to_right_ports == (left_vertex,)
+                and seam.right_to_left_ports == (right_vertex,)
+            ):
+                seam_source_law = False
+    edge_nerve_exact = bool(
+        seam_source_law
+        and len(federation.seams) == len(expected_edges) == 30
+        and observed_edges == expected_edges
+    )
+    if not edge_nerve_exact:
+        blockers.append("federation_seams_are_not_the_source_incidence_edges")
+
+    expected_faces = {_cyclic_face_key(face) for face in template.faces}
+    observed_faces: set[tuple[int, int, int]] = set()
+    if map_bijective:
+        for overlap in federation.triple_overlaps:
+            try:
+                face = tuple(
+                    carrier_to_vertex[carrier_id]
+                    for carrier_id in overlap.oriented_carrier_ids
+                )
+            except KeyError:
+                continue
+            if len(face) == 3:
+                observed_faces.add(_cyclic_face_key(face))
+    face_nerve_exact = bool(
+        len(federation.triple_overlaps) == len(expected_faces) == 20
+        and observed_faces == expected_faces
+    )
+    if not face_nerve_exact:
+        blockers.append(
+            "declared_triple_overlaps_are_not_the_source_oriented_faces"
+        )
+
+    level_cap = max(2, int(max_level))
+    tower = build_geodesic_icosahedral_tower(level_cap)
+    tower_receipt = tower.receipt()
+    level_rows: list[dict[str, Any]] = []
+    base_delta = math.acos(1.0 / math.sqrt(5.0))
+    contraction_factor = 0.75
+    prefix_contraction = True
+    oriented_sphere_prefix = True
+    for mesh in tower.levels:
+        endpoints = mesh.vertices[mesh.edges]
+        edge_dots = np.sum(endpoints[:, 0, :] * endpoints[:, 1, :], axis=1)
+        edge_angles = np.arccos(np.clip(edge_dots, -1.0, 1.0))
+        maximum_angle = float(np.max(edge_angles))
+        bound = base_delta * contraction_factor**mesh.level
+        within_bound = bool(maximum_angle <= bound + 5.0e-14)
+        receipt = mesh.receipt()
+        oriented = bool(
+            receipt["GEODESIC_ICOSAHEDRAL_GEOMETRY_RECEIPT"]
+            and receipt["outward_oriented"]
+            and receipt["euler_characteristic"] == 2
+        )
+        prefix_contraction = prefix_contraction and within_bound
+        oriented_sphere_prefix = oriented_sphere_prefix and oriented
+        level_rows.append(
+            {
+                "level": mesh.level,
+                "vertex_count": mesh.vertex_count,
+                "edge_count": mesh.edge_count,
+                "face_count": mesh.face_count,
+                "maximum_geodesic_edge_angle": maximum_angle,
+                "analytic_mesh_bound": bound,
+                "mesh_bound_verified": within_bound,
+                "outward_oriented_euler_two_sphere": oriented,
+                "geometry_hash": mesh.geometry_hash,
+            }
+        )
+
+    half_base = base_delta / 2.0
+    tangent_bound_coefficient = 1.0 / (2.0 * math.cos(half_base))
+    sine_concavity_coefficient = math.sin(3.0 * half_base / 4.0) / half_base
+    analytic_endpoint_inequality = bool(
+        0.0 < base_delta < math.pi
+        and tangent_bound_coefficient <= sine_concavity_coefficient
+        and contraction_factor < 1.0
+    )
+    analytic_all_levels_contraction = analytic_endpoint_inequality
+    if not analytic_all_levels_contraction:
+        blockers.append("analytic_mesh_contraction_inequality_failed")
+    if not prefix_contraction:
+        blockers.append("computed_refinement_prefix_exceeds_analytic_mesh_bound")
+    if not oriented_sphere_prefix:
+        blockers.append("refinement_prefix_is_not_outward_oriented_sphere")
+
+    receipt = bool(
+        binding_present
+        and map_bijective
+        and edge_nerve_exact
+        and face_nerve_exact
+        and tower_receipt["GEODESIC_ICOSAHEDRAL_TOWER_RECEIPT"]
+        and prefix_contraction
+        and oriented_sphere_prefix
+        and analytic_all_levels_contraction
+        and not blockers
+    )
+    return {
+        "schema": "oph.echosahedral_federation.controlled_oriented_s2_limit.v1",
+        "source_incidence_sha256": _reference_incidence_sha256(),
+        "support_tower_binding_present": binding_present,
+        "carrier_to_base_vertex_bijection": map_bijective,
+        "source_edge_nerve_exact": edge_nerve_exact,
+        "source_oriented_face_nerve_exact": face_nerve_exact,
+        "nerve_simplex_counts": {
+            "vertices": len(carrier_to_vertex),
+            "edges": len(observed_edges),
+            "oriented_faces": len(observed_faces),
+        },
+        "topological_identification": (
+            "simplicial_isomorphism_to_oriented_icosahedral_boundary"
+        ),
+        "refinement_family": "normalized_edge_midpoint_four_child",
+        "base_maximum_geodesic_edge_angle": base_delta,
+        "analytic_contraction_factor": contraction_factor,
+        "analytic_mesh_bound": "delta_n <= delta_0 * (3/4)^n",
+        "normalization_inequality": (
+            "norm(normalize(u)-normalize(v)) <= "
+            "2*norm(u-v)/(norm(u)+norm(v))"
+        ),
+        "analytic_endpoint_coefficients": {
+            "tangent_upper_coefficient": tangent_bound_coefficient,
+            "sine_concavity_lower_coefficient": sine_concavity_coefficient,
+        },
+        "analytic_all_levels_contraction_proved": (
+            analytic_all_levels_contraction
+        ),
+        "mesh_bound_tends_to_zero": analytic_all_levels_contraction,
+        "computed_prefix_level_count": len(tower.levels),
+        "computed_prefix_mesh_bounds_verified": prefix_contraction,
+        "computed_prefix_outward_oriented": oriented_sphere_prefix,
+        "levels": level_rows,
+        "blockers": sorted(set(blockers)),
+        "INCIDENCE_NERVE_TO_SUPPORT_SIMPLICIAL_ISOMORPHISM_RECEIPT": bool(
+            map_bijective and edge_nerve_exact and face_nerve_exact
+        ),
+        "CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT": receipt,
+        "claim_boundary": (
+            "This is a source-incidence theorem for the commutative oriented "
+            "support: the explicit federation nerve is the icosahedral "
+            "boundary and its normalized-midpoint mesh size tends to zero. "
+            "It supplies no length scale, H3 frame, event manifold, BW/KMS "
+            "clock, continuum QFT, or laboratory attachment."
+        ),
+    }
 
 
 @lru_cache(maxsize=4)
@@ -2267,6 +2982,7 @@ def echosahedral_federation_receipt(
             "FULL_DYNAMICAL_QUOTIENT_INVARIANCE_RECEIPT": False,
         }
     refinement = carrier_refinement_naturality_report()
+    support_limit = controlled_oriented_s2_limit_report(federation)
     carrier_receipt = bool(sewing["ECHOSAHEDRAL_CARRIER_CONFORMANCE"])
     sewing_receipt = bool(sewing["FEDERATION_SEWING_RECEIPT"])
     quotient_receipt = bool(
@@ -2281,6 +2997,9 @@ def echosahedral_federation_receipt(
         sewing["INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT"]
     )
     cocycle_receipt = bool(sewing["HIGHER_OVERLAP_COCYCLE_RECEIPT"])
+    nonvacuous_cocycle_witness = bool(
+        sewing["NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS"]
+    )
     full_sewing_receipt = bool(sewing["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"])
     physical_realization_receipt = bool(
         sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
@@ -2292,9 +3011,14 @@ def echosahedral_federation_receipt(
         and refinement_receipt
         and full_sewing_receipt
         and physical_realization_receipt
+        and support_limit["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"]
     )
     s2_support_chart_receipt = bool(
-        chart_realization_receipt and carrier_receipt and sewing_receipt
+        chart_realization_receipt
+        and carrier_receipt
+        and sewing_receipt
+        and physical_realization_receipt
+        and support_limit["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"]
     )
     return {
         "schema": "oph.echosahedral_federation.parent_receipts.v1",
@@ -2315,17 +3039,30 @@ def echosahedral_federation_receipt(
         "presentation_firewall": firewall,
         "quotient_invariance": quotient,
         "refinement_naturality": refinement,
+        "controlled_oriented_s2_limit": support_limit,
         "ECHOSAHEDRAL_CARRIER_CONFORMANCE": carrier_receipt,
         "FEDERATION_SEWING_RECEIPT": sewing_receipt,
         "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": quotient_receipt,
         "CARRIER_REFINEMENT_NATURALITY_RECEIPT": refinement_receipt,
         "INTERFACE_ALGEBRA_MAP_HOMOMORPHISM_RECEIPT": homomorphism_receipt,
         "HIGHER_OVERLAP_COCYCLE_RECEIPT": cocycle_receipt,
+        "HIGHER_OVERLAP_COCYCLE_CONDITION_RECEIPT": cocycle_receipt,
+        "NONVACUOUS_HIGHER_OVERLAP_COCYCLE_WITNESS": (
+            nonvacuous_cocycle_witness
+        ),
         "FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT": full_sewing_receipt,
         "PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT": (
             physical_realization_receipt
         ),
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": chart_realization_receipt,
+        "INCIDENCE_NERVE_TO_SUPPORT_SIMPLICIAL_ISOMORPHISM_RECEIPT": bool(
+            support_limit[
+                "INCIDENCE_NERVE_TO_SUPPORT_SIMPLICIAL_ISOMORPHISM_RECEIPT"
+            ]
+        ),
+        "CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT": bool(
+            support_limit["CONTROLLED_ORIENTED_S2_LIMIT_RECEIPT"]
+        ),
         "ECHOSAHEDRAL_FEDERATION_SOURCE_INSTRUMENT_VALID": source_instrument_valid,
         "S2_SUPPORT_CHART_EMERGENCE_RECEIPT": s2_support_chart_receipt,
         "H3_FRAME_EMERGENCE_RECEIPT": False,
@@ -2338,9 +3075,14 @@ def echosahedral_federation_receipt(
             "source-federation cardinality when unique IDs verify, and is "
             "separate from the support regulator, S2 chart-cell count, N_star, "
             "observer count, H3-point count, and event count. The interface "
-            "algebra map, higher-overlap cocycle, refinement naturality, and "
+            "algebra map, logical higher-overlap cocycle condition, refinement "
+            "naturality, and "
             "support-chart realization receipts are computed finite checks on "
-            "the reference structures. H3 frames, events, BW/KMS clocks, and "
+            "the reference structures. The oriented-S2 promotion additionally "
+            "requires the full source-incidence nerve and the analytic "
+            "mesh-contraction theorem, not merely a finite chart embedding. "
+            "A separate flag records whether a nonvacuous explicitly declared "
+            "triple restriction was present. H3 frames, events, BW/KMS clocks, and "
             "the 2pi normalization require independent downstream receipts."
         ),
     }
@@ -2408,6 +3150,45 @@ def reference_federation_instrument_bundle(
             }
             for seam in federation.seams
         ],
+        "triple_overlaps": [
+            {
+                "overlap_id": overlap.overlap_id,
+                "oriented_carrier_ids": list(overlap.oriented_carrier_ids),
+                "oriented_seam_ids": list(overlap.oriented_seam_ids),
+                "restriction_algebra_id": overlap.restriction_algebra_id,
+                "restriction_algebra_sha256": (
+                    overlap.restriction_algebra_sha256
+                ),
+            }
+            for overlap in federation.triple_overlaps
+        ],
+        "support_tower_binding": (
+            None
+            if federation.support_tower_binding is None
+            else {
+                "geometry_family": (
+                    federation.support_tower_binding.geometry_family
+                ),
+                "carrier_to_base_vertex": [
+                    [carrier_id, vertex]
+                    for carrier_id, vertex in (
+                        federation.support_tower_binding.carrier_to_base_vertex
+                    )
+                ],
+                "orientation": federation.support_tower_binding.orientation,
+                "refinement_rule": (
+                    federation.support_tower_binding.refinement_rule
+                ),
+                "source_incidence_sha256": (
+                    federation.support_tower_binding.source_incidence_sha256
+                ),
+            }
+        ),
+        "presentation_relabeling_witness": (
+            "reverse_every_local_port_order_v1"
+            if federation.support_tower_binding is not None
+            else None
+        ),
         "external_boundaries": [
             {
                 "boundary_id": boundary.boundary_id,
@@ -2500,6 +3281,13 @@ def verify_reference_federation_instrument_bundle(
             )
         carriers = tuple(reference_echosahedral_carrier(value) for value in carrier_ids)
         seams = tuple(_seam_from_bundle_row(row) for row in bundle.get("seams", ()))
+        triple_overlaps = tuple(
+            _triple_overlap_from_bundle_row(row)
+            for row in bundle.get("triple_overlaps", ())
+        )
+        support_binding = _support_binding_from_bundle_value(
+            bundle.get("support_tower_binding")
+        )
         boundaries = tuple(
             _boundary_from_bundle_row(row)
             for row in bundle.get("external_boundaries", ())
@@ -2514,10 +3302,27 @@ def verify_reference_federation_instrument_bundle(
             seams=seams,
             external_boundaries=boundaries,
             observer_supports=supports,
+            triple_overlaps=triple_overlaps,
+            support_tower_binding=support_binding,
         )
+        witness_rule = bundle.get("presentation_relabeling_witness")
+        equivalent_presentation = None
+        presentation_port_permutations = None
+        if witness_rule is not None:
+            if witness_rule != "reverse_every_local_port_order_v1":
+                raise ValueError("unknown presentation_relabeling_witness")
+            presentation_port_permutations = {
+                carrier_id: tuple(reversed(range(_PORT_COUNT)))
+                for carrier_id in carrier_ids
+            }
+            equivalent_presentation = relabel_federation_ports(
+                federation, presentation_port_permutations
+            )
         report = echosahedral_federation_receipt(
             federation,
             promoted_payload=bundle.get("promoted_payload", {}),
+            equivalent_presentation=equivalent_presentation,
+            presentation_port_permutations=presentation_port_permutations,
         )
     except (KeyError, TypeError, ValueError) as exc:
         return {
@@ -3054,6 +3859,22 @@ def _quotient_visible_contract_payload(
                 "checkpoint_cut_sha256": support.checkpoint_cut_sha256,
             }
         )
+    triple_digest = _CanonicalRowDigest()
+    for overlap in sorted(
+        federation.triple_overlaps, key=lambda item: item.overlap_id
+    ):
+        triple_digest.update(
+            {
+                "overlap_id": overlap.overlap_id,
+                "oriented_carrier_ids": list(overlap.oriented_carrier_ids),
+                "oriented_seam_ids": list(overlap.oriented_seam_ids),
+                "restriction_algebra_id": overlap.restriction_algebra_id,
+                "restriction_algebra_sha256": (
+                    overlap.restriction_algebra_sha256
+                ),
+            }
+        )
+    support_binding = federation.support_tower_binding
     return {
         "schema": "oph.echosahedral_federation.quotient_visible_contract.v1",
         "federation_id": federation.federation_id,
@@ -3068,6 +3889,22 @@ def _quotient_visible_contract_payload(
         "external_boundary_rows_sha256": boundary_digest.hexdigest(),
         "observer_support_row_count": observer_digest.row_count,
         "observer_support_rows_sha256": observer_digest.hexdigest(),
+        "triple_overlap_row_count": triple_digest.row_count,
+        "triple_overlap_rows_sha256": triple_digest.hexdigest(),
+        "support_tower_binding": (
+            None
+            if support_binding is None
+            else {
+                "geometry_family": support_binding.geometry_family,
+                "carrier_to_base_vertex": [
+                    [carrier_id, vertex]
+                    for carrier_id, vertex in support_binding.carrier_to_base_vertex
+                ],
+                "orientation": support_binding.orientation,
+                "refinement_rule": support_binding.refinement_rule,
+                "source_incidence_sha256": support_binding.source_incidence_sha256,
+            }
+        ),
     }
 
 
@@ -3191,6 +4028,58 @@ def _boundary_from_bundle_row(row: Mapping[str, Any]) -> ExternalBoundaryBundle:
         ports=_bundle_int_tuple(row, "ports"),
         boundary_condition=_bundle_string(row, "boundary_condition"),
         boundary_algebra_sha256=_bundle_string(row, "boundary_algebra_sha256"),
+    )
+
+
+def _triple_overlap_from_bundle_row(
+    row: Mapping[str, Any],
+) -> TripleOverlapBundle:
+    if not isinstance(row, Mapping):
+        raise TypeError("triple overlap row must be an object")
+    carriers = _bundle_string_tuple(row, "oriented_carrier_ids")
+    seams = _bundle_string_tuple(row, "oriented_seam_ids")
+    if len(carriers) != 3 or len(seams) != 3:
+        raise ValueError("triple overlap rows require exactly three carriers and seams")
+    return TripleOverlapBundle(
+        overlap_id=_bundle_string(row, "overlap_id"),
+        oriented_carrier_ids=(carriers[0], carriers[1], carriers[2]),
+        oriented_seam_ids=(seams[0], seams[1], seams[2]),
+        restriction_algebra_id=_bundle_string(row, "restriction_algebra_id"),
+        restriction_algebra_sha256=_bundle_string(
+            row, "restriction_algebra_sha256"
+        ),
+    )
+
+
+def _support_binding_from_bundle_value(
+    value: Any,
+) -> SupportTowerBinding | None:
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise TypeError("support_tower_binding must be an object or null")
+    raw_rows = value["carrier_to_base_vertex"]
+    if isinstance(raw_rows, (str, bytes)) or not isinstance(raw_rows, Sequence):
+        raise TypeError("carrier_to_base_vertex must be an array")
+    rows: list[tuple[str, int]] = []
+    for row in raw_rows:
+        if (
+            isinstance(row, (str, bytes))
+            or not isinstance(row, Sequence)
+            or len(row) != 2
+            or not isinstance(row[0], str)
+            or type(row[1]) is not int
+        ):
+            raise TypeError(
+                "carrier_to_base_vertex rows must be [string, exact integer]"
+            )
+        rows.append((row[0], row[1]))
+    return SupportTowerBinding(
+        geometry_family=_bundle_string(value, "geometry_family"),
+        carrier_to_base_vertex=tuple(rows),
+        orientation=_bundle_string(value, "orientation"),
+        refinement_rule=_bundle_string(value, "refinement_rule"),
+        source_incidence_sha256=_bundle_string(value, "source_incidence_sha256"),
     )
 
 

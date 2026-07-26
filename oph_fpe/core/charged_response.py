@@ -1,10 +1,10 @@
 """Charged response semantic artifact producer for the twelve-port carrier.
 
-This module measures the charged response representation of the local
+This module derives the finite charged response representation of the local
 recurrent carrier dynamics and emits the versioned semantic artifact consumed
 by the paper-side port-current certificate (issue #599 in
-reverse-engineering-reality). The artifact binds, from measured structure
-rather than declaration:
+reverse-engineering-reality). It derives from finite source structure rather
+than a target gauge assignment or declaration:
 
 - the carrier manifest hash and port order of the certified #565 carrier;
 - the exact A5-isotypic sector decomposition (1, 3, 3', 5) of the twelve-port
@@ -12,15 +12,15 @@ rather than declaration:
   triplet sectors;
 - the port-to-vertex frame assignment in exact Q(sqrt5) arithmetic, oriented
   by the manifest's oriented faces;
-- the potential response (unit and quintet channels, negative sign) and the
-  rotation response (frame and kernel channels, positive sign) of the
-  dynamics, with the per-band normalization rule stated;
+- the exact target-blind response operator ``R = -J`` from the unique
+  graph-distance-three antipode involution, whose computed sector eigenvalues
+  are negative on ``1 + 5`` and positive on ``3 + 3'``;
 - the physical refinement maps: persistence of the twelve defect ports along
   the geodesic tower, with per-level A5 equivariance;
 - runtime binding to the dynamics actually propagated by
   ``oph_fpe.core.echosahedral_dynamics`` (spectrum, equivariance, unitarity).
 
-The producer fails closed with typed errors on carriers whose measured
+The producer fails closed with typed errors on carriers whose source
 structure does not determine a charged double triplet: wrong regularity,
 missing antipodal pairing, rational (non-Galois-paired) triplet spectrum,
 inconsistent face orientation, or a runtime coupling that does not match the
@@ -44,11 +44,13 @@ import numpy as np
 
 from oph_fpe.core.echosahedral_dynamics import (
     local_a5_dynamics_report,
+    reference_impulse_readback_report,
+    reference_negative_antipode_response,
     reference_icosahedral_coupling,
 )
 from oph_fpe.core.icosahedral import build_geodesic_icosahedral_tower
 
-SCHEMA = "oph.charged_response_semantic_artifact.v1"
+SCHEMA = "oph.charged_response_semantic_artifact.v3"
 ISSUE = 599
 RUNTIME_TOLERANCE = 5.0e-9
 
@@ -459,15 +461,230 @@ def isotypic_projectors(adjacency: list[list[int]]) -> dict[str, list[list[Q5]]]
     return projectors
 
 
-def potential_response(frame_vertices: list[tuple[Q5, Q5, Q5]]) -> dict[str, Any]:
-    """Exact charged-sector compression of the port-potential coupling.
+def negative_antipode_response(
+    carrier: Mapping[str, Any],
+    projectors: Mapping[str, list[list[Q5]]],
+) -> dict[str, Any]:
+    """Derive the four relative signs from target-blind impulse/readback.
 
-    The dynamics couples an external port potential v through the generator
-    perturbation -i diag(v). Compressed to the frame triplet sector through
-    the vertex coordinate isometry, the uniform potential drives the central
-    unit channel with the tight-frame constant sum_p v_p v_p^T = (10 +
-    2*sqrt5) I, and centered even potentials drive the quintet channel with
-    constant 2. Both channels carry the negative sign of -i diag(v).
+    Inject a delta at each port, execute the adjacency recurrence through the
+    graph diameter, and solve one homogeneous polynomial filter that cancels
+    every nearer shell and returns the unique maximal-distance echo. The solve
+    produces ``J`` without accepting an antipode map or gauge target. We print
+    ``R=-J``; its common sign remains charge-conjugation convention.
+    """
+
+    distances = _graph_distances(carrier["adjacency"])
+    diameter = max(max(row) for row in distances)
+    _require(diameter == 3, "IMPULSE_READBACK", "carrier diameter is not three")
+    _require(
+        all(sum(value == diameter for value in row) == 1 for row in distances),
+        "IMPULSE_READBACK",
+        "every impulse source must have a unique maximal-distance readback port",
+    )
+    adjacency_q5 = [
+        [Q5.of(carrier["adjacency"][i][j]) for j in range(12)]
+        for i in range(12)
+    ]
+    powers = [q5_identity(12)]
+    for _ in range(diameter):
+        powers.append(q5_matmul(powers[-1], adjacency_q5))
+    target = [
+        [ONE if distances[i][j] == diameter else ZERO for j in range(12)]
+        for i in range(12)
+    ]
+    equations = [
+        [powers[k][i][j] for k in range(diameter + 1)] + [target[i][j]]
+        for i in range(12)
+        for j in range(12)
+    ]
+    reduced = [row[:] for row in equations]
+    pivot_columns: list[int] = []
+    active = 0
+    for column in range(diameter + 1):
+        pivot = next(
+            (
+                index
+                for index in range(active, len(reduced))
+                if not reduced[index][column].is_zero()
+            ),
+            None,
+        )
+        if pivot is None:
+            continue
+        reduced[active], reduced[pivot] = reduced[pivot], reduced[active]
+        scale = reduced[active][column].inverse()
+        reduced[active] = [entry * scale for entry in reduced[active]]
+        for index in range(len(reduced)):
+            if index == active or reduced[index][column].is_zero():
+                continue
+            factor = reduced[index][column]
+            reduced[index] = [
+                reduced[index][j] - factor * reduced[active][j]
+                for j in range(diameter + 2)
+            ]
+        pivot_columns.append(column)
+        active += 1
+    _require(
+        pivot_columns == [0, 1, 2, 3],
+        "IMPULSE_READBACK",
+        "the homogeneous impulse filter is not unique",
+    )
+    _require(
+        all(
+            not (
+                all(row[column].is_zero() for column in range(diameter + 1))
+                and not row[-1].is_zero()
+            )
+            for row in reduced
+        ),
+        "IMPULSE_READBACK",
+        "the impulse/readback constraints are inconsistent",
+    )
+    coefficients = [reduced[index][-1] for index in range(diameter + 1)]
+    _require(
+        coefficients
+        == [ONE, Q5.of(Fraction(-1, 2)), Q5.of(Fraction(-2, 5)), Q5.of(Fraction(1, 10))],
+        "IMPULSE_READBACK",
+        "the solved maximal-distance filter coefficients drifted",
+    )
+    reconstructed = [[ZERO for _ in range(12)] for _ in range(12)]
+    for coefficient, power in zip(coefficients, powers, strict=True):
+        reconstructed = q5_add(reconstructed, q5_scale(power, coefficient))
+    _require(
+        reconstructed == target,
+        "IMPULSE_READBACK",
+        "the solved filter does not isolate the maximal-distance shell",
+    )
+    antipode = [
+        next(j for j in range(12) if target[i][j] == ONE) for i in range(12)
+    ]
+    _require(
+        antipode == [int(value) for value in carrier["antipode"]],
+        "IMPULSE_READBACK",
+        "the readback-derived farthest map does not match the carrier binding",
+    )
+    automorphisms = incidence_automorphisms(carrier["adjacency"])
+    _require(
+        len(automorphisms) == 120,
+        "ANTIPODE_RESPONSE",
+        "the incidence automorphism group does not have order 120",
+    )
+    central_involutions = []
+    for permutation in automorphisms:
+        if all(
+            permutation[other[index]] == other[permutation[index]]
+            for other in automorphisms
+            for index in range(12)
+        ) and all(permutation[permutation[index]] == index for index in range(12)):
+            central_involutions.append(permutation)
+    nonidentity_central = [
+        permutation
+        for permutation in central_involutions
+        if permutation != tuple(range(12))
+    ]
+    _require(
+        nonidentity_central == [tuple(antipode)],
+        "ANTIPODE_RESPONSE",
+        "the distance-three inverse is not the unique nonidentity central involution",
+    )
+    response = [[ZERO for _ in range(12)] for _ in range(12)]
+    for index, partner in enumerate(antipode):
+        response[index][partner] = -ONE
+    _require(
+        q5_matmul(response, response) == q5_identity(12),
+        "ANTIPODE_RESPONSE",
+        "the negative antipode response is not an involution",
+    )
+    adjacency = adjacency_q5
+    antipode_matrix = [[ZERO for _ in range(12)] for _ in range(12)]
+    for index, partner in enumerate(antipode):
+        antipode_matrix[index][partner] = ONE
+    adjacency_squared = q5_matmul(adjacency, adjacency)
+    adjacency_cubed = q5_matmul(adjacency_squared, adjacency)
+    polynomial_antipode = q5_scale(
+        q5_add(
+            q5_add(
+                q5_add(
+                    adjacency_cubed,
+                    q5_scale(adjacency_squared, Q5.of(-4)),
+                ),
+                q5_scale(adjacency, Q5.of(-5)),
+            ),
+            q5_scale(q5_identity(12), Q5.of(10)),
+        ),
+        Q5.of(Fraction(1, 10)),
+    )
+    _require(
+        polynomial_antipode == antipode_matrix,
+        "ANTIPODE_RESPONSE",
+        "J != (A^3 - 4 A^2 - 5 A + 10 I)/10",
+    )
+    _require(
+        q5_matmul(response, adjacency) == q5_matmul(adjacency, response),
+        "ANTIPODE_RESPONSE",
+        "the negative antipode response does not commute with propagation",
+    )
+    signs: dict[str, int] = {}
+    for band, projector in projectors.items():
+        image = q5_matmul(response, projector)
+        if image == projector:
+            signs[band] = 1
+        elif image == q5_scale(projector, -ONE):
+            signs[band] = -1
+        else:
+            raise ChargedResponseError(
+                "ANTIPODE_RESPONSE",
+                f"the {band} sector is not an eigenspace of the response operator",
+            )
+    _require(
+        signs == {"unit": -1, "frame": 1, "quintet": -1, "kernel": 1},
+        "ANTIPODE_RESPONSE",
+        f"unexpected response-sector signs {signs}",
+    )
+    return {
+        "impulse_readback_protocol": {
+            "status": "source_bound_operational_producer",
+            "input": "delta impulse at each unlabeled carrier port",
+            "recurrence": "adjacency powers k=0..graph_diameter",
+            "selection_rule": "cancel every nearer distance shell and normalize the unique maximal-distance echo to one",
+            "homogeneous_filter_coefficients": [coefficient.render() for coefficient in coefficients],
+            "unique_solution_rank": len(pivot_columns),
+            "unique_farthest_port_per_source": True,
+            "nearer_shells_cancelled": True,
+            "target_labels_used": False,
+            "downstream_labels_used": False,
+        },
+        "operator": "negative_graph_antipode_involution",
+        "source": "target_blind_maximal_distance_impulse_readback",
+        "antipode_port_map": antipode,
+        "incidence_automorphism_group_order": len(automorphisms),
+        "central_involution_count_including_identity": len(central_involutions),
+        "unique_nonidentity_central_involution": True,
+        "antipode_polynomial_identity": "J = (A^3 - 4*A^2 - 5*A + 10*I)/10",
+        "commutes_with_propagation_generator": True,
+        "self_adjoint_unitary_involution": True,
+        "sector_eigenvalues": {
+            "unit_band": signs["unit"],
+            "quintet_band": signs["quintet"],
+            "frame_band": signs["frame"],
+            "kernel_band": signs["kernel"],
+        },
+        "overall_response_sign": (
+            "the representative R = -J is conventional; replacing it by +J "
+            "reverses every band together and leaves the current algebra unchanged"
+        ),
+        "impulse_readback_response_executed": True,
+        "physical_perturb_readback_source_bound": True,
+    }
+
+
+def potential_response(frame_vertices: list[tuple[Q5, Q5, Q5]]) -> dict[str, Any]:
+    """Exact frame normalization audit, not a response-law producer.
+
+    The vertex frame has tight-frame constant ``10 + 2*sqrt(5)``.  This number
+    supplies no response sign; the signed response is computed by
+    :func:`negative_antipode_response`.
     """
 
     gram_total = [[ZERO for _ in range(3)] for _ in range(3)]
@@ -486,10 +703,9 @@ def potential_response(frame_vertices: list[tuple[Q5, Q5, Q5]]) -> dict[str, Any
                 "(10 + 2*sqrt(5))",
             )
     return {
-        "coupling": "generator_perturbation_minus_i_diag_port_potential",
+        "status": "normalization_audit_only",
         "unit_channel_constant": expected.render(),
-        "quintet_channel_constant": "2",
-        "response_sign": -1,
+        "response_sign_not_inferred_here": True,
     }
 
 
@@ -535,14 +751,14 @@ def _oriented_face_set(faces: Sequence[Sequence[int]]) -> set[tuple[int, int, in
 
 
 def rotation_response(carrier: dict[str, Any]) -> dict[str, Any]:
-    """Measured rotation response of the bound carrier.
+    """Exact orientation-preserving automorphism report of the bound carrier.
 
     The incidence automorphism group of the measured carrier has order 120;
     exactly sixty automorphisms preserve the manifest's oriented faces. Those
     sixty rotations commute with the propagation generator by construction
     and act on the frame sector by the vertex coordinate isometry, and on the
     kernel sector by its Galois conjugate. The frame and kernel channels
-    carry the positive sign of the generator of a physical rotation.
+    The signed response itself is derived separately from ``R = -J``.
     """
 
     adjacency = carrier["adjacency"]
@@ -574,7 +790,7 @@ def rotation_response(carrier: dict[str, Any]) -> dict[str, Any]:
         "orientation_preserving": True,
         "frame_transport": "vertex_coordinate_isometry",
         "kernel_transport": "galois_conjugate_vertex_coordinate_isometry",
-        "response_sign": 1,
+        "response_sign_not_inferred_here": True,
     }
 
 
@@ -657,6 +873,31 @@ def runtime_binding(carrier: dict[str, Any]) -> dict[str, Any]:
         "the propagated dynamics is not a nontrivial reversible channel",
     )
     _require(
+        bool(report["CHARGED_RESPONSE_OPERATOR_RECEIPT"]),
+        "RUNTIME_RESPONSE",
+        "the runtime dynamics does not expose the incidence-derived response operator",
+    )
+    runtime_response = reference_negative_antipode_response()
+    impulse_report = reference_impulse_readback_report()
+    expected_response = np.zeros((12, 12), dtype=np.complex128)
+    for index, partner in enumerate(carrier["antipode"]):
+        expected_response[index, int(partner)] = -1.0
+    _require(
+        bool(np.array_equal(runtime_response, expected_response)),
+        "RUNTIME_RESPONSE",
+        "the runtime response is not the bound carrier's negative antipode",
+    )
+    _require(
+        impulse_report["homogeneous_filter_coefficients"]
+        == ["1", "-1/2", "-2/5", "1/10"]
+        and impulse_report["farthest_port_map"]
+        == [int(value) for value in carrier["antipode"]]
+        and impulse_report["target_labels_used"] is False
+        and impulse_report["downstream_labels_used"] is False,
+        "RUNTIME_RESPONSE",
+        "the runtime impulse/readback producer does not match the exact source solve",
+    )
+    _require(
         int(tower_adjacency.sum()) == 60,
         "RUNTIME_SPECTRUM",
         "the runtime coupling does not have thirty edges",
@@ -671,6 +912,11 @@ def runtime_binding(carrier: dict[str, Any]) -> dict[str, Any]:
         "reversible_response_source": "finite_unitary_carrier_channel",
         "equivariance_receipt": True,
         "reversibility_receipt": True,
+        "charged_response_operator_receipt": True,
+        "impulse_readback_producer_receipt": True,
+        "impulse_readback_filter_coefficients": (
+            impulse_report["homogeneous_filter_coefficients"]
+        ),
         "runtime_tolerance": RUNTIME_TOLERANCE,
     }
 
@@ -744,7 +990,8 @@ def refinement_persistence(levels: int = 3) -> dict[str, Any]:
 def produce_charged_response_artifact(carrier_manifest: Mapping[str, Any]) -> dict[str, Any]:
     carrier = load_carrier(carrier_manifest)
     frame_vertices = match_vertex_frame(carrier)
-    isotypic_projectors(carrier["adjacency"])
+    projectors = isotypic_projectors(carrier["adjacency"])
+    response = negative_antipode_response(carrier, projectors)
     ports = carrier["ports"]
     antipode = carrier["antipode"]
     axis_representatives = []
@@ -793,30 +1040,31 @@ def produce_charged_response_artifact(carrier_manifest: Mapping[str, Any]) -> di
             "frame_band": "triplet sector with adjacency channel value +sqrt(5) in the oriented vertex frame",
             "kernel_band": "Galois conjugate triplet sector with adjacency channel value -sqrt(5)",
             "faces": "every oriented face has positive determinant in the assigned frame",
-            "block_map": "(A,B,z) -> (z^-2 A, z^3 B)",
+            "overall_u1_charge_sign": (
+                "not selected by the finite response operator; overall charge "
+                "conjugation is a convention"
+            ),
         },
-        "measured_response": {
-            "potential_response": potential_response(frame_vertices),
-            "rotation_response": rotation_response(carrier),
+        "source_response": response,
+        "structural_audits": {
+            "frame_normalization": potential_response(frame_vertices),
+            "rotation_automorphisms": rotation_response(carrier),
         },
         "derived": {
             "construction": "charged_double_triplet",
-            "construction_provenance": "derived_from_measured_sector_structure",
+            "construction_provenance": (
+                "canonical_equivariant_compact_lift_from_the_impulse_readback_"
+                "derived_antipode_response"
+            ),
             "response_band_scales": {
-                "unit_band": "-1",
-                "quintet_band": "-1",
-                "frame_band": "1",
-                "kernel_band": "1",
+                band: str(value)
+                for band, value in response["sector_eigenvalues"].items()
             },
             "normalization_rule": (
-                "each band scale is the measured channel response divided by its "
-                "canonical normalizer: unit by the tight-frame constant "
-                "(10 + 2*sqrt(5)), quintet by the centered axis constant 2, frame "
-                "and kernel by the vertex coordinate isometry; signs are the "
-                "measured response signs"
+                "the source response is the self-adjoint unitary involution R = -J; "
+                "each band scale is its exactly recomputed eigenvalue; the common "
+                "overall sign is a charge-conjugation convention"
             ),
-            "even_quintet_axis_scales": ["1", "1", "1", "1", "1", "1"],
-            "odd_axis_signs": [1, 1, 1, 1, 1, 1],
         },
         "physical_refinement_maps": refinement_persistence(),
         "provenance": {

@@ -44,17 +44,22 @@ class InventoryRow:
 ROWS = (
     InventoryRow(
         row_id="CHARGED_RESPONSE_ARTIFACT",
-        receipt_or_gate="oph.charged_response_semantic_artifact.v1 (#599 source binding)",
+        receipt_or_gate="oph.charged_response_semantic_artifact.v3 (#599 source binding)",
         verifier="tests/test_charged_response.py",
         producer="oph_fpe/core/charged_response.py",
         producer_status="PRODUCED",
         public_status="TESTABLE",
         evidence="tests/test_charged_response.py",
         boundary=(
-            "The producer measures the charged sector structure, signed "
-            "response channels, oriented frame, and defect-port refinement "
-            "persistence of the certified twelve-port carrier in exact "
-            "Q(sqrt5) arithmetic, bound to the propagated dynamics. The "
+            "The producer injects a delta at every unlabeled port, reads the "
+            "adjacency recurrence through the graph diameter, and uniquely "
+            "solves the homogeneous filter cancelling nearer shells and "
+            "isolating the maximal-distance echo. This yields "
+            "J=(A^3-4A^2-5A+10I)/10 and R=-J without a target gauge label. It "
+            "checks the signed eigenspaces, audits the oriented frame, and measures "
+            "defect-port refinement persistence in exact Q(sqrt5) arithmetic, "
+            "bound to the propagated dynamics. The common sign of R is a "
+            "charge-conjugation convention. The "
             "paper-side port-current certificate in "
             "reverse-engineering-reality independently recomputes every "
             "exact claim before consuming the artifact."
@@ -242,8 +247,8 @@ ROWS = (
         ),
         verifier="tests/test_echosahedral_federation.py",
         producer="oph_fpe/core/echosahedral_federation.py",
-        producer_status="PRODUCED",
-        public_status="TESTABLE",
+        producer_status="PRODUCED_NONPROMOTING",
+        public_status="NOT_ATTAINED",
         evidence="tests/test_echosahedral_federation.py",
         boundary=(
             "The producer recomputes the finite natural transformation "
@@ -252,7 +257,7 @@ ROWS = (
             "state-preserving coarse graining, A5 seam-law naturality, "
             "quotient commutation, and the composite chart realization. It "
             "selects no physical support chart and carries no H3, event, BW, "
-            "or KMS claim."
+            "or KMS claim; therefore it does not close the physical #596 bridge."
         ),
     ),
     InventoryRow(
@@ -264,16 +269,18 @@ ROWS = (
         ),
         verifier="tests/test_echosahedral_federation.py",
         producer="oph_fpe/core/echosahedral_federation.py",
-        producer_status="PRODUCED",
-        public_status="TESTABLE",
+        producer_status="PRODUCED_NONPROMOTING",
+        public_status="NOT_ATTAINED",
         evidence="tests/test_echosahedral_federation.py",
         boundary=(
             "Exact finite checks on the typed seams: the orientation-reversing "
             "collar bijection induces a verified finite matrix-algebra "
             "isomorphism, and every composable seam triangle composes to the "
             "identity with vacuous triple overlaps reported by count. The "
-            "realization receipt is the conjunction with structural sewing "
-            "and implies no emergent geometry."
+            "two-carrier reference has no seam triangle, so its logical cocycle "
+            "condition is vacuous and its physical realization receipt is false. "
+            "A dedicated triangle control is structural only because it reuses "
+            "ports and does not itself form an admissible physical federation."
         ),
     ),
     InventoryRow(
@@ -295,6 +302,34 @@ ROWS = (
             "schedule-independence witness with an atomic diamond check. The "
             "phase register is dimensionless with no physical clock "
             "normalization and no KMS claim."
+        ),
+    ),
+    InventoryRow(
+        row_id="INCIDENCE_NERVE_FEDERATION_SUPPORT_BRIDGE",
+        receipt_or_gate=(
+            "NONVACUOUS_PHYSICAL_FEDERATION_RECEIPT / "
+            "OPERATIONAL_OBSERVER_ON_FEDERATION_RECEIPT / "
+            "CONTROLLED_ORIENTED_S2_LIMIT_ON_SAME_TOWER_RECEIPT (#596)"
+        ),
+        verifier="tests/test_incidence_nerve_bridge.py",
+        producer="oph_fpe/consensus/incidence_nerve_bridge.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence=(
+            "tests/test_incidence_nerve_bridge.py; "
+            "tests/test_echosahedral_federation.py; "
+            "tests/test_phase_repair_bridge.py"
+        ),
+        boundary=(
+            "The twelve carrier charts, thirty seam algebras, and twenty "
+            "nonvacuous triple restrictions come from one oriented "
+            "icosahedral incidence complex. The same bound artifact supplies "
+            "accepted confluent seam repairs, operational readback, durable "
+            "records, feedback and prediction controls, checkpoint replay, "
+            "and a refinement-natural oriented S2 support limit. This closes "
+            "the finite carrier/federation/observer/support bridge. It makes "
+            "no H3-frame, event-manifold, BW/KMS clock, laboratory, length "
+            "scale, or continuum-field claim."
         ),
     ),
     InventoryRow(

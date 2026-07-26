@@ -13,6 +13,7 @@ clock/emergence receipts remain false.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 import hashlib
 import json
 import math
@@ -61,6 +62,154 @@ def reference_icosahedral_coupling() -> np.ndarray:
     adjacency[edges[:, 0], edges[:, 1]] = 1.0
     adjacency[edges[:, 1], edges[:, 0]] = 1.0
     return np.diag(np.sum(adjacency, axis=1)) - adjacency
+
+
+def _reference_adjacency() -> np.ndarray:
+    base = build_geodesic_icosahedral_tower(0).levels[0]
+    adjacency = np.zeros((12, 12), dtype=np.int64)
+    for left, right in np.asarray(base.edges, dtype=np.int64):
+        adjacency[int(left), int(right)] = 1
+        adjacency[int(right), int(left)] = 1
+    return adjacency
+
+
+def _graph_distances(adjacency: np.ndarray) -> np.ndarray:
+    distances = np.full((12, 12), -1, dtype=np.int64)
+    for start in range(12):
+        distances[start, start] = 0
+        queue = [start]
+        while queue:
+            node = queue.pop(0)
+            for neighbor in np.flatnonzero(adjacency[node]):
+                neighbor = int(neighbor)
+                if distances[start, neighbor] < 0:
+                    distances[start, neighbor] = distances[start, node] + 1
+                    queue.append(neighbor)
+    return distances
+
+
+def _solve_unique_fraction_system(
+    rows: list[list[int]], rhs: list[int]
+) -> tuple[Fraction, ...]:
+    """Solve an overdetermined exact system with four unknowns."""
+
+    matrix = [
+        [Fraction(value) for value in row] + [Fraction(target)]
+        for row, target in zip(rows, rhs, strict=True)
+    ]
+    pivot_rows: list[int] = []
+    active = 0
+    for column in range(4):
+        pivot = next(
+            (index for index in range(active, len(matrix)) if matrix[index][column]),
+            None,
+        )
+        if pivot is None:
+            continue
+        matrix[active], matrix[pivot] = matrix[pivot], matrix[active]
+        scale = matrix[active][column]
+        matrix[active] = [entry / scale for entry in matrix[active]]
+        for index in range(len(matrix)):
+            if index == active or not matrix[index][column]:
+                continue
+            factor = matrix[index][column]
+            matrix[index] = [
+                matrix[index][j] - factor * matrix[active][j]
+                for j in range(5)
+            ]
+        pivot_rows.append(column)
+        active += 1
+    if pivot_rows != [0, 1, 2, 3]:
+        raise ValueError("impulse/readback polynomial is not uniquely determined")
+    if any(all(not row[column] for column in range(4)) and row[4] for row in matrix):
+        raise ValueError("impulse/readback polynomial constraints are inconsistent")
+    return tuple(matrix[index][4] for index in range(4))
+
+
+def reference_impulse_readback_report() -> dict[str, Any]:
+    """Recover the maximal-distance echo from target-blind impulse readback.
+
+    A delta is injected at every port. The local adjacency recurrence is read
+    for k=0..diameter. One homogeneous polynomial filter is solved from those
+    observations by requiring cancellation on every nearer distance shell and
+    unit response on the maximal shell. No antipode map or gauge label is an
+    input to the solve.
+    """
+
+    adjacency = _reference_adjacency()
+    distances = _graph_distances(adjacency)
+    diameter = int(distances.max())
+    if diameter != 3:
+        raise ValueError(f"reference carrier diameter drifted to {diameter}")
+    farthest_counts = np.sum(distances == diameter, axis=1)
+    if not np.all(farthest_counts == 1):
+        raise ValueError("every impulse source must have one maximal-distance port")
+    powers = [np.eye(12, dtype=np.int64)]
+    for _ in range(diameter):
+        powers.append(powers[-1] @ adjacency)
+    target = (distances == diameter).astype(np.int64)
+    rows: list[list[int]] = []
+    rhs: list[int] = []
+    for source in range(12):
+        for readback in range(12):
+            rows.append(
+                [int(powers[k][source, readback]) for k in range(diameter + 1)]
+            )
+            rhs.append(int(target[source, readback]))
+    coefficients = _solve_unique_fraction_system(rows, rhs)
+    reconstructed = np.zeros((12, 12), dtype=object)
+    for k, coefficient in enumerate(coefficients):
+        reconstructed += coefficient * powers[k]
+    if any(
+        reconstructed[i, j] != Fraction(int(target[i, j]))
+        for i in range(12)
+        for j in range(12)
+    ):
+        raise ValueError("the solved impulse filter does not isolate the farthest shell")
+    farthest_map = tuple(int(np.flatnonzero(target[source])[0]) for source in range(12))
+    if len(set(farthest_map)) != 12 or any(
+        farthest_map[farthest_map[index]] != index for index in range(12)
+    ):
+        raise ValueError("the maximal-distance echo is not a permutation involution")
+    return {
+        "diameter": diameter,
+        "source_count": 12,
+        "recurrence_steps": [0, 1, 2, 3],
+        "homogeneous_filter_coefficients": [str(value) for value in coefficients],
+        "polynomial_identity": "J = (A^3 - 4*A^2 - 5*A + 10*I)/10",
+        "unique_solution_rank": 4,
+        "unique_farthest_port_per_source": True,
+        "nearer_shells_cancelled": True,
+        "farthest_port_map": list(farthest_map),
+        "target_labels_used": False,
+        "downstream_labels_used": False,
+    }
+
+
+def reference_negative_antipode_response() -> np.ndarray:
+    """Return ``R=-J`` from the operational maximal-distance echo protocol."""
+
+    report = reference_impulse_readback_report()
+    response = np.zeros((12, 12), dtype=np.complex128)
+    response[
+        np.arange(12),
+        np.asarray(report["farthest_port_map"], dtype=np.int64),
+    ] = -1.0
+    return response
+
+
+def apply_local_charged_response(
+    state: LocalRecurrentCarrierState,
+) -> LocalRecurrentCarrierState:
+    """Apply the impulse/readback-derived reversible response operator once."""
+
+    amplitudes = _validated_amplitudes(state.amplitudes)
+    response = reference_negative_antipode_response()
+    transformed = amplitudes @ response.T
+    return LocalRecurrentCarrierState(
+        amplitudes=np.asarray(transformed, dtype=np.complex128),
+        intrinsic_phase=np.asarray(state.intrinsic_phase, dtype=float),
+    )
 
 
 def initialize_local_recurrent_carriers(
@@ -128,6 +277,7 @@ def local_a5_dynamics_report(
     if tolerance <= 0.0:
         raise ValueError("tolerance must be positive")
     coupling = reference_icosahedral_coupling()
+    response = reference_negative_antipode_response()
     unitary = expm(-1j * step * strength * coupling)
     unitary_one_period_later = expm(-1j * (step + 1.0) * strength * coupling)
     identity = np.eye(12, dtype=np.complex128)
@@ -150,6 +300,26 @@ def local_a5_dynamics_report(
     maximum_commutator = max(commutator_residuals, default=math.inf)
     maximum_equivariance = max(equivariance_residuals, default=math.inf)
     nontriviality_norm = float(np.linalg.norm(unitary - identity, ord="fro"))
+    response_involution_residual = float(
+        np.linalg.norm(response @ response - identity, ord="fro")
+    )
+    response_self_adjoint_residual = float(
+        np.linalg.norm(response.conj().T - response, ord="fro")
+    )
+    response_coupling_commutator_residual = float(
+        np.linalg.norm(response @ coupling - coupling @ response, ord="fro")
+    )
+    response_probe = LocalRecurrentCarrierState(
+        amplitudes=probe,
+        intrinsic_phase=np.zeros(probe.shape[0], dtype=float),
+    )
+    response_after = apply_local_charged_response(response_probe)
+    response_norm_residual = float(
+        np.linalg.norm(
+            np.linalg.norm(response_after.amplitudes, axis=1)
+            - np.linalg.norm(probe, axis=1)
+        )
+    )
     period_descent_residual = float(
         np.linalg.norm(unitary_one_period_later - unitary, ord="fro")
     )
@@ -172,6 +342,10 @@ def local_a5_dynamics_report(
         and maximum_commutator <= tolerance
         and maximum_equivariance <= tolerance
         and sorted(row["multiplicity"] for row in multiplicities) == [1, 3, 3, 5]
+        and response_involution_residual <= tolerance
+        and response_self_adjoint_residual <= tolerance
+        and response_coupling_commutator_residual <= tolerance
+        and response_norm_residual <= tolerance
     )
     payload = {
         "schema": "oph.echosahedral_local_recurrent_dynamics.v1",
@@ -189,6 +363,21 @@ def local_a5_dynamics_report(
         "maximum_a5_coupling_commutator_residual": maximum_commutator,
         "maximum_a5_propagation_equivariance_residual": maximum_equivariance,
         "propagation_nontriviality_norm": nontriviality_norm,
+        "charged_response_operator": "negative_graph_antipode_involution",
+        "charged_response_source": "target_blind_maximal_distance_impulse_readback",
+        "charged_response_impulse_readback": reference_impulse_readback_report(),
+        "charged_response_involution_residual": response_involution_residual,
+        "charged_response_self_adjoint_residual": response_self_adjoint_residual,
+        "charged_response_coupling_commutator_residual": (
+            response_coupling_commutator_residual
+        ),
+        "charged_response_norm_residual": response_norm_residual,
+        "CHARGED_RESPONSE_OPERATOR_RECEIPT": bool(
+            response_involution_residual <= tolerance
+            and response_self_adjoint_residual <= tolerance
+            and response_coupling_commutator_residual <= tolerance
+            and response_norm_residual <= tolerance
+        ),
         "one_phase_period_propagator_residual": period_descent_residual,
         "hidden_xyz_coordinates_used_by_dynamics": False,
         "global_support_chart_used_by_dynamics": False,
@@ -251,5 +440,7 @@ __all__ = [
     "local_a5_dynamics_report",
     "local_port_statistics",
     "propagate_local_recurrent_carriers",
+    "reference_impulse_readback_report",
     "reference_icosahedral_coupling",
+    "reference_negative_antipode_response",
 ]

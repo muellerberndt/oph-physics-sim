@@ -42,6 +42,7 @@ from oph_fpe.core.echosahedral_federation import (
     ObserverSupport,
     SeamBundle,
     carrier_quotient_invariance_report,
+    finite_matrix_interface_algebra_schema,
     federation_sewing_report,
     interface_algebra_sha256,
     reference_echosahedral_carrier,
@@ -522,15 +523,12 @@ def _build_federation(config: Mapping[str, Any]) -> EchosahedralFederation:
         raise ValueError("all-port source federation requires an even carrier_count")
     carrier_ids = tuple(f"carrier-{index:05d}" for index in range(count))
     carriers = tuple(reference_echosahedral_carrier(item) for item in carrier_ids)
+    interface_id = "finite-overlap-visible-algebra-v1"
     algebra_hash = interface_algebra_sha256(
-        {
-            "schema": "oph.finite-overlap-visible-algebra.v1",
-            "carrier": "regular_icosahedron_12_30_20",
-            "value_space": "complex_port_response",
-        }
+        finite_matrix_interface_algebra_schema(interface_id, 1)
     )
     binding = InterfaceAlgebraBinding(
-        interface_algebra_id="finite-overlap-visible-algebra-v1",
+        interface_algebra_id=interface_id,
         interface_algebra_sha256=algebra_hash,
         left_interface_algebra_sha256=algebra_hash,
         right_interface_algebra_sha256=algebra_hash,
@@ -2574,7 +2572,7 @@ def capture_physical_source(
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
         "physical_federation_status": (
             "STRUCTURAL_INTERFACE_ALGEBRA_AND_COCYCLE_SEWING_REALIZED"
-            if sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
+            if sewing["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"]
             else "BLOCKED_BY_INTERFACE_ALGEBRA_SEWING_CHECKS"
         ),
         "carrier_to_support_realization_status": "NOT_EVALUATED",
