@@ -66,6 +66,56 @@ ROWS = (
         ),
     ),
     InventoryRow(
+        row_id="SPIN_STATISTICS_ARTIFACT",
+        receipt_or_gate="oph.spin_statistics_semantic_artifact.v1 (#314 source binding)",
+        verifier="tests/test_spin_statistics_response.py",
+        producer="oph_fpe/core/spin_statistics_response.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence="tests/test_spin_statistics_response.py",
+        boundary=(
+            "The producer measures the deck group of the certified incidence "
+            "(order 120), realizes every proper deck rotation as an exact "
+            "orthogonal matrix on the measured oriented frame, and lifts the "
+            "sixty rotations to exact unit quaternions: the lift set closes to "
+            "a 120-element group with binary-icosahedral order profile, unique "
+            "involution -1, and centre {+1,-1}. All five Klein four-subgroups "
+            "of the rotation deck are enumerated and all eight sign "
+            "assignments fail to form a section over each, because every "
+            "involution lift squares to -1 exactly. The oriented support is "
+            "verified to be a homology two-sphere with exactly one spin "
+            "structure. No Standard Model label, statistics contract, or "
+            "category typing enters the producer; whether the measured "
+            "non-split transport class forces a fermionic typing of matter "
+            "is decided by the paper-side matter-lift certificate."
+        ),
+    ),
+    InventoryRow(
+        row_id="GLOBAL_FORM_ARTIFACT",
+        receipt_or_gate="oph.global_form_semantic_artifact.v1 (#567 source binding)",
+        verifier="tests/test_global_form_response.py",
+        producer="oph_fpe/core/global_form_response.py",
+        producer_status="PRODUCED",
+        public_status="TESTABLE",
+        evidence="tests/test_global_form_response.py",
+        boundary=(
+            "The producer measures the order-120 deck action on the incidence "
+            "nerve federation's twelve charts, thirty seams, and twenty "
+            "oriented triple overlaps (upgrading the former identity_only "
+            "declaration), the six-axis class group with Smith invariants "
+            "(1,1,1,1,1,6), the vacuum sector class of the realized reference "
+            "federation bound to the federation verifier's cocycle receipts, "
+            "and explicit two-puncture flux-tube seam witnesses realizing "
+            "every class of the measured order-six group on the base and "
+            "first refined complexes, with the exact impossibility of a "
+            "single-puncture nonzero flux. The subgroup obstruction menu is "
+            "exact arithmetic on the measured class group. No gauge label, "
+            "charge table, or quotient choice enters the producer; matter "
+            "transport consistency and any global-form selection are "
+            "paper-side steps."
+        ),
+    ),
+    InventoryRow(
         row_id="WZH_V1_DECLARATIONS",
         receipt_or_gate="WZH0--WZH4 legacy W/Z/H gate inputs",
         verifier="oph_fpe/bosons/pipeline.py",

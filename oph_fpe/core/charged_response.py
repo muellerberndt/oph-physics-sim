@@ -757,8 +757,8 @@ def rotation_response(carrier: dict[str, Any]) -> dict[str, Any]:
     exactly sixty automorphisms preserve the manifest's oriented faces. Those
     sixty rotations commute with the propagation generator by construction
     and act on the frame sector by the vertex coordinate isometry, and on the
-    kernel sector by its Galois conjugate. The frame and kernel channels
-    The signed response itself is derived separately from ``R = -J``.
+    kernel sector by its Galois conjugate. The signed response itself is
+    derived separately from ``R = -J``.
     """
 
     adjacency = carrier["adjacency"]
