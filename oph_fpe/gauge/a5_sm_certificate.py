@@ -101,7 +101,7 @@ _PHYSICAL_GATES = {
     "BLOCK_DETERMINANT_BALANCE_RECEIPT": "physical trace-balanced block descent",
     "PORT_SPIN_LIFT_RECEIPT": "physical compact-group spin lift",
     "AXIS_CENTER_DESCENT_RECEIPT": "physical identification of the six-axis residue with the gauge-group center quotient",
-    "MAR_MATTER_REALIZATION_RECEIPT": "matter, hypercharge, and faithful tensor-kernel realization",
+    "MATTER_REALIZATION_RECEIPT": "matter, hypercharge, and faithful tensor-kernel realization inside a source-complete menu",
     "EXTERIOR_PACKAGE_SELECTION_RECEIPT": "source-derived selection of the non-vacuum even exterior package",
     "HIGGS_SCALAR_SELECTION_RECEIPT": "source-derived selection of W as the physical scalar doublet",
     "A5_FAMILY_ATTACHMENT_RECEIPT": "attachment of the face-phase A5 carrier to physical families",

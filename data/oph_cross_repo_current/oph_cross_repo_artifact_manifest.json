@@ -134,7 +134,7 @@
       "declared_promotion_allowed": false,
       "epistemic_class": "rejected_target_informed_candidate_status",
       "format_version": null,
-      "generated_utc": "2026-07-18T06:04:31Z",
+      "generated_utc": "2026-07-27T08:33:45Z",
       "identity_path": [
         "artifact"
       ],
@@ -142,7 +142,7 @@
       "key": "neutrino_lane_closure",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:e1ccc9fb5176241241eff5fd9c6de1bcc28176b813a78d8559759a2296f242da",
+      "sha256": "sha256:6992d9f2f41a937f5e9d1e3c1758ccbf81c9d21c395ecfbd5505fcaf5e60d7c6",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/neutrino/neutrino_lane_closure_contract.json",
       "source_tracked": true,
@@ -235,11 +235,11 @@
     },
     {
       "artifact": "oph_empirical_ward_projected_hadronic_spectral_measure",
-      "byte_count": 27195,
+      "byte_count": 33250,
       "declared_promotion_allowed": false,
       "epistemic_class": "empirical_external_data_closure",
       "format_version": 1,
-      "generated_utc": "2026-07-18T06:01:48Z",
+      "generated_utc": "2026-07-27T08:32:20Z",
       "identity_path": [
         "artifact"
       ],
@@ -247,7 +247,7 @@
       "key": "empirical_hadron_spectral_measure",
       "present": true,
       "row_class": "oph_plus_empirical_hadron_closure",
-      "sha256": "sha256:72b94228c0e4cb1d2409f324ea5575333db593736a9aea0f8ba5ab487b9e2e42",
+      "sha256": "sha256:05194b5b04b5f740efc0915b6f5507e9e3b141e877ad4f173bd225fda8ea7d4b",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/hadron/empirical_ward_projected_spectral_measure.json",
       "source_tracked": true,
@@ -256,11 +256,11 @@
     },
     {
       "artifact": "oph_empirical_thomson_endpoint",
-      "byte_count": 6059,
+      "byte_count": 5991,
       "declared_promotion_allowed": false,
       "epistemic_class": "empirical_external_data_closure",
       "format_version": null,
-      "generated_utc": "2026-07-12T02:35:03Z",
+      "generated_utc": "2026-07-23T03:16:04Z",
       "identity_path": [
         "artifact"
       ],
@@ -268,7 +268,7 @@
       "key": "empirical_thomson_endpoint",
       "present": true,
       "row_class": "oph_plus_empirical_hadron_closure",
-      "sha256": "sha256:3555719bb003961879183d243bae7a223555b0810a3fe942361c36bf5229a1f9",
+      "sha256": "sha256:c424e873550cf81d2faab4491ff128833034877f73fb70d5e0cb3aec0002f719",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/P_derivation/runtime/empirical_thomson_endpoint_current.json",
       "source_tracked": true,
@@ -277,11 +277,11 @@
     },
     {
       "artifact": "oph_anchor_scheme_bridge",
-      "byte_count": 2331,
+      "byte_count": 2383,
       "declared_promotion_allowed": false,
       "epistemic_class": "compare_only_scheme_analysis",
       "format_version": null,
-      "generated_utc": "2026-07-12T02:18:50Z",
+      "generated_utc": "2026-07-23T03:45:32Z",
       "identity_path": [
         "artifact"
       ],
@@ -289,7 +289,7 @@
       "key": "anchor_scheme_bridge",
       "present": true,
       "row_class": "compare_only_scheme_analysis",
-      "sha256": "sha256:66c71c7f7b4d6628df735a1c155d66a492c51b3f00c35f5fd6c5f5566f83cecb",
+      "sha256": "sha256:7c86ee75ec6e18d29cd42007938db25c36f123934abf4528f3320a9491841e15",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/P_derivation/runtime/anchor_scheme_bridge_current.json",
       "source_tracked": true,
@@ -298,11 +298,11 @@
     },
     {
       "artifact": "oph_status_table_forward_current",
-      "byte_count": 51025,
+      "byte_count": 51235,
       "declared_promotion_allowed": null,
       "epistemic_class": "particle_frontier_status",
       "format_version": null,
-      "generated_utc": "2026-07-13T04:57:34Z",
+      "generated_utc": "2026-07-27T07:59:17Z",
       "identity_path": [
         "artifact"
       ],
@@ -310,7 +310,7 @@
       "key": "particle_status_table",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:6fb81ac0bc20e1b389a50afc5760ab6c0eca9b221b3fa21888434b9614dd94c5",
+      "sha256": "sha256:48cb3f7165521a05d4970f55265d0e4f7a7c80e894a66377db39fce07cc9f27f",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/status/status_table_forward_current.json",
       "source_tracked": true,
@@ -319,11 +319,11 @@
     },
     {
       "artifact": "oph_particle_derivation_gap_ledger",
-      "byte_count": 30153,
+      "byte_count": 30121,
       "declared_promotion_allowed": null,
       "epistemic_class": "open_obligation_ledger",
       "format_version": null,
-      "generated_utc": "2026-07-18T05:32:25Z",
+      "generated_utc": "2026-07-27T07:59:16Z",
       "identity_path": [
         "artifact"
       ],
@@ -331,7 +331,7 @@
       "key": "particle_gap_ledger",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:18ab7e14d6c0ba3ba3039b1055a14d4922fdf19302129f518cede6db50fcb8b9",
+      "sha256": "sha256:7b122aad76440e7f7aed5f89d8a5da28db57b094b2e44ca6661bf64698b16eb6",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/status/particle_derivation_gap_ledger.json",
       "source_tracked": true,
@@ -340,11 +340,11 @@
     },
     {
       "artifact": "oph_charged_trace_lift_theorem",
-      "byte_count": 15060,
+      "byte_count": 15065,
       "declared_promotion_allowed": null,
       "epistemic_class": "source_nonidentifiability_no_go",
       "format_version": null,
-      "generated_utc": "2026-07-12T02:42:13Z",
+      "generated_utc": "2026-07-27T07:16:35Z",
       "identity_path": [
         "artifact"
       ],
@@ -352,7 +352,7 @@
       "key": "charged_trace_no_go",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:43631c4d6dfe43ffb2938cf2610377c46f0bd5668b8af09ecddf171d11663af9",
+      "sha256": "sha256:377f927b09a49fade3759c432c3a8f129baa4c68b09efe73dbe50556fdf3244e",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/leptons/charged_trace_lift_theorem.json",
       "source_tracked": true,
@@ -365,7 +365,7 @@
       "declared_promotion_allowed": false,
       "epistemic_class": "source_nonidentifiability_no_go",
       "format_version": null,
-      "generated_utc": "2026-07-18T06:01:43Z",
+      "generated_utc": "2026-07-27T08:32:18Z",
       "identity_path": [
         "artifact"
       ],
@@ -373,7 +373,7 @@
       "key": "quark_sigma_no_go",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:f47368bd67ed7f4b4696d761946108a9b91b11c36ebed89bf338c5c3c08f1948",
+      "sha256": "sha256:821d23cbce7cb27bc768f2a0fb66536f3f4e0d93d8205933b08ac0cfdb397116",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/flavor/quark_sigma_source_nonidentifiability_obstruction.json",
       "source_tracked": true,
@@ -386,7 +386,7 @@
       "declared_promotion_allowed": null,
       "epistemic_class": "scheme_convention_obstruction",
       "format_version": null,
-      "generated_utc": "2026-07-18T06:01:46Z",
+      "generated_utc": "2026-07-27T08:32:19Z",
       "identity_path": [
         "artifact"
       ],
@@ -394,7 +394,7 @@
       "key": "quark_scheme_obstruction",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:332dd01cce5a5f0415ce057d70cb458d8f84e19917616db6696f1292936f3db3",
+      "sha256": "sha256:670b93637f5910f851db7c48d735c1dfb73759a4c783d7cb3b1f471d7caf02d7",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/particles/runs/flavor/quark_running_mass_scheme_convention_obstruction.json",
       "source_tracked": true,
@@ -437,7 +437,7 @@
     },
     {
       "artifact": "OPH A5 screen/SM closure certificate v1",
-      "byte_count": 5152,
+      "byte_count": 6180,
       "declared_promotion_allowed": null,
       "epistemic_class": "exact_conditional_a5_coefficient_module_witness",
       "format_version": null,
@@ -449,7 +449,7 @@
       "key": "a5_screen_sm_closure",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:c3dba5ed4a9a5b34cc03b6a31eae2ede9f481d9381fbf3ec6c574cd1e0fae6f0",
+      "sha256": "sha256:33c8edf0e3c12899dfefdf1000efeb489c4ef398d6ffa576b5cbb998d90ed1ec",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/a5_closure/a5_screen_sm_closure.json",
       "source_tracked": true,
@@ -458,7 +458,7 @@
     },
     {
       "artifact": "OPH conditional exterior Standard-Model completion certificate v1",
-      "byte_count": 4906,
+      "byte_count": 5782,
       "declared_promotion_allowed": null,
       "epistemic_class": "exact_conditional_exterior_matter_witness",
       "format_version": null,
@@ -470,7 +470,7 @@
       "key": "a5_exterior_sm_completion",
       "present": true,
       "row_class": null,
-      "sha256": "sha256:a53176a3c77ad4fcd57fb9405e0f89ffc45ca0bfd6452392c1578c552f17f739",
+      "sha256": "sha256:195ffc8fa7f1ebd4956ee2de6952b44d56a2be49b4f791bc11fb7119dcf6db96",
       "simulation_receipt_eligible": false,
       "source_relpath": "code/a5_closure/exterior_sm_completion.json",
       "source_tracked": true,
@@ -561,38 +561,17 @@
       "source_tracked": true,
       "status": null,
       "target_relpath": "imported_oph_artifacts/regulator_gluing_evidence_bundle_current.json"
-    },
-    {
-      "artifact": "issue-320-collar-poisson-witness-v1",
-      "byte_count": 19566,
-      "declared_promotion_allowed": null,
-      "epistemic_class": "exact_conditional_counting_witness_not_physical_realization",
-      "format_version": null,
-      "generated_utc": null,
-      "identity_path": [
-        "certificate_id"
-      ],
-      "import_role": "informational_or_diagnostic_only",
-      "key": "collar_poisson_witness",
-      "present": true,
-      "row_class": null,
-      "sha256": "sha256:01d77edd9ea7867e27013370a6d580d62c85a54085dc7a09494b5a5f124415e2",
-      "simulation_receipt_eligible": false,
-      "source_relpath": "code/dark_matter/certificates/collar_poisson_witness_certificate.json",
-      "source_tracked": true,
-      "status": null,
-      "target_relpath": "imported_oph_artifacts/collar_poisson_witness_certificate.json"
     }
   ],
   "claim_boundary": "Imported paper and particle artifacts carry theorem/frontier provenance only. They never promote a simulation receipt; local verifiers must recompute every run-specific hypothesis.",
-  "manifest_payload_sha256": "sha256:1ae58d22807789974e4a222245116ceb29068da2cd9bfe4671be611713cff3cb",
+  "manifest_payload_sha256": "sha256:a653bc6a0f5003f7a6922dff879974011ddd011ce345f9ab11d0c216b79ce1cf",
   "missing_required_artifacts": [],
-  "paper_release_id": "r1556",
+  "paper_release_id": "r1584",
   "run_receipts_promoted_by_import": false,
   "schema": "oph_cross_repo_artifact_manifest_v2",
   "source_repository": {
     "checkout_name": "reverse-engineering-reality",
-    "commit": "bec81e2df36f611ac81b1abaee736234f62d81ff",
+    "commit": "030bb1b9d245b18a612d7fd46958d0c12e2183f9",
     "dirty": false,
     "untracked_file_count": 0,
     "worktree_state_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

@@ -60,6 +60,9 @@ SOURCE_INPUT_FIELDS = frozenset(
         "checkpoint_interval",
         "support_refinement_level",
         "geometry_sample_count",
+        "geometry_transport",
+        "observer_cross_reads",
+        "snapshot_coverage",
     }
 )
 
@@ -940,6 +943,9 @@ def _source_input_projection(
         "checkpoint_interval": observer.get("checkpoint_interval"),
         "support_refinement_level": support.get("refinement_level"),
         "geometry_sample_count": generator.get("geometry_sample_count"),
+        "geometry_transport": "legacy",
+        "observer_cross_reads": False,
+        "snapshot_coverage": "support",
     }
     if set(result) != SOURCE_INPUT_FIELDS:
         raise RuntimeError("internal source-input projection field mismatch")

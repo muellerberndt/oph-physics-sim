@@ -31,8 +31,8 @@ PROVENANCE_TAGS: dict[str, str] = {
     "S2_screen": "AXIOM_1",
     "overlap_consistency": "AXIOM_2",
     "local_MaxEnt": "AXIOM_3",
-    "S_gen": "AXIOM_4",
-    "MAR": "AXIOM_5",
+    "S_gen": "GRAVITY_INTERFACE_S_GEN",
+    "sector_completions": "DECLARED_COMPLETION",
     "sphere_fold": "MICROPHYSICS_SPHERE_FOLD",
     "GeomRead": "THEOREM_E0_STEP_1",
     "Lorentz_H3": "THEOREM_E0_STEP_2",
@@ -196,9 +196,9 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
         "einstein_branch_entry_contract_receipt": branch_entry,
         "einstein_branch_entry_receipt": branch_entry,
         "claim_tier": (
-            "OPH5_E0_THEOREM_BACKED_RUN_RECEIPTS_PASSED"
+            "E0_THEOREM_BACKED_RUN_RECEIPTS_PASSED"
             if branch_entry
-            else "OPH5_E0_THEOREM_BACKED_RUN_RECEIPTS_OPEN"
+            else "E0_THEOREM_BACKED_RUN_RECEIPTS_OPEN"
         ),
         "provenanceTags": PROVENANCE_TAGS,
         "receiptRows": receipt_rows,
@@ -215,7 +215,7 @@ def einstein_bridge_manifest_report(run_dir: Path) -> dict[str, Any]:
             "compatibilityOnly": True,
         },
         "claimBoundary": (
-            "The E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. "
+            "The E0 paper theorem discharges the recovered-core bridge premise package. "
             "The retained run sidecars are declared inputs and cannot promote a simulation "
             "receipt. Branch entry remains false until each required row has a registered "
             "producer and independent resolver. Curved-spacetime visuals remain diagnostics."

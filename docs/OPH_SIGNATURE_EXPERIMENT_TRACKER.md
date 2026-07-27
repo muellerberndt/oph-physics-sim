@@ -726,9 +726,9 @@ advance of the next data release; that is the point of the docket.
   LFU violation at 5 sigma.
 
 ### DK-18. Gallium/BEST deficit
-- OPH stance: exactly three families (MAR + matter package,
-  reality:3035); eV-scale steriles are excluded on that branch, the
-  deficit is nuclear/cross-section systematics. The sim carries a gallium
+- OPH status: three, four, and five families survive the declared finite
+  consistency window; family attachment and sterile-sector completeness are
+  open. The sim carries a gallium
   lane stub (`data/gallium/`, `oph_fpe/gallium/ga71_td.py`): populate it.
   Kill: confirmed sterile oscillation.
 
@@ -1005,7 +1005,7 @@ astrophysical scales.
 | NT-06 | Proton decay | Super-K > 2.4e34 yr (e+ pi0) | corpus: `tau_p^(gauge) = infinity`, no leptoquarks, dim-5 forbidden (compact:11576) | ANY confirmed decay kills the gauge branch; Hyper-K null is the registered outcome |
 | NT-07 | No particle dark matter | LZ/XENONnT/PandaX nulls; ADMX slices | conditional on response branch; cosmological abundance selector fork DISCLOSED (dark paper imports Omega_c baseline) | confirmed WIMP/axion halo detection kills the response interpretation of galaxy phenomenology |
 | NT-08 | No 0nubb at current sensitivity | KamLAND-Zen/GERDA m_bb < 28-122 meV | conditional on proposed rank lane (m_bb 1.5-3.7 meV) | discovery at LEGEND-1000 sensitivity kills the rank lane (and NO with m1 = 0) |
-| NT-09 | No 4th family, steriles, exotics, extra U(1) | LEP N_nu = 2.9840(82) (+1.95 sigma for 3), Higgs fits, BEST tension | MAR + matter package theorem; string selector adds no-exotics | any fourth chiral family or light exotic kills the branch |
+| NT-09 | Family count, steriles, exotics, extra U(1) | LEP N_nu = 2.9840(82) (+1.95 sigma for 3), Higgs fits, BEST tension | The exact finite matter witness does not prove family or extra-sector completeness | evidence outside a source-complete derived menu refutes only a later completeness claim |
 | NT-10 | No GW echoes / horizon reflectivity | LVK echo searches (null) | inherited GR horizon at leading order | confirmed echoes exceed the recovered structure |
 | NT-11 | Neutron EDM / theta-bar | d_n < 1.8e-26 e cm | corpus explicitly does NOT derive theta-bar (deriving:3678); THEOREM-TARGET | a theta-bar = 0 theorem banks the null; a nonzero prediction meets a 10x-tighter bound this decade |
 

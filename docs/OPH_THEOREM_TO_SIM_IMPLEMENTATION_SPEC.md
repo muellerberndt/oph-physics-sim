@@ -16,6 +16,29 @@ The simulator is not a substitute for the paper proof stack. Its role is to expo
 counterparts of the paper structures, test whether the required gates can be made concrete, and keep
 diagnostic visuals separate from physical promotions.
 
+## Three-Axiom Input Kernel
+
+`oph_fpe/core/axiom_kernel.py` is the fail-closed axiom-facing contract for
+new result producers. It accepts no inferred defaults. A valid packet carries:
+
+- the exact A1 twelve-port, thirty-edge, twenty-face boundary; typed seams and
+  triple overlaps; the observer interface surface; and source-bound,
+  degree-one, refinement-natural federation-to-support evidence;
+- the complete A2 family of accepted-data interpretation diagrams, including
+  pairwise, higher-overlap, and refinement naturality;
+- one canonical A3 optimizer type, an exact compatible reference, a finite
+  A1-generated cover whose restrictions determine the feasible family,
+  strictly positive normalized rational weights, the weighted local Umegaki
+  objective, visible-constraint factorization, mutation tests, and wrong
+  reference, wrong cover, and alternative weight controls.
+
+The audit reports whether entropy-maximization language is permitted. That
+equivalence requires identity-proportional reference densities in the
+declared trace. Optimizer pushforward, recovery, generalized entropy, gravity,
+matter-menu completeness, scalar multiplicity, and family attachment are
+separate interfaces or theorem targets. Retired economy and recovery selectors
+are rejected as input fields.
+
 ## Receipt Lanes
 
 Use these lanes consistently in reports, payloads, and documentation:
@@ -389,7 +412,7 @@ motion, or apparent attraction as a proof of gravity. Those lanes may emit diagn
 compaction, and curvature fields for rendering, but production-gravity wording is closed unless the
 E0 bridge manifest passes.
 
-`E0` names the OPH5 recovered-core Einstein bridge manifest. Generic
+`E0` names the recovered-core Einstein bridge manifest: the three axioms together with the collar-recovery, edge-normalization, and generalized-entropy interfaces the branch consumes. Generic
 finite-consensus promotion is outside this receipt. The paper-side theorem
 discharge is recorded in `einstein_bridge_manifest.json` via
 `EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT=true` and provenance tags such as

@@ -93,12 +93,12 @@ def test_capture_is_deterministic_replayable_and_has_real_local_activity() -> No
     assert source["SUPPORT_REGULATOR_STRUCTURAL_DIAGNOSTIC_RECEIPT"]
     assert source["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is False
     assert source["carrier_refinement_naturality_status"] == "NOT_EVALUATED"
-    # The all-port matching has no declared nonempty triple restriction.  It
-    # remains a valid structural federation but cannot borrow the separate
-    # incidence-nerve producer's physical/nonvacuous receipt.
-    assert source["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is False
+    # The source graph supplies its own deterministic nonempty triangle and
+    # exact triple-overlap restriction.  This receipt is independent of the
+    # still-open carrier-to-support chart realization.
+    assert source["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"] is True
     assert source["physical_federation_status"] == (
-        "STRUCTURAL_INTERFACE_ALGEBRA_AND_COCYCLE_SEWING_REALIZED"
+        "NONEMPTY_TRIPLE_OVERLAP_AND_COCYCLE_SEWING_REALIZED"
     )
     assert source["CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT"] is False
     assert source["carrier_to_support_realization_status"] == "NOT_EVALUATED"
@@ -450,10 +450,13 @@ def test_postrun_capture_is_strict_neutral_registered_source_material() -> None:
         "observer_samples": 4,
         "prediction_control": "semantic_hash_shuffle_v1",
         "feedback_enabled": True,
-        "checkpoint_interval": 3,
-        "support_refinement_level": 1,
-        "geometry_sample_count": 4,
-    }
+            "checkpoint_interval": 3,
+            "support_refinement_level": 1,
+            "geometry_sample_count": 4,
+            "geometry_transport": "legacy",
+            "observer_cross_reads": False,
+            "snapshot_coverage": "support",
+        }
     assert registration == {
         "schema": "oph.physical-source-capture.registration.v1",
         "seed": 1729,
@@ -662,15 +665,15 @@ def test_capture_keeps_constructed_p1_p3_diagnostics_fail_closed() -> None:
         capture_physical_source(SMALL_CONFIG)
     )
     p0 = preflight["stages"]["P0_source_dynamics_repair_record_observer"]
-    # The local carrier/repair/observer instrument is structurally complete
-    # while both its nonvacuous physical-federation realization and the
-    # distinct carrier-to-support bridge stay explicit NOT_EVALUATED/open
-    # fields.  A mapping fixture cannot promote either.
+    # The local carrier/repair/observer instrument and its source-graph
+    # triple-overlap realization are complete.  The distinct
+    # carrier-to-support bridge remains explicit and unevaluated, so the
+    # downstream physical and MaxEnt stages cannot be promoted.
     assert p0["passed"]
     assert p0["gate_status"] == "PASS"
     assert p0["scientific_status"] == "NOT_EVALUATED"
     assert p0["evidence"]["carrier_refinement_naturality_receipt"] is False
-    assert p0["evidence"]["physical_federation_realization_receipt"] is False
+    assert p0["evidence"]["physical_federation_realization_receipt"] is True
     assert p0["evidence"]["carrier_to_support_realization_receipt"] is False
     refinement = preflight["stages"][
         "P1_nested_refinement_and_expectations"

@@ -30,7 +30,7 @@ def synchronization_inflation_report(run_dirs: list[Path], *, w_eff: float = 1.0
             "flat_sector_selection": (
                 "Zero clock-slice spatial Levi-Civita holonomy identifies the flat FLRW branch. "
                 "Exact selection is separate direct theorem, conditional CMH theorem, or explicit "
-                "branch assumption; MAR is not used as a cosmological flatness selector."
+                "branch assumption; Axioms 1-3 do not select cosmological flatness."
             ),
             "screen_s3_defect_decay_diagnostic": (
                 "Optional finite-run repair diagnostic on the S3 screen/collar permutation defect. "

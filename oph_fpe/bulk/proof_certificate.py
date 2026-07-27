@@ -642,7 +642,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
         "E0_einstein_branch_entry_contract": _tier(
             OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_RECEIPT,
             einstein_branch_entry,
-            "E0 Einstein bridge manifest: OPH5 theorem provenance plus theorem-tagged run sidecar receipts for geometry, stress, entropy, bounded interval, small ball, remainder, timelike coverage, Lambda, Newton audit, and residual checks.",
+            "E0 Einstein bridge manifest: theorem provenance plus theorem-tagged run sidecar receipts for geometry, stress, entropy, bounded interval, small ball, remainder, timelike coverage, Lambda, Newton audit, and residual checks.",
             blockers=einstein_branch_blockers,
         ),
         "G2_production_gravity": _tier(
@@ -1100,7 +1100,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
             "provenance_tags": dict(einstein_bridge_manifest.get("provenanceTags") or {}),
             "required_receipt_files": list(einstein_bridge_manifest.get("requiredReceiptFiles") or []),
             "claim_boundary": (
-                "The E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. A concrete "
+                "The E0 paper theorem discharges the recovered-core bridge premise package. A concrete "
                 "run still needs the theorem-tagged sidecar receipts in the Einstein bridge manifest. Without "
                 "them, curved-spacetime and defect displays remain diagnostics, not production gravity."
             ),
@@ -1131,7 +1131,7 @@ def bulk_proof_certificate(run_dir: Path) -> dict[str, Any]:
                 "does not replace strict neutral observer-record reconstruction."
             ),
             "einstein_branch_entry": (
-                "The OPH5 Einstein bridge is paper-discharged by E0; the simulator keeps production gravity "
+                "The Einstein bridge premise package is paper-discharged by E0; the simulator keeps production gravity "
                 "closed until the run emits all theorem-tagged bridge sidecar receipts."
             ),
         },

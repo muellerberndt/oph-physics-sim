@@ -47,15 +47,13 @@ def test_target5_record_snapshots_span_port_space(capture: dict) -> None:
     assert float(np.linalg.eigvalsh(moment).min()) > 1.0e-12
 
 
-def test_target1_v2_design_defects_are_recorded(capture: dict) -> None:
-    # Honest frozen status: the v2 thermalization design does NOT attain the
-    # issue-573 target. Two identified defects: the transported geometry rows
-    # are not Moebius-correct (fitted rate far from one), and the framed
-    # projection of the twelve-port equilibrium is not the framed Gibbs
-    # state. Fixing both is open work under #595; this assertion must be
-    # flipped deliberately when it lands.
+def test_target1_v2_transport_is_moebius_correct(capture: dict) -> None:
+    # The held-out transported geometry has unit fitted rate. Physical
+    # promotion remains disabled because the independently reconstructed
+    # framed cap state must still pass the modular-normalization instrument.
     geometry = geometric_flow_rate(capture)
-    assert abs(geometry["rate"] - 1.0) > 0.5
+    assert abs(geometry["rate"] - 1.0) < 1.0e-12
+    assert geometry["residual"] < 1.0e-12
 
 
 def test_no_promotion_flag(capture: dict) -> None:

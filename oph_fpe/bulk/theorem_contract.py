@@ -452,7 +452,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "E0_einstein_branch_entry_umbrella": _stage(
             einstein_branch_entry,
-            "E0 OPH5 Einstein bridge dependencies and independently replayed, theorem-tagged run sidecars",
+            "E0 Einstein bridge premise package and independently replayed, theorem-tagged run sidecars",
             missing=list(
                 einstein_bridge.get("einstein_branch_entry_blockers")
                 or einstein_bridge.get("blockers")
@@ -807,7 +807,7 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
             "shared record/object population in that H3 chart. The chart-blind strict neutral quotient audit is a separate "
             "stronger certificate and is reported without being required for the observer-facing 3D "
             "theorem receipt. The Einstein branch-entry receipt is separate again: the E0 paper theorem "
-            "discharges the OPH5 bridge dependencies, but no run promotes production gravity unless the "
+            "discharges the bridge premise package, but no run promotes production gravity unless the "
             "manifest sidecar receipts for stress, entropy, bounded interval, small ball, remainder, "
             "timelike coverage, stress closure, Lambda, Newton audit, and residual checks are explicitly closed."
         ),
