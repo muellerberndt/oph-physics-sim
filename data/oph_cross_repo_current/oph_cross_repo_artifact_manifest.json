@@ -564,14 +564,14 @@
     }
   ],
   "claim_boundary": "Imported paper and particle artifacts carry theorem/frontier provenance only. They never promote a simulation receipt; local verifiers must recompute every run-specific hypothesis.",
-  "manifest_payload_sha256": "sha256:59927af5ca525db6b0800432d7794e6e3bc426d8a9f47af16cb5164ff44b0c45",
+  "manifest_payload_sha256": "sha256:50798cdbc7479c38c81a3dcda8dd3f8e9cf63b9178a814c134efd21bd9ceace6",
   "missing_required_artifacts": [],
   "paper_release_id": "r1584",
   "run_receipts_promoted_by_import": false,
   "schema": "oph_cross_repo_artifact_manifest_v2",
   "source_repository": {
     "checkout_name": "reverse-engineering-reality",
-    "commit": "dab32d46ba57f5cd37ac161aa933cf04044cbb7c",
+    "commit": "e96e4ff8a163b5227ce6454d96cbfa00d8d7f17e",
     "dirty": false,
     "untracked_file_count": 0,
     "worktree_state_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
