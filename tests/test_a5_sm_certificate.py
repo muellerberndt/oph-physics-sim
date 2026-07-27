@@ -80,7 +80,7 @@ def test_sm_adjoint_character_match_does_not_bypass_set_partition_antibridge():
     assert report["physical_promotion"]["promotion_allowed"] is False
     assert "PORT_CURRENT_INNER_RECEIPT" in report["blockers"]
     assert "PORT_REFINEMENT_INTERTWINER_RECEIPT" in report["blockers"]
-    assert "MAR_MATTER_REALIZATION_RECEIPT" in report["blockers"]
+    assert "MATTER_REALIZATION_RECEIPT" in report["blockers"]
 
 
 def test_conditional_exterior_generation_fields_and_higgs_lines_are_exact():

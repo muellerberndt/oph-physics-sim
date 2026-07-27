@@ -79,6 +79,8 @@ HISTORICAL_CAMPAIGN_RECEIPT_BYTE_SHA256 = (
 HISTORICAL_CAMPAIGN_SHA256 = REGISTERED_HISTORICAL_CAMPAIGN_SHA256
 DEFAULT_HISTORICAL_CAMPAIGN_RECEIPT = (
     Path(__file__).resolve().parents[3]
+    / "Springer"
+    / "RC7"
     / "survival-proof-4"
     / "outputs"
     / "campaign_receipt.json"

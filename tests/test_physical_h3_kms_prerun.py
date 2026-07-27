@@ -231,6 +231,9 @@ def test_strict_plan_allows_capture_but_science_is_not_evaluated() -> None:
         "checkpoint_interval": 8,
         "support_refinement_level": 5,
         "geometry_sample_count": 4,
+        "geometry_transport": "legacy",
+        "observer_cross_reads": False,
+        "snapshot_coverage": "support",
     }
     assert set(report["source_inputs"]) == SOURCE_INPUT_FIELDS
     assert report["source_inputs"] == expected_source_inputs

@@ -41,6 +41,7 @@ from oph_fpe.core.echosahedral_federation import (
     InterfaceAlgebraBinding,
     ObserverSupport,
     SeamBundle,
+    TripleOverlapBundle,
     carrier_quotient_invariance_report,
     finite_matrix_interface_algebra_schema,
     federation_sewing_report,
@@ -513,9 +514,10 @@ def _build_federation(config: Mapping[str, Any]) -> EchosahedralFederation:
     Ports 0 and 1 form alternating perfect matchings on one seeded carrier
     ordering, so their union is a Hamiltonian cycle.  Each remaining port uses
     an independently seeded perfect matching.  Thus every one of the twelve
-    ports of every (even-cardinality) carrier participates in exactly one seam,
-    while neither the support regulator nor any downstream geometry label can
-    affect source topology.
+    ports of every (even-cardinality) carrier participates in exactly one seam.
+    The lexicographically first triangle in the resulting source graph supplies
+    an explicit nonempty triple-overlap restriction. Neither the support
+    regulator nor any downstream geometry label can affect source topology.
     """
 
     count = config["carrier_count"]
@@ -575,6 +577,41 @@ def _build_federation(config: Mapping[str, Any]) -> EchosahedralFederation:
             frozenset((seam.left_carrier_id, seam.right_carrier_id)), set()
         ).add(seam.seam_id)
 
+    triple_overlaps: tuple[TripleOverlapBundle, ...] = ()
+    for left in carrier_ids:
+        for middle in sorted(item for item in adjacency[left] if item > left):
+            candidates = sorted(
+                item
+                for item in adjacency[left] & adjacency[middle]
+                if item > middle
+            )
+            if not candidates:
+                continue
+            right = candidates[0]
+            pairs = (
+                frozenset((left, middle)),
+                frozenset((middle, right)),
+                frozenset((right, left)),
+            )
+            triple_overlaps = (
+                TripleOverlapBundle(
+                    overlap_id="source-graph-triple-0000",
+                    oriented_carrier_ids=(left, middle, right),
+                    oriented_seam_ids=tuple(
+                        sorted(seam_ids_by_pair[pair])[0] for pair in pairs
+                    ),
+                    restriction_algebra_id=interface_id,
+                    restriction_algebra_sha256=algebra_hash,
+                ),
+            )
+            break
+        if triple_overlaps:
+            break
+    if not triple_overlaps:
+        raise RuntimeError(
+            "source federation has no nonempty triangle for the triple-overlap contract"
+        )
+
     width = min(config["observer_support_size"], count)
     supports: list[ObserverSupport] = []
     for observer_index in range(config["observer_count"]):
@@ -613,6 +650,7 @@ def _build_federation(config: Mapping[str, Any]) -> EchosahedralFederation:
         federation_id=f"source-all-port-federation-{count}-seed-{config['seed']}",
         carriers=carriers,
         seams=seams,
+        triple_overlaps=triple_overlaps,
         external_boundaries=(),
         observer_supports=tuple(supports),
     )
@@ -1939,6 +1977,9 @@ def _build_postrun_capture(
                 config["support_refinement_level"]
             ),
             "geometry_sample_count": int(config["geometry_sample_count"]),
+            "geometry_transport": str(config["geometry_transport"]),
+            "observer_cross_reads": bool(config["observer_cross_reads"]),
+            "snapshot_coverage": str(config["snapshot_coverage"]),
     }
     registration = {
         "schema": "oph.physical-source-capture.registration.v1",
@@ -2249,6 +2290,9 @@ def _postrun_capture_schema_blockers(capture: Mapping[str, Any]) -> list[str]:
         "checkpoint_interval",
         "support_refinement_level",
         "geometry_sample_count",
+        "geometry_transport",
+        "observer_cross_reads",
+        "snapshot_coverage",
     }:
         blockers.append("source_inputs_field_set_mismatch")
     else:
@@ -2266,6 +2310,10 @@ def _postrun_capture_schema_blockers(capture: Mapping[str, Any]) -> list[str]:
             or source_inputs["prediction_control"]
             != "semantic_hash_shuffle_v1"
             or source_inputs["feedback_enabled"] is not True
+            or source_inputs["geometry_transport"]
+            not in {"legacy", "held_out_flow"}
+            or type(source_inputs["observer_cross_reads"]) is not bool
+            or source_inputs["snapshot_coverage"] not in {"support", "spanning"}
             or any(
                 type(source_inputs[key]) is not int
                 for key in (
@@ -2571,8 +2619,8 @@ def capture_physical_source(
         ),
         "CARRIER_TO_SUPPORT_CHART_REALIZATION_RECEIPT": False,
         "physical_federation_status": (
-            "STRUCTURAL_INTERFACE_ALGEBRA_AND_COCYCLE_SEWING_REALIZED"
-            if sewing["FULL_INTERFACE_ALGEBRA_SEWING_RECEIPT"]
+            "NONEMPTY_TRIPLE_OVERLAP_AND_COCYCLE_SEWING_REALIZED"
+            if sewing["PHYSICAL_ECHOSAHEDRAL_FEDERATION_REALIZATION_RECEIPT"]
             else "BLOCKED_BY_INTERFACE_ALGEBRA_SEWING_CHECKS"
         ),
         "carrier_to_support_realization_status": "NOT_EVALUATED",

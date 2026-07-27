@@ -16,6 +16,29 @@ The simulator is not a substitute for the paper proof stack. Its role is to expo
 counterparts of the paper structures, test whether the required gates can be made concrete, and keep
 diagnostic visuals separate from physical promotions.
 
+## Three-Axiom Input Kernel
+
+`oph_fpe/core/axiom_kernel.py` is the fail-closed axiom-facing contract for
+new result producers. It accepts no inferred defaults. A valid packet carries:
+
+- the exact A1 twelve-port, thirty-edge, twenty-face boundary; typed seams and
+  triple overlaps; the observer interface surface; and source-bound,
+  degree-one, refinement-natural federation-to-support evidence;
+- the complete A2 family of accepted-data interpretation diagrams, including
+  pairwise, higher-overlap, and refinement naturality;
+- one canonical A3 optimizer type, an exact compatible reference, a finite
+  A1-generated cover whose restrictions determine the feasible family,
+  strictly positive normalized rational weights, the weighted local Umegaki
+  objective, visible-constraint factorization, mutation tests, and wrong
+  reference, wrong cover, and alternative weight controls.
+
+The audit reports whether entropy-maximization language is permitted. That
+equivalence requires identity-proportional reference densities in the
+declared trace. Optimizer pushforward, recovery, generalized entropy, gravity,
+matter-menu completeness, scalar multiplicity, and family attachment are
+separate interfaces or theorem targets. Retired economy and recovery selectors
+are rejected as input fields.
+
 ## Receipt Lanes
 
 Use these lanes consistently in reports, payloads, and documentation:

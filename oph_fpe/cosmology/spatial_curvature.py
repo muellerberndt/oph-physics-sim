@@ -260,7 +260,7 @@ def spatial_curvature_status_report(
         "selector_statement": (
             "Zero clock-slice spatial Levi-Civita holonomy identifies the flat FLRW branch. "
             "Selection of that branch is a separate direct theorem, conditional CMH theorem, "
-            "or explicit assumption; MAR and S3 screen defects do not by themselves select Omega_K=0."
+            "or explicit assumption; Axioms 1-3 and S3 screen defects do not by themselves select Omega_K=0."
         ),
         "claim_boundary": (
             "Fail-closed curvature report. The default state is OPEN_THEOREM/UNRESOLVED; exact "

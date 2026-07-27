@@ -61,7 +61,7 @@ def matscheko_proof_chain_import_report() -> dict[str, Any]:
         "physicsPromotionBlockers": [
             "G9 record-DeltaS to gravity-DeltaS calibration is open",
             "G10 full interaction-energy pricing is a named decision-layer convention",
-            "SEE, MAR, collar instantiation, BW/geometric identification, and continuum transfer remain paper hypotheses",
+            "Exact A3 reference and aggregation, collar instantiation, BW/geometric identification, and continuum transfer remain named paper premises",
         ],
         "blockers": blockers,
         "claim_boundary": (
