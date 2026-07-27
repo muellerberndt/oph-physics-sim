@@ -2822,7 +2822,7 @@ def _paper_accuracy_payload(
         {
             "id": "einstein_branch_entry",
             "payloadPath": "emergentCurvedSpacetime.einsteinBranchEntry",
-            "paperStatus": "E0 OPH5 recovered-core bridge manifest and theorem-tagged sidecar receipts",
+            "paperStatus": "E0 recovered-core bridge manifest and theorem-tagged sidecar receipts",
             "receipt": "EINSTEIN_BRANCH_ENTRY_RECEIPT",
             "passed": bool(
                 curved_receipts.get(
@@ -2831,7 +2831,7 @@ def _paper_accuracy_payload(
                 )
             ),
             "allowedClaim": (
-                "E0 branch-entry sidecar receipts have supplied the required OPH5 bridge data only if true"
+                "E0 branch-entry sidecar receipts have supplied the required bridge data only if true"
             ),
             "notAllowedClaim": (
                 "Einstein equations or production gravity as an unconditional consequence of finite consensus"
@@ -8829,7 +8829,7 @@ def _einstein_branch_entry_visualization_payload(run_dir: Path | None) -> dict[s
             ),
         },
         "claimBoundary": (
-            "E0 paper theorem discharges the OPH5 recovered-core bridge dependencies. Curved-spacetime, "
+            "E0 paper theorem discharges the recovered-core bridge premise package. Curved-spacetime, "
             "H3 object, and defect visuals remain diagnostics unless the run emits every theorem-tagged "
             "Einstein bridge sidecar receipt."
         ),

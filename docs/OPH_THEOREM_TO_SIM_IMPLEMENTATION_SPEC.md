@@ -389,7 +389,7 @@ motion, or apparent attraction as a proof of gravity. Those lanes may emit diagn
 compaction, and curvature fields for rendering, but production-gravity wording is closed unless the
 E0 bridge manifest passes.
 
-`E0` names the OPH5 recovered-core Einstein bridge manifest. Generic
+`E0` names the recovered-core Einstein bridge manifest: the three axioms together with the collar-recovery, edge-normalization, and generalized-entropy interfaces the branch consumes. Generic
 finite-consensus promotion is outside this receipt. The paper-side theorem
 discharge is recorded in `einstein_bridge_manifest.json` via
 `EINSTEIN_BRIDGE_DEPENDENCY_DISCHARGE_RECEIPT=true` and provenance tags such as
