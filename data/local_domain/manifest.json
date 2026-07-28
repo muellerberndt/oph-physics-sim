@@ -4,8 +4,12 @@
  "receipt": "stage1_receipt.json",
  "receipt_sha256": "sha256:6297697079a9f7b44c713c7d01c99dba56d17e4f054755594e7b81251e027d3e",
  "schema": "oph.local-domain-stage1.manifest.v1",
+ "source_gap_receipt": "source_gap_receipt.json",
+ "source_gap_receipt_sha256": "sha256:1432561e623913eeb0b0533e80a46df5113dc08a34ac7c34884b6019c8646179",
  "stage2_receipt": "stage2_receipt.json",
- "stage2_receipt_sha256": "sha256:b8e2a9b7bf900a799c9420b918dec3fbf663ff660da9de98a0118ad00f86384c",
+ "stage2_receipt_sha256": "sha256:8d451564597d4747a12999121c1198655c247b6277afc6bef522e012fff02ae8",
  "stage3_receipt": "stage3_receipt.json",
- "stage3_receipt_sha256": "sha256:0cd84e566e6a76da3685ee26598f5f9e887f4009240716df5e0ea420bf7db4f9"
+ "stage3_receipt_sha256": "sha256:0cd84e566e6a76da3685ee26598f5f9e887f4009240716df5e0ea420bf7db4f9",
+ "stage4_receipt": "stage4_receipt.json",
+ "stage4_receipt_sha256": "sha256:b3a2cc88bc24d3f9a9221aaf89ef324a47be7b4f6fe9e7588e634a51f16e9d7a"
 }

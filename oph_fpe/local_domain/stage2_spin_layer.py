@@ -160,9 +160,10 @@ def seam_complex(
                 triangles.append((ia, ib, ic))
     triangles = sorted(set(triangles))
 
-    port_census: dict[int, int] = {}
+    port_census: dict[str, int] = {}
     for ports in port_degree.values():
-        port_census[len(ports)] = port_census.get(len(ports), 0) + 1
+        key = str(len(ports))
+        port_census[key] = port_census.get(key, 0) + 1
 
     return {
         "node_count": len(nodes),
@@ -180,7 +181,7 @@ def seam_complex(
         "sign_consistent_component_count": bipartite_components,
         "triangle_count": len(triangles),
         "triangles": triangles,
-        "port_bound_census": dict(sorted(port_census.items())),
+        "port_bound_census": port_census,
         "port_bound_of": {
             node: len(ports) for node, ports in port_degree.items()
         },
