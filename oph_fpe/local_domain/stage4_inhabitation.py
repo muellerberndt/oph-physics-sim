@@ -64,7 +64,7 @@ CONTROL_MATRIX = {
 PRESERVATION_SQUARES = {
     "gauge_relabelling": ("stage3", "gauge_relabelling_covariant"),
     "chart_changes": ("stage1", "transitions_supported"),
-    "lift_changes": ("stage2", "lift_ambiguity_rank_identity"),
+    "lift_changes": ("stage2", "lift_ambiguity_rank_cross_checked"),
     "registered_refinements": ("stage3", "refinement_naturality_exact"),
 }
 

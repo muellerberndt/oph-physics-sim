@@ -857,10 +857,14 @@ def produce_stage1_receipt(
             "Finite issue-634 stage-1 object: the source event complex with "
             "an exact causal-order certificate, the issue-575 held-out "
             "signature verdict, and a chart atlas over observer visibility "
-            "neighborhoods with measured transition, cocycle, orientation, "
-            "and time-orientation certificates. The cone margin is recorded "
-            "under issue-595 ownership. No open-chart topology, continuum "
-            "limit, physical metric, or physical promotion is claimed."
+            "neighborhoods whose transition, cocycle, orientation, and "
+            "time-orientation certificates are wiring certificates of the "
+            "restriction frames, exact by construction and guarded by the "
+            "coordinate-flip control. Per-chart held-out fits are recorded "
+            "ungated; one of the six charts records local inertia (0, 4). "
+            "The cone margin is recorded under issue-595 ownership. No "
+            "open-chart topology, continuum limit, physical metric, or "
+            "physical promotion is claimed."
         ),
     }
 

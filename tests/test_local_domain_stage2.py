@@ -74,17 +74,17 @@ def test_holonomy_census_from_edge_signs():
     assert not census["all_triangles_frustrated"]
 
 
-def test_lift_ambiguity_rank_identity():
+def test_lift_ambiguity_rank_cross_checked():
     square = [_row(0, 0, 1), _row(1, 1, 2), _row(2, 2, 3), _row(3, 0, 3)]
     ambiguity = lift_ambiguity(seam_complex(square))
     assert ambiguity["lift_ambiguity_rank"] == 1
-    assert ambiguity["rank_identity_holds"]
+    assert ambiguity["rank_cross_checked"]
 
     filled = [_row(0, 0, 1), _row(1, 1, 2), _row(2, 0, 2)]
     ambiguity = lift_ambiguity(seam_complex(filled))
     assert ambiguity["triangle_boundary_rank"] == 1
     assert ambiguity["lift_ambiguity_rank"] == 0
-    assert ambiguity["rank_identity_holds"]
+    assert ambiguity["rank_cross_checked"]
 
 
 def test_atlas_frame_layer_on_frozen_stage1():
@@ -95,7 +95,7 @@ def test_atlas_frame_layer_on_frozen_stage1():
     assert layer["transition_determinants_positive"]
     assert layer["sign_lift_solvable"]
     assert layer["nerve_lift_ambiguity_rank"] == 0
-    assert layer["nerve_rank_identity_holds"]
+    assert layer["nerve_rank_cross_checked"]
 
 
 def test_frozen_stage2_receipt_binding():
@@ -115,7 +115,7 @@ def test_frozen_stage2_receipt_binding():
     assert all(receipt["clause_verdicts"].values())
     assert receipt["stage1_binding"]["same_source"] is True
     assert receipt["seam_layer"]["holonomy_census"]["all_triangles_frustrated"]
-    assert receipt["seam_layer"]["lift_ambiguity"]["rank_identity_holds"]
+    assert receipt["seam_layer"]["lift_ambiguity"]["rank_cross_checked"]
     assert receipt["controls_fail_closed"] is True
     stage1 = json.loads(
         (DATA_DIR / "stage1_receipt.json").read_text(encoding="utf-8")

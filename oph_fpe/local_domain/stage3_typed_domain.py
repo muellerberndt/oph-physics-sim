@@ -29,8 +29,9 @@ typing clause verified by exact integer arithmetic:
   rank D = V minus the number of sign-consistent components.
 * The boundary is typed from the source: carriers with unbound ports
   form the spatial boundary, the depth-extremal event slices form the
-  temporal boundary, and the Dirichlet restriction identities are
-  exact.
+  temporal boundary, and the Dirichlet layer is a typed restriction
+  rule with a nonempty-interior gate; its identities restate the rule
+  and carry no independent check beyond that gate.
 
 Controls: a nonlocal operator refused by the locality gate, a
 perturbed adjoint refused by the adjoint identity, a broken regauge
@@ -390,6 +391,12 @@ def kinetic_kernel_certificate(
         "component_count": len(components),
         "sign_consistent_component_count": consistent_count,
         "witnesses_annihilated": bool(witness_annihilated),
+        "witness_check_scope": (
+            f"{sum(1 for c in components if c['consistent'])} consistent "
+            f"component witnesses evaluated; on a fully frustrated domain "
+            "the kernel-zero direction rests on the rank theorem, not on "
+            "this loop"
+        ),
         "twisted_kernel_dimension": kernel_dimension,
         "signed_incidence_rank": rank,
         "rank_identity": (
@@ -758,6 +765,7 @@ def produce_stage3_receipt(
                 "component_count",
                 "sign_consistent_component_count",
                 "witnesses_annihilated",
+                "witness_check_scope",
                 "twisted_kernel_dimension",
                 "signed_incidence_rank",
                 "rank_identity",

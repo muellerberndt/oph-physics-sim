@@ -2,14 +2,14 @@
  "arrays": "stage1_arrays.npz.gz",
  "arrays_sha256": "sha256:b366eea6cd291ca2b87e3dbdf7cc05dc935d229ee405ff4361cef25994e4f3ff",
  "receipt": "stage1_receipt.json",
- "receipt_sha256": "sha256:6297697079a9f7b44c713c7d01c99dba56d17e4f054755594e7b81251e027d3e",
+ "receipt_sha256": "sha256:84476f6c097603f9e720c36fe8d3692033d29f056b71c44b6a8b17825decb3cf",
  "schema": "oph.local-domain-stage1.manifest.v1",
  "source_gap_receipt": "source_gap_receipt.json",
- "source_gap_receipt_sha256": "sha256:1432561e623913eeb0b0533e80a46df5113dc08a34ac7c34884b6019c8646179",
+ "source_gap_receipt_sha256": "sha256:90501a2e561bd87c6238ad12e68349d0d830f14b1ee2228635ef71d09aa8aeeb",
  "stage2_receipt": "stage2_receipt.json",
- "stage2_receipt_sha256": "sha256:8d451564597d4747a12999121c1198655c247b6277afc6bef522e012fff02ae8",
+ "stage2_receipt_sha256": "sha256:c448811f491ea20c64586d6acd69810e6f2ae306553718c7a9fdde21655982ff",
  "stage3_receipt": "stage3_receipt.json",
- "stage3_receipt_sha256": "sha256:0cd84e566e6a76da3685ee26598f5f9e887f4009240716df5e0ea420bf7db4f9",
+ "stage3_receipt_sha256": "sha256:f793550497e3e5ee8299aa29c82b20a7b01a113863b09ed3f944424855579167",
  "stage4_receipt": "stage4_receipt.json",
- "stage4_receipt_sha256": "sha256:b3a2cc88bc24d3f9a9221aaf89ef324a47be7b4f6fe9e7588e634a51f16e9d7a"
+ "stage4_receipt_sha256": "sha256:0fe6a93fd3b7b38f774d093eed40bab31f2b14aafd1d363dbc63a0fcac6d036c"
 }

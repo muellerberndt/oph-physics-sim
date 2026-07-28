@@ -5,19 +5,20 @@ sign algebra rather than fitted geometry.  Every seam in the capture
 declares the orientation-reversing gluing convention: single-port
 seams with orientation sign minus one and one shared interface
 algebra.  Stage 2 verifies that declaration fail-closed and computes,
-over GF(2), the transport structure it induces on the event-touched
-seam subcomplex:
+over GF(2), the transport structure it induces on the observer-visible
+seam complex, the seams visible to at least one observer; the sparser
+event-footprint subcomplex is a recorded census only:
 
-* the seam graph on touched carriers with its multiplicity, port-degree,
+* the seam graph on visible carriers with its multiplicity, port-degree,
   component, and triangle census;
 * the cycle holonomy rule of the declared convention, minus one to the
   cycle length, with the per-triangle holonomy census verified exactly;
 * the orientability verdict of the sign transport, bipartiteness per
   component, cross-checked against triangle existence;
 * the lift-ambiguity rank, the GF(2) dimension of the first cohomology
-  of the clique two-complex, with the rank identity verified, and the
-  ambiguity count two to that rank in the convention of the
-  spin-statistics instrument;
+  of the clique two-complex, computed by two eliminations over distinct
+  matrices with an agreement clause, and the ambiguity count two to
+  that rank in the convention of the spin-statistics instrument;
 * the chart-frame layer of the stage-1 atlas: transition determinant
   signs, the sign-lift solvability on the nerve, and the nerve
   cohomology rank.
@@ -243,10 +244,17 @@ def _gf2_rank(rows: list[int]) -> int:
 
 
 def lift_ambiguity(complex_data: Mapping[str, Any]) -> dict[str, Any]:
-    """GF(2) first-cohomology rank of the clique two-complex.
+    """GF(2) first-cohomology rank of the clique two-complex, two ways.
 
-    The rank identity b1 = E - V + C - rank(boundary two) is computed
-    from one elimination and re-verified through the cocycle kernel."""
+    The rank is computed by two eliminations over distinct matrices:
+    the edge-space triangle boundary matrix, and the same boundaries
+    projected onto fundamental-cycle coordinates over a spanning
+    forest, where a cycle equals the sum of the fundamental cycles of
+    its non-tree edges.  The cross-check clause requires the two
+    resulting ranks to agree; corrupting either computation, the
+    triangle enumeration, or the component count breaks the agreement.
+    The defining relation b1 = E - V + C - rank(boundary) is recorded
+    as a definition, not as a check."""
 
     edges = complex_data["edges"]
     node_of = {v: i for i, v in enumerate(complex_data["nodes"])}
@@ -267,17 +275,58 @@ def lift_ambiguity(complex_data: Mapping[str, Any]) -> dict[str, Any]:
         + complex_data["component_count"]
         - triangle_rank
     )
-    cocycle_rank = edge_count - triangle_rank
-    cut_rank = complex_data["node_count"] - complex_data["component_count"]
-    identity_holds = bool(b1 == cocycle_rank - cut_rank and b1 >= 0)
+
+    parent = {v: v for v in complex_data["nodes"]}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    nontree_coord: dict[tuple[int, int], int] = {}
+    for a, b in edges:
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            nontree_coord[(a, b)] = len(nontree_coord)
+        else:
+            parent[ra] = rb
+    forest_components = len({find(v) for v in complex_data["nodes"]})
+    cycle_rows: list[int] = []
+    for a, b, c in complex_data["triangles"]:
+        mask = 0
+        for u, v in ((a, b), (a, c), (b, c)):
+            key = (complex_data["nodes"][u], complex_data["nodes"][v])
+            key = (min(key), max(key))
+            if key in nontree_coord:
+                mask |= 1 << nontree_coord[key]
+        cycle_rows.append(mask)
+    cycle_space_dimension = len(nontree_coord)
+    projected_rank = _gf2_rank(cycle_rows)
+    b1_cycle_route = cycle_space_dimension - projected_rank
+    cross_checked = bool(
+        b1 == b1_cycle_route
+        and triangle_rank == projected_rank
+        and cycle_space_dimension
+        == edge_count
+        - complex_data["node_count"]
+        + forest_components
+        and forest_components == complex_data["component_count"]
+    )
     return {
         "edge_count": edge_count,
         "vertex_count": complex_data["node_count"],
         "component_count": complex_data["component_count"],
         "triangle_boundary_rank": triangle_rank,
+        "cycle_space_dimension": cycle_space_dimension,
+        "cycle_route_projected_rank": projected_rank,
         "lift_ambiguity_rank": int(b1),
         "ambiguity_count_log2": int(b1),
-        "rank_identity_holds": identity_holds,
+        "rank_definition": (
+            "b1 equals edges minus vertices plus components minus the "
+            "triangle boundary rank, by definition"
+        ),
+        "rank_cross_checked": cross_checked,
     }
 
 
@@ -332,7 +381,7 @@ def atlas_frame_layer(stage1_receipt: Mapping[str, Any]) -> dict[str, Any]:
         "transition_determinants_positive": bool(all_positive),
         "sign_lift_solvable": bool(orientation.get("orientable")),
         "nerve_lift_ambiguity_rank": ambiguity["lift_ambiguity_rank"],
-        "nerve_rank_identity_holds": ambiguity["rank_identity_holds"],
+        "nerve_rank_cross_checked": ambiguity["rank_cross_checked"],
     }
 
 
@@ -519,7 +568,7 @@ def produce_stage2_receipt(
         controls["bipartite_countermodel"] = {
             "control_failure_detected": bool(
                 square_ambiguity["lift_ambiguity_rank"] == 1
-                and square_ambiguity["rank_identity_holds"]
+                and square_ambiguity["rank_cross_checked"]
             ),
             "note": (
                 "the four-cycle with no triangles carries ambiguity rank "
@@ -573,12 +622,12 @@ def produce_stage2_receipt(
         "orientability_cross_check": layer["orientability"][
             "triangle_consistency_holds"
         ],
-        "lift_ambiguity_rank_identity": layer["lift_ambiguity"][
-            "rank_identity_holds"
+        "lift_ambiguity_rank_cross_checked": layer["lift_ambiguity"][
+            "rank_cross_checked"
         ],
         "atlas_frame_lift_recorded": bool(
             frame_layer is not None
-            and frame_layer["nerve_rank_identity_holds"]
+            and frame_layer["nerve_rank_cross_checked"]
         ),
         "scale_ladder_recorded": scale_ladder["verdict_stable_across_scales"],
     }
@@ -611,7 +660,7 @@ def produce_stage2_receipt(
             "Finite issue-634 stage-2 object: the declared "
             "orientation-reversing seam convention verified fail-closed, and "
             "the exact GF(2) transport structure it induces on the "
-            "event-touched seam subcomplex: triangle holonomy census, "
+            "observer-visible seam complex: triangle holonomy census, "
             "orientability verdict, lift-ambiguity rank with the verified "
             "rank identity, and the stage-1 chart-frame sign-lift layer. "
             "The identification with continuum Stiefel-Whitney classes is a "
