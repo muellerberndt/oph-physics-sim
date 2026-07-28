@@ -181,6 +181,9 @@ def seam_complex(
         "triangle_count": len(triangles),
         "triangles": triangles,
         "port_bound_census": dict(sorted(port_census.items())),
+        "port_bound_of": {
+            node: len(ports) for node, ports in port_degree.items()
+        },
         "complex_freeze_sha256": _sha256_value(
             {"nodes": nodes, "edges": sorted(edge_rows)}
         ),
