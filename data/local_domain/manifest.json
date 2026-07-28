@@ -1,0 +1,7 @@
+{
+ "arrays": "stage1_arrays.npz.gz",
+ "arrays_sha256": "sha256:b366eea6cd291ca2b87e3dbdf7cc05dc935d229ee405ff4361cef25994e4f3ff",
+ "receipt": "stage1_receipt.json",
+ "receipt_sha256": "sha256:6297697079a9f7b44c713c7d01c99dba56d17e4f054755594e7b81251e027d3e",
+ "schema": "oph.local-domain-stage1.manifest.v1"
+}
