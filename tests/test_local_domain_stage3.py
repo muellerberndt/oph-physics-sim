@@ -71,11 +71,26 @@ def test_kinetic_kernel_matches_sign_structure():
     assert frustrated["sign_consistent_component_count"] == 0
     assert frustrated["twisted_kernel_dimension"] == 0
     assert frustrated["witnesses_annihilated"]
+    assert frustrated["frustrated_component_witnesses_verified"]
+    assert frustrated["rank_theorem"]["applied"]
+    negative_cycle = frustrated["component_certificates"][0][
+        "negative_cycle_witness"
+    ]
+    assert negative_cycle["negative"]
+    assert negative_cycle["sign_product"] == -1
+    assert negative_cycle["nodes"][0] == negative_cycle["nodes"][-1]
+    assert len(negative_cycle["edge_signs"]) == len(
+        negative_cycle["nodes"]
+    ) - 1
 
     consistent = kinetic_kernel_certificate(_square_complex())
     assert consistent["sign_consistent_component_count"] == 1
     assert consistent["twisted_kernel_dimension"] == 1
     assert consistent["witnesses_annihilated"]
+    assert consistent["rank_theorem"]["applied"]
+    assert consistent["component_certificates"][0][
+        "negative_cycle_witness"
+    ] is None
 
 
 def test_gauge_covariance_exact():
@@ -136,7 +151,19 @@ def test_frozen_stage3_receipt_binding():
     stage1 = json.loads(
         (DATA_DIR / "stage1_receipt.json").read_text(encoding="utf-8")
     )
-    assert receipt["capture_sha256"] == stage1["capture_sha256"]
+    assert receipt["source_projection_sha256"] == stage1[
+        "source_projection_sha256"
+    ]
     kernel = receipt["kinetic_kernel_certificate"]
     assert kernel["matches_stage2"] is True
     assert kernel["twisted_kernel_dimension"] == 0
+    assert kernel["rank_theorem"]["applied"] is True
+    assert kernel["frustrated_component_witnesses_verified"] is True
+    assert all(
+        row["consistent"]
+        or (
+            row["negative_cycle_witness"]["negative"]
+            and row["negative_cycle_witness"]["sign_product"] == -1
+        )
+        for row in kernel["component_certificates"]
+    )

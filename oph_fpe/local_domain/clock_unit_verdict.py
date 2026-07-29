@@ -1,48 +1,43 @@
-"""Issue-633 closure certificate: unit non-identifiability on the domain.
+"""Issue-633 finite-interface audit: no physical unit mount is emitted.
 
-The clock lane closes with a source energy interval bound to the SI
-chart or with a complete non-identifiability theorem and the explicit
-verdict that physical units are not evaluable.  The declared domain of
-the lane is the issue-634 local event and Hamiltonian typing, and that
-domain is closed and final, so the negative branch is decidable.  This
-certificate proves it in three exact parts, each fail-closed:
+The declared serialized issue-634 interface contains a positive
+dimensionless gap and no physical unit mount.  This certificate checks
+that bounded statement in three fail-closed parts:
 
-* Exhaustive emitted-quantity classification.  Every numeric leaf of
-  every frozen local-domain receipt is walked and classified: integer
-  counts, hash strings, booleans and verdicts, and dimensionless reals
-  (coordinates of fitted forms, margins, gaps, residuals, rank data).
-  Unit semantics attach through keys in the canonical receipt format,
-  and no key carries unit vocabulary, so the complete emitted
-  interface of the declared domain is dimensionless.
-* Two-completion experiment.  The gap producer is executed twice
-  under two distinct SI attachments placed in a reachable environment
-  channel, and the emitted payloads are byte-identical, a falsifiable
-  measurement that the SI chart is a free coordinate of the
-  completion; a producer reading the channel is shown to be detected
-  by the same comparison.  This is the same-antecedent countermodel
-  form of the negative exit, not a failed clock candidate.
-* Input closure.  The local-domain producer sources are scanned for SI
-  vocabulary and measured-constant imports; none is present, and the
-  capture configuration allowlist carries no unit key, so no unit
-  datum has source ancestry.
+* Every numeric leaf of the listed frozen receipts is classified and
+  every key is scanned for declared unit vocabulary.  This is a schema
+  audit; an unlabeled real is not declared dimensionless merely because
+  its key lacks a unit suffix.
+* The sector producer is run under two values of a named environment
+  channel.  Two attained, byte-identical outputs show that this producer
+  does not read that channel.  They do not constitute a mathematical
+  two-completion theorem.
+* The explicitly listed producer modules are scanned for a declared set
+  of SI tokens, and the capture configuration allowlist is checked for
+  unit keys.  This is a bounded lexical scan, not a transitive dependency
+  closure proof.
 
-The positive first clause of the lane is retained: the issue-633 gap
-receipt carries the source Hamiltonian with its exactly positive
-dimensionless gap.  What the declared domain cannot do is select a
-physical reference transition, so the certificate emits
-PHYSICAL_UNITS_NOT_EVALUABLE for the declared domain.  A completion
-that adds physical fiber content is a different domain owned by the
-family and scalar lanes; under the declared domain this verdict is
-complete.  No physical promotion follows from any output.
+The positive finite clause is retained: the source Hamiltonian has an
+exactly positive dimensionless gap.  The receipt emits
+PHYSICAL_UNITS_NOT_EVALUABLE_ON_DECLARED_SERIALIZED_INTERFACE.  It does
+not prove that every extension of A1--A3 lacks a physical clock or that
+a future matter or measurement producer cannot supply one.  No physical
+promotion follows from any output.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+import os
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
+
+from oph_fpe.local_domain.receipt_io import (
+    load_manifest_pinned_receipt,
+    manifest_pinned_artifact_sha256,
+)
 
 SCHEMA = "oph.local-domain-clock-unit-verdict.v1"
 ISSUE = 633
@@ -108,15 +103,15 @@ def classify_leaf(key_path: str, value: Any) -> str:
     if value is None:
         return "null"
     if isinstance(value, bool):
-        return "boolean_verdict"
+        return "boolean_leaf"
     if isinstance(value, int):
-        return "integer_count"
+        return "integer_leaf"
     if isinstance(value, float):
-        return "dimensionless_real"
+        return "float_leaf"
     if isinstance(value, str):
         if value.startswith("sha256:"):
-            return "hash"
-        return "text"
+            return "sha256_string"
+        return "string_leaf"
     raise TypeError(f"unclassifiable leaf at {key_path}: {type(value)}")
 
 
@@ -187,7 +182,7 @@ def classify_array_artifact(path: Path) -> dict[str, Any]:
 
 
 def interface_classification() -> dict[str, Any]:
-    """Exhaustive classification of every frozen domain artifact.
+    """Classify the explicitly declared frozen finite interface.
 
     Each walked receipt is first pinned against the manifest hash, so
     the classification is of the certified bytes rather than whatever
@@ -195,11 +190,24 @@ def interface_classification() -> dict[str, Any]:
     receipts."""
 
     manifest_path = DATA_DIR / "manifest.json"
-    manifest = (
-        json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest_path.exists()
-        else {}
-    )
+    invalid_artifacts: list[str] = []
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(
+                manifest_path.read_text(encoding="utf-8")
+            )
+            if not isinstance(manifest, Mapping):
+                raise TypeError("manifest must be an object")
+        except (
+            OSError,
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+            TypeError,
+        ):
+            manifest = {}
+            invalid_artifacts.append(manifest_path.name)
+    else:
+        manifest = {}
     manifest_key_of = {
         "stage1_receipt.json": "receipt_sha256",
         "stage2_receipt.json": "stage2_receipt_sha256",
@@ -210,10 +218,27 @@ def interface_classification() -> dict[str, Any]:
         "matter_attachment_receipt.json": "matter_attachment_receipt_sha256",
     }
     per_receipt = {}
+    artifact_sha256: dict[str, str] = {}
     total_census: dict[str, int] = {}
     all_hits: list[str] = []
     missing: list[str] = []
     pin_failures: list[str] = []
+    schema_failures: list[str] = []
+    expected_identity = {
+        "stage1_receipt.json": ("oph.local-domain-stage1.v1", 634),
+        "stage2_receipt.json": ("oph.local-domain-stage2.v1", 634),
+        "stage3_receipt.json": ("oph.local-domain-stage3.v1", 634),
+        "stage4_receipt.json": ("oph.local-domain-stage4.v1", 634),
+        "source_gap_receipt.json": ("oph.source-clock-gap.v1", 633),
+        "defect_sector_receipt.json": (
+            "oph.local-domain-defect-sector-spectra.v1",
+            311,
+        ),
+        "matter_attachment_receipt.json": (
+            "oph.local-domain-matter-attachment.v1",
+            569,
+        ),
+    }
     for name in RECEIPT_FILES:
         path = DATA_DIR / name
         if not path.exists():
@@ -224,7 +249,22 @@ def interface_classification() -> dict[str, Any]:
         if expected != _sha256_bytes(raw):
             pin_failures.append(name)
             continue
-        payload = json.loads(raw.decode("utf-8"))
+        artifact_sha256[name] = _sha256_bytes(raw)
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+            if not isinstance(payload, Mapping):
+                raise TypeError("receipt must be an object")
+        except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
+            invalid_artifacts.append(name)
+            continue
+        expected_schema, expected_issue = expected_identity[name]
+        if (
+            payload.get("schema") != expected_schema
+            or payload.get("issue") != expected_issue
+            or payload.get("physical_promotion_allowed") is not False
+        ):
+            schema_failures.append(name)
+            continue
         census, hits = walk_interface(payload, name)
         per_receipt[name] = {
             "leaf_census": census,
@@ -236,23 +276,44 @@ def interface_classification() -> dict[str, Any]:
 
     array_path = DATA_DIR / "stage1_arrays.npz.gz"
     if array_path.exists():
-        array_report = classify_array_artifact(array_path)
-        if manifest.get("arrays_sha256") != array_report["sha256"]:
+        array_raw = array_path.read_bytes()
+        if manifest.get("arrays_sha256") != _sha256_bytes(array_raw):
             pin_failures.append(array_path.name)
-        all_hits.extend(array_report["unit_vocabulary_hits"])
+            array_report = None
+        else:
+            artifact_sha256[array_path.name] = _sha256_bytes(array_raw)
+            try:
+                array_report = classify_array_artifact(array_path)
+            except (OSError, ValueError, EOFError):
+                invalid_artifacts.append(array_path.name)
+                array_report = None
+            if array_report is not None:
+                all_hits.extend(array_report["unit_vocabulary_hits"])
     else:
         array_report = None
         missing.append(array_path.name)
 
     return {
         "receipts_walked": sorted(per_receipt),
+        "artifact_sha256": dict(sorted(artifact_sha256.items())),
         "missing_receipts": missing,
         "manifest_pin_failures": pin_failures,
+        "schema_failures": schema_failures,
+        "invalid_artifacts": sorted(set(invalid_artifacts)),
         "total_leaf_census": dict(sorted(total_census.items())),
         "array_artifact": array_report,
         "unit_vocabulary_hits": all_hits[:16],
-        "interface_dimensionless": bool(
-            not all_hits and not missing and not pin_failures
+        "no_unit_labeled_field": bool(
+            not all_hits
+            and not missing
+            and not pin_failures
+            and not invalid_artifacts
+            and not schema_failures
+        ),
+        "scope": (
+            "the explicitly listed serialized receipts and stage-1 array "
+            "bundle; absence of a unit-labeled key does not type an "
+            "arbitrary unlabeled value"
         ),
     }
 
@@ -260,60 +321,76 @@ def interface_classification() -> dict[str, Any]:
 SI_ATTACHMENT_CHANNEL = "OPH_SI_UNIT_ATTACHMENT"
 
 
-def two_completion_experiment() -> dict[str, Any]:
-    """Two producer runs under distinct reachable SI attachments.
+def _call_with_temporary_attachment(
+    producer: Callable[[], Any], attachment: str
+) -> Any:
+    """Run one producer while preserving the caller's environment."""
+
+    existed = SI_ATTACHMENT_CHANNEL in os.environ
+    previous = os.environ.get(SI_ATTACHMENT_CHANNEL)
+    os.environ[SI_ATTACHMENT_CHANNEL] = attachment
+    try:
+        return producer()
+    finally:
+        if existed:
+            assert previous is not None
+            os.environ[SI_ATTACHMENT_CHANNEL] = previous
+        else:
+            os.environ.pop(SI_ATTACHMENT_CHANNEL, None)
+
+
+def producer_channel_nonuse_experiment() -> dict[str, Any]:
+    """Two producer runs under distinct named SI channel values.
 
     The attachment is placed in the process environment, a channel any
-    unit-mounting producer could read, and the issue-633 gap producer
+    unit-mounting producer could read, and the finite sector producer
     is executed once under each attachment.  The two emitted payloads
-    are canonicalized and compared byte-level; a producer that read
-    the attachment would emit different bytes, so equality is a
-    falsifiable measurement that the SI chart is a free coordinate of
-    the completion, unconstrained by any domain quantity."""
-
-    import os
+    are canonicalized and compared byte-level.  Equality of two attained
+    runs shows only that this producer does not read this named channel."""
 
     from oph_fpe.local_domain.defect_sector_spectra import (
         produce_defect_sector_receipt,
     )
 
     outputs = {}
+    verdicts = {}
     for label, attachment in (("one", "9192631770"), ("two", "2")):
-        os.environ[SI_ATTACHMENT_CHANNEL] = attachment
-        try:
-            payload = produce_defect_sector_receipt()
-        finally:
-            os.environ.pop(SI_ATTACHMENT_CHANNEL, None)
+        payload = _call_with_temporary_attachment(
+            produce_defect_sector_receipt, attachment
+        )
         outputs[label] = _sha256_bytes(
             _canonical_json(payload).encode("utf-8")
         )
-    identical = bool(outputs["one"] == outputs["two"])
+        verdicts[label] = payload.get("verdict")
+    producer_attained = all(
+        verdict == "ATTAINED" for verdict in verdicts.values()
+    )
+    identical = bool(outputs["one"] == outputs["two"] and producer_attained)
     return {
         "completion_count": 2,
         "attachment_channel": SI_ATTACHMENT_CHANNEL,
         "attachments": {"one": "9192631770", "two": "2"},
         "producer_rerun": "produce_defect_sector_receipt",
         "payload_hashes": outputs,
+        "producer_verdicts": verdicts,
+        "both_producer_runs_attained": producer_attained,
         "domain_restrictions_identical": identical,
         "witness_holds": identical,
         "form": (
-            "measured same-antecedent completions: the producer runs "
-            "under two distinct reachable SI attachments and emits "
-            "identical bytes"
+            "bounded implementation check: two attained producer runs "
+            "under distinct values of the named SI channel emit identical "
+            "bytes"
         ),
     }
 
 
-def unit_reading_probe(attachment: str) -> dict[str, Any]:
+def unit_reading_probe() -> dict[str, Any]:
     """A producer that reads the attachment channel, for the control."""
 
-    import os
-
-    return {"probe_payload": os.environ.get(SI_ATTACHMENT_CHANNEL, ""),
-            "echo": attachment}
+    return {"probe_payload": os.environ.get(SI_ATTACHMENT_CHANNEL, "")}
 
 
-TRANSITIVE_PRODUCER_MODULES = (
+DECLARED_SUPPORTING_MODULES = (
     "bulk/physical_h3_kms_source_capture.py",
     "bulk/event_manifold_producer.py",
     "core/charged_response.py",
@@ -323,13 +400,12 @@ TRANSITIVE_PRODUCER_MODULES = (
 
 
 def source_input_closure() -> dict[str, Any]:
-    """Scan the producer sources for SI vocabulary and constants.
+    """Scan a declared source list for SI vocabulary and constants.
 
-    The scan covers the local-domain producers and the transitive
-    modules they import to generate the data: the capture module, the
-    reconstruction instrument, and the response, pole-residue, and
-    spin producers.  The capture configuration allowlist is checked
-    against the unit vocabulary explicitly."""
+    The scan covers the local-domain producers and explicitly listed
+    supporting modules.  It is not a computed transitive import closure.
+    The capture configuration allowlist is checked against the unit
+    vocabulary explicitly."""
 
     package_root = MODULE_DIR.parent
     scanned = {}
@@ -339,7 +415,7 @@ def source_input_closure() -> dict[str, Any]:
         path
         for path in sorted(MODULE_DIR.glob("*.py"))
         if path.name != own_name
-    ] + [package_root / rel for rel in TRANSITIVE_PRODUCER_MODULES]
+    ] + [package_root / rel for rel in DECLARED_SUPPORTING_MODULES]
     for path in paths:
         text = path.read_text(encoding="utf-8").lower()
         file_hits = [
@@ -378,19 +454,164 @@ def source_input_closure() -> dict[str, Any]:
         "si_token_hits": hits[:8],
         "capture_allowlist_unit_hits": allowlist_hits,
         "main_config_within_allowlist": config_within_allowlist,
-        "closed": bool(
+        "bounded_scan_clean": bool(
             not hits and not allowlist_hits and config_within_allowlist
         ),
+        "scope": (
+            "declared module and token lists; not a proof over the "
+            "transitive Python dependency graph"
+        ),
+    }
+
+
+def _load_pinned_gap_receipt() -> dict[str, Any] | None:
+    """Load the finite gap receipt only when its manifest pin matches."""
+
+    return load_manifest_pinned_receipt(
+        DATA_DIR,
+        "source_gap_receipt.json",
+        "source_gap_receipt_sha256",
+    )
+
+
+def positive_gap_binding(
+    gap_receipt: Mapping[str, Any] | None,
+    bundle_resolution: Mapping[str, Any],
+) -> dict[str, bool]:
+    """Bind the retained positive gap to the resolved finite domain."""
+
+    present = gap_receipt is not None
+    schema_valid = bool(
+        present
+        and gap_receipt.get("schema") == "oph.source-clock-gap.v1"
+        and gap_receipt.get("issue") == 633
+        and gap_receipt.get("physical_promotion_allowed") is False
+    )
+    exact_gap = gap_receipt.get("exact_gap", {}) if present else {}
+    attained = bool(
+        schema_valid
+        and gap_receipt.get("verdict") == "ATTAINED"
+        and isinstance(exact_gap, Mapping)
+        and exact_gap.get("positive")
+    )
+    same_source = bool(
+        present
+        and gap_receipt.get("source_projection_sha256")
+        == bundle_resolution.get("source_projection_sha256")
+    )
+    same_domain = bool(
+        present
+        and gap_receipt.get("domain_freeze_sha256")
+        == bundle_resolution.get("domain_freeze_sha256")
+    )
+    return {
+        "receipt_present_and_pinned": present,
+        "receipt_schema_valid": schema_valid,
+        "receipt_attained_with_positive_gap": attained,
+        "same_source_projection": same_source,
+        "same_domain_freeze": same_domain,
+        "retained": bool(attained and same_source and same_domain),
+    }
+
+
+def source_gap_proof_binding(
+    gap_receipt: Mapping[str, Any] | None,
+    receipt_sha256: str | None,
+) -> dict[str, Any]:
+    """Project the exact finite-gap proof into a portable parent binding."""
+
+    kernel = (
+        gap_receipt.get("kernel_certificate", {})
+        if isinstance(gap_receipt, Mapping)
+        else {}
+    )
+    rows = (
+        kernel.get("component_certificates", [])
+        if isinstance(kernel, Mapping)
+        else []
+    )
+    rows_valid = isinstance(rows, list)
+    negative_rows = (
+        [row for row in rows if isinstance(row, Mapping) and not row.get("consistent")]
+        if rows_valid
+        else []
+    )
+    witnesses_valid = bool(
+        rows_valid
+        and all(
+            isinstance(row.get("negative_cycle_witness"), Mapping)
+            and row["negative_cycle_witness"].get("negative") is True
+            and row["negative_cycle_witness"].get("sign_product") == -1
+            for row in negative_rows
+        )
+    )
+    frustrated_count = (
+        kernel.get("frustrated_component_count")
+        if isinstance(kernel, Mapping)
+        else None
+    )
+    rank_theorem = (
+        kernel.get("rank_theorem", {})
+        if isinstance(kernel, Mapping)
+        else {}
+    )
+    exact_gap = (
+        gap_receipt.get("exact_gap", {})
+        if isinstance(gap_receipt, Mapping)
+        else {}
+    )
+    proof_complete = bool(
+        receipt_sha256 is not None
+        and isinstance(exact_gap, Mapping)
+        and exact_gap.get("positive") is True
+        and isinstance(kernel, Mapping)
+        and kernel.get("twisted_kernel_dimension") == 0
+        and kernel.get("frustrated_component_witnesses_verified") is True
+        and isinstance(rank_theorem, Mapping)
+        and rank_theorem.get("applied") is True
+        and isinstance(frustrated_count, int)
+        and frustrated_count == len(negative_rows)
+        and witnesses_valid
+    )
+    return {
+        "source_gap_receipt_sha256": receipt_sha256,
+        "source_projection_sha256": (
+            gap_receipt.get("source_projection_sha256")
+            if isinstance(gap_receipt, Mapping)
+            else None
+        ),
+        "domain_freeze_sha256": (
+            gap_receipt.get("domain_freeze_sha256")
+            if isinstance(gap_receipt, Mapping)
+            else None
+        ),
+        "exact_gap_positive": bool(
+            isinstance(exact_gap, Mapping)
+            and exact_gap.get("positive") is True
+        ),
+        "twisted_kernel_dimension": (
+            kernel.get("twisted_kernel_dimension")
+            if isinstance(kernel, Mapping)
+            else None
+        ),
+        "rank_theorem_applied": bool(
+            isinstance(rank_theorem, Mapping)
+            and rank_theorem.get("applied") is True
+        ),
+        "frustrated_component_count": frustrated_count,
+        "negative_cycle_witness_count": len(negative_rows),
+        "negative_cycle_witnesses_verified": witnesses_valid,
+        "proof_projection_complete": proof_complete,
     }
 
 
 def produce_clock_unit_verdict(
     *, output_dir: str | Path | None = None
 ) -> dict[str, Any]:
-    """Produce the issue-633 unit non-identifiability certificate."""
+    """Produce the issue-633 serialized finite-interface audit."""
 
     classification = interface_classification()
-    witness = two_completion_experiment()
+    witness = producer_channel_nonuse_experiment()
     closure = source_input_closure()
 
     from oph_fpe.local_domain.stage4_inhabitation import (
@@ -399,16 +620,29 @@ def produce_clock_unit_verdict(
 
     bundle = verify_local_domain_bundle()
 
-    gap_path = DATA_DIR / "source_gap_receipt.json"
-    gap_receipt = (
-        json.loads(gap_path.read_text(encoding="utf-8"))
-        if gap_path.exists()
-        else None
+    gap_receipt = _load_pinned_gap_receipt()
+    gap_receipt_sha256 = manifest_pinned_artifact_sha256(
+        DATA_DIR,
+        "source_gap_receipt.json",
+        "source_gap_receipt_sha256",
+    )
+    gap_binding = positive_gap_binding(gap_receipt, bundle)
+    gap_proof = source_gap_proof_binding(
+        gap_receipt,
+        gap_receipt_sha256,
     )
     gap_retained = bool(
-        gap_receipt is not None
-        and gap_receipt["verdict"] == "ATTAINED"
-        and gap_receipt["exact_gap"]["positive"]
+        gap_binding["retained"] and gap_proof["proof_projection_complete"]
+    )
+    expected_parent_artifacts = set(RECEIPT_FILES) | {
+        "stage1_arrays.npz.gz"
+    }
+    parent_artifacts_pinned = bool(
+        set(classification["artifact_sha256"]) == expected_parent_artifacts
+        and classification["artifact_sha256"].get(
+            "source_gap_receipt.json"
+        )
+        == gap_receipt_sha256
     )
 
     controls: dict[str, dict[str, Any]] = {}
@@ -420,15 +654,11 @@ def produce_clock_unit_verdict(
         "note": "an injected SI-labeled key is flagged by the walker",
     }
 
-    import os
-
     probe_hashes = {}
     for label, attachment in (("one", "9192631770"), ("two", "2")):
-        os.environ[SI_ATTACHMENT_CHANNEL] = attachment
-        try:
-            probe_payload = unit_reading_probe(attachment)
-        finally:
-            os.environ.pop(SI_ATTACHMENT_CHANNEL, None)
+        probe_payload = _call_with_temporary_attachment(
+            unit_reading_probe, attachment
+        )
         probe_hashes[label] = _sha256_bytes(
             _canonical_json(probe_payload).encode("utf-8")
         )
@@ -455,16 +685,21 @@ def produce_clock_unit_verdict(
     )
 
     clause_verdicts = {
-        "declared_domain_final": bool(
+        "audited_parent_artifact_bytes_pinned": parent_artifacts_pinned,
+        "declared_serialized_interface_resolved": bool(
             bundle["passed"]
             and not classification["missing_receipts"]
             and not classification["manifest_pin_failures"]
+            and not classification["invalid_artifacts"]
+            and not classification["schema_failures"]
         ),
-        "interface_exhaustively_dimensionless": classification[
-            "interface_dimensionless"
+        "declared_interface_has_no_unit_labeled_field": classification[
+            "no_unit_labeled_field"
         ],
-        "two_completion_experiment_holds": witness["witness_holds"],
-        "source_input_closure_holds": closure["closed"],
+        "declared_si_channel_not_read_by_attained_producer": witness[
+            "witness_holds"
+        ],
+        "bounded_source_scan_clean": closure["bounded_scan_clean"],
         "positive_gap_clause_retained": gap_retained,
     }
     blockers = sorted(
@@ -480,39 +715,47 @@ def produce_clock_unit_verdict(
         "schema": SCHEMA,
         "issue": ISSUE,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
+        "source_projection_sha256": bundle.get(
+            "source_projection_sha256"
+        ),
+        "domain_freeze_sha256": bundle.get("domain_freeze_sha256"),
         "declared_domain": (
-            "the closed issue-634 local event and Hamiltonian typing, the "
-            "single declared dependency of the clock lane"
+            "the explicitly listed serialized issue-634 local event, "
+            "operator, and finite attachment receipts"
         ),
         "interface_classification": classification,
-        "two_completion_experiment": witness,
-        "source_input_closure": closure,
+        "producer_channel_nonuse_experiment": witness,
+        "bounded_source_scan": closure,
+        "upstream_pins": classification["artifact_sha256"],
         "positive_clause_retained": {
             "source_hamiltonian_with_positive_gap": gap_retained,
             "gap_receipt": "source_gap_receipt.json",
+            "binding": gap_binding,
+            "proof_binding": gap_proof,
         },
         "clause_verdicts": clause_verdicts,
         "negative_controls": controls,
         "controls_fail_closed": controls_fail_closed,
         "verdict": (
-            "PHYSICAL_UNITS_NOT_EVALUABLE" if attained else "NOT_ATTAINED"
+            "PHYSICAL_UNITS_NOT_EVALUABLE_ON_DECLARED_SERIALIZED_INTERFACE"
+            if attained
+            else "NOT_ATTAINED"
         ),
-        "CLOCK_UNIT_NON_IDENTIFIABILITY_RECEIPT": bool(attained),
+        "CLOCK_UNIT_BOUNDED_INTERFACE_AUDIT": bool(attained),
         "blockers": blockers,
         "claim_boundary": (
-            "Complete negative exit of the issue-633 clock lane on its "
-            "declared domain: the closed issue-634 typing emits an "
-            "exhaustively dimensionless interface, two distinct SI "
-            "attachments restrict to byte-identical domain payloads, and "
-            "the producer sources are closed against SI vocabulary, so no "
-            "physical reference transition is identifiable and physical "
-            "units are not evaluable on this domain. The source "
+            "Finite issue-633 boundary result on the declared serialized "
+            "interface: no emitted key carries a physical-unit label, two "
+            "attained runs of the sector producer ignore the named SI "
+            "attachment channel, and the bounded source scan finds none of "
+            "its declared SI tokens. The source "
             "Hamiltonian with its exactly positive dimensionless gap is "
-            "retained. Dimensionless pole verdicts downstream stay "
-            "evaluable; a GeV mass claim is forbidden. A completion "
-            "carrying physical fiber content is a different domain owned "
-            "by the family and scalar lanes and is not judged here. No "
-            "physical promotion follows from any output."
+            "retained. These checks justify no GeV claim from this "
+            "serialized interface. They are not a transitive source-"
+            "closure proof or a no-go theorem for every extended A1--A3 "
+            "domain; a future physical transition or measurement producer "
+            "is not judged here. No physical promotion follows from any "
+            "output."
         ),
     }
 

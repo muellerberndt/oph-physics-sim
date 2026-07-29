@@ -94,10 +94,80 @@ def test_frozen_sector_receipt_binding():
     assert receipt["blockers"] == []
     assert all(receipt["clause_verdicts"].values())
     assert receipt["controls_fail_closed"] is True
-    gaps = [row["gap_above_kernel"] for row in receipt["sector_table"]]
+    assert receipt["stage2_binding"]["receipt_sha256"] == (
+        "sha256:"
+        + hashlib.sha256(
+            (DATA_DIR / "stage2_receipt.json").read_bytes()
+        ).hexdigest()
+    )
+    rows = receipt["sector_table"]
+    gates = receipt["numerical_gates"]
+    gaps = [row["gap_above_kernel"] for row in rows]
+    assert all(
+        row["residual_within_gate"]
+        == (
+            row["relative_residual"]
+            < gates["measured_relative_residual_tolerance"]
+        )
+        for row in rows
+    )
+    assert all(
+        row["kernel_dimension"] == 0
+        or row["kernel_eigenvalue_leak"]
+        < gates["kernel_eigenvalue_abs_floor"]
+        for row in rows
+    )
     assert abs(gaps[1] - gaps[5]) < 1.0e-9
     assert abs(gaps[2] - gaps[4]) < 1.0e-9
     assert receipt["gap_separations"]["distinct_gap_count"] >= 3
+    assert receipt["gap_separations"]["distinct_gap_count"] == len(
+        {
+            round(value, gates["spectral_distinct_round_decimals"])
+            for value in gaps
+        }
+    )
+    assert receipt["gap_separations"][
+        "conjugate_sector_pairs_degenerate"
+    ] == all(
+        abs(gaps[k] - gaps[(6 - k) % 6])
+        < gates["conjugate_degeneracy_abs_tolerance"]
+        for k in range(6)
+    )
+    identity = receipt["spectral_interface_identity"]
+    assert identity["schema"] == receipt["schema"]
+    assert identity["issue"] == receipt["issue"]
+    assert identity["local_domain_issue"] == 634
+    assert identity["rer_exact_flux_12_42_vertex_identity_bridge"] is False
+    assert identity["separate_from_rer_exact_flux_certificate"] is True
+    assert identity["main_domain"]["source_carrier_count"] == 16384
+    assert identity["main_domain"]["source_projection_sha256"] == receipt[
+        "source_projection_sha256"
+    ]
+    assert identity["main_domain"]["domain_freeze_sha256"] == receipt[
+        "domain_freeze_sha256"
+    ]
+    assert identity["main_domain"]["visible_node_count"] == 8662
+    ladder = receipt["scale_ladder"]
+    assert ladder["small_source_carrier_count"] == 2048
+    assert ladder["small_visible_node_count"] == 1052
+    assert ladder["small_visible_edge_count"] == 1663
+    assert ladder["small_source_projection_sha256"].startswith("sha256:")
+    assert ladder["small_domain_freeze_sha256"].startswith("sha256:")
+    assert identity["ladder_domain"]["source_carrier_count"] == ladder[
+        "small_source_carrier_count"
+    ]
+    assert identity["ladder_domain"]["source_projection_sha256"] == ladder[
+        "small_source_projection_sha256"
+    ]
+    assert identity["ladder_domain"]["domain_freeze_sha256"] == ladder[
+        "small_domain_freeze_sha256"
+    ]
+    assert identity["ladder_domain"]["visible_node_count"] == ladder[
+        "small_visible_node_count"
+    ]
+    assert identity["ladder_domain"]["visible_edge_count"] == ladder[
+        "small_visible_edge_count"
+    ]
     gap_receipt = json.loads(
         (DATA_DIR / "source_gap_receipt.json").read_text(encoding="utf-8")
     )
@@ -107,4 +177,6 @@ def test_frozen_sector_receipt_binding():
     stage1 = json.loads(
         (DATA_DIR / "stage1_receipt.json").read_text(encoding="utf-8")
     )
-    assert receipt["capture_sha256"] == stage1["capture_sha256"]
+    assert receipt["source_projection_sha256"] == stage1[
+        "source_projection_sha256"
+    ]

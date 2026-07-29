@@ -1,11 +1,10 @@
-"""Issue-634 local source domain: staged producers and certificates.
+"""Issue-634 finite local source domain: staged producers and certificates.
 
-The package constructs the local Lorentzian/Spin action and operator
-domain from one target-clean source capture.  Stage 1 builds the source
-event complex with a certified causal order, a chart atlas over observer
-neighborhoods, and dimension, signature, orientation, and
-time-orientation certificates.  Later stages own the Spin lift, the
-typed section and operator layer, and the inhabitation receipt.  Every
-stage emits a measured fail-closed receipt; no output of this package
-carries physical promotion.
+The package constructs a finite causal source object, a declared seam-sign
+transport, and a typed operator domain from one target-clean source capture.
+Stage 1 builds the event complex and a prescribed finite feature chart.
+Stage 2 computes exact sign algebra on the visible seam complex.  Stage 3
+types finite sections and local operators.  Stage 4 verifies and replays the
+serialized bundle.  Continuum Lorentzian and Spin identifications are open
+interfaces; no output of this package carries physical promotion.
 """

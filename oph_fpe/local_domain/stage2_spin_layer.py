@@ -1,7 +1,7 @@
 """Issue-634 stage 2: exact seam-transport sign layer and lift ambiguity.
 
-The Spin-layer content available on the finite event complex is exact
-sign algebra rather than fitted geometry.  Every seam in the capture
+The finite precursor content available on the event complex is exact
+sign algebra rather than a Spin structure or fitted geometry.  Every seam in the capture
 declares the orientation-reversing gluing convention: single-port
 seams with orientation sign minus one and one shared interface
 algebra.  Stage 2 verifies that declaration fail-closed and computes,
@@ -16,16 +16,18 @@ event-footprint subcomplex is a recorded census only:
 * the orientability verdict of the sign transport, bipartiteness per
   component, cross-checked against triangle existence;
 * the lift-ambiguity rank, the GF(2) dimension of the first cohomology
-  of the clique two-complex, computed by two eliminations over distinct
-  matrices with an agreement clause, and the ambiguity count two to
+  of the clique two-complex, computed through two coordinate-route
+  eliminations using the same rank routine, with an agreement clause,
+  and the ambiguity count two to
   that rank in the convention of the spin-statistics instrument;
 * the neighborhood-frame layer of the stage-1 closed cover: transition
   determinant
   signs, the sign-lift solvability on the nerve, and the nerve
   cohomology rank.
 
-The stage-2 receipt binds to the frozen stage-1 receipt by capture
-hash, so both stages certify one source object.  The identification of
+The stage-2 receipt binds to the frozen stage-1 receipt by the canonical
+source projection and visible-domain freeze, so both stages certify one
+discrete source object.  The identification of
 this finite sign layer with continuum Stiefel-Whitney classes is a
 named interface owned by the issue-596 face-cocycle lanes; the
 interface-algebra phase extension, the Spin-c analog, is a named
@@ -44,10 +46,12 @@ from typing import Any
 
 from oph_fpe.bulk.event_manifold_producer import _event_table
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
+from oph_fpe.local_domain.receipt_io import load_manifest_pinned_receipt
 from oph_fpe.local_domain.stage1_event_complex import (
     CONTROL_SPLIT_CONFIG,
     FOREIGN_SEED_OFFSET,
     MAIN_CONFIG,
+    local_domain_source_sha256,
     refuse_forbidden_config,
 )
 
@@ -79,11 +83,11 @@ def seam_convention_gate(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
 
     algebra_hashes = set()
     violations: list[str] = []
-    for row in rows:
+    for row_index, row in enumerate(rows):
         if list(row["orientation_signs"]) != [-1]:
-            violations.append(f"nonreversing_sign:{row['overlap_id']}")
+            violations.append(f"nonreversing_sign:row-{row_index}")
         if len(row["left_ports"]) != 1 or len(row["right_ports"]) != 1:
-            violations.append(f"multi_port_seam:{row['overlap_id']}")
+            violations.append(f"multi_port_seam:row-{row_index}")
         algebra_hashes.add(row["interface_algebra_sha256"])
     if len(algebra_hashes) > 1:
         violations.append("multiple_interface_algebras")
@@ -245,9 +249,10 @@ def _gf2_rank(rows: list[int]) -> int:
 
 
 def lift_ambiguity(complex_data: Mapping[str, Any]) -> dict[str, Any]:
-    """GF(2) first-cohomology rank of the clique two-complex, two ways.
+    """GF(2) first-cohomology rank through two coordinate routes.
 
-    The rank is computed by two eliminations over distinct matrices:
+    The rank is computed by the same elimination routine on two
+    coordinate representations:
     the edge-space triangle boundary matrix, and the same boundaries
     projected onto fundamental-cycle coordinates over a spanning
     forest, where a cycle equals the sum of the fundamental cycles of
@@ -327,20 +332,19 @@ def lift_ambiguity(complex_data: Mapping[str, Any]) -> dict[str, Any]:
             "b1 equals edges minus vertices plus components minus the "
             "triangle boundary rank, by definition"
         ),
+        "rank_cross_check_scope": (
+            "two coordinate-route eliminations using the same GF(2) "
+            "rank implementation; algebraic cross-check, not independent "
+            "implementation"
+        ),
         "rank_cross_checked": cross_checked,
     }
 
 
 def _load_frozen_stage1() -> dict[str, Any] | None:
-    receipt_path = DATA_DIR / "stage1_receipt.json"
-    manifest_path = DATA_DIR / "manifest.json"
-    if not receipt_path.exists() or not manifest_path.exists():
-        return None
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    receipt_bytes = receipt_path.read_bytes()
-    if manifest.get("receipt_sha256") != _sha256_bytes(receipt_bytes):
-        return None
-    return json.loads(receipt_bytes.decode("utf-8"))
+    return load_manifest_pinned_receipt(
+        DATA_DIR, "stage1_receipt.json", "receipt_sha256"
+    )
 
 
 def atlas_frame_layer(stage1_receipt: Mapping[str, Any]) -> dict[str, Any]:
@@ -467,6 +471,7 @@ def _seam_layer(capture: Mapping[str, Any]) -> dict[str, Any]:
 def produce_stage2_receipt(
     *,
     config: Mapping[str, Any] | None = None,
+    stage1_receipt: Mapping[str, Any] | None = None,
     output_dir: str | Path | None = None,
     run_controls: bool = True,
 ) -> dict[str, Any]:
@@ -484,30 +489,67 @@ def produce_stage2_receipt(
         }
 
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     layer = _seam_layer(capture)
     domain_complex = layer.pop("_domain_complex_full")
 
-    stage1 = _load_frozen_stage1()
+    stage1 = (
+        dict(stage1_receipt)
+        if stage1_receipt is not None
+        else _load_frozen_stage1()
+    )
     stage1_binding: dict[str, Any]
     frame_layer: dict[str, Any] | None = None
     if stage1 is None:
         stage1_binding = {
             "stage1_receipt_present": False,
+            "stage1_receipt_valid": False,
             "same_source": False,
         }
     else:
-        same_config = stage1["main_config"] == main_config
-        same_source = bool(
-            same_config
-            and stage1["capture_sha256"] == capture["capture_sha256"]
-        )
+        try:
+            stage1_valid = bool(
+                stage1.get("schema") == "oph.local-domain-stage1.v1"
+                and stage1.get("issue") == ISSUE
+                and stage1.get("physical_promotion_allowed") is False
+                and stage1.get("verdict") == "ATTAINED"
+                and isinstance(stage1.get("main_config"), Mapping)
+                and isinstance(stage1.get("atlas"), Mapping)
+                and isinstance(stage1.get("capture_sha256"), str)
+            )
+            same_config = bool(
+                stage1_valid and stage1["main_config"] == main_config
+            )
+            same_source = bool(
+                same_config
+                and stage1.get("source_projection_sha256")
+                == source_projection_sha256
+            )
+            frame_layer = (
+                atlas_frame_layer(stage1) if stage1_valid else None
+            )
+        except (
+            AttributeError,
+            IndexError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ):
+            stage1_valid = False
+            same_source = False
+            frame_layer = None
         stage1_binding = {
             "stage1_receipt_present": True,
-            "stage1_capture_sha256": stage1["capture_sha256"],
+            "stage1_receipt_valid": stage1_valid,
+            "identity_kind": "canonical_discrete_source_projection",
+            "stage1_source_projection_sha256": stage1.get(
+                "source_projection_sha256"
+            ),
+            "stage2_source_projection_sha256": source_projection_sha256,
+            "stage1_capture_sha256": stage1.get("capture_sha256"),
             "stage2_capture_sha256": capture["capture_sha256"],
             "same_source": same_source,
         }
-        frame_layer = atlas_frame_layer(stage1)
 
     ladder_config = dict(CONTROL_SPLIT_CONFIG)
     ladder_config["observer_cross_reads"] = True
@@ -647,6 +689,11 @@ def produce_stage2_receipt(
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
         "stage1_binding": stage1_binding,
         "seam_layer": layer,
         "atlas_frame_layer": frame_layer,

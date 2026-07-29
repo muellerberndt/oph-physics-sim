@@ -1,12 +1,15 @@
-"""Issue-569 instrument: finite Spin/locality matter attachment.
+"""Issue-569 instrument: finite assembled matter boundary packet.
 
 The family lane holds a simulator-realized rank-three multiplicity
-object and an imported fifteen-state generation packet; its open gates
-include chirality and spin data and a Spin/locality receipt.  This
-instrument supplies the finite layer of that attachment on the
-issue-634 typed local domain, with every arithmetic clause exact:
+object and an imported fifteen-state generation packet.  This
+instrument assembles a finite boundary packet from that material, the
+issue-634 local operator domain, and a separate issue-314 spin packet.
+No transport or identity bridge between the twelve-vertex spin support
+and the issue-634 visible seam domain is certified.  Charge, tensor-rank,
+and operator arithmetic are exact; the rank-three band remains the
+declared measured input:
 
-* The generation table is recomputed from the pinned charge data with
+* The declared imported generation table is recomputed with
   exact fractions: five field rows, fifteen Weyl states, all four
   anomaly forms zero, four weak doublets per family.
 * The canonical diagonal Z6 kernel fixes every matter state: for each
@@ -15,25 +18,30 @@ issue-634 typed local domain, with every arithmetic clause exact:
 * Chirality is nondegenerate by exact multiset arithmetic: the table
   shares no state with its conjugate, so the Z2 grading of the typed
   chiral species has no vectorlike collapse.
-* The attachment fiber is the measured rank-three band of the
+* The declared attachment fiber is the measured rank-three band of the
   pole-residue artifact tensored with the recomputed generation, of
   complex rank exactly forty-five, and the sign-twisted seam operators
   of the stage-3 layer act on it with support radius one, exact
-  integer adjoint and kinetic identities, and subcomplex naturality at
-  the full fiber.
-* The twisted kinetic operator on the matter fiber is the scalar
-  operator tensored with the identity, so its spectrum is the scalar
-  spectrum with multiplicity forty-five and the exactly positive gap
-  of the issue-633 receipt is inherited unchanged.
-* The spin data is the pinned issue-314 artifact: one spin structure
-  on the oriented support, the non-split Klein-four section
-  obstruction, and the unique nontrivial central involution, together
-  with the stage-2 sign-transport typing and its recorded lift
-  ambiguity.
+  integer adjoint and kinetic identities, and subcomplex naturality on
+  one deterministic rank-forty-five probe.
+* Under the declared tensor extension, the matter kinetic operator is
+  the scalar operator tensored with the identity.  Its spectrum is the
+  scalar spectrum with multiplicity forty-five and the exactly positive
+  source-gap is inherited conditionally.  The source does not select
+  this matter action.
+* The spin data is retained as a separate pinned issue-314 artifact:
+  one spin structure on its twelve-vertex oriented support, the
+  non-split Klein-four section obstruction, and the unique nontrivial
+  central involution.  Stage-2 sign transport belongs to the distinct
+  local-domain context.  Relating the two is an open interface.
 
-The consumed inputs are closed and scanned: no Yukawa coefficient,
-mass value, or pole datum enters.  The receipt supplies the finite
-Spin/locality layer only; the continuum Spin/locality gate, the
+The declared input keys are scanned for a bounded list of Yukawa and
+laboratory mass fragments, with no match.  This lexical check does not
+type unlabeled values or prove semantic input closure.  The
+finite generator-frequency residue selecting the band is an explicit
+input and carries no laboratory scale.  The receipt supplies conditional
+finite arithmetic on the assembled packet; it does not select a matter
+action or supply a Spin/locality bridge.  The continuum Spin/locality gate, the
 matter-pole identification, the physical seam-action selection, and
 the laboratory current identification of issue 569 stay open.  No
 output of this module carries physical promotion.
@@ -51,8 +59,14 @@ from typing import Any
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
 from oph_fpe.core.pole_residue_readback import produce_pole_residue_artifact
 from oph_fpe.core.spin_statistics_response import produce_spin_statistics_artifact
+from oph_fpe.local_domain.receipt_io import (
+    load_manifest_pinned_receipt,
+    manifest_pinned_artifact_sha256,
+    stage2_matches_source_domain,
+)
 from oph_fpe.local_domain.stage1_event_complex import (
     MAIN_CONFIG,
+    local_domain_source_sha256,
     refuse_forbidden_config,
 )
 from oph_fpe.local_domain.stage2_spin_layer import seam_complex, visible_rows
@@ -256,7 +270,7 @@ def _scan_forbidden_keys(value: Any, path: str = "") -> list[str]:
 def matter_operator_certificate(
     domain_complex: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Exact locality, adjoint, and kinetic identities at fiber 45."""
+    """Exact identities on one deterministic rank-45 section probe."""
 
     nodes = domain_complex["nodes"]
     section = probe_section(nodes, MATTER_FIBER_RANK, salt=569)
@@ -312,7 +326,14 @@ def matter_operator_certificate(
         sub_derivative[edge] == derivative[edge] for edge in sub_edges
     )
     return {
+        "status": "declared_tensor_extension",
+        "source_selected": False,
         "fiber_rank": MATTER_FIBER_RANK,
+        "probe_count": 1,
+        "probe_salt": 569,
+        "identity_scope": (
+            "one deterministic rank-45 section and edge probe"
+        ),
         "support_radius_one": bool(support_radius_one),
         "adjoint_identity_exact": bool(pairing_left == pairing_right),
         "kinetic_identity_exact": bool(kinetic == quadratic),
@@ -323,42 +344,79 @@ def matter_operator_certificate(
 
 def gap_inheritance_certificate(
     gap_receipt: Mapping[str, Any] | None,
+    *,
+    source_projection_sha256: str | None = None,
+    domain_freeze_sha256: str | None = None,
 ) -> dict[str, Any]:
-    """Exact tensor-block inheritance of the scalar gap at fiber 45.
+    """Conditional tensor-block inheritance of the scalar gap at fiber 45.
 
-    The matter kinetic operator is the scalar signed Laplacian
-    tensored with the identity on the fiber, so its eigenvalues are
-    the scalar eigenvalues, each with multiplicity forty-five, and
-    the exact positivity of the scalar gap transfers unchanged."""
+    Under the declared tensor extension, the matter kinetic operator is
+    the scalar signed Laplacian tensored with the identity on the fiber.
+    The source does not select that matter action."""
 
     if gap_receipt is None:
-        return {"gap_receipt_present": False, "inherited": False}
-    exact_positive = bool(gap_receipt["exact_gap"]["positive"])
+        return {
+            "status": (
+                "conditional_algebraic_inheritance_under_declared_"
+                "tensor_extension"
+            ),
+            "matter_action_source_selected": False,
+            "gap_receipt_present": False,
+            "inherited": False,
+        }
+    source_bound = bool(
+        source_projection_sha256 is not None
+        and gap_receipt.get("source_projection_sha256")
+        == source_projection_sha256
+    )
+    domain_bound = bool(
+        domain_freeze_sha256 is not None
+        and gap_receipt.get("domain_freeze_sha256")
+        == domain_freeze_sha256
+    )
+    schema_valid = bool(
+        gap_receipt.get("schema") == "oph.source-clock-gap.v1"
+        and gap_receipt.get("issue") == 633
+        and gap_receipt.get("physical_promotion_allowed") is False
+    )
+    receipt_attained = bool(
+        schema_valid and gap_receipt.get("verdict") == "ATTAINED"
+    )
+    exact_gap = gap_receipt.get("exact_gap", {})
+    measured_gap = gap_receipt.get("measured_gap", {})
+    exact_positive = bool(
+        isinstance(exact_gap, Mapping) and exact_gap.get("positive")
+    )
+    measured_value = (
+        measured_gap.get("smallest_eigenvalue")
+        if isinstance(measured_gap, Mapping)
+        else None
+    )
     return {
+        "status": (
+            "conditional_algebraic_inheritance_under_declared_tensor_extension"
+        ),
+        "matter_action_source_selected": False,
         "gap_receipt_present": True,
+        "same_source_projection": source_bound,
+        "same_domain_freeze": domain_bound,
+        "gap_receipt_schema_valid": schema_valid,
+        "gap_receipt_attained": receipt_attained,
         "structure": (
             "matter operator equals scalar operator tensor identity on "
             "the rank-45 fiber; spectrum equals the scalar spectrum with "
             "multiplicity forty-five"
         ),
         "scalar_gap_exactly_positive": exact_positive,
-        "scalar_measured_gap": gap_receipt["measured_gap"][
-            "smallest_eigenvalue"
-        ],
-        "inherited": exact_positive,
+        "scalar_measured_gap": measured_value,
+        "inherited": bool(
+            exact_positive and source_bound and domain_bound and receipt_attained
+        ),
     }
 
 
 def _load_frozen(name: str, manifest_key: str) -> dict | None:
-    manifest_path = DATA_DIR / "manifest.json"
-    path = DATA_DIR / name
-    if not manifest_path.exists() or not path.exists():
-        return None
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    raw = path.read_bytes()
-    if manifest.get(manifest_key) != _sha256_bytes(raw):
-        return None
-    return json.loads(raw.decode("utf-8"))
+    return load_manifest_pinned_receipt(DATA_DIR, name, manifest_key)
 
 
 def produce_matter_attachment_receipt(
@@ -367,7 +425,7 @@ def produce_matter_attachment_receipt(
     output_dir: str | Path | None = None,
     run_controls: bool = True,
 ) -> dict[str, Any]:
-    """Produce the issue-569 finite Spin/locality attachment receipt."""
+    """Produce the issue-569 finite boundary-packet receipt."""
 
     main_config = dict(MAIN_CONFIG if config is None else config)
     forbidden = refuse_forbidden_config(main_config)
@@ -403,23 +461,37 @@ def produce_matter_attachment_receipt(
 
     bundle = verify_local_domain_bundle()
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     domain_complex = seam_complex(visible_rows(capture))
     stage2 = _load_frozen("stage2_receipt.json", "stage2_receipt_sha256")
     gap_receipt = _load_frozen(
         "source_gap_receipt.json", "source_gap_receipt_sha256"
     )
-    domain_bound = bool(
-        stage2 is not None
-        and stage2["seam_layer"]["domain_complex"]["complex_freeze_sha256"]
-        == domain_complex["complex_freeze_sha256"]
-        and stage2["capture_sha256"] == capture["capture_sha256"]
+    stage2_receipt_sha256 = manifest_pinned_artifact_sha256(
+        DATA_DIR,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
+    )
+    source_gap_receipt_sha256 = manifest_pinned_artifact_sha256(
+        DATA_DIR,
+        "source_gap_receipt.json",
+        "source_gap_receipt_sha256",
+    )
+    domain_bound = stage2_matches_source_domain(
+        stage2,
+        source_projection_sha256,
+        domain_complex["complex_freeze_sha256"],
     )
 
     generation = generation_certificate()
     z6 = z6_kernel_certificate()
     chirality = chirality_certificate()
     operators = matter_operator_certificate(domain_complex)
-    gap = gap_inheritance_certificate(gap_receipt)
+    gap = gap_inheritance_certificate(
+        gap_receipt,
+        source_projection_sha256=source_projection_sha256,
+        domain_freeze_sha256=domain_complex["complex_freeze_sha256"],
+    )
 
     band = pole_residue["pole_residue_readback"]["family_band_residue"]
     band_rank = int(band["measured_rank"])
@@ -441,11 +513,16 @@ def produce_matter_attachment_receipt(
         ],
         "gate_rows": spin_rows,
     }
-    lift_ambiguity_rank = (
-        stage2["seam_layer"]["lift_ambiguity"]["lift_ambiguity_rank"]
-        if stage2 is not None
-        else None
-    )
+    try:
+        lift_ambiguity_rank = (
+            stage2["seam_layer"]["lift_ambiguity"][
+                "lift_ambiguity_rank"
+            ]
+            if domain_bound
+            else None
+        )
+    except (KeyError, TypeError):
+        lift_ambiguity_rank = None
 
     scan_targets = {
         "carrier_manifest": carrier,
@@ -502,7 +579,7 @@ def produce_matter_attachment_receipt(
         }
 
         doctored_bound = False
-        if stage2 is not None:
+        if domain_bound:
             doctored_stage2 = json.loads(json.dumps(stage2))
             doctored_stage2["seam_layer"]["domain_complex"][
                 "complex_freeze_sha256"
@@ -512,8 +589,8 @@ def produce_matter_attachment_receipt(
                     "complex_freeze_sha256"
                 ]
                 == domain_complex["complex_freeze_sha256"]
-                and doctored_stage2["capture_sha256"]
-                == capture["capture_sha256"]
+                and doctored_stage2.get("source_projection_sha256")
+                == source_projection_sha256
             )
         controls["tampered_domain_freeze"] = {
             "control_failure_detected": bool(
@@ -535,7 +612,11 @@ def produce_matter_attachment_receipt(
 
     clause_verdicts = {
         "upstream_inputs_resolved": bool(bundle["passed"]),
-        "same_source_domain_binding": domain_bound,
+        "local_parent_receipt_bytes_pinned": bool(
+            stage2_receipt_sha256 is not None
+            and source_gap_receipt_sha256 is not None
+        ),
+        "local_stage2_same_source_domain_binding": domain_bound,
         "generation_table_exact": bool(
             generation["state_count_exact"]
             and generation["anomalies_vanish"]
@@ -548,21 +629,25 @@ def produce_matter_attachment_receipt(
             and attachment_rank == MATTER_FIBER_RANK
             and bool(band["equals_exact_frame_projector"])
         ),
-        "matter_operators_local_exact": bool(
+        "declared_matter_operator_probe_identities_exact": bool(
             operators["support_radius_one"]
             and operators["adjoint_identity_exact"]
             and operators["kinetic_identity_exact"]
             and operators["subcomplex_naturality_exact"]
         ),
-        "gap_inherited_exact": bool(gap["inherited"]),
-        "spin_gates_consumed": bool(
+        "conditional_gap_inheritance_exact": bool(gap["inherited"]),
+        "separate_issue_314_spin_packet_resolved": bool(
             spin_consumed["spin_structure_count"] == 1
             and spin_consumed["klein_four_obstruction"]
             and spin_rows.get("unique_nontrivial_central_involution")
             and spin_rows.get("unique_spin_structure_on_oriented_support")
-            and lift_ambiguity_rank is not None
         ),
-        "no_yukawa_no_pole_inputs": bool(not forbidden_hits),
+        "local_domain_stage2_context_recorded": bool(
+            lift_ambiguity_rank is not None
+        ),
+        "bounded_declared_key_scan_has_no_configured_target_fragments": bool(
+            not forbidden_hits
+        ),
     }
     blockers = sorted(
         f"clause_failed:{name}"
@@ -579,11 +664,35 @@ def produce_matter_attachment_receipt(
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
+        "declared_matter_packet": {
+            "status": "declared_imported_matter_packet",
+            "source_selected": False,
+            "table_sha256": _sha256_value(
+                [
+                    {
+                        **dict(row),
+                        "hypercharge": str(Fraction(row["hypercharge"])),
+                    }
+                    for row in GENERATION_TABLE
+                ]
+            ),
+            "scope": (
+                "the certificate recomputes conditional arithmetic from "
+                "this packet; it does not derive or select the packet"
+            ),
+        },
         "upstream_pins": {
             "carrier_manifest_sha256": _sha256_value(carrier),
             "response_artifact_sha256": response.get("artifact_sha256"),
             "pole_residue_artifact_sha256": pole_residue.get("artifact_sha256"),
             "spin_artifact_sha256": spin_artifact.get("artifact_sha256"),
+            "stage2_receipt_sha256": stage2_receipt_sha256,
+            "source_gap_receipt_sha256": source_gap_receipt_sha256,
             "local_domain_bundle_passed": bundle["passed"],
             "stage2_receipt_present": bool(stage2 is not None),
             "gap_receipt_present": bool(gap_receipt is not None),
@@ -608,16 +717,41 @@ def produce_matter_attachment_receipt(
         "matter_operator_certificate": operators,
         "gap_inheritance_certificate": gap,
         "spin_layer": {
+            "packet_status": "separate_pinned_issue_314_packet",
+            "spin_to_local_domain_bridge_certified": False,
+            "same_source_domain_certified": False,
+            "spin_support_identity": {
+                "artifact_sha256": spin_artifact.get("artifact_sha256"),
+                "cell_counts": spin_artifact["support_homology"]["cells"],
+            },
+            "local_domain_identity": {
+                "source_projection_sha256": (
+                    source_projection_sha256
+                ),
+                "topology_freeze_sha256": domain_complex[
+                    "complex_freeze_sha256"
+                ],
+                "visible_node_count": domain_complex["node_count"],
+                "visible_edge_count": domain_complex["edge_count"],
+            },
             "issue_314_artifact": spin_consumed,
-            "domain_sign_transport": (
-                "matter sections are sign-twisted sections of the stage-3 "
-                "layer under the declared reversing seam convention"
-            ),
-            "lift_ambiguity_rank": lift_ambiguity_rank,
+            "local_domain_stage2_context": {
+                "sign_transport": (
+                    "matter sections are sign-twisted sections of the "
+                    "stage-3 layer under the declared reversing seam "
+                    "convention"
+                ),
+                "lift_ambiguity_rank": lift_ambiguity_rank,
+            },
+            "open_interface": "physical Spin/locality bridge",
         },
-        "forbidden_input_scan": {
+        "bounded_declared_key_scan": {
             "fragments": list(FORBIDDEN_INPUT_KEY_FRAGMENTS),
             "hits": forbidden_hits[:8],
+            "scope": (
+                "declared mapping keys only; no semantic classification "
+                "of unlabeled values and no transitive input-closure claim"
+            ),
         },
         "clause_verdicts": clause_verdicts,
         "negative_controls": controls,
@@ -626,20 +760,29 @@ def produce_matter_attachment_receipt(
         "MATTER_ATTACHMENT_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": blockers,
         "claim_boundary": (
-            "Finite issue-569 attachment layer on the issue-634 typed "
-            "domain: the recomputed fifteen-state generation with exact "
+            "Finite issue-569 assembled boundary packet: conditional on "
+            "the declared imported fifteen-state "
+            "matter packet, its exact recomputation gives "
             "vanishing anomalies, the exact diagonal Z6 fixing, the exact "
             "nondegenerate chirality grading, the measured rank-three band "
-            "tensored to complex rank forty-five, sign-twisted local "
-            "operators with exact identities at the full fiber, the "
-            "inherited exactly positive gap, and the pinned issue-314 spin "
-            "gates with the stage-2 lift ambiguity recorded. The continuum "
-            "Spin/locality gate, the matter-pole identification, the "
+            "tensored to complex rank forty-five, and a declared "
+            "sign-twisted tensor extension with exact identities on one "
+            "deterministic rank-forty-five probe. The exactly positive "
+            "local-domain gap is inherited conditionally under that "
+            "declared extension. The source does not select a matter "
+            "action. The issue-314 "
+            "spin packet is pinned separately on its twelve-vertex support; "
+            "no source, domain, or transport bridge attaches it to the "
+            "issue-634 operator domain. The physical Spin/locality bridge, "
+            "the matter-pole identification, the "
             "physical seam-action selection, and the laboratory current "
             "identification of issue 569 stay open, and the issue-617 "
             "copy-count invisibility for external completions is untouched. "
-            "No Yukawa coefficient, mass value, or pole datum enters, and "
-            "no physical promotion follows from any output."
+            "The bounded declared-key scan finds no configured Yukawa or "
+            "laboratory-mass fragment; it is not semantic input closure. "
+            "The finite generator-frequency residue used to select the "
+            "band is recorded explicitly. No physical promotion follows "
+            "from any output."
         ),
     }
 

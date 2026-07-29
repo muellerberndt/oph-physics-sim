@@ -56,9 +56,15 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigsh
 
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
+from oph_fpe.local_domain.receipt_io import (
+    load_manifest_pinned_receipt,
+    manifest_pinned_artifact_sha256,
+    stage2_matches_source_domain,
+)
 from oph_fpe.local_domain.stage1_event_complex import (
     CONTROL_SPLIT_CONFIG,
     MAIN_CONFIG,
+    local_domain_source_sha256,
     refuse_forbidden_config,
 )
 from oph_fpe.local_domain.stage2_spin_layer import seam_complex, visible_rows
@@ -73,6 +79,12 @@ SECTOR_COUNT = 6
 PHASE_MODULUS = 12
 RESIDUAL_GATE = 1.0e-8
 KERNEL_EIGENVALUE_FLOOR = 1.0e-9
+POSITIVE_GAP_NUMERICAL_FLOOR = 1.0e-6
+CONJUGATE_DEGENERACY_TOLERANCE = 1.0e-9
+SPECTRAL_CONTROL_SEPARATION_FLOOR = 1.0e-6
+SPECTRAL_DISTINCT_ROUND_DECIMALS = 9
+PAIRWISE_DISPLAY_ROUND_DECIMALS = 12
+EIGENSOLVER_SHIFT = -1.0e-6
 
 FORBIDDEN_INPUT_KEY_FRAGMENTS = ("yukawa", "pole_mass", "mass_gev", "mev")
 
@@ -213,7 +225,7 @@ def measured_sector_gap(
     start = np.ones(matrix.shape[0], dtype=np.complex128)
     start /= np.linalg.norm(start)
     eigenvalues, vectors = eigsh(
-        matrix, k=wanted, sigma=-1.0e-6, which="LM", v0=start
+        matrix, k=wanted, sigma=EIGENSOLVER_SHIFT, which="LM", v0=start
     )
     order = np.argsort(eigenvalues)
     eigenvalues = eigenvalues[order]
@@ -309,21 +321,25 @@ def produce_defect_sector_receipt(
         }
 
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     domain_rows = visible_rows(capture)
     domain_complex = seam_complex(domain_rows)
     oriented = oriented_seams(domain_rows)
 
-    stage2_path = DATA_DIR / "stage2_receipt.json"
-    stage2 = (
-        json.loads(stage2_path.read_text(encoding="utf-8"))
-        if stage2_path.exists()
-        else None
+    stage2 = load_manifest_pinned_receipt(
+        DATA_DIR,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
     )
-    domain_bound = bool(
-        stage2 is not None
-        and stage2["seam_layer"]["domain_complex"]["complex_freeze_sha256"]
-        == domain_complex["complex_freeze_sha256"]
-        and stage2["capture_sha256"] == capture["capture_sha256"]
+    stage2_receipt_sha256 = manifest_pinned_artifact_sha256(
+        DATA_DIR,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
+    )
+    domain_bound = stage2_matches_source_domain(
+        stage2,
+        source_projection_sha256,
+        domain_complex["complex_freeze_sha256"],
     )
 
     table = sector_table(oriented)
@@ -336,14 +352,20 @@ def produce_defect_sector_receipt(
         for j in range(i + 1, SECTOR_COUNT)
     }
     conjugation_pairs_degenerate = all(
-        abs(gaps[k] - gaps[(SECTOR_COUNT - k) % SECTOR_COUNT]) < 1.0e-9
+        abs(gaps[k] - gaps[(SECTOR_COUNT - k) % SECTOR_COUNT])
+        < CONJUGATE_DEGENERACY_TOLERANCE
         for k in range(SECTOR_COUNT)
     )
 
     ladder_config = dict(CONTROL_SPLIT_CONFIG)
     ladder_config["observer_cross_reads"] = True
     ladder_capture = capture_physical_source(ladder_config)
-    ladder_table = sector_table(oriented_seams(visible_rows(ladder_capture)))
+    ladder_rows = visible_rows(ladder_capture)
+    ladder_domain = seam_complex(ladder_rows)
+    ladder_source_projection_sha256 = local_domain_source_sha256(
+        ladder_capture, ladder_config
+    )
+    ladder_table = sector_table(oriented_seams(ladder_rows))
     ladder_kernels = [row["kernel_dimension"] for row in ladder_table]
     main_kernels = [row["kernel_dimension"] for row in table]
 
@@ -373,7 +395,7 @@ def produce_defect_sector_receipt(
                     table[0]["measured"]["gap_above_kernel"]
                     - table[3]["measured"]["gap_above_kernel"]
                 )
-                > 1.0e-6
+                > SPECTRAL_CONTROL_SEPARATION_FLOOR
                 and matrix0.nnz == matrix3.nnz
             ),
             "note": (
@@ -397,10 +419,14 @@ def produce_defect_sector_receipt(
     )
 
     clause_verdicts = {
+        "stage2_parent_bytes_pinned": bool(
+            stage2_receipt_sha256 is not None
+        ),
         "same_source_domain_binding": domain_bound,
         "kernel_exact_numeric_agreement": all(
             row["kernel_dimension"] in (0, 1)
-            and row["measured"]["gap_above_kernel"] > 1.0e-6
+            and row["measured"]["gap_above_kernel"]
+            > POSITIVE_GAP_NUMERICAL_FLOOR
             and (
                 row["kernel_dimension"] == 0
                 or row["measured"]["kernel_eigenvalue_leak"]
@@ -412,7 +438,13 @@ def produce_defect_sector_receipt(
             row["measured"]["residual_within_gate"] for row in table
         ),
         "sector_spectra_distinguish": bool(
-            len({round(g, 9) for g in gaps}) > 1
+            len(
+                {
+                    round(g, SPECTRAL_DISTINCT_ROUND_DECIMALS)
+                    for g in gaps
+                }
+            )
+            > 1
         ),
         "scale_ladder_kernel_stable": bool(ladder_kernels == main_kernels),
     }
@@ -431,7 +463,73 @@ def produce_defect_sector_receipt(
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
         "domain_freeze_sha256": domain_complex["complex_freeze_sha256"],
+        "spectral_interface_identity": {
+            "schema": SCHEMA,
+            "issue": ISSUE,
+            "local_domain_issue": 634,
+            "main_domain": {
+                "source_carrier_count": main_config["carrier_count"],
+                "source_projection_sha256": source_projection_sha256,
+                "domain_freeze_sha256": domain_complex[
+                    "complex_freeze_sha256"
+                ],
+                "visible_node_count": domain_complex["node_count"],
+                "visible_edge_count": domain_complex["edge_count"],
+            },
+            "ladder_domain": {
+                "source_carrier_count": ladder_config["carrier_count"],
+                "source_projection_sha256": (
+                    ladder_source_projection_sha256
+                ),
+                "domain_freeze_sha256": ladder_domain[
+                    "complex_freeze_sha256"
+                ],
+                "visible_node_count": ladder_domain["node_count"],
+                "visible_edge_count": ladder_domain["edge_count"],
+            },
+            "rer_exact_flux_12_42_vertex_identity_bridge": False,
+            "separate_from_rer_exact_flux_certificate": True,
+            "scope": (
+                "The six spectra belong only to the issue-634 finite "
+                "local-domain main and ladder complexes named here. No "
+                "identity map to the separate 12/42-vertex RER exact-flux "
+                "certificate is supplied."
+            ),
+        },
+        "numerical_gates": {
+            "measured_relative_residual_tolerance": RESIDUAL_GATE,
+            "kernel_eigenvalue_abs_floor": KERNEL_EIGENVALUE_FLOOR,
+            "positive_gap_numerical_floor": (
+                POSITIVE_GAP_NUMERICAL_FLOOR
+            ),
+            "conjugate_degeneracy_abs_tolerance": (
+                CONJUGATE_DEGENERACY_TOLERANCE
+            ),
+            "spectral_control_separation_floor": (
+                SPECTRAL_CONTROL_SEPARATION_FLOOR
+            ),
+            "spectral_distinct_round_decimals": (
+                SPECTRAL_DISTINCT_ROUND_DECIMALS
+            ),
+            "pairwise_display_round_decimals": (
+                PAIRWISE_DISPLAY_ROUND_DECIMALS
+            ),
+            "eigensolver_shift": EIGENSOLVER_SHIFT,
+        },
+        "stage2_binding": {
+            "receipt_present_and_manifest_pinned": bool(stage2 is not None),
+            "receipt_sha256": stage2_receipt_sha256,
+            "receipt_attained": bool(
+                stage2 is not None and stage2.get("verdict") == "ATTAINED"
+            ),
+            "same_source_and_domain": domain_bound,
+        },
         "sector_family": {
             "group": "Z6 character orbit of the declared reversing convention",
             "transport_exponents_twelfths": [
@@ -447,21 +545,41 @@ def produce_defect_sector_receipt(
                 ],
                 "kernel_dimension": row["kernel_dimension"],
                 "gap_above_kernel": row["measured"]["gap_above_kernel"],
+                "kernel_eigenvalue_leak": row["measured"][
+                    "kernel_eigenvalue_leak"
+                ],
                 "relative_residual": row["measured"]["relative_residual"],
+                "residual_within_gate": row["measured"][
+                    "residual_within_gate"
+                ],
             }
             for row in table
         ],
         "gap_separations": {
             "pairwise_absolute": {
-                key: round(value, 12) for key, value in pairwise.items()
+                key: round(value, PAIRWISE_DISPLAY_ROUND_DECIMALS)
+                for key, value in pairwise.items()
             },
-            "distinct_gap_count": len({round(g, 9) for g in gaps}),
+            "distinct_gap_count": len(
+                {
+                    round(g, SPECTRAL_DISTINCT_ROUND_DECIMALS)
+                    for g in gaps
+                }
+            ),
             "conjugate_sector_pairs_degenerate": bool(
                 conjugation_pairs_degenerate
             ),
         },
         "scale_ladder": {
-            "small_config_carriers": ladder_config["carrier_count"],
+            "small_source_carrier_count": ladder_config["carrier_count"],
+            "small_visible_node_count": ladder_domain["node_count"],
+            "small_visible_edge_count": ladder_domain["edge_count"],
+            "small_source_projection_sha256": (
+                ladder_source_projection_sha256
+            ),
+            "small_domain_freeze_sha256": ladder_domain[
+                "complex_freeze_sha256"
+            ],
             "small_kernel_dimensions": ladder_kernels,
             "main_kernel_dimensions": main_kernels,
             "small_gaps": [

@@ -1,6 +1,5 @@
 {
- "capture_seconds": 121.2,
- "capture_sha256": "sha256:78d6c311965dcd64712896ee0a2b0d098b64e753c30c69b8965cbfcece27057d",
+ "capture_sha256": "sha256:569de2225392bc4c336a75da3cc0cc1edf79e7494200bb68294d905ed4819d5e",
  "causal_pairs_total": 56610,
  "causal_stride": 1,
  "cone_margin": -3.219901300819808,

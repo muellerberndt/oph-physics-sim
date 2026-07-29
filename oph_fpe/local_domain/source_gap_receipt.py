@@ -20,12 +20,12 @@ Positivity of the spectral gap is therefore exact, not numerical:
 
 The gap is dimensionless by construction: the operator is built from
 the counting measure and the seam signs alone, with no scale mount.
-The SI binding of issue 633 stays an open typed interface: selecting a
-physical reference transition requires the fiber selection owned by
-issues 569 and 630, and no measured frequency, particle mass, or SI
-constant enters this instrument.  This receipt supplies the positive
-gap object consumed by issue 633 and closes nothing.  No output
-carries physical promotion.
+An SI binding is not part of this receipt.  The companion issue-633
+serialized-interface audit records what the declared finite interface
+does and does not emit.  A physical transition supplied by an extended
+producer would require its own source, domain, and unit-mount
+certificates.  No measured frequency, particle mass, or SI constant
+enters this instrument, and no output carries physical promotion.
 """
 
 from __future__ import annotations
@@ -44,7 +44,13 @@ from scipy.sparse.linalg import eigsh
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
 from oph_fpe.local_domain.stage1_event_complex import (
     MAIN_CONFIG,
+    local_domain_source_sha256,
     refuse_forbidden_config,
+)
+from oph_fpe.local_domain.receipt_io import (
+    load_manifest_pinned_receipt,
+    manifest_pinned_artifact_sha256,
+    stage2_matches_source_domain,
 )
 from oph_fpe.local_domain.stage2_spin_layer import (
     holonomy_census,
@@ -182,19 +188,23 @@ def produce_source_gap_receipt(
 
     bundle = verify_local_domain_bundle()
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     domain_complex = seam_complex(visible_rows(capture))
 
-    stage2_path = DATA_DIR / "stage2_receipt.json"
-    stage2 = (
-        json.loads(stage2_path.read_text(encoding="utf-8"))
-        if stage2_path.exists()
-        else None
+    stage2 = load_manifest_pinned_receipt(
+        DATA_DIR,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
     )
-    domain_bound = bool(
-        stage2 is not None
-        and stage2["seam_layer"]["domain_complex"]["complex_freeze_sha256"]
-        == domain_complex["complex_freeze_sha256"]
-        and stage2["capture_sha256"] == capture["capture_sha256"]
+    stage2_receipt_sha256 = manifest_pinned_artifact_sha256(
+        DATA_DIR,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
+    )
+    domain_bound = stage2_matches_source_domain(
+        stage2,
+        source_projection_sha256,
+        domain_complex["complex_freeze_sha256"],
     )
 
     adjoint = adjoint_certificate(domain_complex)
@@ -202,6 +212,8 @@ def produce_source_gap_receipt(
     kernel_trivial = bool(
         kernel["twisted_kernel_dimension"] == 0
         and kernel["witnesses_annihilated"]
+        and kernel["frustrated_component_witnesses_verified"]
+        and kernel["rank_theorem"]["applied"]
     )
     frustration = holonomy_census(domain_complex)
 
@@ -280,6 +292,9 @@ def produce_source_gap_receipt(
 
     clause_verdicts = {
         "bundle_resolves_fail_closed": bool(bundle["passed"]),
+        "stage2_parent_bytes_pinned": bool(
+            stage2_receipt_sha256 is not None
+        ),
         "hamiltonian_source_bound": domain_bound,
         "psd_identity_exact": bool(
             adjoint["kinetic_identity_exact"] and adjoint["kinetic_nonnegative"]
@@ -290,7 +305,7 @@ def produce_source_gap_receipt(
         ),
         "certified_floor_recorded": floor["floor_positive"],
         "measured_gap_within_residual_gate": measured["residual_within_gate"],
-        "si_binding_open_interface_typed": True,
+        "si_mount_absent_by_receipt_scope": True,
     }
     blockers = sorted(
         f"clause_failed:{name}"
@@ -307,7 +322,23 @@ def produce_source_gap_receipt(
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
         "domain_freeze_sha256": domain_complex["complex_freeze_sha256"],
+        "numerical_gates": {
+            "measured_relative_residual_tolerance": RESIDUAL_GATE,
+        },
+        "stage2_binding": {
+            "receipt_present_and_manifest_pinned": bool(stage2 is not None),
+            "receipt_sha256": stage2_receipt_sha256,
+            "receipt_attained": bool(
+                stage2 is not None and stage2.get("verdict") == "ATTAINED"
+            ),
+            "same_source_and_domain": domain_bound,
+        },
         "hamiltonian": {
             "operator": "signed Laplacian of the observer-visible seam complex",
             "carrier_count": domain_complex["node_count"],
@@ -322,24 +353,43 @@ def produce_source_gap_receipt(
             "triangle_count": frustration["triangle_count"],
             "all_triangles_frustrated": frustration["all_triangles_frustrated"],
         },
+        "kernel_certificate": {
+            "component_count": kernel["component_count"],
+            "sign_consistent_component_count": kernel[
+                "sign_consistent_component_count"
+            ],
+            "frustrated_component_count": kernel[
+                "frustrated_component_count"
+            ],
+            "twisted_kernel_dimension": kernel[
+                "twisted_kernel_dimension"
+            ],
+            "signed_incidence_rank": kernel["signed_incidence_rank"],
+            "frustrated_component_witnesses_verified": kernel[
+                "frustrated_component_witnesses_verified"
+            ],
+            "component_certificates": kernel["component_certificates"],
+            "rank_theorem": kernel["rank_theorem"],
+        },
         "exact_gap": {
             "positive": clause_verdicts["gap_positive_exact"],
             "argument": (
                 "positive semidefinite by the kinetic identity and "
-                "kernel-free by the stage-2 sign structure"
+                "kernel-free by the signed-incidence rank theorem, with "
+                "an explicit negative-cycle witness for every frustrated "
+                "component"
             ),
             "certified_floor": floor,
         },
         "measured_gap": measured,
         "si_binding": {
-            "status": "OPEN_INTERFACE_PENDING_FIBER_SELECTION",
-            "owners": ["issue 569", "issue 630"],
+            "status": "NOT_PART_OF_THIS_RECEIPT",
+            "governed_by": "clock_unit_verdict.json",
             "forbidden_ancestry_absent": list(FORBIDDEN_ANCESTRY),
             "note": (
-                "selecting a physical reference transition requires the "
-                "matter fiber content; the declared domain leaves it open, "
-                "so no SI frequency chart is bound and no GeV value exists "
-                "on this receipt"
+                "a future physical transition requires a separately "
+                "certified extended source, domain, and unit mount; no SI "
+                "frequency chart or GeV value is defined by this receipt"
             ),
         },
         "clause_verdicts": clause_verdicts,
@@ -352,15 +402,16 @@ def produce_source_gap_receipt(
             "Finite issue-633 gap object on the issue-634 typed domain: "
             "the sign-twisted kinetic operator is integer symmetric, "
             "positive semidefinite by the exact kinetic identity, and "
-            "kernel-free on the frustrated visible domain, the frustration "
-            "being the declared reversing convention acting on the measured "
-            "seam topology, so its "
+            "kernel-free by the signed-incidence rank theorem, with an "
+            "explicit negative-cycle witness for every frustrated "
+            "component of the visible domain. The sign transport is the "
+            "declared reversing convention acting on the measured seam "
+            "topology, so its "
             "dimensionless spectral gap is exactly positive, with the "
             "determinant floor recorded and the numerical value as a "
             "measured refinement. No physical reference transition is "
-            "selected, no measured frequency or mass enters, the SI "
-            "binding stays an open typed interface, and issue 633 is not "
-            "closed by this receipt."
+            "selected, no measured frequency or mass enters, and an SI "
+            "mount is outside this receipt's declared interface."
         ),
     }
 

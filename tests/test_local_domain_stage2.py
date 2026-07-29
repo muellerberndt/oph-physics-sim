@@ -120,4 +120,6 @@ def test_frozen_stage2_receipt_binding():
     stage1 = json.loads(
         (DATA_DIR / "stage1_receipt.json").read_text(encoding="utf-8")
     )
-    assert receipt["capture_sha256"] == stage1["capture_sha256"]
+    assert receipt["source_projection_sha256"] == stage1[
+        "source_projection_sha256"
+    ]

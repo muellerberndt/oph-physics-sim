@@ -1,62 +1,290 @@
 {
+ "bundle_origin": {
+  "mode": "full_physical_source_run",
+  "runtime_versions": {
+   "numpy": "2.5.1",
+   "python": "3.13.0",
+   "scipy": "1.18.0",
+   "zlib": "1.2.12"
+  },
+  "source_replay_claimed": true
+ },
+ "fit_readback_contract": {
+  "cone_margin_absolute_tolerance": 0.0,
+  "eigenvalue_absolute_tolerance": 0.0,
+  "inertia_eigenvalue_threshold": 1e-12,
+  "producer": "oph_fpe.bulk.event_manifold_producer._fit_quadratic_form",
+  "runtime_scope": "exact equality; a byte-replay claim requires the recorded runtime versions"
+ },
  "rungs": [
   {
    "artifact": "rung_16384.npz.gz",
-   "artifact_sha256": "sha256:1ee4c9bc666b25df8dad714acc454b9acd62425b84a4ccff6b680c988466cb59",
-   "carrier_count": 16384,
+   "artifact_arrays": {
+    "causal_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      39474,
+      2
+     ]
+    },
+    "chart": {
+     "dtype": "<f8",
+     "shape": [
+      2304,
+      4
+     ]
+    },
+    "coefficients": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "flux": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "form_eigenvalues": {
+     "dtype": "<f8",
+     "shape": [
+      4
+     ]
+    },
+    "spacelike_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      300000,
+      2
+     ]
+    }
+   },
+   "artifact_sha256": "sha256:864ae9217d4292e1b73baaef7cef80582c533fa8672ec8626a145defc67d2e54",
    "cone_margin": -5.624222634635595,
+   "config": {
+    "carrier_count": 16384,
+    "cycles": 16,
+    "geometry_transport": "held_out_flow",
+    "observer_count": 128,
+    "observer_cross_reads": true,
+    "observer_samples": 6,
+    "observer_support_size": 96,
+    "seed": 20260751,
+    "snapshot_coverage": "spanning"
+   },
    "coupling_spread": 0.187527,
    "cross_observer_edges": 348,
    "held_out_inertia": [
     1,
     3
    ],
+   "rung_id": "scale_16384_support_96",
    "summary": "rung_16384.json",
-   "summary_sha256": "sha256:b91706514bea0966d10a14c9372653901ba0bbf0973eb7024d93409c672d63de"
+   "summary_sha256": "sha256:3b6c6d3f552bf4271b81a8d8e658486c0167f385aa14e0a2b96575ef5c21b25d",
+   "variant": "support_96_scale_row"
   },
   {
    "artifact": "rung_65536.npz.gz",
-   "artifact_sha256": "sha256:e87c83daf6207e6e2d561f5f771e42e6517111177a1d543cb4971b88f497fc79",
-   "carrier_count": 65536,
+   "artifact_arrays": {
+    "causal_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      56610,
+      2
+     ]
+    },
+    "chart": {
+     "dtype": "<f8",
+     "shape": [
+      4608,
+      4
+     ]
+    },
+    "coefficients": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "flux": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "form_eigenvalues": {
+     "dtype": "<f8",
+     "shape": [
+      4
+     ]
+    },
+    "spacelike_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      300000,
+      2
+     ]
+    }
+   },
+   "artifact_sha256": "sha256:5cb120825947a86c7037c1a5720c651df7eba1208c9a3baef8a143135d1afce1",
    "cone_margin": -3.219901300819808,
+   "config": {
+    "carrier_count": 65536,
+    "cycles": 16,
+    "geometry_transport": "held_out_flow",
+    "observer_count": 256,
+    "observer_cross_reads": true,
+    "observer_samples": 6,
+    "observer_support_size": 96,
+    "seed": 20260751,
+    "snapshot_coverage": "spanning"
+   },
    "coupling_spread": 0.185951,
    "cross_observer_edges": 312,
    "held_out_inertia": [
     1,
     3
    ],
+   "rung_id": "scale_65536_support_96",
    "summary": "rung_65536.json",
-   "summary_sha256": "sha256:bd175076787d4b291f5557dc57987dbbf297a7a0552b258532fc75e5ef35a0fb"
+   "summary_sha256": "sha256:88660932fc53e42e1992cf8aa645cc66310ecd9a4b4eb58e36aee9dc7ade4ab9",
+   "variant": "support_96_scale_row"
   },
   {
    "artifact": "rung_262144.npz.gz",
-   "artifact_sha256": "sha256:212d454d324310723f1c96a706f7ea8728910a35c64c3ab1c4a8ab8188e7f882",
-   "carrier_count": 262144,
+   "artifact_arrays": {
+    "causal_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      94860,
+      2
+     ]
+    },
+    "chart": {
+     "dtype": "<f8",
+     "shape": [
+      9216,
+      4
+     ]
+    },
+    "coefficients": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "flux": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "form_eigenvalues": {
+     "dtype": "<f8",
+     "shape": [
+      4
+     ]
+    },
+    "spacelike_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      300000,
+      2
+     ]
+    }
+   },
+   "artifact_sha256": "sha256:1a6bd5e8baa5205ac9e36512d5ce46cf15fc6d19c9f28ab2b6b8134fe6d8c3d2",
    "cone_margin": -2.4927748023410743,
+   "config": {
+    "carrier_count": 262144,
+    "cycles": 16,
+    "geometry_transport": "held_out_flow",
+    "observer_count": 512,
+    "observer_cross_reads": true,
+    "observer_samples": 6,
+    "observer_support_size": 96,
+    "seed": 20260751,
+    "snapshot_coverage": "spanning"
+   },
    "coupling_spread": 0.17657,
    "cross_observer_edges": 312,
    "held_out_inertia": [
     2,
     2
    ],
+   "rung_id": "control_262144_support_96",
    "summary": "rung_262144.json",
-   "summary_sha256": "sha256:1d7dad7adadb00094988e44c7e892a6ececd26c8babccf19b2937aedbc8bb1ed"
+   "summary_sha256": "sha256:b51cdcb285ae06486c4e3ec668a77e15291b8bb60a5d8417628dbcfe8d47470a",
+   "variant": "same_size_sparse_support_control"
   },
   {
    "artifact": "rung_262144_dense.npz.gz",
-   "artifact_sha256": "sha256:150b7bd27a57f729ee06bd9472b70555521643f6847260b5cfc7b553d0b94435",
-   "carrier_count": 262144,
+   "artifact_arrays": {
+    "causal_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      143820,
+      2
+     ]
+    },
+    "chart": {
+     "dtype": "<f8",
+     "shape": [
+      9216,
+      4
+     ]
+    },
+    "coefficients": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "flux": {
+     "dtype": "<f8",
+     "shape": [
+      6
+     ]
+    },
+    "form_eigenvalues": {
+     "dtype": "<f8",
+     "shape": [
+      4
+     ]
+    },
+    "spacelike_pairs": {
+     "dtype": "<i4",
+     "shape": [
+      300000,
+      2
+     ]
+    }
+   },
+   "artifact_sha256": "sha256:ee79dedc696bb5dd2c80e6657f6a783f0d6b2fa4e604a905f2c33a350dcd8b54",
    "cone_margin": -1.4122990611036421,
+   "config": {
+    "carrier_count": 262144,
+    "cycles": 16,
+    "geometry_transport": "held_out_flow",
+    "observer_count": 512,
+    "observer_cross_reads": true,
+    "observer_samples": 6,
+    "observer_support_size": 384,
+    "seed": 20260751,
+    "snapshot_coverage": "spanning"
+   },
    "coupling_spread": 0.17657,
    "cross_observer_edges": 1062,
    "held_out_inertia": [
     1,
     3
    ],
+   "rung_id": "scale_262144_support_384",
    "summary": "rung_262144_dense.json",
-   "summary_sha256": "sha256:e81e87e2df0408ed85670529e1939daec2ab74c937978a0eeafd42b23adf5b18",
-   "variant": "density_corrected_support_384"
+   "summary_sha256": "sha256:02078da34969d80abdfec11878f0fe663712066893d050b8e37f0035e914dfee",
+   "variant": "support_adjusted_scale_row"
   }
  ],
- "schema": "oph.einstein-convergence-ladder.v1"
+ "schema": "oph.einstein-convergence-ladder.v2"
 }

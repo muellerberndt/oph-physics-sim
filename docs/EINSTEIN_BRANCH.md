@@ -188,12 +188,10 @@ and with the cone margin still negative:
 | 32 (v2) | 3456 | (1,2) | negative |
 | 128 (v1 fixed capture, 16384 carriers, dense supports) | 2304 | (1,3) | negative |
 
-Reading: Einstein spacetime behaves as an effective many-observer
-description, and dense cross-observer record reading is the mechanism that
-merges causal cones. The convergence ladder
-(`scripts/einstein_convergence_ladder.py`, artifacts in
-`data/einstein_convergence/`) measures this at scale on the fixed v1
-capture:
+The table below is a finite fitted-form sensitivity instrument on the fixed
+v1 capture. It does not select a spacetime dimension or establish a continuum
+limit. The script at `scripts/einstein_convergence_ladder.py` produces the
+four hash-bound rows in `data/einstein_convergence/`:
 
 | Carriers | Observers | Support | Cross edges | Inertia | Cone margin | Spread |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -202,16 +200,31 @@ capture:
 | 262,144 | 512 | 96 | 312 | (2,2) | -2.49 | 0.1766 |
 | 262,144 | 512 | 384 | 1,062 | (1,3) | -1.41 | 0.1766 |
 
-At constant cross-observer coupling density the held-out signature is
-Lorentzian `(1,3)` at every rung and the cone margin halves per rung:
-geometric convergence toward the Einstein cone, with the coupling spread
-monotone down. The unscaled 256k row is the density control: stagnant
-coupling degrades the signature to `(2,2)`, so coupling DENSITY, not carrier
-count, is the control variable. Chain depth (`observer_samples`) must be
-held constant across rungs; shortening chains flips the timelike direction.
-Extrapolating the measured halving puts the margin zero crossing in the low
-millions of carriers; that extrapolation is a projection, not a measurement,
-and the positive-margin run is tracked in #595.
+The declared three-point path uses support widths 96, 96, and 384. It does
+not hold observer density, support width, or cross-edge density fixed. Along
+that path the fitted inertia is `(1,3)`, the cone margin stays negative while
+its magnitude decreases, and the coupling spread decreases. The second
+262,144-carrier row is a same-size support-96 control. Changing the support
+from 96 to 384 changes the fitted inertia from `(2,2)` to `(1,3)`, the
+cross-observer edge count from 312 to 1,062, and the negative margin from
+-2.49 to -1.41. This supports sensitivity to the declared support and
+cross-read construction. Four rows do not identify a coupling-density law,
+prove geometric convergence, or certify a zero crossing.
+
+The v2 manifest binds exactly four distinct row identifiers and filenames,
+including both 262,144-carrier controls. Canonical summaries contain no
+wall-clock fields. The validator checks row/configuration parity, payload
+hashes, array schemas, summary readbacks, and a fresh fitted-form calculation
+from each frozen chart and pair sample. A byte-identical full source replay is
+a claim about the same source revision and the runtime versions recorded in
+the manifest, not cross-runtime floating-point portability. Deterministic
+reserialization of frozen arrays is recorded as a separate manifest origin
+and does not count as a physical-source replay. The frozen bundle can be
+checked without running the large captures:
+
+```bash
+.venv/bin/python scripts/einstein_convergence_ladder.py --validate-only
+```
 
 ## Audited v1 simulator findings that affect results
 

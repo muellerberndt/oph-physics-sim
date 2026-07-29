@@ -2,10 +2,16 @@
 
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import numpy as np
 
+from oph_fpe.local_domain.receipt_io import (
+    load_manifest_pinned_receipt,
+    manifest_pinned_artifact_sha256,
+    stage2_matches_source_domain,
+)
 from oph_fpe.local_domain.source_gap_receipt import (
     exact_gap_floor,
     signed_laplacian,
@@ -68,6 +74,77 @@ def test_exact_gap_floor_positive():
     assert floor["floor_log2"] < 0.0
 
 
+def test_stage2_loader_and_binding_fail_closed(tmp_path):
+    shutil.copyfile(DATA_DIR / "manifest.json", tmp_path / "manifest.json")
+    shutil.copyfile(
+        DATA_DIR / "stage2_receipt.json",
+        tmp_path / "stage2_receipt.json",
+    )
+    stage2 = load_manifest_pinned_receipt(
+        tmp_path, "stage2_receipt.json", "stage2_receipt_sha256"
+    )
+    assert stage2 is not None
+    assert manifest_pinned_artifact_sha256(
+        tmp_path,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
+    ) == "sha256:" + hashlib.sha256(
+        (tmp_path / "stage2_receipt.json").read_bytes()
+    ).hexdigest()
+    source = stage2["source_projection_sha256"]
+    domain = stage2["seam_layer"]["domain_complex"][
+        "complex_freeze_sha256"
+    ]
+    assert stage2_matches_source_domain(stage2, source, domain)
+    assert not stage2_matches_source_domain(
+        {**stage2, "verdict": "NOT_ATTAINED"}, source, domain
+    )
+    assert not stage2_matches_source_domain(
+        {**stage2, "stage1_binding": []}, "sha256:wrong", domain
+    )
+
+    with (tmp_path / "stage2_receipt.json").open("ab") as stream:
+        stream.write(b" ")
+    assert (
+        manifest_pinned_artifact_sha256(
+            tmp_path,
+            "stage2_receipt.json",
+            "stage2_receipt_sha256",
+        )
+        is None
+    )
+    assert (
+        load_manifest_pinned_receipt(
+            tmp_path, "stage2_receipt.json", "stage2_receipt_sha256"
+        )
+        is None
+    )
+
+    (tmp_path / "manifest.json").write_text("[]\n")
+    assert (
+        load_manifest_pinned_receipt(
+            tmp_path, "stage2_receipt.json", "stage2_receipt_sha256"
+        )
+        is None
+    )
+
+    nonobject = b"[]\n"
+    (tmp_path / "stage2_receipt.json").write_bytes(nonobject)
+    manifest = {
+        "schema": "oph.local-domain-stage1.manifest.v1",
+        "stage2_receipt_sha256": (
+            "sha256:" + hashlib.sha256(nonobject).hexdigest()
+        ),
+    }
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest) + "\n")
+    assert (
+        load_manifest_pinned_receipt(
+            tmp_path, "stage2_receipt.json", "stage2_receipt_sha256"
+        )
+        is None
+    )
+
+
 def test_frozen_gap_receipt_binding():
     manifest = json.loads(
         (DATA_DIR / "manifest.json").read_text(encoding="utf-8")
@@ -84,12 +161,41 @@ def test_frozen_gap_receipt_binding():
     assert receipt["blockers"] == []
     assert all(receipt["clause_verdicts"].values())
     assert receipt["exact_gap"]["positive"] is True
+    kernel = receipt["kernel_certificate"]
+    assert kernel["twisted_kernel_dimension"] == 0
+    assert kernel["rank_theorem"]["applied"] is True
+    assert kernel["frustrated_component_witnesses_verified"] is True
+    assert all(
+        row["consistent"]
+        or (
+            row["negative_cycle_witness"]["negative"]
+            and row["negative_cycle_witness"]["sign_product"] == -1
+        )
+        for row in kernel["component_certificates"]
+    )
     assert receipt["measured_gap"]["smallest_eigenvalue"] > 0.0
-    assert receipt["measured_gap"]["residual_within_gate"] is True
-    assert receipt["si_binding"]["status"] == (
-        "OPEN_INTERFACE_PENDING_FIBER_SELECTION"
+    measured = receipt["measured_gap"]
+    residual_gate = receipt["numerical_gates"][
+        "measured_relative_residual_tolerance"
+    ]
+    assert measured["residual_within_gate"] == (
+        measured["relative_residual"] < residual_gate
+    )
+    assert receipt["si_binding"]["status"] == "NOT_PART_OF_THIS_RECEIPT"
+    assert receipt["stage2_binding"][
+        "receipt_present_and_manifest_pinned"
+    ] is True
+    assert receipt["stage2_binding"]["receipt_attained"] is True
+    assert receipt["stage2_binding"]["same_source_and_domain"] is True
+    assert receipt["stage2_binding"]["receipt_sha256"] == (
+        "sha256:"
+        + hashlib.sha256(
+            (DATA_DIR / "stage2_receipt.json").read_bytes()
+        ).hexdigest()
     )
     stage1 = json.loads(
         (DATA_DIR / "stage1_receipt.json").read_text(encoding="utf-8")
     )
-    assert receipt["capture_sha256"] == stage1["capture_sha256"]
+    assert receipt["source_projection_sha256"] == stage1[
+        "source_projection_sha256"
+    ]

@@ -1,42 +1,34 @@
-"""Issue-311 closure certificate: the same-interface classical completion.
+"""Issue-311 finite-interface certificate: an explicit classical completion.
 
-The particle-criterion lane closes with a source-positive criterion
-excluding the same-interface classical countermodel, or with the proof
-that the complete declared local domain admits indistinguishable
-classical and quantum completions.  The declared domain, the closed
-issue-634 typing with its frozen receipts, is final, so the second
-branch is decidable.  This certificate decides it constructively:
+This certificate tests whether the finite spectral interface emitted by
+the issue-634 typing excludes a classical realization.  It does not:
 
 * The classical completion is exhibited, not assumed.  For each twist
-  sector the planar-rotor spring network places one two-component
-  coordinate at every carrier and one rotation spring on every
-  oriented seam; its potential energy is one half the summed squared
-  spring extensions, a manifestly classical mechanical energy, and its
+  sector the harmonic network places one two-component coordinate at
+  every carrier and one fixed orthogonal transport coupling on every
+  oriented seam.  With unit masses, its Hamiltonian is one half the
+  squared momentum plus one half the sum of
+  |q_v - R_e q_w| squared over seams.  Its
   stiffness matrix is the exact realification of the sector Laplacian,
   so every sector spectrum appears with each eigenvalue doubled.
 * Payload identity is verified quantity by quantity: the classical
   stiffness spectra reproduce the frozen sector gaps and the frozen
   scalar gap to numerical residual, and the classical kernel counts
   are exactly twice the frozen exact kernel dimensions.
-* The emitted interface is exhaustively partitioned: every leaf of
-  every frozen domain receipt is a shared-data function of the
-  complex, an operator-spectral quantity realized by the stiffness
-  matrices, a hash, a count, prose, or a verdict.  No leaf and no key
-  carries a quantum discriminator: no state-update statistics, no
-  correlation payload, no noncommutativity witness has any producer.
+* The listed frozen artifacts are manifest-pinned, their JSON leaves
+  are counted by primitive serialized type, and their keys are scanned
+  for a declared list of discriminator fragments.  This lexical census
+  reports no matching key.  It does not infer the semantics of an
+  unlabeled value and is not a completeness theorem for quantum
+  discriminators.
 
-The theorem follows: the classical rotor completion and the quantum
-Hamiltonian reading of the same operators emit identical interfaces
-on the complete declared domain, so no criterion constructible from
-the domain excludes the classical countermodel, and the positive
-branch of the lane is not attainable there.  The finite sector
-arithmetic and the sector-gap invariants are retained as closed
-subresults.  Asymptotic states exist in neither completion on the
-finite complex, and sector composition and subcomplex restriction are
-shared structure, so the no-go covers the composition and asymptotics
-clauses.  A completion carrying measurement statistics or state-update
-data is a different domain and is not judged here.  No physical
-promotion follows from any output.
+The result is limited to the declared serialized finite interface.  It
+shows that its sector and scalar spectra admit the displayed classical
+realization.
+It does not prove a no-go for every criterion constructible from an
+extended domain, a cofinal refinement family, asymptotic states, or a
+future measurement/state-update producer.  No physical promotion
+follows from any output.
 """
 
 from __future__ import annotations
@@ -57,8 +49,10 @@ from oph_fpe.local_domain.defect_sector_spectra import (
     oriented_seams,
     sector_laplacian,
 )
+from oph_fpe.local_domain.receipt_io import load_manifest_pinned_receipt
 from oph_fpe.local_domain.stage1_event_complex import (
     MAIN_CONFIG,
+    local_domain_source_sha256,
     refuse_forbidden_config,
 )
 from oph_fpe.local_domain.stage2_spin_layer import seam_complex, visible_rows
@@ -79,7 +73,7 @@ RECEIPT_FILES = (
     "matter_attachment_receipt.json",
 )
 
-DISCRIMINATOR_VOCABULARY = (
+DECLARED_DISCRIMINATOR_KEY_FRAGMENTS = (
     "entangle",
     "bell_",
     "correlation_payload",
@@ -91,6 +85,9 @@ DISCRIMINATOR_VOCABULARY = (
 
 GAP_MATCH_TOLERANCE = 1.0e-9
 KERNEL_FLOOR = 1.0e-9
+SYMMETRY_RESIDUAL_GATE = 1.0e-14
+ORIENTATION_CONTROL_SHIFT_GATE = 1.0e-9
+EIGENSOLVER_SHIFT = -1.0e-6
 
 
 def _canonical_json(value: Any) -> str:
@@ -101,14 +98,23 @@ def _sha256_bytes(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def rotor_stiffness(matrix: csr_matrix) -> csr_matrix:
-    """Real stiffness matrix of the planar-rotor spring network.
+def _load_pinned_receipt(name: str, manifest_key: str) -> dict[str, Any] | None:
+    """Load a receipt only when its manifest pin matches its bytes."""
+
+    return load_manifest_pinned_receipt(DATA_DIR, name, manifest_key)
+
+
+def harmonic_transport_stiffness(matrix: csr_matrix) -> csr_matrix:
+    """Real stiffness matrix of the transport-coupled harmonic network.
 
     The realification [[Re, -Im], [Im, Re]] of the Hermitian sector
     Laplacian is the stiffness matrix of the network whose potential
-    is one half the summed squared extensions of rotation springs, so
-    it is real symmetric positive semidefinite and its spectrum is the
-    sector spectrum with every eigenvalue doubled."""
+    is one half the sum of |q_v - R_e q_w| squared, where R_e is the
+    fixed planar rotation that realifies the seam phase.  With unit
+    masses and canonical momentum p, the classical Hamiltonian is
+    H = (p^T p + q^T K q) / 2.  The matrix is real symmetric positive
+    semidefinite and its spectrum is the sector spectrum with every
+    eigenvalue doubled."""
 
     real = matrix.real.tocsr()
     imag = matrix.imag.tocsr()
@@ -122,7 +128,9 @@ def classical_sector_reading(
 ) -> dict[str, Any]:
     """Classical spectrum of one sector and its frozen-payload match."""
 
-    stiffness = rotor_stiffness(sector_laplacian(oriented, sector))
+    stiffness = harmonic_transport_stiffness(
+        sector_laplacian(oriented, sector)
+    )
     doubled_kernel = 2 * frozen_kernel
     wanted = doubled_kernel + 2
     size = stiffness.shape[0]
@@ -131,27 +139,47 @@ def classical_sector_reading(
     eigenvalues = eigsh(
         stiffness,
         k=wanted,
-        sigma=-1.0e-6,
+        sigma=EIGENSOLVER_SHIFT,
         which="LM",
         v0=start,
         return_eigenvectors=False,
     )
     eigenvalues = np.sort(eigenvalues)
     kernel_count = int((np.abs(eigenvalues) < KERNEL_FLOOR).sum())
+    kernel_max_abs_eigenvalue = (
+        float(np.max(np.abs(eigenvalues[:doubled_kernel])))
+        if doubled_kernel
+        else 0.0
+    )
+    first_nonkernel_abs_eigenvalue = float(
+        abs(eigenvalues[doubled_kernel])
+    )
     gap = float(eigenvalues[doubled_kernel])
+    symmetry_max_residual = float(abs(stiffness - stiffness.T).max())
     return {
         "sector": sector,
         "classical_kernel_count": kernel_count,
         "expected_doubled_kernel": doubled_kernel,
+        "kernel_eigenvalue_abs_floor": KERNEL_FLOOR,
+        "kernel_max_abs_eigenvalue": kernel_max_abs_eigenvalue,
+        "first_nonkernel_abs_eigenvalue": (
+            first_nonkernel_abs_eigenvalue
+        ),
         "classical_gap": gap,
+        "symmetry_max_residual": symmetry_max_residual,
         "symmetric": bool(
-            abs(stiffness - stiffness.T).max() < 1.0e-14
+            symmetry_max_residual < SYMMETRY_RESIDUAL_GATE
         ),
     }
 
 
-def interface_partition() -> dict[str, Any]:
-    """Partition every emitted leaf; flag any quantum discriminator."""
+def serialized_interface_census() -> dict[str, Any]:
+    """Count primitive leaf types and flag declared key fragments.
+
+    This is a bounded lexical schema audit.  It does not infer the
+    meaning of values or prove that future encodings cannot carry
+    quantum information.
+    """
 
     def walk(value: Any, key_path: str) -> tuple[dict[str, int], list[str]]:
         census: dict[str, int] = {}
@@ -159,7 +187,10 @@ def interface_partition() -> dict[str, Any]:
         if isinstance(value, Mapping):
             for key, child in value.items():
                 key_text = str(key).lower()
-                if any(t in key_text for t in DISCRIMINATOR_VOCABULARY):
+                if any(
+                    t in key_text
+                    for t in DECLARED_DISCRIMINATOR_KEY_FRAGMENTS
+                ):
                     hits.append(f"{key_path}/{key}")
                 child_census, child_hits = walk(child, f"{key_path}/{key}")
                 for name, count in child_census.items():
@@ -175,27 +206,96 @@ def interface_partition() -> dict[str, Any]:
             if value is None:
                 name = "null"
             elif isinstance(value, bool):
-                name = "verdict_boolean"
+                name = "boolean_leaf"
             elif isinstance(value, int):
-                name = "shared_data_count"
+                name = "integer_leaf"
             elif isinstance(value, float):
-                name = "spectral_or_shared_real"
+                name = "float_leaf"
             elif isinstance(value, str):
-                name = "hash" if value.startswith("sha256:") else "prose"
+                name = (
+                    "sha256_string"
+                    if value.startswith("sha256:")
+                    else "string_leaf"
+                )
             else:
                 raise TypeError(f"unclassifiable leaf at {key_path}")
             census[name] = census.get(name, 0) + 1
         return census, hits
 
     total: dict[str, int] = {}
+    artifact_sha256: dict[str, str] = {}
     all_hits: list[str] = []
     missing: list[str] = []
+    pin_failures: list[str] = []
+    invalid_artifacts: list[str] = []
+    schema_failures: list[str] = []
+    manifest_path = DATA_DIR / "manifest.json"
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(
+                manifest_path.read_text(encoding="utf-8")
+            )
+            if not isinstance(manifest, Mapping):
+                raise TypeError("manifest must be an object")
+        except (
+            OSError,
+            UnicodeDecodeError,
+            json.JSONDecodeError,
+            TypeError,
+        ):
+            manifest = {}
+            invalid_artifacts.append(manifest_path.name)
+    else:
+        manifest = {}
+    manifest_key_of = {
+        "stage1_receipt.json": "receipt_sha256",
+        "stage2_receipt.json": "stage2_receipt_sha256",
+        "stage3_receipt.json": "stage3_receipt_sha256",
+        "stage4_receipt.json": "stage4_receipt_sha256",
+        "source_gap_receipt.json": "source_gap_receipt_sha256",
+        "defect_sector_receipt.json": "defect_sector_receipt_sha256",
+        "matter_attachment_receipt.json": "matter_attachment_receipt_sha256",
+    }
+    expected_identity = {
+        "stage1_receipt.json": ("oph.local-domain-stage1.v1", 634),
+        "stage2_receipt.json": ("oph.local-domain-stage2.v1", 634),
+        "stage3_receipt.json": ("oph.local-domain-stage3.v1", 634),
+        "stage4_receipt.json": ("oph.local-domain-stage4.v1", 634),
+        "source_gap_receipt.json": ("oph.source-clock-gap.v1", 633),
+        "defect_sector_receipt.json": (
+            "oph.local-domain-defect-sector-spectra.v1",
+            311,
+        ),
+        "matter_attachment_receipt.json": (
+            "oph.local-domain-matter-attachment.v1",
+            569,
+        ),
+    }
     for name in RECEIPT_FILES:
         path = DATA_DIR / name
         if not path.exists():
             missing.append(name)
             continue
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        raw = path.read_bytes()
+        if manifest.get(manifest_key_of[name]) != _sha256_bytes(raw):
+            pin_failures.append(name)
+            continue
+        artifact_sha256[name] = _sha256_bytes(raw)
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+            if not isinstance(payload, Mapping):
+                raise TypeError("receipt must be an object")
+        except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
+            invalid_artifacts.append(name)
+            continue
+        expected_schema, expected_issue = expected_identity[name]
+        if (
+            payload.get("schema") != expected_schema
+            or payload.get("issue") != expected_issue
+            or payload.get("physical_promotion_allowed") is not False
+        ):
+            schema_failures.append(name)
+            continue
         census, hits = walk(payload, name)
         for key, count in census.items():
             total[key] = total.get(key, 0) + count
@@ -207,35 +307,60 @@ def interface_partition() -> dict[str, Any]:
         import gzip
         import io
 
-        bundle = np.load(io.BytesIO(gzip.decompress(array_path.read_bytes())))
-        array_hits = [
-            f"{array_path.name}:{name}"
-            for name in bundle.files
-            if any(t in name.lower() for t in DISCRIMINATOR_VOCABULARY)
-        ]
-        array_report = {
-            "artifact": array_path.name,
-            "arrays": {
-                name: {
-                    "dtype": str(bundle[name].dtype),
-                    "shape": list(bundle[name].shape),
+        array_raw = array_path.read_bytes()
+        if manifest.get("arrays_sha256") != _sha256_bytes(array_raw):
+            pin_failures.append(array_path.name)
+        else:
+            artifact_sha256[array_path.name] = _sha256_bytes(array_raw)
+            try:
+                bundle = np.load(io.BytesIO(gzip.decompress(array_raw)))
+                array_hits = [
+                    f"{array_path.name}:{name}"
+                    for name in bundle.files
+                    if any(
+                        t in name.lower()
+                        for t in DECLARED_DISCRIMINATOR_KEY_FRAGMENTS
+                    )
+                ]
+                array_report = {
+                    "artifact": array_path.name,
+                    "arrays": {
+                        name: {
+                            "dtype": str(bundle[name].dtype),
+                            "shape": list(bundle[name].shape),
+                        }
+                        for name in bundle.files
+                    },
+                    "classification": (
+                        "array names, dtypes, and shapes only"
+                    ),
                 }
-                for name in bundle.files
-            },
-            "classification": (
-                "shared-data coordinate and pair-index arrays of the "
-                "complex, present identically in both completions"
-            ),
-        }
-        all_hits.extend(array_hits)
+                all_hits.extend(array_hits)
+            except (OSError, ValueError, EOFError):
+                invalid_artifacts.append(array_path.name)
     else:
         missing.append(array_path.name)
     return {
         "missing_receipts": missing,
+        "artifact_sha256": dict(sorted(artifact_sha256.items())),
+        "manifest_pin_failures": pin_failures,
+        "schema_failures": schema_failures,
+        "invalid_artifacts": sorted(set(invalid_artifacts)),
         "total_leaf_census": dict(sorted(total.items())),
         "array_artifact": array_report,
-        "discriminator_hits": all_hits[:16],
-        "no_quantum_discriminator": bool(not all_hits and not missing),
+        "declared_key_fragment_hits": all_hits[:16],
+        "no_declared_discriminator_key_match": bool(
+            not all_hits
+            and not missing
+            and not pin_failures
+            and not invalid_artifacts
+            and not schema_failures
+        ),
+        "scope": (
+            "the explicitly listed serialized finite receipts and stage-1 "
+            "array bundle; primitive type census and declared key-fragment "
+            "scan only"
+        ),
     }
 
 
@@ -258,26 +383,53 @@ def produce_classical_realization_receipt(
             "blockers": [f"forbidden_config_key:{key}" for key in forbidden],
         }
 
-    sector_path = DATA_DIR / "defect_sector_receipt.json"
-    gap_path = DATA_DIR / "source_gap_receipt.json"
-    if not sector_path.exists() or not gap_path.exists():
+    sector_receipt = _load_pinned_receipt(
+        "defect_sector_receipt.json", "defect_sector_receipt_sha256"
+    )
+    gap_receipt = _load_pinned_receipt(
+        "source_gap_receipt.json", "source_gap_receipt_sha256"
+    )
+    if sector_receipt is None or gap_receipt is None:
         return {
             "schema": SCHEMA,
             "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "verdict": "NOT_ATTAINED",
-            "blockers": ["frozen_spectral_receipts_missing"],
+            "blockers": ["frozen_spectral_receipts_missing_or_unpinned"],
         }
-    sector_receipt = json.loads(sector_path.read_text(encoding="utf-8"))
-    gap_receipt = json.loads(gap_path.read_text(encoding="utf-8"))
+    spectral_receipts_valid = bool(
+        sector_receipt.get("schema")
+        == "oph.local-domain-defect-sector-spectra.v1"
+        and sector_receipt.get("issue") == ISSUE
+        and sector_receipt.get("physical_promotion_allowed") is False
+        and sector_receipt.get("verdict") == "ATTAINED"
+        and gap_receipt.get("schema") == "oph.source-clock-gap.v1"
+        and gap_receipt.get("issue") == 633
+        and gap_receipt.get("physical_promotion_allowed") is False
+        and gap_receipt.get("verdict") == "ATTAINED"
+    )
+    if not spectral_receipts_valid:
+        return {
+            "schema": SCHEMA,
+            "issue": ISSUE,
+            "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
+            "verdict": "NOT_ATTAINED",
+            "blockers": ["frozen_spectral_receipt_identity_invalid"],
+        }
 
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     domain_rows = visible_rows(capture)
     domain_complex = seam_complex(domain_rows)
     oriented = oriented_seams(domain_rows)
     same_source = bool(
-        sector_receipt["capture_sha256"] == capture["capture_sha256"]
+        sector_receipt.get("source_projection_sha256")
+        == source_projection_sha256
         and sector_receipt["domain_freeze_sha256"]
+        == domain_complex["complex_freeze_sha256"]
+        and gap_receipt.get("source_projection_sha256")
+        == source_projection_sha256
+        and gap_receipt.get("domain_freeze_sha256")
         == domain_complex["complex_freeze_sha256"]
     )
 
@@ -287,30 +439,37 @@ def produce_classical_realization_receipt(
         reading = classical_sector_reading(
             oriented, row["sector"], row["kernel_dimension"]
         )
-        gap_match = bool(
-            abs(reading["classical_gap"] - row["gap_above_kernel"])
-            < GAP_MATCH_TOLERANCE
+        gap_abs_residual = abs(
+            reading["classical_gap"] - row["gap_above_kernel"]
         )
+        gap_match = bool(gap_abs_residual < GAP_MATCH_TOLERANCE)
         kernel_match = bool(
             reading["classical_kernel_count"]
             == reading["expected_doubled_kernel"]
+            and (
+                reading["expected_doubled_kernel"] == 0
+                or reading["kernel_max_abs_eigenvalue"] < KERNEL_FLOOR
+            )
+            and reading["first_nonkernel_abs_eigenvalue"]
+            > KERNEL_FLOOR
         )
         readings.append(
             {
                 **reading,
                 "frozen_gap": row["gap_above_kernel"],
+                "gap_abs_residual": gap_abs_residual,
                 "gap_match": gap_match,
                 "kernel_match": kernel_match,
             }
         )
         matches.append(gap_match and kernel_match and reading["symmetric"])
 
+    scalar_gap_abs_residual = abs(
+        readings[0]["classical_gap"]
+        - gap_receipt["measured_gap"]["smallest_eigenvalue"]
+    )
     scalar_match = bool(
-        abs(
-            readings[0]["classical_gap"]
-            - gap_receipt["measured_gap"]["smallest_eigenvalue"]
-        )
-        < GAP_MATCH_TOLERANCE
+        scalar_gap_abs_residual < GAP_MATCH_TOLERANCE
     )
 
     from oph_fpe.local_domain.stage1_event_complex import (
@@ -320,8 +479,58 @@ def produce_classical_realization_receipt(
     ladder_config = dict(CONTROL_SPLIT_CONFIG)
     ladder_config["observer_cross_reads"] = True
     ladder_capture = capture_physical_source(ladder_config)
-    ladder_oriented = oriented_seams(visible_rows(ladder_capture))
+    ladder_rows = visible_rows(ladder_capture)
+    ladder_domain = seam_complex(ladder_rows)
+    ladder_source_projection_sha256 = local_domain_source_sha256(
+        ladder_capture, ladder_config
+    )
+    ladder_oriented = oriented_seams(ladder_rows)
     frozen_ladder = sector_receipt["scale_ladder"]
+    ladder_source_domain_bound = bool(
+        frozen_ladder.get("small_source_projection_sha256")
+        == ladder_source_projection_sha256
+        and frozen_ladder.get("small_domain_freeze_sha256")
+        == ladder_domain["complex_freeze_sha256"]
+        and frozen_ladder.get("small_source_carrier_count")
+        == ladder_config["carrier_count"]
+        and frozen_ladder.get("small_visible_node_count")
+        == ladder_domain["node_count"]
+        and frozen_ladder.get("small_visible_edge_count")
+        == ladder_domain["edge_count"]
+    )
+    sector_interface = sector_receipt.get("spectral_interface_identity", {})
+    sector_interface_scope_bound = bool(
+        isinstance(sector_interface, Mapping)
+        and sector_interface.get("schema") == sector_receipt["schema"]
+        and sector_interface.get("issue") == sector_receipt["issue"]
+        and sector_interface.get("local_domain_issue") == 634
+        and sector_interface.get(
+            "rer_exact_flux_12_42_vertex_identity_bridge"
+        )
+        is False
+        and sector_interface.get("separate_from_rer_exact_flux_certificate")
+        is True
+        and sector_interface.get("main_domain")
+        == {
+            "source_carrier_count": main_config["carrier_count"],
+            "source_projection_sha256": source_projection_sha256,
+            "domain_freeze_sha256": domain_complex[
+                "complex_freeze_sha256"
+            ],
+            "visible_node_count": domain_complex["node_count"],
+            "visible_edge_count": domain_complex["edge_count"],
+        }
+        and sector_interface.get("ladder_domain")
+        == {
+            "source_carrier_count": ladder_config["carrier_count"],
+            "source_projection_sha256": ladder_source_projection_sha256,
+            "domain_freeze_sha256": ladder_domain[
+                "complex_freeze_sha256"
+            ],
+            "visible_node_count": ladder_domain["node_count"],
+            "visible_edge_count": ladder_domain["edge_count"],
+        }
+    )
     ladder_readings = []
     ladder_matches = []
     for sector in range(SECTOR_COUNT):
@@ -329,28 +538,45 @@ def produce_classical_realization_receipt(
         reading = classical_sector_reading(
             ladder_oriented, sector, frozen_kernel
         )
-        gap_match = bool(
-            abs(
-                reading["classical_gap"]
-                - frozen_ladder["small_gaps"][sector]
-            )
-            < GAP_MATCH_TOLERANCE
+        gap_abs_residual = abs(
+            reading["classical_gap"]
+            - frozen_ladder["small_gaps"][sector]
         )
+        gap_match = bool(gap_abs_residual < GAP_MATCH_TOLERANCE)
         kernel_match = bool(
             reading["classical_kernel_count"]
             == reading["expected_doubled_kernel"]
+            and (
+                reading["expected_doubled_kernel"] == 0
+                or reading["kernel_max_abs_eigenvalue"] < KERNEL_FLOOR
+            )
+            and reading["first_nonkernel_abs_eigenvalue"]
+            > KERNEL_FLOOR
         )
         ladder_readings.append(
             {
                 **reading,
                 "frozen_gap": frozen_ladder["small_gaps"][sector],
+                "gap_abs_residual": gap_abs_residual,
                 "gap_match": gap_match,
                 "kernel_match": kernel_match,
             }
         )
         ladder_matches.append(gap_match and kernel_match)
 
-    partition = interface_partition()
+    census = serialized_interface_census()
+    expected_parent_artifacts = set(RECEIPT_FILES) | {
+        "stage1_arrays.npz.gz"
+    }
+    parent_artifacts_pinned = bool(
+        set(census["artifact_sha256"]) == expected_parent_artifacts
+        and census["artifact_sha256"].get("defect_sector_receipt.json")
+        == _sha256_bytes(
+            (DATA_DIR / "defect_sector_receipt.json").read_bytes()
+        )
+        and census["artifact_sha256"].get("source_gap_receipt.json")
+        == _sha256_bytes((DATA_DIR / "source_gap_receipt.json").read_bytes())
+    )
 
     controls: dict[str, dict[str, Any]] = {}
     if run_controls:
@@ -365,22 +591,31 @@ def produce_classical_realization_receipt(
             values = eigsh(
                 stiffness,
                 k=1,
-                sigma=-1.0e-6,
+                sigma=EIGENSOLVER_SHIFT,
                 which="LM",
                 v0=start,
                 return_eigenvectors=False,
             )
             return float(np.sort(values)[0])
 
-        original_low = lowest(rotor_stiffness(sector_laplacian(oriented, 1)))
-        flipped_low = lowest(rotor_stiffness(sector_laplacian(flipped, 1)))
-        controls["flipped_spring_orientation"] = {
+        original_low = lowest(
+            harmonic_transport_stiffness(
+                sector_laplacian(oriented, 1)
+            )
+        )
+        flipped_low = lowest(
+            harmonic_transport_stiffness(
+                sector_laplacian(flipped, 1)
+            )
+        )
+        controls["flipped_transport_orientation"] = {
             "control_failure_detected": bool(
-                abs(flipped_low - original_low) > 1.0e-9
+                abs(flipped_low - original_low)
+                > ORIENTATION_CONTROL_SHIFT_GATE
             ),
             "measured_shift": abs(flipped_low - original_low),
             "note": (
-                "reversing one rotation spring moves the classical "
+                "reversing one seam transport moves the classical "
                 "spectrum, so the payload identity reads the source "
                 "orientation field rather than a hardwired value"
             ),
@@ -397,7 +632,7 @@ def produce_classical_realization_receipt(
                 for key, child in value.items():
                     if any(
                         t in str(key).lower()
-                        for t in DISCRIMINATOR_VOCABULARY
+                        for t in DECLARED_DISCRIMINATOR_KEY_FRAGMENTS
                     ):
                         hits.append(f"{key_path}/{key}")
                     hits.extend(walk_doctored(child, f"{key_path}/{key}"))
@@ -407,15 +642,16 @@ def produce_classical_realization_receipt(
             return hits
 
         doctored_hits = walk_doctored(doctored_payload, "doctored")
-        controls["discriminator_injection"] = {
+        controls["declared_key_fragment_injection"] = {
             "control_failure_detected": bool(
-                doctored_hits and partition["no_quantum_discriminator"]
+                doctored_hits
+                and census["no_declared_discriminator_key_match"]
             ),
             "flagged_paths": doctored_hits[:4],
             "note": (
-                "a correlation payload injected into a copy of a frozen "
-                "receipt is flagged by the same key walk that clears the "
-                "frozen interface"
+                "a configured key fragment injected into a copy of a "
+                "frozen receipt is flagged by the same bounded lexical "
+                "scan"
             ),
         }
 
@@ -432,18 +668,24 @@ def produce_classical_realization_receipt(
     )
 
     clause_verdicts = {
+        "censused_parent_artifact_bytes_pinned": parent_artifacts_pinned,
         "same_source_domain_binding": same_source,
+        "ladder_source_domain_binding": ladder_source_domain_bound,
+        "spectral_interface_scope_bound": sector_interface_scope_bound,
         "classical_completion_exhibited": all(
             reading["symmetric"] for reading in readings
         ),
         "sector_payload_identity": bool(all(matches)),
         "scalar_gap_payload_identity": scalar_match,
         "ladder_payload_identity": bool(all(ladder_matches)),
-        "interface_exhaustively_partitioned": bool(
-            not partition["missing_receipts"]
+        "declared_serialized_interface_censused": bool(
+            not census["missing_receipts"]
+            and not census["manifest_pin_failures"]
+            and not census["invalid_artifacts"]
+            and not census["schema_failures"]
         ),
-        "no_quantum_discriminator_emitted": partition[
-            "no_quantum_discriminator"
+        "no_declared_discriminator_key_match": census[
+            "no_declared_discriminator_key_match"
         ],
     }
     blockers = sorted(
@@ -461,12 +703,55 @@ def produce_classical_realization_receipt(
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
         "domain_freeze_sha256": domain_complex["complex_freeze_sha256"],
+        "spectral_interface_identity": {
+            "producer_schema": (
+                "oph.local-domain-defect-sector-spectra.v1"
+            ),
+            "main_domain": {
+                "source_projection_sha256": source_projection_sha256,
+                "topology_freeze_sha256": domain_complex[
+                    "complex_freeze_sha256"
+                ],
+                "source_carrier_count": main_config["carrier_count"],
+                "visible_node_count": domain_complex["node_count"],
+                "visible_edge_count": domain_complex["edge_count"],
+            },
+            "ladder_domain": {
+                "source_projection_sha256": (
+                    ladder_source_projection_sha256
+                ),
+                "topology_freeze_sha256": ladder_domain[
+                    "complex_freeze_sha256"
+                ],
+                "source_carrier_count": ladder_config["carrier_count"],
+                "visible_node_count": ladder_domain["node_count"],
+                "visible_edge_count": ladder_domain["edge_count"],
+            },
+            "rer_exact_flux_12_42_vertex_identity_bridge": False,
+            "separate_from_rer_exact_flux_certificate": True,
+        },
+        "numerical_gates": {
+            "gap_match_abs_tolerance": GAP_MATCH_TOLERANCE,
+            "kernel_eigenvalue_abs_floor": KERNEL_FLOOR,
+            "symmetry_max_residual_tolerance": SYMMETRY_RESIDUAL_GATE,
+            "orientation_control_shift_floor": (
+                ORIENTATION_CONTROL_SHIFT_GATE
+            ),
+            "eigensolver_shift": EIGENSOLVER_SHIFT,
+        },
         "classical_completion": {
             "object": (
-                "planar-rotor spring network per sector: one two-component "
-                "coordinate per carrier, one rotation spring per oriented "
-                "seam, potential one half the summed squared extensions"
+                "two-component classical harmonic network per sector: "
+                "one coordinate q_v in R^2 and one momentum p_v in R^2 per "
+                "carrier, fixed orthogonal transport R_e per oriented "
+                "seam, unit masses, and H = one half sum_v |p_v|^2 plus "
+                "one half sum_e |q_v - R_e q_w|^2"
             ),
             "stiffness_rule": (
                 "the stiffness matrix is the exact realification of the "
@@ -475,73 +760,74 @@ def produce_classical_realization_receipt(
             ),
             "sector_readings": readings,
             "scalar_gap_match": scalar_match,
+            "scalar_gap_abs_residual": scalar_gap_abs_residual,
             "ladder_point_readings": ladder_readings,
         },
-        "interface_partition": partition,
-        "indistinguishability_theorem": {
+        "serialized_interface_census": census,
+        "upstream_pins": census["artifact_sha256"],
+        "finite_interface_result": {
             "statement": (
-                "the classical rotor completion and the quantum "
-                "Hamiltonian reading of the same operators emit identical "
-                "interfaces on the complete declared local domain, so no "
-                "criterion constructible from the domain excludes the "
+                "the explicit classical harmonic completion reproduces the "
+                "declared finite sector and scalar spectral interface, so "
+                "those spectral outputs alone do not exclude the "
                 "same-interface classical countermodel"
             ),
-            "composition_covered": (
+            "composition_scope": (
                 "sector twist composition and subcomplex restriction are "
                 "structure of the shared complex, present identically in "
                 "both completions"
             ),
-            "asymptotics_covered": (
-                "the finite complex provides asymptotic states in neither "
-                "completion; the clause closes under the no-go rather "
-                "than by construction"
+            "asymptotics_scope": (
+                "the serialized finite interface contains no asymptotic-"
+                "state observable; no claim about an extended-domain "
+                "asymptotic construction follows"
             ),
-            "refinement_transport_covered": (
+            "refinement_scope": (
                 "the realification is functorial in the complex, so the "
-                "classical completion commutes with subcomplex and scale "
-                "restriction; the ladder-point readings verify the "
-                "commuting square by measurement at the second declared "
-                "scale"
+                "classical completion commutes with subcomplex "
+                "restriction; the second cutoff is a separate measured "
+                "point and does not establish a cofinal refinement map or "
+                "a commuting limit square"
             ),
-            "mass_invariant_box": {
-                "positive_leg": (
-                    "the sector-gap table of the defect-sector receipt"
-                ),
-                "unit_boundary": (
-                    "physical units stay not evaluable on this domain by "
-                    "the issue-633 clock-unit verdict"
-                ),
-                "unit_boundary_receipt": "clock_unit_verdict.json",
-            },
+            "unit_scope": (
+                "the realized spectra are dimensionless finite-operator "
+                "spectra; physical-unit attachment is not part of this "
+                "certificate"
+            ),
             "retained_positive_subresults": [
-                "the exact finite sector arithmetic of the v3 receipt",
-                "the sector-gap invariant table of the sector-spectra "
-                "receipt",
+                "the exact Z6 sector-index arithmetic of the local-domain "
+                "defect-sector receipt",
+                "the local-domain sector-gap tables at the declared main "
+                "and ladder domains",
             ],
         },
         "clause_verdicts": clause_verdicts,
         "negative_controls": controls,
         "controls_fail_closed": controls_fail_closed,
         "verdict": (
-            "CLASSICAL_QUANTUM_INDISTINGUISHABLE_ON_DECLARED_DOMAIN"
+            "CLASSICAL_REALIZATION_MATCHES_DECLARED_FINITE_SPECTRAL_INTERFACE"
             if attained
             else "NOT_ATTAINED"
         ),
         "CLASSICAL_REALIZATION_RECEIPT": bool(attained),
         "blockers": blockers,
         "claim_boundary": (
-            "Complete negative exit of the issue-311 particle-criterion "
-            "lane on its declared domain: an explicit classical rotor "
-            "completion reproduces every emitted spectral quantity of the "
-            "closed issue-634 domain with exact doubled kernels and "
-            "matching gaps, the emitted interface is exhaustively "
-            "partitioned with no quantum discriminator, and therefore the "
-            "declared domain admits indistinguishable classical and "
-            "quantum completions. The finite sector arithmetic and "
-            "sector-gap invariants stay closed subresults. A domain "
-            "extended by measurement statistics or state-update producers "
-            "is a different object and is not judged here. No physical "
-            "promotion follows from any output."
+            "Finite issue-311 boundary result: an explicit two-component "
+            "classical harmonic completion reproduces the declared "
+            "six-sector and scalar "
+            "local-domain spectral interface with doubled kernels and "
+            "matching gaps. This interface is the issue-634 visible seam "
+            "complex and its declared ladder point; no identity bridge to "
+            "the separate RER 12/42-vertex exact-flux certificate is "
+            "claimed. "
+            "The bounded lexical census finds no key matching its declared "
+            "discriminator fragments. The explicit spectral match, not "
+            "that key scan, shows that these finite spectral outputs alone "
+            "do not exclude the classical realization. This does not close a "
+            "criterion over an extended domain, cofinal refinement family, "
+            "asymptotic-state construction, or future measurement and "
+            "state-update producers. No physical promotion follows from "
+            "any output."
         ),
     }
 

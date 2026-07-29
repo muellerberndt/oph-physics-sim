@@ -10,16 +10,16 @@ typing clause verified by exact integer arithmetic:
   chirality summands, and gauge sections on seams valued in unit
   phases of the single interface algebra class.  Physical fiber
   selection stays outside this issue with issues 569 and 630.
-* The measure is the counting measure on carriers and seams.  Equal
-  state weights are the axiom-forced weight rule of the A1-A3
-  derivation campaign, so the volume form carries no free parameter.
+* The measure is the declared counting measure on carriers and seams.
+  This finite certificate verifies its positivity and totals.  A formal
+  derivation of equal weights from A3 is not reproduced or pinned here.
 * The seam difference operator is twisted by the stage-2 sign
   transport, the covariant extension composes a gauge section into the
   same operator shape, and both have support radius one, verified
   entry by entry.
 * The adjoint identity, the kinetic identity that the quadratic form
   equals the squared derivative norm, gauge-relabelling covariance,
-  atlas restriction gluing, and subcomplex refinement naturality are
+  atlas restriction gluing, and subcomplex restriction naturality are
   exact integer identities on deterministic probe sections.
 * The kinetic kernel theorem binds stage 3 to stage 2: on each
   connected component the twisted kernel has dimension one when the
@@ -50,9 +50,14 @@ from typing import Any
 
 from oph_fpe.bulk.event_manifold_producer import _event_table
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
+from oph_fpe.local_domain.receipt_io import (
+    load_manifest_pinned_receipt,
+    stage2_matches_source_domain,
+)
 from oph_fpe.local_domain.stage1_event_complex import (
     FOREIGN_SEED_OFFSET,
     MAIN_CONFIG,
+    local_domain_source_sha256,
     refuse_forbidden_config,
 )
 from oph_fpe.local_domain.stage2_spin_layer import (
@@ -221,14 +226,14 @@ def section_space_typing(complex_data: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def measure_typing(complex_data: Mapping[str, Any]) -> dict[str, Any]:
-    """Counting measure on carriers and seams, axiom-bound weights."""
+    """Declared counting measure on carriers and seams."""
 
     return {
         "carrier_measure": "counting measure, weight one per carrier",
         "seam_measure": "counting measure, weight one per seam",
         "weight_rule_ancestry": (
-            "equal state weights are axiom-forced by the A3 exactness "
-            "clauses of the closed A1-A3 derivation campaign"
+            "declared unit counting weights; any derivation from A3 is an "
+            "external formal premise not certified by this receipt"
         ),
         "carrier_total": complex_data["node_count"],
         "seam_total": complex_data["edge_count"],
@@ -315,7 +320,7 @@ def adjoint_certificate(complex_data: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _sign_components(complex_data: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Connected components with sign-consistency witness colorings."""
+    """Connected components with coloring or negative-cycle witnesses."""
 
     nodes = complex_data["nodes"]
     index = {v: i for i, v in enumerate(nodes)}
@@ -329,7 +334,46 @@ def _sign_components(complex_data: Mapping[str, Any]) -> list[dict[str, Any]]:
             "edge_sign_of"
         ][(a, b)]
     color = [0] * len(nodes)
+    parent = [-1] * len(nodes)
     components = []
+
+    def negative_cycle(u: int, v: int) -> dict[str, Any]:
+        """Return the fundamental cycle closed by one conflicting edge."""
+
+        u_ancestors = []
+        cursor = u
+        while cursor != -1:
+            u_ancestors.append(cursor)
+            cursor = parent[cursor]
+        u_positions = {
+            node_index: position
+            for position, node_index in enumerate(u_ancestors)
+        }
+        v_branch = []
+        cursor = v
+        while cursor not in u_positions:
+            v_branch.append(cursor)
+            cursor = parent[cursor]
+        lca = cursor
+        path = (
+            u_ancestors[: u_positions[lca] + 1]
+            + list(reversed(v_branch))
+        )
+        closed_path = path + [u]
+        signs = [
+            sign_of_index[(min(a, b), max(a, b))]
+            for a, b in zip(closed_path, closed_path[1:])
+        ]
+        sign_product = 1
+        for sign in signs:
+            sign_product *= sign
+        return {
+            "nodes": [nodes[node_index] for node_index in closed_path],
+            "edge_signs": signs,
+            "sign_product": sign_product,
+            "negative": bool(sign_product == -1),
+        }
+
     for start in range(len(nodes)):
         if color[start] != 0:
             continue
@@ -337,6 +381,7 @@ def _sign_components(complex_data: Mapping[str, Any]) -> list[dict[str, Any]]:
         stack = [start]
         members = []
         consistent = True
+        contradiction_cycle = None
         while stack:
             u = stack.pop()
             members.append(u)
@@ -345,14 +390,18 @@ def _sign_components(complex_data: Mapping[str, Any]) -> list[dict[str, Any]]:
                 expected = color[u] * sign
                 if color[v] == 0:
                     color[v] = expected
+                    parent[v] = u
                     stack.append(v)
                 elif color[v] != expected:
                     consistent = False
+                    if contradiction_cycle is None:
+                        contradiction_cycle = negative_cycle(u, v)
         components.append(
             {
                 "members": members,
                 "consistent": consistent,
                 "witness": {nodes[i]: color[i] for i in members},
+                "contradiction_cycle": contradiction_cycle,
             }
         )
     return components
@@ -385,12 +434,47 @@ def kinetic_kernel_certificate(
             if value != 0:
                 witness_annihilated = False
     consistent_count = sum(1 for c in components if c["consistent"])
+    frustrated_count = len(components) - consistent_count
+    contradiction_witnesses_verified = all(
+        component["consistent"]
+        or (
+            component["contradiction_cycle"] is not None
+            and component["contradiction_cycle"]["negative"]
+        )
+        for component in components
+    )
+    partition_verified = bool(
+        sum(len(component["members"]) for component in components)
+        == complex_data["node_count"]
+        and len(
+            {
+                member
+                for component in components
+                for member in component["members"]
+            }
+        )
+        == complex_data["node_count"]
+    )
     kernel_dimension = consistent_count
     rank = complex_data["node_count"] - consistent_count
     return {
         "component_count": len(components),
         "sign_consistent_component_count": consistent_count,
+        "frustrated_component_count": frustrated_count,
         "witnesses_annihilated": bool(witness_annihilated),
+        "frustrated_component_witnesses_verified": bool(
+            contradiction_witnesses_verified
+        ),
+        "component_certificates": [
+            {
+                "member_count": len(component["members"]),
+                "consistent": component["consistent"],
+                "negative_cycle_witness": component[
+                    "contradiction_cycle"
+                ],
+            }
+            for component in components
+        ],
         "witness_check_scope": (
             f"{sum(1 for c in components if c['consistent'])} consistent "
             f"component witnesses evaluated; on a fully frustrated domain "
@@ -399,10 +483,20 @@ def kinetic_kernel_certificate(
         ),
         "twisted_kernel_dimension": kernel_dimension,
         "signed_incidence_rank": rank,
-        "rank_identity": (
-            "rank D equals carrier count minus the sign-consistent "
-            "component count"
-        ),
+        "rank_theorem": {
+            "statement": (
+                "the rank of a real signed incidence matrix equals the "
+                "vertex count minus the number of sign-consistent "
+                "connected components"
+            ),
+            "component_partition_verified": partition_verified,
+            "negative_cycle_witnesses_verified": bool(
+                contradiction_witnesses_verified
+            ),
+            "applied": bool(
+                partition_verified and contradiction_witnesses_verified
+            ),
+        },
         "matches_stage2": None,
     }
 
@@ -482,7 +576,11 @@ def restriction_gluing_certificate(
 def refinement_naturality_certificate(
     complex_data: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Exact naturality of the derivative under subcomplex inclusion."""
+    """Exact naturality of the derivative under one subcomplex inclusion.
+
+    This is not a map between two simulator cutoffs and does not certify
+    a cofinal refinement family.
+    """
 
     edges = complex_data["edges"]
     half = max(1, len(edges) // 2)
@@ -507,6 +605,7 @@ def refinement_naturality_certificate(
     return {
         "subcomplex_edges": len(sub_edges),
         "restriction_commutes_with_derivative": bool(natural),
+        "cross_cutoff_refinement_map_certified": False,
     }
 
 
@@ -558,6 +657,7 @@ def boundary_typing(
 def produce_stage3_receipt(
     *,
     config: Mapping[str, Any] | None = None,
+    stage2_receipt: Mapping[str, Any] | None = None,
     output_dir: str | Path | None = None,
     run_controls: bool = True,
 ) -> dict[str, Any]:
@@ -575,23 +675,48 @@ def produce_stage3_receipt(
         }
 
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     domain_complex = seam_complex(visible_rows(capture))
     event_table = _event_table(capture)
 
-    stage2 = _load_frozen_stage2()
+    stage2 = (
+        dict(stage2_receipt)
+        if stage2_receipt is not None
+        else _load_frozen_stage2()
+    )
+    stage2_source = (
+        stage2.get("source_projection_sha256")
+        if stage2 is not None
+        else None
+    )
+    try:
+        stage2_domain = (
+            stage2["seam_layer"]["domain_complex"][
+                "complex_freeze_sha256"
+            ]
+            if stage2 is not None
+            else None
+        )
+    except (KeyError, TypeError):
+        stage2_domain = None
+    stage2_valid = stage2_matches_source_domain(
+        stage2,
+        source_projection_sha256,
+        domain_complex["complex_freeze_sha256"],
+    )
     binding: dict[str, Any] = {
         "stage2_receipt_present": bool(stage2 is not None),
-        "same_source": False,
-        "same_domain_freeze": False,
+        "stage2_receipt_valid": stage2_valid,
+        "identity_kind": "canonical_discrete_source_projection",
+        "stage2_source_projection_sha256": stage2_source,
+        "stage3_source_projection_sha256": source_projection_sha256,
+        "stage2_domain_freeze_sha256": stage2_domain,
+        "stage3_domain_freeze_sha256": domain_complex[
+            "complex_freeze_sha256"
+        ],
+        "same_source": stage2_valid,
+        "same_domain_freeze": stage2_valid,
     }
-    if stage2 is not None:
-        binding["same_source"] = bool(
-            stage2["capture_sha256"] == capture["capture_sha256"]
-        )
-        binding["same_domain_freeze"] = bool(
-            stage2["seam_layer"]["domain_complex"]["complex_freeze_sha256"]
-            == domain_complex["complex_freeze_sha256"]
-        )
 
     sections = section_space_typing(domain_complex)
     probe = sections.pop("_probe")
@@ -599,13 +724,16 @@ def produce_stage3_receipt(
     locality = locality_certificate(domain_complex)
     adjoints = adjoint_certificate(domain_complex)
     kernel = kinetic_kernel_certificate(domain_complex)
-    if stage2 is not None and binding["same_source"]:
-        kernel["matches_stage2"] = bool(
-            kernel["sign_consistent_component_count"]
-            == stage2["seam_layer"]["domain_complex"][
-                "sign_consistent_component_count"
-            ]
-        )
+    if stage2_valid:
+        try:
+            kernel["matches_stage2"] = bool(
+                kernel["sign_consistent_component_count"]
+                == stage2["seam_layer"]["domain_complex"][
+                    "sign_consistent_component_count"
+                ]
+            )
+        except (KeyError, TypeError):
+            kernel["matches_stage2"] = False
     covariance = gauge_covariance_certificate(domain_complex)
 
     chart_members = observer_carrier_cover(capture)
@@ -624,7 +752,6 @@ def produce_stage3_receipt(
     if run_controls:
         nodes = domain_complex["nodes"]
         nonlocal_pair = None
-        node_set = set(nodes)
         edge_set = set(domain_complex["edges"])
         for a in nodes[:32]:
             for b in nodes[-32:]:
@@ -711,7 +838,7 @@ def produce_stage3_receipt(
             and sections["chirality_grading_exact"]
             and sections["gauge_sections_unit"]
         ),
-        "measure_axiom_bound": measures["positive"],
+        "declared_counting_measure_typed": measures["positive"],
         "operators_local": locality["local"],
         "covariant_derivative_typed": covariant_typed,
         "adjoint_identity_exact": adjoints["adjoint_identity_exact"],
@@ -720,7 +847,10 @@ def produce_stage3_receipt(
             and adjoints["kinetic_nonnegative"]
         ),
         "kinetic_kernel_matches_stage2": bool(
-            kernel["witnesses_annihilated"] and kernel["matches_stage2"]
+            kernel["witnesses_annihilated"]
+            and kernel["frustrated_component_witnesses_verified"]
+            and kernel["rank_theorem"]["applied"]
+            and kernel["matches_stage2"]
         ),
         "gauge_relabelling_covariant": bool(
             covariance["derivative_covariant"]
@@ -731,7 +861,7 @@ def produce_stage3_receipt(
             and gluing["overlap_sections_agree"]
             and gluing["gluing_reconstructs_section"]
         ),
-        "refinement_naturality_exact": naturality[
+        "subcomplex_restriction_naturality_exact": naturality[
             "restriction_commutes_with_derivative"
         ],
         "boundary_typed": boundary["dirichlet_restriction_exact"],
@@ -754,27 +884,41 @@ def produce_stage3_receipt(
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
+        "domain_freeze_sha256": domain_complex["complex_freeze_sha256"],
         "stage_binding": binding,
         "section_typing": sections,
         "measure_typing": measures,
         "locality_certificate": locality,
+        "covariant_derivative_typing": {
+            "produced_edge_count": len(gauged),
+            "domain_edge_count": domain_complex["edge_count"],
+            "matches_domain_edge_count": covariant_typed,
+        },
         "adjoint_certificate": adjoints,
         "kinetic_kernel_certificate": {
             key: kernel[key]
             for key in (
                 "component_count",
                 "sign_consistent_component_count",
+                "frustrated_component_count",
                 "witnesses_annihilated",
+                "frustrated_component_witnesses_verified",
+                "component_certificates",
                 "witness_check_scope",
                 "twisted_kernel_dimension",
                 "signed_incidence_rank",
-                "rank_identity",
+                "rank_theorem",
                 "matches_stage2",
             )
         },
         "gauge_covariance_certificate": covariance,
         "restriction_gluing_certificate": gluing,
-        "refinement_naturality_certificate": naturality,
+        "subcomplex_restriction_naturality_certificate": naturality,
         "boundary_typing": boundary,
         "clause_verdicts": clause_verdicts,
         "negative_controls": controls,
@@ -784,10 +928,12 @@ def produce_stage3_receipt(
         "blockers": blockers,
         "claim_boundary": (
             "Finite issue-634 stage-3 object: section species over declared "
-            "finite fibers, the axiom-bound counting measure, sign-twisted "
+            "finite fibers, the declared counting measure, sign-twisted "
             "local difference operators with exact adjoint, kinetic, "
-            "kernel, covariance, gluing, naturality, and boundary "
-            "certificates on the observer-visible seam complex. Physical "
+            "covariance, gluing, subcomplex-restriction, and boundary "
+            "evaluations on the serialized deterministic probes. The "
+            "general signed-incidence rank identity supplies the exact "
+            "kernel theorem on the observer-visible seam complex. Physical "
             "fiber selection, scalar and Yukawa content, and any continuum "
             "operator limit stay outside this issue. No physical promotion "
             "follows from any output."
@@ -815,15 +961,11 @@ def produce_stage3_receipt(
 
 
 def _load_frozen_stage2() -> dict[str, Any] | None:
-    receipt_path = DATA_DIR / "stage2_receipt.json"
-    manifest_path = DATA_DIR / "manifest.json"
-    if not receipt_path.exists() or not manifest_path.exists():
-        return None
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    receipt_bytes = receipt_path.read_bytes()
-    if manifest.get("stage2_receipt_sha256") != _sha256_bytes(receipt_bytes):
-        return None
-    return json.loads(receipt_bytes.decode("utf-8"))
+    return load_manifest_pinned_receipt(
+        DATA_DIR,
+        "stage2_receipt.json",
+        "stage2_receipt_sha256",
+    )
 
 
 def observer_carrier_cover(capture: Mapping[str, Any]) -> list[list[int]]:

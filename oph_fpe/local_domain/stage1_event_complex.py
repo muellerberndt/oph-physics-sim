@@ -5,21 +5,23 @@ derives, without any target import, the object every downstream typing
 stage consumes: the event complex with an exact causal-order
 certificate, the reconstructed four-coordinate description of the
 issue-575 instrument, a cover of closed observer neighborhoods with
-wiring transitions, and the dimension, fitted-inertia, orientation, and
-time-orientation certificates on that cover.  The cover is a family of
+wiring transitions, and the prescribed-chart rank, fitted-form inertia,
+orientation, and time-orientation certificates on that cover.  The
+cover is a family of
 closed finite sets with exact bookkeeping maps between local frames;
 it is not an atlas of open coordinate charts, and no continuum
 structure is asserted anywhere in this module.
 
 Construction:
 
-* Event classes, ancestry order, footprints, and the global
-  four-coordinate description are the issue-575 reconstruction: time is
-  ancestry depth, space is the seam-graph spectral embedding averaged
-  over each event's carrier footprint.  The held-out quadratic form of
-  that instrument supplies the inertia verdict: a fitted-form result
-  about this finite instrument, evidence of a Lorentzian tendency, and
-  not a signature theorem about a manifold.
+* Event classes, ancestry order, footprints, and the global prescribed
+  four-coordinate feature chart are the issue-575 reconstruction: one
+  coordinate is ancestry depth and exactly three coordinates are the
+  seam-graph spectral embedding averaged over each event's carrier
+  footprint.  The rank certificate checks nondegeneracy of this chosen
+  chart; it does not select a spacetime dimension.  The held-out
+  quadratic form supplies an inertia (1, 3) test on the prescribed
+  chart, not a signature theorem about a manifold.
 * The causal-order certificate is exact rather than fitted: every
   ancestry edge must advance the source sequence index and the ancestry
   depth, and reachability must be acyclic and antisymmetric.  The depth
@@ -32,7 +34,9 @@ Construction:
   neighborhood and the spatial block recentred and rescaled by its own
   root-mean-square spread.  Transitions between neighborhoods are
   therefore exact affine maps computed from the frames and verified on
-  shared events; their residual, cocycle, orientation, and
+  shared events.  They are induced consistency checks of one prescribed
+  global feature chart, not independently reconstructed observer charts.
+  Their residual, cocycle, orientation, and
   time-orientation certificates are wiring certificates of the
   restriction cover.  The source-level transition content, the seam
   orientation signs and port transport of the overlap relations,
@@ -47,9 +51,10 @@ Construction:
   Positive-margin cone merging and the refinement tail are owned by
   issue 595 and the Einstein branch.
 
-Fail-closed controls: collapsed spatial axis (wrong dimension), a
-cross-read-free capture (split signature), a post-fit coordinate flip
-(failed cocycle), a foreign-seed capture (mixed source), and a config
+Fail-closed controls: a collapsed prescribed spatial axis, a
+cross-read-free source with a different fitted feature form, a post-fit
+coordinate flip (failed cocycle), a foreign-seed capture (mixed source),
+and a config
 carrying target vocabulary (target injection).  Each control must be
 detected for the receipt to pass.  No output of this module carries
 physical promotion.
@@ -82,7 +87,7 @@ PHYSICAL_PROMOTION_ALLOWED = False
 
 TARGET_INERTIA = (1, 3)
 PAIR_CAP = 300_000
-SPATIAL_RANK_FLOOR = 0.05
+FULL_CHART_RANK_RATIO_FLOOR = 1.0e-8
 MIN_CHART_EVENTS = 40
 MIN_OVERLAP_EVENTS = 12
 MIN_TRIPLE_EVENTS = 4
@@ -127,13 +132,6 @@ CONTROL_SPLIT_CONFIG: dict[str, Any] = {
 
 FOREIGN_SEED_OFFSET = 110
 
-_LEGACY_LADDER_SUMMARY = (
-    Path(__file__).resolve().parents[2]
-    / "data"
-    / "einstein_convergence"
-    / "rung_16384.json"
-)
-
 
 def _canonical_json(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n"
@@ -149,6 +147,83 @@ def _carrier_index(carrier_id: str) -> int:
     return int(carrier_id.rsplit("-", 1)[1])
 
 
+_LOCAL_EVENT_KEYS = (
+    "source_sequence_index",
+    "observer_token",
+    "visible_footprint",
+)
+_LOCAL_OVERLAP_KEYS = (
+    "left_carrier_id",
+    "right_carrier_id",
+    "left_ports",
+    "right_ports",
+    "orientation_signs",
+    "visible_to_observer_tokens",
+    "interface_algebra_sha256",
+)
+
+
+def local_domain_source_projection(
+    capture: Mapping[str, Any],
+    config: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Canonical discrete source projection consumed by the local domain.
+
+    The complete source capture also contains floating diagnostics whose
+    final bits can vary with the Python/NumPy/SciPy runtime.  Stages 1--3
+    consume only the event identities, ancestry, footprints, and seam
+    transport rows below.  Their identity gate therefore hashes exactly
+    this projection.  The complete capture hash remains a diagnostic and
+    is deliberately not used as a cross-stage identity.
+    """
+
+    post = capture["postrun_capture"]
+    event_count = len(post["semantic_events"])
+    event_index = {
+        row["event_key"]: index
+        for index, row in enumerate(post["semantic_events"])
+    }
+
+    def endpoint(key: str) -> int | dict[str, str]:
+        index = event_index.get(key)
+        return index if index is not None else {"missing_event_key": key}
+
+    return {
+        "schema": "oph.local-domain-source-projection.v1",
+        "declared_config": dict(config),
+        "observed_carrier_count": len(post["carrier_port_trajectories"]),
+        "event_key_census": {
+            "event_count": event_count,
+            "unique_event_key_count": len(event_index),
+            "duplicate_event_key_count": event_count - len(event_index),
+        },
+        "semantic_events": [
+            {key: row[key] for key in _LOCAL_EVENT_KEYS}
+            for row in post["semantic_events"]
+        ],
+        "raw_ancestry_relations": [
+            {
+                "parent_event_index": endpoint(row["parent_event_id"]),
+                "child_event_index": endpoint(row["child_event_id"]),
+            }
+            for row in post["raw_ancestry_relations"]
+        ],
+        "raw_overlap_relations": [
+            {key: row[key] for key in _LOCAL_OVERLAP_KEYS}
+            for row in post["raw_overlap_relations"]
+        ],
+    }
+
+
+def local_domain_source_sha256(
+    capture: Mapping[str, Any],
+    config: Mapping[str, Any],
+) -> str:
+    """Hash the canonical source projection used by the local domain."""
+
+    return _sha256_value(local_domain_source_projection(capture, config))
+
+
 def refuse_forbidden_config(config: Mapping[str, Any]) -> list[str]:
     """Return the forbidden keys present in a config, sorted."""
 
@@ -162,11 +237,14 @@ def build_event_complex(capture: Mapping[str, Any]) -> dict[str, Any]:
     table = _event_table(capture)
     events = post["semantic_events"]
     key_to_index = {event["event_key"]: i for i, event in enumerate(events)}
+    duplicate_event_key_count = len(events) - len(key_to_index)
     edges: list[tuple[int, int]] = []
+    missing_ancestry_endpoint_count = 0
     for edge in post["raw_ancestry_relations"]:
         parent = key_to_index.get(edge["parent_event_id"])
         child = key_to_index.get(edge["child_event_id"])
         if parent is None or child is None:
+            missing_ancestry_endpoint_count += 1
             continue
         edges.append((parent, child))
     sequence = [event["source_sequence_index"] for event in events]
@@ -195,6 +273,8 @@ def build_event_complex(capture: Mapping[str, Any]) -> dict[str, Any]:
         "chart": chart,
         "embedding": embedding,
         "touched_carriers": touched,
+        "duplicate_event_key_count": duplicate_event_key_count,
+        "missing_ancestry_endpoint_count": missing_ancestry_endpoint_count,
     }
 
 
@@ -248,6 +328,12 @@ def causal_certificates(complex_data: Mapping[str, Any]) -> dict[str, Any]:
             break
     return {
         "edge_count": len(edges),
+        "event_keys_unique": bool(
+            complex_data.get("duplicate_event_key_count", 0) == 0
+        ),
+        "ancestry_endpoints_resolved": bool(
+            complex_data.get("missing_ancestry_endpoint_count", 0) == 0
+        ),
         "edge_sequence_strict": bool(edge_sequence_strict),
         "edge_depth_strict": bool(edge_depth_strict),
         "acyclic": bool(acyclic),
@@ -256,18 +342,49 @@ def causal_certificates(complex_data: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def dimension_certificate(chart: np.ndarray) -> dict[str, Any]:
-    """Rank-four certificate: time spread plus spatial singular floor."""
+def prescribed_chart_rank_certificate(
+    chart: np.ndarray,
+) -> dict[str, Any]:
+    """Nondegeneracy test for the prescribed four-coordinate chart."""
 
+    coordinate_count = int(chart.shape[1]) if chart.ndim == 2 else 0
+    if chart.ndim != 2 or coordinate_count != 4 or len(chart) == 0:
+        return {
+            "coordinate_count": coordinate_count,
+            "time_spread": 0.0,
+            "full_chart_singulars": [],
+            "full_chart_rank_ratio": 0.0,
+            "full_chart_rank_ratio_floor": (
+                FULL_CHART_RANK_RATIO_FLOOR
+            ),
+            "spatial_singulars": [],
+            "spatial_rank_ratio": 0.0,
+            "prescribed_four_coordinate_chart_nondegenerate": False,
+        }
     time_spread = float(chart[:, 0].std())
+    centered = chart - chart.mean(axis=0)
+    full_singulars = np.linalg.svd(
+        centered / np.sqrt(len(chart)), compute_uv=False
+    )
+    full_rank_ratio = (
+        float(full_singulars[-1] / full_singulars[0])
+        if full_singulars[0] > 0
+        else 0.0
+    )
     spatial = chart[:, 1:] - chart[:, 1:].mean(axis=0)
     singulars = np.linalg.svd(spatial / np.sqrt(len(chart)), compute_uv=False)
     ratio = float(singulars[2] / singulars[0]) if singulars[0] > 0 else 0.0
     return {
+        "coordinate_count": coordinate_count,
         "time_spread": time_spread,
+        "full_chart_singulars": [float(s) for s in full_singulars],
+        "full_chart_rank_ratio": full_rank_ratio,
+        "full_chart_rank_ratio_floor": FULL_CHART_RANK_RATIO_FLOOR,
         "spatial_singulars": [float(s) for s in singulars],
         "spatial_rank_ratio": ratio,
-        "dimension_four": bool(time_spread > 0.0 and ratio >= SPATIAL_RANK_FLOOR),
+        "prescribed_four_coordinate_chart_nondegenerate": bool(
+            full_rank_ratio >= FULL_CHART_RANK_RATIO_FLOOR
+        ),
     }
 
 
@@ -625,23 +742,6 @@ def _footprint_freeze(table: Mapping[str, Any]) -> str:
     )
 
 
-def _legacy_ladder_binding(tip_capture_sha: str) -> dict[str, Any]:
-    if not _LEGACY_LADDER_SUMMARY.exists():
-        return {"legacy_summary_present": False}
-    summary = json.loads(_LEGACY_LADDER_SUMMARY.read_text(encoding="utf-8"))
-    legacy_sha = summary.get("capture_sha256")
-    return {
-        "legacy_summary_present": True,
-        "legacy_capture_sha256": legacy_sha,
-        "tip_capture_sha256": tip_capture_sha,
-        "capture_binding": (
-            "matched" if legacy_sha == tip_capture_sha else "diverged_code_state"
-        ),
-        "legacy_held_out_inertia": summary.get("held_out_inertia"),
-        "legacy_cone_margin": summary.get("cone_margin"),
-    }
-
-
 def produce_stage1_receipt(
     *,
     config: Mapping[str, Any] | None = None,
@@ -663,12 +763,13 @@ def produce_stage1_receipt(
         }
 
     capture = capture_physical_source(main_config)
+    source_projection_sha256 = local_domain_source_sha256(capture, main_config)
     complex_data = build_event_complex(capture)
     table = complex_data["table"]
     chart = complex_data["chart"]
 
     causal = causal_certificates(complex_data)
-    dimension = dimension_certificate(chart)
+    chart_rank = prescribed_chart_rank_certificate(chart)
     pairs = pair_classes_capped(table)
     fit = _fit_quadratic_form(
         chart, {"causal": pairs["causal"], "spacelike": pairs["spacelike"]}
@@ -707,9 +808,13 @@ def produce_stage1_receipt(
     if run_controls:
         collapsed = chart.copy()
         collapsed[:, 3] = 0.0
-        collapsed_cert = dimension_certificate(collapsed)
-        controls["wrong_dimension"] = {
-            "control_failure_detected": bool(not collapsed_cert["dimension_four"]),
+        collapsed_cert = prescribed_chart_rank_certificate(collapsed)
+        controls["collapsed_prescribed_spatial_axis"] = {
+            "control_failure_detected": bool(
+                not collapsed_cert[
+                    "prescribed_four_coordinate_chart_nondegenerate"
+                ]
+            ),
             "collapsed_rank_ratio": collapsed_cert["spatial_rank_ratio"],
         }
 
@@ -725,7 +830,7 @@ def produce_stage1_receipt(
             for parent, child in split_complex["edges"]
             if split_complex["tokens"][parent] != split_complex["tokens"][child]
         )
-        controls["split_signature"] = {
+        controls["split_source_feature_form"] = {
             "control_failure_detected": bool(
                 split_cross == 0
                 and tuple(split_fit.get("inertia", ())) != TARGET_INERTIA
@@ -780,10 +885,16 @@ def produce_stage1_receipt(
 
     clause_verdicts = {
         "event_classes_and_order_constructed": True,
+        "source_relation_identifiers_well_formed": bool(
+            causal["event_keys_unique"]
+            and causal["ancestry_endpoints_resolved"]
+        ),
         "causal_order_acyclic": causal["acyclic"] and causal["antisymmetric"],
         "strict_time_function": causal["strict_time_function"],
-        "dimension_four": dimension["dimension_four"],
-        "held_out_lorentzian_inertia": inertia_ok,
+        "prescribed_four_coordinate_chart_nondegenerate": chart_rank[
+            "prescribed_four_coordinate_chart_nondegenerate"
+        ],
+        "held_out_feature_form_inertia_1_3": inertia_ok,
         "atlas_covers_all_events": atlas_covers,
         "atlas_nerve_connected": atlas["nerve_connected"],
         "transitions_supported": transitions_supported,
@@ -800,20 +911,81 @@ def produce_stage1_receipt(
         blockers.append("negative_control_did_not_fail")
     verdict = "ATTAINED" if not blockers else "NOT_ATTAINED"
 
+    arrays = {
+        "chart": chart,
+        "causal_pairs": np.asarray(pairs["causal"], dtype=np.int64),
+        "spacelike_pairs": np.asarray(
+            pairs["spacelike"], dtype=np.int64
+        ),
+    }
+    for k, chart_row in enumerate(atlas["charts"]):
+        arrays[f"chart_coords_{k}"] = chart_row["coords"]
+        arrays[f"chart_events_{k}"] = np.asarray(
+            chart_row["event_indices"], dtype=np.int64
+        )
+    array_specs = {
+        name: {
+            "dtype": str(array.dtype),
+            "shape": list(array.shape),
+            "value_sha256": _sha256_value(array.tolist()),
+        }
+        for name, array in sorted(arrays.items())
+    }
+
     receipt = {
         "schema": SCHEMA,
         "issue": ISSUE,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
+        "capture_sha256_role": (
+            "environment-sensitive full-capture diagnostic; not an "
+            "identity gate for the local-domain stages"
+        ),
+        "source_projection_sha256": source_projection_sha256,
+        "declared_acceptance_gates": {
+            "prescribed_chart_full_rank_ratio_floor": (
+                FULL_CHART_RANK_RATIO_FLOOR
+            ),
+            "held_out_feature_form_target_inertia": list(TARGET_INERTIA),
+            "status": (
+                "declared tests on a prescribed feature chart; not "
+                "dimension or signature selection"
+            ),
+        },
         "event_count": table["count"],
         "ancestry_edge_count": causal["edge_count"],
         "causal_pair_total": pairs["causal_total"],
         "spacelike_pair_total": pairs["spacelike_total"],
         "pair_cap": PAIR_CAP,
         "chart_freeze_sha256": _sha256_value(chart.tolist()),
+        "array_bundle_binding": {
+            "schema": "oph.local-domain-stage1-arrays.v1",
+            "array_names": sorted(arrays),
+            "array_specs": array_specs,
+        },
         "causal_certificates": causal,
-        "dimension_certificate": dimension,
+        "prescribed_chart_construction": {
+            "ancestry_depth_coordinate_count": 1,
+            "spectral_embedding_coordinate_count": 3,
+            "total_coordinate_count": 4,
+            "status": (
+                "prescribed feature construction; no dimension-selection "
+                "claim"
+            ),
+        },
+        "prescribed_chart_rank_certificate": chart_rank,
+        "cover_transition_scope": {
+            "construction": (
+                "affine recentering and rescaling of one prescribed "
+                "global feature chart"
+            ),
+            "independent_observer_chart_reconstruction": False,
+            "certificate_scope": (
+                "induced transition consistency on a closed-neighborhood "
+                "cover"
+            ),
+        },
         "held_out_quadratic_fit": {
             key: fit.get(key)
             for key in ("fitted", "inertia", "cone_margin", "held_out_pair_count")
@@ -902,6 +1074,7 @@ def produce_stage1_receipt(
         },
         "atlas": {
             "seed_count": atlas["seed_count"],
+            "covered_event_count": len(covered),
             "chart_event_counts": chart_sizes,
             "chart_observer_counts": [
                 c["observer_count"] for c in atlas["charts"]
@@ -916,6 +1089,7 @@ def produce_stage1_receipt(
                 for c in atlas["charts"]
             ],
             "unreached_observers": atlas["unreached_observers"],
+            "nerve_connected": atlas["nerve_connected"],
             "supported_edges": [list(e) for e in atlas["supported_edges"]],
             "transition_residuals": {
                 f"{o['pair'][0]}-{o['pair'][1]}": round(
@@ -936,24 +1110,29 @@ def produce_stage1_receipt(
         "clause_verdicts": clause_verdicts,
         "negative_controls": controls,
         "controls_fail_closed": controls_fail_closed,
-        "legacy_ladder_binding": _legacy_ladder_binding(capture["capture_sha256"]),
         "verdict": verdict,
         "STAGE1_EVENT_COMPLEX_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": blockers,
         "claim_boundary": (
             "The frozen source capture inhabits a finite causal and "
-            "local-operator domain. Its global fitted form has inertia "
-            "(1, 3): a held-out fitted-form result about this finite "
-            "instrument, not a signature theorem about a manifold. The "
+            "local-operator domain. The feature chart is prescribed as "
+            "one ancestry-depth coordinate plus three spectral embedding "
+            "coordinates; its nondegeneracy and fitted inertia do not "
+            "select a spacetime dimension. Its global fitted form has "
+            "inertia (1, 3), a held-out feature-form result about this "
+            "finite instrument rather than a signature theorem about a "
+            "manifold. The "
             "negative cone margins, one neighborhood fit with inertia "
             "(0, 4), the closed finite neighborhoods, and the missing "
             "refinement limit prevent promotion to a continuum Lorentzian "
             "spacetime; the continuum_promotion gate records each failed "
             "condition machine-readably with its owner. The transition, "
             "cocycle, orientation, and time-orientation certificates are "
-            "wiring certificates of the restriction cover, exact by "
-            "construction and guarded by the coordinate-flip control. No "
-            "physical promotion follows from any output."
+            "induced wiring checks of recentered and rescaled copies of "
+            "that same global chart on a closed-neighborhood cover. They "
+            "are not independent observer-chart reconstructions and are "
+            "guarded by the coordinate-flip control. No physical promotion "
+            "follows from any output."
         ),
     }
 
@@ -962,16 +1141,6 @@ def produce_stage1_receipt(
         out.mkdir(parents=True, exist_ok=True)
         receipt_bytes = _canonical_json(receipt).encode("utf-8")
         (out / "stage1_receipt.json").write_bytes(receipt_bytes)
-        arrays = {
-            "chart": chart,
-            "causal_pairs": np.asarray(pairs["causal"], dtype=np.int64),
-            "spacelike_pairs": np.asarray(pairs["spacelike"], dtype=np.int64),
-        }
-        for k, c in enumerate(atlas["charts"]):
-            arrays[f"chart_coords_{k}"] = c["coords"]
-            arrays[f"chart_events_{k}"] = np.asarray(
-                c["event_indices"], dtype=np.int64
-            )
         buffer = io.BytesIO()
         np.savez(buffer, **arrays)
         compressed = gzip.compress(buffer.getvalue(), mtime=0)

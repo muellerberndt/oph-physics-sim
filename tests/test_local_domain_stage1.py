@@ -11,12 +11,13 @@ from oph_fpe.local_domain.stage1_event_complex import (
     apply_frame,
     causal_certificates,
     chart_frame,
-    dimension_certificate,
     frame_transition,
     orientation_certificate,
     pair_classes_capped,
+    prescribed_chart_rank_certificate,
     produce_stage1_receipt,
     refuse_forbidden_config,
+    local_domain_source_sha256,
     time_orientation_certificate,
     verify_transition,
 )
@@ -34,6 +35,92 @@ SMALL_CONFIG = {
     "snapshot_coverage": "spanning",
     "geometry_transport": "held_out_flow",
 }
+
+
+def _projection_capture(
+    *, diagnostic: float = 1.0, event_prefix: str = "runtime-a"
+) -> dict:
+    first_key = f"{event_prefix}-event-0"
+    second_key = f"{event_prefix}-event-1"
+    return {
+        "capture_sha256": f"sha256:{diagnostic}",
+        "unused_float_diagnostic": diagnostic,
+        "postrun_capture": {
+            "carrier_port_trajectories": [{}, {}],
+            "semantic_events": [
+                {
+                    "event_key": first_key,
+                    "source_sequence_index": 0,
+                    "observer_token": "observer-0",
+                    "visible_footprint": ["carrier-00000:port-0"],
+                    "unused_float": diagnostic,
+                },
+                {
+                    "event_key": second_key,
+                    "source_sequence_index": 1,
+                    "observer_token": "observer-0",
+                    "visible_footprint": ["carrier-00001:port-0"],
+                    "unused_float": diagnostic,
+                },
+            ],
+            "raw_ancestry_relations": [
+                {
+                    "parent_event_id": first_key,
+                    "child_event_id": second_key,
+                }
+            ],
+            "raw_overlap_relations": [
+                {
+                    "overlap_id": "seam-0",
+                    "left_carrier_id": "carrier-00000",
+                    "right_carrier_id": "carrier-00001",
+                    "left_ports": [0],
+                    "right_ports": [0],
+                    "orientation_signs": [-1],
+                    "visible_to_observer_tokens": ["observer-0"],
+                    "interface_algebra_sha256": "sha256:a",
+                    "unused_float": diagnostic,
+                }
+            ],
+        },
+    }
+
+
+def test_source_projection_ignores_unconsumed_float_diagnostics_and_tampers():
+    first = _projection_capture(diagnostic=1.0, event_prefix="float-hash-a")
+    second = _projection_capture(diagnostic=2.0, event_prefix="float-hash-b")
+    assert local_domain_source_sha256(first, SMALL_CONFIG) == (
+        local_domain_source_sha256(second, SMALL_CONFIG)
+    )
+
+    second["postrun_capture"]["raw_ancestry_relations"][0][
+        "child_event_id"
+    ] = second["postrun_capture"]["semantic_events"][0]["event_key"]
+    assert local_domain_source_sha256(first, SMALL_CONFIG) != (
+        local_domain_source_sha256(second, SMALL_CONFIG)
+    )
+
+    second = _projection_capture(diagnostic=2.0, event_prefix="float-hash-b")
+    second["postrun_capture"]["carrier_port_trajectories"].append({})
+    assert local_domain_source_sha256(first, SMALL_CONFIG) != (
+        local_domain_source_sha256(second, SMALL_CONFIG)
+    )
+
+    second = _projection_capture(diagnostic=2.0, event_prefix="float-hash-b")
+    second["postrun_capture"]["semantic_events"][1]["event_key"] = second[
+        "postrun_capture"
+    ]["semantic_events"][0]["event_key"]
+    assert local_domain_source_sha256(first, SMALL_CONFIG) != (
+        local_domain_source_sha256(second, SMALL_CONFIG)
+    )
+
+    second = _projection_capture(diagnostic=2.0, event_prefix="float-hash-b")
+    second["postrun_capture"]["raw_overlap_relations"][0][
+        "orientation_signs"
+    ] = [1]
+    assert local_domain_source_sha256(first, SMALL_CONFIG) != (
+        local_domain_source_sha256(second, SMALL_CONFIG)
+    )
 
 
 def _chain_complex() -> dict:
@@ -72,13 +159,39 @@ def test_causal_certificates_detect_cycle_and_depth_violation():
     assert not certificates["strict_time_function"]
 
 
-def test_dimension_certificate_rank_gate():
+def test_causal_certificates_fail_on_unresolved_or_duplicate_identifiers():
+    complex_data = _chain_complex()
+    complex_data["missing_ancestry_endpoint_count"] = 1
+    assert not causal_certificates(complex_data)[
+        "ancestry_endpoints_resolved"
+    ]
+    complex_data["missing_ancestry_endpoint_count"] = 0
+    complex_data["duplicate_event_key_count"] = 1
+    assert not causal_certificates(complex_data)["event_keys_unique"]
+
+
+def test_prescribed_chart_rank_gate():
     rng = np.random.default_rng(634)
     chart = rng.normal(size=(200, 4))
-    assert dimension_certificate(chart)["dimension_four"]
+    assert prescribed_chart_rank_certificate(chart)[
+        "prescribed_four_coordinate_chart_nondegenerate"
+    ]
     collapsed = chart.copy()
     collapsed[:, 3] = 0.0
-    assert not dimension_certificate(collapsed)["dimension_four"]
+    assert not prescribed_chart_rank_certificate(collapsed)[
+        "prescribed_four_coordinate_chart_nondegenerate"
+    ]
+    dependent = chart.copy()
+    dependent[:, 0] = dependent[:, 1]
+    certificate = prescribed_chart_rank_certificate(dependent)
+    assert certificate["time_spread"] > 0.0
+    assert certificate["spatial_rank_ratio"] > 0.0
+    assert not certificate[
+        "prescribed_four_coordinate_chart_nondegenerate"
+    ]
+    assert certificate["full_chart_rank_ratio"] < certificate[
+        "full_chart_rank_ratio_floor"
+    ]
 
 
 def test_frame_transitions_are_exact_and_composable():
@@ -172,11 +285,25 @@ def test_small_capture_receipt_frozen_shape():
         config=SMALL_CONFIG, seed_count=4, run_controls=False
     )
     assert receipt["verdict"] == "NOT_ATTAINED"
-    assert receipt["blockers"] == ["clause_failed:held_out_lorentzian_inertia"]
+    assert receipt["blockers"] == [
+        "clause_failed:held_out_feature_form_inertia_1_3"
+    ]
     clauses = receipt["clause_verdicts"]
     assert clauses["causal_order_acyclic"]
     assert clauses["strict_time_function"]
-    assert clauses["dimension_four"]
+    assert clauses["prescribed_four_coordinate_chart_nondegenerate"]
+    assert receipt["prescribed_chart_construction"] == {
+        "ancestry_depth_coordinate_count": 1,
+        "spectral_embedding_coordinate_count": 3,
+        "total_coordinate_count": 4,
+        "status": (
+            "prescribed feature construction; no dimension-selection "
+            "claim"
+        ),
+    }
+    assert receipt["declared_acceptance_gates"][
+        "held_out_feature_form_target_inertia"
+    ] == [1, 3]
     assert clauses["atlas_covers_all_events"]
     assert clauses["atlas_nerve_connected"]
     assert clauses["transitions_supported"]
@@ -207,14 +334,13 @@ def test_frozen_main_receipt_binding():
     assert receipt["issue"] == 634
     assert receipt["physical_promotion_allowed"] is False
     assert receipt["main_config"] == MAIN_CONFIG
+    assert receipt["source_projection_sha256"].startswith("sha256:")
     assert receipt["verdict"] == "ATTAINED"
     assert receipt["blockers"] == []
     assert all(receipt["clause_verdicts"].values())
     assert receipt["controls_fail_closed"] is True
     assert tuple(receipt["held_out_quadratic_fit"]["inertia"]) == (1, 3)
-    assert receipt["legacy_ladder_binding"]["legacy_cone_margin"] == (
-        receipt["held_out_quadratic_fit"]["cone_margin"]
-    )
+    assert "legacy_ladder_binding" not in receipt
     promotion = receipt["continuum_promotion"]
     assert promotion["status"] == "BLOCKED"
     assert promotion["failed_conditions"]
