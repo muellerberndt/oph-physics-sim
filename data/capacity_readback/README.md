@@ -28,5 +28,5 @@ The checked-in projection is byte-identical to the issue 551 producer
 projection in the research repository.
 
 This is an independent finite replay of the declared branch grammar. It is not
-an all-rung proof, an independent source construction, or a physical
-cosmological closure.
+an all-rung proof, an independent source construction, a complete A1--A3 lift
+of the fixed packet, or a physical cosmological closure.

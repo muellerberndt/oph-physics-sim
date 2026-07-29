@@ -61,6 +61,7 @@ def test_independent_replay_recovers_all_formulas_and_zero_sets() -> None:
         "all_positive_integer_rungs_proved": False,
         "producer_implementation_independent": True,
         "physical_n_closure_promoted": False,
+        "full_a1_a3_packet_lift_replayed": False,
     }
 
     branches = {row["branch_id"]: row for row in report["branch_reports"]}
@@ -138,6 +139,10 @@ def test_source_signature_and_pin_mutations_fail_closed() -> None:
 
     payload = _payload()
     payload["shared_source"]["sample_rungs"].append(5)
+    assert verify_projection(payload)["status"] == "FAIL"
+
+    payload = _payload()
+    payload["shared_source"]["full_a1_a3_packet_lift_required"] = False
     assert verify_projection(payload)["status"] == "FAIL"
 
 

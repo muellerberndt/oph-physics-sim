@@ -263,6 +263,8 @@ def _validate_common_ancestry(payload: Mapping[str, Any]) -> None:
         raise ProjectionError("unexpected shared source rule")
     if shared_source["base_public_atoms"] != BASE_PUBLIC_ATOMS:
         raise ProjectionError("unexpected base public-atom count")
+    if shared_source.get("full_a1_a3_packet_lift_required") is not True:
+        raise ProjectionError("full A1-A3 packet-lift boundary was removed")
     if payload["shared_source_signature_sha256"] != _source_signature(shared_source):
         raise ProjectionError("shared source signature does not match its canonical material")
 
@@ -405,6 +407,7 @@ def verify_projection(payload: Mapping[str, Any]) -> dict[str, Any]:
                 "all_positive_integer_rungs_proved": False,
                 "producer_implementation_independent": True,
                 "physical_n_closure_promoted": False,
+                "full_a1_a3_packet_lift_replayed": False,
             },
         }
     except (KeyError, TypeError, ProjectionError, ValueError) as error:

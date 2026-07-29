@@ -34,6 +34,7 @@
         "sample_rungs",
         "spectator_multiplicities",
         "branch_completion_scope",
+        "full_a1_a3_packet_lift_required",
         "pin_scope"
       ],
       "properties": {
@@ -72,7 +73,10 @@
           }
         },
         "branch_completion_scope": {
-          "const": "alternative-continuations-of-one-declared-finite-source-antecedent"
+          "const": "base-agreement-positive-carrier-bound-completion-class"
+        },
+        "full_a1_a3_packet_lift_required": {
+          "const": true
         },
         "pin_scope": {
           "const": "semantic-contract-identifiers-not-file-custody"
