@@ -60,6 +60,7 @@ from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
 from oph_fpe.core.pole_residue_readback import produce_pole_residue_artifact
 from oph_fpe.core.spin_statistics_response import produce_spin_statistics_artifact
 from oph_fpe.local_domain.receipt_io import (
+    bundle_manifest_projection_sha256,
     load_manifest_pinned_receipt,
     manifest_pinned_artifact_sha256,
     stage2_matches_source_domain,
@@ -83,6 +84,14 @@ ISSUE = 569
 PHYSICAL_PROMOTION_ALLOWED = False
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "local_domain"
+
+LOCAL_DOMAIN_PARENT_SPECS = {
+    "stage1_receipt.json": "receipt_sha256",
+    "stage1_arrays.npz.gz": "arrays_sha256",
+    "stage2_receipt.json": "stage2_receipt_sha256",
+    "stage3_receipt.json": "stage3_receipt_sha256",
+    "source_gap_receipt.json": "source_gap_receipt_sha256",
+}
 RESEARCH_MANIFESTS = (
     Path(__file__).resolve().parents[3]
     / "reverse-engineering-reality"
@@ -419,6 +428,28 @@ def _load_frozen(name: str, manifest_key: str) -> dict | None:
     return load_manifest_pinned_receipt(DATA_DIR, name, manifest_key)
 
 
+def _local_domain_parent_pins() -> dict[str, str | None]:
+    """Pin every local-domain artifact consumed by bundle verification."""
+
+    return {
+        name: manifest_pinned_artifact_sha256(DATA_DIR, name, manifest_key)
+        for name, manifest_key in LOCAL_DOMAIN_PARENT_SPECS.items()
+    }
+
+
+def _local_domain_parent_pins_complete(
+    pins: Mapping[str, str | None],
+    manifest_projection_sha256: str | None,
+) -> bool:
+    """Check the complete, non-circular local parent identity."""
+
+    return bool(
+        set(pins) == set(LOCAL_DOMAIN_PARENT_SPECS)
+        and all(pins.values())
+        and manifest_projection_sha256 is not None
+    )
+
+
 def produce_matter_attachment_receipt(
     *,
     config: Mapping[str, Any] | None = None,
@@ -477,6 +508,8 @@ def produce_matter_attachment_receipt(
         "source_gap_receipt.json",
         "source_gap_receipt_sha256",
     )
+    local_domain_parent_sha256 = _local_domain_parent_pins()
+    bundle_manifest_projection = bundle_manifest_projection_sha256(DATA_DIR)
     domain_bound = stage2_matches_source_domain(
         stage2,
         source_projection_sha256,
@@ -613,8 +646,10 @@ def produce_matter_attachment_receipt(
     clause_verdicts = {
         "upstream_inputs_resolved": bool(bundle["passed"]),
         "local_parent_receipt_bytes_pinned": bool(
-            stage2_receipt_sha256 is not None
-            and source_gap_receipt_sha256 is not None
+            _local_domain_parent_pins_complete(
+                local_domain_parent_sha256,
+                bundle_manifest_projection,
+            )
         ),
         "local_stage2_same_source_domain_binding": domain_bound,
         "generation_table_exact": bool(
@@ -693,6 +728,16 @@ def produce_matter_attachment_receipt(
             "spin_artifact_sha256": spin_artifact.get("artifact_sha256"),
             "stage2_receipt_sha256": stage2_receipt_sha256,
             "source_gap_receipt_sha256": source_gap_receipt_sha256,
+            "local_domain_parent_sha256": local_domain_parent_sha256,
+            "bundle_manifest_projection_sha256": (
+                bundle_manifest_projection
+            ),
+            "bundle_manifest_projection_scope": (
+                "manifest schema plus the Stage-1 receipt, Stage-1 arrays, "
+                "Stage-2 receipt, and Stage-3 receipt hash fields consumed "
+                "by local-domain bundle verification; downstream leaf "
+                "hashes are excluded to avoid circular self-pinning"
+            ),
             "local_domain_bundle_passed": bundle["passed"],
             "stage2_receipt_present": bool(stage2 is not None),
             "gap_receipt_present": bool(gap_receipt is not None),

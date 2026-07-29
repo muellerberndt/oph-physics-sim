@@ -2,18 +2,96 @@
 
 import hashlib
 import json
+import shutil
 from fractions import Fraction
 from pathlib import Path
 
+import pytest
+
+import oph_fpe.local_domain.matter_attachment as matter_attachment_module
 from oph_fpe.local_domain.matter_attachment import (
     GENERATION_TABLE,
+    LOCAL_DOMAIN_PARENT_SPECS,
+    _local_domain_parent_pins,
+    _local_domain_parent_pins_complete,
     chirality_certificate,
     gap_inheritance_certificate,
     generation_certificate,
     z6_kernel_certificate,
 )
+from oph_fpe.local_domain.receipt_io import (
+    bundle_manifest_projection_sha256,
+)
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "local_domain"
+
+
+def _copy_local_parent_bundle(destination: Path) -> None:
+    for name in ("manifest.json", *LOCAL_DOMAIN_PARENT_SPECS):
+        shutil.copyfile(DATA_DIR / name, destination / name)
+
+
+@pytest.mark.parametrize("name", sorted(LOCAL_DOMAIN_PARENT_SPECS))
+def test_each_local_parent_byte_mismatch_fails_pin_clause(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    name: str,
+) -> None:
+    _copy_local_parent_bundle(tmp_path)
+    (tmp_path / name).write_bytes(
+        (tmp_path / name).read_bytes() + b"\n"
+    )
+    monkeypatch.setattr(matter_attachment_module, "DATA_DIR", tmp_path)
+    pins = _local_domain_parent_pins()
+    projection = bundle_manifest_projection_sha256(tmp_path)
+    assert pins[name] is None
+    assert not _local_domain_parent_pins_complete(pins, projection)
+
+
+def test_manifest_schema_or_consumed_hash_mutation_fails_pin_clause(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _copy_local_parent_bundle(tmp_path)
+    monkeypatch.setattr(matter_attachment_module, "DATA_DIR", tmp_path)
+    manifest_path = tmp_path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["schema"] = "oph.local-domain-stage1.manifest.mutated"
+    manifest_path.write_text(
+        json.dumps(manifest, sort_keys=True, indent=1) + "\n",
+        encoding="utf-8",
+    )
+    pins = _local_domain_parent_pins()
+    projection = bundle_manifest_projection_sha256(tmp_path)
+    assert projection is None
+    assert not _local_domain_parent_pins_complete(pins, projection)
+
+    _copy_local_parent_bundle(tmp_path)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["stage3_receipt_sha256"] = "sha256:" + "0" * 64
+    manifest_path.write_text(
+        json.dumps(manifest, sort_keys=True, indent=1) + "\n",
+        encoding="utf-8",
+    )
+    pins = _local_domain_parent_pins()
+    projection = bundle_manifest_projection_sha256(tmp_path)
+    assert pins["stage3_receipt.json"] is None
+    assert not _local_domain_parent_pins_complete(pins, projection)
+
+
+def test_bundle_manifest_projection_excludes_leaf_hashes(
+    tmp_path: Path,
+) -> None:
+    _copy_local_parent_bundle(tmp_path)
+    before = bundle_manifest_projection_sha256(tmp_path)
+    manifest_path = tmp_path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["matter_attachment_receipt_sha256"] = "sha256:" + "0" * 64
+    manifest_path.write_text(
+        json.dumps(manifest, sort_keys=True, indent=1) + "\n",
+        encoding="utf-8",
+    )
+    assert bundle_manifest_projection_sha256(tmp_path) == before
 
 
 def test_generation_table_exact_arithmetic():
@@ -130,6 +208,21 @@ def test_frozen_matter_attachment_receipt_binding():
             (DATA_DIR / "source_gap_receipt.json").read_bytes()
         ).hexdigest()
     )
+    local_parent_pins = receipt["upstream_pins"][
+        "local_domain_parent_sha256"
+    ]
+    assert set(local_parent_pins) == {
+        "stage1_receipt.json",
+        "stage1_arrays.npz.gz",
+        "stage2_receipt.json",
+        "stage3_receipt.json",
+        "source_gap_receipt.json",
+    }
+    for name, digest in local_parent_pins.items():
+        assert digest == (
+            "sha256:"
+            + hashlib.sha256((DATA_DIR / name).read_bytes()).hexdigest()
+        )
     assert receipt["matter_operator_certificate"]["probe_count"] == 1
     assert receipt["matter_operator_certificate"]["status"] == (
         "declared_tensor_extension"
