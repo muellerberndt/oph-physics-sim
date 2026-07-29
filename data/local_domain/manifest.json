@@ -1,6 +1,8 @@
 {
  "arrays": "stage1_arrays.npz.gz",
  "arrays_sha256": "sha256:b366eea6cd291ca2b87e3dbdf7cc05dc935d229ee405ff4361cef25994e4f3ff",
+ "defect_sector_receipt": "defect_sector_receipt.json",
+ "defect_sector_receipt_sha256": "sha256:50aebb41f2e0e17f94312515cda42ada9f5047a00950a69c0d80d45ba10b497d",
  "matter_attachment_receipt": "matter_attachment_receipt.json",
  "matter_attachment_receipt_sha256": "sha256:ec4bfb04540a6fa6d9aad8a2c85de7730e5361bb66b922db228c4d04718442ed",
  "receipt": "stage1_receipt.json",
