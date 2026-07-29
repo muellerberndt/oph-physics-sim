@@ -56,8 +56,18 @@ def test_frozen_clock_unit_verdict_binding():
     classification = receipt["interface_classification"]
     assert classification["interface_dimensionless"] is True
     assert classification["unit_vocabulary_hits"] == []
-    assert receipt["two_completion_witness"]["witness_holds"] is True
+    assert receipt["two_completion_experiment"]["witness_holds"] is True
+    assert receipt["two_completion_experiment"]["producer_rerun"] == (
+        "produce_defect_sector_receipt"
+    )
+    assert receipt["interface_classification"]["array_artifact"]["clean"]
+    assert receipt["interface_classification"]["manifest_pin_failures"] == []
     assert receipt["source_input_closure"]["closed"] is True
+    assert receipt["source_input_closure"]["main_config_within_allowlist"]
+    assert (
+        "bulk/physical_h3_kms_source_capture.py"
+        in receipt["source_input_closure"]["modules_scanned"]
+    )
     assert receipt["positive_clause_retained"][
         "source_hamiltonian_with_positive_gap"
     ]
@@ -118,6 +128,15 @@ def test_frozen_classical_realization_binding():
     assert readings[3]["classical_kernel_count"] == 2
     partition = receipt["interface_partition"]
     assert partition["no_quantum_discriminator"] is True
+    assert partition["array_artifact"] is not None
+    ladder = receipt["classical_completion"]["ladder_point_readings"]
+    assert len(ladder) == 6
+    assert all(row["gap_match"] and row["kernel_match"] for row in ladder)
+    theorem = receipt["indistinguishability_theorem"]
+    assert "refinement_transport_covered" in theorem
+    assert theorem["mass_invariant_box"]["unit_boundary_receipt"] == (
+        "clock_unit_verdict.json"
+    )
     sector = json.loads(
         (DATA_DIR / "defect_sector_receipt.json").read_text(encoding="utf-8")
     )

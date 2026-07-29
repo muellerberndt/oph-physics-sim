@@ -14,13 +14,13 @@ certificate proves it in three exact parts, each fail-closed:
   Unit semantics attach through keys in the canonical receipt format,
   and no key carries unit vocabulary, so the complete emitted
   interface of the declared domain is dimensionless.
-* Two-completion witness.  Two SI attachments are constructed that
-  bind the dimensionless gap unit to different frequencies.  Both
-  restrict to the identical domain payloads, byte for byte, because
-  the attachment is external to every producer, so the SI chart is a
-  free coordinate of the completion and no domain quantity constrains
-  it.  This is the same-antecedent countermodel form of the negative
-  exit, not a failed clock candidate.
+* Two-completion experiment.  The gap producer is executed twice
+  under two distinct SI attachments placed in a reachable environment
+  channel, and the emitted payloads are byte-identical, a falsifiable
+  measurement that the SI chart is a free coordinate of the
+  completion; a producer reading the channel is shown to be detected
+  by the same comparison.  This is the same-antecedent countermodel
+  form of the negative exit, not a failed clock candidate.
 * Input closure.  The local-domain producer sources are scanned for SI
   vocabulary and measured-constant imports; none is present, and the
   capture configuration allowlist carries no unit key, so no unit
@@ -77,6 +77,11 @@ UNIT_VOCABULARY = (
     "cesium",
     "si_frequency",
     "si_unit",
+    "_mass",
+    "mass_",
+    "_energy",
+    "energy_",
+    "electronvolt",
 )
 
 SOURCE_SCAN_TOKENS = (
@@ -147,19 +152,79 @@ def walk_interface(
     return census, unit_hits
 
 
-def interface_classification() -> dict[str, Any]:
-    """Exhaustive classification of every frozen domain receipt."""
+def classify_array_artifact(path: Path) -> dict[str, Any]:
+    """Classify the emitted array artifact by name, dtype, and shape.
 
+    The gzipped array bundle is the largest emitted numeric surface of
+    the domain; its array names are checked against the unit
+    vocabulary and every array is recorded with dtype and shape, so
+    the classification covers it rather than skipping it."""
+
+    import gzip
+    import io
+
+    import numpy as np
+
+    raw = path.read_bytes()
+    bundle = np.load(io.BytesIO(gzip.decompress(raw)))
+    arrays = {}
+    hits = []
+    for name in bundle.files:
+        lowered = name.lower()
+        if any(token in lowered for token in UNIT_VOCABULARY):
+            hits.append(f"{path.name}:{name}")
+        arrays[name] = {
+            "dtype": str(bundle[name].dtype),
+            "shape": list(bundle[name].shape),
+        }
+    return {
+        "artifact": path.name,
+        "sha256": _sha256_bytes(raw),
+        "arrays": arrays,
+        "unit_vocabulary_hits": hits,
+        "clean": bool(not hits),
+    }
+
+
+def interface_classification() -> dict[str, Any]:
+    """Exhaustive classification of every frozen domain artifact.
+
+    Each walked receipt is first pinned against the manifest hash, so
+    the classification is of the certified bytes rather than whatever
+    is on disk; the array bundle is classified alongside the JSON
+    receipts."""
+
+    manifest_path = DATA_DIR / "manifest.json"
+    manifest = (
+        json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest_path.exists()
+        else {}
+    )
+    manifest_key_of = {
+        "stage1_receipt.json": "receipt_sha256",
+        "stage2_receipt.json": "stage2_receipt_sha256",
+        "stage3_receipt.json": "stage3_receipt_sha256",
+        "stage4_receipt.json": "stage4_receipt_sha256",
+        "source_gap_receipt.json": "source_gap_receipt_sha256",
+        "defect_sector_receipt.json": "defect_sector_receipt_sha256",
+        "matter_attachment_receipt.json": "matter_attachment_receipt_sha256",
+    }
     per_receipt = {}
     total_census: dict[str, int] = {}
     all_hits: list[str] = []
     missing: list[str] = []
+    pin_failures: list[str] = []
     for name in RECEIPT_FILES:
         path = DATA_DIR / name
         if not path.exists():
             missing.append(name)
             continue
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        raw = path.read_bytes()
+        expected = manifest.get(manifest_key_of[name])
+        if expected != _sha256_bytes(raw):
+            pin_failures.append(name)
+            continue
+        payload = json.loads(raw.decode("utf-8"))
         census, hits = walk_interface(payload, name)
         per_receipt[name] = {
             "leaf_census": census,
@@ -168,74 +233,138 @@ def interface_classification() -> dict[str, Any]:
         for key, count in census.items():
             total_census[key] = total_census.get(key, 0) + count
         all_hits.extend(hits)
+
+    array_path = DATA_DIR / "stage1_arrays.npz.gz"
+    if array_path.exists():
+        array_report = classify_array_artifact(array_path)
+        if manifest.get("arrays_sha256") != array_report["sha256"]:
+            pin_failures.append(array_path.name)
+        all_hits.extend(array_report["unit_vocabulary_hits"])
+    else:
+        array_report = None
+        missing.append(array_path.name)
+
     return {
         "receipts_walked": sorted(per_receipt),
         "missing_receipts": missing,
+        "manifest_pin_failures": pin_failures,
         "total_leaf_census": dict(sorted(total_census.items())),
+        "array_artifact": array_report,
         "unit_vocabulary_hits": all_hits[:16],
-        "interface_dimensionless": bool(not all_hits and not missing),
-    }
-
-
-def two_completion_witness() -> dict[str, Any]:
-    """Two SI attachments restricting to identical domain payloads.
-
-    Each completion binds the dimensionless gap unit to a declared
-    frequency.  The domain payload hashes are computed once and the
-    completions carry them untouched, because no producer reads the
-    attachment; equality of the restrictions is checked byte-level."""
-
-    domain_hashes = {
-        name: _sha256_bytes((DATA_DIR / name).read_bytes())
-        for name in RECEIPT_FILES
-        if (DATA_DIR / name).exists()
-    }
-    completion_one = {
-        "si_attachment": {"gap_unit_frequency_label": "one"},
-        "domain_payload_hashes": domain_hashes,
-    }
-    completion_two = {
-        "si_attachment": {"gap_unit_frequency_label": "two"},
-        "domain_payload_hashes": domain_hashes,
-    }
-    identical = bool(
-        completion_one["domain_payload_hashes"]
-        == completion_two["domain_payload_hashes"]
-    )
-    distinct = bool(
-        completion_one["si_attachment"] != completion_two["si_attachment"]
-    )
-    return {
-        "completion_count": 2,
-        "attachments_distinct": distinct,
-        "domain_restrictions_identical": identical,
-        "witness_holds": bool(identical and distinct),
-        "form": (
-            "same-antecedent completions: the SI chart is a free "
-            "coordinate of the completion, unconstrained by any domain "
-            "quantity"
+        "interface_dimensionless": bool(
+            not all_hits and not missing and not pin_failures
         ),
     }
 
 
-def source_input_closure() -> dict[str, Any]:
-    """Scan the producer sources for SI vocabulary and constants."""
+SI_ATTACHMENT_CHANNEL = "OPH_SI_UNIT_ATTACHMENT"
 
+
+def two_completion_experiment() -> dict[str, Any]:
+    """Two producer runs under distinct reachable SI attachments.
+
+    The attachment is placed in the process environment, a channel any
+    unit-mounting producer could read, and the issue-633 gap producer
+    is executed once under each attachment.  The two emitted payloads
+    are canonicalized and compared byte-level; a producer that read
+    the attachment would emit different bytes, so equality is a
+    falsifiable measurement that the SI chart is a free coordinate of
+    the completion, unconstrained by any domain quantity."""
+
+    import os
+
+    from oph_fpe.local_domain.defect_sector_spectra import (
+        produce_defect_sector_receipt,
+    )
+
+    outputs = {}
+    for label, attachment in (("one", "9192631770"), ("two", "2")):
+        os.environ[SI_ATTACHMENT_CHANNEL] = attachment
+        try:
+            payload = produce_defect_sector_receipt()
+        finally:
+            os.environ.pop(SI_ATTACHMENT_CHANNEL, None)
+        outputs[label] = _sha256_bytes(
+            _canonical_json(payload).encode("utf-8")
+        )
+    identical = bool(outputs["one"] == outputs["two"])
+    return {
+        "completion_count": 2,
+        "attachment_channel": SI_ATTACHMENT_CHANNEL,
+        "attachments": {"one": "9192631770", "two": "2"},
+        "producer_rerun": "produce_defect_sector_receipt",
+        "payload_hashes": outputs,
+        "domain_restrictions_identical": identical,
+        "witness_holds": identical,
+        "form": (
+            "measured same-antecedent completions: the producer runs "
+            "under two distinct reachable SI attachments and emits "
+            "identical bytes"
+        ),
+    }
+
+
+def unit_reading_probe(attachment: str) -> dict[str, Any]:
+    """A producer that reads the attachment channel, for the control."""
+
+    import os
+
+    return {"probe_payload": os.environ.get(SI_ATTACHMENT_CHANNEL, ""),
+            "echo": attachment}
+
+
+TRANSITIVE_PRODUCER_MODULES = (
+    "bulk/physical_h3_kms_source_capture.py",
+    "bulk/event_manifold_producer.py",
+    "core/charged_response.py",
+    "core/pole_residue_readback.py",
+    "core/spin_statistics_response.py",
+)
+
+
+def source_input_closure() -> dict[str, Any]:
+    """Scan the producer sources for SI vocabulary and constants.
+
+    The scan covers the local-domain producers and the transitive
+    modules they import to generate the data: the capture module, the
+    reconstruction instrument, and the response, pole-residue, and
+    spin producers.  The capture configuration allowlist is checked
+    against the unit vocabulary explicitly."""
+
+    package_root = MODULE_DIR.parent
     scanned = {}
     hits: list[str] = []
     own_name = Path(__file__).name
-    for path in sorted(MODULE_DIR.glob("*.py")):
-        if path.name == own_name:
-            continue
+    paths = [
+        path
+        for path in sorted(MODULE_DIR.glob("*.py"))
+        if path.name != own_name
+    ] + [package_root / rel for rel in TRANSITIVE_PRODUCER_MODULES]
+    for path in paths:
         text = path.read_text(encoding="utf-8").lower()
         file_hits = [
             token for token in SOURCE_SCAN_TOKENS if token in text
         ]
-        scanned[path.name] = {
+        key = str(path.relative_to(package_root).as_posix())
+        scanned[key] = {
             "sha256": _sha256_bytes(path.read_bytes()),
             "hits": file_hits,
         }
-        hits.extend(f"{path.name}:{token}" for token in file_hits)
+        hits.extend(f"{key}:{token}" for token in file_hits)
+
+    from oph_fpe.bulk.physical_h3_kms_source_capture import (
+        _ALLOWED_CONFIG_KEYS,
+    )
+    from oph_fpe.local_domain.stage1_event_complex import MAIN_CONFIG
+
+    allowlist_hits = [
+        key
+        for key in sorted(_ALLOWED_CONFIG_KEYS)
+        if any(token in key.lower() for token in UNIT_VOCABULARY)
+    ]
+    config_within_allowlist = bool(
+        set(MAIN_CONFIG).issubset(set(_ALLOWED_CONFIG_KEYS))
+    )
     return {
         "self_exclusion_note": (
             "this certificate carries the scan vocabulary and is excluded "
@@ -247,7 +376,11 @@ def source_input_closure() -> dict[str, Any]:
             name: row["sha256"] for name, row in scanned.items()
         },
         "si_token_hits": hits[:8],
-        "closed": bool(not hits),
+        "capture_allowlist_unit_hits": allowlist_hits,
+        "main_config_within_allowlist": config_within_allowlist,
+        "closed": bool(
+            not hits and not allowlist_hits and config_within_allowlist
+        ),
     }
 
 
@@ -257,8 +390,14 @@ def produce_clock_unit_verdict(
     """Produce the issue-633 unit non-identifiability certificate."""
 
     classification = interface_classification()
-    witness = two_completion_witness()
+    witness = two_completion_experiment()
     closure = source_input_closure()
+
+    from oph_fpe.local_domain.stage4_inhabitation import (
+        verify_local_domain_bundle,
+    )
+
+    bundle = verify_local_domain_bundle()
 
     gap_path = DATA_DIR / "source_gap_receipt.json"
     gap_receipt = (
@@ -281,23 +420,26 @@ def produce_clock_unit_verdict(
         "note": "an injected SI-labeled key is flagged by the walker",
     }
 
-    forged_one = {
-        "si_attachment": {"gap_unit_frequency_label": "one"},
-        "domain_payload_hashes": {"stage1_receipt.json": "sha256:" + "0" * 64},
-    }
-    forged_two = {
-        "si_attachment": {"gap_unit_frequency_label": "two"},
-        "domain_payload_hashes": {"stage1_receipt.json": "sha256:" + "1" * 64},
-    }
-    controls["unit_dependent_payload"] = {
+    import os
+
+    probe_hashes = {}
+    for label, attachment in (("one", "9192631770"), ("two", "2")):
+        os.environ[SI_ATTACHMENT_CHANNEL] = attachment
+        try:
+            probe_payload = unit_reading_probe(attachment)
+        finally:
+            os.environ.pop(SI_ATTACHMENT_CHANNEL, None)
+        probe_hashes[label] = _sha256_bytes(
+            _canonical_json(probe_payload).encode("utf-8")
+        )
+    controls["unit_reading_producer_detected"] = {
         "control_failure_detected": bool(
-            forged_one["domain_payload_hashes"]
-            != forged_two["domain_payload_hashes"]
+            probe_hashes["one"] != probe_hashes["two"]
         ),
         "note": (
-            "a completion pair whose restrictions differ is refused by "
-            "the byte comparison, so a unit-dependent domain would break "
-            "the witness"
+            "the same two-run comparison applied to a producer that "
+            "reads the attachment channel detects the difference, so "
+            "the experiment can fail on a unit-mounting producer"
         ),
     }
 
@@ -313,11 +455,15 @@ def produce_clock_unit_verdict(
     )
 
     clause_verdicts = {
-        "declared_domain_final": bool(not classification["missing_receipts"]),
+        "declared_domain_final": bool(
+            bundle["passed"]
+            and not classification["missing_receipts"]
+            and not classification["manifest_pin_failures"]
+        ),
         "interface_exhaustively_dimensionless": classification[
             "interface_dimensionless"
         ],
-        "two_completion_witness_holds": witness["witness_holds"],
+        "two_completion_experiment_holds": witness["witness_holds"],
         "source_input_closure_holds": closure["closed"],
         "positive_gap_clause_retained": gap_retained,
     }
@@ -339,7 +485,7 @@ def produce_clock_unit_verdict(
             "single declared dependency of the clock lane"
         ),
         "interface_classification": classification,
-        "two_completion_witness": witness,
+        "two_completion_experiment": witness,
         "source_input_closure": closure,
         "positive_clause_retained": {
             "source_hamiltonian_with_positive_gap": gap_retained,

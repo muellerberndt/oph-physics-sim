@@ -200,9 +200,40 @@ def interface_partition() -> dict[str, Any]:
         for key, count in census.items():
             total[key] = total.get(key, 0) + count
         all_hits.extend(hits)
+
+    array_report = None
+    array_path = DATA_DIR / "stage1_arrays.npz.gz"
+    if array_path.exists():
+        import gzip
+        import io
+
+        bundle = np.load(io.BytesIO(gzip.decompress(array_path.read_bytes())))
+        array_hits = [
+            f"{array_path.name}:{name}"
+            for name in bundle.files
+            if any(t in name.lower() for t in DISCRIMINATOR_VOCABULARY)
+        ]
+        array_report = {
+            "artifact": array_path.name,
+            "arrays": {
+                name: {
+                    "dtype": str(bundle[name].dtype),
+                    "shape": list(bundle[name].shape),
+                }
+                for name in bundle.files
+            },
+            "classification": (
+                "shared-data coordinate and pair-index arrays of the "
+                "complex, present identically in both completions"
+            ),
+        }
+        all_hits.extend(array_hits)
+    else:
+        missing.append(array_path.name)
     return {
         "missing_receipts": missing,
         "total_leaf_census": dict(sorted(total.items())),
+        "array_artifact": array_report,
         "discriminator_hits": all_hits[:16],
         "no_quantum_discriminator": bool(not all_hits and not missing),
     }
@@ -282,6 +313,43 @@ def produce_classical_realization_receipt(
         < GAP_MATCH_TOLERANCE
     )
 
+    from oph_fpe.local_domain.stage1_event_complex import (
+        CONTROL_SPLIT_CONFIG,
+    )
+
+    ladder_config = dict(CONTROL_SPLIT_CONFIG)
+    ladder_config["observer_cross_reads"] = True
+    ladder_capture = capture_physical_source(ladder_config)
+    ladder_oriented = oriented_seams(visible_rows(ladder_capture))
+    frozen_ladder = sector_receipt["scale_ladder"]
+    ladder_readings = []
+    ladder_matches = []
+    for sector in range(SECTOR_COUNT):
+        frozen_kernel = frozen_ladder["small_kernel_dimensions"][sector]
+        reading = classical_sector_reading(
+            ladder_oriented, sector, frozen_kernel
+        )
+        gap_match = bool(
+            abs(
+                reading["classical_gap"]
+                - frozen_ladder["small_gaps"][sector]
+            )
+            < GAP_MATCH_TOLERANCE
+        )
+        kernel_match = bool(
+            reading["classical_kernel_count"]
+            == reading["expected_doubled_kernel"]
+        )
+        ladder_readings.append(
+            {
+                **reading,
+                "frozen_gap": frozen_ladder["small_gaps"][sector],
+                "gap_match": gap_match,
+                "kernel_match": kernel_match,
+            }
+        )
+        ladder_matches.append(gap_match and kernel_match)
+
     partition = interface_partition()
 
     controls: dict[str, dict[str, Any]] = {}
@@ -318,19 +386,36 @@ def produce_classical_realization_receipt(
             ),
         }
 
-        injected = {"bell_correlation_payload": [0.85, 0.85, 0.85, -0.85]}
-        injected_flagged = any(
-            any(token in str(key).lower() for token in DISCRIMINATOR_VOCABULARY)
-            for key in injected
+        doctored_payload = json.loads(
+            (DATA_DIR / "source_gap_receipt.json").read_text(encoding="utf-8")
         )
+        doctored_payload["bell_correlation_payload"] = [0.85, 0.85, -0.85]
+
+        def walk_doctored(value, key_path):
+            hits = []
+            if isinstance(value, Mapping):
+                for key, child in value.items():
+                    if any(
+                        t in str(key).lower()
+                        for t in DISCRIMINATOR_VOCABULARY
+                    ):
+                        hits.append(f"{key_path}/{key}")
+                    hits.extend(walk_doctored(child, f"{key_path}/{key}"))
+            elif isinstance(value, list):
+                for index, child in enumerate(value):
+                    hits.extend(walk_doctored(child, f"{key_path}[{index}]"))
+            return hits
+
+        doctored_hits = walk_doctored(doctored_payload, "doctored")
         controls["discriminator_injection"] = {
             "control_failure_detected": bool(
-                injected_flagged and partition["no_quantum_discriminator"]
+                doctored_hits and partition["no_quantum_discriminator"]
             ),
+            "flagged_paths": doctored_hits[:4],
             "note": (
-                "an injected correlation payload key is flagged by the "
-                "discriminator vocabulary while the frozen interface "
-                "stays clean"
+                "a correlation payload injected into a copy of a frozen "
+                "receipt is flagged by the same key walk that clears the "
+                "frozen interface"
             ),
         }
 
@@ -353,6 +438,7 @@ def produce_classical_realization_receipt(
         ),
         "sector_payload_identity": bool(all(matches)),
         "scalar_gap_payload_identity": scalar_match,
+        "ladder_payload_identity": bool(all(ladder_matches)),
         "interface_exhaustively_partitioned": bool(
             not partition["missing_receipts"]
         ),
@@ -389,6 +475,7 @@ def produce_classical_realization_receipt(
             ),
             "sector_readings": readings,
             "scalar_gap_match": scalar_match,
+            "ladder_point_readings": ladder_readings,
         },
         "interface_partition": partition,
         "indistinguishability_theorem": {
@@ -409,6 +496,23 @@ def produce_classical_realization_receipt(
                 "completion; the clause closes under the no-go rather "
                 "than by construction"
             ),
+            "refinement_transport_covered": (
+                "the realification is functorial in the complex, so the "
+                "classical completion commutes with subcomplex and scale "
+                "restriction; the ladder-point readings verify the "
+                "commuting square by measurement at the second declared "
+                "scale"
+            ),
+            "mass_invariant_box": {
+                "positive_leg": (
+                    "the sector-gap table of the defect-sector receipt"
+                ),
+                "unit_boundary": (
+                    "physical units stay not evaluable on this domain by "
+                    "the issue-633 clock-unit verdict"
+                ),
+                "unit_boundary_receipt": "clock_unit_verdict.json",
+            },
             "retained_positive_subresults": [
                 "the exact finite sector arithmetic of the v3 receipt",
                 "the sector-gap invariant table of the sector-spectra "
