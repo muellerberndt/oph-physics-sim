@@ -443,12 +443,62 @@ def verify_projection_file(
     return verify_projection(payload)
 
 
+def compact_replay_receipt(
+    report: Mapping[str, Any],
+    *,
+    projection_path: str | Path,
+    schema_path: str | Path = SCHEMA_PATH,
+) -> dict[str, Any]:
+    """Bind a compact custody receipt to the exact independent replay."""
+
+    if report.get("status") != "PASS":
+        raise ProjectionError("cannot bind a failed replay")
+    projection_bytes = Path(projection_path).read_bytes()
+    verifier_bytes = Path(__file__).read_bytes()
+    schema_bytes = Path(schema_path).read_bytes()
+    full_report_bytes = canonical_json_bytes(report)
+    return {
+        "schema": "oph.capacity_indexed_source_family_independent_receipt.v1",
+        "issue": 551,
+        "status": "PASS",
+        "scientific_verdict_replayed": report["scientific_verdict_replayed"],
+        "projection_sha256": (
+            "sha256:" + hashlib.sha256(projection_bytes).hexdigest()
+        ),
+        "schema_sha256": "sha256:" + hashlib.sha256(schema_bytes).hexdigest(),
+        "independent_verifier_sha256": (
+            "sha256:" + hashlib.sha256(verifier_bytes).hexdigest()
+        ),
+        "full_replay_report_sha256": (
+            "sha256:" + hashlib.sha256(full_report_bytes).hexdigest()
+        ),
+        "shared_source_signature_sha256": report[
+            "shared_source_signature_sha256"
+        ],
+        "upstream_pins": report["upstream_pins"],
+        "branch_ids_replayed": [
+            row["branch_id"] for row in report["branch_reports"]
+        ],
+        "scope": report["scope"],
+        "target_clean": report["target_clean"],
+    }
+
+
 def _main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("projection", type=Path)
     parser.add_argument("--schema", type=Path, default=SCHEMA_PATH)
+    parser.add_argument("--receipt-output", type=Path)
     arguments = parser.parse_args(list(argv) if argv is not None else None)
     report = verify_projection_file(arguments.projection, schema_path=arguments.schema)
+    if arguments.receipt_output is not None and report["status"] == "PASS":
+        receipt = compact_replay_receipt(
+            report,
+            projection_path=arguments.projection,
+            schema_path=arguments.schema,
+        )
+        arguments.receipt_output.parent.mkdir(parents=True, exist_ok=True)
+        arguments.receipt_output.write_bytes(canonical_json_bytes(receipt))
     print(canonical_json_bytes(report).decode("ascii"), end="")
     return 0 if report["status"] == "PASS" else 1
 

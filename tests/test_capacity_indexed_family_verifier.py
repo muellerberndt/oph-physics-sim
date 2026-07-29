@@ -8,6 +8,7 @@ from jsonschema import Draft202012Validator
 from oph_fpe.cosmology.capacity_indexed_family_verifier import (
     SCHEMA_PATH,
     canonical_json_bytes,
+    compact_replay_receipt,
     load_projection,
     verify_projection,
     verify_projection_file,
@@ -20,6 +21,12 @@ FIXTURE = (
     / "data"
     / "capacity_readback"
     / "capacity_indexed_source_family_projection.json"
+)
+RECEIPT = (
+    ROOT
+    / "data"
+    / "capacity_readback"
+    / "capacity_indexed_source_family_independent_receipt.json"
 )
 MODULE = (
     ROOT
@@ -173,3 +180,24 @@ def test_verifier_has_no_producer_import_or_target_data_dependency() -> None:
     assert "correctable_public_record_capacity" not in source
     assert "observed_cosmological_constant" not in source
     assert "measured_horizon_radius" not in source
+
+
+def test_compact_receipt_binds_exact_independent_replay() -> None:
+    report = verify_projection_file(FIXTURE)
+    receipt = compact_replay_receipt(report, projection_path=FIXTURE)
+
+    assert receipt["status"] == "PASS"
+    assert receipt["issue"] == 551
+    assert receipt["scientific_verdict_replayed"] == (
+        "SOURCE_CLASS_NONIDENTIFIABLE"
+    )
+    assert receipt["scope"]["producer_implementation_independent"] is True
+    assert receipt["scope"]["all_positive_integer_rungs_proved"] is False
+    assert receipt["target_clean"] is True
+    assert receipt["branch_ids_replayed"] == [
+        "capped_two_class",
+        "copy_collapse_erasure",
+        "hidden_spectator",
+        "reversible_identity",
+    ]
+    assert RECEIPT.read_bytes() == canonical_json_bytes(receipt)

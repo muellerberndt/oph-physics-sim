@@ -1,7 +1,7 @@
 # Capacity-indexed source-family replay
 
-`capacity_indexed_source_family_projection.json` is a byte-canonical
-compatibility fixture for the independent simulator-side checker. The checker
+`capacity_indexed_source_family_projection.json` is the byte-canonical
+producer projection consumed by the independent simulator-side checker. The checker
 rebuilds four deterministic channels without importing the producer:
 
 - reversible identity, with \(M_0=24k\);
@@ -24,8 +24,8 @@ python -m oph_fpe.cosmology.capacity_indexed_family_verifier \
 
 The JSON Schema is
 `schemas/cosmology/capacity_indexed_source_family_projection.schema.json`.
-Producer artifacts can replace the compatibility fixture when they use this
-schema and exact canonical encoding.
+The checked-in projection is byte-identical to the issue 551 producer
+projection in the research repository.
 
 This is an independent finite replay of the declared branch grammar. It is not
 an all-rung proof, an independent source construction, or a physical
