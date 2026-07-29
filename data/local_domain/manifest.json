@@ -1,6 +1,8 @@
 {
  "arrays": "stage1_arrays.npz.gz",
  "arrays_sha256": "sha256:b366eea6cd291ca2b87e3dbdf7cc05dc935d229ee405ff4361cef25994e4f3ff",
+ "matter_attachment_receipt": "matter_attachment_receipt.json",
+ "matter_attachment_receipt_sha256": "sha256:ec4bfb04540a6fa6d9aad8a2c85de7730e5361bb66b922db228c4d04718442ed",
  "receipt": "stage1_receipt.json",
  "receipt_sha256": "sha256:84476f6c097603f9e720c36fe8d3692033d29f056b71c44b6a8b17825decb3cf",
  "schema": "oph.local-domain-stage1.manifest.v1",
