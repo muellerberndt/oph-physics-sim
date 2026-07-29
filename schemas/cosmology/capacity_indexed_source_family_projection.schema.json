@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/cosmology/capacity_indexed_source_family_projection.schema.json",
+  "title": "Capacity-indexed source-family projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scientific_verdict",
+    "physical_n_closure_promoted",
+    "shared_source",
+    "shared_source_signature_sha256",
+    "upstream_pins",
+    "target_cleanliness",
+    "branches"
+  ],
+  "properties": {
+    "schema": {
+      "const": "oph.capacity_indexed_source_family_projection.v1"
+    },
+    "scientific_verdict": {
+      "const": "SOURCE_CLASS_NONIDENTIFIABLE"
+    },
+    "physical_n_closure_promoted": {
+      "const": false
+    },
+    "shared_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_rule_id",
+        "base_public_atoms",
+        "rung_parameter",
+        "sample_rungs",
+        "spectator_multiplicities",
+        "branch_completion_scope",
+        "pin_scope"
+      ],
+      "properties": {
+        "source_rule_id": {
+          "const": "oph.public-record-capacity.branch-completion-family.v1"
+        },
+        "base_public_atoms": {
+          "const": 24
+        },
+        "rung_parameter": {
+          "const": "positive-integer-k"
+        },
+        "sample_rungs": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
+          }
+        },
+        "spectator_multiplicities": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "contains": {
+            "const": 1
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          }
+        },
+        "branch_completion_scope": {
+          "const": "alternative-continuations-of-one-declared-finite-source-antecedent"
+        },
+        "pin_scope": {
+          "const": "semantic-contract-identifiers-not-file-custody"
+        }
+      }
+    },
+    "shared_source_signature_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "upstream_pins": {
+      "$ref": "#/$defs/upstreamPins"
+    },
+    "target_cleanliness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "measured_cosmological_constant_read",
+        "observed_horizon_radius_read",
+        "electroweak_target_read",
+        "desired_capacity_read",
+        "external_fit_read"
+      ],
+      "properties": {
+        "measured_cosmological_constant_read": {
+          "const": false
+        },
+        "observed_horizon_radius_read": {
+          "const": false
+        },
+        "electroweak_target_read": {
+          "const": false
+        },
+        "desired_capacity_read": {
+          "const": false
+        },
+        "external_fit_read": {
+          "const": false
+        }
+      }
+    },
+    "branches": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/branch"
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "upstreamPins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixed_packet_projection_sha256",
+        "fixed_packet_verifier_contract_sha256"
+      ],
+      "properties": {
+        "fixed_packet_projection_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "fixed_packet_verifier_contract_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "sampleRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "k",
+        "spectator_multiplicity",
+        "raw_dimension",
+        "public_dimension",
+        "claimed_capacity_M0",
+        "claimed_slack_zero"
+      ],
+      "properties": {
+        "k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "spectator_multiplicity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "raw_dimension": {
+          "type": "integer",
+          "minimum": 24,
+          "maximum": 4096
+        },
+        "public_dimension": {
+          "type": "integer",
+          "minimum": 24,
+          "maximum": 768
+        },
+        "claimed_capacity_M0": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 768
+        },
+        "claimed_slack_zero": {
+          "type": "boolean"
+        }
+      }
+    },
+    "zeroRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "k",
+        "spectator_multiplicity"
+      ],
+      "properties": {
+        "k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "spectator_multiplicity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        }
+      }
+    },
+    "branch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch_id",
+        "channel_rule",
+        "capacity_formula",
+        "shared_source_signature_sha256",
+        "upstream_pins",
+        "sample_rows",
+        "claimed_bounded_zero_set"
+      ],
+      "properties": {
+        "branch_id": {
+          "enum": [
+            "reversible_identity",
+            "copy_collapse_erasure",
+            "capped_two_class",
+            "hidden_spectator"
+          ]
+        },
+        "channel_rule": {
+          "enum": [
+            "output=(port,copy)",
+            "output=port",
+            "output=(port,min(copy,1))",
+            "output=(port,copy);spectator-hidden"
+          ]
+        },
+        "capacity_formula": {
+          "enum": [
+            "M0=24*k",
+            "M0=24",
+            "M0=24*min(k,2)",
+            "raw_D=24*k*s;M0=24*k"
+          ]
+        },
+        "shared_source_signature_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "upstream_pins": {
+          "$ref": "#/$defs/upstreamPins"
+        },
+        "sample_rows": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/sampleRow"
+          }
+        },
+        "claimed_bounded_zero_set": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/zeroRow"
+          }
+        }
+      }
+    }
+  }
+}
