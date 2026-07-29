@@ -1,6 +1,10 @@
 {
  "arrays": "stage1_arrays.npz.gz",
  "arrays_sha256": "sha256:b366eea6cd291ca2b87e3dbdf7cc05dc935d229ee405ff4361cef25994e4f3ff",
+ "classical_realization_receipt": "classical_realization_receipt.json",
+ "classical_realization_receipt_sha256": "sha256:d7b770a6415c26060f660aca94c15f2c443f6947f281053f9425b9e074ff421d",
+ "clock_unit_verdict": "clock_unit_verdict.json",
+ "clock_unit_verdict_sha256": "sha256:a99b622b64f99b16abd1296b6f2bec1df43a5e7b61f2e2fd69d219a716a9b756",
  "defect_sector_receipt": "defect_sector_receipt.json",
  "defect_sector_receipt_sha256": "sha256:50aebb41f2e0e17f94312515cda42ada9f5047a00950a69c0d80d45ba10b497d",
  "matter_attachment_receipt": "matter_attachment_receipt.json",
