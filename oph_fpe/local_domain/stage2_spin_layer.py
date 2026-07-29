@@ -19,7 +19,8 @@ event-footprint subcomplex is a recorded census only:
   of the clique two-complex, computed by two eliminations over distinct
   matrices with an agreement clause, and the ambiguity count two to
   that rank in the convention of the spin-statistics instrument;
-* the chart-frame layer of the stage-1 atlas: transition determinant
+* the neighborhood-frame layer of the stage-1 closed cover: transition
+  determinant
   signs, the sign-lift solvability on the nerve, and the nerve
   cohomology rank.
 
@@ -343,7 +344,7 @@ def _load_frozen_stage1() -> dict[str, Any] | None:
 
 
 def atlas_frame_layer(stage1_receipt: Mapping[str, Any]) -> dict[str, Any]:
-    """Sign-lift layer of the stage-1 atlas nerve, exactly."""
+    """Sign-lift layer of the stage-1 closed-cover nerve, exactly."""
 
     atlas = stage1_receipt["atlas"]
     seed_count = atlas["seed_count"]

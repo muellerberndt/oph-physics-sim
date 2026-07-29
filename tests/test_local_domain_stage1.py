@@ -215,3 +215,12 @@ def test_frozen_main_receipt_binding():
     assert receipt["legacy_ladder_binding"]["legacy_cone_margin"] == (
         receipt["held_out_quadratic_fit"]["cone_margin"]
     )
+    promotion = receipt["continuum_promotion"]
+    assert promotion["status"] == "BLOCKED"
+    assert promotion["failed_conditions"]
+    assert not any(
+        condition["holds"]
+        for condition in promotion["failed_conditions"].values()
+    )
+    assert "cone_margins_nonnegative" in promotion["failed_conditions"]
+    assert "cofinal_refinement_family" in promotion["failed_conditions"]

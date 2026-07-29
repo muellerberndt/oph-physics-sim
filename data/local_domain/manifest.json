@@ -4,7 +4,7 @@
  "matter_attachment_receipt": "matter_attachment_receipt.json",
  "matter_attachment_receipt_sha256": "sha256:ec4bfb04540a6fa6d9aad8a2c85de7730e5361bb66b922db228c4d04718442ed",
  "receipt": "stage1_receipt.json",
- "receipt_sha256": "sha256:84476f6c097603f9e720c36fe8d3692033d29f056b71c44b6a8b17825decb3cf",
+ "receipt_sha256": "sha256:70ae9c0714b94135f832518a85582201dc68e47220b6bafe496eab590c1e3b31",
  "schema": "oph.local-domain-stage1.manifest.v1",
  "source_gap_receipt": "source_gap_receipt.json",
  "source_gap_receipt_sha256": "sha256:90501a2e561bd87c6238ad12e68349d0d830f14b1ee2228635ef71d09aa8aeeb",
@@ -13,5 +13,5 @@
  "stage3_receipt": "stage3_receipt.json",
  "stage3_receipt_sha256": "sha256:f793550497e3e5ee8299aa29c82b20a7b01a113863b09ed3f944424855579167",
  "stage4_receipt": "stage4_receipt.json",
- "stage4_receipt_sha256": "sha256:0fe6a93fd3b7b38f774d093eed40bab31f2b14aafd1d363dbc63a0fcac6d036c"
+ "stage4_receipt_sha256": "sha256:c04f9dff1214abe10bf50baad6cff8ae8dad0a5cb00d6a845667f4747626312d"
 }

@@ -1,42 +1,51 @@
-"""Issue-634 stage 1: source event complex with certified causal charts.
+"""Issue-634 stage 1: source event complex with a certified causal cover.
 
 The local action domain starts from one target-clean source capture and
 derives, without any target import, the object every downstream typing
 stage consumes: the event complex with an exact causal-order
-certificate, the reconstructed four-coordinate chart of the issue-575
-instrument, a chart atlas over observer visibility neighborhoods with
-fitted transitions, and the dimension, signature, orientation, and
-time-orientation certificates on that atlas.
+certificate, the reconstructed four-coordinate description of the
+issue-575 instrument, a cover of closed observer neighborhoods with
+wiring transitions, and the dimension, fitted-inertia, orientation, and
+time-orientation certificates on that cover.  The cover is a family of
+closed finite sets with exact bookkeeping maps between local frames;
+it is not an atlas of open coordinate charts, and no continuum
+structure is asserted anywhere in this module.
 
 Construction:
 
-* Event classes, ancestry order, footprints, and the global four-chart
-  are the issue-575 reconstruction: time is ancestry depth, space is the
-  seam-graph spectral embedding averaged over each event's carrier
-  footprint.  The held-out quadratic form of that instrument supplies
-  the signature verdict.
+* Event classes, ancestry order, footprints, and the global
+  four-coordinate description are the issue-575 reconstruction: time is
+  ancestry depth, space is the seam-graph spectral embedding averaged
+  over each event's carrier footprint.  The held-out quadratic form of
+  that instrument supplies the inertia verdict: a fitted-form result
+  about this finite instrument, evidence of a Lorentzian tendency, and
+  not a signature theorem about a manifold.
 * The causal-order certificate is exact rather than fitted: every
   ancestry edge must advance the source sequence index and the ancestry
   depth, and reachability must be acyclic and antisymmetric.  The depth
   function is then a strict time function, which is the finite form of
   stable causality.
-* The atlas covers the observer set with closed Voronoi neighborhoods
-  on the seam-visibility graph: two observers are adjacent when one
-  overlap relation is visible to both.  Each chart carries an affine
+* The cover consists of closed Voronoi observer neighborhoods on the
+  seam-visibility graph: two observers are adjacent when one overlap
+  relation is visible to both.  Each neighborhood carries an affine
   local frame of the global reconstruction: depth recentred on the
-  chart and the spatial block recentred and rescaled by the chart's own
-  root-mean-square spread.  Chart transitions are therefore exact
-  affine maps computed from the frames and verified on shared events;
-  their residual, cocycle, orientation, and time-orientation
-  certificates are wiring certificates of the restriction atlas.  The
-  source-level transition content, the seam orientation signs and port
-  transport of the overlap relations, enters at stage 2 as exact
-  cocycle data.  Each chart additionally records its own held-out
-  quadratic fit, the local visibility surface of the signature.
-* The cone margin of the held-out form is recorded and stays owned by
-  issue 595.  Stage 1 certifies the inertia, the causal order, and the
-  atlas; it does not claim positive-margin cone merging, a continuum
-  limit, or a physical metric.
+  neighborhood and the spatial block recentred and rescaled by its own
+  root-mean-square spread.  Transitions between neighborhoods are
+  therefore exact affine maps computed from the frames and verified on
+  shared events; their residual, cocycle, orientation, and
+  time-orientation certificates are wiring certificates of the
+  restriction cover.  The source-level transition content, the seam
+  orientation signs and port transport of the overlap relations,
+  enters at stage 2 as exact cocycle data.  Each neighborhood
+  additionally records its own held-out quadratic fit, the local
+  visibility surface of the fitted inertia.
+* Continuum promotion is a blocked, machine-readable gate of the
+  receipt: every measured cone margin is negative, one neighborhood
+  fit has inertia (0, 4), the neighborhoods are closed finite sets,
+  and no cofinal refinement family establishes convergence, so the
+  finite domain does not promote to a continuum Lorentzian spacetime.
+  Positive-margin cone merging and the refinement tail are owned by
+  issue 595 and the Einstein branch.
 
 Fail-closed controls: collapsed spatial axis (wrong dimension), a
 cross-read-free capture (split signature), a post-fit coordinate flip
@@ -813,6 +822,84 @@ def produce_stage1_receipt(
             "recorded, not gated at stage 1; positive-margin cone merging is "
             "owned by issue 595"
         ),
+        "continuum_promotion": {
+            "status": "BLOCKED",
+            "failed_conditions": {
+                "cone_margins_nonnegative": {
+                    "holds": bool(
+                        fit.get("fitted")
+                        and float(fit.get("cone_margin", -1.0)) >= 0.0
+                    ),
+                    "measured_global_margin": fit.get("cone_margin"),
+                    "owner": "issue 595",
+                },
+                "all_neighborhood_fits_lorentzian": {
+                    "holds": all(
+                        tuple(c["local_fit"].get("inertia") or ())
+                        == TARGET_INERTIA
+                        for c in atlas["charts"]
+                        if c["local_fit"].get("fitted")
+                    ),
+                    "measured_inertias": [
+                        list(c["local_fit"].get("inertia") or [])
+                        for c in atlas["charts"]
+                    ],
+                },
+                "open_chart_topology": {
+                    "holds": False,
+                    "note": (
+                        "the cover is a family of closed finite observer "
+                        "neighborhoods with wiring transitions, not open "
+                        "coordinate charts"
+                    ),
+                },
+                "cofinal_refinement_family": {
+                    "holds": False,
+                    "note": (
+                        "the recorded 2048/16384 pair is a two-point scale "
+                        "ladder, not a convergence family; the cone-margin "
+                        "tail is owned by issue 595"
+                    ),
+                },
+                "invariant_continuum_metric": {
+                    "holds": False,
+                    "note": (
+                        "the held-out inertia is a fitted-form result about "
+                        "this finite instrument, not a manifold signature "
+                        "theorem; no differentiable structure or physical "
+                        "light cone is produced"
+                    ),
+                },
+            },
+            "consumer_rule": (
+                "downstream consumers must treat this receipt as a finite "
+                "causal and local-operator domain and may not assume a "
+                "continuum Lorentzian spacetime"
+            ),
+            "meaning": (
+                "BLOCKED is a condition tracker, not a nonexistence "
+                "result: it records that the promotion conditions are not "
+                "met by this finite object at this cutoff, and it retracts "
+                "nothing"
+            ),
+            "path_to_promotion": {
+                "conditions": [
+                    "nonnegative cone margins on a certified cofinal tail",
+                    "Lorentzian inertia in every neighborhood fit",
+                    "a declared cofinal refinement family with a "
+                    "convergence certificate",
+                ],
+                "standing_evidence": (
+                    "the frozen Einstein-cone ladder measures held-out "
+                    "inertia (1, 3) with the cone margin magnitude roughly "
+                    "halving per rung at 16384 and 65536 carriers and at "
+                    "the density-corrected 262144 rung; that measured "
+                    "trend is the supporting evidence for eventual "
+                    "positive-margin merging and is unchanged by this gate"
+                ),
+                "owners": ["issue 595", "issue 503"],
+            },
+        },
         "atlas": {
             "seed_count": atlas["seed_count"],
             "chart_event_counts": chart_sizes,
@@ -854,17 +941,19 @@ def produce_stage1_receipt(
         "STAGE1_EVENT_COMPLEX_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": blockers,
         "claim_boundary": (
-            "Finite issue-634 stage-1 object: the source event complex with "
-            "an exact causal-order certificate, the issue-575 held-out "
-            "signature verdict, and a chart atlas over observer visibility "
-            "neighborhoods whose transition, cocycle, orientation, and "
-            "time-orientation certificates are wiring certificates of the "
-            "restriction frames, exact by construction and guarded by the "
-            "coordinate-flip control. Per-chart held-out fits are recorded "
-            "ungated; one of the six charts records local inertia (0, 4). "
-            "The cone margin is recorded under issue-595 ownership. No "
-            "open-chart topology, continuum limit, physical metric, or "
-            "physical promotion is claimed."
+            "The frozen source capture inhabits a finite causal and "
+            "local-operator domain. Its global fitted form has inertia "
+            "(1, 3): a held-out fitted-form result about this finite "
+            "instrument, not a signature theorem about a manifold. The "
+            "negative cone margins, one neighborhood fit with inertia "
+            "(0, 4), the closed finite neighborhoods, and the missing "
+            "refinement limit prevent promotion to a continuum Lorentzian "
+            "spacetime; the continuum_promotion gate records each failed "
+            "condition machine-readably with its owner. The transition, "
+            "cocycle, orientation, and time-orientation certificates are "
+            "wiring certificates of the restriction cover, exact by "
+            "construction and guarded by the coordinate-flip control. No "
+            "physical promotion follows from any output."
         ),
     }
 
@@ -887,16 +976,21 @@ def produce_stage1_receipt(
         np.savez(buffer, **arrays)
         compressed = gzip.compress(buffer.getvalue(), mtime=0)
         (out / "stage1_arrays.npz.gz").write_bytes(compressed)
-        manifest = {
-            "schema": "oph.local-domain-stage1.manifest.v1",
-            "receipt": "stage1_receipt.json",
-            "receipt_sha256": "sha256:"
-            + hashlib.sha256(receipt_bytes).hexdigest(),
-            "arrays": "stage1_arrays.npz.gz",
-            "arrays_sha256": "sha256:"
-            + hashlib.sha256(compressed).hexdigest(),
-        }
-        (out / "manifest.json").write_text(
+        manifest_path = out / "manifest.json"
+        manifest = (
+            json.loads(manifest_path.read_text(encoding="utf-8"))
+            if manifest_path.exists()
+            else {"schema": "oph.local-domain-stage1.manifest.v1"}
+        )
+        manifest["receipt"] = "stage1_receipt.json"
+        manifest["receipt_sha256"] = (
+            "sha256:" + hashlib.sha256(receipt_bytes).hexdigest()
+        )
+        manifest["arrays"] = "stage1_arrays.npz.gz"
+        manifest["arrays_sha256"] = (
+            "sha256:" + hashlib.sha256(compressed).hexdigest()
+        )
+        manifest_path.write_text(
             json.dumps(manifest, sort_keys=True, indent=1) + "\n",
             encoding="utf-8",
         )

@@ -425,10 +425,19 @@ def produce_stage4_receipt(
         row["control_failure_detected"] for row in controls.values()
     )
 
+    promotion_gate = receipts["stage1"].get("continuum_promotion", {})
     clause_verdicts = {
         "bundle_resolves_fail_closed": resolution["passed"],
         "single_source_dag": bool(
             dag["single_source"] and dag["acyclic"]
+        ),
+        "continuum_promotion_blocked_and_recorded": bool(
+            promotion_gate.get("status") == "BLOCKED"
+            and promotion_gate.get("failed_conditions")
+            and not any(
+                condition.get("holds")
+                for condition in promotion_gate["failed_conditions"].values()
+            )
         ),
         "target_clean_provenance": bool(
             not any(
@@ -483,13 +492,19 @@ def produce_stage4_receipt(
             "from one target-clean acyclic provenance DAG, with the six "
             "issue-level control families detected, the preservation "
             "squares carried by exact certificates, and the producers "
-            "replayed byte-exactly. The Lorentzian signature certificate "
-            "is the held-out inertia of the issue-575 instrument with the "
-            "cone margin owned by issue 595, the sign layer is the "
-            "declared reversing convention with continuum identification "
-            "owned by the issue-596 lanes, and physical fiber selection "
-            "belongs to issues 569 and 630. No physical promotion follows "
-            "from any output."
+            "replayed byte-exactly. The inertia certificate is the "
+            "held-out fitted form of the issue-575 instrument, a finite "
+            "fitted-form result rather than a manifold signature theorem, "
+            "and the stage-1 continuum_promotion gate is verified BLOCKED "
+            "with every failed condition recorded: negative cone margins "
+            "(issue 595), one neighborhood fit at inertia (0, 4), closed "
+            "finite neighborhoods, and no cofinal refinement family. The "
+            "sign layer is the declared reversing convention with "
+            "continuum identification owned by the issue-596 lanes, and "
+            "physical fiber selection belongs to issues 569 and 630. The "
+            "domain is a finite causal and local-operator object; no "
+            "continuum Lorentzian spacetime and no physical promotion "
+            "follows from any output."
         ),
     }
 
