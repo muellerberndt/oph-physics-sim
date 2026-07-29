@@ -23,7 +23,7 @@ from jsonschema import Draft202012Validator
 
 
 SCHEMA_ID = "oph.capacity_indexed_source_family_projection.v1"
-SCIENTIFIC_VERDICT = "SOURCE_CLASS_NONIDENTIFIABLE"
+SCIENTIFIC_VERDICT = "BOUNDED_COMPLETION_CLASS_NONIDENTIFIABLE"
 SOURCE_RULE_ID = "oph.public-record-capacity.branch-completion-family.v1"
 BASE_PUBLIC_ATOMS = 24
 MAX_INPUT_BYTES = 2_000_000

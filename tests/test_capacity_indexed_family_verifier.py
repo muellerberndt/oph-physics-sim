@@ -52,7 +52,9 @@ def test_independent_replay_recovers_all_formulas_and_zero_sets() -> None:
     report = verify_projection_file(FIXTURE)
 
     assert report["status"] == "PASS"
-    assert report["scientific_verdict_replayed"] == "SOURCE_CLASS_NONIDENTIFIABLE"
+    assert report["scientific_verdict_replayed"] == (
+        "BOUNDED_COMPLETION_CLASS_NONIDENTIFIABLE"
+    )
     assert report["target_clean"] is True
     assert report["complete_declared_branch_grammar"] is True
     assert report["distinct_bounded_zero_sets"] is True
@@ -194,7 +196,7 @@ def test_compact_receipt_binds_exact_independent_replay() -> None:
     assert receipt["status"] == "PASS"
     assert receipt["issue"] == 551
     assert receipt["scientific_verdict_replayed"] == (
-        "SOURCE_CLASS_NONIDENTIFIABLE"
+        "BOUNDED_COMPLETION_CLASS_NONIDENTIFIABLE"
     )
     assert receipt["scope"]["producer_implementation_independent"] is True
     assert receipt["scope"]["all_positive_integer_rungs_proved"] is False

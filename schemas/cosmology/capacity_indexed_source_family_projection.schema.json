@@ -19,7 +19,7 @@
       "const": "oph.capacity_indexed_source_family_projection.v1"
     },
     "scientific_verdict": {
-      "const": "SOURCE_CLASS_NONIDENTIFIABLE"
+      "const": "BOUNDED_COMPLETION_CLASS_NONIDENTIFIABLE"
     },
     "physical_n_closure_promoted": {
       "const": false
