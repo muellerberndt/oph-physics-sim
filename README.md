@@ -483,6 +483,12 @@ Status and experiments:
 
 Contracts and lanes:
 
+- `docs/CANONICAL_REPAIR_LAW.md`: the proposed A1/A2 repair clauses, the
+  exact scalar conditional-expectation and Laplacian specialization, and the
+  unresolved gates between that finite theorem and a physical repair law.
+- `docs/SOURCE_SELECTOR_DECISION_TESTS.md`: target-free angular-transfer and
+  finite response-selector experiments, with executable nonidentifiability
+  receipts and physical-promotion boundaries.
 - `docs/OPH_THEOREM_TO_SIM_IMPLEMENTATION_SPEC.md`: theorem-to-code and
   claim-promotion contract.
 - `docs/CLAIM_LANES.md`: lane-by-lane contracts (screen/scale, BW/H3/bulk,
