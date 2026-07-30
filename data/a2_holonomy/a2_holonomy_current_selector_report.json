@@ -1,0 +1,130 @@
+{
+  "carrier_manifest_sha256": "cee9f912d2a2b9a66ac9866e3b04666a7acf74355771389bec73d7a04fbb8280",
+  "claim_boundary": "The exact conditional classifier forces Standard Model Lie type from a compact twelve-dimensional port current with internal A5 holonomy. The released source artifacts do not establish the ordered-response and same-current holonomy hypotheses. No physical gauge-current promotion follows from this report.",
+  "negative_controls": {
+    "abelian_port_records": {
+      "commutator_closed": true,
+      "nontrivial_a5_action_is_inner": false,
+      "rejected": true,
+      "same_a5_coefficient_module": true
+    },
+    "ambient_normalizer_without_response_generated_path": {
+      "covariance_square_can_match": true,
+      "implementer_in_response_generated_identity_component": false,
+      "rejected": true
+    },
+    "binary_deck_on_independent_ancilla": {
+      "binary_deck_profile_matches": true,
+      "rejected": true,
+      "same_current_source_identity": false
+    },
+    "semantic_model_label": {
+      "accepted_as_source_derivation": false,
+      "construction_name_present": true,
+      "raw_ordered_response_present": false,
+      "rejected": true
+    }
+  },
+  "receipts": {
+    "A2_HOLONOMY_CLASSIFIER_RECEIPT": true,
+    "A2_HOLONOMY_SOURCE_BRIDGE_RECEIPT": false,
+    "PHYSICAL_SM_LIE_CURRENT_ALGEBRA_RECEIPT": false
+  },
+  "report_sha256": "sha256:65f7cda88cb193eebb9d16bba8dca3eeeee9bb03c2ad983ec8aeb5fb7dca5ff1",
+  "schema": "oph.a2-holonomy-current-selector/1.0.0",
+  "source_artifacts": {
+    "binary_deck_transport_sha256": "sha256:ebf72ed5e4c3440c858b8a77c8bd8fca9c6c5d530aa7965fe53236b4b293253a",
+    "inverse_port_response_sha256": "sha256:72dbb4f2f0d443c35d7451bb5ba34ba8a75305ff75161b0bad418529b79c5aa4"
+  },
+  "source_bridge_audit": {
+    "a2_holonomy_source_bridge_receipt": false,
+    "binary_icosahedral_deck_measurement_available": true,
+    "inverse_port_response_constraints_correctly_typed": true,
+    "missing_objects": [
+      "ordered_two_sided_port_response_histories",
+      "twelve_infinitesimal_generator_derivatives",
+      "exact_commutator_reconstruction",
+      "closed_overlap_words_covering_all_proper_rechartings",
+      "same_words_response_implementers",
+      "response_generated_identity_component_factorizations",
+      "port_current_commuting_square",
+      "cofinal_refinement_intertwiners"
+    ],
+    "raw_source_object_count": 0,
+    "reason": "the released artifacts share the carrier and supply the inverse-port response and binary deck lift, but they do not contain raw ordered current tomography or same-current closed overlap words",
+    "required_raw_source_object_count": 8,
+    "required_raw_source_objects": {
+      "closed_overlap_words_covering_all_proper_rechartings": false,
+      "cofinal_refinement_intertwiners": false,
+      "exact_commutator_reconstruction": false,
+      "ordered_two_sided_port_response_histories": false,
+      "port_current_commuting_square": false,
+      "response_generated_identity_component_factorizations": false,
+      "same_words_response_implementers": false,
+      "twelve_infinitesimal_generator_derivatives": false
+    },
+    "same_carrier_source_projection": true,
+    "status": "OPEN_SOURCE_HOLONOMY_BRIDGE"
+  },
+  "status": "OPEN_SOURCE_HOLONOMY_BRIDGE",
+  "theorem_classifier": {
+    "a5_fixed_dimension": 1,
+    "branches": [
+      {
+        "center_dimension": 0,
+        "centerless_inner_a5_fixed_dimensions": [
+          0,
+          3,
+          6,
+          9,
+          12
+        ],
+        "exclusion_reason": "an inner A5 action on each su(2) factor is trivial with fixed dimension three or icosahedral with fixed dimension zero; their sum cannot equal one",
+        "semisimple_dimension": 12,
+        "simple_factor_dimensions": [
+          3,
+          3,
+          3,
+          3
+        ],
+        "survives_compact_dimension_arithmetic": true,
+        "survives_inner_fixed_space_test": false
+      },
+      {
+        "center_dimension": 1,
+        "semisimple_dimension": 11,
+        "simple_factor_dimensions": [
+          3,
+          8
+        ],
+        "survives_compact_dimension_arithmetic": true,
+        "survives_inner_fixed_space_test": true
+      }
+    ],
+    "center_bound_from_inner_action_and_fixed_space": [
+      0,
+      1
+    ],
+    "claim_boundary": "This is a conditional compact Lie-type classifier. It neither constructs the response tangent nor proves holonomy fullness.",
+    "declared_classical_simple_dimension_input": [
+      3,
+      8,
+      10
+    ],
+    "passed": true,
+    "port_tangent_dimension": 12,
+    "survivors": [
+      {
+        "center_dimension": 1,
+        "semisimple_dimension": 11,
+        "simple_factor_dimensions": [
+          3,
+          8
+        ],
+        "survives_compact_dimension_arithmetic": true,
+        "survives_inner_fixed_space_test": true
+      }
+    ],
+    "unique_lie_type": "u(1)+su(2)+su(3)"
+  }
+}

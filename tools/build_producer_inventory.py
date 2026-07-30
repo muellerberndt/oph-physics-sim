@@ -44,7 +44,7 @@ class InventoryRow:
 ROWS = (
     InventoryRow(
         row_id="CHARGED_RESPONSE_ARTIFACT",
-        receipt_or_gate="oph.charged_response_semantic_artifact.v3 (#599 source binding)",
+        receipt_or_gate="oph.charged_response_semantic_artifact.v3 (#599 response constraints)",
         verifier="tests/test_charged_response.py",
         producer="oph_fpe/core/charged_response.py",
         producer_status="PRODUCED",
@@ -62,7 +62,10 @@ ROWS = (
             "charge-conjugation convention. The "
             "paper-side port-current certificate in "
             "reverse-engineering-reality independently recomputes every "
-            "exact claim before consuming the artifact."
+            "exact claim before consuming the artifact. The artifact does not "
+            "derive a current bracket or select the charged-double-triplet "
+            "realization. Ordered response tomography and same-current overlap "
+            "holonomy are separate source gates."
         ),
     ),
     InventoryRow(

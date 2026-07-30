@@ -1,0 +1,354 @@
+{
+  "claim_boundary": "Exact finite control on the scalar twelve-port seam equalizers. It excludes one proposed identification with a twelve-dimensional compact current algebra. It does not exclude a separately derived reversible OPH response algebra and is not a falsification of OPH.",
+  "compact_lie_closure": {
+    "closure_operation": "matrix_commutator",
+    "exact_rational_rank_of_witness_basis": 55,
+    "identified_algebra": "so(V_0,H), hence the compact real algebra so(11)",
+    "metric_skew_structural_upper_bound": 55,
+    "metric_skew_witness": true,
+    "modular_basis_round_ranks": [
+      49,
+      55,
+      55
+    ],
+    "modular_ranks_of_witness_basis": {
+      "1000003": 55,
+      "1000033": 55
+    },
+    "witness_basis_sha256": "sha256:b64cf86cc42dbcc9d490352ca5ebbf668a119b9b9b2f2b97a979b7f32c8007a2"
+  },
+  "current_identification_control": {
+    "comparison_target_dimension": 12,
+    "comparison_used_to_construct_generators_or_ranks": false,
+    "conclusion": "The scalar seam equalizers cannot be identified with the desired twelve-dimensional compact port current. A separate reversible-response and same-current internal-holonomy producer is required.",
+    "repair_equalizer_compact_closure_dimension": 55,
+    "repair_equalizer_operator_algebra_dimension": 121,
+    "repair_equalizers_are_the_desired_12d_compact_current": false
+  },
+  "first_commutators": {
+    "exact_rational_rank": 49,
+    "modular_ranks": {
+      "1000003": 49,
+      "1000033": 49
+    },
+    "nonzero_commutator_count": 120,
+    "packet_sha256": "sha256:d12d8c29cea167bedad64397d0513b9d3872957c3a472b2f6ca24f043ac40cd2",
+    "unordered_generator_pair_count": 435
+  },
+  "generated_operator_algebra": {
+    "closure_operation": "unital left-and-right multiplication by seam generators",
+    "endomorphism_structural_upper_bound": 121,
+    "equalizer_and_generator_unital_algebras_agree": true,
+    "exact_rational_rank_of_witness_basis": 121,
+    "identified_algebra": "End_Q(V_0), extending over R to all 11x11 operators",
+    "modular_basis_round_ranks": [
+      31,
+      110,
+      121
+    ],
+    "modular_ranks_of_witness_basis": {
+      "1000003": 121,
+      "1000033": 121
+    },
+    "witness_basis_sha256": "sha256:d36a6632d53e5fa3b48d568a9a2be990a4c06daedaa503e74450a455a7447e74"
+  },
+  "receipts": {
+    "SEAM_EQUALIZER_FIRST_COMMUTATOR_RANK_49_RECEIPT": true,
+    "SEAM_EQUALIZER_FULL_OPERATOR_ALGEBRA_RECEIPT": true,
+    "SEAM_EQUALIZER_IS_12D_COMPACT_CURRENT_RECEIPT": false,
+    "SEAM_EQUALIZER_SO11_CLOSURE_RECEIPT": true
+  },
+  "report_sha256": "sha256:e595f6f355ff9b72bed5f3f791fcbfadfd1ad9c584d55123f32ebc6d06b8ec7e",
+  "schema": "oph.seam-equalizer-current-control/1.0.0",
+  "seam_equalizers": {
+    "all_generators_metric_self_adjoint": true,
+    "equalizer": "E_e = I - (1/2) b_e b_e^T",
+    "generator_count": 30,
+    "generator_exact_rational_rank": 30,
+    "generator_packet_sha256": "sha256:b82de822bafc3c3937f30b2bf0e33216ef6ab8df4818618dec4e1b0f8f02be8b",
+    "integral_generator": "G_e = 2(I-E_e) = b_e b_e^T"
+  },
+  "source": {
+    "laboratory_measurements_read": false,
+    "oriented_face_sha256": "sha256:772cceb28efb46a2f322dd1cd87eac61f8bde0e54bbf387163efb13a6df9ad1c",
+    "source_module": "oph_fpe.dynamics.self_readback_repair_closure.exact_reference_edges",
+    "target_fields_read_by_rank_engine": [],
+    "undirected_seam_count": 30,
+    "undirected_seams": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        0,
+        7
+      ],
+      [
+        0,
+        10
+      ],
+      [
+        0,
+        11
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        2,
+        11
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        9
+      ],
+      [
+        4,
+        11
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        5,
+        11
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        7,
+        10
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        10,
+        11
+      ]
+    ]
+  },
+  "status": "ATTAINED_NEGATIVE_CONTROL",
+  "zero_sum_representation": {
+    "ambient_port_dimension": 12,
+    "basis": "e_i-e_11 for i=0,...,10",
+    "basis_matrix_sha256": "sha256:bf435abbf6dc3f132002de18f40697686457e2ae034640fc1f9a7327a18e6bae",
+    "gram_matrix": [
+      [
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ]
+    ],
+    "gram_positive_definite": true,
+    "protected_constant_dimension": 1,
+    "zero_sum_dimension": 11
+  }
+}

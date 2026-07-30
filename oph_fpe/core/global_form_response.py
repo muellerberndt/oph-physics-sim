@@ -1,24 +1,30 @@
-"""Global form semantic artifact producer for the twelve-port carrier.
+"""Declared six-axis coefficient-system producer for the twelve-port carrier.
 
-This module measures, from finite source structure alone, the deck/loop and
-sector data that the paper-side axis-center-descent certificate (issue #567
-in reverse-engineering-reality) needs in order to attach the derived kernel
-quotient to physical transport rather than to Lie-type arithmetic. It is
-target-blind: no gauge label, charge table, matter module, or quotient choice
-enters the producer. What it emits are measured facts about the certified
-carrier and its incidence-nerve federation:
+This module keeps carrier measurements separate from a chosen coefficient
+system. The deck action, antipodal axes, reference-sector holonomy, and
+refinement maps are measured from the finite carrier. The order-six class
+group is the exact quotient of a declared free axis lattice by declared
+diagonal and zero-sum relations. Those relations are not selected by the
+carrier measurements.
+
+The artifact supplies exact arithmetic for the paper-side
+axis-center-descent certificate. It does not identify the declared
+coefficient system with the complete current or matter character lattice.
+What it emits is:
 
 - the measured deck group of the incidence (order 120) acting on the twelve
   federation charts, thirty seams, and twenty triple overlaps, with the
   orientation character separating the sixty rotations from the sixty
   improper elements; this upgrades the federation's former
   ``identity_only`` declared deck to a measured action;
-- the measured six-axis class group: the six antipodal port pairs, the free
-  lattice on them modulo the diagonal and zero-sum relations, with Smith
+- the declared six-axis class group: the six measured antipodal port pairs,
+  followed by the free lattice modulo the declared diagonal and zero-sum
+  relations, with Smith
   invariants (1, 1, 1, 1, 1, 6), class group of order six, all six axis
   classes equal to the generator, rotations acting trivially on the class,
   and orientation reversal acting by negation;
-- the measured sector class of the realized reference federation: composing
+- the sector class of the realized reference federation in this declared
+  coefficient system: composing
   the seam identifications around every one of the twenty triangles returns
   the starting port, so the realized federation lies in the vacuum sector
   (class zero);
@@ -29,15 +35,16 @@ carrier and its incidence-nerve federation:
   the closed support because face holonomies of seam data always sum to
   zero, which the producer also verifies exactly;
 - the subgroup obstruction menu: a flux value c lifts through the subgroup
-  chain of the measured class group exactly when c lies in the subgroup
+  chain of the declared class group exactly when c lies in the subgroup
   (orders 1, 2, 3, 6), stated as exact arithmetic on the measured group;
 - refinement naturality: the same two-puncture menu is realized on the next
   geodesic refinement level through child faces of the same punctures.
 
-The producer fails closed with typed errors when the measured structure does
-not present these facts. Whether the measured sector menu and deck data
-select a physical global form for a realized tensor package is decided on
-the paper side; this producer only measures.
+The producer fails closed with typed errors when the carrier fails the
+measured checks or the declared coefficient-system arithmetic fails. A
+same-source theorem selecting the relations, proving character completeness,
+and identifying the loop class with the current and matter kernel is a
+separate physical-source obligation.
 """
 
 from __future__ import annotations
@@ -275,9 +282,9 @@ def measure_six_axis_class_group(carrier: dict[str, Any], deck: Mapping[str, Any
                 frontier.append(image[axis])
     _require(len(reached) == 6, "AXIS_CLASS", "the axis action must be transitive")
 
-    # The class lattice: Z^6 on the axes modulo the diagonal vector and the
-    # zero-sum sublattice. Relations matrix columns: the all-ones vector and a
-    # basis e_i - e_{i+1} of the zero-sum lattice.
+    # Declared coefficient system: Z^6 on the measured axes modulo the
+    # diagonal vector and the zero-sum sublattice. The carrier supplies the
+    # axes and their action. It does not select these relation columns.
     relations = []
     relations.append([1] * 6)
     for i in range(5):
@@ -334,6 +341,8 @@ def measure_six_axis_class_group(carrier: dict[str, Any], deck: Mapping[str, Any
         "axis_count": 6,
         "rotation_action_faithful_order": 60,
         "rotation_action_transitive": True,
+        "coefficient_system_status": "declared_axis_relation_lattice",
+        "relations_source_selected": False,
         "lattice": "free rank six on the axes modulo diagonal and zero-sum relations",
         "smith_invariants": invariants,
         "class_group_order": class_group_order,
@@ -345,9 +354,10 @@ def measure_six_axis_class_group(carrier: dict[str, Any], deck: Mapping[str, Any
             "which descends to negation on the order-six class group"
         ),
         "note": (
-            "the class group order is measured as the last Smith invariant of "
-            "the axis relation lattice; its identification with any tensor-"
-            "action kernel is a paper-side step"
+            "the class group order is computed as the last Smith invariant of "
+            "the declared axis relation lattice; the carrier does not select "
+            "that lattice, and identification with a tensor-action kernel is "
+            "a separate same-source theorem"
         ),
     }
 
@@ -649,7 +659,8 @@ def produce_global_form_artifact(manifest: Mapping[str, Any]) -> dict[str, Any]:
         "schema": SCHEMA,
         "issue": ISSUE,
         "target_firewall": (
-            "no_gauge_label_charge_table_matter_module_or_quotient_choice_enters_the_producer"
+            "no_gauge_label_charge_table_or_matter_module_enters_the_producer; "
+            "the_axis_relation_lattice_is_an_explicit_declared_input"
         ),
         "carrier_binding": {
             "carrier_manifest_sha256": carrier["manifest_sha256"],
@@ -674,20 +685,25 @@ def produce_global_form_artifact(manifest: Mapping[str, Any]) -> dict[str, Any]:
         },
         "physical_source_gate": {
             "deck_action_on_federation_measured": True,
-            "six_axis_class_group_measured": True,
-            "reference_federation_sector_class_measured": True,
-            "flux_tube_sector_menu_realized": True,
+            "six_antipodal_axes_measured": True,
+            "declared_axis_relation_lattice_computed_exactly": True,
+            "reference_federation_sector_class_computed_in_declared_system": True,
+            "flux_tube_sector_menu_realized_in_declared_system": True,
             "single_puncture_impossibility_verified": True,
-            "subgroup_obstruction_menu_exact": True,
-            "refinement_natural_sector_menu": True,
+            "subgroup_obstruction_menu_exact_in_declared_system": True,
+            "refinement_natural_declared_sector_menu": True,
+            "axis_relation_lattice_source_selected": False,
+            "complete_character_category_source_derived": False,
+            "same_source_loop_to_tensor_kernel_identification": False,
             "laboratory_line_measurement": False,
             "four_dimensional_instanton_attachment": False,
-            "passed": True,
+            "finite_declared_coefficient_system_gate_passed": True,
+            "passed": False,
             "scope": (
-                "finite source-model scope: the gate aggregates the seven measured "
-                "rows above; the two false rows are separate lanes (laboratory "
-                "attachment #569, continuum/4d instanton normalization) and never "
-                "enter 'passed'"
+                "the exact finite gate covers carrier deck measurements and "
+                "arithmetic inside the declared axis coefficient system; the "
+                "physical source gate fails until source selection, character "
+                "completeness, and the loop-to-kernel identity are certified"
             ),
         },
     }

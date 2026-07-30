@@ -1,10 +1,10 @@
-"""Charged response semantic artifact producer for the twelve-port carrier.
+"""Inverse-port response artifact producer for the twelve-port carrier.
 
-This module derives the finite charged response representation of the local
-recurrent carrier dynamics and emits the versioned semantic artifact consumed
+This module derives the finite inverse-port response constraints of the local
+recurrent carrier dynamics.  It emits the versioned semantic artifact consumed
 by the paper-side port-current certificate (issue #599 in
-reverse-engineering-reality). It derives from finite source structure rather
-than a target gauge assignment or declaration:
+reverse-engineering-reality).  The following data come from finite source
+structure rather than a target gauge assignment:
 
 - the carrier manifest hash and port order of the certified #565 carrier;
 - the exact A5-isotypic sector decomposition (1, 3, 3', 5) of the twelve-port
@@ -20,13 +20,16 @@ than a target gauge assignment or declaration:
 - runtime binding to the dynamics actually propagated by
   ``oph_fpe.core.echosahedral_dynamics`` (spectrum, equivariance, unitarity).
 
-The producer fails closed with typed errors on carriers whose source
-structure does not determine a charged double triplet: wrong regularity,
-missing antipodal pairing, rational (non-Galois-paired) triplet spectrum,
-inconsistent face orientation, or a runtime coupling that does not match the
-exact combinatorial spectrum. No construction-model string is accepted or
-emitted as an input; the construction name in the artifact is a derived
-status.
+The producer fails closed on wrong regularity, missing antipodal pairing,
+rational rather than Galois-paired triplet spectrum, inconsistent face
+orientation, or a runtime coupling that does not match the exact
+combinatorial spectrum.
+
+The artifact does not derive a Lie bracket or a matrix current realization.
+In particular, ``R = -J`` and its four sector signs do not select the
+charged-double-triplet lift from the family of equivariant brackets.  A
+current construction is admissible only as a separately typed fixture until
+raw ordered response histories and closed overlap holonomies reconstruct it.
 """
 
 from __future__ import annotations
@@ -1051,11 +1054,6 @@ def produce_charged_response_artifact(carrier_manifest: Mapping[str, Any]) -> di
             "rotation_automorphisms": rotation_response(carrier),
         },
         "derived": {
-            "construction": "charged_double_triplet",
-            "construction_provenance": (
-                "canonical_equivariant_compact_lift_from_the_impulse_readback_"
-                "derived_antipode_response"
-            ),
             "response_band_scales": {
                 band: str(value)
                 for band, value in response["sector_eigenvalues"].items()
@@ -1065,6 +1063,17 @@ def produce_charged_response_artifact(carrier_manifest: Mapping[str, Any]) -> di
                 "each band scale is its exactly recomputed eigenvalue; the common "
                 "overall sign is a charge-conjugation convention"
             ),
+            "current_lift_status": {
+                "source_selected": False,
+                "commutator_reconstructed_from_ordered_response": False,
+                "overlap_holonomy_internality_certified": False,
+                "charged_double_triplet_forced": False,
+                "classification": "unselected_equivariant_current_lift",
+                "reason": (
+                    "the inverse-port involution and its sector signs constrain "
+                    "an equivariant lift but do not determine a Lie bracket"
+                ),
+            },
         },
         "physical_refinement_maps": refinement_persistence(),
         "provenance": {
@@ -1103,7 +1112,9 @@ def main() -> int:
                 "carrier_manifest_sha256": artifact["carrier_binding"][
                     "carrier_manifest_sha256"
                 ],
-                "derived_construction": artifact["derived"]["construction"],
+                "current_lift_source_selected": artifact["derived"][
+                    "current_lift_status"
+                ]["source_selected"],
             },
             indent=2,
         )

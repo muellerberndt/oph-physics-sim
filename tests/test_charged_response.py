@@ -43,20 +43,29 @@ def test_artifact_binds_the_pinned_certified_carrier(artifact: dict) -> None:
     assert len(binding["axis_representatives"]) == 6
 
 
-def test_derived_construction_and_signed_scales(artifact: dict) -> None:
+def test_derived_response_constraints_do_not_select_a_current_lift(
+    artifact: dict,
+) -> None:
     derived = artifact["derived"]
-    assert derived["construction"] == "charged_double_triplet"
-    assert (
-        derived["construction_provenance"]
-        == "canonical_equivariant_compact_lift_from_the_impulse_readback_"
-        "derived_antipode_response"
-    )
     assert derived["response_band_scales"] == {
         "unit_band": "-1",
         "quintet_band": "-1",
         "frame_band": "1",
         "kernel_band": "1",
     }
+    status = derived["current_lift_status"]
+    assert status == {
+        "source_selected": False,
+        "commutator_reconstructed_from_ordered_response": False,
+        "overlap_holonomy_internality_certified": False,
+        "charged_double_triplet_forced": False,
+        "classification": "unselected_equivariant_current_lift",
+        "reason": (
+            "the inverse-port involution and its sector signs constrain "
+            "an equivariant lift but do not determine a Lie bracket"
+        ),
+    }
+    assert "construction" not in derived
 
 
 def test_sector_structure_and_galois_pairing(artifact: dict) -> None:

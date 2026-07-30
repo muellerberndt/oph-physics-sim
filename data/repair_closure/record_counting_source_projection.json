@@ -1,0 +1,31 @@
+{
+  "bounded_exit": "exact_named_realization",
+  "claim_boundary": "This projection pins the source-generated total-twelve full-pile sector. It does not identify a completed nearest-balancing macro-event with the source packet's atomic one-unit record move.",
+  "full_pile": {
+    "initial_counts": [
+      12,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "source_generation": "twelve atomic +1 writes at port p00",
+    "total": 12
+  },
+  "schema": "oph.record_counting_source_projection.v1",
+  "source_issue": 628,
+  "source_path": "code/a5_closure/manifests/record_counting_mechanism_reference.json",
+  "source_repository": "FloatingPragma/observer-patch-holography",
+  "termination_lyapunov": "load square V(N) = sum_i N_i^2",
+  "termination_lyapunov_upstream_json_pointer": "/mechanism/termination_lyapunov",
+  "upstream_canonical_json_sha256": "sha256:efad022da8fdb52b58e6e8356ef945227832467c162cb512d0261812f286a655",
+  "upstream_file_sha256": "sha256:13429664e61008e3d2414fecf758deebb15bfe21eada8cf42e7afc4ef64d7eb3",
+  "upstream_manifest_sha256": "sha256:e309f6a11117bfb26b6759dd40e64f5d7828e32df68d3ba5f217be2b13daa56e"
+}

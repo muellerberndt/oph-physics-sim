@@ -45,7 +45,7 @@ def test_self_hash_recomputes(artifact: dict) -> None:
     assert artifact["artifact_sha256"] == "sha256:" + canonical_sha256(body)
 
 
-def test_six_axis_class_group_is_measured_order_six(artifact: dict) -> None:
+def test_declared_six_axis_class_group_has_exact_order_six(artifact: dict) -> None:
     axis = artifact["six_axis_class_measurement"]
     assert axis["axis_count"] == 6
     assert axis["smith_invariants"] == [1, 1, 1, 1, 1, 6]
@@ -53,6 +53,8 @@ def test_six_axis_class_group_is_measured_order_six(artifact: dict) -> None:
     assert axis["rotation_action_faithful_order"] == 60
     assert axis["rotation_action_transitive"] is True
     assert axis["antipode_reverses_every_oriented_axis"] is True
+    assert axis["coefficient_system_status"] == "declared_axis_relation_lattice"
+    assert axis["relations_source_selected"] is False
 
 
 def test_federation_deck_action_upgrades_identity_only(artifact: dict) -> None:
@@ -106,10 +108,14 @@ def test_refined_sector_menu_is_natural(artifact: dict) -> None:
 
 def test_gate_scope_separates_open_lanes(artifact: dict) -> None:
     gate = artifact["physical_source_gate"]
-    assert gate["passed"] is True
+    assert gate["finite_declared_coefficient_system_gate_passed"] is True
+    assert gate["passed"] is False
+    assert gate["axis_relation_lattice_source_selected"] is False
+    assert gate["complete_character_category_source_derived"] is False
+    assert gate["same_source_loop_to_tensor_kernel_identification"] is False
     assert gate["laboratory_line_measurement"] is False
     assert gate["four_dimensional_instanton_attachment"] is False
-    assert gate["flux_tube_sector_menu_realized"] is True
+    assert gate["flux_tube_sector_menu_realized_in_declared_system"] is True
     assert gate["single_puncture_impossibility_verified"] is True
 
 

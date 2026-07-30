@@ -63,12 +63,18 @@ the set of admissible consistent completions for the protected context.
 
 ### A3: remove residual scheduling bias
 
-A3 applies to the fixed finite simplex of primitive moves. If A1 supplies a
-uniform, presentation-natural reference, the move action is transitive,
-normalization is the only constraint, and the optimizer retains full support,
-A3 selects the uniform distribution. Under those declared conditions, each
-seam of the twelve-port carrier has probability \(1/30\). The certificate
-does not derive the uniform reference from bare A1.
+A3 applies to the fixed finite simplex of primitive moves. The exact
+combinatorial certificate constructs sixty directed completions from the
+thirty A1 seams and proves that the proper carrier group acts simply
+transitively on them. Presentation invariance and normalization therefore
+leave one probability distribution: \(1/60\) per directed completion,
+equivalently \(1/30\) per seam and \(1/2\) for the unresolved odd-total tie.
+No adjustable uniform scalar schedule remains. Applying conditional maximum
+randomness to event strings gives the IID extension only if A1-R proves free
+composition of reconciliation attempts and A2-R proves temporal-constraint
+completeness with no coupling. Canonical A3 alone does not imply Markovity.
+The alphabet counts every attempted seam readback, including attempts that
+complete as waits.
 
 A3 does not invent the move grammar or the reconciliation map. It chooses
 inside the A1-fixed move space after A2 has fixed what each move means.
@@ -119,12 +125,12 @@ Each seam step lowers the endpoint quadratic disagreement by
 \((x_i-x_j)^2/2\). The averaged dynamics converges to the constant mode on a
 connected carrier.
 
-The certificate checks the resulting 60 permutation actions and all 1,800
-rotation-seam covariance squares discretely. The helper that recovers those
-permutations uses numerical coordinate matching, so this is not a
-combinatorially enumerated automorphism provenance theorem. Its verifier is a
-deterministic replay of the producer implementation rather than an
-independent implementation.
+The directed-seam certificate enumerates all 120 incidence automorphisms
+without coordinates, separates the 60 proper maps by exact cyclic-face
+orientation, and checks all 3,600 directed-seam transporters. The proper
+subgroup acts freely and transitively on the directed completions. Its
+verifier is a deterministic replay of the producer implementation rather
+than an independent implementation.
 
 ## Atomic integer lift
 
@@ -143,20 +149,29 @@ nearest-balanced shell contains the two ordered states
 The swap-invariant distribution assigns probability \(1/2\) to each. Its
 expectation is the real pair average and its event-level residual remains
 explicit. This is an exact expectation-level lift, not an exact A2
-reconciliation for odd totals. A bridge to an atomic record mechanism would
-need an operational interpretation of the residual shell and a justified
-transition reference.
+reconciliation for odd totals.
 
-The existing one-unit integer transfer mechanism is a different nonlinear
-implementation. It is conservative, covariant, and terminating, but it has
-not been proved to induce the same global transition law. Its receipt remains
-valid in its declared scope.
+The directed completion law supplies the missing operational interpretation:
+a unit-difference event is a wait in one direction and a reversible swap in
+the other. The former one-unit rule suppressed that neutral motion and
+terminated at false local minima. On the full nonnegative total-twelve fiber,
+the one-unit rule has 303 absorbing states, while the directed law has the
+all-one state as its unique closed class. An exact constructive audit checks
+all 1,352,078 states and finds a path of at most three directed events from
+every nonminimum state to a lower quadratic level.
+
+This is a microhistory and expectation-level bridge. On an odd endpoint
+total, neither pathwise placement lies in the exact equality equalizer. The
+completed macro-event can move several units and is not the atomic one-unit
+record move. Those facts keep the integer process separate from the exact real
+A2 conditional expectation and from the record-writing instrument.
 
 ## What the finite result decides
 
 The result fixes the one-step operator inside the scalar, seam-local,
-complete-reconciliation grammar. Under the declared uniform schedule it gives
-a Laplacian generator ray apart from a global time unit.
+complete-reconciliation grammar. The simply transitive event orbit fixes the
+schedule, and the resulting operator is a Laplacian generator ray apart from
+a global time unit.
 
 No theorem identifies this working-reading operator with the gauge-response
 matrices or angular transfers in the selector sweeps. The result does not
@@ -221,7 +236,9 @@ before the channel is built. The channel then realizes that state rather than
 adding physical information absent from the grammar. A stronger
 self-referential claim requires a separate existence-and-uniqueness theorem
 for the coupled state and generator equations. The finite scalar certificate
-does not prove that global result.
+does not prove that global result. The exact bounded reconstruction,
+adversarial controls, two-event schedule check, and total-twelve audit are
+documented in `docs/SELF_READBACK_REPAIR_CLOSURE.md`.
 
 ## Promotion gates
 
@@ -274,6 +291,9 @@ The finite scalar certificate and its countermodels are implemented in:
 ```text
 oph_fpe/dynamics/canonical_seam_repair.py
 tests/test_canonical_seam_repair.py
+oph_fpe/dynamics/self_readback_repair_closure.py
+tests/test_self_readback_repair_closure.py
+data/repair_closure/bounded_atomic_self_readback_closure_receipt.json
 ```
 
 The static selector controls are implemented in:
