@@ -43,6 +43,33 @@ EXPECTED_REPAIR_STATUS = (
 EXPECTED_REPAIR_PAYLOAD_SHA256 = (
     "sha256:9e87c5e4abfb3baed80058ffc832a6dbd3412f386eb383d68fee4ebee10c00d5"
 )
+EXPECTED_COEFFICIENT_BASIS = (
+    "complex Condon-Shortley spherical harmonics; BipoSH convention "
+    "A_ll'^{LM}=sum_mm' (-1)^m' <l m,l' -m'|L M> B_lm,l'm'"
+)
+EXPECTED_PRIMARY_DEFINITION = (
+    "norm_M(A_{2,4}^{6M}) / sqrt(abs(A_{2,2}^{00} A_{4,4}^{00}))"
+)
+EXPECTED_INDEX_FIELDS = [
+    "ell",
+    "ell_prime",
+    "total_L",
+    "total_M",
+    "real",
+    "imaginary",
+]
+FORBIDDEN_COEFFICIENT_CLAIM_FIELDS = (
+    "status",
+    "physical_prediction",
+    "physical_covariance_selected",
+    "promotion_allowed",
+    "continuum_residual_decided",
+    "source_selected",
+    "physical_promotion_allowed",
+    "scientific_promotion_allowed",
+    "physical_repair_law_selected",
+    "screen_to_sky_readout_selected",
+)
 
 
 class VerificationError(ValueError):
@@ -526,11 +553,88 @@ def verify_packet(
         raise VerificationError("receipt status mismatch")
     if coefficients.get("schema") != "oph.a5-biposh-dual-operator-coefficients.v1":
         raise VerificationError("coefficient schema mismatch")
-    if coefficients.get("case_count") != 8:
-        raise VerificationError("coefficient case count mismatch")
+    if type(receipt.get("issue")) is not int or receipt.get("issue") != 659:
+        raise VerificationError("receipt issue mismatch")
+    if type(coefficients.get("issue")) is not int or coefficients.get("issue") != 659:
+        raise VerificationError("coefficient issue mismatch")
+    if coefficients.get("basis") != EXPECTED_COEFFICIENT_BASIS:
+        raise VerificationError("coefficient basis mismatch")
+    if coefficients.get("coefficient_kind") != (
+        "finite stiffness-form operator fingerprint"
+    ):
+        raise VerificationError("coefficient kind mismatch")
+    forbidden_claim_fields = sorted(
+        key for key in FORBIDDEN_COEFFICIENT_CLAIM_FIELDS if key in coefficients
+    )
+    if forbidden_claim_fields:
+        raise VerificationError(
+            f"coefficient bundle gained claim fields: {forbidden_claim_fields}"
+        )
+    serialization = coefficients.get("serialization_contract", {})
+    if (
+        serialization.get(
+            "coefficient_real_and_imaginary_significant_decimal_digits"
+        )
+        != 12
+        or serialization.get("rounding")
+        != "IEEE-754 conversion of scientific decimal round-to-nearest"
+        or coefficients.get("case_count") != 8
+        or coefficients.get("coefficient_count_per_case") != 5929
+    ):
+        raise VerificationError("coefficient serialization or count contract mismatch")
+
+    source_scope = receipt.get("source_scope", {})
+    if (
+        source_scope.get("geometry")
+        != "registered nested geodesic icosahedral vertex tower"
+        or source_scope.get("levels") != list(range(6))
+        or source_scope.get("harmonic_band") != {"ell_min": 2, "ell_max": 8}
+        or source_scope.get("removed_modes") != "weighted ell=0,1 projection"
+        or source_scope.get("candidate_operator")
+        != "unweighted equal-seam combinatorial graph Laplacian"
+        or source_scope.get("control_operator")
+        != "chord-triangle cotangent FEM stiffness"
+        or any(
+            source_scope.get(key) is not False
+            for key in (
+                "external_comparison_data_used",
+                "sky_data_used",
+                "target_values_used",
+                "stochastic_release_ensemble_used",
+                "green_kernel_or_heat_time_used",
+            )
+        )
+    ):
+        raise VerificationError("source scope or no-comparison contract mismatch")
+    primary = receipt.get("frozen_primary_statistic", {})
+    if primary != {
+        "ell": 2,
+        "ell_prime": 4,
+        "total_L": 6,
+        "definition": EXPECTED_PRIMARY_DEFINITION,
+        "amplitude_free": True,
+        "selected_before_any_comparison": True,
+    }:
+        raise VerificationError("frozen primary statistic mismatch")
+    rank_controls = receipt.get("rank_controls", {})
+    if rank_controls != {
+        "full_harmonic_dimension_through_ell_8": 81,
+        "level_0_vertex_count": 12,
+        "level_1_vertex_count": 42,
+        "levels_0_and_1_are_nonadmissible": True,
+    }:
+        raise VerificationError("rank-control contract mismatch")
 
     coefficient_bytes = coefficient_path.read_bytes()
     bundle = receipt["full_coefficient_bundle"]
+    if (
+        bundle.get("case_count") != 8
+        or bundle.get("coefficient_count_per_case") != 5929
+        or bundle.get("contains_every_llprime_LM_coefficient_for_ell_2_through_8")
+        is not True
+        or bundle.get("coefficient_significant_decimal_digits") != 12
+    ):
+        raise VerificationError("coefficient bundle semantic contract mismatch")
     if int(bundle["bytes"]) != len(coefficient_bytes):
         raise VerificationError("coefficient byte count mismatch")
     if bundle["sha256"] != _sha(coefficient_bytes):
@@ -562,14 +666,27 @@ def verify_packet(
         raise VerificationError("a forbidden physical promotion is enabled")
     if selection.get("base_equal_seam_operator_bounded_reconstructed") is not True:
         raise VerificationError("bounded base equal-seam reconstruction is missing")
-    if receipt["source_scope"].get("external_comparison_data_used") is not False:
-        raise VerificationError("comparison data flag is not false")
-
+    coefficient_cases = coefficients.get("cases")
+    if not isinstance(coefficient_cases, list):
+        raise VerificationError("coefficient cases are missing")
+    if any(
+        case.get("index_fields") != EXPECTED_INDEX_FIELDS
+        for case in coefficient_cases
+    ):
+        raise VerificationError("coefficient index convention mismatch")
     cases = {
         (int(case["level"]), str(case["operator_id"])): case
-        for case in coefficients["cases"]
+        for case in coefficient_cases
     }
-    if len(cases) != 8:
+    expected_case_keys = {
+        (level, operator_id)
+        for level in range(2, 6)
+        for operator_id in (
+            "equal_seam_raw_graph_laplacian",
+            "geometric_cotangent_control",
+        )
+    }
+    if set(cases) != expected_case_keys:
         raise VerificationError("duplicate or missing coefficient cases")
     tower = build_geodesic_icosahedral_tower(5)
     bridge = receipt.get("bounded_repair_generator_bridge", {})

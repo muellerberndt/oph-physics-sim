@@ -274,6 +274,61 @@ def test_rehashed_base_face_binding_mutation_is_rejected(
         verify_packet(receipt_path, coefficient_path)
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "error"),
+    [
+        ("coefficient_kind", "physical covariance", "coefficient kind"),
+        ("basis", "unregistered harmonic convention", "coefficient basis"),
+        ("physical_prediction", False, "gained claim fields"),
+    ],
+)
+def test_rehashed_coefficient_semantic_mutations_are_rejected(
+    tmp_path: Path,
+    canonical: tuple[dict, dict],
+    field: str,
+    value: object,
+    error: str,
+) -> None:
+    receipt, coefficients = copy.deepcopy(canonical)
+    coefficients[field] = value
+    receipt_path, coefficient_path = _write_mutation(
+        tmp_path,
+        receipt,
+        coefficients,
+    )
+    with pytest.raises(VerificationError, match=error):
+        verify_packet(receipt_path, coefficient_path)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "error"),
+    [
+        ("comparison", "source scope"),
+        ("primary", "frozen primary"),
+    ],
+)
+def test_rehashed_receipt_semantic_mutations_are_rejected(
+    tmp_path: Path,
+    canonical: tuple[dict, dict],
+    mutation: str,
+    error: str,
+) -> None:
+    receipt, coefficients = copy.deepcopy(canonical)
+    if mutation == "comparison":
+        receipt["source_scope"]["target_values_used"] = True
+    elif mutation == "primary":
+        receipt["frozen_primary_statistic"]["total_L"] = 4
+    else:  # pragma: no cover - the parameter table is closed above
+        raise AssertionError(mutation)
+    receipt_path, coefficient_path = _write_mutation(
+        tmp_path,
+        receipt,
+        coefficients,
+    )
+    with pytest.raises(VerificationError, match=error):
+        verify_packet(receipt_path, coefficient_path)
+
+
 def test_rehashed_coefficient_mutation_is_rejected(
     tmp_path: Path,
     canonical: tuple[dict, dict],
