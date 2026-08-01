@@ -384,6 +384,36 @@
     },
     {
       "critical_bridge_evidence": {
+        "emitted_conditional_interval_excludes_zero": true,
+        "emitted_conditional_l6_nonzero_under_numerical_envelope": true,
+        "emitted_conditional_stiffness_continuum_limit": true,
+        "emitted_declared_block_cauchy_limit": true,
+        "emitted_equal_seam_refinement_source_selected": false,
+        "emitted_exact_refinement_identity": true,
+        "emitted_global_a1_a3_policy_uniqueness": false,
+        "emitted_inverse_covariance_continuum_limit": false,
+        "emitted_inverse_covariance_continuum_tail": false,
+        "emitted_inverse_covariance_finite_diagnostic": true,
+        "emitted_numerical_envelope_is_analytic_library_proof": false,
+        "emitted_physical_covariance": false,
+        "emitted_physical_prediction": false,
+        "emitted_promotion_allowed": false,
+        "emitted_screen_to_sky_readout": false,
+        "emitted_source_ensemble_selected": false
+      },
+      "disposition": "CONDITIONAL_EQUAL_SEAM_CONTINUUM_L6_NONZERO__SOURCE_SELECTION_INVERSE_TAIL_AND_PHYSICAL_TRANSFER_OPEN",
+      "path": "data/refinement/a5_biposh_continuum_tail_receipt.json",
+      "raw_pin": {
+        "bytes": 21474,
+        "path": "data/refinement/a5_biposh_continuum_tail_receipt.json",
+        "sha256": "sha256:79b0262f217472f6d32c4abb84cf125517d9dcbe47a04be4bac72df3932e00b9"
+      },
+      "schema": "oph.a5-biposh-continuum-tail.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "CONDITIONAL_EQUAL_SEAM_CONTINUUM_L6_NONZERO_UNDER_DECLARED_NUMERICAL_ENVELOPE__SOURCE_SELECTION_AND_PHYSICAL_TRANSFER_OPEN"
+    },
+    {
+      "critical_bridge_evidence": {
         "emitted_case_count": 8,
         "emitted_coefficient_count_per_case": 5929,
         "emitted_coefficient_kind": "finite stiffness-form operator fingerprint",
@@ -455,6 +485,49 @@
       "schema": "oph.refinement.physical-birefinement-preflight.v1",
       "semantic_scan_excluded_as_recursive_output": false,
       "status": "SOURCE_PRODUCER_MISSING"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_a5_cross_orbit_weight_selection": false,
+        "emitted_all_edge_incidence_gates_passed": true,
+        "emitted_all_level_atomic_counting_law_source": false,
+        "emitted_all_registered_mesh_permutation_gates_passed": true,
+        "emitted_base_equal_seam_operator_selected_in_bounded_realization": true,
+        "emitted_canonical_a1_a3_cross_orbit_weight_source": false,
+        "emitted_canonical_basis_amendment_required": true,
+        "emitted_comparison_data_used": false,
+        "emitted_continuum_equal_seam_operator": false,
+        "emitted_coordinate_residual_gate": 5e-11,
+        "emitted_edge_orbit_counts": [
+          1,
+          2,
+          8,
+          32,
+          128,
+          512
+        ],
+        "emitted_fourth_axiom_logically_required": false,
+        "emitted_framework_wide_no_go": false,
+        "emitted_maximum_coordinate_residual": 5.688200336284365e-16,
+        "emitted_physical_covariance": false,
+        "emitted_physical_repair_law": false,
+        "emitted_promotion_allowed": false,
+        "emitted_refined_edge_alphabets_have_multiple_a5_orbits": true,
+        "emitted_refinement_commuting_diagram": false,
+        "emitted_registered_mesh_a5_orbits_residual_gated": true,
+        "emitted_unit_counting_additional_premise_until_derived": true,
+        "emitted_unit_counting_derived_from_canonical_structures": false
+      },
+      "disposition": "BASE_EQUAL_SEAM_EXACT__REGISTERED_MESH_A5_ORBITS_RESIDUAL_GATED__ALL_LEVEL_SOURCE_COUNTING_AND_PHYSICAL_OPERATOR_OPEN",
+      "path": "data/refinement/refined_equal_seam_source_gate_receipt.json",
+      "raw_pin": {
+        "bytes": 9794,
+        "path": "data/refinement/refined_equal_seam_source_gate_receipt.json",
+        "sha256": "sha256:092c87b30a9a26e48aa89337d7fe82a74db55e8abba017c59083272d3a3a3a17"
+      },
+      "schema": "oph.refined-equal-seam-source-selection-gate.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "BASE_EQUAL_SEAM_GENERATOR_EXACT__REGISTERED_MESH_A5_EDGE_ORBITS_CLASSIFIED_WITH_RESIDUAL_GATE__SOURCE_COUNTING_EMITTER_OPEN"
     },
     {
       "critical_bridge_evidence": {
@@ -538,6 +611,36 @@
     },
     {
       "critical_bridge_evidence": {
+        "emitted_a2_endpoint_diamonds_without_source_premise": false,
+        "emitted_antipodal_inverse_count": 6,
+        "emitted_comparison_data_used": false,
+        "emitted_conditional_a2_endpoint_descent_lemma": true,
+        "emitted_current_oriented_bijective_step_ledger": false,
+        "emitted_current_port_block_maps_bijective": false,
+        "emitted_current_terminal_confluence": true,
+        "emitted_faithful_physical_z_power_6_action": false,
+        "emitted_negative_issue_655_closure": false,
+        "emitted_physical_prediction": false,
+        "emitted_positive_axis_diamond_count": 15,
+        "emitted_source_a2_naturality_rows": false,
+        "emitted_source_accepted_observer_quotient": false,
+        "emitted_source_endpoint_diamond_ledger": false,
+        "emitted_spatial_translation": false,
+        "emitted_universal_z_power_6_factorization": true
+      },
+      "disposition": "CONDITIONAL_A2_ENDPOINT_DESCENT_AND_Z_POWER_6_FACTORIZATION__SOURCE_NATURALITY_INVERSES_DIAMONDS_FAITHFUL_ACTION_AND_PHYSICAL_TRANSLATION_OPEN",
+      "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
+      "raw_pin": {
+        "bytes": 36932,
+        "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
+        "sha256": "sha256:2155bd0abf9b860172b1a693d19af0f7ebc3c971bcc665eb0ee664d4028ff2b9"
+      },
+      "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "A2_ENDPOINT_TO_QUOTIENT_COMMUTATOR_THEOREM_ATTAINED__SOURCE_NATURALITY_INVERSES_DIAMONDS_AND_PHYSICAL_ACTION_OPEN"
+    },
+    {
+      "critical_bridge_evidence": {
         "emitted_current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": true,
         "emitted_exact_symbolic_matching_and_projector_algebra": true,
         "emitted_in_process_snapshot_reread_carrier_count": 8,
@@ -594,8 +697,8 @@
     }
   ],
   "current_canonical_json_contract_scan": {
-    "current_canonical_json_path_count_excluding_recursive_outputs": 31,
-    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:fb0ccb23fdcc11d9f83f7213a93c57c9db4e4b8e0fea24c6fa7a1d725683891b",
+    "current_canonical_json_path_count_excluding_recursive_outputs": 34,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:0927edf42a1f891fcb89425e14350c5d557aeb60b4d481afe5f958174ca9f485",
     "positive_promotion_signal_rows_excluding_recursive_outputs": [],
     "recursive_output_paths_excluded": [
       "data/repair_closure/port_repair_propagation_bridge_receipt.json",
@@ -615,19 +718,19 @@
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 39635,
+      "bytes": 53554,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:fe05c9d94d2035a45e679a72c162550cabe6b56c630acf9d8dab408e06fd86b2"
+      "sha256": "sha256:4cf56365f8d74ae53eb51e27e76c60b6fc173ee520e1adc49a8fc5e790f80d32"
     },
     "mutation_tests": {
-      "bytes": 18244,
+      "bytes": 26106,
       "path": "tests/test_source_operator_inventory.py",
-      "sha256": "sha256:f284e4d309bcda968d180cfd9a517d04c9b07a2867a548affc8dd20cafc9f075"
+      "sha256": "sha256:6c2f48de2a7cc5d541f88f328c21d795e25e6ea7836043540121a98f55b71bfd"
     },
     "producer": {
-      "bytes": 41710,
+      "bytes": 55629,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:d3772cdf707c4b56b064565280161d8c30a97a34fe39e1d0748a12fef8e800ba"
+      "sha256": "sha256:9425a319d21f4ab72650a51693cb39b9986db72495549706fc5b16ad88f214ec"
     }
   },
   "issue": 655,
@@ -648,17 +751,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:85905992591f4a1df999fe18aa2fd0fbfbb795fa5c66ebd68e64fef5a4cfb8ac",
+  "receipt_sha256": "sha256:d6bfd2d18726cf6041964c0252f162f332178d3c289726e6cfac12c3a5d2a1f0",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding the recursive inventory and parent bridge outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1006,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:287d6eb74c9b55ad4240dafcc40c3388895a59a5d64d15853beb614d8a9d1025",
-    "path_count_including_declared_recursive_outputs": 1008,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:aeb38c074283c02b3756eed6fb89f1d75dd9c91d832f742dd824692346466d30",
+    "content_index_row_count_excluding_recursive_outputs": 1009,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:8bca515239677f0fceae686cc072e9777e3cba9bdceb67e51c7dea051a4f8875",
+    "path_count_including_declared_recursive_outputs": 1011,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:a2a6231aa80d48cfe46ae162c62e0d416c3dd30de33962b86037f9c7dc54b987",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 43,
+      "CURRENT_SIMULATOR_ARTIFACT": 46,
       "EXTERNAL_OR_COMPARISON_DATA": 40,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895

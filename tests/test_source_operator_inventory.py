@@ -256,6 +256,163 @@ def test_near_candidates_remain_separate_objects() -> None:
     }
 
 
+def test_new_conditional_receipts_have_exact_fail_closed_boundaries() -> None:
+    equal_seam = _row(
+        REPORT,
+        "data/refinement/refined_equal_seam_source_gate_receipt.json",
+    )
+    assert equal_seam["disposition"] == (
+        "BASE_EQUAL_SEAM_EXACT__REGISTERED_MESH_A5_ORBITS_RESIDUAL_GATED__"
+        "ALL_LEVEL_SOURCE_COUNTING_AND_PHYSICAL_OPERATOR_OPEN"
+    )
+    assert equal_seam["critical_bridge_evidence"] == {
+        "emitted_base_equal_seam_operator_selected_in_bounded_realization": True,
+        "emitted_registered_mesh_a5_orbits_residual_gated": True,
+        "emitted_edge_orbit_counts": [1, 2, 8, 32, 128, 512],
+        "emitted_maximum_coordinate_residual": 5.688200336284365e-16,
+        "emitted_coordinate_residual_gate": 5.0e-11,
+        "emitted_all_registered_mesh_permutation_gates_passed": True,
+        "emitted_all_edge_incidence_gates_passed": True,
+        "emitted_refined_edge_alphabets_have_multiple_a5_orbits": True,
+        "emitted_a5_cross_orbit_weight_selection": False,
+        "emitted_canonical_a1_a3_cross_orbit_weight_source": False,
+        "emitted_all_level_atomic_counting_law_source": False,
+        "emitted_refinement_commuting_diagram": False,
+        "emitted_continuum_equal_seam_operator": False,
+        "emitted_physical_repair_law": False,
+        "emitted_physical_covariance": False,
+        "emitted_promotion_allowed": False,
+        "emitted_comparison_data_used": False,
+        "emitted_framework_wide_no_go": False,
+        "emitted_fourth_axiom_logically_required": False,
+        "emitted_canonical_basis_amendment_required": True,
+        "emitted_unit_counting_additional_premise_until_derived": True,
+        "emitted_unit_counting_derived_from_canonical_structures": False,
+    }
+
+    tail = _row(
+        REPORT,
+        "data/refinement/a5_biposh_continuum_tail_receipt.json",
+    )
+    assert tail["disposition"] == (
+        "CONDITIONAL_EQUAL_SEAM_CONTINUUM_L6_NONZERO__SOURCE_SELECTION_"
+        "INVERSE_TAIL_AND_PHYSICAL_TRANSFER_OPEN"
+    )
+    assert tail["critical_bridge_evidence"] == {
+        "emitted_exact_refinement_identity": True,
+        "emitted_declared_block_cauchy_limit": True,
+        "emitted_conditional_stiffness_continuum_limit": True,
+        "emitted_conditional_l6_nonzero_under_numerical_envelope": True,
+        "emitted_conditional_interval_excludes_zero": True,
+        "emitted_numerical_envelope_is_analytic_library_proof": False,
+        "emitted_equal_seam_refinement_source_selected": False,
+        "emitted_global_a1_a3_policy_uniqueness": False,
+        "emitted_inverse_covariance_finite_diagnostic": True,
+        "emitted_inverse_covariance_continuum_tail": False,
+        "emitted_inverse_covariance_continuum_limit": False,
+        "emitted_source_ensemble_selected": False,
+        "emitted_physical_covariance": False,
+        "emitted_screen_to_sky_readout": False,
+        "emitted_physical_prediction": False,
+        "emitted_promotion_allowed": False,
+    }
+
+    endpoint = _row(
+        REPORT,
+        "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
+    )
+    assert endpoint["disposition"] == (
+        "CONDITIONAL_A2_ENDPOINT_DESCENT_AND_Z_POWER_6_FACTORIZATION__SOURCE_"
+        "NATURALITY_INVERSES_DIAMONDS_FAITHFUL_ACTION_AND_PHYSICAL_"
+        "TRANSLATION_OPEN"
+    )
+    assert endpoint["critical_bridge_evidence"] == {
+        "emitted_conditional_a2_endpoint_descent_lemma": True,
+        "emitted_a2_endpoint_diamonds_without_source_premise": False,
+        "emitted_universal_z_power_6_factorization": True,
+        "emitted_positive_axis_diamond_count": 15,
+        "emitted_antipodal_inverse_count": 6,
+        "emitted_current_terminal_confluence": True,
+        "emitted_current_port_block_maps_bijective": False,
+        "emitted_current_oriented_bijective_step_ledger": False,
+        "emitted_source_endpoint_diamond_ledger": False,
+        "emitted_source_a2_naturality_rows": False,
+        "emitted_source_accepted_observer_quotient": False,
+        "emitted_faithful_physical_z_power_6_action": False,
+        "emitted_spatial_translation": False,
+        "emitted_physical_prediction": False,
+        "emitted_negative_issue_655_closure": False,
+        "emitted_comparison_data_used": False,
+    }
+
+
+def test_expensive_tail_replay_is_cached_by_complete_content_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert inventory._tail_verification_key() == independent._tail_verification_key()
+    labels = {row[0] for row in inventory._tail_verification_key()}
+    assert "data/refinement/a5_biposh_continuum_tail_receipt.json" in labels
+    assert "data/refinement/a5_biposh_dual_operator_receipt.json" in labels
+    assert "oph_fpe/cosmology/a5_biposh_continuum_tail.py" in labels
+    assert (
+        "oph_fpe/cosmology/verify_a5_biposh_continuum_tail_independent.py"
+        in labels
+    )
+
+    child = inventory.verify_a5_biposh_continuum_tail_independent
+    cache_attribute = inventory._TAIL_VERIFICATION_CACHE_ATTRIBUTE
+    monkeypatch.setattr(child, cache_attribute, {}, raising=False)
+    key = (("synthetic", 1, "sha256"),)
+    monkeypatch.setattr(inventory, "_tail_verification_key", lambda: key)
+    monkeypatch.setattr(independent, "_tail_verification_key", lambda: key)
+    calls: list[bool] = []
+
+    def fake_verify() -> dict:
+        calls.append(True)
+        return {
+            "schema": "oph.a5-biposh-continuum-tail.v1",
+            "status": (
+                "CONDITIONAL_EQUAL_SEAM_CONTINUUM_L6_NONZERO_UNDER_DECLARED_"
+                "NUMERICAL_ENVELOPE__SOURCE_SELECTION_AND_PHYSICAL_TRANSFER_OPEN"
+            ),
+        }
+
+    monkeypatch.setattr(child, "verify_packet", fake_verify)
+    inventory._verify_tail_packet_once_per_content()
+    independent._verify_tail_packet_once_per_content()
+    assert calls == [True]
+
+
+def test_tail_child_verifier_rejects_rehashed_physical_promotion(
+    tmp_path: Path,
+) -> None:
+    child = inventory.verify_a5_biposh_continuum_tail_independent
+    receipt = json.loads(child.DEFAULT_RECEIPT.read_text(encoding="utf-8"))
+    receipt["selection_decision"]["physical_prediction"] = True
+    receipt.pop("payload_sha256", None)
+    payload = json.dumps(
+        receipt,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    receipt["payload_sha256"] = "sha256:" + hashlib.sha256(payload).hexdigest()
+    path = tmp_path / "tampered_tail_receipt.json"
+    path.write_text(
+        json.dumps(
+            receipt,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(child.VerificationError, match="selection boundary"):
+        child.verify_packet(path)
+
+
 @pytest.mark.parametrize(
     "claim_field",
     inventory.BIPOSH_COEFFICIENT_FORBIDDEN_CLAIM_FIELDS,
@@ -307,6 +464,9 @@ def test_admission_counts_and_boundary_are_scope_qualified() -> None:
         "critical_evidence",
         "transport_feasibility_promotion",
         "biposh_promotion",
+        "equal_seam_source_promotion",
+        "continuum_tail_physical_promotion",
+        "endpoint_commutator_physical_promotion",
         "schema",
         "scope",
         "issue",
@@ -342,6 +502,28 @@ def test_rehashed_semantic_mutations_fail_independent_verification(
             "data/refinement/a5_biposh_dual_operator_receipt.json",
         )
         biposh["critical_bridge_evidence"]["emitted_promotion_allowed"] = True
+    elif mutation == "equal_seam_source_promotion":
+        equal_seam = _row(
+            report,
+            "data/refinement/refined_equal_seam_source_gate_receipt.json",
+        )
+        equal_seam["critical_bridge_evidence"][
+            "emitted_all_level_atomic_counting_law_source"
+        ] = True
+    elif mutation == "continuum_tail_physical_promotion":
+        tail = _row(
+            report,
+            "data/refinement/a5_biposh_continuum_tail_receipt.json",
+        )
+        tail["critical_bridge_evidence"]["emitted_physical_prediction"] = True
+    elif mutation == "endpoint_commutator_physical_promotion":
+        endpoint = _row(
+            report,
+            "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
+        )
+        endpoint["critical_bridge_evidence"][
+            "emitted_faithful_physical_z_power_6_action"
+        ] = True
     elif mutation == "schema":
         charged["schema"] = "oph.mutated.v1"
     elif mutation == "scope":
