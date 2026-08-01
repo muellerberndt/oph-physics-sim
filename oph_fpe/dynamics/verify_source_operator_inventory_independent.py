@@ -18,6 +18,8 @@ from pathlib import Path
 import subprocess
 from typing import Any, Iterable, Mapping, Sequence
 
+from oph_fpe.dynamics import verify_vertex12_atomic_port_transfer_independent
+
 
 SCHEMA = "oph.source_operator_ancestry_inventory.v1"
 VERIFICATION_SCHEMA = "oph.source_operator_ancestry_inventory_independent_verification.v1"
@@ -125,8 +127,8 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     ),
     "data/repair_closure/vertex12_atomic_port_transfer_receipt.json": _contract(
         "oph.vertex12-atomic-port-transfer-subpacket.v1",
-        "INTERNAL_VERTEX12_ATOMIC_TRANSFER_AND_COMPLETE_SOURCE_READBACK_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN",
-        "INTERNAL_VERTEX12_TRANSFER_AND_SOURCE_READBACK_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
+        "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN",
+        "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
     ),
     INVENTORY_RELATIVE_PATH: _contract(
         SCHEMA, STATUS, "RECURSIVE_INVENTORY_OUTPUT_EXCLUDED_FROM_SEMANTIC_SCAN"
@@ -135,9 +137,18 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
 
 POSITIVE_SIGNAL_KEYS = (
     "source_native_translation_receipt",
+    "source_native_spatial_translation_receipt",
     "same_operator_receipt",
     "spatial_translation_identification",
     "same_operator_physical_readout",
+    "same_operator_physical_readout_receipt",
+    "internal_seam_transfer_is_spatial_translation",
+    "directed_antipode_inverse_transport_receipt",
+    "noncollapsed_quotient_site_map_receipt",
+    "physical_sector_readout",
+    "independent_persistence_readback",
+    "independent_second_producer_readback",
+    "physical_prediction_unsealed",
     "SPATIAL_PORT_HOP_SOURCE_RECEIPT",
     "SAME_OPERATOR_PHYSICAL_READOUT_RECEIPT",
     "FZ11_FORCED_EXCLUSIVE_RECEIPT",
@@ -210,8 +221,20 @@ def _walk(value: Any) -> Iterable[Mapping[str, Any]]:
             yield from _walk(item)
 
 
+def _strict_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def _load(path: str) -> dict[str, Any]:
-    value = json.loads((REPOSITORY_ROOT / path).read_text(encoding="utf-8"))
+    value = json.loads(
+        (REPOSITORY_ROOT / path).read_text(encoding="utf-8"),
+        object_pairs_hook=_strict_json_object,
+    )
     if not isinstance(value, dict):
         raise ValueError(f"{path} is not an object")
     return value
@@ -338,19 +361,30 @@ def _evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | None:
         }
     if path == "data/repair_closure/vertex12_atomic_port_transfer_receipt.json":
         operator = value.get("atomic_transfer_operator", {})
-        readback = value.get("post_repair_source_readback", {})
+        readback = value.get("post_repair_in_process_snapshot_reread", {})
         boundary = value.get("quotient_and_spatial_boundary", {})
         quotient = boundary.get("quotient_enumeration", {})
+        candidate = value.get("candidate_next_typed_source_object", {})
         return {
             "operator_domain": operator.get("domain"),
-            "emitted_source_native_internal_port_transfer": operator.get(
-                "source_native_internal_port_transfer_receipt"
+            "emitted_source_native_internal_seam_partner_operator": operator.get(
+                "source_native_internal_seam_partner_operator_receipt"
+            ),
+            "emitted_exact_symbolic_matching_and_projector_algebra": operator.get(
+                "exact_symbolic_matching_and_projector_algebra"
             ),
             "emitted_source_native_spatial_translation": operator.get(
                 "source_native_spatial_translation_receipt"
             ),
-            "emitted_complete_source_readback_carrier_count": readback.get(
+            "emitted_in_process_snapshot_reread_carrier_count": readback.get(
                 "covered_carrier_count"
+            ),
+            "emitted_readback_mechanism": readback.get("readback_mechanism"),
+            "emitted_independent_persistence_readback": readback.get(
+                "independent_persistence_readback"
+            ),
+            "emitted_independent_second_producer_readback": readback.get(
+                "independent_second_producer_readback"
             ),
             "emitted_physical_sector_readout": readback.get(
                 "physical_sector_readout"
@@ -360,6 +394,9 @@ def _evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | None:
             ),
             "emitted_same_operator_physical_readout": boundary.get(
                 "same_operator_physical_readout_receipt"
+            ),
+            "emitted_current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": candidate.get(
+                "current_fixed_matching_family_has_no_qualifying_carrier_set_quotient"
             ),
         }
     if path == "data/a2_holonomy/a2_holonomy_current_selector_report.json":
@@ -404,6 +441,15 @@ def _rows(paths: Sequence[str]) -> list[dict[str, Any]]:
         status = _actual_status(value)
         if schema != contract["schema"] or status != contract["status"]:
             raise ValueError(f"schema/status drift for {path}")
+        if path == "data/repair_closure/vertex12_atomic_port_transfer_receipt.json":
+            verification = (
+                verify_vertex12_atomic_port_transfer_independent.verify_report(value)
+            )
+            if verification.get("receipt") is not True:
+                raise ValueError(
+                    "vertex12 packet failed independent verification: "
+                    f"{verification.get('reasons')}"
+                )
         result.append({
             "path": path,
             "schema": schema,
@@ -508,7 +554,7 @@ def _expected_payload() -> dict[str, Any]:
         },
         "epistemic_boundary": {
             "local_spatial_or_kinetic_operators_exist": True,
-            "twelve_port_response_and_readback_exist": True,
+            "twelve_port_internal_seam_response_and_in_process_snapshot_reread_exist": True,
             "claim_that_no_spatial_operator_exists": False,
             "registered_accepted_same_domain_chain_on_scanned_surface_exists": False,
             "unregistered_equivalent_semantics_ruled_out": False,
@@ -532,7 +578,9 @@ def verify(report: Mapping[str, Any]) -> dict[str, Any]:
             reasons.append("receipt_sha256_mismatch")
         expected = _expected_payload()
         for key in sorted(set(received) | set(expected)):
-            if received.get(key) != expected.get(key):
+            if _canonical_bytes(received.get(key)) != _canonical_bytes(
+                expected.get(key)
+            ):
                 reasons.append(f"top_level_mismatch:{key}")
     except (AttributeError, OSError, subprocess.SubprocessError, TypeError, ValueError, json.JSONDecodeError):
         reasons.append("malformed_or_unreplayable_inventory")

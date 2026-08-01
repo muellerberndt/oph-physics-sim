@@ -3,8 +3,9 @@
 The canonical finite source federation pairs every carrier exactly once at
 each of its twelve local port labels.  A full repair cycle therefore realizes
 twelve fixed-point-free matching involutions and the associated averaging
-projectors.  The source record loop commits and reads back the resulting full
-twelve-port state for every carrier in the bounded diagnostic below.
+projectors.  The source record loop commits and rereads, in process, the
+resulting full twelve-port snapshot for every carrier in the bounded diagnostic
+below.
 
 These are internal federation seam operations.  They are not spatial
 translations.  In particular, the matching at a carrier port is not the
@@ -20,6 +21,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -32,7 +34,7 @@ from oph_fpe.bulk.physical_h3_kms_source_capture import (
 SCHEMA = "oph.vertex12-atomic-port-transfer-subpacket.v1"
 VERIFICATION_SCHEMA = "oph.vertex12-atomic-port-transfer-subpacket-verification.v1"
 STATUS = (
-    "INTERNAL_VERTEX12_ATOMIC_TRANSFER_AND_COMPLETE_SOURCE_READBACK_ATTAINED__"
+    "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__"
     "SPATIAL_PHYSICAL_BRIDGE_OPEN"
 )
 
@@ -63,6 +65,32 @@ AUDITED_SURFACES = {
         REPOSITORY_ROOT / "data/common_reserve/producer_capability_matrix.json"
     ),
     "carrier_manifest": CARRIER_MANIFEST,
+    "icosahedral_geometry": REPOSITORY_ROOT / "oph_fpe/core/icosahedral.py",
+    "covariant_overlap": REPOSITORY_ROOT / "oph_fpe/gauge/covariant_overlap.py",
+    "finite_groups": REPOSITORY_ROOT / "oph_fpe/finite_groups.py",
+}
+
+SERIALIZED_DECIMAL_PLACES = 15
+SERIALIZED_ABSOLUTE_TOLERANCE = 2e-15
+REPAIR_EVENT_KEYS = {
+    "cycle",
+    "transaction_index",
+    "seam_id",
+    "read_set",
+    "write_set",
+    "mismatch_before",
+    "mismatch_after",
+    "strict_descent",
+    "update",
+    "event_id",
+}
+READ_ROW_KEYS = {"carrier_id", "port", "version", "value"}
+WRITE_ROW_KEYS = {
+    "carrier_id",
+    "port",
+    "expected_version",
+    "committed_version",
+    "value",
 }
 
 # The seed, carrier count, and replica are the canonical defaults.  The one
@@ -103,6 +131,24 @@ def _canonical_bytes(value: Any) -> bytes:
 
 def _sha(value: Any) -> str:
     return "sha256:" + hashlib.sha256(_canonical_bytes(value)).hexdigest()
+
+
+def _strict_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise PacketError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    value = json.loads(
+        path.read_text(encoding="utf-8"), object_pairs_hook=_strict_json_object
+    )
+    if not isinstance(value, dict):
+        raise PacketError("receipt JSON root is not an object")
+    return value
 
 
 def _raw_pin(path: Path) -> dict[str, Any]:
@@ -171,7 +217,12 @@ def _antipode_map() -> tuple[int, ...]:
 
 def _matching_permutations(
     bundle: Mapping[str, Any],
-) -> tuple[tuple[str, ...], tuple[tuple[int, ...], ...], tuple[tuple[str, ...], ...]]:
+) -> tuple[
+    tuple[str, ...],
+    tuple[tuple[int, ...], ...],
+    tuple[tuple[str, ...], ...],
+    dict[str, tuple[tuple[str, int], tuple[str, int]]],
+]:
     carrier_ids_raw = bundle.get("carrier_ids")
     seams = bundle.get("seams")
     if not isinstance(carrier_ids_raw, list) or not isinstance(seams, list):
@@ -182,6 +233,7 @@ def _matching_permutations(
     index = {carrier_id: position for position, carrier_id in enumerate(carrier_ids)}
     partners: list[list[int | None]] = [[None] * len(carrier_ids) for _ in range(12)]
     seam_ids: list[list[str]] = [[] for _ in range(12)]
+    seam_contracts: dict[str, tuple[tuple[str, int], tuple[str, int]]] = {}
     seen_seams: set[str] = set()
     for seam in seams:
         if not isinstance(seam, Mapping):
@@ -221,6 +273,7 @@ def _matching_permutations(
         partners[port][left] = right
         partners[port][right] = left
         seam_ids[port].append(seam_id)
+        seam_contracts[seam_id] = ((left_id, port), (right_id, port))
     if len(seams) != 48:
         raise PacketError("eight-carrier all-port source must contain 48 seams")
     normalized: list[tuple[int, ...]] = []
@@ -242,7 +295,7 @@ def _matching_permutations(
             raise PacketError(f"port {port} does not contain one perfect matching")
         normalized.append(permutation)
         normalized_seams.append(tuple(sorted(seam_ids[port])))
-    return carrier_ids, tuple(normalized), tuple(normalized_seams)
+    return carrier_ids, tuple(normalized), tuple(normalized_seams), seam_contracts
 
 
 def _partition_labels(size: int) -> Iterable[tuple[int, ...]]:
@@ -336,24 +389,36 @@ def _quotient_audit(
 
 def _repair_history_audit(
     dynamics: Mapping[str, Any],
-    expected_seam_ids: set[str],
+    expected_seams: Mapping[str, tuple[tuple[str, int], tuple[str, int]]],
     carrier_ids: Sequence[str],
 ) -> dict[str, Any]:
     events = dynamics.get("repair_event_log")
-    if not isinstance(events, list) or len(events) != len(expected_seam_ids):
+    if not isinstance(events, list) or len(events) != len(expected_seams):
         raise PacketError("full repair event ledger is missing or incomplete")
     event_rows: list[dict[str, Any]] = []
     observed_seams: set[str] = set()
+    observed_transaction_indices: set[int] = set()
     terminal_values: dict[tuple[str, int], Any] = {}
     for event in events:
-        if not isinstance(event, Mapping):
+        if not isinstance(event, Mapping) or set(event) != REPAIR_EVENT_KEYS:
             raise PacketError("repair event is malformed")
+        transaction_index = event.get("transaction_index")
+        if (
+            type(event.get("cycle")) is not int
+            or event.get("cycle") != 0
+            or type(transaction_index) is not int
+            or transaction_index in observed_transaction_indices
+        ):
+            raise PacketError("repair event cycle or transaction index is malformed")
+        observed_transaction_indices.add(transaction_index)
         material = dict(event)
         event_id = material.pop("event_id", None)
         if event_id != _sha(material):
             raise PacketError("repair event digest does not replay")
-        seam_id = str(event.get("seam_id"))
-        if seam_id not in expected_seam_ids or seam_id in observed_seams:
+        if type(event.get("seam_id")) is not str:
+            raise PacketError("repair history seam identifier is not a string")
+        seam_id = event["seam_id"]
+        if seam_id not in expected_seams or seam_id in observed_seams:
             raise PacketError("repair history has an unknown or duplicate seam")
         observed_seams.add(seam_id)
         reads = event.get("read_set")
@@ -363,12 +428,66 @@ def _repair_history_audit(
             or not isinstance(writes, list)
             or len(reads) != 2
             or len(writes) != 2
+            or any(not isinstance(row, Mapping) or set(row) != READ_ROW_KEYS for row in reads)
+            or any(not isinstance(row, Mapping) or set(row) != WRITE_ROW_KEYS for row in writes)
         ):
             raise PacketError("repair event is not a two-endpoint transaction")
         read_keys = [(row.get("carrier_id"), row.get("port")) for row in reads]
         write_keys = [(row.get("carrier_id"), row.get("port")) for row in writes]
-        if read_keys != write_keys or reads[0].get("port") != reads[1].get("port"):
+        expected_keys = list(expected_seams[seam_id])
+        if (
+            any(
+                type(row.get("carrier_id")) is not str
+                or type(row.get("port")) is not int
+                or type(row.get("version")) is not int
+                for row in reads
+            )
+            or any(
+                type(row.get("carrier_id")) is not str
+                or type(row.get("port")) is not int
+                or type(row.get("expected_version")) is not int
+                or type(row.get("committed_version")) is not int
+                for row in writes
+            )
+            or _canonical_bytes(read_keys) != _canonical_bytes(expected_keys)
+            or _canonical_bytes(write_keys) != _canonical_bytes(expected_keys)
+            or reads[0].get("port") != reads[1].get("port")
+        ):
             raise PacketError("repair transaction changed its endpoint or port domain")
+        numeric_values = [
+            reads[0].get("value"),
+            reads[1].get("value"),
+            writes[0].get("value"),
+            writes[1].get("value"),
+            event.get("mismatch_before"),
+            event.get("mismatch_after"),
+        ]
+        if any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(float(value))
+            for value in numeric_values
+        ):
+            raise PacketError("repair transaction contains a non-finite numeric field")
+        left_value = float(reads[0]["value"])
+        right_value = float(reads[1]["value"])
+        left_write = float(writes[0]["value"])
+        right_write = float(writes[1]["value"])
+        serialized_mean = 0.5 * (left_value + right_value)
+        serialized_before = abs(left_value - right_value)
+        serialized_after = abs(left_write - right_write)
+        if (
+            abs(left_write - serialized_mean) > SERIALIZED_ABSOLUTE_TOLERANCE
+            or abs(right_write - serialized_mean) > SERIALIZED_ABSOLUTE_TOLERANCE
+            or abs(float(event["mismatch_before"]) - serialized_before)
+            > SERIALIZED_ABSOLUTE_TOLERANCE
+            or abs(float(event["mismatch_after"]) - serialized_after)
+            > SERIALIZED_ABSOLUTE_TOLERANCE
+            or event.get("strict_descent") is not (serialized_after < serialized_before)
+        ):
+            raise PacketError(
+                "repair transaction fails the serialized arithmetic-mean/descent contract"
+            )
         if (
             writes[0].get("value") != writes[1].get("value")
             or event.get("mismatch_after") != 0.0
@@ -397,8 +516,10 @@ def _repair_history_audit(
                 "event_id": str(event_id),
             }
         )
-    if observed_seams != expected_seam_ids:
+    if observed_seams != set(expected_seams):
         raise PacketError("repair event ledger does not cover every seam")
+    if observed_transaction_indices != set(range(len(events))):
+        raise PacketError("repair transaction indices are not exactly contiguous")
     expected_coordinates = {
         (carrier_id, port) for carrier_id in carrier_ids for port in range(12)
     }
@@ -429,7 +550,17 @@ def _repair_history_audit(
         "terminal_write_state_rows_sha256": _sha(terminal_rows),
         "terminal_write_coordinate_count": len(terminal_values),
         "every_seam_replayed_once": True,
-        "every_event_is_atomic_two_endpoint_mean": True,
+        "every_event_matches_named_federation_seam": True,
+        "every_event_matches_atomic_two_endpoint_mean_rule_within_serialized_tolerance": True,
+        "serialized_mismatch_and_strict_descent_recomputed": True,
+        "serialized_numeric_contract": {
+            "decimal_places": SERIALIZED_DECIMAL_PLACES,
+            "absolute_tolerance": "2e-15",
+            "scope": (
+                "each source-ledger scalar is rounded independently; the symbolic "
+                "matching/projector identities remain exact"
+            ),
+        },
         "read_conflict_validation_complete": True,
         "union_atomic_revalidation_complete": True,
         "order_replay_exact": True,
@@ -546,9 +677,12 @@ def _readback_audit(
         "record_readback_pairs": pair_rows,
         "record_readback_pairs_sha256": _sha(pair_rows),
         "every_carrier_full_port_state_committed": True,
-        "every_carrier_full_port_state_read_back": True,
+        "every_carrier_full_port_state_reread_in_process": True,
         "record_and_readback_state_digests_identical": True,
-        "readback_domain": "post_repair_internal_visible_port_state",
+        "readback_domain": "post_repair_internal_visible_port_snapshot",
+        "readback_mechanism": "in_process_snapshot_lookup_digest_reread",
+        "independent_persistence_readback": False,
+        "independent_second_producer_readback": False,
         "physical_sector_readout": False,
     }
 
@@ -566,19 +700,25 @@ def _payload() -> dict[str, Any]:
     ):
         raise PacketError("upstream finite source architecture is not attained")
     bundle = capture["source_artifacts"]["federation_bundle"]
-    carrier_ids, permutations, seam_ids = _matching_permutations(bundle)
-    expected_seams = {seam_id for rows in seam_ids for seam_id in rows}
+    carrier_ids, permutations, seam_ids, seam_contracts = _matching_permutations(bundle)
+    expected_seams = set(seam_contracts)
     antipodes = _antipode_map()
 
     default_capture = capture_physical_source()
     default_bundle = default_capture["source_artifacts"]["federation_bundle"]
-    default_carriers, default_permutations, default_seams = _matching_permutations(
+    (
+        default_carriers,
+        default_permutations,
+        default_seams,
+        default_seam_contracts,
+    ) = _matching_permutations(
         default_bundle
     )
     seam_ledger_matches_default = bool(
         carrier_ids == default_carriers
         and permutations == default_permutations
         and seam_ids == default_seams
+        and seam_contracts == default_seam_contracts
     )
     if not seam_ledger_matches_default:
         raise PacketError("coverage config changed the canonical default seam topology")
@@ -612,7 +752,7 @@ def _payload() -> dict[str, Any]:
         )
 
     repair_history = _repair_history_audit(
-        capture["source_artifacts"]["dynamics"], expected_seams, carrier_ids
+        capture["source_artifacts"]["dynamics"], seam_contracts, carrier_ids
     )
     readback = _readback_audit(
         capture["source_artifacts"]["dynamics"],
@@ -675,12 +815,13 @@ def _payload() -> dict[str, Any]:
             "complete_matching_on_every_port": True,
             "all_twelve_transfer_involutions_exact": True,
             "all_twelve_rational_repair_projectors_exact": True,
+            "exact_symbolic_matching_and_projector_algebra": True,
             "block_diagonal_full_repair_formula": "A=direct_sum_p (I+S_p)/2",
-            "source_native_internal_port_transfer_receipt": True,
+            "source_native_internal_seam_partner_operator_receipt": True,
             "source_native_spatial_translation_receipt": False,
         },
         "source_history_replay": repair_history,
-        "post_repair_source_readback": readback,
+        "post_repair_in_process_snapshot_reread": readback,
         "quotient_and_spatial_boundary": {
             "carrier_antipode_map": list(antipodes),
             "all_six_antipodal_transfer_pairs_fail_inverse_relation": True,
@@ -696,7 +837,7 @@ def _payload() -> dict[str, Any]:
             "same_operator_physical_readout_receipt": False,
             "physical_prediction_unsealed": False,
         },
-        "smallest_missing_typed_source_object": {
+        "candidate_next_typed_source_object": {
             "schema": "oph.vertex12-directed-transport-ledger.v1",
             "object": "source_emitted_directed_transport_on_a_noncollapsed_quotient_site_set",
             "required_fields": [
@@ -714,7 +855,7 @@ def _payload() -> dict[str, Any]:
                 "reject unless antipodal ports act by inverse maps and the site A5 action conjugates T_p to T_g(p)",
                 "bind a later sector readout to the exact transport digest; frame, orientation, and boost transport remain separate gates",
             ],
-            "current_source_requires_topology_or_quotient_producer_change": True,
+            "current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": True,
         },
         "comparison_data_read": False,
         "implementation_pins": {
@@ -723,14 +864,19 @@ def _payload() -> dict[str, Any]:
             "mutation_tests": _raw_pin(TEST_PATH),
         },
         "claim_boundary": (
-            "The canonical eight-carrier source topology supplies twelve exact "
-            "port-labelled matching involutions, their rational averaging "
-            "projectors, a complete atomic repair history, and digest-identical "
-            "post-repair full-port source readback covering all eight carriers. "
-            "This is an internal federation result. The antipodal matchings are "
-            "not inverse transports, and an exhaustive 4,140-partition check "
-            "finds no noncollapsed common quotient that repairs the relation. "
-            "No spatial propagation, physical sector, frame, boost, or physical "
+            "For the fixed canonical-seed eight-carrier source topology, the "
+            "same-port seams supply twelve exact internal matching involutions "
+            "and their rational averaging projectors. The repair ledger matches "
+            "the named seams and arithmetic-mean rule under the declared "
+            "15-decimal serialization tolerance. Its 24 record/readback pairs "
+            "are an in-process digest reread of the same captured post-repair "
+            "snapshot, not independent persistence or a second producer. The "
+            "inferred seam-partner matchings fail the antipodal inverse equation, "
+            "and an exhaustive 4,140-partition check finds no noncollapsed common "
+            "carrier-set quotient preserving all twelve matchings that repairs it. "
+            "This does not exclude other seeds, carrier counts, directed maps, "
+            "port-dependent or linear quotients, or enlarged site spaces. No "
+            "spatial propagation, physical sector, frame, boost, or physical "
             "prediction follows from this receipt."
         ),
     }
@@ -749,7 +895,7 @@ def verify_receipt(report: Mapping[str, Any]) -> dict[str, Any]:
         digest = received.pop("receipt_sha256", None)
         if digest != _sha(received):
             reasons.append("receipt_digest_mismatch")
-        if received != _payload():
+        if _canonical_bytes(received) != _canonical_bytes(_payload()):
             reasons.append("producer_replay_mismatch")
         if report.get("status") != STATUS:
             reasons.append("status_mismatch")
@@ -806,7 +952,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--verify", type=Path)
     args = parser.parse_args(argv)
     if args.verify is not None:
-        report = json.loads(args.verify.read_text(encoding="utf-8"))
+        report = _load_json(args.verify)
         verification = verify_receipt(report)
         _write_json(verification, args.output)
         return 0 if verification["receipt"] else 1

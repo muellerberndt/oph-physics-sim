@@ -472,7 +472,7 @@
     "scalar_or_polarization_independent_same_operator_action": false,
     "surviving_physical_alternatives_exhaustively_enumerated": false
   },
-  "receipt_sha256": "sha256:31daa14f7dcb0a816e6918a41b7c1c9334d2acdca644b7f596b37e8054f69c07",
+  "receipt_sha256": "sha256:20d2fcae6a23050405636dfd5511909a656ebd779a4f5b5a4dd3f8171910a7ea",
   "schema": "oph.port_repair_propagation_bridge_receipt.v1",
   "source_operator_ancestry_inventory": {
     "accepted_bridge_count_excluding_recursive_outputs": 0,
@@ -482,11 +482,11 @@
     "local_spatial_or_kinetic_operators_exist": true,
     "producer_code_or_sibling_repository_absence_claimed": false,
     "raw_pin": {
-      "bytes": 26064,
+      "bytes": 26513,
       "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
-      "sha256": "sha256:897771c24564b77126d7aa4039250642984c689464ec718118a4afa918543b82"
+      "sha256": "sha256:733a559870b0f07f243fe21995c31e437e669d972b31b903a5689ae875918259"
     },
-    "receipt_sha256": "sha256:839defc5b23558cbb397857d28de07e10e9eda6c922ff43b473fc1462c6745b4",
+    "receipt_sha256": "sha256:f9086a7e0319f88d845daa0843cbe9974a35aa5364b379957596d5176bd6ff99",
     "recursive_parent_bridge_receipt_exclusion": {
       "packet_count_included_in_scan": false,
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
@@ -540,11 +540,11 @@
       "local_spatial_or_kinetic_operators_exist": true,
       "producer_code_or_sibling_repository_absence_claimed": false,
       "raw_pin": {
-        "bytes": 26064,
+        "bytes": 26513,
         "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
-        "sha256": "sha256:897771c24564b77126d7aa4039250642984c689464ec718118a4afa918543b82"
+        "sha256": "sha256:733a559870b0f07f243fe21995c31e437e669d972b31b903a5689ae875918259"
       },
-      "receipt_sha256": "sha256:839defc5b23558cbb397857d28de07e10e9eda6c922ff43b473fc1462c6745b4",
+      "receipt_sha256": "sha256:f9086a7e0319f88d845daa0843cbe9974a35aa5364b379957596d5176bd6ff99",
       "recursive_parent_bridge_receipt_exclusion": {
         "packet_count_included_in_scan": false,
         "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",

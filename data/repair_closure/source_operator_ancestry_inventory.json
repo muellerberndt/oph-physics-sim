@@ -131,7 +131,7 @@
       "raw_pin": {
         "bytes": 32853,
         "path": "data/common_reserve/producer_capability_matrix.json",
-        "sha256": "sha256:841fab5526dbc3c1129662aa837de5a3cc42828ea37bb61b120622b5478fb8e0"
+        "sha256": "sha256:51b624ab6fe21afbc071023071c278dd4833a318237797f7a461e1499a6dc099"
       },
       "schema": "oph.common-reserve.capability-matrix.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -477,24 +477,29 @@
     },
     {
       "critical_bridge_evidence": {
-        "emitted_complete_source_readback_carrier_count": 8,
+        "emitted_current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": true,
+        "emitted_exact_symbolic_matching_and_projector_algebra": true,
+        "emitted_in_process_snapshot_reread_carrier_count": 8,
+        "emitted_independent_persistence_readback": false,
+        "emitted_independent_second_producer_readback": false,
         "emitted_noncollapsed_inverse_compatible_quotient_count": 0,
         "emitted_physical_sector_readout": false,
+        "emitted_readback_mechanism": "in_process_snapshot_lookup_digest_reread",
         "emitted_same_operator_physical_readout": false,
-        "emitted_source_native_internal_port_transfer": true,
+        "emitted_source_native_internal_seam_partner_operator": true,
         "emitted_source_native_spatial_translation": false,
         "operator_domain": "internal_federation_visible_port_fiber_Q^(8_times_12)"
       },
-      "disposition": "INTERNAL_VERTEX12_TRANSFER_AND_SOURCE_READBACK_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
+      "disposition": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
       "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
       "raw_pin": {
-        "bytes": 39518,
+        "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:f8e5e0550bbbb4b4e13f4d4beeccd756d9896666c290d00ecc137fdeb9839601"
+        "sha256": "sha256:026de811997136bc94d21897503ea993f340b0abdab7a21e0abdd079f1b7f793"
       },
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "semantic_scan_excluded_as_recursive_output": false,
-      "status": "INTERNAL_VERTEX12_ATOMIC_TRANSFER_AND_COMPLETE_SOURCE_READBACK_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
+      "status": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
     }
   ],
   "current_canonical_json_contract_scan": {
@@ -514,24 +519,24 @@
     "producer_code_or_sibling_repository_absence_claimed": false,
     "registered_accepted_same_domain_chain_on_scanned_surface_exists": false,
     "reopen_condition": "Register and independently verify a source packet binding one complete twelve-port translation operator to a digest-identical physical readout with frame and boost custody.",
-    "twelve_port_response_and_readback_exist": true,
+    "twelve_port_internal_seam_response_and_in_process_snapshot_reread_exist": true,
     "unregistered_equivalent_semantics_ruled_out": false
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 29049,
+      "bytes": 31266,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:c7cdda53cd887f3935c911acd7e2e1c5596ba734b36fbd5a6b1bc7832430aca2"
+      "sha256": "sha256:a2b13d259d745e13a5a6928593f8a01207d2275fcffcb76a23fadc05c47d4fef"
     },
     "mutation_tests": {
-      "bytes": 12715,
+      "bytes": 13760,
       "path": "tests/test_source_operator_inventory.py",
-      "sha256": "sha256:4b3b2b806ef9ddf7df87ba675bd216e0cf6983861e728d05991dafea2497c104"
+      "sha256": "sha256:12224c83619e8c05e01df2924cf9a20a44901c8420596a46d62dbb5e33ce7606"
     },
     "producer": {
-      "bytes": 31154,
+      "bytes": 33341,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:1b3ce1ae3550a8f2770583313208ede7ab83071183d280021983627ce06a89ed"
+      "sha256": "sha256:d55b55aed591074f295c3454a02a55c2cdc1c070e226ee5e75608f00b51e493b"
     }
   },
   "issue": 655,
@@ -552,13 +557,13 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:839defc5b23558cbb397857d28de07e10e9eda6c922ff43b473fc1462c6745b4",
+  "receipt_sha256": "sha256:f9086a7e0319f88d845daa0843cbe9974a35aa5364b379957596d5176bd6ff99",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding the recursive inventory and parent bridge outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
     "content_index_row_count_excluding_recursive_outputs": 1003,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:dfd18d6c5ba419e181c83295e317f2a80cbe02d3e487c3872b6d66acfd07e1aa",
+    "content_index_sha256_excluding_recursive_outputs": "sha256:c9c7282f51c57815bddd4213f674e7ff750955d20f75514901df46f0b6623df0",
     "path_count_including_declared_recursive_outputs": 1005,
     "path_list_sha256_including_declared_recursive_outputs": "sha256:878e6f829b4b0762697bcd5efe56c125b0953c2322685dd1902a983f8688ef09",
     "provenance_counts": {

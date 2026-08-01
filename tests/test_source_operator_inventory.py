@@ -163,6 +163,25 @@ def test_near_candidates_remain_separate_objects() -> None:
         "ABSENT_FROM_DECLARED_SCHEMA"
     )
 
+    vertex12 = _row(
+        REPORT,
+        "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
+    )["critical_bridge_evidence"]
+    assert vertex12 == {
+        "operator_domain": "internal_federation_visible_port_fiber_Q^(8_times_12)",
+        "emitted_source_native_internal_seam_partner_operator": True,
+        "emitted_exact_symbolic_matching_and_projector_algebra": True,
+        "emitted_source_native_spatial_translation": False,
+        "emitted_in_process_snapshot_reread_carrier_count": 8,
+        "emitted_readback_mechanism": "in_process_snapshot_lookup_digest_reread",
+        "emitted_independent_persistence_readback": False,
+        "emitted_independent_second_producer_readback": False,
+        "emitted_physical_sector_readout": False,
+        "emitted_noncollapsed_inverse_compatible_quotient_count": 0,
+        "emitted_same_operator_physical_readout": False,
+        "emitted_current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": True,
+    }
+
 
 def test_admission_counts_and_boundary_are_scope_qualified() -> None:
     admission = REPORT["bridge_admission_contract"]
@@ -180,7 +199,9 @@ def test_admission_counts_and_boundary_are_scope_qualified() -> None:
 
     boundary = REPORT["epistemic_boundary"]
     assert boundary["local_spatial_or_kinetic_operators_exist"] is True
-    assert boundary["twelve_port_response_and_readback_exist"] is True
+    assert boundary[
+        "twelve_port_internal_seam_response_and_in_process_snapshot_reread_exist"
+    ] is True
     assert boundary["claim_that_no_spatial_operator_exists"] is False
     assert boundary[
         "registered_accepted_same_domain_chain_on_scanned_surface_exists"

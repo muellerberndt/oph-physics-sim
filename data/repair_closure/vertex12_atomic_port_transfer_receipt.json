@@ -16,6 +16,7 @@
     ],
     "complete_matching_on_every_port": true,
     "domain": "internal_federation_visible_port_fiber_Q^(8_times_12)",
+    "exact_symbolic_matching_and_projector_algebra": true,
     "port_count": 12,
     "port_rows": [
       {
@@ -393,7 +394,7 @@
     ],
     "port_rows_sha256": "sha256:0b8f9aabe92c9176508e0954aa38b9f3db3efe2e2994039e9e42ff7fb6351a09",
     "seam_count": 48,
-    "source_native_internal_port_transfer_receipt": true,
+    "source_native_internal_seam_partner_operator_receipt": true,
     "source_native_spatial_translation_receipt": false
   },
   "audited_surface_pins": {
@@ -402,10 +403,25 @@
       "path": "tests/fixtures/echosahedral_federation_reference.json",
       "sha256": "sha256:12ec97358ade25f919f9981f1cd7c99c2b27aaaaa9ce14bd2320d73a9c1bfc14"
     },
+    "covariant_overlap": {
+      "bytes": 19217,
+      "path": "oph_fpe/gauge/covariant_overlap.py",
+      "sha256": "sha256:f03127e7314b0be60ba18b0a0b4cc934aa8d314785636258796c68baae374aa9"
+    },
     "federation": {
       "bytes": 174471,
       "path": "oph_fpe/core/echosahedral_federation.py",
       "sha256": "sha256:ead1a96812ac1b243bbe2c1d175a368cd23d5c7b29a179e8718a82baf2edeec1"
+    },
+    "finite_groups": {
+      "bytes": 1283,
+      "path": "oph_fpe/finite_groups.py",
+      "sha256": "sha256:1329f07ef90beb9d4be1efa5cd0cb76e323014670d8e90c8f7945eba54e401f6"
+    },
+    "icosahedral_geometry": {
+      "bytes": 48532,
+      "path": "oph_fpe/core/icosahedral.py",
+      "sha256": "sha256:89fac4f2d24bb4d85c4a84624b3c826e99cb717df68060dd23a4b26c6cfe9adc"
     },
     "local_dynamics": {
       "bytes": 18410,
@@ -415,7 +431,7 @@
     "producer_capability_matrix": {
       "bytes": 32853,
       "path": "data/common_reserve/producer_capability_matrix.json",
-      "sha256": "sha256:841fab5526dbc3c1129662aa837de5a3cc42828ea37bb61b120622b5478fb8e0"
+      "sha256": "sha256:51b624ab6fe21afbc071023071c278dd4833a318237797f7a461e1499a6dc099"
     },
     "repair_to_propagation_classifier": {
       "bytes": 39488,
@@ -433,35 +449,58 @@
       "sha256": "sha256:223cab93ad720579fde6bcc1e67dbe130875113fb2b022335996744200d1a874"
     }
   },
-  "claim_boundary": "The canonical eight-carrier source topology supplies twelve exact port-labelled matching involutions, their rational averaging projectors, a complete atomic repair history, and digest-identical post-repair full-port source readback covering all eight carriers. This is an internal federation result. The antipodal matchings are not inverse transports, and an exhaustive 4,140-partition check finds no noncollapsed common quotient that repairs the relation. No spatial propagation, physical sector, frame, boost, or physical prediction follows from this receipt.",
+  "candidate_next_typed_source_object": {
+    "current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": true,
+    "low_cost_producer_design": [
+      "emit the twelve directed site maps from source transition events rather than assigning them after capture",
+      "reject any source whose port maps do not descend to a noncollapsed common quotient",
+      "reject unless antipodal ports act by inverse maps and the site A5 action conjugates T_p to T_g(p)",
+      "bind a later sector readout to the exact transport digest; frame, orientation, and boost transport remain separate gates"
+    ],
+    "object": "source_emitted_directed_transport_on_a_noncollapsed_quotient_site_set",
+    "required_fields": [
+      "source_capture_root_sha256",
+      "quotient_site_ids_and_carrier_to_site_map",
+      "twelve_directed_port_transport_permutations",
+      "icosahedral_antipode_map",
+      "exact_T_antipode_p_equals_inverse_T_p_receipt",
+      "source_transition_event_ids_for_every_transport",
+      "site_A5_action_and_exact_covariance_receipt"
+    ],
+    "schema": "oph.vertex12-directed-transport-ledger.v1"
+  },
+  "claim_boundary": "For the fixed canonical-seed eight-carrier source topology, the same-port seams supply twelve exact internal matching involutions and their rational averaging projectors. The repair ledger matches the named seams and arithmetic-mean rule under the declared 15-decimal serialization tolerance. Its 24 record/readback pairs are an in-process digest reread of the same captured post-repair snapshot, not independent persistence or a second producer. The inferred seam-partner matchings fail the antipodal inverse equation, and an exhaustive 4,140-partition check finds no noncollapsed common carrier-set quotient preserving all twelve matchings that repairs it. This does not exclude other seeds, carrier counts, directed maps, port-dependent or linear quotients, or enlarged site spaces. No spatial propagation, physical sector, frame, boost, or physical prediction follows from this receipt.",
   "comparison_data_read": false,
   "implementation_pins": {
     "independent_packet_verifier": {
-      "bytes": 30271,
+      "bytes": 37081,
       "path": "oph_fpe/dynamics/verify_vertex12_atomic_port_transfer_independent.py",
-      "sha256": "sha256:6fa1c24a761fabff2bea374192f9a2453a33ab7de54d4fc8316a12733ef214e1"
+      "sha256": "sha256:2af3ebd76b20991f6e14d858f1b7b644759e658f30975f4a2e471a3a835b7c61"
     },
     "mutation_tests": {
-      "bytes": 7060,
+      "bytes": 12830,
       "path": "tests/test_vertex12_atomic_port_transfer.py",
-      "sha256": "sha256:3de1008863f1005ebda9125b457e5d85686350d9d388670eccd9eeb411343008"
+      "sha256": "sha256:56de219394d0751bfe88f71f2b37baf5225d083eb829172b9fffb6e833b5ebcd"
     },
     "producer": {
-      "bytes": 35332,
+      "bytes": 41423,
       "path": "oph_fpe/dynamics/vertex12_atomic_port_transfer.py",
-      "sha256": "sha256:c01d3f4d2124f43fcefed5f9ef6c0ec29b97a8212fc673b1315b195cd7351298"
+      "sha256": "sha256:e237a164078b339d3caccc6b2e08db1e5ddb42861721a6334f2e38a975ef9711"
     }
   },
   "issue": 655,
-  "post_repair_source_readback": {
+  "post_repair_in_process_snapshot_reread": {
     "carrier_rows_sha256": "sha256:514452715c328eceadda20274743ffed841671aa2c037d9294931a849b7ea670",
     "covered_carrier_count": 8,
     "covered_port_coordinate_count": 96,
     "every_carrier_full_port_state_committed": true,
-    "every_carrier_full_port_state_read_back": true,
+    "every_carrier_full_port_state_reread_in_process": true,
+    "independent_persistence_readback": false,
+    "independent_second_producer_readback": false,
     "physical_sector_readout": false,
     "readback_count": 24,
-    "readback_domain": "post_repair_internal_visible_port_state",
+    "readback_domain": "post_repair_internal_visible_port_snapshot",
+    "readback_mechanism": "in_process_snapshot_lookup_digest_reread",
     "record_and_readback_state_digests_identical": true,
     "record_count": 24,
     "record_readback_pairs": [
@@ -693,28 +732,8 @@
     "same_operator_physical_readout_receipt": false,
     "scalar_or_polarization_sector_attachment_receipt": false
   },
-  "receipt_sha256": "sha256:6189a2d615a1695182c7d3321d6bec388016e7b64e6d01eff06580cb5d25cd3c",
+  "receipt_sha256": "sha256:91ade54d26edc3d619b61a54a7cf5c1ec6bd8898b5b6a4701d9848808f3471b7",
   "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
-  "smallest_missing_typed_source_object": {
-    "current_source_requires_topology_or_quotient_producer_change": true,
-    "low_cost_producer_design": [
-      "emit the twelve directed site maps from source transition events rather than assigning them after capture",
-      "reject any source whose port maps do not descend to a noncollapsed common quotient",
-      "reject unless antipodal ports act by inverse maps and the site A5 action conjugates T_p to T_g(p)",
-      "bind a later sector readout to the exact transport digest; frame, orientation, and boost transport remain separate gates"
-    ],
-    "object": "source_emitted_directed_transport_on_a_noncollapsed_quotient_site_set",
-    "required_fields": [
-      "source_capture_root_sha256",
-      "quotient_site_ids_and_carrier_to_site_map",
-      "twelve_directed_port_transport_permutations",
-      "icosahedral_antipode_map",
-      "exact_T_antipode_p_equals_inverse_T_p_receipt",
-      "source_transition_event_ids_for_every_transport",
-      "site_A5_action_and_exact_covariance_receipt"
-    ],
-    "schema": "oph.vertex12-directed-transport-ledger.v1"
-  },
   "source_capture_binding": {
     "artifact_type": "OPH_TARGET_BLIND_FINITE_SOURCE_CAPTURE",
     "canonical_default_replica": true,
@@ -1007,16 +1026,23 @@
       }
     ],
     "event_rows_sha256": "sha256:435d29a407fa71515ff5e1fbd4f05d7d58e4874c58c5deee9b12862f7930fc67",
-    "every_event_is_atomic_two_endpoint_mean": true,
+    "every_event_matches_atomic_two_endpoint_mean_rule_within_serialized_tolerance": true,
+    "every_event_matches_named_federation_seam": true,
     "every_seam_replayed_once": true,
     "idempotence_replay_exact": true,
     "order_replay_exact": true,
     "read_conflict_validation_complete": true,
+    "serialized_mismatch_and_strict_descent_recomputed": true,
+    "serialized_numeric_contract": {
+      "absolute_tolerance": "2e-15",
+      "decimal_places": 15,
+      "scope": "each source-ledger scalar is rounded independently; the symbolic matching/projector identities remain exact"
+    },
     "terminal_seam_fixed_point": true,
     "terminal_write_coordinate_count": 96,
     "terminal_write_state_matches_readback_snapshot": true,
     "terminal_write_state_rows_sha256": "sha256:bdc02a96f6c476c92b3561312033940f694f0bc8b5c582fecfe6b8d169af075e",
     "union_atomic_revalidation_complete": true
   },
-  "status": "INTERNAL_VERTEX12_ATOMIC_TRANSFER_AND_COMPLETE_SOURCE_READBACK_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
+  "status": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
 }
