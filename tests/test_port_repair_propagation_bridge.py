@@ -102,7 +102,7 @@ def test_current_source_receipt_fails_closed_without_translation() -> None:
     assert REPORT[bridge.SAME_OPERATOR_PHYSICAL_READOUT_RECEIPT] is False
     assert REPORT[bridge.FZ11_FORCED_EXCLUSIVE_RECEIPT] is False
     assert REPORT["classification"]["blockers"] == [
-        "SPATIAL_TRANSLATION_ABSENT"
+        "NO_TWELVE_PORT_ORBIT_TRANSLATION_BINDING"
     ]
     assert REPORT["classification"][
         "internal_support_count_used_as_spatial_selection"
@@ -130,6 +130,39 @@ def test_current_source_receipt_fails_closed_without_translation() -> None:
     ] is False
     assert dependency["geometry_and_orbit_moments_available"] is True
     assert dependency["geometry_implies_physical_translation_operator"] is False
+    assert dependency["indexed_tracked_serialized_data_census_complete"] is True
+    assert dependency["semantic_scan_limited_to_current_canonical_json"] is True
+    assert dependency[
+        "legacy_imported_external_payloads_semantically_scanned"
+    ] is False
+    assert dependency["local_spatial_or_kinetic_operators_exist"] is True
+    assert dependency[
+        "registered_accepted_vertex12_translation_to_physical_readout_chain_on_scanned_surface_exists"
+    ] is False
+    inventory = REPORT["source_operator_ancestry_inventory"]
+    assert inventory == REPORT["source_packet"][
+        "source_operator_ancestry_inventory"
+    ]
+    assert inventory[
+        "registered_packet_count_excluding_recursive_outputs"
+    ] == 0
+    assert inventory[
+        "accepted_bridge_count_excluding_recursive_outputs"
+    ] == 0
+    assert inventory["recursive_parent_bridge_receipt_exclusion"] == {
+        "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+        "reason": (
+            "parent output embeds the current negative source packet and is "
+            "excluded to avoid recursive custody"
+        ),
+        "packet_count_included_in_scan": False,
+    }
+    assert inventory["local_spatial_or_kinetic_operators_exist"] is True
+    assert inventory["claim_that_no_spatial_operator_exists"] is False
+    assert inventory[
+        "producer_code_or_sibling_repository_absence_claimed"
+    ] is False
+    assert inventory["unregistered_equivalent_semantics_ruled_out"] is False
 
 
 def test_orbit_rays_are_exact_and_independently_recomputed() -> None:
@@ -380,6 +413,12 @@ def test_independent_current_exit_verifier_passes_without_producer_import() -> N
         "source_pin",
         "comparison_consumed",
         "full_independence_promotion",
+        "top_inventory_summary",
+        "dependency_reason",
+        "epistemic_result",
+        "issue",
+        "pin_path",
+        "scope_extra_field",
     ],
 )
 def test_independent_verifier_rejects_rehashed_semantic_mutations(
@@ -410,6 +449,22 @@ def test_independent_verifier_rejects_rehashed_semantic_mutations(
         report["live_issue_acceptance_audit"][
             "independent_full_bridge_implementation"
         ] = True
+    elif mutation == "top_inventory_summary":
+        report["source_operator_ancestry_inventory"][
+            "registered_packet_count_excluding_recursive_outputs"
+        ] = 1
+    elif mutation == "dependency_reason":
+        report["dependency_audit"]["reason"] = "changed"
+    elif mutation == "epistemic_result":
+        report["epistemic_boundary"]["current_result"] = "changed"
+    elif mutation == "issue":
+        report["issue"] = 0
+    elif mutation == "pin_path":
+        report["source_packet"]["carrier_manifest_pin"][
+            "repository_relative_path"
+        ] = "oph_fpe/dynamics/canonical_seam_repair.py"
+    elif mutation == "scope_extra_field":
+        report["source_packet"]["scope_boundary"]["extra"] = False
     else:  # pragma: no cover
         raise AssertionError(mutation)
     _independently_rehash(report)
@@ -419,7 +474,7 @@ def test_independent_verifier_rejects_rehashed_semantic_mutations(
     assert result["status"] == "FAIL"
 
 
-def test_committed_receipt_is_byte_exact() -> None:
-    committed = json.loads(bridge.DEFAULT_OUTPUT.read_text(encoding="utf-8"))
-    assert committed == REPORT
-    assert bridge.verify_bridge_receipt(committed)["receipt"] is True
+def test_canonical_receipt_is_byte_exact() -> None:
+    canonical = json.loads(bridge.DEFAULT_OUTPUT.read_text(encoding="utf-8"))
+    assert canonical == REPORT
+    assert bridge.verify_bridge_receipt(canonical)["receipt"] is True

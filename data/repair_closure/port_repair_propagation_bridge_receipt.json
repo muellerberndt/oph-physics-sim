@@ -5,7 +5,7 @@
   "SPATIAL_PORT_HOP_SOURCE_RECEIPT": false,
   "classification": {
     "blockers": [
-      "SPATIAL_TRANSLATION_ABSENT"
+      "NO_TWELVE_PORT_ORBIT_TRANSLATION_BINDING"
     ],
     "forced_exclusive_issue_exit_attainable_in_v1": false,
     "internal_seam_repair_certified": true,
@@ -22,14 +22,23 @@
     "closed_issue_62_supplies_accepted_physical_repair_law": false,
     "geometry_and_orbit_moments_available": true,
     "geometry_implies_physical_translation_operator": false,
-    "reason": "The current exact repair sources type the scalar and integer seam laws as candidates and set PHYSICAL_REPAIR_LAW_RECEIPT and canonical_three_axiom_derivation to false."
+    "indexed_tracked_serialized_data_census_complete": true,
+    "legacy_imported_external_payloads_semantically_scanned": false,
+    "local_spatial_or_kinetic_operators_exist": true,
+    "reason": "The current exact repair sources type the scalar and integer seam laws as candidates and set PHYSICAL_REPAIR_LAW_RECEIPT and canonical_three_axiom_derivation to false.",
+    "registered_accepted_vertex12_translation_to_physical_readout_chain_on_scanned_surface_exists": false,
+    "semantic_scan_limited_to_current_canonical_json": true
   },
   "epistemic_boundary": {
+    "claim_that_no_spatial_operator_exists": false,
     "comparison_data_read": false,
-    "current_result": "The exact vertex, face, and edge rays are classified, while the committed sources provide no native translation/readout bridge.",
+    "current_result": "The exact vertex, face, and edge rays are classified. On the Git-indexed tracked simulator data surface, the current canonical JSON scan finds local spatial and kinetic operators and a twelve-port response, with no registered accepted packet that binds a complete vertex-orbit translation operator to a digest-identical physical readout. Recursive outputs are excluded from the packet count.",
     "internal_thirty_seams_do_not_select_edge30_spatial_hops": true,
     "physical_prediction_unsealed": false,
-    "reopen_condition": "Supply a source-history-replayed translation operator and a digest-bound physical readout in the same operator domain."
+    "producer_code_or_sibling_repository_absence_claimed": false,
+    "registered_accepted_same_domain_chain_on_scanned_surface_exists": false,
+    "reopen_condition": "Supply a source-history-replayed translation operator and a digest-bound physical readout in the same operator domain.",
+    "unregistered_equivalent_semantics_ruled_out": false
   },
   "exact_orbit_ray_table": {
     "binary_refinement_of_rank_six_coefficient": "B6(a/2) = B6(a)/16",
@@ -427,19 +436,19 @@
   },
   "implementation_pins": {
     "bridge_producer": {
-      "bytes": 35788,
+      "bytes": 39488,
       "repository_relative_path": "oph_fpe/dynamics/port_repair_propagation_bridge.py",
-      "sha256": "sha256:5586e9e051d86a08542a27c4b5f422dda822dcad4af0c9e663077d948d4704bf"
+      "sha256": "sha256:31f4bdfc0683be928224e5cc6b4ce7614274e59370858220fb3196c6fea975c8"
     },
     "independent_current_exit_verifier": {
-      "bytes": 13447,
+      "bytes": 19963,
       "repository_relative_path": "oph_fpe/dynamics/verify_port_repair_propagation_bridge_independent.py",
-      "sha256": "sha256:76f9a425655ad62ae9a71cbb7ca6e787f0cc1189d154fe8a5de0e59cb60e8969"
+      "sha256": "sha256:8ac4cddf9399d777fcd6a38564a5c1772f28deac206e8a58aaf7fabe3e5ca34a"
     },
     "mutation_and_independent_orbit_tests": {
-      "bytes": 16080,
+      "bytes": 18505,
       "repository_relative_path": "tests/test_port_repair_propagation_bridge.py",
-      "sha256": "sha256:8578a65e35adf6be45d1a6342672a35fb5e1278ff59ab2b9c53afca8c6212d4e"
+      "sha256": "sha256:c5c7715aa2461c60bcd7974da2e858a53cc9b245a8ede5d445a0c9388dc2f4f5"
     }
   },
   "issue": 655,
@@ -463,8 +472,31 @@
     "scalar_or_polarization_independent_same_operator_action": false,
     "surviving_physical_alternatives_exhaustively_enumerated": false
   },
-  "receipt_sha256": "sha256:f9a902af30574eda9abaa3b5974d16486ea4d755b6dc3331f51405a4dece4691",
+  "receipt_sha256": "sha256:5c98e8868fa43f7f7dbf6949d45b15f251ea2698c7818a5e3555b1e02bf5d4f4",
   "schema": "oph.port_repair_propagation_bridge_receipt.v1",
+  "source_operator_ancestry_inventory": {
+    "accepted_bridge_count_excluding_recursive_outputs": 0,
+    "claim_that_no_spatial_operator_exists": false,
+    "current_canonical_json_path_count_excluding_recursive_outputs": 27,
+    "indexed_tracked_serialized_data_path_count": 1004,
+    "local_spatial_or_kinetic_operators_exist": true,
+    "producer_code_or_sibling_repository_absence_claimed": false,
+    "raw_pin": {
+      "bytes": 24886,
+      "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
+      "sha256": "sha256:a8a6debfd74cfabe471abaab49d54b5bd123aa79570e2b990499e375873b3b00"
+    },
+    "receipt_sha256": "sha256:b7cad69ba0558f6eeead376b8df5b9b96ecce9a71bdcad997d813ab28bafb1ba",
+    "recursive_parent_bridge_receipt_exclusion": {
+      "packet_count_included_in_scan": false,
+      "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+      "reason": "parent output embeds the current negative source packet and is excluded to avoid recursive custody"
+    },
+    "registered_packet_count_excluding_recursive_outputs": 0,
+    "schema": "oph.source_operator_ancestry_inventory.v1",
+    "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
+    "unregistered_equivalent_semantics_ruled_out": false
+  },
   "source_packet": {
     "carrier_manifest_pin": {
       "bytes": 3646,
@@ -499,6 +531,29 @@
       "equal_support_counts_imply_operator_identity": false,
       "internal_seams_are_spatial_hops": false,
       "physicalization_claimed": false
+    },
+    "source_operator_ancestry_inventory": {
+      "accepted_bridge_count_excluding_recursive_outputs": 0,
+      "claim_that_no_spatial_operator_exists": false,
+      "current_canonical_json_path_count_excluding_recursive_outputs": 27,
+      "indexed_tracked_serialized_data_path_count": 1004,
+      "local_spatial_or_kinetic_operators_exist": true,
+      "producer_code_or_sibling_repository_absence_claimed": false,
+      "raw_pin": {
+        "bytes": 24886,
+        "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
+        "sha256": "sha256:a8a6debfd74cfabe471abaab49d54b5bd123aa79570e2b990499e375873b3b00"
+      },
+      "receipt_sha256": "sha256:b7cad69ba0558f6eeead376b8df5b9b96ecce9a71bdcad997d813ab28bafb1ba",
+      "recursive_parent_bridge_receipt_exclusion": {
+        "packet_count_included_in_scan": false,
+        "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+        "reason": "parent output embeds the current negative source packet and is excluded to avoid recursive custody"
+      },
+      "registered_packet_count_excluding_recursive_outputs": 0,
+      "schema": "oph.source_operator_ancestry_inventory.v1",
+      "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
+      "unregistered_equivalent_semantics_ruled_out": false
     },
     "spatial_hop_operator": null
   },

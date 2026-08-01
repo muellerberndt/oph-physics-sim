@@ -47,6 +47,7 @@ from oph_fpe.core.charged_response import (
     q5_dot,
 )
 from oph_fpe.dynamics import canonical_seam_repair
+from oph_fpe.dynamics import source_operator_inventory
 
 
 REPORT_SCHEMA = "oph.port_repair_propagation_bridge_receipt.v1"
@@ -90,6 +91,7 @@ DEFAULT_REPAIR_RECEIPT = (
     REPOSITORY_ROOT
     / "data/repair_closure/bounded_atomic_self_readback_closure_receipt.json"
 )
+DEFAULT_SOURCE_OPERATOR_INVENTORY = source_operator_inventory.OUTPUT_PATH
 CANONICAL_REPAIR_PRODUCER = (
     REPOSITORY_ROOT / "oph_fpe/dynamics/canonical_seam_repair.py"
 )
@@ -475,12 +477,53 @@ def _internal_repair_block() -> dict[str, Any]:
 
 
 def current_source_packet() -> dict[str, Any]:
-    """Return the exact packet represented by the committed source tree."""
+    """Return the exact packet represented by the indexed serialized inputs."""
 
+    inventory = json.loads(
+        DEFAULT_SOURCE_OPERATOR_INVENTORY.read_text(encoding="utf-8")
+    )
+    inventory_verification = source_operator_inventory.verify_inventory(inventory)
+    if not inventory_verification["receipt"]:
+        raise ValueError("source operator ancestry inventory does not replay")
     return {
         "schema": SOURCE_PACKET_SCHEMA,
         "carrier_manifest_pin": _raw_file_pin(DEFAULT_CARRIER_MANIFEST),
         "internal_seam_repair": _internal_repair_block(),
+        "source_operator_ancestry_inventory": {
+            "raw_pin": _raw_file_pin(DEFAULT_SOURCE_OPERATOR_INVENTORY),
+            "schema": inventory["schema"],
+            "status": inventory["status"],
+            "receipt_sha256": inventory["receipt_sha256"],
+            "indexed_tracked_serialized_data_path_count": inventory[
+                "tracked_serialized_data_catalog"
+            ]["path_count_including_declared_recursive_outputs"],
+            "current_canonical_json_path_count_excluding_recursive_outputs": inventory[
+                "current_canonical_json_contract_scan"
+            ]["current_canonical_json_path_count_excluding_recursive_outputs"],
+            "registered_packet_count_excluding_recursive_outputs": inventory[
+                "bridge_admission_contract"
+            ]["registered_packet_count_excluding_recursive_outputs"],
+            "accepted_bridge_count_excluding_recursive_outputs": inventory[
+                "bridge_admission_contract"
+            ]["accepted_bridge_count_excluding_recursive_outputs"],
+            "recursive_parent_bridge_receipt_exclusion": copy.deepcopy(
+                inventory["bridge_admission_contract"][
+                    "recursive_parent_bridge_receipt_exclusion"
+                ]
+            ),
+            "local_spatial_or_kinetic_operators_exist": inventory[
+                "epistemic_boundary"
+            ]["local_spatial_or_kinetic_operators_exist"],
+            "claim_that_no_spatial_operator_exists": inventory[
+                "epistemic_boundary"
+            ]["claim_that_no_spatial_operator_exists"],
+            "producer_code_or_sibling_repository_absence_claimed": inventory[
+                "epistemic_boundary"
+            ]["producer_code_or_sibling_repository_absence_claimed"],
+            "unregistered_equivalent_semantics_ruled_out": inventory[
+                "epistemic_boundary"
+            ]["unregistered_equivalent_semantics_ruled_out"],
+        },
         "spatial_hop_operator": None,
         "physical_readout": None,
         "scope_boundary": {
@@ -693,8 +736,10 @@ def classify_source_packet(
         spatial = packet.get("spatial_hop_operator")
         if spatial is None:
             raise BridgePacketError(
-                "SPATIAL_TRANSLATION_ABSENT",
-                "no source-native translation operator has been supplied",
+                "NO_TWELVE_PORT_ORBIT_TRANSLATION_BINDING",
+                "no registered accepted packet on the indexed serialized-data "
+                "surface binds a complete twelve-port translation operator to "
+                "the current source packet",
             )
         _require(
             isinstance(spatial, Mapping),
@@ -772,6 +817,9 @@ def _report_payload() -> dict[str, Any]:
         "issue": 655,
         "status": classification["issue_certified_exit"],
         "source_packet": packet,
+        "source_operator_ancestry_inventory": copy.deepcopy(
+            packet["source_operator_ancestry_inventory"]
+        ),
         "implementation_pins": {
             "bridge_producer": _raw_file_pin(BRIDGE_PRODUCER),
             "independent_current_exit_verifier": _raw_file_pin(
@@ -824,6 +872,11 @@ def _report_payload() -> dict[str, Any]:
             ),
             "geometry_and_orbit_moments_available": True,
             "geometry_implies_physical_translation_operator": False,
+            "indexed_tracked_serialized_data_census_complete": True,
+            "semantic_scan_limited_to_current_canonical_json": True,
+            "legacy_imported_external_payloads_semantically_scanned": False,
+            "local_spatial_or_kinetic_operators_exist": True,
+            "registered_accepted_vertex12_translation_to_physical_readout_chain_on_scanned_surface_exists": False,
         },
         INTERNAL_SEAM_REPAIR_CERTIFIED: True,
         SPATIAL_PORT_HOP_SOURCE_RECEIPT: False,
@@ -831,9 +884,17 @@ def _report_payload() -> dict[str, Any]:
         FZ11_FORCED_EXCLUSIVE_RECEIPT: False,
         "epistemic_boundary": {
             "current_result": (
-                "The exact vertex, face, and edge rays are classified, while the "
-                "committed sources provide no native translation/readout bridge."
+                "The exact vertex, face, and edge rays are classified. On the "
+                "Git-indexed tracked simulator data surface, the current canonical "
+                "JSON scan finds local spatial and kinetic operators and a twelve-port "
+                "response, with no registered accepted packet that binds a complete "
+                "vertex-orbit translation operator to a digest-identical physical "
+                "readout. Recursive outputs are excluded from the packet count."
             ),
+            "claim_that_no_spatial_operator_exists": False,
+            "unregistered_equivalent_semantics_ruled_out": False,
+            "producer_code_or_sibling_repository_absence_claimed": False,
+            "registered_accepted_same_domain_chain_on_scanned_surface_exists": False,
             "internal_thirty_seams_do_not_select_edge30_spatial_hops": True,
             "comparison_data_read": False,
             "physical_prediction_unsealed": False,

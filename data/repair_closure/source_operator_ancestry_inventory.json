@@ -1,0 +1,552 @@
+{
+  "bridge_admission_contract": {
+    "accepted_bridge_count_excluding_recursive_outputs": 0,
+    "policy": "Only an independently verified packet with the registered schema may promote the issue-655 translation/readout bridge on this serialized-data surface.",
+    "recursive_parent_bridge_receipt_exclusion": {
+      "packet_count_included_in_scan": false,
+      "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+      "reason": "parent output embeds the current negative source packet and is excluded to avoid recursive custody"
+    },
+    "registered_packet_count_excluding_recursive_outputs": 0,
+    "registered_packet_schema": "oph.port_repair_propagation_source_packet.v1",
+    "required_chain": [
+      "source-history-replayed complete vertex12 translation operator",
+      "digest-identical physical scalar or polarization-independent readout",
+      "coherent frame transport and declared boost custody"
+    ],
+    "true_promotion_signal_path_count_excluding_recursive_outputs": 0
+  },
+  "canonical_artifact_rows": [
+    {
+      "critical_bridge_evidence": {
+        "emitted_source_current_receipt": null,
+        "emitted_status": "OPEN_SOURCE_HOLONOMY_BRIDGE",
+        "spatial_translation_binding": {
+          "classification": "ABSENT_FROM_DECLARED_SCHEMA",
+          "key": "spatial_translation_identification",
+          "occurrences": [],
+          "searched_scope": "entire_canonical_json_object"
+        }
+      },
+      "disposition": "GAUGE_CURRENT_HOLONOMY_OPEN_NOT_SPATIAL_PROPAGATION",
+      "path": "data/a2_holonomy/a2_holonomy_current_selector_report.json",
+      "raw_pin": {
+        "bytes": 4921,
+        "path": "data/a2_holonomy/a2_holonomy_current_selector_report.json",
+        "sha256": "sha256:3d52968235bc2aad3455b500f1c111139a7090b666746b5632e59169fd244e4d"
+      },
+      "schema": "oph.a2-holonomy-current-selector/1.0.0",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "OPEN_SOURCE_HOLONOMY_BRIDGE"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_A1_complete_response_receipt": false,
+        "emitted_A2_same_current_receipt": false,
+        "emitted_derived_algebra_real_rank": 143,
+        "emitted_derived_algebra_type": "su(12)",
+        "emitted_generated_algebra_real_rank": 144,
+        "emitted_generated_algebra_type": "u(12)",
+        "emitted_physical_current_source_bridge_receipt": false,
+        "emitted_port_count": 12,
+        "emitted_propagation_generator": "minus i times L, where L = 5 I - A",
+        "emitted_u12_is_candidate_oph_current": false
+      },
+      "disposition": "TWELVE_PORT_ADJACENCY_PROPAGATION_OVERSHOOTS_TO_U12__PHYSICAL_CURRENT_SOURCE_OPEN",
+      "path": "data/a2_holonomy/ordered_port_response_diagnostic_receipt.json",
+      "raw_pin": {
+        "bytes": 21500,
+        "path": "data/a2_holonomy/ordered_port_response_diagnostic_receipt.json",
+        "sha256": "sha256:13e4bf76b296437ca3a7f6424b075d63ac88d4a681756725fc7a8870124858bc"
+      },
+      "schema": "oph.ordered-port-response-diagnostic.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED_BOUNDED_NEGATIVE_CONTROL"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "CAPACITY_READBACK_NOT_PROPAGATION",
+      "path": "data/capacity_readback/capacity_indexed_source_family_independent_receipt.json",
+      "raw_pin": {
+        "bytes": 1235,
+        "path": "data/capacity_readback/capacity_indexed_source_family_independent_receipt.json",
+        "sha256": "sha256:d9d7e23022252d87f6aa29cf4b0161be568aa128be3e5d6ca3ec05095082f46d"
+      },
+      "schema": "oph.capacity_indexed_source_family_independent_receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "PASS"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "CAPACITY_SOURCE_PROJECTION_NOT_PROPAGATION",
+      "path": "data/capacity_readback/capacity_indexed_source_family_projection.json",
+      "raw_pin": {
+        "bytes": 6559,
+        "path": "data/capacity_readback/capacity_indexed_source_family_projection.json",
+        "sha256": "sha256:d504a4549d0640a03b7ca4af705a826efde2e6df07f1a9b40e6978cc1cf050fd"
+      },
+      "schema": "oph.capacity_indexed_source_family_projection.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_current_lift_source_selected": false,
+        "emitted_source_bound_impulse_readback": true,
+        "emitted_source_response_operator": "negative_graph_antipode_involution",
+        "emitted_support_size": 12,
+        "same_operator_physical_readout": {
+          "classification": "ABSENT_FROM_DECLARED_SCHEMA",
+          "key": "same_operator_physical_readout",
+          "occurrences": [],
+          "searched_scope": "entire_canonical_json_object"
+        },
+        "spatial_translation_binding": {
+          "classification": "ABSENT_FROM_DECLARED_SCHEMA",
+          "key": "spatial_translation_identification",
+          "occurrences": [],
+          "searched_scope": "entire_canonical_json_object"
+        }
+      },
+      "disposition": "TWELVE_PORT_RESPONSE_NOT_SPATIAL_TRANSLATION",
+      "path": "data/common_reserve/charged_response_artifact.json",
+      "raw_pin": {
+        "bytes": 7890,
+        "path": "data/common_reserve/charged_response_artifact.json",
+        "sha256": "sha256:e1478527b6ec1c61332a3b86bc35f2b32b0247eba02b34f40030f0b9fea4b75b"
+      },
+      "schema": "oph.charged_response_semantic_artifact.v3",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_current_lift_source_selected": false,
+        "emitted_finite_simulator_response_identified": true,
+        "emitted_physical_A_T_identification": false,
+        "emitted_scientific_promotion_allowed": false
+      },
+      "disposition": "RAW_RESPONSE_NATIVE_PHYSICAL_AT_BRIDGE_OPEN",
+      "path": "data/common_reserve/producer_capability_matrix.json",
+      "raw_pin": {
+        "bytes": 32853,
+        "path": "data/common_reserve/producer_capability_matrix.json",
+        "sha256": "sha256:56fa7796c5ad621c86ced8d96e225f8a261d5bea54b3800e768ec70afebeb8c4"
+      },
+      "schema": "oph.common-reserve.capability-matrix.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "CAPABILITY_PROBE_COMPLETE__SCIENTIFIC_PROMOTION_DISABLED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EINSTEIN_LADDER_MANIFEST_NOT_VERTEX12_OPERATOR",
+      "path": "data/einstein_convergence/manifest.json",
+      "raw_pin": {
+        "bytes": 5960,
+        "path": "data/einstein_convergence/manifest.json",
+        "sha256": "sha256:358f33030f5f9181db7715d4f6689b81d70180154797d3eefb65122b330caee8"
+      },
+      "schema": "oph.einstein-convergence-ladder.v2",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR",
+      "path": "data/einstein_convergence/rung_16384.json",
+      "raw_pin": {
+        "bytes": 916,
+        "path": "data/einstein_convergence/rung_16384.json",
+        "sha256": "sha256:3b6c6d3f552bf4271b81a8d8e658486c0167f385aa14e0a2b96575ef5c21b25d"
+      },
+      "schema": null,
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR",
+      "path": "data/einstein_convergence/rung_262144.json",
+      "raw_pin": {
+        "bytes": 914,
+        "path": "data/einstein_convergence/rung_262144.json",
+        "sha256": "sha256:b51cdcb285ae06486c4e3ec668a77e15291b8bb60a5d8417628dbcfe8d47470a"
+      },
+      "schema": null,
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR",
+      "path": "data/einstein_convergence/rung_262144_dense.json",
+      "raw_pin": {
+        "bytes": 923,
+        "path": "data/einstein_convergence/rung_262144_dense.json",
+        "sha256": "sha256:02078da34969d80abdfec11878f0fe663712066893d050b8e37f0035e914dfee"
+      },
+      "schema": null,
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR",
+      "path": "data/einstein_convergence/rung_65536.json",
+      "raw_pin": {
+        "bytes": 915,
+        "path": "data/einstein_convergence/rung_65536.json",
+        "sha256": "sha256:88660932fc53e42e1992cf8aa645cc66310ecd9a4b4eb58e36aee9dc7ade4ab9"
+      },
+      "schema": null,
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_physical_promotion_allowed": false,
+        "emitted_rer_exact_flux_vertex_identity_bridge": false,
+        "operator_domain": "finite_local_domain_classical_harmonic_network"
+      },
+      "disposition": "LOCAL_DOMAIN_CLASSICAL_OPERATOR_NO_VERTEX12_IDENTITY_BRIDGE",
+      "path": "data/local_domain/classical_realization_receipt.json",
+      "raw_pin": {
+        "bytes": 12969,
+        "path": "data/local_domain/classical_realization_receipt.json",
+        "sha256": "sha256:0071d986e31f9df89c6a06605238d5d10903194e6ffe95f1cc5760e2152caa5a"
+      },
+      "schema": "oph.local-domain-classical-realization.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "CLASSICAL_REALIZATION_MATCHES_DECLARED_FINITE_SPECTRAL_INTERFACE"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_physical_promotion_allowed": false,
+        "emitted_verdict": "PHYSICAL_UNITS_NOT_EVALUABLE_ON_DECLARED_SERIALIZED_INTERFACE"
+      },
+      "disposition": "LOCAL_DOMAIN_PHYSICAL_UNITS_AND_READOUT_NOT_EVALUABLE",
+      "path": "data/local_domain/clock_unit_verdict.json",
+      "raw_pin": {
+        "bytes": 9252,
+        "path": "data/local_domain/clock_unit_verdict.json",
+        "sha256": "sha256:9cc884694cffd9070fba61b859c5e1bb3312e4a939642ecc537300b6a9156e49"
+      },
+      "schema": "oph.local-domain-clock-unit-verdict.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "PHYSICAL_UNITS_NOT_EVALUABLE_ON_DECLARED_SERIALIZED_INTERFACE"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_physical_promotion_allowed": false,
+        "emitted_rer_exact_flux_vertex_identity_bridge": false,
+        "emitted_separate_from_rer_exact_flux_certificate": true,
+        "operator_domain": "finite_local_domain_twist_sectors"
+      },
+      "disposition": "LOCAL_TWISTED_OPERATORS_NO_VERTEX12_IDENTITY_BRIDGE",
+      "path": "data/local_domain/defect_sector_receipt.json",
+      "raw_pin": {
+        "bytes": 6271,
+        "path": "data/local_domain/defect_sector_receipt.json",
+        "sha256": "sha256:9bbecb4ab9164577b61650d653fd986210ba0ae541b668263e03297a34cfaf60"
+      },
+      "schema": "oph.local-domain-defect-sector-spectra.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "LOCAL_DOMAIN_AGGREGATE_MANIFEST_NO_NEW_OPERATOR",
+      "path": "data/local_domain/manifest.json",
+      "raw_pin": {
+        "bytes": 1577,
+        "path": "data/local_domain/manifest.json",
+        "sha256": "sha256:8ea3442e2ca44137e215169f1f91745d064af349cb5d0ce4fc33a0f1f96a548c"
+      },
+      "schema": "oph.local-domain-stage1.manifest.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_matter_operator_source_selected": false,
+        "emitted_physical_promotion_allowed": false,
+        "emitted_spin_same_source_domain": false,
+        "emitted_spin_to_local_domain_bridge": false
+      },
+      "disposition": "DECLARED_TENSOR_OPERATOR_AND_SEPARATE_SPIN_PACKET_UNBRIDGED",
+      "path": "data/local_domain/matter_attachment_receipt.json",
+      "raw_pin": {
+        "bytes": 8616,
+        "path": "data/local_domain/matter_attachment_receipt.json",
+        "sha256": "sha256:c576f8568738c32195957b9ace6542d2a6df3591f92718d392d6241f6cfb41bf"
+      },
+      "schema": "oph.local-domain-matter-attachment.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_carrier_count": 8662,
+        "emitted_operator": "signed Laplacian of the observer-visible seam complex",
+        "emitted_physical_promotion_allowed": false,
+        "physical_reference_transition": {
+          "classification": "ABSENT_FROM_DECLARED_SCHEMA",
+          "key": "physical_reference_transition_selected",
+          "occurrences": [],
+          "searched_scope": "entire_canonical_json_object"
+        }
+      },
+      "disposition": "LOCAL_SIGNED_LAPLACIAN_NO_PHYSICAL_READOUT",
+      "path": "data/local_domain/source_gap_receipt.json",
+      "raw_pin": {
+        "bytes": 4553,
+        "path": "data/local_domain/source_gap_receipt.json",
+        "sha256": "sha256:925b51838964eafd4f47197868a072153bc3b1eede45324fa18c807cbc7ff285"
+      },
+      "schema": "oph.source-clock-gap.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "PRESCRIBED_FINITE_CHART_NOT_PROPAGATION_OPERATOR",
+      "path": "data/local_domain/stage1_receipt.json",
+      "raw_pin": {
+        "bytes": 10704,
+        "path": "data/local_domain/stage1_receipt.json",
+        "sha256": "sha256:05aa595c7655770988d998b2293ca42b1cf2dea11e23ddc348f10fd1ab396779"
+      },
+      "schema": "oph.local-domain-stage1.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "GF2_SEAM_TRANSPORT_NOT_SPATIAL_TRANSLATION",
+      "path": "data/local_domain/stage2_receipt.json",
+      "raw_pin": {
+        "bytes": 4741,
+        "path": "data/local_domain/stage2_receipt.json",
+        "sha256": "sha256:88729ec8b24e7afe04f7b2a4dc41fe68da6239fe863739e0cc12b818c37e24d3"
+      },
+      "schema": "oph.local-domain-stage2.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_physical_promotion_allowed": false,
+        "emitted_visible_edge_count": 11816,
+        "operator_domain": "observer_visible_local_seam_complex",
+        "vertex12_identity_bridge": {
+          "classification": "ABSENT_FROM_DECLARED_SCHEMA",
+          "key": "rer_exact_flux_12_42_vertex_identity_bridge",
+          "occurrences": [],
+          "searched_scope": "entire_canonical_json_object"
+        }
+      },
+      "disposition": "LOCAL_DIFFERENCE_OPERATOR_NOT_VERTEX12_PHYSICAL_OPERATOR",
+      "path": "data/local_domain/stage3_receipt.json",
+      "raw_pin": {
+        "bytes": 5557,
+        "path": "data/local_domain/stage3_receipt.json",
+        "sha256": "sha256:90b01726b18e34686b61bb81414e898636f43f7e73e100e2a726baee1fd34d50"
+      },
+      "schema": "oph.local-domain-stage3.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "LOCAL_DOMAIN_PROVENANCE_AGGREGATE_NO_NEW_OPERATOR",
+      "path": "data/local_domain/stage4_receipt.json",
+      "raw_pin": {
+        "bytes": 7121,
+        "path": "data/local_domain/stage4_receipt.json",
+        "sha256": "sha256:f491e70b0ce2706f5cf27bc515af71705fbddc2731a6883ccb3743259fc9659b"
+      },
+      "schema": "oph.local-domain-stage4.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "PROJECTIVE_QUANTUM_CANDIDATE_COMPLETED_RECORD_PRODUCER_MISSING",
+      "path": "data/quantum/icosahedral_chsh_candidate_receipt.json",
+      "raw_pin": {
+        "bytes": 9449,
+        "path": "data/quantum/icosahedral_chsh_candidate_receipt.json",
+        "sha256": "sha256:9c3ccbe47ec9939647a4f5ba5d18c2f5a37e96b6910702cba174e11ca336c214"
+      },
+      "schema": "oph.icosahedral_chsh_candidate.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "EXACT_PROJECTIVE_BRANCH_CANDIDATE__TWO_WING_COMPLETED_RECORD_SOURCE_PRODUCER_MISSING"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "PHYSICAL_BIREFINEMENT_SOURCE_PRODUCER_MISSING",
+      "path": "data/refinement/physical_birefinement_preflight.json",
+      "raw_pin": {
+        "bytes": 11609,
+        "path": "data/refinement/physical_birefinement_preflight.json",
+        "sha256": "sha256:5791f42c0fb0eafb3505790e257500b24c9b06235fecb4002911919bdf853d98"
+      },
+      "schema": "oph.refinement.physical-birefinement-preflight.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "SOURCE_PRODUCER_MISSING"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_physical_angular_prediction": false,
+        "emitted_physical_sky_readout_selected": false,
+        "emitted_repair_schedule_source_selected": false
+      },
+      "disposition": "ANGULAR_READOUT_PHYSICAL_SKY_BINDING_OPEN",
+      "path": "data/repair_closure/angular_refinement_repair_observability_receipt.json",
+      "raw_pin": {
+        "bytes": 4940,
+        "path": "data/repair_closure/angular_refinement_repair_observability_receipt.json",
+        "sha256": "sha256:46d65d9e680b4af4ff4435ed7b22d482f471627565996988766dbb37398fb15f"
+      },
+      "schema": "oph.angular_refinement_repair_observability.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "EXACT_REFINEMENT_REPAIR_COUNTERENSEMBLE__DETAIL_COVARIANCE_UNSELECTED__PHYSICAL_SKY_READOUT_OPEN"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_finite_internal_seam_torsor": true,
+        "emitted_full_universe_closure": false,
+        "emitted_physical_repair_law": false
+      },
+      "disposition": "INTERNAL_REPAIR_PHYSICAL_LAW_NOT_SELECTED",
+      "path": "data/repair_closure/bounded_atomic_self_readback_closure_receipt.json",
+      "raw_pin": {
+        "bytes": 47923,
+        "path": "data/repair_closure/bounded_atomic_self_readback_closure_receipt.json",
+        "sha256": "sha256:ae0b1fcd39c54338a6f5af347557b0fcaedc681fa55b3236e1e95eb4a2719a93"
+      },
+      "schema": "oph.bounded_atomic_self_readback_closure.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "BOUNDED_EXPECTATION_LEVEL_REPAIR_FIXED_POINT_UNIQUE_MODULO_CLOCK_IN_THE_FROZEN_ADVERSARIAL_SUITE"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "RECURSIVE_PARENT_BRIDGE_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
+      "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+      "schema": "oph.port_repair_propagation_bridge_receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": true,
+      "status": "BOUNDED_NONSELECTION__FZ11_REMAINS_BRANCH_PREDICTION"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "RECORD_COUNTING_PROJECTION_NOT_PROPAGATION",
+      "path": "data/repair_closure/record_counting_source_projection.json",
+      "raw_pin": {
+        "bytes": 1195,
+        "path": "data/repair_closure/record_counting_source_projection.json",
+        "sha256": "sha256:e61012403c647308940176c7079afb4271c47c513c00dacc2cfe26aa114cf16d"
+      },
+      "schema": "oph.record_counting_source_projection.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_desired_current_identification": false,
+        "emitted_negative_control_status": "ATTAINED_NEGATIVE_CONTROL",
+        "operator_domain": "scalar_twelve_port_seam_equalizers"
+      },
+      "disposition": "SEAM_EQUALIZER_CURRENT_NEGATIVE_CONTROL",
+      "path": "data/repair_closure/seam_equalizer_current_control_report.json",
+      "raw_pin": {
+        "bytes": 6458,
+        "path": "data/repair_closure/seam_equalizer_current_control_report.json",
+        "sha256": "sha256:b26d409522714a3e05ab44c8716e82e553fba21b10930f1cc1f034762d550e9b"
+      },
+      "schema": "oph.seam-equalizer-current-control/1.0.0",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "ATTAINED_NEGATIVE_CONTROL"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "RECURSIVE_INVENTORY_OUTPUT_EXCLUDED_FROM_SEMANTIC_SCAN",
+      "path": "data/repair_closure/source_operator_ancestry_inventory.json",
+      "schema": "oph.source_operator_ancestry_inventory.v1",
+      "semantic_scan_excluded_as_recursive_output": true,
+      "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE"
+    }
+  ],
+  "current_canonical_json_contract_scan": {
+    "current_canonical_json_path_count_excluding_recursive_outputs": 27,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:e4dc194c1ea28c0f935243efdd05ace6ee3db3404830483c763ffe3f6383de3f",
+    "positive_promotion_signal_rows_excluding_recursive_outputs": [],
+    "recursive_output_paths_excluded": [
+      "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+      "data/repair_closure/source_operator_ancestry_inventory.json"
+    ],
+    "registered_source_packet_rows_excluding_recursive_outputs": []
+  },
+  "epistemic_boundary": {
+    "claim_that_no_spatial_operator_exists": false,
+    "local_spatial_or_kinetic_operators_exist": true,
+    "physical_prediction_unsealed": false,
+    "producer_code_or_sibling_repository_absence_claimed": false,
+    "registered_accepted_same_domain_chain_on_scanned_surface_exists": false,
+    "reopen_condition": "Register and independently verify a source packet binding one complete twelve-port translation operator to a digest-identical physical readout with frame and boost custody.",
+    "twelve_port_response_and_readback_exist": true,
+    "unregistered_equivalent_semantics_ruled_out": false
+  },
+  "implementation_pins": {
+    "independent_verifier": {
+      "bytes": 27401,
+      "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
+      "sha256": "sha256:a25d6861988d82e086066e7a7182c678aa757d6b9241a6bc6710a0782f9ee9e3"
+    },
+    "mutation_tests": {
+      "bytes": 12715,
+      "path": "tests/test_source_operator_inventory.py",
+      "sha256": "sha256:4b3b2b806ef9ddf7df87ba675bd216e0cf6983861e728d05991dafea2497c104"
+    },
+    "producer": {
+      "bytes": 29506,
+      "path": "oph_fpe/dynamics/source_operator_inventory.py",
+      "sha256": "sha256:5370a5b23befc77bfa36c1cd9ac456f01adcc98922f30e91b3fe7136a5877f68"
+    }
+  },
+  "issue": 655,
+  "noncurrent_path_catalog": {
+    "EXTERNAL_OR_COMPARISON_DATA": {
+      "path_count": 40,
+      "path_list_sha256": "sha256:3c3c6b3ed06cc182077ac776f42ee1c546d3770c51e306d75f022099b2b251ca",
+      "semantic_payloads_scanned": false
+    },
+    "IMPORTED_NONNATIVE": {
+      "path_count": 30,
+      "path_list_sha256": "sha256:1dd2cd51990800a6d2923aff24d4982f7fc2b75fc743e916a0199e74bccecadd",
+      "semantic_payloads_scanned": false
+    },
+    "LEGACY_EARNED_RUN": {
+      "path_count": 895,
+      "path_list_sha256": "sha256:8f697c378761fc002eb9f8e92a3a9e11a8633075dd1b7e608adfac621619999f",
+      "semantic_payloads_scanned": false
+    }
+  },
+  "receipt_sha256": "sha256:b7cad69ba0558f6eeead376b8df5b9b96ecce9a71bdcad997d813ab28bafb1ba",
+  "schema": "oph.source_operator_ancestry_inventory.v1",
+  "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding the recursive inventory and parent bridge outputs; legacy, imported, and external/comparison paths counted only",
+  "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
+  "tracked_serialized_data_catalog": {
+    "content_index_row_count_excluding_recursive_outputs": 1002,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:8bd3c4a3a75a7e28219ae7f4ace209e49c25360e868beb4c55dd4a234ee290a6",
+    "path_count_including_declared_recursive_outputs": 1004,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:9404272408c77dd99ae4048eda231c97a1ce34c94acfe6348c6930e6cedb5197",
+    "provenance_counts": {
+      "CURRENT_SIMULATOR_ARTIFACT": 39,
+      "EXTERNAL_OR_COMPARISON_DATA": 40,
+      "IMPORTED_NONNATIVE": 30,
+      "LEGACY_EARNED_RUN": 895
+    },
+    "unstaged_current_canonical_inputs": [],
+    "untracked_data_paths_excluding_declared_recursive_outputs": []
+  }
+}
