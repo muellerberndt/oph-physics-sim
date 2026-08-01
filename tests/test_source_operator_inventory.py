@@ -182,6 +182,95 @@ def test_near_candidates_remain_separate_objects() -> None:
         "emitted_current_fixed_matching_family_has_no_qualifying_carrier_set_quotient": True,
     }
 
+    feasibility = _row(
+        REPORT,
+        "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
+    )
+    assert feasibility["disposition"] == (
+        "CURRENT_MATCHING_COVER_OBSTRUCTED__DECLARED_ALGEBRAIC_CONTROL_"
+        "NOT_SOURCE_EMITTED_OR_PHYSICAL"
+    )
+    assert feasibility["critical_bridge_evidence"] == {
+        "emitted_antipodal_pair_count": 6,
+        "emitted_semiconjugate_cover_can_satisfy_inverse_law": False,
+        "emitted_algebraic_control_site_domain": "(Z/3Z)^6",
+        "emitted_algebraic_control_site_count": 729,
+        "emitted_algebraic_control_A5_order": 60,
+        "emitted_algebraic_control_inverse_and_covariance": True,
+        "emitted_control_source_transition_event": False,
+        "emitted_control_repair_generated": False,
+        "emitted_control_source_selected_site_completion": False,
+        "emitted_control_spatial_translation": False,
+        "emitted_control_physical_readout": False,
+        "emitted_control_physical_prediction": False,
+        "emitted_requested_source_transport_ledger": False,
+        "emitted_requested_twelve_directed_maps": False,
+        "emitted_requested_antipodal_inverse": False,
+        "emitted_requested_A5_covariance": False,
+    }
+
+    coefficients = _row(
+        REPORT,
+        "data/refinement/a5_biposh_dual_operator_coefficients.json",
+    )
+    assert coefficients["disposition"] == (
+        "FULL_BIPOSH_COEFFICIENT_BUNDLE__SUPPORTING_OPERATOR_FINGERPRINT_"
+        "ONLY_NOT_PHYSICAL"
+    )
+    assert coefficients["critical_bridge_evidence"] == {
+        "emitted_coefficient_kind": "finite stiffness-form operator fingerprint",
+        "emitted_case_count": 8,
+        "emitted_coefficient_count_per_case": 5929,
+        "forbidden_top_level_claim_fields_checked": list(
+            inventory.BIPOSH_COEFFICIENT_FORBIDDEN_CLAIM_FIELDS
+        ),
+        "forbidden_top_level_claim_fields_present": [],
+        "emitted_supporting_bundle_has_separate_status": False,
+        "emitted_physical_promotion": False,
+    }
+
+    biposh = _row(
+        REPORT,
+        "data/refinement/a5_biposh_dual_operator_receipt.json",
+    )
+    assert biposh["disposition"] == (
+        "FINITE_DUAL_OPERATOR_FINGERPRINT__OPERATOR_SELECTION_CONTINUUM_"
+        "AND_PHYSICAL_COVARIANCE_OPEN"
+    )
+    assert biposh["critical_bridge_evidence"] == {
+        "emitted_base_628_operator_match": True,
+        "emitted_base_labelled_face_presentation_matches_parent": True,
+        "emitted_base_edge_set_matches_face_presentation": True,
+        "emitted_base_equal_seam_operator_bounded_reconstructed": True,
+        "emitted_continuum_residual_decided": False,
+        "emitted_equal_seam_operator_source_selected": False,
+        "emitted_global_frame_quotient_visible": False,
+        "emitted_physical_covariance_selected": False,
+        "emitted_physical_prediction": False,
+        "emitted_physical_release_ensemble_selected": False,
+        "emitted_physical_repair_law_selected": False,
+        "emitted_promotion_allowed": False,
+        "emitted_refinement_extension_source_selected": False,
+        "emitted_screen_to_sky_readout_selected": False,
+        "emitted_comparison_data_used": False,
+    }
+
+
+@pytest.mark.parametrize(
+    "claim_field",
+    inventory.BIPOSH_COEFFICIENT_FORBIDDEN_CLAIM_FIELDS,
+)
+def test_biposh_coefficient_bundle_rejects_top_level_claim_fields(
+    claim_field: str,
+) -> None:
+    path = "data/refinement/a5_biposh_dual_operator_coefficients.json"
+    bundle = json.loads((inventory.REPOSITORY_ROOT / path).read_text("utf-8"))
+    bundle[claim_field] = False
+    with pytest.raises(ValueError, match="forbidden claim fields"):
+        inventory._critical_evidence(path, bundle)
+    with pytest.raises(ValueError, match="forbidden claim fields"):
+        independent._evidence(path, bundle)
+
 
 def test_admission_counts_and_boundary_are_scope_qualified() -> None:
     admission = REPORT["bridge_admission_contract"]
@@ -216,6 +305,8 @@ def test_admission_counts_and_boundary_are_scope_qualified() -> None:
     [
         "disposition",
         "critical_evidence",
+        "transport_feasibility_promotion",
+        "biposh_promotion",
         "schema",
         "scope",
         "issue",
@@ -237,6 +328,20 @@ def test_rehashed_semantic_mutations_fail_independent_verification(
         charged["critical_bridge_evidence"][
             "emitted_current_lift_source_selected"
         ] = True
+    elif mutation == "transport_feasibility_promotion":
+        feasibility = _row(
+            report,
+            "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
+        )
+        feasibility["critical_bridge_evidence"][
+            "emitted_requested_source_transport_ledger"
+        ] = True
+    elif mutation == "biposh_promotion":
+        biposh = _row(
+            report,
+            "data/refinement/a5_biposh_dual_operator_receipt.json",
+        )
+        biposh["critical_bridge_evidence"]["emitted_promotion_allowed"] = True
     elif mutation == "schema":
         charged["schema"] = "oph.mutated.v1"
     elif mutation == "scope":

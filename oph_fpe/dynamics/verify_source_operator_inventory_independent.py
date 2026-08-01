@@ -18,7 +18,11 @@ from pathlib import Path
 import subprocess
 from typing import Any, Iterable, Mapping, Sequence
 
+from oph_fpe.cosmology import verify_a5_biposh_refinement_independent
 from oph_fpe.dynamics import verify_vertex12_atomic_port_transfer_independent
+from oph_fpe.dynamics import (
+    verify_vertex12_directed_transport_feasibility_independent,
+)
 
 
 SCHEMA = "oph.source_operator_ancestry_inventory.v1"
@@ -107,6 +111,16 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     "data/quantum/icosahedral_chsh_candidate_receipt.json": _contract(
         "oph.icosahedral_chsh_candidate.v1", "EXACT_PROJECTIVE_BRANCH_CANDIDATE__TWO_WING_COMPLETED_RECORD_SOURCE_PRODUCER_MISSING", "PROJECTIVE_QUANTUM_CANDIDATE_COMPLETED_RECORD_PRODUCER_MISSING"
     ),
+    "data/refinement/a5_biposh_dual_operator_coefficients.json": _contract(
+        "oph.a5-biposh-dual-operator-coefficients.v1",
+        None,
+        "FULL_BIPOSH_COEFFICIENT_BUNDLE__SUPPORTING_OPERATOR_FINGERPRINT_ONLY_NOT_PHYSICAL",
+    ),
+    "data/refinement/a5_biposh_dual_operator_receipt.json": _contract(
+        "oph.a5-biposh-dual-operator-refinement.v1",
+        "FINITE_DUAL_OPERATOR_FINGERPRINT_ATTAINED__CONTINUUM_RESIDUAL_AND_PHYSICAL_COVARIANCE_OPEN",
+        "FINITE_DUAL_OPERATOR_FINGERPRINT__OPERATOR_SELECTION_CONTINUUM_AND_PHYSICAL_COVARIANCE_OPEN",
+    ),
     "data/refinement/physical_birefinement_preflight.json": _contract(
         "oph.refinement.physical-birefinement-preflight.v1", "SOURCE_PRODUCER_MISSING", "PHYSICAL_BIREFINEMENT_SOURCE_PRODUCER_MISSING"
     ),
@@ -129,6 +143,11 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
         "oph.vertex12-atomic-port-transfer-subpacket.v1",
         "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN",
         "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
+    ),
+    "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json": _contract(
+        "oph.vertex12-directed-transport-feasibility.v1",
+        "EXACT_SEMICONJUGATE_COVER_OBSTRUCTION_FOR_CURRENT_SOURCE_MATCHINGS__ORIENTED_SOURCE_TRANSITION_LAW_OPEN",
+        "CURRENT_MATCHING_COVER_OBSTRUCTED__DECLARED_ALGEBRAIC_CONTROL_NOT_SOURCE_EMITTED_OR_PHYSICAL",
     ),
     INVENTORY_RELATIVE_PATH: _contract(
         SCHEMA, STATUS, "RECURSIVE_INVENTORY_OUTPUT_EXCLUDED_FROM_SEMANTIC_SCAN"
@@ -154,6 +173,19 @@ POSITIVE_SIGNAL_KEYS = (
     "FZ11_FORCED_EXCLUSIVE_RECEIPT",
     "PHYSICAL_CURRENT_SOURCE_BRIDGE_RECEIPT",
     "A2_HOLONOMY_SOURCE_BRIDGE_RECEIPT",
+)
+
+BIPOSH_COEFFICIENT_FORBIDDEN_CLAIM_FIELDS = (
+    "status",
+    "physical_prediction",
+    "physical_covariance_selected",
+    "promotion_allowed",
+    "continuum_residual_decided",
+    "source_selected",
+    "physical_promotion_allowed",
+    "scientific_promotion_allowed",
+    "physical_repair_law_selected",
+    "screen_to_sky_readout_selected",
 )
 
 
@@ -399,6 +431,53 @@ def _evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | None:
                 "current_fixed_matching_family_has_no_qualifying_carrier_set_quotient"
             ),
         }
+    if path == "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json":
+        obstruction = value.get("exact_semiconjugacy_obstruction", {})
+        control = value.get("algebraic_transport_positive_control", {})
+        requested = value.get("requested_directed_transport_ledger", {})
+        return {
+            "emitted_antipodal_pair_count": obstruction.get(
+                "antipodal_pair_count"
+            ),
+            "emitted_semiconjugate_cover_can_satisfy_inverse_law": obstruction.get(
+                "semiconjugate_noncollapsed_site_cover_can_satisfy_inverse_law"
+            ),
+            "emitted_algebraic_control_site_domain": control.get("site_domain"),
+            "emitted_algebraic_control_site_count": control.get("site_count"),
+            "emitted_algebraic_control_A5_order": control.get(
+                "proper_A5_port_action_order"
+            ),
+            "emitted_algebraic_control_inverse_and_covariance": bool(
+                control.get("all_six_antipodal_pairs_are_exact_inverses") is True
+                and control.get("exact_covariance_attained") is True
+            ),
+            "emitted_control_source_transition_event": control.get(
+                "source_transition_event_emitted"
+            ),
+            "emitted_control_repair_generated": control.get("repair_generated"),
+            "emitted_control_source_selected_site_completion": control.get(
+                "source_selected_site_completion"
+            ),
+            "emitted_control_spatial_translation": control.get(
+                "spatial_translation"
+            ),
+            "emitted_control_physical_readout": control.get("physical_readout"),
+            "emitted_control_physical_prediction": control.get(
+                "physical_prediction"
+            ),
+            "emitted_requested_source_transport_ledger": requested.get(
+                "attained_from_current_source_emissions"
+            ),
+            "emitted_requested_twelve_directed_maps": requested.get(
+                "twelve_event_emitted_directed_maps_attained"
+            ),
+            "emitted_requested_antipodal_inverse": requested.get(
+                "exact_T_antipode_p_equals_inverse_T_p_attained"
+            ),
+            "emitted_requested_A5_covariance": requested.get(
+                "site_A5_action_and_exact_covariance_attained"
+            ),
+        }
     if path == "data/a2_holonomy/a2_holonomy_current_selector_report.json":
         return {
             "emitted_status": value.get("status"),
@@ -411,6 +490,81 @@ def _evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | None:
             "emitted_physical_sky_readout_selected": decision.get("physical_sky_readout_selected"),
             "emitted_physical_angular_prediction": decision.get("physical_angular_prediction"),
             "emitted_repair_schedule_source_selected": decision.get("repair_schedule_source_selected"),
+        }
+    if path == "data/refinement/a5_biposh_dual_operator_coefficients.json":
+        forbidden_claim_fields = sorted(
+            key
+            for key in BIPOSH_COEFFICIENT_FORBIDDEN_CLAIM_FIELDS
+            if key in value
+        )
+        if forbidden_claim_fields:
+            raise ValueError(
+                "BipoSH coefficient bundle gained forbidden claim fields: "
+                f"{forbidden_claim_fields}"
+            )
+        return {
+            "emitted_coefficient_kind": value.get("coefficient_kind"),
+            "emitted_case_count": value.get("case_count"),
+            "emitted_coefficient_count_per_case": value.get(
+                "coefficient_count_per_case"
+            ),
+            "forbidden_top_level_claim_fields_checked": list(
+                BIPOSH_COEFFICIENT_FORBIDDEN_CLAIM_FIELDS
+            ),
+            "forbidden_top_level_claim_fields_present": forbidden_claim_fields,
+            "emitted_supporting_bundle_has_separate_status": (
+                "status" in value
+            ),
+            "emitted_physical_promotion": bool(forbidden_claim_fields),
+        }
+    if path == "data/refinement/a5_biposh_dual_operator_receipt.json":
+        bridge = value.get("bounded_repair_generator_bridge", {})
+        decision = value.get("selection_decision", {})
+        source_scope = value.get("source_scope", {})
+        return {
+            "emitted_base_628_operator_match": bridge.get(
+                "base_carrier_operator_matches_bounded_reconstructed_one_atom_mean_generator_up_to_scale"
+            ),
+            "emitted_base_labelled_face_presentation_matches_parent": bridge.get(
+                "base_carrier_labelled_face_presentation_matches_parent"
+            ),
+            "emitted_base_edge_set_matches_face_presentation": bridge.get(
+                "base_carrier_edge_set_matches_face_presentation"
+            ),
+            "emitted_base_equal_seam_operator_bounded_reconstructed": decision.get(
+                "base_equal_seam_operator_bounded_reconstructed"
+            ),
+            "emitted_continuum_residual_decided": decision.get(
+                "continuum_residual_decided"
+            ),
+            "emitted_equal_seam_operator_source_selected": decision.get(
+                "equal_seam_operator_source_selected"
+            ),
+            "emitted_global_frame_quotient_visible": decision.get(
+                "global_frame_quotient_visible"
+            ),
+            "emitted_physical_covariance_selected": decision.get(
+                "physical_covariance_selected"
+            ),
+            "emitted_physical_prediction": decision.get("physical_prediction"),
+            "emitted_physical_release_ensemble_selected": decision.get(
+                "physical_release_ensemble_selected"
+            ),
+            "emitted_physical_repair_law_selected": decision.get(
+                "physical_repair_law_selected"
+            ),
+            "emitted_promotion_allowed": decision.get("promotion_allowed"),
+            "emitted_refinement_extension_source_selected": decision.get(
+                "refinement_tower_equal_seam_extension_source_selected"
+            ),
+            "emitted_screen_to_sky_readout_selected": decision.get(
+                "screen_to_sky_readout_selected"
+            ),
+            "emitted_comparison_data_used": bool(
+                source_scope.get("external_comparison_data_used") is True
+                or source_scope.get("sky_data_used") is True
+                or source_scope.get("target_values_used") is True
+            ),
         }
     return None
 
@@ -449,6 +603,26 @@ def _rows(paths: Sequence[str]) -> list[dict[str, Any]]:
                 raise ValueError(
                     "vertex12 packet failed independent verification: "
                     f"{verification.get('reasons')}"
+                )
+        if path == "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json":
+            verification = (
+                verify_vertex12_directed_transport_feasibility_independent.verify_report(
+                    value
+                )
+            )
+            if verification.get("receipt") is not True:
+                raise ValueError(
+                    "vertex12 directed-transport feasibility packet failed "
+                    "independent verification: "
+                    f"{verification.get('reasons')}"
+                )
+        if path == "data/refinement/a5_biposh_dual_operator_receipt.json":
+            verification = (
+                verify_a5_biposh_refinement_independent.verify_packet()
+            )
+            if verification.get("status") != "PASS":
+                raise ValueError(
+                    "A5 BipoSH dual-operator packet failed independent verification"
                 )
         result.append({
             "path": path,

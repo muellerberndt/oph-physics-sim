@@ -131,7 +131,7 @@
       "raw_pin": {
         "bytes": 32853,
         "path": "data/common_reserve/producer_capability_matrix.json",
-        "sha256": "sha256:51b624ab6fe21afbc071023071c278dd4833a318237797f7a461e1499a6dc099"
+        "sha256": "sha256:9d2374a3bed01fc039adaeabdddbfd5d27a62bd0e1783ed6389a220eefe4665d"
       },
       "schema": "oph.common-reserve.capability-matrix.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -383,13 +383,74 @@
       "status": "EXACT_PROJECTIVE_BRANCH_CANDIDATE__TWO_WING_COMPLETED_RECORD_SOURCE_PRODUCER_MISSING"
     },
     {
+      "critical_bridge_evidence": {
+        "emitted_case_count": 8,
+        "emitted_coefficient_count_per_case": 5929,
+        "emitted_coefficient_kind": "finite stiffness-form operator fingerprint",
+        "emitted_physical_promotion": false,
+        "emitted_supporting_bundle_has_separate_status": false,
+        "forbidden_top_level_claim_fields_checked": [
+          "status",
+          "physical_prediction",
+          "physical_covariance_selected",
+          "promotion_allowed",
+          "continuum_residual_decided",
+          "source_selected",
+          "physical_promotion_allowed",
+          "scientific_promotion_allowed",
+          "physical_repair_law_selected",
+          "screen_to_sky_readout_selected"
+        ],
+        "forbidden_top_level_claim_fields_present": []
+      },
+      "disposition": "FULL_BIPOSH_COEFFICIENT_BUNDLE__SUPPORTING_OPERATOR_FINGERPRINT_ONLY_NOT_PHYSICAL",
+      "path": "data/refinement/a5_biposh_dual_operator_coefficients.json",
+      "raw_pin": {
+        "bytes": 2208712,
+        "path": "data/refinement/a5_biposh_dual_operator_coefficients.json",
+        "sha256": "sha256:125963bd657ddf6fbeb5b22589935261dd0504455f4ce469e1ddd9db972e859c"
+      },
+      "schema": "oph.a5-biposh-dual-operator-coefficients.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_base_628_operator_match": true,
+        "emitted_base_edge_set_matches_face_presentation": true,
+        "emitted_base_equal_seam_operator_bounded_reconstructed": true,
+        "emitted_base_labelled_face_presentation_matches_parent": true,
+        "emitted_comparison_data_used": false,
+        "emitted_continuum_residual_decided": false,
+        "emitted_equal_seam_operator_source_selected": false,
+        "emitted_global_frame_quotient_visible": false,
+        "emitted_physical_covariance_selected": false,
+        "emitted_physical_prediction": false,
+        "emitted_physical_release_ensemble_selected": false,
+        "emitted_physical_repair_law_selected": false,
+        "emitted_promotion_allowed": false,
+        "emitted_refinement_extension_source_selected": false,
+        "emitted_screen_to_sky_readout_selected": false
+      },
+      "disposition": "FINITE_DUAL_OPERATOR_FINGERPRINT__OPERATOR_SELECTION_CONTINUUM_AND_PHYSICAL_COVARIANCE_OPEN",
+      "path": "data/refinement/a5_biposh_dual_operator_receipt.json",
+      "raw_pin": {
+        "bytes": 88576,
+        "path": "data/refinement/a5_biposh_dual_operator_receipt.json",
+        "sha256": "sha256:299864ffef2c9d30d48644fd4b7514e9aa786fac709215661c0f0d280838b1fe"
+      },
+      "schema": "oph.a5-biposh-dual-operator-refinement.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "FINITE_DUAL_OPERATOR_FINGERPRINT_ATTAINED__CONTINUUM_RESIDUAL_AND_PHYSICAL_COVARIANCE_OPEN"
+    },
+    {
       "critical_bridge_evidence": null,
       "disposition": "PHYSICAL_BIREFINEMENT_SOURCE_PRODUCER_MISSING",
       "path": "data/refinement/physical_birefinement_preflight.json",
       "raw_pin": {
         "bytes": 11609,
         "path": "data/refinement/physical_birefinement_preflight.json",
-        "sha256": "sha256:5791f42c0fb0eafb3505790e257500b24c9b06235fecb4002911919bdf853d98"
+        "sha256": "sha256:0abc4ac7562a8d14ec43c5559e01578ebfe9b93f54bbc3592d717957cd7f970c"
       },
       "schema": "oph.refinement.physical-birefinement-preflight.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -495,16 +556,46 @@
       "raw_pin": {
         "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:026de811997136bc94d21897503ea993f340b0abdab7a21e0abdd079f1b7f793"
+        "sha256": "sha256:5696fd94caa29801c573ff7fbc501b14c1dfd82b3d52eada9009415f34b4ea0f"
       },
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "semantic_scan_excluded_as_recursive_output": false,
       "status": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_algebraic_control_A5_order": 60,
+        "emitted_algebraic_control_inverse_and_covariance": true,
+        "emitted_algebraic_control_site_count": 729,
+        "emitted_algebraic_control_site_domain": "(Z/3Z)^6",
+        "emitted_antipodal_pair_count": 6,
+        "emitted_control_physical_prediction": false,
+        "emitted_control_physical_readout": false,
+        "emitted_control_repair_generated": false,
+        "emitted_control_source_selected_site_completion": false,
+        "emitted_control_source_transition_event": false,
+        "emitted_control_spatial_translation": false,
+        "emitted_requested_A5_covariance": false,
+        "emitted_requested_antipodal_inverse": false,
+        "emitted_requested_source_transport_ledger": false,
+        "emitted_requested_twelve_directed_maps": false,
+        "emitted_semiconjugate_cover_can_satisfy_inverse_law": false
+      },
+      "disposition": "CURRENT_MATCHING_COVER_OBSTRUCTED__DECLARED_ALGEBRAIC_CONTROL_NOT_SOURCE_EMITTED_OR_PHYSICAL",
+      "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
+      "raw_pin": {
+        "bytes": 55183,
+        "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
+        "sha256": "sha256:b3326b1bf7635f99dddcb952eb150735b1a1a6a1d5d7f4b5b27a6e7b6ac6a46f"
+      },
+      "schema": "oph.vertex12-directed-transport-feasibility.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "EXACT_SEMICONJUGATE_COVER_OBSTRUCTION_FOR_CURRENT_SOURCE_MATCHINGS__ORIENTED_SOURCE_TRANSITION_LAW_OPEN"
     }
   ],
   "current_canonical_json_contract_scan": {
-    "current_canonical_json_path_count_excluding_recursive_outputs": 28,
-    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:2af981772c10c8087f6b05e762e99a6979ab83119f139460e7784cf3af20485d",
+    "current_canonical_json_path_count_excluding_recursive_outputs": 31,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:fb0ccb23fdcc11d9f83f7213a93c57c9db4e4b8e0fea24c6fa7a1d725683891b",
     "positive_promotion_signal_rows_excluding_recursive_outputs": [],
     "recursive_output_paths_excluded": [
       "data/repair_closure/port_repair_propagation_bridge_receipt.json",
@@ -524,19 +615,19 @@
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 31266,
+      "bytes": 39635,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:a2b13d259d745e13a5a6928593f8a01207d2275fcffcb76a23fadc05c47d4fef"
+      "sha256": "sha256:fe05c9d94d2035a45e679a72c162550cabe6b56c630acf9d8dab408e06fd86b2"
     },
     "mutation_tests": {
-      "bytes": 13760,
+      "bytes": 18244,
       "path": "tests/test_source_operator_inventory.py",
-      "sha256": "sha256:12224c83619e8c05e01df2924cf9a20a44901c8420596a46d62dbb5e33ce7606"
+      "sha256": "sha256:f284e4d309bcda968d180cfd9a517d04c9b07a2867a548affc8dd20cafc9f075"
     },
     "producer": {
-      "bytes": 33341,
+      "bytes": 41710,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:d55b55aed591074f295c3454a02a55c2cdc1c070e226ee5e75608f00b51e493b"
+      "sha256": "sha256:d3772cdf707c4b56b064565280161d8c30a97a34fe39e1d0748a12fef8e800ba"
     }
   },
   "issue": 655,
@@ -557,17 +648,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:f9086a7e0319f88d845daa0843cbe9974a35aa5364b379957596d5176bd6ff99",
+  "receipt_sha256": "sha256:85905992591f4a1df999fe18aa2fd0fbfbb795fa5c66ebd68e64fef5a4cfb8ac",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding the recursive inventory and parent bridge outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1003,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:c9c7282f51c57815bddd4213f674e7ff750955d20f75514901df46f0b6623df0",
-    "path_count_including_declared_recursive_outputs": 1005,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:878e6f829b4b0762697bcd5efe56c125b0953c2322685dd1902a983f8688ef09",
+    "content_index_row_count_excluding_recursive_outputs": 1006,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:287d6eb74c9b55ad4240dafcc40c3388895a59a5d64d15853beb614d8a9d1025",
+    "path_count_including_declared_recursive_outputs": 1008,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:aeb38c074283c02b3756eed6fb89f1d75dd9c91d832f742dd824692346466d30",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 40,
+      "CURRENT_SIMULATOR_ARTIFACT": 43,
       "EXTERNAL_OR_COMPARISON_DATA": 40,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895
