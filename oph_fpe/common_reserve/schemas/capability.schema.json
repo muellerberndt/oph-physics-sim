@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph/common-reserve/capability.v1.json",
+  "title": "OPH common-reserve CR-0 capability matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "issue",
+    "stage",
+    "status",
+    "scientific_promotion_allowed",
+    "allowed_classifications",
+    "capability_order",
+    "audit_scope",
+    "sources",
+    "target_ancestry",
+    "raw_twelve_port_response_probe",
+    "capabilities",
+    "classification_counts",
+    "lane_stop_rules",
+    "claim_boundary",
+    "payload_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "oph.common-reserve.capability-matrix.v1"},
+    "issue": {"const": 660},
+    "stage": {"const": "CR-0"},
+    "status": {"const": "CAPABILITY_PROBE_COMPLETE__SCIENTIFIC_PROMOTION_DISABLED"},
+    "scientific_promotion_allowed": {"const": false},
+    "allowed_classifications": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "AVAILABLE_SIMULATOR_NATIVE"},
+        {"const": "AVAILABLE_CONDITIONAL"},
+        {"const": "AVAILABLE_CONTROL_ONLY"},
+        {"const": "MISSING"},
+        {"const": "AMBIGUOUS"}
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "capability_order": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "physical_quotient"},
+        {"const": "primitive_repair_law"},
+        {"const": "boundary_sector"},
+        {"const": "scalar_register"},
+        {"const": "protected_z6_reserve"},
+        {"const": "scalar_reserve_coregistration"},
+        {"const": "source_ensemble_action"},
+        {"const": "refinement_tower_physical_scale_ratios"},
+        {"const": "support_geometry"},
+        {"const": "full_half_collars"},
+        {"const": "raw_twelve_port_response"}
+      ],
+      "items": false,
+      "minItems": 11,
+      "maxItems": 11
+    },
+    "audit_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "python_tree", "scope_boundary"],
+      "properties": {
+        "repository": {"const": "muellerberndt/oph-physics-sim"},
+        "python_tree": {"$ref": "#/$defs/tree"},
+        "scope_boundary": {"type": "string", "minLength": 1}
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/pin"},
+      "minProperties": 16,
+      "maxProperties": 16
+    },
+    "target_ancestry": {"$ref": "#/$defs/ancestry"},
+    "raw_twelve_port_response_probe": {"$ref": "#/$defs/responseProbe"},
+    "capabilities": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/capability"},
+      "minItems": 11,
+      "maxItems": 11
+    },
+    "classification_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AVAILABLE_SIMULATOR_NATIVE",
+        "AVAILABLE_CONDITIONAL",
+        "AVAILABLE_CONTROL_ONLY",
+        "MISSING",
+        "AMBIGUOUS"
+      ],
+      "properties": {
+        "AVAILABLE_SIMULATOR_NATIVE": {"type": "integer", "minimum": 0},
+        "AVAILABLE_CONDITIONAL": {"type": "integer", "minimum": 0},
+        "AVAILABLE_CONTROL_ONLY": {"type": "integer", "minimum": 0},
+        "MISSING": {"type": "integer", "minimum": 0},
+        "AMBIGUOUS": {"type": "integer", "minimum": 0}
+      }
+    },
+    "lane_stop_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reserve_lane_blocked",
+        "cocycle_lane_blocked",
+        "screen_lane_blocked",
+        "raw_response_archived_for_later_bridge",
+        "independent_internal_repair_audits_may_continue",
+        "large_simulation_authorized",
+        "cr1_or_later_implemented_here"
+      ],
+      "properties": {
+        "reserve_lane_blocked": {"const": true},
+        "cocycle_lane_blocked": {"const": true},
+        "screen_lane_blocked": {"const": true},
+        "raw_response_archived_for_later_bridge": {"const": true},
+        "independent_internal_repair_audits_may_continue": {"const": true},
+        "large_simulation_authorized": {"const": false},
+        "cr1_or_later_implemented_here": {"const": false}
+      }
+    },
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "payload_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "tree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "file_count", "tree_sha256"],
+      "properties": {
+        "root": {"const": "oph_fpe"},
+        "file_count": {"type": "integer", "minimum": 1},
+        "tree_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "ancestry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root_modules",
+        "visited_module_count",
+        "visited_modules_sha256",
+        "import_edges_sha256",
+        "forbidden_module_prefixes",
+        "forbidden_import_paths",
+        "forbidden_literal_pattern_ids",
+        "forbidden_literal_hits",
+        "passed",
+        "scope"
+      ],
+      "properties": {
+        "root_modules": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "visited_module_count": {"type": "integer", "minimum": 1},
+        "visited_modules_sha256": {"$ref": "#/$defs/sha256"},
+        "import_edges_sha256": {"$ref": "#/$defs/sha256"},
+        "forbidden_module_prefixes": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "forbidden_import_paths": {"type": "array", "items": {"type": "string"}, "maxItems": 0},
+        "forbidden_literal_pattern_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+        "forbidden_literal_hits": {"type": "array", "items": {"type": "string"}, "maxItems": 0},
+        "passed": {"const": true},
+        "scope": {"type": "string", "minLength": 1}
+      }
+    },
+    "responseProbe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semantic_id",
+        "source_artifact_schema",
+        "source_artifact_sha256",
+        "carrier_manifest_canonical_sha256",
+        "port_order",
+        "response_operator",
+        "response_source",
+        "antipode_port_map",
+        "homogeneous_filter_coefficients",
+        "recurrence_trace_payload",
+        "recurrence_trace_payload_sha256",
+        "runtime_response_source",
+        "finite_simulator_response_identified",
+        "current_lift_source_selected",
+        "physical_A_T_identification"
+      ],
+      "properties": {
+        "semantic_id": {"const": "twelve_port_source_bound_charged_response.v1"},
+        "source_artifact_schema": {"const": "oph.charged_response_semantic_artifact.v3"},
+        "source_artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "carrier_manifest_canonical_sha256": {"$ref": "#/$defs/sha256"},
+        "port_order": {"type": "array", "items": {"type": "string"}, "minItems": 12, "maxItems": 12, "uniqueItems": true},
+        "response_operator": {"const": "negative_graph_antipode_involution"},
+        "response_source": {"const": "target_blind_maximal_distance_impulse_readback"},
+        "antipode_port_map": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 11}, "minItems": 12, "maxItems": 12, "uniqueItems": true},
+        "homogeneous_filter_coefficients": {
+          "type": "array",
+          "prefixItems": [
+            {"const": "1"},
+            {"const": "-1/2"},
+            {"const": "-2/5"},
+            {"const": "1/10"}
+          ],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "recurrence_trace_payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["port_order", "adjacency_powers_k0_through_k3", "distance_rows", "farthest_port_map"],
+          "properties": {
+            "port_order": {"type": "array", "items": {"type": "string"}, "minItems": 12, "maxItems": 12, "uniqueItems": true},
+            "adjacency_powers_k0_through_k3": {"type": "array", "minItems": 4, "maxItems": 4},
+            "distance_rows": {"type": "array", "minItems": 12, "maxItems": 12},
+            "farthest_port_map": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 11}, "minItems": 12, "maxItems": 12, "uniqueItems": true}
+          }
+        },
+        "recurrence_trace_payload_sha256": {"$ref": "#/$defs/sha256"},
+        "runtime_response_source": {"const": "finite_unitary_carrier_channel"},
+        "finite_simulator_response_identified": {"const": true},
+        "current_lift_source_selected": {"const": false},
+        "physical_A_T_identification": {"const": false}
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "label",
+        "classification",
+        "required_evidence",
+        "verified_evidence",
+        "missing_evidence",
+        "source_pin_ids",
+        "producer_module_roots",
+        "machine_check_ids",
+        "machine_checks_passed",
+        "theory_binding_status",
+        "downstream_effect",
+        "adapter_promotion_allowed"
+      ],
+      "properties": {
+        "capability_id": {"type": "string", "minLength": 1},
+        "label": {"type": "string", "minLength": 1},
+        "classification": {"enum": ["AVAILABLE_SIMULATOR_NATIVE", "AVAILABLE_CONDITIONAL", "AVAILABLE_CONTROL_ONLY", "MISSING", "AMBIGUOUS"]},
+        "required_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+        "verified_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "missing_evidence": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "source_pin_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+        "producer_module_roots": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "machine_check_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": true},
+        "machine_checks_passed": {"const": true},
+        "theory_binding_status": {"type": "string", "minLength": 1},
+        "downstream_effect": {"type": "string", "minLength": 1},
+        "adapter_promotion_allowed": {"const": false}
+      }
+    }
+  }
+}

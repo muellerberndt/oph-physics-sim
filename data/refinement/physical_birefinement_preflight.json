@@ -1,0 +1,310 @@
+{
+  "acceptance_requirements": [
+    {
+      "blocking_capability_ids": [
+        "physical_quotient",
+        "support_geometry"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "raw_twelve_port_response",
+          "classification": "AVAILABLE_SIMULATOR_NATIVE",
+          "native_producer_admitted": true,
+          "theory_binding_status": "NATIVE_RESPONSE_TRACE__A_T_BRIDGE_OPEN"
+        },
+        {
+          "capability_id": "physical_quotient",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_ATTAINED_PHYSICAL_QUOTIENT_CERTIFICATE"
+        },
+        {
+          "capability_id": "support_geometry",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "LOCAL_ATLAS_EXISTS__SCREEN_GEOMETRY_OBJECT_MISSING"
+        }
+      ],
+      "description": "Carrier and support objects with a carrier-to-support metric",
+      "requirement_id": "carrier_support_metric",
+      "requirement_satisfied": false
+    },
+    {
+      "blocking_capability_ids": [
+        "physical_quotient",
+        "refinement_tower_physical_scale_ratios"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "physical_quotient",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_ATTAINED_PHYSICAL_QUOTIENT_CERTIFICATE"
+        },
+        {
+          "capability_id": "refinement_tower_physical_scale_ratios",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_COMMON_PHYSICAL_BIREFINEMENT_TOWER"
+        }
+      ],
+      "description": "Exact commuting R2, R3, and R6 maps on quotient states and observable algebras",
+      "requirement_id": "quotient_observable_birefinement",
+      "requirement_satisfied": false
+    },
+    {
+      "blocking_capability_ids": [
+        "physical_quotient",
+        "scalar_register",
+        "source_ensemble_action",
+        "refinement_tower_physical_scale_ratios"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "physical_quotient",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_ATTAINED_PHYSICAL_QUOTIENT_CERTIFICATE"
+        },
+        {
+          "capability_id": "scalar_register",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_NATIVE_COMMON_RESERVE_SCALAR_REGISTER"
+        },
+        {
+          "capability_id": "source_ensemble_action",
+          "classification": "AVAILABLE_CONTROL_ONLY",
+          "native_producer_admitted": false,
+          "theory_binding_status": "CONVENTIONAL_E1_CONTROL__SOURCE_SELECTION_OPEN"
+        },
+        {
+          "capability_id": "refinement_tower_physical_scale_ratios",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_COMMON_PHYSICAL_BIREFINEMENT_TOWER"
+        }
+      ],
+      "description": "One quotient-visible scalar with projector, source ensemble, precision operator, and route covariances",
+      "requirement_id": "common_scalar_covariance_family",
+      "requirement_satisfied": false
+    },
+    {
+      "blocking_capability_ids": [
+        "support_geometry",
+        "refinement_tower_physical_scale_ratios"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "support_geometry",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "LOCAL_ATLAS_EXISTS__SCREEN_GEOMETRY_OBJECT_MISSING"
+        },
+        {
+          "capability_id": "refinement_tower_physical_scale_ratios",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_COMMON_PHYSICAL_BIREFINEMENT_TOWER"
+        }
+      ],
+      "description": "Source-emitted linear resolutions with exact two-fold and three-fold ratios, excluding count and area proxies",
+      "requirement_id": "physical_linear_resolution_ratios",
+      "requirement_satisfied": false
+    },
+    {
+      "blocking_capability_ids": [
+        "scalar_register",
+        "source_ensemble_action",
+        "refinement_tower_physical_scale_ratios"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "scalar_register",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_NATIVE_COMMON_RESERVE_SCALAR_REGISTER"
+        },
+        {
+          "capability_id": "source_ensemble_action",
+          "classification": "AVAILABLE_CONTROL_ONLY",
+          "native_producer_admitted": false,
+          "theory_binding_status": "CONVENTIONAL_E1_CONTROL__SOURCE_SELECTION_OPEN"
+        },
+        {
+          "capability_id": "refinement_tower_physical_scale_ratios",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_COMMON_PHYSICAL_BIREFINEMENT_TOWER"
+        }
+      ],
+      "description": "One common isolated covariance eigenray with projector, interval, leakage, gap, and route certificates",
+      "requirement_id": "isolated_common_covariance_eigenray",
+      "requirement_satisfied": false
+    },
+    {
+      "blocking_capability_ids": [
+        "scalar_register",
+        "source_ensemble_action",
+        "refinement_tower_physical_scale_ratios"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "scalar_register",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_NATIVE_COMMON_RESERVE_SCALAR_REGISTER"
+        },
+        {
+          "capability_id": "source_ensemble_action",
+          "classification": "AVAILABLE_CONTROL_ONLY",
+          "native_producer_admitted": false,
+          "theory_binding_status": "CONVENTIONAL_E1_CONTROL__SOURCE_SELECTION_OPEN"
+        },
+        {
+          "capability_id": "refinement_tower_physical_scale_ratios",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_COMMON_PHYSICAL_BIREFINEMENT_TOWER"
+        }
+      ],
+      "description": "Cofinal convergence on one lineage with a summable certified error budget",
+      "requirement_id": "cofinal_summable_convergence",
+      "requirement_satisfied": false
+    },
+    {
+      "blocking_capability_ids": [
+        "physical_quotient",
+        "scalar_register",
+        "source_ensemble_action",
+        "refinement_tower_physical_scale_ratios"
+      ],
+      "capability_rows": [
+        {
+          "capability_id": "physical_quotient",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_ATTAINED_PHYSICAL_QUOTIENT_CERTIFICATE"
+        },
+        {
+          "capability_id": "scalar_register",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_NATIVE_COMMON_RESERVE_SCALAR_REGISTER"
+        },
+        {
+          "capability_id": "source_ensemble_action",
+          "classification": "AVAILABLE_CONTROL_ONLY",
+          "native_producer_admitted": false,
+          "theory_binding_status": "CONVENTIONAL_E1_CONTROL__SOURCE_SELECTION_OPEN"
+        },
+        {
+          "capability_id": "refinement_tower_physical_scale_ratios",
+          "classification": "MISSING",
+          "native_producer_admitted": false,
+          "theory_binding_status": "NO_COMMON_PHYSICAL_BIREFINEMENT_TOWER"
+        }
+      ],
+      "description": "A candidate-producer provenance DAG with no target or calibrated-proxy ancestry",
+      "requirement_id": "target_free_candidate_provenance",
+      "requirement_satisfied": false
+    }
+  ],
+  "admission_policy": {
+    "adapter_promotion_admitted": false,
+    "admitted_classifications": [
+      "AVAILABLE_SIMULATOR_NATIVE"
+    ],
+    "comparison_access": "REFUSED",
+    "conditional_objects_admitted": false,
+    "control_objects_admitted": false,
+    "environment_inputs_accessed": false,
+    "measurement_data_accessed": false,
+    "network_accessed": false,
+    "producer_input_paths": [
+      "data/common_reserve/producer_capability_matrix.json"
+    ],
+    "public_data_accessed": false,
+    "target_values_accessed": false
+  },
+  "blocking_capability_ids": [
+    "physical_quotient",
+    "refinement_tower_physical_scale_ratios",
+    "scalar_register",
+    "source_ensemble_action",
+    "support_geometry"
+  ],
+  "campaign_execution_allowed": false,
+  "capability_classifications": {
+    "AMBIGUOUS": [],
+    "AVAILABLE_CONDITIONAL": [
+      "boundary_sector"
+    ],
+    "AVAILABLE_CONTROL_ONLY": [
+      "source_ensemble_action"
+    ],
+    "AVAILABLE_SIMULATOR_NATIVE": [
+      "primitive_repair_law",
+      "raw_twelve_port_response"
+    ],
+    "MISSING": [
+      "full_half_collars",
+      "physical_quotient",
+      "protected_z6_reserve",
+      "refinement_tower_physical_scale_ratios",
+      "scalar_register",
+      "scalar_reserve_coregistration",
+      "support_geometry"
+    ]
+  },
+  "claim_boundary": "This receipt establishes the bounded issue-657 SOURCE_PRODUCER_MISSING exit against the independently replayed CR-0 matrix. It supplies no physical refinement, scalar covariance, eigenvalue, scaling exponent, primordial prediction, or comparison.",
+  "cr0_replay": {
+    "candidate_producer_ancestry_audited": false,
+    "classification_counts": {
+      "AMBIGUOUS": 0,
+      "AVAILABLE_CONDITIONAL": 1,
+      "AVAILABLE_CONTROL_ONLY": 1,
+      "AVAILABLE_SIMULATOR_NATIVE": 2,
+      "MISSING": 7
+    },
+    "independent_verification_reasons": [],
+    "independent_verification_receipt": true,
+    "issue": 660,
+    "matrix_payload_sha256": "sha256:52421a54fa88fe6ad1793f394f3a18a49dea05cc5693c24c323b43dee682d4d8",
+    "stage": "CR-0",
+    "target_ancestry_audit_passed_for_cr0_roots": true
+  },
+  "decision": {
+    "permitted_next_action": "Implement and audit a missing source producer before constructing an eigenvalue estimator or opening comparison data.",
+    "reason": "The audited simulator catalog has no native physical quotient, support geometry, selected scalar register, OPH-native source ensemble, or common physical bi-refinement tower.",
+    "verdict": "SOURCE_PRODUCER_MISSING"
+  },
+  "external_mathematical_prerequisite": {
+    "issue": 656,
+    "local_source_projection_vendored": false,
+    "physical_source_producer_supplied": false,
+    "reported_status": "THEOREM_PACKET_AND_MESH_SCAFFOLD_ATTAINED__SOURCE_NATIVE_PHYSICAL_BIREFINEMENT_OPEN",
+    "repository": "FloatingPragma/observer-patch-holography",
+    "scope": "external mathematical prerequisite only",
+    "sibling_repository_bytes_verified": false
+  },
+  "issue": 657,
+  "payload_sha256": "sha256:4b0ef0e61e739c3afdd21760f95cde72682c479372b4eb9cdb5ed925abd8256c",
+  "schema": "oph.refinement.physical-birefinement-preflight.v1",
+  "scientific_outputs": {
+    "comparison_statistics_emitted": false,
+    "covariance_eigenvalues_emitted": false,
+    "numeric_value_count": 0,
+    "produced": false,
+    "scaling_exponents_emitted": false
+  },
+  "scientific_promotion_allowed": false,
+  "sources": {
+    "cr0_capability_matrix": {
+      "bytes": 32853,
+      "path": "data/common_reserve/producer_capability_matrix.json",
+      "sha256": "sha256:acbcc6a8a08c397dafb143f88f115856e85b6eeebf53e0bc2089e6fe0a62d3b5"
+    }
+  },
+  "status": "SOURCE_PRODUCER_MISSING"
+}

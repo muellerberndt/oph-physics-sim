@@ -279,6 +279,32 @@ The strong generator and second-order semigroup intertwiners fail. A
 renormalized refinement theorem and a source-derived cross-regulator clock
 remain necessary.
 
+There is a sharper state-level boundary at the first refinement. Let \(J\)
+average coarse endpoint values onto the thirty edge midpoints, and let \(Q\)
+restrict a fine field to the twelve inherited vertices. For the level-one
+Laplacian, the exact observability matrix
+
+\[
+\mathcal O=(Q,\,Q\Delta_f,\,\ldots,\,Q\Delta_f^{41})
+\]
+
+has rank \(29\) over \(\mathbb Q\). Its kernel therefore has dimension \(13\). An
+explicit six-midpoint vector \(v\) in this kernel gives two positive fields,
+\(J\mathbf 1\) and \(J\mathbf 1+v/2\), with the same coarse field and the same
+inherited-vertex trace under the complete averaged repair semigroup. Their
+centered degree-six Legendre pair powers are \(0\) and \(15/57344\). The
+proper-rotation orbit of the second field has constant ensemble mean and a
+nonzero invariant covariance.
+
+This calculation concerns the uniform-schedule expectation semigroup.
+Individual seam microhistories need not agree. It also uses inherited-vertex
+restriction as a declared finite readout scaffold, without identifying that
+restriction or the unit-counting measure with a physical sky measurement.
+The IID schedule is a declared branch whose Markov extension is not implied
+by bare A3. The missing source object is a
+refinement-detail state/readout instrument that selects the detail-fiber
+probability law and supplies the physical output binding.
+
 No fourth axiom is warranted while these derivation gates are unresolved.
 If two inequivalent repair laws survive after the complete A1 grammar, A2
 reconciliation conditions, and A3 reference are fixed, the surviving choice
@@ -294,6 +320,10 @@ tests/test_canonical_seam_repair.py
 oph_fpe/dynamics/self_readback_repair_closure.py
 tests/test_self_readback_repair_closure.py
 data/repair_closure/bounded_atomic_self_readback_closure_receipt.json
+oph_fpe/cosmology/angular_refinement_repair_observability.py
+oph_fpe/cosmology/verify_angular_refinement_repair_observability_independent.py
+tests/test_angular_refinement_repair_observability.py
+data/repair_closure/angular_refinement_repair_observability_receipt.json
 ```
 
 The static selector controls are implemented in:

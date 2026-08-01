@@ -13,6 +13,55 @@ def main(argv: list[str] | None = None) -> int:
     run_parser.add_argument("--config", required=True, type=Path)
     run_parser.add_argument("--out-dir", default=Path("runs"), type=Path)
 
+    common_reserve_capability_parser = subparsers.add_parser(
+        "common-reserve-capability",
+        help="emit the fail-closed issue-660 CR-0 producer capability inventory",
+    )
+    common_reserve_capability_parser.add_argument(
+        "--out",
+        default=Path("data/common_reserve/producer_capability_matrix.json"),
+        type=Path,
+    )
+    common_reserve_capability_parser.add_argument(
+        "--report",
+        default=Path("data/common_reserve/producer_capability_matrix.md"),
+        type=Path,
+    )
+
+    icosahedral_chsh_parser = subparsers.add_parser(
+        "icosahedral-chsh-candidate",
+        help=(
+            "emit or validate the fail-closed issue-652 exact projective CHSH "
+            "candidate"
+        ),
+    )
+    icosahedral_chsh_parser.add_argument(
+        "--manifest",
+        default=Path("tests/fixtures/echosahedral_federation_reference.json"),
+        type=Path,
+    )
+    icosahedral_chsh_parser.add_argument(
+        "--out",
+        default=Path("data/quantum/icosahedral_chsh_candidate_receipt.json"),
+        type=Path,
+    )
+    icosahedral_chsh_parser.add_argument("--validate-only", action="store_true")
+
+    icosahedral_chsh_verify_parser = subparsers.add_parser(
+        "verify-icosahedral-chsh-candidate",
+        help="independently replay and verify the issue-652 projective candidate",
+    )
+    icosahedral_chsh_verify_parser.add_argument(
+        "--manifest",
+        default=Path("tests/fixtures/echosahedral_federation_reference.json"),
+        type=Path,
+    )
+    icosahedral_chsh_verify_parser.add_argument(
+        "--receipt",
+        default=Path("data/quantum/icosahedral_chsh_candidate_receipt.json"),
+        type=Path,
+    )
+
     physics_problem_outputs_parser = subparsers.add_parser(
         "physics-problem-outputs",
         help="emit theorem-bounded outputs for adjacent OPH physics problem notes",
@@ -1903,6 +1952,38 @@ def main(argv: list[str] | None = None) -> int:
     proof_chain_parser.add_argument("--out", default=None, type=Path)
 
     args = parser.parse_args(argv)
+    if args.command == "common-reserve-capability":
+        from oph_fpe.common_reserve.capability import write_capability_matrix
+
+        result = write_capability_matrix(args.out, args.report)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "icosahedral-chsh-candidate":
+        from oph_fpe.quantum.icosahedral_chsh_candidate import (
+            build_receipt,
+            load_json,
+            validate_receipt,
+            write_receipt,
+        )
+
+        manifest = load_json(args.manifest)
+        if args.validate_only:
+            validate_receipt(load_json(args.out), manifest)
+            print("ICOSAHEDRAL_CHSH_CANDIDATE_VALID")
+            return 0
+        result = build_receipt(manifest)
+        write_receipt(args.out, result)
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+    if args.command == "verify-icosahedral-chsh-candidate":
+        from oph_fpe.quantum.verify_icosahedral_chsh_candidate_independent import (
+            load_json,
+            verify,
+        )
+
+        result = verify(load_json(args.receipt), load_json(args.manifest))
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
     if args.command == "run":
         from oph_fpe.experiments import load_config, run_config
 

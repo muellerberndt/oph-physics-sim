@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://floatingpragma.io/schemas/oph/refinement/physical-birefinement-preflight-v1.json",
+  "title": "OPH physical bi-refinement producer preflight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "issue",
+    "status",
+    "scientific_promotion_allowed",
+    "campaign_execution_allowed",
+    "sources",
+    "cr0_replay",
+    "external_mathematical_prerequisite",
+    "admission_policy",
+    "capability_classifications",
+    "acceptance_requirements",
+    "blocking_capability_ids",
+    "scientific_outputs",
+    "decision",
+    "claim_boundary",
+    "payload_sha256"
+  ],
+  "properties": {
+    "schema": {"const": "oph.refinement.physical-birefinement-preflight.v1"},
+    "issue": {"const": 657},
+    "status": {"const": "SOURCE_PRODUCER_MISSING"},
+    "scientific_promotion_allowed": {"const": false},
+    "campaign_execution_allowed": {"const": false},
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cr0_capability_matrix"],
+      "properties": {
+        "cr0_capability_matrix": {"$ref": "#/$defs/pin"}
+      }
+    },
+    "cr0_replay": {"$ref": "#/$defs/cr0Replay"},
+    "external_mathematical_prerequisite": {"$ref": "#/$defs/externalPrerequisite"},
+    "admission_policy": {"$ref": "#/$defs/admissionPolicy"},
+    "capability_classifications": {"$ref": "#/$defs/classificationMap"},
+    "acceptance_requirements": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/requirement"},
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "blocking_capability_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "scientific_outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "produced",
+        "numeric_value_count",
+        "covariance_eigenvalues_emitted",
+        "scaling_exponents_emitted",
+        "comparison_statistics_emitted"
+      ],
+      "properties": {
+        "produced": {"const": false},
+        "numeric_value_count": {"const": 0},
+        "covariance_eigenvalues_emitted": {"const": false},
+        "scaling_exponents_emitted": {"const": false},
+        "comparison_statistics_emitted": {"const": false}
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "reason", "permitted_next_action"],
+      "properties": {
+        "verdict": {"const": "SOURCE_PRODUCER_MISSING"},
+        "reason": {"type": "string", "minLength": 1},
+        "permitted_next_action": {"type": "string", "minLength": 1}
+      }
+    },
+    "claim_boundary": {"type": "string", "minLength": 1},
+    "payload_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes", "sha256"],
+      "properties": {
+        "path": {"const": "data/common_reserve/producer_capability_matrix.json"},
+        "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AVAILABLE_SIMULATOR_NATIVE",
+        "AVAILABLE_CONDITIONAL",
+        "AVAILABLE_CONTROL_ONLY",
+        "MISSING",
+        "AMBIGUOUS"
+      ],
+      "properties": {
+        "AVAILABLE_SIMULATOR_NATIVE": {"type": "integer", "minimum": 0},
+        "AVAILABLE_CONDITIONAL": {"type": "integer", "minimum": 0},
+        "AVAILABLE_CONTROL_ONLY": {"type": "integer", "minimum": 0},
+        "MISSING": {"type": "integer", "minimum": 0},
+        "AMBIGUOUS": {"type": "integer", "minimum": 0}
+      }
+    },
+    "cr0Replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue",
+        "stage",
+        "independent_verification_receipt",
+        "independent_verification_reasons",
+        "matrix_payload_sha256",
+        "classification_counts",
+        "target_ancestry_audit_passed_for_cr0_roots",
+        "candidate_producer_ancestry_audited"
+      ],
+      "properties": {
+        "issue": {"const": 660},
+        "stage": {"const": "CR-0"},
+        "independent_verification_receipt": {"const": true},
+        "independent_verification_reasons": {"type": "array", "maxItems": 0},
+        "matrix_payload_sha256": {"$ref": "#/$defs/sha256"},
+        "classification_counts": {"$ref": "#/$defs/counts"},
+        "target_ancestry_audit_passed_for_cr0_roots": {"const": true},
+        "candidate_producer_ancestry_audited": {"const": false}
+      }
+    },
+    "externalPrerequisite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue",
+        "repository",
+        "reported_status",
+        "scope",
+        "local_source_projection_vendored",
+        "sibling_repository_bytes_verified",
+        "physical_source_producer_supplied"
+      ],
+      "properties": {
+        "issue": {"const": 656},
+        "repository": {"const": "FloatingPragma/observer-patch-holography"},
+        "reported_status": {"const": "THEOREM_PACKET_AND_MESH_SCAFFOLD_ATTAINED__SOURCE_NATIVE_PHYSICAL_BIREFINEMENT_OPEN"},
+        "scope": {"const": "external mathematical prerequisite only"},
+        "local_source_projection_vendored": {"const": false},
+        "sibling_repository_bytes_verified": {"const": false},
+        "physical_source_producer_supplied": {"const": false}
+      }
+    },
+    "admissionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admitted_classifications",
+        "conditional_objects_admitted",
+        "control_objects_admitted",
+        "adapter_promotion_admitted",
+        "comparison_access",
+        "network_accessed",
+        "environment_inputs_accessed",
+        "public_data_accessed",
+        "measurement_data_accessed",
+        "target_values_accessed",
+        "producer_input_paths"
+      ],
+      "properties": {
+        "admitted_classifications": {
+          "type": "array",
+          "prefixItems": [{"const": "AVAILABLE_SIMULATOR_NATIVE"}],
+          "items": false,
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "conditional_objects_admitted": {"const": false},
+        "control_objects_admitted": {"const": false},
+        "adapter_promotion_admitted": {"const": false},
+        "comparison_access": {"const": "REFUSED"},
+        "network_accessed": {"const": false},
+        "environment_inputs_accessed": {"const": false},
+        "public_data_accessed": {"const": false},
+        "measurement_data_accessed": {"const": false},
+        "target_values_accessed": {"const": false},
+        "producer_input_paths": {
+          "type": "array",
+          "prefixItems": [{"const": "data/common_reserve/producer_capability_matrix.json"}],
+          "items": false,
+          "minItems": 1,
+          "maxItems": 1
+        }
+      }
+    },
+    "classificationMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "AVAILABLE_SIMULATOR_NATIVE",
+        "AVAILABLE_CONDITIONAL",
+        "AVAILABLE_CONTROL_ONLY",
+        "MISSING",
+        "AMBIGUOUS"
+      ],
+      "properties": {
+        "AVAILABLE_SIMULATOR_NATIVE": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "AVAILABLE_CONDITIONAL": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "AVAILABLE_CONTROL_ONLY": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "MISSING": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "AMBIGUOUS": {"type": "array", "items": {"type": "string"}, "maxItems": 0}
+      }
+    },
+    "mappedCapability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "classification",
+        "native_producer_admitted",
+        "theory_binding_status"
+      ],
+      "properties": {
+        "capability_id": {"type": "string", "minLength": 1},
+        "classification": {"enum": ["AVAILABLE_SIMULATOR_NATIVE", "AVAILABLE_CONDITIONAL", "AVAILABLE_CONTROL_ONLY", "MISSING", "AMBIGUOUS"]},
+        "native_producer_admitted": {"type": "boolean"},
+        "theory_binding_status": {"type": "string", "minLength": 1}
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "description",
+        "capability_rows",
+        "blocking_capability_ids",
+        "requirement_satisfied"
+      ],
+      "properties": {
+        "requirement_id": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "capability_rows": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/mappedCapability"},
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "blocking_capability_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "requirement_satisfied": {"const": false}
+      }
+    }
+  }
+}
