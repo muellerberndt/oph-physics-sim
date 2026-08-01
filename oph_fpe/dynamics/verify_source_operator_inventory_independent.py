@@ -123,6 +123,11 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     "data/repair_closure/seam_equalizer_current_control_report.json": _contract(
         "oph.seam-equalizer-current-control/1.0.0", "ATTAINED_NEGATIVE_CONTROL", "SEAM_EQUALIZER_CURRENT_NEGATIVE_CONTROL"
     ),
+    "data/repair_closure/vertex12_atomic_port_transfer_receipt.json": _contract(
+        "oph.vertex12-atomic-port-transfer-subpacket.v1",
+        "INTERNAL_VERTEX12_ATOMIC_TRANSFER_AND_COMPLETE_SOURCE_READBACK_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN",
+        "INTERNAL_VERTEX12_TRANSFER_AND_SOURCE_READBACK_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
+    ),
     INVENTORY_RELATIVE_PATH: _contract(
         SCHEMA, STATUS, "RECURSIVE_INVENTORY_OUTPUT_EXCLUDED_FROM_SEMANTIC_SCAN"
     ),
@@ -330,6 +335,32 @@ def _evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | None:
             "operator_domain": "scalar_twelve_port_seam_equalizers",
             "emitted_desired_current_identification": value.get("current_identification_control", {}).get("repair_equalizers_are_the_desired_12d_compact_current"),
             "emitted_negative_control_status": value.get("status"),
+        }
+    if path == "data/repair_closure/vertex12_atomic_port_transfer_receipt.json":
+        operator = value.get("atomic_transfer_operator", {})
+        readback = value.get("post_repair_source_readback", {})
+        boundary = value.get("quotient_and_spatial_boundary", {})
+        quotient = boundary.get("quotient_enumeration", {})
+        return {
+            "operator_domain": operator.get("domain"),
+            "emitted_source_native_internal_port_transfer": operator.get(
+                "source_native_internal_port_transfer_receipt"
+            ),
+            "emitted_source_native_spatial_translation": operator.get(
+                "source_native_spatial_translation_receipt"
+            ),
+            "emitted_complete_source_readback_carrier_count": readback.get(
+                "covered_carrier_count"
+            ),
+            "emitted_physical_sector_readout": readback.get(
+                "physical_sector_readout"
+            ),
+            "emitted_noncollapsed_inverse_compatible_quotient_count": quotient.get(
+                "noncollapsed_antipodal_inverse_compatible_quotient_count"
+            ),
+            "emitted_same_operator_physical_readout": boundary.get(
+                "same_operator_physical_readout_receipt"
+            ),
         }
     if path == "data/a2_holonomy/a2_holonomy_current_selector_report.json":
         return {

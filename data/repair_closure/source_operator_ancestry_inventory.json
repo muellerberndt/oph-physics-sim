@@ -131,7 +131,7 @@
       "raw_pin": {
         "bytes": 32853,
         "path": "data/common_reserve/producer_capability_matrix.json",
-        "sha256": "sha256:56fa7796c5ad621c86ced8d96e225f8a261d5bea54b3800e768ec70afebeb8c4"
+        "sha256": "sha256:841fab5526dbc3c1129662aa837de5a3cc42828ea37bb61b120622b5478fb8e0"
       },
       "schema": "oph.common-reserve.capability-matrix.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -474,11 +474,32 @@
       "schema": "oph.source_operator_ancestry_inventory.v1",
       "semantic_scan_excluded_as_recursive_output": true,
       "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE"
+    },
+    {
+      "critical_bridge_evidence": {
+        "emitted_complete_source_readback_carrier_count": 8,
+        "emitted_noncollapsed_inverse_compatible_quotient_count": 0,
+        "emitted_physical_sector_readout": false,
+        "emitted_same_operator_physical_readout": false,
+        "emitted_source_native_internal_port_transfer": true,
+        "emitted_source_native_spatial_translation": false,
+        "operator_domain": "internal_federation_visible_port_fiber_Q^(8_times_12)"
+      },
+      "disposition": "INTERNAL_VERTEX12_TRANSFER_AND_SOURCE_READBACK_ATTAINED__SPATIAL_TRANSLATION_AND_PHYSICAL_READOUT_OPEN",
+      "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
+      "raw_pin": {
+        "bytes": 39518,
+        "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
+        "sha256": "sha256:f8e5e0550bbbb4b4e13f4d4beeccd756d9896666c290d00ecc137fdeb9839601"
+      },
+      "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "INTERNAL_VERTEX12_ATOMIC_TRANSFER_AND_COMPLETE_SOURCE_READBACK_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
     }
   ],
   "current_canonical_json_contract_scan": {
-    "current_canonical_json_path_count_excluding_recursive_outputs": 27,
-    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:e4dc194c1ea28c0f935243efdd05ace6ee3db3404830483c763ffe3f6383de3f",
+    "current_canonical_json_path_count_excluding_recursive_outputs": 28,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:2af981772c10c8087f6b05e762e99a6979ab83119f139460e7784cf3af20485d",
     "positive_promotion_signal_rows_excluding_recursive_outputs": [],
     "recursive_output_paths_excluded": [
       "data/repair_closure/port_repair_propagation_bridge_receipt.json",
@@ -498,9 +519,9 @@
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 27401,
+      "bytes": 29049,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:a25d6861988d82e086066e7a7182c678aa757d6b9241a6bc6710a0782f9ee9e3"
+      "sha256": "sha256:c7cdda53cd887f3935c911acd7e2e1c5596ba734b36fbd5a6b1bc7832430aca2"
     },
     "mutation_tests": {
       "bytes": 12715,
@@ -508,9 +529,9 @@
       "sha256": "sha256:4b3b2b806ef9ddf7df87ba675bd216e0cf6983861e728d05991dafea2497c104"
     },
     "producer": {
-      "bytes": 29506,
+      "bytes": 31154,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:5370a5b23befc77bfa36c1cd9ac456f01adcc98922f30e91b3fe7136a5877f68"
+      "sha256": "sha256:1b3ce1ae3550a8f2770583313208ede7ab83071183d280021983627ce06a89ed"
     }
   },
   "issue": 655,
@@ -531,17 +552,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:b7cad69ba0558f6eeead376b8df5b9b96ecce9a71bdcad997d813ab28bafb1ba",
+  "receipt_sha256": "sha256:839defc5b23558cbb397857d28de07e10e9eda6c922ff43b473fc1462c6745b4",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding the recursive inventory and parent bridge outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1002,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:8bd3c4a3a75a7e28219ae7f4ace209e49c25360e868beb4c55dd4a234ee290a6",
-    "path_count_including_declared_recursive_outputs": 1004,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:9404272408c77dd99ae4048eda231c97a1ce34c94acfe6348c6930e6cedb5197",
+    "content_index_row_count_excluding_recursive_outputs": 1003,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:dfd18d6c5ba419e181c83295e317f2a80cbe02d3e487c3872b6d66acfd07e1aa",
+    "path_count_including_declared_recursive_outputs": 1005,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:878e6f829b4b0762697bcd5efe56c125b0953c2322685dd1902a983f8688ef09",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 39,
+      "CURRENT_SIMULATOR_ARTIFACT": 40,
       "EXTERNAL_OR_COMPARISON_DATA": 40,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895

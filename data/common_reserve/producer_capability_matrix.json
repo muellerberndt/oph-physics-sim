@@ -8,9 +8,9 @@
   ],
   "audit_scope": {
     "python_tree": {
-      "file_count": 368,
+      "file_count": 370,
       "root": "oph_fpe",
-      "tree_sha256": "sha256:50244900da236c5b7fe01d19fdae413e0dd51b15eb1798380f1b1fa0def2204e"
+      "tree_sha256": "sha256:fb62b25ee3f780206df4ad96162729f881602026df732f2bfef8909d83c0f51c"
     },
     "repository": "muellerberndt/oph-physics-sim",
     "scope_boundary": "bounded audit of the committed producer catalog and named artifacts; MISSING means no accepted producer in this snapshot, not a theorem that no future implementation can exist"
@@ -393,7 +393,7 @@
     "reserve_lane_blocked": true,
     "screen_lane_blocked": true
   },
-  "payload_sha256": "sha256:3ab8568ed68041cde7389623ee8f99d7cbaab43d394d1663ddf45923c937e44f",
+  "payload_sha256": "sha256:42c57111fb0bfb8619290cddd126023f785af4a965384ac20901a1d26654666f",
   "raw_twelve_port_response_probe": {
     "antipode_port_map": [
       3,
