@@ -577,6 +577,27 @@ def verify_packet(
     repair = _load_json(repair_path)
     mean_bridge = repair.get("exact_conditional_mean_bridge", {})
     one_atom = mean_bridge.get("one_atom_restriction", {})
+    repair_torsor = repair.get("directed_seam_torsor", {})
+    base_faces = [
+        [int(value) for value in face] for face in tower.levels[0].faces
+    ]
+    base_face_sha256 = _sha(_canonical_bytes(base_faces))
+    base_edges_from_faces = sorted(
+        {
+            tuple(sorted((face[index], face[(index + 1) % 3])))
+            for face in base_faces
+            for index in range(3)
+        }
+    )
+    base_mesh_edges = sorted(
+        tuple(int(value) for value in edge) for edge in tower.levels[0].edges
+    )
+    base_face_binding_matches = bool(
+        repair_torsor.get("exact_oriented_face_count") == 20
+        and repair_torsor.get("undirected_seam_count") == 30
+        and repair_torsor.get("exact_oriented_face_sha256") == base_face_sha256
+        and base_edges_from_faces == base_mesh_edges
+    )
     base_degree = np.bincount(
         tower.levels[0].edges.reshape(-1),
         minlength=tower.levels[0].vertex_count,
@@ -593,6 +614,7 @@ def verify_packet(
         and one_atom.get("one_atom_generator") == "-L_icosahedron/60"
         and one_atom.get("exact_identity_verified") is True
         and one_atom.get("physical_time_scale_selected") is False
+        and base_face_binding_matches
         and tower.levels[0].vertex_count == 12
         and tower.levels[0].edge_count == 30
         and np.all(base_degree == 5)
@@ -606,6 +628,11 @@ def verify_packet(
         or bridge.get("parent_status") != EXPECTED_REPAIR_STATUS
         or bridge.get("parent_certificate_payload_sha256")
         != EXPECTED_REPAIR_PAYLOAD_SHA256
+        or bridge.get("parent_exact_oriented_face_sha256") != base_face_sha256
+        or bridge.get("base_carrier_oriented_face_sha256") != base_face_sha256
+        or bridge.get("base_carrier_labelled_face_presentation_matches_parent")
+        is not True
+        or bridge.get("base_carrier_edge_set_matches_face_presentation") is not True
         or bridge.get("refinement_tower_extension_source_selected") is not False
         or bridge.get("global_a1_a3_policy_uniqueness_receipt") is not False
         or bridge.get("physical_repair_law_receipt") is not False

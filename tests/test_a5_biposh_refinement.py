@@ -243,10 +243,35 @@ def test_bounded_repair_mean_generator_is_connected_only_on_base_carrier(
     )
     assert bridge["base_carrier_vertex_count"] == 12
     assert bridge["base_carrier_edge_count"] == 30
+    assert bridge["parent_exact_oriented_face_sha256"] == (
+        "sha256:772cceb28efb46a2f322dd1cd87eac61f8bde0e54bbf387163efb13a6df9ad1c"
+    )
+    assert bridge["base_carrier_oriented_face_sha256"] == (
+        "sha256:772cceb28efb46a2f322dd1cd87eac61f8bde0e54bbf387163efb13a6df9ad1c"
+    )
+    assert bridge["base_carrier_labelled_face_presentation_matches_parent"] is True
+    assert bridge["base_carrier_edge_set_matches_face_presentation"] is True
     assert bridge["refinement_tower_extension_source_selected"] is False
     assert bridge["global_a1_a3_policy_uniqueness_receipt"] is False
     assert bridge["physical_repair_law_receipt"] is False
     assert bridge["physical_time_scale_selected"] is False
+
+
+def test_rehashed_base_face_binding_mutation_is_rejected(
+    tmp_path: Path,
+    canonical: tuple[dict, dict],
+) -> None:
+    receipt, coefficients = copy.deepcopy(canonical)
+    receipt["bounded_repair_generator_bridge"][
+        "base_carrier_oriented_face_sha256"
+    ] = "sha256:" + "0" * 64
+    receipt_path, coefficient_path = _write_mutation(
+        tmp_path,
+        receipt,
+        coefficients,
+    )
+    with pytest.raises(VerificationError, match="bounded repair generator bridge"):
+        verify_packet(receipt_path, coefficient_path)
 
 
 def test_rehashed_coefficient_mutation_is_rejected(
