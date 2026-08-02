@@ -1957,10 +1957,10 @@
     "constructive_source_receipt": {
       "independently_verified": true,
       "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-      "raw_sha256": "sha256:4dcbfe8b052926a1402129609c812a7c8166ed3f1b0843b675816e23783892a4",
-      "receipt_sha256": "sha256:8c5df651a7e8033a5bdfcd0b135d2074ab41dd02ef53a82a5bf4ef59135a6ff8",
+      "raw_sha256": "sha256:5ecae92e51a3d0bbc87640650ec8686184d763f56fbeba1c666403a05d92083f",
+      "receipt_sha256": "sha256:93e02968ce5425d2bb14bcac832d776a340c9e9a86e50dee81aabcb857934d56",
       "schema": "oph.vertex12-constructive-source-law-control.v1",
-      "source_capture_root_sha256": "sha256:6763d353b5768ec4d07bdf55340c5ee93292c6d102f294ff8dd7ecad721b2971",
+      "source_capture_root_sha256": "sha256:1e1c37cd0060ac4d4da390a084a41095554653f5147914b6cb85a796ee197c7d",
       "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
     },
     "frozen_FZ11_prediction": {
@@ -1976,7 +1976,7 @@
       "status": "FROZEN_PROSPECTIVE_PRIMITIVE_TWELVE_PORT_BRANCH_PREDICTION__PHYSICAL_COMPARISON_UNARMED"
     }
   },
-  "receipt_sha256": "sha256:4a200620deaba956805a6e65523536762857eef89298cb819aa039ff8a28c571",
+  "receipt_sha256": "sha256:e0ecfb72aef1250d3f5ab64102b480e92e7c26e1958172f8a650dd28cf5460e9",
   "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
   "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN",
   "target_free_plane_wave_replay": {

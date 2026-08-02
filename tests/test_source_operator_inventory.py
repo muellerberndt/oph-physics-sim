@@ -43,7 +43,7 @@ def test_inventory_replays_on_the_indexed_serialized_data_surface() -> None:
     assert REPORT["issue"] == 655
     assert REPORT["scope"] == (
         "Git-indexed tracked paths under data; semantic scan of current canonical "
-        "simulator JSON objects excluding the recursive inventory and parent bridge "
+        "simulator JSON objects excluding declared recursive ancestor and descendant "
         "outputs; legacy, imported, and external/comparison paths counted only"
     )
 
@@ -117,6 +117,90 @@ def test_conditional_fz11_adapter_is_not_admitted_as_source_capability() -> None
     assert REPORT["bridge_admission_contract"][
         "accepted_bridge_count_excluding_recursive_outputs"
     ] == 0
+
+
+def test_conditional_fz11_time_lift_is_not_a_physical_bridge() -> None:
+    row = _row(
+        REPORT,
+        "data/repair_closure/fz11_conservative_time_lift_receipt.json",
+    )
+    assert row["schema"] == "oph.fz11-conservative-time-lift.v1"
+    assert row["status"] == (
+        "EXACT_CONSERVATIVE_TIME_LIFT_FOR_DECLARED_FZ11_OPERATOR_ATTAINED__"
+        "SOURCE_B_CLOCK_LORENTZ_SECTOR_CONTINUUM_AND_SCALE_OPEN"
+    )
+    assert row["disposition"] == (
+        "CONDITIONAL_CONSERVATIVE_TIME_LIFT__TRANSLATION_SOURCE_CLOCK_"
+        "LORENTZ_SECTOR_CONTINUUM_SCALE_AND_READOUT_OPEN"
+    )
+    assert row["critical_bridge_evidence"] == {
+        "emitted_B_source_selected": False,
+        "emitted_comparison_permitted": False,
+        "emitted_conditional_auxiliary_time_evolution": True,
+        "emitted_continuum_limit": False,
+        "emitted_generic_psd_factorizations_remain_nonunique": True,
+        "emitted_lorentz_or_boost_law": False,
+        "emitted_phase_norm_identified_with_physical_energy": False,
+        "emitted_physical_clock_selected": False,
+        "emitted_physical_field_sector_selected": False,
+        "emitted_physical_readout_selected": False,
+        "emitted_physical_scale_selected": False,
+        "emitted_repair_tick_supplies_physical_time": False,
+        "emitted_translation_action_source_selected": False,
+    }
+    assert REPORT["bridge_admission_contract"][
+        "accepted_bridge_count_excluding_recursive_outputs"
+    ] == 0
+
+
+def test_port_gram_descendant_is_declared_and_excluded_from_recursive_scan() -> None:
+    row = _row(REPORT, inventory.PORT_GRAM_RELATIVE_PATH)
+    assert row == {
+        "critical_bridge_evidence": None,
+        "disposition": (
+            "RECURSIVE_DESCENDANT_PORT_GRAM_COMPLETION_RECEIPT_EXCLUDED_FROM_"
+            "SEMANTIC_SCAN"
+        ),
+        "path": inventory.PORT_GRAM_RELATIVE_PATH,
+        "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
+        "semantic_scan_excluded_as_recursive_output": True,
+        "status": (
+            "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__"
+            "A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
+        ),
+    }
+    exclusion = REPORT["bridge_admission_contract"][
+        "recursive_descendant_receipt_exclusion"
+    ]
+    assert exclusion["path"] == inventory.PORT_GRAM_RELATIVE_PATH
+    assert exclusion["packet_count_included_in_scan"] is False
+
+
+def test_primitive_port_dual_measure_retains_physical_attachment_boundary() -> None:
+    path = "data/repair_closure/primitive_port_dual_measure_receipt.json"
+    row = _row(REPORT, path)
+    assert row["schema"] == "oph.primitive-port-dual-normalized-measure.v1"
+    assert row["status"] == (
+        "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__"
+        "PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
+    )
+    assert row["disposition"] == (
+        "QUOTIENT_VISIBLE_PORT_DUAL_MEASURE__PHYSICAL_PIXEL_HOP_AND_SCALE_"
+        "IDENTITIES_OPEN"
+    )
+    assert row["critical_bridge_evidence"] == {
+        "emitted_comparison_permitted": False,
+        "emitted_declared_finite_refinement_naturality": True,
+        "emitted_exact_normalized_port_dual_measure": True,
+        "emitted_issue_662_armed": False,
+        "emitted_kappa_geom_source_selected": False,
+        "emitted_physical_P_pixel_identification": False,
+        "emitted_physical_prediction_promoted": False,
+        "emitted_quotient_visible_port_to_support_map": True,
+        "emitted_shared_geometry_physical_identity": False,
+        "emitted_support_radius_hop_identification": False,
+        "emitted_terminal_refinement_stage_selected": False,
+    }
 
 
 def test_ordered_port_diagnostic_is_indexed_with_exact_negative_evidence() -> None:

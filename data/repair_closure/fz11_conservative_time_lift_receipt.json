@@ -1,0 +1,1835 @@
+{
+  "attainment": {
+    "B_source_selected": false,
+    "J_B_skew_adjoint_exact": true,
+    "J_B_square_exact": true,
+    "K_equals_B_star_B_exact": true,
+    "comparison_permitted": false,
+    "conditional_auxiliary_time_evolution_supplied": true,
+    "continuous_coordinate_equation_exact": true,
+    "continuum_limit_derived": false,
+    "finite_declared_B_exact": true,
+    "frozen_spatial_eigenvalue_is_omega_squared_conditionally": true,
+    "issue_655_closure_supported": false,
+    "lorentz_or_boost_law_derived": false,
+    "phase_norm_identified_with_physical_energy": false,
+    "physical_clock_selected": false,
+    "physical_field_sector_selected": false,
+    "physical_prediction_promoted": false,
+    "physical_readout_selected": false,
+    "physical_scale_selected": false,
+    "weighted_adjoint_exact": true
+  },
+  "claim_boundary": "For the declared finite rational B, the weighted-adjoint factorization and conservative continuous flow are exact. The same construction conditionally factors the frozen primitive spatial operator whenever its six translations have a finite unitary realization. Once those translations and the direct one-component incidence class are supplied, B is canonical up to a momentum-frame isometry. Conservation of the declared canonical energy forces the second-order operator A to equal K, but A1/A2 identification of that energy remains open. The norm conserved by the auxiliary phase flow is not identified with that second-order energy, any physical energy, or a clock. The auxiliary parameter is not a physical clock. The packet does not source-select the translation action, a Lorentz or boost law, a field sector, a continuum limit, a physical scale, or a readout. The leapfrog audit carries its sine-modified frequency and is not substituted for the continuous frozen relation. A discrete repair tick cannot supply physical time without a clock or continuum theorem. No target or comparison data are read.",
+  "comparison_data_read": false,
+  "continuous_time_lift": {
+    "conditional_continuous_evolution_supplied": true,
+    "conservation_law": "d/dt(||q||_q^2+||p||_p^2)=0 because J_B is skew-adjoint",
+    "conserved_phase_norm_identified_with_canonical_second_order_energy": false,
+    "conserved_phase_norm_identified_with_physical_energy": false,
+    "conserved_phase_norm_selects_physical_clock": false,
+    "coordinate_equation": "q_second_derivative+K*q=0",
+    "flow": "exp(t*J_B)",
+    "flow_parameter": "auxiliary continuous real parameter t",
+    "frozen_relation": "omega^2=lambda",
+    "generator": "J_B=[[0,-B_star],[B,0]]",
+    "mode_equation": "Kq=lambda*q implies q''+lambda*q=0",
+    "physical_clock_selected": false,
+    "square": "J_B^2=diag(-B_star*B,-B*B_star)",
+    "state_equation": "d/dt(q,p)=(-B_star*p,B*q)"
+  },
+  "declared_finite_factorization": {
+    "B": [
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ]
+    ],
+    "B_B_star": [
+      [
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ]
+    ],
+    "B_star": [
+      [
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2"
+      ],
+      [
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2"
+      ]
+    ],
+    "J_B": [
+      [
+        "0",
+        "0",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2"
+      ],
+      [
+        "0",
+        "0",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2",
+        "-1/2",
+        "1/2"
+      ],
+      [
+        "-1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "-1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "-1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "-1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "-1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "-1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "-1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "-1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "-1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "-1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "-1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "1",
+        "-1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    ],
+    "J_B_squared": [
+      [
+        "-6",
+        "6",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "6",
+        "-6",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "0",
+        "0",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "0",
+        "0",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "0",
+        "0",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "0",
+        "0",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "0",
+        "0",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "0",
+        "0",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "0",
+        "0",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "0",
+        "0",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "0",
+        "0",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ],
+      [
+        "0",
+        "0",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1"
+      ],
+      [
+        "0",
+        "0",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1",
+        "1",
+        "-1"
+      ]
+    ],
+    "K_equals_B_star_B": [
+      [
+        "6",
+        "-6"
+      ],
+      [
+        "-6",
+        "6"
+      ]
+    ],
+    "a_squared": "1",
+    "exact_modes": {
+      "alternating": {
+        "eigenvalue": "12",
+        "vector": [
+          "1",
+          "-1"
+        ]
+      },
+      "constant": {
+        "eigenvalue": "0",
+        "vector": [
+          "1",
+          "1"
+        ]
+      }
+    },
+    "fixture_id": "six_axis_two_site_involution_at_a_squared_one",
+    "forward_difference_per_axis_T_minus_I": [
+      [
+        "-1",
+        "1"
+      ],
+      [
+        "1",
+        "-1"
+      ]
+    ],
+    "frozen_symbol_specialization": {
+      "continuous_mode_relation": "omega^2=12",
+      "exact_value_at_a_squared_one": "12",
+      "formula": "a^-2*sum_alpha(1-cos(theta_alpha))",
+      "six_positive_translation_phases": [
+        "pi",
+        "pi",
+        "pi",
+        "pi",
+        "pi",
+        "pi"
+      ]
+    },
+    "identities": {
+      "B_star_is_weighted_adjoint": true,
+      "J_B_skew_adjoint": true,
+      "J_B_squared_equals_diag_minus_K_minus_B_B_star": true,
+      "K_equals_B_star_B": true,
+      "K_positive_semidefinite": true
+    },
+    "p_dimension": 12,
+    "p_inner_product_gram": [
+      [
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2"
+      ]
+    ],
+    "phase_space_gram": [
+      [
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "1/2"
+      ]
+    ],
+    "positive_axis_count": 6,
+    "q_dimension": 2,
+    "q_inner_product_gram": [
+      [
+        "1",
+        "0"
+      ],
+      [
+        "0",
+        "1"
+      ]
+    ],
+    "scalar_field": "Q",
+    "site_shift_T": [
+      [
+        "0",
+        "1"
+      ],
+      [
+        "1",
+        "0"
+      ]
+    ],
+    "skew_adjoint_residual": [
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ]
+    ]
+  },
+  "direct_factorization_uniqueness": {
+    "B_prime_equals_U_B": true,
+    "B_prime_star_B_prime_equals_B_star_B": true,
+    "J_B_prime_equals_diag_I_U_J_B_diag_I_U_inverse": true,
+    "axis_permutation_is_edge_isometry": true,
+    "class": "stack each declared T_alpha-I or T_alpha^-1-I exactly once, with no additional coefficient or internal map and with the declared common edge weight",
+    "enlarged_or_internal_momentum_factorizations_remain_nonunique": true,
+    "exact_three_site_orientation_fixture": {
+      "J_conjugacy_exact": true,
+      "common_K": [
+        [
+          "1",
+          "-1/2",
+          "-1/2"
+        ],
+        [
+          "-1/2",
+          "1",
+          "-1/2"
+        ],
+        [
+          "-1/2",
+          "-1/2",
+          "1"
+        ]
+      ],
+      "forward_difference": [
+        [
+          "-1",
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "-1",
+          "1"
+        ],
+        [
+          "1",
+          "0",
+          "-1"
+        ]
+      ],
+      "forward_shift": [
+        [
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "inverse_shift": [
+        [
+          "0",
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "1",
+          "0"
+        ]
+      ],
+      "orientation_isometry": [
+        [
+          "0",
+          "0",
+          "-1"
+        ],
+        [
+          "-1",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "-1",
+          "0"
+        ]
+      ],
+      "reverse_difference": [
+        [
+          "-1",
+          "0",
+          "1"
+        ],
+        [
+          "1",
+          "-1",
+          "0"
+        ],
+        [
+          "0",
+          "1",
+          "-1"
+        ]
+      ]
+    },
+    "generic_psd_factorizations_remain_nonunique_outside_declared_class": true,
+    "labeled_presentation_operation_count": 46080,
+    "orientation_identity": "T_alpha^-1-I=(-T_alpha^-1)*(T_alpha-I)",
+    "orientation_map_is_edge_isometry": true,
+    "scope_boundary": "uniqueness holds inside the declared direct one-component-per-axis incidence class; it does not select the translations, exclude extra ranges or components, or identify a physical field. Generic positive-semidefinite square roots and factorizations on enlarged or internally rotated momentum spaces remain nonunique",
+    "six_axis_orientation_choices": 64,
+    "six_axis_permutation_choices": 720
+  },
+  "discrete_time_audit": {
+    "characteristic_equation": "r^2+(h^2*lambda-2)r+1=0",
+    "clock_or_continuum_theorem_required_for_physical_time": true,
+    "continuous_relation_retained_separately": "omega^2=lambda",
+    "exact_fixture": {
+      "characteristic_polynomial": "r^2+r+1=0",
+      "continuous_frequency": "omega=2*sqrt(3)",
+      "frequencies_identified": false,
+      "h": "1/2",
+      "h_squared_lambda": "3",
+      "lambda": "12",
+      "leapfrog_numerical_frequency": "omega_tilde=4*pi/3",
+      "principal_stable_phase": "theta=2*pi/3",
+      "sine_modified_relation": "4*(1/2)^-2*sin((2*pi/3)/2)^2=12"
+    },
+    "leapfrog_map_identified_with_exp_h_J_B": false,
+    "method": "centered_second_difference_or_leapfrog",
+    "mode_recurrence": "q_(n+1)-2q_n+q_(n-1)+h^2*lambda*q_n=0",
+    "numerical_frequency": "omega_tilde=theta/h",
+    "omega_tilde_squared_identified_with_lambda": false,
+    "physical_discrete_clock_selected": false,
+    "repair_tick_supplies_physical_time": false,
+    "separate_from_continuous_packet": true,
+    "stability_condition": "0<=h^2*lambda<=4",
+    "stable_phase_relation": "4*h^-2*sin(theta/2)^2=lambda"
+  },
+  "frozen_operator_binding": {
+    "B_definition": "(Bq)_alpha=(T_alpha-I)q",
+    "direct_factorization_canonical_up_to_momentum_frame_isometry": true,
+    "edge_inner_product": "<p,r>_p=(1/(2a^2))*sum_alpha <p_alpha,r_alpha>",
+    "enlarged_or_internal_momentum_factorizations_remain_nonunique": true,
+    "factorization": "B_star*B=(1/(2a^2))*sum_alpha(2I-T_alpha-T_alpha^-1)=K_a",
+    "factorization_arbitrary_within_declared_direct_incidence_class": false,
+    "finite_fixture_is_physical_spatial_domain": false,
+    "generic_psd_factorizations_remain_nonunique_outside_declared_class": true,
+    "laurent_symbol": "K(z)=(1/(2a^2))*sum_alpha(2-z_alpha-z_alpha^-1)",
+    "laurent_terms_at_a_squared_one": [
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          -1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          -1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          0,
+          -1,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          0,
+          0,
+          -1,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "coefficient": "6",
+        "exponents": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "coefficient": "-1/2",
+        "exponents": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "matches_parent_frozen_spatial_symbol": true,
+    "plane_wave_symbol": "lambda(k)=a^-2*sum_alpha(1-cos(a*k.u_alpha))",
+    "scope": "finite unitary realizations of the six positive primitive translations, conditional on a declared scale a",
+    "translation_action_source_selected": false,
+    "twelve_port_equivalence": "a^-2*sum_alpha(1-cos(theta_alpha))=(1/(2a^2))*sum_p[1-cos(theta_p)] under antipodal pairing",
+    "weighted_adjoint": "(B_star p)=(1/(2a^2))*sum_alpha(T_alpha^-1-I)p_alpha"
+  },
+  "implementation_pins": [
+    {
+      "bytes": 28541,
+      "path": "oph_fpe/dynamics/fz11_conservative_time_lift.py",
+      "sha256": "sha256:ddef7b4904b84b4f0e2d861c70a359c5ea09561f940b85fc4074e195c8e2e1bf"
+    },
+    {
+      "bytes": 31151,
+      "path": "oph_fpe/dynamics/verify_fz11_conservative_time_lift_independent.py",
+      "sha256": "sha256:008b4a61530b0e08de4665fbc9d99c50d6070799007cbb9b3e8fcb17a728f9fe"
+    },
+    {
+      "bytes": 12837,
+      "path": "tests/test_fz11_conservative_time_lift.py",
+      "sha256": "sha256:28f2d4285081c2fcf8965d1efbd0096b7a6068e1c92a171aa7ef82d14da260a0"
+    }
+  ],
+  "issue": 655,
+  "parent_pin": {
+    "bytes": 37873,
+    "operator_projection": {
+      "cosine_symbol": "omega^2(k)=(1/(2a^2))*sum_p[1-cos(a*k.u_p)]",
+      "laurent_symbol": "(1/(2a^2))*sum_alpha(2-z_alpha-z_alpha^-1)",
+      "omega_squared_only": true,
+      "paired_real_space_form": "K_a=(1/(2a^2))*sum_alpha(2I-T_alpha-T_alpha_inverse)",
+      "time_evolution_or_frequency_sign_selected": false
+    },
+    "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
+    "receipt_sha256": "sha256:e0ecfb72aef1250d3f5ab64102b480e92e7c26e1958172f8a650dd28cf5460e9",
+    "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
+    "sha256": "sha256:199529b661a3c1f4116bb3aafec0c19bac77142277a5ca390884167513d4f76d",
+    "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
+  },
+  "receipt_sha256": "sha256:f02dfa4cf86385cd5ea46da78b94ffcb0eef242a5d3fd9b273f0715ae3776443",
+  "schema": "oph.fz11-conservative-time-lift.v1",
+  "status": "EXACT_CONSERVATIVE_TIME_LIFT_FOR_DECLARED_FZ11_OPERATOR_ATTAINED__SOURCE_B_CLOCK_LORENTZ_SECTOR_CONTINUUM_AND_SCALE_OPEN",
+  "target_data_paths": [],
+  "target_data_read": false,
+  "time_law_uniqueness_from_energy": {
+    "A_equals_K_forced_under_declared_energy_premise": true,
+    "E_K_identified_with_conserved_phase_norm": false,
+    "all_initial_data_consequence": "if dE_K/dt=0 for every initial (q,v), then A=K",
+    "candidate_second_order_law": "q_second_derivative+A*q=0",
+    "canonical_energy": "E_K(q,v)=(1/2)*||v||^2+(1/2)*<q,Kq>",
+    "complete_response_energy_identified_with_E_K": false,
+    "declared_hypotheses": [
+      "finite-dimensional real configuration space",
+      "linear second-order law q_second_derivative+A*q=0",
+      "canonical velocity inner product in the kinetic term",
+      "self-adjoint frozen stiffness K",
+      "conservation of E_K for every initial displacement and velocity"
+    ],
+    "derivative_identity": "dE_K/dt=<v,(K-A)q>",
+    "exact_mutation_control": {
+      "A_not_K": [
+        [
+          "7",
+          "-6"
+        ],
+        [
+          "-6",
+          "6"
+        ]
+      ],
+      "conservation_violated": true,
+      "dE_K_dt_at_initial_state": "-1",
+      "initial_q": [
+        "1",
+        "0"
+      ],
+      "initial_v": [
+        "1",
+        "0"
+      ]
+    },
+    "physical_clock_selected": false,
+    "scope_boundary": "the implication selects A only after the canonical energy is identified with the conserved complete-response energy; A1/A2 do not supply that identification in this packet"
+  }
+}

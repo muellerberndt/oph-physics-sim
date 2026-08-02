@@ -1,0 +1,1002 @@
+{
+  "attainment": {
+    "A1R_A2R_repair_amendment_adopted": false,
+    "A2_cauchy_operational_completion_clause_present": false,
+    "canonical_signed_port_record_source_selected": false,
+    "comparison_permitted": false,
+    "completion_is_three_dimensional_euclidean_vector_group": true,
+    "continuous_carrier_constructed_as_metric_completion": true,
+    "exact_lowest_repair_band_selects_port_gram": true,
+    "faithful_A5_completion_action_formalized": false,
+    "galois_branch_separated_by_exact_cost": true,
+    "global_carrier_promoted": false,
+    "issue_662_armed": false,
+    "operational_Gram_Cauchy_readback_and_topology_selected": false,
+    "overall_physical_scale_selected": false,
+    "overlap_refinement_gluing_proved": false,
+    "physical_P_pixel_is_primitive_port_sector": false,
+    "physical_prediction_promoted": false,
+    "physical_three_space_promoted": false,
+    "raw_translation_extends_uniquely_to_completion": true,
+    "same_semantic_support_translation_object_emitted": false,
+    "scalar_field_space_selected": false,
+    "signed_integer_record_metric_hausdorff": true,
+    "signed_module_gram_rank_three": true,
+    "signed_record_image_dense": true,
+    "source_conditional_mean_T_exact": true,
+    "source_native_physical_translation_promoted": false,
+    "support_areal_radius_is_primitive_hop_promoted": false,
+    "support_hop_equal_gram_isometry_implication": true
+  },
+  "claim_boundary": "The exact finite implication identifies the normalized icosahedral port Gram as four times the lowest-positive spectral projector of the declared seam Laplacian. The pinned source supplies one expectation-level discrete repair step; deriving the Gram as its normalized centered future-response kernel requires the named A2 carrier-position readback/topology premise. The intrinsic range of the selected projector is a rank-three local carrier with the port Gram, before any Cartesian chart is introduced. On the signed cumulative antipodal record module its position-metric completion is a three-dimensional Euclidean vector group, and raw record addition extends to translations of that completion. The normalized infinite-response limit must be taken before quotient and completion. Ordered history, exact records, and record cost remain a separate fiber. The support port frame has the same normalized Gram and is therefore related by a labeled isometry, while its dimensionful radius remains independent of the primitive hop until a source semantic identity is proved. The current source does not select the signed Z^6 module, the A1-R/A2-R repair amendment is not adopted, and A2 does not contain those completion/readback clauses. Ordered-history descent, temporal completeness, faithful action and overlap/refinement gluing, and the physical repair law remain open. No global or physical space, pixel, scale, field, time law, prediction, or comparison is promoted, and issue #662 remains unarmed.",
+  "comparison_data_read": false,
+  "countermodel_controls": {
+    "completion_without_source_control": {
+      "mathematical_completion_exists": true,
+      "source_native_physical_action_follows_without_A1_RG_A2_RC": false
+    },
+    "dense_hop_control": {
+      "arbitrarily_small_nonzero_composite_translations_exist": true,
+      "atomic_event_length_is_a_minimum_lattice_spacing": false,
+      "single_atomic_event_has_unit_normalized_gram_norm": true
+    },
+    "finite_n_completion_control": {
+      "finite_n_antipodally_odd_response_rank": 6,
+      "finite_n_centered_response_rank": 11,
+      "normalized_infinite_response_limit_is_load_bearing": true,
+      "three_dimensional_completion_before_normalized_limit": false
+    },
+    "finite_quotient_control": {
+      "fails_metric_factorization_reason": "3*e_alpha is zero in the finite endpoint quotient and has nonzero Gram length",
+      "finite_endpoint_quotient_is_physical_translation_completion": false,
+      "meaning": "(Z/3Z)^6"
+    },
+    "galois_branch_control": {
+      "separated_only_by_repair_cost_projector": true,
+      "surviving_models": [
+        "G",
+        "conj(G)"
+      ],
+      "weaker_clause": "A5 covariance, antipodes, rank three, and unit diagonal only"
+    },
+    "independent_rescaling_control": {
+      "R_A_over_a_remains_free": true,
+      "all_current_finite_invariants_preserved": true,
+      "family": "X_R(p)=R*u_p and h_a(p)=a*u_p for arbitrary R,a>0",
+      "weaker_clause": "same port labels, same A5 action, same normalized 1/12 measure, and isomorphic three-dimensional spaces"
+    },
+    "response_kernel_controls": {
+      "asymptotic_readback_normalization_is_load_bearing": true,
+      "equal_probe_counting_is_load_bearing_for_dimension_three": false,
+      "equal_probe_counting_is_load_bearing_for_exact_icosahedral_angles": true,
+      "unequal_probe_weight_control": "strictly positive unequal centered port-probe weights leave a rank-three P_low*W*P_low form rather than a scalar multiple of P_low",
+      "without_scale_normalization_raw_kernel_limit": "0 on the centered subspace"
+    }
+  },
+  "exact_repair_selected_gram": {
+    "Gram_class_adjacency_matches_independent_repair_incidence": true,
+    "canonical_centered_response_kernel_derivation": {
+      "common_diagonal_formula": "diag(C_n)=((55+sqrt5)/60)^(2n)/4+5*(9/10)^(2n)/12+((55-sqrt5)/60)^(2n)/4",
+      "current_A2_contains_completed_asymptotic_kernel_readback": false,
+      "exact_for_every_nonnegative_integer_n": true,
+      "exact_spectral_formula": "C_n=((55+sqrt5)/60)^(2n)*P_low+(9/10)^(2n)*P_5+((55-sqrt5)/60)^(2n)*P_high",
+      "finite_n_antipodally_odd_rank": 6,
+      "finite_n_centered_rank": 11,
+      "finite_n_signed_module_is_discrete_and_complete": true,
+      "formal_response_powers_are_physical_time_evolution": false,
+      "kernel_definition": "C_n=(T^n*Q)^T*(T^n*Q)=Q*T^(2n)*Q",
+      "limit_before_quotient_and_completion_required": true,
+      "named_Gram_topology_premise": "the scale-normalized asymptotic response kernel defines the port metric",
+      "named_operational_readback_premise": "completed future-repair distinguishability is read through the centered equal-port response kernel",
+      "port_gram_derived_rather_than_supplied_by_A1_RG": true,
+      "probe_count": 12,
+      "probe_family": "q_p=Q*e_p for all twelve ports with Q=I-P_0",
+      "probe_weights": "equal source-counting weight",
+      "projective_limit": "[C_n] -> [P_low]",
+      "response_vectors": "y_p^(n)=T^n*q_p",
+      "stochastic_initial_ensemble_required": false,
+      "strictly_positive_unequal_probe_weights_preserve_limit_rank_three": true,
+      "target_or_comparison_data_used": false,
+      "trace_formula": "trace(C_n)=3*((55+sqrt5)/60)^(2n)+5*(9/10)^(2n)+3*((55-sqrt5)/60)^(2n)",
+      "trace_one_limit": "C_n/trace(C_n) -> P_low/3",
+      "trace_twelve_limit": "12*C_n/trace(C_n) -> 4*P_low=G",
+      "unequal_weight_limit_form": "P_low*W*P_low on range(P_low)",
+      "unequal_weights_preserve_exact_icosahedral_Gram_angles": false,
+      "unique_largest_nonconstant_factor": "(55+sqrt5)/60",
+      "unit_diagonal_limit": "C_n/common_diagonal(C_n) -> 4*P_low=G"
+    },
+    "current_A1R_A2R_adopted": false,
+    "current_A1_selects_between_galois_frames": false,
+    "dynamical_selection_scope": "the finite implication uses the pinned one-step expectation operator and its formal powers; an IID history law, temporal completeness, asymptotic operational readback, and physical repair law are not promoted",
+    "full_gram_qsqrt5": [
+      [
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5"
+      ]
+    ],
+    "full_spectral_resolution": {
+      "costs": [
+        "0",
+        "5+-1*sqrt5",
+        "6+0*sqrt5",
+        "5+1*sqrt5"
+      ],
+      "projectors_pairwise_orthogonal": true,
+      "projectors_resolve_identity": true,
+      "ranks": [
+        1,
+        3,
+        5,
+        3
+      ]
+    },
+    "galois_control_gram_qsqrt5": [
+      [
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5"
+      ]
+    ],
+    "galois_partner_distinct": true,
+    "galois_partner_eigen_identity": "L_ico*conj(G)=(5+sqrt5)*conj(G)",
+    "gram_branch_selected_by_declared_repair_cost_if_A1R_A2R_adopted": true,
+    "gram_diagonal": "1",
+    "gram_squared_identity": "G^2=4G",
+    "independent_repair_incidence": {
+      "carrier_manifest_path": "tests/fixtures/echosahedral_federation_reference.json",
+      "carrier_manifest_raw_sha256": "sha256:12ec97358ade25f919f9981f1cd7c99c2b27aaaaa9ce14bd2320d73a9c1bfc14",
+      "fixture_to_source_port_map": [
+        5,
+        7,
+        4,
+        6,
+        1,
+        3,
+        0,
+        2,
+        9,
+        8,
+        11,
+        10
+      ],
+      "origin": "pinned repair carrier incidence, relabeled by exact frame equality",
+      "source_adjacency_sha256": "sha256:df1a35cb881c51f5a7b875e2d31bb81597bc0b164bd8a010b255ef0117a82001",
+      "source_edge_list": [
+        [
+          4,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          10,
+          11
+        ]
+      ],
+      "upstream_carrier_manifest_raw_sha256": "sha256:12ec97358ade25f919f9981f1cd7c99c2b27aaaaa9ce14bd2320d73a9c1bfc14"
+    },
+    "intrinsic_local_carrier": {
+      "ambient": "twelve-port source-counting space",
+      "cartesian_chart_role": "isometric chart and arithmetic density witness only",
+      "cartesian_coordinates_used_to_define_carrier": false,
+      "definition": "H=range(P_low)",
+      "generator_gram_identity": "<v_p,v_q>=4*(P_low)_pq=G_pq",
+      "generator_gram_identity_exact": true,
+      "global_or_physical_space_promoted": false,
+      "labeled_generator": "v_p=2*P_low*e_p",
+      "preferred_cartesian_frame_selected": false,
+      "real_dimension": 3
+    },
+    "laplacian_eigen_identity": "L_ico*G=(5-sqrt5)*G",
+    "positive_clock_rescaling_changes_selected_eigenspace": false,
+    "projector_constructed_from_independent_adjacency_polynomial": true,
+    "projector_polynomial": "P_low=(A-5I)(A+I)(A+sqrt(5)I)/((sqrt(5)-5)(sqrt(5)+1)(2sqrt(5)))",
+    "repair_generator": "K=L_ico/60",
+    "selected_band": "adjacency_+sqrt5__laplacian_5-sqrt5__rank_3",
+    "selected_gram_normalization": "G=4*P_slowest_nonconstant",
+    "selected_projector_trace": "3",
+    "slowest_band_selection_is_extra_economy_selector": false,
+    "source_backed_discrete_repair": {
+      "IID_or_temporal_independence_proved": false,
+      "continuous_exponential_semigroup_used": false,
+      "exact_power_formula": "T^n=P_0+((55+sqrt5)/60)^n*P_low+(9/10)^n*P_5+((55-sqrt5)/60)^n*P_high",
+      "formal_operator_powers_equal_physical_n_tick_history": false,
+      "full_temporal_grammar_completeness_proved": false,
+      "one_step_eigenvalues_descending": [
+        "1",
+        "11/12+1/60*sqrt5",
+        "9/10+0*sqrt5",
+        "11/12+-1/60*sqrt5"
+      ],
+      "one_step_expectation_operator": "T=I-L_ico/60",
+      "one_step_operator_source_backed_by_pinned_ancestry": true,
+      "physical_repair_law_promoted": false,
+      "strict_subunit_order": "0 < (55-sqrt5)/60 < 9/10 < (55+sqrt5)/60 < 1"
+    },
+    "strict_cost_order": "5-sqrt5 < 6 < 5+sqrt5",
+    "unscaled_laplacian_band_costs": [
+      "5+-1*sqrt5",
+      "6+0*sqrt5",
+      "5+1*sqrt5"
+    ]
+  },
+  "exact_signed_module_completion": {
+    "antipodal_relations": [
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        4,
+        7
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        8,
+        11
+      ],
+      [
+        9,
+        10
+      ]
+    ],
+    "atomic_generator_is_not_a_metric_minimum": true,
+    "carrier_position_readback_only": true,
+    "completion_theorem": "the metric completion of (M_Z,d_G) is uniquely isometric to H_0",
+    "completion_translation_action_is_same_raw_action": true,
+    "constructive_source_control_event_count": 12,
+    "constructive_source_control_is_canonical_source_law": false,
+    "constructive_source_control_projection_sha256": "sha256:42ea6e56ad9cde6cee68300b309e05eae980490ef86c02e42d84a11bedc1d3cd",
+    "continuous_carrier_constructed_as_metric_completion": true,
+    "continuous_carrier_is_primitive_input": false,
+    "continuous_field_assumed": false,
+    "density_argument": "sqrt(5) is irrational, so Z[phi] is dense in R; the determinant-eight image contains 8*Z[phi]^3 and is dense in R^3",
+    "faithful_A5_completion_action_formalized": false,
+    "finite_n_antipodally_odd_rank": 6,
+    "finite_n_centered_rank": 11,
+    "finite_n_signed_module_is_discrete_and_complete": true,
+    "full_Gram_antipodal_descent_identity": "G[antipode(p),q]=-G[p,q]=G[p,antipode(q)]",
+    "full_Gram_descends_to_signed_record_quotient": true,
+    "gram6_is_the_descended_positive_port_basis_form": true,
+    "gram6_qsqrt5": [
+      [
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5"
+      ]
+    ],
+    "gram_factorization": "G6=U^T U/(5/2+sqrt5/2)",
+    "group_and_action_extension_formalized_in_Lean": false,
+    "group_and_action_extension_scope": "standard completion theorem for a translation-invariant metric group; the finite Gram, density, and raw isometry premises are machine checked",
+    "hausdorff_metric": "d_G(m,n)^2=(m-n)^T G6 (m-n)",
+    "hausdorff_on_integer_records": true,
+    "image_contains": "8*Z[phi]^3",
+    "image_dense_in_real_three_space": true,
+    "image_module": "finite-index-8 submodule of Z[phi]^3",
+    "integer_kernel_is_zero": true,
+    "integer_kernel_witness": {
+      "coefficient_basis": "split every coordinate in the Q-basis {1,phi}",
+      "determinant": "-8",
+      "six_by_six_rational_matrix": [
+        [
+          "-1",
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        [
+          "0",
+          "0",
+          "-1",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0",
+          "-1",
+          "1"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "limit_before_quotient_and_completion_required": true,
+    "local_carrier_only": true,
+    "nonzero_integer_records_have_a_shortest_positive_gram_length": false,
+    "ordered_history_to_position_quotient_proved": false,
+    "overall_positive_metric_scale_selected": false,
+    "overlap_refinement_gluing_proved": false,
+    "physical_continuous_field_selected": false,
+    "positive_port_basis": [
+      0,
+      1,
+      4,
+      5,
+      8,
+      9
+    ],
+    "positive_semidefinite": true,
+    "preferred_cartesian_frame_selected": false,
+    "rank_witness_positive_ports": [
+      0,
+      1,
+      4
+    ],
+    "raw_addition_isometric": true,
+    "raw_generator_coordinates_qsqrt5": [
+      [
+        "-1+0*sqrt5",
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5"
+      ],
+      [
+        "1+0*sqrt5",
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5"
+      ],
+      [
+        "0+0*sqrt5",
+        "-1+0*sqrt5",
+        "1/2+1/2*sqrt5"
+      ],
+      [
+        "0+0*sqrt5",
+        "1+0*sqrt5",
+        "1/2+1/2*sqrt5"
+      ],
+      [
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5",
+        "-1+0*sqrt5"
+      ],
+      [
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5",
+        "1+0*sqrt5"
+      ]
+    ],
+    "raw_rank_witness_determinant": "-3+-1*sqrt5",
+    "real_kernel_dimension": 3,
+    "real_quotient": "H_0=(R tensor M_Z)/ker(G6)",
+    "real_quotient_dimension": 3,
+    "real_rank": 3,
+    "real_scalar_extension": "M_R=R tensor_Z M_Z ~= R^6",
+    "record_order_and_cost_retained_separately": true,
+    "scalar_field_space_selected": false,
+    "signed_cumulative_port_record_module": "M_Z=Z[ports]/<e_antipode(p)+e_p> ~= Z^6",
+    "single_event_generators_have_unit_gram_norm": true,
+    "translation_extension": "every addition map n->n+m extends uniquely by continuity to H_0"
+  },
+  "implementation_pins": [
+    {
+      "bytes": 65229,
+      "path": "oph_fpe/dynamics/port_gram_completion_bridge.py",
+      "sha256": "sha256:4834ca47dee8f395ea2fec1705633ea448cdac80ed0769fd68e784f271989f3f"
+    },
+    {
+      "bytes": 70995,
+      "path": "oph_fpe/dynamics/verify_port_gram_completion_bridge_independent.py",
+      "sha256": "sha256:c9a6ba94a4a84b8fe712e6ebe9363e629cb2add547b724dbc50c586c984b35be"
+    },
+    {
+      "bytes": 22283,
+      "path": "tests/test_port_gram_completion_bridge.py",
+      "sha256": "sha256:a93b1e54b71a397dd64128d9ab7b303beec701ccbdc19a24994d468f0308988f"
+    }
+  ],
+  "issues": [
+    655,
+    663,
+    664
+  ],
+  "parent_pins": {
+    "bounded_one_step_expectation_repair": {
+      "canonical_A3_alone_implies_markovity": false,
+      "certificate_payload_sha256": "sha256:9e87c5e4abfb3baed80058ffc832a6dbd3412f386eb383d68fee4ebee10c00d5",
+      "path": "data/repair_closure/bounded_atomic_self_readback_closure_receipt.json",
+      "physical_repair_law_receipt": false,
+      "raw_sha256": "sha256:ae0b1fcd39c54338a6f5af347557b0fcaedc681fa55b3236e1e95eb4a2719a93",
+      "schema": "oph.bounded_atomic_self_readback_closure.v1",
+      "status": "BOUNDED_EXPECTATION_LEVEL_REPAIR_FIXED_POINT_UNIQUE_MODULO_CLOCK_IN_THE_FROZEN_ADVERSARIAL_SUITE"
+    },
+    "constructive_signed_port_record_control": {
+      "canonical_source_selection": false,
+      "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
+      "raw_sha256": "sha256:5ecae92e51a3d0bbc87640650ec8686184d763f56fbeba1c666403a05d92083f",
+      "receipt_sha256": "sha256:93e02968ce5425d2bb14bcac832d776a340c9e9a86e50dee81aabcb857934d56",
+      "schema": "oph.vertex12-constructive-source-law-control.v1",
+      "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
+    },
+    "fz11_conditional_adapter": {
+      "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
+      "raw_sha256": "sha256:199529b661a3c1f4116bb3aafec0c19bac77142277a5ca390884167513d4f76d",
+      "receipt_sha256": "sha256:e0ecfb72aef1250d3f5ab64102b480e92e7c26e1958172f8a650dd28cf5460e9",
+      "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
+      "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
+    },
+    "port_repair_propagation_boundary": {
+      "one_step_operator": "T = I - L_icosahedron/60",
+      "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+      "raw_sha256": "sha256:72d04dfa270eae82e2ce02fe741b855ce6a76526e54455b63b7e9cbf35298bcb",
+      "receipt_sha256": "sha256:5857f5dd2e77bb9c7c062439ea2fef2c76a0452827c556cb53dadd26a4c062c8",
+      "same_operator_physical_readout_receipt": false,
+      "schema": "oph.port_repair_propagation_bridge_receipt.v1",
+      "spatial_port_hop_source_receipt": false,
+      "status": "BOUNDED_NONSELECTION__FZ11_REMAINS_BRANCH_PREDICTION"
+    },
+    "primitive_port_dual_measure": {
+      "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
+      "raw_sha256": "sha256:b37a2a83e91c4112cd19fd399025632702f31d8e7fb754b65524b47c8cb31fa1",
+      "receipt_sha256": "sha256:f3556ffd6b37ff5d801deff9edb934f8df6074bd3123fc1d173d4ebd3338530f",
+      "schema": "oph.primitive-port-dual-normalized-measure.v1",
+      "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
+    }
+  },
+  "receipt_sha256": "sha256:2c80149e92474cacd975ae6b303287cae3bb3ad92b48d4feef82139106e33795",
+  "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
+  "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN",
+  "support_hop_isometry_implication": {
+    "auxiliary_adapter_normalized_support_and_hop_directions_equal_by_definition": true,
+    "auxiliary_coordinate_equality_is_source_semantic_identity": false,
+    "common_finite_geometry_hash": "e333556ce101cb224d94882270c17e0d7e36469908871ca133e5bbbee2c6eafd",
+    "conditional_common_completion_object": "H_0",
+    "conditional_hop_symbol_scope": "a is the common norm of one atomic signed-port event, not a shortest nonzero translation length",
+    "conditional_identity_requires_A2_cauchy_readback_clause": true,
+    "conditional_primitive_hop": "h_p=class(e_p) in H_0",
+    "conditional_support_embedding": "X(p)=class(e_p) in H_0",
+    "dimensionful_support_and_hop_vectors_equal_by_definition": false,
+    "dimensionful_support_radius_over_hop_selected": false,
+    "labeled_spanning_equal_gram_isometry_theorem": "two spanning labeled families with identical Gram matrices admit a unique linear isometry sending every first-family vector to its labeled mate",
+    "normalized_labeled_frame_isometry": true,
+    "physical_areal_radius_selected": false,
+    "physical_pixel_identified": false,
+    "port_to_support_vertex_map": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "source_semantic_identity_required": true,
+    "support_and_hop_share_semantic_object_in_current_source": false,
+    "support_frame_gram_equals_selected_repair_gram": true
+  },
+  "target_data_read": false,
+  "weakest_clause_strengthening": {
+    "A1_RG": [
+      "The cumulative signed primitive port-record position is the antipodal module M_Z. Ordered event history, record identity, and repair cost remain separate data and are not quotiented into this position object.",
+      "On the same port labels, the adopted completed seam-repair source emits the one-step expectation operator T=I-L_ico/60 on the complete signed cumulative record module; it does not separately supply a Gram form.",
+      "The support seed map, signed cumulative record labels, and complete equal-port response-probe census are emitted in one source projection and co-transform under presentation and refinement."
+    ],
+    "A2_RC": [
+      "Operational meanings of cumulative port positions are Hausdorff and Cauchy-complete for the response-derived Gram seminorm; zero-distance positions are identified.",
+      "The primitive translation readback and support seed readback factor through that same universal completion, so their labeled generator maps are the unique equal-Gram isometry rather than two independently scaled copies.",
+      "Completed future-repair distinguishability is the centered equal-port response kernel, and its scale-normalized asymptotic ray defines the Gram topology on that same cumulative port-record position. The normalized infinite-response limit is taken before quotient and completion."
+    ],
+    "overall_clock_or_length_unit_left_free": true,
+    "proposed_label": "A1-RG/A2-RC cumulative port-record completion clause",
+    "why_no_fourth_axiom_is_needed_if_adopted": "A1 types the cumulative record position, event history, one-step response, support labels, and complete probe census; A2 fixes the response-derived topology, common operational completion, and same-readback factorization; A3 supplies the source-counting weights without a new geometric selector."
+  }
+}

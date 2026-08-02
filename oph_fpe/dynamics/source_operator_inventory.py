@@ -6,12 +6,13 @@ scalar or polarization-independent readout of that exact operator.  This
 module checks the narrower custody question needed to keep that branch sealed.
 
 The path census is the Git index under ``data/``.  Semantic scanning is limited
-to current canonical simulator JSON objects and excludes the inventory itself
-and its parent bridge receipt to avoid recursion.  Legacy earned runs, imported
-mirrors, and external/comparison data are counted and hash-bound by path only;
-their very large or LFS-backed JSON payloads are not parsed here.  Producer
-code, configs, tests, documents, sibling repositories, and unregistered
-equivalent semantics are outside this receipt.
+to current canonical simulator JSON objects and excludes the inventory, its
+parent bridge receipt, and declared descendant receipts that pin the parent to
+avoid hash cycles.  Legacy earned runs, imported mirrors, and
+external/comparison data are counted and hash-bound by path only; their very
+large or LFS-backed JSON payloads are not parsed here.  Producer code, configs,
+tests, documents, sibling repositories, and unregistered equivalent semantics
+are outside this receipt.
 """
 
 from __future__ import annotations
@@ -54,7 +55,14 @@ TEST_PATH = REPOSITORY_ROOT / "tests/test_source_operator_inventory.py"
 
 INVENTORY_RELATIVE_PATH = OUTPUT_PATH.relative_to(REPOSITORY_ROOT).as_posix()
 BRIDGE_RELATIVE_PATH = BRIDGE_RECEIPT_PATH.relative_to(REPOSITORY_ROOT).as_posix()
-DECLARED_OUTPUT_PATHS = {INVENTORY_RELATIVE_PATH, BRIDGE_RELATIVE_PATH}
+PORT_GRAM_RELATIVE_PATH = (
+    "data/repair_closure/port_gram_completion_bridge_receipt.json"
+)
+DECLARED_OUTPUT_PATHS = {
+    INVENTORY_RELATIVE_PATH,
+    BRIDGE_RELATIVE_PATH,
+    PORT_GRAM_RELATIVE_PATH,
+}
 
 NONCURRENT_PREFIXES = (
     "data/earned_runs/",
@@ -196,6 +204,39 @@ CANONICAL_CONTRACTS: dict[str, dict[str, Any]] = {
         (
             "CONDITIONAL_AUXILIARY_CONTINUOUS_R3_TRANSLATION_ADAPTER__"
             "NOT_SOURCE_NATIVE_NOT_PHYSICAL_NOT_COMPARISON_ELIGIBLE"
+        ),
+    ),
+    "data/repair_closure/fz11_conservative_time_lift_receipt.json": _contract(
+        "oph.fz11-conservative-time-lift.v1",
+        (
+            "EXACT_CONSERVATIVE_TIME_LIFT_FOR_DECLARED_FZ11_OPERATOR_ATTAINED__"
+            "SOURCE_B_CLOCK_LORENTZ_SECTOR_CONTINUUM_AND_SCALE_OPEN"
+        ),
+        (
+            "CONDITIONAL_CONSERVATIVE_TIME_LIFT__TRANSLATION_SOURCE_CLOCK_"
+            "LORENTZ_SECTOR_CONTINUUM_SCALE_AND_READOUT_OPEN"
+        ),
+    ),
+    PORT_GRAM_RELATIVE_PATH: _contract(
+        "oph.port-gram-hausdorff-completion-bridge.v1",
+        (
+            "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__"
+            "A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
+        ),
+        (
+            "RECURSIVE_DESCENDANT_PORT_GRAM_COMPLETION_RECEIPT_EXCLUDED_FROM_"
+            "SEMANTIC_SCAN"
+        ),
+    ),
+    "data/repair_closure/primitive_port_dual_measure_receipt.json": _contract(
+        "oph.primitive-port-dual-normalized-measure.v1",
+        (
+            "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__"
+            "PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
+        ),
+        (
+            "QUOTIENT_VISIBLE_PORT_DUAL_MEASURE__PHYSICAL_PIXEL_HOP_AND_SCALE_"
+            "IDENTITIES_OPEN"
         ),
     ),
     BRIDGE_RELATIVE_PATH: _contract(
@@ -524,6 +565,79 @@ def _critical_evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | 
             "emitted_finite_internal_seam_torsor": value.get("FINITE_DIRECTED_SEAM_TORSOR_RECEIPT"),
             "emitted_physical_repair_law": value.get("PHYSICAL_REPAIR_LAW_RECEIPT"),
             "emitted_full_universe_closure": value.get("FULL_SELF_READING_UNIVERSE_CLOSURE_RECEIPT"),
+        }
+    if path == "data/repair_closure/fz11_conservative_time_lift_receipt.json":
+        attainment = value.get("attainment", {})
+        binding = value.get("frozen_operator_binding", {})
+        discrete = value.get("discrete_time_audit", {})
+        return {
+            "emitted_conditional_auxiliary_time_evolution": attainment.get(
+                "conditional_auxiliary_time_evolution_supplied"
+            ),
+            "emitted_translation_action_source_selected": binding.get(
+                "translation_action_source_selected"
+            ),
+            "emitted_B_source_selected": attainment.get("B_source_selected"),
+            "emitted_generic_psd_factorizations_remain_nonunique": binding.get(
+                "generic_psd_factorizations_remain_nonunique_outside_declared_class"
+            ),
+            "emitted_phase_norm_identified_with_physical_energy": attainment.get(
+                "phase_norm_identified_with_physical_energy"
+            ),
+            "emitted_physical_clock_selected": attainment.get(
+                "physical_clock_selected"
+            ),
+            "emitted_lorentz_or_boost_law": attainment.get(
+                "lorentz_or_boost_law_derived"
+            ),
+            "emitted_physical_field_sector_selected": attainment.get(
+                "physical_field_sector_selected"
+            ),
+            "emitted_continuum_limit": attainment.get("continuum_limit_derived"),
+            "emitted_physical_scale_selected": attainment.get(
+                "physical_scale_selected"
+            ),
+            "emitted_physical_readout_selected": attainment.get(
+                "physical_readout_selected"
+            ),
+            "emitted_comparison_permitted": attainment.get("comparison_permitted"),
+            "emitted_repair_tick_supplies_physical_time": discrete.get(
+                "repair_tick_supplies_physical_time"
+            ),
+        }
+    if path == "data/repair_closure/primitive_port_dual_measure_receipt.json":
+        attainment = value.get("attainment", {})
+        boundary = value.get("epistemic_boundary", {})
+        return {
+            "emitted_exact_normalized_port_dual_measure": attainment.get(
+                "exact_normalized_port_dual_measure_1_over_12"
+            ),
+            "emitted_quotient_visible_port_to_support_map": attainment.get(
+                "quotient_visible_port_to_support_map"
+            ),
+            "emitted_declared_finite_refinement_naturality": attainment.get(
+                "declared_finite_refinement_naturality"
+            ),
+            "emitted_physical_P_pixel_identification": attainment.get(
+                "physical_P_pixel_is_primitive_port_sector"
+            ),
+            "emitted_support_radius_hop_identification": attainment.get(
+                "support_areal_radius_is_issue_655_translation_hop"
+            ),
+            "emitted_kappa_geom_source_selected": attainment.get(
+                "kappa_geom_source_selected"
+            ),
+            "emitted_terminal_refinement_stage_selected": attainment.get(
+                "terminal_physical_refinement_stage_selected"
+            ),
+            "emitted_shared_geometry_physical_identity": boundary.get(
+                "shared_geometry_implies_physical_identity"
+            ),
+            "emitted_comparison_permitted": attainment.get("comparison_permitted"),
+            "emitted_physical_prediction_promoted": attainment.get(
+                "physical_prediction_promoted"
+            ),
+            "emitted_issue_662_armed": attainment.get("issue_662_armed"),
         }
     if path == "data/local_domain/stage3_receipt.json":
         return {
@@ -1341,7 +1455,7 @@ def _payload() -> dict[str, Any]:
         "status": STATUS,
         "scope": (
             "Git-indexed tracked paths under data; semantic scan of current canonical "
-            "simulator JSON objects excluding the recursive inventory and parent bridge "
+            "simulator JSON objects excluding declared recursive ancestor and descendant "
             "outputs; legacy, imported, and external/comparison paths counted only"
         ),
         "tracked_serialized_data_catalog": {
@@ -1373,6 +1487,14 @@ def _payload() -> dict[str, Any]:
             "recursive_parent_bridge_receipt_exclusion": {
                 "path": BRIDGE_RELATIVE_PATH,
                 "reason": "parent output embeds the current negative source packet and is excluded to avoid recursive custody",
+                "packet_count_included_in_scan": False,
+            },
+            "recursive_descendant_receipt_exclusion": {
+                "path": PORT_GRAM_RELATIVE_PATH,
+                "reason": (
+                    "descendant output pins the parent bridge, which pins this "
+                    "inventory, and is excluded to avoid a hash cycle"
+                ),
                 "packet_count_included_in_scan": False,
             },
         },
