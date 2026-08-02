@@ -1,0 +1,1593 @@
+{
+  "attainment": {
+    "cofinal_refinement_gluing_proved": false,
+    "comparison_permitted": false,
+    "conditional_completion_action_available": true,
+    "conditional_mean_descends_and_is_equivariant": true,
+    "full_pathwise_repair_descent_proved": false,
+    "global_space_promoted": false,
+    "operational_position_readback_selected": false,
+    "ordered_history_to_position_descent_proved": false,
+    "physical_prediction_promoted": false,
+    "physical_translation_action_promoted": false,
+    "repair_amendment_adopted": false,
+    "signed_module_remains_arbitrary_algebraic_control": false,
+    "source_integer_load_metric_quotient_to_signed_module_derived": true
+  },
+  "claim_boundary": "The pinned repair source supplies twelve integer load coordinates. The integer radical of the repair-selected Gram is exactly the subgroup of antipodally equal loads, so its metric quotient is canonically the signed six-coordinate module. This removes the module as an independent algebraic input. The proper carrier action preserves the quotient, and the exact conditional mean intertwines with its induced operator. For the thirty source seams, composing the incidence boundary with the load quotient has rank six and image exactly the even-sum D6 lattice. Its direction axes bind to the existing edge30 control ray without making the seams spatial hops or nonlinear repair updates. For each positive protected total, differences of admissible source states generate the even-sum D6 lattice, whose repair-Gram image is dense in the same conditional three-dimensional completion. A fixed-total state set itself is finite and is not dense. The full nonlinear repair kernel does not descend through the quotient; an exact total-two counterexample is retained. Therefore ordered-history descent, operational position semantics, adoption of the repair clauses, cofinal gluing, global space, physical action, scale, prediction, and comparison remain open.",
+  "comparison_data_read": false,
+  "exact_integer_load_metric_quotient": {
+    "Gram_factorization": "G12=D^T*G6*D",
+    "Gram_factorization_exact": true,
+    "antipodal_involution": [
+      3,
+      2,
+      1,
+      0,
+      7,
+      6,
+      5,
+      4,
+      11,
+      10,
+      9,
+      8
+    ],
+    "difference_after_section_is_identity": true,
+    "difference_map": "D(x)_i=x[p_i]-x[-p_i]",
+    "difference_map_surjective": true,
+    "difference_matrix": [
+      [
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        -1,
+        0
+      ]
+    ],
+    "extra_real_radical_directions_have_nonzero_integer_points": false,
+    "integer_kernel_rank": 6,
+    "integer_metric_kernel": "ker_Z(G12)=ker_Z(D)={x:x_p=x_-p}",
+    "integer_metric_kernel_exact": true,
+    "integer_section_matrix": [
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "positive_port_basis": [
+      0,
+      1,
+      4,
+      5,
+      8,
+      9
+    ],
+    "quotient_completion_equals_parent_conditional_completion": true,
+    "quotient_isomorphic_to_Z6": true,
+    "real_Gram_radical_dimension": 9,
+    "real_Gram_radical_equals_integer_kernel_scalar_extension": false,
+    "signed_module_derived_from_source_load_domain": true,
+    "signed_module_independent_input_required": false,
+    "source_load_group_completion": "Grothendieck(N^12)=Z^12"
+  },
+  "exact_mean_quotient_intertwiner": {
+    "identity": "D*T12=T6*D",
+    "identity_exact": true,
+    "induced_operator_q": [
+      [
+        "11/12",
+        "1/60",
+        "-1/60",
+        "1/60",
+        "-1/60",
+        "-1/60"
+      ],
+      [
+        "1/60",
+        "11/12",
+        "-1/60",
+        "1/60",
+        "1/60",
+        "1/60"
+      ],
+      [
+        "-1/60",
+        "-1/60",
+        "11/12",
+        "1/60",
+        "-1/60",
+        "1/60"
+      ],
+      [
+        "1/60",
+        "1/60",
+        "1/60",
+        "11/12",
+        "-1/60",
+        "1/60"
+      ],
+      [
+        "-1/60",
+        "1/60",
+        "-1/60",
+        "-1/60",
+        "11/12",
+        "1/60"
+      ],
+      [
+        "-1/60",
+        "1/60",
+        "1/60",
+        "1/60",
+        "1/60",
+        "11/12"
+      ]
+    ],
+    "mean_readback_only": true,
+    "proper_carrier_equivariant": true,
+    "same_operator_as_parent_response_step": true,
+    "source_operator": "T12=I-L_icosahedron/60",
+    "unitary_or_physical_propagation_identified": false
+  },
+  "exact_seam_current_boundary": {
+    "D_boundary_chart_equals_port_coordinate_difference_exact": true,
+    "Smith_invariants": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+    ],
+    "boundary_matrix_12_by_30": [
+      [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        -1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        -1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        -1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "edge30_control_axis_multiset_binding_exact": true,
+    "edge30_control_ray": {
+      "B0": "1/840",
+      "B0_over_C4_squared": "10/21",
+      "B6": "-1/12600",
+      "B6_over_B0": "-1/15",
+      "B6_over_C4_squared": "-2/63",
+      "C4": "-1/20"
+    },
+    "edge30_control_ray_digest": "sha256:683da90123810ec154d17893519aa79c166c34c4b579d5f57daf0965b9d32c93",
+    "edge30_control_ray_physicalized": false,
+    "edge30_coordinate_chart_scale": "phi=(1+sqrt5)/2",
+    "edge30_orientation_signs_selected": false,
+    "every_seam_current_has_even_coordinate_sum": true,
+    "image_equals_pairwise_displacement_generated_D6": true,
+    "index_two_minor_columns": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7
+    ],
+    "index_two_minor_determinant": -2,
+    "index_two_minor_edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        0,
+        7
+      ],
+      [
+        0,
+        10
+      ],
+      [
+        0,
+        11
+      ],
+      [
+        1,
+        8
+      ]
+    ],
+    "oriented_edge_convention": "one column e_right-e_left for each left<right seam",
+    "rank": 6,
+    "seam_boundary_columns_are_algebraic_load_currents": true,
+    "seam_boundary_columns_are_nonlinear_repair_updates": false,
+    "signed_seam_current_matrix_D_after_boundary": [
+      [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        -1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1,
+        -1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        -1,
+        -1
+      ],
+      [
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        -1,
+        1,
+        1
+      ]
+    ],
+    "source_edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        0,
+        7
+      ],
+      [
+        0,
+        10
+      ],
+      [
+        0,
+        11
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        1,
+        8
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        2,
+        11
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        3,
+        6
+      ],
+      [
+        3,
+        8
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        9
+      ],
+      [
+        4,
+        11
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        5,
+        11
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        7,
+        8
+      ],
+      [
+        7,
+        10
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        10,
+        11
+      ]
+    ],
+    "spatial_hop_source_certified": false,
+    "thirty_seams_are_sixty_or_twelve_translation_events": false,
+    "undirected_seam_count": 30
+  },
+  "fixed_total_source_geometry": {
+    "D6_contains_2Z6": true,
+    "D6_repair_Gram_image_dense_in_parent_completion": true,
+    "density_uses_displacement_group_completion_not_finite_state_set": true,
+    "displacement_lattice_Smith_invariants": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+    ],
+    "displacement_lattice_index_in_Z6": 2,
+    "exact_formula": "q(N^12 cap {sum x=S})={z in Z^6: sum|z_i|<=S and sum z_i congruent S mod 2}",
+    "exhaustive_source_rows": [
+      {
+        "distinct_quotient_state_count": 1,
+        "exact_nonnegative_image_formula_verified": true,
+        "protected_total": 0,
+        "source_state_count": 1
+      },
+      {
+        "distinct_quotient_state_count": 12,
+        "exact_nonnegative_image_formula_verified": true,
+        "protected_total": 1,
+        "source_state_count": 12
+      },
+      {
+        "distinct_quotient_state_count": 73,
+        "exact_nonnegative_image_formula_verified": true,
+        "protected_total": 2,
+        "source_state_count": 78
+      },
+      {
+        "distinct_quotient_state_count": 304,
+        "exact_nonnegative_image_formula_verified": true,
+        "protected_total": 3,
+        "source_state_count": 364
+      },
+      {
+        "distinct_quotient_state_count": 985,
+        "exact_nonnegative_image_formula_verified": true,
+        "protected_total": 4,
+        "source_state_count": 1365
+      }
+    ],
+    "leading_unit_minor_and_full_determinant_witness": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+    ],
+    "one_fixed_total_nonnegative_image_is_dense": false,
+    "one_fixed_total_nonnegative_image_is_finite": true,
+    "positive_total_pairwise_displacement_generated_subgroup": "D6={d in Z^6: sum d_i even}",
+    "raw_pairwise_displacement_set_at_fixed_total_is_finite": true,
+    "total_one_basis_extends_to_every_positive_total_by_common_filler": true,
+    "total_one_difference_basis": [
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        -1
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        -1
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        -1
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0,
+        -1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        -1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ]
+    ],
+    "total_one_difference_basis_matrix": [
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        2
+      ]
+    ],
+    "unrestricted_integer_fixed_total_image": "q(Z^12 cap {sum x=S})={z in Z^6: sum z_i congruent S mod 2}"
+  },
+  "implementation_pins": [
+    {
+      "bytes": 32670,
+      "path": "oph_fpe/dynamics/port_load_metric_quotient.py",
+      "sha256": "sha256:2bbcc07ce47be3dda1a54232124be593dde7623b275071988d98a9a5aafb0d25"
+    },
+    {
+      "bytes": 28799,
+      "path": "oph_fpe/dynamics/verify_port_load_metric_quotient_independent.py",
+      "sha256": "sha256:8314fec775b62f80d70d568e4872ab1e0b7fd4ec53546272b390a934356b11f8"
+    },
+    {
+      "bytes": 11406,
+      "path": "tests/test_port_load_metric_quotient.py",
+      "sha256": "sha256:e3b23035b5bb54f6dd2b7dae8d936cb5623e6d8a41eee6e190406391242c7d68"
+    }
+  ],
+  "issues": [
+    655,
+    663,
+    666
+  ],
+  "parent_pins": {
+    "bounded_integer_load_repair_source": {
+      "bytes": 47923,
+      "certificate_payload_sha256": "sha256:9e87c5e4abfb3baed80058ffc832a6dbd3412f386eb383d68fee4ebee10c00d5",
+      "directed_completion_label_count": 60,
+      "path": "data/repair_closure/bounded_atomic_self_readback_closure_receipt.json",
+      "schema": "oph.bounded_atomic_self_readback_closure.v1",
+      "sha256": "sha256:ae0b1fcd39c54338a6f5af347557b0fcaedc681fa55b3236e1e95eb4a2719a93",
+      "status": "BOUNDED_EXPECTATION_LEVEL_REPAIR_FIXED_POINT_UNIQUE_MODULO_CLOCK_IN_THE_FROZEN_ADVERSARIAL_SUITE",
+      "undirected_seam_attempt_count": 30
+    },
+    "carrier_manifest": {
+      "bytes": 3646,
+      "path": "tests/fixtures/echosahedral_federation_reference.json",
+      "sha256": "sha256:12ec97358ade25f919f9981f1cd7c99c2b27aaaaa9ce14bd2320d73a9c1bfc14"
+    },
+    "conditional_equivariant_completion_action": {
+      "bytes": 13060,
+      "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
+      "receipt_sha256": "sha256:d0003711b09098fabc21b7a299da5a60e9035e508ce536afb07b9ec0a90c715f",
+      "schema": "oph.port-gram-equivariant-completion-action.v1",
+      "sha256": "sha256:d7fdcbc098f907aa0270271b799dbd60ddb241d763dc01f994fa7bb39051ee87",
+      "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
+    },
+    "edge30_orbit_ray_control": {
+      "bytes": 18602,
+      "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
+      "receipt_sha256": "sha256:ec72ec6facd2b61ad333ce1191ddf9ad86c39371d433ac1428e035815fb715dd",
+      "schema": "oph.port_repair_propagation_bridge_receipt.v1",
+      "selected_spatial_orbit": null,
+      "sha256": "sha256:1021bdff1cd53560e37ad202b153a80a195d09fbe54d81f58699a8674f31a3ec",
+      "spatial_hop_source_certified": false,
+      "status": "BOUNDED_NONSELECTION__FZ11_REMAINS_BRANCH_PREDICTION"
+    },
+    "repair_selected_completion": {
+      "bytes": 32216,
+      "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
+      "receipt_sha256": "sha256:8733f9f22ffa7d90bd5261cde8dba85c6a7e2cce7c19e1b7be767d03b44c9899",
+      "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
+      "sha256": "sha256:2dedde8473317678cd4e2ebc763522735fcbc90599c4c9f678ecbdda27842641",
+      "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
+    }
+  },
+  "pathwise_descent_counterexample": {
+    "full_nonlinear_repair_kernel_descends": false,
+    "individual_seam_events_are_translation_generators": false,
+    "left_quotient_distribution": [
+      {
+        "probability": "1/60",
+        "z": [
+          -1,
+          0,
+          0,
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          -1,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          0,
+          -1,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          0,
+          0,
+          -1,
+          0,
+          1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          0,
+          0,
+          0,
+          -1,
+          1
+        ]
+      },
+      {
+        "probability": "5/6",
+        "z": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          -1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          -1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      }
+    ],
+    "one_step_quotient_distributions_equal": false,
+    "protected_total": 2,
+    "quotient_expectations_equal": true,
+    "right_quotient_distribution": [
+      {
+        "probability": "1/60",
+        "z": [
+          -1,
+          0,
+          -1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          -1,
+          0,
+          0,
+          0,
+          -1,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          -1,
+          0,
+          0,
+          0,
+          0,
+          -1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          -1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          -1,
+          1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "5/6",
+        "z": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          1,
+          -1,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          1,
+          0,
+          0,
+          -1,
+          0,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "probability": "1/60",
+        "z": [
+          1,
+          0,
+          1,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "same_input_quotient": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "sixty_completion_labels_identified_with_twelve_translations": false,
+    "state_left": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0
+    ],
+    "state_right": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "thirty_seam_attempts_identified_with_six_axis_steps": false
+  },
+  "receipt_sha256": "sha256:8910933d4194a2da1b5f769c1b53f53882a2524c00b25abd1d6203295a993deb",
+  "schema": "oph.port-load-repair-gram-metric-quotient.v1",
+  "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN",
+  "target_data_read": false
+}

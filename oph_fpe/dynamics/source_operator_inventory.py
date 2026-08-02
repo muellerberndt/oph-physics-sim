@@ -58,10 +58,18 @@ BRIDGE_RELATIVE_PATH = BRIDGE_RECEIPT_PATH.relative_to(REPOSITORY_ROOT).as_posix
 PORT_GRAM_RELATIVE_PATH = (
     "data/repair_closure/port_gram_completion_bridge_receipt.json"
 )
+PORT_GRAM_ACTION_RELATIVE_PATH = (
+    "data/repair_closure/port_gram_equivariant_action_receipt.json"
+)
+PORT_LOAD_QUOTIENT_RELATIVE_PATH = (
+    "data/repair_closure/port_load_metric_quotient_receipt.json"
+)
 DECLARED_OUTPUT_PATHS = {
     INVENTORY_RELATIVE_PATH,
     BRIDGE_RELATIVE_PATH,
     PORT_GRAM_RELATIVE_PATH,
+    PORT_GRAM_ACTION_RELATIVE_PATH,
+    PORT_LOAD_QUOTIENT_RELATIVE_PATH,
 }
 
 NONCURRENT_PREFIXES = (
@@ -227,6 +235,23 @@ CANONICAL_CONTRACTS: dict[str, dict[str, Any]] = {
             "RECURSIVE_DESCENDANT_PORT_GRAM_COMPLETION_RECEIPT_EXCLUDED_FROM_"
             "SEMANTIC_SCAN"
         ),
+    ),
+    PORT_GRAM_ACTION_RELATIVE_PATH: _contract(
+        "oph.port-gram-equivariant-completion-action.v1",
+        (
+            "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_"
+            "COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_"
+            "ACTION_OPEN"
+        ),
+        "RECURSIVE_DESCENDANT_EQUIVARIANT_ACTION_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
+    ),
+    PORT_LOAD_QUOTIENT_RELATIVE_PATH: _contract(
+        "oph.port-load-repair-gram-metric-quotient.v1",
+        (
+            "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__"
+            "PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN"
+        ),
+        "RECURSIVE_DESCENDANT_LOAD_QUOTIENT_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
     ),
     "data/repair_closure/primitive_port_dual_measure_receipt.json": _contract(
         "oph.primitive-port-dual-normalized-measure.v1",

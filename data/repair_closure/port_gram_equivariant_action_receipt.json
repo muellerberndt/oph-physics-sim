@@ -1,0 +1,545 @@
+{
+  "attainment": {
+    "A2_operational_position_topology_selected": false,
+    "canonical_signed_record_source_selected": false,
+    "cofinal_overlap_refinement_gluing_proved": false,
+    "comparison_permitted": false,
+    "conditional_faithful_A5_completion_action_certified": true,
+    "finite_declared_tower_recharting_cocycle_certified": true,
+    "global_space_promoted": false,
+    "parent_completion_premises_discharged": false,
+    "physical_action_promoted": false,
+    "physical_prediction_promoted": false,
+    "scale_refinement_naturality_proved": false
+  },
+  "claim_boundary": "The pinned oriented twelve-port carrier has exactly sixty proper incidence automorphisms. They preserve the repair-selected Gram, act faithfully on its rank-three real quotient, preserve the antipodal relations, and induce signed integral isometries of the dense cumulative-record module. Each therefore extends uniquely to an isometry of the conditional metric completion. Two explicit generators satisfy the (2,3,5) presentation and generate all sixty maps, identifying the action with the proper icosahedral group A5. The three manifest-declared tower maps are members of this action, intertwine the Gram and repair operator, and obey the exact r0-r1-r2 cocycle. Those maps are permutations of one finite carrier, so this is finite recharting naturality rather than scale refinement, cofinal gluing, or an atlas theorem. The parent completion remains conditional on signed-record and position-readback premises. No global or physical space, physical action, field, time, length scale, prediction, or comparison is promoted.",
+  "comparison_data_read": false,
+  "declared_finite_tower_cocycle": {
+    "cofinal_refinement_family_proved": false,
+    "completion_isometry_cocycle_exact": true,
+    "direct_r0_r2_equals_r1_r2_after_r0_r1": true,
+    "finite_recharting_naturality_attained": true,
+    "global_carrier_gluing_proved": false,
+    "map_rows": [
+      {
+        "antipodal_signed_module_action": [
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            -1,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            -1
+          ]
+        ],
+        "port_permutation": [
+          1,
+          0,
+          3,
+          2,
+          6,
+          7,
+          4,
+          5,
+          11,
+          10,
+          9,
+          8
+        ],
+        "proper_carrier_action_member": true,
+        "repair_incidence_intertwined_exactly": true,
+        "selected_Gram_intertwined_exactly": true,
+        "source": "r0",
+        "target": "r1"
+      },
+      {
+        "antipodal_signed_module_action": [
+          [
+            0,
+            0,
+            -1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            -1,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            0,
+            0,
+            -1,
+            0,
+            0
+          ]
+        ],
+        "port_permutation": [
+          5,
+          1,
+          2,
+          6,
+          3,
+          10,
+          9,
+          0,
+          7,
+          11,
+          8,
+          4
+        ],
+        "proper_carrier_action_member": true,
+        "repair_incidence_intertwined_exactly": true,
+        "selected_Gram_intertwined_exactly": true,
+        "source": "r0",
+        "target": "r2"
+      },
+      {
+        "antipodal_signed_module_action": [
+          [
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        ],
+        "port_permutation": [
+          1,
+          5,
+          6,
+          2,
+          9,
+          0,
+          3,
+          10,
+          4,
+          8,
+          11,
+          7
+        ],
+        "proper_carrier_action_member": true,
+        "repair_incidence_intertwined_exactly": true,
+        "selected_Gram_intertwined_exactly": true,
+        "source": "r1",
+        "target": "r2"
+      }
+    ],
+    "maps_add_new_carrier_degrees_of_freedom": false,
+    "overlap_atlas_gluing_proved": false,
+    "scale_refinement_semigroup_proved": false,
+    "signed_module_cocycle_exact": true
+  },
+  "exact_completion_action": {
+    "all_proper_maps_commute_with_repair_incidence": true,
+    "all_proper_maps_preserve_antipodal_relations": true,
+    "all_proper_maps_preserve_selected_Gram": true,
+    "antipodal_involution": [
+      3,
+      2,
+      1,
+      0,
+      7,
+      6,
+      5,
+      4,
+      11,
+      10,
+      9,
+      8
+    ],
+    "completion_action_faithful": true,
+    "dense_module_isometries_extend_uniquely_to_metric_completion": true,
+    "extension_is_conditional_on_parent_completion_premises": true,
+    "quotient_action_faithful": true,
+    "quotient_action_kernel_size": 1,
+    "selected_Gram_in_manifest_order_qsqrt5": [
+      [
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5"
+      ],
+      [
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "-1+0*sqrt5",
+        "1+0*sqrt5",
+        "0+1/5*sqrt5"
+      ],
+      [
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "-1+0*sqrt5",
+        "0+-1/5*sqrt5",
+        "0+1/5*sqrt5",
+        "1+0*sqrt5"
+      ]
+    ],
+    "signed_action_composition_exact": true,
+    "signed_integral_action_count": 60,
+    "signed_integral_action_faithful": true,
+    "signed_integral_determinant_values": [
+      1
+    ],
+    "signed_module_basis_ports": [
+      0,
+      1,
+      4,
+      5,
+      8,
+      9
+    ],
+    "source_native_physical_action_promoted": false
+  },
+  "exact_proper_carrier_action": {
+    "abstract_group_identification": "A5 (proper icosahedral rotations)",
+    "element_order_histogram": {
+      "1": 1,
+      "2": 15,
+      "3": 20,
+      "5": 24
+    },
+    "full_incidence_automorphism_count": 120,
+    "generated_subgroup_order": 60,
+    "order_three_generator": [
+      1,
+      5,
+      6,
+      2,
+      9,
+      0,
+      3,
+      10,
+      4,
+      8,
+      11,
+      7
+    ],
+    "order_two_generator": [
+      1,
+      0,
+      3,
+      2,
+      6,
+      7,
+      4,
+      5,
+      11,
+      10,
+      9,
+      8
+    ],
+    "orientation_field_is_load_bearing": true,
+    "oriented_proper_automorphism_count": 60,
+    "presentation": "<s,t | s^2=t^3=(s*t)^5=1>",
+    "product_order": 5,
+    "proper_action_permutations_sha256": "sha256:d1ab7e4be9d7f8296fc5b6f55057388a0c7dbe7d2675c9e2f9ff549597ffbf88",
+    "removing_orientation_retains_full_order_120_group": true
+  },
+  "implementation_pins": [
+    {
+      "bytes": 25293,
+      "path": "oph_fpe/dynamics/port_gram_equivariant_action.py",
+      "sha256": "sha256:6ebe0a84e0f678c4cf1e1c5d40b11998dca455edf32c79258005b51e70d7dcef"
+    },
+    {
+      "bytes": 21578,
+      "path": "oph_fpe/dynamics/verify_port_gram_equivariant_action_independent.py",
+      "sha256": "sha256:1a516012251d6eb690624a19e9424a0e7c6ec7bdb65cbc18d5fb92839e1893e8"
+    },
+    {
+      "bytes": 9420,
+      "path": "tests/test_port_gram_equivariant_action.py",
+      "sha256": "sha256:d35dc66a3c1ffb23b5533ed2079f96f3e95ed32320db8fbdbf0f47c0a397ceb0"
+    }
+  ],
+  "issues": [
+    655,
+    663
+  ],
+  "parent_pins": {
+    "oriented_carrier_and_declared_tower": {
+      "bytes": 3646,
+      "levels": [
+        "r0",
+        "r1",
+        "r2"
+      ],
+      "path": "tests/fixtures/echosahedral_federation_reference.json",
+      "schema": "oph.echosahedral_selector_manifest.v1",
+      "sha256": "sha256:12ec97358ade25f919f9981f1cd7c99c2b27aaaaa9ce14bd2320d73a9c1bfc14"
+    },
+    "repair_selected_completion": {
+      "bytes": 32216,
+      "completion_conditional": true,
+      "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
+      "physical_three_space_promoted": false,
+      "receipt_sha256": "sha256:8733f9f22ffa7d90bd5261cde8dba85c6a7e2cce7c19e1b7be767d03b44c9899",
+      "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
+      "sha256": "sha256:2dedde8473317678cd4e2ebc763522735fcbc90599c4c9f678ecbdda27842641",
+      "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
+    }
+  },
+  "receipt_sha256": "sha256:d0003711b09098fabc21b7a299da5a60e9035e508ce536afb07b9ec0a90c715f",
+  "schema": "oph.port-gram-equivariant-completion-action.v1",
+  "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN",
+  "target_data_read": false
+}

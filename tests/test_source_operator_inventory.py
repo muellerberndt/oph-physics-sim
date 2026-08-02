@@ -176,6 +176,27 @@ def test_port_gram_descendant_is_declared_and_excluded_from_recursive_scan() -> 
     assert exclusion["packet_count_included_in_scan"] is False
 
 
+def test_completion_action_and_load_quotient_descendants_are_cycle_excluded() -> None:
+    expected = {
+        inventory.PORT_GRAM_ACTION_RELATIVE_PATH: (
+            "oph.port-gram-equivariant-completion-action.v1",
+            "RECURSIVE_DESCENDANT_EQUIVARIANT_ACTION_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
+        ),
+        inventory.PORT_LOAD_QUOTIENT_RELATIVE_PATH: (
+            "oph.port-load-repair-gram-metric-quotient.v1",
+            "RECURSIVE_DESCENDANT_LOAD_QUOTIENT_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
+        ),
+    }
+    for path, (schema, disposition) in expected.items():
+        row = _row(REPORT, path)
+        assert row["path"] == path
+        assert row["schema"] == schema
+        assert row["disposition"] == disposition
+        assert row["semantic_scan_excluded_as_recursive_output"] is True
+        assert row["critical_bridge_evidence"] is None
+        assert "raw_pin" not in row
+
+
 def test_primitive_port_dual_measure_retains_physical_attachment_boundary() -> None:
     path = "data/repair_closure/primitive_port_dual_measure_receipt.json"
     row = _row(REPORT, path)
