@@ -1,0 +1,2046 @@
+{
+  "attainment": {
+    "boost_law_derived": false,
+    "canonical_A1_A2_A3_derivation": false,
+    "canonical_physical_readout": false,
+    "canonical_source_selection": false,
+    "carrier_frame_selected": false,
+    "comparison_permitted": false,
+    "conditional_auxiliary_R3_shift_adapter": true,
+    "exact_FZ11_cosine_symbol": true,
+    "exact_frozen_coefficient_relations": true,
+    "exact_inverse_shift_pairing": true,
+    "exact_raw_Z6_impulse_replay": true,
+    "exact_signed_record_to_R3_shift_homomorphism": true,
+    "exact_source_to_PortFrameGram_conjugacy": true,
+    "exclusivity_proved": false,
+    "faithful_finite_Q_translation_action": false,
+    "finite_scale_selected": false,
+    "issue_655_closure_supported": false,
+    "issue_662_armed": false,
+    "observer_quotient_spatial_readout": false,
+    "photon_sector_selected": false,
+    "physical_prediction_promoted": false,
+    "physical_sector_selected": false,
+    "spatial_site_lattice_or_quasicrystal": false,
+    "target_free_R3_plane_wave_replay": true,
+    "time_evolution_derived": false
+  },
+  "claim_boundary": "The constructive Z^6 control admits a mathematically consistent, A5-covariant homomorphism into three-dimensional icosahedral translations. On this declared adapter, the signed-step operator has the frozen FZ-11 plane-wave symbol and exact coefficient relations. Canonical A1-A3 do not select the source law, the adapter, a physical sector, or a physical readout. The modulo-three observer meaning does not factor the R3 map. The integer image is an injective, dense index-eight submodule of (a/sqrt(2+phi))*Z[phi]^3, so it is a finite-range operator on an assumed continuous field rather than a locally finite lattice or quasicrystal. No comparison is permitted and issue #662 remains unarmed.",
+  "comparison_data_read": false,
+  "conditional_R3_translation_adapter": {
+    "adapter_is_auxiliary_physical_branch_premise": true,
+    "adapter_selected_by_canonical_repair_dynamics": false,
+    "axis_to_positive_source_port": [
+      0,
+      1,
+      4,
+      5,
+      8,
+      9
+    ],
+    "codomain": "additive Euclidean R^3 acting on an assumed continuous field",
+    "continuous_R3_field_is_an_auxiliary_input": true,
+    "domain": "raw constructive-source record module Z^6",
+    "image_density_certificate": {
+      "character_test": {
+        "annihilator": "{0}",
+        "assumption": "q dot ((a/sqrt(2+phi))*g_alpha) is integral for all six raw generators",
+        "forced_coordinate_pairs": [
+          "2*p_x is integral and 2*phi*p_x is integral",
+          "2*p_y is integral and 2*phi*p_y is integral",
+          "2*p_z is integral and 2*phi*p_z is integral"
+        ],
+        "irrationality_witness": "x^2-x-1 has nonsquare discriminant 5 over Q",
+        "rescaled_character": "p=(a/sqrt(2+phi))*q"
+      },
+      "common_unit_normalization": "1/sqrt(2+phi)",
+      "conclusion": "for every finite positive a the image is a dense index-eight submodule of (a/sqrt(2+phi))*Z[phi]^3",
+      "golden_ratio": "phi=(1+sqrt(5))/2",
+      "index_witness": "absolute determinant of the six-by-six {1,phi}-coefficient matrix",
+      "physical_image_module": "(a/sqrt(2+phi))*M, where M is the raw image",
+      "raw_coordinate_module": "Z[phi]^3=(Z+phi*Z)^3",
+      "raw_image_contains_eight_times_Z_phi_cubed": true,
+      "raw_image_index_in_Z_phi_cubed": 8
+    },
+    "image_is_dense_index_8_submodule_of_scaled_Z_phi_cubed": true,
+    "image_is_locally_finite_spatial_lattice_or_quasicrystal": false,
+    "integer_injection_certificate": {
+      "basis": "split each R3 coordinate in the Q-basis {1,phi}",
+      "conclusion": "F_a(n)=0 implies n=0 for every finite positive a",
+      "determinant": "-8",
+      "positive_axis_order": [
+        0,
+        1,
+        4,
+        5,
+        8,
+        9
+      ],
+      "rank": 6,
+      "six_by_six_rational_coefficient_matrix": [
+        [
+          "-1",
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0",
+          "1",
+          "1"
+        ],
+        [
+          "0",
+          "0",
+          "-1",
+          "1",
+          "0",
+          "0"
+        ],
+        [
+          "1",
+          "1",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0",
+          "-1",
+          "1"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "1",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "integer_kernel_dimension": 0,
+    "integer_module_map_is_injective": true,
+    "inverse_source_steps_map_to_inverse_R3_shifts": true,
+    "map": "F_a(n)=a*sum_alpha n_alpha*u_alpha",
+    "observer_modulo_three_quotient_factors_this_R3_map": false,
+    "port_rows": [
+      {
+        "RER_PortFrameGram_label": 8,
+        "inverse_source_port": 3,
+        "raw_R3_direction_qsqrt5": [
+          "-1+0*sqrt5",
+          "1/2+1/2*sqrt5",
+          "0+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:cb94b188735dbe9bffa53d8f15e9a9cd14c7ae4b10d48a0f9f0b576539178f63",
+        "source_port": 0,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 10,
+        "inverse_source_port": 2,
+        "raw_R3_direction_qsqrt5": [
+          "1+0*sqrt5",
+          "1/2+1/2*sqrt5",
+          "0+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:6b6df799aeafa54f529133c91b3f1e57f6a98c55ec6f5d821ccd8570b2bc4de3",
+        "source_port": 1,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 1,
+        "inverse_source_port": 1,
+        "raw_R3_direction_qsqrt5": [
+          "-1+0*sqrt5",
+          "-1/2+-1/2*sqrt5",
+          "0+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          -1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:1b21cca23723ed5ee1692ed7a612503d9867c5fc3d2550a5512a72bee95ba910",
+        "source_port": 2,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 3,
+        "inverse_source_port": 0,
+        "raw_R3_direction_qsqrt5": [
+          "1+0*sqrt5",
+          "-1/2+-1/2*sqrt5",
+          "0+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:dd19b2e2258704f95b9bd83016c9c2d25472c240204a4468ef6c59a373e9d562",
+        "source_port": 3,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 7,
+        "inverse_source_port": 7,
+        "raw_R3_direction_qsqrt5": [
+          "0+0*sqrt5",
+          "-1+0*sqrt5",
+          "1/2+1/2*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:4576b735f5c92674d6d543e3fa89e4790ca2da617f47c1a91e779797561ee86b",
+        "source_port": 4,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 11,
+        "inverse_source_port": 6,
+        "raw_R3_direction_qsqrt5": [
+          "0+0*sqrt5",
+          "1+0*sqrt5",
+          "1/2+1/2*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:b454c16a352b5e46d2cc6abf558456e15d5a319f9cbe7aad1c6f13569414aa49",
+        "source_port": 5,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 0,
+        "inverse_source_port": 5,
+        "raw_R3_direction_qsqrt5": [
+          "0+0*sqrt5",
+          "-1+0*sqrt5",
+          "-1/2+-1/2*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          0,
+          -1,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:a7ffe0784a1bef88ec3435d9d111d7c95989f4532264471202d4f9fdbb24df7d",
+        "source_port": 6,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 4,
+        "inverse_source_port": 4,
+        "raw_R3_direction_qsqrt5": [
+          "0+0*sqrt5",
+          "1+0*sqrt5",
+          "-1/2+-1/2*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          -1,
+          0,
+          0,
+          0
+        ],
+        "source_event_id": "sha256:9f4837f09f60340ea995c1296eddf55df723e0d44a809c319529ebde9a6c20cc",
+        "source_port": 7,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 6,
+        "inverse_source_port": 11,
+        "raw_R3_direction_qsqrt5": [
+          "1/2+1/2*sqrt5",
+          "0+0*sqrt5",
+          "-1+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "source_event_id": "sha256:098dff65d4fa135b91332f64068727d22e2f5b5054323e306d46dcb4e87b4a71",
+        "source_port": 8,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 9,
+        "inverse_source_port": 10,
+        "raw_R3_direction_qsqrt5": [
+          "1/2+1/2*sqrt5",
+          "0+0*sqrt5",
+          "1+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "source_event_id": "sha256:bc5264578a3f122bc2af3a787200407d991d43bae1a08da20d226e5b7cecde62",
+        "source_port": 9,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 2,
+        "inverse_source_port": 9,
+        "raw_R3_direction_qsqrt5": [
+          "-1/2+-1/2*sqrt5",
+          "0+0*sqrt5",
+          "-1+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1
+        ],
+        "source_event_id": "sha256:977f15c02a5d29f86f8a348c5bbde44832cc4d25669cf4f227c41d1379abf3f9",
+        "source_port": 10,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      },
+      {
+        "RER_PortFrameGram_label": 5,
+        "inverse_source_port": 8,
+        "raw_R3_direction_qsqrt5": [
+          "-1/2+-1/2*sqrt5",
+          "0+0*sqrt5",
+          "1+0*sqrt5"
+        ],
+        "source_Z6_direction": [
+          0,
+          0,
+          0,
+          0,
+          -1,
+          0
+        ],
+        "source_event_id": "sha256:1b6bab48d151644af48a8d6ef092eda65422efb4b8cb577d83ddcd3ae741a6ec",
+        "source_port": 11,
+        "unit_shift": "a*raw_R3_direction/sqrt(5/2+sqrt(5)/2)"
+      }
+    ],
+    "quotient_nonfactorization_reason": "F_a(3e_alpha)=3a*u_alpha is nonzero for finite positive a, although 3e_alpha is zero in (Z/3Z)^6",
+    "rank_witness_columns_by_source_port": [
+      0,
+      1,
+      4
+    ],
+    "raw_rank_witness_determinant_qsqrt5": "-3+-1*sqrt5",
+    "real_linear_extension_kernel_dimension": 3,
+    "real_linear_extension_rank": 3
+  },
+  "exact_expansion_certificate": {
+    "I6_vertex_normalization": "1",
+    "angular_gradient_coefficient_at_a4_k4": "1/7875",
+    "coefficients": {
+      "B0_over_a4": "1/840",
+      "B6_over_a4": "2/7875",
+      "C4_over_a2": "-1/20"
+    },
+    "cosine_taylor_through_sixth_order": "omega^2=k^2-(a^2/20)k^4+(a^4/840)k^6+(2a^4/7875)k^6 I6(n)+O(a^6 k^8)",
+    "exact_vertex_row_even_moments": {
+      "M2": "4",
+      "M4": "12/5",
+      "M6": "52/25"
+    },
+    "full_vector_group_velocity_boundary": "grad_k omega=n*(d omega/dk)+(1/k)*grad_S2 omega; the rank-six angular term contributes (a^4 k^4/7875)*grad_S2 I6(n)+O(a^6 k^6)",
+    "group_velocity_coefficients": {
+      "a2_k2": "-3/40",
+      "isotropic_a4_k4": "19/13440",
+      "rank6_a4_k4": "1/1575"
+    },
+    "group_velocity_expansion": "d(sqrt(omega^2))/dk=1-(3/40)a^2 k^2+a^4 k^4(19/13440+I6(n)/1575)+O(a^6 k^6)",
+    "group_velocity_scope": "formal radial derivative of the positive square-root branch at fixed direction n; no time evolution is selected",
+    "matches_frozen_exact_prediction_sha256": "sha256:dc3aa0afc49d94eb4ef4220baed21c918cd11fc9e00ebb1611f3643396cd50f2",
+    "scale_free_relations": {
+      "B0_over_C4_squared": "10/21",
+      "B6_over_B0": "16/75",
+      "B6_over_C4_squared": "32/315"
+    },
+    "sixth_moment_split": "M6(n)=12/7+(64/175)*I6(n)"
+  },
+  "exact_impulse_replay": {
+    "coefficient_sum": "0",
+    "exact_inverse_pairing": true,
+    "input": "Kronecker delta at the origin",
+    "operator": "(1/(2a^2))*sum_p(I-T_p) on the raw Z^6 source module",
+    "output_support_at_a_equals_1": [
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "6"
+      },
+      {
+        "Z6_coordinate": [
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          -1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          -1,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          -1,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          0,
+          -1,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      },
+      {
+        "Z6_coordinate": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        "coefficient_at_a_equals_1": "-1/2"
+      }
+    ],
+    "squared_l2_norm": "39",
+    "support_count": 13
+  },
+  "exact_port_frame_and_relabel": {
+    "RER_PortFrameGram_label_to_source": [
+      6,
+      2,
+      10,
+      3,
+      7,
+      11,
+      8,
+      4,
+      0,
+      9,
+      1,
+      5
+    ],
+    "RER_conjugated_A5_action_sha256": "sha256:cf7d842766a394b74224e82e69cd16eab528ade6354b729dea07005dd446dc19",
+    "RER_scaled_gram_5G_qsqrt5_integer_pairs": [
+      [
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ]
+      ]
+    ],
+    "all_144_scaled_gram_entries_match_PortFrameGram": true,
+    "all_30_edges_preserved": true,
+    "all_60_conjugated_actions_preserve_gram_and_antipodes": true,
+    "all_6_antipodal_pairs_preserved": true,
+    "common_raw_norm_squared": "5/2+1/2*sqrt5",
+    "conjugated_group_order": 60,
+    "mapping_direction_is_explicit": true,
+    "ordered_gram_class_counts": {
+      "adjacent": 60,
+      "antipodal": 12,
+      "diagonal": 12,
+      "distance_two": 60
+    },
+    "raw_coordinates_qsqrt5": [
+      [
+        "-1+0*sqrt5",
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5"
+      ],
+      [
+        "1+0*sqrt5",
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5"
+      ],
+      [
+        "-1+0*sqrt5",
+        "-1/2+-1/2*sqrt5",
+        "0+0*sqrt5"
+      ],
+      [
+        "1+0*sqrt5",
+        "-1/2+-1/2*sqrt5",
+        "0+0*sqrt5"
+      ],
+      [
+        "0+0*sqrt5",
+        "-1+0*sqrt5",
+        "1/2+1/2*sqrt5"
+      ],
+      [
+        "0+0*sqrt5",
+        "1+0*sqrt5",
+        "1/2+1/2*sqrt5"
+      ],
+      [
+        "0+0*sqrt5",
+        "-1+0*sqrt5",
+        "-1/2+-1/2*sqrt5"
+      ],
+      [
+        "0+0*sqrt5",
+        "1+0*sqrt5",
+        "-1/2+-1/2*sqrt5"
+      ],
+      [
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5",
+        "-1+0*sqrt5"
+      ],
+      [
+        "1/2+1/2*sqrt5",
+        "0+0*sqrt5",
+        "1+0*sqrt5"
+      ],
+      [
+        "-1/2+-1/2*sqrt5",
+        "0+0*sqrt5",
+        "-1+0*sqrt5"
+      ],
+      [
+        "-1/2+-1/2*sqrt5",
+        "0+0*sqrt5",
+        "1+0*sqrt5"
+      ]
+    ],
+    "source_A5_action_sha256": "sha256:a5d348ca956e4f1b57e12483c443af4a8c247260c78ddc547b5189be281e990e",
+    "source_antipodes": [
+      3,
+      2,
+      1,
+      0,
+      7,
+      6,
+      5,
+      4,
+      11,
+      10,
+      9,
+      8
+    ],
+    "source_geometry_family": "level-zero nested geodesic icosahedron",
+    "source_geometry_hash": "e333556ce101cb224d94882270c17e0d7e36469908871ca133e5bbbee2c6eafd",
+    "source_scaled_gram_5G_qsqrt5_integer_pairs": [
+      [
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ]
+      ],
+      [
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          -5,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          5,
+          0
+        ]
+      ]
+    ],
+    "source_to_RER_PortFrameGram_label": [
+      8,
+      10,
+      1,
+      3,
+      7,
+      11,
+      0,
+      4,
+      6,
+      9,
+      2,
+      5
+    ],
+    "unit_vectors": "raw_coordinates/sqrt(5/2+sqrt(5)/2)"
+  },
+  "implementation_pins": [
+    {
+      "bytes": 35700,
+      "path": "oph_fpe/dynamics/fz11_3d_translation_bridge.py",
+      "sha256": "sha256:8259a82ff5a438c93b0b7cf98a4e76923b44051f8a8a920768bdcea31d191364"
+    },
+    {
+      "bytes": 35523,
+      "path": "oph_fpe/dynamics/verify_fz11_3d_translation_bridge_independent.py",
+      "sha256": "sha256:8ce20ca2c38b54f6e546da8d2642e5d8de7e26af6e83ec847bb203e456bed6af"
+    },
+    {
+      "bytes": 13210,
+      "path": "tests/test_fz11_3d_translation_bridge.py",
+      "sha256": "sha256:8fa0c76d19c04993d4dd228595a6a6d577f7ba9aac8471ea31e3189586baae5a"
+    },
+    {
+      "bytes": 48532,
+      "path": "oph_fpe/core/icosahedral.py",
+      "sha256": "sha256:89fac4f2d24bb4d85c4a84624b3c826e99cb717df68060dd23a4b26c6cfe9adc"
+    }
+  ],
+  "issue": 655,
+  "issue_662_armed": false,
+  "open_premises": [
+    "derive or uniquely select the signed six-axis source law inside canonical A1-A3 repair dynamics",
+    "derive the R3 adapter or an operational spacetime readout rather than declare it",
+    "derive time evolution and identify a physical field sector carrying omega squared",
+    "derive boost and frame transport laws and isolate source, medium, gravity, and instrument terms",
+    "select a finite scale and prove support and sector exclusivity before dataset-specific preregistration",
+    "satisfy the separate custody gate before reading any qualifying comparison data"
+  ],
+  "operator_contract": {
+    "A3_control_weight_per_port": "1/12",
+    "carrier_rest_frame_selected": false,
+    "complete_twelve_port_support": true,
+    "cosine_symbol": "omega^2(k)=(1/(2a^2))*sum_p[1-cos(a*k.u_p)]",
+    "equal_weights": true,
+    "finite_scale_a_selected": false,
+    "laurent_symbol": "(1/(2a^2))*sum_alpha(2-z_alpha-z_alpha^-1)",
+    "normalization_is_declared_branch_premise": true,
+    "omega_squared_only": true,
+    "paired_real_space_form": "K_a=(1/(2a^2))*sum_alpha(2I-T_alpha-T_alpha_inverse)",
+    "physical_sector_exclusivity_proved": false,
+    "plane_wave_specialization": "z_alpha=exp(i*a*k.u_alpha)",
+    "positive_semidefinite_on_plane_waves": true,
+    "quadratic_normalization_multiplier": "6/a^2",
+    "resulting_weight_per_port": "1/(2a^2)",
+    "source_operator": "K_a=(1/(2a^2))*sum_p(I-T_p)",
+    "time_evolution_or_frequency_sign_selected": false
+  },
+  "parent_pins": {
+    "RER_PortFrameGram_Lean_source": {
+      "path": "Lean/Screen/PortFrameGram.lean",
+      "raw_sha256": "sha256:d1cebe56450e7586eed730b52068753ebca3a6563da1453679e87fa7c7b653e3",
+      "repository": "FloatingPragma/observer-patch-holography"
+    },
+    "constructive_source_receipt": {
+      "independently_verified": true,
+      "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
+      "raw_sha256": "sha256:4dcbfe8b052926a1402129609c812a7c8166ed3f1b0843b675816e23783892a4",
+      "receipt_sha256": "sha256:8c5df651a7e8033a5bdfcd0b135d2074ab41dd02ef53a82a5bf4ef59135a6ff8",
+      "schema": "oph.vertex12-constructive-source-law-control.v1",
+      "source_capture_root_sha256": "sha256:6763d353b5768ec4d07bdf55340c5ee93292c6d102f294ff8dd7ecad721b2971",
+      "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
+    },
+    "frozen_FZ11_prediction": {
+      "branch_premises_sha256": "sha256:543afc4e7313a9155bd9d4a3a20eea7d83ae5a68c6e5acc6b62b2f42b5dc7de0",
+      "comparison_permitted": false,
+      "exact_prediction_sha256": "sha256:dc3aa0afc49d94eb4ef4220baed21c918cd11fc9e00ebb1611f3643396cd50f2",
+      "path": "code/a5_fingerprint/runtime/spin_six_primitive_port_prediction_receipt.json",
+      "prediction_scope_sha256": "sha256:8f43767bf0d89684452b93fcc663028a8492c2c6192783870b8dbe3ee8715893",
+      "raw_sha256": "sha256:8ac97d7c46199717ed031610efdda65c40f6a251e78715d6bc05888d598e66d8",
+      "receipt_sha256": "sha256:92cc654f2fae04ac1fb90d3f646eae599e6106f217df74641fda2e921bfc0f92",
+      "repository": "FloatingPragma/observer-patch-holography",
+      "schema": "oph.spin_six_primitive_port_prediction.v1",
+      "status": "FROZEN_PROSPECTIVE_PRIMITIVE_TWELVE_PORT_BRANCH_PREDICTION__PHYSICAL_COMPARISON_UNARMED"
+    }
+  },
+  "receipt_sha256": "sha256:4a200620deaba956805a6e65523536762857eef89298cb819aa039ff8a28c571",
+  "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
+  "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN",
+  "target_free_plane_wave_replay": {
+    "all_direct_shift_replays_match_symbol": true,
+    "direct_operator": "(1/(2a^2))*sum_p[f(x)-f(x+a*u_p)]",
+    "field": "f_k(x)=exp(i k.x)",
+    "sample_count": 3,
+    "sample_rows": [
+      {
+        "a": "1/5",
+        "absolute_residual_upper_bound": "5e-13",
+        "cosine_symbol_10dp": "0.2669812514",
+        "direct_multiplier_imag_10dp": "-0.0000000000",
+        "direct_multiplier_real_10dp": "0.2669812514",
+        "k": [
+          "1/3",
+          "-2/7",
+          "3/11"
+        ],
+        "sample": 0,
+        "x": [
+          "1/7",
+          "2/9",
+          "-1/6"
+        ]
+      },
+      {
+        "a": "2/9",
+        "absolute_residual_upper_bound": "5e-13",
+        "cosine_symbol_10dp": "0.4195954495",
+        "direct_multiplier_imag_10dp": "0.0000000000",
+        "direct_multiplier_real_10dp": "0.4195954495",
+        "k": [
+          "-4/9",
+          "1/4",
+          "2/5"
+        ],
+        "sample": 1,
+        "x": [
+          "-2/11",
+          "1/8",
+          "3/10"
+        ]
+      },
+      {
+        "a": "3/10",
+        "absolute_residual_upper_bound": "5e-13",
+        "cosine_symbol_10dp": "0.6004473634",
+        "direct_multiplier_imag_10dp": "-0.0000000000",
+        "direct_multiplier_real_10dp": "0.6004473634",
+        "k": [
+          "5/8",
+          "1/6",
+          "-3/7"
+        ],
+        "sample": 2,
+        "x": [
+          "1/13",
+          "-3/10",
+          "2/9"
+        ]
+      }
+    ],
+    "symbol": "(1/(2a^2))*sum_p[1-cos(a*k.u_p)]",
+    "target_or_comparison_data_used": false
+  }
+}

@@ -186,6 +186,18 @@ CANONICAL_CONTRACTS: dict[str, dict[str, Any]] = {
         "BOUNDED_EXPECTATION_LEVEL_REPAIR_FIXED_POINT_UNIQUE_MODULO_CLOCK_IN_THE_FROZEN_ADVERSARIAL_SUITE",
         "INTERNAL_REPAIR_PHYSICAL_LAW_NOT_SELECTED",
     ),
+    "data/repair_closure/fz11_3d_translation_bridge_receipt.json": _contract(
+        "oph.fz11-conditional-3d-translation-bridge.v1",
+        (
+            "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__"
+            "CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_"
+            "BOOST_AND_EXCLUSIVITY_OPEN"
+        ),
+        (
+            "CONDITIONAL_AUXILIARY_CONTINUOUS_R3_TRANSLATION_ADAPTER__"
+            "NOT_SOURCE_NATIVE_NOT_PHYSICAL_NOT_COMPARISON_ELIGIBLE"
+        ),
+    ),
     BRIDGE_RELATIVE_PATH: _contract(
         "oph.port_repair_propagation_bridge_receipt.v1",
         "BOUNDED_NONSELECTION__FZ11_REMAINS_BRANCH_PREDICTION",

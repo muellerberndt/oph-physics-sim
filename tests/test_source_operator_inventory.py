@@ -99,6 +99,26 @@ def test_every_current_canonical_json_has_an_exact_contract() -> None:
             assert row["raw_pin"]["path"] == row["path"]
 
 
+def test_conditional_fz11_adapter_is_not_admitted_as_source_capability() -> None:
+    row = _row(
+        REPORT,
+        "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
+    )
+    assert row["schema"] == "oph.fz11-conditional-3d-translation-bridge.v1"
+    assert row["status"] == (
+        "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__"
+        "CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_"
+        "BOOST_AND_EXCLUSIVITY_OPEN"
+    )
+    assert row["disposition"] == (
+        "CONDITIONAL_AUXILIARY_CONTINUOUS_R3_TRANSLATION_ADAPTER__"
+        "NOT_SOURCE_NATIVE_NOT_PHYSICAL_NOT_COMPARISON_ELIGIBLE"
+    )
+    assert REPORT["bridge_admission_contract"][
+        "accepted_bridge_count_excluding_recursive_outputs"
+    ] == 0
+
+
 def test_ordered_port_diagnostic_is_indexed_with_exact_negative_evidence() -> None:
     path = "data/a2_holonomy/ordered_port_response_diagnostic_receipt.json"
     row = _row(REPORT, path)

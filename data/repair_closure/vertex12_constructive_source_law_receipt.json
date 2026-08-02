@@ -19,9 +19,9 @@
       "raw_pin": {
         "bytes": 36932,
         "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
-        "sha256": "sha256:a63787761531cfe8d42993e0406190b4f16afd296f9317d4877b505f525684e5"
+        "sha256": "sha256:17ed5666b4adf888e59608e8a4fdd659600bf5dd954da29f1a055a4bd5b2b2c9"
       },
-      "receipt_sha256": "sha256:2f73bf0def28e8bac232acdf2a4f7b6f89a4f849aad6476f6e3b6c59e8f482fb",
+      "receipt_sha256": "sha256:acc7b1a078e1fb3bf44c3c3feea2ae69253451e5ce040f3c8c8f1135c0c693d0",
       "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
       "status": "A2_ENDPOINT_TO_QUOTIENT_COMMUTATOR_THEOREM_ATTAINED__SOURCE_NATURALITY_INVERSES_DIAMONDS_AND_PHYSICAL_ACTION_OPEN"
     },
@@ -29,9 +29,9 @@
       "raw_pin": {
         "bytes": 55183,
         "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
-        "sha256": "sha256:f3b3da1911e138ea90d2d7e35f08cb0d498341a01ba97e6e275095585999e6f5"
+        "sha256": "sha256:9572b9b7dd88f922b6d8813e358603949d3d8e7f65c693daa75fff00080c2ff9"
       },
-      "receipt_sha256": "sha256:57a33d961c245a7890d64655968509d52739e8efe78a78bff5b2c7754d2513d3",
+      "receipt_sha256": "sha256:b47b718531d77b4f16007b3883ed2f3e1791de07986489a1f268bb5e13a30288",
       "schema": "oph.vertex12-directed-transport-feasibility.v1",
       "status": "EXACT_SEMICONJUGATE_COVER_OBSTRUCTION_FOR_CURRENT_SOURCE_MATCHINGS__ORIENTED_SOURCE_TRANSITION_LAW_OPEN"
     }
@@ -114837,15 +114837,15 @@
         ],
         "observer_meaning": "(Z/3Z)^6",
         "parent_receipts": {
-          "endpoint_receipt_sha256": "sha256:2f73bf0def28e8bac232acdf2a4f7b6f89a4f849aad6476f6e3b6c59e8f482fb",
-          "feasibility_receipt_sha256": "sha256:57a33d961c245a7890d64655968509d52739e8efe78a78bff5b2c7754d2513d3"
+          "endpoint_receipt_sha256": "sha256:acc7b1a078e1fb3bf44c3c3feea2ae69253451e5ce040f3c8c8f1135c0c693d0",
+          "feasibility_receipt_sha256": "sha256:b47b718531d77b4f16007b3883ed2f3e1791de07986489a1f268bb5e13a30288"
         },
         "quotient_formula": "q(n_0,...,n_5)=(n_0 mod 3,...,n_5 mod 3)",
         "raw_state": "Z^6",
         "schema": "oph.vertex12-constructive-source-capture.v1",
         "source_law_id": "signed-six-axis-record-translation-control"
       },
-      "source_capture_root_sha256": "sha256:585be111961f7352b4d317787d7c4142d9a2e1178a44667dbc11241f3098075a"
+      "source_capture_root_sha256": "sha256:6763d353b5768ec4d07bdf55340c5ee93292c6d102f294ff8dd7ecad721b2971"
     }
   },
   "implementation_pins": [
@@ -114887,7 +114887,7 @@
     "post_capture_assignment_to_canonical_source": false,
     "spatial_identification_claimed": false
   },
-  "receipt_sha256": "sha256:7db3dc30b54527f883af8e8d596c3d8100e48b26678ae8ccc3ef4a98c0833eea",
+  "receipt_sha256": "sha256:8c5df651a7e8033a5bdfcd0b135d2074ab41dd02ef53a82a5bf4ef59135a6ff8",
   "schema": "oph.vertex12-constructive-source-law-control.v1",
   "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
 }
