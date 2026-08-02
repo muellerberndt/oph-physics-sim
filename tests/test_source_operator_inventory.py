@@ -317,6 +317,77 @@ def test_new_conditional_receipts_have_exact_fail_closed_boundaries() -> None:
         "emitted_promotion_allowed": False,
     }
 
+    inverse = _row(
+        REPORT,
+        "data/refinement/a5_biposh_inverse_continuum_gate_receipt.json",
+    )
+    assert inverse["disposition"] == (
+        "FULL_RAW_STIFFNESS_CAUCHY__INVERSE_COERCIVITY_QUOTIENT_AND_"
+        "PHYSICAL_RESPONSE_OPEN"
+    )
+    assert inverse["critical_bridge_evidence"] == {
+        "emitted_full_raw_stiffness_cauchy_limit": True,
+        "emitted_uniform_continuum_coercivity": False,
+        "emitted_projected_quotient_continuum_tail": False,
+        "emitted_full_inverse_covariance_continuum_limit": False,
+        "emitted_finite_anchor_neumann_gate": False,
+        "emitted_source_ensemble_selected": False,
+        "emitted_declared_ladder_primitive_alphabet": True,
+        "emitted_declared_ladder_unit_counting": True,
+        "emitted_declared_ladder_reaches_inverse_anchor": False,
+        "emitted_first_order_refinement_readback": True,
+        "emitted_full_refinement_commuting_diagram": False,
+        "emitted_all_level_response_law": False,
+        "emitted_operational_stiffness_observable_candidate": True,
+        "emitted_physical_response_readout": False,
+        "emitted_scalar_rescaling_cancellation": True,
+        "emitted_rotation_equivariant_transfer": False,
+        "emitted_multiplicity_one": False,
+        "emitted_radial_copy_mixing_excluded": False,
+        "emitted_shape_regular_coercivity_theorem": False,
+        "emitted_exact_tail_arithmetic_reimplemented": True,
+        "emitted_independent_harmonic_implementation": False,
+        "emitted_harmonic_kernels_shared_with_producer": True,
+        "emitted_physical_covariance": False,
+        "emitted_physical_prediction": False,
+        "emitted_promotion_allowed": False,
+        "emitted_comparison_data_used": False,
+    }
+
+    all_level = _row(
+        REPORT,
+        "data/refinement/all_level_primitive_seam_source_receipt.json",
+    )
+    assert all_level["disposition"] == (
+        "DECLARED_REGISTERED_LADDER_UNIT_COUNTING_BRANCH__INFINITE_TOWER_"
+        "ATOMIC_RECORD_FULL_REFINEMENT_CONTINUUM_AND_PHYSICAL_BRIDGES_OPEN"
+    )
+    assert all_level["critical_bridge_evidence"] == {
+        "emitted_registered_level_count": 6,
+        "emitted_complete_primitive_event_count": 40950,
+        "emitted_declared_registered_ladder_event_source": True,
+        "emitted_declared_registered_ladder_unit_counting_source": True,
+        "emitted_infinite_tower_event_source": False,
+        "emitted_infinite_tower_unit_counting_source": False,
+        "emitted_unit_counting_across_a5_orbits": True,
+        "emitted_unit_counting_derived_from_canonical_a1_a3": False,
+        "emitted_expected_balancing_diagnostic": True,
+        "emitted_canonical_a2_pathwise_agreement": False,
+        "emitted_odd_total_pathwise_exact_agreement": False,
+        "emitted_issue_628_atomic_record_bridge": False,
+        "emitted_complete_event_lineage": True,
+        "emitted_normalized_counting_refinement_naturality": True,
+        "emitted_first_order_refinement_readback": True,
+        "emitted_full_refinement_commuting_diagram": False,
+        "emitted_repair_semigroup_refinement_naturality": False,
+        "emitted_canonical_a1_a3_force_emitter": False,
+        "emitted_continuum_operator_selected": False,
+        "emitted_physical_repair_law": False,
+        "emitted_physical_prediction": False,
+        "emitted_promotion_allowed": False,
+        "emitted_comparison_data_used": False,
+    }
+
     endpoint = _row(
         REPORT,
         "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
@@ -342,6 +413,38 @@ def test_new_conditional_receipts_have_exact_fail_closed_boundaries() -> None:
         "emitted_spatial_translation": False,
         "emitted_physical_prediction": False,
         "emitted_negative_issue_655_closure": False,
+        "emitted_comparison_data_used": False,
+    }
+
+    constructive = _row(
+        REPORT,
+        "data/repair_closure/vertex12_constructive_source_law_receipt.json",
+    )
+    assert constructive["disposition"] == (
+        "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ONLY__CANONICAL_SELECTION_AND_"
+        "PHYSICAL_ATTACHMENT_OPEN"
+    )
+    assert constructive["critical_bridge_evidence"] == {
+        "emitted_constructive_source_capture_root": True,
+        "emitted_accepted_surjective_quotient": True,
+        "emitted_raw_step_count": 12,
+        "emitted_meaning_step_count": 12,
+        "emitted_A2_descent_square_count": 12,
+        "emitted_quotient_inverse_count": 6,
+        "emitted_endpoint_diamond_count": 15,
+        "emitted_same_Q_A5_group_order": 60,
+        "emitted_same_Q_A5_covariance_row_count": 720,
+        "emitted_canonical_source_selection": False,
+        "emitted_canonical_A1_A2_A3_derivation_claimed": False,
+        "emitted_full_canonical_A1_typed_object_instantiated": False,
+        "emitted_full_A2_observer_federation_functor_instantiated": False,
+        "emitted_canonical_A3_maximum_entropy_selection_instantiated": False,
+        "emitted_spatial_translation": False,
+        "emitted_physical_readout": False,
+        "emitted_physical_prediction": False,
+        "emitted_advances_canonical_source_bridge": False,
+        "emitted_advances_physical_bridge": False,
+        "emitted_issue_closure_supported": False,
         "emitted_comparison_data_used": False,
     }
 
@@ -380,6 +483,46 @@ def test_expensive_tail_replay_is_cached_by_complete_content_key(
     monkeypatch.setattr(child, "verify_packet", fake_verify)
     inventory._verify_tail_packet_once_per_content()
     independent._verify_tail_packet_once_per_content()
+    assert calls == [True]
+
+
+def test_expensive_inverse_replay_is_cached_by_complete_content_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert (
+        inventory._inverse_verification_key()
+        == independent._inverse_verification_key()
+    )
+    labels = {row[0] for row in inventory._inverse_verification_key()}
+    assert "data/refinement/a5_biposh_inverse_continuum_gate_receipt.json" in labels
+    assert "data/refinement/all_level_primitive_seam_source_receipt.json" in labels
+    assert "oph_fpe/cosmology/a5_biposh_inverse_continuum_gate.py" in labels
+    assert (
+        "oph_fpe/cosmology/verify_a5_biposh_inverse_continuum_gate_independent.py"
+        in labels
+    )
+
+    child = inventory.verify_a5_biposh_inverse_continuum_gate_independent
+    cache_attribute = inventory._INVERSE_VERIFICATION_CACHE_ATTRIBUTE
+    monkeypatch.setattr(child, cache_attribute, {}, raising=False)
+    key = (("synthetic-inverse", 1, "sha256"),)
+    monkeypatch.setattr(inventory, "_inverse_verification_key", lambda: key)
+    monkeypatch.setattr(independent, "_inverse_verification_key", lambda: key)
+    calls: list[bool] = []
+
+    def fake_verify() -> dict:
+        calls.append(True)
+        return {
+            "schema": "oph.a5-biposh-inverse-continuum-gate.v1",
+            "status": (
+                "FULL_RAW_STIFFNESS_CAUCHY_TAIL_ATTAINED__UNIFORM_COERCIVITY_"
+                "PROJECTED_QUOTIENT_AND_PHYSICAL_RESPONSE_OPEN"
+            ),
+        }
+
+    monkeypatch.setattr(child, "verify_packet", fake_verify)
+    inventory._verify_inverse_packet_once_per_content()
+    independent._verify_inverse_packet_once_per_content()
     assert calls == [True]
 
 
@@ -465,8 +608,11 @@ def test_admission_counts_and_boundary_are_scope_qualified() -> None:
         "transport_feasibility_promotion",
         "biposh_promotion",
         "equal_seam_source_promotion",
+        "all_level_seam_physical_promotion",
         "continuum_tail_physical_promotion",
+        "inverse_continuum_physical_promotion",
         "endpoint_commutator_physical_promotion",
+        "constructive_source_law_physical_promotion",
         "schema",
         "scope",
         "issue",
@@ -510,12 +656,26 @@ def test_rehashed_semantic_mutations_fail_independent_verification(
         equal_seam["critical_bridge_evidence"][
             "emitted_all_level_atomic_counting_law_source"
         ] = True
+    elif mutation == "all_level_seam_physical_promotion":
+        all_level = _row(
+            report,
+            "data/refinement/all_level_primitive_seam_source_receipt.json",
+        )
+        all_level["critical_bridge_evidence"][
+            "emitted_physical_prediction"
+        ] = True
     elif mutation == "continuum_tail_physical_promotion":
         tail = _row(
             report,
             "data/refinement/a5_biposh_continuum_tail_receipt.json",
         )
         tail["critical_bridge_evidence"]["emitted_physical_prediction"] = True
+    elif mutation == "inverse_continuum_physical_promotion":
+        inverse = _row(
+            report,
+            "data/refinement/a5_biposh_inverse_continuum_gate_receipt.json",
+        )
+        inverse["critical_bridge_evidence"]["emitted_physical_prediction"] = True
     elif mutation == "endpoint_commutator_physical_promotion":
         endpoint = _row(
             report,
@@ -523,6 +683,14 @@ def test_rehashed_semantic_mutations_fail_independent_verification(
         )
         endpoint["critical_bridge_evidence"][
             "emitted_faithful_physical_z_power_6_action"
+        ] = True
+    elif mutation == "constructive_source_law_physical_promotion":
+        constructive = _row(
+            report,
+            "data/repair_closure/vertex12_constructive_source_law_receipt.json",
+        )
+        constructive["critical_bridge_evidence"][
+            "emitted_advances_physical_bridge"
         ] = True
     elif mutation == "schema":
         charged["schema"] = "oph.mutated.v1"

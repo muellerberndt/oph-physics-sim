@@ -472,21 +472,21 @@
     "scalar_or_polarization_independent_same_operator_action": false,
     "surviving_physical_alternatives_exhaustively_enumerated": false
   },
-  "receipt_sha256": "sha256:3c305e7b19f5a8520b9afa8fe1bddee3efee844214e64ea395cf0c0f19bcebba",
+  "receipt_sha256": "sha256:2ac03b1f8703d7f1009b5ec2db37c0116ed5df1a05df413b64563dbd6ea3481e",
   "schema": "oph.port_repair_propagation_bridge_receipt.v1",
   "source_operator_ancestry_inventory": {
     "accepted_bridge_count_excluding_recursive_outputs": 0,
     "claim_that_no_spatial_operator_exists": false,
-    "current_canonical_json_path_count_excluding_recursive_outputs": 34,
-    "indexed_tracked_serialized_data_path_count": 1011,
+    "current_canonical_json_path_count_excluding_recursive_outputs": 37,
+    "indexed_tracked_serialized_data_path_count": 1014,
     "local_spatial_or_kinetic_operators_exist": true,
     "producer_code_or_sibling_repository_absence_claimed": false,
     "raw_pin": {
-      "bytes": 36539,
+      "bytes": 42704,
       "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
-      "sha256": "sha256:995734da760d5ed49cdb9c15b911d4e44194c006c44981de8b343b2a012354f7"
+      "sha256": "sha256:f9f91800a57d6d4b9a0e7a0f4c91e936db26b481e2e13cecab6641723e6591f9"
     },
-    "receipt_sha256": "sha256:d6bfd2d18726cf6041964c0252f162f332178d3c289726e6cfac12c3a5d2a1f0",
+    "receipt_sha256": "sha256:53d7f4a2a5c7425be5294a35ea2cb69cbc5ce5863967ebf1deb42cda60a38638",
     "recursive_parent_bridge_receipt_exclusion": {
       "packet_count_included_in_scan": false,
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
@@ -535,16 +535,16 @@
     "source_operator_ancestry_inventory": {
       "accepted_bridge_count_excluding_recursive_outputs": 0,
       "claim_that_no_spatial_operator_exists": false,
-      "current_canonical_json_path_count_excluding_recursive_outputs": 34,
-      "indexed_tracked_serialized_data_path_count": 1011,
+      "current_canonical_json_path_count_excluding_recursive_outputs": 37,
+      "indexed_tracked_serialized_data_path_count": 1014,
       "local_spatial_or_kinetic_operators_exist": true,
       "producer_code_or_sibling_repository_absence_claimed": false,
       "raw_pin": {
-        "bytes": 36539,
+        "bytes": 42704,
         "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
-        "sha256": "sha256:995734da760d5ed49cdb9c15b911d4e44194c006c44981de8b343b2a012354f7"
+        "sha256": "sha256:f9f91800a57d6d4b9a0e7a0f4c91e936db26b481e2e13cecab6641723e6591f9"
       },
-      "receipt_sha256": "sha256:d6bfd2d18726cf6041964c0252f162f332178d3c289726e6cfac12c3a5d2a1f0",
+      "receipt_sha256": "sha256:53d7f4a2a5c7425be5294a35ea2cb69cbc5ce5863967ebf1deb42cda60a38638",
       "recursive_parent_bridge_receipt_exclusion": {
         "packet_count_included_in_scan": false,
         "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",

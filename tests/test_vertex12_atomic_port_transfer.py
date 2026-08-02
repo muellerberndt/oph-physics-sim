@@ -127,6 +127,22 @@ def test_packet_attains_internal_transfer_and_in_process_snapshot_reread(
     assert readback["physical_sector_readout"] is False
 
 
+def test_receipt_verification_does_not_mutate_its_input(receipt: dict) -> None:
+    before = copy.deepcopy(receipt)
+    assert producer.verify_receipt(receipt)["receipt"] is True
+    assert independent.verify_report(receipt)["receipt"] is True
+    assert receipt == before
+
+
+def test_producer_replay_does_not_mutate_upstream_capture_state() -> None:
+    before = copy.deepcopy(producer.capture_physical_source(producer.SOURCE_CONFIG))
+    first = producer.produce_receipt()
+    second = producer.produce_receipt()
+    after = producer.capture_physical_source(producer.SOURCE_CONFIG)
+    assert after == before
+    assert first == second
+
+
 def test_packet_keeps_internal_transfer_separate_from_spatial_physics(
     receipt: dict,
 ) -> None:

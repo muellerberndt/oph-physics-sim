@@ -688,7 +688,10 @@ def _readback_audit(
 
 
 def _payload() -> dict[str, Any]:
-    capture = capture_physical_source(SOURCE_CONFIG)
+    # Nested capture assembly can reuse mutable cached report objects.  Its
+    # verifier normalizes report blocks in place, so work on a private copy to
+    # keep producer replay from mutating shared upstream state.
+    capture = copy.deepcopy(capture_physical_source(SOURCE_CONFIG))
     source_verification = verify_physical_source_capture(capture)
     if source_verification.get("SOURCE_CAPTURE_REPLAY_RECEIPT") is not True:
         raise PacketError("upstream source capture does not replay")
@@ -704,7 +707,7 @@ def _payload() -> dict[str, Any]:
     expected_seams = set(seam_contracts)
     antipodes = _antipode_map()
 
-    default_capture = capture_physical_source()
+    default_capture = copy.deepcopy(capture_physical_source())
     default_bundle = default_capture["source_artifacts"]["federation_bundle"]
     (
         default_carriers,

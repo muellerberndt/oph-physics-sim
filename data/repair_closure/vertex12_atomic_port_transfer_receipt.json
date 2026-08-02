@@ -478,14 +478,14 @@
       "sha256": "sha256:2af3ebd76b20991f6e14d858f1b7b644759e658f30975f4a2e471a3a835b7c61"
     },
     "mutation_tests": {
-      "bytes": 12830,
+      "bytes": 13469,
       "path": "tests/test_vertex12_atomic_port_transfer.py",
-      "sha256": "sha256:56de219394d0751bfe88f71f2b37baf5225d083eb829172b9fffb6e833b5ebcd"
+      "sha256": "sha256:f269bae70308032e407a219318a1eab8cb3db61302ec51e2a57becf1760d0e11"
     },
     "producer": {
-      "bytes": 41423,
+      "bytes": 41672,
       "path": "oph_fpe/dynamics/vertex12_atomic_port_transfer.py",
-      "sha256": "sha256:e237a164078b339d3caccc6b2e08db1e5ddb42861721a6334f2e38a975ef9711"
+      "sha256": "sha256:3b775b7a173cfd0cc1981b6b254dfc98339c97e409a533105e2c9f0fe7dc9340"
     }
   },
   "issue": 655,
@@ -732,7 +732,7 @@
     "same_operator_physical_readout_receipt": false,
     "scalar_or_polarization_sector_attachment_receipt": false
   },
-  "receipt_sha256": "sha256:3ef122a5a1e548e8392f5e5527789358099db29e063dd892ec048bbe268e7e6c",
+  "receipt_sha256": "sha256:ee5066fe62d2baee544bc4955aaa5900ebc658a66423e9ac693aa730886d7d5c",
   "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
   "source_capture_binding": {
     "artifact_type": "OPH_TARGET_BLIND_FINITE_SOURCE_CAPTURE",

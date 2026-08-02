@@ -26,13 +26,16 @@ import subprocess
 from typing import Any, Iterable, Mapping, Sequence
 
 from oph_fpe.cosmology import (
+    verify_all_level_primitive_seam_source_independent,
     verify_a5_biposh_continuum_tail_independent,
+    verify_a5_biposh_inverse_continuum_gate_independent,
     verify_a5_biposh_refinement_independent,
     verify_refined_equal_seam_source_gate_independent,
 )
 from oph_fpe.dynamics import verify_vertex12_atomic_port_transfer_independent
 from oph_fpe.dynamics import (
     verify_vertex12_a2_endpoint_commutator_independent,
+    verify_vertex12_constructive_source_law_independent,
     verify_vertex12_directed_transport_feasibility_independent,
 )
 
@@ -155,6 +158,16 @@ CANONICAL_CONTRACTS: dict[str, dict[str, Any]] = {
         "CONDITIONAL_EQUAL_SEAM_CONTINUUM_L6_NONZERO_UNDER_DECLARED_NUMERICAL_ENVELOPE__SOURCE_SELECTION_AND_PHYSICAL_TRANSFER_OPEN",
         "CONDITIONAL_EQUAL_SEAM_CONTINUUM_L6_NONZERO__SOURCE_SELECTION_INVERSE_TAIL_AND_PHYSICAL_TRANSFER_OPEN",
     ),
+    "data/refinement/a5_biposh_inverse_continuum_gate_receipt.json": _contract(
+        "oph.a5-biposh-inverse-continuum-gate.v1",
+        "FULL_RAW_STIFFNESS_CAUCHY_TAIL_ATTAINED__UNIFORM_COERCIVITY_PROJECTED_QUOTIENT_AND_PHYSICAL_RESPONSE_OPEN",
+        "FULL_RAW_STIFFNESS_CAUCHY__INVERSE_COERCIVITY_QUOTIENT_AND_PHYSICAL_RESPONSE_OPEN",
+    ),
+    "data/refinement/all_level_primitive_seam_source_receipt.json": _contract(
+        "oph.registered-ladder-primitive-seam-source.v1",
+        "TARGET_CLEAN_REGISTERED_LADDER_PRIMITIVE_SEAM_ALPHABET_AND_UNIT_COUNTING_ATTAINED__EXPECTED_A2_RECONCILIATION_FIRST_ORDER_REFINEMENT_ONLY__INFINITE_TOWER_CANONICAL_DERIVATION_ATOMIC_RECORD_AND_FULL_SEMIGROUP_OPEN",
+        "DECLARED_REGISTERED_LADDER_UNIT_COUNTING_BRANCH__INFINITE_TOWER_ATOMIC_RECORD_FULL_REFINEMENT_CONTINUUM_AND_PHYSICAL_BRIDGES_OPEN",
+    ),
     "data/refinement/physical_birefinement_preflight.json": _contract(
         "oph.refinement.physical-birefinement-preflight.v1", "SOURCE_PRODUCER_MISSING", "PHYSICAL_BIREFINEMENT_SOURCE_PRODUCER_MISSING"
     ),
@@ -193,6 +206,11 @@ CANONICAL_CONTRACTS: dict[str, dict[str, Any]] = {
         "oph.vertex12-a2-endpoint-commutator-boundary.v1",
         "A2_ENDPOINT_TO_QUOTIENT_COMMUTATOR_THEOREM_ATTAINED__SOURCE_NATURALITY_INVERSES_DIAMONDS_AND_PHYSICAL_ACTION_OPEN",
         "CONDITIONAL_A2_ENDPOINT_DESCENT_AND_Z_POWER_6_FACTORIZATION__SOURCE_NATURALITY_INVERSES_DIAMONDS_FAITHFUL_ACTION_AND_PHYSICAL_TRANSLATION_OPEN",
+    ),
+    "data/repair_closure/vertex12_constructive_source_law_receipt.json": _contract(
+        "oph.vertex12-constructive-source-law-control.v1",
+        "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN",
+        "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ONLY__CANONICAL_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN",
     ),
     "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json": _contract(
         "oph.vertex12-directed-transport-feasibility.v1",
@@ -296,6 +314,53 @@ def _verify_tail_packet_once_per_content() -> Mapping[str, Any]:
         setattr(
             verify_a5_biposh_continuum_tail_independent,
             _TAIL_VERIFICATION_CACHE_ATTRIBUTE,
+            cache,
+        )
+    return cache[key]
+
+
+_INVERSE_VERIFICATION_CACHE_ATTRIBUTE = (
+    "_source_operator_inventory_inverse_verification_cache_v1"
+)
+
+
+def _inverse_verification_key() -> tuple[tuple[str, int, str], ...]:
+    receipt_path = (
+        verify_a5_biposh_inverse_continuum_gate_independent.DEFAULT_RECEIPT
+    )
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    dependency_paths = {receipt_path.resolve()}
+    for parent in receipt.get("parents", {}).values():
+        if isinstance(parent, Mapping) and isinstance(parent.get("path"), str):
+            dependency_paths.add((REPOSITORY_ROOT / parent["path"]).resolve())
+    for pin in receipt.get("source_pins", []):
+        if isinstance(pin, Mapping) and isinstance(pin.get("path"), str):
+            dependency_paths.add((REPOSITORY_ROOT / pin["path"]).resolve())
+    rows: list[tuple[str, int, str]] = []
+    for path in sorted(dependency_paths, key=str):
+        raw = path.read_bytes()
+        try:
+            label = path.relative_to(REPOSITORY_ROOT).as_posix()
+        except ValueError:
+            label = str(path)
+        rows.append((label, len(raw), hashlib.sha256(raw).hexdigest()))
+    return tuple(rows)
+
+
+def _verify_inverse_packet_once_per_content() -> Mapping[str, Any]:
+    key = _inverse_verification_key()
+    cache = getattr(
+        verify_a5_biposh_inverse_continuum_gate_independent,
+        _INVERSE_VERIFICATION_CACHE_ATTRIBUTE,
+        {},
+    )
+    if key not in cache:
+        cache[key] = (
+            verify_a5_biposh_inverse_continuum_gate_independent.verify_packet()
+        )
+        setattr(
+            verify_a5_biposh_inverse_continuum_gate_independent,
+            _INVERSE_VERIFICATION_CACHE_ATTRIBUTE,
             cache,
         )
     return cache[key]
@@ -763,6 +828,83 @@ def _critical_evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | 
                 "derived_from_canonical_a1_a3_by_this_packet"
             ),
         }
+    if path == "data/refinement/all_level_primitive_seam_source_receipt.json":
+        decision = value.get("selection_decision", {})
+        counting = value.get("unit_counting_certificate", {})
+        a2 = value.get("a2_reconciliation", {})
+        refinement = value.get("refinement_certificate", {})
+        scope = value.get("source_scope", {})
+        levels = value.get("level_alphabets", [])
+        return {
+            "emitted_registered_level_count": len(levels),
+            "emitted_complete_primitive_event_count": sum(
+                int(row.get("seam_count", 0))
+                for row in levels
+                if isinstance(row, Mapping)
+            ),
+            "emitted_declared_registered_ladder_event_source": decision.get(
+                "registered_ladder_complete_primitive_attempt_alphabet_source_emitted"
+            ),
+            "emitted_declared_registered_ladder_unit_counting_source": decision.get(
+                "registered_ladder_exact_unit_counting_source_emitted_on_declared_branch"
+            ),
+            "emitted_infinite_tower_event_source": decision.get(
+                "infinite_tower_complete_primitive_attempt_alphabet_source_emitted"
+            ),
+            "emitted_infinite_tower_unit_counting_source": decision.get(
+                "infinite_tower_exact_unit_counting_source_emitted_on_declared_branch"
+            ),
+            "emitted_unit_counting_across_a5_orbits": counting.get(
+                "exact_unit_counting_across_a5_orbit_classes_in_declared_source"
+            ),
+            "emitted_unit_counting_derived_from_canonical_a1_a3": counting.get(
+                "unit_counting_derived_from_canonical_a1_a3"
+            ),
+            "emitted_expected_balancing_diagnostic": a2.get(
+                "expected_endpoint_agreement_exact"
+            ),
+            "emitted_canonical_a2_pathwise_agreement": a2.get(
+                "canonical_a2_pathwise_agreement_discharged"
+            ),
+            "emitted_odd_total_pathwise_exact_agreement": a2.get(
+                "odd_total_pathwise_exact_agreement"
+            ),
+            "emitted_issue_628_atomic_record_bridge": decision.get(
+                "issue_628_atomic_record_bridge_discharged"
+            ),
+            "emitted_complete_event_lineage": refinement.get(
+                "complete_event_lineage_exact"
+            ),
+            "emitted_normalized_counting_refinement_naturality": refinement.get(
+                "normalized_unit_counting_refinement_natural"
+            ),
+            "emitted_first_order_refinement_readback": decision.get(
+                "first_order_refinement_readback_discharged"
+            ),
+            "emitted_full_refinement_commuting_diagram": decision.get(
+                "full_refinement_commuting_diagram_discharged"
+            ),
+            "emitted_repair_semigroup_refinement_naturality": refinement.get(
+                "repair_semigroup_refinement_natural"
+            ),
+            "emitted_canonical_a1_a3_force_emitter": decision.get(
+                "canonical_a1_a3_force_the_emitter"
+            ),
+            "emitted_continuum_operator_selected": decision.get(
+                "continuum_equal_seam_operator_selected"
+            ),
+            "emitted_physical_repair_law": decision.get(
+                "physical_repair_law_selected"
+            ),
+            "emitted_physical_prediction": decision.get("physical_prediction"),
+            "emitted_promotion_allowed": decision.get("promotion_allowed"),
+            "emitted_comparison_data_used": bool(
+                scope.get("external_comparison_data_used") is True
+                or scope.get("particle_data_used") is True
+                or scope.get("sky_data_used") is True
+                or scope.get("target_values_used") is True
+            ),
+        }
     if path == "data/refinement/a5_biposh_continuum_tail_receipt.json":
         decision = value.get("selection_decision", {})
         identity = value.get("exact_refinement_identity", {})
@@ -809,6 +951,89 @@ def _critical_evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | 
             ),
             "emitted_physical_prediction": decision.get("physical_prediction"),
             "emitted_promotion_allowed": decision.get("promotion_allowed"),
+        }
+    if path == "data/refinement/a5_biposh_inverse_continuum_gate_receipt.json":
+        decision = value.get("selection_decision", {})
+        response = value.get("operational_stiffness_response", {})
+        transfer = value.get("transfer_boundary", {})
+        scope = value.get("source_scope", {})
+        admission = value.get("inverse_admission_gate", {})
+        geometry = value.get("continuum_geometry_assessment", {})
+        route = geometry.get("shape_regular_coercivity_route", {})
+        verification = value.get("verification_scope", {})
+        return {
+            "emitted_full_raw_stiffness_cauchy_limit": decision.get(
+                "full_raw_stiffness_cauchy_limit"
+            ),
+            "emitted_uniform_continuum_coercivity": decision.get(
+                "uniform_continuum_coercivity"
+            ),
+            "emitted_projected_quotient_continuum_tail": decision.get(
+                "projected_quotient_continuum_tail"
+            ),
+            "emitted_full_inverse_covariance_continuum_limit": decision.get(
+                "full_inverse_covariance_continuum_limit"
+            ),
+            "emitted_finite_anchor_neumann_gate": admission.get(
+                "finite_anchor_neumann_gate_epsilon_lt_gap"
+            ),
+            "emitted_source_ensemble_selected": decision.get(
+                "source_ensemble_selected"
+            ),
+            "emitted_declared_ladder_primitive_alphabet": response.get(
+                "declared_registered_ladder_primitive_alphabet_source_emitted"
+            ),
+            "emitted_declared_ladder_unit_counting": response.get(
+                "declared_registered_ladder_unit_counting_source_emitted"
+            ),
+            "emitted_declared_ladder_reaches_inverse_anchor": response.get(
+                "declared_ladder_reaches_inverse_anchor_level"
+            ),
+            "emitted_first_order_refinement_readback": response.get(
+                "first_order_refinement_readback_discharged"
+            ),
+            "emitted_full_refinement_commuting_diagram": response.get(
+                "full_refinement_commuting_diagram_discharged"
+            ),
+            "emitted_all_level_response_law": response.get(
+                "all_level_response_law_source_selected"
+            ),
+            "emitted_operational_stiffness_observable_candidate": response.get(
+                "stiffness_statistic_can_be_an_operational_response_observable"
+            ),
+            "emitted_physical_response_readout": decision.get(
+                "physical_response_readout_selected"
+            ),
+            "emitted_scalar_rescaling_cancellation": transfer.get(
+                "scalar_rescaling_cancellation_proved"
+            ),
+            "emitted_rotation_equivariant_transfer": transfer.get(
+                "rotation_equivariant_transfer_proved"
+            ),
+            "emitted_multiplicity_one": transfer.get("multiplicity_one_proved"),
+            "emitted_radial_copy_mixing_excluded": transfer.get(
+                "radial_copy_mixing_excluded"
+            ),
+            "emitted_shape_regular_coercivity_theorem": route.get("closed_here"),
+            "emitted_exact_tail_arithmetic_reimplemented": verification.get(
+                "exact_tail_arithmetic_reimplemented"
+            ),
+            "emitted_independent_harmonic_implementation": verification.get(
+                "independent_harmonic_implementation"
+            ),
+            "emitted_harmonic_kernels_shared_with_producer": verification.get(
+                "harmonic_design_stiffness_and_biposh_kernels_shared"
+            ),
+            "emitted_physical_covariance": decision.get(
+                "physical_covariance_selected"
+            ),
+            "emitted_physical_prediction": decision.get("physical_prediction"),
+            "emitted_promotion_allowed": decision.get("promotion_allowed"),
+            "emitted_comparison_data_used": bool(
+                scope.get("external_comparison_data_used") is True
+                or scope.get("sky_data_used") is True
+                or scope.get("target_values_used") is True
+            ),
         }
     if path == "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json":
         theorem = value.get("a2_endpoint_commutator_theorem", {})
@@ -860,6 +1085,65 @@ def _critical_evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | 
                 "negative_closure_supported"
             ),
             "emitted_comparison_data_used": value.get("comparison_data_read"),
+        }
+    if path == "data/repair_closure/vertex12_constructive_source_law_receipt.json":
+        law = value.get("constructive_source_law", {})
+        attainment = value.get("attainment", {})
+        provenance = value.get("provenance_boundary", {})
+        disposition = value.get("issue_655_disposition", {})
+        a5_action = law.get("same_Q_A5_action", {})
+        return {
+            "emitted_constructive_source_capture_root": attainment.get(
+                "constructive_source_law_capture_root"
+            ),
+            "emitted_accepted_surjective_quotient": attainment.get(
+                "accepted_surjective_quotient"
+            ),
+            "emitted_raw_step_count": len(law.get("raw_step_rows", [])),
+            "emitted_meaning_step_count": len(law.get("meaning_step_rows", [])),
+            "emitted_A2_descent_square_count": len(
+                law.get("a2_descent_rows", [])
+            ),
+            "emitted_quotient_inverse_count": len(
+                law.get("antipodal_inverse_rows", [])
+            ),
+            "emitted_endpoint_diamond_count": len(
+                law.get("positive_axis_endpoint_diamond_rows", [])
+            ),
+            "emitted_same_Q_A5_group_order": len(a5_action.get("group_rows", [])),
+            "emitted_same_Q_A5_covariance_row_count": len(
+                a5_action.get("covariance_rows", [])
+            ),
+            "emitted_canonical_source_selection": attainment.get(
+                "canonical_source_selection"
+            ),
+            "emitted_canonical_A1_A2_A3_derivation_claimed": provenance.get(
+                "canonical_A1_A2_A3_derivation_claimed"
+            ),
+            "emitted_full_canonical_A1_typed_object_instantiated": provenance.get(
+                "full_canonical_A1_typed_object_instantiated"
+            ),
+            "emitted_full_A2_observer_federation_functor_instantiated": provenance.get(
+                "full_A2_observer_federation_functor_instantiated"
+            ),
+            "emitted_canonical_A3_maximum_entropy_selection_instantiated": provenance.get(
+                "canonical_A3_maximum_entropy_selection_instantiated"
+            ),
+            "emitted_spatial_translation": attainment.get("spatial_translation"),
+            "emitted_physical_readout": attainment.get("physical_readout"),
+            "emitted_physical_prediction": attainment.get("physical_prediction"),
+            "emitted_advances_canonical_source_bridge": disposition.get(
+                "advances_canonical_source_bridge"
+            ),
+            "emitted_advances_physical_bridge": disposition.get(
+                "advances_physical_bridge"
+            ),
+            "emitted_issue_closure_supported": disposition.get(
+                "issue_closure_supported"
+            ),
+            "emitted_comparison_data_used": provenance.get(
+                "comparison_or_target_data_used"
+            ),
         }
     return None
 
@@ -931,6 +1215,14 @@ def _canonical_rows(paths: Sequence[str]) -> list[dict[str, Any]]:
                 raise ValueError(
                     "refined equal-seam source gate failed independent verification"
                 )
+        if path == "data/refinement/all_level_primitive_seam_source_receipt.json":
+            verification = (
+                verify_all_level_primitive_seam_source_independent.verify_receipt()
+            )
+            if verification.get("receipt") is not True:
+                raise ValueError(
+                    "all-level primitive seam source failed independent verification"
+                )
         if path == "data/refinement/a5_biposh_continuum_tail_receipt.json":
             verification = _verify_tail_packet_once_per_content()
             if (
@@ -940,6 +1232,15 @@ def _canonical_rows(paths: Sequence[str]) -> list[dict[str, Any]]:
                 raise ValueError(
                     "A5 BipoSH continuum-tail packet failed independent verification"
                 )
+        if path == "data/refinement/a5_biposh_inverse_continuum_gate_receipt.json":
+            verification = _verify_inverse_packet_once_per_content()
+            if (
+                verification.get("schema") != contract["schema"]
+                or verification.get("status") != contract["status"]
+            ):
+                raise ValueError(
+                    "A5 BipoSH inverse-continuum packet failed independent verification"
+                )
         if path == "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json":
             verification = (
                 verify_vertex12_a2_endpoint_commutator_independent.verify_report(value)
@@ -947,6 +1248,17 @@ def _canonical_rows(paths: Sequence[str]) -> list[dict[str, Any]]:
             if verification.get("receipt") is not True:
                 raise ValueError(
                     "vertex12 A2 endpoint-commutator packet failed independent "
+                    f"verification: {verification.get('reasons')}"
+                )
+        if path == "data/repair_closure/vertex12_constructive_source_law_receipt.json":
+            verification = (
+                verify_vertex12_constructive_source_law_independent.verify_receipt(
+                    REPOSITORY_ROOT / path
+                )
+            )
+            if verification.get("receipt") is not True:
+                raise ValueError(
+                    "vertex12 constructive source-law control failed independent "
                     f"verification: {verification.get('reasons')}"
                 )
         rows.append({
