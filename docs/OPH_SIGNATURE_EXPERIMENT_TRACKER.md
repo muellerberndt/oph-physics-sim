@@ -831,11 +831,18 @@ astrophysical scales.
   anomalies as mismodeling, bank the kill. BUILD, weeks.
 
 ### MM-07. Exact-symmetry block (count once)
-- Recovered exact structures imply: no LIV dispersion (Fermi-LAT,
-  LHAASO), GW speed = c (GW170817), exact EP (MICROSCOPE eta ~ 1e-15),
-  photon mass zero (PDG < 1e-18 eV). All pass. The corpus itself notes
-  the GW bound is consistency, no theory-side certificate (PAPER:3419).
-  One evidence block, class S0.
+- The recovered local Lorentz, gauge, and geodesic structures constrain
+  kinematics. They do not prove exactly linear dispersion for every physical
+  operator. In particular, the separately frozen FZ-11 and FZ-12 branches
+  have linked higher-order coefficients if their open physical-action,
+  sector, clock, frame, scale, and readout premises are discharged. Existing
+  Fermi-LAT and LHAASO limits are exposed retrospective diagnostics for those
+  branches, not proof of a universal OPH null. GW speed consistency
+  (GW170817), equivalence-principle consistency (MICROSCOPE), and the photon
+  mass bound likewise require their named physical attachments before they
+  can score OPH. The corpus records the GW result as consistency without a
+  theory-side certificate (PAPER:3419). One conditional evidence block, class
+  S0.
 
 ---
 
@@ -997,7 +1004,7 @@ astrophysical scales.
 
 | # | Null | Data (passing today) | OPH status | Teeth |
 |---|---|---|---|---|
-| NT-01 | No LIV dispersion | Fermi-LAT GRBs, LHAASO | recovered SO+(3,1), refinement-limit | confirmed LIV kills the core |
+| NT-01 | Linked propagation dispersion and anisotropy | Fermi-LAT GRBs, LHAASO | Exact Lorentz kinematics alone does not force zero dispersion. FZ-11 and FZ-12 define distinct conditional higher-order rays whose physical position, sector, clock, frame, scale, and readout attachments remain open | Existing bounds are exposed retrospective diagnostics. After one branch is physically forced, a linked nonzero signal can support it; a powered null can reject it only with a same-action positive scale lower bound. Generic Lorentz violation does not by itself reject the OPH core |
 | NT-02 | alpha-dot = G-dot = mu-dot = 0 | Oklo, optical clocks, ESPRESSO (Webb dipole unconfirmed) | SILENT: constants fixed from P implies zero drift; theorem unstated | state it; three datasets bank immediately; confirmed drift kills pixel closure |
 | NT-03 | Photon mass = 0 | PDG < 1e-18 eV | unbroken U(1) exact | massive photon kills quotient |
 | NT-04 | Equivalence principle | MICROSCOPE eta = (-1.5 +/- 2.7)e-15 | geodesic inheritance | confirmed violation kills recovery |

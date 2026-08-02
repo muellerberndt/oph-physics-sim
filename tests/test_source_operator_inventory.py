@@ -186,6 +186,10 @@ def test_completion_action_and_load_quotient_descendants_are_cycle_excluded() ->
             "oph.port-load-repair-gram-metric-quotient.v1",
             "RECURSIVE_DESCENDANT_LOAD_QUOTIENT_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
         ),
+        inventory.SEAM_SCALE_RELATIVE_PATH: (
+            "oph.seam-current-same-metric-scale.v1",
+            "RECURSIVE_DESCENDANT_SEAM_SCALE_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
+        ),
     }
     for path, (schema, disposition) in expected.items():
         row = _row(REPORT, path)

@@ -261,14 +261,14 @@
       "issue_662_armed": false,
       "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
       "physical_hop_identity_consumed": false,
-      "raw_sha256": "sha256:49b6f143114733748f9c389bba0e56b5f14e9c09c8b2eb8a677e8bf043a139cb",
-      "receipt_sha256": "sha256:04c3858d46fc9ff3aa175c29c5cca30077a0cc2bf718f69023931a5933d782bf",
+      "raw_sha256": "sha256:60687f6534c45cb2f521c293455e87143598fd41d15e5037647a3fa76923bb21",
+      "receipt_sha256": "sha256:85a089bd6c2d695b7bf37b4493d516452c8ddc36be80b22c271fcf2a2ce4f715",
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "source_geometry_hash": "e333556ce101cb224d94882270c17e0d7e36469908871ca133e5bbbee2c6eafd",
       "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
     }
   },
-  "receipt_sha256": "sha256:f3c07584a52e371322e6b8cc95a4ca1e1273b29bb699e7f59338a81384fa7589",
+  "receipt_sha256": "sha256:6845c686cc20773f0c7c5df2aaf8b93c76c34db1aa476597b59f24317640efc5",
   "refinement_naturality": {
     "REFINEMENT_NATURAL_PORT_DUAL_MEASURE_RECEIPT": true,
     "all_declared_levels_pass": true,

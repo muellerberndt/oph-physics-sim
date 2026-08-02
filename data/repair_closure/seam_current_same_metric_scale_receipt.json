@@ -1,0 +1,211 @@
+{
+  "attainment": {
+    "comparison_permitted": false,
+    "independently_calibrated_SI_carrier_scale": false,
+    "physical_pixel_attachment": false,
+    "physical_position_action_attachment": false,
+    "physical_positive_lower_bound": false,
+    "physical_prediction_promoted": false,
+    "raw_norm_four_is_response_Gram_norm_four": false,
+    "same_internal_action_metric_binding": true,
+    "source_native_SI_carrier_scale": false,
+    "source_native_dimensionless_seam_action_scale": true,
+    "source_native_strict_dimensionless_seam_event_lower_bound": true
+  },
+  "claim_boundary": "The exact D6 unit-current seam action and the exact response-selected Gram metric are the same internal object within the pinned finite ancestry. The parent completion remains conditional on source selection of the signed record as position and of the A2 response topology. Their composition fixes the full seam event's squared dimensionless length to 2-2/sqrt(5), strictly between one and six fifths in normalized port units. The raw moment-chart value four is related by the common raw port radius 2+phi and is not itself the normalized response-Gram norm. This closes a source-native dimensionless scale for the internal FZ-12 action. It does not make the internal record completion physical position. A common positive conversion from response units to physical length preserves every pinned finite relation and has no source-selected lower bound, so no dimensionful carrier length, physical kappa, experimental amplitude, prediction promotion, or comparison permission follows.",
+  "comparison_data_read": false,
+  "conditional_physical_cell_attachment": {
+    "conditional_B0": "kappa_edge^2*P^2*ell_star^4/840",
+    "conditional_B6": "-kappa_edge^2*P^2*ell_star^4/12600",
+    "conditional_C4": "-kappa_edge*P*ell_star^2/20",
+    "conditional_a_edge_over_ell_star": "sqrt(kappa_edge*P)",
+    "conditional_edge_kappa_equivalent": "6*(1-1/sqrt(5))/pi",
+    "conditional_edge_kappa_if_both_identities_hold": "(6+-6/5*sqrt5)/pi",
+    "conditional_relation": "kappa_edge=(2-2/sqrt(5))*kappa_vertex",
+    "conditional_vertex_kappa_if_both_identities_hold": "3/pi",
+    "normalized_port_dual_area": "1/12",
+    "physical_kappa_edge_source_selected": false,
+    "port_sector_is_P_defined_physical_cell": false,
+    "support_areal_radius_is_vertex_action_length": false,
+    "terminal_physical_refinement_stage_selected": false
+  },
+  "dimensionful_rescaling_counterfamily": {
+    "D6_action_and_proper_carrier_covariance_preserved": true,
+    "FZ11_and_FZ12_scale_free_coefficient_rays_preserved": true,
+    "arbitrarily_small_positive_physical_seam_lengths_survive": true,
+    "bounded_exhaustiveness": "all source constraints in the pinned finite metric, action, measure, and frozen-ray ancestry are scale homogeneous",
+    "bounded_physical_result": "COMMON_METRIC_RESCALING_COUNTERFAMILY_SURVIVES__FUTURE_ATTACHMENT_CAN_BREAK",
+    "does_not_replace_primary_dimensionless_typed_outcome": true,
+    "finite_carrier_records_preserved": true,
+    "future_source_attachment_can_break_counterfamily": true,
+    "normalized_port_dual_measure_preserved": true,
+    "normalized_response_Gram_and_dimensionless_ratio_preserved": true,
+    "parameter": "lambda>0 physical-length units per response-metric unit",
+    "physical_coefficients_scale": {
+      "B0": "s^4*B0",
+      "B6": "s^4*B6",
+      "C4": "s^2*C4"
+    },
+    "positive_dimensionful_lower_bound_from_pinned_ancestry": false,
+    "rescaling": "lambda -> s*lambda for arbitrary s>0",
+    "seam_physical_length": "lambda*sqrt(2-2/sqrt(5))",
+    "vertex_physical_length": "lambda"
+  },
+  "exact_dimensionless_scale": {
+    "FZ12_unit_3d_direction_norm_squared": "1",
+    "dimensionful_length_selected": false,
+    "equivalent_expression": "2-2/sqrt(5)",
+    "frozen_FZ12_physical_a_identified_with_internal_a_edge": false,
+    "full_unit_current_seam_norm_squared_qsqrt5": "2+-2/5*sqrt5",
+    "half_seam_control_factor_relative_to_full_current": "1/2",
+    "half_seam_control_is_unit_3d_direction": false,
+    "half_seam_control_pullback_Gram_norm_squared_qsqrt5": "1/2+-1/10*sqrt5",
+    "normalized_port_generator_norm_squared": "1",
+    "raw_port_radius_squared_qsqrt5": "5/2+1/2*sqrt5",
+    "raw_seam_difference_norm_squared_qsqrt5": "4+0*sqrt5",
+    "raw_to_response_identity": "raw_seam_norm_squared = raw_port_radius_squared * response_Gram_seam_norm_squared",
+    "raw_to_response_identity_exact": true,
+    "same_action_derivation": "d6Position(delta)=rawRadius^-1*rawDifference=(2/rawRadius)*FZ12_unit_3d_direction",
+    "same_metric_edge_over_vertex_squared_ratio_qsqrt5": "2+-2/5*sqrt5",
+    "same_metric_vertex_a_squared": "1",
+    "source_event_equals_a_edge_times_FZ12_unit_direction": true,
+    "source_native_a_edge_in_response_units": "2/sqrt(5/2+sqrt(5)/2)",
+    "source_native_a_edge_squared_qsqrt5": "2+-2/5*sqrt5",
+    "strict_rational_bounds": {
+      "lower": "1",
+      "lower_proof": "sqrt(5)<5/2 because 5<25/4",
+      "positive_root_statement": "1 < a_edge < sqrt(6/5)",
+      "statement": "1 < a_edge^2 < 6/5",
+      "upper": "6/5",
+      "upper_proof": "2<sqrt(5) because 4<5"
+    },
+    "strictly_positive": true,
+    "typed_outcome": "SOURCE_NATIVE_DIMENSIONLESS_CARRIER_SCALE_ATTAINED"
+  },
+  "implementation_pins": [
+    {
+      "bytes": 25713,
+      "path": "oph_fpe/dynamics/seam_current_same_metric_scale.py",
+      "sha256": "sha256:e91542630942f522fa2ee5c8d3e776560820d9a0eea2f47c27f87595029d24ca"
+    },
+    {
+      "bytes": 26376,
+      "path": "oph_fpe/dynamics/verify_seam_current_same_metric_scale_independent.py",
+      "sha256": "sha256:7e1fe579834518fd79e7561973b0930df666d69d56552eede636ad03a6d9c103"
+    },
+    {
+      "bytes": 12322,
+      "path": "tests/test_seam_current_same_metric_scale.py",
+      "sha256": "sha256:3323208773616d307472a62af43f6f14d1f4d6a0e9528d0548392930cac48fe9"
+    }
+  ],
+  "issue": 664,
+  "parent_pins": {
+    "A1_carrier_definition": {
+      "bytes": 3646,
+      "path": "tests/fixtures/echosahedral_federation_reference.json",
+      "sha256": "sha256:12ec97358ade25f919f9981f1cd7c99c2b27aaaaa9ce14bd2320d73a9c1bfc14"
+    },
+    "D6_source_action": {
+      "bytes": 26025,
+      "path": "data/repair_closure/port_load_metric_quotient_receipt.json",
+      "receipt_sha256": "sha256:76d0917bb6786a1436242d1e9d5099d68644a3adf41c15b6710b356654cd91d4",
+      "schema": "oph.port-load-repair-gram-metric-quotient.v1",
+      "sha256": "sha256:98496c03afe9830f0fc19125c98bc7762080769d0e0b1ef33cedcd1e2cd723b2",
+      "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN"
+    },
+    "FZ11_immutable_prediction_via_bridge": {
+      "bytes": 37873,
+      "frozen_prediction_pin": {
+        "branch_premises_sha256": "sha256:543afc4e7313a9155bd9d4a3a20eea7d83ae5a68c6e5acc6b62b2f42b5dc7de0",
+        "comparison_permitted": false,
+        "exact_prediction_sha256": "sha256:dc3aa0afc49d94eb4ef4220baed21c918cd11fc9e00ebb1611f3643396cd50f2",
+        "path": "code/a5_fingerprint/runtime/spin_six_primitive_port_prediction_receipt.json",
+        "prediction_scope_sha256": "sha256:8f43767bf0d89684452b93fcc663028a8492c2c6192783870b8dbe3ee8715893",
+        "raw_sha256": "sha256:8ac97d7c46199717ed031610efdda65c40f6a251e78715d6bc05888d598e66d8",
+        "receipt_sha256": "sha256:92cc654f2fae04ac1fb90d3f646eae599e6106f217df74641fda2e921bfc0f92",
+        "repository": "FloatingPragma/observer-patch-holography",
+        "schema": "oph.spin_six_primitive_port_prediction.v1",
+        "status": "FROZEN_PROSPECTIVE_PRIMITIVE_TWELVE_PORT_BRANCH_PREDICTION__PHYSICAL_COMPARISON_UNARMED"
+      },
+      "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
+      "receipt_sha256": "sha256:85a089bd6c2d695b7bf37b4493d516452c8ddc36be80b22c271fcf2a2ce4f715",
+      "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
+      "sha256": "sha256:60687f6534c45cb2f521c293455e87143598fd41d15e5037647a3fa76923bb21",
+      "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
+    },
+    "FZ12_immutable_prediction": {
+      "comparison_permitted": false,
+      "conditional_physical_candidate_sha256": "sha256:e3a20b7fade1731bd58ab6ae7bd24d61d92e99801b2210c791fec7f590ff49ef",
+      "exact_source_result_sha256": "sha256:135527821a72cf2bffba2a10ced6c17bc7452150e60d6998b7f4b84b19c2ffc1",
+      "path": "code/a5_fingerprint/runtime/seam_current_edge_prediction_receipt.json",
+      "raw_sha256": "sha256:0b8f0f7573f556ef0f47158fe07eca002c5b35790231d1ef2b75518057d12915",
+      "receipt_sha256": "sha256:3b1344dbce713545deba54b48e027a88faedac9b3a8776795b9abe33cafde7c3",
+      "repository": "FloatingPragma/observer-patch-holography",
+      "schema": "oph.seam_current_edge_prediction_candidate.v1",
+      "status": "EXACT_SOURCE_NATIVE_EDGE_RAY__PROSPECTIVE_PHYSICAL_BRANCH_UNARMED__PHYSICAL_PRODUCER_OPEN"
+    },
+    "completion_isometry_action": {
+      "bytes": 13060,
+      "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
+      "receipt_sha256": "sha256:fec195cb0efa09681cdc2e2575065eff5aff71e19d3990cb2ded0c8a2d2838ee",
+      "schema": "oph.port-gram-equivariant-completion-action.v1",
+      "sha256": "sha256:426b3397ab40d4b8e93a9ea55430367e4204b3040827675314d178eb8227d534",
+      "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
+    },
+    "homogeneous_action_Lean_source": {
+      "path": "Lean/Screen/SeamCurrentHomogeneousAction.lean",
+      "raw_sha256": "sha256:1fa16cbd466e85c5533b2a373b02b5d804efa703db62e8fd0e1cf8b34fcbc265",
+      "repository": "FloatingPragma/observer-patch-holography",
+      "required_theorems": [
+        "d6Translate_isometry",
+        "directedSeamStep_canonical_chart",
+        "unitCarrierSeamDirection_norm_sq",
+        "normalized_average_generator_eq_edgeCurrentGenerator"
+      ]
+    },
+    "normalized_port_dual_measure": {
+      "bytes": 13559,
+      "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
+      "receipt_sha256": "sha256:6845c686cc20773f0c7c5df2aaf8b93c76c34db1aa476597b59f24317640efc5",
+      "schema": "oph.primitive-port-dual-normalized-measure.v1",
+      "sha256": "sha256:ca329d410ac9c2e855747f8373c5e0bdbed77dd22517c129fa997e7dedfff49c",
+      "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
+    },
+    "response_Gram_completion": {
+      "bytes": 32216,
+      "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
+      "receipt_sha256": "sha256:e4d77eea40bf399778beb543bd6137701ffa12341d2b302d8fdd19fe631b5915",
+      "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
+      "sha256": "sha256:64692c8cb316d26c9774b577b3c8ca1abb858dcde6ca45c859e72fc7bb8805c8",
+      "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
+    }
+  },
+  "receipt_sha256": "sha256:7e4379ce71b6080451b1bcfec2dadf833720d0cca6f01a91bc6485dc6472e89d",
+  "same_internal_action_binding": {
+    "D6_translation_isometry_theorem_pinned": true,
+    "action": "translation by one directed unit-current seam boundary",
+    "all_seam_columns_have_the_same_response_Gram_norm": true,
+    "all_seam_columns_lie_in_D6": true,
+    "directed_seam_count": 60,
+    "internal_record_completion_is_physical_position": false,
+    "metric": "unit-diagonal response-selected Gram pulled back to D6",
+    "record_carrier": "D6={z in Z^6: sum(z_i) is even}",
+    "same_action_metric_digest": "sha256:2a1f290790d781523830c5a9ee89f67e676b664acda0b93650de773bf3342da3",
+    "seam_count": 30,
+    "seam_event_is_physical_field_propagation": false,
+    "source_action_and_metric_are_same_internal_object": true
+  },
+  "schema": "oph.seam-current-same-metric-scale.v1",
+  "status": "SOURCE_NATIVE_DIMENSIONLESS_SEAM_ACTION_SCALE_ATTAINED__PHYSICAL_UNIT_CELL_ATTACHMENT_AND_LOWER_BOUND_OPEN",
+  "target_data_read": false,
+  "typed_objects": {
+    "a_cell": "dimension-two physical screen-cell area; unselected",
+    "a_edge_internal": "dimensionless length of one full unit-current seam event in the normalized response-Gram completion",
+    "a_edge_physical": "dimension-one physical length; unselected",
+    "ell_star_squared": "dimension-two reference area; unselected",
+    "internal_and_physical_a_edge_identified": false,
+    "kappa_edge": "dimensionless physical metric conversion; unselected",
+    "length_area_and_reference_area_kept_distinct": true
+  }
+}

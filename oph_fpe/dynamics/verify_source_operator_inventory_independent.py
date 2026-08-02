@@ -51,12 +51,18 @@ PORT_GRAM_ACTION_RELATIVE_PATH = (
 PORT_LOAD_QUOTIENT_RELATIVE_PATH = (
     "data/repair_closure/port_load_metric_quotient_receipt.json"
 )
+# This descendant pins the load quotient and therefore depends transitively on
+# the inventory. It must be excluded from the inventory's raw-input hash set.
+SEAM_SCALE_RELATIVE_PATH = (
+    "data/repair_closure/seam_current_same_metric_scale_receipt.json"
+)
 DECLARED_OUTPUT_PATHS = {
     INVENTORY_RELATIVE_PATH,
     BRIDGE_RELATIVE_PATH,
     PORT_GRAM_RELATIVE_PATH,
     PORT_GRAM_ACTION_RELATIVE_PATH,
     PORT_LOAD_QUOTIENT_RELATIVE_PATH,
+    SEAM_SCALE_RELATIVE_PATH,
 }
 PRODUCER_PATH = REPOSITORY_ROOT / "oph_fpe/dynamics/source_operator_inventory.py"
 INDEPENDENT_VERIFIER_PATH = Path(__file__).resolve()
@@ -234,6 +240,14 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
             "QUOTIENT_VISIBLE_PORT_DUAL_MEASURE__PHYSICAL_PIXEL_HOP_AND_SCALE_"
             "IDENTITIES_OPEN"
         ),
+    ),
+    SEAM_SCALE_RELATIVE_PATH: _contract(
+        "oph.seam-current-same-metric-scale.v1",
+        (
+            "SOURCE_NATIVE_DIMENSIONLESS_SEAM_ACTION_SCALE_ATTAINED__"
+            "PHYSICAL_UNIT_CELL_ATTACHMENT_AND_LOWER_BOUND_OPEN"
+        ),
+        "RECURSIVE_DESCENDANT_SEAM_SCALE_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN",
     ),
     BRIDGE_RELATIVE_PATH: _contract(
         "oph.port_repair_propagation_bridge_receipt.v1", "BOUNDED_NONSELECTION__FZ11_REMAINS_BRANCH_PREDICTION", "RECURSIVE_PARENT_BRIDGE_RECEIPT_EXCLUDED_FROM_SEMANTIC_SCAN"
@@ -623,6 +637,30 @@ def _evidence(path: str, value: Mapping[str, Any]) -> dict[str, Any] | None:
                 "physical_prediction_promoted"
             ),
             "emitted_issue_662_armed": attainment.get("issue_662_armed"),
+        }
+    if path == "data/repair_closure/seam_current_same_metric_scale_receipt.json":
+        attainment = value.get("attainment", {})
+        scale = value.get("exact_dimensionless_scale", {})
+        typed = value.get("typed_objects", {})
+        return {
+            "emitted_source_native_dimensionless_seam_scale": attainment.get(
+                "source_native_dimensionless_seam_action_scale"
+            ),
+            "emitted_response_Gram_seam_norm_squared": scale.get(
+                "full_unit_current_seam_norm_squared_qsqrt5"
+            ),
+            "emitted_internal_and_physical_scale_identified": typed.get(
+                "internal_and_physical_a_edge_identified"
+            ),
+            "emitted_physical_position_attachment": attainment.get(
+                "physical_position_action_attachment"
+            ),
+            "emitted_physical_positive_lower_bound": attainment.get(
+                "physical_positive_lower_bound"
+            ),
+            "emitted_comparison_permitted": attainment.get(
+                "comparison_permitted"
+            ),
         }
     if path == "data/local_domain/stage3_receipt.json":
         return {

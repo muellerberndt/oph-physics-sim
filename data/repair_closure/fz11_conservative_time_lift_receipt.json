@@ -1782,12 +1782,12 @@
       "time_evolution_or_frequency_sign_selected": false
     },
     "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-    "receipt_sha256": "sha256:04c3858d46fc9ff3aa175c29c5cca30077a0cc2bf718f69023931a5933d782bf",
+    "receipt_sha256": "sha256:85a089bd6c2d695b7bf37b4493d516452c8ddc36be80b22c271fcf2a2ce4f715",
     "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
-    "sha256": "sha256:49b6f143114733748f9c389bba0e56b5f14e9c09c8b2eb8a677e8bf043a139cb",
+    "sha256": "sha256:60687f6534c45cb2f521c293455e87143598fd41d15e5037647a3fa76923bb21",
     "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
   },
-  "receipt_sha256": "sha256:c575742fc4b77b5ebb8491da7570693358b086c1b480a0529b0dd3a604bbcdbb",
+  "receipt_sha256": "sha256:665762bca914b192de1e14bd757d545694f2a0982b9c5480ffc9a31a3dcf974b",
   "schema": "oph.fz11-conservative-time-lift.v1",
   "status": "EXACT_CONSERVATIVE_TIME_LIFT_FOR_DECLARED_FZ11_OPERATOR_ATTAINED__SOURCE_B_CLOCK_LORENTZ_SECTOR_CONTINUUM_AND_SCALE_OPEN",
   "target_data_paths": [],

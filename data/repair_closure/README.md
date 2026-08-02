@@ -26,3 +26,31 @@ python3 -m oph_fpe.dynamics.self_readback_repair_closure \
 python3 -m oph_fpe.dynamics.self_readback_repair_closure \
   --verify data/repair_closure/bounded_atomic_self_readback_closure_receipt.json
 ```
+
+## Same-action seam scale
+
+`seam_current_same_metric_scale_receipt.json` composes the exact unit-current
+`D6` action with the response-selected Gram on that same record carrier. It
+certifies
+
+\[
+  \lVert\delta_{\rm edge}\rVert_G^2=2-2/\sqrt5,
+  \qquad 1<\lVert\delta_{\rm edge}\rVert_G^2<6/5.
+\]
+
+This is a source-native dimensionless scale inside the pinned internal
+completion. Source selection of the signed record as physical position and of
+the A2 response topology remains open. The raw FZ-12 chart norm is four; the
+response normalization divides by the squared raw port radius
+`5/2+sqrt(5)/2`. A common conversion from response units to physical length
+remains freely rescalable, so the packet does not supply an SI scale, a
+physical `kappa_edge`, a physical lower bound, or comparison permission.
+
+Regenerate and verify the packet from the repository root:
+
+```bash
+python3 -m oph_fpe.dynamics.seam_current_same_metric_scale
+python3 -m oph_fpe.dynamics.seam_current_same_metric_scale \
+  --verify data/repair_closure/seam_current_same_metric_scale_receipt.json
+python3 -m oph_fpe.dynamics.verify_seam_current_same_metric_scale_independent
+```
