@@ -384,7 +384,7 @@ def finite_repair_transition_clock_report(
         min_transition_count=config.min_transition_count,
     )
     raw = _row_stochastic(counts)
-    reversible = _reversible_projection(counts)
+    reversible, reversibilization_method = _reversible_projection(counts)
     pixel = OPHPixelConstants(P=float(config.p_value))
     clock_target = edge_center_clock_target(float(config.p_value))
     clock_evidence = validate_edge_center_clock_evidence(
@@ -404,6 +404,7 @@ def finite_repair_transition_clock_report(
         target=clock_target,
         repair_step_time=config.repair_step_time,
     )
+    reversible_summary["reversibilization_method"] = reversibilization_method
     matrix_summaries = {
         "raw_empirical": raw_summary,
         "reversible_empirical": reversible_summary,
@@ -691,13 +692,16 @@ def _transition_counts_from_observer_views(
             for step in steps:
                 key = tuple((field, int(step.get(field, 0))) for field in fields)
                 encoded.append(state_to_idx.setdefault(key, len(state_to_idx)))
-            local_transition_count = 0
-            for left, right in zip(encoded, encoded[1:], strict=False):
+            window = list(zip(encoded, encoded[1:], strict=False))
+            if len(window) < min_transition_count:
+                # Filtered windows contribute nothing to the count matrix;
+                # committing first and skipping afterwards would contaminate
+                # the matrix while reporting the observer as skipped.
+                skipped += 1
+                continue
+            for left, right in window:
                 counts[(left, right)] += float(weight)
                 transition_count += 1
-                local_transition_count += 1
-            if local_transition_count < min_transition_count:
-                skipped += 1
     labels = [None] * len(state_to_idx)
     for key, idx in state_to_idx.items():
         labels[idx] = key
@@ -720,13 +724,31 @@ def _row_stochastic(counts: np.ndarray) -> np.ndarray:
     return matrix
 
 
-def _reversible_projection(counts: np.ndarray) -> np.ndarray:
+def _reversible_projection(counts: np.ndarray) -> tuple[np.ndarray, str]:
+    """Reversibilize the empirical chain.
+
+    When the raw row-stochastic chain is irreducible, the additive
+    reversibilization `(P + P*)/2` with `P*` the time reversal under the
+    raw chain's stationary law is used; it preserves that stationary law
+    and is reversible with respect to it, which is what the declared
+    name promises. A reducible raw chain has no unique stationary law,
+    so the symmetrized-count estimator is used instead and labeled as
+    such; its stationary law is proportional to the symmetrized row
+    sums and generally differs from the raw chain's.
+    """
     if counts.size == 0:
-        return counts.copy()
+        return counts.copy(), "empty"
+    raw = _row_stochastic(counts)
+    if _is_strongly_connected(raw > 1.0e-12):
+        stationary = _stationary_distribution(raw)
+        if np.all(stationary > 0.0):
+            reversal = (stationary[None, :] * raw.T) / stationary[:, None]
+            additive = 0.5 * (raw + reversal)
+            return additive, "additive_stationary_reversibilization"
     symmetric = 0.5 * (counts + counts.T)
     if np.all(symmetric.sum(axis=1) <= 0.0):
-        return np.eye(counts.shape[0], dtype=np.float64)
-    return _row_stochastic(symmetric)
+        return np.eye(counts.shape[0], dtype=np.float64), "identity_fallback"
+    return _row_stochastic(symmetric), "symmetrized_count_fallback_reducible_raw"
 
 
 def _matrix_summary(

@@ -1,4 +1,4 @@
-name: e4_smoke_4k_evolution
+name: e6_axiom_manifest_64k_dense_observers
 simulation_assumptions:
   enabled: true
   scope: visualization_only
@@ -53,16 +53,15 @@ simulation_assumptions:
     transfer_model: pinned_tt_reference_best_fit_visualization
     sky_realization_seed: 20260751
 run_mode: observer_shared_bulk_candidate_compact
-seed: 20260751
-claim_boundary: 'Compact 4k observer-chart object-population diagnostic. This tests
-  whether persistent observer-facing record objects populate the modular-response
-  H3 chart under shuffled-incidence controls. It is not a final 3D bulk, particle,
-  or physical CMB claim unless emitted gates pass.
-
-  '
+seed: 20260805
+claim_boundary: 'Compact 64k dense-observer diagnostic on the axiom-manifest lane: the e4
+  observer-chart object-population run with doubled observer sampling density, a pinned verbatim
+  A1-A3 axiom manifest, and the exact conditional-resampling realization receipt on the committed
+  record classes. It is not a final 3D bulk, particle, or physical CMB claim unless emitted
+  gates pass.'
 graph:
   family: fibonacci_sphere
-  patch_count: 4096
+  patch_count: 65536
   neighbors: 12
 group:
   name: S3
@@ -87,9 +86,9 @@ oph_constants:
 screen_units:
   mode: numerical_regulator
 dynamics:
-  cycles: 160
+  cycles: 128
   repair_fraction_per_cycle: 0.0625
-  repairs_per_cycle: 1024
+  repairs_per_cycle: 4096
   repair_budget_schedule:
     enabled: true
     kind: smooth_hotspot
@@ -108,7 +107,7 @@ dynamics:
     edge_fraction: 0.003
     max_edges_per_cycle: 2048
     start_cycle: 0
-    stop_cycle: 28
+    stop_cycle: 72
     endpoint_noise_probability: 0.03
     phase_advance_per_cycle: 0
   beta_schedule:
@@ -127,7 +126,7 @@ bw:
   mode: state_derived_modular_probe
   source_state: theorem_observer
   state_mode: history_koopman_generator_state
-  history_window: 16
+  history_window: 32
   target_operator_mode: soft
   transition_response_time: 0.25
   transition_response_scale: 6.283185307179586
@@ -207,21 +206,21 @@ collar_markov:
   sector_conditioned: true
   write_recovery_bound: true
 observers:
-  sample_count: 64
+  sample_count: 2048
   neighborhood_size: 96
 neutral_frontier:
   seed: 11
-  sample_count: 128
-  max_model_points: 96
-  strict_bulk_max_model_points: 96
-  planted_control_points: 48
+  sample_count: 512
+  max_model_points: 384
+  strict_bulk_max_model_points: 384
+  planted_control_points: 192
   object_min_objects: 16
   object_min_observers_per_object: 3
   object_max_observer_fraction_per_object: 0.65
   object_max_model_points: 192
   object_heldout_fraction: 0.25
   graph_workers: 4
-  overlap_control_max_model_points: 96
+  overlap_control_max_model_points: 384
   ranks:
   - 2
   - 3
@@ -241,7 +240,7 @@ neutral_frontier:
   graph_seeds:
   - 7
   graph_max_model_points_values:
-  - 96
+  - 384
   graph_k_neighbor_values:
   - 12
   residual_remove_mode_values:
@@ -254,7 +253,7 @@ observer_objects:
   enabled: true
   family_mode: transition_affinity
   packet_mode: coarse_visible_packet
-  history_window: 4
+  history_window: 32
   signature_bins: 12
   include_s3_sector: true
   include_repair_load_bin: false
@@ -282,15 +281,15 @@ observer_objects:
   transition_bins: 8
   record_family_modulus: 16
   min_support_size: 3
-  max_support_nodes_per_family: 256
+  max_support_nodes_per_family: 2048
   persistence_horizon: 8
   counterfactual_perturbations: 16
-  max_families: 256
+  max_families: 2048
 observer_chart_population:
   enabled: true
   refit_incidence_mode: transition_history_mixture_cluster
   incidence_mode: transition_history_mixture_cluster
-  history_window: 4
+  history_window: 32
   min_persistence: 3
   min_objects: 8
   min_observers_per_object: 3
@@ -335,8 +334,8 @@ visualization_diagnostics:
     refinement_sweeps: 8
   organic_defect_population:
     enabled: true
-    patch_count: 4096
-    steps: 40
+    patch_count: 65536
+    steps: 160
     defect_count: 16
     min_defects: 10
     max_defects: 20
@@ -354,9 +353,9 @@ visualization_diagnostics:
   two_defect_gravity_assay:
     enabled: true
     free_dynamics_enabled: true
-    patch_count: 4096
-    steps: 32
-    free_steps: 32
+    patch_count: 65536
+    steps: 96
+    free_steps: 128
     support_node_count: 8
     free_seed: 1729
     cycle_stride: 1
@@ -383,8 +382,8 @@ h3_support_profiles:
   - 1.25
   collar_width_mode: cell_scaled
   collar_k: 1.0
-  candidate_count: 512
-  timeline_candidate_count: 1024
+  candidate_count: 4096
+  timeline_candidate_count: 8192
   timeline_response_mode: support_transport_similarity
   timeline_transport_time: 0.1
   timeline_transport_scale: 6.283185307179586
@@ -432,7 +431,7 @@ h3_modular_response:
   k_transport: 1
   fit_mode: joint_global
   control_fit_mode: same_h3_model_not_affine_target_fit
-  candidate_count: 512
+  candidate_count: 4096
   candidate_radius: 2.0
   softness: 0.25
   heldout_fraction: 0.25
@@ -448,10 +447,10 @@ h3_modular_response:
   exclude_observables:
   - record_family
   - repair_load_bucket
-  exclusion_claim_boundary: 'record_family and repair_load_bucket are retained for
-    observer-object extraction and diagnostics, but they are auxiliary record/repair
-    labels. The theorem-side BW/H3 response receipt is fitted on the support-visible
-    geometric transition lane without letting those labels select the chart.
+  exclusion_claim_boundary: 'record_family and repair_load_bucket are retained for observer-object
+    extraction and diagnostics, but they are auxiliary record/repair labels. The theorem-side
+    BW/H3 response receipt is fitted on the support-visible geometric transition lane without
+    letting those labels select the chart.
 
     '
   max_fit_features: 512
@@ -463,7 +462,7 @@ h3_modular_response:
   min_observers: 32
   min_features: 16
 theorem_core:
-  projection_sample: 128
+  projection_sample: 512
   include_default_sm_candidate: false
   consensus_replay:
     enabled: true
@@ -476,7 +475,7 @@ cosmology:
   write_freezeout_npz: true
   harmonic_time_trace:
     enabled: true
-    sample_count: 12
+    sample_count: 48
     ell_max: 24
     harmonic_batch_size: 8192
     save_raw_frames: true
@@ -557,7 +556,7 @@ cosmology:
     - record_sector_mix
   b_a_paired_perturbation:
     enabled: true
-    source_state: theorem_observer
+    source_state: final
     cap_source: h3
     max_caps: 8
     modes_per_cap_time: 2
@@ -569,8 +568,9 @@ cosmology:
     times:
     - 0.25
     controls:
-    - shuffled_source
-    - sign_flip
+    - no_perturbation
+    - phase_shuffled_baryon_mode
+    - wrong_k_label
     response_field: cumulative_repair_load
     perturb_strength: 1.0
     perturb_budget_mode: modular_amount
@@ -586,7 +586,7 @@ defects:
     probability: 0.08
   timeline:
     enabled: true
-    sample_count: 160
+    sample_count: 12
     max_triangles: 8000
     persistence_cycles: 3
     particle_min_observations: 3
@@ -613,4 +613,3 @@ outputs:
   write_state_derived_bw_report: true
   write_freezeout_cl_proxy: true
   write_dimension_report: false
-run_id: k1_fusion_universe_4k_20260712

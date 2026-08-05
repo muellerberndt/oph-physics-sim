@@ -285,6 +285,15 @@ def run_oph_universe_pipeline(
         run_dir = Path(base_result["path"])
     assumption_manifest = simulation_assumption_manifest(base_config)
     _write_json(run_dir / "simulation_assumption_manifest.json", assumption_manifest)
+    from oph_fpe.axioms import axiom_manifest
+    from oph_fpe.dynamics.conditional_resampling import (
+        write_conditional_resampling_realization,
+    )
+
+    _write_json(run_dir / "axiom_manifest.json", axiom_manifest(base_config))
+    conditional_resampling_summary = write_conditional_resampling_realization(
+        run_dir, seed=int(base_config.get("seed", 0) or 0)
+    )
     refinement_dir = run_dir / "auto_theorem_refinement"
     refinement_dir.mkdir(parents=True, exist_ok=True)
 
@@ -418,6 +427,16 @@ def run_oph_universe_pipeline(
         "base_result": base_result,
         "visualization_export_settings": export_settings,
         "simulation_assumptions": assumption_manifest,
+        "axiom_manifest_path": str(run_dir / "axiom_manifest.json"),
+        "conditional_resampling_realization": {
+            "receipt": bool(
+                conditional_resampling_summary.get(
+                    "CONDITIONAL_RESAMPLING_REALIZATION_RECEIPT", False
+                )
+            ),
+            "skipped": bool(conditional_resampling_summary.get("skipped", False)),
+            "path": str(run_dir / "conditional_resampling_realization_receipt.json"),
+        },
         "selected_h3_refit": selected_h3,
         "selected_object_chart": selected_object,
         "h3_refit_candidates": _strip_scores(h3_candidates),

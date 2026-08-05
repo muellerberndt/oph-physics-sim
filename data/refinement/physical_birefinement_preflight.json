@@ -270,7 +270,7 @@
     "independent_verification_reasons": [],
     "independent_verification_receipt": true,
     "issue": 660,
-    "matrix_payload_sha256": "sha256:24fbbb7f5c0124ec01cf26ee2f3b4ee448ef0096a239760fce48fcf55e172ac5",
+    "matrix_payload_sha256": "sha256:aaac5f48599e2c646c19a481dfbdf0f58158649583a3a84ef69a95f7665151c5",
     "stage": "CR-0",
     "target_ancestry_audit_passed_for_cr0_roots": true
   },
@@ -289,7 +289,7 @@
     "sibling_repository_bytes_verified": false
   },
   "issue": 657,
-  "payload_sha256": "sha256:608db31438073160fa1207c95d6bb255915e8d23cb5a003e4cb107dd02fff284",
+  "payload_sha256": "sha256:22f66a98bc6f1169fabdac68ab34d5908783854b386eb850f121f6530a9c2a1c",
   "schema": "oph.refinement.physical-birefinement-preflight.v1",
   "scientific_outputs": {
     "comparison_statistics_emitted": false,
@@ -303,7 +303,7 @@
     "cr0_capability_matrix": {
       "bytes": 32853,
       "path": "data/common_reserve/producer_capability_matrix.json",
-      "sha256": "sha256:4fb5d92394c79dc58723598b1980725c730334ebe1350c2963ce64f77f218f1d"
+      "sha256": "sha256:9877ae13867bacd8345d2491f627dcb0e19bc7df781fa22aff7950cde52d0de5"
     }
   },
   "status": "SOURCE_PRODUCER_MISSING"

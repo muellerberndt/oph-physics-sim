@@ -54,7 +54,7 @@ simulation_assumptions:
     sky_realization_seed: 20260751
 run_mode: observer_shared_bulk_candidate_compact
 seed: 20260751
-claim_boundary: 'Compact 64k observer-chart object-population diagnostic. This tests
+claim_boundary: 'Compact 4k observer-chart object-population diagnostic. This tests
   whether persistent observer-facing record objects populate the modular-response
   H3 chart under shuffled-incidence controls. It is not a final 3D bulk, particle,
   or physical CMB claim unless emitted gates pass.

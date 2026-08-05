@@ -47,6 +47,27 @@ def test_lyapunov_descent_receipt_uses_trace_phi_pairs():
     assert report["LYAPUNOV_DESCENT_RECEIPT"] is True
     assert report["claim_level"] == "recovered_core"
     assert report["strict_descent_steps"] == 2
+    assert report["driven_trajectory"] is False
+
+
+def test_lyapunov_descent_receipt_fails_on_driven_trajectory():
+    report = lyapunov_descent_receipt([
+        {"phi_before": 10, "phi": 7},
+        {"phi_before": 12, "phi": 5},
+        {"phi_before": 5, "phi": 0},
+    ])
+
+    assert report["LYAPUNOV_DESCENT_RECEIPT"] is False
+    assert report["driven_trajectory"] is True
+    assert report["cross_cycle_injection_count"] == 1
+    assert report["max_cross_cycle_injection"] == 5.0
+
+
+def test_lyapunov_descent_receipt_rejects_self_comparison_rows():
+    import pytest
+
+    with pytest.raises(ValueError):
+        lyapunov_descent_receipt([{"phi": 3.0}, {"phi": 5.0}])
 
 
 def test_boundary_fiber_receipt_requires_unique_extension():

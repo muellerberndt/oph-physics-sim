@@ -690,7 +690,7 @@
     "completion_translation_action_is_same_raw_action": true,
     "constructive_source_control_event_count": 12,
     "constructive_source_control_is_canonical_source_law": false,
-    "constructive_source_control_projection_sha256": "sha256:6d33d220f6d9142d0d321f218b8fb8f1cad7c348659c07d026b9333662a09d9e",
+    "constructive_source_control_projection_sha256": "sha256:ce184b8968cf2d2feb3059a7dcf3777eda4502e1768d7527456f2b519c9569fa",
     "continuous_carrier_constructed_as_metric_completion": true,
     "continuous_carrier_is_primitive_input": false,
     "continuous_field_assumed": false,
@@ -917,23 +917,23 @@
     "constructive_signed_port_record_control": {
       "canonical_source_selection": false,
       "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-      "raw_sha256": "sha256:e1675ef9d05d7db59b67f5b3e9a424f8d3611ae3f8b2987befc3eb3a577ca384",
-      "receipt_sha256": "sha256:61a47998320b4cf032ae19c5d4ed541564b473196f3bb7c092ae74a494914dca",
+      "raw_sha256": "sha256:19a6eacb2016ea1c26d79a5878455176235296de8f275bd90e8ad9902fdf24c3",
+      "receipt_sha256": "sha256:8d4408fa5e1143a6a254ec454f446af16c33cda0a2d1ca5f918176c6f9ac74c6",
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
     },
     "fz11_conditional_adapter": {
       "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-      "raw_sha256": "sha256:60687f6534c45cb2f521c293455e87143598fd41d15e5037647a3fa76923bb21",
-      "receipt_sha256": "sha256:85a089bd6c2d695b7bf37b4493d516452c8ddc36be80b22c271fcf2a2ce4f715",
+      "raw_sha256": "sha256:0b2c9c95cd5309680e1a0ed3062a8b5375e8ec5765830d9e1e2d5408ecf535a4",
+      "receipt_sha256": "sha256:c755c473a7b8d2bb439be7babaaee540bb3985e08d3e6cf7bff7dbb36805cb7c",
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
     },
     "port_repair_propagation_boundary": {
       "one_step_operator": "T = I - L_icosahedron/60",
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
-      "raw_sha256": "sha256:3afd4309abe0537d38fda3fe3db62f34327451254d570f890f8fae2ba14741f4",
-      "receipt_sha256": "sha256:2a904931e1c17067a3d679c9551a7e08622dcdda0eff801061783a8a09de5ef3",
+      "raw_sha256": "sha256:d3d9bdaeab590bc330b79df49d8fbfa373f9ec797e233dc48bd77206da29084c",
+      "receipt_sha256": "sha256:9d8afc7ff31e3f6caf9e22a2f5d0f7cbdc1f1de0a4a66f9a4ae934c333dde929",
       "same_operator_physical_readout_receipt": false,
       "schema": "oph.port_repair_propagation_bridge_receipt.v1",
       "spatial_port_hop_source_receipt": false,
@@ -941,13 +941,13 @@
     },
     "primitive_port_dual_measure": {
       "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-      "raw_sha256": "sha256:ca329d410ac9c2e855747f8373c5e0bdbed77dd22517c129fa997e7dedfff49c",
-      "receipt_sha256": "sha256:6845c686cc20773f0c7c5df2aaf8b93c76c34db1aa476597b59f24317640efc5",
+      "raw_sha256": "sha256:e84a1dbcfddacd764f5f9c8cae6e23d6fa965887ed96f58a2e88504b74e2f6da",
+      "receipt_sha256": "sha256:8a0604b5ea67febb0c13a411de12b2bbe85a64a6a31bb5443ba2b3808d32024b",
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:e4d77eea40bf399778beb543bd6137701ffa12341d2b302d8fdd19fe631b5915",
+  "receipt_sha256": "sha256:2bce744cd73109657338e6ba5ac192229420993bc82a6ee43f033c3c4328394a",
   "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
   "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN",
   "support_hop_isometry_implication": {
