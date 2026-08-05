@@ -1,0 +1,79 @@
+{
+  "schema": "oph.sim.b12_preregistered_source_run_receipt.v1",
+  "B12_PREREGISTERED_SOURCE_RUN_RECEIPT": true,
+  "preregistration": {
+    "document": "docs/B12_PREREGISTERED_SOURCE_RUN_2026-08-05.md",
+    "document_sha256": "cde3ddfabf2e33908f02f6c7a28e7385c9c9c90d489425e29aebe975cab8872d",
+    "declared_document_sha256": "cde3ddfabf2e33908f02f6c7a28e7385c9c9c90d489425e29aebe975cab8872d",
+    "derived_config": "configs/local/b12_prereg_16k_20260806.yml",
+    "derived_config_sha256": "ba1ec33e87f7920742b2f8491fc923a8d8f37bc60b7e4621a06d59f67f827302",
+    "declared_derived_config_sha256": "ba1ec33e87f7920742b2f8491fc923a8d8f37bc60b7e4621a06d59f67f827302",
+    "declared_seed": 20260806,
+    "declared_patch_cap": 16384,
+    "declared_observer_cap": 1024,
+    "run_id": "b12_prereg_16k_20260806"
+  },
+  "run_dir": "runs/b12_prereg_16k_20260806",
+  "gates": {
+    "P0_run_conformance": {
+      "pass": true,
+      "prereg_doc_sha256_matches": true,
+      "derived_config_sha256_matches": true,
+      "manifest_run_seed": 20260806,
+      "manifest_run_seed_matches": true,
+      "manifest_patch_count": 16384,
+      "manifest_patch_count_matches": true,
+      "stored_config_seed_matches": true,
+      "stored_config_observer_cap": 1024,
+      "stored_config_observer_cap_matches": true,
+      "stored_config_patch_cap_matches": true,
+      "receipt_empirical_seed": 20260806,
+      "receipt_empirical_seed_matches": true,
+      "receipt_provenance_patch_count_matches": true
+    },
+    "G1_recognizer_receipt": {
+      "pass": true,
+      "CONDITIONAL_RESAMPLING_REALIZATION_RECEIPT": true,
+      "not_a_labeled_skip": true,
+      "exact_table_recognition_receipt": true,
+      "r1_fiber_supported": true,
+      "r2_fiber_rows_constant": true,
+      "r3_weighted_detailed_balance": true,
+      "explicit_formula_match": true
+    },
+    "G2_nonconstant_protected_record": {
+      "pass": true,
+      "receipt_nonconstant": true,
+      "receipt_unchanged_by_resampling": true,
+      "receipt_class_count": 32,
+      "receipt_class_count_at_least_8": true,
+      "recomputed_class_count": 32,
+      "recomputed_class_count_at_least_8": true,
+      "recomputed_equals_receipt": true,
+      "recomputed_companion_field": "cumulative_repair_load",
+      "receipt_companion_field_matches": true
+    },
+    "G3_stationary_law_equals_reference": {
+      "pass": true,
+      "receipt_reference_stationary": true,
+      "receipt_idempotent": true,
+      "recomputed_stationarity_exact_over_Q": true,
+      "reference_state_count": 256,
+      "reference_state_count_matches_receipt": true,
+      "reference_total_mass_count": 16384,
+      "reference_total_mass_matches_receipt": true
+    },
+    "G4_chi_squared_contraction": {
+      "pass": true,
+      "receipt_chi_squared_contracts": true,
+      "chi_squared_before": "19113/1138688",
+      "chi_squared_after_one_step": "4761/1048576",
+      "exact_after_leq_before": true,
+      "receipt_one_step_collapse_measured": true,
+      "displaced_start_chi_squared": "220316924/4849845",
+      "first_sweep_chi_squared": "2887594025804138001606815372762046858662516113137844386659/226380281536036455669166696220002915087298622658289369088000",
+      "exact_first_sweep_below_displaced_start": true
+    }
+  },
+  "claim_boundary": "Comparison of one preregistered bounded source run against its declared gates, exact over the rationals where declared. A negative verdict is a valid preregistered negative result. No physical claim is promoted."
+}
