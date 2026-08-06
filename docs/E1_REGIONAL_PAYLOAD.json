@@ -1,0 +1,1243 @@
+{
+ "schema": "oph.sim.e1_regional_payload.v1",
+ "provenance": {
+  "run_id": "b12_prereg_16k_20260806",
+  "run_git_commit": "b39b78faf894894ebe573571e0902ccfaaeac32a",
+  "seed": 20260806,
+  "receipt_path": "runs/b12_prereg_16k_20260806/conditional_resampling_realization_receipt.json",
+  "receipt_sha256": "d6739274e9451295b8bb0334180231bfb1e516c03bfd6f2c80f70e4da64db749",
+  "receipt_schema": "oph.sim.conditional_resampling_realization.v1",
+  "freezeout_path": "runs/b12_prereg_16k_20260806/freezeout_fields.npz",
+  "freezeout_sha256": "b962c5b80205a17d5d6bc023f5f5d487bc23c1327793978e7d1bc69494fac49e",
+  "observer_views_path": "runs/b12_prereg_16k_20260806/observer_views.jsonl",
+  "observer_views_sha256": "3da6f04d770b81b49a082ad1e6ecb93c611517dd85ecaccd7cc89077fcd6c0ca",
+  "witness_payload_path": "docs/SIM_EARNED_WITNESS_PAYLOAD.json",
+  "witness_payload_sha256": "e880f8d75f1dada71a05e47ded177897c93f3279147a165020fab127cf89352f",
+  "extraction": {
+   "script": "scripts/extract_e1_regional_payload.py",
+   "binning_producer": "oph_fpe.dynamics.conditional_resampling.realization_inputs_from_freezeout",
+   "record_field": "record_signature",
+   "companion_field": "cumulative_repair_load",
+   "observer_selection_rule": "the observers of the witness payload, in its file order",
+   "support_truncation": 8,
+   "split_fibre_rule": "a record class of a truncated support is a split fibre when it carries at least two distinct companion classes there",
+   "designated_block_rule": "first split fibre in observer file order and truncated support position order"
+  }
+ },
+ "observers": [
+  {
+   "observer_id": 36,
+   "support_patch_count": 96,
+   "truncated_support_nodes": [
+    36,
+    10,
+    15,
+    23,
+    28,
+    31,
+    41,
+    44
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 2,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 36,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 23,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 10,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 20,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 15,
+       "companion_class": 6
+      },
+      {
+       "support_position": 3,
+       "node": 23,
+       "companion_class": 6
+      }
+     ],
+     "companion_class_counts": [
+      [
+       6,
+       2
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 16,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 28,
+       "companion_class": 1
+      }
+     ],
+     "companion_class_counts": [
+      [
+       1,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 22,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 31,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 19,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 41,
+       "companion_class": 10
+      }
+     ],
+     "companion_class_counts": [
+      [
+       10,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 7,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 44,
+       "companion_class": 7
+      }
+     ],
+     "companion_class_counts": [
+      [
+       7,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibre_record_classes": [],
+   "truncated_split_fibre_count": 0,
+   "full_support_fibre_statistics": {
+    "record_class_count": 31,
+    "multi_companion_record_class_count": 28,
+    "max_distinct_companion_classes": 5,
+    "distinct_companion_class_counts": [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      3
+     ],
+     [
+      4,
+      2
+     ],
+     [
+      5,
+      2
+     ],
+     [
+      6,
+      2
+     ],
+     [
+      7,
+      4
+     ],
+     [
+      8,
+      2
+     ],
+     [
+      9,
+      1
+     ],
+     [
+      10,
+      3
+     ],
+     [
+      11,
+      3
+     ],
+     [
+      12,
+      3
+     ],
+     [
+      13,
+      2
+     ],
+     [
+      14,
+      2
+     ],
+     [
+      15,
+      1
+     ],
+     [
+      16,
+      3
+     ],
+     [
+      17,
+      3
+     ],
+     [
+      18,
+      2
+     ],
+     [
+      19,
+      2
+     ],
+     [
+      20,
+      4
+     ],
+     [
+      21,
+      3
+     ],
+     [
+      22,
+      2
+     ],
+     [
+      23,
+      3
+     ],
+     [
+      24,
+      2
+     ],
+     [
+      25,
+      3
+     ],
+     [
+      26,
+      3
+     ],
+     [
+      28,
+      3
+     ],
+     [
+      29,
+      5
+     ],
+     [
+      30,
+      4
+     ],
+     [
+      31,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "observer_id": 60,
+   "support_patch_count": 96,
+   "truncated_support_nodes": [
+    60,
+    26,
+    34,
+    39,
+    47,
+    52,
+    68,
+    73
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 29,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 60,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 20,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 26,
+       "companion_class": 13
+      }
+     ],
+     "companion_class_counts": [
+      [
+       13,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 23,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 34,
+       "companion_class": 10
+      }
+     ],
+     "companion_class_counts": [
+      [
+       10,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 1,
+     "entries": [
+      {
+       "support_position": 3,
+       "node": 39,
+       "companion_class": 6
+      }
+     ],
+     "companion_class_counts": [
+      [
+       6,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 4,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 47,
+       "companion_class": 10
+      }
+     ],
+     "companion_class_counts": [
+      [
+       10,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 11,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 52,
+       "companion_class": 7
+      }
+     ],
+     "companion_class_counts": [
+      [
+       7,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 21,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 68,
+       "companion_class": 10
+      }
+     ],
+     "companion_class_counts": [
+      [
+       10,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 30,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 73,
+       "companion_class": 7
+      }
+     ],
+     "companion_class_counts": [
+      [
+       7,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibre_record_classes": [],
+   "truncated_split_fibre_count": 0,
+   "full_support_fibre_statistics": {
+    "record_class_count": 32,
+    "multi_companion_record_class_count": 23,
+    "max_distinct_companion_classes": 6,
+    "distinct_companion_class_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      5
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      4,
+      2
+     ],
+     [
+      5,
+      1
+     ],
+     [
+      6,
+      3
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      8,
+      2
+     ],
+     [
+      9,
+      2
+     ],
+     [
+      10,
+      1
+     ],
+     [
+      11,
+      3
+     ],
+     [
+      12,
+      2
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      14,
+      3
+     ],
+     [
+      15,
+      2
+     ],
+     [
+      16,
+      3
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      18,
+      2
+     ],
+     [
+      19,
+      3
+     ],
+     [
+      20,
+      3
+     ],
+     [
+      21,
+      3
+     ],
+     [
+      22,
+      4
+     ],
+     [
+      23,
+      3
+     ],
+     [
+      24,
+      2
+     ],
+     [
+      25,
+      1
+     ],
+     [
+      26,
+      2
+     ],
+     [
+      27,
+      1
+     ],
+     [
+      28,
+      2
+     ],
+     [
+      29,
+      3
+     ],
+     [
+      30,
+      6
+     ],
+     [
+      31,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "observer_id": 64,
+   "support_patch_count": 96,
+   "truncated_support_nodes": [
+    64,
+    30,
+    38,
+    43,
+    51,
+    56,
+    72,
+    77
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 18,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 64,
+       "companion_class": 13
+      },
+      {
+       "support_position": 3,
+       "node": 43,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ],
+      [
+       13,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 2
+    },
+    {
+     "record_class": 2,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 30,
+       "companion_class": 13
+      }
+     ],
+     "companion_class_counts": [
+      [
+       13,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 8,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 38,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 28,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 51,
+       "companion_class": 13
+      },
+      {
+       "support_position": 7,
+       "node": 77,
+       "companion_class": 6
+      }
+     ],
+     "companion_class_counts": [
+      [
+       6,
+       1
+      ],
+      [
+       13,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 2
+    },
+    {
+     "record_class": 24,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 56,
+       "companion_class": 13
+      }
+     ],
+     "companion_class_counts": [
+      [
+       13,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 15,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 72,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibre_record_classes": [
+    18,
+    28
+   ],
+   "truncated_split_fibre_count": 2,
+   "full_support_fibre_statistics": {
+    "record_class_count": 31,
+    "multi_companion_record_class_count": 26,
+    "max_distinct_companion_classes": 4,
+    "distinct_companion_class_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      4
+     ],
+     [
+      4,
+      2
+     ],
+     [
+      5,
+      2
+     ],
+     [
+      6,
+      4
+     ],
+     [
+      7,
+      1
+     ],
+     [
+      8,
+      3
+     ],
+     [
+      9,
+      2
+     ],
+     [
+      10,
+      2
+     ],
+     [
+      11,
+      2
+     ],
+     [
+      12,
+      4
+     ],
+     [
+      13,
+      1
+     ],
+     [
+      14,
+      2
+     ],
+     [
+      15,
+      2
+     ],
+     [
+      16,
+      3
+     ],
+     [
+      17,
+      3
+     ],
+     [
+      18,
+      4
+     ],
+     [
+      19,
+      4
+     ],
+     [
+      20,
+      4
+     ],
+     [
+      21,
+      2
+     ],
+     [
+      22,
+      1
+     ],
+     [
+      23,
+      2
+     ],
+     [
+      24,
+      4
+     ],
+     [
+      25,
+      3
+     ],
+     [
+      26,
+      1
+     ],
+     [
+      28,
+      2
+     ],
+     [
+      29,
+      3
+     ],
+     [
+      30,
+      2
+     ],
+     [
+      31,
+      2
+     ]
+    ]
+   }
+  },
+  {
+   "observer_id": 92,
+   "support_patch_count": 96,
+   "truncated_support_nodes": [
+    92,
+    37,
+    50,
+    58,
+    71,
+    79,
+    84,
+    100
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 21,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 92,
+       "companion_class": 1
+      }
+     ],
+     "companion_class_counts": [
+      [
+       1,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 20,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 37,
+       "companion_class": 13
+      }
+     ],
+     "companion_class_counts": [
+      [
+       13,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 1,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 50,
+       "companion_class": 10
+      }
+     ],
+     "companion_class_counts": [
+      [
+       10,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 30,
+     "entries": [
+      {
+       "support_position": 3,
+       "node": 58,
+       "companion_class": 0
+      }
+     ],
+     "companion_class_counts": [
+      [
+       0,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 18,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 71,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 7,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 79,
+       "companion_class": 6
+      }
+     ],
+     "companion_class_counts": [
+      [
+       6,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 6,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 84,
+       "companion_class": 10
+      }
+     ],
+     "companion_class_counts": [
+      [
+       10,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 27,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 100,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibre_record_classes": [],
+   "truncated_split_fibre_count": 0,
+   "full_support_fibre_statistics": {
+    "record_class_count": 31,
+    "multi_companion_record_class_count": 24,
+    "max_distinct_companion_classes": 4,
+    "distinct_companion_class_counts": [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      3
+     ],
+     [
+      4,
+      1
+     ],
+     [
+      5,
+      3
+     ],
+     [
+      6,
+      3
+     ],
+     [
+      7,
+      4
+     ],
+     [
+      8,
+      1
+     ],
+     [
+      9,
+      3
+     ],
+     [
+      10,
+      3
+     ],
+     [
+      11,
+      2
+     ],
+     [
+      12,
+      1
+     ],
+     [
+      13,
+      2
+     ],
+     [
+      14,
+      1
+     ],
+     [
+      15,
+      4
+     ],
+     [
+      17,
+      1
+     ],
+     [
+      18,
+      4
+     ],
+     [
+      19,
+      1
+     ],
+     [
+      20,
+      2
+     ],
+     [
+      21,
+      4
+     ],
+     [
+      22,
+      3
+     ],
+     [
+      23,
+      4
+     ],
+     [
+      24,
+      2
+     ],
+     [
+      25,
+      2
+     ],
+     [
+      26,
+      3
+     ],
+     [
+      27,
+      2
+     ],
+     [
+      28,
+      3
+     ],
+     [
+      29,
+      2
+     ],
+     [
+      30,
+      3
+     ],
+     [
+      31,
+      2
+     ]
+    ]
+   }
+  }
+ ],
+ "split_fibres": [
+  {
+   "observer_id": 64,
+   "record_class": 18,
+   "first_support_position": 0,
+   "entries": [
+    {
+     "support_position": 0,
+     "node": 64,
+     "companion_class": 13
+    },
+    {
+     "support_position": 3,
+     "node": 43,
+     "companion_class": 3
+    }
+   ]
+  },
+  {
+   "observer_id": 64,
+   "record_class": 28,
+   "first_support_position": 4,
+   "entries": [
+    {
+     "support_position": 4,
+     "node": 51,
+     "companion_class": 13
+    },
+    {
+     "support_position": 7,
+     "node": 77,
+     "companion_class": 6
+    }
+   ]
+  }
+ ],
+ "designated_block": {
+  "observer_id": 64,
+  "record_class": 18,
+  "first_support_position": 0,
+  "entries": [
+   {
+    "support_position": 0,
+    "node": 64,
+    "companion_class": 13
+   },
+   {
+    "support_position": 3,
+    "node": 43,
+    "companion_class": 3
+   }
+  ]
+ },
+ "enlargement_statistic": {
+  "definition": "per observer, the number of record classes on the truncated support that carry at least two distinct companion classes; every such class supports one two-by-two matrix block in the regional algebra",
+  "at_truncation": 8,
+  "values": [
+   [
+    36,
+    0
+   ],
+   [
+    60,
+    0
+   ],
+   [
+    64,
+    2
+   ],
+   [
+    92,
+    0
+   ]
+  ],
+  "full_support_values": [
+   [
+    36,
+    28
+   ],
+   [
+    60,
+    23
+   ],
+   [
+    64,
+    26
+   ],
+   [
+    92,
+    24
+   ]
+  ],
+  "requirement_for_fully_noncommutative_net": "a payload in which every observer has truncated_split_fibre_count >= 1; the full-support values show what a deeper truncation of the same run would provide"
+ },
+ "claim_boundary": "Realized finite data from one committed run under a declared binning and the witness payload's observer selection. The fibre tables are exact counts on this run's freezeout fields; the split-fibre and designation rules are declared extraction parameters with no canonical status; no physical claim and no probability claim beyond realized frequencies are asserted."
+}
