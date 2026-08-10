@@ -1,0 +1,1022 @@
+{
+ "schema": "oph.sim.e1_rich_fibre_payload.v1",
+ "provenance": {
+  "run_id": "e1_prereg_64k_20260810",
+  "seed": 20260810,
+  "run_git_commit": "ca9e9e702251a60eb0fd070501be91b538b9ed19",
+  "receipt_sha256": "c17670ea5aa2fdfbe1c754acf59e2e60d0c75579560a1ed4190a2736d93178cb",
+  "freezeout_sha256": "fb1afa68d13f0af3993ed0189350522ffd46ac921533ea37be621ada98d93c2b",
+  "observer_views_sha256": "f25b356ae108d95f9ecbbf06692b7bd799c499941f29659cc87d08001ddb1812",
+  "extraction": {
+   "record_field": "record_signature",
+   "companion_field": "cumulative_repair_load",
+   "support_truncation": 12,
+   "observer_rule": "first four patch_observer rows in observer_views.jsonl file order",
+   "split_fibre_rule": "a record class of a truncated support is a split fibre when it carries at least two distinct companion classes there",
+   "designated_block_rule": "per observer, the first split fibre in truncated support position order"
+  }
+ },
+ "class_structure": {
+  "fiber_count": 32,
+  "state_count": 224,
+  "total_mass_count": 65536
+ },
+ "observers": [
+  {
+   "observer_id": 15,
+   "support_size": 96,
+   "truncated_support_nodes": [
+    15,
+    2,
+    7,
+    10,
+    12,
+    20,
+    23,
+    28,
+    36,
+    41,
+    49,
+    0
+   ],
+   "truncated_record_classes": [
+    4,
+    29,
+    26,
+    28,
+    23,
+    13,
+    22,
+    18,
+    18,
+    8,
+    0,
+    19
+   ],
+   "truncated_companion_classes": [
+    15,
+    15,
+    3,
+    12,
+    3,
+    15,
+    15,
+    8,
+    3,
+    12,
+    12,
+    3
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 4,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 15,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 29,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 2,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 26,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 7,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 28,
+     "entries": [
+      {
+       "support_position": 3,
+       "node": 10,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 23,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 12,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 13,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 20,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 22,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 23,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 18,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 28,
+       "companion_class": 8
+      },
+      {
+       "support_position": 8,
+       "node": 36,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ],
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 2
+    },
+    {
+     "record_class": 8,
+     "entries": [
+      {
+       "support_position": 9,
+       "node": 41,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 0,
+     "entries": [
+      {
+       "support_position": 10,
+       "node": 49,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 19,
+     "entries": [
+      {
+       "support_position": 11,
+       "node": 0,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibres": [
+    18
+   ],
+   "truncated_split_fibre_count": 1,
+   "designated_block_record_class": 18,
+   "full_support_split_fibre_count": 25
+  },
+  {
+   "observer_id": 28,
+   "support_size": 96,
+   "truncated_support_nodes": [
+    28,
+    7,
+    15,
+    20,
+    23,
+    33,
+    36,
+    41,
+    49,
+    54,
+    62,
+    70
+   ],
+   "truncated_record_classes": [
+    18,
+    26,
+    4,
+    13,
+    22,
+    10,
+    18,
+    8,
+    0,
+    13,
+    14,
+    6
+   ],
+   "truncated_companion_classes": [
+    8,
+    3,
+    15,
+    15,
+    15,
+    3,
+    3,
+    12,
+    12,
+    15,
+    0,
+    8
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 18,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 28,
+       "companion_class": 8
+      },
+      {
+       "support_position": 6,
+       "node": 36,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ],
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 2
+    },
+    {
+     "record_class": 26,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 7,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 4,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 15,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 13,
+     "entries": [
+      {
+       "support_position": 3,
+       "node": 20,
+       "companion_class": 15
+      },
+      {
+       "support_position": 9,
+       "node": 54,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       2
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 22,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 23,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 10,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 33,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 8,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 41,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 0,
+     "entries": [
+      {
+       "support_position": 8,
+       "node": 49,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 14,
+     "entries": [
+      {
+       "support_position": 10,
+       "node": 62,
+       "companion_class": 0
+      }
+     ],
+     "companion_class_counts": [
+      [
+       0,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 6,
+     "entries": [
+      {
+       "support_position": 11,
+       "node": 70,
+       "companion_class": 8
+      }
+     ],
+     "companion_class_counts": [
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibres": [
+    18
+   ],
+   "truncated_split_fibre_count": 1,
+   "designated_block_record_class": 18,
+   "full_support_split_fibre_count": 26
+  },
+  {
+   "observer_id": 67,
+   "support_size": 96,
+   "truncated_support_nodes": [
+    67,
+    25,
+    33,
+    41,
+    46,
+    54,
+    59,
+    75,
+    80,
+    88,
+    101,
+    109
+   ],
+   "truncated_record_classes": [
+    22,
+    25,
+    10,
+    8,
+    0,
+    13,
+    28,
+    7,
+    27,
+    5,
+    14,
+    27
+   ],
+   "truncated_companion_classes": [
+    3,
+    3,
+    3,
+    12,
+    1,
+    15,
+    4,
+    15,
+    12,
+    8,
+    15,
+    1
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 22,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 67,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 25,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 25,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 10,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 33,
+       "companion_class": 3
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 8,
+     "entries": [
+      {
+       "support_position": 3,
+       "node": 41,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 0,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 46,
+       "companion_class": 1
+      }
+     ],
+     "companion_class_counts": [
+      [
+       1,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 13,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 54,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 28,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 59,
+       "companion_class": 4
+      }
+     ],
+     "companion_class_counts": [
+      [
+       4,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 7,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 75,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 27,
+     "entries": [
+      {
+       "support_position": 8,
+       "node": 80,
+       "companion_class": 12
+      },
+      {
+       "support_position": 11,
+       "node": 109,
+       "companion_class": 1
+      }
+     ],
+     "companion_class_counts": [
+      [
+       1,
+       1
+      ],
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 2
+    },
+    {
+     "record_class": 5,
+     "entries": [
+      {
+       "support_position": 9,
+       "node": 88,
+       "companion_class": 8
+      }
+     ],
+     "companion_class_counts": [
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 14,
+     "entries": [
+      {
+       "support_position": 10,
+       "node": 101,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibres": [
+    27
+   ],
+   "truncated_split_fibre_count": 1,
+   "designated_block_record_class": 27,
+   "full_support_split_fibre_count": 26
+  },
+  {
+   "observer_id": 86,
+   "support_size": 96,
+   "truncated_support_nodes": [
+    86,
+    44,
+    52,
+    65,
+    73,
+    78,
+    94,
+    99,
+    107,
+    120,
+    128,
+    141
+   ],
+   "truncated_record_classes": [
+    28,
+    27,
+    5,
+    4,
+    29,
+    15,
+    16,
+    21,
+    31,
+    23,
+    28,
+    22
+   ],
+   "truncated_companion_classes": [
+    3,
+    15,
+    15,
+    8,
+    8,
+    12,
+    15,
+    8,
+    15,
+    15,
+    15,
+    15
+   ],
+   "truncated_fibres": [
+    {
+     "record_class": 28,
+     "entries": [
+      {
+       "support_position": 0,
+       "node": 86,
+       "companion_class": 3
+      },
+      {
+       "support_position": 10,
+       "node": 128,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       3,
+       1
+      ],
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 2
+    },
+    {
+     "record_class": 27,
+     "entries": [
+      {
+       "support_position": 1,
+       "node": 44,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 5,
+     "entries": [
+      {
+       "support_position": 2,
+       "node": 52,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 4,
+     "entries": [
+      {
+       "support_position": 3,
+       "node": 65,
+       "companion_class": 8
+      }
+     ],
+     "companion_class_counts": [
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 29,
+     "entries": [
+      {
+       "support_position": 4,
+       "node": 73,
+       "companion_class": 8
+      }
+     ],
+     "companion_class_counts": [
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 15,
+     "entries": [
+      {
+       "support_position": 5,
+       "node": 78,
+       "companion_class": 12
+      }
+     ],
+     "companion_class_counts": [
+      [
+       12,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 16,
+     "entries": [
+      {
+       "support_position": 6,
+       "node": 94,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 21,
+     "entries": [
+      {
+       "support_position": 7,
+       "node": 99,
+       "companion_class": 8
+      }
+     ],
+     "companion_class_counts": [
+      [
+       8,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 31,
+     "entries": [
+      {
+       "support_position": 8,
+       "node": 107,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 23,
+     "entries": [
+      {
+       "support_position": 9,
+       "node": 120,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    },
+    {
+     "record_class": 22,
+     "entries": [
+      {
+       "support_position": 11,
+       "node": 141,
+       "companion_class": 15
+      }
+     ],
+     "companion_class_counts": [
+      [
+       15,
+       1
+      ]
+     ],
+     "distinct_companion_class_count": 1
+    }
+   ],
+   "truncated_split_fibres": [
+    28
+   ],
+   "truncated_split_fibre_count": 1,
+   "designated_block_record_class": 28,
+   "full_support_split_fibre_count": 22
+  }
+ ],
+ "gates": {
+  "G1_three_of_four_observers_split": true,
+  "G2_two_observers_with_two_splits": false,
+  "G2_rich_observer_ids": [],
+  "G3_pairwise_disjoint_truncated_supports": false,
+  "G3_truncated_union_size": 37,
+  "all_preregistered_gates_pass": false
+ }
+}
