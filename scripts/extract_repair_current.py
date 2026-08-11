@@ -16,10 +16,19 @@ part, and two declared orientation invariants:
 * the designated cycle: the lexicographically least 3-cycle maximizing the
   absolute difference of forward and backward count products.
 
-Reversing every transition window is verified to transpose the count table
-exactly, so both invariants flip sign under time reversal of the counted
-order.  A count table with ``C = C^T`` would be reported as a negative
-result: the orientation would then be empty and the payload says so.
+Falsifiable cross-checks: observer, skip, and transition totals must equal
+the pinned report; every step must lie inside the report alphabet; every
+step field must be present with an exact integer value; and the recounted
+26-state integer matrix must match the pinned npz weighted matrix on
+positivity support and within tolerance on weighted recount, before any
+projection.  Two further facts are identities of ordered recounting, not
+data checks, and are labeled so: reversing every window transposes the
+count table, and re-bucketing conserves totals.  Both invariants therefore
+flip sign under time reversal of the counted order by construction.  A
+count table with ``C = C^T`` would be reported as a negative result: the
+designated pair and cycle would then be empty and the payload says so.  The
+pair and cycle conditions are logically independent, so the payload reports
+both applicability flags; the Lean orientation bit consumes the cycle flag.
 
 Claim boundary.  These are ordered counts of one committed bounded run under
 one declared quotient.  No physical arrow of time, thermodynamic-limit
@@ -37,7 +46,10 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+from fractions import Fraction
 from pathlib import Path
+
+import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RUN_DIR = REPO_ROOT / "runs" / "b12_prereg_16k_20260806"
@@ -45,6 +57,7 @@ OUT_PATH = REPO_ROOT / "docs" / "REPAIR_CURRENT_PAYLOAD.json"
 
 PINNED_INPUTS = (
     "finite_repair_transition_matrix_report.json",
+    "finite_repair_transition_matrix.npz",
     "observer_views.jsonl",
     "conditional_resampling_realization_receipt.json",
     "git_commit.txt",
@@ -52,6 +65,7 @@ PINNED_INPUTS = (
 
 PROJECTION_FIELD = "repair_load_bucket"
 MAX_PAYLOAD_BYTES = 100_000
+WEIGHT_RECOUNT_ABS_TOLERANCE = 1e-6
 
 
 def sha256_file(path: Path) -> str:
@@ -87,7 +101,7 @@ def count_transitions(run_dir: Path):
     require(n == int(report["state_count"]), "state_count disagrees with labels")
 
     forward = [[0] * n for _ in range(n)]
-    reversed_counts = [[0] * n for _ in range(n)]
+    weighted = [[Fraction(0)] * n for _ in range(n)]
     observer_count = 0
     skipped = 0
     transition_count = 0
@@ -101,9 +115,20 @@ def count_transitions(run_dir: Path):
             if len(steps) < 2:
                 skipped += 1
                 continue
+            weight = Fraction(float(view.get("transition_history_mean_modal_mass", 1.0)))
+            require(weight > 0, "nonpositive observer weight breaks the support check")
             encoded = []
             for step in steps:
-                key = tuple((f, int(step.get(f, 0))) for f in fields)
+                values = []
+                for f in fields:
+                    require(f in step, f"transition step misses the field {f}")
+                    value = step[f]
+                    require(
+                        isinstance(value, int) and not isinstance(value, bool),
+                        f"non-integer value for field {f}: {value!r}",
+                    )
+                    values.append((f, value))
+                key = tuple(values)
                 require(
                     key in state_index,
                     f"transition step outside the report alphabet: {key}",
@@ -111,9 +136,8 @@ def count_transitions(run_dir: Path):
                 encoded.append(state_index[key])
             for left, right in zip(encoded, encoded[1:]):
                 forward[left][right] += 1
+                weighted[left][right] += weight
                 transition_count += 1
-            for left, right in zip(encoded[::-1], encoded[::-1][1:]):
-                reversed_counts[left][right] += 1
 
     require(
         observer_count == int(report["observer_count"]),
@@ -127,13 +151,28 @@ def count_transitions(run_dir: Path):
         transition_count == int(report["transition_count"]),
         "transition count disagrees with the report",
     )
-    # time reversal of every counted window is exactly the transpose
-    for i in range(n):
-        for j in range(n):
-            require(
-                reversed_counts[i][j] == forward[j][i],
-                "reversed recount is not the transpose",
-            )
+    # matrix-level cross-check against the pinned weighted count matrix
+    pinned = np.load(run_dir / "finite_repair_transition_matrix.npz", allow_pickle=True)
+    pinned_counts = pinned["counts"]
+    require(
+        pinned_counts.shape == (n, n),
+        "pinned count matrix shape disagrees with the alphabet",
+    )
+    weight_recount_dev = max(
+        abs(float(weighted[i][j]) - float(pinned_counts[i][j]))
+        for i in range(n)
+        for j in range(n)
+    )
+    require(
+        weight_recount_dev <= WEIGHT_RECOUNT_ABS_TOLERANCE,
+        f"weighted recount deviates from the pinned npz by {weight_recount_dev}",
+    )
+    support_int = {(i, j) for i in range(n) for j in range(n) if forward[i][j] > 0}
+    support_pinned = {(i, j) for i in range(n) for j in range(n) if pinned_counts[i][j] > 0}
+    require(
+        support_int == support_pinned,
+        "integer counts and pinned weighted counts disagree on the positivity support",
+    )
     return report, labels, forward, observer_count, transition_count
 
 
@@ -156,6 +195,7 @@ def main() -> None:
         for j in range(n):
             bj = bucket_index[dict(labels[j])[PROJECTION_FIELD]]
             counts[bi][bj] += full_counts[i][j]
+    # identity of re-bucketing, kept as a guard against indexing bugs only
     require(
         sum(map(sum, counts)) == transition_count,
         "projected counts lose transitions",
@@ -209,7 +249,7 @@ def main() -> None:
             }
 
     payload = {
-        "schema": "oph.sim.repair_current_payload.v1",
+        "schema": "oph.sim.repair_current_payload.v2",
         "provenance": {
             "run_id": RUN_DIR.name,
             "run_git_commit": (RUN_DIR / "git_commit.txt").read_text().strip(),
@@ -222,6 +262,19 @@ def main() -> None:
                 "the report state alphabet; identical to the mixing-chain "
                 "extraction convention"
             ),
+            "falsifiable_checks": (
+                "observer, skip, and transition totals equal the pinned "
+                "report; every step lies inside the report alphabet with "
+                "exact integer field values; the recounted 26-state integer "
+                "matrix matches the pinned npz weighted matrix on positivity "
+                "support and within 1e-6 on weighted recount"
+            ),
+            "recount_identities": (
+                "reversing every transition window transposes the count "
+                "table, and re-bucketing conserves totals; both hold for any "
+                "ordered recount by construction and are identities, not "
+                "data checks"
+            ),
             "projection_field": PROJECTION_FIELD,
             "designated_pair_rule": (
                 "lexicographically least ordered bucket pair maximizing "
@@ -231,17 +284,14 @@ def main() -> None:
                 "lexicographically least ordered bucket 3-cycle maximizing "
                 "|forward product - backward product|"
             ),
-            "time_reversal_receipt": (
-                "reversing every transition window recounts exactly to the "
-                "transpose of the count table; verified during extraction"
-            ),
         },
         "observer_count": observer_count,
         "transition_count": transition_count,
         "buckets": buckets,
         "ordered_counts": counts,
         "current_antisymmetric_part": current,
-        "orientation_nonempty": not symmetric,
+        "pair_orientation_nonempty": not symmetric,
+        "cycle_orientation_nonempty": designated_cycle is not None,
         "designated_pair": designated_pair,
         "designated_cycle": designated_cycle,
     }
@@ -254,7 +304,8 @@ def main() -> None:
     digest = hashlib.sha256(text.encode()).hexdigest()
     print(f"wrote {OUT_PATH} ({len(text.encode())} bytes)")
     print(f"payload_sha256: {digest}")
-    print(f"orientation_nonempty: {not symmetric}")
+    print(f"pair_orientation_nonempty: {not symmetric}")
+    print(f"cycle_orientation_nonempty: {designated_cycle is not None}")
     if designated_pair:
         print(
             "designated pair: "

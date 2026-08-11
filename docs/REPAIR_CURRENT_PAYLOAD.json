@@ -91,6 +91,7 @@
    0
   ]
  ],
+ "cycle_orientation_nonempty": true,
  "designated_cycle": {
   "backward_product": 0,
   "buckets": [
@@ -191,22 +192,24 @@
    55
   ]
  ],
- "orientation_nonempty": true,
+ "pair_orientation_nonempty": true,
  "provenance": {
   "counting_convention": "ordered pairs of consecutive transition_history_descriptor steps per observer, unweighted integer multiplicities, under the report state alphabet; identical to the mixing-chain extraction convention",
   "designated_cycle_rule": "lexicographically least ordered bucket 3-cycle maximizing |forward product - backward product|",
   "designated_pair_rule": "lexicographically least ordered bucket pair maximizing |C(a,b)-C(b,a)|",
+  "falsifiable_checks": "observer, skip, and transition totals equal the pinned report; every step lies inside the report alphabet with exact integer field values; the recounted 26-state integer matrix matches the pinned npz weighted matrix on positivity support and within 1e-6 on weighted recount",
   "pinned_input_sha256": {
    "conditional_resampling_realization_receipt.json": "d6739274e9451295b8bb0334180231bfb1e516c03bfd6f2c80f70e4da64db749",
+   "finite_repair_transition_matrix.npz": "1f8ff2cc413f4bbfeabe9450ae48cb5d0794ec28f284f25913e7c9c61b677163",
    "finite_repair_transition_matrix_report.json": "e38bb28475fb7b34127b864abd20414efc920d8ef9ddbdf5c78612874ae37f2d",
    "git_commit.txt": "2a084f768662274335ba7c23afaa18b61bd1184e8d481a4e17ab511c1e9d3293",
    "observer_views.jsonl": "3da6f04d770b81b49a082ad1e6ecb93c611517dd85ecaccd7cc89077fcd6c0ca"
   },
   "projection_field": "repair_load_bucket",
+  "recount_identities": "reversing every transition window transposes the count table, and re-bucketing conserves totals; both hold for any ordered recount by construction and are identities, not data checks",
   "run_git_commit": "b39b78faf894894ebe573571e0902ccfaaeac32a",
-  "run_id": "b12_prereg_16k_20260806",
-  "time_reversal_receipt": "reversing every transition window recounts exactly to the transpose of the count table; verified during extraction"
+  "run_id": "b12_prereg_16k_20260806"
  },
- "schema": "oph.sim.repair_current_payload.v1",
+ "schema": "oph.sim.repair_current_payload.v2",
  "transition_count": 31744
 }
