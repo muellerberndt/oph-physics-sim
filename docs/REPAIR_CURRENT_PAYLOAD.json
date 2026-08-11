@@ -1,4 +1,5 @@
 {
+ "analysis_status": "post_hoc_diagnostic",
  "buckets": [
   0,
   1,
@@ -109,6 +110,8 @@
   "count_forward": 1343,
   "difference": 1343
  },
+ "designation_rule_preregistered": false,
+ "eligible_as_validation": false,
  "observer_count": 1028,
  "ordered_counts": [
   [
@@ -210,6 +213,7 @@
   "run_git_commit": "b39b78faf894894ebe573571e0902ccfaaeac32a",
   "run_id": "b12_prereg_16k_20260806"
  },
- "schema": "oph.sim.repair_current_payload.v2",
+ "schema": "oph.sim.repair_current_payload.v3",
+ "statistic_preregistered": false,
  "transition_count": 31744
 }

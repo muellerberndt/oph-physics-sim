@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Extract the repair-load irreversibility current from the preregistered run.
+"""Extract a post-hoc repair-load statistic from the locally frozen B12 run.
 
-Post-hoc extraction from the retained bundle of the preregistered run
+Post-hoc extraction from the retained bundle of the locally hash-pinned run
 ``runs/b12_prereg_16k_20260806`` in the house pattern: pinned inputs are
 hashed, the ordered transition windows of ``observer_views.jsonl`` are
 recounted with exact integer arithmetic under the report's state alphabet
@@ -30,11 +30,15 @@ designated pair and cycle would then be empty and the payload says so.  The
 pair and cycle conditions are logically independent, so the payload reports
 both applicability flags; the Lean orientation bit consumes the cycle flag.
 
-Claim boundary.  These are ordered counts of one committed bounded run under
-one declared quotient.  No physical arrow of time, thermodynamic-limit
-current, or laboratory statement is made; the physical clock is owned by E5
-(#703).  The payload is consumed by the B13 (#702) orientation-selection
-Lean packet as literal input.
+Claim boundary.  These are post-hoc ordered-count diagnostics on one
+committed bounded run under one declared quotient.  The B12 contract was
+locally frozen before execution, but its Git commit does not independently
+timestamp it before the results.  The statistic and its
+pair/cycle designation rules were not in the earlier B12 run contract and
+are not eligible as preregistered validation.  No physical arrow of time,
+thermodynamic-limit current, or laboratory statement is made; the physical
+clock is owned by E5 (#703).  The payload is consumed by the B13 (#702)
+conditional convention packet as literal exploratory input.
 
 Usage (from the repository root, venv python):
 
@@ -249,7 +253,11 @@ def main() -> None:
             }
 
     payload = {
-        "schema": "oph.sim.repair_current_payload.v2",
+        "schema": "oph.sim.repair_current_payload.v3",
+        "analysis_status": "post_hoc_diagnostic",
+        "statistic_preregistered": False,
+        "designation_rule_preregistered": False,
+        "eligible_as_validation": False,
         "provenance": {
             "run_id": RUN_DIR.name,
             "run_git_commit": (RUN_DIR / "git_commit.txt").read_text().strip(),
