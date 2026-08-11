@@ -11,11 +11,16 @@ Post-hoc extraction from the retained bundle ``runs/e1_prereg2_64k_20260810``
   state (the diagonal field projectors);
 * the step-aligned joint label path and counted joint transition table of
   every observer pair;
-* the alignment receipt: the committed engine computes every observer's step
-  labels from one shared global snapshot list (``history_source_states`` in
-  ``oph_fpe/scale/bw_array.py``, built once and passed to the histogram
-  attachment for all rows), so ``steps[t]`` of two observers refer to one
-  global snapshot; the related 31-entry ledger
+* the alignment receipt, a three-link conditional chain: the committed
+  engine computes every observer's step labels from one shared global
+  snapshot list (``history_source_states`` in ``oph_fpe/scale/bw_array.py``,
+  built once for all rows), that list is capped at the pinned
+  ``history_window`` of 32 entries (checked against ``config.yml``), and the
+  engine may drop snapshots per observer, so shared-list membership alone
+  does not align steps; every rich observer carrying exactly 32 steps
+  (checked) closes the chain, because a 32-step descriptor over a list of at
+  most 32 snapshots drops none, and then ``steps[t]`` of two observers refer
+  to one global snapshot.  The related 31-entry ledger
   ``source_state.history_cycles`` of ``bw_state_derived_report.json`` is
   recorded verbatim as context without a one-to-one step indexing claim,
   because the bundle does not serialize per-snapshot cycles for the observer
@@ -26,13 +31,17 @@ Post-hoc extraction from the retained bundle ``runs/e1_prereg2_64k_20260810``
   the greedy-disjoint scan pinned only the truncated windows.
 
 Falsifiable checks: every rich observer carries exactly 32 steps over exactly
-the five declared fields with strict integer values; the four truncated
-windows are pairwise disjoint; the alphabet sizes stay at most 32;
-every observer walk visits its whole realized alphabet;
-``history_cycles`` is nonempty and strictly increasing; and the
-committed rich-fibre payload names this run.  Marginals
-of the joint paths equal the per-observer paths by construction; that is an
-identity of the assembly, recorded as such, not a data check.
+the five declared fields with strict integer values; every occurrence of
+``history_window`` in the pinned ``config.yml`` equals 32; the four
+truncated windows are pairwise disjoint; ``history_cycles`` is nonempty and
+strictly increasing; and the committed rich-fibre payload names this run.
+Identities of the assembly, recorded as such and not as data checks: the
+alphabet size is at most 32 because an alphabet of 32 steps cannot exceed
+32 labels, every walk visits its whole realized alphabet because the
+alphabet is defined from the walk, and marginals of the joint paths equal
+the per-observer paths.  The genuine walk-surjectivity content lives in the
+Lean packet as a two-literal cross-check between the transcribed alphabet
+and path.
 
 Claim boundary.  This is a post-hoc adapter-preflight extraction; neither the
 statistic nor its rules were preregistered, and the payload is ineligible as
@@ -61,6 +70,7 @@ OUT_PATH = REPO_ROOT / "docs" / "E1_SOURCE_OPERATOR_PAYLOAD.json"
 PINNED_INPUTS = (
     "observer_views.jsonl",
     "bw_state_derived_report.json",
+    "config.yml",
     "git_commit.txt",
 )
 
@@ -139,6 +149,18 @@ def main() -> None:
                 require(oid not in views, f"duplicate observer row {oid}")
                 views[oid] = view
     require(set(views) == set(rich_ids), "run lacks a rich observer row")
+
+    config_text = (RUN_DIR / "config.yml").read_text()
+    window_values = [
+        int(line.split(":", 1)[1].strip())
+        for line in config_text.splitlines()
+        if line.strip().startswith("history_window:")
+    ]
+    require(len(window_values) > 0, "config.yml pins no history_window")
+    require(
+        all(v == STEP_COUNT for v in window_values),
+        f"history_window values {window_values} differ from {STEP_COUNT}",
+    )
 
     derived = json.loads((RUN_DIR / "bw_state_derived_report.json").read_text())
     cycles = derived["source_state"]["history_cycles"]
@@ -268,12 +290,16 @@ def main() -> None:
                 "sorted set of realized tuples per observer"
             ),
             "alignment_receipt": (
-                "the committed engine builds one shared history snapshot "
-                "list (history_source_states, oph_fpe/scale/bw_array.py) "
-                "and computes every observer's steps from it, so steps[t] "
-                "of two observers refer to one global snapshot; joint paths "
-                "pair equal step indices; this is a declared engine reading "
-                "of the pinned run commit"
+                "conditional chain: the committed engine builds one shared "
+                "history snapshot list (history_source_states, "
+                "oph_fpe/scale/bw_array.py) capped at the pinned "
+                "history_window of 32 (checked in config.yml), the engine "
+                "may drop snapshots per observer, and every rich observer "
+                "carries exactly 32 steps (checked), which forces zero "
+                "drops, so steps[t] of two observers refer to one global "
+                "snapshot; joint paths pair equal step indices; the "
+                "shared-list and drop-branch facts are a declared engine "
+                "reading of the pinned run commit"
             ),
             "history_cycles_note": (
                 "source_state.history_cycles is a related 31-snapshot "
@@ -283,8 +309,10 @@ def main() -> None:
                 "step indexing is claimed"
             ),
             "identity_note": (
-                "marginals of the joint paths equal the per-observer paths "
-                "by assembly; recorded as an identity, not a data check"
+                "identities of the assembly, not data checks: joint-path "
+                "marginals equal the per-observer paths, alphabet sizes "
+                "stay at most the step count, and every walk visits its "
+                "realized alphabet by definition of the alphabet"
             ),
             "epistemic_status": (
                 "post-hoc adapter-preflight extraction from a retained "

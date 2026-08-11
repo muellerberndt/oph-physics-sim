@@ -3120,7 +3120,7 @@
   }
  ],
  "provenance": {
-  "alignment_receipt": "the committed engine builds one shared history snapshot list (history_source_states, oph_fpe/scale/bw_array.py) and computes every observer's steps from it, so steps[t] of two observers refer to one global snapshot; joint paths pair equal step indices; this is a declared engine reading of the pinned run commit",
+  "alignment_receipt": "conditional chain: the committed engine builds one shared history snapshot list (history_source_states, oph_fpe/scale/bw_array.py) capped at the pinned history_window of 32 (checked in config.yml), the engine may drop snapshots per observer, and every rich observer carries exactly 32 steps (checked), which forces zero drops, so steps[t] of two observers refer to one global snapshot; joint paths pair equal step indices; the shared-list and drop-branch facts are a declared engine reading of the pinned run commit",
   "descriptor_fields": [
    "record_family",
    "checkpoint_class",
@@ -3130,9 +3130,10 @@
   ],
   "epistemic_status": "post-hoc adapter-preflight extraction from a retained bundle; not preregistered; ineligible as validation",
   "history_cycles_note": "source_state.history_cycles is a related 31-snapshot ledger of the derived report, recorded verbatim as context; the bundle does not serialize per-snapshot cycles for the observer history list, so no one-to-one step indexing is claimed",
-  "identity_note": "marginals of the joint paths equal the per-observer paths by assembly; recorded as an identity, not a data check",
+  "identity_note": "identities of the assembly, not data checks: joint-path marginals equal the per-observer paths, alphabet sizes stay at most the step count, and every walk visits its realized alphabet by definition of the alphabet",
   "pinned_input_sha256": {
    "bw_state_derived_report.json": "86c97631b4102dfc4f10e445171238dc5980a45c45d3a0e13a21a1856818881a",
+   "config.yml": "e7fc7d2754c0a7203281561e92d16fd60fc4ec59f2d6ceafa01788297e04873a",
    "git_commit.txt": "b1fb3b786b40acd6044acbb69e40d75588abf109cf4afcfc3bd9c367f7439cad",
    "observer_views.jsonl": "07ab3e555fdd8e0d50091794e3e1b20c4e98c96e3282fbee68c0c3b413fc0619"
   },
