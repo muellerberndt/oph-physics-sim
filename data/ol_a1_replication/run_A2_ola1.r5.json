@@ -1,0 +1,139 @@
+{
+ "arm_id": "A2",
+ "arm_role": "scale_row",
+ "campaign_id": "ol_a1_tier_a_2026-08-12",
+ "capture_sha256": "sha256:5c544704f9197df4c0890ccb5a835f8523d03b8e8453bfa7491916836a0487cd",
+ "config": {
+  "carrier_count": 65536,
+  "cycles": 16,
+  "geometry_transport": "held_out_flow",
+  "observer_count": 256,
+  "observer_cross_reads": true,
+  "observer_samples": 6,
+  "observer_support_size": 96,
+  "preregistered_plan_sha256": "sha256:b4953ec083e9af7121baf0656d97ab538598e705575f7b6742a26c9ade7490ae",
+  "replicate_id": "ola1.r5",
+  "seed": 20260813,
+  "snapshot_coverage": "spanning"
+ },
+ "controls": {
+  "c_ancestry": {
+   "destroyed_measured_inertia": false,
+   "null_fit": {
+    "blocker": null,
+    "cone_margin": -4.300727195596155,
+    "degeneracy_ratio": 3.143581919442331e-05,
+    "eigenvalues": [
+     -32.78596703497266,
+     -16.276692187344704,
+     -0.0010306537318257234,
+     10.308661405825955
+    ],
+    "fitted": true,
+    "held_out_pair_count": 178992,
+    "robust_inertia": [
+     1,
+     2,
+     1
+    ],
+    "threshold_inertia": [
+     1,
+     3
+    ]
+   },
+   "null_seed": 15267797442782739389,
+   "null_seed_rule": "first eight bytes, big endian, of sha256 of 'ol_a1_ancestry_null:<arm_id>:<replicate_id>'",
+   "pair_classes_changed": true,
+   "preserved_1_3": true
+  }
+ },
+ "fit_parity0": {
+  "blocker": null,
+  "cone_margin": -5.243248539037873,
+  "degeneracy_ratio": 2.4201638015992635e-05,
+  "eigenvalues": [
+   -37.68404919138581,
+   -5.575687346121953,
+   -0.0009120157175067793,
+   2.2057599245711517
+  ],
+  "fitted": true,
+  "held_out_pair_count": 179881,
+  "robust_inertia": [
+   1,
+   2,
+   1
+  ],
+  "threshold_inertia": [
+   1,
+   3
+  ]
+ },
+ "observables": {
+  "o1_threshold_inertia": [
+   1,
+   3
+  ],
+  "o2_robust_inertia": [
+   1,
+   2,
+   1
+  ],
+  "o3_degeneracy_ratio": 2.4201638015992635e-05,
+  "o3_in_reference_band": true,
+  "o4_cone_margin": -5.243248539037873,
+  "o5_structural": {
+   "causal_pair_parity": {
+    "kept": 57528,
+    "parity_even": 27612,
+    "parity_odd": 29916
+   },
+   "causal_pairs_total": 57528,
+   "causal_stride": 1,
+   "cross_observer_edges": 336,
+   "event_count": 4608,
+   "held_out_pair_count": 179881,
+   "spacelike_pair_parity": {
+    "kept": 300000,
+    "parity_even": 150035,
+    "parity_odd": 149965
+   },
+   "spacelike_pairs_total": 10557000,
+   "spacelike_stride": 35
+  },
+  "o6_split_half": {
+   "parity1_fit": {
+    "blocker": null,
+    "cone_margin": -3.0475827719727397,
+    "degeneracy_ratio": 2.5544624540802136e-05,
+    "eigenvalues": [
+     -35.38301465529641,
+     -6.753048704848277,
+     -0.0009038458244912462,
+     3.7864095326402682
+    ],
+    "fitted": true,
+    "held_out_pair_count": 177647,
+    "robust_inertia": [
+     1,
+     2,
+     1
+    ],
+    "threshold_inertia": [
+     1,
+     3
+    ]
+   },
+   "robust_concordant": true,
+   "threshold_concordant": true
+  }
+ },
+ "replicate_id": "ola1.r5",
+ "runtime_versions": {
+  "numpy": "2.5.1",
+  "python": "3.13.0",
+  "scipy": "1.18.0",
+  "zlib": "1.2.12"
+ },
+ "schema": "oph.ol-a1-signature-replication.receipt.v1"
+}

@@ -1,0 +1,24 @@
+{
+ "campaign_id": "ol_a1_tier_a_2026-08-12",
+ "files": {
+  "campaign_summary.json": "sha256:e9f8cd54f1451b546a88341f678203f87f500dd4207584309dbe9a0612d2fe6b",
+  "run_A1_ola1.r1.json": "sha256:66be4d632ae4a37b42369b6a89ee0bee4d6c667fd9cc612449fbc7f7fbb9b515",
+  "run_A1_ola1.r2.json": "sha256:87841e0a5fab7feca514cba821c158c177bb308c53cba6f9d3a8c96d2276f765",
+  "run_A1_ola1.r3.json": "sha256:03d5b2e305bd5652d73b60bdc757d8c9812007a9b81648602e02772522161674",
+  "run_A1_ola1.r4.json": "sha256:07c43363eb37ae908d6ef2d203b9b4afbe080d05a52802c69ce20d80bc649ece",
+  "run_A1_ola1.r5.json": "sha256:bf81a4f85aca32f6292458005d481590d7c9556ae9829025a607d9c0f048125a",
+  "run_A2_ola1.r1.json": "sha256:0a4dd46e524914f54c307ebbd970e85fe8bba1abc733f2e62b6a970c32b1e016",
+  "run_A2_ola1.r2.json": "sha256:e2da7a503978ef7e66b780a40017e491c09f80e03da10c9c5f0095975f64a416",
+  "run_A2_ola1.r3.json": "sha256:86f387b87ae7dd16792a0df6a1f5d09b99c759deb30f8696848739b1fdd67d24",
+  "run_A2_ola1.r4.json": "sha256:83e1719b8efec4a73a9decf9f2cb8ddddb46ed1f4fb5d842ee7a04771c1e5bba",
+  "run_A2_ola1.r5.json": "sha256:5dc398c3f86f8b172bfd5cee1332c3077d7c69a7381f4b46092fc96953e77eb4",
+  "run_C1_ola1.r1.json": "sha256:ae4d18d3c7a4c113d5fa279b4198218589d546b962b7294736f48045c8b0b8c4",
+  "run_C1_ola1.r2.json": "sha256:b38f02987fb5c10b8ef4971b6078b4cda2943f2f0258fd3267416618cc2abcb2",
+  "run_C1_ola1.r3.json": "sha256:39cbb3c7a4bcd37c71e68302bece6dba606bbe7f3f3413d077a6c5257e0b1bd7",
+  "run_C1_ola1.r4.json": "sha256:109257fa22802d15c9fd8d2bff14dfc0e1584d634e05bda038c77a559d387e7c",
+  "run_C1_ola1.r5.json": "sha256:0461bc690c019ed34ad974aee7deaba0247c2d64b607c78ba107202e649404f4"
+ },
+ "preregistration_sha256": "sha256:b4953ec083e9af7121baf0656d97ab538598e705575f7b6742a26c9ade7490ae",
+ "schema": "oph.ol-a1-signature-replication.manifest.v1",
+ "spec_sha256": "sha256:acc8d5d67c2a4eaffe25c07fcdbfdcd7175a8b9a82142b8edb53d0d402f70f05"
+}

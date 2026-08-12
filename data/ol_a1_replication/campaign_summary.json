@@ -1,0 +1,218 @@
+{
+ "campaign_id": "ol_a1_tier_a_2026-08-12",
+ "decision": {
+  "c_support": {
+   "degradation": false,
+   "edges_halved": true,
+   "fired": false,
+   "inverted": false,
+   "mean_cross_edges_a1": 322.8,
+   "mean_cross_edges_c1": 19.2,
+   "scale_signature_rate_a1": 0.2,
+   "scale_signature_rate_c1": 0.2
+  },
+  "caution": "The archived (1,3) threshold verdict rides on one eigenvalue at relative magnitude about 3e-5 against a 1e-12 threshold; at relative tau 1e-3 the robust inertia of the retained rungs is (1,2) with one degenerate direction, and a fresh seed can flip (1,3) to (2,2) with no change in physical content. N = 5 resolves seed fragility at the 1-in-5 level only.",
+  "failed_clauses": {
+   "f_a_robust_breakdown": true,
+   "f_b_ratio_band_breakdown": true,
+   "f_c_ancestry_null_preserved": true,
+   "f_d_support_control_inverted": false
+  },
+  "per_replicate": {
+   "ancestry_destroyed": {
+    "A1": [
+     false,
+     false,
+     true,
+     false,
+     false
+    ],
+    "A2": [
+     false,
+     false,
+     false,
+     false,
+     false
+    ]
+   },
+   "c1_reference_robust_match": [
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "c1_scale_signature_match": [
+    false,
+    false,
+    false,
+    true,
+    false
+   ],
+   "margin_ratio_in_band": [
+    false,
+    false,
+    false,
+    false,
+    false
+   ],
+   "margin_ratios_a2_over_a1": [
+    2.503810228402271,
+    0.9221651550103334,
+    0.9696098504617238,
+    1.0408641459147487,
+    1.3641645597375816
+   ],
+   "robust_match": {
+    "A1": [
+     false,
+     false,
+     true,
+     false,
+     false
+    ],
+    "A2": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ]
+   }
+  },
+  "replicated_clauses": {
+   "r_a_robust_signature": false,
+   "r_b_ratio_in_band": false,
+   "r_c_ancestry_null_fired": false,
+   "r_d_support_control_fired": false
+  },
+  "reported_threshold_1_3_count_of_5": {
+   "A1": 2,
+   "A2": 5
+  },
+  "verdict": "FAILED"
+ },
+ "declared_constants": {
+  "degeneracy_reference_band": [
+   2e-05,
+   4e-05
+  ],
+  "margin_ratio_band": [
+   0.35,
+   0.8
+  ],
+  "margin_ratio_reference": 0.5725,
+  "robust_tau_relative": 0.001,
+  "threshold": 1e-12
+ },
+ "equal_prominence": "FAILED and INCONCLUSIVE are reported with the same structure and prominence as REPLICATED.",
+ "instrument": "INS-01",
+ "ledger_row": "OL-A1",
+ "p0_conformance": {
+  "checks": {
+   "clean_tree_at_run_start": true,
+   "declared_cell_count_executed": true,
+   "pinned_code_sha256_match": true,
+   "preregistration_sha256_match": true,
+   "single_runtime_environment": true,
+   "thread_pinning_env": true
+  },
+  "conformant": true,
+  "git_head_at_run_start": "9dd7d08d577a829160311ba0ddf22691be26562f",
+  "nonconformance_policy": "A P0 nonconformance voids the campaign as an execution error. It is reported as such and authorizes no seed re-draw.",
+  "pinned_code": {
+   "oph_fpe/bulk/event_manifold_producer.py": {
+    "declared": "sha256:a075829cac265284fc3faa205216023bf428f97ab7c04b4ded8b6594809e9482",
+    "measured": "sha256:a075829cac265284fc3faa205216023bf428f97ab7c04b4ded8b6594809e9482"
+   },
+   "oph_fpe/bulk/physical_h3_kms_source_capture.py": {
+    "declared": "sha256:223cab93ad720579fde6bcc1e67dbe130875113fb2b022335996744200d1a874",
+    "measured": "sha256:223cab93ad720579fde6bcc1e67dbe130875113fb2b022335996744200d1a874"
+   },
+   "scripts/einstein_convergence_ladder.py": {
+    "declared": "sha256:56b99043daddb5f1456d5631b27e728064fb503f2c155968fac0784f6571f7ed",
+    "measured": "sha256:56b99043daddb5f1456d5631b27e728064fb503f2c155968fac0784f6571f7ed"
+   }
+  },
+  "run_status": "CONFORMANT",
+  "spec_sha256": "sha256:acc8d5d67c2a4eaffe25c07fcdbfdcd7175a8b9a82142b8edb53d0d402f70f05",
+  "thread_env": {
+   "MKL_NUM_THREADS": "1",
+   "NUMEXPR_NUM_THREADS": "1",
+   "OMP_NUM_THREADS": "1",
+   "OPENBLAS_NUM_THREADS": "1",
+   "VECLIB_MAXIMUM_THREADS": "1"
+  }
+ },
+ "receipt_files": {
+  "A1:ola1.r1": "run_A1_ola1.r1.json",
+  "A1:ola1.r2": "run_A1_ola1.r2.json",
+  "A1:ola1.r3": "run_A1_ola1.r3.json",
+  "A1:ola1.r4": "run_A1_ola1.r4.json",
+  "A1:ola1.r5": "run_A1_ola1.r5.json",
+  "A2:ola1.r1": "run_A2_ola1.r1.json",
+  "A2:ola1.r2": "run_A2_ola1.r2.json",
+  "A2:ola1.r3": "run_A2_ola1.r3.json",
+  "A2:ola1.r4": "run_A2_ola1.r4.json",
+  "A2:ola1.r5": "run_A2_ola1.r5.json",
+  "C1:ola1.r1": "run_C1_ola1.r1.json",
+  "C1:ola1.r2": "run_C1_ola1.r2.json",
+  "C1:ola1.r3": "run_C1_ola1.r3.json",
+  "C1:ola1.r4": "run_C1_ola1.r4.json",
+  "C1:ola1.r5": "run_C1_ola1.r5.json"
+ },
+ "schema": "oph.ol-a1-signature-replication.summary.v1",
+ "spec": {
+  "arms": [
+   {
+    "arm_id": "A1",
+    "carrier_count": 16384,
+    "observer_count": 128,
+    "observer_support_size": 96,
+    "reference_robust_inertia": [
+     1,
+     2,
+     1
+    ],
+    "role": "scale_row"
+   },
+   {
+    "arm_id": "A2",
+    "carrier_count": 65536,
+    "observer_count": 256,
+    "observer_support_size": 96,
+    "reference_robust_inertia": [
+     1,
+     2,
+     1
+    ],
+    "role": "scale_row"
+   },
+   {
+    "arm_id": "C1",
+    "carrier_count": 16384,
+    "observer_count": 128,
+    "observer_support_size": 6,
+    "reference_robust_inertia": [
+     2,
+     1,
+     1
+    ],
+    "role": "support_density_control"
+   }
+  ],
+  "path": "docs/OL_A1_SEED_TABLE_2026-08-12.json",
+  "preregistration": {
+   "path": "docs/OL_A1_PREREGISTERED_SIGNATURE_REPLICATION_2026-08-12.md",
+   "sha256": "sha256:b4953ec083e9af7121baf0656d97ab538598e705575f7b6742a26c9ade7490ae"
+  },
+  "replicate_ids": [
+   "ola1.r1",
+   "ola1.r2",
+   "ola1.r3",
+   "ola1.r4",
+   "ola1.r5"
+  ],
+  "seed": 20260813
+ }
+}
