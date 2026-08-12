@@ -1,0 +1,61 @@
+{
+ "arms": [
+  {
+   "arm_id": "A1",
+   "carrier_count": 16384,
+   "observer_count": 128,
+   "observer_support_size": 96,
+   "reference_robust_inertia": [
+    1,
+    2,
+    1
+   ],
+   "role": "scale_row"
+  },
+  {
+   "arm_id": "A2",
+   "carrier_count": 65536,
+   "observer_count": 256,
+   "observer_support_size": 96,
+   "reference_robust_inertia": [
+    1,
+    2,
+    1
+   ],
+   "role": "scale_row"
+  },
+  {
+   "arm_id": "C1",
+   "carrier_count": 16384,
+   "observer_count": 128,
+   "observer_support_size": 6,
+   "reference_robust_inertia": [
+    2,
+    1,
+    1
+   ],
+   "role": "support_density_control"
+  }
+ ],
+ "campaign_id": "ol_a1_tier_a_2026-08-12",
+ "driver_sha256": "sha256:6cd6b179e9f62e7d7f5f1177ec4cfa329a07c0279ef9e7aedc7aef2383e8acc1",
+ "pinned_code_sha256": {
+  "oph_fpe/bulk/event_manifold_producer.py": "sha256:a075829cac265284fc3faa205216023bf428f97ab7c04b4ded8b6594809e9482",
+  "oph_fpe/bulk/physical_h3_kms_source_capture.py": "sha256:223cab93ad720579fde6bcc1e67dbe130875113fb2b022335996744200d1a874",
+  "scripts/einstein_convergence_ladder.py": "sha256:56b99043daddb5f1456d5631b27e728064fb503f2c155968fac0784f6571f7ed"
+ },
+ "preregistration": {
+  "path": "docs/OL_A1_PREREGISTERED_SIGNATURE_REPLICATION_2026-08-12.md",
+  "sha256": "sha256:b4953ec083e9af7121baf0656d97ab538598e705575f7b6742a26c9ade7490ae"
+ },
+ "replicate_ids": [
+  "ola1.r1",
+  "ola1.r2",
+  "ola1.r3",
+  "ola1.r4",
+  "ola1.r5"
+ ],
+ "schema": "oph.ol-a1-signature-replication.spec.v1",
+ "seed": 20260813,
+ "seed_freshness": "Drawn 2026-08-12 after the preregistration commit 67c81b44332510cfabfd7bb5e6bca95a9357e7b5. grep over oph-physics-sim and reverse-engineering-reality (git objects excluded) returns zero matches for 20260813 at draw time. No re-draw is authorized by any later event."
+}
