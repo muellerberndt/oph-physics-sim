@@ -26,9 +26,12 @@ Post-hoc extraction from the retained bundle ``runs/e1_prereg2_64k_20260810``
   because the bundle does not serialize per-snapshot cycles for the observer
   history list itself;
 * the window receipts: the four truncated twenty-node windows of the
-  committed payload are pairwise disjoint (a hard check); the pairwise
-  overlap sizes of the full 96-node supports are reported as data, because
-  the greedy-disjoint scan pinned only the truncated windows.
+  committed payload are pairwise disjoint (a hard check); the full 96-node
+  support lists are exported verbatim and the pairwise overlap sizes of the
+  full supports are reported as data, because the greedy-disjoint scan
+  pinned only the truncated windows.  Two pairs have fully disjoint
+  supports, which downstream constructions may consume as a kernel-checked
+  source receipt.
 
 Falsifiable checks: every rich observer carries exactly 32 steps over exactly
 the five declared fields with strict integer values; every occurrence of
@@ -202,6 +205,7 @@ def main() -> None:
             {
                 "observer_id": oid,
                 "support_size": len(supports[oid]),
+                "full_support_nodes": supports[oid],
                 "truncated_window_nodes": windows[oid],
                 "state_alphabet": [list(label) for label in alphabet],
                 "state_count": len(alphabet),
@@ -275,7 +279,7 @@ def main() -> None:
             )
 
     payload = {
-        "schema": "oph.sim.e1_source_operator_payload.v1",
+        "schema": "oph.sim.e1_source_operator_payload.v2",
         "provenance": {
             "run_id": RUN_DIR.name,
             "run_git_commit": (RUN_DIR / "git_commit.txt").read_text().strip(),
