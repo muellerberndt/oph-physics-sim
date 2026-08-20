@@ -532,13 +532,13 @@
       "completion_conditional": true,
       "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
       "physical_three_space_promoted": false,
-      "receipt_sha256": "sha256:ce2f22fa10d1ab96f6c37f701f13dc40077b63fe232ba67c91e30430aa204e6c",
+      "receipt_sha256": "sha256:cd788366059dea4950206119f4ce48530a286c7abfa9ecfa72a2bfb43198e713",
       "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
-      "sha256": "sha256:a3fe606271b29298ecc156abf1da44d2bacd1f89e551847b6d5f473346cb9db3",
+      "sha256": "sha256:8334c0303ba6623b00d4c75b4e6795482a3b51e7a51e7477b2517cf195f56189",
       "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:977b0037b1ca9f0378243491111ef45d8f9990223b988b4a497a498015da545d",
+  "receipt_sha256": "sha256:9123497fab167bf5a305d037385340c9a5ff40bf51865c391dc6c5078420d32f",
   "schema": "oph.port-gram-equivariant-completion-action.v1",
   "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN",
   "target_data_read": false

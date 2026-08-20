@@ -109,9 +109,9 @@
     "D6_source_action": {
       "bytes": 26025,
       "path": "data/repair_closure/port_load_metric_quotient_receipt.json",
-      "receipt_sha256": "sha256:f11ff8b8eb467a71e115de4b93398a9df5df797aaf61f79023d8c2f200d6ebde",
+      "receipt_sha256": "sha256:798451ffbc5f469cf9f95eceae74fa471ed479c01aa796d946041d92b04c2f61",
       "schema": "oph.port-load-repair-gram-metric-quotient.v1",
-      "sha256": "sha256:ad04d51d750c6757dc5450dca787f3a92aa3c06ec0b9705aebe2f24ee195aa32",
+      "sha256": "sha256:9eb6287d77f36f530503138a31c82c7111a7d93ce09ce4804590381091c6ed5c",
       "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN"
     },
     "FZ11_immutable_prediction_via_bridge": {
@@ -129,9 +129,9 @@
         "status": "FROZEN_PROSPECTIVE_PRIMITIVE_TWELVE_PORT_BRANCH_PREDICTION__PHYSICAL_COMPARISON_UNARMED"
       },
       "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-      "receipt_sha256": "sha256:c755c473a7b8d2bb439be7babaaee540bb3985e08d3e6cf7bff7dbb36805cb7c",
+      "receipt_sha256": "sha256:25a3fd92c511c559d25700f44ce548012cf11ff407e13f9583147768243eea6b",
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
-      "sha256": "sha256:0b2c9c95cd5309680e1a0ed3062a8b5375e8ec5765830d9e1e2d5408ecf535a4",
+      "sha256": "sha256:11a559b1310f51796816816de83a8b23e6e1da5f20626c1837a49d536ced3a14",
       "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
     },
     "FZ12_immutable_prediction": {
@@ -148,9 +148,9 @@
     "completion_isometry_action": {
       "bytes": 13060,
       "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
-      "receipt_sha256": "sha256:977b0037b1ca9f0378243491111ef45d8f9990223b988b4a497a498015da545d",
+      "receipt_sha256": "sha256:9123497fab167bf5a305d037385340c9a5ff40bf51865c391dc6c5078420d32f",
       "schema": "oph.port-gram-equivariant-completion-action.v1",
-      "sha256": "sha256:71b1a32cd32637e71948adef2b48b58110c55f58a629449b48cd86fe1e785bca",
+      "sha256": "sha256:109da1f76be82c602e3c7a4798020f84fa9b7e1fc317d0c3895c7949d8dfd9d9",
       "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
     },
     "homogeneous_action_Lean_source": {
@@ -175,13 +175,13 @@
     "response_Gram_completion": {
       "bytes": 32216,
       "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
-      "receipt_sha256": "sha256:ce2f22fa10d1ab96f6c37f701f13dc40077b63fe232ba67c91e30430aa204e6c",
+      "receipt_sha256": "sha256:cd788366059dea4950206119f4ce48530a286c7abfa9ecfa72a2bfb43198e713",
       "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
-      "sha256": "sha256:a3fe606271b29298ecc156abf1da44d2bacd1f89e551847b6d5f473346cb9db3",
+      "sha256": "sha256:8334c0303ba6623b00d4c75b4e6795482a3b51e7a51e7477b2517cf195f56189",
       "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:0c17600069b957ac445120724cc902dee26da0f565b00c118bf7c73c14e8048a",
+  "receipt_sha256": "sha256:b0cb6521a03d35639c98b4c99029dcdea9e251e26034eb32e2967f9a78c17e81",
   "same_internal_action_binding": {
     "D6_translation_isometry_theorem_pinned": true,
     "action": "translation by one directed unit-current seam boundary",

@@ -105,7 +105,8 @@ stationarity: minimizing the inter-level quadratic energy
 `kappa * sum_c w_c (x_{L+1}(c) - x_L(p(c)))^2`
 
 * in the fine field alone sets `x_{L+1} = embed(x_L)` (the committed
-  childwise-constant pullback, the sim instance of the Lean `sect`), and
+  childwise-constant pullback, the sim instance of the Lean `sect` up to
+  Lean's explicit `1 / fiber_size` normalization), and
 * in the coarse field alone sets `x_L = conditional_expectation(x_{L+1})`
   (the committed area-weighted child average, the sim instance of the Lean
   `marg` followed by normalization; `E = sect ∘ marg` is the committed
@@ -129,18 +130,24 @@ configuration (`symmetry_max_abs_asymmetry`, required exactly 0.0).
 
 * DECOUPLED control: `kappa = 0` (block-diagonal union; kernel dimension
   equals the level count) and single-level operators at `L` in `{3, 4, 5}`.
-* STATIC control: the union graph with every weight set to 1.0, intra-level
-  and inter-level alike. This control is partially by construction: its
-  spectral content reflects the fixed union graph shape, not the
-  dynamics-derived weights. It is labeled `construction_control` in the
-  receipt and the report.
+* MATCHED-SCALE WEIGHT-SHAPE control: for every positive `kappa`, use the
+  uniform fiber weight `kappa / 4` on each parent-child edge. It has the same
+  total inter-level weight per parent as the area-weighted operator and changes
+  only the four-child weight shape.
+* COUPLING-SCALE control: the union graph with every inter-level weight set to
+  1.0. Its effective per-parent coupling is four, above the pinned `kappa`
+  grid, so it is not a weight-shape control. It is labeled
+  `coupling_scale_control` in the receipt and report.
 
 ## 4. Estimators (all pinned before running)
 
 ### 4.1 Heat-kernel spectral dimension
 
 Return probability `P(sigma) = (1/N) tr exp(-sigma * L_union)` on the pinned
-sigma grid `numpy.logspace(-3, 4, 71)` (ten points per decade). Spectral
+sigma grid `numpy.logspace(-3, 4, 141)` (twenty points per decade). The first
+version used 71 points and left `torus3d_24` exactly at the five-point window
+floor; the denser grid supplies explicit positive margin without changing the
+window endpoints. Spectral
 dimension curve by centered differences in log-log:
 
 ```
@@ -154,8 +161,8 @@ Trace paths:
 * Stochastic path (primary for `N > 2000`): Hutchinson trace with
   Rademacher probes, 128 probes split into eight independent sixteen-probe
   seed batches. The reported curve is their mean; the pointwise standard
-  error and the standard error, minimum, and maximum of the guarded
-  per-seed plateau medians are recorded. Each probe's scalar
+  error and the mean, sample standard deviation, standard error, minimum, and
+  maximum of the guarded per-seed plateau medians are recorded. Each probe's scalar
   curve `z^T exp(-sigma L) z` is evaluated for the whole sigma grid from one
   Lanczos factorization of 120 steps with full reorthogonalization
   (Gauss quadrature on the probe's spectral measure). Exact kernel
@@ -179,13 +186,15 @@ agreement check is pinned to the comparison window above. (b) Within a few
 relaxation times of `1 / lambda_2` the non-kernel trace remainder falls
 under the 64-probe Hutchinson noise floor and no fixed probe count holds a
 relative tolerance there (measured on `cycle_512`: `max |d_s|` difference
-0.2349 unguarded at `sigma` in {5012, 6310} where dense `P` is under
-`4 / N`, against 0.0385 with the guard), so the saturation guard above is
-part of the pinned window. The tolerances did not move.
+0.2349 unguarded at `sigma = 6310`, against 0.2016 at `5012` and 0.0385 with
+the guard), so the saturation guard above is part of the pinned window. The
+complete excluded set on that grid is `{1585, 1995, 2512, 3162, 3981, 5012,
+6310}`. The tolerances did not move.
 
-Probe-count reductions, if any configuration is slow, are recorded in the
-receipt under `probe_count_reductions`; the field is present and empty when
-no reduction occurred. No silent reduction.
+Probe-count reductions are derived by comparing every stochastic row's actual
+probe count with the pinned count and recorded under `probe_count_reductions`.
+The field is structurally empty only when every row used the full count. No
+silent reduction.
 
 ### 4.2 Fit window (pinned rule)
 
@@ -221,7 +230,14 @@ floor 8 skips low-lying degenerate multiplets. Recorded fix 2026-08-20:
 the first draft pinned `k = 64`; pre-run calibration on exact torus
 spectra places the `torus3d_24` Weyl fit at 2.801 with `k = 64`, outside
 the pinned band, and at 3.027 with `k = 200`. The eigencount moved; the
-band did not.
+band did not. The exact-spectrum audit scan is pinned at
+`k = {32, 64, 100, 128, 200, 300, 400, 600, 800, 1000}`. For
+`torus2d_64` it yields `{1.841, 2.013, 2.033, 2.033, 2.040, 2.052, 2.063,
+2.083, 2.105, 2.127}`; for `torus3d_24` it yields
+`{2.551, 2.801, 2.903, 2.931, 3.027, 3.050, 3.087, 3.119, 3.144, 3.174}`.
+The common calibration-admissible range is recorded as `k in [100, 600]`;
+`k = 200` remains the declared production pin rather than being described as
+a converged `k -> infinity` plateau.
 
 ## 5. Calibration suite (mandatory)
 
@@ -234,18 +250,20 @@ gets fixed and the fix is recorded; the tolerance does not move.
 | `cycle_4096` | cycle `C_4096` | 4096 | `d = 1` | `|d_s_median - 1| <= 0.15` and `|d_weyl - 1| <= 0.15` |
 | `torus2d_64` | 64 x 64 periodic square lattice | 4096 | `d = 2` | `|d_s_median - 2| <= 0.15` and `|d_weyl - 2| <= 0.15` |
 | `torus3d_24` | 24^3 periodic cubic lattice | 13824 | `d = 3` | `|d_s_median - 3| <= 0.15` and `|d_weyl - 3| <= 0.15` |
-| `tree4_depth8` | rooted 4-regular tree (root degree 4, interior degree 4), depth 8 | 13121 | anomalous, non-integer control | `d_weyl` outside every band `[d - 0.15, d + 0.15]`, `d in {1, 2, 3}`; `d_s_median` band status recorded without an assertion |
+| `tree4_depth8` | rooted 4-regular tree (root degree 4, interior degree 4), depth 8 | 13121 | anomalous, non-integer control | exact shell counts grow by factor 3 at every interior radius; spectral band statuses are diagnostic only |
 
 The tree control's rationale: a 4-regular tree has exponential volume
 growth; the infinite-tree return probability carries the factor
 `exp(-(4 - 2 sqrt(3)) sigma)`, so `d_s(sigma)` has no finite plateau.
-Recorded fix 2026-08-20: on the finite truncated tree the window cap at
-`1 / lambda_2` cuts the growth of `d_s(sigma)` and the window median lands
-near 1.9 (measured 1.8457 at depth 6, 1.9011 at depth 8, the latter inside
-the `d = 2` band), so the asserted band exclusion moved to `d_weyl`
-(measured 1.6262 at depth 8, outside every band); `d_s_median` and the
-full curve stay recorded. The bands did not move; the asserted statistic
-did.
+Recorded fix 2026-08-20: neither finite-window `d_s_median` nor `d_weyl` is a
+stable anomaly assertion. The independent audit's `d_weyl` scan over
+`k = {32, 64, 100, 128, 200, 300, 400, 600, 800, 1000}` was
+`{1.421, 1.442, 1.830, 1.521, 1.626, 1.758, 1.881, 1.605, 1.647, 1.506}`
+and crosses the integer bands. The asserted statistic is therefore the exact,
+eigencount-independent construction witness: shell counts are
+`1, 4, 12, 36, ...` and every interior shell ratio is exactly 3, establishing
+exponential volume growth. The spectral scan, `d_s_median`, and full curve stay
+recorded as diagnostics without a pass assertion.
 
 Dense/stochastic cross-check variants (both paths run, agreement asserted
 per 4.1): `cycle_512` (512), `torus2d_40` (1600), `torus3d_12` (1728),
@@ -262,8 +280,10 @@ Configurations, every one reported, none thresholded:
 * Coupled unions: levels `[0..L]` for `L` in `{3, 4, 5}`, `kappa` in
   `{0.25, 0.5, 1.0, 2.0}` (dynamics-weighted operator) and `kappa = 0`
   (decoupled union control).
-* Static-control unions: levels `[0..L]` for `L` in `{3, 4, 5}`, all
-  weights 1.0, labeled `construction_control`.
+* Matched-scale weight-shape controls: levels `[0..L]` for `L` in `{3, 4, 5}`
+  and every positive pinned `kappa`, using uniform `kappa / 4` lineage weights.
+* Coupling-scale controls: levels `[0..L]` for `L` in `{3, 4, 5}`, with
+  inter-level weights 1.0, labeled `coupling_scale_control`.
 
 The deliverable is the table: per configuration the `d_s` window median
 (with window data), the Weyl dimension, `lambda_2`, `lambda_max`, kernel
@@ -283,7 +303,7 @@ measured value is reported as measured.
 * `EIGSH_SEED = 20260821` (pinned `v0` start vectors).
 * Probes: 128 total, split into eight independent batches of sixteen. Lanczos
   steps: 120, full reorthogonalization. Dense cap:
-  2000 nodes. Sigma grid: `logspace(-3, 4, 71)`. Weyl: `k = 200` (recorded
+  2000 nodes. Sigma grid: `logspace(-3, 4, 141)`. Weyl: `k = 200` (recorded
   fix of 4.3), rank floor 8, shift `-1e-6`, zero-mode cut `1e-9`. Kappa
   grid: `{0.0, 0.25, 0.5, 1.0, 2.0}`. Level ceiling: 5.
 * Receipt: one JSON document, canonical serialization
@@ -314,7 +334,8 @@ measured value is reported as measured.
   onto the childwise-constant subspace of the fine level as the Lean pushout
   would when the coarse carrier is itself the shared layer. The
   union-with-coupling presentation makes a coupling-strength family
-  scannable; the static control exposes the bare union graph.
+  scannable; the all-ones coupling-scale control exposes the bare union graph
+  at a stronger effective coupling.
 * C2 (intra-level normalization). Unit seam weight at every level, the
   level-0 convention of `oph_fpe/em/base_carrier.laplacian_matrix` extended
   level-uniformly and carried from the port basis to the committed cell
@@ -350,7 +371,13 @@ measured value is reported as measured.
 ## 9. What the numbers do and do not show
 
 The numbers are spectral statistics of declared finite operators. The
-static union statistic is partially a property of the constructed graph.
+all-ones coupling-scale statistic is partially a property of the constructed
+graph and sits at a stronger effective coupling than the scanned family. In
+the audited deterministic Weyl rows it is consistently above every
+area-weighted coupled `kappa`, while those coupled rows increase slightly and
+monotonically with `kappa`; this small real effect is reported rather than
+described as equality. The matched-scale `kappa / 4` controls isolate the much
+smaller fiber-weight-shape effect.
 The dynamics-weighted statistics are properties of the declared
 linearization of committed transport, at declared coupling strengths, on
 finite windows of a finite tower; they carry the window and size effects

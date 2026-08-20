@@ -10,10 +10,12 @@ union node set of a level window:
   per committed lineage pair (declared convention C3; the single-field
   stationarity of this quadratic form reproduces the committed ``embed``
   and ``conditional_expectation`` of ``oph_fpe/core/icosahedral.py``, the
-  sim instance of the Lean section/marginalization pair of
+  sim instance of the Lean section up to its fiber normalization and of the
+  normalized marginalization pair of
   ``Lean/QFT/CarrierJoinTransport.lean``);
-* the static control sets every weight to 1.0 and is labeled
-  ``construction_control``.
+* the matched-scale control uses ``kappa / 4`` per lineage edge to change only
+  the fiber-weight shape, while the all-ones control is explicitly labeled a
+  ``coupling_scale_control``.
 """
 
 from __future__ import annotations
@@ -53,6 +55,8 @@ def inter_level_edges(
     incidences: list[RefinementIncidence],
     offsets: dict[int, int],
     kappa: float,
+    *,
+    uniform_fiber_weights: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Committed parent-child lineage edges with expectation weights times kappa."""
 
@@ -65,7 +69,12 @@ def inter_level_edges(
         fine_ids = np.arange(incidence.child_to_parent.size, dtype=np.int64)
         rows.append(incidence.child_to_parent + offsets[incidence.coarse_level])
         cols.append(fine_ids + offsets[incidence.fine_level])
-        weights.append(float(kappa) * incidence.expectation_weights)
+        fiber_weights = (
+            np.full(incidence.expectation_weights.shape, 0.25, dtype=np.float64)
+            if uniform_fiber_weights
+            else incidence.expectation_weights
+        )
+        weights.append(float(kappa) * fiber_weights)
     if not rows:
         empty_i = np.zeros(0, dtype=np.int64)
         return empty_i, empty_i.copy(), np.zeros(0, dtype=np.float64)
@@ -99,19 +108,26 @@ def union_laplacian(
     kappa: float,
     *,
     static_control: bool = False,
+    uniform_fiber_weights: bool = False,
 ) -> tuple[sp.csr_matrix, dict]:
     """Assemble the probe operator on a level window.
 
     ``kappa = 0.0`` is the decoupled control (block-diagonal union).
-    ``static_control = True`` replaces every weight by 1.0 and is the
-    construction control; ``kappa`` is ignored on the inter-level block in
-    that mode (weight 1.0 per lineage edge).
+    ``uniform_fiber_weights = True`` uses ``kappa / 4`` on every lineage edge,
+    a matched-scale weight-shape control. ``static_control = True`` replaces
+    every weight by 1.0 and is the coupling-scale control; ``kappa`` is ignored
+    on the inter-level block in that mode.
     """
 
+    if static_control and uniform_fiber_weights:
+        raise ValueError("static and matched-scale controls are mutually exclusive")
     offsets, node_count = union_offsets(level_graphs)
     intra_row, intra_col, intra_weight = intra_level_edges(level_graphs, offsets)
     inter_row, inter_col, inter_weight = inter_level_edges(
-        incidences, offsets, kappa=1.0 if static_control else kappa
+        incidences,
+        offsets,
+        kappa=1.0 if static_control else kappa,
+        uniform_fiber_weights=uniform_fiber_weights,
     )
     if static_control:
         inter_weight = np.ones_like(inter_weight)
@@ -127,6 +143,16 @@ def union_laplacian(
         "levels": [graph.level for graph in level_graphs],
         "kappa": float(kappa),
         "static_control": bool(static_control),
+        "uniform_fiber_weights": bool(uniform_fiber_weights),
+        "inter_level_weight_model": (
+            "all_ones_coupling_scale_control"
+            if static_control
+            else (
+                "matched_scale_uniform_one_quarter"
+                if uniform_fiber_weights
+                else "spherical_area_conditional_expectation"
+            )
+        ),
         "intra_edge_count": int(intra_row.size),
         "inter_edge_count": int(np.count_nonzero(keep)),
         "offsets": {str(level): int(offset) for level, offset in offsets.items()},

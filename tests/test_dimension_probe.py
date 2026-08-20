@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 
+from oph_fpe.dimension import EVIDENTIAL_STATUS
 from oph_fpe.dimension import calibration as cal
 from oph_fpe.dimension import estimators as est
 from oph_fpe.dimension import geometry, operators, probe, receipts
@@ -47,9 +48,13 @@ def test_calibration_integer_cases(calibration_rows, name):
 
 def test_calibration_tree_anomalous_control(calibration_rows):
     row = calibration_rows["tree4_depth8"]
-    assert row["d_weyl_outside_all_integer_bands"]
+    assert row["anomalous_control_assertion"] == "exact_exponential_shell_growth"
+    assert row["anomalous_control_pass"]
+    assert row["exact_tree_growth"]["independent_of_weyl_eigencount"]
+    assert row["exact_tree_growth"]["minimum_interior_shell_growth_ratio"] == 3.0
     assert isinstance(row["d_s_median"], float)
     assert "d_s_median_outside_all_integer_bands" in row
+    assert set(row["weyl_k_scan_audit"]) == {str(k) for k in est.WEYL_K_SCAN}
 
 
 def test_cross_checks_within_tolerance(cross_check_rows):
@@ -109,6 +114,35 @@ def test_static_control_unit_weights(small_window):
     assert meta["inter_edge_count"] == sum(
         incidence.child_to_parent.size for incidence in incidences
     )
+    assert meta["inter_level_weight_model"] == "all_ones_coupling_scale_control"
+
+
+def test_matched_scale_control_changes_only_fiber_weight_shape(small_window):
+    level_graphs, incidences = small_window
+    kappa = 0.5
+    matched, meta = operators.union_laplacian(
+        level_graphs,
+        incidences,
+        kappa=kappa,
+        uniform_fiber_weights=True,
+    )
+    assert meta["inter_level_weight_model"] == "matched_scale_uniform_one_quarter"
+    offsets, _ = operators.union_offsets(level_graphs)
+    _, _, weights = operators.inter_level_edges(
+        incidences,
+        offsets,
+        kappa,
+        uniform_fiber_weights=True,
+    )
+    assert np.all(weights == kappa / 4.0)
+    assert operators.require_symmetric(matched) == 0.0
+
+
+def test_tower_configuration_labels_separate_shape_and_scale_controls():
+    rows = probe.tower_configurations()
+    assert any(row["kind"] == "matched_scale_weight_shape_control" for row in rows)
+    assert any(row["kind"] == "coupling_scale_control" for row in rows)
+    assert not any(row["kind"] == "construction_control" for row in rows)
 
 
 def test_committed_tower_receipts(small_window):
@@ -168,7 +202,47 @@ def test_stochastic_measurement_reports_seed_uncertainty(small_window):
     assert measured["probes_per_seed"] == 1
     assert len(measured["d_s_median_seed_estimates"]) >= 2
     assert measured["d_s_median_seed_standard_error"] is not None
+    assert measured["d_s_median_seed_mean"] is not None
+    assert measured["d_s_median_seed_standard_deviation"] is not None
+    assert measured["d_s_median_seed_standard_deviation"] == pytest.approx(
+        measured["d_s_median_seed_standard_error"] * np.sqrt(8.0)
+    )
     assert measured["p_return_standard_error"].shape == est.SIGMA_GRID.shape
+
+
+def test_sigma_grid_has_calibration_window_margin(calibration_rows):
+    assert est.SIGMA_GRID_POINTS == 141
+    row = calibration_rows["torus3d_24"]
+    assert row["window_point_count"] > est.WINDOW_MIN_POINTS
+    assert row["window_point_margin"] > 0
+
+
+def test_weyl_k_scan_records_admissible_range(calibration_rows):
+    assert est.WEYL_ADMISSIBLE_K_RANGE == (100, 600)
+    for name, expected in (("torus2d_64", 2), ("torus3d_24", 3)):
+        scan = calibration_rows[name]["weyl_k_scan"]
+        assert set(scan) == {str(k) for k in est.WEYL_K_SCAN}
+        for k in (100, 128, 200, 300, 400, 600):
+            assert cal.integer_band_check(scan[str(k)], expected)
+
+
+def test_probe_reduction_ledger_is_derived():
+    rows = [
+        {"name": "dense", "probes": None},
+        {"name": "full", "probes": est.HUTCHINSON_PROBES},
+        {"name": "reduced", "probes": est.HUTCHINSON_PROBES // 2},
+    ]
+    assert probe.derive_probe_count_reductions(rows) == [
+        {
+            "name": "reduced",
+            "configured_probes": est.HUTCHINSON_PROBES,
+            "actual_probes": est.HUTCHINSON_PROBES // 2,
+        }
+    ]
+
+
+def test_evidential_status_constant_is_canonical():
+    assert EVIDENTIAL_STATUS == "exploratory_non_evidential"
 
 
 def test_stochastic_estimator_deterministic(small_window):

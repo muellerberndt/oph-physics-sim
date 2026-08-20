@@ -151,3 +151,28 @@ marked config- or gate-dependent. The visualizer bundle builder
   `neutral-3d-bulk-audit`, `bulk-proof-certificate`, and the other
   claim-gate commands (README section) recompute their artifacts
   post-hoc.
+
+## Compact headline handoffs
+
+`python tools/build_headline_visualizer_handoffs.py` builds fourteen
+directory-based packages under
+`visualizer_handoffs/oph-headlines-2026-08-20/`. These are display-only
+exports, not run bundles. They cover S2 carrier interactions, one-carrier
+repair, observer-frame Born weights and Lueders conditioning, refinement-depth
+statistics, repair confluence, observer cameras, modular time, defect emergence
+and grouping, observer-facing spacetime diagnostics, A5 sectors, finite EM,
+screen/cosmology diagnostics, and the paper/Lean/simulator evidence atlas.
+
+Every package contains `manifest.json`, `DISPLAY_INSTRUCTIONS.md`, and only the
+selected JSON/NPZ display data needed for its view. The builder hashes every
+file and fails if any package exceeds 200,000,000 bytes. Existing 16k data are
+explicitly labeled as legacy-chart control output; fresh finite replays retain
+their non-evidential or conditional boundaries.
+
+Both `visualizer_handoffs/` and `visualizer_bundles/` are generated and ignored
+by Git. After building the handoffs, run
+`python tools/build_visualizer_upload_bundle.py` to produce
+`visualizer_bundles/oph-headlines-visualizer-builder-2026-08-20.zip` and its
+SHA-256 sidecar. The archive contains all fourteen handoffs under `handoffs/`,
+a bundle manifest, builder instructions, and a ready-to-paste builder prompt;
+it contains no whole run or simulator source tree.

@@ -40,5 +40,9 @@ temp/
 *.log
 *.jsonl
 
+# Generated display-only visualizer exports and upload archives.
+visualizer_handoffs/
+visualizer_bundles/
+
 # Empirical run outputs are retained locally or in receipt archives, not in Git.
 data/earned_runs/

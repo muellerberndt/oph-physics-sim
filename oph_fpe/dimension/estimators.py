@@ -14,7 +14,8 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 from scipy.linalg import eigh_tridiagonal
 
-SIGMA_GRID = np.logspace(-3.0, 4.0, 71)
+SIGMA_GRID_POINTS = 141
+SIGMA_GRID = np.logspace(-3.0, 4.0, SIGMA_GRID_POINTS)
 DENSE_CAP = 2000
 HUTCHINSON_PROBES = 128
 HUTCHINSON_SEED_ENSEMBLE_SIZE = 8
@@ -22,6 +23,8 @@ HUTCHINSON_PROBES_PER_SEED = HUTCHINSON_PROBES // HUTCHINSON_SEED_ENSEMBLE_SIZE
 HUTCHINSON_SEED_STRIDE = 100_003
 LANCZOS_STEPS = 120
 WEYL_EIGENCOUNT = 200
+WEYL_K_SCAN = (32, 64, 100, 128, 200, 300, 400, 600, 800, 1000)
+WEYL_ADMISSIBLE_K_RANGE = (100, 600)
 WEYL_RANK_FLOOR = 8
 WEYL_SHIFT = -1.0e-6
 ZERO_MODE_CUT = 1.0e-9
@@ -207,6 +210,7 @@ def window_statistics(
             "d_s_window_max": None,
             "window_saturation_floor": None,
             "window_saturation_guard_applied": p_return is not None,
+            "window_point_margin": -WINDOW_MIN_POINTS,
         }
     sigma_hi = 1.0 / float(lambda_2)
     mask = (sigmas >= SIGMA_LO) & (sigmas <= sigma_hi) & np.isfinite(ds_curve)
@@ -238,6 +242,7 @@ def window_statistics(
         "d_s_window_max": float(np.max(values)) if count else None,
         "window_saturation_floor": saturation_floor,
         "window_saturation_guard_applied": p_return is not None,
+        "window_point_margin": count - WINDOW_MIN_POINTS,
     }
 
 
@@ -357,7 +362,9 @@ def measure_dimensions(
         p_return_standard_error = None
         per_seed_p_return = None
         seed_ensemble: tuple[int, ...] = ()
-        low_eigenvalues = spectrum[: min(WEYL_EIGENCOUNT, node_count - 2)]
+        low_eigenvalues = low_spectrum(
+            matrix, eigencount=WEYL_EIGENCOUNT, seed=eigsh_seed
+        )
         lambda_max = float(spectrum[-1])
         estimator_path = "dense_eigvalsh"
     else:
@@ -406,6 +413,10 @@ def measure_dimensions(
         if len(seed_medians) >= 2
         else None
     )
+    seed_mean = float(np.mean(seed_medians)) if seed_medians else None
+    seed_standard_deviation = (
+        float(np.std(seed_medians, ddof=1)) if len(seed_medians) >= 2 else None
+    )
     return {
         "node_count": int(node_count),
         "estimator_path": estimator_path,
@@ -421,6 +432,8 @@ def measure_dimensions(
         "p_return_standard_error": p_return_standard_error,
         "d_s_curve": ds_curve,
         "d_s_median_seed_estimates": seed_medians,
+        "d_s_median_seed_mean": seed_mean,
+        "d_s_median_seed_standard_deviation": seed_standard_deviation,
         "d_s_median_seed_standard_error": seed_standard_error,
         "d_s_median_seed_min": min(seed_medians) if seed_medians else None,
         "d_s_median_seed_max": max(seed_medians) if seed_medians else None,

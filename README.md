@@ -163,3 +163,13 @@ interpretations remain conditional on explicit receipts. See
 
 Interactive visualizations built from simulator evidence bundles are available
 at <https://simulation.floatingpragma.io>.
+
+Compact display-only handoffs for carrier dynamics, observer-frame quantum
+conditioning, refinement depth, repair confluence, observer cameras and modular
+time, defects, finite EM, cosmology diagnostics, and the full theorem/evidence
+atlas live under `visualizer_handoffs/oph-headlines-2026-08-20/`. Regenerate
+them with `python tools/build_headline_visualizer_handoffs.py`; every directory
+has renderer instructions, hashes, an explicit claim boundary, and a hard
+200 MB size limit. The generated handoffs are intentionally ignored by Git.
+Build the single upload-ready visualizer-builder archive, including its guide
+and copy/paste prompt, with `python tools/build_visualizer_upload_bundle.py`.

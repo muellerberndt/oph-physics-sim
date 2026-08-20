@@ -16,11 +16,13 @@ import numpy as np
 import scipy
 import scipy.sparse as sp
 
+from oph_fpe.dimension import EVIDENTIAL_STATUS
 from oph_fpe.dimension import calibration as cal
 from oph_fpe.dimension import estimators as est
 from oph_fpe.dimension import geometry, operators, receipts
 
 KAPPA_GRID = (0.0, 0.25, 0.5, 1.0, 2.0)
+MATCHED_SCALE_KAPPA_GRID = tuple(value for value in KAPPA_GRID if value > 0.0)
 UNION_TOP_LEVELS = (3, 4, 5)
 SINGLE_CONTROL_LEVELS = (3, 4, 5)
 LEVEL_CEILING = 5
@@ -33,7 +35,9 @@ CROSS_CHECK_SATURATION_GUARD = est.SATURATION_GUARD_MULTIPLIER
 CLAIM_BOUNDARY = (
     "Exploratory, non-evidential spectral statistics of declared finite "
     "operators on the committed tower and on calibration graphs. The static "
-    "union statistic is partially a property of the constructed graph. No "
+    "all-ones coupling-scale control is partially a property of the constructed "
+    "graph; the small monotone separation between area-weighted and matched-scale "
+    "uniform-fiber rows is reported rather than collapsed. No "
     "number is a measurement of physical spatial dimension; no verdict is "
     "attached; open premise rows of the committed corpus stay open."
 )
@@ -47,10 +51,11 @@ CONVENTIONS = (
     "C3 inter-level quadratic form: one parent-child edge per committed "
     "lineage pair, weight kappa times the committed "
     "conditional_expectation_weights entry; single-field stationarity "
-    "reproduces the committed embed and conditional_expectation",
+    "reproduces the committed embed up to the Lean section's fiber "
+    "normalization and reproduces conditional_expectation exactly",
     "C4 coupling strength kappa grid {0.0, 0.25, 0.5, 1.0, 2.0}; the corpus "
     "is silent on the strength",
-    "C5 estimator pins: sigma grid logspace(-3,4,71), window "
+    "C5 estimator pins: sigma grid logspace(-3,4,141), window "
     "[4.0, 1/lambda_2] with P >= 4*kernel_dim/N and minimum 5 points, "
     "128 Rademacher probes split over 8 independent seeds, 120 "
     "Lanczos steps with full reorthogonalization, dense cap 2000, Weyl "
@@ -123,6 +128,20 @@ def run_calibration() -> list[dict]:
         )
         row["name"] = case["name"]
         row["kind"] = case["kind"]
+        if case["kind"] == "anomalous_tree":
+            row["exact_tree_growth"] = cal.tree_exponential_growth_receipt(
+                int(case["builder"][1])
+            )
+            row["weyl_k_scan_audit"] = {
+                str(k): value for k, value in cal.TREE_WEYL_K_SCAN_AUDIT.items()
+            }
+            row["weyl_k_scan_audit_provenance"] = (
+                "independent audit supplied 2026-08-20; diagnostic only"
+            )
+        elif case["name"] in {"torus2d_64", "torus3d_24"}:
+            row["weyl_k_scan"] = cal.exact_torus_weyl_k_scan(
+                tuple(case["builder"][1]), est.WEYL_K_SCAN
+            )
         row.update(cal.calibration_verdict(row, case))
         rows.append(row)
     return rows
@@ -198,6 +217,9 @@ def run_cross_checks() -> list[dict]:
                     and p_rel <= CROSS_CHECK_P_REL_TOL
                 ),
                 "probe_seed": seed,
+                "runtime_seconds": float(
+                    dense.pop("runtime_seconds") + stochastic.pop("runtime_seconds")
+                ),
             }
         )
     return rows
@@ -233,12 +255,25 @@ def tower_configurations() -> list[dict]:
         configs.append(
             {
                 "name": f"union_0_to_{top}_static",
-                "kind": "construction_control",
+                "kind": "coupling_scale_control",
                 "levels": list(range(top + 1)),
                 "kappa": None,
                 "static": True,
+                "uniform_fiber_weights": False,
             }
         )
+        for kappa in MATCHED_SCALE_KAPPA_GRID:
+            kappa_tag = str(kappa).replace(".", "p")
+            configs.append(
+                {
+                    "name": f"union_0_to_{top}_matched_uniform_kappa_{kappa_tag}",
+                    "kind": "matched_scale_weight_shape_control",
+                    "levels": list(range(top + 1)),
+                    "kappa": float(kappa),
+                    "static": False,
+                    "uniform_fiber_weights": True,
+                }
+            )
     return configs
 
 
@@ -261,7 +296,10 @@ def run_tower_sweep(level_graphs, incidences) -> list[dict]:
             matrix, meta = operators.single_level_laplacian(window_graphs[0])
         else:
             matrix, meta = operators.union_laplacian(
-                window_graphs, window_incidences, kappa=config["kappa"]
+                window_graphs,
+                window_incidences,
+                kappa=config["kappa"],
+                uniform_fiber_weights=config.get("uniform_fiber_weights", False),
             )
         expected_components = (
             len(config["levels"])
@@ -282,10 +320,26 @@ def run_tower_sweep(level_graphs, incidences) -> list[dict]:
                 "kappa": config["kappa"],
                 "intra_edge_count": meta["intra_edge_count"],
                 "inter_edge_count": meta["inter_edge_count"],
+                "inter_level_weight_model": meta["inter_level_weight_model"],
             }
         )
         rows.append(row)
     return rows
+
+
+def derive_probe_count_reductions(rows: list[dict]) -> list[dict]:
+    """Report actual stochastic probe reductions; never use a literal placeholder."""
+
+    return [
+        {
+            "name": row["name"],
+            "configured_probes": est.HUTCHINSON_PROBES,
+            "actual_probes": int(row["probes"]),
+        }
+        for row in rows
+        if row.get("probes") is not None
+        and int(row["probes"]) < est.HUTCHINSON_PROBES
+    ]
 
 
 def build_receipt() -> dict:
@@ -294,9 +348,28 @@ def build_receipt() -> dict:
     calibration_rows = run_calibration()
     cross_check_rows = run_cross_checks()
     configuration_rows = run_tower_sweep(level_graphs, incidences)
+    timings = {
+        "label": "unhashed_timing_sidecar",
+        "calibration_seconds": {
+            row["name"]: row.pop("runtime_seconds") for row in calibration_rows
+        },
+        "cross_check_seconds": {
+            row["name"]: row.pop("runtime_seconds") for row in cross_check_rows
+        },
+        "configuration_seconds": {
+            row["name"]: row.pop("runtime_seconds") for row in configuration_rows
+        },
+        "total_seconds": time.perf_counter() - started,
+    }
+    stochastic_rows = [
+        row
+        for row in calibration_rows + configuration_rows
+        if row.get("probes") is not None
+    ]
+    probe_count_reductions = derive_probe_count_reductions(stochastic_rows)
     document = {
         "schema": "oph.dimension_probe.v1",
-        "evidential_status": "exploratory_non_evidential",
+        "evidential_status": EVIDENTIAL_STATUS,
         "claim_boundary": CLAIM_BOUNDARY,
         "environment": {
             "python": sys.version.split()[0],
@@ -304,7 +377,11 @@ def build_receipt() -> dict:
             "scipy": scipy.__version__,
         },
         "pins": {
-            "sigma_grid": {"start_exponent": -3.0, "stop_exponent": 4.0, "num": 71},
+            "sigma_grid": {
+                "start_exponent": -3.0,
+                "stop_exponent": 4.0,
+                "num": est.SIGMA_GRID_POINTS,
+            },
             "sigma_grid_values": est.SIGMA_GRID,
             "hutchinson_probes": est.HUTCHINSON_PROBES,
             "hutchinson_seed_ensemble_size": est.HUTCHINSON_SEED_ENSEMBLE_SIZE,
@@ -313,6 +390,8 @@ def build_receipt() -> dict:
             "lanczos_steps": est.LANCZOS_STEPS,
             "dense_cap": est.DENSE_CAP,
             "weyl_eigencount": est.WEYL_EIGENCOUNT,
+            "weyl_k_scan": list(est.WEYL_K_SCAN),
+            "weyl_admissible_k_range": list(est.WEYL_ADMISSIBLE_K_RANGE),
             "weyl_rank_floor": est.WEYL_RANK_FLOOR,
             "weyl_shift": est.WEYL_SHIFT,
             "zero_mode_cut": est.ZERO_MODE_CUT,
@@ -362,17 +441,11 @@ def build_receipt() -> dict:
         "calibration": calibration_rows,
         "cross_checks": cross_check_rows,
         "configurations": configuration_rows,
-        "probe_count_reductions": [],
-    }
-    timings = {
-        "label": "unhashed_timing_sidecar",
-        "calibration_seconds": {
-            row["name"]: row.pop("runtime_seconds") for row in calibration_rows
-        },
-        "configuration_seconds": {
-            row["name"]: row.pop("runtime_seconds") for row in configuration_rows
-        },
-        "total_seconds": time.perf_counter() - started,
+        "probe_count_reductions": probe_count_reductions,
+        "probe_count_policy": (
+            "derived from every stochastic row; structurally empty only when "
+            "all rows use the pinned probe count"
+        ),
     }
     return document, timings
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from oph_fpe.dimension import probe, receipts
+from oph_fpe.dimension import EVIDENTIAL_STATUS, probe, receipts
 
 DEFAULT_OUT = Path("runs/dimension_probe/dimension_probe_receipt.json")
 
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"sha256: {digest}")
     print(f"timings_sidecar: {timing_path}")
     print(f"runtime_seconds_total: {timings['total_seconds']:.1f}")
-    print("evidential_status: exploratory_non_evidential")
+    print(f"evidential_status: {EVIDENTIAL_STATUS}")
     return 0
 
 

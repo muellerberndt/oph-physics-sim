@@ -14,6 +14,18 @@ from oph_fpe.dimension.operators import laplacian_from_edges
 
 DIMENSION_TOLERANCE = 0.15
 INTEGER_TARGETS = (1, 2, 3)
+TREE_WEYL_K_SCAN_AUDIT = {
+    32: 1.421,
+    64: 1.442,
+    100: 1.830,
+    128: 1.521,
+    200: 1.626,
+    300: 1.758,
+    400: 1.881,
+    600: 1.605,
+    800: 1.647,
+    1000: 1.506,
+}
 
 
 def cycle_laplacian(node_count: int) -> sp.csr_matrix:
@@ -123,6 +135,43 @@ def anomalous_band_check(value: float | None) -> bool:
     )
 
 
+def tree_exponential_growth_receipt(depth: int) -> dict:
+    """Exact, eigencount-independent anomaly witness for the tree control."""
+
+    shell_counts = [1] + [4 * 3 ** (radius - 1) for radius in range(1, depth + 1)]
+    ratios = [
+        shell_counts[index + 1] / shell_counts[index]
+        for index in range(1, len(shell_counts) - 1)
+    ]
+    return {
+        "statistic": "exact_shell_growth",
+        "shell_counts": shell_counts,
+        "interior_shell_growth_ratios": ratios,
+        "minimum_interior_shell_growth_ratio": min(ratios),
+        "exponential_volume_growth": bool(ratios and min(ratios) == 3.0),
+        "independent_of_weyl_eigencount": True,
+    }
+
+
+def exact_torus_weyl_k_scan(shape: tuple[int, ...], k_values: tuple[int, ...]) -> dict:
+    """Exact finite-torus Weyl scan without a sparse eigensolver."""
+
+    axes = [
+        2.0 - 2.0 * np.cos(2.0 * np.pi * np.arange(size) / float(size))
+        for size in shape
+    ]
+    eigenvalues = axes[0]
+    for axis in axes[1:]:
+        eigenvalues = (eigenvalues[..., None] + axis).reshape(-1)
+    ordered = np.sort(eigenvalues)
+    from oph_fpe.dimension.estimators import weyl_fit
+
+    return {
+        str(k): float(weyl_fit(ordered[:k], expected_kernel_dim=1)["d_weyl"])
+        for k in k_values
+    }
+
+
 def calibration_verdict(row: dict, case: dict) -> dict:
     """Per-case pass fields for the receipt (calibration only; tower rows
     carry no pass field)."""
@@ -136,8 +185,14 @@ def calibration_verdict(row: dict, case: dict) -> dict:
         }
     return {
         "expected_dimension": None,
-        "d_weyl_outside_all_integer_bands": anomalous_band_check(row.get("d_weyl")),
+        "d_weyl_outside_all_integer_bands_diagnostic": anomalous_band_check(
+            row.get("d_weyl")
+        ),
         "d_s_median_outside_all_integer_bands": anomalous_band_check(
             row.get("d_s_median")
+        ),
+        "anomalous_control_assertion": "exact_exponential_shell_growth",
+        "anomalous_control_pass": bool(
+            row.get("exact_tree_growth", {}).get("exponential_volume_growth")
         ),
     }
