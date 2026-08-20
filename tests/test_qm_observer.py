@@ -330,7 +330,7 @@ def test_receipt_labels_window_and_boundary() -> None:
     body = receipt.build_receipt()
     assert body["labels"]["exploratory"] is True
     assert body["labels"]["evidential"] is False
-    assert "declared architecture operation" in body["boundary"]
+    assert "declared phase-sensitive effect" in body["boundary"]
     assert "does not derive the Hilbert-space structure" in body["boundary"]
     assert "no probability postulate" in body["semantics"].lower()
     assert body["phase_receipt_window"]["counts"] == [179, 179]

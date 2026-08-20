@@ -49,18 +49,21 @@ LABELS = {
 }
 
 BOUNDARY_STATEMENT = (
-    "The phase operation is a declared architecture operation under the "
+    "The phase effect is a declared phase-sensitive effect under the "
     "PR-04 recorded decision (2026-08-18, disposition axiomatize, lane "
     "issue 730), not derived from source dynamics. This probe establishes "
     "that observer-frame record counting reproduces the exact quantum "
     "weights without a probability postulate, and that conditioning "
     "reproduces projection under the declared record-persistence and "
     "conditioned-class conventions. It does not derive the Hilbert-space "
-    "structure, does not source-produce a phase operation, and does not "
-    "create evidence: no instrument, no freeze, no evidential run. INS-01 "
-    "remains the controlling OL-A1 verdict; OL-C5 status is untouched; "
-    "the PR-52 physical attachments and the source-production obligation "
-    "on register row PR-04 stay open."
+    "structure, does not source-produce a phase-sensitive effect, and does "
+    "not create evidence: no instrument, no freeze, no evidential run. "
+    "INS-01 remains the controlling OL-A1 verdict; OL-C5 status is "
+    "untouched; the PR-52 physical attachments and the source-production "
+    "obligation on register row PR-04 stay open; PR-64 owns "
+    "completely-positive trace-nonincreasing outcome maps and the "
+    "trace-preserving summed channel; PR-65 owns source provenance, common "
+    "preparation, public outcomes, and custody."
 )
 
 SEMANTICS_STATEMENT = (
@@ -376,9 +379,9 @@ def base_context_identity(
 
 
 def collapse_chain(context_name: str) -> dict[str, Any]:
-    """One collapse chain: measure, condition on each realized outcome,
-    receipt record persistence and the projection statistics of every probe
-    context against the Lueders-updated state."""
+    """One collapse chain: apply the declared context effect, condition on
+    each realized outcome, receipt record persistence and the projection
+    statistics of every probe context against the Lueders-updated state."""
 
     applied = ensemble.apply_context(ensemble.base_ensemble(), context_name)
     zero, one = ensemble.outcome_counts(applied)
@@ -461,7 +464,7 @@ def require_interference(gap: Fraction) -> None:
 
 
 def interference_receipt() -> dict[str, Any]:
-    """The exact measurement-disturbance gap of DESIGN.md section 5 between
+    """The exact record-disturbance gap of DESIGN.md section 5 between
     the direct second-context statistics and the statistics mediated by the
     first context."""
 
@@ -524,12 +527,13 @@ def interference_receipt() -> dict[str, Any]:
         "gap": fraction_pair(gap),
         "classical_family": (
             "every model in which each micro-configuration carries "
-            "simultaneous definite outcome values for both contexts and "
-            "measurement reveals the value without rewriting the record "
-            "satisfies direct = mediated; the exact gap excludes every "
-            "member of that family. No Bell-type claim and no locality "
-            "claim is carried: the receipt is a measurement-disturbance "
-            "identity of the committed weights (DESIGN.md section 5)"
+            "simultaneous definite outcome values for both contexts "
+            "and context application reveals the value without "
+            "rewriting the record satisfies direct = mediated; the "
+            "exact gap excludes every member of that family. No "
+            "Bell-type claim and no locality claim is carried: the "
+            "receipt is a record-disturbance identity of the committed "
+            "weights (DESIGN.md section 5)"
         ),
     }
 
@@ -551,7 +555,7 @@ def _root_node(node_id: str, ens: ensemble.Ensemble) -> dict[str, Any]:
     }
 
 
-def _measurement_node(
+def _context_node(
     node_id: str, context_name: str, applied: ensemble.Ensemble
 ) -> dict[str, Any]:
     zero, one = ensemble.outcome_counts(applied)
@@ -575,7 +579,7 @@ def _base_scenario(context_name: str) -> dict[str, Any]:
     zero, one = ensemble.outcome_counts(applied)
     root = _root_node("base", base)
     root["children"].append(
-        _measurement_node(f"base>{context_name}", context_name, applied)
+        _context_node(f"base>{context_name}", context_name, applied)
     )
     return {
         "scenario_id": f"base_context/{context_name}",
@@ -598,10 +602,10 @@ def _collapse_scenario(context_name: str) -> dict[str, Any]:
     applied = ensemble.apply_context(base, context_name)
     zero, one = ensemble.outcome_counts(applied)
     root = _root_node("base", base)
-    measured = _measurement_node(
+    recorded = _context_node(
         f"base>{context_name}", context_name, applied
     )
-    root["children"].append(measured)
+    root["children"].append(recorded)
     collapse_events = []
     float_weights: dict[str, float] = {}
     for outcome in (0, 1):
@@ -620,7 +624,7 @@ def _collapse_scenario(context_name: str) -> dict[str, Any]:
         )
         repeat = ensemble.apply_context(sub, context_name)
         conditioned["children"].append(
-            _measurement_node(
+            _context_node(
                 f"base>{context_name}={outcome}>{context_name}",
                 context_name,
                 repeat,
@@ -630,7 +634,7 @@ def _collapse_scenario(context_name: str) -> dict[str, Any]:
             probed = ensemble.apply_context(sub, probe_name)
             probe_zero, _ = ensemble.outcome_counts(probed)
             conditioned["children"].append(
-                _measurement_node(
+                _context_node(
                     f"base>{context_name}={outcome}>{probe_name}",
                     probe_name,
                     probed,
@@ -639,7 +643,7 @@ def _collapse_scenario(context_name: str) -> dict[str, Any]:
             float_weights[f"outcome_{outcome}/{probe_name}"] = (
                 probe_zero / probed.mass
             )
-        measured["children"].append(conditioned)
+        recorded["children"].append(conditioned)
     return {
         "scenario_id": f"collapse_chain/{context_name}",
         "kind": "collapse_chain",
@@ -660,17 +664,17 @@ def _interference_scenario() -> dict[str, Any]:
     first = ensemble.apply_context(base, INTERFERENCE_FIRST)
     root = _root_node("base", base)
     root["children"].append(
-        _measurement_node(
+        _context_node(
             f"base>{INTERFERENCE_SECOND}", INTERFERENCE_SECOND, direct
         )
     )
-    first_node = _measurement_node(
+    first_node = _context_node(
         f"base>{INTERFERENCE_FIRST}", INTERFERENCE_FIRST, first
     )
     root["children"].append(first_node)
     mediated = ensemble.apply_context(first, INTERFERENCE_SECOND)
     first_node["children"].append(
-        _measurement_node(
+        _context_node(
             f"base>{INTERFERENCE_FIRST}>{INTERFERENCE_SECOND}",
             INTERFERENCE_SECOND,
             mediated,
@@ -685,7 +689,7 @@ def _interference_scenario() -> dict[str, Any]:
         )
         probed = ensemble.apply_context(sub, INTERFERENCE_SECOND)
         conditioned["children"].append(
-            _measurement_node(
+            _context_node(
                 f"base>{INTERFERENCE_FIRST}={outcome}>"
                 f"{INTERFERENCE_SECOND}",
                 INTERFERENCE_SECOND,

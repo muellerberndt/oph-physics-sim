@@ -158,7 +158,9 @@ def outcome_counts(ens: Ensemble) -> tuple[int, int]:
     require(ens.mass > 0, "EMPTY_ENSEMBLE", "tally over an empty ensemble")
     context = ens.last_context
     require(
-        context is not None, "NO_RECORD", "tally over an unmeasured ensemble"
+        context is not None,
+        "NO_RECORD",
+        "tally over an ensemble with no recorded context",
     )
     zero = 0
     one = 0
@@ -176,7 +178,7 @@ def outcome_counts(ens: Ensemble) -> tuple[int, int]:
 
 
 def outcome_ratio(ens: Ensemble) -> Fraction:
-    """The exact outcome-0 count ratio of the most recent measurement."""
+    """The exact outcome-0 count ratio of the most recent recorded context."""
 
     zero, _ = outcome_counts(ens)
     return Fraction(zero, ens.mass)

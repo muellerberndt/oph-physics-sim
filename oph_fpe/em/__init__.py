@@ -3,10 +3,12 @@
 Design-only, non-evidential.  Exact rational base-carrier incidence
 (``base_carrier``), the exact Green solve with the three handoff
 observables (``green``), the replay harness against the committed RER
-receipt (``replay``), and the exact leapfrog temporal lane with fail-closed
-receipts (``temporal``).  Nothing in this package arms an instrument,
-freezes a decision rule, or states a physical claim; the step index of the
-temporal lane is a declared evolution parameter, not physical time.
+receipt (``replay``), and the exact leapfrog lane for the declared PR-66
+temporal update with fail-closed receipts (``temporal``).  Nothing in this
+package arms an instrument, freezes a decision rule, or states a physical
+claim; the step index of the temporal lane is a declared evolution
+parameter, not physical time; the conserved staggered form of the temporal
+lane is indefinite and is not an energy.
 """
 
 from oph_fpe.em.base_carrier import (

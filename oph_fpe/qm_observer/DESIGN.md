@@ -1,20 +1,22 @@
 # Observer-frame quantum statistics probe (lane D3)
 
-Status: exploratory, non-evidential. No instrument is frozen, no run is
-evidential, INS-01 remains the controlling OL-A1 verdict, and OL-C5 status is
-untouched by this lane. This document precedes and pins the code in
-`oph_fpe/qm_observer/`.
+Status: exploratory, non-evidential. The PR-04 object is a declared Pauli
+(+Y) phase-sensitive effect and its deterministic count package is a static
+semantic-conformance fixture, not an operation, instrument, measurement, or
+validation. No instrument is frozen, no run is evidential, INS-01 remains the
+controlling OL-A1 verdict, and OL-C5 status is untouched by this lane. This
+document precedes and pins the code in `oph_fpe/qm_observer/`.
 
 ## 1. Purpose
 
 The probe demonstrates quantum statistics in the observer frame: the exact
-committed Born weights of the eight PR-04 measurement contexts are reproduced
+committed Born weights of the eight PR-04 context effects are reproduced
 as integer count ratios over a finite deterministic record ensemble driven by
 the declared branch tables, which are transcriptions of the committed
 conditional weights Tr(p F) (section 3.3), with no probability postulate
-anywhere in the code path, and measurement collapse is realized as
-conditioning on the observer's record. The probe feeds a visualizer through
-a documented JSON export.
+anywhere in the code path, and collapse is modeled as conditioning on the
+observer's record. The probe feeds a visualizer through a documented JSON
+export.
 
 ## 2. Committed sources, per modeling choice
 
@@ -28,18 +30,19 @@ imported read-only; nothing outside `oph_fpe/qm_observer/` and
 | The committed outcome weights: 111/179 on the three diagonal contexts, 315/716 on the four rotated contexts, 1/2 on the phase context, with counts (111, 68), (315, 401), (179, 179) at masses 179, 716, 358 | `reverse-engineering-reality/code/phase_operation_producer/PHASE_OPERATION_RECEIPT.v1.json`, payload sha256 `71a06f1c15192123cd09feb2386da702b572c8ac57c9b7633f5aa60c5d404e22` |
 | Conditioning rule: Lueders update `rho -> P rho P / Tr(rho P)`, repeatability, idempotence | `reverse-engineering-reality/Lean/EventAlgebra/Lueders.lean` |
 | Every count frequency of a committed-core inhabitant is an exact affine function of one free coordinate; the integer receipt window `32041*(a-b)^2 <= 30192*(a+b)^2` is scoped to committed-core phase count pairs | `reverse-engineering-reality/Lean/EventAlgebra/PhaseInstrumentDetermination.lean` |
-| The phase lift is a declared architecture operation (register row PR-04, disposition axiomatize, decision date 2026-08-18, lane issue 730), never derived from source dynamics; the completion ambiguity is one conjugation orbit | `oph_fpe/quantum/phase_operation.py` docstring, `Lean/QFT/ConjugationGauge.lean`, `Lean/QFT/SourceOrientedCompletion.lean` |
-| Claim boundary language: projector webs alone underdetermine the weight; frequencies alone do not prove the universal valuation law; the current source supplies no phase operation, rotated/phase outcome receipts, or common-preparation instrument validation | `reverse-engineering-reality/paper/observers_are_all_you_need.tex`, Born passages, and `Lean/EventAlgebra/FiniteBornFrame.lean` |
+| The phase lift is a declared phase-sensitive effect (register row PR-04, disposition axiomatize, decision date 2026-08-18, lane issue 730), never derived from source dynamics; the completion ambiguity is one conjugation orbit | `oph_fpe/quantum/phase_operation.py` docstring, `Lean/QFT/ConjugationGauge.lean`, `Lean/QFT/SourceOrientedCompletion.lean` |
+| Claim boundary language: projector webs alone underdetermine the weight; frequencies alone do not prove the universal valuation law; the current source supplies no phase-sensitive effect, rotated/phase outcome receipts, or common-preparation provenance; PR-64 owns completely-positive outcome maps and the summed channel, PR-65 owns source provenance | `reverse-engineering-reality/paper/observers_are_all_you_need.tex`, Born passages, and `Lean/EventAlgebra/FiniteBornFrame.lean` |
 
 The exhaustive-deterministic semantics of the committed corpus reads: every
-count pair is the exact Born weight of the context effect under the committed
-record-diagonal run state diag(111/179, 68/179), computed in exact arithmetic
-over Q(sqrt(3), i) and scaled to the least positive integer multiple of the
-committed run mass 179 that makes both counts integers. Probabilities are
-count ratios over a finite deterministic ensemble. The committed corpus does
-not claim a Born-rule derivation: the operation is declared, the counts are
-produced by the declared semantics, and the physical-attachment premises of
-the register stay open.
+integer pair is a generated expected-frequency numerator for the exact Born
+weight of the context effect under the declared diagonal matrix
+diag(111/179, 68/179), computed in exact arithmetic over Q(sqrt(3), i) and
+scaled to the least positive integer multiple of the committed run mass 179
+that makes both counts integers. Probabilities are count ratios over a
+finite deterministic ensemble. The committed corpus does not claim a
+Born-rule derivation: the effect is declared, the integer pairs are
+generated expected-frequency numerators of the declared semantics, and the
+physical-attachment premises of the register stay open.
 
 ## 3. Record-ensemble construction
 
@@ -58,7 +61,7 @@ section 8.1. No amplitude enters this construction.
 
 ### 3.2 Context application by integer branch rules
 
-Applying a measurement context to an ensemble proceeds by uniform
+Applying a declared context effect to an ensemble proceeds by uniform
 refinement and deterministic outcome assignment:
 
 1. For every class present, the declared branch table supplies an exact
@@ -166,7 +169,7 @@ Receipted properties, each an exact integer identity:
    constructed.
 
 The collapse chains of the standard run: for each of the eight contexts c
-and each outcome k realized on the base measurement, condition, repeat c,
+and each outcome k realized on the base context effect, condition, repeat c,
 then apply each probe context d in the fixed probe set {web_diagonal,
 web_conjugated_3, phase}.
 
@@ -191,8 +194,8 @@ second = web_diagonal (its base context).
 - Exact gap: 1776 - 1518 = 258 at mass 2864, the Fraction 129/1432.
 
 Classical mixture family: every model in which each micro-configuration
-carries simultaneous definite outcome values for both contexts and
-measurement reveals the value without rewriting the record satisfies the
+carries simultaneous definite outcome values for both contexts and context
+application reveals the value without rewriting the record satisfies the
 counting identity direct = mediated (a sub-population tally sews back to the
 whole-population tally). The recorded gap 129/1432 differs from 0, so the
 recorded statistics differ from every member of the family. The receipt
@@ -200,11 +203,11 @@ carries the exact integers and the exact rational gap. The tests carry a
 reveal-only classical mock whose mediated counts equal its direct counts and
 which the interference check therefore rejects.
 
-The gap has a companion reading on the amplitude path: measurement rewrites
-the record because the conditioned classes A0, A1 are non-diagonal
+The gap has a companion reading on the amplitude path: context application
+rewrites the record because the conditioned classes A0, A1 are non-diagonal
 projectors, and Tr(P_rec E_A-conditioned mixture) differs from
 Tr(rho_base P_rec) by the exact off-diagonal transfer. No Bell-type or
-locality claim is made; the receipt is a measurement-disturbance identity.
+locality claim is made; the receipt is a record-disturbance identity.
 
 ## 6. Module layout and independence receipt
 
@@ -283,9 +286,9 @@ Node object (the branch tree; exact integers and [num, den] rationals):
 ```
 
 The root node carries `context: null`, `counts: null`, and `weights: null`:
-an unmeasured population has no recorded outcome to tally. Its `class_counts`
-and `mass` fields are populated. A child node describes one context
-application to its parent's (possibly conditioned) population.
+a population with no recorded context has no outcome to tally. Its
+`class_counts` and `mass` fields are populated. A child node describes one
+context application to its parent's (possibly conditioned) population.
 
 Interference scenarios carry one additional `comparison` object with
 the common mass, both count vectors at the common mass, the exact gap
@@ -337,14 +340,17 @@ timestamps, and environment data.
 
 ## 9. Boundaries
 
-The phase operation is a declared architecture operation under the PR-04
+The phase effect is a declared phase-sensitive effect under the PR-04
 recorded decision (2026-08-18, disposition axiomatize, lane issue 730), not
 derived from source dynamics. This probe establishes that observer-frame
 record counting reproduces the exact quantum weights without a probability
 postulate, and that conditioning reproduces projection under the declared
 record-persistence and conditioned-class conventions. It does not derive
-the Hilbert-space structure, does not source-produce a phase operation, and
-does not create evidence: no instrument, no freeze, no evidential run.
+the Hilbert-space structure, does not source-produce a phase-sensitive
+effect, and does not create evidence: no instrument, no freeze, no
+evidential run. PR-64 owns completely-positive trace-nonincreasing outcome
+maps and the trace-preserving summed channel; PR-65 owns source provenance,
+common preparation, public outcomes, and custody.
 Projector webs alone underdetermine the weight and frequencies alone do not
 prove the universal valuation law; the flagship boundary stands unchanged.
 INS-01 remains the controlling OL-A1 verdict; OL-C5 status is untouched;

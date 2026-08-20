@@ -22,13 +22,13 @@ _CACHE: dict[str, object] = {}
 def _built() -> dict[str, object]:
     if not _CACHE:
         projectors = po.context_projectors()
-        operation = po.declared_phase_operation()
+        effect = po.declared_phase_operation()
         effects = dict(po.named_effects())
         effect_by_key = {
             "P_rec": po.RECORD_PROJECTOR,
             "E_A": projectors[3],
             "E_B": projectors[4],
-            "Y_plus": operation,
+            "Y_plus": effect,
         }
         class_projectors = {
             "rec0": po.RECORD_PROJECTOR,
@@ -37,8 +37,8 @@ def _built() -> dict[str, object]:
             "A1": po.msub(po.IDENTITY, projectors[3]),
             "B0": projectors[4],
             "B1": po.msub(po.IDENTITY, projectors[4]),
-            "Y0": operation,
-            "Y1": po.msub(po.IDENTITY, operation),
+            "Y0": effect,
+            "Y1": po.msub(po.IDENTITY, effect),
         }
         _CACHE["effects"] = effects
         _CACHE["effect_by_key"] = effect_by_key

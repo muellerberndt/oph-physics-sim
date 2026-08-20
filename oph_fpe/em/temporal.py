@@ -1,4 +1,5 @@
-"""Exact leapfrog temporal Maxwell lane on the committed base carrier.
+"""Exact leapfrog lane for the declared PR-66 temporal update on the
+committed base carrier.
 
 Design-only, non-evidential module.  The arithmetic mirrors the theorem
 statements of ``Lean/Screen/TemporalMaxwellEvolution.lean`` over exact
@@ -9,28 +10,41 @@ committed module:
 * electric seam field on the half step:
   ``E(n) = -(A(n+1) - A(n)) - d(phi(n))``;
 * magnetic face field at integer steps: ``B(n) = C A(n)``;
-* the declared leapfrog Ampere update:
+* the declared PR-66 leapfrog Ampere update:
   ``E(n+1) - E(n) = C^T B(n+1) - J(n)``;
 * Faraday as an identity of the definitions:
   ``B(n+1) - B(n) = -C E(n)``;
 * Gauss propagation ``boundary(E(n)) = rho(n)`` exactly when the
   continuity equation ``rho(n+1) - rho(n) + boundary(J(n)) = 0`` holds
   (both directions);
-* the exact staggered energy
+* the exact staggered quadratic form
   ``(1/2)|E(n)|^2 + (1/2)<B(n), B(n+1)>`` with per-step balance
-  ``energy(n+1) = energy(n) - (1/2)<E(n) + E(n+1), J(n)>``;
+  ``form(n+1) = form(n) - (1/2)<E(n) + E(n+1), J(n)>``; the form is
+  indefinite on the committed spectrum and is not an energy;
 * time-dependent gauge invariance
   ``A -> A + d(chi(n))``, ``phi -> phi - (chi(n+1) - chi(n))``;
-* the static Coulomb join and the source-free wave recursion
+* the static Coulomb join and the zero-current wave recursion with neutral
+  port load
   ``A(n+2) - 2 A(n+1) + A(n) + C^T C A(n+1) + d(phi(n+1) - phi(n)) = 0``.
 
 Every identity is checked per step and fails closed
 (``TemporalReceiptError``).
 
-Boundaries.  The step index ``n`` is a declared evolution parameter, not
-physical time (PR-15 open).  The sources ``rho`` and ``J`` are declared
+Boundaries.  The update is declared under PR-66, not derived from a repair
+or variational law.  The step index ``n`` is a declared evolution parameter,
+not physical time (PR-15 open).  The sources ``rho`` and ``J`` are declared
 inputs, not source-produced currents (PR-54 open).  No photon, propagation
-speed, continuum limit, or laboratory readout is claimed (PR-53 open).
+speed, physical time, continuum limit, or laboratory readout is claimed
+(PR-53 open).  The staggered quadratic form is not proved positive here.
+This module computes no spectrum and certifies no stability property.
+Finding F3 of ``plan/audits/RER_POST_R2020_DEEP_AUDIT_2026-08-20.md`` and
+the boundary section of ``Lean/Screen/TemporalMaxwellEvolution.lean`` record
+eigenvalues of the committed ``C^T C`` above the unit-step leapfrog
+stability threshold 4, reported there as 5 and 3 + sqrt(5), so growing
+modes exist on the committed carrier and no stable propagation follows from
+this lane.  That audit records the scaled continuation condition
+``h^2 lambda_max <= 4``, hence ``h <= 2/sqrt(3 + sqrt(5))`` on the committed
+carrier, as required work rather than as a result of this module.
 Everything is finite exact mathematics on the committed carrier; nothing
 here is a frozen instrument or a physical claim.
 """
@@ -83,7 +97,7 @@ class LeapfrogLane:
 
     ``face_matrix`` defaults to the committed oriented face incidence; a
     mutated matrix exists for mutation-guard tests and is caught by the
-    Faraday, energy, and codifferential-boundary receipts.
+    Faraday, quadratic-form, and codifferential-boundary receipts.
     """
 
     def __init__(self, face_matrix: Matrix | None = None) -> None:
@@ -106,7 +120,9 @@ class LeapfrogLane:
         return base_carrier.face_curvature(a[n], self.face_matrix)
 
     def field_energy(self, a: History, phi: History, n: int) -> Fraction:
-        """Staggered energy ``(1/2)|E(n)|^2 + (1/2)<B(n), B(n+1)>``."""
+        """Staggered quadratic form
+        ``(1/2)|E(n)|^2 + (1/2)<B(n), B(n+1)>``.  The form is indefinite
+        on the committed spectrum and is not an energy."""
         electric = self.electric_field(a, phi, n)
         return HALF * base_carrier.seam_energy(electric) + HALF * (
             base_carrier.face_inner(
@@ -180,8 +196,9 @@ class LeapfrogLane:
 
         Receipts: the Ampere residual, the Faraday identity, the vanishing
         boundary of the codifferential, Gauss propagation with the two-way
-        continuity equivalence, the exact energy balance with source work
-        term, and zero energy drift for source-free histories.  With
+        continuity equivalence, the exact staggered quadratic-form balance
+        with source work term, and zero form drift for zero-current
+        histories with neutral port load.  With
         ``fail_closed`` the first collection of failures raises
         ``TemporalReceiptError``.
         """
@@ -285,8 +302,8 @@ class LeapfrogLane:
                     f"gauss breaks at step {first_gauss_failure}"
                 )
 
-        # Exact staggered energy balance with source work term.
-        energies = [
+        # Exact staggered quadratic-form balance with source work term.
+        forms = [
             HALF * base_carrier.seam_energy(electric[n])
             + HALF * base_carrier.face_inner(magnetic[n], magnetic[n + 1])
             for n in range(last)
@@ -300,18 +317,20 @@ class LeapfrogLane:
                 ],
                 current[n],
             )
-            if energies[n + 1] != energies[n] - work:
+            if forms[n + 1] != forms[n] - work:
                 balance_ok = False
-                failures.append(f"energy balance fails at step {n}")
+                failures.append(f"quadratic-form balance fails at step {n}")
                 break
-        source_free = all(
+        zero_current = all(
             all(x == 0 for x in current[n]) for n in range(last - 1)
         )
         drift_zero: bool | None = None
-        if source_free:
-            drift_zero = all(value == energies[0] for value in energies)
+        if zero_current:
+            drift_zero = all(value == forms[0] for value in forms)
             if not drift_zero:
-                failures.append("energy drift under source-free evolution")
+                failures.append(
+                    "quadratic-form drift under zero-current evolution"
+                )
 
         receipts = {
             "schema": "oph.sim.em_temporal_receipts.v1",
@@ -323,15 +342,27 @@ class LeapfrogLane:
             "gauss": gauss_report,
             "energy": {
                 "balance_exact": balance_ok,
-                "source_free": source_free,
+                "source_free": zero_current,
                 "drift_zero": drift_zero,
-                "initial": str(energies[0]),
-                "final": str(energies[-1]),
+                "initial": str(forms[0]),
+                "final": str(forms[-1]),
             },
             "failures": failures,
             "statement": (
-                "step index is a declared evolution parameter, not physical "
-                "time; sources are declared inputs; PR-15, PR-53, PR-54 open"
+                "the unit-step Ampere update is declared under PR-66; the "
+                "conserved staggered form is an indefinite quadratic form, "
+                "not an energy; this module computes no spectrum; RER "
+                "audit finding F3 and the boundary section of "
+                "Lean/Screen/TemporalMaxwellEvolution.lean record "
+                "eigenvalues 5 and 3 + sqrt(5) of the committed C^T C, "
+                "above the unit-step leapfrog stability threshold 4, so "
+                "growing modes exist on the committed carrier and no "
+                "stable propagation follows from this lane; that audit "
+                "records the scaled continuation condition "
+                "h^2 lambda_max <= 4, hence h <= 2/sqrt(3 + sqrt(5)), as "
+                "required work; step index is a declared evolution "
+                "parameter, not physical time; sources are declared "
+                "inputs; PR-15, PR-53, PR-54 open"
             ),
         }
         if fail_closed and failures:
@@ -369,7 +400,8 @@ class LeapfrogLane:
         self, a: History, phi: History, current: History, chi: History
     ) -> dict:
         """Exact invariance of ``E``, ``B``, the Ampere residual, and the
-        energy under the time-dependent gauge transformation."""
+        staggered quadratic form under the time-dependent gauge
+        transformation."""
         a_new, phi_new = self.gauge_transform(a, phi, chi)
         last = len(a) - 1
         failures: list[str] = []
@@ -385,7 +417,7 @@ class LeapfrogLane:
             if self.field_energy(a_new, phi_new, n) != self.field_energy(
                 a, phi, n
             ):
-                failures.append(f"energy moves under gauge at {n}")
+                failures.append(f"quadratic form moves under gauge at {n}")
         original = self.verify_history(
             a, phi, current, fail_closed=False
         )
@@ -411,8 +443,8 @@ class LeapfrogLane:
         self, a: History, phi: History, current: History
     ) -> dict:
         """Uniqueness direction of the committed static join: a constant
-        source-free solution has a forced-neutral load, zero magnetic field,
-        and electric field exactly the committed Coulomb field."""
+        zero-current solution has a forced-neutral port load, zero magnetic
+        field, and electric field exactly the committed Coulomb field."""
         last = len(a) - 1
         if any(a[n] != a[0] for n in range(last + 1)):
             raise TemporalReceiptError("history is not constant in A")
@@ -475,7 +507,7 @@ class LeapfrogLane:
     # -- wave recursion -----------------------------------------------------
 
     def wave_recursion_receipt(self, a: History, phi: History) -> dict:
-        """Source-free second-order recursion:
+        """Zero-current second-order recursion with neutral port load:
         ``A(n+2) - 2 A(n+1) + A(n) + C^T C A(n+1)
         + d(phi(n+1) - phi(n)) = 0`` at every interior step."""
         last = len(a) - 1
@@ -503,9 +535,11 @@ class LeapfrogLane:
 
 def demo_bundle(steps: int = 64) -> dict:
     """The committed nonstatic inhabitant: zero initial data kicked by the
-    face-zero boundary cycle, evolved source-free.  Mirrors the committed
-    anchors ``A(1)(0) = 1``, ``B(0) = 0``, ``B(1)(0) = 3`` and the exact
-    energy conservation."""
+    face-zero boundary cycle, evolved at zero current with neutral port
+    load.  Mirrors the committed anchors ``A(1)(0) = 1``, ``B(0) = 0``,
+    ``B(1)(0) = 3`` and the exact conservation of the staggered quadratic
+    form.  Conservation of an indefinite form is not a stability
+    statement."""
     lane = LeapfrogLane()
     kick = base_carrier.face_codifferential(
         [ONE if f == 0 else ZERO for f in range(FACES)]

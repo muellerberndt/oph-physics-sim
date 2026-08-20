@@ -1,9 +1,9 @@
-"""Declared PR-04 phase operation as a simulator architecture operation.
+"""Declared PR-04 phase-sensitive effect on the simulator side.
 
 Register row PR-04 of the research repository carries a recorded decision
 (dated 2026-08-18, lane issue 730, disposition axiomatize): the exact phase
-lift ``I/2 - (2*sqrt(3)/3)*i*(Q*P - P*Q)`` is a declared architecture
-operation with exact matrix ``[[1/2, -i/2], [i/2, 1/2]]``, the Pauli +Y
+lift ``I/2 - (2*sqrt(3)/3)*i*(Q*P - P*Q)`` is a declared phase-sensitive
+effect with exact matrix ``[[1/2, -i/2], [i/2, 1/2]]``, the Pauli +Y
 projector.  This module carries that declaration on the simulator side:
 
 * the committed standard two-dimensional S3 representation, rebuilt from the
@@ -12,11 +12,13 @@ projector.  This module carries that declaration on the simulator side:
 * the committed context web (the record projector and its six gauge
   conjugates) and the declared lift, demanded equal to the Pauli +Y
   projector, Hermitian, and idempotent;
-* an explicitly exhaustive deterministic outcome semantics on record-diagonal
-  and committed-core states: every count pair is the exact Born weight of the
-  context effect, scaled to the least positive integer multiple of the run
-  mass that clears the denominator.  No sampling, no randomness, and no
-  floating-point arithmetic occurs anywhere in this module;
+* an explicitly exhaustive deterministic count semantics for a static
+  semantic-conformance fixture on record-diagonal and committed-core
+  matrices: every integer pair is a generated expected-frequency numerator
+  for the exact Born weight of the context effect, scaled to the least
+  positive integer multiple of the run mass that clears the denominator.
+  No sampling, no randomness, and no floating-point arithmetic occurs
+  anywhere in this module;
 * the committed integer phase receipt window
   ``32041*(a - b)^2 <= 30192*(a + b)^2`` with both outcomes positive, applied
   fail-closed to every emitted phase count pair.  The committed coefficients
@@ -30,11 +32,15 @@ All arithmetic is exact over ``Q(sqrt(3), i)``, represented as pairs of
 ``Q3 = a + b*sqrt(3)`` elements with ``Fraction`` coefficients, following the
 ``Q5``/``C5`` pattern of ``icosahedral_chsh_candidate``.
 
-Boundaries: the operation is a declared architecture decision, never derived
-from source dynamics; the counts are produced by the declared semantics,
-never measured.  The operation is available to simulator instruments; no
-instrument is frozen by this module, no run is evidential, INS-01 remains the
-controlling OL-A1 verdict, and OL-C5 status is untouched by this lane.
+Boundaries: the effect is a declared architecture decision, never derived
+from source dynamics; the integer pairs are generated expected-frequency
+numerators, never measured.  This fixture is not an operation, instrument,
+measurement, or validation.  No instrument is frozen by this module, no run
+is evidential, INS-01 remains the controlling OL-A1 verdict, and OL-C5
+status is untouched by this lane.  PR-64 owns completely-positive
+trace-nonincreasing outcome maps, a trace-preserving summed channel, and
+effect/readback compatibility; PR-65 owns common preparation, public
+outcomes, provenance, and custody; PR-03 owns cross-context additivity.
 """
 
 from __future__ import annotations
@@ -82,15 +88,16 @@ DEFAULT_REFERENCE_RECEIPT = (
 DECISION_STATEMENT = (
     "Recorded decision on register row PR-04 (disposition axiomatize): the "
     "committed exact lift I/2 - (2*sqrt(3)/3)*i*(Q*P - P*Q) of "
-    "code/born_context_phase_lift is a declared architecture operation. The "
-    "information cost is one declared non-diagonal operation with the exact "
+    "code/born_context_phase_lift is a declared phase-sensitive effect. The "
+    "information cost is one declared non-real effect with the exact "
     "matrix [[1/2, -i/2], [i/2, 1/2]], equal to the Pauli +Y projector."
 )
 
 SEMANTICS_DECLARATION = (
-    "Explicitly exhaustive deterministic semantics: every count pair is the "
-    "exact Born weight of the context effect under the committed "
-    "record-diagonal run state diag(111/179, 68/179), computed in exact "
+    "Explicitly exhaustive deterministic semantics for a static conformance "
+    "fixture: every integer pair is a generated expected-frequency numerator "
+    "for the exact Born weight of the context effect under the declared "
+    "diagonal matrix diag(111/179, 68/179), computed in exact "
     "arithmetic over Q(sqrt(3), i) and scaled to the least positive integer "
     "multiple of the committed run mass 179 that makes both counts integers. "
     "No sampling, no randomness, no statistical estimate, and no "
@@ -98,15 +105,16 @@ SEMANTICS_DECLARATION = (
 )
 
 PROVENANCE_STATEMENT = (
-    "The phase operation is a declared architecture decision recorded on "
+    "The phase effect is a declared architecture decision recorded on "
     "register row PR-04; it is never derived from source dynamics, repair "
-    "records, or run data. The outcome counts are produced by the declared "
-    "exhaustive deterministic semantics, never measured and never sampled."
+    "records, or run data. The integer pairs are generated "
+    "expected-frequency numerators of the declared exhaustive "
+    "deterministic semantics, never measured and never sampled."
 )
 
 
 class PhaseOperationError(ValueError):
-    """Typed fail-closed phase-operation error."""
+    """Typed fail-closed phase-effect fixture error."""
 
     def __init__(self, code: str, message: str) -> None:
         super().__init__(f"{code}: {message}")
@@ -376,27 +384,27 @@ def phase_lift(commutator: Mat, coefficient: Q3 | None = None) -> Mat:
 
 
 def declared_phase_operation(coefficient: Q3 | None = None) -> Mat:
-    """The declared architecture operation, demanded equal to the committed
+    """The declared phase-sensitive effect, demanded equal to the committed
     Pauli +Y projector, Hermitian, and idempotent; a wrong coefficient
     fails closed."""
 
-    operation = phase_lift(record_commutator(), coefficient)
+    effect = phase_lift(record_commutator(), coefficient)
     require(
-        operation == PAULI_Y_PLUS_PROJECTOR,
+        effect == PAULI_Y_PLUS_PROJECTOR,
         "PHASE_PROJECTOR",
         "lift is not the committed Pauli +Y projector",
     )
     require(
-        mdagger(operation) == operation,
+        mdagger(effect) == effect,
         "PHASE_HERMITIAN",
-        "declared operation is not Hermitian",
+        "declared effect is not Hermitian",
     )
     require(
-        mmul(operation, operation) == operation,
+        mmul(effect, effect) == effect,
         "PHASE_IDEMPOTENT",
-        "declared operation is not idempotent",
+        "declared effect is not idempotent",
     )
-    return operation
+    return effect
 
 
 def record_diagonal_state(first: int, second: int) -> Mat:
@@ -503,12 +511,12 @@ def named_effects() -> tuple[tuple[str, Mat], ...]:
     conjugated web contexts, and the declared phase context."""
 
     projectors = context_projectors()
-    operation = declared_phase_operation()
+    phase_effect = declared_phase_operation()
     effects: list[tuple[str, Mat]] = [("web_diagonal", RECORD_PROJECTOR)]
     effects += [
         (f"web_conjugated_{g}", projectors[g]) for g in range(len(projectors))
     ]
-    effects.append(("phase", operation))
+    effects.append(("phase", phase_effect))
     return tuple(effects)
 
 
@@ -543,12 +551,12 @@ def outcome_table(state: Mat, run_mass: int = RUN_MASS) -> list[dict[str, Any]]:
 
 
 def build_receipt() -> dict[str, Any]:
-    """The committed-run export: the declared operation, the committed
-    record-diagonal state, the complete deterministic outcome table, and the
-    fail-closed phase window clause, stamped with the recorded-decision
-    provenance."""
+    """The committed-run export: the declared effect under its legacy field
+    name, the declared diagonal matrix, the complete deterministic count
+    table, and the fail-closed phase window clause, stamped with the
+    recorded-decision provenance."""
 
-    operation = declared_phase_operation()
+    effect = declared_phase_operation()
     state = record_diagonal_state(*RUN_COUNTS)
     rows = outcome_table(state, RUN_MASS)
     require(
@@ -567,7 +575,7 @@ def build_receipt() -> dict[str, Any]:
             "statement": DECISION_STATEMENT,
         },
         "provenance": {
-            "operation_origin": "declared_architecture_operation",
+            "operation_origin": "declared_phase_sensitive_effect",
             "derived_from_source_dynamics": False,
             "statement": PROVENANCE_STATEMENT,
             "register_path": "tracking/premise_register.json",
@@ -582,7 +590,7 @@ def build_receipt() -> dict[str, Any]:
         },
         "declared_operation": {
             "formula": "I/2 - (2*sqrt(3)/3)*i*(Q*P - P*Q)",
-            "matrix": encode_matrix(operation),
+            "matrix": encode_matrix(effect),
             "equals_pauli_y_plus_projector": True,
             "scalar_encoding": (
                 "each scalar is [re_rational, re_sqrt3, im_rational, im_sqrt3] over Q"
@@ -591,8 +599,9 @@ def build_receipt() -> dict[str, Any]:
         "committed_state": {
             "matrix": encode_matrix(state),
             "reading": (
-                "record-diagonal state of the committed run literals "
-                "(111, 68) at mass 179"
+                "declared record-diagonal matrix built from literals "
+                "(111, 68) at reference mass 179; no Fin-2 "
+                "source-reachability witness"
             ),
         },
         "semantics": SEMANTICS_DECLARATION,
@@ -605,15 +614,18 @@ def build_receipt() -> dict[str, Any]:
         },
         "boundaries": {
             "operation_scope": (
-                "declared architecture operation available to simulator "
-                "instruments; never derived from source dynamics"
+                "declared phase-sensitive effect carried under a legacy "
+                "field name; never derived from source dynamics; not an "
+                "operation, instrument, measurement, or validation"
             ),
             "count_scope": (
-                "counts produced by the declared exhaustive deterministic "
-                "semantics; never measured, never sampled"
+                "integer pairs are generated expected-frequency numerators "
+                "of the declared exhaustive deterministic semantics; never "
+                "measured, never sampled"
             ),
             "instrument_scope": (
-                "no instrument is frozen by this receipt; no run is "
+                "this package is a static semantic-conformance fixture; no "
+                "instrument is frozen by this receipt; no run is "
                 "evidential; INS-01 remains the controlling OL-A1 verdict"
             ),
             "ol_c5_scope": (
@@ -622,8 +634,13 @@ def build_receipt() -> dict[str, Any]:
             ),
             "register_scope": (
                 "PR-52 physical attachments stay open; source production of "
-                "a phase operation remains the open obligation recorded on "
-                "register row PR-04"
+                "a phase-sensitive effect remains the open obligation "
+                "recorded on register row PR-04; PR-64 owns "
+                "completely-positive trace-nonincreasing outcome maps, a "
+                "trace-preserving summed channel, and effect/readback "
+                "compatibility; PR-65 owns common preparation, public "
+                "outcomes, provenance, and custody; PR-03 owns "
+                "cross-context additivity"
             ),
             "window_reading": (
                 "32041 = 179^2 and 30192 = 4*111*68: the committed integer "
@@ -642,8 +659,8 @@ def replay_against_reference(
     """Fail-closed cross-repository replay: every context row of the
     simulator receipt (name, effect, Born weight, run-mass multiple, mass,
     counts) is demanded equal to the committed reference receipt row, along
-    with the declared operation matrix, the committed state matrix, the
-    input pins, and the phase window integers."""
+    with the legacy-named declared effect matrix, the declared diagonal
+    matrix, the input pins, and the phase window integers."""
 
     require(
         receipt.get("schema") == SCHEMA,
@@ -688,7 +705,7 @@ def replay_against_reference(
         reference.get("declared_operation", {}).get("matrix")
         == receipt.get("declared_operation", {}).get("matrix"),
         "REPLAY_OPERATION",
-        "declared operation matrix differs from the reference",
+        "legacy operation-field matrix differs from the reference",
     )
     require(
         reference.get("committed_state", {}).get("matrix")
@@ -741,9 +758,11 @@ def replay_against_reference(
         "phase_window_lhs": ours_window.get("lhs"),
         "phase_window_rhs": ours_window.get("rhs"),
         "verdict": (
-            "Cross-repository replay verifies: the simulator's deterministic "
-            "outcome table of the declared PR-04 operation on the committed "
-            "run state equals the committed reference receipt exactly."
+            "Cross-repository replay verifies static semantic conformance: "
+            "the generated Born table of the declared PR-04 effect on the "
+            "declared diagonal matrix equals the committed reference "
+            "receipt exactly; no instrument, measurement, or validation is "
+            "certified."
         ),
     }
 

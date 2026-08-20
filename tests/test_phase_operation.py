@@ -1,5 +1,5 @@
-"""Exact positive and mutation controls for the declared PR-04 phase
-operation architecture module.
+"""Exact positive and mutation controls for the declared PR-04
+phase-effect architecture module.
 
 Guarded fail-closed mutation families: a wrong lift coefficient fails the
 projector identity, a tampered outcome entry fails the cross-repository
@@ -38,12 +38,12 @@ def reference() -> dict:
     return json.loads(po.DEFAULT_REFERENCE_RECEIPT.read_text(encoding="utf-8"))
 
 
-def test_declared_operation_is_pauli_y_projector() -> None:
-    operation = po.declared_phase_operation()
-    assert operation == po.PAULI_Y_PLUS_PROJECTOR
-    assert po.mdagger(operation) == operation
-    assert po.mmul(operation, operation) == operation
-    assert po.encode_matrix(operation) == [
+def test_declared_effect_is_pauli_y_projector() -> None:
+    effect = po.declared_phase_operation()
+    assert effect == po.PAULI_Y_PLUS_PROJECTOR
+    assert po.mdagger(effect) == effect
+    assert po.mmul(effect, effect) == effect
+    assert po.encode_matrix(effect) == [
         [["1/2", "0", "0", "0"], ["0", "0", "-1/2", "0"]],
         [["0", "0", "1/2", "0"], ["1/2", "0", "0", "0"]],
     ]
@@ -114,7 +114,7 @@ def test_receipt_is_deterministic_and_self_hashed(receipt: dict) -> None:
 
 def test_receipt_stamps_declared_provenance(receipt: dict) -> None:
     provenance = receipt["provenance"]
-    assert provenance["operation_origin"] == "declared_architecture_operation"
+    assert provenance["operation_origin"] == "declared_phase_sensitive_effect"
     assert provenance["derived_from_source_dynamics"] is False
     assert "never derived" in provenance["statement"]
     assert "never measured" in provenance["statement"]
@@ -122,7 +122,7 @@ def test_receipt_stamps_declared_provenance(receipt: dict) -> None:
     assert decision["register_row"] == "PR-04"
     assert decision["disposition"] == "axiomatize"
     assert decision["date"] == "2026-08-18"
-    assert "declared architecture operation" in decision["statement"]
+    assert "declared phase-sensitive effect" in decision["statement"]
     assert "No sampling" in receipt["semantics"]
     boundaries = receipt["boundaries"]
     assert "no instrument is frozen" in boundaries["instrument_scope"]
@@ -187,7 +187,7 @@ def test_tampered_window_integers_fail_replay(
 
 
 @cross_repo
-def test_tampered_operation_matrix_fails_replay(
+def test_tampered_legacy_effect_field_matrix_fails_replay(
     receipt: dict, reference: dict
 ) -> None:
     tampered = copy.deepcopy(reference)
@@ -214,11 +214,11 @@ def test_sign_flipped_coefficient_fails_committed_literal() -> None:
 
 
 def test_off_diagonal_imaginary_part_shifts_phase_frequency() -> None:
-    operation = po.declared_phase_operation()
+    effect = po.declared_phase_operation()
     half = Fraction(1, 2)
-    assert po.born_weight(po.committed_core_state(0, 0), operation) == half
+    assert po.born_weight(po.committed_core_state(0, 0), effect) == half
     for y in (Fraction(1, 8), Fraction(-1, 12), Fraction(12, 25)):
-        weight = po.born_weight(po.committed_core_state(0, y), operation)
+        weight = po.born_weight(po.committed_core_state(0, y), effect)
         assert weight == half - y
         assert weight != half
     rows = po.outcome_table(po.committed_core_state(0, Fraction(1, 8)))
@@ -230,8 +230,8 @@ def test_off_diagonal_imaginary_part_shifts_phase_frequency() -> None:
 
 def test_real_off_diagonal_part_leaves_phase_but_fails_rotated_rationality() -> None:
     state = po.committed_core_state(Fraction(1, 10), 0)
-    operation = po.declared_phase_operation()
-    assert po.born_weight(state, operation) == Fraction(1, 2)
+    effect = po.declared_phase_operation()
+    assert po.born_weight(state, effect) == Fraction(1, 2)
     rotated = po.context_projectors()[3]
     with pytest.raises(po.PhaseOperationError, match="WEIGHT_SQRT3"):
         po.born_weight(state, rotated)

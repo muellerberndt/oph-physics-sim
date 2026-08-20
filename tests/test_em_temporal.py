@@ -1,9 +1,10 @@
-"""Exact leapfrog temporal Maxwell lane: per-step receipts and mutation
-guards.
+"""Exact leapfrog lane for the declared PR-66 temporal update: per-step
+receipts and mutation guards.
 
 Design-only tests.  The step index is a declared evolution parameter, not
-physical time; sources are declared inputs; nothing here is a frozen
-instrument or a physical claim.
+physical time; sources are declared inputs; the conserved staggered form is
+indefinite and is not an energy; nothing here is a frozen instrument or a
+physical claim.
 """
 
 from __future__ import annotations
@@ -33,7 +34,8 @@ def face_zero_kick() -> list[Fraction]:
 
 
 # ---------------------------------------------------------------------------
-# The committed nonstatic inhabitant and exact energy conservation
+# The committed nonstatic inhabitant and exact staggered quadratic-form
+# conservation
 # ---------------------------------------------------------------------------
 
 def test_demo_bundle_matches_committed_anchors_over_64_steps() -> None:
@@ -56,7 +58,7 @@ def test_demo_bundle_matches_committed_anchors_over_64_steps() -> None:
     assert demo["wave"]["interior_steps"] == 63
 
 
-def test_energy_balance_carries_the_exact_source_work_term() -> None:
+def test_quadratic_form_balance_carries_the_exact_source_work_term() -> None:
     lane = LeapfrogLane()
     steps = 8
     # Conserved seam current: a fundamental cycle, constant in the step index.
@@ -71,10 +73,11 @@ def test_energy_balance_carries_the_exact_source_work_term() -> None:
     )
     assert receipts["energy"]["balance_exact"] is True
     assert receipts["energy"]["source_free"] is False
-    # The work term moves the energy: the balance is not vacuous here.
+    # The work term moves the staggered quadratic form: the balance is not
+    # vacuous here.
     a = run["A"]
-    energies = [lane.field_energy(a, phi, n) for n in range(steps)]
-    assert energies[0] != energies[-1]
+    forms = [lane.field_energy(a, phi, n) for n in range(steps)]
+    assert forms[0] != forms[-1]
     for n in range(steps - 1):
         electric_sum = [
             lane.electric_field(a, phi, n)[e]
@@ -82,7 +85,7 @@ def test_energy_balance_carries_the_exact_source_work_term() -> None:
             for e in range(SEAMS)
         ]
         work = Fraction(1, 2) * base_carrier.seam_inner(electric_sum, cycle)
-        assert energies[n + 1] == energies[n] - work
+        assert forms[n + 1] == forms[n] - work
 
 
 # ---------------------------------------------------------------------------
@@ -236,7 +239,7 @@ def test_static_join_rejects_a_nonconstant_history() -> None:
 # Wave recursion
 # ---------------------------------------------------------------------------
 
-def test_wave_recursion_holds_source_free_and_fails_with_a_source() -> None:
+def test_wave_recursion_holds_at_zero_current_and_fails_with_a_source() -> None:
     lane = LeapfrogLane()
     steps = 10
     phi = [[Fraction(p - 5, 4) for p in range(PORTS)] for _ in range(steps)]
@@ -260,7 +263,9 @@ def test_wave_recursion_holds_source_free_and_fails_with_a_source() -> None:
 # Mutation guards
 # ---------------------------------------------------------------------------
 
-def test_sign_flip_in_c_is_caught_by_faraday_and_energy_receipts() -> None:
+def test_sign_flip_in_c_is_caught_by_faraday_and_quadratic_form_receipts() -> (
+    None
+):
     flipped = [list(row) for row in base_carrier.face_incidence_matrix()]
     flipped[0][0] = -flipped[0][0]
     lane_bad = LeapfrogLane(face_matrix=flipped)
@@ -280,7 +285,7 @@ def test_sign_flip_in_c_is_caught_by_faraday_and_energy_receipts() -> None:
         lane_bad.verify_history(run["A"], phi, current, fail_closed=True)
 
 
-def test_energy_drift_detector_catches_a_tampered_history() -> None:
+def test_quadratic_form_drift_detector_catches_a_tampered_history() -> None:
     lane = LeapfrogLane()
     steps = 8
     phi = constant_history(zero_ports(), steps)
