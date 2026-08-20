@@ -6,14 +6,16 @@ projection statistics against the Lueders update, the exact interference
 gap, export round-trip, receipt determinism. Mutation guards: a dropped
 micro-configuration breaks the count-ratio identity, a counts-from-
 amplitudes mutant is detected by the import-graph check, a tampered
-branch-table entry is detected by the trace verification, a classical
-reveal-only mock fails the interference receipt, and conditioning on a
-never-realized outcome fails closed.
+branch-table entry is detected by the trace verification, a live-file
+mutant and the dynamic-import escapes are detected by the same check, a
+classical reveal-only mock fails the interference receipt, and conditioning
+on a never-realized outcome fails closed.
 """
 
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 from fractions import Fraction
 
@@ -110,6 +112,60 @@ def test_counts_from_amplitudes_mutant_detected() -> None:
         receipt.check_source_independence(
             "amplitudes.py", "from oph_fpe.qm_observer import ensemble\n"
         )
+
+
+DYNAMIC_MUTANT_SOURCES = (
+    'amplitudes = __import__("oph_fpe.qm_observer.amplitudes")\n',
+    'import importlib\n'
+    'amplitudes = importlib.import_module("oph_fpe.qm_observer.amplitudes")\n',
+    'from importlib import import_module\n'
+    'amplitudes = import_module("oph_fpe.qm_observer.amplitudes")\n',
+    'name = "oph_fpe" + ".qm_observer.amplitudes"\n'
+    'amplitudes = __import__(name)\n',
+)
+
+
+@pytest.mark.parametrize("mutant_source", DYNAMIC_MUTANT_SOURCES)
+def test_dynamic_import_mutant_detected(mutant_source: str) -> None:
+    with pytest.raises(QMObserverError, match="IMPORT_INDEPENDENCE"):
+        receipt.check_source_independence("ensemble.py", mutant_source)
+
+
+LIVE_MUTANT_INSERTIONS = (
+    "from oph_fpe.qm_observer import amplitudes  # mutant\n",
+    '__import__("oph_fpe.qm_observer.amplitudes")  # mutant\n',
+    'import importlib  # mutant\n'
+    'importlib.import_module("oph_fpe.qm_observer.amplitudes")  # mutant\n',
+)
+
+
+@pytest.mark.parametrize("insertion", LIVE_MUTANT_INSERTIONS)
+def test_live_file_mutant_detected(insertion: str) -> None:
+    """The independence check reads the live module bytes: a mutant written
+    into ``ensemble.py`` on disk is rejected. The saved bytes are restored
+    before the test returns, so the tree is left byte-identical."""
+
+    path = receipt.PACKAGE_DIR / "ensemble.py"
+    saved = path.read_bytes()
+    marker = b"from __future__ import annotations\n"
+    assert saved.count(marker) == 1
+    mutated = saved.replace(marker, marker + insertion.encode("utf-8"))
+    assert mutated != saved
+    try:
+        path.write_bytes(mutated)
+        with pytest.raises(QMObserverError, match="IMPORT_INDEPENDENCE"):
+            receipt.check_independence()
+    finally:
+        path.write_bytes(saved)
+    assert path.read_bytes() == saved
+
+
+def test_independence_receipt_pins_source_hashes() -> None:
+    report = receipt.check_independence()
+    for filename, entry in report["modules"].items():
+        raw = (receipt.PACKAGE_DIR / filename).read_bytes()
+        assert entry["source_sha256"] == hashlib.sha256(raw).hexdigest()
+        assert entry["dynamic_import_calls"] == []
 
 
 def test_record_persistence_all_chains() -> None:
@@ -230,15 +286,23 @@ def test_export_round_trip_exact() -> None:
     assert interference["collapse_events"][0]["after"]["class"] == "A0"
 
 
-def _assert_floats_confined(value, path=()) -> None:
+def _assert_floats_confined(value, path=(), in_display=False) -> None:
     if isinstance(value, float):
-        assert "display" in path, f"float outside display block at {path}"
+        assert in_display, (
+            f"float outside a block carrying derived_for_display: true "
+            f"at {path}"
+        )
     elif isinstance(value, dict):
         for key, item in value.items():
-            _assert_floats_confined(item, path + (key,))
+            enclosed = in_display or (
+                key == "display"
+                and isinstance(item, dict)
+                and item.get("derived_for_display") is True
+            )
+            _assert_floats_confined(item, path + (key,), enclosed)
     elif isinstance(value, (list, tuple)):
         for index, item in enumerate(value):
-            _assert_floats_confined(item, path + (index,))
+            _assert_floats_confined(item, path + (index,), in_display)
 
 
 def test_floats_confined_to_display_blocks() -> None:

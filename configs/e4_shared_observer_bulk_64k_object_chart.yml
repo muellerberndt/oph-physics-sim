@@ -164,7 +164,7 @@ bw:
   - 0.5
   normalization: 2pi
   observables:
-  - record_signature_projectors
+  - record_port_entropy_projectors
   - repair_load_projectors
   - s3_sector_projectors
   - cumulative_repair_load_projectors
@@ -186,7 +186,7 @@ bw:
     times:
     - 0.25
     observables:
-    - record_signature_projectors
+    - record_port_entropy_projectors
     - repair_load_projectors
     - s3_sector_projectors
     - cumulative_repair_load_projectors
@@ -201,7 +201,7 @@ collar_markov:
   enabled: true
   max_triplets: 2048
   packet_bins:
-    record_signature: 64
+    record_packet_id: 64
     stable_count: 8
     repair_load: 8
     s3_class_density: 6
@@ -464,7 +464,7 @@ cosmology:
     controls:
     - shuffled_field
     fields:
-    - record_signature
+    - record_port_entropy
     - local_mismatch_density
     - cumulative_repair_load
     - modular_depth
@@ -476,40 +476,40 @@ cosmology:
     allow_screen_proxy_without_bulk: true
     commit_fraction: 0.95
     fields:
-    - record_signature
+    - record_port_entropy
     - stable_count
     - cumulative_repair_load
     - repair_load
     - local_mismatch_density
     - s3_class_density
-    - record_signature_smooth_k16
-    - record_signature_smooth_k32
+    - record_port_entropy_smooth_k16
+    - record_port_entropy_smooth_k32
     - record_repair_mix
     - record_sector_mix
     derived_fields:
-    - name: record_signature_smooth_k16
+    - name: record_port_entropy_smooth_k16
       kind: knn_smooth
-      source: record_signature
+      source: record_port_entropy
       k: 16
       steps: 2
       alpha: 1.0
-    - name: record_signature_smooth_k32
+    - name: record_port_entropy_smooth_k32
       kind: knn_smooth
-      source: record_signature
+      source: record_port_entropy
       k: 32
       steps: 3
       alpha: 1.0
     - name: record_repair_mix
       kind: linear_combo
       terms:
-      - field: record_signature
+      - field: record_port_entropy
         weight: 1.0
       - field: cumulative_repair_load
         weight: 0.35
     - name: record_sector_mix
       kind: linear_combo
       terms:
-      - field: record_signature
+      - field: record_port_entropy
         weight: 1.0
       - field: s3_class_density
         weight: 0.25
@@ -527,12 +527,12 @@ cosmology:
     benchmark_label: Planck2018_TT_binned
     source_url: https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt
     fields:
-    - record_signature
+    - record_port_entropy
     - stable_count
     - cumulative_repair_load
     - s3_class_density
-    - record_signature_smooth_k16
-    - record_signature_smooth_k32
+    - record_port_entropy_smooth_k16
+    - record_port_entropy_smooth_k32
     - record_repair_mix
     - record_sector_mix
   b_a_paired_perturbation:

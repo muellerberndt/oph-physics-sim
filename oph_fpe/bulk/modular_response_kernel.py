@@ -1232,6 +1232,10 @@ def _simulate_cap_collar_perturb_resettle(
     repair_load = incident_mismatch / np.maximum(degree, 1.0)
     cumulative = np.asarray(raw_fields.get("cumulative_repair_load", np.zeros(patch_count)), dtype=float) + repair_incident / np.maximum(degree, 1.0)
     post = dict(raw_fields)
+    # The probe-local change token overwrites both record token keys so a
+    # stale baseline record_packet_id cannot shadow the post-perturbation
+    # signature for packet-field readers.
+    post.pop("record_packet_id", None)
     post.update(
         {
             "record_signature": signature.astype(float),
@@ -1884,7 +1888,13 @@ def _object_packet_fields(
             stable_flag = (stable >= threshold).astype(np.int64)
             packets[key] = (2 * (committed > 0.5).astype(np.int64) + stable_flag).astype(np.int64)
         elif key == "record_family":
-            values = np.asarray(raw_fields.get("record_signature", np.zeros(patch_count)), dtype=np.int64)
+            values = np.asarray(
+                raw_fields.get(
+                    "record_packet_id",
+                    raw_fields.get("record_signature", np.zeros(patch_count)),
+                ),
+                dtype=np.int64,
+            )
             packets[key] = np.mod(np.abs(values), int(record_family_modulus)).astype(np.int64)
         elif key == "s3_sector_class":
             values = np.asarray(raw_fields.get("s3_sector_class", np.zeros(patch_count)), dtype=np.int64)
@@ -1897,7 +1907,13 @@ def _object_packet_fields(
                 bins,
             )
         elif key == "committed_object_normal_form":
-            signature = np.asarray(raw_fields.get("record_signature", np.zeros(patch_count)), dtype=np.int64)
+            signature = np.asarray(
+                raw_fields.get(
+                    "record_packet_id",
+                    raw_fields.get("record_signature", np.zeros(patch_count)),
+                ),
+                dtype=np.int64,
+            )
             sector = np.asarray(raw_fields.get("s3_sector_class", np.zeros(patch_count)), dtype=np.int64)
             stable_flag = (stable >= max(1.0, float(np.median(stable)) if stable.size else 1.0)).astype(np.int64)
             packets[key] = np.mod(np.abs(signature) + 7 * np.abs(sector) + 13 * stable_flag, int(record_family_modulus)).astype(np.int64)

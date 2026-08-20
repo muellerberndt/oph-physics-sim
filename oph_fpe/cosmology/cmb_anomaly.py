@@ -366,7 +366,10 @@ def _field_question_readouts(stats: dict[str, Any], separation: dict[str, Any]) 
 def _aggregate_field_reports(fields: dict[str, Any]) -> dict[str, Any]:
     if not fields:
         return {"field_count": 0, "primary_field": None}
-    primary = "record_signature" if "record_signature" in fields else next(iter(fields))
+    primary = next(
+        (name for name in ("record_port_entropy", "record_signature") if name in fields),
+        next(iter(fields)),
+    )
     low = _best_field(fields, "low_power_abs_fraction", lower=True)
     large = _best_field(fields, "S_1_2_scalar_proxy", lower=True)
     parity = _best_field(fields, "parity_log_abs_deviation", lower=False)

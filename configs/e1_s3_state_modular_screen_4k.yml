@@ -53,7 +53,7 @@ bw:
   times: [0.025, 0.05, 0.10]
   normalization: "2pi"
   observables:
-    - record_signature_projectors
+    - record_port_entropy_projectors
     - repair_load_projectors
     - s3_sector_projectors
     - cumulative_repair_load_projectors
@@ -69,7 +69,7 @@ collar_markov:
   enabled: true
   max_triplets: 2048
   packet_bins:
-    record_signature: 64
+    record_packet_id: 64
     stable_count: 8
     repair_load: 8
     s3_class_density: 6

@@ -137,6 +137,63 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     "data/local_domain/stage4_receipt.json": _contract(
         "oph.local-domain-stage4.v1", "ATTAINED", "LOCAL_DOMAIN_PROVENANCE_AGGREGATE_NO_NEW_OPERATOR"
     ),
+    # Independent copy of the ol_a1_replication review (commit 42aa966,
+    # reviewed 2026-08-20): frozen INS-01 Tier A replication verdict records.
+    "data/ol_a1_replication/campaign_summary.json": _contract(
+        "oph.ol-a1-signature-replication.summary.v1",
+        None,
+        "OL_A1_TIER_A_REPLICATION_VERDICT_RECORD_NOT_VERTEX12_OPERATOR",
+    ),
+    "data/ol_a1_replication/manifest.json": _contract(
+        "oph.ol-a1-signature-replication.manifest.v1",
+        None,
+        "OL_A1_REPLICATION_CAMPAIGN_MANIFEST_NOT_VERTEX12_OPERATOR",
+    ),
+    "data/ol_a1_replication/run_A1_ola1.r1.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A1_ola1.r2.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A1_ola1.r3.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A1_ola1.r4.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A1_ola1.r5.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A2_ola1.r1.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A2_ola1.r2.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A2_ola1.r3.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A2_ola1.r4.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_A2_ola1.r5.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_C1_ola1.r1.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_C1_ola1.r2.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_C1_ola1.r3.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_C1_ola1.r4.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/ol_a1_replication/run_C1_ola1.r5.json": _contract(
+        "oph.ol-a1-signature-replication.receipt.v1", None, "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR"
+    ),
     "data/quantum/icosahedral_chsh_candidate_receipt.json": _contract(
         "oph.icosahedral_chsh_candidate.v1", "EXACT_PROJECTIVE_BRANCH_CANDIDATE__TWO_WING_COMPLETED_RECORD_SOURCE_PRODUCER_MISSING", "PROJECTIVE_QUANTUM_CANDIDATE_COMPLETED_RECORD_PRODUCER_MISSING"
     ),

@@ -23,7 +23,7 @@ from oph_fpe.claims import H3_RESPONSE_CONTROL_SEPARATION_RECEIPT
 
 
 DEFAULT_RECORD_FIELDS = (
-    "record_signature",
+    "record_port_entropy",
     "stable_count",
     "repair_load",
     "cumulative_repair_load",

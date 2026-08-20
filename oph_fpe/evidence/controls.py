@@ -8,6 +8,32 @@ from oph_fpe.defects.array_s3_holonomy import S3_INV, S3_MUL, defect_class, s3_t
 from oph_fpe.gauge.covariant_overlap import GAUGE_COVARIANT_OVERLAP_SCHEMA, covariant_mismatch_mask
 from oph_fpe.observers.objects import RecordFamily, observer_object_report
 
+GAUGE_BLIND_NEGATIVE_CONTROL_LABEL = "gauge_blind_negative_control"
+
+
+def _require_coupled_or_declared_blind(
+    *,
+    coupled_state_supplied: bool,
+    allow_gauge_blind_negative_control: bool,
+) -> None:
+    """Fence the raw-label mismatch path.
+
+    Production mismatch counting is gauge covariant.  Comparing endpoint labels
+    without the gauge link is gauge blind and is admissible only as a declared
+    negative control.  Callers therefore either pass the full gauge-coupled
+    overlap state or request the negative-control variant explicitly; the
+    former silent fallback is removed.
+    """
+
+    if coupled_state_supplied or allow_gauge_blind_negative_control:
+        return
+    raise ValueError(
+        "OPH_GAUGE_BLIND_CONTROL_FENCE: mandatory_control_report requires the "
+        "gauge-coupled overlap state (initial_gauge, final_gauge, group_name, "
+        "group_order); pass allow_gauge_blind_negative_control=True only to "
+        "run the declared gauge-blind negative control"
+    )
+
 
 def mandatory_control_report(
     *,
@@ -25,6 +51,7 @@ def mandatory_control_report(
     group_order: int | None = None,
     object_rows: list[dict[str, Any]] | None = None,
     seed: int = 1,
+    allow_gauge_blind_negative_control: bool = False,
 ) -> dict[str, Any]:
     requested = [str(control) for control in requested_controls]
     controls: dict[str, Any] = {}
@@ -33,6 +60,10 @@ def mandatory_control_report(
         and final_gauge is not None
         and group_name is not None
         and group_order is not None
+    )
+    _require_coupled_or_declared_blind(
+        coupled_state_supplied=coupled_state_supplied,
+        allow_gauge_blind_negative_control=bool(allow_gauge_blind_negative_control),
     )
     if "no_repair" in requested:
         controls["no_repair"] = _no_repair_control(
@@ -65,7 +96,11 @@ def mandatory_control_report(
         "implemented_controls": sorted(controls),
         "controls": controls,
         "gauge_coupled_overlap_state_supplied": coupled_state_supplied,
-        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled_state_supplied else "legacy_raw_label_inequality",
+        "gauge_blind_negative_control_requested": bool(allow_gauge_blind_negative_control)
+        and not coupled_state_supplied,
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA
+        if coupled_state_supplied
+        else GAUGE_BLIND_NEGATIVE_CONTROL_LABEL,
         "all_expected_failures_observed": bool(controls) and all(bool(row.get("expected_failure_observed")) for row in controls.values()),
         "claim_boundary": "negative-control receipts; required before any 3D-bulk or early-universe claim",
     }
@@ -118,7 +153,7 @@ def _no_repair_control(
         "initial_phi_without_repair": initial_phi,
         "final_phi_with_repair": final_phi,
         "expected_failure_observed": bool(initial_phi > final_phi and initial_phi > 0),
-        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled else "legacy_raw_label_inequality",
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled else GAUGE_BLIND_NEGATIVE_CONTROL_LABEL,
         "failure_mode": "Phi does not settle when repair is absent",
     }
 
@@ -154,7 +189,7 @@ def _shuffled_interfaces_control(
         "shuffled_phi": shuffled_phi,
         "edge_count": int(final_left.size),
         "expected_failure_observed": bool(shuffled_phi > threshold),
-        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled else "legacy_raw_label_inequality",
+        "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA if coupled else GAUGE_BLIND_NEGATIVE_CONTROL_LABEL,
         "failure_mode": "interface label shuffle destroys overlap agreement",
     }
 

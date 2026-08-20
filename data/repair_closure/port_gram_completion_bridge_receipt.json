@@ -690,7 +690,7 @@
     "completion_translation_action_is_same_raw_action": true,
     "constructive_source_control_event_count": 12,
     "constructive_source_control_is_canonical_source_law": false,
-    "constructive_source_control_projection_sha256": "sha256:ce184b8968cf2d2feb3059a7dcf3777eda4502e1768d7527456f2b519c9569fa",
+    "constructive_source_control_projection_sha256": "sha256:fe347e8dde0596237fb49c510318720b0e877ea466c49e2b19b3cc07d0f89db1",
     "continuous_carrier_constructed_as_metric_completion": true,
     "continuous_carrier_is_primitive_input": false,
     "continuous_field_assumed": false,
@@ -917,8 +917,8 @@
     "constructive_signed_port_record_control": {
       "canonical_source_selection": false,
       "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-      "raw_sha256": "sha256:19a6eacb2016ea1c26d79a5878455176235296de8f275bd90e8ad9902fdf24c3",
-      "receipt_sha256": "sha256:8d4408fa5e1143a6a254ec454f446af16c33cda0a2d1ca5f918176c6f9ac74c6",
+      "raw_sha256": "sha256:60a218a83c68280ca218effeb48b030a5ab4318441d1b2dc84850ee649c5ebac",
+      "receipt_sha256": "sha256:e1eb97f2b5452dbeb82fb6a7c39aa112c007b66255eea8f5d36273f8a8e2ea9b",
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
     },
@@ -932,8 +932,8 @@
     "port_repair_propagation_boundary": {
       "one_step_operator": "T = I - L_icosahedron/60",
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
-      "raw_sha256": "sha256:1a3b2174c226bac91085df34d73f6e55462572df8a36aafcc0319ffb28ff2f65",
-      "receipt_sha256": "sha256:3d358a746135fc0cd70b10be5828ee42cd8497006e5244c342383c5d0ccfba71",
+      "raw_sha256": "sha256:ee633cd64625a09d75ae2f4ea894765456ff27e55fc29a9307511e99e4cbac13",
+      "receipt_sha256": "sha256:15e960451272583ec6994c214b5646a3f81f5cb771b99b67c92f6039f893f8dd",
       "same_operator_physical_readout_receipt": false,
       "schema": "oph.port_repair_propagation_bridge_receipt.v1",
       "spatial_port_hop_source_receipt": false,
@@ -947,7 +947,7 @@
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:a43385525666f64c1ef713309810f410419eb78e0280acf11795fb61f3989819",
+  "receipt_sha256": "sha256:d774096f4bb4979aa7c5b9ec43b255ef083aab6b43b25af2756d0c22dc71b47d",
   "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
   "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN",
   "support_hop_isometry_implication": {

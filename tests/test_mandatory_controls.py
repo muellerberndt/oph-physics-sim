@@ -39,6 +39,7 @@ def test_mandatory_controls_report_expected_failures():
         final_port_left=final_left,
         final_port_right=final_right,
         seed=3,
+        allow_gauge_blind_negative_control=True,
     )
 
     assert set(report["implemented_controls"]) == {
@@ -48,6 +49,9 @@ def test_mandatory_controls_report_expected_failures():
         "shuffled_interfaces",
         "wrong_s3_orientation",
     }
+    assert report["mismatch_definition"] == "gauge_blind_negative_control"
+    assert report["gauge_blind_negative_control_requested"] is True
+    assert report["controls"]["no_repair"]["mismatch_definition"] == "gauge_blind_negative_control"
     assert report["controls"]["no_repair"]["expected_failure_observed"] is True
     assert report["controls"]["wrong_s3_orientation"]["expected_failure_observed"] is True
     assert report["controls"]["fake_record_rewrite"]["expected_failure_observed"] is True

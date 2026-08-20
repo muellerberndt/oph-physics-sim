@@ -567,8 +567,9 @@ def _response_features(
     ):
         if name in raw_fields:
             columns.append(_standardize(np.asarray(raw_fields[name], dtype=float)[basis]))
-    if "record_signature" in raw_fields:
-        signature = np.asarray(raw_fields["record_signature"], dtype=np.int64)[basis]
+    record_token = raw_fields.get("record_packet_id", raw_fields.get("record_signature"))
+    if record_token is not None:
+        signature = np.asarray(record_token, dtype=np.int64)[basis]
         columns.append(_standardize((signature % 257).astype(float) / 257.0))
         columns.append(_standardize((signature % 17).astype(float) / 17.0))
     return np.column_stack(columns) if columns else np.zeros((basis.size, 0), dtype=float)
@@ -625,7 +626,13 @@ def _standardize_rows(matrix: np.ndarray) -> np.ndarray:
 
 
 def _observable_matrix(raw_fields: dict[str, np.ndarray], observable: str, basis: np.ndarray) -> np.ndarray:
-    values = np.asarray(raw_fields.get(observable, raw_fields.get("record_signature")), dtype=float)[basis]
+    values = np.asarray(
+        raw_fields.get(
+            observable,
+            raw_fields.get("record_port_entropy", raw_fields.get("record_signature")),
+        ),
+        dtype=float,
+    )[basis]
     values = _standardize(values)
     diagonal = np.diag(values.astype(complex))
     transition = np.zeros_like(diagonal)

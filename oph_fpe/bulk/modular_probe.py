@@ -332,6 +332,8 @@ def history_transition_density(
             features.append(_packet_histogram_features(transition_tokens, bins=64))
             features.append(_standardize_columns((packet_seq[1:] != packet_seq[:-1]).T.astype(float)))
     for key in (
+        "record_packet_id",
+        "record_port_entropy",
         "record_signature",
         "stable_count",
         "committed_mask",
@@ -410,6 +412,8 @@ def collar_operator_system_density(
             features.append(_packet_histogram_features(transition_tokens, bins=64))
             features.append(_standardize_columns((packet_seq[1:] != packet_seq[:-1]).T.astype(float)))
     for key in (
+        "record_packet_id",
+        "record_port_entropy",
         "record_signature",
         "stable_count",
         "committed_mask",
@@ -2586,8 +2590,9 @@ def _repair_affinity_features(
     ):
         if name in raw_fields:
             columns.append(_standardize(np.asarray(raw_fields[name], dtype=float)[basis]))
-    if "record_signature" in raw_fields:
-        signature = np.asarray(raw_fields["record_signature"], dtype=np.int64)[basis]
+    record_token = raw_fields.get("record_packet_id", raw_fields.get("record_signature"))
+    if record_token is not None:
+        signature = np.asarray(record_token, dtype=np.int64)[basis]
         columns.append(_standardize((np.mod(signature, 257)).astype(float) / 257.0))
         columns.append(_standardize((np.mod(signature, 17)).astype(float) / 17.0))
     return np.column_stack(columns) if columns else np.zeros((basis.size, 0), dtype=float)
@@ -2697,6 +2702,8 @@ def _history_field_series(states: list[dict[str, np.ndarray]], key: str, basis: 
 
 def _koopman_feature_series(states: list[dict[str, np.ndarray]], basis: np.ndarray) -> list[np.ndarray]:
     fields = (
+        "record_packet_id",
+        "record_port_entropy",
         "record_signature",
         "stable_count",
         "committed_mask",
@@ -2789,7 +2796,13 @@ def _observable_matrix(
         link_norm = float(np.linalg.norm(links, ord="fro"))
         if link_norm > 1.0e-12:
             return links / link_norm
-    values = np.asarray(raw_fields.get(observable, raw_fields.get("record_signature")), dtype=float)[basis]
+    values = np.asarray(
+        raw_fields.get(
+            observable,
+            raw_fields.get("record_port_entropy", raw_fields.get("record_signature")),
+        ),
+        dtype=float,
+    )[basis]
     values = _standardize(values)
     diagonal = np.diag(values.astype(complex))
     transition = np.zeros_like(diagonal)

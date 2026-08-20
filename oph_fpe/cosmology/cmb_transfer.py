@@ -11,15 +11,15 @@ from oph_fpe.cosmology.cmb_compare import load_planck_tt_binned
 
 
 DEFAULT_TRANSFER_FIELDS = [
-    "record_signature",
+    "record_port_entropy",
     "stable_count",
     "cumulative_repair_load",
     "repair_load",
     "s3_class_density",
-    "record_signature_smooth_k16",
-    "record_signature_smooth_k32",
-    "record_signature_smooth_k64",
-    "record_signature_band_k16_k64",
+    "record_port_entropy_smooth_k16",
+    "record_port_entropy_smooth_k32",
+    "record_port_entropy_smooth_k64",
+    "record_port_entropy_band_k16_k64",
     "record_repair_mix",
     "record_sector_mix",
 ]

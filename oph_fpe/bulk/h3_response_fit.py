@@ -844,7 +844,7 @@ def synthetic_h3_modular_kernel(
     *,
     observer_count: int = 16,
     times: list[float] | tuple[float, ...] = (0.1,),
-    field_names: list[str] | tuple[str, ...] = ("record_signature",),
+    field_names: list[str] | tuple[str, ...] = ("record_port_entropy",),
     seed: int = 1,
     radius: float = 1.2,
     softness: float = 0.2,

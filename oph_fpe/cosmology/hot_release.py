@@ -113,7 +113,7 @@ def _run_row(
         "release_temperature_proxy_inverse_beta": t_proxy,
         "release_phi": _float_or_none(release.get("phi")) if release else None,
         "release_committed_fraction": _float_or_none(release.get("committed_fraction")) if release else None,
-        "release_record_entropy": _float_or_none(release.get("record_entropy")) if release else None,
+        "release_record_packet_entropy": _float_or_none(release.get("record_packet_entropy")) if release else None,
         "freezeout_cycle": _int_or_none(freezeout.get("freezeout_cycle")),
         "freezeout_committed_fraction": _float_or_none(freezeout.get("committed_fraction")),
         "median_epsilon_cmi": median_cmi,

@@ -157,6 +157,8 @@ def maxent_record_operator_cap_state(
 
 def _feature_series(states: list[dict[str, np.ndarray]], basis: np.ndarray) -> list[np.ndarray]:
     fields = (
+        "record_packet_id",
+        "record_port_entropy",
         "record_signature",
         "stable_count",
         "committed_mask",

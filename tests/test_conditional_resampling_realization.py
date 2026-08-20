@@ -35,7 +35,7 @@ def _synthetic_inputs(patches: int = 600, seed: int = 5) -> RealizationInputs:
     return RealizationInputs(
         record_classes=tuple(int(v) for v in record.tolist()),
         companion_classes=tuple(int(v) for v in companion.tolist()),
-        record_label="record_signature",
+        record_label="record_port_entropy",
         companion_label="s3_class_density",
         provenance={"source": "synthetic", "patch_count": patches},
     )
@@ -71,7 +71,7 @@ def test_singleton_fibers_fail_closed():
     inputs = RealizationInputs(
         record_classes=record,
         companion_classes=record,
-        record_label="record_signature",
+        record_label="record_port_entropy",
         companion_label="degenerate_copy",
         provenance={"source": "synthetic"},
     )
@@ -83,7 +83,7 @@ def test_companion_candidate_chain_skips_constant_fields(tmp_path):
     rng = np.random.default_rng(4)
     np.savez(
         tmp_path / "freezeout_fields.npz",
-        record_signature=rng.normal(size=300),
+        record_port_entropy=rng.normal(size=300),
         s3_class_density=np.zeros(300),
         repair_load=np.zeros(300),
         cumulative_repair_load=rng.integers(0, 5, size=300).astype(np.float64),
@@ -97,7 +97,7 @@ def test_constant_protected_record_fails_closed():
     inputs = RealizationInputs(
         record_classes=tuple([3] * patches),
         companion_classes=tuple(int(v) for v in np.arange(patches) % 4),
-        record_label="record_signature",
+        record_label="record_port_entropy",
         companion_label="s3_class_density",
         provenance={"source": "synthetic"},
     )
@@ -111,7 +111,7 @@ def test_freezeout_loader_and_run_writer(tmp_path):
     density = rng.normal(size=400)
     np.savez(
         tmp_path / "freezeout_fields.npz",
-        record_signature=record,
+        record_port_entropy=record,
         s3_class_density=density,
     )
     inputs = realization_inputs_from_freezeout(tmp_path / "freezeout_fields.npz")

@@ -8,6 +8,20 @@ import numpy as np
 from oph_fpe.evidence.hashes import stable_json_hash
 
 
+def _record_token_array(records: dict[str, np.ndarray]) -> np.ndarray:
+    """Per-node record identity token as int64.
+
+    ``record_packet_id`` (the physical content id over exact record packets)
+    is preferred; ``record_signature`` is accepted as a fallback for payloads
+    produced before the physical-packet surface existed.
+    """
+
+    token = records.get("record_packet_id")
+    if token is None:
+        token = records.get("record_signature")
+    return np.asarray(token, dtype=np.int64)
+
+
 @dataclass
 class RecordFamily:
     object_id: str
@@ -42,7 +56,7 @@ def extract_record_families(
 
     projection_cfg = projections if isinstance(projections, dict) else {}
     if isinstance(records, dict):
-        signatures = np.asarray(records.get("record_signature"), dtype=np.int64)
+        signatures = _record_token_array(records)
         stable_count = np.asarray(records.get("stable_count", np.ones_like(signatures)), dtype=np.int64)
         repair_load = np.asarray(records.get("repair_load", np.zeros_like(signatures, dtype=float)), dtype=float)
         object_packets = _visible_object_packets(records, projection_cfg)
@@ -324,7 +338,7 @@ def _modal_int(values: np.ndarray) -> int:
 
 
 def _visible_object_packets(records: dict[str, np.ndarray], config: dict[str, Any]) -> np.ndarray:
-    signatures = np.asarray(records.get("record_signature"), dtype=np.int64)
+    signatures = _record_token_array(records)
     if signatures.size == 0:
         return signatures
     mode = str(config.get("packet_mode", "exact_signature"))
@@ -463,7 +477,10 @@ def _transition_affinity_packet_fields(records: dict[str, np.ndarray], config: d
     committed = np.asarray(records.get("committed_mask", np.zeros(patch_count)), dtype=float)
     threshold = max(1.0, float(np.median(stable)) if stable.size else 1.0)
     stable_flag = (stable >= threshold).astype(np.int64)
-    signature = np.asarray(records.get("record_signature", np.zeros(patch_count)), dtype=np.int64)
+    signature = np.asarray(
+        records.get("record_packet_id", records.get("record_signature", np.zeros(patch_count))),
+        dtype=np.int64,
+    )
     sector = np.asarray(records.get("s3_sector_class", np.zeros(patch_count)), dtype=np.int64)
     fields = {
         "checkpoint_class": (2 * (committed > 0.5).astype(np.int64) + stable_flag).astype(np.int64),

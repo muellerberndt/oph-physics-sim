@@ -31,6 +31,10 @@ from oph_fpe.gauge.covariant_overlap import (
     overlap_contract_metadata,
     repair_covariant_port_pairs,
 )
+from oph_fpe.scale.capacity_conformance import (
+    CapacityConformanceTracker,
+    snapshot_chosen_edge_state,
+)
 
 
 def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
@@ -118,6 +122,17 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
     depth_samples: list[np.ndarray] = []
     trace: list[dict[str, Any]] = []
     repair_receipts: list[dict[str, Any]] = []
+    conformance_cfg = config.get("scheduler_conformance", {}) or {}
+    conformance_tracker = CapacityConformanceTracker(
+        patch_count=patch_count,
+        edge_left=left,
+        edge_right=right,
+        group_name=group_name,
+        group_order=group_order,
+        seed=seed,
+        sample_edges_per_cycle=int(conformance_cfg.get("sample_edges_per_cycle", 8)),
+        engine="array_screen",
+    )
 
     for cycle in range(cycles):
         beta = _beta_at(beta_schedule, cycle, cycles)
@@ -130,10 +145,16 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
         )
         phi_before = int(np.sum(mismatches))
         active = np.flatnonzero(mismatches)
+        chosen = np.zeros(0, dtype=np.int64)
+        direction = np.zeros(0, dtype=bool)
         if active.size:
             chosen_count = min(repairs_per_cycle, active.size)
             chosen = rng.choice(active, size=chosen_count, replace=False)
             direction = rng.random(chosen_count) < 0.5
+        # Pre-repair copies of the chosen edge slots: the measurement baseline
+        # for the private/shared spend split.  Reads only; no dynamics change.
+        conformance_before = snapshot_chosen_edge_state(chosen, port_left, port_right, gauge)
+        if chosen.size:
             repair_covariant_port_pairs(
                 port_left,
                 port_right,
@@ -159,6 +180,20 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
             group_order=group_order,
         )
         phi_after = int(np.sum(mismatches_after))
+        conformance_row = conformance_tracker.record_cycle(
+            cycle=cycle,
+            phi_before=phi_before,
+            phi_after=phi_after,
+            before=conformance_before,
+            direction=direction,
+            port_left=port_left,
+            port_right=port_right,
+            gauge=gauge,
+            mismatches_after=mismatches_after,
+            repair_budget=repairs_per_cycle,
+            sector_link_writes_reported=0,
+            readback_drive_edges=0,
+        )
         repair_receipts.append(
             {
                 "verifier": "array_parallel_repair_nonincrease",
@@ -168,6 +203,15 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
                 "phi_after": phi_after,
                 "beta": beta,
                 "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
+                "private_spend_actions": conformance_row["private_spend_actions"],
+                "shared_spend_actions": conformance_row["shared_spend_actions"],
+                "total_repair_actions": conformance_row["total_repair_actions"],
+                "clauses": dict(conformance_row["clauses"]),
+                "observed_schedule_in_declared_class": conformance_row[
+                    "observed_schedule_in_declared_class"
+                ],
+                "claim_kind": "measured",
+                "sampled_transaction": conformance_row["sampled_transaction"],
             }
         )
 
@@ -217,7 +261,10 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
                 "phi": phi_after,
                 "mismatch_edges": phi_after,
                 "committed_records": int(np.sum(committed)),
-                "record_entropy": _entropy(signature[committed]) if np.any(committed) else 0.0,
+                "record_packet_entropy": _record_packet_entropy(
+                    record_patch_port_state,
+                    committed,
+                ),
                 "defect_proxy_count": int(
                     _defect_proxy(
                         gauge,
@@ -229,6 +276,7 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
                 ),
                 "modular_depth_mean": float(np.mean(modular_depth)),
                 "modular_depth_std": float(np.std(modular_depth)),
+                **conformance_tracker.trace_fields(conformance_row),
             }
         )
 
@@ -302,6 +350,18 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
 
     _write_csv(bundle.path / "mismatch_trace.csv", trace)
     bundle.write_jsonl("verifier_receipts.jsonl", repair_receipts)
+    bundle.write_jsonl(
+        "scheduler_class_conformance.jsonl", conformance_tracker.cycle_rows
+    )
+    bundle.write_json(
+        "scheduler_class_conformance.json", conformance_tracker.run_report()
+    )
+    per_patch_spend = conformance_tracker.per_patch_spend()
+    np.savez_compressed(
+        bundle.path / "capacity_spend_per_patch.npz",
+        private_spend=per_patch_spend["private"],
+        shared_spend=per_patch_spend["shared"],
+    )
     bundle.write_json("dimension_report.json", dimensions)
     bundle.write_json(
         "cosmology_observables.json",
@@ -317,6 +377,10 @@ def run_array_screen_config(config: dict[str, Any], out_dir: Path) -> dict[str, 
         },
     )
     bundle.write_json("gauge_covariant_overlap_contract.json", overlap_contract_metadata())
+    bundle.write_json(
+        "record_observable_semantics_receipt.json",
+        record_observable_semantics_receipt(),
+    )
     kernel_dispatch = dispatch_configured_kernels(config, bundle.path, engine="array_screen")
     manifest = {
         "run_id": run_id,
@@ -479,11 +543,15 @@ def _node_signature(
 ) -> np.ndarray:
     """Return a deterministic hash of every oriented incident port packet.
 
-    The former signature was just a sum, so records such as ``[0, 2]`` and
-    ``[1, 1]`` were indistinguishable.  This vectorized multiset hash keys each
-    packet by its edge slot, endpoint orientation, and exact label.  It keeps
-    the O(E) memory/time profile needed by the large array runs while reducing
-    accidental record collisions to a 64-bit hash collision.
+    Internal record-change bookkeeping token only.  The hash keys each packet
+    by its edge slot, endpoint orientation, and exact label, so it detects
+    per-node record changes in O(E) time for the commit-stability machinery
+    and the patch-state binding receipt.  Because the edge slots enter the
+    hash, two nodes with identical physical record content receive different
+    values; the hash therefore carries no cross-node structure and is never
+    exported as an observable.  Exported record observables come from the
+    physical packet helpers below (``_record_packet_entropy``,
+    ``_record_port_entropy``, ``_record_packet_ids``).
     """
 
     port_left = np.asarray(port_left, dtype=np.uint64)
@@ -512,6 +580,154 @@ def _splitmix64(values: np.ndarray) -> np.ndarray:
         mixed = (mixed ^ (mixed >> np.uint64(30))) * np.uint64(0xBF58476D1CE4E5B9)
         mixed = (mixed ^ (mixed >> np.uint64(27))) * np.uint64(0x94D049BB133111EB)
         return mixed ^ (mixed >> np.uint64(31))
+
+
+RECORD_PACKET_OBSERVABLE_SCHEMA = {
+    "schema": "oph_physical_record_packet_v2",
+    "packet_definition": (
+        "per-patch physical record packet: the canonical echosahedral record "
+        "port row (group-element indices after the node-frame gauge quotient), "
+        "the exact content whose cross-cycle stability defines a commit"
+    ),
+    "port_value_encoding": "exact group-element indices; the packet is integer-valued, no float binning",
+    "modular_depth_status": (
+        "not part of the packet: the array commit machinery binds port/gauge "
+        "state only, and modular depth is exported separately as its own field"
+    ),
+    "entropy_units": "nats",
+    "entropy_definition": (
+        "Shannon entropy over the multiset of packets on committed patches; "
+        "0.0 when no patch is committed"
+    ),
+    "mirrors": (
+        "the E0 approach (entropy over committed record content, "
+        "oph_fpe.core.patch_state.PatchState.observer_packet); E0's committed "
+        "record additionally carries that engine's scalar/modular bins because "
+        "they are part of E0's record content"
+    ),
+}
+
+
+def _record_packet_matrix(record_port_state: np.ndarray) -> np.ndarray:
+    """Return the physical per-patch record packet rows as an int64 matrix.
+
+    Row ``i`` is patch ``i``'s committed-record content: its canonical record
+    port values.  The encoding is declared in
+    ``RECORD_PACKET_OBSERVABLE_SCHEMA`` and is deterministic.
+    """
+
+    state = np.asarray(record_port_state, dtype=np.int64)
+    if state.ndim != 2:
+        raise ValueError("record_port_state must be a (patch_count, ports) array")
+    return state
+
+
+def _record_packet_ids(record_port_state: np.ndarray) -> np.ndarray:
+    """Dense deterministic content ids over the physical record packets.
+
+    Patches with identical packet content share an id; ids are assigned in
+    lexicographic packet order, so the map from content to id is a pure
+    function of the state.  No hash is involved.
+    """
+
+    matrix = _record_packet_matrix(record_port_state)
+    if matrix.shape[0] == 0:
+        return np.zeros(0, dtype=np.int64)
+    _, inverse = np.unique(matrix, axis=0, return_inverse=True)
+    return np.asarray(inverse, dtype=np.int64).reshape(-1)
+
+
+def _record_packet_entropy(
+    record_port_state: np.ndarray,
+    committed: np.ndarray,
+) -> float:
+    """Shannon entropy (nats) over the committed physical record packets.
+
+    Identical committed packets count as one outcome, so a structured
+    low-diversity record population reads low even when every patch is
+    committed; only genuinely distinct record content raises the value.
+    """
+
+    committed_mask = np.asarray(committed, dtype=bool)
+    if not np.any(committed_mask):
+        return 0.0
+    matrix = _record_packet_matrix(record_port_state)[committed_mask]
+    _, counts = np.unique(matrix, axis=0, return_counts=True)
+    probs = counts / counts.sum()
+    return float(-np.sum(probs * np.log(probs)) + 0.0)
+
+
+def _record_port_entropy(
+    record_port_state: np.ndarray,
+    group_order: int,
+) -> np.ndarray:
+    """Per-patch Shannon entropy (nats) of the canonical record port multiset.
+
+    A patch whose record ports all carry the same group element reads 0.0; the
+    value grows with the diversity of its port labels up to
+    ``ln(min(ports, group_order))``.  Relabeling-invariant per patch.
+    """
+
+    state = np.asarray(record_port_state, dtype=np.int64)
+    if state.ndim != 2:
+        raise ValueError("record_port_state must be a (patch_count, ports) array")
+    patch_count, port_count = state.shape
+    entropy = np.zeros(patch_count, dtype=np.float64)
+    if port_count == 0:
+        return entropy
+    for element in range(int(group_order)):
+        fraction = np.count_nonzero(state == element, axis=1) / float(port_count)
+        positive = fraction > 0.0
+        entropy[positive] -= fraction[positive] * np.log(fraction[positive])
+    return entropy
+
+
+def record_observable_semantics_receipt() -> dict[str, Any]:
+    """Receipt for the physical record-observable surface of the array engines."""
+
+    return {
+        "schema": "oph_record_observable_semantics_v1",
+        "removed_exports": {
+            "record_entropy": (
+                "Shannon entropy over SplitMix64 record-hash values; saturated at "
+                "ln(committed patch count) by construction because the hash keys "
+                "include per-node incidence slots"
+            ),
+            "record_signature": (
+                "per-node SplitMix64 hash previously exported as a screen/harmonic/"
+                "freezeout scalar field"
+            ),
+        },
+        "replacement_exports": {
+            "record_packet_entropy": (
+                "trace scalar: Shannon entropy (nats) over the multiset of committed "
+                "physical record packets"
+            ),
+            "record_port_entropy": (
+                "per-patch scalar field: Shannon entropy (nats) of the canonical "
+                "record port multiset"
+            ),
+            "record_packet_id": (
+                "per-patch dense content id over physical record packets; observer/"
+                "record-family bookkeeping token, not a harmonic-analysis field"
+            ),
+        },
+        "packet": RECORD_PACKET_OBSERVABLE_SCHEMA,
+        "hash_token_status": (
+            "SplitMix64 node signatures remain internal record-change/commit "
+            "bookkeeping and the patch-state binding token; they are not exported "
+            "as observables"
+        ),
+        "content_diversity_note": (
+            "record_packet_entropy measures exact committed-record content "
+            "diversity: equal content collapses to one outcome. Under the "
+            "current iid-random initialization of unrouted patch ports the "
+            "record population is near-maximally diverse, so values near "
+            "ln(committed count) report state content, not a hash artifact; "
+            "the value is reproducible from the patch-state artifact's "
+            "canonical_record_port_state and committed arrays"
+        ),
+    }
 
 
 def _advance_record_commit_state(

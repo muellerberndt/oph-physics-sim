@@ -136,6 +136,10 @@ from oph_fpe.gauge.covariant_overlap import (
     transform_local_frames,
 )
 from oph_fpe.gauge.repair_projection import exact_repair_projection_receipt
+from oph_fpe.scale.capacity_conformance import (
+    CapacityConformanceTracker,
+    snapshot_chosen_edge_state,
+)
 from oph_fpe.observers import (
     assign_counterfactual_stability_from_records,
     deterministic_observer_analysis_indices,
@@ -149,16 +153,52 @@ from oph_fpe.observers import (
 from oph_fpe.scale.array_screen import (
     _beta_at,
     _advance_record_commit_state,
-    _entropy,
     _group_order,
     _knn_edges,
     _modular_cap_drive,
     _modular_update,
     _node_signature,
+    _record_packet_entropy,
+    _record_packet_ids,
+    _record_port_entropy,
     _splitmix64,
     _write_csv,
+    record_observable_semantics_receipt,
 )
 from oph_fpe.scale.parallel import jobs_from_config
+
+
+# Observer-readback drive modes that wrote hash-derived record tokens back
+# into physical port state.  Selecting one raises: the record signature is an
+# internal SplitMix64 bookkeeping token, and feeding it into the state made a
+# hash artifact part of the dynamics.  No shipped config selected these modes.
+REMOVED_HASH_RECORD_FEEDBACK_MODES = frozenset(
+    {
+        "record_feedback_refresh",
+        "committed_record_feedback",
+        "observer_record_readback",
+    }
+)
+
+
+def _hash_record_feedback_rejection(mode: str) -> dict[str, Any]:
+    return {
+        "schema": "oph_config_rejection_v1",
+        "receipt": "OPH_HASH_RECORD_FEEDBACK_MODE_REMOVED",
+        "rejected_mode": str(mode),
+        "removed_modes": sorted(REMOVED_HASH_RECORD_FEEDBACK_MODES),
+        "reason": "hash feedback into physical state",
+        "detail": (
+            "the mode wrote SplitMix64 record-hash values into port_left/"
+            "port_right; the record signature is internal bookkeeping, not a "
+            "physical drive source"
+        ),
+        "supported_modes": [
+            "support_visible_boundary_refresh",
+            "cap_net_boundary_refresh",
+            "iid_refresh_default",
+        ],
+    }
 
 
 def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
@@ -343,6 +383,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     readback_drive_report: dict[str, Any] = {"enabled": False}
     if readback_drive_cfg.get("enabled", False):
         readback_mode = str(readback_drive_cfg.get("mode", "support_visible_boundary_refresh"))
+        if readback_mode.lower().replace("-", "_") in REMOVED_HASH_RECORD_FEEDBACK_MODES:
+            rejection = _hash_record_feedback_rejection(readback_mode)
+            bundle.write_json("config_rejection_receipt.json", rejection)
+            raise ValueError(
+                "OPH_HASH_RECORD_FEEDBACK_MODE_REMOVED: observer_readback_drive mode "
+                f"'{readback_mode}' is rejected (hash feedback into physical state); "
+                "receipt written to config_rejection_receipt.json"
+            )
         if readback_mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"}:
             readback_node_labels, readback_drive_report = _support_visible_cap_net_labels(
                 points,
@@ -422,6 +470,17 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     harmonic_trace_samples: list[dict[str, Any]] = []
     progress_cfg = config.get("progress", {}) or {}
     base_progress_interval = max(0, int(progress_cfg.get("base_cycle_interval", dyn.get("progress_interval", 4))))
+    conformance_cfg = config.get("scheduler_conformance", {}) or {}
+    conformance_tracker = CapacityConformanceTracker(
+        patch_count=patch_count,
+        edge_left=left,
+        edge_right=right,
+        group_name=group_name,
+        group_order=group_order,
+        seed=seed,
+        sample_edges_per_cycle=int(conformance_cfg.get("sample_edges_per_cycle", 8)),
+        engine="bw_array",
+    )
     base_loop_started = time.time()
     bundle.write_json(
         "base_progress.json",
@@ -492,6 +551,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 group_name=group_name,
                 group_order=group_order,
             )
+        # Pre-repair copies of the chosen edge slots: the measurement baseline
+        # for the private/shared spend split and the sampled transactional
+        # replays.  Reads only; the repair schedule below is unchanged.
+        conformance_before = snapshot_chosen_edge_state(chosen, port_left, port_right, gauge)
+        repair_direction = np.zeros(0, dtype=bool)
         if chosen.size:
             sector_edges_changed = _repair_sector_labels(
                 gauge,
@@ -502,12 +566,15 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 rng=sector_rng,
                 config=sector_repair_cfg,
             )
+            # The direction draw is hoisted into a variable at the identical
+            # position in the repair stream, so the schedule is byte-identical.
+            repair_direction = repair_rng.random(chosen.size) < 0.5
             repair_covariant_port_pairs(
                 port_left,
                 port_right,
                 gauge,
                 chosen,
-                repair_rng.random(chosen.size) < 0.5,
+                repair_direction,
                 group_name=group_name,
                 group_order=group_order,
             )
@@ -532,6 +599,20 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             group_order=group_order,
         )
         phi_after = int(np.sum(mismatches_after))
+        conformance_row = conformance_tracker.record_cycle(
+            cycle=cycle,
+            phi_before=phi_before,
+            phi_after=phi_after,
+            before=conformance_before,
+            direction=repair_direction,
+            port_left=port_left,
+            port_right=port_right,
+            gauge=gauge,
+            mismatches_after=mismatches_after,
+            repair_budget=repair_budget,
+            sector_link_writes_reported=sector_edges_changed,
+            readback_drive_edges=int(readback_drive_edges),
+        )
         incident_mismatch = (
             np.bincount(left, weights=mismatches_after.astype(float), minlength=patch_count)
             + np.bincount(right, weights=mismatches_after.astype(float), minlength=patch_count)
@@ -598,7 +679,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             repair_peak_candidate = _state_snapshot(
                 cycle=cycle,
                 committed_fraction=committed_fraction,
-                signature=signature,
+                record_packet_id=_record_packet_ids(record_patch_port_state),
+                record_port_entropy=_record_port_entropy(record_patch_port_state, group_order),
                 stable_count=stable_count,
                 committed=committed,
                 repair_load=final_repair_load,
@@ -683,10 +765,14 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
                 "committed_records": int(np.sum(committed)),
                 "committed_fraction": committed_fraction,
-                "record_entropy": _entropy(signature[committed]) if np.any(committed) else 0.0,
+                "record_packet_entropy": _record_packet_entropy(
+                    record_patch_port_state,
+                    committed,
+                ),
                 "modular_depth_mean": float(np.mean(modular_depth)),
                 "modular_depth_std": float(np.std(modular_depth)),
                 "observer_readback_drive_edges": int(readback_drive_edges),
+                **conformance_tracker.trace_fields(conformance_row),
             }
         )
         if harmonic_trace_enabled and cycle in harmonic_trace_cycles:
@@ -701,7 +787,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                     group_name=group_name,
                     group_order=group_order,
                     patch_count=patch_count,
-                    signature=signature,
+                    record_port_entropy=_record_port_entropy(record_patch_port_state, group_order),
                     stable_count=stable_count,
                     committed=committed,
                     repair_load=final_repair_load,
@@ -731,7 +817,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                     chosen_edges=int(chosen.size),
                     committed_fraction=committed_fraction,
                     readback_drive_edges=int(readback_drive_edges),
-                    record_entropy=trace[-1]["record_entropy"],
+                    record_packet_entropy=trace[-1]["record_packet_entropy"],
                     modular_depth_mean=trace[-1]["modular_depth_mean"],
                     modular_depth_std=trace[-1]["modular_depth_std"],
                 ),
@@ -827,6 +913,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         ),
     }
     bundle.write_json("gauge_coupled_dynamics_report.json", gauge_coupled_dynamics_report)
+    record_semantics_receipt = record_observable_semantics_receipt()
+    record_semantics_receipt["removed_state_feedback_modes"] = sorted(
+        REMOVED_HASH_RECORD_FEEDBACK_MODES
+    )
+    record_semantics_receipt["removed_state_feedback_reason"] = (
+        "hash feedback into physical state"
+    )
+    bundle.write_json(
+        "record_observable_semantics_receipt.json", record_semantics_receipt
+    )
     bundle.write_json(
         "base_progress.json",
         _base_repair_progress_report(
@@ -840,7 +936,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             chosen_edges=None,
             committed_fraction=float(np.mean(committed)),
             readback_drive_edges=trace[-1]["observer_readback_drive_edges"] if trace else None,
-            record_entropy=trace[-1]["record_entropy"] if trace else None,
+            record_packet_entropy=trace[-1]["record_packet_entropy"] if trace else None,
             modular_depth_mean=trace[-1]["modular_depth_mean"] if trace else None,
             modular_depth_std=trace[-1]["modular_depth_std"] if trace else None,
         ),
@@ -864,6 +960,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         if str(group_name).upper() == "S3"
         else np.zeros(0, dtype=np.int16)
     )
+    final_record_packet_ids = _record_packet_ids(record_patch_port_state)
+    final_record_port_entropy = _record_port_entropy(record_patch_port_state, group_order)
     fields_all = _observable_fields(
         port_left=port_left,
         port_right=port_right,
@@ -871,7 +969,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         right=right,
         gauge=gauge,
         patch_count=patch_count,
-        signature=prev_signature,
+        record_port_entropy=final_record_port_entropy,
         stable_count=stable_count,
         committed=committed,
         repair_load=final_repair_load,
@@ -882,7 +980,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         edge_residual=final_observer_edge_residual,
     )
     bw_cfg = config.get("bw", {})
-    observables = [str(name) for name in bw_cfg.get("observables", ["record_signature", "repair_load", "s3_class_density", "stable_count"])]
+    observables = [str(name) for name in bw_cfg.get("observables", ["record_port_entropy", "repair_load", "s3_class_density", "stable_count"])]
     fields = {}
     skipped_scalar_observables: list[dict[str, str]] = []
     for name in observables:
@@ -1000,7 +1098,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         right=right,
         gauge=gauge,
         patch_count=patch_count,
-        signature=prev_signature,
+        record_packet_id=final_record_packet_ids,
+        record_port_entropy=final_record_port_entropy,
         stable_count=stable_count,
         committed=committed,
         repair_load=final_repair_load,
@@ -1015,7 +1114,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             _state_snapshot(
                 cycle=cycles - 1,
                 committed_fraction=float(np.mean(committed)),
-                signature=prev_signature,
+                record_packet_id=final_record_packet_ids,
+                record_port_entropy=final_record_port_entropy,
                 stable_count=stable_count,
                 committed=committed,
                 repair_load=final_repair_load,
@@ -1122,7 +1222,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             state_raw_observer_fields,
             collar_report,
             times=times,
-            observables=[_projector_field_name(name) for name in bw_cfg.get("observables", ["record_signature"])],
+            observables=[_projector_field_name(name) for name in bw_cfg.get("observables", ["record_port_entropy"])],
             regularizers=[float(value) for value in bw_cfg.get("regularizer_a", [0.001])],
             controls=controls,
             state_mode=str(bw_cfg.get("state_mode", "cooccurrence_kernel")),
@@ -1156,7 +1256,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 caps,
                 state_raw_observer_fields,
                 times=[float(value) for value in selection_cfg.get("times", times)],
-                observables=[_projector_field_name(name) for name in selection_cfg.get("observables", bw_cfg.get("observables", ["record_signature"]))],
+                observables=[_projector_field_name(name) for name in selection_cfg.get("observables", bw_cfg.get("observables", ["record_port_entropy"]))],
                 candidate_scales=[float(value) for value in selection_cfg.get("candidate_scales", [1.0, math.pi, 2.0 * math.pi, 4.0 * math.pi])],
                 sources=selection_sources,
                 declared_response_scale=float(selection_cfg.get("declared_response_scale", bw_cfg.get("transition_response_scale", 2.0 * math.pi))),
@@ -1333,12 +1433,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         receipt="EDGE_HEAT_KERNEL_RECEIPT",
         physical_claim=False,
     )
+    # Event identity for the Born surface is the physical record packet id,
+    # not the internal SplitMix64 hash, so equal committed record content maps
+    # to one event.
     central_record_report = central_record_born_report(
-        record_signature=prev_signature,
+        record_signature=final_record_packet_ids,
         committed=committed,
         stable_count=stable_count,
         commit_cycles=commit_cycles,
     )
+    central_record_report["event_identity"] = "physical_record_packet_id"
     checkpoint_report = observer_checkpoint_restoration_report(
         raw_observer_fields,
         observer_analysis_rows,
@@ -1365,7 +1469,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             cell_entropy=cell_entropy,
             seed=seed + 1801,
             field_names=tuple(h3_population_cfg.get("field_names", [
-                "record_signature",
+                "record_port_entropy",
                 "stable_count",
                 "repair_load",
                 "cumulative_repair_load",
@@ -1426,7 +1530,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 h3_modular_response_cfg.get(
                     "field_names",
                     [
-                        "record_signature",
+                        "record_port_entropy",
                         "stable_count",
                         "cumulative_repair_load",
                         "s3_class_density",
@@ -1773,7 +1877,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             s3_defect_timeline_report,
             raw_fields=h3_raw_observer_fields,
             field_names=tuple(h3_support_cfg.get("timeline_field_names", h3_population_cfg.get("field_names", [
-                "record_signature",
+                "record_port_entropy",
                 "stable_count",
                 "repair_load",
                 "cumulative_repair_load",
@@ -2372,6 +2476,22 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("visualization_defect_diagnostics_summary.json", visualization_defect_diagnostics)
 
     _write_csv(bundle.path / "mismatch_trace.csv", trace)
+    scheduler_conformance_report = conformance_tracker.run_report()
+    bundle.write_jsonl(
+        "scheduler_class_conformance.jsonl", conformance_tracker.cycle_rows
+    )
+    bundle.write_json(
+        "scheduler_class_conformance.json", scheduler_conformance_report
+    )
+    if bool(
+        outputs_cfg.get("write_capacity_spend_npz", output_profile != "compact")
+    ):
+        per_patch_spend = conformance_tracker.per_patch_spend()
+        np.savez_compressed(
+            bundle.path / "capacity_spend_per_patch.npz",
+            private_spend=per_patch_spend["private"],
+            shared_spend=per_patch_spend["shared"],
+        )
     bundle.write_json("bw_report.json", bw_report)
     bundle.write_json("bw_controls.json", bw_report["controls"])
     if collar_report:
@@ -3045,7 +3165,7 @@ def _base_repair_progress_report(
     chosen_edges: int | None,
     committed_fraction: float,
     readback_drive_edges: int | None = None,
-    record_entropy: float | None = None,
+    record_packet_entropy: float | None = None,
     modular_depth_mean: float | None = None,
     modular_depth_std: float | None = None,
 ) -> dict[str, Any]:
@@ -3071,7 +3191,7 @@ def _base_repair_progress_report(
         "chosen_edges": chosen_edges,
         "committed_fraction": float(committed_fraction),
         "readback_drive_edges": readback_drive_edges,
-        "record_entropy": record_entropy,
+        "record_packet_entropy": record_packet_entropy,
         "modular_depth_mean": modular_depth_mean,
         "modular_depth_std": modular_depth_std,
     }
@@ -3415,7 +3535,7 @@ def _observable_fields(
     right: np.ndarray,
     gauge: np.ndarray,
     patch_count: int,
-    signature: np.ndarray,
+    record_port_entropy: np.ndarray,
     stable_count: np.ndarray,
     committed: np.ndarray,
     repair_load: np.ndarray,
@@ -3425,8 +3545,14 @@ def _observable_fields(
     cumulative_repair_load: np.ndarray,
     edge_residual: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
+    """Exported screen scalar fields.
+
+    Physical record content enters as ``record_port_entropy``; the SplitMix64
+    record hash is internal bookkeeping and is not exported here.
+    """
+
     fields = {
-        "record_signature": _standardize(signature.astype(float)),
+        "record_port_entropy": _standardize(np.asarray(record_port_entropy, dtype=float)),
         "stable_count": _standardize(stable_count.astype(float)),
         "committed_mask": committed.astype(float),
         "repair_load": _standardize(repair_load.astype(float)),
@@ -3544,8 +3670,26 @@ def _apply_observer_readback_drive(
     committed: np.ndarray | None = None,
     audit_rows: list[dict[str, Any]] | None = None,
 ) -> int:
+    """Apply the configured physical boundary-refresh drive to bounded ports.
+
+    ``record_signature``, ``committed``, and ``audit_rows`` are accepted for
+    call compatibility only.  The hash-to-state feedback modes that consumed
+    them (``record_feedback_refresh``, ``committed_record_feedback``,
+    ``observer_record_readback``) are removed: they wrote SplitMix64
+    record-hash values into port state, and selecting one raises with the
+    ``OPH_HASH_RECORD_FEEDBACK_MODE_REMOVED`` receipt.
+    """
+
+    del record_signature, committed, audit_rows
     if not config.get("enabled", False):
         return 0
+    mode = str(config.get("mode", "support_visible_boundary_refresh"))
+    normalized_mode = mode.lower().replace("-", "_")
+    if normalized_mode in REMOVED_HASH_RECORD_FEEDBACK_MODES:
+        raise ValueError(
+            "OPH_HASH_RECORD_FEEDBACK_MODE_REMOVED: observer_readback_drive mode "
+            f"'{mode}' is rejected (hash feedback into physical state)"
+        )
     start_cycle = int(config.get("start_cycle", 0))
     stop_cycle_raw = config.get("stop_cycle")
     stop_cycle = int(stop_cycle_raw) if stop_cycle_raw is not None else None
@@ -3560,39 +3704,11 @@ def _apply_observer_readback_drive(
     drive_count = min(edge_count, max(0, requested), max_edges)
     if drive_count <= 0:
         return 0
-    mode = str(config.get("mode", "support_visible_boundary_refresh"))
-    normalized_mode = mode.lower().replace("-", "_")
-    record_feedback_mode = normalized_mode in {
-        "record_feedback_refresh",
-        "committed_record_feedback",
-        "observer_record_readback",
-    }
-    record_values = np.asarray(record_signature) if record_signature is not None else np.zeros(0)
-    committed_mask = np.asarray(committed, dtype=bool) if committed is not None else np.zeros(0, dtype=bool)
-    if record_feedback_mode:
-        if record_values.size == 0 or committed_mask.size != record_values.size:
-            return 0
-        eligible = np.flatnonzero(committed_mask[left] | committed_mask[right])
-        if eligible.size == 0:
-            return 0
-        drive_count = min(drive_count, int(eligible.size))
-        edges = rng.choice(eligible, size=drive_count, replace=False)
-    else:
-        edges = rng.choice(edge_count, size=drive_count, replace=False)
+    edges = rng.choice(edge_count, size=drive_count, replace=False)
     update_left = rng.random(drive_count) < 0.5
     phase_advance = int(config.get("phase_advance_per_cycle", 0))
     phase = int((int(cycle) * phase_advance) % max(int(group_order), 1))
-    if record_feedback_mode:
-        left_records = np.mod(np.abs(record_values[left[edges]].astype(np.int64)), int(group_order))
-        right_records = np.mod(np.abs(record_values[right[edges]].astype(np.int64)), int(group_order))
-        # Each endpoint may read only a committed neighboring/local record.
-        # If only one side is committed, both local targets are derived from
-        # that accessible record rather than an external cap program.
-        left_is_committed = committed_mask[left[edges]]
-        right_is_committed = committed_mask[right[edges]]
-        left_targets = np.where(left_is_committed, left_records, right_records)
-        right_targets = np.where(right_is_committed, right_records, left_records)
-    elif mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"} and node_labels is not None:
+    if mode in {"support_visible_boundary_refresh", "cap_net_boundary_refresh"} and node_labels is not None:
         left_targets = (np.asarray(node_labels[left[edges]], dtype=np.int64) + phase) % int(group_order)
         right_targets = (np.asarray(node_labels[right[edges]], dtype=np.int64) + phase) % int(group_order)
     else:
@@ -3610,25 +3726,6 @@ def _apply_observer_readback_drive(
         port_left[edges[update_left]] = left_targets[update_left].astype(port_left.dtype)
     if np.any(~update_left):
         port_right[edges[~update_left]] = right_targets[~update_left].astype(port_right.dtype)
-    if record_feedback_mode and audit_rows is not None:
-        audit_rows.append(
-            {
-                "cycle": int(cycle),
-                "read_count": int(drive_count),
-                "write_count": int(drive_count),
-                "records_causally_bound_to_prior_commits": True,
-                "readback_changes_future_local_actions": True,
-                "read_edge_ids_hash": stable_json_hash(
-                    [int(value) for value in np.sort(edges)]
-                ),
-                "record_values_hash": stable_json_hash(
-                    [
-                        [int(left_records[index]), int(right_records[index])]
-                        for index in range(drive_count)
-                    ]
-                ),
-            }
-        )
     return int(drive_count)
 
 
@@ -3918,7 +4015,8 @@ def _state_snapshot(
     *,
     cycle: int,
     committed_fraction: float,
-    signature: np.ndarray,
+    record_packet_id: np.ndarray,
+    record_port_entropy: np.ndarray,
     stable_count: np.ndarray,
     committed: np.ndarray,
     repair_load: np.ndarray,
@@ -3931,7 +4029,8 @@ def _state_snapshot(
     return {
         "cycle": int(cycle),
         "committed_fraction": float(committed_fraction),
-        "signature": np.asarray(signature, dtype=np.int64).copy(),
+        "record_packet_id": np.asarray(record_packet_id, dtype=np.int64).copy(),
+        "record_port_entropy": np.asarray(record_port_entropy, dtype=np.float32).copy(),
         "stable_count": np.asarray(stable_count, dtype=np.int32).copy(),
         "committed": np.asarray(committed, dtype=bool).copy(),
         "repair_load": repair_readback,
@@ -3942,7 +4041,7 @@ def _state_snapshot(
         "modular_depth": np.asarray(modular_depth, dtype=np.float32).copy(),
         "modular_time": np.asarray(modular_time, dtype=np.float32).copy(),
         "cumulative_repair_load": np.asarray(cumulative_repair_load, dtype=np.float32).copy(),
-        "snapshot_storage_bytes_per_patch_estimate": 29,
+        "snapshot_storage_bytes_per_patch_estimate": 33,
     }
 
 
@@ -3998,7 +4097,7 @@ def _observable_fields_from_snapshot(
         right=right,
         gauge=np.zeros(0, dtype=np.int16),
         patch_count=patch_count,
-        signature=np.asarray(snapshot["signature"]),
+        record_port_entropy=np.asarray(snapshot["record_port_entropy"], dtype=float),
         stable_count=np.asarray(snapshot["stable_count"]),
         committed=np.asarray(snapshot["committed"]),
         repair_load=np.asarray(snapshot["repair_load"], dtype=float),
@@ -4016,7 +4115,8 @@ def _observer_raw_fields(
     right: np.ndarray,
     gauge: np.ndarray,
     patch_count: int,
-    signature: np.ndarray,
+    record_packet_id: np.ndarray,
+    record_port_entropy: np.ndarray,
     stable_count: np.ndarray,
     committed: np.ndarray,
     repair_load: np.ndarray,
@@ -4026,8 +4126,17 @@ def _observer_raw_fields(
     cumulative_repair_load: np.ndarray,
     edge_residual: np.ndarray | None = None,
 ) -> dict[str, np.ndarray]:
+    """Observer-visible raw fields.
+
+    ``record_packet_id`` is the physical record-content token (dense id over
+    exact packets) used by the record-family and observer-view bookkeeping;
+    ``record_port_entropy`` is the physical per-patch record scalar.  The
+    SplitMix64 record hash is not present.
+    """
+
     fields = {
-        "record_signature": signature.astype(float),
+        "record_packet_id": np.asarray(record_packet_id, dtype=float),
+        "record_port_entropy": np.asarray(record_port_entropy, dtype=float),
         "stable_count": stable_count.astype(float),
         "committed_mask": committed.astype(float),
         "repair_load": repair_load.astype(float),
@@ -4065,7 +4174,8 @@ def _observer_raw_fields_from_snapshot(
         right=right,
         gauge=np.zeros(0, dtype=np.int16),
         patch_count=patch_count,
-        signature=np.asarray(snapshot["signature"]),
+        record_packet_id=np.asarray(snapshot["record_packet_id"]),
+        record_port_entropy=np.asarray(snapshot["record_port_entropy"], dtype=float),
         stable_count=np.asarray(snapshot["stable_count"]),
         committed=np.asarray(snapshot["committed"]),
         repair_load=np.asarray(snapshot["repair_load"], dtype=float),
@@ -4391,7 +4501,7 @@ def _harmonic_time_trace_sample(
     group_name: str,
     group_order: int,
     patch_count: int,
-    signature: np.ndarray,
+    record_port_entropy: np.ndarray,
     stable_count: np.ndarray,
     committed: np.ndarray,
     repair_load: np.ndarray,
@@ -4422,7 +4532,7 @@ def _harmonic_time_trace_sample(
         right=right,
         gauge=gauge,
         patch_count=patch_count,
-        signature=signature,
+        record_port_entropy=record_port_entropy,
         stable_count=stable_count,
         committed=committed,
         repair_load=repair_load,
@@ -4436,7 +4546,7 @@ def _harmonic_time_trace_sample(
         str(name)
         for name in config.get(
             "fields",
-            ["record_signature", "stable_count", "cumulative_repair_load"],
+            ["record_port_entropy", "stable_count", "cumulative_repair_load"],
         )
     ]
     selected = {name: fields_all[name] for name in field_names if name in fields_all}
@@ -6006,7 +6116,7 @@ def _h2_repair_current_tensor(
     if len(raw_history) >= 2:
         before_fields = raw_history[0]
         after_fields = raw_history[-1]
-        for name in ("repair_load", "cumulative_repair_load", "local_mismatch_density", "record_signature"):
+        for name in ("repair_load", "cumulative_repair_load", "local_mismatch_density", "record_port_entropy"):
             before = before_fields.get(name)
             after = after_fields.get(name)
             if before is None or after is None:

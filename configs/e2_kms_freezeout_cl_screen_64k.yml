@@ -65,7 +65,7 @@ bw:
   times: [0.05, 0.10]
   normalization: "2pi"
   observables:
-    - record_signature_projectors
+    - record_port_entropy_projectors
     - repair_load_projectors
     - s3_sector_projectors
     - cumulative_repair_load_projectors
@@ -83,7 +83,7 @@ bw:
     candidate_scales: [1.0, 3.141592653589793, 6.283185307179586, 12.566370614359172]
     times: [0.10]
     observables:
-      - record_signature_projectors
+      - record_port_entropy_projectors
       - repair_load_projectors
       - s3_sector_projectors
       - cumulative_repair_load_projectors
@@ -98,7 +98,7 @@ collar_markov:
   enabled: true
   max_triplets: 2048
   packet_bins:
-    record_signature: 64
+    record_packet_id: 64
     stable_count: 8
     repair_load: 8
     s3_class_density: 6
@@ -136,7 +136,7 @@ h3_population:
   pass_ratio: 0.85
   geometry_blend: 0.0
   field_names:
-    - record_signature
+    - record_port_entropy
     - stable_count
     - repair_load
     - cumulative_repair_load
@@ -170,7 +170,7 @@ cosmology:
     allow_screen_proxy_without_bulk: true
     commit_fraction: 0.95
     fields:
-      - record_signature
+      - record_port_entropy
       - stable_count
       - cumulative_repair_load
       - s3_class_density

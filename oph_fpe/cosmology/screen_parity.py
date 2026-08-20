@@ -37,10 +37,10 @@ import numpy as np
 SCREEN_PARITY_SCHEMA = "screen_parity_pseudoscalar_v1"
 
 DEFAULT_FIELD_PAIRS = (
-    ("record_signature", "s3_class_density"),
-    ("record_signature", "cell_entropy"),
+    ("record_port_entropy", "s3_class_density"),
+    ("record_port_entropy", "cell_entropy"),
     ("s3_class_density", "cumulative_repair_load"),
-    ("record_signature_smooth_k16", "s3_class_density"),
+    ("record_port_entropy_smooth_k16", "s3_class_density"),
 )
 
 

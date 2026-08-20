@@ -84,7 +84,7 @@ _COMPANION_CANDIDATES = (
 def realization_inputs_from_freezeout(
     freezeout_path: Path,
     *,
-    record_field: str = "record_signature",
+    record_field: str = "record_port_entropy",
     companion_field: str | None = None,
     max_record_classes: int = _MAX_RECORD_CLASSES,
     max_companion_classes: int = _MAX_COMPANION_CLASSES,

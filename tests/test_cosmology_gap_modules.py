@@ -37,11 +37,11 @@ def test_hot_release_detects_mechanical_surface_but_not_theorem_ready(tmp_path):
     with (run / "mismatch_trace.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
-            fieldnames=["cycle", "beta", "phi", "committed_fraction", "record_entropy"],
+            fieldnames=["cycle", "beta", "phi", "committed_fraction", "record_packet_entropy"],
         )
         writer.writeheader()
-        writer.writerow({"cycle": 0, "beta": 0.1, "phi": 12, "committed_fraction": 0.0, "record_entropy": 0.0})
-        writer.writerow({"cycle": 4, "beta": 0.5, "phi": 0, "committed_fraction": 1.0, "record_entropy": 2.0})
+        writer.writerow({"cycle": 0, "beta": 0.1, "phi": 12, "committed_fraction": 0.0, "record_packet_entropy": 0.0})
+        writer.writerow({"cycle": 4, "beta": 0.5, "phi": 0, "committed_fraction": 1.0, "record_packet_entropy": 2.0})
     (run / "freezeout_map_summary.json").write_text(
         json.dumps({"freezeout_cycle": 4, "committed_fraction": 1.0}),
         encoding="utf-8",

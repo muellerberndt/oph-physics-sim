@@ -1924,14 +1924,17 @@ def _write_full_screen_field_bin(
     source = str(npz_path)
     exact_values = True
     fallback_reason: str | None = None
-    field_name = "record_signature"
+    field_name = "record_port_entropy"
     if npz_path.exists():
         try:
             with np.load(npz_path) as data:
                 points = np.asarray(data["points"], dtype=float)
-                field_name = "record_signature" if "record_signature" in data.files else next(
-                    (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
-                    "uniform",
+                field_name = next(
+                    (name for name in ("record_port_entropy", "record_signature") if name in data.files),
+                    next(
+                        (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
+                        "uniform",
+                    ),
                 )
                 values = (
                     np.asarray(data[field_name], dtype=float)
@@ -2061,7 +2064,7 @@ def _fallback_full_screen_field(
 def _load_screen_evolution_frames(
     run_dir: Path | None,
     *,
-    preferred_fields: tuple[str, ...] = ("local_mismatch_density", "record_signature"),
+    preferred_fields: tuple[str, ...] = ("local_mismatch_density", "record_port_entropy", "record_signature"),
 ) -> dict[str, Any] | None:
     """Load per-cycle screen field frames written by the harmonic time trace."""
 
@@ -3157,7 +3160,7 @@ def _observer_modular_time_payload(
         )
     evolution_frames = _load_screen_evolution_frames(
         run_dir,
-        preferred_fields=("local_mismatch_density", "repair_load", "record_signature"),
+        preferred_fields=("local_mismatch_density", "repair_load", "record_port_entropy", "record_signature"),
     )
     overlap_links = _observer_overlap_links(
         views,
@@ -3384,7 +3387,9 @@ def _screen_evolution_payload(
     with ``screen.points`` so the vacuum view can animate without extra fetches.
     """
 
-    evolution = _load_screen_evolution_frames(run_dir, preferred_fields=("record_signature",))
+    evolution = _load_screen_evolution_frames(
+        run_dir, preferred_fields=("record_port_entropy", "record_signature")
+    )
     if not evolution:
         return {
             "available": False,
@@ -3395,7 +3400,7 @@ def _screen_evolution_payload(
             ),
         }
     cycles = [int(value) for value in evolution["cycles"].tolist()]
-    inline_fields = ("record_signature", "local_mismatch_density")
+    inline_fields = ("record_port_entropy", "record_signature", "local_mismatch_density")
     fields_payload: dict[str, Any] = {}
     sidecar_only_fields: list[str] = []
     for name, matrix in sorted(evolution.get("fields", {}).items()):
@@ -5990,9 +5995,12 @@ def _screen_points_and_field(
     if npz_path.exists():
         with np.load(npz_path) as data:
             points = np.asarray(data["points"], dtype=float)
-            field_name = "record_signature" if "record_signature" in data.files else next(
-                (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
-                "uniform",
+            field_name = next(
+                (name for name in ("record_port_entropy", "record_signature") if name in data.files),
+                next(
+                    (name for name in data.files if name not in {"points", "cell_area_planck", "cell_entropy"}),
+                    "uniform",
+                ),
             )
             values = np.asarray(data[field_name], dtype=float) if field_name in data.files else np.zeros(points.shape[0])
             for name in data.files:
@@ -7426,7 +7434,7 @@ def _pn_silence_to_observation_payload(run_dir: Path, alternate_dir: Path | None
             "cycle": silence.get("cycle"),
             "committedRecords": silence.get("committed_records"),
             "committedFraction": silence.get("committed_fraction"),
-            "recordEntropy": silence.get("record_entropy"),
+            "recordPacketEntropy": silence.get("record_packet_entropy"),
             "initialRecordSilenceReceipt": bool(silence.get("initial_record_silence_receipt", False)),
         },
         "observationEmergence": {

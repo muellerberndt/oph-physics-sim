@@ -27,7 +27,7 @@ def _write_minimal_run(run: Path, *, initial_silent: bool = True, h3_objects: in
     first_fraction = 0.0 if initial_silent else 0.1
     first_entropy = 0.0 if initial_silent else 0.2
     (run / "mismatch_trace.csv").write_text(
-        "cycle,phase,phi,committed_records,committed_fraction,record_entropy,modular_depth_mean,mismatch_edges\n"
+        "cycle,phase,phi,committed_records,committed_fraction,record_packet_entropy,modular_depth_mean,mismatch_edges\n"
         f"0,exploration,10,{first_records},{first_fraction},{first_entropy},0.0,10\n"
         "63,exploration,0,64,1.0,2.0,0.7,0\n",
         encoding="utf-8",

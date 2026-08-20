@@ -37,7 +37,7 @@ class SilenceToObservationInputs:
     N_source: str = "ew-bridge"
     repair_rounds: int = 24
     initial_committed_fraction_max: float = 0.0
-    initial_record_entropy_max: float = 0.0
+    initial_record_packet_entropy_max: float = 0.0
     observation_committed_fraction_min: float = 0.95
     min_observer_count: int = 1
     min_h3_object_count: int = 1
@@ -85,7 +85,8 @@ def silence_to_observation_report(
     last = trace_rows[-1] if trace_rows else {}
     initial_record_silence = bool(
         _float(first.get("committed_fraction"), 1.0) <= float(opts.initial_committed_fraction_max)
-        and _float(first.get("record_entropy"), 1.0) <= float(opts.initial_record_entropy_max)
+        and _float(first.get("record_packet_entropy"), 1.0)
+        <= float(opts.initial_record_packet_entropy_max)
         and _float(first.get("committed_records"), 1.0) <= 0.0
     )
     observation_emergence = bool(
@@ -177,7 +178,8 @@ def silence_to_observation_report(
             "cycle": first.get("cycle"),
             "committed_records": first.get("committed_records"),
             "committed_fraction": first.get("committed_fraction"),
-            "record_entropy": first.get("record_entropy"),
+            "record_packet_entropy": first.get("record_packet_entropy"),
+            "record_entropy_semantics": "physical_record_packet_entropy_nats",
             "mismatch_phi": first.get("phi"),
             "initial_record_silence_receipt": initial_record_silence,
             "claim_boundary": (
@@ -190,7 +192,7 @@ def silence_to_observation_report(
             "final_cycle": last.get("cycle"),
             "final_committed_records": last.get("committed_records"),
             "final_committed_fraction": last.get("committed_fraction"),
-            "final_record_entropy": last.get("record_entropy"),
+            "final_record_packet_entropy": last.get("record_packet_entropy"),
             "final_phi": last.get("phi"),
             "finite_consensus_theorem_receipt": finite_consensus,
             "observer_modular_time_receipt": bool(observer.get("observer_modular_time_receipt", False)),
@@ -400,7 +402,7 @@ def _markdown_report(report: dict[str, Any]) -> str:
             "## Silence To Observation",
             "",
             f"- initial committed records: `{silence['committed_records']}`",
-            f"- initial record entropy: `{silence['record_entropy']}`",
+            f"- initial record packet entropy: `{silence['record_packet_entropy']}`",
             f"- final committed records: `{emergence['final_committed_records']}`",
             f"- observer count: `{emergence['observer_count']}`",
             f"- H3 object count: `{emergence['h3_object_count']}`",

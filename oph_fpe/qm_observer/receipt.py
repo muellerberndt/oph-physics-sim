@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 from fractions import Fraction
 from math import lcm
@@ -41,8 +42,9 @@ LABELS = {
         "Exploratory, non-evidential probe: observer-frame record counting "
         "reproduces the exact committed quantum weights without a "
         "probability postulate, and conditioning on the observer's record "
-        "reproduces projection. No instrument, no freeze, no evidential "
-        "run."
+        "reproduces projection under the declared record-persistence and "
+        "conditioned-class conventions. No instrument, no freeze, no "
+        "evidential run."
     ),
 }
 
@@ -52,7 +54,8 @@ BOUNDARY_STATEMENT = (
     "issue 730), not derived from source dynamics. This probe establishes "
     "that observer-frame record counting reproduces the exact quantum "
     "weights without a probability postulate, and that conditioning "
-    "reproduces projection. It does not derive the Hilbert-space "
+    "reproduces projection under the declared record-persistence and "
+    "conditioned-class conventions. It does not derive the Hilbert-space "
     "structure, does not source-produce a phase operation, and does not "
     "create evidence: no instrument, no freeze, no evidential run. INS-01 "
     "remains the controlling OL-A1 verdict; OL-C5 status is untouched; "
@@ -117,6 +120,15 @@ FORBIDDEN_IMPORT_TOKENS = {
     "amplitudes.py": ("ensemble", "tables", "oph_fpe.qm_observer"),
 }
 
+# Dynamic-import call forms rejected outright in the inspected modules:
+# none of the three carries a legitimate dynamic import, so any occurrence
+# is an escape from the static import contract.
+DYNAMIC_IMPORT_CALLS = (
+    "__import__",
+    "import_module",
+    "importlib.import_module",
+)
+
 
 def fraction_pair(value: Fraction) -> list[int]:
     return [value.numerator, value.denominator]
@@ -150,10 +162,56 @@ def imports_from_source(source: str) -> list[str]:
     return sorted(names)
 
 
+def _call_name(node: ast.Call) -> str | None:
+    """The dotted name of a call target, when the target is a name or an
+    attribute chain over names."""
+
+    func = node.func
+    if isinstance(func, ast.Name):
+        return func.id
+    if isinstance(func, ast.Attribute):
+        parts = [func.attr]
+        value: ast.expr = func.value
+        while isinstance(value, ast.Attribute):
+            parts.append(value.attr)
+            value = value.value
+        if isinstance(value, ast.Name):
+            parts.append(value.id)
+        return ".".join(reversed(parts))
+    return None
+
+
+def dynamic_imports_from_source(source: str) -> list[str]:
+    """Dynamic-import call nodes found by AST parsing: ``__import__`` and
+    ``importlib.import_module`` in any binding, each rendered with its
+    literal string argument when the call carries one."""
+
+    tree = ast.parse(source)
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = _call_name(node)
+        if name is None:
+            continue
+        if name not in DYNAMIC_IMPORT_CALLS and not name.endswith(
+            ".import_module"
+        ):
+            continue
+        argument = "<unresolved>"
+        first = node.args[0] if node.args else None
+        if isinstance(first, ast.Constant) and isinstance(first.value, str):
+            argument = first.value
+        found.add(f"{name}({argument})")
+    return sorted(found)
+
+
 def check_source_independence(filename: str, source: str) -> list[str]:
     """Fail-closed check of one module source against its forbidden import
-    tokens; a mutant that computes counts from amplitudes has to import
-    across this boundary and is detected here."""
+    tokens and against the dynamic-import call forms. A mutant that computes
+    counts from amplitudes by a static cross-import, by ``__import__``, or by
+    ``importlib.import_module`` is rejected here; the check covers those
+    forms and no other route between the two paths."""
 
     require(
         filename in FORBIDDEN_IMPORT_TOKENS,
@@ -170,23 +228,36 @@ def check_source_independence(filename: str, source: str) -> list[str]:
         "IMPORT_INDEPENDENCE",
         f"{filename} imports {violations}",
     )
+    dynamic = dynamic_imports_from_source(source)
+    require(
+        not dynamic,
+        "IMPORT_INDEPENDENCE",
+        f"{filename} carries dynamic-import calls {dynamic}",
+    )
     return imports
 
 
 def check_independence() -> dict[str, Any]:
-    """The import-graph independence receipt over the package sources."""
+    """The import-graph independence receipt over the package sources, with
+    the sha256 of every inspected source pinning the code that produced the
+    counts."""
 
     modules: dict[str, Any] = {}
     for filename in sorted(FORBIDDEN_IMPORT_TOKENS):
-        source = (PACKAGE_DIR / filename).read_text(encoding="utf-8")
+        raw = (PACKAGE_DIR / filename).read_bytes()
+        source = raw.decode("utf-8")
         modules[filename] = {
             "imports": check_source_independence(filename, source),
             "forbidden_tokens": list(FORBIDDEN_IMPORT_TOKENS[filename]),
+            "dynamic_import_calls": dynamic_imports_from_source(source),
+            "source_sha256": hashlib.sha256(raw).hexdigest(),
         }
     return {
         "modules": modules,
         "verdict": (
-            "the counting path and the amplitude path share no import edge"
+            "the counting path and the amplitude path share no static "
+            "import edge and no __import__ or importlib.import_module call; "
+            "each inspected source is pinned by its sha256"
         ),
     }
 
@@ -456,7 +527,9 @@ def interference_receipt() -> dict[str, Any]:
             "simultaneous definite outcome values for both contexts and "
             "measurement reveals the value without rewriting the record "
             "satisfies direct = mediated; the exact gap excludes every "
-            "member of that family"
+            "member of that family. No Bell-type claim and no locality "
+            "claim is carried: the receipt is a measurement-disturbance "
+            "identity of the committed weights (DESIGN.md section 5)"
         ),
     }
 
@@ -712,7 +785,13 @@ def build_receipt() -> dict[str, Any]:
     identities = [
         base_context_identity(name) for name, _ in tables.CONTEXTS
     ]
-    phase_counts = identities[-1]["counts"]
+    phase_rows = [row for row in identities if row["context"] == "phase"]
+    require(
+        len(phase_rows) == 1,
+        "PHASE_ROW",
+        "the count-ratio identities carry no single phase row",
+    )
+    phase_counts = phase_rows[0]["counts"]
     window_lhs, window_rhs = po.check_phase_window(phase_counts)
     receipt: dict[str, Any] = {
         "schema": SCHEMA_RECEIPT,
@@ -728,10 +807,15 @@ def build_receipt() -> dict[str, Any]:
             "counts": phase_counts,
             "lhs": window_lhs,
             "rhs": window_rhs,
-            "satisfied": True,
+            "satisfied": window_lhs <= window_rhs,
             "scope": (
                 "base ensemble phase pair only; conditioned sub-ensembles "
-                "are outside the committed core"
+                "are outside the committed core. A conditioned phase pair "
+                "carries a zero-mass outcome and fails WINDOW_POSITIVITY, "
+                "so the window is never evaluated on one. On any "
+                "record-diagonal base state the phase pair is balanced and "
+                "lhs is identically 0, so the window clause holds "
+                "vacuously and discriminates nothing here."
             ),
         },
         "collapse_chains": [

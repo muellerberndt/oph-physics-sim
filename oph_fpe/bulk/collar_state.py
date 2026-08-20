@@ -10,6 +10,7 @@ import numpy as np
 from oph_fpe.bulk.cap_geometry import RoundCap, cap_weights, collar_mask
 
 _VISIBLE_PACKET_FIELDS = (
+    "record_packet_id",
     "record_signature",
     "committed_mask",
     "stable_count",
@@ -17,6 +18,7 @@ _VISIBLE_PACKET_FIELDS = (
     "s3_class_density",
     "local_mismatch_density",
 )
+_RECORD_TOKEN_FIELDS = {"record_packet_id", "record_signature"}
 _VISIBLE_PACKET_CACHE_MAX_ENTRIES = 256
 _VISIBLE_PACKET_CACHE: dict[tuple[Any, ...], np.ndarray] = {}
 
@@ -63,7 +65,7 @@ def visible_packets(state: dict[str, np.ndarray], bins: dict[str, int] | None = 
     radix = 1
     for key in present:
         values = np.asarray(state[key])
-        if key == "record_signature":
+        if key in _RECORD_TOKEN_FIELDS:
             component = _compress_ints(values.astype(np.int64), max_classes=int(bins.get(key, 64)))
         elif key == "committed_mask":
             component = values.astype(bool).astype(np.int64)
@@ -98,7 +100,7 @@ def visible_packet_encoding_report(state: dict[str, np.ndarray], bins: dict[str,
     theorem_safe = True
     for key in present:
         values = np.asarray(state[key])
-        if key == "record_signature":
+        if key in _RECORD_TOKEN_FIELDS:
             component = _compress_ints(values.astype(np.int64), max_classes=int(bins.get(key, 64)))
             collision_count = _compressed_int_collision_count(values.astype(np.int64), component)
             theorem_safe = theorem_safe and collision_count == 0
@@ -283,7 +285,7 @@ def _visible_packet_cache_key(
         values = np.asarray(raw_values)
         if values.ndim != 1:
             return None
-        bin_count = int(bins.get(key, 64 if key == "record_signature" else 8))
+        bin_count = int(bins.get(key, 64 if key in _RECORD_TOKEN_FIELDS else 8))
         parts.append((key, _array_hash(values), values.shape, values.dtype.str, bin_count))
     return tuple(parts)
 

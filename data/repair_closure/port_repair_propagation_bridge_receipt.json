@@ -472,7 +472,7 @@
     "scalar_or_polarization_independent_same_operator_action": false,
     "surviving_physical_alternatives_exhaustively_enumerated": false
   },
-  "receipt_sha256": "sha256:3d358a746135fc0cd70b10be5828ee42cd8497006e5244c342383c5d0ccfba71",
+  "receipt_sha256": "sha256:15e960451272583ec6994c214b5646a3f81f5cb771b99b67c92f6039f893f8dd",
   "schema": "oph.port_repair_propagation_bridge_receipt.v1",
   "source_operator_ancestry_inventory": {
     "accepted_bridge_count_excluding_recursive_outputs": 0,
@@ -484,9 +484,9 @@
     "raw_pin": {
       "bytes": 58478,
       "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
-      "sha256": "sha256:c137b38ed8efb6f8f8940fdd141dc75c2578aa98f0c7950e075969e265b01b49"
+      "sha256": "sha256:b7f85e77193111d27eeed4acf64e8961b66abd33a4159e4fb61005f45ae26723"
     },
-    "receipt_sha256": "sha256:93c84873c9b6c11e3db25f07109a113aa64c96dc2d28a849bebc4a0c2dd03145",
+    "receipt_sha256": "sha256:39f78f9498870e904aa40350244d5210b6ec32a6ce9a3c1c0ef4c907cfed0cea",
     "recursive_parent_bridge_receipt_exclusion": {
       "packet_count_included_in_scan": false,
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
@@ -542,9 +542,9 @@
       "raw_pin": {
         "bytes": 58478,
         "repository_relative_path": "data/repair_closure/source_operator_ancestry_inventory.json",
-        "sha256": "sha256:c137b38ed8efb6f8f8940fdd141dc75c2578aa98f0c7950e075969e265b01b49"
+        "sha256": "sha256:b7f85e77193111d27eeed4acf64e8961b66abd33a4159e4fb61005f45ae26723"
       },
-      "receipt_sha256": "sha256:93c84873c9b6c11e3db25f07109a113aa64c96dc2d28a849bebc4a0c2dd03145",
+      "receipt_sha256": "sha256:39f78f9498870e904aa40350244d5210b6ec32a6ce9a3c1c0ef4c907cfed0cea",
       "recursive_parent_bridge_receipt_exclusion": {
         "packet_count_included_in_scan": false,
         "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",

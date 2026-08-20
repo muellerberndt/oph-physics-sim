@@ -98,7 +98,7 @@ def prepare_config(base: dict[str, Any], *, seed: int) -> dict[str, Any]:
         "fixed_time_controls": True,
         "controls": ["shuffled_field"],
         "fields": [
-            "record_signature",
+            "record_port_entropy",
             "local_mismatch_density",
             "cumulative_repair_load",
         ],
@@ -109,7 +109,7 @@ def prepare_config(base: dict[str, Any], *, seed: int) -> dict[str, Any]:
         "export_final_screen_fields_for_visualization_without_promoting_bw_bulk_or_physical_cmb"
     )
     freezeout["fields"] = [
-        "record_signature",
+        "record_port_entropy",
         "local_mismatch_density",
         "cumulative_repair_load",
         "s3_class_density",

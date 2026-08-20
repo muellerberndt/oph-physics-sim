@@ -8,11 +8,13 @@ untouched by this lane. This document precedes and pins the code in
 ## 1. Purpose
 
 The probe demonstrates quantum statistics in the observer frame: the exact
-committed Born weights of the eight PR-04 measurement contexts arise as
-integer count ratios over a finite deterministic record ensemble, with no
-probability postulate anywhere in the code path, and measurement collapse is
-realized as conditioning on the observer's record. The probe feeds a
-visualizer through a documented JSON export.
+committed Born weights of the eight PR-04 measurement contexts are reproduced
+as integer count ratios over a finite deterministic record ensemble driven by
+the declared branch tables, which are transcriptions of the committed
+conditional weights Tr(p F) (section 3.3), with no probability postulate
+anywhere in the code path, and measurement collapse is realized as
+conditioning on the observer's record. The probe feeds a visualizer through
+a documented JSON export.
 
 ## 2. Committed sources, per modeling choice
 
@@ -50,7 +52,9 @@ history is the tuple of (context, outcome) records the configuration carries.
 The base ensemble is the committed run population: 179 micro-configurations,
 111 in class `rec0` (record bit 0) and 68 in class `rec1` (record bit 1).
 Source: the committed run literals `run_counts = [111, 68]`, `run_mass = 179`
-of the reference receipt inputs. No amplitude enters this construction.
+of the reference receipt inputs, which are the record state of a 16k run;
+reading them as an exhaustive record population is the declared convention of
+section 8.1. No amplitude enters this construction.
 
 ### 3.2 Context application by integer branch rules
 
@@ -112,7 +116,7 @@ inside the counting module.
 
 ### 3.4 The receipted identity
 
-For every committed context, three independently computed quantities are
+For every committed context, three separately computed quantities are
 receipted equal:
 
 1. the exact integer count ratio over the enumerated ensemble
@@ -123,7 +127,11 @@ receipted equal:
 
 The counting path never references amplitudes and the amplitude path never
 references counts; section 6 receipts that separation by an import-graph
-check. Expected identities on the base ensemble:
+check. The inputs of the counting path are the declared branch tables of
+section 3.3, which are transcriptions of the amplitude conditionals Tr(p F),
+so the identity is a consistency receipt over the transcription, the
+refinement rule, and the enumeration, not an independent confirmation of the
+committed weights. Expected identities on the base ensemble:
 
 | context | counts | mass | ratio = committed weight |
 | --- | --- | --- | --- |
@@ -216,12 +224,15 @@ locality claim is made; the receipt is a measurement-disturbance identity.
 - `__main__.py`: argument parsing for `python -m oph_fpe.qm_observer`.
 
 The independence receipt records, per module, the absolute import set found
-by AST parsing, and demands: `ensemble` imports neither `amplitudes` nor any
-matrix machinery; `amplitudes` imports neither `ensemble` nor `tables`. A
-mutant that computes counts from amplitudes has to import across that
-boundary and is detected. A mutant that drops one micro-configuration breaks
-the count-ratio identity because the enumerated mass and tally no longer
-match the exact rational weight.
+by AST parsing, the dynamic-import call set, and the sha256 of the inspected
+source, and demands: `ensemble` imports neither `amplitudes` nor any matrix
+machinery; `amplitudes` imports neither `ensemble` nor `tables`; none of the
+three inspected sources carries an `__import__` or `importlib.import_module`
+call. The check therefore covers static cross-imports and those named
+dynamic-import forms; the source hashes pin the audited code, so the
+receipted import sets and the counts belong to the same bytes. A mutant that
+drops one micro-configuration breaks the count-ratio identity because the
+enumerated mass and tally no longer match the exact rational weight.
 
 ## 7. Visualizer export schema
 
@@ -235,10 +246,14 @@ Schema id: `oph.sim.qm_observer_viz.v1`. One JSON object:
     "evidential": false,
     "statement": "..."
   },
+  "boundary": "...",
   "fraction_encoding": "every exact rational is a two-integer array [numerator, denominator]",
   "scenarios": [Scenario, ...]
 }
 ```
+
+The `boundary` field carries the claim-boundary statement of section 9,
+byte-identical to the `boundary` field of the receipt JSON.
 
 Scenario object:
 
@@ -267,8 +282,10 @@ Node object (the branch tree; exact integers and [num, den] rationals):
 }
 ```
 
-The root node has `context: null` and no `counts`; a child node describes
-one context application to its parent's (possibly conditioned) population.
+The root node carries `context: null`, `counts: null`, and `weights: null`:
+an unmeasured population has no recorded outcome to tally. Its `class_counts`
+and `mass` fields are populated. A child node describes one context
+application to its parent's (possibly conditioned) population.
 
 Interference scenarios carry one additional `comparison` object with
 the common mass, both count vectors at the common mass, the exact gap
@@ -301,7 +318,10 @@ timestamps, and environment data.
 ## 8. Declared conventions beyond the committed corpus
 
 1. The base ensemble population (111 in rec0, 68 in rec1) reads the
-   committed run literals as an exhaustive record population.
+   committed run literals as an exhaustive record population. The literals
+   are the record state of a 16k run (`REFERENCE_RUN_ID`
+   `b12_prereg_16k_20260806`), not a 179-member population; the exhaustive
+   reading is this convention and carries no source claim.
 2. The branch tables of section 3.3 are declared literal data on the
    counting path, transcribed from the exact conditional weights Tr(p F).
 3. Uniform refinement by the least common multiple of class denominators.
@@ -321,7 +341,8 @@ The phase operation is a declared architecture operation under the PR-04
 recorded decision (2026-08-18, disposition axiomatize, lane issue 730), not
 derived from source dynamics. This probe establishes that observer-frame
 record counting reproduces the exact quantum weights without a probability
-postulate, and that conditioning reproduces projection. It does not derive
+postulate, and that conditioning reproduces projection under the declared
+record-persistence and conditioned-class conventions. It does not derive
 the Hilbert-space structure, does not source-produce a phase operation, and
 does not create evidence: no instrument, no freeze, no evidential run.
 Projector webs alone underdetermine the weight and frequencies alone do not

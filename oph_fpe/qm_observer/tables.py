@@ -12,8 +12,11 @@ from ``oph_fpe.quantum``.
 
 from __future__ import annotations
 
-# The committed run population (reference receipt inputs run_counts,
-# run_mass): 111 micro-configurations in class rec0, 68 in class rec1.
+# The base population: 111 micro-configurations in class rec0, 68 in class
+# rec1. The literals are the reference receipt inputs run_counts and
+# run_mass, the record state of a 16k run, not a 179-member population.
+# Reading them as an exhaustive record population is a declared convention
+# of this probe (DESIGN.md section 8.1).
 BASE_POPULATION: tuple[tuple[str, int], ...] = (
     ("rec0", 111),
     ("rec1", 68),

@@ -103,7 +103,7 @@ def run_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]:
                 "beta": beta,
                 "phi": net.total_phi(),
                 "mismatch_edges": len(net.mismatch_edges()),
-                "record_entropy": _record_entropy(net),
+                "record_packet_entropy": _record_packet_entropy(net),
                 "committed_records": sum(1 for state in net.states.values() if state.record is not None),
                 "defect_count": len(defects),
             }
@@ -203,7 +203,14 @@ def _inject_defects(net: PatchNet, config: dict[str, Any], seed: int) -> None:
         net.set_directed_gauge(left, right, net.group.multiply(current, twist))
 
 
-def _record_entropy(net: PatchNet) -> float:
+def _record_packet_entropy(net: PatchNet) -> float:
+    """Shannon entropy (nats) over the committed physical record packets.
+
+    E0 records are ``PatchState.observer_packet`` contents, so this trace
+    scalar and the array engines' ``record_packet_entropy`` share one
+    semantics: entropy over physical record content, not over hash tokens.
+    """
+
     counts: dict[str, int] = {}
     for state in net.states.values():
         if state.record is None:

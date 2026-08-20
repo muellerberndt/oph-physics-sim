@@ -58,7 +58,7 @@ bw:
   times: [0.025, 0.05]
   normalization: "2pi"
   observables:
-    - record_signature
+    - record_port_entropy
     - repair_load
     - s3_class_density
     - stable_count
@@ -74,7 +74,7 @@ cosmology:
     enabled: false
     commit_fraction: 0.95
     fields:
-      - record_signature
+      - record_port_entropy
       - stable_count
       - cumulative_repair_load
       - s3_class_density

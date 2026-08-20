@@ -57,9 +57,11 @@ class Ensemble:
 
 
 def base_ensemble() -> Ensemble:
-    """The committed run population: 111 micro-configurations in class
-    rec0 and 68 in class rec1 (the run literals of the reference receipt
-    inputs)."""
+    """The base population: 111 micro-configurations in class rec0 and 68
+    in class rec1. The literals are the run counts of the reference receipt
+    inputs, the record state of a 16k run, not a 179-member population;
+    reading them as an exhaustive record population is a declared
+    convention of this probe (``DESIGN.md`` section 8.1)."""
 
     configs: list[MicroConfiguration] = []
     for label, multiplicity in tables.BASE_POPULATION:
@@ -200,6 +202,12 @@ def condition(ens: Ensemble, context_name: str, outcome: int) -> Ensemble:
         "CONDITION_CONTEXT",
         f"most recent recorded context is not {context_name}",
     )
+    for config in ens.configs:
+        require(
+            bool(config.history) and config.history[-1][0] == context_name,
+            "RECORD_MIXED",
+            "micro-configurations disagree on the most recent context",
+        )
     selected = tuple(
         config for config in ens.configs if config.history[-1][1] == outcome
     )

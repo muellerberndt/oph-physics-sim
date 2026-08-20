@@ -132,7 +132,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
         "freezeout": {
             "enabled": True,
             "commit_fraction": 0.75,
-            "fields": ["record_signature", "cumulative_repair_load", "s3_class_density"],
+            "fields": ["record_port_entropy", "cumulative_repair_load", "s3_class_density"],
             "require_kms_bw_pass": False,
             "require_state_bw_controls": False,
         },
@@ -141,7 +141,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
             "enabled": True,
             "sample_count": 3,
             "ell_max": 4,
-            "fields": ["record_signature", "stable_count"],
+            "fields": ["record_port_entropy", "stable_count"],
             "harmonic_batch_size": 128,
         },
     }
@@ -301,13 +301,13 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert "harmonic_time_trace" in manifest
     assert harmonic_trace["cycles"].shape[0] == 3
     assert harmonic_trace["ell"].shape[0] == 5
-    assert harmonic_trace["record_signature"].shape == (3, 5)
+    assert harmonic_trace["record_port_entropy"].shape == (3, 5)
     assert harmonic_trace["stable_count"].shape == (3, 5)
     evolution_frames = np.load(run_path / "screen_evolution_frames.npz")
     assert evolution_frames["cycles"].shape[0] == 3
-    assert evolution_frames["field__record_signature"].shape == (3, 512)
+    assert evolution_frames["field__record_port_entropy"].shape == (3, 512)
     assert evolution_frames["field__stable_count"].shape == (3, 512)
-    assert np.isfinite(evolution_frames["field__record_signature"]).all()
+    assert np.isfinite(evolution_frames["field__record_port_entropy"]).all()
     assert manifest["screen_units"]["mode"] == "numerical_regulator"
     assert bw_report["support_visible_regularization"]["steps"] == 4
     assert ports_report["port_names"][0] == "P0"
@@ -326,7 +326,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert checkpoint["mode"] == "observer_checkpoint_restoration"
     assert cl_report["claim_boundary"].startswith("screen-only")
     assert cl_report["ell_max"] == 12
-    assert "record_signature" in cl_report["fields"]
+    assert "record_port_entropy" in cl_report["fields"]
 
 
 def test_bw_array_writes_organic_defect_population_before_two_defect_fallback(tmp_path: Path):
@@ -911,7 +911,8 @@ def test_named_rng_streams_are_reproducible_and_draw_isolated():
 
 def test_retained_snapshot_uses_its_contemporaneous_invariant_residual_not_final_links():
     snapshot = {
-        "signature": np.asarray([1, 2]),
+        "record_packet_id": np.asarray([0, 1]),
+        "record_port_entropy": np.asarray([0.0, 0.5]),
         "stable_count": np.asarray([3, 4]),
         "committed": np.asarray([True, False]),
         "repair_load": np.asarray([0.1, 0.2]),
@@ -995,7 +996,8 @@ def test_record_signatures_and_observer_sector_fields_are_frame_invariant():
         "left": edge_left,
         "right": edge_right,
         "patch_count": 4,
-        "signature": signature,
+        "record_packet_id": np.mod(np.abs(signature), 97),
+        "record_port_entropy": np.zeros(4),
         "stable_count": np.zeros(4),
         "committed": np.zeros(4, dtype=bool),
         "repair_load": np.zeros(4),
@@ -1008,11 +1010,12 @@ def test_record_signatures_and_observer_sector_fields_are_frame_invariant():
     transformed_fields = _observer_raw_fields(
         gauge=transformed[2],
         edge_residual=transformed_residual,
-        **{**common, "signature": transformed_signature},
+        **{**common, "record_packet_id": np.mod(np.abs(transformed_signature), 97)},
     )
 
     assert np.array_equal(signature, transformed_signature)
     assert np.array_equal(residual, transformed_residual)
+    assert np.array_equal(original_fields["record_packet_id"], transformed_fields["record_packet_id"])
     assert np.array_equal(original_fields["s3_class_density"], transformed_fields["s3_class_density"])
     assert np.array_equal(original_fields["s3_sector_class"], transformed_fields["s3_sector_class"])
 
@@ -1274,7 +1277,7 @@ def test_e3_cosmo_proxy_compact_profile_suppresses_debug_payloads(tmp_path: Path
     config["h3_modular_response"] = {
         "enabled": True,
         "times": [0.1],
-        "field_names": ["record_signature", "stable_count"],
+        "field_names": ["record_port_entropy", "stable_count"],
         "candidate_count": 512,
         "candidate_radius": 1.2,
         "softness": 0.25,

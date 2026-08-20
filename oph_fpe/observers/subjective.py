@@ -21,6 +21,20 @@ LOCALITY_PACKET_FIELDS = (
 LOCALITY_PACKET_BINS = 8
 
 
+def _record_token_values(raw_fields: dict[str, np.ndarray]) -> np.ndarray | None:
+    """Return the per-patch record identity token.
+
+    ``record_packet_id`` is the physical content id over exact record packets;
+    ``record_signature`` is accepted as a fallback for payloads produced before
+    the physical-packet surface existed.
+    """
+
+    token = raw_fields.get("record_packet_id")
+    if token is None:
+        token = raw_fields.get("record_signature")
+    return token
+
+
 def observer_view_rows(
     points: np.ndarray,
     *,
@@ -65,7 +79,7 @@ def observer_view_rows(
     for row_index, observer_id in enumerate(observer_ids):
         support = np.asarray(neighbor_indices[row_index], dtype=np.int64)
         support_weight = cell_entropy[support]
-        signature_histogram = _signature_histogram(raw_fields.get("record_signature"), support)
+        signature_histogram = _signature_histogram(_record_token_values(raw_fields), support)
         locality_vector = _locality_packet_feature_vector(
             raw_fields,
             support,
@@ -87,7 +101,7 @@ def observer_view_rows(
                 "observer_relative_times": [float(value) for value in times],
                 "repair_load_mean": _weighted_mean(raw_fields.get("repair_load"), support, support_weight),
                 "mismatch_density_mean": _weighted_mean(raw_fields.get("local_mismatch_density"), support, support_weight),
-                "visible_signature_entropy": _entropy(raw_fields.get("record_signature"), support),
+                "visible_signature_entropy": _entropy(_record_token_values(raw_fields), support),
                 "record_signature_histogram": {str(key): value for key, value in signature_histogram.items()},
                 "dominant_record_signature": _dominant_histogram_key(signature_histogram),
                 "visible_readout_hash": _visible_hash(raw_fields, support),
@@ -104,7 +118,11 @@ def observer_view_rows(
                         "ecdf_median",
                         "ecdf_q75",
                     ],
-                    "excluded_hash_fields": ["record_signature", "visible_readout_hash"],
+                    "excluded_hash_fields": [
+                        "record_packet_id",
+                        "record_signature",
+                        "visible_readout_hash",
+                    ],
                     "feature_value_coordinate_fields_used": [],
                     "support_selection_carrier": support_selection_carrier,
                     "support_selection_carrier_ancestry": (
@@ -444,7 +462,7 @@ def observer_consensus_report(
     _, neighbor_indices = tree.query(points[observer_ids], k=k)
     if neighbor_indices.ndim == 1:
         neighbor_indices = neighbor_indices[:, None]
-    signatures = raw_fields.get("record_signature")
+    signatures = _record_token_values(raw_fields)
     committed = raw_fields.get("committed_mask")
     repair = raw_fields.get("repair_load")
     support_sets = [set(int(value) for value in row) for row in neighbor_indices]
