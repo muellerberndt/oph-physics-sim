@@ -152,7 +152,10 @@ Trace paths:
 * Dense path (primary for `N <= 2000`, the pinned dense cap):
   `numpy.linalg.eigvalsh` of the dense operator; `P` from the full spectrum.
 * Stochastic path (primary for `N > 2000`): Hutchinson trace with
-  Rademacher probes, 64 probes, seed pinned below. Each probe's scalar
+  Rademacher probes, 128 probes split into eight independent sixteen-probe
+  seed batches. The reported curve is their mean; the pointwise standard
+  error and the standard error, minimum, and maximum of the guarded
+  per-seed plateau medians are recorded. Each probe's scalar
   curve `z^T exp(-sigma L) z` is evaluated for the whole sigma grid from one
   Lanczos factorization of 120 steps with full reorthogonalization
   (Gauss quadrature on the probe's spectral measure). Exact kernel
@@ -194,7 +197,10 @@ no reduction occurred. No silent reduction.
   eigensolve (4.3). Beyond a few multiples of this time the return
   probability saturates at `kernel_dim / N` and the curve leaves the
   scaling regime.
-* Window `W` = grid points with `sigma_lo <= sigma <= sigma_hi`. If `W` has
+* Window `W` = grid points with `sigma_lo <= sigma <= sigma_hi` and
+  `P(sigma) >= 4 * kernel_dim / N`. This is the same kernel-saturation guard
+  used by the dense/stochastic cross-check; it applies to every reported
+  plateau median, not only to that cross-check. If `W` has
   fewer than 5 points the configuration is reported with
   `window_degenerate = true` and the point count; the statistic is still
   reported over the available points, or `null` at zero points.
@@ -269,12 +275,14 @@ measured value is reported as measured.
 ## 7. Seeds, sizes, receipt schema
 
 * `HUTCHINSON_SEED = 20260820` (Rademacher probes,
-  `numpy.random.Generator(numpy.random.PCG64(seed))`, one child seed per
+  `numpy.random.Generator(numpy.random.PCG64(seed))`, one base seed per
   configuration derived by `seed + block + index` with block 1000 for
   calibration rows, 2000 for cross-check rows, 3000 for tower rows,
-  recorded per row where the stochastic path runs).
+  and eight child seeds `base + j * 100003`, `j = 0..7`, recorded per row
+  where the stochastic path runs).
 * `EIGSH_SEED = 20260821` (pinned `v0` start vectors).
-* Probes: 64. Lanczos steps: 120, full reorthogonalization. Dense cap:
+* Probes: 128 total, split into eight independent batches of sixteen. Lanczos
+  steps: 120, full reorthogonalization. Dense cap:
   2000 nodes. Sigma grid: `logspace(-3, 4, 71)`. Weyl: `k = 200` (recorded
   fix of 4.3), rank floor 8, shift `-1e-6`, zero-mode cut `1e-9`. Kappa
   grid: `{0.0, 0.25, 0.5, 1.0, 2.0}`. Level ceiling: 5.
@@ -321,7 +329,8 @@ measured value is reported as measured.
 * C4 (coupling strength). `kappa` grid `{0.0, 0.25, 0.5, 1.0, 2.0}`;
   the corpus is silent on the strength.
 * C5 (estimator pins). Sigma grid, window constants (`sigma_lo = 4.0`,
-  `sigma_hi = 1 / lambda_2`, minimum 5 points), probe and Lanczos counts,
+  `sigma_hi = 1 / lambda_2`, `P >= 4 * kernel_dim / N`, minimum 5 points),
+  probe ensemble and Lanczos counts,
   Weyl `k`/rank floor/shift/zero cut, dense cap, and seeds, as in section 7.
 * C6 (receipt float convention). 10 significant digits before canonical
   serialization.
@@ -329,10 +338,12 @@ measured value is reported as measured.
   fiber-uniform (`1/4` per child); the sim commits spherical-area weights.
   The committed area weights are used; the maximum deviation from `1/4` is
   recorded per level pair in the receipt.
-* C8 (cross-check comparison window). Estimator agreement is compared over
+* C8 (saturation guard). Every reported plateau median, and the estimator
+  agreement comparison, is restricted to
   grid points with `sigma <= 1 / lambda_2`, finite curves on both paths,
   and dense `P(sigma) >= 4 * kernel_dim / N` (saturation guard); the
-  plateau window floor does not apply to the agreement check.
+  plateau window additionally applies `sigma >= 4.0`, while the agreement
+  check does not.
 * C9 (timing sidecar). Wall-clock values live outside the hashed receipt,
   in `dimension_probe_timings.json` next to it.
 

@@ -5,6 +5,10 @@ one-off runs.
 
 Tracked configs are limited to:
 
+- `icosa_smoke.yml`, `icosa_20k.yml`, `icosa_82k.yml`, `icosa_328k.yml`, and
+  `icosa_1310k.yml`: the production `icosahedral_tower` family, from the small
+  engineering rung through the named campaign sizes. These are non-evidential
+  unless a separately preregistered instrument says otherwise.
 - `e0_z2_patchnet.yml`: E0 finite patch-net smoke run.
 - `e1_s3_modular_screen_4k.yml`: S3 modular-screen smoke run.
 - `e1_s3_bw_screen_4k.yml` and `e1_s3_bw_screen_64k.yml`: BW sweep fixtures.
@@ -14,6 +18,11 @@ Tracked configs are limited to:
 - `e3_cosmo_proxy_screen_64k.yml`: compact cosmology-proxy fixture.
 - `e4_shared_observer_bulk_64k_object_chart.yml`: current local OPH-universe object-chart fixture.
 - `e4_shared_observer_bulk_256k_observers4096_theorem.yml`: current large OPH-universe theorem-scale fixture; filename is legacy, while the YAML now materializes 32,768 observer-local readout neighborhoods and exports 4,096 observer perspectives.
+
+All tracked fixtures whose `graph.family` is `fibonacci_sphere` are legacy
+support-chart/KNN controls. Their geometry receipt deliberately keeps
+`TRUE_ICOSAHEDRAL_REFINEMENT_TOWER_RECEIPT` false; a declared twelve-port
+screen stanza does not turn that graph into the production A1 carrier.
 
 The E4 visual-universe configurations declare `simulation_assumptions` for
 paper bridges that the renderer needs but the Python run is not intended to

@@ -98,7 +98,18 @@ oph-fpe run \
   --out-dir runs
 ```
 
-For the vectorized S3 observer-screen pipeline:
+For the production icosahedral-tower array pipeline (a small,
+non-evidential engineering rung):
+
+```bash
+oph-fpe run-array \
+  --config configs/icosa_smoke.yml \
+  --out-dir runs
+```
+
+The older `fibonacci_sphere` fixtures remain available as explicit
+support-chart/KNN controls; they do not instantiate the production A1 carrier.
+For example:
 
 ```bash
 oph-fpe run-array \
@@ -106,7 +117,9 @@ oph-fpe run-array \
   --out-dir runs
 ```
 
-For the integrated observer, geometry, defect, and visualization pipeline:
+For the integrated observer, geometry, defect, and visualization pipeline,
+the current bundled fixture is likewise a legacy-chart control rather than a
+production-carrier run:
 
 ```bash
 oph-fpe run-oph-universe \

@@ -16,7 +16,10 @@ from scipy.linalg import eigh_tridiagonal
 
 SIGMA_GRID = np.logspace(-3.0, 4.0, 71)
 DENSE_CAP = 2000
-HUTCHINSON_PROBES = 64
+HUTCHINSON_PROBES = 128
+HUTCHINSON_SEED_ENSEMBLE_SIZE = 8
+HUTCHINSON_PROBES_PER_SEED = HUTCHINSON_PROBES // HUTCHINSON_SEED_ENSEMBLE_SIZE
+HUTCHINSON_SEED_STRIDE = 100_003
 LANCZOS_STEPS = 120
 WEYL_EIGENCOUNT = 200
 WEYL_RANK_FLOOR = 8
@@ -26,6 +29,7 @@ SIGMA_LO = 4.0
 WINDOW_MIN_POINTS = 5
 HUTCHINSON_SEED = 20260820
 EIGSH_SEED = 20260821
+SATURATION_GUARD_MULTIPLIER = 4.0
 
 
 def dense_spectrum(matrix: sp.spmatrix) -> np.ndarray:
@@ -124,6 +128,47 @@ def return_probability_stochastic(
     return trace_estimate / float(node_count)
 
 
+def return_probability_stochastic_ensemble(
+    matrix: sp.csr_matrix,
+    kernel_basis: np.ndarray,
+    sigmas: np.ndarray,
+    *,
+    total_probes: int = HUTCHINSON_PROBES,
+    ensemble_size: int = HUTCHINSON_SEED_ENSEMBLE_SIZE,
+    steps: int = LANCZOS_STEPS,
+    seed: int = HUTCHINSON_SEED,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, tuple[int, ...]]:
+    """Independent-seed Hutchinson ensemble with a fixed total probe budget.
+
+    The returned mean is the stochastic trace estimate used by the reported
+    dimension.  The per-seed curves and their standard error make seed
+    sensitivity part of every stochastic receipt instead of hiding it behind
+    one PRNG stream.
+    """
+
+    if ensemble_size < 2 or total_probes % ensemble_size:
+        raise ValueError("Hutchinson probes must split evenly across at least two seeds")
+    probes_per_seed = total_probes // ensemble_size
+    seeds = tuple(int(seed + index * HUTCHINSON_SEED_STRIDE) for index in range(ensemble_size))
+    curves = np.stack(
+        [
+            return_probability_stochastic(
+                matrix,
+                kernel_basis,
+                sigmas,
+                probes=probes_per_seed,
+                steps=steps,
+                seed=child_seed,
+            )
+            for child_seed in seeds
+        ],
+        axis=0,
+    )
+    mean = np.mean(curves, axis=0)
+    standard_error = np.std(curves, axis=0, ddof=1) / np.sqrt(float(ensemble_size))
+    return mean, standard_error, curves, seeds
+
+
 def spectral_dimension_curve(sigmas: np.ndarray, p_return: np.ndarray) -> np.ndarray:
     """Centered log-log differences; the two endpoints carry ``nan``."""
 
@@ -138,8 +183,18 @@ def window_statistics(
     sigmas: np.ndarray,
     ds_curve: np.ndarray,
     lambda_2: float | None,
+    *,
+    p_return: np.ndarray | None = None,
+    kernel_dim: int | None = None,
+    node_count: int | None = None,
 ) -> dict:
-    """Pinned window rule: ``[SIGMA_LO, 1 / lambda_2]``, median statistic."""
+    """Pinned guarded window and median statistic.
+
+    The same ``P >= 4 * kernel_dim / N`` floor used by the dense/stochastic
+    cross-check protects the reported plateau from the kernel-saturation
+    regime.  ``p_return`` and ``kernel_dim`` are supplied for every measured
+    operator; the optional form is retained for direct window-rule tests.
+    """
 
     if lambda_2 is None or lambda_2 <= 0.0:
         return {
@@ -150,9 +205,27 @@ def window_statistics(
             "d_s_median": None,
             "d_s_window_min": None,
             "d_s_window_max": None,
+            "window_saturation_floor": None,
+            "window_saturation_guard_applied": p_return is not None,
         }
     sigma_hi = 1.0 / float(lambda_2)
     mask = (sigmas >= SIGMA_LO) & (sigmas <= sigma_hi) & np.isfinite(ds_curve)
+    saturation_floor = None
+    if p_return is not None:
+        if (
+            kernel_dim is None
+            or kernel_dim < 1
+            or node_count is None
+            or node_count < kernel_dim
+            or p_return.shape != sigmas.shape
+        ):
+            raise ValueError(
+                "guarded window requires kernel_dim, node_count, and one P value per sigma"
+            )
+        saturation_floor = (
+            SATURATION_GUARD_MULTIPLIER * float(kernel_dim) / float(node_count)
+        )
+        mask &= p_return >= saturation_floor
     count = int(np.count_nonzero(mask))
     values = ds_curve[mask]
     return {
@@ -163,6 +236,8 @@ def window_statistics(
         "d_s_median": float(np.median(values)) if count else None,
         "d_s_window_min": float(np.min(values)) if count else None,
         "d_s_window_max": float(np.max(values)) if count else None,
+        "window_saturation_floor": saturation_floor,
+        "window_saturation_guard_applied": p_return is not None,
     }
 
 
@@ -279,15 +354,23 @@ def measure_dimensions(
     if use_dense:
         spectrum = dense_spectrum(matrix)
         p_return = return_probability_from_spectrum(spectrum, sigmas)
+        p_return_standard_error = None
+        per_seed_p_return = None
+        seed_ensemble: tuple[int, ...] = ()
         low_eigenvalues = spectrum[: min(WEYL_EIGENCOUNT, node_count - 2)]
         lambda_max = float(spectrum[-1])
         estimator_path = "dense_eigvalsh"
     else:
-        p_return = return_probability_stochastic(
+        (
+            p_return,
+            p_return_standard_error,
+            per_seed_p_return,
+            seed_ensemble,
+        ) = return_probability_stochastic_ensemble(
             matrix,
             kernel_basis,
             sigmas,
-            probes=probes,
+            total_probes=probes,
             steps=steps,
             seed=hutchinson_seed,
         )
@@ -296,16 +379,51 @@ def measure_dimensions(
         estimator_path = "hutchinson_lanczos_quadrature"
     weyl = weyl_fit(low_eigenvalues, expected_kernel_dim=expected_kernel_dim)
     ds_curve = spectral_dimension_curve(sigmas, p_return)
-    window = window_statistics(sigmas, ds_curve, weyl["lambda_2"])
+    window = window_statistics(
+        sigmas,
+        ds_curve,
+        weyl["lambda_2"],
+        p_return=p_return,
+        kernel_dim=weyl["kernel_dim"],
+        node_count=node_count,
+    )
+    seed_medians: list[float] = []
+    if per_seed_p_return is not None:
+        for seed_curve in per_seed_p_return:
+            seed_ds_curve = spectral_dimension_curve(sigmas, seed_curve)
+            seed_window = window_statistics(
+                sigmas,
+                seed_ds_curve,
+                weyl["lambda_2"],
+                p_return=seed_curve,
+                kernel_dim=weyl["kernel_dim"],
+                node_count=node_count,
+            )
+            if seed_window["d_s_median"] is not None:
+                seed_medians.append(float(seed_window["d_s_median"]))
+    seed_standard_error = (
+        float(np.std(seed_medians, ddof=1) / np.sqrt(float(len(seed_medians))))
+        if len(seed_medians) >= 2
+        else None
+    )
     return {
         "node_count": int(node_count),
         "estimator_path": estimator_path,
         "probes": int(probes) if not use_dense else None,
+        "probes_per_seed": (
+            int(probes // HUTCHINSON_SEED_ENSEMBLE_SIZE) if not use_dense else None
+        ),
         "lanczos_steps": int(steps) if not use_dense else None,
         "hutchinson_seed": int(hutchinson_seed) if not use_dense else None,
+        "hutchinson_seed_ensemble": list(seed_ensemble),
         "lambda_max": lambda_max,
         "p_return": p_return,
+        "p_return_standard_error": p_return_standard_error,
         "d_s_curve": ds_curve,
+        "d_s_median_seed_estimates": seed_medians,
+        "d_s_median_seed_standard_error": seed_standard_error,
+        "d_s_median_seed_min": min(seed_medians) if seed_medians else None,
+        "d_s_median_seed_max": max(seed_medians) if seed_medians else None,
         **weyl,
         **window,
     }

@@ -12,6 +12,8 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
+import subprocess
 
 import pytest
 
@@ -53,10 +55,14 @@ def test_manifest_maps_each_axiom_to_simulator_structures():
         row for row in manifest["simulator_realizations"] if row["axiom"] == "A1"
     )
     assert a1["twelve_port_carrier_declared"] is True
+    assert a1["production_icosahedral_tower_selected"] is False
+    assert a1["full_axiom_instantiated"] is False
+    assert "CarrierUniqueness.lean" in a1["theory_correspondence"]["lean_theorems"][0]
     a3 = next(
         row for row in manifest["simulator_realizations"] if row["axiom"] == "A3"
     )
     assert "conditional_resampling" in a3["simulator_structures"]["kernel_producer"]
+    assert a3["full_axiom_instantiated"] is False
 
 
 def test_pin_matches_theory_checkout_when_present():
@@ -65,11 +71,21 @@ def test_pin_matches_theory_checkout_when_present():
     pin = load_axiom_registry_pin()
     raw = _RER_REGISTRY.read_bytes()
     digest = hashlib.sha256(raw).hexdigest()
-    if digest != pin["source"]["sha256"]:
-        pytest.skip(
-            "theory checkout moved past the pinned registry revision; "
-            "refresh data/theory/axiom_registry_pin.json"
-        )
+    assert digest == pin["source"]["sha256"], (
+        "theory checkout moved past the pinned registry revision; run "
+        "python tools/refresh_axiom_registry_pin.py"
+    )
+    theory_root = _RER_REGISTRY.parents[1]
+    current_commit = subprocess.check_output(
+        ["git", "-C", str(theory_root), "rev-parse", "HEAD"], text=True
+    ).strip()
+    assert pin["source"]["commit"] == current_commit
+    release_text = (theory_root / "paper/release_info.tex").read_text(encoding="utf-8")
+    release_match = re.search(
+        r"\\newcommand\{\\OPHPaperReleaseID\}\{([^}]+)\}", release_text
+    )
+    assert release_match is not None
+    assert pin["source"]["release"] == release_match.group(1)
     lines = raw.decode("utf-8").splitlines()
     start = next(i for i, line in enumerate(lines) if line.strip() == "{")
     registry = json.loads("\n".join(lines[start:]))
@@ -77,3 +93,17 @@ def test_pin_matches_theory_checkout_when_present():
     for axiom in pin["axioms"]:
         assert axiom["informal"] == canonical[axiom["id"]]["informal"]
         assert axiom["formal_concise"] == canonical[axiom["id"]]["formal_concise"]
+
+
+def test_production_tower_is_distinguished_from_legacy_control():
+    manifest = axiom_manifest(
+        {
+            "graph": {"family": "icosahedral_tower", "refinement_level": 3},
+            "screen": {"ports_per_patch": 12},
+        }
+    )
+    a1 = next(
+        row for row in manifest["simulator_realizations"] if row["axiom"] == "A1"
+    )
+    assert a1["production_icosahedral_tower_selected"] is True
+    assert a1["full_axiom_instantiated"] is False

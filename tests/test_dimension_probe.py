@@ -132,6 +132,45 @@ def test_window_rule_degenerate_paths():
     assert tight["window_point_count"] < est.WINDOW_MIN_POINTS
 
 
+def test_reported_window_excludes_kernel_saturated_tail():
+    sigmas = est.SIGMA_GRID
+    curve = np.full(sigmas.size, 2.0)
+    p_return = np.ones(sigmas.size)
+    unguarded = est.window_statistics(sigmas, curve, 1.0e-4)
+    p_return[sigmas >= 100.0] = 0.03
+    guarded = est.window_statistics(
+        sigmas,
+        curve,
+        1.0e-4,
+        p_return=p_return,
+        kernel_dim=1,
+        node_count=100,
+    )
+    assert guarded["window_saturation_guard_applied"]
+    assert guarded["window_saturation_floor"] == pytest.approx(0.04)
+    assert guarded["window_point_count"] < unguarded["window_point_count"]
+
+
+def test_stochastic_measurement_reports_seed_uncertainty(small_window):
+    level_graphs, incidences = small_window
+    union, _ = operators.union_laplacian(level_graphs, incidences, kappa=1.0)
+    _, labels = operators.component_structure(union)
+    basis = operators.kernel_basis_from_components(labels)
+    measured = est.measure_dimensions(
+        union,
+        basis,
+        expected_kernel_dim=1,
+        probes=8,
+        steps=32,
+        force_stochastic=True,
+    )
+    assert len(measured["hutchinson_seed_ensemble"]) == 8
+    assert measured["probes_per_seed"] == 1
+    assert len(measured["d_s_median_seed_estimates"]) >= 2
+    assert measured["d_s_median_seed_standard_error"] is not None
+    assert measured["p_return_standard_error"].shape == est.SIGMA_GRID.shape
+
+
 def test_stochastic_estimator_deterministic(small_window):
     level_graphs, incidences = small_window
     union, _ = operators.union_laplacian(level_graphs, incidences, kappa=1.0)

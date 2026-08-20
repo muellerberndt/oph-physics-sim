@@ -38,17 +38,18 @@ The standard simulator config is YAML. The loader accepts a mapping and passes n
 selected CLI command. Common top-level sections are:
 
 ```yaml
-name: e4_shared_observer_bulk_64k_object_chart
-run_mode: observer_shared_bulk_candidate_compact
-seed: 20260751
+name: icosa_smoke
+run_mode: array_screen
+seed: 20260820
 claim_boundary: >
   State what the run may and may not claim. A diagnostic chart, visualizer export,
   or proxy spectrum is not a physical claim unless the corresponding receipts pass.
 
 graph:
-  family: fibonacci_sphere
-  patch_count: 65536
-  neighbors: 12
+  family: icosahedral_tower
+  patch_basis: cells
+  refinement_level: 3
+  patch_count: 1280
 
 group:
   name: S3

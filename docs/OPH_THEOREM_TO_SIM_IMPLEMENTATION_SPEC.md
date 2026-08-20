@@ -21,15 +21,24 @@ diagnostic visuals separate from physical promotions.
 `oph_fpe/core/axiom_kernel.py` is the fail-closed axiom-facing contract for
 new result producers. It accepts no inferred defaults. A valid packet carries:
 
-- the exact A1 twelve-port, thirty-edge, twenty-face boundary; typed seams and
-  triple overlaps; the observer interface surface; and source-bound,
-  degree-one, refinement-natural federation-to-support evidence;
+- the exact A1 twelve-port, thirty-edge, twenty-face boundary; isotone local
+  algebra net and central record/port partition; typed seams and triple
+  overlaps; the full state/readback/record/repair/prediction/checkpoint
+  observer interface surface; source-bound, degree-one,
+  refinement-natural federation-to-support evidence; and the faithful,
+  finite-dimensional, commutator-closed response object complete on the
+  public response tangent;
 - the complete A2 family of accepted-data interpretation diagrams, including
-  pairwise, higher-overlap, and refinement naturality;
+  overlap restrictions, recharting, seam translation, higher overlaps,
+  federation maps, and refinement, plus surjective proper-recharting holonomy
+  with projective same-response implementers and refinement-natural
+  composition;
 - one canonical A3 optimizer type, an exact compatible reference, a finite
   A1-generated cover whose restrictions determine the feasible family,
   strictly positive normalized rational weights, the weighted local Umegaki
-  objective, visible-constraint factorization, mutation tests, and wrong
+  objective with stated existence, uniqueness, support, and faithfulness,
+  target-independent quotient-visible constraint factorization, mutation
+  tests, and wrong
   reference, wrong cover, and alternative weight controls.
 
 The audit reports whether entropy-maximization language is permitted. That

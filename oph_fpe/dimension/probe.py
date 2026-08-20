@@ -28,7 +28,7 @@ LEVEL_CEILING = 5
 CROSS_CHECK_DS_POINTWISE_TOL = 0.15
 CROSS_CHECK_DS_MEDIAN_TOL = 0.10
 CROSS_CHECK_P_REL_TOL = 0.05
-CROSS_CHECK_SATURATION_GUARD = 4.0
+CROSS_CHECK_SATURATION_GUARD = est.SATURATION_GUARD_MULTIPLIER
 
 CLAIM_BOUNDARY = (
     "Exploratory, non-evidential spectral statistics of declared finite "
@@ -51,7 +51,8 @@ CONVENTIONS = (
     "C4 coupling strength kappa grid {0.0, 0.25, 0.5, 1.0, 2.0}; the corpus "
     "is silent on the strength",
     "C5 estimator pins: sigma grid logspace(-3,4,71), window "
-    "[4.0, 1/lambda_2] with minimum 5 points, 64 Rademacher probes, 120 "
+    "[4.0, 1/lambda_2] with P >= 4*kernel_dim/N and minimum 5 points, "
+    "128 Rademacher probes split over 8 independent seeds, 120 "
     "Lanczos steps with full reorthogonalization, dense cap 2000, Weyl "
     "k=200 rank floor 8 shift -1e-6 zero cut 1e-9, pinned seeds "
     "(recorded fix of DESIGN.md 4.3: k moved from 64 to 200)",
@@ -59,10 +60,9 @@ CONVENTIONS = (
     "serialization",
     "C7 fiber weights: committed spherical-area expectation weights in "
     "place of the exact uniform 1/4; per-pair deviation recorded",
-    "C8 cross-check comparison window: grid points with sigma <= 1/lambda_2, "
-    "finite d_s on both paths, and dense P(sigma) >= 4*kernel_dim/N "
-    "(saturation guard); the plateau window floor sigma_lo does not apply "
-    "to the agreement check",
+    "C8 saturation guard: every reported plateau and the cross-check use "
+    "P(sigma) >= 4*kernel_dim/N; plateaus also require sigma >= 4.0, while "
+    "the cross-check comparison does not",
     "C9 timing sidecar: wall-clock values live outside the hashed receipt, "
     "in dimension_probe_timings.json",
 )
@@ -307,6 +307,9 @@ def build_receipt() -> dict:
             "sigma_grid": {"start_exponent": -3.0, "stop_exponent": 4.0, "num": 71},
             "sigma_grid_values": est.SIGMA_GRID,
             "hutchinson_probes": est.HUTCHINSON_PROBES,
+            "hutchinson_seed_ensemble_size": est.HUTCHINSON_SEED_ENSEMBLE_SIZE,
+            "hutchinson_probes_per_seed": est.HUTCHINSON_PROBES_PER_SEED,
+            "hutchinson_seed_stride": est.HUTCHINSON_SEED_STRIDE,
             "lanczos_steps": est.LANCZOS_STEPS,
             "dense_cap": est.DENSE_CAP,
             "weyl_eigencount": est.WEYL_EIGENCOUNT,
@@ -314,7 +317,10 @@ def build_receipt() -> dict:
             "weyl_shift": est.WEYL_SHIFT,
             "zero_mode_cut": est.ZERO_MODE_CUT,
             "window_sigma_lo": est.SIGMA_LO,
-            "window_rule": "sigma in [4.0, 1/lambda_2], minimum 5 grid points",
+            "window_rule": (
+                "sigma in [4.0, 1/lambda_2], P >= 4*kernel_dim/N, "
+                "minimum 5 grid points"
+            ),
             "window_min_points": est.WINDOW_MIN_POINTS,
             "hutchinson_seed": est.HUTCHINSON_SEED,
             "eigsh_seed": est.EIGSH_SEED,
@@ -334,6 +340,7 @@ def build_receipt() -> dict:
                 "dense P >= 4*kernel_dim/N"
             ),
             "cross_check_saturation_guard": CROSS_CHECK_SATURATION_GUARD,
+            "reported_window_saturation_guard": est.SATURATION_GUARD_MULTIPLIER,
         },
         "conventions": list(CONVENTIONS),
         "citations": CITATIONS,

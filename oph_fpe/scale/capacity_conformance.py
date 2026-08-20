@@ -398,10 +398,22 @@ class CapacityConformanceTracker:
         both_endpoints_changed = int(np.sum(left_changed & right_changed))
         offside_left_writes = int(np.sum(left_changed & ~direction))
         offside_right_writes = int(np.sum(right_changed & direction))
+        spend_per_scheduled_step = (
+            left_changed.astype(np.int8)
+            + right_changed.astype(np.int8)
+            + gauge_changed.astype(np.int8)
+        )
+        two_register_writes = int(np.sum(spend_per_scheduled_step > 1))
+        max_capacity_per_step = (
+            int(np.max(spend_per_scheduled_step))
+            if spend_per_scheduled_step.size
+            else 0
+        )
         single_slot_locality_ok = bool(
             both_endpoints_changed == 0
             and offside_left_writes == 0
             and offside_right_writes == 0
+            and two_register_writes == 0
         )
 
         residual_chosen = int(np.sum(np.asarray(mismatches_after)[chosen])) if chosen.size else 0
@@ -409,7 +421,7 @@ class CapacityConformanceTracker:
         interference = int(phi_after) - (int(phi_before) - resolved)
         mismatch_nonincrease_ok = bool(int(phi_after) <= int(phi_before))
         within_budget_ok = bool(int(chosen.size) <= int(repair_budget))
-        unit_capacity_ok = single_slot_locality_ok
+        unit_capacity_ok = bool(max_capacity_per_step <= 1)
 
         # Per-patch cumulative spend, attributed by the measured written slot.
         if chosen.size:
@@ -435,7 +447,7 @@ class CapacityConformanceTracker:
         clauses = {
             "mismatch_nonincrease": mismatch_nonincrease_ok,
             "single_slot_locality": single_slot_locality_ok,
-            "unit_capacity_per_action": unit_capacity_ok,
+            "unit_expected_capacity_per_step": unit_capacity_ok,
             "within_declared_cycle_budget": within_budget_ok,
         }
         row = {
@@ -450,6 +462,13 @@ class CapacityConformanceTracker:
             "left_endpoint_writes": left_endpoint_writes,
             "right_endpoint_writes": right_endpoint_writes,
             "far_endpoint_writes": 0,
+            "two_register_writes": two_register_writes,
+            "max_capacity_per_scheduled_step": max_capacity_per_step,
+            "mean_capacity_per_scheduled_step": (
+                float(np.mean(spend_per_scheduled_step))
+                if spend_per_scheduled_step.size
+                else 0.0
+            ),
             "port_write_instructions": port_write_instructions,
             "sector_link_writes_reported": int(sector_link_writes_reported),
             "shared_reported_matches_measured": bool(

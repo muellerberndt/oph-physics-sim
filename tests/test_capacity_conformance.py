@@ -221,7 +221,44 @@ def test_locality_violation_is_caught():
     )
 
     assert row["clauses"]["single_slot_locality"] is False
-    assert row["clauses"]["unit_capacity_per_action"] is False
+    assert row["clauses"]["unit_expected_capacity_per_step"] is False
+    assert row["observed_schedule_in_declared_class"] is False
+
+
+def test_shared_plus_private_write_on_one_step_fails_capacity_clause():
+    left, right, port_left, port_right, gauge = _fixture_state(seed=18)
+    tracker = _tracker(left, right, sample=0)
+    phi_before, mask = _phi(port_left, port_right, gauge)
+    chosen = np.flatnonzero(mask)[:1].astype(np.int64)
+    assert chosen.size == 1
+    before = snapshot_chosen_edge_state(chosen, port_left, port_right, gauge)
+    direction = np.ones(chosen.size, dtype=bool)
+    repair_covariant_port_pairs(
+        port_left, port_right, gauge, chosen, direction, group_name="S3", group_order=6
+    )
+    edge = int(chosen[0])
+    gauge[edge] = np.int16((int(gauge[edge]) + 1) % 6)
+    phi_after, mask_after = _phi(port_left, port_right, gauge)
+
+    row = tracker.record_cycle(
+        cycle=0,
+        phi_before=phi_before,
+        phi_after=phi_after,
+        before=before,
+        direction=direction,
+        port_left=port_left,
+        port_right=port_right,
+        gauge=gauge,
+        mismatches_after=mask_after,
+        repair_budget=1,
+        sector_link_writes_reported=1,
+        readback_drive_edges=0,
+    )
+
+    assert row["two_register_writes"] == 1
+    assert row["max_capacity_per_scheduled_step"] == 2
+    assert row["clauses"]["single_slot_locality"] is False
+    assert row["clauses"]["unit_expected_capacity_per_step"] is False
     assert row["observed_schedule_in_declared_class"] is False
 
 
