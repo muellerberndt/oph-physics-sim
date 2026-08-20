@@ -957,7 +957,7 @@
       "raw_pin": {
         "bytes": 13559,
         "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-        "sha256": "sha256:e84a1dbcfddacd764f5f9c8cae6e23d6fa965887ed96f58a2e88504b74e2f6da"
+        "sha256": "sha256:6069b11fe0ce337eaa8824101ad815b460a48c6159f5d80271f51c690c6731b9"
       },
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1137,7 +1137,7 @@
       "raw_pin": {
         "bytes": 5899,
         "path": "data/theory/axiom_registry_pin.json",
-        "sha256": "sha256:53f6524ea43fc02e67cc297ef89b1d1b3aba31e03433e7b0d6f57aa77a44300d"
+        "sha256": "sha256:d84930ba02557c62ae6392c2a154d703fc9a0e6a1aeb59e0688b68a03f01c095"
       },
       "schema": "oph.sim.axiom_registry_pin.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1203,13 +1203,13 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:6c7a91fd79d1b54992c6a5dccf062c92a775f882cff25c67ed1fddfa6be94002",
+  "receipt_sha256": "sha256:54eca42dac392d379759fe0c6e4d2aa53d1384fe7fc2dadb59a700bf51554ab0",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
     "content_index_row_count_excluding_recursive_outputs": 1033,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:2349e1d7023ef8b63c2a10e3e616508fd464b047025d1926c0eddf6f9f9cf323",
+    "content_index_sha256_excluding_recursive_outputs": "sha256:35c4f49cf0bfe45649513cc4a07a2e70b0f4c5939fa00a8928968b6d2ccd2b1d",
     "path_count_including_declared_recursive_outputs": 1039,
     "path_list_sha256_including_declared_recursive_outputs": "sha256:da75989c7dc3eaacf09cffe5ba5bb1ac04e3bc2172b975dc392ccc09c2b0dc12",
     "provenance_counts": {

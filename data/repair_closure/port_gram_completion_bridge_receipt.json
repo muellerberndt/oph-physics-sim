@@ -932,8 +932,8 @@
     "port_repair_propagation_boundary": {
       "one_step_operator": "T = I - L_icosahedron/60",
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
-      "raw_sha256": "sha256:cf743fc087596ca267ecd472d312ee9b544374178e578df15cadb29545aeaa9c",
-      "receipt_sha256": "sha256:ef828b134cac395b4d2fcf1deefb7d0f90d6bf5dfb8aa6c4de5b65bbb55395b4",
+      "raw_sha256": "sha256:04c4bd7d70f3e2b640fbfd8fde65a4c43e49acdd02bfa3ab64f878f3926a48cf",
+      "receipt_sha256": "sha256:a7ac1fba709fcaa30a0565fd6c881922a55b9ec05ebdd4f7b77444c49273ee54",
       "same_operator_physical_readout_receipt": false,
       "schema": "oph.port_repair_propagation_bridge_receipt.v1",
       "spatial_port_hop_source_receipt": false,
@@ -941,13 +941,13 @@
     },
     "primitive_port_dual_measure": {
       "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-      "raw_sha256": "sha256:e84a1dbcfddacd764f5f9c8cae6e23d6fa965887ed96f58a2e88504b74e2f6da",
-      "receipt_sha256": "sha256:8a0604b5ea67febb0c13a411de12b2bbe85a64a6a31bb5443ba2b3808d32024b",
+      "raw_sha256": "sha256:6069b11fe0ce337eaa8824101ad815b460a48c6159f5d80271f51c690c6731b9",
+      "receipt_sha256": "sha256:4cf46eb465307a332e785e7b2cf0a088af73d3d036e31b83a7dd4b8af372ecd0",
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:cd788366059dea4950206119f4ce48530a286c7abfa9ecfa72a2bfb43198e713",
+  "receipt_sha256": "sha256:7287e9fa9b379b01f1a1635bbf54ba58feffc5263a544e13c077a8ddb343b4e4",
   "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
   "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN",
   "support_hop_isometry_implication": {
