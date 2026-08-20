@@ -1137,7 +1137,7 @@
       "raw_pin": {
         "bytes": 5899,
         "path": "data/theory/axiom_registry_pin.json",
-        "sha256": "sha256:d84930ba02557c62ae6392c2a154d703fc9a0e6a1aeb59e0688b68a03f01c095"
+        "sha256": "sha256:610b12006460cbcc7eb210378a466503edc1ea3a210becaa5719aad1234559bc"
       },
       "schema": "oph.sim.axiom_registry_pin.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1203,13 +1203,13 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:fe303b0e38b35e93c565920ad547467834af89c6a027f2e4606fa84fafbcac9a",
+  "receipt_sha256": "sha256:19527e4c497e85116233e96bd9451d2c346a83b8731cc32fe27d081002b44979",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
     "content_index_row_count_excluding_recursive_outputs": 1033,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:f632ec1632c3d9c4390f1c0c1573b30bd6d2bf40405bae60eb3c283aeb7d1214",
+    "content_index_sha256_excluding_recursive_outputs": "sha256:95f40b4f3501e09451dbe8d449f64dc86c2cd48274d1f366387078d7737fff2d",
     "path_count_including_declared_recursive_outputs": 1039,
     "path_list_sha256_including_declared_recursive_outputs": "sha256:da75989c7dc3eaacf09cffe5ba5bb1ac04e3bc2172b975dc392ccc09c2b0dc12",
     "provenance_counts": {
