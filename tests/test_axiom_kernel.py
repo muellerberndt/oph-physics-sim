@@ -157,6 +157,37 @@ def test_cover_must_determine_the_feasible_family() -> None:
     assert any("state-determining" in error for error in audit.errors)
 
 
+def test_feasible_state_signatures_require_content_addressed_local_states() -> None:
+    contract = valid_contract()
+    malformed = replace(
+        contract.a3.feasible_signatures[0],
+        local_state_sha256=(("p0", "not-a-hash"), ("p1", "sha256:" + "1" * 64)),
+    )
+    audit = audit_three_axiom_contract(
+        replace(
+            contract,
+            a3=replace(
+                contract.a3,
+                feasible_signatures=(malformed, contract.a3.feasible_signatures[1]),
+            ),
+        )
+    )
+    assert not audit.valid
+    assert any("state-determining" in error for error in audit.errors)
+
+
+def test_constraint_grammar_rejects_duplicate_declarations() -> None:
+    contract = valid_contract()
+    audit = audit_three_axiom_contract(
+        replace(
+            contract,
+            a3=replace(contract.a3, observable_grammar=("energy", "energy")),
+        )
+    )
+    assert not audit.valid
+    assert any("factorization" in error for error in audit.errors)
+
+
 def test_weights_are_exact_positive_and_complete() -> None:
     contract = valid_contract()
     audit = audit_three_axiom_contract(

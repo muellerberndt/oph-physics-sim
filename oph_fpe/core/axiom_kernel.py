@@ -184,9 +184,15 @@ def _cover_is_state_determining(
     signatures: tuple[FeasibleStateSignature, ...],
 ) -> bool:
     projected: set[tuple[str, ...]] = set()
+    state_ids: set[str] = set()
     for signature in signatures:
+        if not signature.state_id or signature.state_id in state_ids:
+            return False
+        state_ids.add(signature.state_id)
         local = signature.as_mapping()
-        if set(local) != set(cover):
+        if len(local) != len(signature.local_state_sha256) or set(local) != set(cover):
+            return False
+        if not all(_valid_sha256(value) for value in local.values()):
             return False
         value = tuple(local[patch] for patch in cover)
         if value in projected:
@@ -272,6 +278,8 @@ def audit_three_axiom_contract(contract: ThreeAxiomSimulationContract) -> Contra
     if len(diagram_ids) != len(set(diagram_ids)):
         errors.append("A2 diagram identifiers must be unique")
     for diagram in a2.diagrams:
+        if not diagram.diagram_id or not diagram.data_kind or not diagram.transport_kind:
+            errors.append("A2 diagrams require nonempty identifiers, data kinds, and transport kinds")
         if not diagram.commutes_after_interpretation:
             errors.append(f"A2 diagram does not commute: {diagram.diagram_id}")
         if not _valid_sha256(diagram.evidence_sha256):
@@ -375,6 +383,9 @@ def audit_three_axiom_contract(contract: ThreeAxiomSimulationContract) -> Contra
     factors = dict(a3.constraint_factorization)
     grammar_complete = (
         bool(grammar)
+        and len(grammar) == len(a3.observable_grammar)
+        and len(set(a3.visible_constraints)) == len(a3.visible_constraints)
+        and len(factors) == len(a3.constraint_factorization)
         and set(factors) == set(a3.visible_constraints)
         and all(target in grammar for target in factors.values())
         and a3.constraints_target_independent
