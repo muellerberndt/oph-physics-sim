@@ -19,7 +19,7 @@ total holonomy, so the matter-grammar checks become live.
 The committed corpus fixes the meaning of the label coordinates at the
 level of the matter table. The defining passages:
 
-* `Lean/Screen/GlobalFormCharacterDescent.lean` (lines 136 to 141, doc of
+* `Lean/Screen/GlobalFormCharacterDescent.lean` (lines 133 to 141, doc of
   `exterior_rows_integer_congruence`): "The same ten rows as exact integer
   congruences on the committed charge and bidegree columns:
   `2t + 3d + q = 0 mod 6` with `t` the color exterior degree, `d` the weak
@@ -188,7 +188,9 @@ chord-set functional). All three are pinned above.
    over GF(2). Consequence: no nonzero A5-invariant triality or duality
    character on sector space exists, so no A5-equivariant assignment rule
    into a fixed character is available, for this construction or any
-   other. Coloring-independence fails as well: the transport identity
+   other. The zero statement is scoped to characters (the dual action);
+   the A5-fixed sector space itself is one dimensional over GF(2), so
+   paraphrases that drop the character scoping are wrong. Coloring-independence fails as well: the transport identity
    `t_{sigma . col}(sigma_* k) = t_{col}(k)` fails on sampled pairs
    (design-time diagnostic: 25 mismatches of 40; the unoriented coloring
    does not track the orientation signs of holonomy transport). The

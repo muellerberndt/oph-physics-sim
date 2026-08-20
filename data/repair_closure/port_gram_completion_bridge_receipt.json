@@ -932,8 +932,8 @@
     "port_repair_propagation_boundary": {
       "one_step_operator": "T = I - L_icosahedron/60",
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
-      "raw_sha256": "sha256:d3d9bdaeab590bc330b79df49d8fbfa373f9ec797e233dc48bd77206da29084c",
-      "receipt_sha256": "sha256:9d8afc7ff31e3f6caf9e22a2f5d0f7cbdc1f1de0a4a66f9a4ae934c333dde929",
+      "raw_sha256": "sha256:1a3b2174c226bac91085df34d73f6e55462572df8a36aafcc0319ffb28ff2f65",
+      "receipt_sha256": "sha256:3d358a746135fc0cd70b10be5828ee42cd8497006e5244c342383c5d0ccfba71",
       "same_operator_physical_readout_receipt": false,
       "schema": "oph.port_repair_propagation_bridge_receipt.v1",
       "spatial_port_hop_source_receipt": false,
@@ -947,7 +947,7 @@
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:2bce744cd73109657338e6ba5ac192229420993bc82a6ee43f033c3c4328394a",
+  "receipt_sha256": "sha256:a43385525666f64c1ef713309810f410419eb78e0280acf11795fb61f3989819",
   "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
   "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN",
   "support_hop_isometry_implication": {

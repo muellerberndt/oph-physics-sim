@@ -30,9 +30,9 @@
     "pin": {
       "bytes": 41087,
       "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-      "sha256": "sha256:52ee80e1e55c8982982d82bed91f4b7bd487338e6361114de6a63626402a70f8"
+      "sha256": "sha256:90fd15e5f12cfe07c21b8cd9ddf9eb089375b23bb8d51d4c27cd5ee471d76456"
     },
-    "receipt_sha256": "sha256:6b40d58cdcdbd935625cb3089d96e5eb9ca9860f545859afb37d11d255cecbcf",
+    "receipt_sha256": "sha256:53b1aacec1e65e33e4b716b59030a1c9ccf06e9635e4c87f9b26158baf68e49b",
     "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
     "status": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
   },
@@ -561,7 +561,7 @@
     ],
     "spatial_or_physical_promotion_allowed": false
   },
-  "receipt_sha256": "sha256:1be2a3ff16e6f86f858ee344b41dde9afaa1fe6a22bcff2433ebf2d8dd020987",
+  "receipt_sha256": "sha256:8895de285b782f275ae80f7172bf5c4a3ddb6002d24325c50d5e98a19e20e87c",
   "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
   "status": "A2_ENDPOINT_TO_QUOTIENT_COMMUTATOR_THEOREM_ATTAINED__SOURCE_NATURALITY_INVERSES_DIAMONDS_AND_PHYSICAL_ACTION_OPEN",
   "universal_abelian_port_factorization": {
@@ -1419,9 +1419,9 @@
     "pin": {
       "bytes": 55183,
       "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
-      "sha256": "sha256:27968b93dc61ef26b64cc37dc410956138273013aa2e1f637651d50a4e62bce0"
+      "sha256": "sha256:85ef58ceffe278d5fa31840aa62eb8de848778c3b7795ffd037b9f84da7dfc4e"
     },
-    "receipt_sha256": "sha256:1238ed22cd16737d9b7d3bdcb671dd5bf6cd0a6219d18fa54dcb3e77787e965b",
+    "receipt_sha256": "sha256:6321bf68cafb6879c5d9d0a8e8444510c6e3e48632bd2b82eacaeca34ff90611",
     "schema": "oph.vertex12-directed-transport-feasibility.v1",
     "status": "EXACT_SEMICONJUGATE_COVER_OBSTRUCTION_FOR_CURRENT_SOURCE_MATCHINGS__ORIENTED_SOURCE_TRANSITION_LAW_OPEN"
   }

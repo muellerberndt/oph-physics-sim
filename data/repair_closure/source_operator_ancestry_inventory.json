@@ -376,6 +376,227 @@
     },
     {
       "critical_bridge_evidence": null,
+      "disposition": "OL_A1_TIER_A_REPLICATION_VERDICT_RECORD_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/campaign_summary.json",
+      "raw_pin": {
+        "bytes": 5550,
+        "path": "data/ol_a1_replication/campaign_summary.json",
+        "sha256": "sha256:e9f8cd54f1451b546a88341f678203f87f500dd4207584309dbe9a0612d2fe6b"
+      },
+      "schema": "oph.ol-a1-signature-replication.summary.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CAMPAIGN_MANIFEST_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/manifest.json",
+      "raw_pin": {
+        "bytes": 1914,
+        "path": "data/ol_a1_replication/manifest.json",
+        "sha256": "sha256:befad341fdc5dfe8dcc1370c9ec613748b3891f7744957b133251ac36ac85d28"
+      },
+      "schema": "oph.ol-a1-signature-replication.manifest.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A1_ola1.r1.json",
+      "raw_pin": {
+        "bytes": 3054,
+        "path": "data/ol_a1_replication/run_A1_ola1.r1.json",
+        "sha256": "sha256:66be4d632ae4a37b42369b6a89ee0bee4d6c667fd9cc612449fbc7f7fbb9b515"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A1_ola1.r2.json",
+      "raw_pin": {
+        "bytes": 3058,
+        "path": "data/ol_a1_replication/run_A1_ola1.r2.json",
+        "sha256": "sha256:87841e0a5fab7feca514cba821c158c177bb308c53cba6f9d3a8c96d2276f765"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A1_ola1.r3.json",
+      "raw_pin": {
+        "bytes": 3059,
+        "path": "data/ol_a1_replication/run_A1_ola1.r3.json",
+        "sha256": "sha256:03d5b2e305bd5652d73b60bdc757d8c9812007a9b81648602e02772522161674"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A1_ola1.r4.json",
+      "raw_pin": {
+        "bytes": 3057,
+        "path": "data/ol_a1_replication/run_A1_ola1.r4.json",
+        "sha256": "sha256:07c43363eb37ae908d6ef2d203b9b4afbe080d05a52802c69ce20d80bc649ece"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A1_ola1.r5.json",
+      "raw_pin": {
+        "bytes": 3060,
+        "path": "data/ol_a1_replication/run_A1_ola1.r5.json",
+        "sha256": "sha256:bf81a4f85aca32f6292458005d481590d7c9556ae9829025a607d9c0f048125a"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A2_ola1.r1.json",
+      "raw_pin": {
+        "bytes": 3045,
+        "path": "data/ol_a1_replication/run_A2_ola1.r1.json",
+        "sha256": "sha256:0a4dd46e524914f54c307ebbd970e85fe8bba1abc733f2e62b6a970c32b1e016"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A2_ola1.r2.json",
+      "raw_pin": {
+        "bytes": 3055,
+        "path": "data/ol_a1_replication/run_A2_ola1.r2.json",
+        "sha256": "sha256:e2da7a503978ef7e66b780a40017e491c09f80e03da10c9c5f0095975f64a416"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A2_ola1.r3.json",
+      "raw_pin": {
+        "bytes": 3054,
+        "path": "data/ol_a1_replication/run_A2_ola1.r3.json",
+        "sha256": "sha256:86f387b87ae7dd16792a0df6a1f5d09b99c759deb30f8696848739b1fdd67d24"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A2_ola1.r4.json",
+      "raw_pin": {
+        "bytes": 3052,
+        "path": "data/ol_a1_replication/run_A2_ola1.r4.json",
+        "sha256": "sha256:83e1719b8efec4a73a9decf9f2cb8ddddb46ed1f4fb5d842ee7a04771c1e5bba"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_A2_ola1.r5.json",
+      "raw_pin": {
+        "bytes": 3056,
+        "path": "data/ol_a1_replication/run_A2_ola1.r5.json",
+        "sha256": "sha256:5dc398c3f86f8b172bfd5cee1332c3077d7c69a7381f4b46092fc96953e77eb4"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_C1_ola1.r1.json",
+      "raw_pin": {
+        "bytes": 3061,
+        "path": "data/ol_a1_replication/run_C1_ola1.r1.json",
+        "sha256": "sha256:ae4d18d3c7a4c113d5fa279b4198218589d546b962b7294736f48045c8b0b8c4"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_C1_ola1.r2.json",
+      "raw_pin": {
+        "bytes": 3066,
+        "path": "data/ol_a1_replication/run_C1_ola1.r2.json",
+        "sha256": "sha256:b38f02987fb5c10b8ef4971b6078b4cda2943f2f0258fd3267416618cc2abcb2"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_C1_ola1.r3.json",
+      "raw_pin": {
+        "bytes": 3072,
+        "path": "data/ol_a1_replication/run_C1_ola1.r3.json",
+        "sha256": "sha256:39cbb3c7a4bcd37c71e68302bece6dba606bbe7f3f3413d077a6c5257e0b1bd7"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_C1_ola1.r4.json",
+      "raw_pin": {
+        "bytes": 3067,
+        "path": "data/ol_a1_replication/run_C1_ola1.r4.json",
+        "sha256": "sha256:109257fa22802d15c9fd8d2bff14dfc0e1584d634e05bda038c77a559d387e7c"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "OL_A1_REPLICATION_CELL_RECEIPT_NOT_VERTEX12_OPERATOR",
+      "path": "data/ol_a1_replication/run_C1_ola1.r5.json",
+      "raw_pin": {
+        "bytes": 3071,
+        "path": "data/ol_a1_replication/run_C1_ola1.r5.json",
+        "sha256": "sha256:0461bc690c019ed34ad974aee7deaba0247c2d64b607c78ba107202e649404f4"
+      },
+      "schema": "oph.ol-a1-signature-replication.receipt.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
       "disposition": "PROJECTIVE_QUANTUM_CANDIDATE_COMPLETED_RECORD_PRODUCER_MISSING",
       "path": "data/quantum/icosahedral_chsh_candidate_receipt.json",
       "raw_pin": {
@@ -924,8 +1145,8 @@
     }
   ],
   "current_canonical_json_contract_scan": {
-    "current_canonical_json_path_count_excluding_recursive_outputs": 41,
-    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:d5102aaf00ddfccd420ab6acd5d87fee3ee3f87ad4576ccffeac087772519ba0",
+    "current_canonical_json_path_count_excluding_recursive_outputs": 58,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:1298c03d89d3575833d7a3adece8dd04a584ce085fdf25e6072da147d34bd36b",
     "positive_promotion_signal_rows_excluding_recursive_outputs": [],
     "recursive_output_paths_excluded": [
       "data/repair_closure/port_gram_completion_bridge_receipt.json",
@@ -949,9 +1170,9 @@
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 77829,
+      "bytes": 81135,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:5ea5ac5719782cb0425be6e02645b8c2635f96323db423ddb098d94234eaf927"
+      "sha256": "sha256:54c573f5eec1282b42479cb8f38bcda44c4f399e32641b13519c7a5dc1eeea31"
     },
     "mutation_tests": {
       "bytes": 39261,
@@ -959,9 +1180,9 @@
       "sha256": "sha256:1af2ac519cc81638646be8060ec257761df395562e9f6c5f594940fa27bb91df"
     },
     "producer": {
-      "bytes": 80016,
+      "bytes": 83549,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:a4a0541534ff67afe9b0bf4fa2e272dcfdbd522ddd5c557add4e98d5d0873830"
+      "sha256": "sha256:9f10196b06c191bc4d0d7df521e7375955b0d1e01589830bcbdc12f0f1ff453d"
     }
   },
   "issue": 655,
@@ -982,17 +1203,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:945cc83db8f498e57a49a03d5d2bd3baa637e53149f8ff99c1a9a074f6f599b0",
+  "receipt_sha256": "sha256:93c84873c9b6c11e3db25f07109a113aa64c96dc2d28a849bebc4a0c2dd03145",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1016,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:9258f08761b418462aa969744cec3c393da9e49b05d7d0d9768d5434024ac13f",
-    "path_count_including_declared_recursive_outputs": 1022,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:616291b95d4a4626b67b1af598feadb364491b281ab92427d48237eae0d44b6d",
+    "content_index_row_count_excluding_recursive_outputs": 1033,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:242a5e9fcdc3211c2d5f2b41085c0574b881bde49280e39553dcec1c052956f2",
+    "path_count_including_declared_recursive_outputs": 1039,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:da75989c7dc3eaacf09cffe5ba5bb1ac04e3bc2172b975dc392ccc09c2b0dc12",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 57,
+      "CURRENT_SIMULATOR_ARTIFACT": 74,
       "EXTERNAL_OR_COMPARISON_DATA": 40,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895

@@ -78,9 +78,14 @@ def test_tait_receipt_rainbow_and_classes():
 
 
 def test_tait_receipt_rejects_broken_coloring():
+    from oph_fpe.defects.z6_family_readout import _face_seams
+
+    seams0 = list(_face_seams(SPEC))[0]
     broken = list(COLORING)
-    broken[0] = broken[1] = broken[2] = 0
-    with pytest.raises(CarrierDefectError):
+    e1, e2 = seams0[0], seams0[1]
+    broken[e1], broken[e2] = broken[e2], broken[e1]
+    assert sorted(sum(1 for c in broken if c == v) for v in range(3)) == [10, 10, 10]
+    with pytest.raises(CarrierDefectError, match="not rainbow"):
         tait_receipt(SPEC, broken)
 
 
