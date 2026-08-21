@@ -139,11 +139,35 @@ def _pair_classes(table: Mapping[str, Any]) -> dict[str, list[tuple[int, int]]]:
     return {"causal": causal, "spacelike": spacelike}
 
 
+def standardize_chart(chart: np.ndarray) -> np.ndarray:
+    """Return the chart with each coordinate centred and scaled to unit spread.
+
+    The event chart mixes one integer ancestry-depth coordinate with three
+    spectral-embedding coordinates whose numerical spreads differ by about
+    three orders of magnitude (depth standard deviation near 29 against
+    spectral standard deviations near 0.05 on a 2,048-carrier capture).  A
+    quadratic form fitted on those raw coordinates is dominated by the depth
+    direction, and the spectral directions collapse into an eigenvalue at
+    roughly 1e-5 relative magnitude.  The reported signature then turns on
+    whether that numerically degenerate direction falls above or below the
+    inertia cut, which a change of seed can flip with no change in content.
+    Centring and scaling each coordinate removes that conditioning artifact
+    and leaves the signature invariant under per-coordinate rescaling.
+    """
+
+    values = np.asarray(chart, dtype=float)
+    centre = values.mean(axis=0)
+    spread = values.std(axis=0)
+    spread[spread == 0.0] = 1.0
+    return (values - centre) / spread
+
+
 def _fit_quadratic_form(
     chart: np.ndarray,
     pairs: Mapping[str, list[tuple[int, int]]],
     *,
     train_parity: int = 0,
+    standardize: bool = False,
 ) -> dict[str, Any]:
     """Fit a symmetric form on the training half, evaluate held out.
 
@@ -151,8 +175,15 @@ def _fit_quadratic_form(
     the ten quadratic monomials of the coordinate differences.  The held-out
     margin is the smallest correctly-signed value; one wrongly-signed
     held-out pair makes the margin negative.
+
+    With ``standardize`` set, each chart coordinate is centred and scaled to
+    unit spread before the differences are formed, which removes the
+    conditioning artifact described in :func:`standardize_chart`.  The default
+    is off so that every previously committed receipt replays byte for byte.
     """
 
+    if standardize:
+        chart = standardize_chart(chart)
     monomial_rows: list[np.ndarray] = []
     targets: list[float] = []
     held_rows: list[tuple[np.ndarray, float]] = []
@@ -188,6 +219,7 @@ def _fit_quadratic_form(
         "inertia": (positive, negative),
         "held_out_pair_count": len(held_rows),
         "cone_margin": float(min(margins)),
+        "standardized": bool(standardize),
     }
 
 
