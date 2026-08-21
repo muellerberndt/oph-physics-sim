@@ -98,5 +98,5 @@ visible:
 
 ## Contact
 
-Raised by Ben Cassie (@WGlynn). Happy to move this into the repository proper, to run it in
+Raised by Ben Cassie (@velvetmonkey). Happy to move this into the repository proper, to run it in
 CI, or to close it if the pointer is not wanted.
