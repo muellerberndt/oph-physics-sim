@@ -123,8 +123,9 @@ The current simulator has these stable surfaces:
   kernels, compound-graph maximum independent sets, complete terminal fibres, carrier projection,
   scalarization, robust fixed-point closure, and the unique zero-slack gate.
 - Screen microphysics reports for local pixel scale, port budget, support-visible S2 cellulation,
-  edge-sector heat-kernel diagnostics, central-record/Born diagnostics, and observer checkpoint
-  restoration.
+  finite S3 class-distribution diagnostics, classical categorical record-partition diagnostics,
+  and observer checkpoint restoration. These diagnostic reports do not validate a heat kernel,
+  centrality, a Lüders instrument, or a Born law.
 - BW/KMS and cap-flow reports that distinguish branch replay from endogenous finite Lorentz
   theorem contracts.
 - Observer-local modular-time reports, subjective observer camera payloads, H3 chart readouts, and

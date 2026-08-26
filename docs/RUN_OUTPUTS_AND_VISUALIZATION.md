@@ -137,6 +137,13 @@ marked config- or gate-dependent. The visualizer bundle builder
 - `auto_theorem_refinement/`, `reference_vacuum_baseline/`,
   `boundary_program_report.json`, `edge_sector_heat_kernel_report.json`,
   `central_record_born_report.json`, `silence_to_observation_report.md`.
+  The edge-sector report is likewise a finite S3 class-distribution diagnostic
+  against a declared target. It has no acceptance threshold or generative
+  goodness-of-fit receipt, so its heat-kernel validation gate is false.
+  The `central_record_born_report.json` name is retained for compatibility:
+  it certifies only a finite classical partition of categorical record IDs and
+  normalized empirical frequencies. No ambient algebra is supplied, so its
+  centrality, Lüders-instrument, and Born-law validation gates are false.
 
 ## Consumers
 
@@ -158,7 +165,7 @@ marked config- or gate-dependent. The visualizer bundle builder
 directory-based packages under
 `visualizer_handoffs/oph-headlines-2026-08-20/`. These are display-only
 exports, not run bundles. They cover S2 carrier interactions, one-carrier
-repair, observer-frame Born weights and Lueders conditioning, refinement-depth
+repair, a generated finite Born-form/Lueders-conditioning theorem fixture, refinement-depth
 statistics, repair confluence, observer cameras, modular time, defect emergence
 and grouping, observer-facing spacetime diagnostics, A5 sectors, finite EM,
 screen/cosmology diagnostics, and the paper/Lean/simulator evidence atlas.

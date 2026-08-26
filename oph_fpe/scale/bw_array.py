@@ -1427,22 +1427,25 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     edge_sector_report = with_claim_metadata(
         {
             **edge_sector_report,
+            "EDGE_SECTOR_DIAGNOSTIC_RECEIPT": bool(
+                edge_sector_report.get("edge_sector_diagnostic_receipt", False)
+            ),
             "EDGE_HEAT_KERNEL_RECEIPT": bool(edge_sector_report.get("receipt", False)),
         },
-        claim_level=RECOVERED_CORE,
-        receipt="EDGE_HEAT_KERNEL_RECEIPT",
+        claim_level=DEMO,
+        receipt="EDGE_SECTOR_DIAGNOSTIC_RECEIPT",
         physical_claim=False,
     )
-    # Event identity for the Born surface is the physical record packet id,
-    # not the internal SplitMix64 hash, so equal committed record content maps
-    # to one event.
+    # Event identity for the legacy central-record surface is the observer
+    # record-packet id, not the internal SplitMix64 hash, so equal committed
+    # record content maps to one classical event class.
     central_record_report = central_record_born_report(
         record_signature=final_record_packet_ids,
         committed=committed,
         stable_count=stable_count,
         commit_cycles=commit_cycles,
     )
-    central_record_report["event_identity"] = "physical_record_packet_id"
+    central_record_report["event_identity"] = "observer_record_packet_id"
     checkpoint_report = observer_checkpoint_restoration_report(
         raw_observer_fields,
         observer_analysis_rows,
@@ -2109,8 +2112,31 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     )
     emergence_status["mandatory_controls_pass"] = bool(mandatory_controls.get("all_expected_failures_observed"))
     emergence_status["neutral_reconstruction_written"] = bool(neutral_report)
-    emergence_status["edge_sector_heat_kernel_receipt"] = bool(edge_sector_report.get("receipt", False))
-    emergence_status["central_record_born_receipt"] = bool(central_record_report.get("receipt", False))
+    emergence_status["edge_sector_diagnostic_receipt"] = bool(
+        edge_sector_report.get("edge_sector_diagnostic_receipt", False)
+    )
+    # Compatibility key retained fail-closed: a finite comparison against a
+    # declared target is not a heat-kernel validation.
+    emergence_status["edge_sector_heat_kernel_receipt"] = bool(
+        edge_sector_report.get("heat_kernel_validation_receipt", False)
+    )
+    emergence_status["classical_record_partition_receipt"] = bool(
+        central_record_report.get("classical_record_partition_receipt", False)
+    )
+    emergence_status["centrality_validation_receipt"] = bool(
+        central_record_report.get("centrality_validation_receipt", False)
+    )
+    # Compatibility key retained fail-closed: categorical partition indicators
+    # do not establish centrality in an ambient observer algebra.
+    emergence_status["central_record_algebra_receipt"] = bool(
+        central_record_report.get("central_record_algebra_receipt", False)
+    )
+    # Compatibility key retained fail-closed.  The report contains empirical
+    # frequencies derived from the same record counts, not an independent
+    # Born-law prediction or measurement comparison.
+    emergence_status["central_record_born_receipt"] = bool(
+        central_record_report.get("born_law_validation_receipt", False)
+    )
     emergence_status["observer_checkpoint_restoration_receipt"] = bool(checkpoint_report.get("receipt", False))
     if state_bw_report:
         emergence_status["state_derived_bw_median"] = state_bw_report.get("median")

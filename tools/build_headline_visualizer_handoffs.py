@@ -332,12 +332,12 @@ def _quantum_package(output: Path, root: Path) -> dict[str, Any]:
     boundary = receipt["boundary"]
     (package / "DISPLAY_INSTRUCTIONS.md").write_text(
         _instructions(
-            "Observer-frame quantum weights and collapse",
+            "Finite quantum-form weights and conditioning fixture",
             ["data/QM_OBSERVER_VIZ.v1.json", "data/QM_OBSERVER_RECEIPT.v1.json"],
             [
-                "Use one panel per scenario: base contexts, collapse chains, then interference.",
+                "Use one panel per generated scenario: base contexts, conditioning chains, then interference.",
                 "Draw exact count ratios as stacked outcome bars; display fraction pairs before decimal formatting.",
-                "Animate collapse as conditioning on the observer record: pre-state, selected event, Lueders-updated state, repeat read.",
+                "Animate the declared Lueders conditioning fixture: pre-state, selected event, updated state, repeat read. Do not present it as a source-produced preparation, laboratory instrument, or observed wave-function collapse.",
                 "Show direct and mediated interference branches on a shared count scale.",
             ],
             ["Context selector", "Outcome-conditioned branch selector", "Exact fraction/decimal toggle"],
@@ -348,7 +348,7 @@ def _quantum_package(output: Path, root: Path) -> dict[str, Any]:
     return _finish_package(
         package,
         package_id=package.name,
-        title="Observer-frame quantum weights and collapse",
+        title="Finite quantum-form weights and conditioning fixture",
         provenance="computed",
         claim_boundary=boundary,
         source_rows=[

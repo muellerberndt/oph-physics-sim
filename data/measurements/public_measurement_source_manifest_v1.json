@@ -1,0 +1,78 @@
+{
+  "schema": "oph.public_measurement_source_manifest.v1",
+  "bundle_id": "oph-fpe-public-measurements-2026-08-26",
+  "files": [
+    {
+      "role": "planck_tt_binned",
+      "path": "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt",
+      "sha256": "ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd",
+      "bytes": 7143,
+      "data_kind": "published_binned_power_spectrum",
+      "representation": "exact_published_bytes",
+      "upstream_sha256": "ed2b8b51b033e668e661f6cf4eb7705f15bcaf358189dfc4a4481cc7020130cd",
+      "upstream_bytes": 7143,
+      "public_source": "https://irsa.ipac.caltech.edu/data/Planck/release_3/ancillary-data/cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt"
+    },
+    {
+      "role": "sparc_rar",
+      "path": "data/measurements/sparc/RAR.mrt",
+      "sha256": "24aa7059dab7fa44787f7c11191052489899819370f6508621674769f3b72833",
+      "bytes": 68136,
+      "data_kind": "published_radial_acceleration_table",
+      "representation": "exact_published_bytes",
+      "upstream_sha256": "24aa7059dab7fa44787f7c11191052489899819370f6508621674769f3b72833",
+      "upstream_bytes": 68136,
+      "public_source": "https://astroweb.case.edu/SPARC/RAR.mrt"
+    },
+    {
+      "role": "sparc_rar_bins",
+      "path": "data/measurements/sparc/RARbins.mrt",
+      "sha256": "6cb3721693ea007f99f0ab1d4056440561e568408e03cad1765888b3ffd770f5",
+      "bytes": 1188,
+      "data_kind": "normalized_published_binned_radial_acceleration_table",
+      "representation": "normalized_published_snapshot",
+      "upstream_sha256": "d543cab7b720a4f14152ccc8158f7823072ce65a9c5b403d7c401b3f039a79d7",
+      "upstream_bytes": 1202,
+      "normalization": {
+        "id": "strip_one_trailing_ascii_space_from_each_data_row_v1",
+        "description": "The live 1202-byte file has one trailing ASCII space on each of its 14 data rows. Remove exactly those 14 spaces and preserve all 27 LF line endings; the result is the committed 1188-byte local snapshot."
+      },
+      "public_source": "https://astroweb.case.edu/SPARC/RARbins.mrt"
+    },
+    {
+      "role": "sparc_btfr",
+      "path": "data/measurements/sparc/BTFR_Lelli2019.mrt",
+      "sha256": "a9b5776f6812398abcec32c21c6c53e5d0bd88c22a708c9f875e49bd12a3a66f",
+      "bytes": 20360,
+      "data_kind": "published_baryonic_tully_fisher_table",
+      "representation": "exact_published_bytes",
+      "upstream_sha256": "a9b5776f6812398abcec32c21c6c53e5d0bd88c22a708c9f875e49bd12a3a66f",
+      "upstream_bytes": 20360,
+      "public_source": "https://astroweb.case.edu/SPARC/BTFR_Lelli2019.mrt"
+    },
+    {
+      "role": "sparc_mass_models",
+      "path": "data/measurements/sparc/MassModels_Lelli2016c.mrt",
+      "sha256": "9108994b12cc401b94a1768beca61c53ec354779385c9c9cc571049f3043244c",
+      "bytes": 269518,
+      "data_kind": "published_galaxy_mass_model_table",
+      "representation": "exact_published_bytes",
+      "upstream_sha256": "9108994b12cc401b94a1768beca61c53ec354779385c9c9cc571049f3043244c",
+      "upstream_bytes": 269518,
+      "public_source": "https://astroweb.case.edu/SPARC/MassModels_Lelli2016c.mrt"
+    },
+    {
+      "role": "cassini_q2_summary",
+      "path": "data/measurements/cassini/cassini_q2_2026.json",
+      "sha256": "ee6419c3399a4849884418a528c07d8f63c38867487196b5f0392bcbd7d41847",
+      "bytes": 1524,
+      "data_kind": "published_summary_statistic_not_raw_tracking_data",
+      "representation": "transcribed_published_summary",
+      "upstream_sha256": null,
+      "upstream_bytes": null,
+      "transcription_scope": "Science values cross-checked against arXiv:2602.17884v2 sections abstract and IV.2.1; the JSON is a local structured transcription and is not an upstream file.",
+      "public_source": "https://arxiv.org/abs/2602.17884v2"
+    }
+  ],
+  "claim_boundary": "This manifest binds the exact committed local bytes used by the public-data comparison suite to declared public source URLs and records whether each local representation is an exact upstream copy, an explicitly normalized snapshot, or a structured transcription. A matching digest proves local byte identity with the reviewed repository copy, not authenticity of the remote host, independent custody, raw-instrument provenance, an official likelihood evaluation, or agreement with OPH. The Planck and SPARC files are published data products; RARbins removes a documented trailing-space-only difference; the Cassini file is a transcribed published summary statistic, not raw radio-tracking data."
+}

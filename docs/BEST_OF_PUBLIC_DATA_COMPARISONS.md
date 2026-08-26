@@ -5,7 +5,7 @@ this suite feeds, lives in `OPH_SIGNATURE_EXPERIMENT_TRACKER.md`
 (section 0a). This document stays the contract for the generated
 comparison bundle itself.
 
-The comparison suite turns the strongest currently available OPH-FPE measurement surfaces into one provenance-bound scoreboard. It selects a primary run before looking at public metrics, binds every CMB report and sidecar to that exact run directory, and keeps evidence classes separate. It never emits a combined “OPH score.”
+The comparison suite turns the strongest currently available OPH-FPE measurement surfaces into one provenance-bound scoreboard. It selects a primary run before looking at public metrics, binds every CMB report and sidecar to that exact run directory, and keeps evidence classes separate. For each CMB curve it recomputes the single weighted-least-squares amplitude and the entire scaled curve from the raw CAMB bins. The LambdaCDM comparator is the uniquely named, same-run `camb_lcdm_baseline_report.json`, whose Planck hash, bins, model parameters, amplitude, curve, and statistic are independently checked; arbitrary external rows are never minimized over. The suite also fails closed unless the selected Planck, SPARC, and Cassini-summary bytes match `data/measurements/public_measurement_source_manifest_v1.json`; merely hashing whatever file was supplied is not accepted as source integrity. It never emits a combined “OPH score.”
 
 The generated bundle contains:
 
@@ -14,6 +14,19 @@ The generated bundle contains:
 - `best_of_public_data_metrics.csv`: one metric per row.
 
 Validate the JSON with `schemas/cosmology/best_of_public_data_comparisons.schema.json`.
+
+The byte-binding receipt uses real published data products, not synthetic
+fixtures. Its canonical positive verdict requires both the canonical manifest
+path and the manifest SHA-256 pinned in the validator; a self-consistent custom
+data-plus-manifest pair remains diagnostic and fails the canonical receipt. A
+positive verdict is still only infrastructure: it proves local byte identity
+with the reviewed committed representations. It does not authenticate the
+remote hosts or download custody, recover raw instrument telemetry, evaluate
+an official likelihood, or validate OPH. Check it independently with:
+
+```bash
+python3 tools/verify_public_measurement_sources.py
+```
 
 ## Current result (as of the 2026-07-11 audited primary run)
 
@@ -29,19 +42,19 @@ The current audited primary run is `runs/oph_universe_64k_final_audited_20260711
 
 | Evidence | Result | Interpretation |
 |---|---:|---|
-| Planck PR3 binned TT | OPH diagonal chi2/bin `1.41749`; LambdaCDM `0.94450`; OPH-minus-LambdaCDM total diagnostic delta chi2 `+39.26` over 83 bins | LambdaCDM is better. One OPH amplitude was fitted on the same bins; this is not the official Planck likelihood. |
+| Planck PR3 binned TT | OPH diagonal chi2/bin `1.41749`; LambdaCDM `0.94450`; OPH-minus-LambdaCDM total diagnostic delta chi2 `+39.26` over 83 bins | LambdaCDM is better. Both displayed curves use one recomputed amplitude fitted on the same bins; this is not the official Planck likelihood, and no run ledger can promote this same-data row to a prediction. Because the target also participates in model selection, the suite reports neither an `N-1` degrees-of-freedom interpretation nor a p-value. |
 | Conditional analytic `n_s=1-P/48` | `n_s=0.9660215`, `0.27 sigma` from Planck's scalar-tilt summary; CAMB diagonal chi2/bin `0.95450` versus `0.94450`, total delta chi2 `+0.83` over 83 bins | Encouraging math-only diagnostic. It is distinct from the simulation-derived `n_s=0.97893`; the source/radial-lift/amplitude/official-likelihood gates remain open. |
 | Planck TT profiled residual RMS | `1.19058 sigma` | Recomputed from the amplitude-profiled curve. The older exported `1.27608 sigma` value used the unscaled curve. |
-| Cassini Solar-System external field | OPH conditional-Z6 branch `Q2 = 3.62018e-26 s^-2` versus Cassini `(1.6 +/- 1.8)e-27 s^-2`; raw fixed-input pull `19.22 sigma`; about `10.7 sigma` after a linearized Gaia-external-field uncertainty only | Strongly excludes the natural universal/full-source QUMOND extension. It does not by itself falsify recovered OPH core because the paper scopes the static law to settled galaxies; instead it exposes a missing quantitative Solar-System applicability/screening/transport gate. |
+| Cassini Solar-System external field | OPH conditional-Z6 branch `Q2 = 3.62018e-26 s^-2` versus Cassini `(1.6 +/- 1.8)e-27 s^-2`; raw fixed-input pull `19.22 sigma`; about `10.7 sigma` after a linearized Gaia-external-field uncertainty only | Large conditional stress diagnostic for the natural universal/full-source QUMOND extension. There is no independently custodied preregistration, and only two lambda endpoints—not a global band minimum—are evaluated. A threshold assertion inside the evaluated source file cannot earn an external-domain falsifier receipt. Solar-System applicability is also not derived. |
 | SPARC RAR calibration | `0.13281 dex` over 2,693 aggregate RAR points | A good same-data calibration, not a prediction. Only `a0/lambda_collar^2` is identifiable. |
 | Fixed OPH RAR branches | Z6 aggregate RMS `0.13283 dex`; unit branch `0.13421 dex`; same-data effective-scale optimum `0.13295 dex` | Positive retrospective formula check. The coefficient is benchmark-derived/conditional and shared galaxy nuisances are not profiled, so this is not a blind prediction or a formal significance. |
 | SPARC galaxy holdout | acceleration RMSE `0.17239 dex`; velocity RMSE `22.69 km/s` versus `59.18 km/s` baryon-only | Positive galaxy-level holdout, but the velocity diagonal chi2 proxy remains large at `33.89` per point. |
-| SPARC BTFR check | error-aware observed slope `3.84565 +/- 0.08582`; OPH slope `4.0` is `1.80 sigma` high; at 100 km/s the Z6 fixed normalization is `0.13476 dex` high (`6.47 sigma` statistical-only) | Mixed. The slope is compatible and within the published systematic range; normalization is under pressure for the table's fixed mass-to-light convention, but global galaxy systematics are not marginalized. This table overlaps the SPARC sample and is not a wholly independent galaxy sample. |
+| SPARC BTFR separate-table diagnostic | error-aware observed slope `3.84565 +/- 0.08582`; OPH slope `4.0` is `1.80 sigma` by the Wald/Hessian approximation and `sqrt(delta deviance)=1.73`; at 100 km/s the Z6 fixed normalization is `0.13476 dex` high (`6.47 sigma` Wald/Hessian; `sqrt(delta deviance)=5.89`) | Mixed diagnostic, not an independent-dataset check. The OPH slope and normalization inputs are fixed, but the orthogonal intrinsic-scatter nuisance is profiled on this BTFR table. Global galaxy systematics are not marginalized, and the overlapping SPARC galaxy sample is not a strict untouched holdout. |
 | Compressed cosmology reference | archived OPH `11.4633`; fixed-H0 grid `9.5504`; free compressed point `6.2852` | Invalidated and blocked: hard-coded constants, no attached public covariance, correlated compressed variables, and a rejected neutrino input. It is excluded from evidence. |
 
 There are currently zero frozen physical-prediction receipts. The Planck promotion ledger stops at `SPECTRUM_DIAGNOSTIC`; the first blocked parent gate is the finite quotient source law.
 
-The Cassini row is deliberately not promoted to a frozen OPH prediction. Its OPH `a0` is a calibrated benchmark, the exact `lambda=exp(-P/24)` coefficient is conditional on an unclosed uniform-product-thickening gate, and no current source law says that the settled-galaxy PDE applies to the Milky-Way-plus-Sun source. The `19.22 sigma` value is therefore labeled a raw central-input residual, not a nuisance-marginalized exclusion significance. Even so, the unit-lambda endpoint is still about `18.01 sigma` raw, so the current Jensen lambda band does not remove the problem under universal applicability.
+The Cassini row is deliberately not promoted to a frozen OPH prediction or a conditional falsifier receipt. Its OPH `a0` is a calibrated benchmark, the exact `lambda=exp(-P/24)` coefficient is conditional on an unclosed uniform-product-thickening gate, and no current source law says that the settled-galaxy PDE applies to the Milky-Way-plus-Sun source. The `19.22 sigma` value is therefore labeled a raw central-input residual, not a nuisance-marginalized exclusion significance. The report notes whether the two encoded endpoints exceed the conventional `5 sigma` reference, but explicitly marks that reference as diagnostic rather than an acceptance or falsifier threshold. The unit-lambda endpoint is about `18.01 sigma` raw; without a monotonicity proof or global minimization this says only that both endpoints are stressed, not that every intermediate lambda is. A threshold and “declared earlier” assertion in the evaluated file remains a nonpromoting candidate until independent preregistration custody exists.
 
 The dark-sector benchmark also has an unresolved capacity provenance fork. The existing calculator uses the observed rounded `N_scr=3.31e122`; using the exact source-side electroweak capacity `N_EW=3.5323546e122` changes `a0` to `9.96267e-11 m/s^2` and the Z6 effective scale to `1.14131e-10 m/s^2`. This does not rescue Cassini (about `18.94 sigma` raw) and slightly worsens the BTFR normalization. Any capacity-derived acceleration comparison must freeze and disclose one branch.
 
@@ -145,7 +158,7 @@ The report will show:
 - the run-derived finite-repair-clock and selector inputs used by CAMB;
 - paired-response and `B_A` kernel readiness changes without treating them as public-data fits;
 - the unchanged SPARC continuation and compressed reference as run-independent lanes;
-- a false prediction receipt unless the same run bundle passes the frozen source, solver, likelihood, physical-input, and promotion ledger gates.
+- a false prediction receipt for every amplitude-profiled same-data row, regardless of an unrelated promotion-ledger assertion. A future prediction needs a separate frozen source-side model and official-likelihood artifact bound to the evaluated curve.
 
 The suite may order explicitly supplied Planck diagnostics by their diagonal statistic, but a better historical score never replaces the predeclared primary run. A larger run also does not “win” because it has more patches.
 

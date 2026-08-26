@@ -1911,7 +1911,7 @@
     "reuse_current_matching_maps_via_a_surjective_semiconjugate_cover": "exactly_obstructed",
     "source_selection_of_a_site_completion_and_event_provenance_remain_required": true
   },
-  "receipt_sha256": "sha256:57bdce235f0150fd507eecab4c11aaffa7c15a51eb12ee87890f47ab96e0281d",
+  "receipt_sha256": "sha256:c3dea9a4a71514dcabd347401c97af3ce51b690c854da1799786eadcdcccf3af",
   "requested_directed_transport_ledger": {
     "attained_from_current_source_emissions": false,
     "exact_T_antipode_p_equals_inverse_T_p_attained": false,
@@ -1939,9 +1939,9 @@
     "pin": {
       "bytes": 41087,
       "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-      "sha256": "sha256:5e295400a320dfee2cd25096c700bb4bbf107a8f4a584a5babc7abb0677110e0"
+      "sha256": "sha256:140e27bad21df480238c73d7b6dd6247fa65465a27f9d8eeed14e86b856c447d"
     },
-    "receipt_sha256": "sha256:2c6b5fb5f76a9b399ed1d98d517fbea14277870e9625f9f6d3705325db830582",
+    "receipt_sha256": "sha256:afbfa995f10e6ff85114208f1c7aa2211d6c9ce97d893e56c337e73d7d4a1aa4",
     "repair_log_sha256": "sha256:d7264b081c045624855f9bde1bce4a6b97675cd00c9cfd3b950533228eb496b1",
     "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
     "source_engine_independently_reimplemented": false,

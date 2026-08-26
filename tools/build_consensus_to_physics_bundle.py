@@ -50,7 +50,8 @@ blocker list. Each panel still ends with one honest sentence about what it does 
    fields with contours, worldlines threading a block universe. Canvas and WebGL, not static SVG.
    This should look like a planetarium exhibit about a new physics.
 2. **Legible physics.** Wherever an OPH object matches a standard construction, say so and draw the
-   correspondence - Stern-Gerlach, spherical harmonics, the H-theorem, Hilbert-space collapse,
+   correspondence - finite algebraic analyser fixtures, spherical harmonics, the H-theorem,
+   classical record conditioning,
    Minkowski diagrams, Gauss's law, parallel transport, the Einstein equation, the CMB.
 3. **Complete the picture.** Where the run's data is thinner than the scene, draw the scene anyway
    and mark it declared with a visually distinct treatment. A vivid scene with an honest label
@@ -59,7 +60,7 @@ blocker list. Each panel still ends with one honest sentence about what it does 
 
 ## Build these first
 
-V07 (three dimensions crystallising), V12b (the observer's sky), V18 (wave-function collapse),
+V07 (three dimensions crystallising), V12b (the observer's sky), V18 (classical record conditioning),
 V23 (one generation of matter), V24b (a proto-particle seen from inside), V29b (the bulk
 contracting around mass), then V14 and V17. V07 and V23 are exact and need no run data at all -
 they can be recomputed in the browser and verified immediately.

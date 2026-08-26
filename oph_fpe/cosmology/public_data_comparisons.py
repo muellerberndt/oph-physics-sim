@@ -16,6 +16,14 @@ from oph_fpe.cosmology.galaxy_static import (
     load_static_galaxy_dataset,
     static_galaxy_measurement_report,
 )
+from oph_fpe.cosmology.public_measurement_source_binding import (
+    CASSINI_ROLES,
+    DEFAULT_MANIFEST_PATH as DEFAULT_PUBLIC_MEASUREMENT_MANIFEST_PATH,
+    PLANCK_ROLES,
+    SPARC_ROLES,
+    binding_errors_for_roles,
+    validate_public_measurement_sources,
+)
 from oph_fpe.cosmology.rar_fixed_comparison import fixed_oph_rar_report
 
 
@@ -25,10 +33,29 @@ PLANCK_TT_SOURCE_URL = (
     "cosmoparams/COM_PowerSpect_CMB-TT-binned_R3.01.txt"
 )
 SPARC_SOURCE_URL = "https://astroweb.case.edu/SPARC/"
-CASSINI_SOURCE_URL = "https://arxiv.org/abs/2602.17884"
+CASSINI_SOURCE_URL = "https://arxiv.org/abs/2602.17884v2"
 DEFAULT_CASSINI_SUMMARY_PATH = (
     Path(__file__).resolve().parents[2]
     / "data/measurements/cassini/cassini_q2_2026.json"
+)
+CASSINI_CANDIDATE_RULE_STATISTIC = (
+    "jensen_lambda_endpoints_minimum_absolute_raw_fixed_input_pull_sigma"
+)
+CASSINI_CONVENTIONAL_REFERENCE_SIGMA = 5.0
+CMB_BASELINE_SOURCE_REPORT = "camb_lcdm_baseline_report.json"
+CMB_BASELINE_MODEL_ID = "lcdm_baseline"
+CMB_BASELINE_PARAMETERS = {
+    "H0": 67.36,
+    "ombh2": 0.02237,
+    "omch2": 0.12,
+    "mnu": 0.06,
+    "omk": 0.0,
+    "tau": 0.0544,
+    "As": 2.1e-9,
+    "ns": 0.9649,
+}
+CMB_BASELINE_PARAMETERS_SHA256 = (
+    "4c8c754b73d19c9f0f3bf0defc098f4435031ce23037367d70e60f1ddd112821"
 )
 
 
@@ -55,7 +82,16 @@ def public_data_comparison_report(
     baseline = Path(baseline_run_dir) if baseline_run_dir is not None else primary
     all_runs = _unique_paths([primary, *history, baseline])
 
+    selected_cassini_path = Path(cassini_summary_path or DEFAULT_CASSINI_SUMMARY_PATH)
+    source_binding = validate_public_measurement_sources(
+        planck_tt_path=Path(planck_tt_path),
+        sparc_dir=Path(sparc_dir),
+        cassini_summary_path=selected_cassini_path,
+        manifest_path=DEFAULT_PUBLIC_MEASUREMENT_MANIFEST_PATH,
+    )
+
     planck_rows, planck_errors = _read_planck_rows(Path(planck_tt_path))
+    planck_errors.extend(binding_errors_for_roles(source_binding, PLANCK_ROLES))
     planck_dataset = _dataset_record(
         dataset_id="planck_pr3_tt_binned_r3_01",
         release="Planck 2018 / PR3 R3.01",
@@ -64,12 +100,52 @@ def public_data_comparison_report(
         record_count=len(planck_rows),
         errors=planck_errors,
     )
-    sparc_dataset, sparc_report, sparc_errors = _sparc_dataset_and_report(Path(sparc_dir))
-    cassini_dataset, cassini_row, cassini_errors = _cassini_dataset_and_comparison(
-        Path(cassini_summary_path or DEFAULT_CASSINI_SUMMARY_PATH)
+    sparc_dataset, sparc_report, sparc_errors = _sparc_dataset_and_report(
+        Path(sparc_dir)
     )
+    sparc_binding_errors = binding_errors_for_roles(source_binding, SPARC_ROLES)
+    sparc_errors.extend(sparc_binding_errors)
+    sparc_errors[:] = sorted(set(sparc_errors))
+    sparc_dataset["integrity_errors"] = sparc_errors
+    sparc_dataset["integrity_receipt"] = not sparc_errors
+    cassini_dataset, cassini_row, cassini_errors = _cassini_dataset_and_comparison(
+        selected_cassini_path
+    )
+    cassini_binding_errors = binding_errors_for_roles(source_binding, CASSINI_ROLES)
+    cassini_errors.extend(cassini_binding_errors)
+    cassini_errors[:] = sorted(set(cassini_errors))
+    cassini_dataset["integrity_errors"] = cassini_errors
+    cassini_dataset["integrity_receipt"] = not cassini_errors
+    cassini_row["integrity_errors"] = cassini_errors
+    cassini_row["integrity_receipt"] = not cassini_errors
+    cassini_row["comparison_receipt"] = bool(
+        cassini_row.get("comparison_receipt") and not cassini_errors
+    )
+    cassini_row["conditional_external_domain_falsifier"] = bool(
+        cassini_row.get("conditional_external_domain_falsifier") and not cassini_errors
+    )
+    falsifier_decision = cassini_row.get("falsifier_decision")
+    if isinstance(falsifier_decision, dict):
+        falsifier_decision["decision_receipt"] = cassini_row[
+            "conditional_external_domain_falsifier"
+        ]
+        if cassini_errors:
+            falsifier_decision["decision_rule_receipt"] = False
+            falsifier_decision["threshold_passed"] = False
+            falsifier_decision["blockers"] = sorted(
+                set(
+                    [
+                        *list(falsifier_decision.get("blockers") or []),
+                        "public_measurement_integrity_failed",
+                    ]
+                )
+            )
+    if not cassini_row["conditional_external_domain_falsifier"]:
+        cassini_row["claim_level"] = "conditional_stress_diagnostic"
 
-    run_bundles = [_run_bundle(path, primary=primary, baseline=baseline) for path in all_runs]
+    run_bundles = [
+        _run_bundle(path, primary=primary, baseline=baseline) for path in all_runs
+    ]
     run_by_key = {_path_key(Path(row["run_dir"])): row for row in run_bundles}
 
     cmb_rows: list[dict[str, Any]] = []
@@ -90,13 +166,19 @@ def public_data_comparison_report(
     if compressed_row is not None:
         comparisons.append(compressed_row)
 
-    readiness = [_repair_readiness(path, run_by_key[_path_key(path)]) for path in all_runs]
+    readiness = [
+        _repair_readiness(path, run_by_key[_path_key(path)]) for path in all_runs
+    ]
     scale_contract = (
-        _config_scale_contract(Path(planned_config_path), planck_rows=planck_rows, role="planned")
+        _config_scale_contract(
+            Path(planned_config_path), planck_rows=planck_rows, role="planned"
+        )
         if planned_config_path is not None
         else None
     )
-    baseline_delta = _primary_baseline_delta(cmb_rows, primary=primary, baseline=baseline)
+    baseline_delta = _primary_baseline_delta(
+        cmb_rows, primary=primary, baseline=baseline
+    )
     diagnostic_order = _diagnostic_order(cmb_rows)
 
     featured = _featured_by_evidence_class(comparisons, diagnostic_order)
@@ -125,9 +207,12 @@ def public_data_comparison_report(
     public_rows = [
         row
         for row in comparisons
-        if row.get("comparison_receipt") and row.get("dataset_id") != "compressed_cosmology_reference"
+        if row.get("comparison_receipt")
+        and row.get("dataset_id") != "compressed_cosmology_reference"
     ]
-    frozen_predictions = [row for row in comparisons if row.get("physical_prediction_receipt")]
+    frozen_predictions = [
+        row for row in comparisons if row.get("physical_prediction_receipt")
+    ]
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -146,6 +231,7 @@ def public_data_comparison_report(
             "sparc": sparc_dataset,
             "cassini_q2": cassini_dataset,
         },
+        "public_measurement_source_binding": source_binding,
         "run_bundles": run_bundles,
         "planned_run_scale_contract": scale_contract,
         "comparisons": comparisons,
@@ -175,12 +261,13 @@ def public_data_comparison_report(
             "Planck TT values are diagonal-error diagnostics with one amplitude fitted on the same bins, not "
             "the official Planck likelihood. SPARC RAR is a calibration, BTFR is a separate descriptive check, "
             "and the mass-model result is a galaxy-level holdout of a phenomenological continuation. Cassini "
-            "strongly excludes the natural universal QUMOND extension of the OPH static galaxy equation at "
-            "fixed inputs, but the current paper scopes that equation to settled galaxies and supplies no "
-            "Solar-System applicability rule; this is a conditional external-domain falsifier and hard missing "
-            "gate, not a falsification of recovered OPH core. Only a "
-            "same-run promotion ledger with frozen source/solver/likelihood hashes and an evaluated official "
-            "likelihood can count as a physical prediction. More carrier patches do not change that status."
+            "shows a large fixed-input tension for the natural universal QUMOND extension of the OPH static "
+            "galaxy equation, but it has neither independently custodied preregistration, a global lambda-band "
+            "minimum, nor a Solar-System applicability rule; it is therefore a conditional stress diagnostic "
+            "and hard missing gate, not a falsification receipt for recovered OPH core. Only a separate prediction row bound "
+            "to frozen source/solver artifacts and an evaluated official likelihood can count as a physical "
+            "prediction; a run ledger cannot promote the amplitude-fitted row. More carrier patches do not "
+            "change that status."
         ),
     }
 
@@ -226,8 +313,19 @@ def _cmb_comparison(
     dataset: dict[str, Any],
     planck_rows: list[dict[str, float]],
 ) -> dict[str, Any]:
-    errors: list[str] = []
+    # A CMB row is a statement about both the external measurement bytes and
+    # one particular run bundle.  Fail it closed if either side lacks its
+    # provenance/integrity contract; otherwise a valid Planck file could mask
+    # a missing or internally inconsistent manifest/config pair.
+    errors: list[str] = [
+        *list(dataset.get("integrity_errors") or []),
+        *list(bundle.get("integrity_errors") or []),
+    ]
     output_path = Path(run_dir) / "physical_cmb_output_comparison_report.json"
+    if output_path.is_symlink() or output_path.resolve().parent != Path(
+        run_dir
+    ).resolve():
+        errors.append("output_report_cross_root_mismatch")
     output, load_error = _load_json(output_path)
     if load_error:
         errors.append(load_error)
@@ -287,6 +385,10 @@ def _cmb_comparison(
     if not source_name or Path(source_name).name != source_name:
         errors.append("invalid_source_report_name")
     source_path = Path(run_dir) / source_name
+    if source_path.is_symlink() or source_path.resolve().parent != Path(
+        run_dir
+    ).resolve():
+        errors.append("selected_source_report_cross_root_mismatch")
     source, source_error = _load_json(source_path)
     if source_error:
         errors.append(source_error)
@@ -294,7 +396,9 @@ def _cmb_comparison(
     comparison: dict[str, Any] = {}
     if source:
         comparisons = source.get("comparison")
-        if isinstance(comparisons, dict) and isinstance(comparisons.get(model_id), dict):
+        if isinstance(comparisons, dict) and isinstance(
+            comparisons.get(model_id), dict
+        ):
             comparison = comparisons[model_id]
         elif model_id == "lcdm_baseline" and isinstance(comparisons, dict):
             comparison = comparisons
@@ -306,10 +410,15 @@ def _cmb_comparison(
         for row in output.get("rows", [])
         if isinstance(row, dict) and row.get("model_id") == model_id
     ]
-    if len(output_model_rows) != 1 or output_model_rows[0].get("model_role") != "oph_diagnostic":
+    if (
+        len(output_model_rows) != 1
+        or output_model_rows[0].get("model_role") != "oph_diagnostic"
+    ):
         errors.append("selected_model_has_no_unique_explicit_oph_role_row")
 
-    embedded = comparison.get("binned_tt_comparison") if isinstance(comparison, dict) else None
+    embedded = (
+        comparison.get("binned_tt_comparison") if isinstance(comparison, dict) else None
+    )
     if not isinstance(embedded, list) or not embedded:
         errors.append("profiled_binned_tt_rows_missing_from_source_report")
         embedded = []
@@ -321,63 +430,132 @@ def _cmb_comparison(
     if reported_benchmark_hash != dataset.get("sha256"):
         errors.append("source_report_benchmark_hash_mismatch")
 
-    profiled_chi2 = _profiled_chi2_per_bin(embedded)
+    common_fit = _common_amplitude_fit(embedded)
+    profiled_chi2 = (
+        _finite_or_none(common_fit.get("chi2_per_bin")) if common_fit else None
+    )
+    fitted_curve = list(common_fit.get("fitted_curve") or []) if common_fit else []
+    fitted_amplitude = (
+        _finite_or_none(common_fit.get("amplitude")) if common_fit else None
+    )
     reported_chi2 = _finite_or_none(comparison.get("amplitude_fit_chi2_per_bin"))
+    reported_amplitude = _finite_or_none(comparison.get("best_fit_amplitude"))
+    amplitude_matches = bool(
+        common_fit is not None
+        and reported_amplitude is not None
+        and fitted_amplitude is not None
+        and math.isclose(
+            fitted_amplitude,
+            reported_amplitude,
+            rel_tol=1e-12,
+            abs_tol=1e-12,
+        )
+    )
+    reported_curve_matches = bool(
+        common_fit is not None
+        and _reported_curve_matches_common_fit(embedded, fitted_curve)
+    )
+    if common_fit is None:
+        errors.append("common_amplitude_fit_not_recomputable")
+    elif not amplitude_matches:
+        errors.append("reported_best_fit_amplitude_does_not_recompute")
+    if common_fit is not None and not reported_curve_matches:
+        errors.append("reported_profiled_curve_not_common_amplitude_scaled")
     if profiled_chi2 is None:
         errors.append("profiled_chi2_not_recomputable")
-    elif reported_chi2 is None or not math.isclose(profiled_chi2, reported_chi2, rel_tol=1e-10, abs_tol=1e-10):
+    elif reported_chi2 is None or not math.isclose(
+        profiled_chi2, reported_chi2, rel_tol=1e-10, abs_tol=1e-10
+    ):
         errors.append("reported_profiled_chi2_does_not_recompute")
 
-    residuals = _residual_metrics(embedded)
-    external_rows = [
-        row
-        for row in output.get("rows", [])
-        if isinstance(row, dict)
-        and row.get("model_role") == "external_baseline"
-        and _finite_or_none(row.get("amplitude_fit_chi2_per_bin")) is not None
-    ]
-    external = min(
-        external_rows,
-        key=lambda row: float(row["amplitude_fit_chi2_per_bin"]),
-        default=None,
-    )
-    if external is None:
-        errors.append("external_lcdm_baseline_missing")
+    if comparison.get("usable") is not True:
+        errors.append("selected_source_comparison_not_usable")
+    if not _exact_int_equals(comparison.get("bin_count"), len(embedded)):
+        errors.append("selected_source_comparison_bin_count_mismatch")
+    if len(output_model_rows) == 1:
+        output_model_row = output_model_rows[0]
+        if not _exact_int_equals(output_model_row.get("bin_count"), len(embedded)):
+            errors.append("selected_output_row_bin_count_mismatch")
+        output_chi2 = _finite_or_none(
+            output_model_row.get("amplitude_fit_chi2_per_bin")
+        )
+        if (
+            output_chi2 is None
+            or profiled_chi2 is None
+            or not math.isclose(
+                output_chi2, profiled_chi2, rel_tol=1e-10, abs_tol=1e-10
+            )
+        ):
+            errors.append("selected_output_row_chi2_mismatch")
+    best_chi2 = _finite_or_none(best.get("amplitude_fit_chi2_per_bin"))
+    if (
+        best_chi2 is None
+        or profiled_chi2 is None
+        or not math.isclose(best_chi2, profiled_chi2, rel_tol=1e-10, abs_tol=1e-10)
+    ):
+        errors.append("best_oph_diagnostic_chi2_mismatch")
 
-    residual_source_name = str((output.get("best_oph_residual_summary") or {}).get("source_csv") or "")
-    residual_source_path = Path(run_dir) / residual_source_name if residual_source_name else None
+    residuals = _residual_metrics(embedded, fitted_curve=fitted_curve)
+    baseline, baseline_errors = _bound_lcdm_baseline(
+        Path(run_dir),
+        output=output,
+        dataset=dataset,
+        planck_rows=planck_rows,
+    )
+    errors.extend(baseline_errors)
+
+    residual_source_name = str(
+        (output.get("best_oph_residual_summary") or {}).get("source_csv") or ""
+    )
+    residual_source_path = (
+        Path(run_dir) / residual_source_name if residual_source_name else None
+    )
     if residual_source_path is None or not residual_source_path.is_file():
         errors.append("bound_tt_sidecar_missing")
-    elif residual_source_path.parent.resolve() != Path(run_dir).resolve():
+    elif residual_source_path.is_symlink() or residual_source_path.resolve().parent != Path(
+        run_dir
+    ).resolve():
         errors.append("bound_tt_sidecar_cross_root_mismatch")
 
     physical_residual_path = Path(run_dir) / "physical_cmb_best_oph_residuals.csv"
     ledger: dict[str, Any]
     try:
         ledger = cmb_promotion_ledger_report([Path(run_dir)])
-    except Exception as exc:  # pragma: no cover - defensive against malformed third-party bundles
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - defensive against malformed third-party bundles
         ledger = {"blockers": [f"promotion_ledger_error:{type(exc).__name__}"]}
-    prediction_receipt = bool(ledger.get("likelihood_evaluated_physical_cmb_prediction", False))
+    ledger_prediction_receipt = bool(
+        ledger.get("likelihood_evaluated_physical_cmb_prediction", False)
+    )
     prediction_blockers = list(ledger.get("blockers") or [])
-    if not prediction_receipt:
-        prediction_blockers.extend(
-            [
-                "same_data_amplitude_profiled_diagnostic",
-                "not_an_official_planck_likelihood_evaluation",
-            ]
-        )
 
     comparison_receipt = bool(
         not errors
+        and output.get("PHYSICAL_CMB_OUTPUT_COMPARISON_RECEIPT") is True
         and output.get("USABLE_PHYSICAL_CMB_DATA_RECEIPT") is True
         and profiled_chi2 is not None
     )
-    bin_count = len(embedded)
-    baseline_value = (
-        float(external["amplitude_fit_chi2_per_bin"])
-        if external is not None
-        else None
+    # This row profiles an amplitude on the same Planck bins it evaluates and
+    # uses only the diagonal public-bin errors.  A separate run ledger cannot
+    # turn that same-data diagnostic into a frozen/official-likelihood result.
+    prediction_receipt = False
+    if ledger_prediction_receipt and not comparison_receipt:
+        prediction_blockers.append(
+            "public_measurement_integrity_or_comparison_receipt_failed"
+        )
+    if ledger_prediction_receipt:
+        prediction_blockers.append(
+            "promotion_ledger_cannot_promote_same_data_diagnostic"
+        )
+    prediction_blockers.extend(
+        [
+            "same_data_amplitude_profiled_diagnostic",
+            "not_an_official_planck_likelihood_evaluation",
+        ]
     )
+    bin_count = len(embedded)
+    baseline_value = _finite_or_none(baseline.get("chi2_per_bin"))
     delta_per_bin = (
         float(profiled_chi2 - baseline_value)
         if profiled_chi2 is not None and baseline_value is not None
@@ -388,6 +566,9 @@ def _cmb_comparison(
         _file_hash_record(output_path),
         _file_hash_record(source_path),
     ]
+    baseline_source_path = baseline.get("source_path")
+    if isinstance(baseline_source_path, Path):
+        source_files.append(_file_hash_record(baseline_source_path))
     if residual_source_path is not None:
         source_files.append(_file_hash_record(residual_source_path))
     if physical_residual_path.is_file():
@@ -410,6 +591,18 @@ def _cmb_comparison(
                 "fitted_parameters": ["overall_TT_amplitude"],
                 "covariance": "diagonal_binned_errors_only",
                 "official_likelihood": False,
+                "nominal_bin_count": bin_count,
+                "fitted_parameter_count_for_description_only": 1,
+                "inferential_degrees_of_freedom": None,
+                "p_value": None,
+                "n_minus_fitted_parameter_count_used_for_inference": False,
+                "target_used_for_model_selection": True,
+                "no_dof_or_p_value_reason": (
+                    "the Planck target participates in model selection and amplitude fitting"
+                ),
+                "common_amplitude_recomputed_by_weighted_least_squares": True,
+                "reported_common_amplitude_verified": amplitude_matches,
+                "reported_scaled_curve_verified": reported_curve_matches,
                 "profiled_residuals_recomputed_from_source_json": True,
                 "legacy_residual_sidecar_uses_raw_curve": True,
             },
@@ -425,8 +618,12 @@ def _cmb_comparison(
                     profiled_chi2 * bin_count if profiled_chi2 is not None else None,
                     unit="dimensionless",
                     direction="lower_is_better_within_this_diagnostic_only",
-                    baseline_value=baseline_value * bin_count if baseline_value is not None else None,
-                    delta=delta_per_bin * bin_count if delta_per_bin is not None else None,
+                    baseline_value=baseline_value * bin_count
+                    if baseline_value is not None
+                    else None,
+                    delta=delta_per_bin * bin_count
+                    if delta_per_bin is not None
+                    else None,
                 ),
                 "shape_correlation": _metric(
                     comparison.get("shape_correlation"),
@@ -449,15 +646,21 @@ def _cmb_comparison(
                     direction="lower_is_better",
                 ),
                 "best_fit_amplitude": _metric(
-                    comparison.get("best_fit_amplitude"),
+                    fitted_amplitude,
                     unit="multiplicative",
                     direction="descriptive",
                 ),
                 "bin_count": _metric(bin_count, unit="bins", direction="descriptive"),
             },
             "baseline": {
-                "model_id": external.get("model_id") if external else None,
+                "model_id": CMB_BASELINE_MODEL_ID,
                 "model_role": "external_baseline",
+                "source_report": CMB_BASELINE_SOURCE_REPORT,
+                "source_report_mode": baseline.get("source_report_mode"),
+                "binding_receipt": not baseline_errors,
+                "fit_recomputed_from_bound_source_rows": bool(
+                    baseline.get("fit_recomputed")
+                ),
                 "diagonal_chi2_per_bin_after_one_amplitude_fit": baseline_value,
                 "oph_minus_baseline_per_bin": delta_per_bin,
                 "oph_minus_baseline_total_over_bins": (
@@ -476,33 +679,39 @@ def _cmb_comparison(
             },
             "comparison_receipt": comparison_receipt,
             "physical_prediction_receipt": prediction_receipt,
-            "prediction_class": (
-                "frozen_prediction" if prediction_receipt else "measurement_facing_amplitude_fitted_diagnostic"
-            ),
+            "prediction_class": "measurement_facing_amplitude_fitted_diagnostic",
             "rank_eligible_within_planck_diagnostic_lane": comparison_receipt,
             "rank_exclusion_reasons": [] if comparison_receipt else sorted(set(errors)),
             "integrity_receipt": not errors,
             "integrity_errors": sorted(set(errors)),
-            "prediction_blockers": sorted(set(str(value) for value in prediction_blockers)),
+            "prediction_blockers": sorted(
+                set(str(value) for value in prediction_blockers)
+            ),
             "promotion_ledger": {
                 "current_claim_tier": ledger.get("current_claim_tier"),
                 "first_blocked_gate": ledger.get("first_blocked_gate"),
+                "ledger_asserted_prediction_receipt": ledger_prediction_receipt,
+                "same_data_row_promotion_allowed": False,
                 "terminal_prediction_assertion_rejected": (
-                    "untrusted_terminal_prediction_assertion_rejected" in prediction_blockers
+                    "untrusted_terminal_prediction_assertion_rejected"
+                    in prediction_blockers
                 ),
             },
             "claim_boundary": (
                 "Run-derived CAMB TT diagnostic against 83 Planck PR3 binned TT points. The displayed "
                 "chi-square uses diagonal bin errors and profiles one amplitude on those same bins; it is "
                 "neither a reduced chi-square nor the official Planck likelihood. The selected OPH curve is "
-                "compared explicitly with the external LambdaCDM baseline."
+                "compared explicitly with the external LambdaCDM baseline. Because the target also participates "
+                "in model selection, no N-1 degrees-of-freedom or p-value inference is reported."
             ),
         }
     )
     return base
 
 
-def _sparc_dataset_and_report(path: Path) -> tuple[dict[str, Any], dict[str, Any], list[str]]:
+def _sparc_dataset_and_report(
+    path: Path,
+) -> tuple[dict[str, Any], dict[str, Any], list[str]]:
     errors: list[str] = []
     table_names = (
         "RAR.mrt",
@@ -525,7 +734,9 @@ def _sparc_dataset_and_report(path: Path) -> tuple[dict[str, Any], dict[str, Any
             report["fixed_oph_rar_comparison"] = fixed_oph_rar_report(
                 path / "RAR.mrt", path / "RARbins.mrt"
             )
-        except Exception as exc:  # pragma: no cover - defensive for malformed external tables
+        except (
+            Exception
+        ) as exc:  # pragma: no cover - defensive for malformed external tables
             errors.append(f"sparc_parse_or_fit_error:{type(exc).__name__}:{exc}")
             report = {}
     record = {
@@ -540,7 +751,9 @@ def _sparc_dataset_and_report(path: Path) -> tuple[dict[str, Any], dict[str, Any
         "rar_point_count": report.get("rar_point_count"),
         "rar_galaxy_label_count": report.get("rar_galaxy_count"),
         "public_rar_source_galaxy_count": (
-            (report.get("fixed_oph_rar_comparison") or {}).get("public_rar_galaxy_count")
+            (report.get("fixed_oph_rar_comparison") or {}).get(
+                "public_rar_galaxy_count"
+            )
         ),
         "btfr_galaxy_count": report.get("btfr_galaxy_count"),
         "integrity_errors": errors,
@@ -553,13 +766,19 @@ def _cassini_dataset_and_comparison(
 ) -> tuple[dict[str, Any], dict[str, Any], list[str]]:
     source, load_error = _load_json(path)
     errors = [load_error] if load_error else []
-    observable = source.get("observable") if isinstance(source.get("observable"), dict) else {}
+    observable = (
+        source.get("observable") if isinstance(source.get("observable"), dict) else {}
+    )
     external = (
         source.get("galactic_external_field")
         if isinstance(source.get("galactic_external_field"), dict)
         else {}
     )
-    benchmark = source.get("rar_benchmark") if isinstance(source.get("rar_benchmark"), dict) else {}
+    benchmark = (
+        source.get("rar_benchmark")
+        if isinstance(source.get("rar_benchmark"), dict)
+        else {}
+    )
 
     central = _finite_or_none(observable.get("central_value_s2"))
     sigma = _finite_or_none(observable.get("standard_uncertainty_s2"))
@@ -600,7 +819,9 @@ def _cassini_dataset_and_comparison(
                 park_benchmark_q2_s2=float(benchmark_q2),
             )
         except (ArithmeticError, RuntimeError, ValueError) as exc:
-            errors.append(f"cassini_qumond_calculation_error:{type(exc).__name__}:{exc}")
+            errors.append(
+                f"cassini_qumond_calculation_error:{type(exc).__name__}:{exc}"
+            )
     validation = calculation.get("validation") or {}
     if calculation and not validation.get("receipt"):
         errors.append("cassini_spherical_benchmark_reproduction_failed")
@@ -610,7 +831,8 @@ def _cassini_dataset_and_comparison(
     dataset = {
         "dataset_id": "cassini_de440_q2_2026",
         "release": str(
-            source.get("release") or "Park et al. 2026 Cassini DE440 quadrupole constraint"
+            source.get("release")
+            or "Park et al. 2026 Cassini DE440 quadrupole constraint"
         ),
         "public_source": CASSINI_SOURCE_URL,
         "path": str(path),
@@ -623,9 +845,49 @@ def _cassini_dataset_and_comparison(
         "integrity_errors": sorted(set(str(value) for value in errors)),
     }
     fixed = calculation.get("fixed_input_diagnostic") or {}
-    z6 = ((calculation.get("oph_branches") or {}).get("z6_exact_uniform_target") or {})
-    unit = ((calculation.get("oph_branches") or {}).get("unit_lambda_endpoint") or {})
-    band = ((calculation.get("oph_branches") or {}).get("jensen_lambda_band") or {})
+    z6 = (calculation.get("oph_branches") or {}).get("z6_exact_uniform_target") or {}
+    unit = (calculation.get("oph_branches") or {}).get("unit_lambda_endpoint") or {}
+    endpoint_summary = (calculation.get("oph_branches") or {}).get(
+        "jensen_lambda_band"
+    ) or {}
+    endpoint_pull_low = _finite_or_none(endpoint_summary.get("raw_pull_min_sigma"))
+    endpoint_pull_high = _finite_or_none(endpoint_summary.get("raw_pull_max_sigma"))
+    minimum_absolute_endpoint_pull = _minimum_absolute_endpoint_value(
+        endpoint_pull_low, endpoint_pull_high
+    )
+    candidate_rule = source.get("conditional_external_domain_falsifier_rule")
+    if not isinstance(candidate_rule, dict):
+        candidate_rule = {}
+    candidate_threshold = _finite_or_none(
+        candidate_rule.get("minimum_abs_pull_sigma")
+    )
+    source_asserts_declared_before_comparison = (
+        candidate_rule.get("declared_before_comparison") is True
+    )
+    candidate_provenance = str(candidate_rule.get("provenance") or "")
+    candidate_rule_syntactically_valid = bool(
+        candidate_rule.get("statistic") == CASSINI_CANDIDATE_RULE_STATISTIC
+        and candidate_threshold is not None
+        and candidate_threshold > 0.0
+        and source_asserts_declared_before_comparison
+        and candidate_provenance
+    )
+    candidate_threshold_exceeded = bool(
+        candidate_rule_syntactically_valid
+        and minimum_absolute_endpoint_pull is not None
+        and candidate_threshold is not None
+        and minimum_absolute_endpoint_pull >= candidate_threshold
+    )
+    decision_blockers = [
+        "no_independently_custodied_preregistration",
+        "endpoint_check_is_not_global_band_minimization",
+    ]
+    if not candidate_rule:
+        decision_blockers.append("no_candidate_tension_threshold")
+    elif not candidate_rule_syntactically_valid:
+        decision_blockers.append("candidate_tension_rule_malformed")
+    elif not candidate_threshold_exceeded:
+        decision_blockers.append("candidate_tension_threshold_not_exceeded")
     applicability = calculation.get("applicability") or {
         "assumption_tested": "universal_full_source_static_QUMOND_extension",
         "assumption_derived_by_current_oph": False,
@@ -633,6 +895,11 @@ def _cassini_dataset_and_comparison(
         "missing_gate": "source_derived_solar_system_applicability_or_screening_reduction",
     }
     comparison_receipt = bool(calculation.get("comparison_receipt") and not errors)
+    # A same-file assertion that a rule was declared earlier is not independent
+    # preregistration custody.  Endpoint arithmetic also does not prove a
+    # minimum over the continuous lambda interval.  This report therefore has
+    # no promotion path to a falsifier receipt in the current schema version.
+    conditional_falsifier = False
     row = {
         "comparison_id": "cassini:conditional_static_external_field",
         "domain": "solar_system_external_field",
@@ -645,7 +912,7 @@ def _cassini_dataset_and_comparison(
         "run_dependent": False,
         "model_id": "oph_static_rar_qumond_universal_extension",
         "model_role": "oph_universal_static_qumond_extension",
-        "claim_level": "conditional_exclusion",
+        "claim_level": "conditional_stress_diagnostic",
         "evaluation_class": (
             "calibrated_independent_dataset" if calculation else "blocked"
         ),
@@ -656,6 +923,8 @@ def _cassini_dataset_and_comparison(
             "raw_tracking_likelihood_evaluated": False,
             "oph_a0_is_external_benchmark": True,
             "oph_lambda_is_conditional_exact_uniform_target": True,
+            "falsifier_threshold_prefrozen": False,
+            "independent_preregistration_custody_receipt": False,
         },
         "applicability": applicability,
         "applicability_receipt": False,
@@ -667,7 +936,9 @@ def _cassini_dataset_and_comparison(
                 unit="s^-2",
                 direction="closer_to_cassini_is_better",
                 baseline_value=central,
-                delta=(z6.get("Q2_s2") - central) if z6.get("Q2_s2") is not None and central is not None else None,
+                delta=(z6.get("Q2_s2") - central)
+                if z6.get("Q2_s2") is not None and central is not None
+                else None,
             ),
             "z6_raw_fixed_input_pull": _metric(
                 fixed.get("z6_raw_pull_sigma"),
@@ -684,17 +955,29 @@ def _cassini_dataset_and_comparison(
                 unit="s^-2",
                 direction="closer_to_cassini_is_better",
                 baseline_value=central,
-                delta=(unit.get("Q2_s2") - central) if unit.get("Q2_s2") is not None and central is not None else None,
+                delta=(unit.get("Q2_s2") - central)
+                if unit.get("Q2_s2") is not None and central is not None
+                else None,
             ),
             "unit_lambda_raw_fixed_input_pull": _metric(
                 fixed.get("unit_lambda_raw_pull_sigma"),
                 unit="sigma",
                 direction="closer_to_zero_is_better",
             ),
-            "jensen_band_minimum_raw_fixed_input_pull": _metric(
-                band.get("raw_pull_min_sigma"),
+            "jensen_endpoints_minimum_raw_fixed_input_pull": _metric(
+                endpoint_summary.get("raw_pull_min_sigma"),
                 unit="sigma",
                 direction="closer_to_zero_is_better",
+            ),
+            "jensen_endpoints_minimum_absolute_raw_fixed_input_pull": _metric(
+                minimum_absolute_endpoint_pull,
+                unit="sigma",
+                direction="closer_to_zero_is_better",
+            ),
+            "conventional_five_sigma_reference": _metric(
+                CASSINI_CONVENTIONAL_REFERENCE_SIGMA,
+                unit="sigma",
+                direction="diagnostic_reference_only",
             ),
             "maximum_z6_fraction_for_cassini_two_sigma_upper": _metric(
                 fixed.get("maximum_multiplicative_fraction_for_two_sigma_upper_z6"),
@@ -709,30 +992,66 @@ def _cassini_dataset_and_comparison(
         },
         "comparison_receipt": comparison_receipt,
         "physical_prediction_receipt": False,
-        "conditional_external_domain_falsifier": comparison_receipt,
+        "conditional_external_domain_falsifier": conditional_falsifier,
+        "falsifier_decision": {
+            "statistic": CASSINI_CANDIDATE_RULE_STATISTIC,
+            "observed_abs_endpoint_pull_sigma": minimum_absolute_endpoint_pull,
+            "candidate_minimum_abs_pull_sigma": candidate_threshold,
+            "source_asserts_declared_before_comparison": (
+                source_asserts_declared_before_comparison
+            ),
+            "candidate_threshold_provenance": candidate_provenance or None,
+            "candidate_rule_syntactically_valid": candidate_rule_syntactically_valid,
+            "candidate_threshold_exceeded": candidate_threshold_exceeded,
+            "independent_preregistration_custody_receipt": False,
+            "global_band_minimization_receipt": False,
+            "decision_rule_receipt": False,
+            "threshold_passed": False,
+            "decision_receipt": False,
+            "blockers": decision_blockers,
+        },
+        "diagnostic_reference": {
+            "conventional_reference_sigma": CASSINI_CONVENTIONAL_REFERENCE_SIGMA,
+            "exceeds_conventional_reference": bool(
+                minimum_absolute_endpoint_pull is not None
+                and minimum_absolute_endpoint_pull
+                >= CASSINI_CONVENTIONAL_REFERENCE_SIGMA
+            ),
+            "is_acceptance_or_falsifier_threshold": False,
+        },
         "rank_eligible_within_planck_diagnostic_lane": False,
         "rank_exclusion_reasons": [
             "different_domain",
             "universal_applicability_not_derived",
             "published_summary_statistic_not_raw_likelihood",
             "raw_pull_not_nuisance_marginalized",
+            "no_independently_custodied_preregistration",
+            "endpoint_check_not_global_band_minimization",
         ],
         "source_bundle": {
             "files": [
                 _file_hash_record(path),
-                _file_hash_record(Path(__file__).with_name("cassini_external_field.py")),
+                _file_hash_record(
+                    Path(__file__).with_name("cassini_external_field.py")
+                ),
             ]
         },
         "calculation": calculation,
         "integrity_receipt": not errors,
         "integrity_errors": sorted(set(str(value) for value in errors)),
-        "assessment": str(
-            calculation.get("assessment")
-            or "Cassini comparison unavailable because the summary or benchmark receipt failed."
+        "assessment": (
+            "large fixed-input conditional stress diagnostic; neither an independently custodied "
+            "preregistration nor a global minimization over the lambda interval is present, so no "
+            "external-domain falsifier receipt is issued"
         ),
-        "claim_boundary": str(
-            calculation.get("claim_boundary")
-            or "No Cassini claim can be made because the source summary or numerical receipt failed."
+        "claim_boundary": (
+            str(calculation.get("claim_boundary"))
+            + " The displayed Jensen result is only the smaller absolute pull at the two encoded lambda "
+            "endpoints, not a proved minimum over the continuous interval. A threshold asserted inside "
+            "the evaluated source file has no independent preregistration custody and cannot promote this "
+            "diagnostic to a conditional falsifier receipt."
+            if calculation.get("claim_boundary")
+            else "No Cassini claim can be made because the summary or numerical receipt failed."
         ),
     }
     return dataset, row, sorted(set(str(value) for value in errors))
@@ -775,7 +1094,9 @@ def _sparc_comparisons(
 
     a0 = _finite_or_none(report.get("shared_a0"))
     collar = _finite_or_none(report.get("shared_lambda_collar"))
-    effective_a0 = a0 / (collar * collar) if a0 is not None and collar not in (None, 0.0) else None
+    effective_a0 = (
+        a0 / (collar * collar) if a0 is not None and collar not in (None, 0.0) else None
+    )
     rar = {
         **common,
         "comparison_id": "sparc:rar_calibration",
@@ -800,13 +1121,15 @@ def _sparc_comparisons(
                 report.get("rar_point_count"), unit="points", direction="descriptive"
             ),
             "rar_galaxy_label_count": _metric(
-                report.get("rar_galaxy_count"), unit="galaxy_labels", direction="descriptive"
+                report.get("rar_galaxy_count"),
+                unit="galaxy_labels",
+                direction="descriptive",
             ),
             "effective_a0": _metric(
                 effective_a0, unit="m/s^2", direction="descriptive"
             ),
         },
-        "comparison_receipt": bool(report.get("receipt")),
+        "comparison_receipt": bool(report.get("receipt") and not errors),
         "rank_eligible_within_planck_diagnostic_lane": False,
         "rank_exclusion_reasons": ["same_data_calibration", "different_domain"],
         "assessment": "positive calibration fit, not an out-of-sample prediction",
@@ -848,18 +1171,26 @@ def _sparc_comparisons(
                 direction="closer_to_zero_is_better",
             ),
             "z6_binned_weighted_rms_residual": _metric(
-                (z6_rar.get("binned") or {}).get("point_count_weighted_rms_residual_dex"),
+                (z6_rar.get("binned") or {}).get(
+                    "point_count_weighted_rms_residual_dex"
+                ),
                 unit="dex",
                 direction="lower_is_better",
             ),
             "unit_lambda_rms_residual": _metric(
-                unit_rar.get("rms_residual_dex"), unit="dex", direction="lower_is_better"
+                unit_rar.get("rms_residual_dex"),
+                unit="dex",
+                direction="lower_is_better",
             ),
             "same_data_best_rms_residual": _metric(
-                best_rar.get("rms_residual_dex"), unit="dex", direction="lower_is_better"
+                best_rar.get("rms_residual_dex"),
+                unit="dex",
+                direction="lower_is_better",
             ),
             "z6_minus_same_data_best_rms": _metric(
-                (fixed_rar.get("z6_vs_same_data_best") or {}).get("rms_residual_delta_dex"),
+                (fixed_rar.get("z6_vs_same_data_best") or {}).get(
+                    "rms_residual_delta_dex"
+                ),
                 unit="dex",
                 direction="closer_to_zero_is_better",
             ),
@@ -872,7 +1203,9 @@ def _sparc_comparisons(
                 direction="descriptive",
             ),
         },
-        "comparison_receipt": bool(fixed_rar.get("comparison_receipt")),
+        "comparison_receipt": bool(
+            fixed_rar.get("comparison_receipt") and not errors
+        ),
         "fixed_formula_report": fixed_rar,
         "rank_eligible_within_planck_diagnostic_lane": False,
         "rank_exclusion_reasons": [
@@ -880,8 +1213,12 @@ def _sparc_comparisons(
             "retrospective_calibrated_coefficient",
             "aggregate_rows_share_galaxy_systematics",
         ],
-        "assessment": str(fixed_rar.get("assessment") or "Fixed RAR comparison unavailable."),
-        "claim_boundary": str(fixed_rar.get("claim_boundary") or "Fixed RAR comparison unavailable."),
+        "assessment": str(
+            fixed_rar.get("assessment") or "Fixed RAR comparison unavailable."
+        ),
+        "claim_boundary": str(
+            fixed_rar.get("claim_boundary") or "Fixed RAR comparison unavailable."
+        ),
     }
 
     btfr = report.get("btfr_prediction_from_rar_fit") or {}
@@ -892,29 +1229,85 @@ def _sparc_comparisons(
     fixed_branches = btfr_eiv.get("oph_fixed_normalization_branches") or {}
     z6_btfr = fixed_branches.get("z6_exact_uniform_target") or {}
     unit_btfr = fixed_branches.get("unit_lambda_endpoint") or {}
+    z6_profile_deviance = _finite_or_none(
+        z6_btfr.get("deviance_vs_slope_four_normalization_fit")
+    )
+    z6_normalization_delta = _finite_or_none(
+        z6_btfr.get("observed_minus_predicted_pivot_dex")
+    )
+    z6_signed_sqrt_profile_deviance = (
+        math.copysign(math.sqrt(z6_profile_deviance), z6_normalization_delta)
+        if z6_profile_deviance is not None
+        and z6_profile_deviance >= 0.0
+        and z6_normalization_delta is not None
+        else None
+    )
+    unit_profile_deviance = _finite_or_none(
+        unit_btfr.get("deviance_vs_slope_four_normalization_fit")
+    )
+    unit_normalization_delta = _finite_or_none(
+        unit_btfr.get("observed_minus_predicted_pivot_dex")
+    )
+    unit_signed_sqrt_profile_deviance = (
+        math.copysign(math.sqrt(unit_profile_deviance), unit_normalization_delta)
+        if unit_profile_deviance is not None
+        and unit_profile_deviance >= 0.0
+        and unit_normalization_delta is not None
+        else None
+    )
+    free_nll = _finite_or_none(free_btfr.get("nll"))
+    slope_four_nll = _finite_or_none(slope_four_btfr.get("nll"))
+    slope_profile_deviance = (
+        2.0 * (slope_four_nll - free_nll)
+        if free_nll is not None and slope_four_nll is not None
+        else None
+    )
+    slope_delta = (
+        float(slope_test["predicted_slope"])
+        - float(slope_test["observed_slope"])
+        if slope_test.get("predicted_slope") is not None
+        and slope_test.get("observed_slope") is not None
+        else None
+    )
+    slope_signed_sqrt_profile_deviance = (
+        math.copysign(math.sqrt(slope_profile_deviance), slope_delta)
+        if slope_profile_deviance is not None
+        and slope_profile_deviance >= 0.0
+        and slope_delta is not None
+        else None
+    )
     btfr_row = {
         **common,
-        "comparison_id": "sparc:btfr_independent_table_check",
-        "evaluation_class": "calibrated_independent_dataset",
+        "comparison_id": "sparc:btfr_separate_table_diagnostic",
+        "evaluation_class": "diagnostic_proxy",
         "data_use": {
-            "fit_to_evaluation_data": False,
-            "parameters_fit_to_btfr": False,
+            "fit_to_evaluation_data": True,
+            "oph_prediction_parameters_fit_to_btfr": False,
+            "fitted_nuisance_parameters": [
+                "orthogonal_intrinsic_scatter_perpendicular_dex"
+            ],
             "oph_a0_source": "external_cosmology_benchmark",
             "oph_lambda_source": "conditional_exact_uniform_product_thickening_target",
             "evaluated_on": "SPARC_BTFR_Lelli2019",
-            "holdout": True,
-            "holdout_unit": "dataset",
+            "holdout": False,
+            "separate_table_from_rar_calibration": True,
+            "independent_galaxy_sample": False,
         },
         "metrics": {
             "predicted_log_mass_vs_log_velocity_slope": _metric(
-                slope_test.get("predicted_slope"), unit="dimensionless", direction="descriptive"
+                slope_test.get("predicted_slope"),
+                unit="dimensionless",
+                direction="descriptive",
             ),
             "observed_error_aware_log_mass_vs_log_velocity_slope": _metric(
-                slope_test.get("observed_slope"), unit="dimensionless", direction="descriptive"
+                slope_test.get("observed_slope"),
+                unit="dimensionless",
+                direction="descriptive",
             ),
             "observed_minus_predicted_slope": _metric(
                 (
-                    float(slope_test["observed_slope"]) - float(slope_test["predicted_slope"])
+                    float(slope_test["observed_slope"])
+                    - float(slope_test["predicted_slope"])
                     if slope_test.get("observed_slope") is not None
                     and slope_test.get("predicted_slope") is not None
                     else None
@@ -922,9 +1315,14 @@ def _sparc_comparisons(
                 unit="dimensionless",
                 direction="closer_to_zero_is_better",
             ),
-            "predicted_minus_observed_slope_pull": _metric(
+            "predicted_minus_observed_slope_wald_hessian_stat_only_pull": _metric(
                 slope_test.get("predicted_minus_observed_pull_sigma"),
                 unit="sigma",
+                direction="closer_to_zero_is_better",
+            ),
+            "slope_four_signed_sqrt_profile_deviance_vs_free_fit": _metric(
+                slope_signed_sqrt_profile_deviance,
+                unit="signed_sqrt_delta_deviance",
                 direction="closer_to_zero_is_better",
             ),
             "observed_slope_standard_error": _metric(
@@ -947,14 +1345,24 @@ def _sparc_comparisons(
                 unit="dex",
                 direction="closer_to_zero_is_better",
             ),
-            "z6_normalization_stat_only_pull": _metric(
+            "z6_normalization_wald_hessian_stat_only_pull": _metric(
                 z6_btfr.get("stat_only_normalization_pull_sigma"),
                 unit="sigma",
                 direction="closer_to_zero_is_better",
             ),
-            "unit_lambda_normalization_stat_only_pull": _metric(
+            "z6_normalization_signed_sqrt_profile_deviance": _metric(
+                z6_signed_sqrt_profile_deviance,
+                unit="signed_sqrt_delta_deviance",
+                direction="closer_to_zero_is_better",
+            ),
+            "unit_lambda_normalization_wald_hessian_stat_only_pull": _metric(
                 unit_btfr.get("stat_only_normalization_pull_sigma"),
                 unit="sigma",
+                direction="closer_to_zero_is_better",
+            ),
+            "unit_lambda_normalization_signed_sqrt_profile_deviance": _metric(
+                unit_signed_sqrt_profile_deviance,
+                unit="signed_sqrt_delta_deviance",
                 direction="closer_to_zero_is_better",
             ),
             "orthogonal_intrinsic_scatter": _metric(
@@ -966,9 +1374,14 @@ def _sparc_comparisons(
                 btfr_eiv.get("row_count"), unit="galaxies", direction="descriptive"
             ),
         },
-        "comparison_receipt": bool(btfr_eiv.get("comparison_receipt")),
+        "comparison_receipt": bool(btfr_eiv.get("comparison_receipt") and not errors),
         "rank_eligible_within_planck_diagnostic_lane": False,
-        "rank_exclusion_reasons": ["different_domain", "no_prefrozen_btfr_acceptance_threshold"],
+        "rank_exclusion_reasons": [
+            "different_domain",
+            "no_prefrozen_btfr_acceptance_threshold",
+            "intrinsic_scatter_profiled_on_evaluation_table",
+            "overlapping_galaxy_sample_not_strict_holdout",
+        ],
         "superseded_diagnostics": {
             "naive_unweighted_ols_slope": btfr.get("observed_slope_logM_vs_logV"),
             "invalid_unpivoted_mixed_slope_intercept_delta_dex": btfr.get(
@@ -983,9 +1396,15 @@ def _sparc_comparisons(
         "assessment": (
             "corrected mixed result: the asymptotic slope 4 is compatible with the error-aware fit, "
             "while the fixed OPH normalization is high under the table's fixed mass-to-light convention; "
-            "the normalization pull is statistical only and global galaxy systematics are not marginalized"
+            "the intrinsic scatter is profiled on this BTFR table, the normalization pull is statistical "
+            "only (with the profile-deviance statistic distinguished from the Wald/Hessian pull), and global "
+            "galaxy systematics are not marginalized"
         ),
-        "claim_boundary": str(btfr_eiv.get("claim_boundary") or "BTFR comparison unavailable."),
+        "claim_boundary": (
+            str(btfr_eiv.get("claim_boundary") or "BTFR comparison unavailable.")
+            + " The orthogonal intrinsic-scatter nuisance is fitted on the evaluation table, and the "
+            "overlapping SPARC galaxy sample is not a strict untouched holdout."
+        ),
     }
 
     holdout = report.get("holdout_validation") or {}
@@ -1018,7 +1437,9 @@ def _sparc_comparisons(
         },
         "metrics": {
             "test_log_acceleration_rmse": _metric(
-                test.get("log_acceleration_rmse_dex"), unit="dex", direction="lower_is_better"
+                test.get("log_acceleration_rmse_dex"),
+                unit="dex",
+                direction="lower_is_better",
             ),
             "test_baryon_only_log_acceleration_rmse": _metric(
                 test.get("baryon_only_log_acceleration_rmse_dex"),
@@ -1044,20 +1465,26 @@ def _sparc_comparisons(
                 direction="lower_is_better",
             ),
             "test_galaxy_count": _metric(
-                holdout.get("test_galaxy_count"), unit="galaxies", direction="descriptive"
+                holdout.get("test_galaxy_count"),
+                unit="galaxies",
+                direction="descriptive",
             ),
             "test_point_count": _metric(
                 holdout.get("test_point_count"), unit="points", direction="descriptive"
             ),
         },
-        "comparison_receipt": bool(holdout.get("usable") and holdout.get("receipt")),
+        "comparison_receipt": bool(
+            holdout.get("usable") and holdout.get("receipt") and not errors
+        ),
         "rank_eligible_within_planck_diagnostic_lane": False,
         "rank_exclusion_reasons": ["different_domain"],
         "assessment": (
             "positive held-out RMSE improvement over baryons alone, alongside a large diagonal velocity "
             "chi-square proxy; phenomenological continuation, not a full galaxy likelihood"
         ),
-        "claim_boundary": str(holdout.get("claim_boundary") or "Galaxy holdout unavailable."),
+        "claim_boundary": str(
+            holdout.get("claim_boundary") or "Galaxy holdout unavailable."
+        ),
     }
     return [rar, fixed_rar_row, btfr_row, holdout_row]
 
@@ -1069,7 +1496,9 @@ def _compressed_reference_comparison(run_dir: Path) -> dict[str, Any] | None:
         return None
     point = report.get("oph_compressed_point") or {}
     scans = report.get("scan_points") or []
-    fixed = next((row for row in scans if row.get("case") == "Best grid point, H0 fixed"), {})
+    fixed = next(
+        (row for row in scans if row.get("case") == "Best grid point, H0 fixed"), {}
+    )
     free = next((row for row in scans if row.get("case") == "Free compressed best"), {})
     return {
         "comparison_id": "compressed_cosmology:static_reference",
@@ -1092,7 +1521,9 @@ def _compressed_reference_comparison(run_dir: Path) -> dict[str, Any] | None:
         },
         "metrics": {
             "oph_reference_diagonal_chi2": _metric(
-                point.get("chi2_diag"), unit="dimensionless", direction="lower_is_better"
+                point.get("chi2_diag"),
+                unit="dimensionless",
+                direction="lower_is_better",
             ),
             "fixed_h0_grid_best_diagonal_chi2": _metric(
                 fixed.get("chi2"), unit="dimensionless", direction="lower_is_better"
@@ -1138,13 +1569,19 @@ def _repair_readiness(run_dir: Path, bundle: dict[str, Any]) -> dict[str, Any]:
         "selection_role": bundle.get("selection_role"),
         "carrier_patch_count": bundle.get("carrier_patch_count"),
         "materialized_observer_count": bundle.get("materialized_observer_count"),
-        "paired_reruns_present": bool(checks.get("real_baryon_perturbation_runs_present")),
+        "paired_reruns_present": bool(
+            checks.get("real_baryon_perturbation_runs_present")
+        ),
         "paired_full_rerun": bool(checks.get("full_perturbation_rerun")),
         "controls_fail_as_required": bool(checks.get("controls_fail")),
         "sign_stable": bool(checks.get("sign_stable")),
-        "paired_b_a_diagnostic_receipt": bool(readiness.get("B_A_PAIRED_DIAGNOSTIC_RECEIPT")),
+        "paired_b_a_diagnostic_receipt": bool(
+            readiness.get("B_A_PAIRED_DIAGNOSTIC_RECEIPT")
+        ),
         "b_a_parent_receipt": bool(readiness.get("B_A_PARENT_RECEIPT")),
-        "b_a_kernel_candidate_receipt": bool(kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT")),
+        "b_a_kernel_candidate_receipt": bool(
+            kernel.get("B_A_KERNEL_CANDIDATE_RECEIPT")
+        ),
         "b_a_physical_kernel_receipt": bool(kernel.get("B_A_KERNEL_RECEIPT")),
         "physical_prediction_ready": bool(readiness.get("physical_prediction_ready")),
         "kernel_row_count": kernel.get("row_count"),
@@ -1171,19 +1608,31 @@ def _run_bundle(run_dir: Path, *, primary: Path, baseline: Path) -> dict[str, An
     errors = [value for value in (manifest_error, config_error) if value]
     patch_manifest = _int_or_none(manifest.get("patch_count"))
     patch_config = _int_or_none((config.get("graph") or {}).get("patch_count"))
-    if patch_manifest is not None and patch_config is not None and patch_manifest != patch_config:
+    if (
+        patch_manifest is not None
+        and patch_config is not None
+        and patch_manifest != patch_config
+    ):
         errors.append("manifest_config_patch_count_mismatch")
     observer_count = _int_or_none((config.get("observers") or {}).get("sample_count"))
     prep = config.get("million_patch_preparation") or {}
     prep_observers = _int_or_none(prep.get("materialized_observer_count"))
-    if observer_count is not None and prep_observers is not None and observer_count != prep_observers:
+    if (
+        observer_count is not None
+        and prep_observers is not None
+        and observer_count != prep_observers
+    ):
         errors.append("config_preparation_observer_count_mismatch")
     patch_count = patch_manifest if patch_manifest is not None else patch_config
     role = "primary" if _same_path(path, primary) else "history"
     if _same_path(path, baseline):
         role = "primary_baseline" if role == "primary" else "baseline"
     git_commit_path = path / "git_commit.txt"
-    git_commit = git_commit_path.read_text(encoding="utf-8").strip() if git_commit_path.is_file() else None
+    git_commit = (
+        git_commit_path.read_text(encoding="utf-8").strip()
+        if git_commit_path.is_file()
+        else None
+    )
     return {
         "run_id": str(manifest.get("run_id") or path.name),
         "run_dir": str(path),
@@ -1191,7 +1640,9 @@ def _run_bundle(run_dir: Path, *, primary: Path, baseline: Path) -> dict[str, An
         "carrier_patch_count": patch_count,
         "materialized_observer_count": observer_count,
         "scale_label": _scale_label(patch_count, observer_count),
-        "is_at_least_one_million_carrier_patches": bool(patch_count is not None and patch_count >= 1_000_000),
+        "is_at_least_one_million_carrier_patches": bool(
+            patch_count is not None and patch_count >= 1_000_000
+        ),
         "is_at_least_one_million_materialized_observers": bool(
             observer_count is not None and observer_count >= 1_000_000
         ),
@@ -1203,7 +1654,9 @@ def _run_bundle(run_dir: Path, *, primary: Path, baseline: Path) -> dict[str, An
     }
 
 
-def _config_scale_contract(path: Path, *, planck_rows: list[dict[str, float]], role: str) -> dict[str, Any]:
+def _config_scale_contract(
+    path: Path, *, planck_rows: list[dict[str, float]], role: str
+) -> dict[str, Any]:
     config, error = _load_yaml(path)
     if error:
         return {
@@ -1223,7 +1676,9 @@ def _config_scale_contract(path: Path, *, planck_rows: list[dict[str, float]], r
         ((config.get("cosmology") or {}).get("angular_power") or {}).get("ell_max")
     )
     planck_min = min((row["ell"] for row in planck_rows), default=None)
-    real_ell_overlap = bool(ell_max is not None and planck_min is not None and ell_max >= planck_min)
+    real_ell_overlap = bool(
+        ell_max is not None and planck_min is not None and ell_max >= planck_min
+    )
     errors: list[str] = []
     if patches is None:
         errors.append("carrier_patch_count_missing")
@@ -1236,7 +1691,9 @@ def _config_scale_contract(path: Path, *, planck_rows: list[dict[str, float]], r
         "carrier_patch_count": patches,
         "materialized_observer_count": observers,
         "scale_label": _scale_label(patches, observers),
-        "is_at_least_one_million_carrier_patches": bool(patches is not None and patches >= 1_000_000),
+        "is_at_least_one_million_carrier_patches": bool(
+            patches is not None and patches >= 1_000_000
+        ),
         "is_at_least_one_million_materialized_observers": bool(
             observers is not None and observers >= 1_000_000
         ),
@@ -1257,17 +1714,30 @@ def _config_scale_contract(path: Path, *, planck_rows: list[dict[str, float]], r
 def _primary_baseline_delta(
     cmb_rows: list[dict[str, Any]], *, primary: Path, baseline: Path
 ) -> dict[str, Any]:
-    primary_row = next((row for row in cmb_rows if _same_path(Path(row["run_dir"]), primary)), None)
-    baseline_row = next((row for row in cmb_rows if _same_path(Path(row["run_dir"]), baseline)), None)
+    primary_row = next(
+        (row for row in cmb_rows if _same_path(Path(row["run_dir"]), primary)), None
+    )
+    baseline_row = next(
+        (row for row in cmb_rows if _same_path(Path(row["run_dir"]), baseline)), None
+    )
     if primary_row is None or baseline_row is None:
         return {"status": "not_comparable", "reason": "primary_or_baseline_row_missing"}
-    p_value = _metric_value(primary_row, "diagonal_chi2_per_bin_after_one_amplitude_fit")
-    b_value = _metric_value(baseline_row, "diagonal_chi2_per_bin_after_one_amplitude_fit")
+    p_value = _metric_value(
+        primary_row, "diagonal_chi2_per_bin_after_one_amplitude_fit"
+    )
+    b_value = _metric_value(
+        baseline_row, "diagonal_chi2_per_bin_after_one_amplitude_fit"
+    )
     if p_value is None or b_value is None:
-        return {"status": "not_comparable", "reason": "primary_or_baseline_metric_missing"}
+        return {
+            "status": "not_comparable",
+            "reason": "primary_or_baseline_metric_missing",
+        }
     p_bins = _metric_value(primary_row, "bin_count")
     delta = p_value - b_value
-    same_artifact = _comparison_source_hash(primary_row) == _comparison_source_hash(baseline_row)
+    same_artifact = _comparison_source_hash(primary_row) == _comparison_source_hash(
+        baseline_row
+    )
     if same_artifact or math.isclose(delta, 0.0, abs_tol=1e-12):
         verdict = "tied_or_identical_artifact"
     elif delta < 0:
@@ -1283,9 +1753,13 @@ def _primary_baseline_delta(
         "primary_value": p_value,
         "baseline_value": b_value,
         "delta_primary_minus_baseline_per_bin": delta,
-        "delta_primary_minus_baseline_total": delta * p_bins if p_bins is not None else None,
+        "delta_primary_minus_baseline_total": delta * p_bins
+        if p_bins is not None
+        else None,
         "carrier_patch_ratio": (
-            p_patches / b_patches if p_patches is not None and b_patches not in (None, 0) else None
+            p_patches / b_patches
+            if p_patches is not None and b_patches not in (None, 0)
+            else None
         ),
         "same_source_artifact_hash": same_artifact,
         "diagnostic_verdict": verdict,
@@ -1320,7 +1794,8 @@ def _featured_by_evidence_class(
     heldout = [
         row.get("comparison_id")
         for row in comparisons
-        if row.get("evaluation_class") == "heldout_test" and row.get("comparison_receipt")
+        if row.get("evaluation_class") == "heldout_test"
+        and row.get("comparison_receipt")
     ]
     independent = [
         row.get("comparison_id")
@@ -1331,7 +1806,8 @@ def _featured_by_evidence_class(
     conditional_external = [
         row.get("comparison_id")
         for row in comparisons
-        if row.get("conditional_external_domain_falsifier") and row.get("comparison_receipt")
+        if row.get("conditional_external_domain_falsifier")
+        and row.get("comparison_receipt")
     ]
     primary_cmb = next(
         (
@@ -1365,7 +1841,9 @@ def _read_planck_rows(path: Path) -> tuple[list[dict[str, float]], list[str]]:
     rows: list[dict[str, float]] = []
     errors: list[str] = []
     try:
-        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        for line_number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             text = line.strip()
             if not text or text.startswith("#"):
                 continue
@@ -1390,44 +1868,243 @@ def _read_planck_rows(path: Path) -> tuple[list[dict[str, float]], list[str]]:
     return rows, errors
 
 
-def _planck_alignment_ok(embedded: list[dict[str, Any]], planck_rows: list[dict[str, float]]) -> bool:
+def _planck_alignment_ok(
+    embedded: list[dict[str, Any]], planck_rows: list[dict[str, float]]
+) -> bool:
     if len(embedded) != len(planck_rows) or not embedded:
         return False
     for source_row, data_row in zip(embedded, planck_rows, strict=True):
         values = (
             (_finite_or_none(source_row.get("ell")), data_row["ell"]),
-            (_finite_or_none(source_row.get("observed_D_ell")), data_row["observed_D_ell"]),
+            (
+                _finite_or_none(source_row.get("observed_D_ell")),
+                data_row["observed_D_ell"],
+            ),
             (_finite_or_none(source_row.get("sigma_D_ell")), data_row["plus_dD_ell"]),
         )
-        if any(left is None or not math.isclose(left, right, rel_tol=1e-10, abs_tol=1e-9) for left, right in values):
+        if any(
+            left is None or not math.isclose(left, right, rel_tol=1e-10, abs_tol=1e-9)
+            for left, right in values
+        ):
             return False
     return True
 
 
-def _profiled_chi2_per_bin(rows: list[dict[str, Any]]) -> float | None:
-    values: list[float] = []
+def _bound_lcdm_baseline(
+    run_dir: Path,
+    *,
+    output: dict[str, Any],
+    dataset: dict[str, Any],
+    planck_rows: list[dict[str, float]],
+) -> tuple[dict[str, Any], list[str]]:
+    """Load and recompute the one canonical baseline bound to this run/dataset."""
+
+    errors: list[str] = []
+    output_rows = output.get("rows") if isinstance(output.get("rows"), list) else []
+    candidates = [
+        row
+        for row in output_rows
+        if isinstance(row, dict)
+        and row.get("source_report") == CMB_BASELINE_SOURCE_REPORT
+        and row.get("model_id") == CMB_BASELINE_MODEL_ID
+        and row.get("model_role") == "external_baseline"
+    ]
+    if not candidates:
+        errors.append("bound_external_lcdm_baseline_missing")
+    elif len(candidates) != 1:
+        errors.append("bound_external_lcdm_baseline_ambiguous")
+    output_row = candidates[0] if len(candidates) == 1 else {}
+    if output_row:
+        if output_row.get("measurement_comparable") is not True:
+            errors.append("bound_external_lcdm_baseline_not_measurement_comparable")
+        if output_row.get("physical_cmb_prediction") is not False:
+            errors.append("bound_external_lcdm_baseline_role_inconsistent")
+        if not _exact_int_equals(output_row.get("bin_count"), len(planck_rows)):
+            errors.append("bound_external_lcdm_baseline_bin_count_mismatch")
+        row_dataset = output_row.get("dataset_id")
+        if row_dataset is not None and row_dataset != dataset.get("dataset_id"):
+            errors.append("bound_external_lcdm_baseline_dataset_mismatch")
+
+    source_path = Path(run_dir) / CMB_BASELINE_SOURCE_REPORT
+    if source_path.is_symlink() or source_path.resolve().parent != Path(
+        run_dir
+    ).resolve():
+        errors.append("bound_external_lcdm_baseline_cross_root_mismatch")
+    source, load_error = _load_json(source_path)
+    if load_error:
+        errors.append(load_error)
+    comparison = source.get("comparison") if isinstance(source, dict) else None
+    if not isinstance(comparison, dict):
+        errors.append("bound_external_lcdm_baseline_comparison_missing")
+        comparison = {}
+    embedded = comparison.get("binned_tt_comparison")
+    if not isinstance(embedded, list) or not embedded:
+        errors.append("bound_external_lcdm_baseline_binned_rows_missing")
+        embedded = []
+    if source and source.get("mode") != "camb_lcdm_baseline_regression":
+        errors.append("bound_external_lcdm_baseline_mode_mismatch")
+    benchmark = source.get("benchmark") if isinstance(source, dict) else None
+    if not isinstance(benchmark, dict):
+        errors.append("bound_external_lcdm_baseline_benchmark_missing")
+        benchmark = {}
+    if benchmark.get("label") != "Planck2018_TT_binned":
+        errors.append("bound_external_lcdm_baseline_dataset_label_mismatch")
+    if not _exact_int_equals(benchmark.get("row_count"), len(planck_rows)):
+        errors.append("bound_external_lcdm_baseline_benchmark_row_count_mismatch")
+    camb_contract = source.get("camb") if isinstance(source, dict) else None
+    if not isinstance(camb_contract, dict):
+        camb_contract = {}
+    lambda_cdm_parameters = camb_contract.get("lambda_cdm_parameters")
+    if lambda_cdm_parameters != CMB_BASELINE_PARAMETERS:
+        errors.append("bound_external_lcdm_baseline_model_parameters_mismatch")
+    if camb_contract.get("spectrum") != "lensed_total_TT_D_ell":
+        errors.append("bound_external_lcdm_baseline_spectrum_mismatch")
+    if not _exact_int_equals(camb_contract.get("lmax"), 2600):
+        errors.append("bound_external_lcdm_baseline_lmax_mismatch")
+    if not _planck_alignment_ok(embedded, planck_rows):
+        errors.append("bound_external_lcdm_baseline_planck_rows_mismatch")
+    benchmark_hash = (source.get("input_hashes") or {}).get("benchmark_sha256")
+    if benchmark_hash != dataset.get("sha256"):
+        errors.append("bound_external_lcdm_baseline_benchmark_hash_mismatch")
+    params_hash = (source.get("input_hashes") or {}).get("params_sha256")
+    if params_hash != CMB_BASELINE_PARAMETERS_SHA256:
+        errors.append("bound_external_lcdm_baseline_parameter_hash_mismatch")
+    if source and source.get("CDM_LIMIT_BOLTZMANN_RECEIPT") is not True:
+        errors.append("bound_external_lcdm_baseline_receipt_failed")
+    if source and source.get("physical_cmb_prediction") is not False:
+        errors.append("bound_external_lcdm_baseline_prediction_role_mismatch")
+
+    fit = _common_amplitude_fit(embedded)
+    if fit is None:
+        errors.append("bound_external_lcdm_baseline_fit_not_recomputable")
+    fitted_curve = list(fit.get("fitted_curve") or []) if fit else []
+    amplitude = _finite_or_none(fit.get("amplitude")) if fit else None
+    chi2_per_bin = _finite_or_none(fit.get("chi2_per_bin")) if fit else None
+    reported_amplitude = _finite_or_none(comparison.get("best_fit_amplitude"))
+    if (
+        amplitude is None
+        or reported_amplitude is None
+        or not math.isclose(amplitude, reported_amplitude, rel_tol=1e-12, abs_tol=1e-12)
+    ):
+        errors.append("bound_external_lcdm_baseline_amplitude_mismatch")
+    if fit is not None and not _reported_curve_matches_common_fit(
+        embedded, fitted_curve
+    ):
+        errors.append("bound_external_lcdm_baseline_scaled_curve_mismatch")
+    reported_source_chi2 = _finite_or_none(
+        comparison.get("amplitude_fit_chi2_per_bin")
+    )
+    if (
+        chi2_per_bin is None
+        or reported_source_chi2 is None
+        or reported_source_chi2 < 0.0
+        or not math.isclose(
+            chi2_per_bin, reported_source_chi2, rel_tol=1e-10, abs_tol=1e-10
+        )
+    ):
+        errors.append("bound_external_lcdm_baseline_source_chi2_mismatch")
+    reported_output_chi2 = _finite_or_none(
+        output_row.get("amplitude_fit_chi2_per_bin")
+    )
+    if (
+        reported_output_chi2 is None
+        or reported_output_chi2 < 0.0
+        or chi2_per_bin is None
+        or not math.isclose(
+            chi2_per_bin, reported_output_chi2, rel_tol=1e-10, abs_tol=1e-10
+        )
+    ):
+        errors.append("bound_external_lcdm_baseline_output_chi2_mismatch")
+    if comparison.get("usable") is not True:
+        errors.append("bound_external_lcdm_baseline_not_usable")
+    if not _exact_int_equals(comparison.get("bin_count"), len(planck_rows)):
+        errors.append("bound_external_lcdm_baseline_source_bin_count_mismatch")
+
+    return {
+        "source_path": source_path,
+        "source_report_mode": source.get("mode") if source else None,
+        "chi2_per_bin": chi2_per_bin,
+        "amplitude": amplitude,
+        "fit_recomputed": fit is not None,
+        "benchmark_sha256": benchmark_hash,
+    }, sorted(set(errors))
+
+
+def _common_amplitude_fit(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Recompute the unique weighted least-squares scalar and fitted curve."""
+
+    parsed: list[tuple[float, float, float]] = []
     for row in rows:
         observed = _finite_or_none(row.get("observed_D_ell"))
         sigma = _finite_or_none(row.get("sigma_D_ell"))
-        profiled = _finite_or_none(row.get("amplitude_fit_camb_D_ell"))
-        if observed is None or sigma in (None, 0.0) or profiled is None:
+        raw = _finite_or_none(row.get("camb_D_ell"))
+        if (
+            observed is None
+            or sigma is None
+            or sigma <= 0.0
+            or raw is None
+            or raw <= 0.0
+        ):
             return None
-        values.append(((profiled - observed) / sigma) ** 2)
-    return sum(values) / len(values) if values else None
+        parsed.append((observed, sigma, raw))
+    if not parsed:
+        return None
+
+    numerator = sum(raw * observed / (sigma * sigma) for observed, sigma, raw in parsed)
+    denominator = sum((raw / sigma) ** 2 for _, sigma, raw in parsed)
+    if not math.isfinite(numerator) or not math.isfinite(denominator) or denominator <= 0.0:
+        return None
+    amplitude = numerator / denominator
+    if not math.isfinite(amplitude) or amplitude <= 0.0:
+        return None
+    fitted_curve = [amplitude * raw for _, _, raw in parsed]
+    if any(not math.isfinite(value) for value in fitted_curve):
+        return None
+    chi2_per_bin = sum(
+        ((fitted - observed) / sigma) ** 2
+        for fitted, (observed, sigma, _) in zip(
+            fitted_curve, parsed, strict=True
+        )
+    ) / len(parsed)
+    if not math.isfinite(chi2_per_bin) or chi2_per_bin < 0.0:
+        return None
+    return {
+        "amplitude": amplitude,
+        "fitted_curve": fitted_curve,
+        "chi2_per_bin": chi2_per_bin,
+        "bin_count": len(parsed),
+    }
 
 
-def _residual_metrics(rows: list[dict[str, Any]]) -> dict[str, float | None]:
+def _reported_curve_matches_common_fit(
+    rows: list[dict[str, Any]], fitted_curve: list[float]
+) -> bool:
+    if len(rows) != len(fitted_curve) or not rows:
+        return False
+    for row, recomputed in zip(rows, fitted_curve, strict=True):
+        reported = _finite_or_none(row.get("amplitude_fit_camb_D_ell"))
+        if reported is None or not math.isclose(
+            reported, recomputed, rel_tol=1e-12, abs_tol=1e-9
+        ):
+            return False
+    return True
+
+
+def _residual_metrics(
+    rows: list[dict[str, Any]], *, fitted_curve: list[float]
+) -> dict[str, float | None]:
     profiled: list[float] = []
     raw: list[float] = []
-    for row in rows:
+    if len(fitted_curve) != len(rows):
+        fitted_curve = []
+    for index, row in enumerate(rows):
         observed = _finite_or_none(row.get("observed_D_ell"))
         sigma = _finite_or_none(row.get("sigma_D_ell"))
-        fit = _finite_or_none(row.get("amplitude_fit_camb_D_ell"))
         raw_value = _finite_or_none(row.get("camb_D_ell"))
-        if observed is None or sigma in (None, 0.0):
+        if observed is None or sigma is None or sigma <= 0.0:
             continue
-        if fit is not None:
-            profiled.append((fit - observed) / sigma)
+        if fitted_curve:
+            profiled.append((fitted_curve[index] - observed) / sigma)
         if raw_value is not None:
             raw.append((raw_value - observed) / sigma)
     return {
@@ -1481,7 +2158,9 @@ def _metric_value(row: dict[str, Any], name: str) -> float | None:
 
 def _comparison_source_hash(row: dict[str, Any]) -> str | None:
     for file_row in (row.get("source_bundle") or {}).get("files", []):
-        if str(file_row.get("path", "")).endswith("finite_repair_clock_cmb_camb_report.json"):
+        if str(file_row.get("path", "")).endswith(
+            "finite_repair_clock_cmb_camb_report.json"
+        ):
             return file_row.get("sha256")
     return None
 
@@ -1567,6 +2246,10 @@ def _int_or_none(value: Any) -> int | None:
         return None
 
 
+def _exact_int_equals(value: Any, expected: int) -> bool:
+    return type(value) is int and value == expected
+
+
 def _finite_or_none(value: Any) -> float | None:
     if isinstance(value, bool):
         return None
@@ -1577,8 +2260,20 @@ def _finite_or_none(value: Any) -> float | None:
     return result if math.isfinite(result) else None
 
 
+def _minimum_absolute_endpoint_value(
+    endpoint_a: float | None, endpoint_b: float | None
+) -> float | None:
+    if endpoint_a is None or endpoint_b is None:
+        return None
+    return min(abs(endpoint_a), abs(endpoint_b))
+
+
 def _rms(values: list[float]) -> float | None:
-    return math.sqrt(sum(value * value for value in values) / len(values)) if values else None
+    return (
+        math.sqrt(sum(value * value for value in values) / len(values))
+        if values
+        else None
+    )
 
 
 def _write_metrics_csv(path: Path, report: dict[str, Any]) -> None:
@@ -1624,7 +2319,9 @@ def _write_metrics_csv(path: Path, report: dict[str, Any]) -> None:
                         "baseline_value": metric.get("baseline_value"),
                         "delta": metric.get("delta"),
                         "comparison_receipt": comparison.get("comparison_receipt"),
-                        "physical_prediction_receipt": comparison.get("physical_prediction_receipt"),
+                        "physical_prediction_receipt": comparison.get(
+                            "physical_prediction_receipt"
+                        ),
                     }
                 )
 
@@ -1644,15 +2341,23 @@ def _markdown_report(report: dict[str, Any]) -> str:
         "| Evidence | Evaluation class | Result | Status |",
         "|---|---|---:|---|",
     ]
-    comparisons = {row.get("comparison_id"): row for row in report.get("comparisons", [])}
-    primary_cmb_id = report["featured_by_evidence_class"].get("primary_run_cmb_diagnostic")
+    comparisons = {
+        row.get("comparison_id"): row for row in report.get("comparisons", [])
+    }
+    primary_cmb_id = report["featured_by_evidence_class"].get(
+        "primary_run_cmb_diagnostic"
+    )
     primary_cmb = comparisons.get(primary_cmb_id) if primary_cmb_id else None
     if primary_cmb:
-        chi2 = _metric_value(primary_cmb, "diagonal_chi2_per_bin_after_one_amplitude_fit")
+        chi2 = _metric_value(
+            primary_cmb, "diagonal_chi2_per_bin_after_one_amplitude_fit"
+        )
         baseline = (primary_cmb.get("baseline") or {}).get(
             "diagonal_chi2_per_bin_after_one_amplitude_fit"
         )
-        delta = (primary_cmb.get("baseline") or {}).get("oph_minus_baseline_total_over_bins")
+        delta = (primary_cmb.get("baseline") or {}).get(
+            "oph_minus_baseline_total_over_bins"
+        )
         lines.append(
             "| Planck PR3 TT (primary OPH curve) | calibrated same-data diagnostic | "
             f"chi2/bin {_fmt(chi2)} vs LambdaCDM {_fmt(baseline)}; total delta {_fmt(delta)} | "
@@ -1664,16 +2369,28 @@ def _markdown_report(report: dict[str, Any]) -> str:
         raw_pull = _metric_value(cassini, "z6_raw_fixed_input_pull")
         gaia_pull = _metric_value(cassini, "z6_gaia_only_combined_pull")
         lines.append(
-            "| Cassini Solar-System external field | conditional independent-dataset test | "
+            "| Cassini Solar-System external field | conditional external-summary diagnostic | "
             f"Q2 {_fmt(q2)} s^-2; raw fixed-input pull {_fmt(raw_pull)} sigma; "
-            f"Gaia-only combined pull {_fmt(gaia_pull)} sigma | universal extension strongly excluded; "
-            "current OPH applicability gate missing |"
+            f"Gaia-only combined pull {_fmt(gaia_pull)} sigma | large conditional stress diagnostic; "
+            "endpoint-only check, no independent preregistration custody or current OPH applicability rule |"
         )
     for comparison_id, label, metric_name in (
         ("sparc:rar_calibration", "SPARC RAR", "rar_scatter"),
-        ("sparc:galaxy_level_massmodel_holdout", "SPARC mass-model holdout", "test_log_acceleration_rmse"),
-        ("sparc:btfr_independent_table_check", "SPARC BTFR", "observed_minus_predicted_slope"),
-        ("compressed_cosmology:static_reference", "Compressed cosmology reference", "oph_reference_diagonal_chi2"),
+        (
+            "sparc:galaxy_level_massmodel_holdout",
+            "SPARC mass-model holdout",
+            "test_log_acceleration_rmse",
+        ),
+        (
+            "sparc:btfr_separate_table_diagnostic",
+            "SPARC BTFR",
+            "observed_minus_predicted_slope",
+        ),
+        (
+            "compressed_cosmology:static_reference",
+            "Compressed cosmology reference",
+            "oph_reference_diagonal_chi2",
+        ),
     ):
         row = comparisons.get(comparison_id)
         if row:
@@ -1690,7 +2407,11 @@ def _markdown_report(report: dict[str, Any]) -> str:
             f"Frozen physical predictions: **{summary['frozen_prediction_count']}**.",
             "",
             "A comparison receipt is not a prediction receipt. The Planck lane currently profiles an amplitude "
-            "on the same 83 bins and uses diagonal errors, while the SPARC lane is a phenomenological continuation.",
+            "on the same 83 bins and uses diagonal errors; no promotion ledger can upgrade that same-data row. "
+            "Because the target participates in model selection, no N-1 degrees-of-freedom or p-value inference "
+            "is made. "
+            "The BTFR lane profiles an intrinsic-scatter nuisance on its evaluation table, and the wider SPARC "
+            "lane remains a phenomenological continuation.",
         ]
     )
     planned = report.get("planned_run_scale_contract")
@@ -1726,7 +2447,9 @@ def _markdown_report(report: dict[str, Any]) -> str:
     )
     for error in summary.get("integrity_errors", []):
         lines.append(f"- `{error}`")
-    lines.extend(["", "## Claim boundary", "", str(report.get("claim_boundary") or ""), ""])
+    lines.extend(
+        ["", "## Claim boundary", "", str(report.get("claim_boundary") or ""), ""]
+    )
     return "\n".join(lines)
 
 

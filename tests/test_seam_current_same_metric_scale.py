@@ -67,6 +67,9 @@ def test_producer_verifier_passes(canonical: dict) -> None:
         "physical_lower_bound": False,
         "comparison_permitted": False,
     }
+    assert canonical["attainment"]["cross_repository_source_bytes_embedded"] is False
+    assert canonical["attainment"]["cross_repository_source_custody_attested"] is False
+    assert "absence does not fail" in canonical["claim_boundary"]
 
 
 def test_independent_verifier_reconstructs_exact_scale() -> None:

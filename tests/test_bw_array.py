@@ -322,7 +322,23 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert "screen_holonomy" in manifest
     assert "fixed_cutoff_microphysics_receipts" in manifest
     assert edge_sector["mode"] == "edge_sector_heat_kernel_casimir_surrogate"
+    assert edge_sector["edge_sector_diagnostic_receipt"] is True
+    assert edge_sector["heat_kernel_validation_receipt"] is False
+    assert edge_sector["claim_level"] == "demo"
+    assert edge_sector["receipt_name"] == "EDGE_SECTOR_DIAGNOSTIC_RECEIPT"
+    assert edge_sector["EDGE_SECTOR_DIAGNOSTIC_RECEIPT"] is True
+    assert edge_sector["EDGE_HEAT_KERNEL_RECEIPT"] is False
+    assert emergence_status["edge_sector_diagnostic_receipt"] is True
+    assert emergence_status["edge_sector_heat_kernel_receipt"] is False
     assert born["mode"] == "central_record_born_surface"
+    assert born["classical_record_partition_receipt"] is True
+    assert born["centrality_validation_receipt"] is False
+    assert born["central_record_algebra_receipt"] is False
+    assert born["born_law_validation_receipt"] is False
+    assert emergence_status["classical_record_partition_receipt"] is True
+    assert emergence_status["centrality_validation_receipt"] is False
+    assert emergence_status["central_record_algebra_receipt"] is False
+    assert emergence_status["central_record_born_receipt"] is False
     assert checkpoint["mode"] == "observer_checkpoint_restoration"
     assert cl_report["claim_boundary"].startswith("screen-only")
     assert cl_report["ell_max"] == 12

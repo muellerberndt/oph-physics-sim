@@ -1,6 +1,8 @@
 {
   "attainment": {
     "comparison_permitted": false,
+    "cross_repository_source_bytes_embedded": false,
+    "cross_repository_source_custody_attested": false,
     "independently_calibrated_SI_carrier_scale": false,
     "physical_pixel_attachment": false,
     "physical_position_action_attachment": false,
@@ -12,7 +14,7 @@
     "source_native_dimensionless_seam_action_scale": true,
     "source_native_strict_dimensionless_seam_event_lower_bound": true
   },
-  "claim_boundary": "The exact D6 unit-current seam action and the exact response-selected Gram metric are the same internal object within the pinned finite ancestry. The parent completion remains conditional on source selection of the signed record as position and of the A2 response topology. Their composition fixes the full seam event's squared dimensionless length to 2-2/sqrt(5), strictly between one and six fifths in normalized port units. The raw moment-chart value four is related by the common raw port radius 2+phi and is not itself the normalized response-Gram norm. This closes a source-native dimensionless scale for the internal FZ-12 action. It does not make the internal record completion physical position. A common positive conversion from response units to physical length preserves every pinned finite relation and has no source-selected lower bound, so no dimensionful carrier length, physical kappa, experimental amplitude, prediction promotion, or comparison permission follows.",
+  "claim_boundary": "The exact D6 unit-current seam action and the exact response-selected Gram metric are the same internal object within the pinned finite ancestry. The parent completion remains conditional on source selection of the signed record as position and of the A2 response topology. Their composition fixes the full seam event's squared dimensionless length to 2-2/sqrt(5), strictly between one and six fifths in normalized port units. The raw moment-chart value four is related by the common raw port radius 2+phi and is not itself the normalized response-Gram norm. This closes a source-native dimensionless scale for the internal FZ-12 action. It does not make the internal record completion physical position. A common positive conversion from response units to physical length preserves every pinned finite relation and has no source-selected lower bound, so no dimensionful carrier length, physical kappa, experimental amplitude, prediction promotion, or comparison permission follows. The two cross-repository source hashes are digest declarations: their bytes are checked when the sibling checkout is present, but absence does not fail this standalone receipt and no external custody is attested.",
   "comparison_data_read": false,
   "conditional_physical_cell_attachment": {
     "conditional_B0": "kappa_edge^2*P^2*ell_star^4/840",
@@ -84,19 +86,19 @@
   },
   "implementation_pins": [
     {
-      "bytes": 25713,
+      "bytes": 26071,
       "path": "oph_fpe/dynamics/seam_current_same_metric_scale.py",
-      "sha256": "sha256:e91542630942f522fa2ee5c8d3e776560820d9a0eea2f47c27f87595029d24ca"
+      "sha256": "sha256:33b87e720cec3997a3806f1895a9e5a6ac25e871342a8bbe0e38ec4df1f1a53a"
     },
     {
-      "bytes": 26376,
+      "bytes": 26726,
       "path": "oph_fpe/dynamics/verify_seam_current_same_metric_scale_independent.py",
-      "sha256": "sha256:7e1fe579834518fd79e7561973b0930df666d69d56552eede636ad03a6d9c103"
+      "sha256": "sha256:9d636e64aca765a9742a5ba38e2822dc6b80963e28aa03191d252eb49a953267"
     },
     {
-      "bytes": 12322,
+      "bytes": 12562,
       "path": "tests/test_seam_current_same_metric_scale.py",
-      "sha256": "sha256:3323208773616d307472a62af43f6f14d1f4d6a0e9528d0548392930cac48fe9"
+      "sha256": "sha256:2feb72798797cb6ebdc79cb6a024f490b1e62e5e5136b6f011d2fd9bb6aee2ea"
     }
   ],
   "issue": 664,
@@ -109,9 +111,9 @@
     "D6_source_action": {
       "bytes": 26025,
       "path": "data/repair_closure/port_load_metric_quotient_receipt.json",
-      "receipt_sha256": "sha256:4e6566eea5eb258263685adcba88a60095cd875bc795c8c28581545c6178c772",
+      "receipt_sha256": "sha256:4794752c6c140b61ae32f704cead1cc5a50acb76763b7f9e0d6bbc59d33e6c7d",
       "schema": "oph.port-load-repair-gram-metric-quotient.v1",
-      "sha256": "sha256:30ca7354664cedc198f9affe3a2a39e2b8b5d38ed049e35b61be4a5d7ecd0638",
+      "sha256": "sha256:60df96a3f3c6055623c2aab305584677418d458a013993e8fbc28e697ae51052",
       "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN"
     },
     "FZ11_immutable_prediction_via_bridge": {
@@ -129,9 +131,9 @@
         "status": "FROZEN_PROSPECTIVE_PRIMITIVE_TWELVE_PORT_BRANCH_PREDICTION__PHYSICAL_COMPARISON_UNARMED"
       },
       "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-      "receipt_sha256": "sha256:25a3fd92c511c559d25700f44ce548012cf11ff407e13f9583147768243eea6b",
+      "receipt_sha256": "sha256:59d279e0a2195ddd49bf23785c18530beb6134edf876cfa167e46bdaaa088824",
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
-      "sha256": "sha256:11a559b1310f51796816816de83a8b23e6e1da5f20626c1837a49d536ced3a14",
+      "sha256": "sha256:4d844f8ddd3463df057808cfe8acd99d28e758c4604df534cd814e144ebfb3a0",
       "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
     },
     "FZ12_immutable_prediction": {
@@ -148,14 +150,14 @@
     "completion_isometry_action": {
       "bytes": 13060,
       "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
-      "receipt_sha256": "sha256:95317f671e0b95c8bfb400675b02f9f74cc7563005a5bcf5afe15955311715c7",
+      "receipt_sha256": "sha256:d4f473867a804732bf397e1f9e42668798fb6ea4b487fdc3fbc3aa31d3aaba7c",
       "schema": "oph.port-gram-equivariant-completion-action.v1",
-      "sha256": "sha256:12a180d0da20ea101b44469cdff86b593c12fcfb6e35132df38b6eb30af98cab",
+      "sha256": "sha256:4257f3aa45899267ada4f4efc86a50b3256f14e9aabe5a022c3b57e9b163844e",
       "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
     },
     "homogeneous_action_Lean_source": {
       "path": "Lean/Screen/SeamCurrentHomogeneousAction.lean",
-      "raw_sha256": "sha256:1fa16cbd466e85c5533b2a373b02b5d804efa703db62e8fd0e1cf8b34fcbc265",
+      "raw_sha256": "sha256:1539274d87375209aeb583ca1e91e491ca5d166861505efa23f552ab93d9d094",
       "repository": "FloatingPragma/observer-patch-holography",
       "required_theorems": [
         "d6Translate_isometry",
@@ -167,21 +169,21 @@
     "normalized_port_dual_measure": {
       "bytes": 13559,
       "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-      "receipt_sha256": "sha256:4cf46eb465307a332e785e7b2cf0a088af73d3d036e31b83a7dd4b8af372ecd0",
+      "receipt_sha256": "sha256:a508f31f9749476335dc3f4da8f84c61955d27e67e05d6437b852f8b71f8cad1",
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
-      "sha256": "sha256:6069b11fe0ce337eaa8824101ad815b460a48c6159f5d80271f51c690c6731b9",
+      "sha256": "sha256:2700ce56b7d7115f9514dd4913a45ac3e2d0b23fac8caf65dcfda47d2b3dba87",
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     },
     "response_Gram_completion": {
       "bytes": 32216,
       "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
-      "receipt_sha256": "sha256:cabaefca7a23c54e53da997c26d033fd0afdd4b6ab628f2593a53166c2285b51",
+      "receipt_sha256": "sha256:fcece37fdc97614c167929a763562856912805c733a92acbf2f57fd7663050c8",
       "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
-      "sha256": "sha256:2f4cef1500677e592fe8f01a782670d0d53c51360abb13b3c3d29a985fa1f522",
+      "sha256": "sha256:30d30eb2956497049cf1e235c7adf160b2f824e3f254207e21ea0ca49237835b",
       "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:fdd02557ab3d49388a4948c24f3676320f953f0c4ad0867fa07f146342cbd67a",
+  "receipt_sha256": "sha256:309df77a0398c6218a57f19d9651917d29a58165d2ccabaff19089b3ff9f910d",
   "same_internal_action_binding": {
     "D6_translation_isometry_theorem_pinned": true,
     "action": "translation by one directed unit-current seam boundary",
@@ -191,7 +193,7 @@
     "internal_record_completion_is_physical_position": false,
     "metric": "unit-diagonal response-selected Gram pulled back to D6",
     "record_carrier": "D6={z in Z^6: sum(z_i) is even}",
-    "same_action_metric_digest": "sha256:2a1f290790d781523830c5a9ee89f67e676b664acda0b93650de773bf3342da3",
+    "same_action_metric_digest": "sha256:268a23178155182ab2afc9b844486d7d53f4eaa20894473a29197c622a8c2b22",
     "seam_count": 30,
     "seam_event_is_physical_field_propagation": false,
     "source_action_and_metric_are_same_internal_object": true

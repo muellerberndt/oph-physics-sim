@@ -109,8 +109,10 @@ def _render_html(
         "runPath": str(run_path),
         "runId": manifest.get("run_id", run_path.name),
         "status": {
-            "edgeSector": bool(status.get("edge_sector_heat_kernel_receipt", False)),
-            "centralRecord": bool(status.get("central_record_born_receipt", False)),
+            "edgeSector": bool(status.get("edge_sector_diagnostic_receipt", False)),
+            "centralRecord": bool(
+                status.get("classical_record_partition_receipt", False)
+            ),
             "checkpoint": bool(status.get("observer_checkpoint_restoration_receipt", False)),
             "supportVisibleLorentz": bool(status.get("support_visible_lorentz_3p1_kinematics_receipt")),
             "h3Chart": bool(status.get("conformal_h3_spatial_chart_receipt")),
@@ -207,7 +209,7 @@ function drawCL() {{ const svg=document.getElementById("cl"); clear(svg); const 
 function gate(label, ok) {{ return `<span class="gate ${{ok?'pass':'fail'}}">${{label}}: ${{ok?'pass':'open'}}</span>`; }}
 function init() {{
   document.getElementById("runline").textContent = `${{DATA.runId}} · ${{DATA.runPath}}`;
-  document.getElementById("gates").innerHTML = gate("edge sector", DATA.status.edgeSector)+gate("central records", DATA.status.centralRecord)+gate("checkpoint", DATA.status.checkpoint)+gate("BW/KMS Lorentz", DATA.status.supportVisibleLorentz)+gate("H3 chart", DATA.status.h3Chart)+gate("record bulk", DATA.status.recordBulk)+gate("3D bulk", DATA.status.bulk3d)+gate("defect H3", DATA.status.defectH3)+gate("particle diag", DATA.status.particleDiagnostic)+gate("particles", DATA.status.particle);
+  document.getElementById("gates").innerHTML = gate("edge diagnostic", DATA.status.edgeSector)+gate("record partition", DATA.status.centralRecord)+gate("checkpoint", DATA.status.checkpoint)+gate("BW/KMS Lorentz", DATA.status.supportVisibleLorentz)+gate("H3 chart", DATA.status.h3Chart)+gate("record bulk", DATA.status.recordBulk)+gate("3D bulk", DATA.status.bulk3d)+gate("defect H3", DATA.status.defectH3)+gate("particle diag", DATA.status.particleDiagnostic)+gate("particles", DATA.status.particle);
   drawScatter(document.getElementById("screen"), DATA.screen.points, DATA.screen.values, projectS2, DATA.screen.points.length>3000?1.25:1.8);
   document.getElementById("screenNote").textContent = `Color field: ${{DATA.screenField}}. This is the S2 observer screen regulator, not an initialized 3D bulk lattice.`;
   const slider = document.getElementById("timeSlider");

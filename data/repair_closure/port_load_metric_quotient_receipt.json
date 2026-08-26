@@ -1271,27 +1271,27 @@
     "conditional_equivariant_completion_action": {
       "bytes": 13060,
       "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
-      "receipt_sha256": "sha256:95317f671e0b95c8bfb400675b02f9f74cc7563005a5bcf5afe15955311715c7",
+      "receipt_sha256": "sha256:d4f473867a804732bf397e1f9e42668798fb6ea4b487fdc3fbc3aa31d3aaba7c",
       "schema": "oph.port-gram-equivariant-completion-action.v1",
-      "sha256": "sha256:12a180d0da20ea101b44469cdff86b593c12fcfb6e35132df38b6eb30af98cab",
+      "sha256": "sha256:4257f3aa45899267ada4f4efc86a50b3256f14e9aabe5a022c3b57e9b163844e",
       "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
     },
     "edge30_orbit_ray_control": {
       "bytes": 18602,
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
-      "receipt_sha256": "sha256:fe5dcb7c11f4bb1077f7df69b30cb57e4799daf71a15c50de4b9780916b32b89",
+      "receipt_sha256": "sha256:c842dad597c49b701b640c4bec0cc789504d6030ed091d7951987673b07f2e9b",
       "schema": "oph.port_repair_propagation_bridge_receipt.v1",
       "selected_spatial_orbit": null,
-      "sha256": "sha256:6e607e63ee928b090541f54531ad8043ce5db5cc7a358eb70bad9bfab4091893",
+      "sha256": "sha256:3171f557eb43a429f23f34de59028dec07230ee60085195a97e0fc333fa3d51b",
       "spatial_hop_source_certified": false,
       "status": "BOUNDED_NONSELECTION__FZ11_REMAINS_BRANCH_PREDICTION"
     },
     "repair_selected_completion": {
       "bytes": 32216,
       "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
-      "receipt_sha256": "sha256:cabaefca7a23c54e53da997c26d033fd0afdd4b6ab628f2593a53166c2285b51",
+      "receipt_sha256": "sha256:fcece37fdc97614c167929a763562856912805c733a92acbf2f57fd7663050c8",
       "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
-      "sha256": "sha256:2f4cef1500677e592fe8f01a782670d0d53c51360abb13b3c3d29a985fa1f522",
+      "sha256": "sha256:30d30eb2956497049cf1e235c7adf160b2f824e3f254207e21ea0ca49237835b",
       "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
     }
   },
@@ -1586,7 +1586,7 @@
     ],
     "thirty_seam_attempts_identified_with_six_axis_steps": false
   },
-  "receipt_sha256": "sha256:4e6566eea5eb258263685adcba88a60095cd875bc795c8c28581545c6178c772",
+  "receipt_sha256": "sha256:4794752c6c140b61ae32f704cead1cc5a50acb76763b7f9e0d6bbc59d33e6c7d",
   "schema": "oph.port-load-repair-gram-metric-quotient.v1",
   "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN",
   "target_data_read": false

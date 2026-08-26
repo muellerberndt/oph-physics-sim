@@ -12,7 +12,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from oph_fpe.cosmology.public_data_comparisons import write_public_data_comparison_suite
+from oph_fpe.cosmology.public_data_comparisons import (  # noqa: E402
+    write_public_data_comparison_suite,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -28,7 +30,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--planck-tt",
         type=Path,
-        default=Path("data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt"),
+        default=Path(
+            "data/measurements/planck2018/COM_PowerSpect_CMB-TT-binned_R3.01.txt"
+        ),
     )
     parser.add_argument(
         "--sparc-dir",

@@ -42,7 +42,7 @@ does not contain a complete simulator run or simulator source code.
 
 - Begin with a suite overview that lists all fourteen views and their explicit
   claim boundaries.
-- Give first-class navigation to observer quantum/Born/collapse, refinement
+- Give first-class navigation to the finite quantum-form conditioning fixture, refinement
   depth, defect emergence, and defect grouping/interactions.
 - Keep the remaining carrier, repair, camera, modular-time, spacetime, A5,
   electromagnetic, cosmology, and evidence-atlas views available as peers.
@@ -76,7 +76,7 @@ does not contain a complete simulator run or simulator source code.
 
 ## Suggested presentation order
 
-1. Observer-frame quantum weights and collapse
+1. Finite quantum-form weights and conditioning fixture
 2. Refinement-depth emergence
 3. Defect emergence
 4. Defect grouping and interactions
@@ -112,7 +112,7 @@ First read `VISUALIZER_BUILDER_INSTRUCTIONS.md`, `bundle_manifest.json`, and
 `DISPLAY_INSTRUCTIONS.md` before implementing that view.
 
 Create one navigable static web experience for all fourteen packages. Prioritize
-the observer-frame quantum/Born/collapse, refinement-depth, defect-emergence,
+the finite quantum-form conditioning fixture, refinement-depth, defect-emergence,
 and defect-grouping views, while retaining every other package. Load only the
 bundled display data by relative path. Keep exact fractions authoritative,
 preserve integer/categorical meanings, and never manufacture missing values.

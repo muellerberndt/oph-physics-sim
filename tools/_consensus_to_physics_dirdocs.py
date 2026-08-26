@@ -107,10 +107,13 @@ all-sky-plus-C_ℓ pairing. Draw the shuffled control faintly beneath the spectr
 - `mismatch_trace.csv` — **the single most useful file in the bundle.** One row per cycle:
   `phi` (total disagreement), `record_packet_entropy`, `beta`, `committed_fraction`,
   `modular_depth_mean`, `total_repair_actions`. Thermodynamics lives here.
-- `central_record_born_report.json` — the measured quantum-measurement surface on all 65,536
-  records: `probability_sum` 1.0, `max_projector_idempotent_error` 0.0,
-  `record_projectors_commute` true, `luders_conditioning_idempotent` true,
-  `repeat_read_stability_fraction` 1.0, plus `sample_events` to animate.
+- `central_record_born_report.json` — a legacy-named classical categorical-partition diagnostic
+  on all 65,536 records: `probability_sum` 1.0, zero indicator-idempotence error,
+  `record_partition_filters_commute` true, `partition_filter_idempotent` true, and
+  `repeat_read_stability_fraction` 1.0, plus `sample_events` to animate. No ambient algebra is
+  supplied, so centrality and a Lüders instrument are not tested. The displayed probabilities
+  are empirical frequencies normalized from these same counts; this is not a Born-law test,
+  quantum instrument, or physical measurement receipt.
 - `observer_modular_experience_report.json`, `observer_perspective_rows.csv`,
   `observer_consensus_report.json` — the observer population and its clocks.
 - `defect_*` reports, `array_holonomy_report.json`, `s3_class_counts.json` — matter.
@@ -128,10 +131,11 @@ and switch to the 16k control in `../control/` — three cycles run backwards th
 64k. That contrast *is* the fluctuation theorem: the law bounds an average, and fluctuations
 shrink like 1/√N.
 
-**Collapse (V18).** Take a real event from `sample_events` and stage it: a fan of superposed
-record branches, then measurement, then the branches inconsistent with the outcome evaporate while
-the survivor surges to full opacity. Re-read and nothing moves. The four exact identities in this
-file are the reason the animation is honest — show them as literal numbers beside it.
+**Classical record conditioning (V18).** Take one committed event class from `sample_events` and
+show the finite partition, then filter the records to that class. Reapplying the same filter changes
+nothing. Show the exact partition and idempotence identities as literal numbers beside it, and label
+the frequencies as same-sample empirical counts. Do not depict superposition, wave-function
+collapse, a quantum instrument, or a Born-law comparison: this file supplies none of them.
 
 **Gate ladders (V26, V30).** Render as staircases climbing toward a familiar equation, rungs lit
 where discharged and dark where not. Put the destination — `G_ab + Λg_ab = 8πG⟨T_ab⟩` — at the top,
@@ -174,9 +178,11 @@ with hypercharge on an axis, then fade in the names: Q_L, u_R, d_R, L, e_R and c
 hypercharges `1/6, 2/3, −1/3, −1/2, −1` are forced by `2t + 3d + q ≡ 0 (mod 6)`, the condition for
 a representation to descend to `(SU(3)×SU(2)×U(1))/Z6`. Keep them as fractions.
 
-**Born statistics (V17).** A beam of 179 tokens hitting an analyser and splitting — Stern–Gerlach,
-except you can count every token and the ratio is exact. Show the refinement into sub-configurations
-before the split so `716` is not mysterious.
+**Finite Born-form scenario (V17).** A beam of 179 tokens hitting a schematic analyser and
+splitting can visualize the exact finite algebraic fixture. Show the refinement into
+sub-configurations before the split so `716` is not mysterious, and label the panel explicitly as
+a generated theorem fixture rather than laboratory data, a source-produced preparation, or an
+instrument receipt.
 
 **Spectral dimension (V11).** Lead with the calibration: the estimator recovers 1.0030, 2.0223 and
 3.0460 on a ring, a 2-torus and a 3-torus. Then show the tower climbing from 1.95 at κ=0 to about

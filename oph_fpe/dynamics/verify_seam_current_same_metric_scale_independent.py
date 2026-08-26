@@ -72,7 +72,7 @@ FZ12_CANDIDATE_SHA256 = (
     "sha256:e3a20b7fade1731bd58ab6ae7bd24d61d92e99801b2210c791fec7f590ff49ef"
 )
 HOMOGENEOUS_ACTION_SHA256 = (
-    "sha256:1fa16cbd466e85c5533b2a373b02b5d804efa703db62e8fd0e1cf8b34fcbc265"
+    "sha256:1539274d87375209aeb583ca1e91e491ca5d166861505efa23f552ab93d9d094"
 )
 REQUIRED_LEAN_THEOREMS = [
     "d6Translate_isometry",
@@ -96,7 +96,10 @@ EXPECTED_CLAIM_BOUNDARY = (
     "common positive conversion from response units to physical length "
     "preserves every pinned finite relation and has no source-selected lower "
     "bound, so no dimensionful carrier length, physical kappa, experimental "
-    "amplitude, prediction promotion, or comparison permission follows."
+    "amplitude, prediction promotion, or comparison permission follows. The "
+    "two cross-repository source hashes are digest declarations: their bytes "
+    "are checked when the sibling checkout is present, but absence does not "
+    "fail this standalone receipt and no external custody is attested."
 )
 
 Q5 = tuple[Fraction, Fraction]
@@ -603,6 +606,8 @@ def _verify_payload(
         "physical_positive_lower_bound": False,
         "physical_prediction_promoted": False,
         "comparison_permitted": False,
+        "cross_repository_source_bytes_embedded": False,
+        "cross_repository_source_custody_attested": False,
     }
     _require(attainment == expected_attainment, "attainment packet drifted")
     _require(

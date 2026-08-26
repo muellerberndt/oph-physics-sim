@@ -8,6 +8,7 @@
     "mode",
     "selection_policy",
     "datasets",
+    "public_measurement_source_binding",
     "run_bundles",
     "comparisons",
     "repair_and_boltzmann_readiness",
@@ -51,6 +52,9 @@
         "cassini_q2": {"$ref": "#/$defs/dataset"}
       },
       "additionalProperties": false
+    },
+    "public_measurement_source_binding": {
+      "$ref": "#/$defs/publicMeasurementSourceBinding"
     },
     "run_bundles": {
       "type": "array",
@@ -116,6 +120,167 @@
     "claim_boundary": {"type": "string", "minLength": 1}
   },
   "$defs": {
+    "publicMeasurementSourceBinding": {
+      "type": "object",
+      "required": [
+        "schema",
+        "validator",
+        "status",
+        "manifest_path",
+        "manifest_sha256",
+        "canonical_manifest_path",
+        "canonical_manifest_sha256",
+        "contains_external_published_measurements",
+        "raw_instrument_telemetry_included",
+        "remote_source_authentication_performed",
+        "files",
+        "canonical_source_binding_receipt",
+        "integrity_receipt",
+        "integrity_errors",
+        "claim_boundary"
+      ],
+      "properties": {
+        "schema": {"const": "oph.public_measurement_source_binding_receipt.v1"},
+        "validator": {"const": "oph.public_measurement_source_binding.v1"},
+        "status": {"enum": ["PUBLIC_MEASUREMENT_BYTES_BOUND", "NONCONFORMANT"]},
+        "manifest_path": {"type": "string", "minLength": 1},
+        "manifest_sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          ]
+        },
+        "canonical_manifest_path": {"type": "string", "minLength": 1},
+        "canonical_manifest_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "contains_external_published_measurements": {"type": "boolean"},
+        "raw_instrument_telemetry_included": {"const": false},
+        "remote_source_authentication_performed": {"const": false},
+        "files": {
+          "type": "object",
+          "required": [
+            "planck_tt_binned",
+            "sparc_rar",
+            "sparc_rar_bins",
+            "sparc_btfr",
+            "sparc_mass_models",
+            "cassini_q2_summary"
+          ],
+          "properties": {
+            "planck_tt_binned": {"$ref": "#/$defs/publicMeasurementSourceFile"},
+            "sparc_rar": {"$ref": "#/$defs/publicMeasurementSourceFile"},
+            "sparc_rar_bins": {"$ref": "#/$defs/publicMeasurementSourceFile"},
+            "sparc_btfr": {"$ref": "#/$defs/publicMeasurementSourceFile"},
+            "sparc_mass_models": {"$ref": "#/$defs/publicMeasurementSourceFile"},
+            "cassini_q2_summary": {"$ref": "#/$defs/publicMeasurementSourceFile"}
+          },
+          "additionalProperties": false
+        },
+        "canonical_source_binding_receipt": {"type": "boolean"},
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}},
+        "claim_boundary": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "PUBLIC_MEASUREMENT_BYTES_BOUND"}}},
+          "then": {
+            "properties": {
+              "contains_external_published_measurements": {"const": true},
+              "canonical_source_binding_receipt": {"const": true},
+              "integrity_receipt": {"const": true},
+              "manifest_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "integrity_errors": {"maxItems": 0},
+              "files": {
+                "properties": {
+                  "planck_tt_binned": {"$ref": "#/$defs/publicMeasurementSourceFilePassed"},
+                  "sparc_rar": {"$ref": "#/$defs/publicMeasurementSourceFilePassed"},
+                  "sparc_rar_bins": {"$ref": "#/$defs/publicMeasurementSourceFilePassed"},
+                  "sparc_btfr": {"$ref": "#/$defs/publicMeasurementSourceFilePassed"},
+                  "sparc_mass_models": {"$ref": "#/$defs/publicMeasurementSourceFilePassed"},
+                  "cassini_q2_summary": {"$ref": "#/$defs/publicMeasurementSourceFilePassed"}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"status": {"const": "NONCONFORMANT"}}},
+          "then": {
+            "properties": {
+              "contains_external_published_measurements": {"const": false},
+              "canonical_source_binding_receipt": {"const": false},
+              "integrity_receipt": {"const": false}
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "publicMeasurementSourceFile": {
+      "type": "object",
+      "required": [
+        "selected_path",
+        "expected_sha256",
+        "actual_sha256",
+        "expected_bytes",
+        "actual_bytes",
+        "data_kind",
+        "representation",
+        "public_source",
+        "integrity_receipt",
+        "integrity_errors"
+      ],
+      "properties": {
+        "selected_path": {"type": "string", "minLength": 1},
+        "expected_sha256": {"type": ["string", "null"]},
+        "actual_sha256": {"type": ["string", "null"]},
+        "expected_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "actual_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "data_kind": {"type": ["string", "null"]},
+        "representation": {
+          "enum": [
+            "exact_published_bytes",
+            "normalized_published_snapshot",
+            "transcribed_published_summary",
+            null
+          ]
+        },
+        "public_source": {"type": ["string", "null"]},
+        "integrity_receipt": {"type": "boolean"},
+        "integrity_errors": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "publicMeasurementSourceFilePassed": {
+      "allOf": [
+        {"$ref": "#/$defs/publicMeasurementSourceFile"},
+        {
+          "properties": {
+            "expected_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "actual_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "expected_bytes": {"type": "integer", "minimum": 0},
+            "actual_bytes": {"type": "integer", "minimum": 0},
+            "data_kind": {"type": "string", "minLength": 1},
+            "representation": {
+              "enum": [
+                "exact_published_bytes",
+                "normalized_published_snapshot",
+                "transcribed_published_summary"
+              ]
+            },
+            "public_source": {"type": "string", "format": "uri"},
+            "integrity_receipt": {"const": true},
+            "integrity_errors": {"maxItems": 0}
+          }
+        }
+      ]
+    },
     "dataset": {
       "type": "object",
       "required": ["dataset_id", "release", "path", "public_source", "integrity_receipt", "integrity_errors"],
@@ -227,6 +392,8 @@
             "blocked"
           ]
         },
+        "data_use": {"type": "object"},
+        "fit_protocol": {"type": "object"},
         "metrics": {
           "type": "object",
           "additionalProperties": {"$ref": "#/$defs/metric"}
@@ -236,12 +403,105 @@
         "applicability_receipt": {"type": "boolean"},
         "current_scope_match": {"type": "boolean"},
         "raw_pull_not_nuisance_marginalized": {"type": "boolean"},
-        "conditional_external_domain_falsifier": {"type": "boolean"},
+        "conditional_external_domain_falsifier": {"const": false},
+        "falsifier_decision": {
+          "type": "object",
+          "required": [
+            "statistic",
+            "observed_abs_endpoint_pull_sigma",
+            "candidate_minimum_abs_pull_sigma",
+            "source_asserts_declared_before_comparison",
+            "candidate_threshold_provenance",
+            "candidate_rule_syntactically_valid",
+            "candidate_threshold_exceeded",
+            "independent_preregistration_custody_receipt",
+            "global_band_minimization_receipt",
+            "decision_rule_receipt",
+            "threshold_passed",
+            "decision_receipt",
+            "blockers"
+          ],
+          "properties": {
+            "statistic": {
+              "const": "jensen_lambda_endpoints_minimum_absolute_raw_fixed_input_pull_sigma"
+            },
+            "observed_abs_endpoint_pull_sigma": {"type": ["number", "null"], "minimum": 0},
+            "candidate_minimum_abs_pull_sigma": {"type": ["number", "null"], "exclusiveMinimum": 0},
+            "source_asserts_declared_before_comparison": {"type": "boolean"},
+            "candidate_threshold_provenance": {"type": ["string", "null"]},
+            "candidate_rule_syntactically_valid": {"type": "boolean"},
+            "candidate_threshold_exceeded": {"type": "boolean"},
+            "independent_preregistration_custody_receipt": {"const": false},
+            "global_band_minimization_receipt": {"const": false},
+            "decision_rule_receipt": {"const": false},
+            "threshold_passed": {"const": false},
+            "decision_receipt": {"const": false},
+            "blockers": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "diagnostic_reference": {
+          "type": "object",
+          "required": [
+            "conventional_reference_sigma",
+            "exceeds_conventional_reference",
+            "is_acceptance_or_falsifier_threshold"
+          ],
+          "properties": {
+            "conventional_reference_sigma": {"const": 5.0},
+            "exceeds_conventional_reference": {"type": "boolean"},
+            "is_acceptance_or_falsifier_threshold": {"const": false}
+          },
+          "additionalProperties": false
+        },
         "integrity_receipt": {"type": "boolean"},
         "integrity_errors": {"type": "array", "items": {"type": "string"}},
         "claim_boundary": {"type": "string", "minLength": 1}
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {"physical_prediction_receipt": {"const": true}},
+            "required": ["physical_prediction_receipt"]
+          },
+          "then": {
+            "properties": {
+              "comparison_receipt": {"const": true},
+              "integrity_receipt": {"const": true}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "domain": {"const": "cmb_tt"},
+              "evaluation_class": {"const": "calibrated_same_data"}
+            },
+            "required": ["domain", "evaluation_class"]
+          },
+          "then": {
+            "required": ["fit_protocol"],
+            "properties": {
+              "physical_prediction_receipt": {"const": false},
+              "fit_protocol": {
+                "required": [
+                  "inferential_degrees_of_freedom",
+                  "p_value",
+                  "n_minus_fitted_parameter_count_used_for_inference",
+                  "target_used_for_model_selection",
+                  "no_dof_or_p_value_reason"
+                ],
+                "properties": {
+                  "inferential_degrees_of_freedom": {"const": null},
+                  "p_value": {"const": null},
+                  "n_minus_fitted_parameter_count_used_for_inference": {"const": false},
+                  "target_used_for_model_selection": {"const": true},
+                  "no_dof_or_p_value_reason": {"type": "string", "minLength": 1}
+                }
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {"domain": {"const": "solar_system_external_field"}},
@@ -253,7 +513,9 @@
               "applicability_receipt",
               "current_scope_match",
               "raw_pull_not_nuisance_marginalized",
-              "conditional_external_domain_falsifier"
+              "conditional_external_domain_falsifier",
+              "falsifier_decision",
+              "diagnostic_reference"
             ],
             "properties": {
               "applicability_receipt": {"const": false},
@@ -273,6 +535,41 @@
                   "current_paper_scope_match": {"const": false}
                 },
                 "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "comparison_id": {"const": "sparc:btfr_separate_table_diagnostic"}
+            },
+            "required": ["comparison_id"]
+          },
+          "then": {
+            "required": ["data_use"],
+            "properties": {
+              "evaluation_class": {"const": "diagnostic_proxy"},
+              "data_use": {
+                "required": [
+                  "fit_to_evaluation_data",
+                  "oph_prediction_parameters_fit_to_btfr",
+                  "fitted_nuisance_parameters",
+                  "holdout",
+                  "independent_galaxy_sample"
+                ],
+                "properties": {
+                  "fit_to_evaluation_data": {"const": true},
+                  "oph_prediction_parameters_fit_to_btfr": {"const": false},
+                  "fitted_nuisance_parameters": {
+                    "type": "array",
+                    "contains": {
+                      "const": "orthogonal_intrinsic_scatter_perpendicular_dex"
+                    }
+                  },
+                  "holdout": {"const": false},
+                  "independent_galaxy_sample": {"const": false}
+                }
               }
             }
           }
