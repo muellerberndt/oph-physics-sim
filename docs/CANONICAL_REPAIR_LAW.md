@@ -305,6 +305,35 @@ by bare A3. The missing source object is a
 refinement-detail state/readout instrument that selects the detail-fiber
 probability law and supplies the physical output binding.
 
+The rank-29 statement is specific to that passive averaged-semigroup
+protocol. It is not a no-go for every readout that can act on the refined
+carrier. A separate exact certificate studies a declared active instrument.
+For each midpoint $m$, choose an inherited endpoint $u$ of its parent edge,
+apply the labeled pair-average event $E_{(u,m)}$, and read the $u$ coordinate
+through $Q$. The baseline and event responses obey
+
+\[
+(Qx)_u=x_u,
+\qquad
+(QE_{(u,m)}x)_u=\frac{x_u+x_m}{2},
+\qquad
+x_m=2(QE_{(u,m)}x)_u-(Qx)_u.
+\]
+
+One event per midpoint therefore gives an exact 42 by 42 rational readout
+with a checked inverse. The complete sixty-event directed family is stable
+under the proper $A_5$ action and also has rank 42 when joined to $Q$. The
+minimal thirty-event selector is only a rank witness; it is not
+$A_5$-invariant. The directed events form one $A_5$ orbit, which rules out
+an equivariant choice of exactly one endpoint above every midpoint.
+
+This active protocol requires every labeled response to refer to the same
+pre-event field. That needs repeatable preparation, reset or checkpoint
+access, parallel prepared copies, or a nondestructive response instrument.
+The certificate does not derive any of these from A1 through A3. It does not
+identify the finite response with a sky or laboratory observable. It narrows
+the open readout question while preserving the passive rank-29 theorem.
+
 No fourth axiom is warranted while these derivation gates are unresolved.
 If two inequivalent repair laws survive after the complete A1 grammar, A2
 reconciliation conditions, and A3 reference are fixed, the surviving choice
@@ -324,6 +353,10 @@ oph_fpe/cosmology/angular_refinement_repair_observability.py
 oph_fpe/cosmology/verify_angular_refinement_repair_observability_independent.py
 tests/test_angular_refinement_repair_observability.py
 data/repair_closure/angular_refinement_repair_observability_receipt.json
+oph_fpe/cosmology/angular_refinement_labeled_event_readout.py
+oph_fpe/cosmology/verify_angular_refinement_labeled_event_readout_independent.py
+tests/test_angular_refinement_labeled_event_readout.py
+data/repair_closure/angular_refinement_labeled_event_readout_receipt.json
 ```
 
 The static selector controls are implemented in:
