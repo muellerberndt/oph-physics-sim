@@ -924,16 +924,16 @@
     },
     "fz11_conditional_adapter": {
       "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-      "raw_sha256": "sha256:4d844f8ddd3463df057808cfe8acd99d28e758c4604df534cd814e144ebfb3a0",
-      "receipt_sha256": "sha256:59d279e0a2195ddd49bf23785c18530beb6134edf876cfa167e46bdaaa088824",
+      "raw_sha256": "sha256:cd77e44d8b837ee1375711e5a9a269f82be5b99884a690e1e998b5c0e6995ec3",
+      "receipt_sha256": "sha256:b96b4f4ef5e83c52f01f9e4678d4c42deb789580b7056f905b50a085b1505ac1",
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
     },
     "port_repair_propagation_boundary": {
       "one_step_operator": "T = I - L_icosahedron/60",
       "path": "data/repair_closure/port_repair_propagation_bridge_receipt.json",
-      "raw_sha256": "sha256:a7c039e3df03c6f02773189326fe69ca9fb3cc46318813ae0dd15fc341678ce4",
-      "receipt_sha256": "sha256:b9ec28ce6203d0a03703fe264310b0c403e2dde5a81bafdcb650ee472b910dd0",
+      "raw_sha256": "sha256:7899263a92a0732d1ad55334d6b24c0598bc00aa5deb406867f3116bd953840f",
+      "receipt_sha256": "sha256:4b16ceb8d04ac5830f15395e492ee4c9da52fe72cbddb9042522e0f9e51d5b53",
       "same_operator_physical_readout_receipt": false,
       "schema": "oph.port_repair_propagation_bridge_receipt.v1",
       "spatial_port_hop_source_receipt": false,
@@ -947,7 +947,7 @@
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:f8eb98cfba9a2a3385a20563c4ee9704bd657285e9cb872db40ebe454c5c4f56",
+  "receipt_sha256": "sha256:2d95878a54f6ae6da605c447dd8a6244cd886a2902e447eab40b6eddc0b7d195",
   "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
   "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN",
   "support_hop_isometry_implication": {

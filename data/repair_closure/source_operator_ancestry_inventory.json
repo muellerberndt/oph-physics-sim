@@ -886,7 +886,7 @@
       "raw_pin": {
         "bytes": 37873,
         "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-        "sha256": "sha256:4d844f8ddd3463df057808cfe8acd99d28e758c4604df534cd814e144ebfb3a0"
+        "sha256": "sha256:cd77e44d8b837ee1375711e5a9a269f82be5b99884a690e1e998b5c0e6995ec3"
       },
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1161,9 +1161,9 @@
       "disposition": "VERBATIM_A1_A2_A3_STATEMENT_PIN_NOT_VERTEX12_OPERATOR_OR_PHYSICAL_CLAIM",
       "path": "data/theory/axiom_registry_pin.json",
       "raw_pin": {
-        "bytes": 5899,
+        "bytes": 5939,
         "path": "data/theory/axiom_registry_pin.json",
-        "sha256": "sha256:7ce7274be0c715c1a05d5aafc3c55a578289d8c35f88efa8037967291527f103"
+        "sha256": "sha256:18523c8f47ad9af0998cea8b0a325ffbb72bf9970dd01498f46824a0a0e22693"
       },
       "schema": "oph.sim.axiom_registry_pin.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1229,13 +1229,13 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:f52180d1e60d278f9c82330bc7260d1bc29c5a78eb3aaf906b11b5766e9f61f6",
+  "receipt_sha256": "sha256:d9fff550936f95e0b7ee621910c3d474d9e351f18c70d7a3687e6be7a35442da",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
     "content_index_row_count_excluding_recursive_outputs": 1036,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:656d84d6994b8eb1fb350b7c775d2cfa8dd62a92f9fe1768b1c508c63d95312c",
+    "content_index_sha256_excluding_recursive_outputs": "sha256:fca5030f393a53f5f7e19ff66b96145ca8262327b27357477205f4d859b8eed8",
     "path_count_including_declared_recursive_outputs": 1042,
     "path_list_sha256_including_declared_recursive_outputs": "sha256:bba6a8e6c271b76a2b02368cece9fefd2b9ccb5f15bcbbff1434327dd48e1d52",
     "provenance_counts": {
