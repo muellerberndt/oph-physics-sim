@@ -146,6 +146,12 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
             "harmonic_batch_size": 128,
         },
     }
+    config["internal_diagnostics"] = {
+        "early_universe": {
+            "emit_screen_event_times": True,
+            "primary_observable": "first_commit_cycle",
+        }
+    }
 
     result = run_bw_array_config(config, tmp_path)
     run_path = Path(result["path"])
@@ -182,6 +188,8 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     assert (run_path / "harmonic_time_trace.npz").exists()
     assert (run_path / "harmonic_time_trace_report.json").exists()
     assert (run_path / "screen_evolution_frames.npz").exists()
+    assert (run_path / "screen_event_times.npz").exists()
+    assert (run_path / "screen_event_times_report.json").exists()
     assert (run_path / "echosahedral_patch_state_report.json").exists()
     assert (run_path / "echosahedral_patch_state.npz").exists()
     assert (run_path / "source_dynamics_repair_record_observer_report.json").exists()
@@ -196,6 +204,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
     emergence_status = json.loads((run_path / "emergence_status_report.json").read_text(encoding="utf-8"))
     cl_report = json.loads((run_path / "cl_comparison_report.json").read_text(encoding="utf-8"))
     harmonic_trace = np.load(run_path / "harmonic_time_trace.npz")
+    event_times = np.load(run_path / "screen_event_times.npz")
     observer_rows = [
         json.loads(line)
         for line in (run_path / "observer_views.jsonl").read_text(encoding="utf-8").splitlines()
@@ -219,6 +228,16 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
             encoding="utf-8"
         )
     )
+    assert event_times["first_commit_cycle"].shape == (512,)
+    assert event_times["first_quiescence_cycle"].shape == (512,)
+    assert event_times["last_record_change_cycle"].shape == (512,)
+    assert event_times["commit_revocation_count"].shape == (512,)
+    assert event_times["edge_left"].shape == event_times["edge_right"].shape
+    assert (
+        event_times["initial_edge_mismatch_mask"].shape
+        == event_times["edge_left"].shape
+    )
+    assert manifest["screen_event_times"]["primary_observable"] == "first_commit_cycle"
     patch_state = np.load(run_path / "echosahedral_patch_state.npz")
 
     assert bw_report["rows"][0]["weight_measure"] == "cell_entropy_capacity"

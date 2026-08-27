@@ -400,6 +400,25 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             )
         )
     )
+    initial_covariant_mismatch_mask = covariant_mismatch_mask(
+        initial_port_left,
+        initial_port_right,
+        initial_gauge,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    initial_incident_mismatch_count = (
+        np.bincount(
+            left,
+            weights=initial_covariant_mismatch_mask.astype(np.int16),
+            minlength=patch_count,
+        )
+        + np.bincount(
+            right,
+            weights=initial_covariant_mismatch_mask.astype(np.int16),
+            minlength=patch_count,
+        )
+    ).astype(np.int16)
     boundary_program_report["initial_covariant_mismatch_count"] = initial_covariant_mismatch_count
     boundary_program_report["initial_covariant_mismatch_fraction"] = (
         float(initial_covariant_mismatch_count / edge_count) if edge_count else 0.0
@@ -410,6 +429,21 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     stable_count = np.zeros(patch_count, dtype=np.uint32)
     committed = np.zeros(patch_count, dtype=bool)
     prev_signature = np.full(patch_count, -1, dtype=np.int64)
+    internal_early_cfg = (
+        (config.get("internal_diagnostics", {}) or {}).get("early_universe", {})
+        or {}
+    )
+    screen_event_times_enabled = bool(
+        internal_early_cfg.get("emit_screen_event_times", False)
+    )
+    first_repair_cycle = np.full(patch_count, -1, dtype=np.int32)
+    last_repair_cycle = np.full(patch_count, -1, dtype=np.int32)
+    last_mismatch_cycle = np.full(patch_count, -1, dtype=np.int32)
+    first_commit_cycle = np.full(patch_count, -1, dtype=np.int32)
+    last_commit_cycle = np.full(patch_count, -1, dtype=np.int32)
+    last_record_change_cycle = np.full(patch_count, -1, dtype=np.int32)
+    last_commit_state_change_cycle = np.full(patch_count, -1, dtype=np.int32)
+    commit_revocation_count = np.zeros(patch_count, dtype=np.uint32)
     degree = np.bincount(np.concatenate([left, right]), minlength=patch_count).astype(np.float64)
     degree = np.maximum(degree, 1.0)
 
@@ -696,6 +730,13 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
                 np.bincount(left[chosen], minlength=patch_count)
                 + np.bincount(right[chosen], minlength=patch_count)
             ) / degree
+            if screen_event_times_enabled:
+                repaired_nodes = np.unique(
+                    np.concatenate((left[chosen], right[chosen]))
+                )
+                not_seen = first_repair_cycle[repaired_nodes] < 0
+                first_repair_cycle[repaired_nodes[not_seen]] = int(cycle)
+                last_repair_cycle[repaired_nodes] = int(cycle)
         mismatches_after = covariant_mismatch_mask(
             port_left,
             port_right,
@@ -724,6 +765,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         )
         final_repair_load = incident_mismatch / degree
         final_mismatch_density = final_repair_load.copy()
+        if screen_event_times_enabled:
+            mismatch_nodes = np.flatnonzero(incident_mismatch > 0)
+            last_mismatch_cycle[mismatch_nodes] = int(cycle)
         modular_depth, modular_time = _modular_update(
             points,
             left,
@@ -758,6 +802,9 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             routed_record_signature,
             record_patch_port_state,
         )
+        if screen_event_times_enabled:
+            record_changed = signature != prev_signature
+            last_record_change_cycle[record_changed] = int(cycle)
         previously_committed = committed.copy()
         stable_count, committed = _advance_record_commit_state(
             signature,
@@ -766,6 +813,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             incident_mismatch,
             commit_cycles=commit_cycles,
         )
+        if screen_event_times_enabled:
+            newly_committed = committed & ~previously_committed
+            revoked = previously_committed & ~committed
+            first_commit_cycle[
+                newly_committed & (first_commit_cycle < 0)
+            ] = int(cycle)
+            last_commit_cycle[newly_committed] = int(cycle)
+            commit_state_changed = committed != previously_committed
+            last_commit_state_change_cycle[commit_state_changed] = int(cycle)
+            commit_revocation_count[revoked] += np.uint32(1)
         for patch_id in np.flatnonzero(
             committed & ~previously_committed & observer_commit_capture_mask
         ):
@@ -1089,6 +1146,33 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         harmonic_trace_cfg,
         points=points,
         cell_entropy=cell_entropy,
+    )
+    screen_event_times_report = (
+        _write_screen_event_times(
+            bundle.path,
+            points=points,
+            edge_left=left,
+            edge_right=right,
+            cell_entropy=cell_entropy,
+            initial_incident_mismatch_count=initial_incident_mismatch_count,
+            initial_edge_mismatch_mask=initial_covariant_mismatch_mask,
+            first_repair_cycle=first_repair_cycle,
+            last_repair_cycle=last_repair_cycle,
+            last_mismatch_cycle=last_mismatch_cycle,
+            first_commit_cycle=first_commit_cycle,
+            last_commit_cycle=last_commit_cycle,
+            last_record_change_cycle=last_record_change_cycle,
+            last_commit_state_change_cycle=last_commit_state_change_cycle,
+            commit_revocation_count=commit_revocation_count,
+            cumulative_repair_load=cumulative_repair_load,
+            final_mismatch_density=final_mismatch_density,
+            committed=committed,
+            cycles=cycles,
+            commit_cycles=commit_cycles,
+            config=internal_early_cfg,
+        )
+        if screen_event_times_enabled
+        else {}
     )
 
     final_observer_edge_residual = (
@@ -2822,6 +2906,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         bundle.write_json("galaxy_proxy_report.json", galaxy_proxy_report)
     if harmonic_time_trace_report:
         bundle.write_json("harmonic_time_trace_report.json", harmonic_time_trace_report)
+    if screen_event_times_report:
+        bundle.write_json("screen_event_times_report.json", screen_event_times_report)
     bundle.write_json("receipt_ladder_report.json", receipt_ladder_report)
     bundle.write_json("s3_class_counts.json", s3_class_counts(gauge) if group_name == "S3" else {})
     if group_name == "S3":
@@ -2962,6 +3048,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             if paired_ba_report
             else {},
             "harmonic_time_trace": harmonic_time_trace_report,
+            "screen_event_times": screen_event_times_report,
             "visualization_defect_diagnostics": visualization_defect_diagnostics,
             "cosmology_gate": cosmology_gate_report if config.get("cosmology", {}).get("freezeout", {}).get("enabled", False) else {},
             "screen_holonomy": {
@@ -4807,6 +4894,25 @@ def _harmonic_time_trace_sample(
         cumulative_repair_load=cumulative_repair_load,
         edge_residual=edge_residual,
     )
+    raw_fields_all: dict[str, np.ndarray] = {
+        "record_port_entropy": np.asarray(record_port_entropy, dtype=float),
+        "stable_count": np.asarray(stable_count, dtype=float),
+        "committed_mask": np.asarray(committed, dtype=float),
+        "repair_load": np.asarray(repair_load, dtype=float),
+        "cumulative_repair_load": np.asarray(cumulative_repair_load, dtype=float),
+        # These two names intentionally expose the exact alias rather than
+        # pretending that one local readback is two independent observables.
+        "local_mismatch_density": np.asarray(mismatch_density, dtype=float),
+        "modular_depth": np.asarray(modular_depth, dtype=float),
+        "modular_time": np.asarray(modular_time, dtype=float),
+    }
+    if edge_residual.size:
+        raw_fields_all["s3_class_density"] = s3_edge_class_density(
+            left, right, edge_residual, patch_count
+        )
+        raw_fields_all["s3_sector_class"] = _node_sector_class(
+            left, right, edge_residual, patch_count
+        )
     field_names = [
         str(name)
         for name in config.get(
@@ -4815,6 +4921,14 @@ def _harmonic_time_trace_sample(
         )
     ]
     selected = {name: fields_all[name] for name in field_names if name in fields_all}
+    raw_field_names = [
+        str(name) for name in config.get("raw_fields", field_names)
+    ]
+    raw_selected = {
+        name: raw_fields_all[name]
+        for name in raw_field_names
+        if name in raw_fields_all
+    }
     ell_max = int(config.get("ell_max", 32))
     if not selected:
         return {"cycle": int(cycle), "ell": np.arange(ell_max + 1, dtype=float), "fields": {}}
@@ -4852,9 +4966,204 @@ def _harmonic_time_trace_sample(
     }
     payload["raw_fields"] = {
         name: np.asarray(values, dtype=np.float32)
-        for name, values in selected.items()
+        for name, values in raw_selected.items()
+    }
+    payload["raw_field_semantics"] = "unstandardized_observer_fields_v1"
+    payload["raw_field_aliases"] = {
+        "local_mismatch_density": "repair_load"
     }
     return payload
+
+
+def _write_screen_event_times(
+    run_path: Path,
+    *,
+    points: np.ndarray,
+    edge_left: np.ndarray,
+    edge_right: np.ndarray,
+    cell_entropy: np.ndarray,
+    initial_incident_mismatch_count: np.ndarray,
+    initial_edge_mismatch_mask: np.ndarray,
+    first_repair_cycle: np.ndarray,
+    last_repair_cycle: np.ndarray,
+    last_mismatch_cycle: np.ndarray,
+    first_commit_cycle: np.ndarray,
+    last_commit_cycle: np.ndarray,
+    last_record_change_cycle: np.ndarray,
+    last_commit_state_change_cycle: np.ndarray,
+    commit_revocation_count: np.ndarray,
+    cumulative_repair_load: np.ndarray,
+    final_mismatch_density: np.ndarray,
+    committed: np.ndarray,
+    cycles: int,
+    commit_cycles: int,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    """Persist observer-internal event times for target-blind diagnostics.
+
+    These fields use only the finite run's local seam and record events.  In
+    particular, no laboratory clock, redshift, temperature, length, mass, or
+    public measurement enters their construction.  The first completed-record
+    cycle is the fixed primary scalar for the downstream internal diagnostic;
+    the other arrays expose scheduler/source dependence and negative results.
+    """
+
+    point_values = np.asarray(points, dtype=np.float32)
+    left = np.asarray(edge_left, dtype=np.int64)
+    right = np.asarray(edge_right, dtype=np.int64)
+    node_count = int(point_values.shape[0])
+    if point_values.ndim != 2 or point_values.shape[1] != 3:
+        raise ValueError("screen event-time points must have shape (N, 3)")
+    if left.shape != right.shape:
+        raise ValueError("screen event-time seam endpoint arrays must match")
+    initial_edge_mismatch = np.asarray(initial_edge_mismatch_mask, dtype=np.uint8)
+    if initial_edge_mismatch.shape != left.shape:
+        raise ValueError(
+            "screen event-time initial edge mismatch mask must match seam endpoints"
+        )
+    if left.size and (
+        int(min(left.min(), right.min())) < 0
+        or int(max(left.max(), right.max())) >= node_count
+    ):
+        raise ValueError("screen event-time seam endpoint is out of range")
+
+    arrays = {
+        "cell_entropy": np.asarray(cell_entropy, dtype=np.float32),
+        "initial_incident_mismatch_count": np.asarray(
+            initial_incident_mismatch_count, dtype=np.int16
+        ),
+        "first_repair_cycle": np.asarray(first_repair_cycle, dtype=np.int32),
+        "last_repair_cycle": np.asarray(last_repair_cycle, dtype=np.int32),
+        "last_mismatch_cycle": np.asarray(last_mismatch_cycle, dtype=np.int32),
+        "first_commit_cycle": np.asarray(first_commit_cycle, dtype=np.int32),
+        "last_commit_cycle": np.asarray(last_commit_cycle, dtype=np.int32),
+        "last_record_change_cycle": np.asarray(
+            last_record_change_cycle, dtype=np.int32
+        ),
+        "last_commit_state_change_cycle": np.asarray(
+            last_commit_state_change_cycle, dtype=np.int32
+        ),
+        "commit_revocation_count": np.asarray(
+            commit_revocation_count, dtype=np.uint32
+        ),
+        "cumulative_repair_load": np.asarray(
+            cumulative_repair_load, dtype=np.float32
+        ),
+        "final_mismatch_density": np.asarray(
+            final_mismatch_density, dtype=np.float32
+        ),
+        "committed_final": np.asarray(committed, dtype=np.uint8),
+    }
+    for name, values in arrays.items():
+        if values.shape != (node_count,):
+            raise ValueError(
+                f"screen event-time array {name!r} has shape {values.shape}, "
+                f"expected {(node_count,)}"
+            )
+
+    last_mismatch = arrays["last_mismatch_cycle"]
+    final_mismatch = arrays["final_mismatch_density"]
+    first_quiescence_cycle = np.where(
+        final_mismatch > 0.0,
+        -1,
+        np.maximum(last_mismatch + 1, 0),
+    ).astype(np.int32)
+    first_repair = arrays["first_repair_cycle"]
+    last_repair = arrays["last_repair_cycle"]
+    repair_span_cycles = np.where(
+        (first_repair >= 0) & (last_repair >= first_repair),
+        last_repair - first_repair,
+        -1,
+    ).astype(np.int32)
+    first_commit = arrays["first_commit_cycle"]
+    commit_latency_after_quiescence = np.where(
+        (first_commit >= 0) & (first_quiescence_cycle >= 0),
+        first_commit - first_quiescence_cycle,
+        -1,
+    ).astype(np.int32)
+
+    artifact_path = Path(run_path) / "screen_event_times.npz"
+    np.savez_compressed(
+        artifact_path,
+        points=point_values,
+        edge_left=left.astype(np.int32),
+        edge_right=right.astype(np.int32),
+        initial_edge_mismatch_mask=initial_edge_mismatch,
+        cycles=np.asarray([int(cycles)], dtype=np.int32),
+        record_commit_cycles=np.asarray([int(commit_cycles)], dtype=np.int32),
+        first_quiescence_cycle=first_quiescence_cycle,
+        repair_span_cycles=repair_span_cycles,
+        commit_latency_after_quiescence=commit_latency_after_quiescence,
+        **arrays,
+    )
+    byte_count = int(artifact_path.stat().st_size)
+    committed_count = int(np.count_nonzero(first_commit >= 0))
+    quiescent_count = int(np.count_nonzero(first_quiescence_cycle >= 0))
+    primary_values = first_commit[first_commit >= 0]
+    return {
+        "schema": "oph_internal_screen_event_times_v1",
+        "artifact": artifact_path.name,
+        "artifact_sha256": _file_sha256(artifact_path),
+        "artifact_byte_count": byte_count,
+        "node_count": node_count,
+        "seam_count": int(left.size),
+        "cycles": int(cycles),
+        "record_commit_cycles": int(commit_cycles),
+        "primary_observable": "first_commit_cycle",
+        "primary_observable_predeclared": bool(
+            str(config.get("primary_observable", "first_commit_cycle"))
+            == "first_commit_cycle"
+        ),
+        "committed_patch_count": committed_count,
+        "committed_patch_fraction": (
+            float(committed_count / node_count) if node_count else 0.0
+        ),
+        "quiescent_patch_count": quiescent_count,
+        "quiescent_patch_fraction": (
+            float(quiescent_count / node_count) if node_count else 0.0
+        ),
+        "primary_distinct_value_count": int(np.unique(primary_values).size),
+        "field_semantics": {
+            "first_commit_cycle": (
+                "first run cycle at which the patch's observer-visible record "
+                "satisfies the fixed stability threshold"
+            ),
+            "first_repair_cycle": "first cycle with a selected incident seam repair",
+            "last_repair_cycle": "last cycle with a selected incident seam repair",
+            "last_mismatch_cycle": (
+                "last sampled post-repair cycle with a nonzero local covariant mismatch"
+            ),
+            "first_quiescence_cycle": (
+                "one cycle after the last post-repair local mismatch, provided the "
+                "patch is quiescent at the end of the run"
+            ),
+            "last_record_change_cycle": (
+                "last cycle at which the patch's canonical observer-record signature changed"
+            ),
+            "last_commit_state_change_cycle": (
+                "last cycle at which the patch entered or left current commit status"
+            ),
+            "commit_revocation_count": (
+                "number of transitions from committed to uncommitted during the run"
+            ),
+            "cumulative_repair_load": "degree-normalized incident selected-repair count",
+        },
+        "target_data_read": False,
+        "physical_identification": {
+            "seconds": False,
+            "redshift": False,
+            "scale_factor": False,
+            "temperature": False,
+            "length": False,
+            "mass": False,
+        },
+        "claim_boundary": (
+            "Observer-internal finite screen event times. They diagnose the supplied "
+            "source, authority, repair scheduler, and record protocol. They are not "
+            "physical early-universe times or cosmological observables without a "
+            "separate source-to-observable bridge."
+        ),
+    }
 
 
 def _write_harmonic_time_trace(
@@ -4923,7 +5232,10 @@ def _write_harmonic_time_trace(
         isinstance(sample.get("raw_fields"), dict) for sample in usable
     ):
         frame_arrays: dict[str, np.ndarray] = {}
-        for name in field_names:
+        raw_field_names = sorted(
+            set().union(*(set(sample["raw_fields"]) for sample in usable))
+        )
+        for name in raw_field_names:
             rows = []
             for sample in usable:
                 values = np.asarray(
@@ -4938,6 +5250,16 @@ def _write_harmonic_time_trace(
             np.savez_compressed(
                 run_path / "screen_evolution_frames.npz",
                 cycles=cycles,
+                points=(
+                    np.asarray(points, dtype=np.float32)
+                    if points is not None
+                    else np.zeros((0, 3), dtype=np.float32)
+                ),
+                cell_entropy=(
+                    np.asarray(cell_entropy, dtype=np.float32)
+                    if cell_entropy is not None
+                    else np.zeros(0, dtype=np.float32)
+                ),
                 **frame_arrays,
             )
     return {
@@ -4949,7 +5271,12 @@ def _write_harmonic_time_trace(
         "control_keys": control_keys,
         "fixed_time_controls": bool(fixed_control_report),
         "raw_frame_fields": raw_frame_fields,
+        "raw_frame_semantics": "unstandardized_observer_fields_v1",
+        "raw_frame_aliases": {"local_mismatch_density": "repair_load"},
         "raw_frames_path": "screen_evolution_frames.npz" if raw_frame_fields else None,
+        "raw_frames_include_geometry": bool(
+            raw_frame_fields and points is not None and cell_entropy is not None
+        ),
         "ell_max": int(ell[-1]) if ell.size else None,
         "n_jobs": config.get("n_jobs", 1),
         "harmonic_batch_size": int(config.get("harmonic_batch_size", 4096)),

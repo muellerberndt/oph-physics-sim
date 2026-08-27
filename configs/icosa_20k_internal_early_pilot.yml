@@ -1,0 +1,136 @@
+name: icosa_20k_internal_early_pilot
+run_id: icosa_20k_internal_early_pilot_20260827
+seed: 20260827
+claim_boundary: >-
+  Target-blind level-five true-icosahedral pilot for observer-internal finite
+  settling diagnostics. The fixed primary scalar is each patch's first
+  completed-record cycle. All times are repair cycles and all distances are
+  graph hops or unit-screen angles. This run does not identify physical time,
+  redshift, temperature, length, mass, matter, particles, or the CMB.
+
+graph:
+  family: icosahedral_tower
+  patch_basis: cells
+  refinement_level: 5
+  patch_count: 20480
+
+group:
+  name: S3
+
+screen:
+  chart: geodesic_icosahedral_s2_cellulation
+  carrier: federated_echosahedral_patch
+  ports_per_patch: 12
+  cap_family: round_caps_on_s2
+  edge_sector_law: fixed_cutoff_heat_kernel_casimir_surrogate
+
+screen_units:
+  mode: numerical_regulator
+
+modular_flow:
+  enabled: true
+  dt: 0.03
+  damping: 0.012
+  repair_load_coupling: 0.35
+  cap_coupling: 0.0
+  diffusion: 0.06
+  cap_axes: 20
+
+dynamics:
+  cycles: 32
+  repair_fraction_per_cycle: 0.10
+  repair: array_parallel_edge_repair
+  repair_kernel:
+    mode: protected_source_authority_v1
+  record_commit_cycles: 6
+  beta_schedule:
+    kind: geometric
+    beta_start: 0.05
+    beta_end: 15.0
+
+theorem_core:
+  projection_sample: 256
+  include_default_sm_candidate: false
+  consensus_replay:
+    enabled: true
+    schedule_replays: 4
+    requested_schedule_replays: 4
+    max_event_rows: 128
+    disjoint_checks: 128
+    local_diamond_checks: 128
+    gauge_relabeling_checks: 8
+
+scheduler_conformance:
+  sample_edges_per_cycle: 32
+
+observers:
+  sample_count: 512
+  neighborhood_size: 96
+  sample_pair_limit: 10000
+  consensus_analysis_max_observers: 512
+  observer_wide_analysis_max_observers: 512
+
+bw:
+  enabled: false
+  observables: []
+  cap_count: 2
+  theta0: [0.55]
+  times: [0.05]
+  n_jobs: 1
+
+cosmology:
+  harmonic_time_trace:
+    enabled: true
+    sample_count: 16
+    ell_max: 0
+    fields:
+      - record_port_entropy
+    raw_fields:
+      - record_port_entropy
+      - stable_count
+      - committed_mask
+      - repair_load
+      - cumulative_repair_load
+      - modular_depth
+      - modular_time
+      - s3_class_density
+      - s3_sector_class
+    fixed_time_controls: false
+    controls: []
+    save_raw_frames: true
+    harmonic_batch_size: 1024
+    n_jobs: 1
+  freezeout:
+    enabled: false
+  angular_power:
+    ell_max: 0
+    pair_samples: 0
+
+internal_diagnostics:
+  early_universe:
+    emit_screen_event_times: true
+    primary_observable: first_commit_cycle
+    public_measurement_inputs_allowed: false
+    morphology_quantiles: [0.50, 0.75, 0.90]
+    angular_ell_max: 16
+    shuffle_draws: 16
+
+defects:
+  sector_repair:
+    enabled: false
+    probability: 0.0
+  timeline:
+    enabled: false
+
+controls: []
+
+outputs:
+  profile: compact
+  write_jsonl: false
+  write_bw_report: true
+  write_cap_geometry_report: true
+  write_holonomy_trace: false
+  write_dimension_report: false
+  write_modular_lift_visualization: false
+  write_echosahedral_patch_state_npz: true
+  write_capacity_spend_npz: false

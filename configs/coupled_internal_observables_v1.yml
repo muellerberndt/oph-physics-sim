@@ -1,0 +1,116 @@
+name: coupled_internal_observables_v1
+campaign_id: coupled_internal_observables_20260827_v5
+schema: oph_coupled_internal_observables_campaign_config_v1
+classification: INTERNAL_DIAGNOSTIC_ONLY
+claim_boundary: >-
+  Target-blind finite-screen experiment on a declared coupled scalar probe
+  living on the true icosahedral cell graph. Graph hops, update cycles, field
+  amplitudes, defects, records, and excitation candidates are internal
+  numerical quantities. No mapping to physical distance, time, temperature,
+  curvature, CMB anisotropy, matter density, mass, or particle identity is
+  supplied or inferred by this campaign.
+
+graph:
+  family: icosahedral_tower
+  patch_basis: cells
+
+model:
+  cycles: 192
+  dt: 0.04
+  # Canonical custody keeps every transition. A strided history can alias
+  # one-cycle commits, defects, and response-front events.
+  frame_stride: 1
+  coupling: 0.24
+  damping: 0.16
+  quartic: 0.32
+  mass_squared_start: 0.70
+  mass_squared_end: -0.72
+  quench_start_cycle: 20
+  quench_cycles: 48
+  initial_state_scale: 0.025
+  initial_velocity_scale: 0.015
+  noise_amplitude: 0.018
+  # Every arm uses the same extended finite grid.  The spacing remains exactly
+  # 1/4096, while the linear negative-mass control has enough range to avoid
+  # the boundary saturation found in v3.
+  state_bound: 8.0
+  velocity_bound: 8.0
+  state_levels: 65537
+  velocity_levels: 32769
+  record_threshold: 0.65
+  record_persistence: 6
+  record_amplitude: 1.0
+  feedback_strength: 0.075
+  defect_threshold: 0.08
+  stability_limit: 0.50
+
+intervention:
+  enabled: true
+  cycle: 108
+  center_policy: deterministic_max_positive_z
+  graph_radius: 1
+  velocity_impulse: 0.28
+  collision_pair:
+    first_center_policy: deterministic_max_positive_z
+    second_center_policy: deterministic_min_z_on_exact_distance_shell
+    graph_radius: 1
+    cycle: 84
+    separation_hops: 8
+    velocity_impulse: 0.45
+
+campaign:
+  smoke:
+    refinement_level: 1
+    seeds: [20260827]
+    cycles: 48
+    quench_cycles: [12]
+  seed_and_quench_matrix:
+    refinement_level: 4
+    seeds: [20260831, 20260901, 20260902]
+    quench_cycles: [24, 48, 96]
+  refinement_ladder:
+    levels: [3, 4, 5, 6]
+    seed: 20260831
+    quench_cycles: 48
+  paired_intervention:
+    refinement_level: 5
+    seeds: [20260831, 20260901, 20260902]
+    quench_cycles: 48
+  collision_probe:
+    refinement_level: 4
+    seed: 20260831
+    quench_cycles: 48
+    branches: [baseline, impulse_a, impulse_b, impulses_ab]
+  ablations:
+    - name: no_graph_coupling
+      coupling: 0.0
+    - name: no_record_feedback
+      feedback_strength: 0.0
+    - name: quantized_no_quartic_no_feedback
+      quartic: 0.0
+      feedback_strength: 0.0
+diagnostics:
+  stored_frame_limit: 193
+  graph_shell_max_hops: 16
+  correlation_anchor_count: 2048
+  latent_neighborhood_anchor_count: 512
+  observer_graph_radius: 4
+  excitation_threshold: 4.0
+  excitation_min_lifetime_frames: 3
+  persistence_threshold_count: 21
+  random_walk_probe_count: 64
+  random_walk_max_steps: 64
+  graph_spectrum_modes: 96
+  control_draws: 16
+
+outputs:
+  root: runs/coupled_internal_observables_20260827_v5
+  save_full_state_history: true
+  save_full_velocity_history: true
+  save_full_record_history: true
+  save_commit_history: true
+  save_defect_history: true
+  save_paired_delta_history: true
+  write_csv_tables: true
+  write_visualization_pack: true
+  hash_every_artifact: true

@@ -13,6 +13,25 @@ Tracked configs are limited to:
   protected-authority finite consensus protocol. It tests confluence within a
   frozen authority-conditioned boundary fiber and does not derive the
   authority, observer feedback, spacetime, or laboratory physics.
+- `icosa_20k_internal_early_pilot.yml` and
+  `icosa_328k_internal_early_gate.yml`: target-blind, protected-authority
+  refinement fixtures for observer-record event times, graph-hop correlations,
+  morphology, anisotropy, and factorized source/scheduler controls. Their
+  coordinates are screen angles, graph hops, and repair cycles; the fixtures
+  make no CMB, matter, particle, redshift, or physical-clock identification.
+- `coupled_internal_observables_v1.yml`: frozen target-blind campaign for an
+  explicitly coupled scalar probe on the true icosahedral cell graph. It
+  includes seed, quench-rate, refinement, and same-seed localized-intervention
+  controls and emits visualization-ready internal-observable bundles. The
+  canonical run retains every update cycle so one-cycle commits, threshold
+  edges, and response-front events cannot be hidden by frame striding. Run a
+  disposable gate with `python3 -m oph_fpe.cosmology.coupled_campaign --stage
+  smoke --out runs/<new-smoke-id>`; run the frozen matrix by omitting
+  `--stage smoke` and choosing a new append-only output directory. Each output
+  contains its frozen YAML, source snapshot, full arrays, CSV/JSON diagnostics,
+  visualization pack, and SHA-256 artifact index. This is a declared
+  diagnostic model variant, not a derived OPH source law or a physical
+  early-universe identification.
 - `e0_z2_patchnet.yml`: E0 finite patch-net smoke run.
 - `e1_s3_modular_screen_4k.yml`: S3 modular-screen smoke run.
 - `e1_s3_bw_screen_4k.yml` and `e1_s3_bw_screen_64k.yml`: BW sweep fixtures.

@@ -719,6 +719,23 @@ def main(argv: list[str] | None = None) -> int:
     sync_gap_parser.add_argument("--min-gamma-per-cycle", default=1.0e-3, type=float)
     sync_gap_parser.add_argument("--min-control-z", default=1.0, type=float)
 
+    internal_early_parser = subparsers.add_parser(
+        "internal-early-universe-report",
+        help=(
+            "measure target-blind observer-internal event-time, morphology, "
+            "correlation, and anisotropy diagnostics from a finite run"
+        ),
+    )
+    internal_early_parser.add_argument("--run-dir", required=True, type=Path)
+    internal_early_parser.add_argument("--out", required=True, type=Path)
+    internal_early_parser.add_argument("--ell-max", default=16, type=int)
+    internal_early_parser.add_argument("--pair-samples", default=100_000, type=int)
+    internal_early_parser.add_argument("--shuffle-draws", default=16, type=int)
+    internal_early_parser.add_argument("--thresholds", default="0.50,0.75,0.90")
+    internal_early_parser.add_argument("--seed", default=17, type=int)
+    internal_early_parser.add_argument("--n-jobs", default=1, type=int)
+    internal_early_parser.add_argument("--harmonic-batch-size", default=4096, type=int)
+
     fossil_parser = subparsers.add_parser(
         "fossil-spectrum-report",
         help="audit time-resolved finite-screen spectra from harmonic_time_trace.npz",
@@ -2607,6 +2624,24 @@ def main(argv: list[str] | None = None) -> int:
             ell_max_cmb=args.ell_max_cmb,
             min_gamma_per_cycle=args.min_gamma_per_cycle,
             min_control_z=args.min_control_z,
+        )
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+    if args.command == "internal-early-universe-report":
+        from oph_fpe.cosmology.internal_early_universe import (
+            write_internal_early_universe_report,
+        )
+
+        result = write_internal_early_universe_report(
+            args.run_dir,
+            args.out,
+            ell_max=args.ell_max,
+            pair_samples=args.pair_samples,
+            shuffle_draws=args.shuffle_draws,
+            thresholds=tuple(float(value) for value in _csv_values(args.thresholds)),
+            seed=args.seed,
+            n_jobs=args.n_jobs,
+            harmonic_batch_size=args.harmonic_batch_size,
         )
         print(json.dumps(result, indent=2, default=str))
         return 0
