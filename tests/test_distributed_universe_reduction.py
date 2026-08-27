@@ -15,6 +15,13 @@ from oph_fpe.pipelines.distributed_universe import (
     prepare_distributed_oph_universe,
     reduce_distributed_oph_universe,
 )
+from oph_fpe.bulk.self_reading_contract import (
+    CAUSAL_POLICY_SCHEMA,
+    RUN_BINDING_SCHEMA,
+    observer_population_binding_hash,
+    write_causal_event_artifact,
+)
+from oph_fpe.evidence.hashes import stable_json_hash
 from oph_fpe.viz.visualization_schema import validate_visualization_payload
 
 
@@ -176,11 +183,19 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert summary["all_shards_local_scale_compressed_pn_witness_receipt"] is True
     assert summary["global_pn_resonance_receipt"] is False
     assert summary["strict_single_global_neutral_bulk_receipt"] is False
+    assert summary["observer_like_self_reading_system_receipt"] is False
+    assert "do not all pass the dedicated causal self-reading receipt" in summary[
+        "observer_like_self_reading_system_note"
+    ]
 
     payload = json.loads((tmp_path / "reduced" / "distributed_visualization_payload.json").read_text())
     assert validate_visualization_payload(payload)["variant"] == "distributed"
     assert payload["schemaVersion"] == "oph_universe_timeline_visualization_payload_v1"
     assert payload["distributedSchema"] == "oph_distributed_universe_visualization_payload_v1"
+    assert "current value is false" in payload["ophDifferentiator"]
+    assert "sampled shards do not pass the causal self-reading receipt" in payload[
+        "unifiedUniverse"
+    ]["unifiedUniverseInterpretation"]
     assert payload["coordinateSystems"]["h3_hyperboloid_spatial_components_v1"]["model"] == (
         "future_unit_hyperboloid_spatial_components"
     )
@@ -224,6 +239,70 @@ def test_distributed_reducer_writes_fail_closed_global_cmb_report(tmp_path: Path
     assert contract["distributed_kernel_scaling_readiness_receipt"] is False
     assert "distributed_realization_event_certificate_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
     assert "online_cross_shard_overlap_repair_receipt" in contract["profile_blockers"]["distributed_kernel_scaling"]
+
+
+def test_distributed_self_reading_prose_fails_closed_when_one_shard_fails(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path, shard_count=2)
+    shard_root = tmp_path / "shards"
+    _write_shard(shard_root / "u_shard0000")
+    _write_shard(shard_root / "u_shard0001", self_reading=False)
+
+    summary = reduce_distributed_oph_universe(
+        manifest_path=manifest,
+        shard_root=shard_root,
+        out_dir=tmp_path / "reduced",
+    )
+    payload = json.loads(
+        (tmp_path / "reduced" / "distributed_visualization_payload.json").read_text()
+    )
+
+    assert summary["observer_like_self_reading_system_receipt"] is False
+    assert "do not all pass" in summary["observer_like_self_reading_system_note"]
+    assert "current value is false" in payload["ophDifferentiator"]
+    assert "do not pass the causal self-reading receipt" in payload[
+        "unifiedUniverse"
+    ]["unifiedUniverseInterpretation"]
+
+
+def test_distributed_self_reading_fails_closed_without_source_contract(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path, shard_count=1)
+    shard_root = tmp_path / "shards"
+    run = shard_root / "u_shard0000"
+    _write_shard(run)
+    (run / "source_dynamics_repair_record_observer_report.json").unlink()
+
+    summary = reduce_distributed_oph_universe(
+        manifest_path=manifest,
+        shard_root=shard_root,
+        out_dir=tmp_path / "reduced",
+    )
+
+    assert summary["observer_like_self_reading_system_receipt"] is False
+    assert summary["shards"][0]["source_observer_contract_validation"][
+        "passed"
+    ] is False
+
+
+def test_distributed_self_reading_requires_every_expected_shard(
+    tmp_path: Path,
+) -> None:
+    manifest = _write_manifest(tmp_path, shard_count=2)
+    shard_root = tmp_path / "shards"
+    _write_shard(shard_root / "u_shard0000")
+
+    summary = reduce_distributed_oph_universe(
+        manifest_path=manifest,
+        shard_root=shard_root,
+        out_dir=tmp_path / "reduced",
+    )
+
+    assert summary["completed_shard_count"] == 1
+    assert summary["expected_shard_count"] == 2
+    assert summary["observer_like_self_reading_system_receipt"] is False
 
 
 def test_self_authored_online_seam_booleans_cannot_promote_missing_runtime_kernel(
@@ -586,10 +665,10 @@ def _write_manifest_without_carrier(tmp_path: Path, *, shard_count: int) -> Path
     return path
 
 
-def _write_shard(run_dir: Path) -> None:
+def _write_shard(run_dir: Path, *, self_reading: bool = True) -> None:
     run_dir.mkdir(parents=True)
     receipts = {
-        "observer_like_self_reading_system_receipt": True,
+        "observer_like_self_reading_system_receipt": self_reading,
         "observer_modular_time_receipt": True,
         "observer_facing_3p1d_h3_experience_receipt": True,
         "theorem_assisted_consensus_3d_bulk_readout_receipt": True,
@@ -598,6 +677,146 @@ def _write_shard(run_dir: Path) -> None:
     }
     _write_json(run_dir / "AUTO_THEOREM_UNIVERSE_SUMMARY.json", {"final_receipts": receipts})
     _write_json(run_dir / "manifest.json", {"patch_count": 16, "edge_count": 32})
+    observer_id = 1
+    visible_hash = f"visible-{run_dir.name}"
+    (run_dir / "observer_views.jsonl").write_text(
+        json.dumps(
+            {
+                "view_type": "patch_observer",
+                "observer_id": observer_id,
+                "visible_readout_hash": visible_hash,
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    _write_json(
+        run_dir / "observer_population_report.json",
+        {
+            "mode": "bounded_materialized_observer_population_v1",
+            "materialized_observer_count": 1,
+            "observer_wide_analyzed_count": 1,
+            "verbose_jsonl_patch_observer_count": 1,
+            "verbose_jsonl_cap_observer_count": 0,
+            "materialized_rows_preserved": True,
+            "verbose_jsonl_population": "all_materialized_observers",
+        },
+    )
+    config_hash = stable_json_hash({"fixture": run_dir.name})
+    seed = 2026
+    _write_json(
+        run_dir / "seed_material.json", {"config_hash": config_hash, "seed": seed}
+    )
+    audit_rows = [
+        {
+            "schema": "oph_record_feedback_causal_event_v1",
+            "policy_schema": CAUSAL_POLICY_SCHEMA,
+            "event_id": "event-1",
+            "observer_id": observer_id,
+            "patch_id": observer_id,
+            "record_id": "record-1",
+            "prior_record_signature": -7,
+            "readback_record_signature": -7,
+            "counterfactual_record_signature": -8,
+            "record_coordinate_source": "committed_patch_port_state",
+            "record_coordinate_port_index": 0,
+            "prior_record_port_value": 1,
+            "counterfactual_record_port_value": 2,
+            "commit_cycle": 1,
+            "read_cycle": 1,
+            "write_cycle": 1,
+            "commit_event_index": 1,
+            "read_event_index": 2,
+            "write_event_index": 3,
+            "bounded_port_index": 0,
+            "port_state_before": 0,
+            "port_state_after": 1 if self_reading else 0,
+            "counterfactual_port_state_after": 2,
+            "group_order": 6,
+            "counterfactual_holds_nonrecord_inputs_fixed": True,
+            "write_is_bounded_local_port": self_reading,
+            "read_count": 1,
+            "write_count": 1,
+            "records_causally_bound_to_prior_commits": self_reading,
+            "readback_changes_future_local_actions": self_reading,
+        }
+    ]
+    contract = {
+            "schema_version": "oph_source_repair_record_observer_contract_v3",
+            "mode": "source_dynamics_repair_record_observer_contract",
+            "SOURCE_PATCH_ARCHITECTURE_RECEIPT": True,
+            "PATCH_LOCAL_STATE_RECEIPT": True,
+            "PATCH_PORT_BOUNDARY_RECEIPT": True,
+            "PATCH_READBACK_RECEIPT": True,
+            "PATCH_ALL_PORT_READBACK_RECEIPT": True,
+            "RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT": True,
+            "ECHOSAHEDRAL_LOCAL_PATCH_ARCHITECTURE_RECEIPT": True,
+            "ECHOSAHEDRAL_CARRIER_CONFORMANCE": True,
+            "FEDERATION_SEWING_RECEIPT": True,
+            "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": True,
+            "CARRIER_REFINEMENT_NATURALITY_RECEIPT": True,
+            "TRANSACTION_VALIDATION_COMPLETE_READ_CONFLICT_SET_RECEIPT": True,
+            "UNION_PAYLOAD_ATOMIC_REVALIDATION_RECEIPT": True,
+            "LOCAL_REPAIR_DYNAMICS_RECEIPT": True,
+            "RECORD_COMMIT_RECEIPT": True,
+            "OBSERVER_SELF_READING_RECORD_LOOP_RECEIPT": self_reading,
+            "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": self_reading,
+            "OPH_SOURCE_QUALIFIED_ATOMIC_SELF_READING_SYSTEM_RECEIPT": self_reading,
+            "RECORD_READ_AFTER_WRITE_RECEIPT": self_reading,
+            "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT": self_reading,
+            "record_observer": {
+                "observer_count": 1,
+                "committed_record_count": 1,
+                "causally_verified_observer_count": 1,
+                "readback_count": 1,
+                "feedback_event_count": 1,
+                "readback_changes_future_local_actions": self_reading,
+                "records_causally_bound_to_writes": self_reading,
+                "orphan_read_count": 0,
+                "external_cap_refresh_is_observer_feedback": False,
+                "record_readback_feedback_log_hash": stable_json_hash(audit_rows),
+                "record_feedback_audit_rows": audit_rows,
+            },
+            "source_architecture": {
+                "bounded_patch_system": True,
+                "simulation_native_source": True,
+                "local_state_factor_count": 12,
+                "boundary_port_count": 12,
+                "all_local_port_readout_maps_materialized": True,
+                "all_local_port_states_bound_into_records": True,
+                "carrier_is_not_support_chart_cell": True,
+                "carrier_is_not_primitive_observer": True,
+                "carrier_support_conflation_present": False,
+            },
+            "repair_dynamics": {
+                "local_update_rule": True,
+                "uses_only_local_state_and_ports": True,
+                "target_free_rule": True,
+                "repair_event_count": 1,
+                "nonlocal_write_count": 0,
+                "repair_rule_hash": "sha256:test-repair-rule",
+                "repair_event_log_hash": "sha256:test-repair-log",
+            },
+            "source_generator_target_free": True,
+            "source_forbidden_target_hits": [],
+            "run_binding": {
+                "schema": RUN_BINDING_SCHEMA,
+                "config_hash": config_hash,
+                "seed": seed,
+                "patch_count": 16,
+                "edge_count": 32,
+                "observer_population_binding_hash": observer_population_binding_hash(
+                    [observer_id], [visible_hash]
+                ),
+            },
+        }
+    contract["causal_event_artifact"] = write_causal_event_artifact(
+        run_dir / "source_dynamics_repair_record_observer_events.jsonl",
+        audit_rows,
+    )
+    _write_json(
+        run_dir / "source_dynamics_repair_record_observer_report.json", contract
+    )
     _write_json(run_dir / "emergence_status_report.json", {"bulk_3d_established": True})
     _write_json(run_dir / "observer_modular_experience_report.json", {"observer_count": 8})
     _write_json(run_dir / "observer_chart_object_h3_report.json", {"object_count": 2, "localized_object_count": 1})
@@ -671,6 +890,7 @@ def _write_shard(run_dir: Path) -> None:
                     }
                 ],
                 "receipts": {
+                    "observer_like_self_reading_system_receipt": self_reading,
                     "observer_modular_time_receipt": True,
                     "observer_h3_object_population_receipt": True,
                     "theorem_assisted_consensus_3d_bulk_readout_receipt": True,

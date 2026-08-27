@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -11,16 +12,25 @@ from oph_fpe.bulk.einstein_bridge import (
     write_einstein_bridge_manifest,
 )
 from oph_fpe.bulk.theorem_contract import finite_oph_theorem_contract_report
+from oph_fpe.bulk.self_reading_contract import (
+    CAUSAL_POLICY_SCHEMA,
+    RUN_BINDING_SCHEMA,
+    observer_population_binding_hash,
+    write_causal_event_artifact,
+)
 from oph_fpe.claims import (
     CAP_NORMAL_H3_CHART_RECEIPT,
     ISSUE_308_BW_CERTIFICATE_RECEIPT,
     MODULAR_RESPONSE_H3_LOCALIZATION_RECEIPT,
 )
 from oph_fpe.scale.bw_array import (
+    PROTECTED_AUTHORITY_REPAIR_MODE,
     _array_port_pair_consensus_replay_report,
     _computed_array_replay_consensus_certificate,
     _write_finite_consensus_source_artifact,
+    _write_repair_authority_artifact,
 )
+from oph_fpe.evidence.hashes import stable_json_hash
 from tests.test_bw_certificate_308 import _primitive_bwrec, _primitive_mgns1
 from tests.test_cap_normal_h3_chart_309 import _primitive_chart
 from tests.test_modular_response_h3_localization_310 import _payload as _localization_payload
@@ -28,6 +38,19 @@ from tests.test_modular_response_h3_localization_310 import _payload as _localiz
 
 def _write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _rebind_source_state_file_hash(run: Path) -> None:
+    state = run / "finite_consensus_source_state.npz"
+    digest = "sha256:" + hashlib.sha256(state.read_bytes()).hexdigest()
+    manifest_path = run / "finite_consensus_source_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["state_file_sha256"] = digest
+    _write_json(manifest_path, manifest)
+    theorem_path = run / "theorem_core_receipts.json"
+    theorem = json.loads(theorem_path.read_text(encoding="utf-8"))
+    theorem["finite_consensus_source_artifact"] = manifest
+    _write_json(theorem_path, theorem)
 
 
 def _write_all_einstein_bridge_sidecars(run: Path) -> None:
@@ -58,7 +81,11 @@ def _write_computed_bridge_reports(run: Path, *, include_localization: bool = Tr
         )
 
 
-def _write_computed_consensus_replay(run: Path) -> None:
+def _write_computed_consensus_replay(
+    run: Path,
+    *,
+    protected_authority: bool = False,
+) -> None:
     initial_port_left = np.zeros(4, dtype=np.uint8)
     initial_port_right = np.ones(4, dtype=np.uint8)
     initial_gauge = np.zeros(4, dtype=np.uint8)
@@ -72,12 +99,24 @@ def _write_computed_consensus_replay(run: Path) -> None:
         "disjoint_checks": 16,
     }
     replay_seed = 31_338
+    authorities = (
+        np.asarray([8, 2, 7, 1, 6, 3, 5, 4], dtype=np.int64)
+        if protected_authority
+        else None
+    )
+    repair_mode = (
+        PROTECTED_AUTHORITY_REPAIR_MODE
+        if protected_authority
+        else "legacy_random_endpoint_v1"
+    )
     replay = _array_port_pair_consensus_replay_report(
         initial_port_left,
         initial_port_right,
         initial_gauge,
         edge_left=edge_left,
         edge_right=edge_right,
+        repair_kernel_mode=repair_mode,
+        node_repair_authorities=authorities,
         group_name="S3",
         group_order=6,
         config=replay_config,
@@ -86,6 +125,17 @@ def _write_computed_consensus_replay(run: Path) -> None:
     )
     assert replay["receipt"] is True
     certificate = _computed_array_replay_consensus_certificate(replay)
+    if protected_authority:
+        _write_json(
+            run / "repair_kernel_contract.json",
+            _write_repair_authority_artifact(
+                run,
+                mode=repair_mode,
+                authorities=authorities,
+                seed=replay_seed,
+                stream_report={"test_fixture": True},
+            ),
+        )
     manifest = _write_finite_consensus_source_artifact(
         run,
         initial_port_left=initial_port_left,
@@ -93,6 +143,8 @@ def _write_computed_consensus_replay(run: Path) -> None:
         initial_gauge=initial_gauge,
         edge_left=edge_left,
         edge_right=edge_right,
+        repair_kernel_mode=repair_mode,
+        node_repair_authorities=authorities,
         group_name="S3",
         group_order=6,
         replay_config=replay_config,
@@ -189,6 +241,141 @@ def _write_valid_refinement_naturality(run: Path) -> None:
     )
 
 
+def _write_self_reading_contract(run: Path) -> None:
+    patch_rows = [
+        json.loads(line)
+        for line in (run / "observer_views.jsonl").read_text(encoding="utf-8").splitlines()
+        if line.strip() and json.loads(line).get("view_type") == "patch_observer"
+    ]
+    observer_ids = [int(row["observer_id"]) for row in patch_rows]
+    visible_hashes = [str(row["visible_readout_hash"]) for row in patch_rows]
+    config_hash = stable_json_hash({"fixture": run.name})
+    seed = 2026
+    _write_json(
+        run / "observer_population_report.json",
+        {
+            "mode": "bounded_materialized_observer_population_v1",
+            "materialized_observer_count": len(patch_rows),
+            "observer_wide_analyzed_count": len(patch_rows),
+            "verbose_jsonl_patch_observer_count": len(patch_rows),
+            "verbose_jsonl_cap_observer_count": 0,
+            "materialized_rows_preserved": True,
+            "verbose_jsonl_population": "all_materialized_observers",
+        },
+    )
+    _write_json(run / "seed_material.json", {"config_hash": config_hash, "seed": seed})
+    _write_json(run / "manifest.json", {"patch_count": 16, "edge_count": 32})
+    audit_rows = [
+        {
+            "schema": "oph_record_feedback_causal_event_v1",
+            "policy_schema": CAUSAL_POLICY_SCHEMA,
+            "event_id": "event-1",
+            "observer_id": observer_ids[0],
+            "patch_id": observer_ids[0],
+            "record_id": "record-1",
+            "prior_record_signature": -7,
+            "readback_record_signature": -7,
+            "counterfactual_record_signature": -8,
+            "record_coordinate_source": "committed_patch_port_state",
+            "record_coordinate_port_index": 0,
+            "prior_record_port_value": 1,
+            "counterfactual_record_port_value": 2,
+            "commit_cycle": 1,
+            "read_cycle": 1,
+            "write_cycle": 1,
+            "commit_event_index": 1,
+            "read_event_index": 2,
+            "write_event_index": 3,
+            "bounded_port_index": 0,
+            "port_state_before": 0,
+            "port_state_after": 1,
+            "counterfactual_port_state_after": 2,
+            "group_order": 6,
+            "counterfactual_holds_nonrecord_inputs_fixed": True,
+            "write_is_bounded_local_port": True,
+            "read_count": 1,
+            "write_count": 1,
+            "records_causally_bound_to_prior_commits": True,
+            "readback_changes_future_local_actions": True,
+        }
+    ]
+    contract = {
+            "schema_version": "oph_source_repair_record_observer_contract_v3",
+            "mode": "source_dynamics_repair_record_observer_contract",
+            "SOURCE_PATCH_ARCHITECTURE_RECEIPT": True,
+            "PATCH_LOCAL_STATE_RECEIPT": True,
+            "PATCH_PORT_BOUNDARY_RECEIPT": True,
+            "PATCH_READBACK_RECEIPT": True,
+            "PATCH_ALL_PORT_READBACK_RECEIPT": True,
+            "RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT": True,
+            "ECHOSAHEDRAL_LOCAL_PATCH_ARCHITECTURE_RECEIPT": True,
+            "ECHOSAHEDRAL_CARRIER_CONFORMANCE": True,
+            "FEDERATION_SEWING_RECEIPT": True,
+            "CARRIER_QUOTIENT_INVARIANCE_RECEIPT": True,
+            "CARRIER_REFINEMENT_NATURALITY_RECEIPT": True,
+            "TRANSACTION_VALIDATION_COMPLETE_READ_CONFLICT_SET_RECEIPT": True,
+            "UNION_PAYLOAD_ATOMIC_REVALIDATION_RECEIPT": True,
+            "LOCAL_REPAIR_DYNAMICS_RECEIPT": True,
+            "RECORD_COMMIT_RECEIPT": True,
+            "OBSERVER_SELF_READING_RECORD_LOOP_RECEIPT": True,
+            "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": True,
+            "OPH_SOURCE_QUALIFIED_ATOMIC_SELF_READING_SYSTEM_RECEIPT": True,
+            "RECORD_READ_AFTER_WRITE_RECEIPT": True,
+            "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT": True,
+            "record_observer": {
+                "observer_count": len(patch_rows),
+                "committed_record_count": 1,
+                "causally_verified_observer_count": len(patch_rows),
+                "readback_count": 1,
+                "feedback_event_count": 1,
+                "readback_changes_future_local_actions": True,
+                "records_causally_bound_to_writes": True,
+                "orphan_read_count": 0,
+                "external_cap_refresh_is_observer_feedback": False,
+                "record_readback_feedback_log_hash": stable_json_hash(audit_rows),
+                "record_feedback_audit_rows": audit_rows,
+            },
+            "source_architecture": {
+                "bounded_patch_system": True,
+                "simulation_native_source": True,
+                "local_state_factor_count": 12,
+                "boundary_port_count": 12,
+                "all_local_port_readout_maps_materialized": True,
+                "all_local_port_states_bound_into_records": True,
+                "carrier_is_not_support_chart_cell": True,
+                "carrier_is_not_primitive_observer": True,
+                "carrier_support_conflation_present": False,
+            },
+            "repair_dynamics": {
+                "local_update_rule": True,
+                "uses_only_local_state_and_ports": True,
+                "target_free_rule": True,
+                "repair_event_count": 1,
+                "nonlocal_write_count": 0,
+                "repair_rule_hash": "sha256:test-repair-rule",
+                "repair_event_log_hash": "sha256:test-repair-log",
+            },
+            "source_generator_target_free": True,
+            "source_forbidden_target_hits": [],
+            "run_binding": {
+                "schema": RUN_BINDING_SCHEMA,
+                "config_hash": config_hash,
+                "seed": seed,
+                "patch_count": 16,
+                "edge_count": 32,
+                "observer_population_binding_hash": observer_population_binding_hash(
+                    observer_ids, visible_hashes
+                ),
+            },
+        }
+    contract["causal_event_artifact"] = write_causal_event_artifact(
+        run / "source_dynamics_repair_record_observer_events.jsonl", audit_rows
+    )
+    _write_json(
+        run / "source_dynamics_repair_record_observer_report.json", contract
+    )
+
+
 def test_refinement_naturality_rejects_a_two_scale_receipt_claiming_four_runs(
     tmp_path: Path,
 ) -> None:
@@ -228,6 +415,95 @@ def test_consensus_contract_rejects_tampered_primitive_source_arrays(
     assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
     blockers = report["stages"]["C0_finite_consensus_theorem"]["details"]["blockers"]
     assert "finite_consensus_source_state_file_hash_mismatch" in blockers
+
+
+def test_consensus_contract_independently_replays_protected_authority_source(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run, protected_authority=True)
+
+    report = finite_oph_theorem_contract_report(run)
+    stage = report["stages"]["C0_finite_consensus_theorem"]
+
+    assert stage["passed"] is True
+    independent = stage["details"]["independent_source_replay"]
+    assert independent["passed"] is True
+    assert independent["recomputed_receipt"] is True
+
+
+def test_consensus_contract_fails_closed_on_uint64_authority_overflow(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run, protected_authority=True)
+    state_path = run / "finite_consensus_source_state.npz"
+    with np.load(state_path, allow_pickle=False) as payload:
+        arrays = {name: np.asarray(payload[name]).copy() for name in payload.files}
+    authorities = arrays["node_repair_authorities"].astype(np.uint64)
+    authorities[0] = np.uint64(2**63)
+    arrays["node_repair_authorities"] = authorities
+    np.savez(state_path, **arrays)
+    _rebind_source_state_file_hash(run)
+
+    report = finite_oph_theorem_contract_report(run)
+    stage = report["stages"]["C0_finite_consensus_theorem"]
+    independent = stage["details"]["independent_source_replay"]
+
+    assert stage["passed"] is False
+    assert "finite_consensus_source_authority_dtype_invalid" in independent["blockers"]
+    assert independent["passed"] is False
+
+
+def test_consensus_contract_fails_closed_on_protected_authority_self_loop(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run, protected_authority=True)
+    state_path = run / "finite_consensus_source_state.npz"
+    with np.load(state_path, allow_pickle=False) as payload:
+        arrays = {name: np.asarray(payload[name]).copy() for name in payload.files}
+    arrays["edge_right"][0] = arrays["edge_left"][0]
+    np.savez(state_path, **arrays)
+    _rebind_source_state_file_hash(run)
+
+    report = finite_oph_theorem_contract_report(run)
+    stage = report["stages"]["C0_finite_consensus_theorem"]
+    independent = stage["details"]["independent_source_replay"]
+
+    assert stage["passed"] is False
+    assert "finite_consensus_source_authority_self_loop" in independent["blockers"]
+    assert independent["passed"] is False
+
+
+def test_consensus_contract_rejects_authority_source_artifact_divergence(
+    tmp_path: Path,
+) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    _write_computed_consensus_replay(run, protected_authority=True)
+    state_path = run / "finite_consensus_source_state.npz"
+    with np.load(state_path, allow_pickle=False) as payload:
+        arrays = {name: np.asarray(payload[name]).copy() for name in payload.files}
+    arrays["node_repair_authorities"] = arrays[
+        "node_repair_authorities"
+    ][::-1].copy()
+    np.savez(state_path, **arrays)
+    _rebind_source_state_file_hash(run)
+
+    report = finite_oph_theorem_contract_report(run)
+    stage = report["stages"]["C0_finite_consensus_theorem"]
+    independent = stage["details"]["independent_source_replay"]
+
+    assert stage["passed"] is False
+    assert (
+        "finite_consensus_authority_artifact_source_mismatch"
+        in independent["blockers"]
+    )
+    assert independent["passed"] is False
 
 
 def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contract(tmp_path: Path) -> None:
@@ -281,8 +557,11 @@ def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contrac
 
     report = finite_oph_theorem_contract_report(run)
 
-    assert report["observer_like_self_reading_system_receipt"] is True
-    assert report["stages"]["L1_observer_record_algebra"]["passed"] is True
+    assert report["observer_like_self_reading_system_receipt"] is False
+    assert report["stages"]["L1_observer_record_algebra"]["passed"] is False
+    assert "observer_like_self_reading_source_contract" in report["stages"][
+        "L1_observer_record_algebra"
+    ]["missing_or_blocking_evidence"]
     assert report["stages"]["L3_kms_modular_clock_fit"]["passed"] is False
     assert report["stages"]["L6_lorentz_algebra_closure"]["passed"] is False
     assert report["stages"]["C0_finite_consensus_theorem"]["passed"] is False
@@ -294,7 +573,47 @@ def test_finite_theorem_contract_blocks_branch_replay_without_endogenous_contrac
     assert "L2_endogenous_modular_generator" in report["blockers"]
 
 
-def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_path: Path) -> None:
+def test_contradictory_self_reading_summary_fails_closed(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    run.mkdir()
+    (run / "observer_views.jsonl").write_text(
+        json.dumps(
+            {
+                "view_type": "patch_observer",
+                "observer_id": 1,
+                "support_nodes": [1],
+                "visible_readout_hash": "abc",
+                "transition_history_descriptor": {"persistence": 1},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    _write_self_reading_contract(run)
+    contract_path = run / "source_dynamics_repair_record_observer_report.json"
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["RECORD_READ_AFTER_WRITE_RECEIPT"] = False
+    contract["OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT"] = False
+    contract["OBSERVER_SELF_READING_RECORD_LOOP_RECEIPT"] = False
+    contract["record_observer"]["readback_changes_future_local_actions"] = False
+    contract["record_observer"]["records_causally_bound_to_writes"] = False
+    _write_json(contract_path, contract)
+
+    report = finite_oph_theorem_contract_report(run)
+
+    stage = report["stages"]["L1_observer_record_algebra"]
+    assert report["observer_like_self_reading_system_receipt"] is False
+    assert stage["passed"] is False
+    assert "record_read_after_write_receipt" in stage["missing_or_blocking_evidence"]
+    assert (
+        "observer_readback_feedback_causal_loop_receipt"
+        in stage["missing_or_blocking_evidence"]
+    )
+
+
+def test_paper_geometric_branch_stays_fail_closed_without_verified_record_loop(
+    tmp_path: Path,
+) -> None:
     run = tmp_path / "run"
     run.mkdir()
     _write_computed_bridge_reports(run)
@@ -355,17 +674,18 @@ def test_paper_geometric_branch_can_pass_without_promoting_endogenous_clock(tmp_
         + "\n",
         encoding="utf-8",
     )
+    _write_self_reading_contract(run)
 
     report = finite_oph_theorem_contract_report(run)
 
     assert report["finite_lorentz_theorem_contract_receipt"] is False
     assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
-    assert report["paper_geometric_branch_lorentz_contract_receipt"] is True
-    assert report["paper_geometric_branch_observer_spacetime_emergence_receipt"] is True
-    assert report["paper_geometric_branch_consensus_bulk_emergence_receipt"] is True
-    assert report["simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt"] is True
+    assert report["paper_geometric_branch_lorentz_contract_receipt"] is False
+    assert report["paper_geometric_branch_observer_spacetime_emergence_receipt"] is False
+    assert report["paper_geometric_branch_consensus_bulk_emergence_receipt"] is False
+    assert report["simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt"] is False
     assert report["simulation_matches_full_oph_spacetime_bulk_prediction_receipt"] is False
-    assert report["paper_geometric_branch_blockers"] == []
+    assert "L1_observer_record_algebra" in report["paper_geometric_branch_blockers"]
     assert "L2_endogenous_modular_generator" in report["blockers"]
     assert "L3_kms_modular_clock_fit" in report["blockers"]
     assert report["einstein_branch_entry_contract_receipt"] is False
@@ -462,7 +782,9 @@ def test_einstein_bridge_rejects_wrong_theorem_tag(tmp_path: Path) -> None:
     assert manifest["EINSTEIN_BRANCH_ENTRY_RECEIPT"] is False
 
 
-def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp_path: Path) -> None:
+def test_finite_theorem_contract_rejects_unverified_self_reading_sidecar(
+    tmp_path: Path,
+) -> None:
     run = tmp_path / "run"
     run.mkdir()
     _write_computed_bridge_reports(run)
@@ -513,13 +835,19 @@ def test_finite_theorem_contract_can_pass_when_all_hypothesis_receipts_exist(tmp
         + "\n",
         encoding="utf-8",
     )
+    _write_self_reading_contract(run)
 
     report = finite_oph_theorem_contract_report(run)
 
-    assert report["finite_lorentz_theorem_contract_receipt"] is True
-    assert report["paper_faithful_observer_spacetime_emergence_receipt"] is True
-    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
-    assert report["blockers"] == []
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
+    assert report["paper_faithful_observer_spacetime_emergence_receipt"] is False
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
+    assert "L1_observer_record_algebra" in report["blockers"]
+    assert "source_qualified_independent_verifier_unimplemented" in report[
+        "stages"
+    ]["L1_observer_record_algebra"]["details"]["source_contract_validation"][
+        "source_qualified_atomic_blockers"
+    ]
     assert report["einstein_branch_entry_contract_receipt"] is False
     assert "E0_einstein_branch_entry_umbrella" in report["einstein_branch_entry_blockers"]
 
@@ -653,11 +981,12 @@ def test_finite_theorem_contract_splits_observer_h3_from_populated_and_neutral(t
         + "\n",
         encoding="utf-8",
     )
+    _write_self_reading_contract(run)
 
     report = finite_oph_theorem_contract_report(run)
 
-    assert report["finite_lorentz_theorem_contract_receipt"] is True
-    assert report["paper_faithful_observer_spacetime_emergence_receipt"] is True
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
+    assert report["paper_faithful_observer_spacetime_emergence_receipt"] is False
     assert report["paper_faithful_populated_h3_observer_experience_receipt"] is False
     assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
     assert report["stages"]["L7_refinement_naturality"]["passed"] is True
@@ -713,16 +1042,17 @@ def test_observer_facing_consensus_bulk_does_not_require_chart_blind_neutral(tmp
         + "\n",
         encoding="utf-8",
     )
+    _write_self_reading_contract(run)
 
     report = finite_oph_theorem_contract_report(run)
 
-    assert report["finite_lorentz_theorem_contract_receipt"] is True
-    assert report["paper_faithful_populated_h3_observer_experience_receipt"] is True
-    assert report["observer_facing_consensus_3d_bulk_emergence_receipt"] is True
-    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is True
+    assert report["finite_lorentz_theorem_contract_receipt"] is False
+    assert report["paper_faithful_populated_h3_observer_experience_receipt"] is False
+    assert report["observer_facing_consensus_3d_bulk_emergence_receipt"] is False
+    assert report["paper_faithful_consensus_bulk_emergence_receipt"] is False
     assert report["chart_blind_strict_neutral_quotient_bulk_receipt"] is False
     assert report["strict_neutral_bulk_contract_receipt"] is False
-    assert report["blockers"] == []
+    assert report["blockers"] == ["L1_observer_record_algebra"]
     assert report["strict_neutral_blockers"] == ["B4_strict_neutral_bulk_audit"]
 
 

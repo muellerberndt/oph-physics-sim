@@ -66,6 +66,14 @@ from oph_fpe.bulk.record_to_h3 import (
     record_populated_h3_report,
     support_profiles_to_h3_report,
 )
+from oph_fpe.bulk.self_reading_contract import (
+    COMMITTED_RECORD_SNAPSHOT_SCHEMA,
+    RUN_BINDING_SCHEMA,
+    observer_population_binding_hash,
+    valid_causal_audit_row,
+    write_causal_event_artifact,
+    write_record_commit_artifact,
+)
 from oph_fpe.bulk.transition_selection import transition_scale_selection_report
 from oph_fpe.cache.geometry_cache import GeometryCache
 from oph_fpe.constants.oph_pixel import equal_cell_area_planck, equal_cell_entropy
@@ -135,6 +143,16 @@ from oph_fpe.gauge.covariant_overlap import (
     repair_production_sector_links,
     transform_local_frames,
 )
+from oph_fpe.gauge.authority_repair import (
+    AUTHORITY_SCHEMA,
+    PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA,
+    PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA,
+    authority_sha256,
+    authority_repair_directions,
+    protected_authority_source_sha256,
+    protected_authority_terminal_sha256,
+    validate_node_authorities,
+)
 from oph_fpe.gauge.repair_projection import exact_repair_projection_receipt
 from oph_fpe.scale.capacity_conformance import (
     CapacityConformanceTracker,
@@ -178,6 +196,12 @@ REMOVED_HASH_RECORD_FEEDBACK_MODES = frozenset(
         "committed_record_feedback",
         "observer_record_readback",
     }
+)
+
+PROTECTED_AUTHORITY_REPAIR_MODE = "protected_source_authority_v1"
+LEGACY_RANDOM_ENDPOINT_REPAIR_MODE = "legacy_random_endpoint_v1"
+SUPPORTED_REPAIR_KERNEL_MODES = frozenset(
+    {PROTECTED_AUTHORITY_REPAIR_MODE, LEGACY_RANDOM_ENDPOINT_REPAIR_MODE}
 )
 
 
@@ -252,13 +276,21 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     seed = int(config.get("seed", 1))
     rng_streams, rng_stream_report = _named_rng_streams(
         seed,
-        ("initialization", "patch_ports", "readback", "repair", "sector"),
+        (
+            "initialization",
+            "patch_ports",
+            "readback",
+            "repair",
+            "sector",
+            "repair_authority",
+        ),
     )
     initialization_rng = rng_streams["initialization"]
     patch_state_rng = rng_streams["patch_ports"]
     readback_rng = rng_streams["readback"]
     repair_rng = rng_streams["repair"]
     sector_rng = rng_streams["sector"]
+    repair_authority_rng = rng_streams["repair_authority"]
     outputs_cfg = config.get("outputs", {}) or {}
     output_profile = str(outputs_cfg.get("profile", "evidence"))
     observer_payload_needed = bool(
@@ -292,6 +324,29 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     group_name = str(config.get("group", {}).get("name", "S3")).upper()
     group_order = _group_order(group_name)
     edge_count = int(left.size)
+    dynamics_config = config.get("dynamics", {}) or {}
+    repair_kernel_config = dynamics_config.get("repair_kernel", {}) or {}
+    if isinstance(repair_kernel_config, str):
+        repair_kernel_config = {"mode": repair_kernel_config}
+    if not isinstance(repair_kernel_config, dict):
+        raise ValueError("dynamics.repair_kernel must be a mapping or mode string")
+    repair_kernel_mode = str(
+        repair_kernel_config.get("mode", LEGACY_RANDOM_ENDPOINT_REPAIR_MODE)
+    )
+    if repair_kernel_mode not in SUPPORTED_REPAIR_KERNEL_MODES:
+        raise ValueError(
+            "unsupported dynamics.repair_kernel mode: " + repair_kernel_mode
+        )
+    node_repair_authorities: np.ndarray | None = None
+    if repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE:
+        # The authority order is sampled from its own named source stream and
+        # frozen before any repair, record, observer, or downstream fit.  The
+        # values are patch metadata: they travel with patches under a node
+        # relabeling and do not depend on stored edge orientation.
+        node_repair_authorities = validate_node_authorities(
+            repair_authority_rng.permutation(patch_count).astype(np.int64),
+            patch_count,
+        )
     screen_microphysics = screen_microphysics_from_config(config, patch_count, edge_count)
     screen_ports = assign_echosahedral_ports(
         left,
@@ -370,7 +425,16 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("rng_streams.json", rng_stream_report)
     bundle.write_json("gauge_covariant_overlap_contract.json", overlap_contract_metadata())
 
-    dyn = config.get("dynamics", {})
+    repair_authority_report = _write_repair_authority_artifact(
+        bundle.path,
+        mode=repair_kernel_mode,
+        authorities=node_repair_authorities,
+        seed=seed,
+        stream_report=rng_stream_report["streams"]["repair_authority"],
+    )
+    bundle.write_json("repair_kernel_contract.json", repair_authority_report)
+
+    dyn = dynamics_config
     cycles = int(dyn.get("cycles", 64))
     repairs_per_cycle = _repairs_per_cycle_from_config(dyn, patch_count=patch_count, edge_count=edge_count)
     commit_cycles = int(dyn.get("record_commit_cycles", 8))
@@ -380,6 +444,20 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     modular_cap_drive = _modular_cap_drive(points, mod_cfg)
     readback_node_labels: np.ndarray | None = None
     record_feedback_audit_rows: list[dict[str, Any]] = []
+    record_commit_rows: list[dict[str, Any]] = []
+    observer_commit_sample_count = min(
+        int((config.get("observers", {}) or {}).get("sample_count", min(64, patch_count))),
+        patch_count,
+    )
+    observer_commit_ids = np.sort(
+        np.random.default_rng(seed + 1201).choice(
+            patch_count,
+            size=observer_commit_sample_count,
+            replace=False,
+        )
+    )
+    observer_commit_capture_mask = np.zeros(patch_count, dtype=bool)
+    observer_commit_capture_mask[observer_commit_ids] = True
     readback_drive_report: dict[str, Any] = {"enabled": False}
     if readback_drive_cfg.get("enabled", False):
         readback_mode = str(readback_drive_cfg.get("mode", "support_visible_boundary_refresh"))
@@ -433,6 +511,24 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     repair_peak_score = -1.0
     defects_cfg = config.get("defects", {})
     sector_repair_cfg = defects_cfg.get("sector_repair", {})
+    if (
+        repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE
+        and bool(sector_repair_cfg.get("enabled", False))
+        and float(sector_repair_cfg.get("probability", 0.0)) > 0.0
+    ):
+        rejection = {
+            "schema": "oph_config_rejection_v1",
+            "receipt": "PROTECTED_AUTHORITY_STRICT_REPAIR_SECTOR_MUTATION_REJECTED",
+            "repair_kernel_mode": repair_kernel_mode,
+            "reason": (
+                "strict repair must preserve the protected gauge-link/sector boundary; "
+                "stochastic link mutation belongs to a separately typed exploration phase"
+            ),
+        }
+        bundle.write_json("config_rejection_receipt.json", rejection)
+        raise ValueError(
+            "protected authority repair rejects enabled stochastic sector-link mutation"
+        )
     timeline_cfg = defects_cfg.get("timeline", {})
     defect_timeline_enabled = bool(group_name == "S3" and timeline_cfg.get("enabled", False))
     defect_timeline_cycles = _timeline_cycles(cycles, int(timeline_cfg.get("sample_count", 8)))
@@ -557,18 +653,27 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         conformance_before = snapshot_chosen_edge_state(chosen, port_left, port_right, gauge)
         repair_direction = np.zeros(0, dtype=bool)
         if chosen.size:
-            sector_edges_changed = _repair_sector_labels(
-                gauge,
-                chosen,
-                chosen_delta,
-                group_name=group_name,
-                group_order=group_order,
-                rng=sector_rng,
-                config=sector_repair_cfg,
-            )
-            # The direction draw is hoisted into a variable at the identical
-            # position in the repair stream, so the schedule is byte-identical.
-            repair_direction = repair_rng.random(chosen.size) < 0.5
+            if repair_kernel_mode == LEGACY_RANDOM_ENDPOINT_REPAIR_MODE:
+                sector_edges_changed = _repair_sector_labels(
+                    gauge,
+                    chosen,
+                    chosen_delta,
+                    group_name=group_name,
+                    group_order=group_order,
+                    rng=sector_rng,
+                    config=sector_repair_cfg,
+                )
+                # Retained solely for replaying historical diagnostics and
+                # their structural nonconfluence regression.
+                repair_direction = repair_rng.random(chosen.size) < 0.5
+            else:
+                assert node_repair_authorities is not None
+                repair_direction = authority_repair_directions(
+                    left,
+                    right,
+                    chosen,
+                    node_repair_authorities,
+                )
             repair_covariant_port_pairs(
                 port_left,
                 port_right,
@@ -639,19 +744,21 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             group_name=group_name,
             group_order=group_order,
         )
+        routed_record_signature = _gauge_coupled_node_signature(
+            port_left,
+            port_right,
+            gauge,
+            left,
+            right,
+            patch_count,
+            group_name=group_name,
+            group_order=group_order,
+        )
         signature = echosahedral_patch_record_signature(
-            _gauge_coupled_node_signature(
-                port_left,
-                port_right,
-                gauge,
-                left,
-                right,
-                patch_count,
-                group_name=group_name,
-                group_order=group_order,
-            ),
+            routed_record_signature,
             record_patch_port_state,
         )
+        previously_committed = committed.copy()
         stable_count, committed = _advance_record_commit_state(
             signature,
             prev_signature,
@@ -659,6 +766,37 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             incident_mismatch,
             commit_cycles=commit_cycles,
         )
+        for patch_id in np.flatnonzero(
+            committed & ~previously_committed & observer_commit_capture_mask
+        ):
+            patch_index = int(patch_id)
+            commit_id = (
+                f"commit:{cycle}:{patch_index}:{int(signature[patch_index])}"
+            )
+            snapshot = {
+                "schema": COMMITTED_RECORD_SNAPSHOT_SCHEMA,
+                "commit_id": commit_id,
+                "observer_id": patch_index,
+                "patch_id": patch_index,
+                "record_id": f"record:{patch_index}:{int(signature[patch_index])}",
+                "commit_cycle": int(cycle),
+                "commit_event_index": patch_index,
+                "routed_node_signature_input": int(
+                    routed_record_signature[patch_index]
+                ),
+                "canonical_patch_port_state": [
+                    int(value) for value in record_patch_port_state[patch_index]
+                ],
+                "record_signature": int(signature[patch_index]),
+                "stable_count": int(stable_count[patch_index]),
+                "commit_threshold": max(1, int(commit_cycles)),
+                "incident_mismatch": int(incident_mismatch[patch_index]),
+                "previous_committed": bool(previously_committed[patch_index]),
+                "current_committed": bool(committed[patch_index]),
+                "newly_committed_transition": True,
+            }
+            snapshot["snapshot_hash"] = stable_json_hash(snapshot)
+            record_commit_rows.append(snapshot)
         prev_signature = signature
         committed_fraction = float(np.mean(committed))
         mean_mismatch_density = float(np.mean(final_mismatch_density))
@@ -888,6 +1026,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     bundle.write_json("echosahedral_patch_state_report.json", patch_state_report)
     gauge_coupled_dynamics_report = {
         "mode": "finite_gauge_covariant_overlap_repair_v1",
+        "repair_kernel_mode": repair_kernel_mode,
+        "protected_repair_authority": repair_authority_report,
         **overlap_contract_metadata(),
         "group": group_name,
         "group_order": int(group_order),
@@ -907,9 +1047,11 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         ],
         "observer_sector_fields_use_gauge_invariant_edge_residual": True,
         "claim_boundary": (
-            "Finite regulator overlap dynamics with group-correct link transport. This establishes that the "
-            "simulated mismatch and repair state are gauge coupled; it is not a continuum gauge-theory or "
-            "Standard Model receipt."
+            "Finite regulator overlap dynamics with group-correct link transport. In protected-authority "
+            "mode, an immutable source-bound patch order selects which endpoint record is preserved, every "
+            "strict repair holds the gauge link fixed, and the order travels with patches under relabeling. "
+            "This is a conditional finite protocol receipt; it neither derives the authority order nor "
+            "establishes a continuum gauge theory or Standard Model."
         ),
     }
     bundle.write_json("gauge_coupled_dynamics_report.json", gauge_coupled_dynamics_report)
@@ -1378,6 +1520,7 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         committed=committed,
         patch_observer_rows=patch_observer_rows,
         record_feedback_audit_rows=record_feedback_audit_rows,
+        record_commit_rows=record_commit_rows,
         support_geometry_report=geometry_report,
         screen_port_map_report=screen_ports_report,
         patch_state_report=patch_state_report,
@@ -2077,6 +2220,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         initial_gauge=initial_gauge,
         edge_left=left,
         edge_right=right,
+        repair_kernel_mode=repair_kernel_mode,
+        node_repair_authorities=node_repair_authorities,
         group_name=group_name,
         group_order=group_order,
         seed=seed,
@@ -2545,6 +2690,20 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
     if observer_chart_object_report:
         bundle.write_json("observer_chart_object_h3_report.json", observer_chart_object_report)
     bundle.write_json("observer_modular_experience_report.json", observer_modular_experience_report)
+    source_observer_contract_report["causal_event_artifact"] = (
+        write_causal_event_artifact(
+            bundle.path / "source_dynamics_repair_record_observer_events.jsonl",
+            record_feedback_audit_rows,
+            run_binding=source_observer_contract_report["run_binding"],
+        )
+    )
+    source_observer_contract_report["record_commit_artifact"] = (
+        write_record_commit_artifact(
+            bundle.path / "source_dynamics_repair_record_commits.jsonl",
+            record_commit_rows,
+            run_binding=source_observer_contract_report["run_binding"],
+        )
+    )
     bundle.write_json(
         "source_dynamics_repair_record_observer_report.json",
         source_observer_contract_report,
@@ -2560,6 +2719,8 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
             initial_gauge=initial_gauge,
             edge_left=left,
             edge_right=right,
+            repair_kernel_mode=repair_kernel_mode,
+            node_repair_authorities=node_repair_authorities,
             group_name=group_name,
             group_order=group_order,
             replay_config=(config.get("theorem_core", {}) or {}).get("consensus_replay", {}),
@@ -3767,6 +3928,7 @@ def _source_observer_contract_report(
     committed: np.ndarray,
     patch_observer_rows: list[dict[str, Any]],
     record_feedback_audit_rows: list[dict[str, Any]],
+    record_commit_rows: list[dict[str, Any]],
     support_geometry_report: dict[str, Any],
     screen_port_map_report: dict[str, Any],
     patch_state_report: dict[str, Any],
@@ -3907,19 +4069,38 @@ def _source_observer_contract_report(
             ]
         ),
     }
+    audited_observer_ids = {
+        int(row["observer_id"])
+        for row in record_feedback_audit_rows
+        if isinstance(row, dict)
+        and isinstance(row.get("observer_id"), int)
+        and not isinstance(row.get("observer_id"), bool)
+        and int(row["observer_id"]) >= 0
+    }
+    materialized_observer_ids = {
+        int(row.get("observer_id", -1)) for row in patch_observer_rows
+    }
     feedback_passed = bool(
         readback_count > 0
         and feedback_event_count > 0
         and record_feedback_audit_rows
         and all(
-            row.get("records_causally_bound_to_prior_commits") is True
-            and row.get("readback_changes_future_local_actions") is True
+            valid_causal_audit_row(
+                row,
+                boundary_port_count=boundary_port_count,
+            )
             for row in record_feedback_audit_rows
         )
+        and audited_observer_ids == materialized_observer_ids
     )
     record_observer = {
         "observer_count": int(len(patch_observer_rows)),
-        "committed_record_count": int(np.sum(np.asarray(committed, dtype=bool))),
+        "committed_record_count": int(len(record_commit_rows)),
+        "historical_committed_record_count": int(len(record_commit_rows)),
+        "current_committed_record_count": int(
+            np.sum(np.asarray(committed, dtype=bool))
+        ),
+        "causally_verified_observer_count": len(audited_observer_ids),
         "readback_count": readback_count,
         "feedback_event_count": feedback_event_count,
         "readback_changes_future_local_actions": feedback_passed,
@@ -3933,20 +4114,72 @@ def _source_observer_contract_report(
         "record_feedback_audit_rows": record_feedback_audit_rows,
         "external_cap_refresh_is_observer_feedback": False,
     }
+    patch_readback_receipt = bool(
+        patch_state_receipt
+        and patch_state_report.get("PATCH_ALL_PORT_READBACK_RECEIPT") is True
+    )
+    source_patch_architecture_receipt = bool(
+        patch_state_receipt
+        and local_echosahedral_receipt
+        and patch_readback_receipt
+        and all_port_record_binding
+        and source_architecture["carrier_is_not_support_chart_cell"] is True
+        and source_architecture["carrier_is_not_primitive_observer"] is True
+        and source_architecture["carrier_support_conflation_present"] is False
+        and carrier_bridge["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is True
+        and carrier_bridge["FEDERATION_SEWING_RECEIPT"] is True
+        and carrier_bridge["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is True
+        and carrier_bridge["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is True
+    )
+    transaction_validation_receipt = False
+    union_atomic_revalidation_receipt = False
+    local_repair_receipt = bool(repair_event_count > 0)
+    record_commit_receipt = bool(
+        record_observer["historical_committed_record_count"] > 0
+    )
+    source_generator_lexical_target_scan_clear = not target_hits
+    # Lexical scans can identify suspicious names but cannot prove the absence
+    # of target information in the source dataflow.
+    source_generator_target_free_receipt = False
+    observer_self_reading_receipt = bool(
+        patch_state_receipt
+        and local_echosahedral_receipt
+        and patch_readback_receipt
+        and all_port_record_binding
+        and local_repair_receipt
+        and record_commit_receipt
+        and feedback_passed
+    )
+    source_qualified_atomic_self_reading_receipt = bool(
+        observer_self_reading_receipt
+        and source_patch_architecture_receipt
+        and carrier_bridge["ECHOSAHEDRAL_CARRIER_CONFORMANCE"] is True
+        and carrier_bridge["FEDERATION_SEWING_RECEIPT"] is True
+        and carrier_bridge["CARRIER_QUOTIENT_INVARIANCE_RECEIPT"] is True
+        and carrier_bridge["CARRIER_REFINEMENT_NATURALITY_RECEIPT"] is True
+        and transaction_validation_receipt
+        and union_atomic_revalidation_receipt
+        and source_generator_target_free_receipt
+    )
+    run_binding = {
+        "schema": RUN_BINDING_SCHEMA,
+        "config_hash": stable_json_hash(config),
+        "seed": int(config.get("seed", 1)),
+        "patch_count": int(patch_count),
+        "edge_count": int(edge_count),
+        "observer_population_binding_hash": observer_population_binding_hash(
+            [int(row.get("observer_id", -1)) for row in patch_observer_rows],
+            [str(row.get("visible_readout_hash", "")) for row in patch_observer_rows],
+        ),
+    }
     return {
-        "schema_version": "oph_source_repair_record_observer_contract_v2",
+        "schema_version": "oph_source_repair_record_observer_contract_v3",
         "mode": "source_dynamics_repair_record_observer_contract",
-        "SOURCE_PATCH_ARCHITECTURE_RECEIPT": False,
+        "SOURCE_PATCH_ARCHITECTURE_RECEIPT": source_patch_architecture_receipt,
         "PATCH_LOCAL_STATE_RECEIPT": patch_state_receipt,
         "PATCH_PORT_BOUNDARY_RECEIPT": local_echosahedral_receipt,
-        "PATCH_READBACK_RECEIPT": bool(
-            patch_state_receipt
-            and patch_state_report.get("PATCH_ALL_PORT_READBACK_RECEIPT") is True
-        ),
-        "PATCH_ALL_PORT_READBACK_RECEIPT": bool(
-            patch_state_receipt
-            and patch_state_report.get("PATCH_ALL_PORT_READBACK_RECEIPT") is True
-        ),
+        "PATCH_READBACK_RECEIPT": patch_readback_receipt,
+        "PATCH_ALL_PORT_READBACK_RECEIPT": patch_readback_receipt,
         "RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT": all_port_record_binding,
         "ECHOSAHEDRAL_LOCAL_PATCH_ARCHITECTURE_RECEIPT": local_echosahedral_receipt,
         "ECHOSAHEDRAL_CARRIER_CONFORMANCE": carrier_bridge[
@@ -3959,20 +4192,24 @@ def _source_observer_contract_report(
         "CARRIER_REFINEMENT_NATURALITY_RECEIPT": carrier_bridge[
             "CARRIER_REFINEMENT_NATURALITY_RECEIPT"
         ],
-        "TRANSACTION_VALIDATION_COMPLETE_READ_CONFLICT_SET_RECEIPT": False,
-        "UNION_PAYLOAD_ATOMIC_REVALIDATION_RECEIPT": False,
+        "TRANSACTION_VALIDATION_COMPLETE_READ_CONFLICT_SET_RECEIPT": transaction_validation_receipt,
+        "UNION_PAYLOAD_ATOMIC_REVALIDATION_RECEIPT": union_atomic_revalidation_receipt,
         "GAUGE_COVARIANT_OVERLAP_MISMATCH_RECEIPT": bool(edge_count > 0),
-        "LOCAL_REPAIR_DYNAMICS_RECEIPT": bool(repair_event_count > 0),
+        "LOCAL_REPAIR_DYNAMICS_RECEIPT": local_repair_receipt,
         "SEAM_REPAIR_DESCENT_RECEIPT": bool(
             repair_event_count > 0 and non_descent_cycle_count == 0
         ),
-        "SEAM_ATOMIC_COMMIT_RECEIPT": bool(repair_event_count > 0),
-        "RECORD_COMMIT_RECEIPT": bool(record_observer["committed_record_count"] > 0),
+        "SEAM_ATOMIC_COMMIT_RECEIPT": False,
+        "RECORD_COMMIT_RECEIPT": record_commit_receipt,
         "RECORD_READ_AFTER_WRITE_RECEIPT": feedback_passed,
-        "OBSERVER_SELF_READING_RECORD_LOOP_RECEIPT": feedback_passed,
-        "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": feedback_passed,
+        "OBSERVER_SELF_READING_RECORD_LOOP_RECEIPT": observer_self_reading_receipt,
+        "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": observer_self_reading_receipt,
+        "OPH_SOURCE_QUALIFIED_ATOMIC_SELF_READING_SYSTEM_RECEIPT": source_qualified_atomic_self_reading_receipt,
         "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT": feedback_passed,
-        "source_generator_target_free": not target_hits,
+        "source_generator_target_free": source_generator_target_free_receipt,
+        "source_generator_lexical_target_scan_clear": (
+            source_generator_lexical_target_scan_clear
+        ),
         "source_forbidden_target_hits": target_hits,
         "source_architecture": source_architecture,
         "local_patch_architecture": local_patch_architecture_report,
@@ -3980,12 +4217,14 @@ def _source_observer_contract_report(
         "patch_federation_state": patch_state_report,
         "repair_dynamics": repair_dynamics,
         "record_observer": record_observer,
+        "run_binding": run_binding,
         "claim_boundary": (
             "Diagnostic simulator-native source/repair/record audit. The current production path "
             "still uses a global support-chart cell as each carrier node and uses those coordinates "
             "to choose seams, so the four carrier-level source receipts deliberately remain false. "
-            "A self-reading observer requires "
-            "a committed record to be read and to cause a later bounded port write. External cap-net "
+            "The generic causal self-reading tier requires a committed record to be read and to cause a "
+            "later bounded port write. The source-qualified atomic tier additionally requires separated "
+            "carrier architecture, complete transaction validation, and a target-free source. External cap-net "
             "refresh, worker/cycle time, record correlation without feedback, and downstream H3/SM/"
             "gravity fits cannot satisfy this gate. Strict confluence and theorem promotion remain "
             "separate receipts."
@@ -6672,6 +6911,8 @@ def _theorem_core_receipts(
     initial_gauge: np.ndarray | None = None,
     edge_left: np.ndarray | None = None,
     edge_right: np.ndarray | None = None,
+    repair_kernel_mode: str = LEGACY_RANDOM_ENDPOINT_REPAIR_MODE,
+    node_repair_authorities: np.ndarray | None = None,
     group_name: str = "S3",
     group_order: int = 1,
     seed: int = 1,
@@ -6706,6 +6947,8 @@ def _theorem_core_receipts(
         initial_gauge,
         edge_left=edge_left,
         edge_right=edge_right,
+        repair_kernel_mode=repair_kernel_mode,
+        node_repair_authorities=node_repair_authorities,
         group_name=group_name,
         group_order=group_order,
         config=theorem_cfg.get("consensus_replay", {}),
@@ -6795,6 +7038,8 @@ def _write_finite_consensus_source_artifact(
     initial_gauge: np.ndarray,
     edge_left: np.ndarray,
     edge_right: np.ndarray,
+    repair_kernel_mode: str = LEGACY_RANDOM_ENDPOINT_REPAIR_MODE,
+    node_repair_authorities: np.ndarray | None = None,
     group_name: str,
     group_order: int,
     replay_config: dict[str, Any],
@@ -6811,14 +7056,24 @@ def _write_finite_consensus_source_artifact(
     gauge = np.asarray(initial_gauge, dtype=np.uint8)
     endpoints_left = np.asarray(edge_left, dtype=np.uint32)
     endpoints_right = np.asarray(edge_right, dtype=np.uint32)
-    np.savez(
-        state_path,
-        initial_port_left=left,
-        initial_port_right=right,
-        initial_gauge=gauge,
-        edge_left=endpoints_left,
-        edge_right=endpoints_right,
-    )
+    state_arrays: dict[str, np.ndarray] = {
+        "initial_port_left": left,
+        "initial_port_right": right,
+        "initial_gauge": gauge,
+        "edge_left": endpoints_left,
+        "edge_right": endpoints_right,
+    }
+    if repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE:
+        node_count = (
+            int(max(np.max(endpoints_left), np.max(endpoints_right))) + 1
+            if endpoints_left.size
+            else 0
+        )
+        state_arrays["node_repair_authorities"] = validate_node_authorities(
+            node_repair_authorities,
+            node_count,
+        )
+    np.savez(state_path, **state_arrays)
     source_state_sha256 = coupled_state_hash(
         left,
         right,
@@ -6837,8 +7092,62 @@ def _write_finite_consensus_source_artifact(
         group_name=group_name,
         group_order=group_order,
     )
+    protected_binding: dict[str, Any] = {}
+    if repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE:
+        authority = state_arrays["node_repair_authorities"]
+        authority_hash = authority_sha256(authority)
+        authority_path = root / "protected_repair_authority.npz"
+        contract_path = root / "repair_kernel_contract.json"
+        if not authority_path.is_file() or not contract_path.is_file():
+            raise RuntimeError(
+                "protected consensus source requires the pre-repair authority artifact and contract"
+            )
+        try:
+            with np.load(authority_path, allow_pickle=False) as payload:
+                if set(payload.files) != {"node_repair_authorities"}:
+                    raise ValueError("protected authority artifact schema mismatch")
+                artifact_authority = np.asarray(
+                    payload["node_repair_authorities"]
+                ).copy()
+            authority_contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            raise RuntimeError("protected authority artifact is unreadable") from exc
+        if not np.array_equal(artifact_authority, authority):
+            raise RuntimeError(
+                "protected authority artifact does not match theorem replay source"
+            )
+        if (
+            not isinstance(authority_contract, dict)
+            or authority_contract.get("mode") != PROTECTED_AUTHORITY_REPAIR_MODE
+            or authority_contract.get("authority_hash_schema") != AUTHORITY_SCHEMA
+            or authority_contract.get("authority_sha256") != authority_hash
+        ):
+            raise RuntimeError(
+                "protected authority contract does not bind the theorem replay source"
+            )
+        protected_binding = {
+            "authority_hash_schema": AUTHORITY_SCHEMA,
+            "authority_sha256": authority_hash,
+            "protected_source_hash_schema": PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA,
+            "protected_source_sha256": protected_authority_source_sha256(
+                source_state_sha256,
+                authority,
+            ),
+            "terminal_hash_schema": PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA,
+            "authority_artifact_path": authority_path.name,
+            "authority_artifact_file_sha256": _file_sha256(authority_path),
+            "repair_kernel_contract_path": contract_path.name,
+            "repair_kernel_contract_file_sha256": _file_sha256(contract_path),
+            "authority_kernel_file_sha256": _file_sha256(
+                Path(authority_sha256.__code__.co_filename)
+            ),
+        }
     manifest = {
-        "schema": "finite_consensus_replay_source_v1",
+        "schema": (
+            "finite_consensus_replay_source_v2"
+            if repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE
+            else "finite_consensus_replay_source_v1"
+        ),
         "state_path": state_path.name,
         "state_file_sha256": _file_sha256(state_path),
         "source_state_sha256": source_state_sha256,
@@ -6857,12 +7166,79 @@ def _write_finite_consensus_source_artifact(
             "Primitive gauge-coupled source arrays and exact replay parameters; "
             "the theorem validator must hash-bind and independently rerun them."
         ),
+        **protected_binding,
     }
+    if repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE:
+        manifest.update(
+            {
+                "node_count": int(state_arrays["node_repair_authorities"].size),
+                "repair_kernel_mode": repair_kernel_mode,
+                "node_repair_authority_present": True,
+            }
+        )
     (root / "finite_consensus_source_manifest.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True),
         encoding="utf-8",
     )
     return manifest
+
+
+def _write_repair_authority_artifact(
+    run_dir: Path,
+    *,
+    mode: str,
+    authorities: np.ndarray | None,
+    seed: int,
+    stream_report: dict[str, Any],
+) -> dict[str, Any]:
+    """Persist the protected normalizer metadata before repair begins."""
+
+    if mode != PROTECTED_AUTHORITY_REPAIR_MODE:
+        return {
+            "schema": "oph_repair_kernel_contract_v1",
+            "mode": mode,
+            "protected_authority_present": False,
+            "finite_consensus_eligible": False,
+            "reason": "historical random endpoint branch retained for negative-control replay",
+        }
+    raw = np.asarray(authorities)
+    validated = validate_node_authorities(authorities, int(raw.size))
+    path = Path(run_dir) / "protected_repair_authority.npz"
+    np.savez(path, node_repair_authorities=validated)
+    canonical_authority_sha256 = authority_sha256(validated)
+    return {
+        "schema": "oph_repair_kernel_contract_v1",
+        "mode": mode,
+        "protected_authority_present": True,
+        "authority_hash_schema": AUTHORITY_SCHEMA,
+        "authority_semantics": "larger_signed_integer_has_higher_authority",
+        "authority_count": int(validated.size),
+        "authority_values_pairwise_distinct": True,
+        "authority_minimum": int(np.min(validated)) if validated.size else None,
+        "authority_maximum": int(np.max(validated)) if validated.size else None,
+        "authority_sha256": canonical_authority_sha256,
+        "artifact": {
+            "path": path.name,
+            "file_sha256": _file_sha256(path),
+            "array_name": "node_repair_authorities",
+            "dtype": "int64",
+        },
+        "source_binding": {
+            "run_seed": int(seed),
+            "named_rng_stream": "repair_authority",
+            "stream": dict(stream_report),
+            "frozen_before_repair": True,
+            "downstream_target_input_used": False,
+        },
+        "link_boundary": "all_gauge_links_fixed_during_strict_repair",
+        "finite_consensus_eligible": True,
+        "physical_authority_derived": False,
+        "claim_boundary": (
+            "The source seed and a name-isolated stream precommit a distinct patch-authority "
+            "order before dynamics. The finite consensus theorem is conditional on that protected "
+            "metadata. This artifact does not derive a physical authority field."
+        ),
+    }
 
 
 def _file_sha256(path: Path) -> str:
@@ -6880,6 +7256,8 @@ def _array_port_pair_consensus_replay_report(
     *,
     edge_left: np.ndarray | None = None,
     edge_right: np.ndarray | None = None,
+    repair_kernel_mode: str = LEGACY_RANDOM_ENDPOINT_REPAIR_MODE,
+    node_repair_authorities: np.ndarray | None = None,
     group_name: str = "S3",
     group_order: int,
     config: dict[str, Any],
@@ -6887,6 +7265,9 @@ def _array_port_pair_consensus_replay_report(
     seed: int,
 ) -> dict[str, Any]:
     cfg = dict(config or {})
+    if repair_kernel_mode not in SUPPORTED_REPAIR_KERNEL_MODES:
+        raise ValueError("unsupported theorem replay repair kernel mode")
+    authority_mode = repair_kernel_mode == PROTECTED_AUTHORITY_REPAIR_MODE
     sector_cfg = dict(production_sector_repair_config or {})
     try:
         sector_probability = float(sector_cfg.get("probability", 0.0))
@@ -6912,21 +7293,32 @@ def _array_port_pair_consensus_replay_report(
         move_contract_blockers.append("production_sector_repair_probability_invalid")
     if production_link_mutation_enabled and sector_mode != "repair_coupled_group_compose":
         move_contract_blockers.append("production_sector_link_mutation_not_gauge_covariant")
+    if authority_mode and production_link_mutation_enabled:
+        sector_move_supported = False
+        move_contract_blockers.append(
+            "protected_authority_strict_repair_requires_fixed_sector_links"
+        )
     move_contract = {
-        "schema": "bw_array_production_overlap_move_contract_v1",
+        "schema": "bw_array_production_overlap_move_contract_v2",
+        "repair_kernel_mode": repair_kernel_mode,
         "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
         "endpoint_repair_branches": [
             "port_left <- g_ij * port_right",
             "port_right <- inverse(g_ij) * port_left",
         ],
-        "endpoint_branch_selection": "independent Bernoulli(0.5) per selected edge",
+        "endpoint_branch_selection": (
+            "preserve the endpoint with larger protected source-authority value"
+            if authority_mode
+            else "independent Bernoulli(0.5) per selected edge"
+        ),
         "sector_repair": {
             "enabled": production_link_mutation_enabled,
             "mode": sector_mode,
             "probability": sector_probability if np.isfinite(sector_probability) else None,
             "mutation": "g_ij <- discrepancy_i * g_ij" if production_link_mutation_enabled else None,
         },
-        "replayed_endpoint_branches": True,
+        "replayed_endpoint_branches": not authority_mode,
+        "replayed_protected_authority_normalizer": authority_mode,
         "replayed_sector_link_mutation": True,
         "shared_sector_mutation_primitive": "repair_production_sector_links",
         "exact_production_move_set_replayed": sector_move_supported,
@@ -6980,16 +7372,61 @@ def _array_port_pair_consensus_replay_report(
         )
     ).astype(np.int64)
     initial_phi = int(active.size)
-    exact_branch_check = _endpoint_branch_confluence_report(
-        replay_edge_left,
-        replay_edge_right,
-        active,
-        endpoint_branch_effective=not bool(
-            production_link_mutation_enabled
-            and sector_mode == "repair_coupled_group_compose"
-            and sector_probability >= 1.0
-        ),
-    )
+    authority_directions: np.ndarray | None = None
+    validated_authorities: np.ndarray | None = None
+    if authority_mode:
+        node_count = (
+            int(max(np.max(replay_edge_left), np.max(replay_edge_right))) + 1
+            if replay_edge_left.size
+            else 0
+        )
+        validated_authorities = validate_node_authorities(
+            node_repair_authorities,
+            node_count,
+        )
+        authority_directions = authority_repair_directions(
+            replay_edge_left,
+            replay_edge_right,
+            np.arange(left0.size, dtype=np.int64),
+            validated_authorities,
+        )
+        exact_branch_check = {
+            "mode": "exact_protected_authority_normalizer_confluence_v1",
+            "coverage_complete": bool(initial_phi > 0),
+            "active_edge_count": initial_phi,
+            "structurally_confluent": bool(initial_phi > 0),
+            "structural_nonconfluence_witness_count": 0,
+            "unique_terminal_quotient_hash_count": 1 if initial_phi > 0 else None,
+            "terminal_orbit_count_semantics": "exact",
+            "endpoint_repair_effective": bool(initial_phi > 0),
+            "endpoint_branch_nondeterministic": False,
+            "endpoint_branch_effective": False,
+            "endpoint_branch_effective_semantics": (
+                "deprecated compatibility field: false means the legacy nondeterministic "
+                "endpoint-choice branch is absent; it does not mean protected-authority "
+                "endpoint repairs are no-ops"
+            ),
+            "authority_order": "larger_signed_integer_has_higher_authority",
+            "protected_authority_distinct": True,
+            "gauge_links_protected": not production_link_mutation_enabled,
+            "proof": (
+                "each seam has one schedule-independent winning endpoint; distinct edge slots "
+                "commute, every enabled rewrite eliminates exactly one mismatch, and fixed links "
+                "preserve the protected sector boundary"
+            ),
+            "blockers": [] if initial_phi > 0 else ["no_enabled_authority_repair"],
+        }
+    else:
+        exact_branch_check = _endpoint_branch_confluence_report(
+            replay_edge_left,
+            replay_edge_right,
+            active,
+            endpoint_branch_effective=not bool(
+                production_link_mutation_enabled
+                and sector_mode == "repair_coupled_group_compose"
+                and sector_probability >= 1.0
+            ),
+        )
     configured_schedule_replays = int(cfg.get("schedule_replays", 16))
     requested_schedule_replays = int(
         cfg.get("requested_schedule_replays", configured_schedule_replays)
@@ -7007,6 +7444,7 @@ def _array_port_pair_consensus_replay_report(
     disjoint_checks = int(cfg.get("disjoint_checks", 256))
     local_diamond_checks = int(cfg.get("local_diamond_checks", disjoint_checks))
     terminal_hashes: list[str] = []
+    terminal_quotient_hashes: list[str] = []
     terminal_representative_hashes: list[str] = []
     first_sample_events: list[dict[str, Any]] = []
     strict_descent_violations = 0
@@ -7041,7 +7479,11 @@ def _array_port_pair_consensus_replay_report(
                     "port_right": int(right[edge]),
                     "gauge_ij": int(gauge[edge]),
                 }
-            repair_left = bool(rng.random() < 0.5)
+            repair_left = (
+                bool(authority_directions[int(edge)])
+                if authority_directions is not None
+                else bool(rng.random() < 0.5)
+            )
             before, after, sector_changed = _apply_array_production_overlap_move(
                 left,
                 right,
@@ -7080,9 +7522,18 @@ def _array_port_pair_consensus_replay_report(
                     "theorem_eligible": True,
                     "mismatch_definition": GAUGE_COVARIANT_OVERLAP_SCHEMA,
                     "repair_branch": "left_endpoint" if repair_left else "right_endpoint",
+                    "repair_selection": (
+                        "protected_source_authority"
+                        if authority_mode
+                        else "legacy_bernoulli_endpoint"
+                    ),
                     "sector_link_mutation_replayed": True,
                     "sector_link_changed": bool(sector_changed),
-                    "reason": "strict_gauge_covariant_random_endpoint_normalization",
+                    "reason": (
+                        "strict_gauge_covariant_protected_authority_normalization"
+                        if authority_mode
+                        else "strict_gauge_covariant_random_endpoint_normalization"
+                    ),
                 }
             phi = phi_after
             if capture_event:
@@ -7094,16 +7545,23 @@ def _array_port_pair_consensus_replay_report(
                 replay_events.append(event)
         if phi != 0:
             terminal_phi_violations += 1
+        terminal_quotient_hash = gauge_quotient_state_hash(
+            left,
+            right,
+            gauge,
+            edge_left=replay_edge_left,
+            edge_right=replay_edge_right,
+            group_name=group_name,
+            group_order=group_order,
+        )
+        terminal_quotient_hashes.append(terminal_quotient_hash)
         terminal_hashes.append(
-            gauge_quotient_state_hash(
-                left,
-                right,
-                gauge,
-                edge_left=replay_edge_left,
-                edge_right=replay_edge_right,
-                group_name=group_name,
-                group_order=group_order,
+            protected_authority_terminal_sha256(
+                terminal_quotient_hash,
+                validated_authorities,
             )
+            if validated_authorities is not None
+            else terminal_quotient_hash
         )
         terminal_representative_hashes.append(
             coupled_state_hash(
@@ -7131,6 +7589,7 @@ def _array_port_pair_consensus_replay_report(
         group_name=group_name,
         group_order=group_order,
         sector_config=sector_cfg,
+        repair_directions=authority_directions,
         rng=rng,
     )
     covariance_checks = _array_gauge_covariance_checks(
@@ -7144,9 +7603,13 @@ def _array_port_pair_consensus_replay_report(
         group_name=group_name,
         group_order=group_order,
         sector_config=sector_cfg,
+        repair_directions=authority_directions,
         rng=rng,
     )
     sampled_unique_terminal_hashes = sorted(set(terminal_hashes))
+    sampled_unique_terminal_quotient_hashes = sorted(
+        set(terminal_quotient_hashes)
+    )
     exact_unique_count = exact_branch_check.get("unique_terminal_quotient_hash_count")
     evidence = {
         "evidence_kind": "computed_gauge_covariant_quotient_replay_v1",
@@ -7167,7 +7630,9 @@ def _array_port_pair_consensus_replay_report(
         ),
         "repair_completeness_violation_count": terminal_phi_violations,
         "unique_terminal_quotient_hash_count": int(exact_unique_count) if exact_unique_count is not None else -1,
-        "sampled_unique_terminal_quotient_hash_count": len(sampled_unique_terminal_hashes),
+        "sampled_unique_terminal_quotient_hash_count": len(
+            sampled_unique_terminal_quotient_hashes
+        ),
         "schedule_replay_count": schedule_replays,
         "configured_schedule_replay_count": configured_schedule_replays,
         "requested_schedule_replays": requested_schedule_replays,
@@ -7184,12 +7649,34 @@ def _array_port_pair_consensus_replay_report(
         and move_contract["exact_production_move_set_replayed"]
         and exact_branch_check["coverage_complete"]
         and exact_unique_count == 1
-        and len(sampled_unique_terminal_hashes) == 1
+        and len(sampled_unique_terminal_quotient_hashes) == 1
         and terminal_phi_violations == 0
         and schedule_replays >= requested_schedule_replays
     )
+    source_state_sha256 = coupled_state_hash(
+        left0,
+        right0,
+        gauge0,
+        edge_left=replay_edge_left,
+        edge_right=replay_edge_right,
+        group_name=group_name,
+        group_order=group_order,
+    )
+    protected_hashes: dict[str, Any] = {}
+    if validated_authorities is not None:
+        protected_hashes = {
+            "authority_hash_schema": AUTHORITY_SCHEMA,
+            "authority_sha256": authority_sha256(validated_authorities),
+            "protected_source_hash_schema": PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA,
+            "protected_source_sha256": protected_authority_source_sha256(
+                source_state_sha256,
+                validated_authorities,
+            ),
+            "terminal_hash_schema": PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA,
+        }
     return {
         "mode": "array_port_pair_strict_consensus_replay",
+        "repair_kernel_mode": repair_kernel_mode,
         "enabled": True,
         "receipt": receipt,
         FINITE_CONSENSUS_THEOREM_RECEIPT: receipt,
@@ -7200,15 +7687,8 @@ def _array_port_pair_consensus_replay_report(
         "gauge_quotient_canonicalizer": GAUGE_QUOTIENT_CANONICALIZER,
         "production_move_contract": move_contract,
         "exact_endpoint_branch_check": exact_branch_check,
-        "source_state_sha256": coupled_state_hash(
-            left0,
-            right0,
-            gauge0,
-            edge_left=replay_edge_left,
-            edge_right=replay_edge_right,
-            group_name=group_name,
-            group_order=group_order,
-        ),
+        "exact_normalizer_confluence_check": exact_branch_check,
+        "source_state_sha256": source_state_sha256,
         "source_quotient_hash": gauge_quotient_state_hash(
             left0,
             right0,
@@ -7228,7 +7708,16 @@ def _array_port_pair_consensus_replay_report(
             and int(exact_unique_count or 0) == 1
             else None
         ),
+        "terminal_quotient_hash": (
+            sampled_unique_terminal_quotient_hashes[0]
+            if len(sampled_unique_terminal_quotient_hashes) == 1
+            and int(exact_unique_count or 0) == 1
+            else None
+        ),
         "sampled_terminal_hashes": sampled_unique_terminal_hashes,
+        "sampled_terminal_quotient_hashes": (
+            sampled_unique_terminal_quotient_hashes
+        ),
         "terminal_representative_hash_count": len(set(terminal_representative_hashes)),
         "unique_terminal_hash_count": int(exact_unique_count) if exact_unique_count is not None else -1,
         "sample_event_count": len(first_sample_events),
@@ -7246,16 +7735,22 @@ def _array_port_pair_consensus_replay_report(
         "local_diamond_status": pair_checks["status"],
         "gauge_relabeling_check_count": covariance_checks["checked_count"],
         "gauge_covariance_violation_count": covariance_checks["violation_count"],
+        **protected_hashes,
         "claim_boundary": (
-            "C0b replay evidence for the finite gauge-coupled port-link quotient. Mismatch is computed "
-            "after group-correct link transport, terminal hashes canonicalize local node frames, and "
-            "random frame relabelings check the predicate, both endpoint-repair branches, and quotient hash. "
-            "The production sector-link mutation is replayed through the same primitive used by the live BW "
-            "kernel; unsupported non-covariant sector modes fail closed. An exact "
-            "O(E) endpoint-incidence proof exposes endpoint-branch nonconfluence independently of Monte Carlo "
-            "schedule coverage; sampled terminal quotient hashes remain diagnostic. AB/BA diamonds still act on "
-            "edge slots; the state model has no shared patch-local repair variable, so this does not certify "
-            "a full OPH patch algebra, record algebra C1, or Lorentz L1-L7 receipts."
+            (
+                "C0b replay evidence for the finite gauge-coupled port-link quotient under a precommitted "
+                "protected patch-authority order. The same authority metadata is used in every shuffled "
+                "schedule; group-correct transport, fixed links, exact strict descent, edge-slot diamonds, "
+                "and local-frame covariance are recomputed from primitive arrays. The theorem is conditional "
+                "on the declared source authority and does not derive its physical origin, a coupled "
+                "multi-port patch algebra, continuum physics, or a laboratory realization."
+            )
+            if authority_mode
+            else (
+                "Historical random-endpoint replay for the finite gauge-coupled port-link quotient. The exact "
+                "endpoint-incidence check exposes its structural nonconfluence on shared-patch graphs. This "
+                "legacy relation is retained as a negative control and is not a finite-consensus theorem."
+            )
         ),
     }
 
@@ -7265,6 +7760,15 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
 
     report = dict(replay_report or {})
     evidence = report.get("evidence") if isinstance(report.get("evidence"), dict) else {}
+    production_contract = (
+        report.get("production_move_contract")
+        if isinstance(report.get("production_move_contract"), dict)
+        else {}
+    )
+    protected_authority_mode = (
+        production_contract.get("repair_kernel_mode")
+        == PROTECTED_AUTHORITY_REPAIR_MODE
+    )
     required_exact = {
         "strict_descent_violation_count": 0,
         "accepted_phi_increase_violation_count": 0,
@@ -7339,6 +7843,32 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
             continue
         if not (np.isfinite(touched) and np.isfinite(global_delta) and touched < 0.0 and global_delta <= 0.0):
             invalid.append(f"sample_events[{index}].delta")
+    if protected_authority_mode:
+        for key in (
+            "authority_sha256",
+            "protected_source_sha256",
+            "terminal_hash",
+            "terminal_quotient_hash",
+        ):
+            value = report.get(key)
+            if not (
+                isinstance(value, str)
+                and value.startswith("sha256:")
+                and len(value.removeprefix("sha256:")) == 64
+            ):
+                invalid.append(key)
+        if report.get("authority_hash_schema") != AUTHORITY_SCHEMA:
+            invalid.append("authority_hash_schema")
+        if (
+            report.get("protected_source_hash_schema")
+            != PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA
+        ):
+            invalid.append("protected_source_hash_schema")
+        if (
+            report.get("terminal_hash_schema")
+            != PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA
+        ):
+            invalid.append("terminal_hash_schema")
     passed = bool(
         report.get("mode") == "array_port_pair_strict_consensus_replay"
         and report.get("enabled") is True
@@ -7372,6 +7902,15 @@ def _computed_array_replay_consensus_certificate(replay_report: dict[str, Any]) 
         "exact_endpoint_branch_check": exact_branch_check,
         "source_state_sha256": report.get("source_state_sha256"),
         "source_quotient_hash": report.get("source_quotient_hash"),
+        "authority_hash_schema": report.get("authority_hash_schema"),
+        "authority_sha256": report.get("authority_sha256"),
+        "protected_source_hash_schema": report.get(
+            "protected_source_hash_schema"
+        ),
+        "protected_source_sha256": report.get("protected_source_sha256"),
+        "terminal_hash_schema": report.get("terminal_hash_schema"),
+        "terminal_hash": report.get("terminal_hash"),
+        "terminal_quotient_hash": report.get("terminal_quotient_hash"),
         **{key: evidence.get(key) for key in (
             "theorem_phase_event_count",
             "accepted_theorem_move_count",
@@ -7547,6 +8086,7 @@ def _array_gauge_covariance_checks(
     group_name: str,
     group_order: int,
     sector_config: dict[str, Any] | None,
+    repair_directions: np.ndarray | None,
     rng: np.random.Generator,
 ) -> dict[str, Any]:
     """Replay mismatch, rewrite, and quotient hashing after local frame changes."""
@@ -7600,7 +8140,15 @@ def _array_gauge_covariance_checks(
         check_pass = bool(np.array_equal(source_mask, transformed_mask) and source_quotient_hash == transformed_hash)
         if active.size:
             edge = int(active[index % int(active.size)])
-            repair_left = bool(index % 2 == 0)
+            if repair_directions is None:
+                repair_left = bool(index % 2 == 0)
+            else:
+                directions = np.asarray(repair_directions, dtype=bool)
+                if directions.shape != left0.shape:
+                    raise ValueError(
+                        "repair directions must match theorem replay edge slots"
+                    )
+                repair_left = bool(directions[edge])
             original_after = (left0.copy(), right0.copy(), gauge0.copy())
             transformed_after = tuple(np.asarray(values).copy() for values in transformed)
             sector_seed = int(rng.integers(0, np.iinfo(np.int64).max))
@@ -7791,6 +8339,7 @@ def _array_port_pair_commutation_checks(
     group_name: str,
     group_order: int,
     sector_config: dict[str, Any] | None,
+    repair_directions: np.ndarray | None,
     rng: np.random.Generator,
 ) -> dict[str, Any]:
     """Execute sampled AB/BA rewrites instead of asserting confluence.
@@ -7859,6 +8408,7 @@ def _array_port_pair_commutation_checks(
             group_name=group_name,
             group_order=group_order,
             sector_config=sector_config,
+            repair_directions=repair_directions,
         )
         for first, second in disjoint_pairs
     )
@@ -7872,6 +8422,7 @@ def _array_port_pair_commutation_checks(
             group_name=group_name,
             group_order=group_order,
             sector_config=sector_config,
+            repair_directions=repair_directions,
         )
         for first, second in local_pairs
     )
@@ -7910,78 +8461,94 @@ def _array_port_pair_rewrites_commute(
     group_name: str,
     group_order: int,
     sector_config: dict[str, Any] | None = None,
+    repair_directions: np.ndarray | None = None,
 ) -> bool:
-    """Run both orders for every enabled endpoint-branch assignment."""
+    """Run both orders for the prescribed move relation.
+
+    Historical Bernoulli mode checks every endpoint-branch assignment.  The
+    protected-authority mode supplies one schedule-independent direction per
+    source edge and checks only that declared normalizer.
+    """
 
     slots = np.asarray([int(first), int(second)], dtype=np.int64)
     source_left = np.asarray(left0[slots], dtype=np.int16)
     source_right = np.asarray(right0[slots], dtype=np.int16)
     source_gauge = np.asarray(gauge0[slots], dtype=np.int16)
-    for first_repairs_left in (False, True):
-        for second_repairs_left in (False, True):
-            branch_code = int(first_repairs_left) + 2 * int(second_repairs_left)
-            first_sector_seed = (
-                (int(first) + 1) * 1_000_003 + branch_code * 97 + 17
-            ) % np.iinfo(np.int64).max
-            second_sector_seed = (
-                (int(second) + 1) * 1_000_033 + branch_code * 193 + 29
-            ) % np.iinfo(np.int64).max
-            left_ab = source_left.copy()
-            right_ab = source_right.copy()
-            gauge_ab = source_gauge.copy()
-            left_ba = source_left.copy()
-            right_ba = source_right.copy()
-            gauge_ba = source_gauge.copy()
-            _apply_array_production_overlap_move(
-                left_ab,
-                right_ab,
-                gauge_ab,
-                0,
-                repair_left=first_repairs_left,
-                group_name=group_name,
-                group_order=group_order,
-                sector_rng=np.random.default_rng(first_sector_seed),
-                sector_config=dict(sector_config or {}),
-            )
-            _apply_array_production_overlap_move(
-                left_ab,
-                right_ab,
-                gauge_ab,
-                1,
-                repair_left=second_repairs_left,
-                group_name=group_name,
-                group_order=group_order,
-                sector_rng=np.random.default_rng(second_sector_seed),
-                sector_config=dict(sector_config or {}),
-            )
-            _apply_array_production_overlap_move(
-                left_ba,
-                right_ba,
-                gauge_ba,
-                1,
-                repair_left=second_repairs_left,
-                group_name=group_name,
-                group_order=group_order,
-                sector_rng=np.random.default_rng(second_sector_seed),
-                sector_config=dict(sector_config or {}),
-            )
-            _apply_array_production_overlap_move(
-                left_ba,
-                right_ba,
-                gauge_ba,
-                0,
-                repair_left=first_repairs_left,
-                group_name=group_name,
-                group_order=group_order,
-                sector_rng=np.random.default_rng(first_sector_seed),
-                sector_config=dict(sector_config or {}),
-            )
-            if not (
-                np.array_equal(left_ab, left_ba)
-                and np.array_equal(right_ab, right_ba)
-                and np.array_equal(gauge_ab, gauge_ba)
-            ):
-                return False
+    if repair_directions is None:
+        direction_pairs = (
+            (first_direction, second_direction)
+            for first_direction in (False, True)
+            for second_direction in (False, True)
+        )
+    else:
+        directions = np.asarray(repair_directions, dtype=bool)
+        if directions.shape != np.asarray(left0).shape:
+            raise ValueError("repair directions must match theorem replay edge slots")
+        direction_pairs = iter(((bool(directions[first]), bool(directions[second])),))
+    for first_repairs_left, second_repairs_left in direction_pairs:
+        branch_code = int(first_repairs_left) + 2 * int(second_repairs_left)
+        first_sector_seed = (
+            (int(first) + 1) * 1_000_003 + branch_code * 97 + 17
+        ) % np.iinfo(np.int64).max
+        second_sector_seed = (
+            (int(second) + 1) * 1_000_033 + branch_code * 193 + 29
+        ) % np.iinfo(np.int64).max
+        left_ab = source_left.copy()
+        right_ab = source_right.copy()
+        gauge_ab = source_gauge.copy()
+        left_ba = source_left.copy()
+        right_ba = source_right.copy()
+        gauge_ba = source_gauge.copy()
+        _apply_array_production_overlap_move(
+            left_ab,
+            right_ab,
+            gauge_ab,
+            0,
+            repair_left=first_repairs_left,
+            group_name=group_name,
+            group_order=group_order,
+            sector_rng=np.random.default_rng(first_sector_seed),
+            sector_config=dict(sector_config or {}),
+        )
+        _apply_array_production_overlap_move(
+            left_ab,
+            right_ab,
+            gauge_ab,
+            1,
+            repair_left=second_repairs_left,
+            group_name=group_name,
+            group_order=group_order,
+            sector_rng=np.random.default_rng(second_sector_seed),
+            sector_config=dict(sector_config or {}),
+        )
+        _apply_array_production_overlap_move(
+            left_ba,
+            right_ba,
+            gauge_ba,
+            1,
+            repair_left=second_repairs_left,
+            group_name=group_name,
+            group_order=group_order,
+            sector_rng=np.random.default_rng(second_sector_seed),
+            sector_config=dict(sector_config or {}),
+        )
+        _apply_array_production_overlap_move(
+            left_ba,
+            right_ba,
+            gauge_ba,
+            0,
+            repair_left=first_repairs_left,
+            group_name=group_name,
+            group_order=group_order,
+            sector_rng=np.random.default_rng(first_sector_seed),
+            sector_config=dict(sector_config or {}),
+        )
+        if not (
+            np.array_equal(left_ab, left_ba)
+            and np.array_equal(right_ab, right_ba)
+            and np.array_equal(gauge_ab, gauge_ba)
+        ):
+            return False
     return True
 
 

@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from oph_fpe.bulk.self_reading_contract import validate_run_self_reading_contract
+
 import numpy as np
 import yaml
 
@@ -47,6 +49,15 @@ from oph_fpe.gauge.covariant_overlap import (
     GAUGE_COVARIANT_OVERLAP_SCHEMA,
     GAUGE_QUOTIENT_CANONICALIZER,
 )
+from oph_fpe.gauge.authority_repair import (
+    AUTHORITY_SCHEMA,
+    PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA,
+    PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA,
+    authority_sha256,
+    protected_authority_source_sha256,
+    protected_authority_terminal_sha256,
+    validate_node_authorities,
+)
 from oph_fpe.simulation_assumptions import (
     manifest_assumptions_pass,
     revalidate_simulation_assumption_manifest,
@@ -76,6 +87,9 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
     refinement = _read_json(root / "strict_neutral_bulk_frontier_report.json")
     einstein = _read_json(root / "einstein_branch_entry_report.json")
     explicit_einstein_bridge_manifest = _read_json(root / "einstein_bridge_manifest.json")
+    source_observer_contract = _read_json(
+        root / "source_dynamics_repair_record_observer_report.json"
+    )
     # A persisted manifest is a cache/display artifact, not producer evidence.
     # Always replay the theorem-tagged sidecars so neither an old aggregate
     # report nor a hand-edited manifest can promote branch entry.
@@ -114,12 +128,36 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         root,
         theorem_core,
     )
-    record_algebra = bool(
+    self_reading_validation = validate_run_self_reading_contract(
+        root,
+        source_observer_contract,
+    )
+    generic_observer_like_self_reading = self_reading_validation[
+        "generic_causal_self_reading_passed"
+    ]
+    source_contract_summary = self_reading_validation[
+        "source_qualified_atomic_passed"
+    ]
+    record_read_after_write = _literal_true(
+        source_observer_contract.get("RECORD_READ_AFTER_WRITE_RECEIPT")
+    )
+    observer_feedback_loop = _literal_true(
+        source_observer_contract.get(
+            "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT"
+        )
+    )
+    observer_like_self_reading = bool(
+        source_contract_summary
+        and record_read_after_write
+        and observer_feedback_loop
+    )
+    record_rows_complete = bool(
         observer_rows["patch_observer_count"] > 0
         and observer_rows["rows_with_support_nodes"] > 0
         and observer_rows["rows_with_readout_hash"] > 0
         and observer_rows["rows_with_transition_histories"] > 0
     )
+    record_algebra = bool(record_rows_complete and observer_like_self_reading)
     state_bw = _read_json(root / "bw_state_derived_report.json")
     inferred_clock = state_bw.get("inferred_modular_clock_fit") or {}
     endogenous_generator = _validated_endogenous_modular_generator(state_bw)
@@ -263,8 +301,39 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         ),
         "L1_observer_record_algebra": _stage(
             record_algebra,
-            "observer-like self-reading rows expose support, records, readback, and transition histories",
-            details=observer_rows,
+            "observer rows expose support and transition histories, and a dedicated source contract verifies record readback causing a later bounded write",
+            missing=(
+                []
+                if record_algebra
+                else [
+                    *([] if record_rows_complete else ["complete_observer_record_rows"]),
+                    *(
+                        []
+                        if source_contract_summary
+                        else ["observer_like_self_reading_source_contract"]
+                    ),
+                    *(
+                        []
+                        if record_read_after_write
+                        else ["record_read_after_write_receipt"]
+                    ),
+                    *(
+                        []
+                        if observer_feedback_loop
+                        else ["observer_readback_feedback_causal_loop_receipt"]
+                    ),
+                ]
+            ),
+            details={
+                **observer_rows,
+                "record_rows_complete": record_rows_complete,
+                "dedicated_source_contract_present": bool(source_observer_contract),
+                "observer_like_self_reading_system_receipt": generic_observer_like_self_reading,
+                "oph_source_qualified_atomic_self_reading_system_receipt": observer_like_self_reading,
+                "record_read_after_write_receipt": record_read_after_write,
+                "observer_readback_feedback_causal_loop_receipt": observer_feedback_loop,
+                "source_contract_validation": self_reading_validation,
+            },
         ),
         "L2_endogenous_modular_generator": _stage(
             endogenous_generator,
@@ -785,7 +854,8 @@ def finite_oph_theorem_contract_report(run_dir: Path) -> dict[str, Any]:
         "einstein_branch_entry_primary_blockers": einstein_branch_blockers[:6],
         "einstein_branch_entry_child_gates": einstein_child_gates,
         "all_stage_blockers": all_stage_blockers,
-        "observer_like_self_reading_system_receipt": bool(observer_rows["patch_observer_count"] > 0),
+        "observer_like_self_reading_system_receipt": generic_observer_like_self_reading,
+        "oph_source_qualified_atomic_self_reading_system_receipt": observer_like_self_reading,
         "observer_row_summary": observer_rows,
         "claim_boundary": (
             "Computed finite OPH spacetime/bulk emergence audit. This is stricter than branch "
@@ -998,11 +1068,52 @@ def _validated_finite_consensus_replay(
     )
     if certificate.get("production_move_contract") != production_move_contract:
         blockers.append("certificate_production_move_contract_mismatch")
-    if production_move_contract.get("schema") != "bw_array_production_overlap_move_contract_v1":
+    production_schema = production_move_contract.get("schema")
+    repair_kernel_mode = production_move_contract.get("repair_kernel_mode")
+    protected_authority_mode = repair_kernel_mode == "protected_source_authority_v1"
+    if production_schema not in {
+        "bw_array_production_overlap_move_contract_v1",
+        "bw_array_production_overlap_move_contract_v2",
+    }:
         blockers.append("production_move_contract_schema_invalid")
     if production_move_contract.get("mismatch_definition") != GAUGE_COVARIANT_OVERLAP_SCHEMA:
         blockers.append("production_move_contract_mismatch_definition_invalid")
-    if not _literal_true(production_move_contract.get("replayed_endpoint_branches")):
+    if protected_authority_mode:
+        if not _literal_true(
+            production_move_contract.get("replayed_protected_authority_normalizer")
+        ):
+            blockers.append("production_authority_normalizer_not_replayed")
+        protected_hash_fields = (
+            "authority_hash_schema",
+            "authority_sha256",
+            "protected_source_hash_schema",
+            "protected_source_sha256",
+            "terminal_hash_schema",
+            "terminal_hash",
+            "terminal_quotient_hash",
+        )
+        for key in protected_hash_fields:
+            if certificate.get(key) != replay.get(key):
+                blockers.append(f"certificate_{key}_mismatch")
+        if replay.get("authority_hash_schema") != AUTHORITY_SCHEMA:
+            blockers.append("replay_authority_hash_schema_invalid")
+        if not _sha256_receipt(replay.get("authority_sha256")):
+            blockers.append("replay_authority_sha256_invalid")
+        if (
+            replay.get("protected_source_hash_schema")
+            != PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA
+        ):
+            blockers.append("replay_protected_source_hash_schema_invalid")
+        if not _sha256_receipt(replay.get("protected_source_sha256")):
+            blockers.append("replay_protected_source_sha256_invalid")
+        if (
+            replay.get("terminal_hash_schema")
+            != PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA
+        ):
+            blockers.append("replay_terminal_hash_schema_invalid")
+        if not _sha256_receipt(replay.get("terminal_quotient_hash")):
+            blockers.append("replay_terminal_quotient_hash_invalid")
+    elif not _literal_true(production_move_contract.get("replayed_endpoint_branches")):
         blockers.append("production_endpoint_branches_not_replayed")
     if not _literal_true(production_move_contract.get("exact_production_move_set_replayed")):
         blockers.append("production_move_set_not_exactly_replayed")
@@ -1055,7 +1166,12 @@ def _validated_finite_consensus_replay(
     )
     if certificate.get("exact_endpoint_branch_check") != exact_branch_check:
         blockers.append("certificate_exact_endpoint_branch_check_mismatch")
-    if exact_branch_check.get("mode") != "exact_endpoint_branch_structural_confluence_v1":
+    expected_exact_mode = (
+        "exact_protected_authority_normalizer_confluence_v1"
+        if protected_authority_mode
+        else "exact_endpoint_branch_structural_confluence_v1"
+    )
+    if exact_branch_check.get("mode") != expected_exact_mode:
         blockers.append("exact_endpoint_branch_check_mode_invalid")
     if not _literal_true(exact_branch_check.get("coverage_complete")):
         blockers.append("exact_endpoint_branch_coverage_incomplete")
@@ -1129,7 +1245,11 @@ def _independently_replay_finite_consensus_source(
         blockers.append("finite_consensus_source_manifest_missing")
     if not isinstance(nested_manifest, dict) or nested_manifest != manifest:
         blockers.append("finite_consensus_nested_source_manifest_mismatch")
-    if manifest.get("schema") != "finite_consensus_replay_source_v1":
+    source_schema = manifest.get("schema")
+    if source_schema not in {
+        "finite_consensus_replay_source_v1",
+        "finite_consensus_replay_source_v2",
+    }:
         blockers.append("finite_consensus_source_manifest_schema_invalid")
     if manifest.get("hash_schema") != CANONICAL_HASH_SCHEMA:
         blockers.append("finite_consensus_source_hash_schema_invalid")
@@ -1165,6 +1285,8 @@ def _independently_replay_finite_consensus_source(
                     "edge_left",
                     "edge_right",
                 }
+                if source_schema == "finite_consensus_replay_source_v2":
+                    required.add("node_repair_authorities")
                 if set(payload.files) != required:
                     blockers.append("finite_consensus_source_array_schema_invalid")
                 arrays = {
@@ -1174,13 +1296,62 @@ def _independently_replay_finite_consensus_source(
                 }
         except (OSError, ValueError, KeyError):
             blockers.append("finite_consensus_source_state_unreadable")
+    edge_array_names = {
+        "initial_port_left",
+        "initial_port_right",
+        "initial_gauge",
+        "edge_left",
+        "edge_right",
+    }
+    validated_source_authority: np.ndarray | None = None
     if arrays:
-        shapes = {array.shape for array in arrays.values()}
+        shapes = {
+            arrays[name].shape for name in edge_array_names if name in arrays
+        }
         if len(shapes) != 1 or any(array.ndim != 1 for array in arrays.values()):
             blockers.append("finite_consensus_source_array_shapes_invalid")
         edge_count = manifest.get("edge_count")
         if not _strict_int(edge_count, minimum=1) or next(iter(shapes), ()) != (edge_count,):
             blockers.append("finite_consensus_source_edge_count_invalid")
+        if source_schema == "finite_consensus_replay_source_v2":
+            node_count = manifest.get("node_count")
+            authority = arrays.get("node_repair_authorities")
+            expected_authority_mode = bool(
+                replay_kernel is not None
+                and manifest.get("repair_kernel_mode")
+                == replay_kernel.PROTECTED_AUTHORITY_REPAIR_MODE
+            )
+            if not _strict_int(node_count, minimum=1) or not expected_authority_mode:
+                blockers.append("finite_consensus_source_authority_invalid")
+            elif authority is None or authority.shape != (node_count,):
+                blockers.append("finite_consensus_source_authority_shape_invalid")
+            elif authority.dtype != np.dtype(np.int64):
+                blockers.append("finite_consensus_source_authority_dtype_invalid")
+            else:
+                try:
+                    validated_source_authority = validate_node_authorities(
+                        authority,
+                        int(node_count),
+                    )
+                except (TypeError, ValueError, OverflowError):
+                    blockers.append("finite_consensus_source_authority_invalid")
+            graph_left = arrays.get("edge_left")
+            graph_right = arrays.get("edge_right")
+            if graph_left is None or graph_right is None:
+                blockers.append("finite_consensus_source_graph_missing")
+            elif not _strict_int(node_count, minimum=1):
+                pass
+            elif graph_left.dtype.kind not in "iu" or graph_right.dtype.kind not in "iu":
+                blockers.append("finite_consensus_source_graph_dtype_invalid")
+            elif (
+                np.any(graph_left < 0)
+                or np.any(graph_right < 0)
+                or np.any(graph_left >= int(node_count))
+                or np.any(graph_right >= int(node_count))
+            ):
+                blockers.append("finite_consensus_source_graph_endpoint_invalid")
+            elif np.any(graph_left == graph_right):
+                blockers.append("finite_consensus_source_authority_self_loop")
 
     group_name = manifest.get("group_name")
     group_order = manifest.get("group_order")
@@ -1198,51 +1369,203 @@ def _independently_replay_finite_consensus_source(
     if not isinstance(sector_config, dict):
         blockers.append("finite_consensus_source_sector_config_invalid")
 
+    if source_schema == "finite_consensus_replay_source_v2":
+        authority_path_name = manifest.get("authority_artifact_path")
+        authority_path = root / "protected_repair_authority.npz"
+        contract_path_name = manifest.get("repair_kernel_contract_path")
+        contract_path = root / "repair_kernel_contract.json"
+        if authority_path_name != authority_path.name:
+            blockers.append("finite_consensus_authority_artifact_path_invalid")
+        if contract_path_name != contract_path.name:
+            blockers.append("finite_consensus_authority_contract_path_invalid")
+        actual_authority_file_hash = (
+            _file_sha256(authority_path) if authority_path.is_file() else None
+        )
+        if (
+            not _sha256_receipt(manifest.get("authority_artifact_file_sha256"))
+            or manifest.get("authority_artifact_file_sha256")
+            != actual_authority_file_hash
+        ):
+            blockers.append("finite_consensus_authority_artifact_file_hash_mismatch")
+        actual_contract_file_hash = (
+            _file_sha256(contract_path) if contract_path.is_file() else None
+        )
+        if (
+            not _sha256_receipt(
+                manifest.get("repair_kernel_contract_file_sha256")
+            )
+            or manifest.get("repair_kernel_contract_file_sha256")
+            != actual_contract_file_hash
+        ):
+            blockers.append("finite_consensus_authority_contract_file_hash_mismatch")
+        actual_authority_kernel_hash = _file_sha256(
+            Path(authority_sha256.__code__.co_filename)
+        )
+        if (
+            not _sha256_receipt(manifest.get("authority_kernel_file_sha256"))
+            or manifest.get("authority_kernel_file_sha256")
+            != actual_authority_kernel_hash
+        ):
+            blockers.append("finite_consensus_authority_kernel_hash_mismatch")
+
+        artifact_authority: np.ndarray | None = None
+        if authority_path.is_file():
+            try:
+                with np.load(authority_path, allow_pickle=False) as payload:
+                    if set(payload.files) != {"node_repair_authorities"}:
+                        blockers.append("finite_consensus_authority_artifact_schema_invalid")
+                    elif payload["node_repair_authorities"].dtype != np.dtype(np.int64):
+                        blockers.append("finite_consensus_authority_artifact_dtype_invalid")
+                    else:
+                        artifact_authority = np.asarray(
+                            payload["node_repair_authorities"]
+                        ).copy()
+            except (OSError, ValueError, KeyError):
+                blockers.append("finite_consensus_authority_artifact_unreadable")
+        authority_contract = _read_json(contract_path)
+        if not authority_contract:
+            blockers.append("finite_consensus_authority_contract_unreadable")
+
+        if validated_source_authority is not None:
+            expected_authority_hash = authority_sha256(
+                validated_source_authority
+            )
+            if (
+                artifact_authority is None
+                or not np.array_equal(
+                    artifact_authority,
+                    validated_source_authority,
+                )
+            ):
+                blockers.append("finite_consensus_authority_artifact_source_mismatch")
+            for owner, payload in (
+                ("manifest", manifest),
+                ("certificate", certificate),
+                ("replay", replay),
+                ("contract", authority_contract),
+            ):
+                if payload.get("authority_hash_schema") != AUTHORITY_SCHEMA:
+                    blockers.append(
+                        f"finite_consensus_{owner}_authority_hash_schema_invalid"
+                    )
+                if payload.get("authority_sha256") != expected_authority_hash:
+                    blockers.append(
+                        f"finite_consensus_{owner}_authority_hash_not_recomputed"
+                    )
+            if authority_contract.get("mode") != "protected_source_authority_v1":
+                blockers.append("finite_consensus_authority_contract_mode_invalid")
+
     recomputed_source_hash = None
     recomputed_quotient_hash = None
+    recomputed_protected_source_hash = None
     recomputed_replay: dict[str, Any] = {}
     if not blockers and replay_kernel is not None:
-        recomputed_source_hash = replay_kernel.coupled_state_hash(
-            arrays["initial_port_left"],
-            arrays["initial_port_right"],
-            arrays["initial_gauge"],
-            edge_left=arrays["edge_left"],
-            edge_right=arrays["edge_right"],
-            group_name=str(group_name),
-            group_order=int(group_order),
-        )
-        recomputed_quotient_hash = replay_kernel.gauge_quotient_state_hash(
-            arrays["initial_port_left"],
-            arrays["initial_port_right"],
-            arrays["initial_gauge"],
-            edge_left=arrays["edge_left"],
-            edge_right=arrays["edge_right"],
-            group_name=str(group_name),
-            group_order=int(group_order),
-        )
-        for owner, payload in (
-            ("manifest", manifest),
-            ("certificate", certificate),
-            ("replay", replay),
-        ):
-            if payload.get("source_state_sha256") != recomputed_source_hash:
-                blockers.append(f"finite_consensus_{owner}_source_hash_not_recomputed")
-            if payload.get("source_quotient_hash") != recomputed_quotient_hash:
-                blockers.append(f"finite_consensus_{owner}_quotient_hash_not_recomputed")
-        recomputed_replay = replay_kernel._array_port_pair_consensus_replay_report(
-            arrays["initial_port_left"],
-            arrays["initial_port_right"],
-            arrays["initial_gauge"],
-            edge_left=arrays["edge_left"],
-            edge_right=arrays["edge_right"],
-            group_name=str(group_name),
-            group_order=int(group_order),
-            config=dict(replay_config),
-            production_sector_repair_config=dict(sector_config),
-            seed=int(replay_seed),
-        )
-        if recomputed_replay != replay:
-            blockers.append("finite_consensus_independent_replay_mismatch")
+        try:
+            recomputed_source_hash = replay_kernel.coupled_state_hash(
+                arrays["initial_port_left"],
+                arrays["initial_port_right"],
+                arrays["initial_gauge"],
+                edge_left=arrays["edge_left"],
+                edge_right=arrays["edge_right"],
+                group_name=str(group_name),
+                group_order=int(group_order),
+            )
+            recomputed_quotient_hash = replay_kernel.gauge_quotient_state_hash(
+                arrays["initial_port_left"],
+                arrays["initial_port_right"],
+                arrays["initial_gauge"],
+                edge_left=arrays["edge_left"],
+                edge_right=arrays["edge_right"],
+                group_name=str(group_name),
+                group_order=int(group_order),
+            )
+            for owner, payload in (
+                ("manifest", manifest),
+                ("certificate", certificate),
+                ("replay", replay),
+            ):
+                if payload.get("source_state_sha256") != recomputed_source_hash:
+                    blockers.append(
+                        f"finite_consensus_{owner}_source_hash_not_recomputed"
+                    )
+                if payload.get("source_quotient_hash") != recomputed_quotient_hash:
+                    blockers.append(
+                        f"finite_consensus_{owner}_quotient_hash_not_recomputed"
+                    )
+            if validated_source_authority is not None:
+                recomputed_protected_source_hash = (
+                    protected_authority_source_sha256(
+                        recomputed_source_hash,
+                        validated_source_authority,
+                    )
+                )
+                for owner, payload in (
+                    ("manifest", manifest),
+                    ("certificate", certificate),
+                    ("replay", replay),
+                ):
+                    if (
+                        payload.get("protected_source_hash_schema")
+                        != PROTECTED_AUTHORITY_SOURCE_HASH_SCHEMA
+                    ):
+                        blockers.append(
+                            f"finite_consensus_{owner}_protected_source_hash_schema_invalid"
+                        )
+                    if (
+                        payload.get("protected_source_sha256")
+                        != recomputed_protected_source_hash
+                    ):
+                        blockers.append(
+                            f"finite_consensus_{owner}_protected_source_hash_not_recomputed"
+                        )
+                terminal_quotient_hash = replay.get("terminal_quotient_hash")
+                if _sha256_receipt(terminal_quotient_hash):
+                    expected_terminal_hash = protected_authority_terminal_sha256(
+                        terminal_quotient_hash,
+                        validated_source_authority,
+                    )
+                    for owner, payload in (
+                        ("certificate", certificate),
+                        ("replay", replay),
+                    ):
+                        if (
+                            payload.get("terminal_hash_schema")
+                            != PROTECTED_AUTHORITY_TERMINAL_HASH_SCHEMA
+                        ):
+                            blockers.append(
+                                f"finite_consensus_{owner}_terminal_hash_schema_invalid"
+                            )
+                        if payload.get("terminal_hash") != expected_terminal_hash:
+                            blockers.append(
+                                f"finite_consensus_{owner}_terminal_hash_not_recomputed"
+                            )
+                else:
+                    blockers.append(
+                        "finite_consensus_replay_terminal_quotient_hash_invalid"
+                    )
+            recomputed_replay = replay_kernel._array_port_pair_consensus_replay_report(
+                arrays["initial_port_left"],
+                arrays["initial_port_right"],
+                arrays["initial_gauge"],
+                edge_left=arrays["edge_left"],
+                edge_right=arrays["edge_right"],
+                repair_kernel_mode=str(
+                    manifest.get(
+                        "repair_kernel_mode",
+                        replay_kernel.LEGACY_RANDOM_ENDPOINT_REPAIR_MODE,
+                    )
+                ),
+                node_repair_authorities=arrays.get("node_repair_authorities"),
+                group_name=str(group_name),
+                group_order=int(group_order),
+                config=dict(replay_config),
+                production_sector_repair_config=dict(sector_config),
+                seed=int(replay_seed),
+            )
+            if recomputed_replay != replay:
+                blockers.append("finite_consensus_independent_replay_mismatch")
+        except Exception:
+            blockers.append("finite_consensus_independent_replay_execution_failed")
 
     return {
         "mode": "finite_consensus_primitive_bound_independent_replay_v1",
@@ -1251,6 +1574,7 @@ def _independently_replay_finite_consensus_source(
         "state_file_sha256": actual_file_hash,
         "source_state_sha256": recomputed_source_hash,
         "source_quotient_hash": recomputed_quotient_hash,
+        "protected_source_sha256": recomputed_protected_source_hash,
         "recomputed_receipt": recomputed_replay.get("receipt"),
         "blockers": list(dict.fromkeys(blockers)),
         "passed": not blockers,

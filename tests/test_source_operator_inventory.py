@@ -99,6 +99,23 @@ def test_every_current_canonical_json_has_an_exact_contract() -> None:
             assert row["raw_pin"]["path"] == row["path"]
 
 
+def test_labeled_refinement_readout_is_registered_without_physical_promotion() -> None:
+    row = _row(
+        REPORT,
+        "data/repair_closure/angular_refinement_labeled_event_readout_receipt.json",
+    )
+    assert row["schema"] == "oph.angular_refinement_labeled_event_readout.v1"
+    assert row["status"] == (
+        "EXACT_LEVEL_ONE_LABELED_EVENT_FULL_RECONSTRUCTION__"
+        "PHYSICAL_INSTRUMENT_OPEN"
+    )
+    assert row["disposition"] == (
+        "EXACT_LABELED_EVENT_READOUT__EVENT_GRAMMAR_RESET_CHECKPOINT_AND_"
+        "PHYSICAL_INSTRUMENT_OPEN"
+    )
+    assert row["critical_bridge_evidence"] is None
+
+
 def test_conditional_fz11_adapter_is_not_admitted_as_source_capability() -> None:
     row = _row(
         REPORT,

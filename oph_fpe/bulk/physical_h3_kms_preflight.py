@@ -1139,7 +1139,7 @@ def _source_observer_stage(config: Mapping[str, Any], report: Mapping[str, Any])
     )
     architecture_passed = bool(
         report.get("schema_version")
-        == "oph_source_repair_record_observer_contract_v2"
+        == "oph_physical_h3_kms_source_capture_contract_v2"
         and architecture.get("bounded_patch_system") is True
         and architecture.get("simulation_native_source") is True
         and architecture.get("carrier_family")

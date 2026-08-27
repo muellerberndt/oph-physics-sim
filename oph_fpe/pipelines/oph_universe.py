@@ -618,13 +618,8 @@ def run_oph_universe_pipeline(
             "cmb_neutral_frontier_viewer": cmb_neutral_viewer.get("viewer_path"),
             "visualizer_csv_aliases": visualizer_csv_aliases,
         },
-        "claim_boundary": (
-            "Canonical theorem-following OPH universe run. The pipeline instantiates observer-like "
-            "self-reading systems, runs a finite overlap-repair simulation, refits the cached modular "
-            "response through controlled H3 candidates, recomputes observer-object chart population, "
-            "and emits proof/readout/viewer artifacts. It does not lower computed receipt thresholds. "
-            "A separately labeled simulation-assumption manifest may complete the explanatory S2/BW/H3/"
-            "dS4/topological-matter scene without changing any proof or physical-measurement receipt."
+        "claim_boundary": _universe_claim_boundary(
+            readout.get("observer_like_self_reading_system_receipt") is True
         ),
     }
     _write_json(run_dir / "AUTO_THEOREM_UNIVERSE_SUMMARY.json", summary)
@@ -648,6 +643,15 @@ def _write_visualizer_csv_aliases(run_dir: Path, readout_dir: Path) -> dict[str,
                 "source": str(source),
                 "path": str(destination),
                 "reason": "source_missing",
+            }
+            continue
+        if destination.exists():
+            aliases[alias_name] = {
+                "written": False,
+                "preserved_existing": True,
+                "source": str(source),
+                "path": str(destination),
+                "reason": "existing_source_run_artifact_preserved",
             }
             continue
         shutil.copyfile(source, destination)
@@ -870,6 +874,253 @@ def refresh_post_theorem_large_run_readiness_report(run_dir: Path) -> dict[str, 
         )
     _write_json(run_path / "large_run_readiness_report.json", report)
     return report
+
+
+def refresh_observer_contract_dependent_surfaces(run_dir: Path) -> dict[str, Any]:
+    """Fail closed all public aggregate surfaces after a causal-contract change."""
+
+    run_path = Path(run_dir)
+    summary = _read_json(run_path / "AUTO_THEOREM_UNIVERSE_SUMMARY.json")
+    export_settings = summary.get("visualization_export_settings", {})
+    theorem_contract = write_finite_oph_theorem_contract_report(
+        run_path,
+        run_path / "finite_oph_theorem_contract_report.json",
+    )
+    proof = write_bulk_proof_certificate(
+        run_path,
+        run_path / "bulk_proof_certificate_report.json",
+    )
+    readout = write_observer_consensus_bulk_readout_report(
+        [run_path],
+        run_path / "observer_consensus_bulk",
+        observer_sample_count=int(
+            export_settings.get("readout_observer_sample_count", 12)
+        ),
+        object_sample_count=int(export_settings.get("readout_object_sample_count", 24)),
+    )
+    _write_visualizer_csv_aliases(run_path, run_path / "observer_consensus_bulk")
+    timeline: dict[str, Any] = {}
+    if (run_path / "universe_timeline").is_dir():
+        timeline = write_universe_timeline_bundle(
+            small_universe_dir=run_path,
+            observer_run_dir=run_path,
+            consensus_pack_dir=run_path,
+            consensus_readout_dir=run_path / "observer_consensus_bulk",
+            out_dir=run_path / "universe_timeline",
+            max_screen_points=int(export_settings.get("max_screen_points", 3500)),
+            max_observers=int(export_settings.get("max_observers", 96)),
+            max_objective_observer_views=int(
+                export_settings.get(
+                    "max_objective_observer_views",
+                    export_settings.get("max_observers", 96),
+                )
+            ),
+            max_h3_objects=int(export_settings.get("max_h3_objects", 512)),
+        )
+        _verify_timeline_self_reading_receipt_sync(
+            run_path / "universe_timeline",
+            expected=readout.get("observer_like_self_reading_system_receipt") is True,
+        )
+
+    final_receipts = summary.setdefault("final_receipts", {})
+    for key in (
+        "observer_like_self_reading_system_receipt",
+        "observer_modular_time_receipt",
+        "observer_facing_3p1d_h3_experience_receipt",
+        "theorem_assisted_consensus_3d_bulk_readout_receipt",
+        "observer_facing_consensus_3d_bulk_readout_receipt",
+        "chart_blind_strict_neutral_quotient_bulk_receipt",
+        "strict_neutral_third_person_bulk_receipt",
+        "physical_cmb_output_comparison_receipt",
+        "physical_cmb_prediction_receipt",
+    ):
+        final_receipts[key] = readout.get(key) is True
+    for key in (
+        "finite_lorentz_theorem_contract_receipt",
+        "paper_faithful_observer_spacetime_emergence_receipt",
+        "paper_faithful_consensus_bulk_emergence_receipt",
+        "paper_geometric_branch_lorentz_contract_receipt",
+        "paper_geometric_branch_observer_spacetime_emergence_receipt",
+        "paper_geometric_branch_consensus_bulk_emergence_receipt",
+        "strict_neutral_bulk_contract_receipt",
+    ):
+        final_receipts[key] = theorem_contract.get(key) is True
+    final_receipts[
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt"
+    ] = theorem_contract.get(
+        "simulation_matches_observer_facing_oph_spacetime_bulk_prediction_receipt",
+        theorem_contract.get(
+            "paper_geometric_branch_consensus_bulk_emergence_receipt", False
+        ),
+    ) is True
+    final_receipts["simulation_assumed_visual_universe_receipt"] = (
+        theorem_contract.get("SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT") is True
+    )
+    final_receipts["einstein_branch_entry_contract_receipt"] = bool(
+        theorem_contract.get("einstein_branch_entry_contract_receipt") is True
+        or theorem_contract.get("OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1") is True
+    )
+
+    summary["finite_theorem_contract_summary"] = {
+        key: theorem_contract.get(key)
+        for key in (
+            "finite_lorentz_theorem_contract_receipt",
+            "paper_faithful_observer_spacetime_emergence_receipt",
+            "paper_faithful_consensus_bulk_emergence_receipt",
+            "paper_geometric_branch_lorentz_contract_receipt",
+            "paper_geometric_branch_observer_spacetime_emergence_receipt",
+            "paper_geometric_branch_consensus_bulk_emergence_receipt",
+            "strict_neutral_bulk_contract_receipt",
+            "einstein_branch_entry_contract_receipt",
+            "einstein_branch_entry_primary_blockers",
+            "einstein_branch_entry_blockers",
+            "chart_blind_strict_neutral_blockers",
+            "paper_geometric_branch_primary_blockers",
+            "primary_blockers",
+        )
+    }
+    summary["finite_theorem_contract_summary"][
+        "simulation_assumed_visual_universe_receipt"
+    ] = theorem_contract.get("SIMULATION_ASSUMED_VISUAL_UNIVERSE_RECEIPT")
+    summary["proof_summary"] = {
+        key: proof.get(key)
+        for key in (
+            "bulk_3d_established_theorem_assisted",
+            "bulk_3d_established_observer_facing_consensus",
+            "bulk_3d_established_paper_geometric_branch_observer_facing_consensus",
+            "bulk_3d_established_strict",
+            "bulk_3d_established_chart_blind_strict_neutral",
+            "physical_cmb_prediction",
+        )
+    }
+    post_theorem_readiness = _post_theorem_large_run_readiness(
+        theorem_contract=theorem_contract,
+        proof=proof,
+        readout=readout,
+        frontier_artifacts=summary.get("frontier_artifacts", {}),
+        cmb_diagnostics=summary.get("cmb_diagnostic_summary", {}),
+        visualization_data_completeness=timeline.get(
+            "visual_universe_render_completeness", {}
+        ),
+    )
+    summary["post_theorem_large_run_readiness"] = post_theorem_readiness
+    summary["claim_boundary"] = _universe_claim_boundary(
+        readout.get("observer_like_self_reading_system_receipt") is True
+    )
+    if timeline:
+        viewers = summary.setdefault("viewer_outputs", {})
+        viewers.update(
+            {
+                "timeline_viewer": timeline.get("viewer_path"),
+                "timeline_payload": timeline.get("payload_path"),
+                "timeline_visualizer_pack": (
+                    timeline.get("visualizer_pack") or {}
+                ).get("path"),
+                "timeline_visualizer_pack_bytes": (
+                    timeline.get("visualizer_pack") or {}
+                ).get("byte_count"),
+                "timeline_visualizer_pack_under_256m": bool(
+                    (timeline.get("visualizer_pack") or {}).get(
+                        "under_hard_limit", False
+                    )
+                ),
+                "timeline_sidecar_exports": timeline.get("sidecar_exports"),
+                "timeline_instructions": timeline.get("instructions_path"),
+                "web_agent_brief": timeline.get("web_coding_agent_brief_path"),
+                "timeline_self_reading_receipt_sync": True,
+            }
+        )
+    _write_json(run_path / "large_run_readiness_report.json", post_theorem_readiness)
+    _write_json(run_path / "AUTO_THEOREM_UNIVERSE_SUMMARY.json", summary)
+    _write_readme(run_path / "README_OPH_UNIVERSE_PACK.md", summary)
+    return summary
+
+
+def _verify_timeline_self_reading_receipt_sync(
+    timeline_dir: Path,
+    *,
+    expected: bool,
+) -> None:
+    """Reject loose or packed visualization receipts stale against the readout."""
+
+    root = Path(timeline_dir)
+    loose = _read_json(root / "visualization_payload.json")
+    loose_receipt = (
+        (loose.get("consensusBulk") or {}).get("receipts") or {}
+    ).get("observer_like_self_reading_system_receipt")
+    packed_receipt = _read_packed_consensus_self_reading_receipt(
+        root / "oph_visualizer_pack_v2.tar.zst"
+    )
+    if loose_receipt is not expected or packed_receipt is not expected:
+        raise ValueError(
+            "observer self-reading receipt drift between refreshed readout, "
+            "visualization payload, and packed visualization payload"
+        )
+
+
+def _read_packed_consensus_self_reading_receipt(pack_path: Path) -> Any:
+    """Verify and read the receipt-bearing section without expanding all chunks."""
+
+    import hashlib
+    import tarfile
+
+    import zstandard
+
+    manifest: dict[str, Any] = {}
+    section_bytes: bytes | None = None
+    with Path(pack_path).open("rb") as compressed:
+        with zstandard.ZstdDecompressor().stream_reader(compressed) as reader:
+            with tarfile.open(fileobj=reader, mode="r|") as archive:
+                for member in archive:
+                    if member.name not in {
+                        "manifest.json",
+                        "sections/consensusBulk.json",
+                    }:
+                        continue
+                    handle = archive.extractfile(member)
+                    if handle is None:
+                        continue
+                    payload = handle.read()
+                    if member.name == "manifest.json":
+                        manifest = json.loads(payload.decode("utf-8"))
+                    else:
+                        section_bytes = payload
+    if not manifest or section_bytes is None:
+        raise ValueError("visualizer pack lacks manifest or consensusBulk section")
+    file_rows = {
+        row.get("path"): row
+        for row in manifest.get("files", [])
+        if isinstance(row, dict)
+    }
+    expected = file_rows.get("sections/consensusBulk.json") or {}
+    actual_hash = "sha256:" + hashlib.sha256(section_bytes).hexdigest()
+    if (
+        expected.get("sha256") != actual_hash
+        or expected.get("byteCount") != len(section_bytes)
+    ):
+        raise ValueError("packed consensusBulk section fails manifest custody")
+    section = json.loads(section_bytes.decode("utf-8"))
+    return (section.get("receipts") or {}).get(
+        "observer_like_self_reading_system_receipt"
+    )
+
+
+def _universe_claim_boundary(self_reading_receipt: bool) -> str:
+    causal_status = (
+        "The dedicated causal contract verifies observer-like self-reading. "
+        if self_reading_receipt
+        else "Materialized observer rows do not pass the dedicated causal self-reading "
+        "contract and are not promoted to observer-like self-reading systems. "
+    )
+    return (
+        "Canonical theorem-following OPH universe run. "
+        + causal_status
+        + "The pipeline runs a finite overlap-repair simulation, refits the cached modular "
+        "response through controlled H3 candidates, recomputes observer-object chart population, "
+        "and emits proof/readout/viewer artifacts. It does not lower computed receipt thresholds. "
+        "A separately labeled simulation-assumption manifest may complete the explanatory S2/BW/H3/"
+        "dS4/topological-matter scene without changing any proof or physical-measurement receipt."
+    )
 
 
 def _write_frontier_artifacts(run_dir: Path, config: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -2020,11 +2271,18 @@ def _write_readme(path: Path, summary: dict[str, Any]) -> None:
     assumption_manifest = summary.get("simulation_assumptions", {})
     visual_assumption_receipt = bool(receipts.get("simulation_assumed_visual_universe_receipt", False))
     viewers = summary.get("viewer_outputs", {})
+    self_reading_receipt = receipts.get("observer_like_self_reading_system_receipt") is True
     lines = [
         "# OPH Universe Simulation Pack",
         "",
         "This pack was generated by the canonical theorem-following OPH universe pipeline.",
-        "It instantiates observer-like self-reading systems and keeps failed theorem gates explicit.",
+        (
+            "Its dedicated causal contract verifies observer-like self-reading, and failed theorem "
+            "gates remain explicit."
+            if self_reading_receipt
+            else "It materializes observer rows, but the dedicated causal self-reading contract is "
+            "open; failed theorem gates remain explicit."
+        ),
         "",
         "## Computed Receipts And Promotion Gates",
     ]

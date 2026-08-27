@@ -107,6 +107,22 @@ oph-fpe run-array \
   --out-dir runs
 ```
 
+The protected-authority consensus fixture exercises a theorem-audited finite
+normalizer on the 81,920-cell tower rung:
+
+```bash
+oph-fpe run-bw-array \
+  --config configs/icosa_82k_protected_consensus.yml \
+  --out-dir runs
+```
+
+Its consensus theorem is conditional on the authority metadata frozen before
+dynamics. The separate
+`data/repair_closure/vertex12_signed_record_feedback_receipt.json` checks a
+literal record-conditioned software feedback rule on eight twelve-port
+carriers. That smaller receipt is not part of the 81,920-cell run and does not
+constitute a laboratory or physical-observer attachment.
+
 The older `fibonacci_sphere` fixtures remain available as explicit
 support-chart/KNN controls; they do not instantiate the production A1 carrier.
 For example:

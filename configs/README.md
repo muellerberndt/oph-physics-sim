@@ -9,6 +9,10 @@ Tracked configs are limited to:
   `icosa_1310k.yml`: the production `icosahedral_tower` family, from the small
   engineering rung through the named campaign sizes. These are non-evidential
   unless a separately preregistered instrument says otherwise.
+- `icosa_82k_protected_consensus.yml`: an evidence-profile tower run for the
+  protected-authority finite consensus protocol. It tests confluence within a
+  frozen authority-conditioned boundary fiber and does not derive the
+  authority, observer feedback, spacetime, or laboratory physics.
 - `e0_z2_patchnet.yml`: E0 finite patch-net smoke run.
 - `e1_s3_modular_screen_4k.yml`: S3 modular-screen smoke run.
 - `e1_s3_bw_screen_4k.yml` and `e1_s3_bw_screen_64k.yml`: BW sweep fixtures.

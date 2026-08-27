@@ -16,6 +16,7 @@ from oph_fpe.pipelines.oph_universe import (
     _write_physical_cmb_source_artifacts,
     _write_physical_cmb_transfer_artifacts,
     _write_readme,
+    _universe_claim_boundary,
     _write_visualizer_csv_aliases,
     _write_visualization_diagnostic_artifacts,
     _visualization_export_settings,
@@ -48,6 +49,36 @@ def test_universe_pack_readme_separates_visual_assumptions_from_computed_receipt
     assert "simulation_assumed_visual_universe_receipt" not in computed_section
     assert "simulation_assumed_visual_universe_receipt`: `true" in assumption_section
     assert "not a computed proof receipt or a physical prediction" in assumption_section
+    assert "dedicated causal self-reading contract is open" in content
+    assert "instantiates observer-like self-reading systems" not in content
+
+
+def test_universe_pack_readme_promotes_self_reading_only_with_dedicated_receipt(
+    tmp_path,
+):
+    path = tmp_path / "README_OPH_UNIVERSE_PACK.md"
+    _write_readme(
+        path,
+        {
+            "final_receipts": {
+                "observer_like_self_reading_system_receipt": True,
+            },
+            "simulation_assumptions": {},
+            "viewer_outputs": {},
+            "claim_boundary": "finite test boundary",
+        },
+    )
+
+    content = path.read_text(encoding="utf-8")
+    assert "dedicated causal contract verifies observer-like self-reading" in content
+
+
+def test_universe_claim_boundary_is_conditional_on_causal_receipt():
+    failed = _universe_claim_boundary(False)
+    passed = _universe_claim_boundary(True)
+
+    assert "are not promoted to observer-like self-reading systems" in failed
+    assert "verifies observer-like self-reading" in passed
 
 
 def test_refit_selection_is_predeclared_not_best_score():

@@ -378,7 +378,7 @@ def _conforming_bundle() -> dict:
         },
         "reports": {
             "source_observer": {
-                "schema_version": "oph_source_repair_record_observer_contract_v2",
+                "schema_version": "oph_physical_h3_kms_source_capture_contract_v2",
                 "SOURCE_PATCH_ARCHITECTURE_RECEIPT": True,
                 "PATCH_LOCAL_STATE_RECEIPT": True,
                 "PATCH_PORT_BOUNDARY_RECEIPT": True,

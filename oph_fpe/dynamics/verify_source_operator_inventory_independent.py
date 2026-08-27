@@ -30,6 +30,7 @@ from oph_fpe.dynamics import (
     verify_vertex12_a2_endpoint_commutator_independent,
     verify_vertex12_constructive_source_law_independent,
     verify_vertex12_directed_transport_feasibility_independent,
+    verify_vertex12_signed_record_feedback_independent,
 )
 
 
@@ -233,6 +234,11 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     "data/repair_closure/angular_refinement_repair_observability_receipt.json": _contract(
         "oph.angular_refinement_repair_observability.v1", "EXACT_REFINEMENT_REPAIR_COUNTERENSEMBLE__DETAIL_COVARIANCE_UNSELECTED__PHYSICAL_SKY_READOUT_OPEN", "ANGULAR_READOUT_PHYSICAL_SKY_BINDING_OPEN"
     ),
+    "data/repair_closure/angular_refinement_labeled_event_readout_receipt.json": _contract(
+        "oph.angular_refinement_labeled_event_readout.v1",
+        "EXACT_LEVEL_ONE_LABELED_EVENT_FULL_RECONSTRUCTION__PHYSICAL_INSTRUMENT_OPEN",
+        "EXACT_LABELED_EVENT_READOUT__EVENT_GRAMMAR_RESET_CHECKPOINT_AND_PHYSICAL_INSTRUMENT_OPEN",
+    ),
     "data/repair_closure/bounded_atomic_self_readback_closure_receipt.json": _contract(
         "oph.bounded_atomic_self_readback_closure.v1", "BOUNDED_EXPECTATION_LEVEL_REPAIR_FIXED_POINT_UNIQUE_MODULO_CLOCK_IN_THE_FROZEN_ADVERSARIAL_SUITE", "INTERNAL_REPAIR_PHYSICAL_LAW_NOT_SELECTED"
     ),
@@ -334,6 +340,17 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
         "oph.vertex12-directed-transport-feasibility.v1",
         "EXACT_SEMICONJUGATE_COVER_OBSTRUCTION_FOR_CURRENT_SOURCE_MATCHINGS__ORIENTED_SOURCE_TRANSITION_LAW_OPEN",
         "CURRENT_MATCHING_COVER_OBSTRUCTED__DECLARED_ALGEBRAIC_CONTROL_NOT_SOURCE_EMITTED_OR_PHYSICAL",
+    ),
+    "data/repair_closure/vertex12_signed_record_feedback_receipt.json": _contract(
+        "oph.vertex12-signed-record-feedback-diagnostic.v1",
+        (
+            "INTERNAL_BOUNDED_LITERAL_SIGNED_RECORD_CAUSAL_FEEDBACK_ATTAINED__"
+            "CANONICAL_SOURCE_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
+        ),
+        (
+            "INDEPENDENTLY_REPLAYED_INTERNAL_LITERAL_RECORD_FEEDBACK__"
+            "CANONICAL_SOURCE_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
+        ),
     ),
     "data/theory/axiom_registry_pin.json": _contract(
         "oph.sim.axiom_registry_pin.v1",
@@ -1467,6 +1484,17 @@ def _rows(paths: Sequence[str]) -> list[dict[str, Any]]:
                 raise ValueError(
                     "vertex12 constructive source-law control failed independent "
                     f"verification: {verification.get('reasons')}"
+                )
+        if path == "data/repair_closure/vertex12_signed_record_feedback_receipt.json":
+            verification = (
+                verify_vertex12_signed_record_feedback_independent.verify_report(
+                    value
+                )
+            )
+            if verification.get("receipt") is not True:
+                raise ValueError(
+                    "vertex12 signed-record feedback failed independent "
+                    f"verification: {verification.get('reason')}"
                 )
         result.append({
             "path": path,

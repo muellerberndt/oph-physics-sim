@@ -7,6 +7,7 @@ import pytest
 
 from oph_fpe.experiments import load_config
 from oph_fpe.scale.bw_array import (
+    PROTECTED_AUTHORITY_REPAIR_MODE,
     _attach_modular_response_histograms,
     _attach_transition_history_histograms,
     _array_port_pair_consensus_replay_report,
@@ -243,7 +244,7 @@ def test_bw_array_writes_bw_report(tmp_path: Path):
         ],
         patch_state["routed_right_state"],
     )
-    assert source_contract["schema_version"] == "oph_source_repair_record_observer_contract_v2"
+    assert source_contract["schema_version"] == "oph_source_repair_record_observer_contract_v3"
     assert source_contract["PATCH_LOCAL_STATE_RECEIPT"] is True
     assert source_contract["PATCH_ALL_PORT_READBACK_RECEIPT"] is True
     assert source_contract["RECORD_SIGNATURE_BINDS_ALL_LOCAL_PORT_STATE_RECEIPT"] is True
@@ -827,6 +828,127 @@ def test_endpoint_branch_nonconfluence_is_structural_not_monte_carlo_luck():
     assert exact["structural_nonconfluence_witness_count"] == 1
     assert exact["unique_terminal_quotient_hash_count"] >= 2
     assert report["evidence"]["endpoint_branch_confluence_violation_count"] == 1
+
+
+def test_protected_authority_replay_has_one_exact_terminal_normal_form():
+    port_left = np.asarray([5, 4, 3, 2], dtype=np.int16)
+    port_right = np.asarray([0, 1, 0, 1], dtype=np.int16)
+    edge_left = np.asarray([0, 0, 1, 2], dtype=np.int64)
+    edge_right = np.asarray([1, 2, 2, 3], dtype=np.int64)
+    authorities = np.asarray([10, 40, 20, 30], dtype=np.int64)
+
+    report = _array_port_pair_consensus_replay_report(
+        port_left,
+        port_right,
+        np.asarray([1, 2, 3, 4], dtype=np.int16),
+        edge_left=edge_left,
+        edge_right=edge_right,
+        repair_kernel_mode=PROTECTED_AUTHORITY_REPAIR_MODE,
+        node_repair_authorities=authorities,
+        group_name="S3",
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 8,
+            "requested_schedule_replays": 8,
+            "disjoint_checks": 8,
+            "local_diamond_checks": 8,
+            "gauge_relabeling_checks": 6,
+        },
+        seed=91,
+    )
+
+    assert report["receipt"] is True
+    assert report["repair_kernel_mode"] == PROTECTED_AUTHORITY_REPAIR_MODE
+    assert report["unique_terminal_hash_count"] == 1
+    assert report["evidence"]["schedule_replay_count"] == 8
+    assert report["evidence"]["strict_descent_violation_count"] == 0
+    assert report["evidence"]["local_diamond_violation_count"] == 0
+    assert report["evidence"]["gauge_covariance_violation_count"] == 0
+    exact = report["exact_normalizer_confluence_check"]
+    assert exact["structurally_confluent"] is True
+    assert exact["endpoint_repair_effective"] is True
+    assert exact["endpoint_branch_nondeterministic"] is False
+    assert exact["endpoint_branch_effective"] is False
+    assert "deprecated compatibility field" in exact["endpoint_branch_effective_semantics"]
+    assert _computed_array_replay_consensus_certificate(report)["receipt"] is True
+
+
+def test_protected_authority_is_bound_into_source_and_terminal_hash_domains():
+    port_left = np.asarray([0, 0], dtype=np.int16)
+    port_right = np.asarray([0, 0], dtype=np.int16)
+    gauge = np.asarray([0, 1], dtype=np.int16)
+    edge_left = np.asarray([0, 1], dtype=np.int64)
+    edge_right = np.asarray([1, 2], dtype=np.int64)
+    config = {
+        "enabled": True,
+        "schedule_replays": 2,
+        "requested_schedule_replays": 2,
+        "disjoint_checks": 2,
+        "local_diamond_checks": 2,
+        "gauge_relabeling_checks": 2,
+    }
+
+    reports = [
+        _array_port_pair_consensus_replay_report(
+            port_left,
+            port_right,
+            gauge,
+            edge_left=edge_left,
+            edge_right=edge_right,
+            repair_kernel_mode=PROTECTED_AUTHORITY_REPAIR_MODE,
+            node_repair_authorities=np.asarray(authorities, dtype=np.int64),
+            group_name="S3",
+            group_order=6,
+            config=config,
+            seed=17,
+        )
+        for authorities in ([0, 1, 2], [0, 2, 1])
+    ]
+
+    assert all(report["receipt"] is True for report in reports)
+    assert reports[0]["source_state_sha256"] == reports[1]["source_state_sha256"]
+    assert reports[0]["source_quotient_hash"] == reports[1]["source_quotient_hash"]
+    assert reports[0]["authority_sha256"] != reports[1]["authority_sha256"]
+    assert (
+        reports[0]["protected_source_sha256"]
+        != reports[1]["protected_source_sha256"]
+    )
+    assert reports[0]["terminal_quotient_hash"] != reports[1]["terminal_quotient_hash"]
+    assert reports[0]["terminal_hash"] != reports[1]["terminal_hash"]
+
+
+def test_protected_authority_replay_rejects_sector_link_mutation():
+    report = _array_port_pair_consensus_replay_report(
+        np.asarray([2, 1, 4], dtype=np.int16),
+        np.asarray([1, 0, 3], dtype=np.int16),
+        np.zeros(3, dtype=np.int16),
+        edge_left=np.asarray([0, 1, 2], dtype=np.int64),
+        edge_right=np.asarray([1, 2, 3], dtype=np.int64),
+        repair_kernel_mode=PROTECTED_AUTHORITY_REPAIR_MODE,
+        node_repair_authorities=np.asarray([1, 4, 2, 3], dtype=np.int64),
+        group_name="S3",
+        group_order=6,
+        config={
+            "enabled": True,
+            "schedule_replays": 4,
+            "requested_schedule_replays": 4,
+            "disjoint_checks": 4,
+            "local_diamond_checks": 4,
+        },
+        production_sector_repair_config={
+            "enabled": True,
+            "mode": "repair_coupled_group_compose",
+            "probability": 0.08,
+        },
+        seed=23,
+    )
+
+    assert report["receipt"] is False
+    assert (
+        "protected_authority_strict_repair_requires_fixed_sector_links"
+        in report["production_move_contract"]["blockers"]
+    )
 
 
 def test_consensus_replay_cannot_disable_required_ab_ba_coverage():

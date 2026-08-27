@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+from oph_fpe.bulk.self_reading_contract import validate_run_self_reading_contract
 import yaml
 
 from oph_fpe.experiments import load_config
@@ -90,9 +92,10 @@ def prepare_distributed_oph_universe(
 ) -> dict[str, Any]:
     """Prepare a theorem-aligned distributed OPH universe run.
 
-    Each shard is a bounded observer-like self-reading screen patch. The reducer
-    may certify a federated witness, but it must not promote the run to a single
-    chart-blind strict neutral quotient bulk unless future cross-shard repair/overlap receipts exist.
+    Each shard is a bounded observer-patch candidate for the dedicated causal
+    self-reading contract. The reducer may certify a federated witness, but it
+    must not promote self-reading or a single chart-blind strict neutral quotient
+    bulk unless the corresponding shard and cross-shard receipts pass.
     """
 
     if shard_count <= 0:
@@ -187,9 +190,10 @@ def prepare_distributed_oph_universe(
         "run_id": run_id,
         "config_path": str(config_path),
         "claim_boundary": (
-            "Distributed OPH-FPE execution over observer-like self-reading screen shards. "
-            "Each shard has bounded local state, ports/boundaries, readback, records, feedback/repair moves, "
-            "and public receipts. The reducer can certify a federated large-universe witness; it cannot by "
+            "Distributed OPH-FPE execution over observer-patch screen shards configured to test the "
+            "dedicated causal self-reading contract. Each shard has bounded local state, ports or "
+            "boundaries, readback rows, records, repair moves, and public receipts. The reducer can certify "
+            "self-reading only when every completed shard passes that receipt; it cannot by "
             "itself certify a strict single neutral third-person bulk without explicit cross-shard overlap "
             "repair receipts."
         ),
@@ -260,6 +264,19 @@ def reduce_distributed_oph_universe(
         timeline_payload_path = run_dir / "universe_timeline" / "visualization_payload.json"
         trace = _read_trace(run_dir / "mismatch_trace.csv")
         receipts = dict(summary.get("final_receipts") or {})
+        source_observer_contract = _read_json(
+            run_dir / "source_dynamics_repair_record_observer_report.json"
+        )
+        self_reading_validation = validate_run_self_reading_contract(
+            run_dir,
+            source_observer_contract,
+        )
+        reported_self_reading_receipt = receipts.get(
+            "observer_like_self_reading_system_receipt"
+        )
+        receipts["observer_like_self_reading_system_receipt"] = bool(
+            self_reading_validation["passed"]
+        )
         shard_rows.append(
             {
                 "shard_index": int(shard.get("shard_index", len(shard_rows))),
@@ -282,6 +299,14 @@ def reduce_distributed_oph_universe(
                 "trace_samples": _trace_summary(trace),
                 "timeline_payload_path": str(timeline_payload_path) if timeline_payload_path.exists() else None,
                 "final_receipts": receipts,
+                "source_observer_contract_validation": self_reading_validation,
+                "source_observer_contract_summary_disagreement": bool(
+                    (reported_self_reading_receipt is True)
+                    != bool(self_reading_validation["passed"])
+                ),
+                "reported_observer_like_self_reading_system_receipt": (
+                    reported_self_reading_receipt
+                ),
                 "emergence_status": {
                     "bulk_population_source": emergence.get("bulk_population_source"),
                     "bulk_3d_established": _literal_true(emergence.get("bulk_3d_established")),
@@ -299,6 +324,15 @@ def reduce_distributed_oph_universe(
 
     completed = [row for row in shard_rows if row["completed"]]
     receipt_summary = _receipt_summary(completed)
+    all_expected_completed = len(completed) == int(manifest.get("shard_count", 0))
+    self_reading_all_shards = bool(
+        all_expected_completed
+        and completed
+        and receipt_summary.get(
+            "observer_like_self_reading_system_receipt", {}
+        ).get("passed_count")
+        == len(completed)
+    )
     total_patches = sum(int(row.get("patch_count") or 0) for row in completed)
     total_observers = sum(int(row.get("observer_count") or 0) for row in completed)
     total_objects = sum(int(row.get("object_count") or 0) for row in completed)
@@ -320,7 +354,6 @@ def reduce_distributed_oph_universe(
     all_required = bool(completed) and all(
         receipt_summary.get(key, {}).get("passed_count") == len(completed) for key in required_federated_keys
     )
-    all_expected_completed = len(completed) == int(manifest.get("shard_count", 0))
     halo_exchange = _global_halo_exchange_reduction(
         manifest=manifest,
         completed=completed,
@@ -372,6 +405,7 @@ def reduce_distributed_oph_universe(
         pn_global=pn_global,
         assumption_manifest=distributed_assumptions,
         assumption_manifest_source="simulation_assumption_manifest.json",
+        observer_like_self_reading_system_receipt=self_reading_all_shards,
     )
     run_pack_contract = _distributed_run_pack_contract(
         manifest=manifest,
@@ -411,6 +445,7 @@ def reduce_distributed_oph_universe(
         "total_object_candidates_completed": total_objects,
         "total_h3_worldlines_completed": total_worldlines,
         "receipt_summary": receipt_summary,
+        "observer_like_self_reading_system_receipt": self_reading_all_shards,
         "global_carrier_contract_receipt": _literal_true(
             global_carrier.get("global_carrier_contract_receipt")
         ),
@@ -476,8 +511,10 @@ def reduce_distributed_oph_universe(
         "visualizer_pack": visualizer_pack,
         "run_pack_contract_path": str(out_dir / "DISTRIBUTED_RUN_PACK_CONTRACT.json"),
         "observer_like_self_reading_system_note": (
-            "The distributed unit is still an OPH observer-like self-reading system: each shard has local "
-            "state, ports/boundaries, readback, records, feedback/repair moves, and public evidence files."
+            "Every completed shard passes the dedicated causal self-reading receipt."
+            if self_reading_all_shards
+            else "The completed shards do not all pass the dedicated causal self-reading receipt; "
+            "materialized observer rows and repair moves are not promoted to self-reading systems."
         ),
         "shards": shard_rows,
     }
@@ -2126,7 +2163,7 @@ def _global_physical_cmb_reduction(
             "blockers": blockers,
             "claim_boundary": (
                 "Global distributed physical-CMB reduction over completed OPH shards. The reducer first "
-                "combines finite-derived theorem/CMB source reports across observer-like self-reading shards, "
+                "combines finite-derived theorem/CMB source reports across completed observer-patch shards, "
                 "then runs the hard physical-CMB contract. Physical-unit TT outputs remain diagnostics unless "
                 "the global input contract, promotion gates, output comparison, and prediction receipts all pass."
             ),
@@ -2588,16 +2625,17 @@ def _shard_config(
             ),
         },
         "claim_boundary": (
-            "This is one distributed bounded OPH observer-patch shard. It is a real local "
-            "self-reading repair simulation, but cross-shard bulk claims require the reducer."
+            "This is one distributed bounded OPH observer-patch shard configured to test local causal "
+            "self-reading. Its generated receipt, rather than this configuration, determines whether that "
+            "gate passes; cross-shard bulk claims require the reducer."
         ),
     }
     base_boundary = str(config.get("claim_boundary", "")).strip()
     config["claim_boundary"] = (
         base_boundary
-        + "\n\nDistributed kernel shard: bounded observer-like self-reading screen patch with local state, "
-        "ports/boundaries, readback, records, feedback/repair moves, and public receipts. "
-        "Not a standalone strict global bulk claim."
+        + "\n\nDistributed kernel shard: bounded observer-patch candidate with local state, ports or "
+        "boundaries, readback rows, records, repair moves, and public receipts. The generated causal "
+        "self-reading receipt controls promotion. This is not a standalone strict global bulk claim."
     ).strip()
     return config
 
@@ -2737,9 +2775,15 @@ def _write_markdown(path: Path, summary: dict[str, Any]) -> None:
         "",
         "## OPH Differentiator",
         "",
-        "This distributed kernel is not generic parallel numerics. Each shard instantiates an observer-like "
-        "self-reading system: bounded local state, ports/boundaries, readback, records, feedback/repair moves, "
-        "and public evidence bundles.",
+        (
+            "Every completed shard passes the causal self-reading contract: bounded local state, ports or "
+            "boundaries, committed-record readback, causally effective feedback moves, and public evidence "
+            "bundles are present."
+            if summary.get("observer_like_self_reading_system_receipt") is True
+            else "The distributed kernel tests observer-like self-reading, but the completed shards do not "
+            "all pass its causal receipt. Bounded state, ports, records, and repair rows alone do not establish "
+            "causally effective record readback."
+        ),
         "",
         "## Claim Boundary",
         "",
@@ -3059,6 +3103,7 @@ def _distributed_visualization_payload(
     pn_global: dict[str, Any],
     assumption_manifest: dict[str, Any],
     assumption_manifest_source: str,
+    observer_like_self_reading_system_receipt: bool,
 ) -> dict[str, Any]:
     sampled_payloads = _sample_shard_timeline_payloads(shard_rows, max_payloads=8)
     objective_views = []
@@ -3203,6 +3248,15 @@ def _distributed_visualization_payload(
         assumption_manifest_source=assumption_manifest_source,
     )
     pn_payload = _distributed_pn_payload(pn_global)
+    distributed_bulk_receipts = _distributed_bulk_receipts(
+        sampled_payloads,
+        neutral_global,
+        h3_objects,
+    )
+    self_reading_receipt = observer_like_self_reading_system_receipt is True
+    distributed_bulk_receipts[
+        "observer_like_self_reading_system_receipt"
+    ] = self_reading_receipt
     bulk_payload = {
         "description": (
             "Distributed theorem-assisted H3 object/worldline readout plus strict-neutral global reduction status."
@@ -3248,7 +3302,7 @@ def _distributed_visualization_payload(
             ),
         },
         "strictNeutralGlobalReduction": neutral_global,
-        "receipts": _distributed_bulk_receipts(sampled_payloads, neutral_global, h3_objects),
+        "receipts": distributed_bulk_receipts,
         "strictNeutralBlockers": list(neutral_global.get("blockers") or []),
         "claimBoundary": (
             "Distributed H3 objects are observer-facing chart data. Strict neutral third-person bulk "
@@ -3336,8 +3390,10 @@ def _distributed_visualization_payload(
         "runId": manifest.get("run_id"),
         "claimBoundary": manifest.get("claim_boundary"),
         "ophDifferentiator": (
-            "OPH technology instantiates observer-like self-reading systems: bounded patches with local "
-            "state, ports or boundaries, readback, records, feedback/repair moves, and public receipts."
+            "OPH requires bounded patches with local state, ports or boundaries, readback, records, "
+            "feedback or repair moves, and public receipts. This distributed payload certifies "
+            "observer-like self-reading only when its receipt is true; the current value is "
+            f"{str(self_reading_receipt).lower()}."
         ),
         "sourcePaths": {
             "distributedManifest": str(manifest.get("manifest_path") or ""),
@@ -3393,8 +3449,14 @@ def _distributed_visualization_payload(
                 for row in shard_rows
             ],
             "unifiedUniverseInterpretation": (
-                "One global atlas of OPH observer-like self-reading shards. Display shard centers as one screen/bulk "
-                "atlas and render declared carrier-cut links as overlapping observer supports across partitions."
+                (
+                    "One global atlas whose sampled shards pass the causal self-reading receipt. "
+                    if self_reading_receipt
+                    else "One global observer-patch atlas whose sampled shards do not pass the causal "
+                    "self-reading receipt. "
+                )
+                + "Display shard centers as one screen/bulk atlas and render declared carrier-cut links "
+                "as overlapping observer supports across partitions."
             ),
         },
         "physicalCMB": {

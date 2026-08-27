@@ -6,6 +6,8 @@ import math
 from pathlib import Path
 from typing import Any
 
+from oph_fpe.bulk.self_reading_contract import validate_run_self_reading_contract
+
 
 def observer_consensus_bulk_readout_report(
     run_dirs: list[Path],
@@ -16,8 +18,8 @@ def observer_consensus_bulk_readout_report(
     """Assemble an observer-facing consensus-bulk readout from run receipts.
 
     This is intentionally a readout layer. It does not change the strict neutral
-    bulk gate; it makes explicit the OPH-specific object of study: instantiated
-    observer-like systems reading local records and agreeing on shared objects.
+    bulk gate; it tests whether materialized observer rows satisfy the dedicated
+    causal self-reading contract and agree on shared objects.
     """
 
     roots = [Path(path) for path in run_dirs]
@@ -31,8 +33,21 @@ def observer_consensus_bulk_readout_report(
     object_population = _first_json(roots, "observer_chart_object_h3_report.json")
     if not object_population:
         object_population = _first_json(roots, "observer_chart_object_h3_lineage_report.json")
-
     observer_path = _first_path(roots, "observer_views.jsonl")
+    source_root = observer_path.parent if observer_path is not None else roots[0]
+    source_observer_contract_path = (
+        observer_path.parent / "source_dynamics_repair_record_observer_report.json"
+        if observer_path is not None
+        else None
+    )
+    source_observer_contract = (
+        _first_json(
+            [observer_path.parent],
+            "source_dynamics_repair_record_observer_report.json",
+        )
+        if observer_path is not None
+        else {}
+    )
     h3_object_path = _first_path(roots, "h3_objects.csv")
     neutral_object_path = _first_path(roots, "neutral_objects.jsonl")
 
@@ -65,8 +80,27 @@ def observer_consensus_bulk_readout_report(
         or frontier.get("strict_neutral_bulk_frontier_ready", False)
         or claims.get("strict_neutral_bulk", False)
     )
+    self_reading_validation = validate_run_self_reading_contract(
+        source_root,
+        source_observer_contract,
+    )
+    record_read_after_write = source_observer_contract.get(
+        "RECORD_READ_AFTER_WRITE_RECEIPT"
+    ) is True
+    observer_feedback_loop = source_observer_contract.get(
+        "OBSERVER_READBACK_FEEDBACK_CAUSAL_LOOP_RECEIPT"
+    ) is True
+    observer_like_self_reading = bool(
+        observer_readout["observer_view_count"] > 0
+        and self_reading_validation["passed"]
+    )
+    source_qualified_atomic_self_reading = bool(
+        observer_readout["observer_view_count"] > 0
+        and self_reading_validation["source_qualified_atomic_passed"]
+    )
     consensus_bulk_readout = bool(
-        observer_modular_time
+        observer_like_self_reading
+        and observer_modular_time
         and observer_3p1d_experience
         and theorem_assisted_h3
         and object_readout["object_count"] > 0
@@ -101,12 +135,34 @@ def observer_consensus_bulk_readout_report(
         or claims.get("physical_cmb_output_prediction_receipt", False)
         or claims.get("physical_cmb_prediction", False)
     )
+    self_reading_boundary = (
+        "The dedicated causal contract passes: materialized observer records are "
+        "read and cause later bounded port writes. "
+        if observer_like_self_reading
+        else "Observer rows are materialized, but the dedicated causal self-reading "
+        "contract does not pass; row presence alone does not instantiate an "
+        "observer-like self-reading system. "
+    )
 
     return {
         "mode": "observer_consensus_bulk_readout_v0",
         "run_dirs": [str(path) for path in roots],
-        "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": bool(observer_readout["observer_view_count"] > 0),
-        "observer_like_self_reading_system_receipt": bool(observer_readout["observer_view_count"] > 0),
+        "OBSERVER_LIKE_SELF_READING_SYSTEM_RECEIPT": observer_like_self_reading,
+        "observer_like_self_reading_system_receipt": observer_like_self_reading,
+        "OPH_SOURCE_QUALIFIED_ATOMIC_SELF_READING_SYSTEM_RECEIPT": source_qualified_atomic_self_reading,
+        "oph_source_qualified_atomic_self_reading_system_receipt": source_qualified_atomic_self_reading,
+        "source_dynamics_repair_record_observer": {
+            "report_present": bool(source_observer_contract),
+            "report_path": (
+                str(source_observer_contract_path)
+                if source_observer_contract_path is not None
+                and source_observer_contract_path.exists()
+                else None
+            ),
+            "record_read_after_write_receipt": record_read_after_write,
+            "observer_readback_feedback_causal_loop_receipt": observer_feedback_loop,
+            "validation": self_reading_validation,
+        },
         "observer_modular_time_receipt": observer_modular_time,
         "observer_facing_3p1d_h3_experience_receipt": observer_3p1d_experience,
         "observer_facing_consensus_3d_bulk_readout_receipt": consensus_bulk_readout,
@@ -175,8 +231,9 @@ def observer_consensus_bulk_readout_report(
             or []
         ),
         "claim_boundary": (
-            "Instantiation of observer-like self-reading systems: local observer rows read support, "
-            "record, modular-time, and visible-object data from run artifacts. A true theorem-assisted "
+            self_reading_boundary
+            + "Local observer rows expose support, record, modular-time, and visible-object data from "
+            "run artifacts. A true theorem-assisted "
             "consensus 3D bulk readout means observer-local records share objects in a 3D H3 chart under "
             "the current theorem-assisted route. The paper-geometric branch receipts additionally require "
             "the declared KMS collar/cap 2*pi theorem branch. The stricter paper-faithful observer-spacetime "
@@ -226,6 +283,8 @@ def _observer_view_summary(path: Path | None, sample_count: int) -> dict[str, An
     patch_views: list[dict[str, Any]] = []
     cap_views: list[dict[str, Any]] = []
     total = 0
+    patch_count = 0
+    cap_count = 0
     if path is not None and path.exists():
         with path.open("r", encoding="utf-8") as handle:
             for line in handle:
@@ -234,10 +293,14 @@ def _observer_view_summary(path: Path | None, sample_count: int) -> dict[str, An
                 total += 1
                 row = json.loads(line)
                 view_type = str(row.get("view_type", ""))
-                if view_type == "patch_observer" and len(patch_views) < sample_count:
-                    patch_views.append(_sample_observer_view(row))
-                elif view_type == "cap_observer" and len(cap_views) < max(1, sample_count // 2):
-                    cap_views.append(_sample_cap_view(row))
+                if view_type == "patch_observer":
+                    patch_count += 1
+                    if len(patch_views) < sample_count:
+                        patch_views.append(_sample_observer_view(row))
+                elif view_type == "cap_observer":
+                    cap_count += 1
+                    if len(cap_views) < max(1, sample_count // 2):
+                        cap_views.append(_sample_cap_view(row))
     sample_views = [*patch_views, *cap_views]
     relative_times = sorted(
         {
@@ -250,6 +313,8 @@ def _observer_view_summary(path: Path | None, sample_count: int) -> dict[str, An
     return {
         "source_path": str(path) if path is not None else None,
         "observer_view_count": total,
+        "patch_observer_count": patch_count,
+        "cap_observer_count": cap_count,
         "sample_patch_observer_count": len(patch_views),
         "sample_cap_observer_count": len(cap_views),
         "relative_time_count": len(relative_times),
@@ -386,6 +451,12 @@ def _sample_cap_view(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _sample_h3_object(row: dict[str, str]) -> dict[str, Any]:
+    point = _json_list(row.get("h3_spatial_point"))
+    if not isinstance(point, list) or len(point) != 3:
+        split_point = [
+            _float_or_none(row.get(key)) for key in ("h3_x", "h3_y", "h3_z")
+        ]
+        point = split_point if all(value is not None for value in split_point) else []
     return {
         "object_id": row.get("object_id"),
         "record_family_id": row.get("record_family_id"),
@@ -395,7 +466,7 @@ def _sample_h3_object(row: dict[str, str]) -> dict[str, Any]:
         "support_size": _int_or_none(row.get("support_size")),
         "h3_compactness": _float_or_none(row.get("h3_compactness")),
         "h3_compactness_normalized": _float_or_none(row.get("h3_compactness_normalized")),
-        "h3_spatial_point": _json_list(row.get("h3_spatial_point")),
+        "h3_spatial_point": point,
         "mean_observer_key_weight": _float_or_none(row.get("mean_observer_key_weight")),
     }
 

@@ -2665,6 +2665,12 @@ def build_universe_timeline_payload(
         curved_spacetime_payload=emergent_curved_spacetime_payload,
         visualization_views=visualization_views,
     )
+    self_reading_receipt = (
+        (bulk_payload.get("receipts") or {}).get(
+            "observer_like_self_reading_system_receipt"
+        )
+        is True
+    )
     return {
         "schemaVersion": "oph_universe_timeline_visualization_payload_v1",
         "schema": "oph_universe_timeline_visualization_payload_v1",
@@ -2676,15 +2682,23 @@ def build_universe_timeline_payload(
             "consensusReadoutDir": str(consensus_readout_dir) if consensus_readout_dir is not None else None,
         },
         "claimBoundary": (
-            "Visualization/readout bundle for OPH observer-like self-reading systems. It shows a finite "
+            (
+                "The dedicated causal receipt verifies observer-like self-reading in this bundle. "
+                if self_reading_receipt
+                else "This bundle materializes observer rows, while the dedicated causal self-reading "
+                "receipt is false; those rows are not promoted to observer-like self-reading systems. "
+            )
+            + "It shows a finite "
             "observer screen, overlap repair, observer-local modular-time readouts, controlled H3 chart "
             "diagnostics, record-object layers, and measurement-comparable CMB diagnostics when present. "
             "Computed H3 receipts, assumed scene completion, strict neutral bulk, and physical CMB "
             "promotion remain separately labeled."
         ),
         "ophDifferentiator": (
-            "OPH technology instantiates observer-like self-reading systems: bounded patches with local "
-            "state, ports or boundaries, readback, records, feedback/repair moves, and public receipts."
+            "OPH requires bounded patches with local state, ports or boundaries, readback, records, "
+            "feedback or repair moves, and public receipts. This bundle certifies that observer-like "
+            "self-reading structure only when observer_like_self_reading_system_receipt is true; its "
+            f"current value is {str(self_reading_receipt).lower()}."
         ),
         "coordinateSystems": {
             H3_COORDINATE_SYSTEM: _h3_coordinate_contract(),
@@ -10621,19 +10635,27 @@ def _render_external_payload_html() -> str:
 </main></body></html>"""
 
 
-def _cinematic_storyboard_guidance() -> str:
+def _cinematic_storyboard_guidance(self_reading_receipt: bool) -> str:
     """Shared product direction for the generated human and coding-agent handoffs."""
 
-    return """## Canonical pedagogical cinematic storyboard
+    opening_step = (
+        """1. **Bounded self-reading patches.** Begin close on one finite patch against a quiet dark field.
+   Reveal its boundary/ports, local state, readback pulse, record write, and verified feedback arrow;
+   then pull back to show many such patches on the finite S2 screen. Caption: \"The dedicated causal
+   receipt verifies bounded systems that read and update local records.\" No H3 bulk exists in this shot."""
+        if self_reading_receipt
+        else """1. **Bounded observer-patch candidates.** Begin close on one finite patch against a quiet
+   dark field. Reveal its boundary/ports, local state, readback rows, record writes, and repair moves,
+   but do not draw a causal feedback arrow. Caption: \"The dedicated causal self-reading receipt is
+   false for this run.\" No H3 bulk exists in this shot."""
+    )
+    return f"""## Canonical pedagogical cinematic storyboard
 
 Build a guided **Story mode** and an immediately available **Explore mode**. Story mode is a
 progressive reveal of one idea, not a montage of unrelated panels. Keep a compact chapter rail so
 the viewer can pause, scrub, replay, or jump without losing the active observer or time selection.
 
-1. **Bounded self-reading patches.** Begin close on one finite patch against a quiet dark field.
-   Reveal its boundary/ports, local state, readback pulse, record write, and feedback arrow; then pull
-   back to show many such patches on the finite S2 screen. Caption: "Observers begin as bounded
-   systems that read and update local records." No H3 bulk exists in this shot.
+{opening_step}
 2. **Overlap repair.** Illuminate shared boundaries in amber. Animate a mismatch, the selected local
    repair move, and decreasing `phi`; repaired relations cool to teal. Use the exact mini-universe
    path only when `smallUniverse.contentAvailable=true`; otherwise use the separately labelled
@@ -10743,6 +10765,15 @@ def _reader_facing_claim_boundary(payload: dict[str, Any]) -> str:
     ).replace("Consensus object packets", "Record-object packets")
 
 
+def _payload_self_reading_receipt(payload: dict[str, Any]) -> bool:
+    return (
+        ((payload.get("consensusBulk") or {}).get("receipts") or {}).get(
+            "observer_like_self_reading_system_receipt"
+        )
+        is True
+    )
+
+
 def _visualization_instructions(viewer_path: Path | None, payload_path: Path, payload: dict[str, Any]) -> str:
     viewer_block = (
         f"""Open the standalone viewer:
@@ -10778,6 +10809,15 @@ open {viewer_path}
             "H3/worldline string-view layers; do not synthesize replacement string oscillations."
         )
     )
+    self_reading_receipt = _payload_self_reading_receipt(payload)
+    observer_row_instruction = (
+        "- Panel 3 shows observer-camera rows whose dedicated causal self-reading receipt passes. "
+        "Each row exposes local support, records, readback hash, and modular-depth readout."
+        if self_reading_receipt
+        else "- Panel 3 shows materialized observer-camera rows with local support, records, readback "
+        "hash, and modular-depth readout. The dedicated causal self-reading receipt is false, so the "
+        "rows must not be described as instantiated self-reading observers."
+    )
     return f"""# OPH Universe Visualization Instructions
 
 {viewer_block}
@@ -10788,14 +10828,14 @@ Data payload for custom viewers:
 {payload_path}
 ```
 
-{_cinematic_storyboard_guidance()}
+{_cinematic_storyboard_guidance(self_reading_receipt)}
 
 What to inspect:
 
 - Panel 1 shows the fluctuating-vacuum diagnostic view: the finite S2 observer screen/boundary readback from the larger observer-flow run. Colors are screen readback fields; rings are screen-local defect/holonomy residues. This is a diagnostic OPH readback field, not a literal QFT vacuum unless a future receipt says so.
 - The same view may include `visualizationViews.fluctuatingQuantumVacuum.yangMillsGapCertificate`: finite SU(2) Wilson-lattice plaquette/Wilson/Polyakov traces and transfer-gap proxies. Show its finite diagnostic receipt separately from `YANG_MILLS_GAP_REPRODUCED_RECEIPT`, which should remain closed unless a future continuum certificate promotes it.
 {small_universe_instruction}
-- Panel 3 shows the observer-camera view and observer-local modular time. Each dot is an observer-like self-reading row with local support, records, readback hash, and modular-depth readout. Use the observer selector to inspect one observer's objective readout across its modular-time frames: record packet, object packet, transition step, local packet histograms, and the global trace cycle used only for synchronization.
+{observer_row_instruction} Use the observer selector to inspect one row's objective readout across its modular-time frames: record packet, object packet, transition step, local packet histograms, and the global trace cycle used only for synchronization.
 - The payload also exports `subjectiveObserverCameras`: first-person rendering cameras derived from visible observer-local readouts. These are the right inputs for a subjective observer camera map.
 - Every H3 vec3 uses `h3_hyperboloid_spatial_components_v1`: lift it to `(sqrt(1+|x|^2),x)`, use intrinsic distance/geodesics, and project through the observer logarithm map. Never guess Poincare coordinates from the numeric range.
 - `visibleProtoWorldlines` contains only nominal-FOV hits. Compact `peripheralDiagnosticProtoWorldlineIds` drive a separate on-demand full-sky diagnostic lane and must not be counted as directly visible.
@@ -10816,6 +10856,20 @@ Claim boundary:
 
 
 def _web_agent_brief(payload_path: Path, payload: dict[str, Any]) -> str:
+    self_reading_receipt = _payload_self_reading_receipt(payload)
+    product_goal = (
+        "Create an interactive OPH visualization of a run whose dedicated causal receipt verifies "
+        "observer-like self-reading."
+        if self_reading_receipt
+        else "Create an interactive OPH observer-row visualization. Its dedicated causal self-reading "
+        "receipt is false, so do not label the rows as instantiated self-reading observers."
+    )
+    first_text = (
+        "State that this run verifies the required observer-like self-reading structure."
+        if self_reading_receipt
+        else "State that OPH requires observer-like self-reading structure and that this run has not "
+        "verified its causal-feedback receipt."
+    )
     return f"""# Web Coding Agent Visualization Brief
 
 Build from `visualization_payload.json` or the chunked `oph_visualizer_pack_v2.tar.zst`:
@@ -10826,9 +10880,9 @@ Build from `visualization_payload.json` or the chunked `oph_visualizer_pack_v2.t
 
 Core product goal:
 
-Create an interactive OPH visualization of observer-like self-reading systems. The differentiator must remain explicit: OPH is not generic particles in a box. It is bounded patches with local state, ports/boundaries, readback, records, feedback/repair moves, and public receipts.
+{product_goal} The differentiator remains the bounded patch architecture: local state, ports or boundaries, readback, records, feedback or repair moves, and public receipts.
 
-{_cinematic_storyboard_guidance()}
+{_cinematic_storyboard_guidance(self_reading_receipt)}
 
 Paper-accuracy requirement:
 
@@ -10935,7 +10989,7 @@ Visual language:
 
 - Favor direct geometry: finite S2 screen, repair graph, H3 scatter, receipt gates.
 - Avoid decorative sci-fi metaphors. Use the OPH explanation text in the payload.
-- The first visible text should state that OPH tech instantiates observer-like self-reading systems.
+- {first_text}
 - Every gate badge must be data-driven from `receipts`; no hard-coded success labels.
 
 Receipt boundary to preserve verbatim:

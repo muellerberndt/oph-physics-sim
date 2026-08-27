@@ -12,6 +12,7 @@ from oph_fpe.viz.universe_timeline_viewer import (
     _read_proto_particle_candidates,
     _small_universe_payload,
     _visualization_instructions,
+    _web_agent_brief,
     _write_full_screen_field_bin,
 )
 
@@ -133,7 +134,9 @@ def test_small_universe_payload_rejects_stale_unvalidated_receipt_fallback(tmp_p
     assert "no exact mini-universe graph/path may be drawn" in instructions
     assert "finite-edge vibration sublayer is unavailable and must be hidden" in instructions
     assert "Canonical pedagogical cinematic storyboard" in instructions
-    assert "Bounded self-reading patches" in instructions
+    assert "Bounded observer-patch candidates" in instructions
+    assert "do not draw a causal feedback arrow" in instructions
+    assert "must not be described as instantiated self-reading observers" in instructions
     assert "Shared-record gauge views" in instructions
     assert "Enter one observer's 3+1D view" in instructions
     assert "ASSUMED VISUAL LAYER — NOT DERIVED" in instructions
@@ -142,6 +145,32 @@ def test_small_universe_payload_rejects_stale_unvalidated_receipt_fallback(tmp_p
     assert "explanatory overview (not observer-visible)" in instructions
     assert "prefers-reduced-motion" in instructions
     assert "256,000,000-byte hard package ceiling" in instructions
+
+
+def test_visualization_handoffs_promote_self_reading_only_when_receipted(
+    tmp_path: Path,
+):
+    payload = {
+        "smallUniverse": {"contentAvailable": False},
+        "effectiveStringTheory": {},
+        "consensusBulk": {
+            "receipts": {"observer_like_self_reading_system_receipt": True}
+        },
+        "claimBoundary": "test boundary",
+    }
+
+    instructions = _visualization_instructions(
+        None,
+        tmp_path / "visualization_payload.json",
+        payload,
+    )
+    brief = _web_agent_brief(tmp_path / "visualization_payload.json", payload)
+
+    assert "Bounded self-reading patches" in instructions
+    assert "verified feedback arrow" in instructions
+    assert "dedicated causal self-reading receipt passes" in instructions
+    assert "causal receipt verifies observer-like self-reading" in brief
+    assert "this run verifies the required observer-like self-reading" in brief
 
 
 def test_full_screen_sidecar_falls_back_to_manifest_patch_count(tmp_path: Path):

@@ -8,9 +8,9 @@
   ],
   "audit_scope": {
     "python_tree": {
-      "file_count": 430,
+      "file_count": 436,
       "root": "oph_fpe",
-      "tree_sha256": "sha256:024251cfed680eb3c8bb6a01449fdc2256a03166b21b1f6beaff28faaa802855"
+      "tree_sha256": "sha256:13f5173cb4ce7af984d8bf4a2f93284f0bb369062c4e420c694f905041e43bd1"
     },
     "repository": "muellerberndt/oph-physics-sim",
     "scope_boundary": "bounded audit of the committed producer catalog and named artifacts; MISSING means no accepted producer in this snapshot, not a theorem that no future implementation can exist"
@@ -393,7 +393,7 @@
     "reserve_lane_blocked": true,
     "screen_lane_blocked": true
   },
-  "payload_sha256": "sha256:075b3ce5ead1b4a1469028000c6ceeb0e4cb53982e4ce1981cb4461486219e11",
+  "payload_sha256": "sha256:5695b1746ad0eb7d3f64b7123873ebda5ab05d81c1095bcc00af6bc66a6814a3",
   "raw_twelve_port_response_probe": {
     "antipode_port_map": [
       3,
@@ -1321,7 +1321,7 @@
     "runtime_response_source": "finite_unitary_carrier_channel",
     "semantic_id": "twelve_port_source_bound_charged_response.v1",
     "source_artifact_schema": "oph.charged_response_semantic_artifact.v3",
-    "source_artifact_sha256": "sha256:90e1e5b6dba265fd51f04ebc81b3104aff5647219320971344634b2663f646fd"
+    "source_artifact_sha256": "sha256:72dbb4f2f0d443c35d7451bb5ba34ba8a75305ff75161b0bad418529b79c5aa4"
   },
   "schema": "oph.common-reserve.capability-matrix.v1",
   "scientific_promotion_allowed": false,
@@ -1344,7 +1344,7 @@
     "charged_response_artifact": {
       "bytes": 7890,
       "path": "data/common_reserve/charged_response_artifact.json",
-      "sha256": "sha256:b5e630c16377795ee87eba573a0710038974c4f90bfaf0896d84552f51be4fc2"
+      "sha256": "sha256:e1478527b6ec1c61332a3b86bc35f2b32b0247eba02b34f40030f0b9fea4b75b"
     },
     "charged_response_producer": {
       "bytes": 42441,

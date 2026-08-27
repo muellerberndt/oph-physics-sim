@@ -2571,7 +2571,7 @@ def capture_physical_source(
         and not source_forbidden_hits
     )
     source_observer = {
-        "schema_version": "oph_source_repair_record_observer_contract_v2",
+        "schema_version": "oph_physical_h3_kms_source_capture_contract_v2",
         "SOURCE_PATCH_ARCHITECTURE_RECEIPT": p0_receipt,
         "PATCH_LOCAL_STATE_RECEIPT": p0_receipt,
         "PATCH_PORT_BOUNDARY_RECEIPT": p0_receipt,
