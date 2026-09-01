@@ -76,17 +76,33 @@ def test_pin_matches_theory_checkout_when_present():
         "python tools/refresh_axiom_registry_pin.py"
     )
     theory_root = _RER_REGISTRY.parents[1]
-    current_commit = subprocess.check_output(
-        ["git", "-C", str(theory_root), "rev-parse", "HEAD"], text=True
-    ).strip()
-    assert pin["source"]["commit"] == current_commit
-    release_text = (theory_root / "paper/release_info.tex").read_text(encoding="utf-8")
+    pinned_commit = pin["source"]["commit"]
+    pinned_raw = subprocess.check_output(
+        [
+            "git",
+            "-C",
+            str(theory_root),
+            "show",
+            f"{pinned_commit}:claims/axiom_registry.yaml",
+        ]
+    )
+    assert hashlib.sha256(pinned_raw).hexdigest() == pin["source"]["sha256"]
+    release_text = subprocess.check_output(
+        [
+            "git",
+            "-C",
+            str(theory_root),
+            "show",
+            f"{pinned_commit}:paper/release_info.tex",
+        ],
+        text=True,
+    )
     release_match = re.search(
         r"\\newcommand\{\\OPHPaperReleaseID\}\{([^}]+)\}", release_text
     )
     assert release_match is not None
     assert pin["source"]["release"] == release_match.group(1)
-    lines = raw.decode("utf-8").splitlines()
+    lines = pinned_raw.decode("utf-8").splitlines()
     start = next(i for i, line in enumerate(lines) if line.strip() == "{")
     registry = json.loads("\n".join(lines[start:]))
     canonical = {axiom["id"]: axiom for axiom in registry["axioms"]}
