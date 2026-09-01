@@ -170,7 +170,7 @@
       "raw_pin": {
         "bytes": 7890,
         "path": "data/common_reserve/charged_response_artifact.json",
-        "sha256": "sha256:b5e630c16377795ee87eba573a0710038974c4f90bfaf0896d84552f51be4fc2"
+        "sha256": "sha256:e1478527b6ec1c61332a3b86bc35f2b32b0247eba02b34f40030f0b9fea4b75b"
       },
       "schema": "oph.charged_response_semantic_artifact.v3",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -188,7 +188,7 @@
       "raw_pin": {
         "bytes": 32853,
         "path": "data/common_reserve/producer_capability_matrix.json",
-        "sha256": "sha256:7019532cbe9161b321aa5aa56f4648011b24d4ee4404f22fa5ff568fa030e7a1"
+        "sha256": "sha256:78382aea052bdbe87cb91b097fbd243a946aa31cbd34c1dbfd71cc48bd0bdbc1"
       },
       "schema": "oph.common-reserve.capability-matrix.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -835,7 +835,7 @@
       "raw_pin": {
         "bytes": 11609,
         "path": "data/refinement/physical_birefinement_preflight.json",
-        "sha256": "sha256:5e8329b1d2f6d9898f1a8a70452ed5aa9b0ecae9c051fa65f6d60398f0cfbefb"
+        "sha256": "sha256:27a77c5cc0967b73959d7729f1949dfa6faed9d42435b574a0db60d6f25f2a5b"
       },
       "schema": "oph.refinement.physical-birefinement-preflight.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -938,7 +938,7 @@
       "raw_pin": {
         "bytes": 37873,
         "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-        "sha256": "sha256:12bd818afb63e197f191b19e72f67399c32b8b795b9e23f893a70b4bf42fd9d9"
+        "sha256": "sha256:8b3a4654bcff4f18da105db8b22a5c52ef77fe7a1d192a8b9b5a8b72da5c2306"
       },
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -965,7 +965,7 @@
       "raw_pin": {
         "bytes": 31270,
         "path": "data/repair_closure/fz11_conservative_time_lift_receipt.json",
-        "sha256": "sha256:d7d0d1376feceb3e4bf3f22bdbb1fca3d0365f8b43c2313aea02ada210e411ee"
+        "sha256": "sha256:03ff83ff64fd2dd0c691c255d790fb3b601e93156e96a4828e2c53dc1cbe0429"
       },
       "schema": "oph.fz11-conservative-time-lift.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1022,7 +1022,7 @@
       "raw_pin": {
         "bytes": 13559,
         "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-        "sha256": "sha256:7bdd864ba08e30403c7043f070648cba0edc82470c90aeb1b7856dae3d1f132f"
+        "sha256": "sha256:aa4c292792a37613ba4da2f400f4b1990baf71fbde5f543bb87720becd266e2b"
       },
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1098,7 +1098,7 @@
       "raw_pin": {
         "bytes": 36932,
         "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
-        "sha256": "sha256:cfe56161a39b0eea82aa4ac2fadfce18b315b201af2c9ee90282ec3706da24af"
+        "sha256": "sha256:17497e372ef4a7f5545526cebcff10c41a9d6b7fdab0e81554e5576fa22116a9"
       },
       "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1124,7 +1124,7 @@
       "raw_pin": {
         "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:198e8abbea53a927754663e0bdcc7aa2641036315d2b299c8fcb1e0349d737cf"
+        "sha256": "sha256:b65cdee937b14de31963a41aa25a28c0080df8eeb006211aec7031d72f6fc949"
       },
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1159,7 +1159,7 @@
       "raw_pin": {
         "bytes": 2018887,
         "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-        "sha256": "sha256:7867e516233550d7ba0362de240a0f92b8def8fa9eb1dfe063629dc9066cdcac"
+        "sha256": "sha256:1c11c4fd93536bee312c2d4440e51f6ff9c30c521744a9a168d23982984a61e3"
       },
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1189,7 +1189,7 @@
       "raw_pin": {
         "bytes": 55183,
         "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
-        "sha256": "sha256:bcb13d485c0bd373598788a9518d487c9da3ebda11281837663559c8f82adc5e"
+        "sha256": "sha256:924d7934e864358961ed7756646dde5ae1b5d8ea42fd9104df88e0bdff846ffe"
       },
       "schema": "oph.vertex12-directed-transport-feasibility.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1202,7 +1202,7 @@
       "raw_pin": {
         "bytes": 1074185,
         "path": "data/repair_closure/vertex12_signed_record_feedback_receipt.json",
-        "sha256": "sha256:433acf2e0c383f7bd61af2739a83db19dbbdcb8de72f1d08d3a71eb8e44c1fa3"
+        "sha256": "sha256:86e43e9e3b4464dc2589b97c88161c251c1672723429f0f4abbef93bc4cc263e"
       },
       "schema": "oph.vertex12-signed-record-feedback-diagnostic.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1281,13 +1281,13 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:97fc714408b34a33a919f98434b23d634bf7c6eeb01e06f7641a17cf79ec1cf3",
+  "receipt_sha256": "sha256:88e2b4281ffeb46cda6bd520a35d4b59fe80717574507d58bdd2804c93aa8b99",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
     "content_index_row_count_excluding_recursive_outputs": 1040,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:d4dd0c7dccdd2cc1a2e6ed3089afa03eccaa858e14b8b9dac72bf2d348aff148",
+    "content_index_sha256_excluding_recursive_outputs": "sha256:f16a77f4cf90fa6d6731d8affddee21ba8006e0bba1e2f3f542a439371daaa28",
     "path_count_including_declared_recursive_outputs": 1046,
     "path_list_sha256_including_declared_recursive_outputs": "sha256:10654c4f4522c40900b998cb177dc0b3f067b5d93c1e0a4030aa306a5782f95d",
     "provenance_counts": {

@@ -393,7 +393,7 @@
     "reserve_lane_blocked": true,
     "screen_lane_blocked": true
   },
-  "payload_sha256": "sha256:57a42b6ea07d943c3ec8068bf62b4f5427c44ce7c567b1c486a48fb269414f88",
+  "payload_sha256": "sha256:6e077b83bb952cbd0b91b4871361781091f8fd9e3b8c3e1c10ec6a2f96e681d5",
   "raw_twelve_port_response_probe": {
     "antipode_port_map": [
       3,
@@ -1321,7 +1321,7 @@
     "runtime_response_source": "finite_unitary_carrier_channel",
     "semantic_id": "twelve_port_source_bound_charged_response.v1",
     "source_artifact_schema": "oph.charged_response_semantic_artifact.v3",
-    "source_artifact_sha256": "sha256:90e1e5b6dba265fd51f04ebc81b3104aff5647219320971344634b2663f646fd"
+    "source_artifact_sha256": "sha256:72dbb4f2f0d443c35d7451bb5ba34ba8a75305ff75161b0bad418529b79c5aa4"
   },
   "schema": "oph.common-reserve.capability-matrix.v1",
   "scientific_promotion_allowed": false,
@@ -1344,7 +1344,7 @@
     "charged_response_artifact": {
       "bytes": 7890,
       "path": "data/common_reserve/charged_response_artifact.json",
-      "sha256": "sha256:b5e630c16377795ee87eba573a0710038974c4f90bfaf0896d84552f51be4fc2"
+      "sha256": "sha256:e1478527b6ec1c61332a3b86bc35f2b32b0247eba02b34f40030f0b9fea4b75b"
     },
     "charged_response_producer": {
       "bytes": 42441,

@@ -431,7 +431,7 @@
     "producer_capability_matrix": {
       "bytes": 32853,
       "path": "data/common_reserve/producer_capability_matrix.json",
-      "sha256": "sha256:7019532cbe9161b321aa5aa56f4648011b24d4ee4404f22fa5ff568fa030e7a1"
+      "sha256": "sha256:78382aea052bdbe87cb91b097fbd243a946aa31cbd34c1dbfd71cc48bd0bdbc1"
     },
     "repair_to_propagation_classifier": {
       "bytes": 39488,
@@ -732,7 +732,7 @@
     "same_operator_physical_readout_receipt": false,
     "scalar_or_polarization_sector_attachment_receipt": false
   },
-  "receipt_sha256": "sha256:45196b01ae3b0d3aba89f683ae5dfa885f20386d80ac093cdc9d85994e898796",
+  "receipt_sha256": "sha256:7c0e3cb97af5534fcfd4542ffeecf1b16b0287bd9676e7a68efee3342f1a9657",
   "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
   "source_capture_binding": {
     "artifact_type": "OPH_TARGET_BLIND_FINITE_SOURCE_CAPTURE",
