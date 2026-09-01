@@ -3,7 +3,7 @@
   "source": {
     "repository": "reverse-engineering-reality",
     "path": "claims/axiom_registry.yaml",
-    "commit": "49cf6a8f9749d4dc0914e9bbaebcb0c3c0479db7",
+    "commit": "27247aa1abe39694e137c0662cb85aa4b9bbaad9",
     "release": "r2033",
     "sha256": "4cb54266a5ca93475ce14babac0be2f2a0b23ebcf65fe50686e8c26451cb4669"
   },

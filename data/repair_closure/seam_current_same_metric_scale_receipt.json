@@ -111,9 +111,9 @@
     "D6_source_action": {
       "bytes": 26025,
       "path": "data/repair_closure/port_load_metric_quotient_receipt.json",
-      "receipt_sha256": "sha256:0631f526bf5ca723be7e6362456162b824b88bdb5c7efcdf9a1fa6355d0e011f",
+      "receipt_sha256": "sha256:4b0242b75c016b6a3f88e6c534a4bcc4b6387e3cecd6dd85e72acc4a27e0cd6f",
       "schema": "oph.port-load-repair-gram-metric-quotient.v1",
-      "sha256": "sha256:4e5eeeaebbadd3cefa7f020c208edd23d85378392b48b08db479c8f1489a4b59",
+      "sha256": "sha256:1cdbd54da8b1ee9f8f6bec15c9f422b5523a6fed777d02e012f4382e1f5b3389",
       "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN"
     },
     "FZ11_immutable_prediction_via_bridge": {
@@ -150,9 +150,9 @@
     "completion_isometry_action": {
       "bytes": 13060,
       "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
-      "receipt_sha256": "sha256:fd9b03d30a77fe96a4ab13248b7b22b8ba12399580159275ca37ba8771c0296a",
+      "receipt_sha256": "sha256:3a2fccf12c03695d86949a150020fadfb0920ddfa6bbb138e3c01905da14ef4f",
       "schema": "oph.port-gram-equivariant-completion-action.v1",
-      "sha256": "sha256:e824f3fd9efdc3df2fc1e7a71dd05ed48c3071d1d9650acf14fa6438cc9fefa7",
+      "sha256": "sha256:df8480ba3379c220960e56e725d492e0f3a8b0d7ea3d35d46d0b972b14fdd13b",
       "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
     },
     "homogeneous_action_Lean_source": {
@@ -177,13 +177,13 @@
     "response_Gram_completion": {
       "bytes": 32216,
       "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
-      "receipt_sha256": "sha256:99fccfb4b87202da0cac7e8de438fd3febf20cd0d2b876895199914e43268a0e",
+      "receipt_sha256": "sha256:a15504079a27cc92b2f9c714e3def3d54a584f92e4d2ce558525a13a1ed329e9",
       "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
-      "sha256": "sha256:6ab46f6863a207b9e35aaad88f4bbb6bd2323df4b1e85d6e50827b916364f6e4",
+      "sha256": "sha256:c4e490cec1258e1c37290937acefb2ac32e1b60a5cf68703673cdb567f4c9572",
       "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:d3ddd3904b57c68fedc0612a8318cbf9ab4fac2563c4e803580bf51aecd55a88",
+  "receipt_sha256": "sha256:0783afe431608810ed9dc77ad885a6368defc08a43fffa74a6dd8af3cdc59b98",
   "same_internal_action_binding": {
     "D6_translation_isometry_theorem_pinned": true,
     "action": "translation by one directed unit-current seam boundary",
