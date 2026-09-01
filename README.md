@@ -61,6 +61,33 @@ In short:
 bounded patches -> local readback -> overlap repair -> shared records -> gated reconstruction
 ```
 
+## Causal-order evidence
+
+Three machine-readable artifacts separate the current finite result from the
+stronger physical claims it does not establish:
+
+- [`source_derived_causal_order_receipt.json`](data/causal_order/source_derived_causal_order_receipt.json)
+  reconstructs the 24-event bounded observer log from authenticated
+  read-after-write provenance. Its 38 canonical projected edges agree exactly
+  with the declared ancestry; this is an observer-instrumentation order over
+  source snapshots, not a complete physical causal order.
+- [`causet_likeness_receipt.json`](data/causal_order/causet_likeness_receipt.json)
+  evaluates the current 2,304-event local-domain order at one exploratory
+  cutoff. None of its 736 qualifying intervals falls in the frozen broad 4D
+  ordering-fraction band, so the result is not similar at that cutoff. It is
+  neither a physical no-go result nor a dimension, embedding, or continuum
+  receipt.
+- [`rank3_fcc_causet_compatibility_receipt.json`](data/causal_order/rank3_fcc_causet_compatibility_receipt.json)
+  verifies a bounded architecture fixture: source-derived versioned order,
+  exact nested induced suborders, cubic FCC carrier-ball counts through radius
+  20, and quartic fine-event counts on the checked imposed-depth grid n=1--10.
+  Its additional depth-24
+  control reverses the earlier interval-profile trend, so it supplies no
+  finite causet-likeness similarity or profile-convergence result. The
+  construction has `O_h`, not exact `A5`/S2, symmetry, is not selected by the
+  current random federation, and gives no physical causet, manifoldlikeness,
+  volume, Lorentz invariance, Lorentzian geometry, or continuum promotion.
+
 ## Installation
 
 OPH-FPE requires Python 3.11 or newer.

@@ -1,4 +1,4 @@
-"""Issue-634 stage 3: typed sections, measures, operators, and boundary.
+"""Stage 3: typed sections, measures, operators, and boundary.
 
 Stage 3 types the field and operator layer of the local domain on the
 observer-visible seam complex certified by stages 1 and 2, with every
@@ -9,7 +9,7 @@ typing clause verified by exact integer arithmetic:
   carriers with an exact Z/2 grading and conjugation that swaps the
   chirality summands, and gauge sections on seams valued in unit
   phases of the single interface algebra class.  Physical fiber
-  selection stays outside this issue with issues 569 and 630.
+  selection requires an additional source-selection certificate.
 * The measure is the declared counting measure on carriers and seams.
   This finite certificate verifies its positivity and totals.  A formal
   derivation of equal weights from A3 is not reproduced or pinned here.
@@ -66,7 +66,6 @@ from oph_fpe.local_domain.stage2_spin_layer import (
 )
 
 SCHEMA = "oph.local-domain-stage3.v1"
-ISSUE = 634
 PHYSICAL_PROMOTION_ALLOWED = False
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "local_domain"
@@ -216,7 +215,7 @@ def section_space_typing(complex_data: Mapping[str, Any]) -> dict[str, Any]:
             },
         },
         "physical_fiber_selection": (
-            "outside this issue; owned by issues 569 and 630"
+            "not supplied; requires an independent source-selection certificate"
         ),
         "conjugation_involution_exact": bool(involution_exact),
         "chirality_grading_exact": bool(graded),
@@ -668,7 +667,6 @@ def produce_stage3_receipt(
     if forbidden:
         return {
             "schema": SCHEMA,
-            "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "verdict": "REFUSED",
             "blockers": [f"forbidden_config_key:{key}" for key in forbidden],
@@ -880,7 +878,6 @@ def produce_stage3_receipt(
 
     receipt = {
         "schema": SCHEMA,
-        "issue": ISSUE,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
@@ -927,7 +924,7 @@ def produce_stage3_receipt(
         "STAGE3_TYPED_DOMAIN_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": blockers,
         "claim_boundary": (
-            "Finite issue-634 stage-3 object: section species over declared "
+            "Finite stage-3 object: section species over declared "
             "finite fibers, the declared counting measure, sign-twisted "
             "local difference operators with exact adjoint, kinetic, "
             "covariance, gluing, subcomplex-restriction, and boundary "
@@ -935,7 +932,7 @@ def produce_stage3_receipt(
             "general signed-incidence rank identity supplies the exact "
             "kernel theorem on the observer-visible seam complex. Physical "
             "fiber selection, scalar and Yukawa content, and any continuum "
-            "operator limit stay outside this issue. No physical promotion "
+            "operator limit require additional hypotheses. No physical promotion "
             "follows from any output."
         ),
     }

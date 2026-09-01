@@ -1,5 +1,5 @@
 {
-  "artifact_sha256": "sha256:72dbb4f2f0d443c35d7451bb5ba34ba8a75305ff75161b0bad418529b79c5aa4",
+  "artifact_sha256": "sha256:90e1e5b6dba265fd51f04ebc81b3104aff5647219320971344634b2663f646fd",
   "carrier_binding": {
     "antipode": {
       "p00": "p03",
@@ -181,7 +181,7 @@
       "charged_response_operator_receipt": true,
       "coupling": "combinatorial_icosahedral_graph_laplacian",
       "dynamics_module": "oph_fpe.core.echosahedral_dynamics",
-      "dynamics_sha256": "sha256:0bb9d95da7f27adfc525d945fad295ffb0e85acac0904550ac374543999dba29",
+      "dynamics_sha256": "sha256:030a64a7e5e79757fd66718f03fc70f8451c8f799eade9005d727213b7e24f01",
       "equivariance_receipt": true,
       "evolution": "finite_unitary_exp_minus_i_u_gL",
       "impulse_readback_filter_coefficients": [

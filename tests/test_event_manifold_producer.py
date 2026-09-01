@@ -1,4 +1,4 @@
-"""Fail-closed tests for the issue-575 event-manifold instrument."""
+"""Fail-closed tests for the finite event-manifold candidate instrument."""
 
 from __future__ import annotations
 
@@ -35,28 +35,27 @@ def test_instrument_is_valid_all_controls_fail_closed(report: dict) -> None:
 def test_causal_structure_is_nondegenerate(report: dict) -> None:
     verdicts = report["clause_verdicts"]
     assert verdicts["event_classes_and_order_constructed"] is True
-    assert verdicts["four_chart_constructed"] is True
+    assert verdicts["candidate_four_coordinate_embedding_constructed"] is True
     assert verdicts["nondegenerate_causal_structure"] is True
     assert report["causal_pair_count"] > 0
     assert report["spacelike_pair_count"] > 0
 
 
 def test_current_source_event_geometry_is_not_lorentzian(report: dict) -> None:
-    # Frozen empirical status of the present source at this cutoff: the
-    # held-out quadratic form on the ancestry-depth/spectral chart has
-    # inertia (2,2), one timelike direction per observer chain, and the cone
-    # margin is negative. The observer cones are not merged into one
-    # Lorentzian cone by cross-observer overlap events. A future source law
-    # that changes this verdict must update this assertion deliberately.
+    # Frozen empirical status for the source-round producer: the prescribed
+    # ancestry-depth plus three-spectral-coordinate ansatz has Euclidean
+    # inertia (4,0) and a negative cone margin. This is not independent
+    # dimension evidence. A future source law that changes this verdict must
+    # update this assertion deliberately.
     fit = report["held_out_quadratic_fit"]
     assert fit["fitted"] is True
-    assert tuple(fit["inertia"]) == (2, 2)
+    assert tuple(fit["inertia"]) == (4, 0)
     assert tuple(fit["inertia"]) != TARGET_INERTIA
     assert fit["cone_margin"] < 0.0
     assert report["verdict"] == "NOT_ATTAINED"
     assert set(report["blockers"]) == {
-        "held_out_form_inertia_is_not_lorentzian",
         "cone_margin_not_positive_on_held_out_pairs",
+        "held_out_form_inertia_is_not_lorentzian",
     }
 
 

@@ -278,6 +278,7 @@ def capture_geometric_law(config: Mapping[str, Any] | None = None) -> dict[str, 
     ancestry: list[dict[str, Any]] = []
     shared = "carrier-00000"
     record_of: dict[int, str] = {}
+    writer_of: dict[str, tuple[str, int]] = {}
     sequence = 0
 
     def _event(
@@ -285,62 +286,84 @@ def capture_geometric_law(config: Mapping[str, Any] | None = None) -> dict[str, 
         footprint: list[str],
         reads: list[str],
         writes: list[str],
-        parents: list[str],
+        *,
+        event_kind: str,
+        step: int,
     ) -> str:
         nonlocal sequence
-        key = _sha([observer, footprint, reads, writes, parents, sequence])
+        parents: dict[str, list[str]] = {}
+        parent_sequences: dict[str, int] = {}
+        for resource in reads:
+            source = writer_of.get(resource)
+            if source is None:
+                raise RuntimeError(
+                    f"geometric-law semantic read has no writer: {resource}"
+                )
+            parent, parent_sequence = source
+            parents.setdefault(parent, []).append(resource)
+            parent_sequences[parent] = parent_sequence
+        payload = {
+            "event_kind": event_kind,
+            "law_id": LAW_ID,
+            "step": int(step),
+            "read_resource_ids": sorted(reads),
+        }
+        key = _sha(
+            {
+                "schema": "oph.semantic-source-event-id.v1",
+                "canonical_semantic_payload": payload,
+                "observer_token": observer,
+                "visible_footprint": sorted(footprint),
+                "read_resource_ids": sorted(reads),
+            }
+        )
+        for resource in writes:
+            if resource in writer_of:
+                raise RuntimeError(
+                    f"geometric-law semantic resource has two writers: {resource}"
+                )
         events.append(
             {
                 "event_key": key,
                 "observer_token": observer,
-                "canonical_semantic_payload": _sha([observer, sequence]),
+                "canonical_semantic_payload": payload,
                 "visible_footprint": footprint,
                 "read_resource_ids": reads,
                 "write_resource_ids": writes,
-                "parent_event_ids": list(parents),
+                "parent_event_ids": sorted(parents),
                 "source_sequence_index": sequence,
             }
         )
-        for parent in parents:
-            ancestry.append(
-                {
-                    "parent_event_id": parent,
-                    "child_event_id": key,
-                    "observer_token": observer,
-                    "parent_sequence_index": 0,
-                    "child_sequence_index": sequence,
-                    "shared_resource_ids": reads[:1],
-                    "edge_id": _sha([parent, key]),
-                }
-            )
+        for parent, shared_resources in sorted(parents.items()):
+            material = {
+                "parent_event_id": parent,
+                "child_event_id": key,
+                "observer_token": observer,
+                "parent_sequence_index": parent_sequences[parent],
+                "child_sequence_index": sequence,
+                "shared_resource_ids": sorted(shared_resources),
+            }
+            ancestry.append({**material, "edge_id": _sha(material)})
+        for resource in writes:
+            writer_of[resource] = (key, sequence)
         sequence += 1
         return key
 
     observer_count = max(int(values["observer_count"]), 2)
     steps = max(cycles * 3, 12) * observer_count // 2
-    last_by_observer: dict[str, str] = {}
     for step in range(steps):
         observer = f"observer-{step % observer_count:04d}"
-        predecessor = f"observer-{(step - 1) % observer_count:04d}"
         record = f"record:{_sha(['shared', step])}"
-        parents = []
-        if observer in last_by_observer:
-            parents.append(last_by_observer[observer])
-        if step > 0 and (step - 1) in record_of and predecessor in last_by_observer:
-            # Read the record the predecessor observer committed one step
-            # earlier: a genuine cross-observer read-after-write edge, so the
-            # round-robin schedule densely links every observer chain.
-            parents.append(last_by_observer[predecessor])
         reads = [record_of[step - 1]] if (step - 1) in record_of else []
         key = _event(
             observer,
             [f"{shared}:port-{step % PORTS:02d}"],
             reads,
             [record],
-            parents,
+            event_kind="SYNTHETIC_SHARED_RECORD_COMMIT",
+            step=step,
         )
         record_of[step] = record
-        last_by_observer[observer] = key
         # A private transverse event per observer per step keeps a genuine
         # spacelike class.
         private = f"carrier-{(5 + (step % observer_count) * 7) % count:05d}"
@@ -349,7 +372,8 @@ def capture_geometric_law(config: Mapping[str, Any] | None = None) -> dict[str, 
             [f"{private}:port-{(step * 5) % PORTS:02d}"],
             [],
             [f"record:{_sha(['private', step])}"],
-            [],
+            event_kind="SYNTHETIC_PRIVATE_RECORD_COMMIT",
+            step=step,
         )
 
     generators = _positive_generator_family()

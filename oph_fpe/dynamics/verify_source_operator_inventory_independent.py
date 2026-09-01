@@ -98,6 +98,21 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     "data/common_reserve/charged_response_artifact.json": _contract(
         "oph.charged_response_semantic_artifact.v3", None, "TWELVE_PORT_RESPONSE_NOT_SPATIAL_TRANSLATION"
     ),
+    "data/causal_order/source_derived_causal_order_receipt.json": _contract(
+        "oph.source-derived-causal-order.v2",
+        "SOURCE_DERIVED_CAUSAL_ORDER_BYTE_IDENTITY_ATTAINED__PHYSICAL_ATTACHMENT_OPEN",
+        "GENERATED_READ_AFTER_WRITE_PROVENANCE_ORDER__INFORMATIONAL_NOT_PHYSICAL_CAUSALITY",
+    ),
+    "data/causal_order/causet_likeness_receipt.json": _contract(
+        "oph.causet-likeness-exploratory.v1",
+        "NOT_SIMILAR_AT_CURRENT_CUTOFF__INTERVAL_ORDERING_FRACTIONS_OUTSIDE_EXPLORATORY_4D_BAND",
+        "EXPLORATORY_CAUSAL_SET_DIAGNOSTICS__NO_MANIFOLDLIKE_OR_PHYSICAL_PROMOTION",
+    ),
+    "data/causal_order/rank3_fcc_causet_compatibility_receipt.json": _contract(
+        "oph.rank3-fcc-causal-order-compatibility.v2",
+        "BOUNDED_RANK3_PLUS_TIME_ARCHITECTURE_COMPATIBILITY_FIXTURE_PASSED",
+        "IMPOSED_FCC_RANK3_COARSE_CAUSAL_SIGNATURE_CONTROL__NOT_CURRENT_FEDERATION_OR_PHYSICAL_PROMOTION",
+    ),
     "data/common_reserve/producer_capability_matrix.json": _contract(
         "oph.common-reserve.capability-matrix.v1", "CAPABILITY_PROBE_COMPLETE__SCIENTIFIC_PROMOTION_DISABLED", "RAW_RESPONSE_NATIVE_PHYSICAL_AT_BRIDGE_OPEN"
     ),

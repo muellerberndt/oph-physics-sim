@@ -61,6 +61,9 @@ def _clause_vector(capture: Mapping[str, Any]) -> dict[str, bool]:
     null_assembly = _null_generator_report(capture)
     table = _event_table(capture)
     pairs = _pair_classes(table)
+    control = capture.get("_external_relation_countermodel")
+    if control not in (None, "EMPTY_RELATION_OUTSIDE_SOURCE_DERIVED_CERTIFICATE"):
+        raise ValueError("unknown external relation countermodel")
     # Faithfulness is judged on the raw empirical moment, before the
     # numerical regularizer that the GNS machinery adds for conditioning;
     # otherwise the regularizer masks genuinely rank-deficient sources.
@@ -77,7 +80,9 @@ def _clause_vector(capture: Mapping[str, Any]) -> dict[str, bool]:
         ),
         "future_cone": bool(null_assembly["future_cone_spectrum_attained"]),
         "causal_nondegenerate": bool(
-            len(pairs["causal"]) >= 8 and len(pairs["spacelike"]) >= 8
+            control is None
+            and len(pairs["causal"]) >= 8
+            and len(pairs["spacelike"]) >= 8
         ),
     }
 
@@ -138,17 +143,19 @@ def _countermodel_positive_generators(capture: Mapping[str, Any]) -> dict[str, A
 
 
 def _countermodel_erased_ancestry(capture: Mapping[str, Any]) -> dict[str, Any]:
-    """Causal-degeneracy countermodel: all ancestry edges removed.
+    """External causal-degeneracy control: interpret the relation as empty.
 
-    Every event becomes causally isolated, so the causal class collapses
-    below the declared floor while states, generators, and intersections are
-    untouched.
+    The source-derived certificate is first checked on the unmodified capture.
+    The empty relation is then supplied only to the countermodel clause as an
+    external mathematical control.  It is not presented as a coherent source
+    log, because deleting semantic reads while retaining their authenticated
+    payload references would invalidate the v1 semantic event IDs.
     """
 
     modified = _deep_copy_capture(capture)
-    modified["postrun_capture"]["raw_ancestry_relations"] = []
-    for event in modified["postrun_capture"]["semantic_events"]:
-        event["parent_event_ids"] = []
+    modified["_external_relation_countermodel"] = (
+        "EMPTY_RELATION_OUTSIDE_SOURCE_DERIVED_CERTIFICATE"
+    )
     return modified
 
 
@@ -208,7 +215,14 @@ def produce_countermodel_matrix(
         )
         rows[family] = {
             "countermodel": name,
-            "kind": "semantic_source_modification",
+            "kind": (
+                "external_relation_control_outside_source_derived_certificate"
+                if family == "causal_nondegenerate"
+                else "semantic_source_modification"
+            ),
+            "source_derived_certificate_checked_before_external_control": bool(
+                family == "causal_nondegenerate"
+            ),
             "baseline": baseline[family],
             "countermodel_value": vector[family],
             "flipped_families": sorted(

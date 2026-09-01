@@ -1,4 +1,4 @@
-"""Issue-634 stage 2: exact seam-transport sign layer and lift ambiguity.
+"""Stage 2: exact seam-transport sign layer and lift ambiguity.
 
 The finite precursor content available on the event complex is exact
 sign algebra rather than a Spin structure or fitted geometry.  Every seam in the capture
@@ -28,10 +28,10 @@ event-footprint subcomplex is a recorded census only:
 The stage-2 receipt binds to the frozen stage-1 receipt by the canonical
 source projection and visible-domain freeze, so both stages certify one
 discrete source object.  The identification of
-this finite sign layer with continuum Stiefel-Whitney classes is a
-named interface owned by the issue-596 face-cocycle lanes; the
-interface-algebra phase extension, the Spin-c analog, is a named
-interface owned by the stage-3 operator typing.  No output of this
+this finite sign layer with continuum Stiefel-Whitney classes is an
+additional face-cocycle hypothesis not established here; the
+interface-algebra phase extension, the Spin-c analog, requires the
+separate stage-3 operator typing.  No output of this
 module carries physical promotion.
 """
 
@@ -56,7 +56,6 @@ from oph_fpe.local_domain.stage1_event_complex import (
 )
 
 SCHEMA = "oph.local-domain-stage2.v1"
-ISSUE = 634
 PHYSICAL_PROMOTION_ALLOWED = False
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "local_domain"
@@ -482,7 +481,6 @@ def produce_stage2_receipt(
     if forbidden:
         return {
             "schema": SCHEMA,
-            "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "verdict": "REFUSED",
             "blockers": [f"forbidden_config_key:{key}" for key in forbidden],
@@ -510,7 +508,6 @@ def produce_stage2_receipt(
         try:
             stage1_valid = bool(
                 stage1.get("schema") == "oph.local-domain-stage1.v1"
-                and stage1.get("issue") == ISSUE
                 and stage1.get("physical_promotion_allowed") is False
                 and stage1.get("verdict") == "ATTAINED"
                 and isinstance(stage1.get("main_config"), Mapping)
@@ -685,7 +682,6 @@ def produce_stage2_receipt(
 
     receipt = {
         "schema": SCHEMA,
-        "issue": ISSUE,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
@@ -705,16 +701,16 @@ def produce_stage2_receipt(
         "STAGE2_SIGN_LAYER_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": blockers,
         "claim_boundary": (
-            "Finite issue-634 stage-2 object: the declared "
+            "Finite stage-2 object: the declared "
             "orientation-reversing seam convention verified fail-closed, and "
             "the exact GF(2) transport structure it induces on the "
             "observer-visible seam complex: triangle holonomy census, "
             "orientability verdict, lift-ambiguity rank with the verified "
             "rank identity, and the stage-1 chart-frame sign-lift layer. "
-            "The identification with continuum Stiefel-Whitney classes is a "
-            "named interface owned by the issue-596 face-cocycle lanes, and "
-            "the interface-algebra phase extension is a named interface "
-            "owned by stage-3 typing. No physical promotion follows from "
+            "Identification with continuum Stiefel-Whitney classes requires "
+            "a separate face-cocycle hypothesis and certificate, and "
+            "the interface-algebra phase extension requires the separate "
+            "stage-3 typing. No physical promotion follows from "
             "any output."
         ),
     }

@@ -1,15 +1,17 @@
-"""Issue-575 producer: ancestry-derived event chart and cone-margin verdicts.
+"""Finite event-manifold candidate instrument.
 
-The Einstein branch needs a Lorentzian event manifold reconstructed from
-repair events: event classes from semantic ancestry, an open four-chart, a
-held-out quadratic form of inertia (1,3), a positive cone margin separating
-ancestry-comparable from incomparable pairs, and causal reachability.  Issue
-#575 owns those receipts (E1 through E6 in the paper stack).
+The Einstein branch tests a candidate Lorentzian event description reconstructed
+from observer events: event classes from semantic ancestry, a prescribed
+four-coordinate embedding, a held-out quadratic form of inertia (1,3), a
+positive cone margin separating
+ancestry-comparable from incomparable pairs, and causal reachability.  These
+are the named E1--E6 finite event-manifold clauses.
 
 This instrument derives everything from the frozen capture: event classes and
-their causal order from the semantic ancestry relations; a four-coordinate
-chart whose time coordinate is ancestry depth and whose three spatial
-coordinates are the seam-graph spectral embedding of each event's carrier
+their causal order from the semantic ancestry relations; a candidate
+four-coordinate embedding whose time coordinate is ancestry depth and whose
+three spatial
+coordinates are a preselected seam-graph spectral embedding of each event's carrier
 footprint; a quadratic form fitted on a declared training half of the event
 pairs and evaluated on the held-out half; the inertia of that form; and the
 cone margin with which it separates causal from spacelike pairs.
@@ -32,6 +34,10 @@ from typing import Any
 import numpy as np
 
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
+from oph_fpe.bulk.source_derived_causal_order import (
+    SourceDerivedCausalOrderError,
+    generated_provenance_edges,
+)
 
 SCHEMA = "oph.event-manifold-producer.v1"
 PHYSICAL_PROMOTION_ALLOWED = False
@@ -48,6 +54,28 @@ def _sha256_value(value: Any) -> str:
     return "sha256:" + hashlib.sha256(
         _canonical_json(value).encode("utf-8")
     ).hexdigest()
+
+
+def _semantic_event_key(event: Mapping[str, Any]) -> str:
+    material = {
+        "schema": "oph.semantic-source-event-id.v1",
+        "canonical_semantic_payload": event["canonical_semantic_payload"],
+        "observer_token": str(event["observer_token"]),
+        "visible_footprint": sorted(
+            str(value) for value in event["visible_footprint"]
+        ),
+        "read_resource_ids": sorted(
+            str(value) for value in event["read_resource_ids"]
+        ),
+    }
+    encoded = json.dumps(
+        material,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
 def _carrier_index(carrier_id: str) -> int:
@@ -82,14 +110,91 @@ def _spectral_embedding(adjacency: np.ndarray, dimensions: int = 3) -> np.ndarra
 def _event_table(capture: Mapping[str, Any]) -> dict[str, Any]:
     events = capture["postrun_capture"]["semantic_events"]
     ancestry = capture["postrun_capture"]["raw_ancestry_relations"]
+    event_keys = [str(event["event_key"]) for event in events]
+    if len(event_keys) != len(set(event_keys)):
+        raise ValueError(
+            "source-derived causal-order certificate refused: duplicate semantic IDs"
+        )
+    for event in events:
+        if str(event["event_key"]) != _semantic_event_key(event):
+            raise ValueError(
+                "source-derived causal-order certificate refused: semantic event "
+                "ID does not bind v1 semantic material"
+            )
+    provenance_view = [
+        {
+            "event_key": str(event["event_key"]),
+            "read_resource_ids": sorted(
+                str(value) for value in event["read_resource_ids"]
+            ),
+            "write_resource_ids": sorted(
+                str(value) for value in event["write_resource_ids"]
+            ),
+        }
+        for event in events
+    ]
+    distinguished_roots = sorted(
+        {
+            resource
+            for event in provenance_view
+            for resource in event["read_resource_ids"]
+            if resource.startswith("source-state:")
+        }
+    )
+    try:
+        generated = generated_provenance_edges(
+            provenance_view,
+            distinguished_source_resource_ids=distinguished_roots,
+        )
+    except SourceDerivedCausalOrderError as error:
+        raise ValueError(
+            f"source-derived causal-order certificate refused: {error}"
+        ) from error
+    ancestry_projection = sorted(
+        (
+            {
+                "parent_event_id": str(edge["parent_event_id"]),
+                "child_event_id": str(edge["child_event_id"]),
+                "shared_resource_ids": sorted(
+                    str(value) for value in edge["shared_resource_ids"]
+                ),
+            }
+            for edge in ancestry
+        ),
+        key=lambda row: (row["parent_event_id"], row["child_event_id"]),
+    )
+    if ancestry_projection != generated:
+        raise ValueError(
+            "source-derived causal-order certificate refused: capture ancestry "
+            "does not equal generated read-after-write provenance"
+        )
+    generated_parents: dict[str, list[str]] = {
+        str(event["event_key"]): [] for event in events
+    }
+    for edge in generated:
+        generated_parents[edge["child_event_id"]].append(
+            edge["parent_event_id"]
+        )
+    if any(
+        sorted(str(value) for value in event["parent_event_ids"])
+        != sorted(generated_parents[str(event["event_key"])])
+        for event in events
+    ):
+        raise ValueError(
+            "source-derived causal-order certificate refused: semantic parent "
+            "lists do not equal generated provenance"
+        )
     key_to_index = {event["event_key"]: i for i, event in enumerate(events)}
     count = len(events)
     parents: dict[int, set[int]] = {i: set() for i in range(count)}
-    for edge in ancestry:
+    for edge in generated:
         parent = key_to_index.get(edge["parent_event_id"])
         child = key_to_index.get(edge["child_event_id"])
         if parent is None or child is None:
-            continue
+            raise ValueError(
+                "source-derived causal-order certificate refused: generated edge "
+                "names an absent semantic event"
+            )
         parents[child].add(parent)
     # Ancestry depth by longest path (events arrive in sequence order).
     order = sorted(range(count), key=lambda i: events[i]["source_sequence_index"])
@@ -112,6 +217,7 @@ def _event_table(capture: Mapping[str, Any]) -> dict[str, Any]:
         "depth": depth,
         "reachable": reachable,
         "footprints": footprints,
+        "source_derived_causal_order_verified": True,
     }
 
 
@@ -321,7 +427,6 @@ def produce_event_manifold_report(
     verdict = "ATTAINED" if not blockers else "NOT_ATTAINED"
     report = {
         "schema": SCHEMA,
-        "issue": 575,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
@@ -332,7 +437,10 @@ def produce_event_manifold_report(
         "held_out_quadratic_fit": fit,
         "clause_verdicts": {
             "event_classes_and_order_constructed": True,
-            "four_chart_constructed": True,
+            "source_derived_causal_order_verified": bool(
+                table["source_derived_causal_order_verified"]
+            ),
+            "candidate_four_coordinate_embedding_constructed": True,
             "nondegenerate_causal_structure": bool(
                 causal_count >= MIN_CAUSAL_PAIRS
                 and spacelike_count >= MIN_SPACELIKE_PAIRS
@@ -346,14 +454,18 @@ def produce_event_manifold_report(
         "EVENT_MANIFOLD_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "Finite issue-575 instrument: event classes and causal order from "
-            "semantic ancestry, a four-chart from ancestry depth and the "
+            "Finite event-manifold candidate instrument: event classes and "
+            "causal order from "
+            "semantic ancestry, plus a candidate four-coordinate embedding "
+            "made from ancestry depth and a preselected three-coordinate "
             "seam-graph spectral embedding, and a held-out quadratic form "
             "with measured inertia and cone margin. A NOT_ATTAINED verdict, "
             "including the degenerate-causal-structure blocker, is an "
-            "empirical result about this source at this cutoff. No open-chart "
-            "topology, continuum limit, or physical metric is claimed, and no "
-            "physical promotion follows from any output."
+            "empirical result about this source at this cutoff. The spatial "
+            "coordinate count is an ansatz, not independent dimension "
+            "evidence. No open-chart topology, continuum limit, or physical "
+            "metric is claimed, and no physical promotion follows from any "
+            "output."
         ),
     }
     if output_path is not None:

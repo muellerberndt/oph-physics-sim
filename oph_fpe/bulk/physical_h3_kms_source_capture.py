@@ -1083,17 +1083,48 @@ def _observer_loop(
             "source_state_root": str(record["source_state_root"]),
         }
 
-    units = [
-        (observer_index, support, sample)
-        for observer_index, support in enumerate(federation.observer_supports)
-        for sample in range(config["observer_samples"])
+    supports = tuple(
+        sorted(federation.observer_supports, key=lambda item: item.observer_token)
+    )
+    stable_observer_index = {
+        support.observer_token: index for index, support in enumerate(supports)
+    }
+    support_by_token = {support.observer_token: support for support in supports}
+    seam_endpoints = {
+        seam.seam_id: frozenset((seam.left_carrier_id, seam.right_carrier_id))
+        for seam in federation.seams
+    }
+    visibility_contract = [
+        {
+            "observer_token": support.observer_token,
+            "carrier_ids": sorted(support.carrier_ids),
+            "visible_seam_ids": sorted(support.visible_seam_ids),
+        }
+        for support in supports
+    ]
+    seam_endpoint_contract = [
+        {
+            "seam_id": seam_id,
+            "carrier_ids": sorted(endpoints),
+        }
+        for seam_id, endpoints in sorted(seam_endpoints.items())
     ]
 
-    def emit_units(
-        start: int,
-        stop: int,
+    def emit_rounds(
+        start_round: int,
+        stop_round: int,
         continuation_state: Mapping[str, Any],
+        *,
+        phase_supports: tuple[ObserverSupport, ...] = supports,
     ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        """Emit complete RECORD/READBACK/FEEDBACK source rounds.
+
+        Observer enumeration within a phase is serialization metadata only.
+        Every readback is evaluated against the complete same-round record
+        map, so reversing that enumeration cannot alter any event material or
+        read-after-write edge.
+        """
+
         rows: list[dict[str, Any]] = []
         last_events = {
             str(key): str(value)
@@ -1107,132 +1138,301 @@ def _observer_loop(
                 continuation_state.get("last_record_carrier_by_observer", {})
             ).items()
         }
+        last_record_event = {
+            str(key): str(value)
+            for key, value in dict(
+                continuation_state.get("last_record_event_by_observer", {})
+            ).items()
+        }
+        last_record_state_hash = {
+            str(key): str(value)
+            for key, value in dict(
+                continuation_state.get(
+                    "last_record_state_sha256_by_observer", {}
+                )
+            ).items()
+        }
         next_ports = {
             str(key): int(value)
             for key, value in dict(
                 continuation_state.get("next_port_by_observer", {})
             ).items()
         }
-        for observer_index, support, sample in units[start:stop]:
-            carrier_ids = sorted(support.carrier_ids)
-            carrier_id = carrier_ids[sample % len(carrier_ids)]
-            port = next_ports.get(
-                support.observer_token,
-                (sample * 5 + observer_index * 3) % 12,
-            )
+        for sample in range(start_round, stop_round):
             snapshot = snapshots[sample % len(snapshots)]
             record_cycle = int(snapshot["cycle"])
-            field_row = snapshot_lookup[(record_cycle, carrier_id)]
-            full_state = [float(value) for value in field_row["full_port_state"]]
-            full_state_hash = _sha(full_state)
-            record_material = {
-                "kind": "RECORD_COMMIT",
-                "observer_token": support.observer_token,
-                "carrier_id": carrier_id,
-                "port": port,
-                "sample": sample,
-                "record_cycle": record_cycle,
-                "port_value": _clean_float(full_state[port]),
-                "full_port_state": full_state,
-                "full_port_state_sha256": full_state_hash,
-                "source_state_root": source_state_root,
-                "parents": (
-                    []
-                    if support.observer_token not in last_events
-                    else [last_events[support.observer_token]]
-                ),
-            }
-            record = {**record_material, "event_id": _sha(record_material)}
-            rows.append(record)
-            last_record_carrier[support.observer_token] = carrier_id
+            round_records: dict[str, dict[str, Any]] = {}
 
-            independently_loaded = snapshot_lookup[(record_cycle, carrier_id)]
-            independently_loaded_state = [
-                float(value) for value in independently_loaded["full_port_state"]
-            ]
-            recomputed_hash = _sha(independently_loaded_state)
-            cross_parents: list[str] = []
-            if bool(config.get("observer_cross_reads", False)):
-                # Cross-observer read-after-write: read the latest record any
-                # other observer committed on a carrier this observer also
-                # supports, creating a genuine cross-chain ancestry edge.
-                for other_token, other_event in sorted(last_events.items()):
-                    if other_token == support.observer_token:
-                        continue
-                    other_carrier = last_record_carrier.get(other_token)
-                    if other_carrier is not None and other_carrier in {
-                        str(cid) for cid in support.carrier_ids
-                    }:
-                        cross_parents.append(other_event)
-            read_material = {
-                "kind": "READBACK",
-                "observer_token": support.observer_token,
-                "record_event_id": record["event_id"],
-                "carrier_id": carrier_id,
-                "record_cycle": record_cycle,
-                "recomputed_full_port_state_sha256": recomputed_hash,
-                "record_signature_matches_source_field": bool(
-                    recomputed_hash == record["full_port_state_sha256"]
-                ),
-                "parents": [record["event_id"], *cross_parents],
-            }
-            read = {**read_material, "event_id": _sha(read_material)}
-            rows.append(read)
+            # Phase 1: all records commit from the prior round's continuation.
+            for support in phase_supports:
+                token = support.observer_token
+                carrier_ids = sorted(support.carrier_ids)
+                carrier_id = carrier_ids[sample % len(carrier_ids)]
+                applied_feedback_event_id = (
+                    last_events.get(token) if token in next_ports else None
+                )
+                port = next_ports.get(
+                    token,
+                    (sample * 5 + stable_observer_index[token] * 3) % 12,
+                )
+                field_row = snapshot_lookup[(record_cycle, carrier_id)]
+                full_state = [
+                    float(value) for value in field_row["full_port_state"]
+                ]
+                full_state_hash = _sha(full_state)
+                record_material = {
+                    "kind": "RECORD_COMMIT",
+                    "observer_token": token,
+                    "carrier_id": carrier_id,
+                    "port": port,
+                    "sample": sample,
+                    "record_cycle": record_cycle,
+                    "port_value": _clean_float(full_state[port]),
+                    "full_port_state": full_state,
+                    "full_port_state_sha256": full_state_hash,
+                    "source_state_root": source_state_root,
+                    "applied_feedback_event_id": applied_feedback_event_id,
+                    "parents": (
+                        []
+                        if applied_feedback_event_id is None
+                        else [applied_feedback_event_id]
+                    ),
+                    # Canonical record presentation is metadata.  When it
+                    # names the prior record, the semantic continuation edge
+                    # still comes only from applied_feedback_event_id.
+                    "record_order_previous_event_ids": (
+                        []
+                        if token not in last_record_event
+                        else [last_record_event[token]]
+                    ),
+                }
+                record = {**record_material, "event_id": _sha(record_material)}
+                rows.append(record)
+                round_records[token] = record
 
-            predicted_material = future_action_material(record)
-            predicted_action = _sha(predicted_material)
-            reconstructed_record = {
-                **record,
-                "port_value": _clean_float(independently_loaded_state[port]),
-                "full_port_state": independently_loaded_state,
-                "full_port_state_sha256": recomputed_hash,
-            }
-            observed_material = future_action_material(reconstructed_record)
-            observed_action = _sha(observed_material)
-            ablated_material = future_action_material(
-                reconstructed_record, ablate_full_state=True
-            )
-            ablated_action = _sha(ablated_material)
-            feedback_material = {
-                "kind": "LOCAL_FEEDBACK",
-                "observer_token": support.observer_token,
-                "readback_event_id": read["event_id"],
-                "parents": [read["event_id"]],
-                "action_input_record_event_id": record["event_id"],
-                "predicted_action_material_sha256": _sha(predicted_material),
-                "observed_recomputation_material_sha256": _sha(observed_material),
-                "observed_action_recomputed_from_record": True,
-                "observed_action_recomputed_from_source_field": True,
-                "predicted_action_material_next_port": int(
-                    predicted_material["next_port"]
-                ),
-                "observed_action_material_next_port": int(
-                    observed_material["next_port"]
-                ),
-                "ablated_action_material_next_port": int(
-                    ablated_material["next_port"]
-                ),
-                "predicted_action": predicted_action,
-                "observed_action": observed_action,
-                "ablated_action": ablated_action,
-            }
-            feedback = {**feedback_material, "event_id": _sha(feedback_material)}
-            if config["feedback_enabled"]:
-                rows.append(feedback)
-                last_events[support.observer_token] = feedback["event_id"]
-                next_ports[support.observer_token] = int(
-                    observed_material["next_port"]
+            round_readbacks: dict[str, dict[str, Any]] = {}
+            # Phase 2: each observer sees the complete same-round record map.
+            for support in phase_supports:
+                token = support.observer_token
+                record = round_records[token]
+                carrier_id = str(record["carrier_id"])
+                independently_loaded = snapshot_lookup[(record_cycle, carrier_id)]
+                independently_loaded_state = [
+                    float(value)
+                    for value in independently_loaded["full_port_state"]
+                ]
+                recomputed_hash = _sha(independently_loaded_state)
+                cross_parents: list[str] = []
+                cross_read_state_hashes: list[str] = []
+                overlap_witnesses: list[dict[str, Any]] = []
+                if bool(config.get("observer_cross_reads", False)):
+                    for other_token in sorted(round_records):
+                        if other_token == token:
+                            continue
+                        other_record = round_records[other_token]
+                        other_support = support_by_token[other_token]
+                        other_carrier = str(other_record["carrier_id"])
+                        shared_visible_seams = sorted(
+                            seam_id
+                            for seam_id in (
+                                support.visible_seam_ids
+                                & other_support.visible_seam_ids
+                            )
+                            if other_carrier in seam_endpoints[seam_id]
+                        )
+                        if (
+                            other_carrier not in support.carrier_ids
+                        ):
+                            continue
+                        cross_parents.append(str(other_record["event_id"]))
+                        cross_read_state_hashes.append(
+                            str(other_record["full_port_state_sha256"])
+                        )
+                        overlap_witnesses.append(
+                            {
+                                "record_event_id": str(other_record["event_id"]),
+                                "record_observer_token": other_token,
+                                "record_carrier_id": other_carrier,
+                                "visibility_witness_kind": (
+                                    "shared_declared_support_carrier"
+                                ),
+                                "shared_visible_seam_ids": shared_visible_seams,
+                            }
+                        )
+                read_material = {
+                    "kind": "READBACK",
+                    "observer_token": token,
+                    "sample": sample,
+                    "record_event_id": record["event_id"],
+                    "carrier_id": carrier_id,
+                    "record_cycle": record_cycle,
+                    "recomputed_full_port_state_sha256": recomputed_hash,
+                    "record_signature_matches_source_field": bool(
+                        recomputed_hash == record["full_port_state_sha256"]
+                    ),
+                    "cross_read_record_event_ids": cross_parents,
+                    "cross_read_record_state_sha256s": cross_read_state_hashes,
+                    "cross_read_overlap_witnesses": overlap_witnesses,
+                    "parents": [record["event_id"], *cross_parents],
+                }
+                read = {**read_material, "event_id": _sha(read_material)}
+                rows.append(read)
+                round_readbacks[token] = read
+
+            # Phase 3: local feedback consumes that observer's record/readback.
+            for support in phase_supports:
+                token = support.observer_token
+                record = round_records[token]
+                read = round_readbacks[token]
+                port = int(record["port"])
+                independently_loaded = snapshot_lookup[
+                    (record_cycle, str(record["carrier_id"]))
+                ]
+                independently_loaded_state = [
+                    float(value)
+                    for value in independently_loaded["full_port_state"]
+                ]
+                recomputed_hash = _sha(independently_loaded_state)
+                predicted_material = future_action_material(record)
+                predicted_action = _sha(predicted_material)
+                reconstructed_record = {
+                    **record,
+                    "port_value": _clean_float(independently_loaded_state[port]),
+                    "full_port_state": independently_loaded_state,
+                    "full_port_state_sha256": recomputed_hash,
+                }
+                observed_material = future_action_material(reconstructed_record)
+                observed_action = _sha(observed_material)
+                ablated_material = future_action_material(
+                    reconstructed_record, ablate_full_state=True
+                )
+                ablated_action = _sha(ablated_material)
+                feedback_material = {
+                    "kind": "LOCAL_FEEDBACK",
+                    "observer_token": token,
+                    "sample": sample,
+                    "readback_event_id": read["event_id"],
+                    "parents": [read["event_id"], record["event_id"]],
+                    "action_input_record_event_id": record["event_id"],
+                    "predicted_action_material_sha256": _sha(predicted_material),
+                    "observed_recomputation_material_sha256": _sha(
+                        observed_material
+                    ),
+                    "observed_action_recomputed_from_record": True,
+                    "observed_action_recomputed_from_source_field": True,
+                    "predicted_action_material_next_port": int(
+                        predicted_material["next_port"]
+                    ),
+                    "observed_action_material_next_port": int(
+                        observed_material["next_port"]
+                    ),
+                    "ablated_action_material_next_port": int(
+                        ablated_material["next_port"]
+                    ),
+                    "predicted_action": predicted_action,
+                    "observed_action": observed_action,
+                    "ablated_action": ablated_action,
+                }
+                feedback = {
+                    **feedback_material,
+                    "event_id": _sha(feedback_material),
+                }
+                if config["feedback_enabled"]:
+                    rows.append(feedback)
+                    last_events[token] = feedback["event_id"]
+                    next_ports[token] = int(observed_material["next_port"])
+
+            for token, record in round_records.items():
+                last_record_carrier[token] = str(record["carrier_id"])
+                last_record_event[token] = str(record["event_id"])
+                last_record_state_hash[token] = str(
+                    record["full_port_state_sha256"]
                 )
         return rows, {
             "last_event_by_observer": last_events,
+            "last_record_carrier_by_observer": last_record_carrier,
+            "last_record_event_by_observer": last_record_event,
+            "last_record_state_sha256_by_observer": last_record_state_hash,
             "next_port_by_observer": next_ports,
         }
 
-    full_replay, _ = emit_units(0, len(units), {})
-    cut_units = min(config["checkpoint_interval"], len(units) - 1)
-    prefix, continuation_state = emit_units(0, cut_units, {})
-    continuation, _ = emit_units(cut_units, len(units), continuation_state)
+    round_count = int(config["observer_samples"])
+    full_replay, _ = emit_rounds(0, round_count, {})
+    cut_rounds = min(int(config["checkpoint_interval"]), round_count - 1)
+    prefix, continuation_state = emit_rounds(0, cut_rounds, {})
+    continuation, _ = emit_rounds(
+        cut_rounds, round_count, continuation_state
+    )
     events = prefix + continuation
+    permuted_replay, _ = emit_rounds(
+        0, round_count, {}, phase_supports=tuple(reversed(supports))
+    )
+
+    def presentation_projection(
+        event_rows: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        semantic, generated, _, _ = _semantic_source_events(
+            {
+                "events": event_rows,
+                "observer_support_visibility_contract": visibility_contract,
+                "overlap_seam_endpoint_contract": seam_endpoint_contract,
+                "cross_read_visibility_rule": (
+                    "same_round_shared_declared_support_carrier_v1"
+                ),
+            }
+        )
+        semantic_projection = sorted(
+            (
+                {
+                    key: value
+                    for key, value in row.items()
+                    if key != "source_sequence_index"
+                }
+                for row in semantic
+            ),
+            key=lambda row: str(row["event_key"]),
+        )
+        edge_projection = sorted(
+            (
+                {
+                    "parent_event_id": row["parent_event_id"],
+                    "child_event_id": row["child_event_id"],
+                    "shared_resource_ids": row["shared_resource_ids"],
+                }
+                for row in generated
+            ),
+            key=lambda row: (row["parent_event_id"], row["child_event_id"]),
+        )
+        return semantic_projection, edge_projection
+
+    canonical_semantic_projection, canonical_edge_projection = (
+        presentation_projection(events)
+    )
+    permuted_semantic_projection, permuted_edge_projection = (
+        presentation_projection(permuted_replay)
+    )
+    phase_permutation_control = {
+        "algorithm_id": "reverse_observer_order_within_each_source_round_phase_v1",
+        "source_round_count": round_count,
+        "transport_event_material_set_invariant": bool(
+            sorted(events, key=lambda row: str(row["event_id"]))
+            == sorted(permuted_replay, key=lambda row: str(row["event_id"]))
+        ),
+        "canonical_semantic_event_set_sha256": _sha(
+            canonical_semantic_projection
+        ),
+        "permuted_semantic_event_set_sha256": _sha(
+            permuted_semantic_projection
+        ),
+        "semantic_event_set_invariant": bool(
+            canonical_semantic_projection == permuted_semantic_projection
+        ),
+        "canonical_source_order_sha256": _sha(canonical_edge_projection),
+        "permuted_source_order_sha256": _sha(permuted_edge_projection),
+        "source_order_invariant": bool(
+            canonical_edge_projection == permuted_edge_projection
+        ),
+    }
     record_rows = [row for row in events if row["kind"] == "RECORD_COMMIT"]
     feedback_rows = [row for row in events if row["kind"] == "LOCAL_FEEDBACK"]
     direct = sum(
@@ -1263,7 +1463,9 @@ def _observer_loop(
     )
     checkpoint_material = {
         "requested_checkpoint_interval": config["checkpoint_interval"],
-        "cut_unit_index": cut_units,
+        "checkpoint_interval_unit": "complete_source_rounds",
+        "cut_round_count": cut_rounds,
+        "next_round_index": cut_rounds,
         "cut_event_id": prefix[-1]["event_id"],
         "prefix_root": _sha(prefix),
         "saved_continuation_state": continuation_state,
@@ -1279,6 +1481,18 @@ def _observer_loop(
     return {
         "events": events,
         "event_log_sha256": _sha(events),
+        "event_carrier_scope": (
+            "observer_instrumentation_history_over_source_state_snapshots"
+        ),
+        "underlying_repair_transactions_promoted_as_events": False,
+        "observer_support_visibility_contract": visibility_contract,
+        "overlap_seam_endpoint_contract": seam_endpoint_contract,
+        "cross_read_visibility_rule": (
+            "same_round_shared_declared_support_carrier_v1"
+        ),
+        "source_round_count": round_count,
+        "phase_order": ["RECORD_COMMIT", "READBACK", "LOCAL_FEEDBACK"],
+        "phase_observer_permutation_control": phase_permutation_control,
         "checkpoint": checkpoint,
         "checkpoint_replay_exact": events == full_replay,
         "record_count": len(record_rows),
@@ -1614,47 +1828,124 @@ def _port_intensities_from_complex_rows(
 
 def _semantic_source_events(
     observer_log: Mapping[str, Any],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Project observer events into a presentation-bound structural DAG.
+    *,
+    validate_transport_ids: bool = True,
+) -> tuple[
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    list[str],
+]:
+    """Project a transport log into semantic events and source-derived edges.
 
-    ``event_key`` remains the deterministic transport key from the concrete
-    carrier/port presentation.  Neither it nor the payload below is asserted to
-    be an A5-quotient-invariant semantic identity.
+    The transport ``event_id``, archival sequence, declared ``parents``, and
+    ``record_order_previous_event_ids`` are deliberately excluded from the
+    semantic identity.  Explicit read fields are translated from transport
+    IDs to the semantic IDs of the records they name.  Resource provenance
+    then generates the consumed ancestry relation; declared transport parents
+    are returned separately only for the byte-identity audit.
+
+    The identity remains carrier/port-presentation-bound and is not claimed to
+    be an A5 quotient identity.  It is, however, invariant under changes to
+    executor ancestry, checkpoint placement, and record-order metadata.
     """
 
     raw_events = [dict(row) for row in observer_log["events"]]
-    event_index = {
-        str(row["event_id"]): index for index, row in enumerate(raw_events)
-    }
+    support_visibility: dict[str, dict[str, set[str]]] = {}
+    for row in observer_log.get("observer_support_visibility_contract", []):
+        token = str(row["observer_token"])
+        if token in support_visibility:
+            raise RuntimeError(f"duplicate observer visibility contract: {token}")
+        support_visibility[token] = {
+            "carrier_ids": {str(value) for value in row["carrier_ids"]},
+            "visible_seam_ids": {
+                str(value) for value in row["visible_seam_ids"]
+            },
+        }
+    seam_endpoints: dict[str, set[str]] = {}
+    for row in observer_log.get("overlap_seam_endpoint_contract", []):
+        seam_id = str(row["seam_id"])
+        endpoints = {str(value) for value in row["carrier_ids"]}
+        if seam_id in seam_endpoints or len(endpoints) != 2:
+            raise RuntimeError(f"malformed overlap seam contract: {seam_id}")
+        seam_endpoints[seam_id] = endpoints
+    if not support_visibility or not seam_endpoints:
+        raise RuntimeError("observer overlap-visibility contract is absent")
+    if observer_log.get("cross_read_visibility_rule") != (
+        "same_round_shared_declared_support_carrier_v1"
+    ):
+        raise RuntimeError("unknown cross-read visibility rule")
+    raw_to_semantic: dict[str, str] = {}
+    processed_raw: dict[str, dict[str, Any]] = {}
     semantic_events: list[dict[str, Any]] = []
     resources: dict[str, dict[str, set[str]]] = {}
+    distinguished_roots: set[str] = set()
+
+    def referenced_semantic(raw_id: object, field: str) -> str:
+        key = str(raw_id)
+        if key not in raw_to_semantic:
+            raise RuntimeError(
+                f"{field} names an absent or non-prior transport event: {key}"
+            )
+        return raw_to_semantic[key]
+
     for index, row in enumerate(raw_events):
-        event_id = str(row["event_id"])
-        parents = [str(value) for value in row.get("parents", [])]
-        # An ancestry edge is admitted only when the child reads a concrete
-        # resource committed by its parent.  Generic ``event:<id>`` tokens
-        # would make every declared parent edge a read-after-write witness by
-        # construction and are therefore forbidden here.
+        raw_event_id = str(row["event_id"])
+        if raw_event_id in raw_to_semantic:
+            raise RuntimeError(f"duplicate transport event id: {raw_event_id}")
+        if validate_transport_ids:
+            material = {key: value for key, value in row.items() if key != "event_id"}
+            if raw_event_id != _sha(material):
+                raise RuntimeError(
+                    f"transport event id does not bind event material: {raw_event_id}"
+                )
+
         reads: set[str] = set()
-        writes: set[str] = set()
         footprint: list[str] = []
-        # Sequence is archival metadata below, never part of the downstream
-        # computed identity.  The remaining material is still presentation
-        # bound and therefore is not a quotient-canonical semantic identity.
         payload: dict[str, Any] = {"event_kind": str(row["kind"])}
         if row["kind"] == "RECORD_COMMIT":
             carrier_id = str(row["carrier_id"])
             port = int(row["port"])
+            full_state = [float(value) for value in row["full_port_state"]]
+            if len(full_state) != 12 or _sha(full_state) != str(
+                row["full_port_state_sha256"]
+            ):
+                raise RuntimeError("record full-state commitment is invalid")
+            observer_contract = support_visibility.get(str(row["observer_token"]))
+            if (
+                observer_contract is None
+                or carrier_id not in observer_contract["carrier_ids"]
+            ):
+                raise RuntimeError("record carrier is outside observer support")
             footprint = [f"{carrier_id}:port-{item:02d}" for item in range(12)]
-            reads.update(
+            source_reads = {
                 f"source-state:{row['source_state_root']}:{carrier_id}:port-{item:02d}"
                 for item in range(12)
-            )
-            writes.add(f"record:{event_id}")
-            for parent in parents:
-                parent_row = raw_events[event_index[parent]]
-                if parent_row.get("kind") == "LOCAL_FEEDBACK":
-                    reads.add(f"local-action:{parent}")
+            }
+            reads.update(source_reads)
+            distinguished_roots.update(source_reads)
+            applied_feedback_raw = row.get("applied_feedback_event_id")
+            applied_feedback_id: str | None = None
+            if applied_feedback_raw is not None:
+                applied_feedback_id = referenced_semantic(
+                    applied_feedback_raw, "applied_feedback_event_id"
+                )
+                prior_feedback = processed_raw[str(applied_feedback_raw)]
+                if prior_feedback.get("kind") != "LOCAL_FEEDBACK":
+                    raise RuntimeError(
+                        "applied_feedback_event_id does not name local feedback"
+                    )
+                if prior_feedback.get("observer_token") != row.get(
+                    "observer_token"
+                ):
+                    raise RuntimeError(
+                        "record consumes feedback from a different observer"
+                    )
+                if int(prior_feedback["observed_action_material_next_port"]) != port:
+                    raise RuntimeError(
+                        "record port does not equal the consumed feedback action"
+                    )
+                reads.add(f"local-action:{applied_feedback_id}")
             payload.update(
                 {
                     "carrier_id": carrier_id,
@@ -1666,32 +1957,149 @@ def _semantic_source_events(
                         row["full_port_state_sha256"]
                     ),
                     "source_state_root": str(row["source_state_root"]),
+                    "applied_feedback_event_id": applied_feedback_id,
                 }
             )
         elif row["kind"] == "READBACK":
-            record_id = str(row["record_event_id"])
+            raw_record_id = str(row["record_event_id"])
+            record_id = referenced_semantic(
+                raw_record_id, "record_event_id"
+            )
+            source_record = processed_raw[raw_record_id]
+            if source_record.get("kind") != "RECORD_COMMIT":
+                raise RuntimeError("record_event_id does not name a record commit")
+            committed_hash = str(source_record["full_port_state_sha256"])
+            recomputed_hash = str(row["recomputed_full_port_state_sha256"])
+            signature_matches = recomputed_hash == committed_hash
+            if signature_matches != bool(
+                row["record_signature_matches_source_field"]
+            ):
+                raise RuntimeError("readback signature verdict is inconsistent")
+            if not signature_matches:
+                raise RuntimeError("readback does not authenticate its named record")
+            sample = int(row["sample"])
+            if int(source_record["sample"]) != sample:
+                raise RuntimeError("readback does not name its same-round record")
+            raw_cross_ids = [
+                str(value)
+                for value in row.get("cross_read_record_event_ids", [])
+            ]
+            cross_hashes = [
+                str(value)
+                for value in row.get("cross_read_record_state_sha256s", [])
+            ]
+            if len(raw_cross_ids) != len(cross_hashes):
+                raise RuntimeError(
+                    "cross-read record IDs and committed-state hashes differ in length"
+                )
+            overlap_witnesses = [
+                dict(value)
+                for value in row.get("cross_read_overlap_witnesses", [])
+            ]
+            if len(overlap_witnesses) != len(raw_cross_ids):
+                raise RuntimeError(
+                    "cross-read version and visibility witness lengths differ"
+                )
+            reader_token = str(row["observer_token"])
+            reader_contract = support_visibility.get(reader_token)
+            if reader_contract is None:
+                raise RuntimeError("readback observer has no visibility contract")
+            cross_versions: list[dict[str, Any]] = []
+            for raw_cross_id, state_hash, witness in zip(
+                raw_cross_ids, cross_hashes, overlap_witnesses, strict=True
+            ):
+                cross_id = referenced_semantic(
+                    raw_cross_id, "cross_read_record_event_ids"
+                )
+                cross_record = processed_raw[raw_cross_id]
+                if cross_record.get("kind") != "RECORD_COMMIT":
+                    raise RuntimeError("cross-read ID does not name a record commit")
+                if str(cross_record["full_port_state_sha256"]) != state_hash:
+                    raise RuntimeError(
+                        "cross-read state hash does not match the named record"
+                    )
+                if int(cross_record["sample"]) != sample:
+                    raise RuntimeError("cross-read record is not from the same round")
+                cross_token = str(cross_record["observer_token"])
+                cross_carrier = str(cross_record["carrier_id"])
+                cross_contract = support_visibility.get(cross_token)
+                witness_seams = [
+                    str(value) for value in witness["shared_visible_seam_ids"]
+                ]
+                if (
+                    str(witness.get("record_event_id")) != raw_cross_id
+                    or str(witness.get("record_observer_token")) != cross_token
+                    or str(witness.get("record_carrier_id")) != cross_carrier
+                    or cross_contract is None
+                    or cross_carrier not in reader_contract["carrier_ids"]
+                    or cross_carrier not in cross_contract["carrier_ids"]
+                    or witness.get("visibility_witness_kind")
+                    != "shared_declared_support_carrier"
+                    or witness_seams != sorted(set(witness_seams))
+                ):
+                    raise RuntimeError("cross-read overlap witness is malformed")
+                for seam_id in witness_seams:
+                    if (
+                        seam_id not in reader_contract["visible_seam_ids"]
+                        or seam_id not in cross_contract["visible_seam_ids"]
+                        or cross_carrier not in seam_endpoints.get(seam_id, set())
+                    ):
+                        raise RuntimeError(
+                            "cross-read is not witnessed by declared overlap visibility"
+                        )
+                cross_versions.append(
+                    {
+                        "record_event_id": cross_id,
+                        "committed_full_port_state_sha256": state_hash,
+                        "record_observer_token": cross_token,
+                        "record_carrier_id": cross_carrier,
+                        "visibility_witness_kind": (
+                            "shared_declared_support_carrier"
+                        ),
+                        "shared_visible_seam_ids": witness_seams,
+                    }
+                )
             reads.add(f"record:{record_id}")
-            writes.add(f"readback:{event_id}")
+            reads.update(
+                f"record:{value['record_event_id']}" for value in cross_versions
+            )
             payload.update(
                 {
+                    "sample": sample,
                     "record_event_id": record_id,
-                    "recomputed_full_port_state_sha256": str(
-                        row["recomputed_full_port_state_sha256"]
+                    "cross_read_record_versions": sorted(
+                        cross_versions,
+                        key=lambda value: (
+                            value["record_event_id"],
+                            value["committed_full_port_state_sha256"],
+                            value["record_observer_token"],
+                        ),
                     ),
-                    "record_signature_matches_source_field": bool(
-                        row["record_signature_matches_source_field"]
-                    ),
+                    "recomputed_full_port_state_sha256": recomputed_hash,
+                    "record_signature_matches_source_field": signature_matches,
                 }
             )
         elif row["kind"] == "LOCAL_FEEDBACK":
-            readback_id = str(row["readback_event_id"])
-            input_record_id = str(row["action_input_record_event_id"])
+            readback_id = referenced_semantic(
+                row["readback_event_id"], "readback_event_id"
+            )
+            input_record_id = referenced_semantic(
+                row["action_input_record_event_id"],
+                "action_input_record_event_id",
+            )
             reads.update(
                 {f"readback:{readback_id}", f"record:{input_record_id}"}
             )
-            writes.add(f"local-action:{event_id}")
+            sample = int(row["sample"])
+            raw_readback = processed_raw[str(row["readback_event_id"])]
+            raw_record = processed_raw[str(row["action_input_record_event_id"])]
+            if int(raw_readback["sample"]) != sample or int(
+                raw_record["sample"]
+            ) != sample:
+                raise RuntimeError("feedback inputs do not belong to its source round")
             payload.update(
                 {
+                    "sample": sample,
                     "readback_event_id": readback_id,
                     "action_input_record_event_id": input_record_id,
                     "predicted_action": str(row["predicted_action"]),
@@ -1714,37 +2122,121 @@ def _semantic_source_events(
                     ),
                 }
             )
-        resources[event_id] = {"reads": reads, "writes": writes}
+        else:
+            raise RuntimeError(f"unknown observer event kind: {row['kind']!r}")
+
+        identity_material = {
+            "schema": "oph.semantic-source-event-id.v1",
+            "canonical_semantic_payload": payload,
+            "observer_token": str(row["observer_token"]),
+            "visible_footprint": sorted(footprint),
+            "read_resource_ids": sorted(reads),
+        }
+        semantic_id = _sha(identity_material)
+        if semantic_id in resources:
+            raise RuntimeError(f"duplicate semantic event id: {semantic_id}")
+        kind = str(row["kind"])
+        resource_kind = {
+            "RECORD_COMMIT": "record",
+            "READBACK": "readback",
+            "LOCAL_FEEDBACK": "local-action",
+        }[kind]
+        writes = {f"{resource_kind}:{semantic_id}"}
+        raw_to_semantic[raw_event_id] = semantic_id
+        resources[semantic_id] = {"reads": reads, "writes": writes}
         semantic_events.append(
             {
-                "event_key": event_id,
+                "event_key": semantic_id,
                 "canonical_semantic_payload": payload,
                 "observer_token": str(row["observer_token"]),
                 "visible_footprint": footprint,
-                "parent_event_ids": parents,
+                "parent_event_ids": [],
                 "read_resource_ids": sorted(reads),
                 "write_resource_ids": sorted(writes),
                 "source_sequence_index": index,
             }
         )
+        processed_raw[raw_event_id] = row
 
-    ancestry: list[dict[str, Any]] = []
+    writer_of: dict[str, str] = {}
+    for event in semantic_events:
+        for resource in event["write_resource_ids"]:
+            if resource in writer_of:
+                raise RuntimeError(f"semantic resource has two writers: {resource}")
+            writer_of[resource] = str(event["event_key"])
+
+    generated_parent_resources: dict[tuple[str, str], list[str]] = {}
     for event in semantic_events:
         child = str(event["event_key"])
-        for parent in event["parent_event_ids"]:
+        for resource in event["read_resource_ids"]:
+            parent = writer_of.get(resource)
+            if parent is None:
+                if resource not in distinguished_roots:
+                    raise RuntimeError(
+                        f"semantic read has no writer or distinguished root: {resource}"
+                    )
+                continue
+            if parent == child:
+                raise RuntimeError(f"semantic event reads its own write: {child}")
+            generated_parent_resources.setdefault((parent, child), []).append(
+                resource
+            )
+
+    sequence_of = {
+        str(event["event_key"]): int(event["source_sequence_index"])
+        for event in semantic_events
+    }
+    by_semantic = {str(event["event_key"]): event for event in semantic_events}
+    generated_ancestry: list[dict[str, Any]] = []
+    for (parent, child), shared in sorted(generated_parent_resources.items()):
+        by_semantic[child]["parent_event_ids"].append(parent)
+        material = {
+            "parent_event_id": parent,
+            "child_event_id": child,
+            "observer_token": by_semantic[child]["observer_token"],
+            "parent_sequence_index": sequence_of[parent],
+            "child_sequence_index": sequence_of[child],
+            "shared_resource_ids": sorted(shared),
+        }
+        generated_ancestry.append({**material, "edge_id": _sha(material)})
+    for event in semantic_events:
+        event["parent_event_ids"].sort()
+
+    declared_ancestry: list[dict[str, Any]] = []
+    for raw_child in raw_events:
+        child = raw_to_semantic[str(raw_child["event_id"])]
+        for raw_parent in raw_child.get("parents", []):
+            parent = raw_to_semantic.get(str(raw_parent))
+            if parent is None:
+                raise RuntimeError(
+                    f"declared parent names an absent transport event: {raw_parent}"
+                )
             shared = sorted(
-                resources[parent]["writes"].intersection(resources[child]["reads"])
+                resources[parent]["writes"].intersection(
+                    resources[child]["reads"]
+                )
             )
             material = {
                 "parent_event_id": parent,
                 "child_event_id": child,
-                "observer_token": event["observer_token"],
-                "parent_sequence_index": event_index[parent],
-                "child_sequence_index": event_index[child],
+                "observer_token": by_semantic[child]["observer_token"],
+                "parent_sequence_index": sequence_of[parent],
+                "child_sequence_index": sequence_of[child],
                 "shared_resource_ids": shared,
             }
-            ancestry.append({**material, "edge_id": _sha(material)})
-    return semantic_events, ancestry
+            declared_ancestry.append({**material, "edge_id": _sha(material)})
+    generated_ancestry.sort(
+        key=lambda row: (row["parent_event_id"], row["child_event_id"])
+    )
+    declared_ancestry.sort(
+        key=lambda row: (row["parent_event_id"], row["child_event_id"])
+    )
+    return (
+        semantic_events,
+        generated_ancestry,
+        declared_ancestry,
+        sorted(distinguished_roots),
+    )
 
 
 def _raw_overlap_relations(
@@ -1941,7 +2433,7 @@ def _build_postrun_capture(
         }
         neutral_geometry_rows.append({**material, "row_sha256": _sha(material)})
 
-    semantic_events, ancestry = _semantic_source_events(observer_log)
+    semantic_events, ancestry, _, _ = _semantic_source_events(observer_log)
     registered_source_inputs = {
             "carrier_count": int(config["carrier_count"]),
             "seed": int(config["seed"]),
@@ -2591,13 +3083,14 @@ def capture_physical_source(
         ),
         "SEMANTIC_EVENT_A5_QUOTIENT_INVARIANCE_RECEIPT": False,
         "semantic_event_identity_status": (
-            "PRESENTATION_BOUND_DIAGNOSTIC_KEY_ONLY"
+            "TRANSPORT_METADATA_INVARIANT_PRESENTATION_BOUND_SEMANTIC_KEY"
         ),
         "semantic_event_identity_basis": [
             "presentation_carrier_id",
             "presentation_port_index",
             "presentation_bound_source_state_root",
-            "presentation_bound_parent_event_hashes",
+            "explicit_semantic_read_resources",
+            "declared_parents_record_order_and_sequence_excluded",
         ],
         "INDEPENDENT_SUPPORT_REGULATOR_RECEIPT": refinement[
             "COMMUTATIVE_CELL_REFINEMENT_DIAGNOSTIC_RECEIPT"

@@ -182,7 +182,7 @@ def test_source_derived_geometry_is_target_blind_but_not_independent() -> None:
     ] == []
 
 
-def test_semantic_event_keys_are_explicitly_presentation_bound() -> None:
+def test_semantic_event_keys_are_transport_metadata_invariant_but_presentation_bound() -> None:
     capture = capture_physical_source(SMALL_CONFIG)
     source = capture["reports"]["source_observer"]
     semantic = capture["postrun_capture"]["semantic_events"]
@@ -197,10 +197,13 @@ def test_semantic_event_keys_are_explicitly_presentation_bound() -> None:
     )
     assert source["SEMANTIC_EVENT_A5_QUOTIENT_INVARIANCE_RECEIPT"] is False
     assert source["semantic_event_identity_status"] == (
-        "PRESENTATION_BOUND_DIAGNOSTIC_KEY_ONLY"
+        "TRANSPORT_METADATA_INVARIANT_PRESENTATION_BOUND_SEMANTIC_KEY"
     )
     assert "presentation_port_index" in source["semantic_event_identity_basis"]
-    assert {row["event_key"] for row in semantic} == raw_event_ids
+    assert "declared_parents_record_order_and_sequence_excluded" in source[
+        "semantic_event_identity_basis"
+    ]
+    assert {row["event_key"] for row in semantic}.isdisjoint(raw_event_ids)
 
 
 def test_federation_is_connected_all_port_and_support_independent() -> None:
@@ -283,13 +286,55 @@ def test_records_bind_full_c12_and_checkpoint_restarts_from_saved_prefix() -> No
     reads = [row for row in observer["events"] if row["kind"] == "READBACK"]
     assert observer["checkpoint_replay_exact"]
     assert observer["checkpoint"]["requested_checkpoint_interval"] == 3
-    assert observer["checkpoint"]["cut_unit_index"] == 3
+    assert observer["checkpoint"]["checkpoint_interval_unit"] == (
+        "complete_source_rounds"
+    )
+    assert observer["checkpoint"]["cut_round_count"] == 3
+    assert observer["checkpoint"]["next_round_index"] == 3
     assert observer["checkpoint"]["saved_continuation_state"]
+    assert observer["phase_order"] == [
+        "RECORD_COMMIT",
+        "READBACK",
+        "LOCAL_FEEDBACK",
+    ]
+    assert observer["phase_observer_permutation_control"][
+        "transport_event_material_set_invariant"
+    ]
+    assert observer["phase_observer_permutation_control"][
+        "semantic_event_set_invariant"
+    ]
+    assert observer["phase_observer_permutation_control"][
+        "source_order_invariant"
+    ]
+    phase_rank = {kind: index for index, kind in enumerate(observer["phase_order"])}
+    assert [
+        (row["sample"], phase_rank[row["kind"]]) for row in observer["events"]
+    ] == sorted(
+        (row["sample"], phase_rank[row["kind"]]) for row in observer["events"]
+    )
     assert all(len(row["full_port_state"]) == 12 for row in records)
     assert all(row["full_port_state_sha256"] == _sha(row["full_port_state"]) for row in records)
     assert all(row["record_signature_matches_source_field"] for row in reads)
     assert observer["full_port_record_signature_count"] == len(records)
     assert observer["readback_source_signature_match_count"] == len(reads)
+    for token in sorted({row["observer_token"] for row in records}):
+        token_records = [
+            row for row in records if row["observer_token"] == token
+        ]
+        token_feedback = [
+            row
+            for row in observer["events"]
+            if row["kind"] == "LOCAL_FEEDBACK"
+            and row["observer_token"] == token
+        ]
+        assert token_records[0]["record_order_previous_event_ids"] == []
+        for index in range(1, len(token_records)):
+            assert token_records[index]["record_order_previous_event_ids"] == [
+                token_records[index - 1]["event_id"]
+            ]
+            assert token_records[index]["applied_feedback_event_id"] == (
+                token_feedback[index - 1]["event_id"]
+            )
 
     semantic = capture["postrun_capture"]["semantic_events"]
     assert all(
@@ -302,6 +347,37 @@ def test_records_bind_full_c12_and_checkpoint_restarts_from_saved_prefix() -> No
         if row["canonical_semantic_payload"]["event_kind"] == "RECORD_COMMIT"
     )
     assert len(record_semantic["visible_footprint"]) == 12
+
+
+def test_cross_reads_use_same_round_declared_support_overlap() -> None:
+    capture = capture_physical_source(
+        {**SMALL_CONFIG, "observer_cross_reads": True}
+    )
+    observer = capture["source_artifacts"]["observer_log"]
+    raw = {row["event_id"]: row for row in observer["events"]}
+    supports = {
+        row["observer_token"]: set(row["carrier_ids"])
+        for row in observer["observer_support_visibility_contract"]
+    }
+    cross_count = 0
+    for readback in (
+        row for row in observer["events"] if row["kind"] == "READBACK"
+    ):
+        for cross_id, witness in zip(
+            readback["cross_read_record_event_ids"],
+            readback["cross_read_overlap_witnesses"],
+            strict=True,
+        ):
+            cross_count += 1
+            record = raw[cross_id]
+            assert record["sample"] == readback["sample"]
+            assert record["carrier_id"] in supports[readback["observer_token"]]
+            assert record["carrier_id"] in supports[record["observer_token"]]
+            assert witness["visibility_witness_kind"] == (
+                "shared_declared_support_carrier"
+            )
+            assert witness["record_event_id"] == cross_id
+    assert cross_count > 0
 
 
 @pytest.mark.parametrize(
@@ -550,7 +626,7 @@ def test_declared_pcg64_complex_gaussian_initializer_is_executable() -> None:
     assert reconstructed == pytest.approx(expected, abs=1.0e-14)
 
 
-def test_observer_parent_chains_are_independent_and_actions_are_recomputed() -> None:
+def test_record_order_is_separate_but_applied_feedback_is_causal() -> None:
     capture = capture_physical_source(SMALL_CONFIG)
     events = capture["source_artifacts"]["observer_log"]["events"]
     by_observer: dict[str, list[dict]] = {}
@@ -561,12 +637,26 @@ def test_observer_parent_chains_are_independent_and_actions_are_recomputed() -> 
         records = [row for row in observer_rows if row["kind"] == "RECORD_COMMIT"]
         feedback = [row for row in observer_rows if row["kind"] == "LOCAL_FEEDBACK"]
         assert records[0]["parents"] == []
+        assert records[0]["applied_feedback_event_id"] is None
+        assert records[0]["record_order_previous_event_ids"] == []
         for index in range(1, len(records)):
-            assert records[index]["parents"] == [feedback[index - 1]["event_id"]]
+            assert records[index]["record_order_previous_event_ids"] == [
+                records[index - 1]["event_id"]
+            ]
+            assert records[index]["applied_feedback_event_id"] == (
+                feedback[index - 1]["event_id"]
+            )
+            assert records[index]["parents"] == [
+                feedback[index - 1]["event_id"]
+            ]
             assert records[index]["port"] == feedback[index - 1][
                 "observed_action_material_next_port"
             ]
         for row in feedback:
+            assert set(row["parents"]) == {
+                row["readback_event_id"],
+                row["action_input_record_event_id"],
+            }
             assert row["observed_action_recomputed_from_record"]
             assert row["predicted_action_material_sha256"] == row[
                 "observed_recomputation_material_sha256"

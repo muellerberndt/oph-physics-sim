@@ -1,4 +1,4 @@
-"""Frozen tests for the issue-634 stage-3 typed domain."""
+"""Frozen tests for the stage-3 typed domain."""
 
 import hashlib
 import json
@@ -142,7 +142,6 @@ def test_frozen_stage3_receipt_binding():
     ).hexdigest()
     receipt = json.loads(receipt_bytes.decode("utf-8"))
     assert receipt["schema"] == "oph.local-domain-stage3.v1"
-    assert receipt["issue"] == 634
     assert receipt["physical_promotion_allowed"] is False
     assert receipt["verdict"] == "ATTAINED"
     assert receipt["blockers"] == []

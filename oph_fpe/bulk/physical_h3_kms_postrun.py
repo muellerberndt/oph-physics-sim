@@ -2307,28 +2307,61 @@ def _semantic_event_report(
         == "RECORD_COMMIT"
     ]
     record_pair_count = len(record_event_keys) * (len(record_event_keys) - 1) // 2
-    parents_by_child = {
-        key: [
+    writes_by_key = {
+        key: {
             str(value)
-            for value in _sequence(row.get("parent_event_ids"))
-        ]
+            for value in _sequence(row.get("write_resource_ids"))
+        }
         for key, row in by_key.items()
     }
+    reads_by_key = {
+        key: {
+            str(value)
+            for value in _sequence(row.get("read_resource_ids"))
+        }
+        for key, row in by_key.items()
+    }
+    writer_of: dict[str, str] = {}
+    for key, resources in writes_by_key.items():
+        for resource in resources:
+            if resource in writer_of:
+                raise PostrunCaptureError(
+                    f"semantic resource has two writers: {resource}"
+                )
+            writer_of[resource] = key
+    generated_parents: dict[str, list[str]] = {key: [] for key in keys}
+    for child, resources in reads_by_key.items():
+        for resource in resources:
+            parent = writer_of.get(resource)
+            if parent is None:
+                if not resource.startswith("source-state:"):
+                    raise PostrunCaptureError(
+                        "semantic read has no writer or distinguished source "
+                        f"root: {resource}"
+                    )
+                continue
+            if parent == child:
+                raise PostrunCaptureError("semantic event reads its own write")
+            generated_parents[child].append(parent)
+    for child in generated_parents:
+        generated_parents[child] = sorted(set(generated_parents[child]))
+    parents_by_child = {
+        key: sorted(
+            str(value) for value in _sequence(row.get("parent_event_ids"))
+        )
+        for key, row in by_key.items()
+    }
+    if parents_by_child != generated_parents:
+        raise PostrunCaptureError(
+            "semantic parents differ from generated read-after-write provenance"
+        )
     for parents in parents_by_child.values():
         if any(parent not in by_key for parent in parents):
             raise PostrunCaptureError("semantic event names an absent parent")
-    children_by_parent: dict[str, list[str]] = {key: [] for key in keys}
-    indegree = {key: len(parents) for key, parents in parents_by_child.items()}
-    for child, parents in parents_by_child.items():
-        for parent in parents:
-            children_by_parent[parent].append(child)
     computed_ids: dict[str, str] = {}
-    ready = [key for key in keys if indegree[key] == 0]
-    heapq.heapify(ready)
-    while ready:
-        key = heapq.heappop(ready)
-        parents = parents_by_child[key]
+    for key in keys:
         material = {
+            "schema": "oph.semantic-source-event-id.v1",
             "canonical_semantic_payload": by_key[key].get(
                 "canonical_semantic_payload", {}
             ),
@@ -2337,24 +2370,27 @@ def _semantic_event_report(
                 str(value)
                 for value in _sequence(by_key[key].get("visible_footprint"))
             ),
-            "semantic_causal_parents": sorted(
-                computed_ids[parent] for parent in parents
+            "read_resource_ids": sorted(
+                str(value)
+                for value in _sequence(by_key[key].get("read_resource_ids"))
             ),
         }
         computed_ids[key] = _hash(material)
-        for child in children_by_parent[key]:
-            indegree[child] -= 1
-            if indegree[child] == 0:
-                heapq.heappush(ready, child)
-    remaining = set(keys) - set(computed_ids)
-    acyclic = not remaining
+        if computed_ids[key] != key:
+            raise PostrunCaptureError(
+                "semantic event key does not bind v1 semantic identity material"
+            )
     parent_edges = [
         (str(parent), key)
         for key, parents in parents_by_child.items()
         for parent in parents
     ]
     raw_edges = [(str(parent), str(child)) for parent, child in parent_edges]
-    depths = _dag_depths(keys, raw_edges) if acyclic else {key: 0 for key in keys}
+    depths = _dag_depths(keys, raw_edges)
+    remaining = set(keys) - set(depths)
+    acyclic = not remaining
+    if remaining:
+        depths.update({key: 0 for key in remaining})
     overlaps = _verified_overlap_rows(raw_overlaps)
     carrier_coordinates, carrier_degrees = _carrier_topology_coordinates(overlaps)
 
@@ -2633,7 +2669,13 @@ def _semantic_event_report(
             },
         },
         "semantic_event_dag": {
-            "identity_fields": ["canonical_semantic_payload", "observer_token", "visible_footprint", "semantic_causal_parents"],
+            "identity_schema": "oph.semantic-source-event-id.v1",
+            "identity_fields": [
+                "canonical_semantic_payload",
+                "observer_token",
+                "visible_footprint",
+                "read_resource_ids",
+            ],
             "forbidden_identity_fields_present": [],
             "semantic_parent_edge_count": len(raw_edges),
             "acyclic": acyclic,
@@ -2641,7 +2683,9 @@ def _semantic_event_report(
             "duplicate_semantic_event_count": len(computed_ids) - len(set(computed_ids.values())),
             "preassigned_metric_used_for_identity": False,
             "quotient_canonical_identity_receipt": False,
-            "identity_scope": "presentation_bound_structural_dag_only",
+            "identity_scope": (
+                "transport_metadata_invariant_presentation_bound_resource_semantics"
+            ),
             "semantic_event_dag_hash": _hash({"ids": computed_ids, "edges": raw_edges}),
         },
         "causal_ancestry": {

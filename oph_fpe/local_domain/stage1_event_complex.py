@@ -1,10 +1,10 @@
-"""Issue-634 stage 1: source event complex with a certified causal cover.
+"""Stage 1: source event complex with a certified causal cover.
 
 The local action domain starts from one target-clean source capture and
 derives, without any target import, the object every downstream typing
 stage consumes: the event complex with an exact causal-order
-certificate, the reconstructed four-coordinate description of the
-issue-575 instrument, a cover of closed observer neighborhoods with
+certificate, the reconstructed four-coordinate event-manifold candidate, a
+cover of closed observer neighborhoods with
 wiring transitions, and the prescribed-chart rank, fitted-form inertia,
 orientation, and time-orientation certificates on that cover.  The
 cover is a family of
@@ -15,7 +15,7 @@ structure is asserted anywhere in this module.
 Construction:
 
 * Event classes, ancestry order, footprints, and the global prescribed
-  four-coordinate feature chart are the issue-575 reconstruction: one
+  four-coordinate feature chart are the finite event-manifold reconstruction: one
   coordinate is ancestry depth and exactly three coordinates are the
   seam-graph spectral embedding averaged over each event's carrier
   footprint.  The rank certificate checks nondegeneracy of this chosen
@@ -43,13 +43,11 @@ Construction:
   enters at stage 2 as exact cocycle data.  Each neighborhood
   additionally records its own held-out quadratic fit, the local
   visibility surface of the fitted inertia.
-* Continuum promotion is a blocked, machine-readable gate of the
-  receipt: every measured cone margin is negative, one neighborhood
+* The continuum conditions are machine-readable and not attained at this
+  finite cutoff: every measured cone margin is negative, one neighborhood
   fit has inertia (0, 4), the neighborhoods are closed finite sets,
   and no cofinal refinement family establishes convergence, so the
   finite domain does not promote to a continuum Lorentzian spacetime.
-  Positive-margin cone merging and the refinement tail are owned by
-  issue 595 and the Einstein branch.
 
 Fail-closed controls: a collapsed prescribed spatial axis, a
 cross-read-free source with a different fitted feature form, a post-fit
@@ -82,7 +80,6 @@ from oph_fpe.bulk.event_manifold_producer import (
 from oph_fpe.bulk.physical_h3_kms_source_capture import capture_physical_source
 
 SCHEMA = "oph.local-domain-stage1.v1"
-ISSUE = 634
 PHYSICAL_PROMOTION_ALLOWED = False
 
 TARGET_INERTIA = (1, 3)
@@ -231,7 +228,7 @@ def refuse_forbidden_config(config: Mapping[str, Any]) -> list[str]:
 
 
 def build_event_complex(capture: Mapping[str, Any]) -> dict[str, Any]:
-    """Event table, ancestry edge list, and the issue-575 global chart."""
+    """Event table, ancestry edge list, and prescribed global feature chart."""
 
     post = capture["postrun_capture"]
     table = _event_table(capture)
@@ -756,7 +753,6 @@ def produce_stage1_receipt(
     if forbidden:
         return {
             "schema": SCHEMA,
-            "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "verdict": "REFUSED",
             "blockers": [f"forbidden_config_key:{key}" for key in forbidden],
@@ -913,6 +909,13 @@ def produce_stage1_receipt(
 
     arrays = {
         "chart": chart,
+        # The capped pair arrays are fit/sensitivity samples. Preserve the
+        # exact generated Hasse-input relation separately so consumers can
+        # reconstruct the full finite order without mistaking a stride sample
+        # for the poset.
+        "direct_ancestry_edges": np.asarray(
+            complex_data["edges"], dtype=np.int64
+        ),
         "causal_pairs": np.asarray(pairs["causal"], dtype=np.int64),
         "spacelike_pairs": np.asarray(
             pairs["spacelike"], dtype=np.int64
@@ -934,7 +937,6 @@ def produce_stage1_receipt(
 
     receipt = {
         "schema": SCHEMA,
-        "issue": ISSUE,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "main_config": main_config,
         "capture_sha256": capture["capture_sha256"],
@@ -955,6 +957,7 @@ def produce_stage1_receipt(
         },
         "event_count": table["count"],
         "ancestry_edge_count": causal["edge_count"],
+        "direct_ancestry_array_name": "direct_ancestry_edges",
         "causal_pair_total": pairs["causal_total"],
         "spacelike_pair_total": pairs["spacelike_total"],
         "pair_cap": PAIR_CAP,
@@ -990,20 +993,15 @@ def produce_stage1_receipt(
             key: fit.get(key)
             for key in ("fitted", "inertia", "cone_margin", "held_out_pair_count")
         },
-        "cone_margin_ownership": (
-            "recorded, not gated at stage 1; positive-margin cone merging is "
-            "owned by issue 595"
-        ),
-        "continuum_promotion": {
-            "status": "BLOCKED",
-            "failed_conditions": {
+        "continuum_conditions": {
+            "status": "NOT_ATTAINED_AT_CURRENT_FINITE_CUTOFF",
+            "conditions": {
                 "cone_margins_nonnegative": {
                     "holds": bool(
                         fit.get("fitted")
                         and float(fit.get("cone_margin", -1.0)) >= 0.0
                     ),
                     "measured_global_margin": fit.get("cone_margin"),
-                    "owner": "issue 595",
                 },
                 "all_neighborhood_fits_lorentzian": {
                     "holds": all(
@@ -1028,9 +1026,8 @@ def produce_stage1_receipt(
                 "cofinal_refinement_family": {
                     "holds": False,
                     "note": (
-                        "the recorded 2048/16384 pair is a two-point scale "
-                        "ladder, not a convergence family; the cone-margin "
-                        "tail is owned by issue 595"
+                        "no certified cofinal refinement family or convergence "
+                        "certificate is supplied by this finite receipt"
                     ),
                 },
                 "invariant_continuum_metric": {
@@ -1048,29 +1045,10 @@ def produce_stage1_receipt(
                 "causal and local-operator domain and may not assume a "
                 "continuum Lorentzian spacetime"
             ),
-            "meaning": (
-                "BLOCKED is a condition tracker, not a nonexistence "
-                "result: it records that the promotion conditions are not "
-                "met by this finite object at this cutoff, and it retracts "
-                "nothing"
+            "interpretation": (
+                "The named continuum conditions are not met by this finite "
+                "object at this cutoff. This is not a nonexistence result."
             ),
-            "path_to_promotion": {
-                "conditions": [
-                    "nonnegative cone margins on a certified cofinal tail",
-                    "Lorentzian inertia in every neighborhood fit",
-                    "a declared cofinal refinement family with a "
-                    "convergence certificate",
-                ],
-                "standing_evidence": (
-                    "the frozen Einstein-cone ladder measures held-out "
-                    "inertia (1, 3) with the cone margin magnitude roughly "
-                    "halving per rung at 16384 and 65536 carriers and at "
-                    "the density-corrected 262144 rung; that measured "
-                    "trend is the supporting evidence for eventual "
-                    "positive-margin merging and is unchanged by this gate"
-                ),
-                "owners": ["issue 595", "issue 503"],
-            },
         },
         "atlas": {
             "seed_count": atlas["seed_count"],
@@ -1125,8 +1103,8 @@ def produce_stage1_receipt(
             "negative cone margins, one neighborhood fit with inertia "
             "(0, 4), the closed finite neighborhoods, and the missing "
             "refinement limit prevent promotion to a continuum Lorentzian "
-            "spacetime; the continuum_promotion gate records each failed "
-            "condition machine-readably with its owner. The transition, "
+            "spacetime; the continuum_conditions record the current finite "
+            "non-satisfaction machine-readably. The transition, "
             "cocycle, orientation, and time-orientation certificates are "
             "induced wiring checks of recentered and rescaled copies of "
             "that same global chart on a closed-neighborhood cover. They "

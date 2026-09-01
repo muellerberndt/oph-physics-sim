@@ -39,12 +39,20 @@ def test_baseline_records_raw_snapshot_rank_deficiency(report: dict) -> None:
     assert row["countermodel_value"] is True
 
 
-def test_countermodels_are_semantic_not_syntactic(report: dict) -> None:
+def test_countermodels_are_semantic_or_explicit_external_controls(report: dict) -> None:
     kinds = {row["kind"] for row in report["countermodels"].values()}
     assert kinds <= {
         "semantic_source_modification",
         "semantic_declaration_modification",
+        "external_relation_control_outside_source_derived_certificate",
     }
+    causal = report["countermodels"]["causal_nondegenerate"]
+    assert causal["kind"] == (
+        "external_relation_control_outside_source_derived_certificate"
+    )
+    assert causal[
+        "source_derived_certificate_checked_before_external_control"
+    ] is True
     assert report["physical_promotion_allowed"] is False
     assert PHYSICAL_PROMOTION_ALLOWED is False
 

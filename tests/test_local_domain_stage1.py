@@ -1,4 +1,4 @@
-"""Frozen tests for the issue-634 stage-1 event-complex producer."""
+"""Frozen tests for the stage-1 event-complex producer."""
 
 import hashlib
 import json
@@ -331,7 +331,6 @@ def test_frozen_main_receipt_binding():
     ).hexdigest()
     receipt = json.loads(receipt_bytes.decode("utf-8"))
     assert receipt["schema"] == "oph.local-domain-stage1.v1"
-    assert receipt["issue"] == 634
     assert receipt["physical_promotion_allowed"] is False
     assert receipt["main_config"] == MAIN_CONFIG
     assert receipt["source_projection_sha256"].startswith("sha256:")
@@ -341,12 +340,12 @@ def test_frozen_main_receipt_binding():
     assert receipt["controls_fail_closed"] is True
     assert tuple(receipt["held_out_quadratic_fit"]["inertia"]) == (1, 3)
     assert "legacy_ladder_binding" not in receipt
-    promotion = receipt["continuum_promotion"]
-    assert promotion["status"] == "BLOCKED"
-    assert promotion["failed_conditions"]
+    promotion = receipt["continuum_conditions"]
+    assert promotion["status"] == "NOT_ATTAINED_AT_CURRENT_FINITE_CUTOFF"
+    assert promotion["conditions"]
     assert not any(
         condition["holds"]
-        for condition in promotion["failed_conditions"].values()
+        for condition in promotion["conditions"].values()
     )
-    assert "cone_margins_nonnegative" in promotion["failed_conditions"]
-    assert "cofinal_refinement_family" in promotion["failed_conditions"]
+    assert "cone_margins_nonnegative" in promotion["conditions"]
+    assert "cofinal_refinement_family" in promotion["conditions"]

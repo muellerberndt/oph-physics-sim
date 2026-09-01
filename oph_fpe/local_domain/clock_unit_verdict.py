@@ -225,10 +225,10 @@ def interface_classification() -> dict[str, Any]:
     pin_failures: list[str] = []
     schema_failures: list[str] = []
     expected_identity = {
-        "stage1_receipt.json": ("oph.local-domain-stage1.v1", 634),
-        "stage2_receipt.json": ("oph.local-domain-stage2.v1", 634),
-        "stage3_receipt.json": ("oph.local-domain-stage3.v1", 634),
-        "stage4_receipt.json": ("oph.local-domain-stage4.v1", 634),
+        "stage1_receipt.json": ("oph.local-domain-stage1.v1", None),
+        "stage2_receipt.json": ("oph.local-domain-stage2.v1", None),
+        "stage3_receipt.json": ("oph.local-domain-stage3.v1", None),
+        "stage4_receipt.json": ("oph.local-domain-stage4.v1", None),
         "source_gap_receipt.json": ("oph.source-clock-gap.v1", 633),
         "defect_sector_receipt.json": (
             "oph.local-domain-defect-sector-spectra.v1",
@@ -258,9 +258,14 @@ def interface_classification() -> dict[str, Any]:
             invalid_artifacts.append(name)
             continue
         expected_schema, expected_issue = expected_identity[name]
+        issue_identity_valid = (
+            "issue" not in payload
+            if expected_issue is None
+            else payload.get("issue") == expected_issue
+        )
         if (
             payload.get("schema") != expected_schema
-            or payload.get("issue") != expected_issue
+            or not issue_identity_valid
             or payload.get("physical_promotion_allowed") is not False
         ):
             schema_failures.append(name)

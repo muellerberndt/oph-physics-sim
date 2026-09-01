@@ -26,6 +26,48 @@ python -m oph_fpe.cli --help
 The CLI and `oph_fpe.cosmology` package use lazy imports so a missing optional
 Boltzmann dependency does not break unrelated diagnostics.
 
+## Causal-order receipts
+
+Regenerate and independently verify the bounded source-derived order:
+
+```bash
+.venv/bin/python -m oph_fpe.bulk.source_derived_causal_order \
+  --out data/causal_order/source_derived_causal_order_receipt.json
+.venv/bin/python -m oph_fpe.bulk.verify_source_derived_causal_order_independent \
+  --receipt data/causal_order/source_derived_causal_order_receipt.json
+```
+
+Regenerate and independently verify the current-cutoff exploratory causal-set
+diagnostic. Its frozen result is a negative similarity result at that cutoff,
+not a physical no-go or a dimension claim:
+
+```bash
+.venv/bin/python -m oph_fpe.bulk.causet_likeness \
+  --source data/causal_order/source_derived_causal_order_receipt.json \
+  --out data/causal_order/causet_likeness_receipt.json
+.venv/bin/python -m oph_fpe.bulk.verify_causet_likeness_independent \
+  --receipt data/causal_order/causet_likeness_receipt.json
+```
+
+Regenerate and independently verify the imposed rank-three FCC causal-order
+fixture. Its positive scope is exact provenance, nesting, and cubic/quartic
+carrier-count matches on the bounded grids recorded in the receipt, under
+imposed spatial gluing and temporal depth. The
+additional depth-24 profile control is negative; this is not a finite
+causet-likeness, Lorentz-invariance, or convergence receipt:
+
+```bash
+.venv/bin/python -m oph_fpe.bulk.rank3_fcc_causet_compatibility \
+  --output data/causal_order/rank3_fcc_causet_compatibility_receipt.json
+.venv/bin/python -m oph_fpe.bulk.verify_rank3_fcc_causet_compatibility_independent \
+  --receipt data/causal_order/rank3_fcc_causet_compatibility_receipt.json
+```
+
+The stochastic-control receipts record the NumPy version used to generate
+their frozen bytes. Exact replay should use the recorded environment; the
+repository `.venv` is the canonical environment for this checkout. A version
+change is reported explicitly rather than silently accepted as byte identity.
+
 ## Measurement-Facing Reports
 
 Regenerate the standard LambdaCDM/CAMB benchmark receipt:

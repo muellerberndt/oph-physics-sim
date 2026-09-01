@@ -21,9 +21,9 @@ and Lean cannot decide.**
   *current implemented source dynamics* attains the branch clauses. Five
   fail-closed instruments measure this. Their present verdicts are recorded
   below and frozen in the test suite.
-- **The frontier.** Making the measured clauses true by construction:
-  issue [#595](https://github.com/FloatingPragma/observer-patch-holography/issues/595)
-  owns the five targets, with a Lean-first route named for each.
+- **The frontier.** Making the five measured clauses true requires the
+  source-law conditions stated below; each proposed route is Lean-first where
+  the condition is mathematical.
 
 ## Setup (one time)
 
@@ -35,7 +35,7 @@ cd oph-physics-sim
 
 No network access is needed. All runs are deterministic from declared seeds.
 
-## Step 1: run the full Einstein-branch test battery
+## Run the full Einstein-branch test battery
 
 ```bash
 .venv/bin/python -m pytest -q \
@@ -51,7 +51,7 @@ No network access is needed. All runs are deterministic from declared seeds.
 either the environment is broken or a frozen verdict has changed; both are
 findings.
 
-## Step 2: produce and verify the typed source tower (issue #572)
+## Produce and verify the typed source tower
 
 ```bash
 .venv/bin/python - << 'PY'
@@ -81,11 +81,11 @@ source binding replay: True
 ```
 
 The overall receipt is `False` **by design**: the verifier pins two physical
-receipts until the generator-code firewall and federation binding land
-(owned by #595). `True` for those two lines before #595 closes would itself
-be a bug report.
+receipts until the generator-code firewall and federation binding are
+attained. `True` for those two lines without those conditions would itself be
+an invalid promotion.
 
-## Step 3: read the five measured clause verdicts
+## Read the five measured clause verdicts
 
 Run each instrument and compare with the frozen verdicts.
 
@@ -97,146 +97,84 @@ from oph_fpe.bulk.event_manifold_producer import produce_event_manifold_report
 from oph_fpe.bulk.stress_coupling_producer import produce_stress_coupling_report
 from oph_fpe.bulk.einstein_branch_countermodels import produce_countermodel_matrix
 
-r573 = produce_modular_normalization_report()
-print("573 normalization:", r573["verdict"], r573["normalization_interval"])
-r574 = produce_gns_tower_report()
-print("574 gns clauses:", r574["verdict"], r574["clause_verdicts"])
-r575 = produce_event_manifold_report()
-print("575 event manifold:", r575["verdict"], r575["held_out_quadratic_fit"]["inertia"])
-r576 = produce_stress_coupling_report()
-print("576 coupling:", r576["verdict"], round(r576["coupling_relative_spread"], 3))
-r577 = produce_countermodel_matrix()
-print("577 countermodels isolated:", r577["all_countermodels_isolated"])
+r_normalization = produce_modular_normalization_report()
+print("normalization:", r_normalization["verdict"], r_normalization["normalization_interval"])
+r_gns = produce_gns_tower_report()
+print("gns clauses:", r_gns["verdict"], r_gns["clause_verdicts"])
+r_manifold = produce_event_manifold_report()
+print("event manifold:", r_manifold["verdict"], r_manifold["held_out_quadratic_fit"]["inertia"])
+r_coupling = produce_stress_coupling_report()
+print("coupling:", r_coupling["verdict"], round(r_coupling["coupling_relative_spread"], 3))
+r_countermodels = produce_countermodel_matrix()
+print("countermodels isolated:", r_countermodels["all_countermodels_isolated"])
 PY
 ```
 
-**Expected verdicts for the current source dynamics** (frozen 2026-07-22):
+**Expected verdicts for the current bounded instruments** (source-round
+observer revision):
 
 | Instrument | Verdict | Measured detail |
 | --- | --- | --- |
-| 573 normalization | `NOT_ATTAINED` | interval near `(-1.36, 0.95)`, acceptance band `(5.34, 7.23)` |
-| 574 GNS clauses | `NOT_ATTAINED` | cyclicity/separation/intersection True; future cone False (3 of 4 candidates positive) |
-| 575 event manifold | `NOT_ATTAINED` | held-out inertia `(2, 2)`, one time direction per observer chain |
-| 576 coupling | `NOT_ATTAINED` | ratio spread about `0.68` against envelope `0.10` |
-| 577 countermodels | isolated: `True` | each clause family flips alone |
+| Normalization | `NOT_ATTAINED` | interval near `(-1.36, 0.95)`, acceptance band `(5.34, 7.23)` |
+| GNS clauses | `NOT_ATTAINED` | cyclicity/separation/intersection True; future cone False (3 of 4 candidates positive) |
+| Event manifold | `NOT_ATTAINED` | source-round provenance gives held-out inertia `(4, 0)` and a negative cone margin on the prescribed depth-plus-three-spectral-coordinate ansatz |
+| Coupling | `NOT_ATTAINED` | ratio spread about `0.68` against envelope `0.10` |
+| Countermodels | isolated: `True` | each clause family flips alone |
 
 These `NOT_ATTAINED` verdicts are the honest status of the heuristic
 dynamics, not defects in the instruments: every instrument carries negative
 controls that all fail closed, so a passing verdict cannot be faked.
 
-## Step 4: what would change these verdicts
+## Conditions that would change these verdicts
 
-Only a change to the source law, tracked in #595. The Lean-first routes:
+The relevant source-law hypotheses are:
 
-1. **Thermalization (573):** a detailed-balance repair law against a
+1. **Thermalization:** a detailed-balance repair law against a
    geometric cap Hamiltonian makes the `2*pi` normalization a theorem.
-2. **Positivity (574):** choose the generator family positive by
+2. **Positivity:** choose the generator family positive by
    construction; prove it the way `PortFrameGram.lean` proves its identities.
-3. **Cone merge (575):** prove a finite overlap-density-implies-merge lemma;
+3. **Cone merge:** prove a finite overlap-density-implies-merge lemma;
    the density hypothesis is a counted quantity.
-4. **Universality (576):** already a theorem (`A5CouplingSymmetry.lean`);
+4. **Universality:** already a theorem (`A5CouplingSymmetry.lean`);
    the only open hypothesis is `A5`-equivariance of the implemented law,
    a finite check.
-5. **Record spanning (577 baseline):** the source must emit snapshots that
+5. **Record spanning:** the source must emit snapshots that
    span port space, so faithfulness stops depending on the regularizer.
 
-When a target is attained, the corresponding frozen assertion in the test
-suite must be flipped **deliberately, one commit per target, citing #595**.
+An attained condition changes a frozen assertion only after the corresponding
+producer and independent verifier reproduce the new result.
 
-## Campaign cells (larger runs)
-
-Frozen H3/KMS campaign cells require the canonical single-threaded runtime:
-
-```bash
-OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
-VECLIB_MAXIMUM_THREADS=1 NUMEXPR_NUM_THREADS=1 \
-.venv/bin/python -m oph_fpe.bulk.physical_h3_kms_campaign \
-  --seed 20260751 --rung 4096 --execute-physical-cell /tmp/cell_4k
-```
-
-Expected: `instrument_status: VALID_PASS`, `cell_scientific_status:
-INCOMPLETE` (about 30 seconds). Rung 16384 and above are refused until the
-lower cells are scientifically decisive; that refusal is the fail-closed
-design working, and more compute cannot change it.
-
-## The declared v2 law and the many-observer scaling result
+## The declared v2 law
 
 `oph_fpe/dynamics/geometric_law_v2.py` declares a second source law designed
-so the #595 targets hold by construction where mathematics allows. Frozen
+so the measured conditions hold by construction where mathematics allows. Frozen
 status (`tests/test_geometric_law_v2.py`):
 
-| Target | v2 status | How |
+| Condition | v2 status | How |
 | --- | --- | --- |
 | 2. Generator positivity | attained | positive by construction, 4/4 candidates |
 | 4. Coupling universality | attained | `A5`-equivariant law; zero spread, per the Lean theorem |
 | 5. Record spanning | attained | spanning snapshot family, full-rank raw moment |
-| 1. Thermalization | open | two recorded v2 defects: non-Moebius geometry rows, framed-projection mismatch |
-| 3. Cone merge | open, supported | see the scaling table |
+| 1. Thermalization | not attained | two recorded v2 defects: non-Moebius geometry rows and framed-projection mismatch |
+| 3. Cone merge | not attained | the current bounded event-manifold candidate has a negative cone margin |
 
-The many-observer scaling probe (cross-reading round-robin observers on a
-shared carrier) confirms the effective-description hypothesis: the held-out
-event-form signature climbs with observer count, reaching the Lorentzian
-inertia `(1,3)` at sixteen observers, though not yet stably at other scales
-and with the cone margin still negative:
-
-| observers | events | inertia | margin |
-| --- | --- | --- | --- |
-| 2 (v1 heuristic law) | 36 | (2,2) | negative |
-| 2 (v2) | 72 | (1,0) | negative |
-| 4 (v2) | 144 | (1,1) | negative |
-| 16 (v2) | 576 | (1,3) | negative |
-| 32 (v2) | 3456 | (1,2) | negative |
-| 128 (v1 fixed capture, 16384 carriers, dense supports) | 2304 | (1,3) | negative |
-
-The table below is a finite fitted-form sensitivity instrument on the fixed
-v1 capture. It does not select a spacetime dimension or establish a continuum
-limit. The script at `scripts/einstein_convergence_ladder.py` produces the
-four hash-bound rows in `data/einstein_convergence/`:
-
-| Carriers | Observers | Support | Cross edges | Inertia | Cone margin | Spread |
-| --- | --- | --- | --- | --- | --- | --- |
-| 16,384 | 128 | 96 | 348 | (1,3) | -5.62 | 0.1875 |
-| 65,536 | 256 | 96 | 312 | (1,3) | -3.22 | 0.1860 |
-| 262,144 | 512 | 96 | 312 | (2,2) | -2.49 | 0.1766 |
-| 262,144 | 512 | 384 | 1,062 | (1,3) | -1.41 | 0.1766 |
-
-The declared three-point path uses support widths 96, 96, and 384. It does
-not hold observer density, support width, or cross-edge density fixed. Along
-that path the fitted inertia is `(1,3)`, the cone margin stays negative while
-its magnitude decreases, and the coupling spread decreases. The second
-262,144-carrier row is a same-size support-96 control. Changing the support
-from 96 to 384 changes the fitted inertia from `(2,2)` to `(1,3)`, the
-cross-observer edge count from 312 to 1,062, and the negative margin from
--2.49 to -1.41. This supports sensitivity to the declared support and
-cross-read construction. Four rows do not identify a coupling-density law,
-prove geometric convergence, or certify a zero crossing.
-
-The v2 manifest binds exactly four distinct row identifiers and filenames,
-including both 262,144-carrier controls. Canonical summaries contain no
-wall-clock fields. The validator checks row/configuration parity, payload
-hashes, array schemas, summary readbacks, and a fresh fitted-form calculation
-from each frozen chart and pair sample. A byte-identical full source replay is
-a claim about the same source revision and the runtime versions recorded in
-the manifest, not cross-runtime floating-point portability. Deterministic
-reserialization of frozen arrays is recorded as a separate manifest origin
-and does not count as a physical-source replay. The frozen bundle can be
-checked without running the large captures:
-
-```bash
-.venv/bin/python scripts/einstein_convergence_ladder.py --validate-only
-```
+These statuses concern the current finite source and cutoff. They do not
+assert nonexistence, scaling convergence, or a continuum limit.
 
 ## Audited v1 simulator findings that affect results
 
-The v1 capture audit found four result-affecting limitations, all now
-documented: record snapshots sample only the observer-support carriers (four
-of thirty-two at defaults); observer supports are small disjoint balls, and
-the observer loop never reads records committed by other observers, so
-cross-observer ancestry is structurally zero regardless of dynamics; and the
-geometry rows derive the flow parameter from the cross ratio, making the
-geometric rate fit circular. The instrument verdicts on the heuristic law
-were re-measured under widened sampling and remain NOT_ATTAINED, so the
-verdicts stand; the structural cross-read gap is fixed by the v2 law design.
+The historical v1 audit found result-affecting sampling, cross-read, and
+geometric-fit limitations. The current observer producer now emits complete
+source rounds: every round commits all records, then performs same-round reads
+on declared shared support carriers, then emits feedback; the next round's
+records consume that feedback. Observer order within each phase is certified
+as presentation metadata. This removes executor-order contamination, but the
+result remains an observer instrumentation history over source snapshots, not
+the complete physical repair-event order. A repair-only carrier is an
+antichain in the current grammar because its reads consume version-zero roots.
+Physical causet work therefore requires eventized, interleaved recurrent
+propagation and seam repair. The prescribed three-coordinate spectral block
+is an ansatz and supplies no independent dimension evidence.
 
 ## Claim boundary
 

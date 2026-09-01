@@ -1,4 +1,4 @@
-"""Frozen tests for the issue-634 stage-2 seam sign layer."""
+"""Frozen tests for the stage-2 seam sign layer."""
 
 import hashlib
 import json
@@ -108,7 +108,6 @@ def test_frozen_stage2_receipt_binding():
     ).hexdigest()
     receipt = json.loads(receipt_bytes.decode("utf-8"))
     assert receipt["schema"] == "oph.local-domain-stage2.v1"
-    assert receipt["issue"] == 634
     assert receipt["physical_promotion_allowed"] is False
     assert receipt["verdict"] == "ATTAINED"
     assert receipt["blockers"] == []

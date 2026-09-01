@@ -128,7 +128,6 @@ def stage2_matches_source_domain(
         return False
     return bool(
         receipt.get("schema") == "oph.local-domain-stage2.v1"
-        and receipt.get("issue") == 634
         and receipt.get("physical_promotion_allowed") is False
         and receipt.get("verdict") == "ATTAINED"
         and receipt.get("source_projection_sha256")

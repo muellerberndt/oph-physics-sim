@@ -111,9 +111,9 @@
     "D6_source_action": {
       "bytes": 26025,
       "path": "data/repair_closure/port_load_metric_quotient_receipt.json",
-      "receipt_sha256": "sha256:3fccf883021329ba152035385481710970ba6d6fd3933bcd1c333bf715d803d1",
+      "receipt_sha256": "sha256:d32d7e4085a074adabdde78bd4c548af2d316c1b93f9ebda80d6c8e19e5d91ad",
       "schema": "oph.port-load-repair-gram-metric-quotient.v1",
-      "sha256": "sha256:37ae2e80679e6dbe64884320871c4e4c2c949d7724d389941c12bdcdebfbafd3",
+      "sha256": "sha256:0a5ffd700e07f3e7280d83f3c5c5213307b9c1ca5955c8823333223d331b1a65",
       "status": "EXACT_INTEGER_LOAD_METRIC_QUOTIENT_AND_MEAN_INTERTWINER_ATTAINED__PATHWISE_DESCENT_POSITION_SEMANTICS_AND_PHYSICAL_ACTION_OPEN"
     },
     "FZ11_immutable_prediction_via_bridge": {
@@ -131,9 +131,9 @@
         "status": "FROZEN_PROSPECTIVE_PRIMITIVE_TWELVE_PORT_BRANCH_PREDICTION__PHYSICAL_COMPARISON_UNARMED"
       },
       "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-      "receipt_sha256": "sha256:b96b4f4ef5e83c52f01f9e4678d4c42deb789580b7056f905b50a085b1505ac1",
+      "receipt_sha256": "sha256:723208d1c5d4e07085e667087f88c76983cf7ab48d5c1afb0c9e9fc1e70a3607",
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
-      "sha256": "sha256:cd77e44d8b837ee1375711e5a9a269f82be5b99884a690e1e998b5c0e6995ec3",
+      "sha256": "sha256:7d66c90767748fa06f6c1f9ad1f737b4c6235e35bea2bd9c71d7a0df14668b1d",
       "status": "CONDITIONAL_3D_SCALAR_TRANSLATION_ADAPTER_ATTAINED__CANONICAL_SOURCE_SELECTION_TIME_EVOLUTION_PHOTON_SECTOR_SCALE_FRAME_BOOST_AND_EXCLUSIVITY_OPEN"
     },
     "FZ12_immutable_prediction": {
@@ -150,9 +150,9 @@
     "completion_isometry_action": {
       "bytes": 13060,
       "path": "data/repair_closure/port_gram_equivariant_action_receipt.json",
-      "receipt_sha256": "sha256:48835e4270910f56fe77bd0d0462419bb96a31b2e563e6fbf8cfe92ace91289a",
+      "receipt_sha256": "sha256:e094ff44ff8fbfd53b99e83c931b16cfc0bba757f4f016afcb1590b9d8e7081b",
       "schema": "oph.port-gram-equivariant-completion-action.v1",
-      "sha256": "sha256:8d9b06300a4c0b6a7c1c51a4dc41295cafe53cb5cd25b4d3667da08dc8de2e13",
+      "sha256": "sha256:540df8dac10e30c4f363536e04fb72c7e98799d1ed2cc78efcb71ef956f010a4",
       "status": "EXACT_FAITHFUL_PROPER_CARRIER_ACTION_AND_FINITE_RECHARTING_COCYCLE_ATTAINED__SOURCE_SELECTION_COFINAL_GLUING_AND_PHYSICAL_ACTION_OPEN"
     },
     "homogeneous_action_Lean_source": {
@@ -169,21 +169,21 @@
     "normalized_port_dual_measure": {
       "bytes": 13559,
       "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-      "receipt_sha256": "sha256:a508f31f9749476335dc3f4da8f84c61955d27e67e05d6437b852f8b71f8cad1",
+      "receipt_sha256": "sha256:092ef34ea9b21e3fbe44937f87da018fbaf98b4281c191942cd7e0f0874dbc7c",
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
-      "sha256": "sha256:2700ce56b7d7115f9514dd4913a45ac3e2d0b23fac8caf65dcfda47d2b3dba87",
+      "sha256": "sha256:7756ec07d3daaa55d64c8be71face830715f90a78bb7b939f7e11a3ec2b246c8",
       "status": "QUOTIENT_VISIBLE_NORMALIZED_PORT_DUAL_MEASURE_ATTAINED__PHYSICAL_PIXEL_AND_HOP_IDENTITIES_OPEN"
     },
     "response_Gram_completion": {
       "bytes": 32216,
       "path": "data/repair_closure/port_gram_completion_bridge_receipt.json",
-      "receipt_sha256": "sha256:2d95878a54f6ae6da605c447dd8a6244cd886a2902e447eab40b6eddc0b7d195",
+      "receipt_sha256": "sha256:26d6d3d203823679102a88b4e02e581c7124a474b29adc42c68e684eb8d15054",
       "schema": "oph.port-gram-hausdorff-completion-bridge.v1",
-      "sha256": "sha256:35938a00f19b91a49efe9bcc822e05e1806778bc5e3ee190520041b76f7d0496",
+      "sha256": "sha256:75b9e085f67f0abe75894ccc0917f52487c25c2c80d0035e8bff0dca1a43cc0e",
       "status": "EXACT_REPAIR_RESPONSE_GRAM_QUOTIENT_AND_3D_COMPLETION_ATTAINED__A1R_SIGNED_RECORD_MODULE_AND_A2R_POSITION_READBACK_PREMISES_OPEN"
     }
   },
-  "receipt_sha256": "sha256:28cc808363bd8562821b1a43232ca2a1a2463f674ae5850040b0d0aa62a4140d",
+  "receipt_sha256": "sha256:b973c1db3d26571ab16fcb2ee606ec95f036553d2b028355cded9a0cccceea24",
   "same_internal_action_binding": {
     "D6_translation_isometry_theorem_pinned": true,
     "action": "translation by one directed unit-current seam boundary",

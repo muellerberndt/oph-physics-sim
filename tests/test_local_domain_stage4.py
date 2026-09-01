@@ -1,4 +1,4 @@
-"""Frozen tests for the issue-634 stage-4 inhabitation layer."""
+"""Frozen tests for the stage-4 inhabitation layer."""
 
 import gzip
 import hashlib
@@ -408,7 +408,6 @@ def test_frozen_stage4_receipt_binding():
     ).hexdigest()
     receipt = json.loads(receipt_bytes.decode("utf-8"))
     assert receipt["schema"] == "oph.local-domain-stage4.v1"
-    assert receipt["issue"] == 634
     assert receipt["physical_promotion_allowed"] is False
     assert receipt["verdict"] == "ATTAINED"
     assert receipt["blockers"] == []
@@ -417,7 +416,7 @@ def test_frozen_stage4_receipt_binding():
     assert replay["all_semantic_exact"] is True
     assert replay["producer_independence"] is False
     assert all(
-        row["detected"] for row in receipt["issue_control_matrix"].values()
+        row["detected"] for row in receipt["negative_control_matrix"].values()
     )
     assert all(
         row["holds"] for row in receipt["preservation_rows"].values()

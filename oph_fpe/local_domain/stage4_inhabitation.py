@@ -1,4 +1,4 @@
-"""Issue-634 stage 4: inhabitation, provenance DAG, and replay verifier.
+"""Stage 4: inhabitation, provenance DAG, and replay verifier.
 
 Stage 4 closes the staged construction: one target-clean source, the
 declared sixteen-thousand-carrier capture, inhabits the complete typed
@@ -19,7 +19,7 @@ provenance DAG hashes the configuration,
 the consumed source projection, the full-capture diagnostic, the
 producer and capture modules, and every receipt, and
 the configuration gate refuses the declared forbidden input keys.  The
-issue-level control matrix maps the six
+negative-control matrix maps the six
 declared control families, collapsed prescribed chart rank, split-source
 feature form, failed cocycle, nonlocal operator, mixed source, and target
 injection, to the
@@ -52,7 +52,6 @@ from oph_fpe.local_domain.stage1_event_complex import (
 )
 
 SCHEMA = "oph.local-domain-stage4.v1"
-ISSUE = 634
 PHYSICAL_PROMOTION_ALLOWED = False
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "local_domain"
@@ -560,6 +559,7 @@ def _stage1_array_consistency(
         expected_names = {
             "chart",
             "causal_pairs",
+            "direct_ancestry_edges",
             "spacelike_pairs",
             *{f"chart_coords_{index}" for index in range(seed_count)},
             *{f"chart_events_{index}" for index in range(seed_count)},
@@ -568,6 +568,15 @@ def _stage1_array_consistency(
             blockers.append("stage1_arrays_required_names_mismatch")
         if list(arrays["chart"].shape) != [event_count, 4]:
             blockers.append("stage1_chart_shape_disagrees_with_receipt")
+        if list(arrays["direct_ancestry_edges"].shape) != [
+            int(stage1_receipt["ancestry_edge_count"]),
+            2,
+        ]:
+            blockers.append("stage1_direct_ancestry_shape_mismatch")
+        if stage1_receipt.get("direct_ancestry_array_name") != (
+            "direct_ancestry_edges"
+        ):
+            blockers.append("stage1_direct_ancestry_name_mismatch")
         if _sha256_value(arrays["chart"].tolist()) != stage1_receipt.get(
             "chart_freeze_sha256"
         ):
@@ -673,8 +682,6 @@ def verify_local_domain_bundle(
             continue
         if receipt.get("schema") != STAGE_SCHEMAS[stage]:
             blockers.append(f"{stage}_schema_invalid")
-        if receipt.get("issue") != ISSUE:
-            blockers.append(f"{stage}_issue_invalid")
         try:
             recomputed = _recompute_verdict(receipt)
         except (AttributeError, TypeError, ValueError):
@@ -1042,7 +1049,6 @@ def produce_stage4_receipt(
     if not resolution["passed"]:
         return {
             "schema": SCHEMA,
-            "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "bundle_resolution": resolution,
             "verdict": "NOT_ATTAINED",
@@ -1058,7 +1064,6 @@ def produce_stage4_receipt(
     if len(receipts) != len(STAGE_RECEIPTS):
         return {
             "schema": SCHEMA,
-            "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "verdict": "NOT_ATTAINED",
             "blockers": ["stage_receipts_incomplete"],
@@ -1066,7 +1071,6 @@ def produce_stage4_receipt(
     if any(receipt is None for receipt in receipts.values()):
         return {
             "schema": SCHEMA,
-            "issue": ISSUE,
             "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
             "verdict": "NOT_ATTAINED",
             "blockers": ["stage_receipts_missing_or_unpinned"],
@@ -1158,18 +1162,19 @@ def produce_stage4_receipt(
         row["control_failure_detected"] for row in controls.values()
     )
 
-    promotion_gate = receipts["stage1"].get("continuum_promotion", {})
+    continuum_conditions = receipts["stage1"].get("continuum_conditions", {})
     clause_verdicts = {
         "bundle_resolves_fail_closed": resolution["passed"],
         "single_source_dag": bool(
             dag["single_source"] and dag["acyclic"]
         ),
-        "continuum_promotion_blocked_and_recorded": bool(
-            promotion_gate.get("status") == "BLOCKED"
-            and promotion_gate.get("failed_conditions")
+        "continuum_conditions_unsatisfied_at_current_cutoff": bool(
+            continuum_conditions.get("status")
+            == "NOT_ATTAINED_AT_CURRENT_FINITE_CUTOFF"
+            and continuum_conditions.get("conditions")
             and not any(
                 condition.get("holds")
-                for condition in promotion_gate["failed_conditions"].values()
+                for condition in continuum_conditions["conditions"].values()
             )
         ),
         "forbidden_config_keys_absent": bool(
@@ -1185,7 +1190,7 @@ def produce_stage4_receipt(
                 for verdict in resolution["stage_verdicts"].values()
             )
         ),
-        "issue_control_matrix_complete": all(
+        "negative_control_matrix_complete": all(
             row["detected"] for row in control_rows.values()
         ),
         "finite_preservation_rows_hold": all(
@@ -1204,7 +1209,6 @@ def produce_stage4_receipt(
 
     receipt = {
         "schema": SCHEMA,
-        "issue": ISSUE,
         "physical_promotion_allowed": PHYSICAL_PROMOTION_ALLOWED,
         "capture_sha256": resolution.get("capture_sha256"),
         "source_projection_sha256": resolution.get(
@@ -1212,7 +1216,7 @@ def produce_stage4_receipt(
         ),
         "bundle_resolution": resolution,
         "provenance_dag": dag,
-        "issue_control_matrix": control_rows,
+        "negative_control_matrix": control_rows,
         "preservation_rows": preservation_rows,
         "producer_semantic_replay": replay,
         "clause_verdicts": clause_verdicts,
@@ -1222,13 +1226,13 @@ def produce_stage4_receipt(
         "LOCAL_DOMAIN_INHABITATION_RECEIPT": bool(verdict == "ATTAINED"),
         "blockers": blockers,
         "claim_boundary": (
-            "Finite issue-634 stage-4 object: the declared source inhabits "
+            "Finite stage-4 object: the declared source inhabits "
             "the typed local domain in the finite sense that the three "
             "stage receipts are attained on one canonical discrete source "
             "projection, resolvable "
             "from one acyclic provenance DAG under the declared "
             "configuration-key gate, with the six "
-            "issue-level control families detected, the finite "
+            "negative-control families detected, the finite "
             "preservation rows carried by their stated certificates, and "
             "fresh runs of the "
             "same producers reproduce the serialized finite semantics "
@@ -1236,16 +1240,16 @@ def produce_stage4_receipt(
             "implementation. The four-coordinate feature chart is "
             "prescribed as ancestry depth plus three spectral coordinates; "
             "its rank check does not select dimension. The inertia "
-            "certificate is the held-out fitted form of the issue-575 "
-            "instrument, a finite "
+            "certificate is the held-out fitted form of the finite "
+            "event-manifold candidate, a "
             "fitted-form result rather than a manifold signature theorem, "
-            "and the stage-1 continuum_promotion gate is verified BLOCKED "
-            "with every failed condition recorded: negative cone margins "
-            "(issue 595), one neighborhood fit at inertia (0, 4), closed "
-            "finite neighborhoods, and no cofinal refinement family. The "
-            "sign layer is the declared reversing convention with "
-            "continuum identification owned by the issue-596 lanes, and "
-            "physical fiber selection belongs to issues 569 and 630. The "
+            "and the stage-1 continuum conditions are not attained at the "
+            "current finite cutoff: the cone margins are negative, one "
+            "neighborhood fit has inertia (0, 4), the neighborhoods are "
+            "closed and finite, and no cofinal refinement family is "
+            "certified. The sign layer is the declared reversing convention; "
+            "continuum characteristic-class identification and physical "
+            "fiber selection require separate hypotheses and certificates. The "
             "domain is a finite causal and local-operator object; no "
             "continuum Lorentzian spacetime and no physical promotion "
             "follows from any output."

@@ -1,13 +1,13 @@
-"""Source-derived causal order for the observer event log (issue #763).
+"""Source-derived causal order for the observer event log.
 
-The committed capture pipeline emits semantic observer events whose
-ancestry edges are read from declared ``parent_event_ids``. This producer
-regenerates the causal edge set from resource provenance alone: an edge
-runs from one event to another exactly when the second reads a resource
-the first committed. Every committed resource in the observer log has one
-writer, so the generated relation is read-after-write provenance with no
-appeal to declared parents, sequence positions, worker metadata, or
-timestamps.
+The committed capture pipeline emits semantic observer events together with
+an ancestry surface generated from resource provenance. This producer
+independently regenerates the causal edge set from those resources alone: an
+edge runs from one event to another exactly when the second reads a resource
+the first committed. Every committed resource has one writer, and every
+unwritten input must be an explicit distinguished source root, so the
+generated relation makes no appeal to declared parents, sequence positions,
+worker metadata, or timestamps.
 
 The report compares the generated edge set with the declared ancestry
 byte for byte under one canonical projection, quantifies both differences
@@ -17,8 +17,9 @@ longest-path rank of the generated set, and checks that every generated
 edge advances the archival source sequence index, the executed-history
 counterpart of the append-only ancestry rank.
 
-Claim boundary: the generated order is informational structure on one
-presentation-bound finite log. No physical causality, spacetime, manifold,
+Claim boundary: the generated order is informational structure on one finite
+log. Its semantic IDs exclude transport metadata but remain carrier/port
+presentation-bound. No physical causality, spacetime, manifold,
 Lorentzian, or continuum statement follows, and no promotion of the
 capture's other reports is implied. A byte-identity failure is a finding
 about the declared ancestry, not a physical verdict.
@@ -28,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import copy
 from typing import Any, Mapping
 
 from oph_fpe.bulk.physical_h3_kms_source_capture import (
@@ -35,8 +37,7 @@ from oph_fpe.bulk.physical_h3_kms_source_capture import (
     capture_physical_source,
 )
 
-SCHEMA = "oph.source-derived-causal-order.v1"
-ISSUE = 763
+SCHEMA = "oph.source-derived-causal-order.v2"
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "carrier_count": 4,
@@ -46,7 +47,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "repair_fraction_per_cycle": 0.0625,
     "record_commit_cycles": 4,
     "observer_count": 2,
-    "observer_support_size": 2,
+    # Three carriers force an actual shared-support cross-read in this bounded
+    # control log; support size two produced only disconnected observer units.
+    "observer_support_size": 3,
     "observer_samples": 4,
     "observer_cross_reads": True,
     "prediction_control": "semantic_hash_shuffle_v1",
@@ -88,6 +91,17 @@ def _sha256(value: object) -> str:
     return "sha256:" + hashlib.sha256(_canonical_bytes(value)).hexdigest()
 
 
+def _raw_sha256(value: object) -> str:
+    payload = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
 def _provenance_view(semantic_events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Project events onto the fields provenance generation may read.
 
@@ -113,6 +127,8 @@ def _provenance_view(semantic_events: list[dict[str, Any]]) -> list[dict[str, An
 
 def generated_provenance_edges(
     provenance_view: list[dict[str, Any]],
+    *,
+    distinguished_source_resource_ids: list[str] | tuple[str, ...] = (),
 ) -> list[dict[str, Any]]:
     """Generate causal edges from read-after-write resource provenance.
 
@@ -122,6 +138,7 @@ def generated_provenance_edges(
     this projection and aborts generation.
     """
 
+    roots = {str(value) for value in distinguished_source_resource_ids}
     writer_of: dict[str, str] = {}
     for event in provenance_view:
         for resource in event["write_resource_ids"]:
@@ -138,8 +155,17 @@ def generated_provenance_edges(
         child = event["event_key"]
         for resource in event["read_resource_ids"]:
             parent = writer_of.get(resource)
-            if parent is None or parent == child:
+            if parent is None:
+                if resource not in roots:
+                    raise SourceDerivedCausalOrderError(
+                        "read resource has neither a writer nor a distinguished "
+                        f"source root: {resource!r}"
+                    )
                 continue
+            if parent == child:
+                raise SourceDerivedCausalOrderError(
+                    f"event {child!r} reads its own committed resource {resource!r}"
+                )
             shared.setdefault((parent, child), []).append(resource)
 
     edges = [
@@ -200,6 +226,7 @@ def _longest_path_ranks(
 def _writer_permutation_control(
     provenance_view: list[dict[str, Any]],
     generated: list[dict[str, Any]],
+    distinguished_roots: list[str],
 ) -> bool:
     """Rotating write attributions must change the generated edge set."""
 
@@ -217,10 +244,244 @@ def _writer_permutation_control(
         if event["event_key"] in rotation:
             event["write_resource_ids"] = rotation[event["event_key"]]
     try:
-        permuted = generated_provenance_edges(rotated)
+        permuted = generated_provenance_edges(
+            rotated,
+            distinguished_source_resource_ids=distinguished_roots,
+        )
     except SourceDerivedCausalOrderError:
         return True
     return _canonical_bytes(permuted) != _canonical_bytes(generated)
+
+
+def _refusal_control(
+    provenance_view: list[dict[str, Any]],
+    distinguished_roots: list[str],
+    *,
+    duplicate_writer: bool,
+) -> bool:
+    """Exercise the two fail-closed resource-integrity clauses."""
+
+    mutated = copy.deepcopy(provenance_view)
+    if duplicate_writer:
+        writer = next(row for row in mutated if row["write_resource_ids"])
+        other = next(row for row in mutated if row is not writer)
+        other["write_resource_ids"] = [writer["write_resource_ids"][0]]
+    else:
+        mutated[0]["read_resource_ids"] = ["unrooted:missing-writer"]
+    try:
+        generated_provenance_edges(
+            mutated,
+            distinguished_source_resource_ids=distinguished_roots,
+        )
+    except SourceDerivedCausalOrderError:
+        return True
+    return False
+
+
+def _transport_metadata_controls(
+    observer_log: Mapping[str, Any],
+    semantic_events: list[dict[str, Any]],
+    generated: list[dict[str, Any]],
+) -> dict[str, bool]:
+    """Mutate noncausal transport metadata and replay the semantic projection."""
+
+    baseline_events = _canonical_bytes(semantic_events)
+    baseline_generated = _canonical_bytes(generated)
+
+    parent_mutation = copy.deepcopy(observer_log)
+    child = next(
+        row for row in parent_mutation["events"] if row.get("parents")
+    )
+    child["parents"] = []
+    parent_semantic, parent_generated, parent_declared, _ = (
+        _semantic_source_events(parent_mutation, validate_transport_ids=False)
+    )
+    parent_generated_projection = declared_ancestry_projection(
+        parent_generated
+    )
+    parent_declared_projection = declared_ancestry_projection(parent_declared)
+
+    order_mutation = copy.deepcopy(observer_log)
+    record = next(
+        row
+        for row in order_mutation["events"]
+        if row.get("kind") == "RECORD_COMMIT"
+    )
+    record["record_order_previous_event_ids"] = ["sha256:" + "f" * 64]
+    order_semantic, order_generated, _, _ = _semantic_source_events(
+        order_mutation, validate_transport_ids=False
+    )
+    order_generated_projection = declared_ancestry_projection(order_generated)
+
+    state_mutation = copy.deepcopy(observer_log)
+    mutated_record = next(
+        row
+        for row in state_mutation["events"]
+        if row.get("kind") == "RECORD_COMMIT"
+    )
+    mutated_record["full_port_state"][0] = (
+        float(mutated_record["full_port_state"][0]) + 1.0
+    )
+    try:
+        _semantic_source_events(state_mutation, validate_transport_ids=False)
+        state_mutation_refused = False
+    except RuntimeError:
+        state_mutation_refused = True
+
+    phase_order = ("RECORD_COMMIT", "READBACK", "LOCAL_FEEDBACK")
+    permuted_log = copy.deepcopy(observer_log)
+    permuted_events: list[dict[str, Any]] = []
+    samples = sorted(
+        {int(row["sample"]) for row in permuted_log["events"]}
+    )
+    for sample in samples:
+        for kind in phase_order:
+            permuted_events.extend(
+                sorted(
+                    (
+                        row
+                        for row in permuted_log["events"]
+                        if int(row["sample"]) == sample and row["kind"] == kind
+                    ),
+                    key=lambda row: str(row["observer_token"]),
+                    reverse=True,
+                )
+            )
+    permuted_log["events"] = permuted_events
+    permuted_semantic, permuted_generated, _, _ = _semantic_source_events(
+        permuted_log
+    )
+
+    def presentation_events(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return sorted(
+            (
+                {
+                    key: value
+                    for key, value in row.items()
+                    if key != "source_sequence_index"
+                }
+                for row in rows
+            ),
+            key=lambda row: str(row["event_key"]),
+        )
+
+    return {
+        "declared_parent_mutation_leaves_semantic_order_unchanged": bool(
+            _canonical_bytes(parent_semantic) == baseline_events
+            and _canonical_bytes(parent_generated_projection)
+            == baseline_generated
+            and bool(parent_declared_projection != generated)
+        ),
+        "record_order_mutation_leaves_semantic_order_unchanged": bool(
+            _canonical_bytes(order_semantic) == baseline_events
+            and _canonical_bytes(order_generated_projection)
+            == baseline_generated
+        ),
+        "record_full_state_hash_mutation_is_refused": state_mutation_refused,
+        "phase_observer_permutation_leaves_semantic_order_unchanged": bool(
+            presentation_events(permuted_semantic)
+            == presentation_events(semantic_events)
+            and declared_ancestry_projection(permuted_generated) == generated
+            and observer_log.get("phase_observer_permutation_control", {}).get(
+                "transport_event_material_set_invariant"
+            )
+            is True
+            and observer_log.get("phase_observer_permutation_control", {}).get(
+                "semantic_event_set_invariant"
+            )
+            is True
+            and observer_log.get("phase_observer_permutation_control", {}).get(
+                "source_order_invariant"
+            )
+            is True
+        ),
+    }
+
+
+def _repair_only_event_carrier_control(
+    dynamics: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Classify the current versioned seam-repair log as an event carrier."""
+
+    events = [dict(row) for row in dynamics["repair_event_log"]]
+    if not bool(dynamics["repair_event_examples_complete"]):
+        raise SourceDerivedCausalOrderError(
+            "bounded repair-only control requires the complete repair log"
+        )
+    writer_of_version: dict[tuple[str, int, int], str] = {}
+    edges: set[tuple[str, str, str]] = set()
+    roots: set[str] = set()
+    for event in events:
+        event_id = str(event["event_id"])
+        material = {key: value for key, value in event.items() if key != "event_id"}
+        if event_id != _raw_sha256(material):
+            raise SourceDerivedCausalOrderError(
+                "repair event ID does not bind transaction material"
+            )
+        for read in event["read_set"]:
+            carrier = str(read["carrier_id"])
+            port = int(read["port"])
+            version = int(read["version"])
+            resource = f"repair-port:{carrier}:{port:02d}:version-{version}"
+            writer = writer_of_version.get((carrier, port, version))
+            if writer is None:
+                if version != 0:
+                    raise SourceDerivedCausalOrderError(
+                        "repair event reads an unwritten nonroot version"
+                    )
+                roots.add(resource)
+            else:
+                edges.add((writer, event_id, resource))
+        for write in event["write_set"]:
+            carrier = str(write["carrier_id"])
+            port = int(write["port"])
+            expected = int(write["expected_version"])
+            committed = int(write["committed_version"])
+            if committed != expected + 1:
+                raise SourceDerivedCausalOrderError(
+                    "repair write does not advance its exact version"
+                )
+            key = (carrier, port, committed)
+            if key in writer_of_version:
+                raise SourceDerivedCausalOrderError(
+                    "repair resource version has multiple writers"
+                )
+            writer_of_version[key] = event_id
+    projected_edges = [
+        {
+            "parent_event_id": parent,
+            "child_event_id": child,
+            "shared_resource_id": resource,
+        }
+        for parent, child, resource in sorted(edges)
+    ]
+    return {
+        "schema": "oph.repair-only-event-carrier-control.v1",
+        "repair_event_material": events,
+        "repair_event_material_sha256": _sha256(events),
+        "repair_event_count": len(events),
+        "versioned_provenance_edges": projected_edges,
+        "versioned_provenance_edge_count": len(projected_edges),
+        "distinguished_version_zero_root_count": len(roots),
+        "all_reads_are_version_zero_roots": bool(
+            events
+            and all(
+                int(read["version"]) == 0
+                for event in events
+                for read in event["read_set"]
+            )
+        ),
+        "classification": (
+            "REPAIR_ONLY_EVENT_CARRIER_IS_ANTICHAIN"
+            if events and not projected_edges
+            else "REPAIR_ONLY_EVENT_CARRIER_HAS_VERSIONED_DEPENDENCIES"
+        ),
+        "physical_causet_promotion_allowed": False,
+        "required_model_change": (
+            "eventize_and_interleave_local_recurrent_propagation_with_"
+            "versioned_seam_repair_so_state_can_transport_between_seams"
+        ),
+    }
 
 
 def produce_source_derived_causal_order_report(
@@ -228,11 +489,26 @@ def produce_source_derived_causal_order_report(
 ) -> dict[str, Any]:
     capture = capture_physical_source(dict(config) if config else DEFAULT_CONFIG)
     observer_log = capture["source_artifacts"]["observer_log"]
-    semantic_events, declared_ancestry = _semantic_source_events(observer_log)
+    (
+        semantic_events,
+        capture_generated_ancestry,
+        declared_ancestry,
+        distinguished_roots,
+    ) = _semantic_source_events(observer_log)
 
     provenance_view = _provenance_view(semantic_events)
-    generated = generated_provenance_edges(provenance_view)
+    generated = generated_provenance_edges(
+        provenance_view,
+        distinguished_source_resource_ids=distinguished_roots,
+    )
     declared = declared_ancestry_projection(declared_ancestry)
+    capture_generated = declared_ancestry_projection(capture_generated_ancestry)
+    postrun_generated = declared_ancestry_projection(
+        capture["postrun_capture"]["raw_ancestry_relations"]
+    )
+    capture_ancestry_matches_generated = bool(
+        generated == capture_generated == postrun_generated
+    )
 
     generated_bytes = _canonical_bytes(generated)
     declared_bytes = _canonical_bytes(declared)
@@ -265,20 +541,68 @@ def produce_source_derived_causal_order_report(
 
     controls = {
         "writer_permutation_changes_edges": _writer_permutation_control(
-            provenance_view, generated
+            provenance_view, generated, distinguished_roots
         ),
-        "declared_parents_stripped_before_generation": True,
-        "single_writer_clause_checked": True,
+        "single_writer_mutation_is_refused": _refusal_control(
+            provenance_view, distinguished_roots, duplicate_writer=True
+        ),
+        "missing_nonroot_writer_is_refused": _refusal_control(
+            provenance_view, distinguished_roots, duplicate_writer=False
+        ),
+        **_transport_metadata_controls(
+            observer_log, semantic_events, generated
+        ),
     }
     controls_fail_closed = all(controls.values())
-    receipt_flag = bool(acyclic and sequence_compatible and controls_fail_closed)
+    repair_only_control = _repair_only_event_carrier_control(
+        capture["source_artifacts"]["dynamics"]
+    )
+    observer_of = {
+        str(event["event_key"]): str(event["observer_token"])
+        for event in semantic_events
+    }
+    cross_observer_edge_count = sum(
+        observer_of[row["parent_event_id"]]
+        != observer_of[row["child_event_id"]]
+        for row in generated
+    )
+    receipt_flag = bool(
+        byte_identical
+        and acyclic
+        and sequence_compatible
+        and controls_fail_closed
+        and capture_ancestry_matches_generated
+        and cross_observer_edge_count > 0
+    )
 
+    status = (
+        "SOURCE_DERIVED_CAUSAL_ORDER_BYTE_IDENTITY_ATTAINED__PHYSICAL_ATTACHMENT_OPEN"
+        if byte_identical
+        else "SOURCE_DERIVED_CAUSAL_ORDER_BYTE_IDENTITY_NOT_ATTAINED__PHYSICAL_ATTACHMENT_OPEN"
+    )
     report = {
         "schema": SCHEMA,
-        "issue": ISSUE,
+        "status": status,
         "config": dict(config) if config else dict(DEFAULT_CONFIG),
+        "config_sha256": _sha256(
+            dict(config) if config else dict(DEFAULT_CONFIG)
+        ),
         "event_count": len(provenance_view),
         "observer_event_log_sha256": observer_log["event_log_sha256"],
+        "observer_log_material_sha256": _sha256(observer_log),
+        "observer_log_material": observer_log,
+        "source_capture_binding": {
+            "capture_sha256": capture["capture_sha256"],
+            "source_root_sha256": capture["source_root_sha256"],
+            "postrun_capture_sha256": capture["postrun_capture"][
+                "primitive_root_sha256"
+            ],
+        },
+        "event_carrier_scope": observer_log["event_carrier_scope"],
+        "underlying_repair_transactions_promoted_as_events": observer_log[
+            "underlying_repair_transactions_promoted_as_events"
+        ],
+        "distinguished_source_resource_ids": distinguished_roots,
         "semantic_events": semantic_events,
         "generated_edges": generated,
         "declared_edges": declared,
@@ -286,7 +610,20 @@ def produce_source_derived_causal_order_report(
         "declared_edges_sha256": _sha256(declared),
         "generated_edge_count": len(generated),
         "declared_edge_count": len(declared),
+        "capture_ancestry_matches_generated": (
+            capture_ancestry_matches_generated
+        ),
+        "cross_observer_edge_count": cross_observer_edge_count,
         "byte_identity_clause": {
+            "scope": (
+                "canonical_projected_provenance_edge_rows_on_bounded_"
+                "source_observer_instrumentation_log"
+            ),
+            "comparison_representation": (
+                "sorted_parent_child_shared_resource_rows_without_transport_"
+                "sequence_or_edge_id_fields"
+            ),
+            "event_count": len(provenance_view),
             "byte_identical": byte_identical,
             "verdict": "ATTAINED" if byte_identical else "NOT_ATTAINED",
             "declared_only_pair_count": len(declared_only),
@@ -300,15 +637,23 @@ def produce_source_derived_causal_order_report(
         "sequence_compatible": sequence_compatible,
         "negative_controls": controls,
         "controls_fail_closed": controls_fail_closed,
+        "repair_only_event_carrier_control": repair_only_control,
         "SOURCE_DERIVED_CAUSAL_ORDER_RECEIPT": receipt_flag,
         "physical_promotion_allowed": False,
         "claim_boundary": (
             "The generated relation is informational read-after-write "
-            "provenance on one presentation-bound finite observer log. "
+            "provenance on one finite observer instrumentation log over "
+            "source-state snapshots. The underlying seam-repair transactions "
+            "are not events in this order, so it is not a complete physical "
+            "repair-event causet. Semantic IDs exclude "
+            "declared parents, record-order metadata, checkpoint placement, "
+            "and source sequence, but remain carrier/port presentation-bound. "
             "It selects no schedule, supplies no physical causality, "
             "spacetime, manifold, Lorentzian, or continuum statement, and "
             "promotes no other capture report. A byte-identity failure "
-            "classifies the declared ancestry against provenance and "
+            "classifies the canonical projected declared edge rows against "
+            "the canonical projected provenance rows; it is not a claim of "
+            "raw-log byte identity and "
             "carries no physical verdict."
         ),
     }
