@@ -101,7 +101,7 @@
       "raw_pin": {
         "bytes": 114761,
         "path": "data/causal_order/causet_likeness_receipt.json",
-        "sha256": "sha256:868d41675878ce5c1ae5509cf92f39d16a2f668dac2c7e85bbafa25c9314bfdc"
+        "sha256": "sha256:bdecca4af8770e932f7163e5194b7f066a4592cea882c14afc4a535563f90a83"
       },
       "schema": "oph.causet-likeness-exploratory.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -114,7 +114,7 @@
       "raw_pin": {
         "bytes": 15172,
         "path": "data/causal_order/source_causal_history_family_publication_projection.json",
-        "sha256": "sha256:71e7bd82464ae76756a43be43e7e0a1d9379394dee1d05ed721e2a83efe80a08"
+        "sha256": "sha256:014a81196021c68c7c8b4d8b36f4a8ff9113fcf142b6486795ded71b386c361e"
       },
       "schema": "oph.source-causal-history-family-publication-projection.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -125,9 +125,9 @@
       "disposition": "EXACT_INDUCED_HISTORY_PREFIX_FAMILY__NEGATIVE_RANK3_CONE_AND_MANIFOLD_PROMOTION",
       "path": "data/causal_order/source_causal_history_family_receipt.json",
       "raw_pin": {
-        "bytes": 908189,
+        "bytes": 908190,
         "path": "data/causal_order/source_causal_history_family_receipt.json",
-        "sha256": "sha256:5416931a05a9acf1f67b0f01f6747a61e4655803946f2b49a643351f5fdf543d"
+        "sha256": "sha256:495a92d18d53b1302bde1d8555bfdfcf2d7f2bcb1b195a1d772f9deaf6828996"
       },
       "schema": "oph.source-causal-history-family.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -140,7 +140,7 @@
       "raw_pin": {
         "bytes": 122246,
         "path": "data/causal_order/source_derived_causal_order_receipt.json",
-        "sha256": "sha256:9d8a073ecaaa8784ad9d45ae44e45d92d4cd3bb8bed900d75fdb766ce74acd75"
+        "sha256": "sha256:50ff410dc1f11ffd52ffb8ced8a85af7e5ae7dc62cdda2e252ec2fc2d101fe4e"
       },
       "schema": "oph.source-derived-causal-order.v2",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -938,7 +938,7 @@
       "raw_pin": {
         "bytes": 37873,
         "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-        "sha256": "sha256:7d66c90767748fa06f6c1f9ad1f737b4c6235e35bea2bd9c71d7a0df14668b1d"
+        "sha256": "sha256:12bd818afb63e197f191b19e72f67399c32b8b795b9e23f893a70b4bf42fd9d9"
       },
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -965,7 +965,7 @@
       "raw_pin": {
         "bytes": 31270,
         "path": "data/repair_closure/fz11_conservative_time_lift_receipt.json",
-        "sha256": "sha256:1a32a7350602914b3c3557c98453d2f00aaa6296f718c0c6a78124cbd5918db8"
+        "sha256": "sha256:d7d0d1376feceb3e4bf3f22bdbb1fca3d0365f8b43c2313aea02ada210e411ee"
       },
       "schema": "oph.fz11-conservative-time-lift.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1022,7 +1022,7 @@
       "raw_pin": {
         "bytes": 13559,
         "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-        "sha256": "sha256:7756ec07d3daaa55d64c8be71face830715f90a78bb7b939f7e11a3ec2b246c8"
+        "sha256": "sha256:7bdd864ba08e30403c7043f070648cba0edc82470c90aeb1b7856dae3d1f132f"
       },
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1098,7 +1098,7 @@
       "raw_pin": {
         "bytes": 36932,
         "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
-        "sha256": "sha256:4fe37b081a4266519121656c598763692f29ff78a897180e6b0893975cebc9c5"
+        "sha256": "sha256:cfe56161a39b0eea82aa4ac2fadfce18b315b201af2c9ee90282ec3706da24af"
       },
       "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1124,7 +1124,7 @@
       "raw_pin": {
         "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:573cd6ecd2ea0095d4b29733a768f8feefa056f10f990ae6679b5d7ea729b38c"
+        "sha256": "sha256:198e8abbea53a927754663e0bdcc7aa2641036315d2b299c8fcb1e0349d737cf"
       },
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1159,7 +1159,7 @@
       "raw_pin": {
         "bytes": 2018887,
         "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-        "sha256": "sha256:7e8c5635d6c9fb20f581e3631d1b0d0eb8dc991e48427285acae523e74453219"
+        "sha256": "sha256:7867e516233550d7ba0362de240a0f92b8def8fa9eb1dfe063629dc9066cdcac"
       },
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1189,7 +1189,7 @@
       "raw_pin": {
         "bytes": 55183,
         "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
-        "sha256": "sha256:e33c4c1933cdf3c09679bd4049217622c57c10ebf0852dc9e36bc2b6caa5f080"
+        "sha256": "sha256:bcb13d485c0bd373598788a9518d487c9da3ebda11281837663559c8f82adc5e"
       },
       "schema": "oph.vertex12-directed-transport-feasibility.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1202,7 +1202,7 @@
       "raw_pin": {
         "bytes": 1074185,
         "path": "data/repair_closure/vertex12_signed_record_feedback_receipt.json",
-        "sha256": "sha256:bc01439e0518f9febe75ab56fb4a1edab887b65266cb64b94b7fea9445cb068c"
+        "sha256": "sha256:433acf2e0c383f7bd61af2739a83db19dbbdcb8de72f1d08d3a71eb8e44c1fa3"
       },
       "schema": "oph.vertex12-signed-record-feedback-diagnostic.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1281,13 +1281,13 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:818e80e0aac51a2d8be3df79c7ba6546e303c9c37e4d7e10e0fa1d1c5a3c8393",
+  "receipt_sha256": "sha256:97fc714408b34a33a919f98434b23d634bf7c6eeb01e06f7641a17cf79ec1cf3",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
     "content_index_row_count_excluding_recursive_outputs": 1040,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:74d2152bc66e91926c5c04a24adffc581e3762b9d319fab3537536055744e25d",
+    "content_index_sha256_excluding_recursive_outputs": "sha256:d4dd0c7dccdd2cc1a2e6ed3089afa03eccaa858e14b8b9dac72bf2d348aff148",
     "path_count_including_declared_recursive_outputs": 1046,
     "path_list_sha256_including_declared_recursive_outputs": "sha256:10654c4f4522c40900b998cb177dc0b3f067b5d93c1e0a4030aa306a5782f95d",
     "provenance_counts": {

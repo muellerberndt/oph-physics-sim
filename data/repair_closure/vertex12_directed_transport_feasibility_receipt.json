@@ -1577,9 +1577,9 @@
           "sha256:b9ef9553e6ff1d6007c237242985c29ff17234848288adf356f37004293bda32"
         ],
         "source_repair_event_ids_for_p": [
-          "sha256:465da1ea8bd9cd6b44b4a17a76f639c16a4c3824d95c10998d9541ae7f1a9d40",
           "sha256:5155ae32c4ff9b6bd74c07ba26986ecb74a116a03c2442bbdcf6ca1348f08d0c",
           "sha256:6cdebf83bf5aaa909aaf21b342ab23a0caf0b909477fb2cccdbabc23bf3dc4b9",
+          "sha256:b755cc659e6850a098a6c897fd953ddc672fa97c9943f65e905e069750763d95",
           "sha256:c0ca2bbe040f4c67437d347435849a0c90fc825b186b6ddca7253833acc2784b"
         ]
       },
@@ -1625,9 +1625,9 @@
         "port": 1,
         "source_repair_event_ids_for_antipode_p": [
           "sha256:412377d80e805945ece50c0d3340817e892e5676534ec9408ef97d0f5537cdf4",
+          "sha256:6d70e06a55fbbacd2f87818960254e8a51977bdf22c6c5c69729bc755c4b0262",
           "sha256:83e1919f67ce4f472acfbf064c6db2675145147e08a8ccd96f25f58e98b61c95",
-          "sha256:8430becf282d0b960a4b8f10ecd2468f9eb65db78fcfa9991c8cf850bc34c447",
-          "sha256:d2fe4acd621b6a82980a8442f677a14991f27c47cf2724d06fb0a9d2c83bfd58"
+          "sha256:d0c95d4c444235cbe093187841270e2199c5a0221242b01a46076b5752ca2af9"
         ],
         "source_repair_event_ids_for_p": [
           "sha256:9cb14363023e58d64fd3825bf780b0ede9d4e42fec31a3acb5ff26abbdd2c300",
@@ -1685,8 +1685,8 @@
         "source_repair_event_ids_for_p": [
           "sha256:09c2345b685414a345457435ec98fd2c8e986baea58f05b911c49c11e0ea9211",
           "sha256:5022ac050a990623b6e1eaa012fb38633304aec56329a4d6428c548dded80612",
-          "sha256:ad4f9f47f8ab804c16d55026df2c2ba0ccc4b584af276b005a4f8656b431c49c",
-          "sha256:b145a750946a6fcc6864c5d2307b522b639ce65c9ec35eae4a2612bd1f0185f3"
+          "sha256:7f46d1f14c240c02e7fd0ef74c621994f148baa043d82bac609f31848eb9c9d1",
+          "sha256:ad4f9f47f8ab804c16d55026df2c2ba0ccc4b584af276b005a4f8656b431c49c"
         ]
       },
       {
@@ -1849,7 +1849,7 @@
         ]
       }
     ],
-    "pair_rows_sha256": "sha256:284101b02071d38626e6efba9604a608950270b4d7dd7a3b7fac3cd1c4d465d3",
+    "pair_rows_sha256": "sha256:7f67f76e1df0a9f6ed5c80ebb5ca9b5561299e17ee1f6bbc28590849a35a6363",
     "port_count": 12,
     "proof_steps": [
       "pi_after_T_antipode_p=S_antipode_p_after_pi",
@@ -1911,7 +1911,7 @@
     "reuse_current_matching_maps_via_a_surjective_semiconjugate_cover": "exactly_obstructed",
     "source_selection_of_a_site_completion_and_event_provenance_remain_required": true
   },
-  "receipt_sha256": "sha256:19c1139c057fd5808e6ece2ddab8d4e275ac7d4236ab127a9cc609b61d6d56b0",
+  "receipt_sha256": "sha256:82c647557922398ff9d420f6531a13482118f5b4aaf861d4355f87fe8edca932",
   "requested_directed_transport_ledger": {
     "attained_from_current_source_emissions": false,
     "exact_T_antipode_p_equals_inverse_T_p_attained": false,
@@ -1939,13 +1939,13 @@
     "pin": {
       "bytes": 41087,
       "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-      "sha256": "sha256:573cd6ecd2ea0095d4b29733a768f8feefa056f10f990ae6679b5d7ea729b38c"
+      "sha256": "sha256:198e8abbea53a927754663e0bdcc7aa2641036315d2b299c8fcb1e0349d737cf"
     },
-    "receipt_sha256": "sha256:84563042e6770dbb84df11ad0a57b4852cbebe47627e7c7446c00ac9d25b7d0c",
-    "repair_log_sha256": "sha256:d7264b081c045624855f9bde1bce4a6b97675cd00c9cfd3b950533228eb496b1",
+    "receipt_sha256": "sha256:45196b01ae3b0d3aba89f683ae5dfa885f20386d80ac093cdc9d85994e898796",
+    "repair_log_sha256": "sha256:624ddadd0c46a51aa85ea21f0539646e15ed120d3c910c33e137af3ddf42d289",
     "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
     "source_engine_independently_reimplemented": false,
-    "source_state_root_sha256": "sha256:3e247c95baf20b883d94660fe0a56ea1cd6a647a2f1c71d61c3e961c6d90340a",
+    "source_state_root_sha256": "sha256:e3db0d964072dd7b07595c81a502bd7fce8b418ccbb83072acd024dd53ce93a4",
     "status": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
   }
 }

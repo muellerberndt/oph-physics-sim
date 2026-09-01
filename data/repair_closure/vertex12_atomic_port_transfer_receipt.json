@@ -506,153 +506,153 @@
     "record_readback_pairs": [
       {
         "carrier_id": "carrier-00000",
-        "readback_event_id": "sha256:ed08d280d1597bc51de6a9336cab3c846400b9d19793573eec3a4cd3856e4e93",
-        "record_event_id": "sha256:4bae0cdd7c3e539fbb360fb054b07fdaa9c5468e1bdc0697b95c2c9d77b79eb3",
+        "readback_event_id": "sha256:a2a8ebc9f91bfafa6b2fefbe77567a548ceedbcbf821ae419ed9c2c9c9dd9609",
+        "record_event_id": "sha256:0b6d7593a6128c278756c7f706ef8e4a51bd5a23aed50a4dd3695338a71c8bdc",
         "state_sha256": "sha256:32e94ff0ba7e9815fcff27d19aba0f77e94868f57d45c3bf2d5c8a99a2ae77e3"
       },
       {
         "carrier_id": "carrier-00000",
-        "readback_event_id": "sha256:c226cfce45c0cba7b91839163a98cb9a8be15530785a9b10cb9fa9c2e0225f6c",
-        "record_event_id": "sha256:6cd607d3ea229a8b6df305379c1803aa6d82b7d9ab62d2db5a141068e08313c2",
+        "readback_event_id": "sha256:ca9b07f78ff0eb41d4a61f2b92e7c1cf88bb98e409e8014a877c88a6eda9ba34",
+        "record_event_id": "sha256:bf4070aaa2edef58a9685b2c0cbec21e234ccb887caccc36152721a563bfda48",
         "state_sha256": "sha256:32e94ff0ba7e9815fcff27d19aba0f77e94868f57d45c3bf2d5c8a99a2ae77e3"
       },
       {
         "carrier_id": "carrier-00000",
-        "readback_event_id": "sha256:9aa53aa881945efbaeb4e2c682c50eaf29b6620c6345d58102656ee41db84ed7",
-        "record_event_id": "sha256:829d66ca791be01abbfa9231e1227fb242d8accfed56e1095fad3f315bacadfb",
+        "readback_event_id": "sha256:49801e8ac2bf5e926cf654a0383d3890a81077953f4c58cccaea166fb7d877ac",
+        "record_event_id": "sha256:f407a72a868066dc419510bf96c5174d18a33783dc4b05fda8b427bf236fa1e0",
         "state_sha256": "sha256:32e94ff0ba7e9815fcff27d19aba0f77e94868f57d45c3bf2d5c8a99a2ae77e3"
       },
       {
         "carrier_id": "carrier-00001",
-        "readback_event_id": "sha256:0e64b1c3f69b7eeaedcc0a0c31cc3e0d13102bd8f797d84f75dae72d25989a2a",
-        "record_event_id": "sha256:10221dae269e3a7d5e4f281e29f81837ecab4d3109cb7ea778101968987860ec",
+        "readback_event_id": "sha256:e7bfb4dd3b54aeb44bbec1972f6b47015e7280d4e16e02aa8b33e1a70032ac7e",
+        "record_event_id": "sha256:227c2144ec5e3ae1a6739bd6576cde6e6a74d0759d0f92f2ff2def3dc1952620",
         "state_sha256": "sha256:f689342016d17ac8e9123f66235f4f5e858569d44a42bad50d975fada9cd9090"
       },
       {
         "carrier_id": "carrier-00001",
-        "readback_event_id": "sha256:1ac55fdcfa3b9321f408bd69cb9c266050d5034685e8ecf1085ffd3985164e4f",
-        "record_event_id": "sha256:5d764efd9839c0ab7aa084bbed6232d3cbcae132a70ae1b7d2ebf3f08f22a6bb",
+        "readback_event_id": "sha256:58bea75b9089b060effcdad68328efb49a4d465040b71ca18fb78cdbedad5de5",
+        "record_event_id": "sha256:c3fa1c3ba98d7e094af24b14a96b262378498f46e37f37cb607f688af51401c1",
         "state_sha256": "sha256:f689342016d17ac8e9123f66235f4f5e858569d44a42bad50d975fada9cd9090"
       },
       {
         "carrier_id": "carrier-00001",
-        "readback_event_id": "sha256:b652e7860c2df3e9d9b2aa52d75a3a76bd1be7bc47ae7f25086f8d43f0bfde69",
-        "record_event_id": "sha256:a36202501acf97c0eb6a48827fa0fe58144a74961fc9e20dd2be23767205d462",
+        "readback_event_id": "sha256:ca443633d12022e8e4f892a626e23adeab48d5225ea07936c19f735de80f3a50",
+        "record_event_id": "sha256:e64eda3ac8c433fa250b340e58f9e02f2fa7b30aadc70fa705ee08e1bb2a7c81",
         "state_sha256": "sha256:f689342016d17ac8e9123f66235f4f5e858569d44a42bad50d975fada9cd9090"
       },
       {
         "carrier_id": "carrier-00002",
-        "readback_event_id": "sha256:9524e3a0be20eb1710735dfc52ebe3b3488f55b90d29d0fd86ea17877fa6a9f3",
-        "record_event_id": "sha256:1f0e9d1dfb6be9979f2e31ab8eb93936d6dad05b2f346a8fff8b2c1968b9ce77",
+        "readback_event_id": "sha256:f05b12bd92cbde9795b1bc7a8fa4f61b54ad2f5966b17c44f9f2c32d7f344854",
+        "record_event_id": "sha256:ac82e5e1e9bac926c9589f8a88bdf643dec603afd9f78e0990342ea50277c257",
         "state_sha256": "sha256:dd21cbf612d03d8d9def08c411d492f6210f3651627aec162720429d5fb81603"
       },
       {
         "carrier_id": "carrier-00002",
-        "readback_event_id": "sha256:7026f7970268ed1a944fd45ff160d691891c6a7393234a21e93ff5d28ee4d630",
-        "record_event_id": "sha256:33a8e249204d8d7d3353015bb9405888b4755728048d81fdb4f818d50995fcbb",
+        "readback_event_id": "sha256:3a6819e82620db2346dacaf4b60b4a6178914e81c4d9ff876cb7069cd69accea",
+        "record_event_id": "sha256:d1ede5230e525f44ed748a0506511d67412c9701347ff5b2f4ca5c70c16fc476",
         "state_sha256": "sha256:dd21cbf612d03d8d9def08c411d492f6210f3651627aec162720429d5fb81603"
       },
       {
         "carrier_id": "carrier-00002",
-        "readback_event_id": "sha256:0e9ca7be05e1fd9f1f1cb49332230a14a9bcccbaac51cf12f03fa1e79f95b5c4",
-        "record_event_id": "sha256:450e3fb83c2513807edc2817583af57cdca376a0c433b0c899dee3015de8082b",
+        "readback_event_id": "sha256:35c4c6b9d1f1a11d774088e7436c647324a8c3389cdc503604c6a5e2cebbca8b",
+        "record_event_id": "sha256:ffb3c652f9140e1d31028571dc3d6bcdc65794c5ddc40bb485257de6710a54ef",
         "state_sha256": "sha256:dd21cbf612d03d8d9def08c411d492f6210f3651627aec162720429d5fb81603"
       },
       {
         "carrier_id": "carrier-00003",
-        "readback_event_id": "sha256:c4555eaf5e9e8eb0f900cdf4114f64c4eafca60aadded9336de111e0476d3313",
-        "record_event_id": "sha256:50aa77cf2eb2c8cfccb4b01a11280ff6bfa025c3cbd62d20f6ab35127fef114f",
+        "readback_event_id": "sha256:fe8fefc9c98522c35d42017cf54355a316de2b13f4f8806cdbfd3c6e0f1a139b",
+        "record_event_id": "sha256:2423e8a5dc988179c7303007411c1ea832ded258679592225646a7d585bfbeb1",
         "state_sha256": "sha256:a7e2d10b94961388eb5607d5f5510ec0382514c422e37b13f4cf96f35d56b6d8"
       },
       {
         "carrier_id": "carrier-00003",
-        "readback_event_id": "sha256:b1797939a0b06f81063e035cc54bc7d07a2469ad4c17a59db56d6a5e09b6951d",
-        "record_event_id": "sha256:a218143a7eff43a9fea167d8c00f78b0df708bf638a61a8fb1e0622aa81dd795",
+        "readback_event_id": "sha256:fd069e610105c5819d5405ad16712e9175e5fd4f00a5de10c7eed1e1b4820448",
+        "record_event_id": "sha256:37ef5f489b8c5797f7d50b34eceb8f5ddb55bfabf198aa01f24b78f8f876250b",
         "state_sha256": "sha256:a7e2d10b94961388eb5607d5f5510ec0382514c422e37b13f4cf96f35d56b6d8"
       },
       {
         "carrier_id": "carrier-00003",
-        "readback_event_id": "sha256:1729bab294a7c6a103a24471f9bf587326db116eda73545e6cfb2b3d7c49654c",
-        "record_event_id": "sha256:dbddab4b597b38876c3d8fbac6516d795300456a38f08482cc9ffcf05d763801",
+        "readback_event_id": "sha256:5100e7c0be65a926bed0bf5f3e8cdeffd44f41fa4c266a9283171c4ad02d0427",
+        "record_event_id": "sha256:97227437ea5debdef3092ff5dc0fc05a5635053ab11d210fdb6234922c9d1dcd",
         "state_sha256": "sha256:a7e2d10b94961388eb5607d5f5510ec0382514c422e37b13f4cf96f35d56b6d8"
       },
       {
         "carrier_id": "carrier-00004",
-        "readback_event_id": "sha256:6fcd594e07ec318f71811f289f5d68ac2f1bfb3b71f7c995356e98811104703a",
-        "record_event_id": "sha256:0a20d2bc083a6a9c6a521fe0ddb20387ee511aa62035e4e28f9e08ab3b829388",
+        "readback_event_id": "sha256:00867382a277ba94f690e6b99f51b1f7e73ead351a7f051fb9f2d3e16be47556",
+        "record_event_id": "sha256:311ad2316ceb27b8ef51722f78f4ed9ddcf720267e3c6ee5d0cc187949b9468b",
         "state_sha256": "sha256:71eea9117303a36db88624d93222f08c4c448968b0250eb37c72e806b909861b"
       },
       {
         "carrier_id": "carrier-00004",
-        "readback_event_id": "sha256:532d52608489c43915198c744a933d23a3d7dab375460e1d195effee9ea5fd8a",
-        "record_event_id": "sha256:2d748ec9742bd99a3e318737ea348a833dea4723f3b95e340b7c925d7c138289",
+        "readback_event_id": "sha256:abf1c7fa8d46da93118a2e67cd796a57578b4cd6d3c256d50e460f3dc74ecb61",
+        "record_event_id": "sha256:58b1bfd408281bbbc61ea255ac0f1410c01755cb4dc39f7cdc7770b90b1d301d",
         "state_sha256": "sha256:71eea9117303a36db88624d93222f08c4c448968b0250eb37c72e806b909861b"
       },
       {
         "carrier_id": "carrier-00004",
-        "readback_event_id": "sha256:de259b888e61fba0bc257a621e51e9fe419563338ea60ec92b96ed3e97e45d06",
-        "record_event_id": "sha256:7aa9b0dba6febfb7c3f1647ccacf1d98625f4d8178a028a77616e15a059f9a56",
+        "readback_event_id": "sha256:a6d7dfaf1b0dddeeee936b2455f42a99ddceba5dcf4921ab8e1a7a784da9e6fe",
+        "record_event_id": "sha256:67e52d92f6b70ad799e270abb4f413a4b2b4a6f6bffb16a029869ad955ff1b7c",
         "state_sha256": "sha256:71eea9117303a36db88624d93222f08c4c448968b0250eb37c72e806b909861b"
       },
       {
         "carrier_id": "carrier-00005",
-        "readback_event_id": "sha256:37fcf1874bb9c51af3e54f27e96b63c62ab3fa6da10830b5a9ce8159efa9a383",
-        "record_event_id": "sha256:1c8cbed3f606481f4bdd2e7827a5bb6c644df0cbc39e77c320f2d560e9bc14b4",
+        "readback_event_id": "sha256:ac5ce92edd5d09e511b77685ffc6746045b78db09a91c013b9307786cdafe1b8",
+        "record_event_id": "sha256:4d15b589a272faa09257d1f2b89f50db97903d58d24b119c1d93fe03ffb2ea01",
         "state_sha256": "sha256:0527013e7913076e254511109c7015b1512028726a32bef201ac13b075b92448"
       },
       {
         "carrier_id": "carrier-00005",
-        "readback_event_id": "sha256:129a02761e566a7bfa24eefa10f3178a4ed2db32a61c5bd266b21d0a941960db",
-        "record_event_id": "sha256:30ef09483c60c41a6c6cb54a3953e0dd26700e83db7fd52adb05f6142134c508",
+        "readback_event_id": "sha256:879edaa9c0d2ab707e564b62824df28598660301ebb73747bd7fb4725bfbd6b8",
+        "record_event_id": "sha256:93e4c06291f31402a55ccd4283152b8f3d50d827f3a55a046cb58340342240d1",
         "state_sha256": "sha256:0527013e7913076e254511109c7015b1512028726a32bef201ac13b075b92448"
       },
       {
         "carrier_id": "carrier-00005",
-        "readback_event_id": "sha256:ce99ec0673d492967e75be9d905b48bae100acfda7ba8f46bf4688ddacd031c9",
-        "record_event_id": "sha256:4134c5cdc101062f9e7f0ddb1ad46b6f3c329427e3dfd2cabe78ea277c14d4bc",
+        "readback_event_id": "sha256:5873a17a6e466a81ba26eaf32f382a195ace10b676c2375f9cafcf618ae38ca1",
+        "record_event_id": "sha256:e54e3fa51522d18d2b1627b355d9688977a92e097f6a06abf4f6da80fbbbcf78",
         "state_sha256": "sha256:0527013e7913076e254511109c7015b1512028726a32bef201ac13b075b92448"
       },
       {
         "carrier_id": "carrier-00006",
-        "readback_event_id": "sha256:febada58461f581d316d88df42eff8bbfbb98b7bff31e09446e4a944fb6b06ca",
-        "record_event_id": "sha256:5760cfb7706825472bf56129a074a707bcc29466acee2e148f70e9aa170441c8",
+        "readback_event_id": "sha256:efc8e052c8d271bec92334c5bbefcfc33313feb6c135546bd37634b14acd2d8c",
+        "record_event_id": "sha256:abab10b837298e92c893a7f7d8fff55bcc8c16311f4cdcc688dfa4e9841c850b",
         "state_sha256": "sha256:50bee572138ba209cd9e0adbbccd0ab3effcd27eb18e48c644ae27fe287c5101"
       },
       {
         "carrier_id": "carrier-00006",
-        "readback_event_id": "sha256:37edc473a4ddaceaa870ed886392382689a47ecd3764ddb443d3a838d392e2b2",
-        "record_event_id": "sha256:73d90862870b2bd1a71e4bdafc966740028424060decd02f38f50e45c3a92e73",
+        "readback_event_id": "sha256:f70428aa940bda32ed43bdc4261ee3dba059aa21d9a6c9a8342300fbc6ebc93a",
+        "record_event_id": "sha256:acbe3a3939577b04866cf0666be6f37f0ed0f9136d9af4a01c82ad285eb1524f",
         "state_sha256": "sha256:50bee572138ba209cd9e0adbbccd0ab3effcd27eb18e48c644ae27fe287c5101"
       },
       {
         "carrier_id": "carrier-00006",
-        "readback_event_id": "sha256:539e33a71053b4229f587d662b6ae5be949686301201eb19ae4e84c0e80d8d9f",
-        "record_event_id": "sha256:b56a03832fe7ec4f53eb9c2d08fedfe39ff313f8c730d16a31d1b140f5b9a485",
+        "readback_event_id": "sha256:b1f372b107c17c4a686b0380d73f52e9034778b37d0c2deb41fccdaaeb21fa55",
+        "record_event_id": "sha256:f959fcf99abe84c97ecff369fce0a17a10d1d5f7d18f303df50f1096f34efafa",
         "state_sha256": "sha256:50bee572138ba209cd9e0adbbccd0ab3effcd27eb18e48c644ae27fe287c5101"
       },
       {
         "carrier_id": "carrier-00007",
-        "readback_event_id": "sha256:ef0cc9586bdd0466016fafeba068e5a3068221489f409e7e50d2ffbe4878a46d",
-        "record_event_id": "sha256:6ee1996902c6d8df6cd0f48b97060f76433b563b8430abd572be6671d4a61cdd",
+        "readback_event_id": "sha256:d51160225042d77af176a74c838a4d45c4d8c9574bfbceb55be17cd153eba2fa",
+        "record_event_id": "sha256:2e7cd4b4ac4dd2fb20d8bd6ee33dad091054514f021a4130ae3ca3d8fe06e2b0",
         "state_sha256": "sha256:41a77877df63ccc0815aed9b9afb50139eddb204f7f1fbe7057c89d051dd645f"
       },
       {
         "carrier_id": "carrier-00007",
-        "readback_event_id": "sha256:8fc4c70cd555d4e3df7507620187c9ade2b133fc902b7024b7bb0b4bf635caa3",
-        "record_event_id": "sha256:8e527303d2af2d7a8811d6b243a431dff502abf1d4420ec2ad7aa062dd7fb251",
+        "readback_event_id": "sha256:1acb01bd2dfb8e568b9b78e08bdd00123d1ac179d2f60f5c41c36cdf4c195378",
+        "record_event_id": "sha256:4a43699ce273face41131d33d403d40bab2f6c0900cf4d8d8fa470ac6212430c",
         "state_sha256": "sha256:41a77877df63ccc0815aed9b9afb50139eddb204f7f1fbe7057c89d051dd645f"
       },
       {
         "carrier_id": "carrier-00007",
-        "readback_event_id": "sha256:96dd464e4e65aa2564dd46bc316e68488283521b1f825c66960a23a1c024be5d",
-        "record_event_id": "sha256:c1de4427bc24b7c26f01c93b68b42aa1ad8c302db45e5dbd5659280f51e2c08c",
+        "readback_event_id": "sha256:2b1f278b976eed431d06e7b7dd65c05ffaff812a93b74c58b9db594e2e808fcd",
+        "record_event_id": "sha256:866ba7ff30432a2f3d4eb1e3684dc4f5970b55b1ecdb30eedf580857fe3c797c",
         "state_sha256": "sha256:41a77877df63ccc0815aed9b9afb50139eddb204f7f1fbe7057c89d051dd645f"
       }
     ],
-    "record_readback_pairs_sha256": "sha256:c85beeaa390607eaccadcae2f9b6a0e5803c409ef30888b8dc6289b0e5b4d64d",
+    "record_readback_pairs_sha256": "sha256:7833e9a7ad55aee884c95baf5b1e62088e7403992b713e09dec57b7c8d9f553f",
     "snapshot_cycle": 0,
     "terminal_state_rows_sha256": "sha256:bdc02a96f6c476c92b3561312033940f694f0bc8b5c582fecfe6b8d169af075e",
-    "visible_state_sha256": "sha256:1a3ab9234667421f601fd66ac0d9969d2e78bc226d37894059fecf0ac7560948"
+    "visible_state_sha256": "sha256:7f77456f70d6d3b9fe4d0bf1e65b948a168a0ae2ced3bcceb02d8d1ef05d71aa"
   },
   "quotient_and_spatial_boundary": {
     "a5_covariant_site_action_receipt": false,
@@ -732,7 +732,7 @@
     "same_operator_physical_readout_receipt": false,
     "scalar_or_polarization_sector_attachment_receipt": false
   },
-  "receipt_sha256": "sha256:84563042e6770dbb84df11ad0a57b4852cbebe47627e7c7446c00ac9d25b7d0c",
+  "receipt_sha256": "sha256:45196b01ae3b0d3aba89f683ae5dfa885f20386d80ac093cdc9d85994e898796",
   "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
   "source_capture_binding": {
     "artifact_type": "OPH_TARGET_BLIND_FINITE_SOURCE_CAPTURE",
@@ -743,13 +743,13 @@
     "finite_federation_realization_receipt": true,
     "finite_source_architecture_receipt": true,
     "input_config_sha256": "sha256:9a227653afd42c889f71939a2e9c0e8bc6ad8b63da8dc75a15dbb7a0b146e15b",
-    "observer_log_sha256": "sha256:d75418f5ac3480d800b4792b357e0d1bbce9a9e1b544b0229e9802a6dd14558e",
-    "postrun_capture_sha256": "sha256:1451d7d9798e2f24711e1ad10e2921002ba5b657117bbe37391ae80e7301ae6f",
-    "repair_log_sha256": "sha256:d7264b081c045624855f9bde1bce4a6b97675cd00c9cfd3b950533228eb496b1",
+    "observer_log_sha256": "sha256:e183e05d62ad166aff71e9e769b21528e8a809e85ca62d80432969654f4ca8b6",
+    "postrun_capture_sha256": "sha256:beb1fb8c4fc0df603991e9498b7c944ef53b9d7b0d8b20b4d3505b8d0927549a",
+    "repair_log_sha256": "sha256:624ddadd0c46a51aa85ea21f0539646e15ed120d3c910c33e137af3ddf42d289",
     "schema": "oph.physical-source-capture/1.0.0",
     "source_capture_replay_receipt": true,
     "source_engine_independently_reimplemented": false,
-    "source_state_root_sha256": "sha256:3e247c95baf20b883d94660fe0a56ea1cd6a647a2f1c71d61c3e961c6d90340a",
+    "source_state_root_sha256": "sha256:e3db0d964072dd7b07595c81a502bd7fce8b418ccbb83072acd024dd53ce93a4",
     "target_or_comparison_token_hits": []
   },
   "source_config": {
@@ -800,7 +800,7 @@
         "seam_id": "seam-p00-000002"
       },
       {
-        "event_id": "sha256:465da1ea8bd9cd6b44b4a17a76f639c16a4c3824d95c10998d9541ae7f1a9d40",
+        "event_id": "sha256:b755cc659e6850a098a6c897fd953ddc672fa97c9943f65e905e069750763d95",
         "port": 0,
         "seam_id": "seam-p00-000003"
       },
@@ -830,12 +830,12 @@
         "seam_id": "seam-p02-000000"
       },
       {
-        "event_id": "sha256:d2fe4acd621b6a82980a8442f677a14991f27c47cf2724d06fb0a9d2c83bfd58",
+        "event_id": "sha256:d0c95d4c444235cbe093187841270e2199c5a0221242b01a46076b5752ca2af9",
         "port": 2,
         "seam_id": "seam-p02-000001"
       },
       {
-        "event_id": "sha256:8430becf282d0b960a4b8f10ecd2468f9eb65db78fcfa9991c8cf850bc34c447",
+        "event_id": "sha256:6d70e06a55fbbacd2f87818960254e8a51977bdf22c6c5c69729bc755c4b0262",
         "port": 2,
         "seam_id": "seam-p02-000002"
       },
@@ -880,7 +880,7 @@
         "seam_id": "seam-p04-000002"
       },
       {
-        "event_id": "sha256:b145a750946a6fcc6864c5d2307b522b639ce65c9ec35eae4a2612bd1f0185f3",
+        "event_id": "sha256:7f46d1f14c240c02e7fd0ef74c621994f148baa043d82bac609f31848eb9c9d1",
         "port": 4,
         "seam_id": "seam-p04-000003"
       },
@@ -1025,7 +1025,7 @@
         "seam_id": "seam-p11-000003"
       }
     ],
-    "event_rows_sha256": "sha256:f1deca5c9539fc8288403753929860b876756c303b4bb392ad575234f5b00102",
+    "event_rows_sha256": "sha256:435d29a407fa71515ff5e1fbd4f05d7d58e4874c58c5deee9b12862f7930fc67",
     "every_event_matches_atomic_two_endpoint_mean_rule_within_serialized_tolerance": true,
     "every_event_matches_named_federation_seam": true,
     "every_seam_replayed_once": true,

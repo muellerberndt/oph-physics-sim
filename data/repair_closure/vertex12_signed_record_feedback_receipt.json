@@ -42364,9 +42364,9 @@
       "raw_pin": {
         "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:573cd6ecd2ea0095d4b29733a768f8feefa056f10f990ae6679b5d7ea729b38c"
+        "sha256": "sha256:198e8abbea53a927754663e0bdcc7aa2641036315d2b299c8fcb1e0349d737cf"
       },
-      "receipt_sha256": "sha256:84563042e6770dbb84df11ad0a57b4852cbebe47627e7c7446c00ac9d25b7d0c",
+      "receipt_sha256": "sha256:45196b01ae3b0d3aba89f683ae5dfa885f20386d80ac093cdc9d85994e898796",
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "status": "INTERNAL_VERTEX12_SEAM_MATCHING_PROJECTORS_AND_IN_PROCESS_SNAPSHOT_REREAD_ATTAINED__SPATIAL_PHYSICAL_BRIDGE_OPEN"
     },
@@ -42374,14 +42374,14 @@
       "raw_pin": {
         "bytes": 2018887,
         "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-        "sha256": "sha256:7e8c5635d6c9fb20f581e3631d1b0d0eb8dc991e48427285acae523e74453219"
+        "sha256": "sha256:7867e516233550d7ba0362de240a0f92b8def8fa9eb1dfe063629dc9066cdcac"
       },
-      "receipt_sha256": "sha256:a964f99cc4919fb54463d571976f4dc0b2b546ade9b5c7a8e17fc734f53fbc5a",
+      "receipt_sha256": "sha256:a4820a9e8d12802f08587ded6b0bf99cbc70a1c8ae77d9360034bd2fee126cfe",
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "status": "CONSTRUCTIVE_SOURCE_LAW_CONTROL_ATTAINED__CANONICAL_A1_A2_A3_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
     }
   },
-  "receipt_sha256": "sha256:83a164d2dcf375e358fad180aaaaa9f5366d400e33c65728e0207fdb6a2593c7",
+  "receipt_sha256": "sha256:00227c8340bd5a4f39fd96c4f22f68d33a1eadca823cbd66b19e3a6ac6d2e89b",
   "schema": "oph.vertex12-signed-record-feedback-diagnostic.v1",
   "status": "INTERNAL_BOUNDED_LITERAL_SIGNED_RECORD_CAUSAL_FEEDBACK_ATTAINED__CANONICAL_SOURCE_SELECTION_AND_PHYSICAL_ATTACHMENT_OPEN"
 }
