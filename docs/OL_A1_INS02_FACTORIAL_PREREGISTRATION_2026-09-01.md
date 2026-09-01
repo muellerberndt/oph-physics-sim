@@ -130,6 +130,13 @@ and may not be revisited after data.
 The frozen driver does not exist yet. Stage S2 commits it with an addendum
 manifest pinning its sha256; the driver must implement this document with
 no semantic discretion, and any deviation voids the campaign to S0.
+Architecture-change declaration: this instrument requires no new exports,
+conserved labels, or producer capabilities; it consumes only the pinned
+existing code paths above. If stage S2 finds otherwise, the change goes
+through the upstream premise register's recorded-decision process before
+any run, the recorded decision id is added to the seed table, and a run
+without it is a P0 nonconformance.
+
 Environment at run time: single process, one recorded runtime environment,
 thread pinning `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 VECLIB_MAXIMUM_THREADS=1 NUMEXPR_NUM_THREADS=1`.

@@ -80,6 +80,14 @@ example `standardize` on the quadratic-form fit) are pinned to explicit
 values here, not left to defaults. The runtime environment pinning (thread
 variables, single recorded environment) is declared.
 
+Every instance also carries an **architecture-change declaration**: whether
+the instrument needs any architecture change (new exports, conserved
+labels, producer capabilities). If it does, the upstream premise register's
+recorded-decision process must complete before stage S3, the recorded
+decision id is added to the seed table, and a run without it is a P0
+nonconformance. If it does not, the instance says so and consumes only
+pinned existing code paths.
+
 **4. Declared observables.** Each observable gets an id, an exact
 computational definition in terms of the pinned code, a declared reference
 value or band with the provenance and claim tag of that reference, and an
