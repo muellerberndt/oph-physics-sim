@@ -231,7 +231,7 @@ def replay_inputs(monkeypatch: pytest.MonkeyPatch) -> ReplayInputs:
             "P3_independent_geometric_parameter",
             "P4_native_bw01_bw08",
             "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
-            "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+            "P7_legacy_prescribed_event_chart_cone_diagnostic",
             "P8_frozen_multiseed_four_rung_campaign",
         )
         stage_epistemics = {

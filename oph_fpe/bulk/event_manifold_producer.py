@@ -1,11 +1,10 @@
-"""Finite event-manifold candidate instrument.
+"""Finite prescribed event-chart/cone diagnostic.
 
-The Einstein branch tests a candidate Lorentzian event description reconstructed
-from observer events: event classes from semantic ancestry, a prescribed
-four-coordinate embedding, a held-out quadratic form of inertia (1,3), a
-positive cone margin separating
-ancestry-comparable from incomparable pairs, and causal reachability.  These
-are the named E1--E6 finite event-manifold clauses.
+This compatibility diagnostic starts from observer events, constructs a
+prescribed four-feature chart, and tests a held-out quadratic form.  It is not
+the source-derived causal-manifold-limit gate: the spatial coordinate count is
+fixed by the diagnostic and therefore cannot establish dimension,
+manifoldlikeness, faithful embedding, volume, or a continuum limit.
 
 This instrument derives everything from the frozen capture: event classes and
 their causal order from the semantic ancestry relations; a candidate
@@ -16,11 +15,12 @@ footprint; a quadratic form fitted on a declared training half of the event
 pairs and evaluated on the held-out half; the inertia of that form; and the
 cone margin with which it separates causal from spacelike pairs.
 
-The verdicts are measured fail-closed.  In particular the instrument detects
+The diagnostic verdicts are measured fail-closed.  In particular the instrument detects
 and reports degenerate causal structure: when the observer history is a
 near-chain, the spacelike class is too small to support any cone, and that
 insufficiency is the recorded result rather than an excuse to weaken the
-test.  No physical promotion follows from any output of this module.
+test.  No physical promotion follows from any output of this module, including
+a future positive compatibility verdict.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ from oph_fpe.bulk.source_derived_causal_order import (
     generated_provenance_edges,
 )
 
-SCHEMA = "oph.event-manifold-producer.v1"
+SCHEMA = "oph.finite-event-chart-cone-diagnostic.v2"
 PHYSICAL_PROMOTION_ALLOWED = False
 MIN_SPACELIKE_PAIRS = 8
 MIN_CAUSAL_PAIRS = 8
@@ -440,7 +440,7 @@ def produce_event_manifold_report(
             "source_derived_causal_order_verified": bool(
                 table["source_derived_causal_order_verified"]
             ),
-            "candidate_four_coordinate_embedding_constructed": True,
+            "prescribed_four_coordinate_feature_chart_constructed": True,
             "nondegenerate_causal_structure": bool(
                 causal_count >= MIN_CAUSAL_PAIRS
                 and spacelike_count >= MIN_SPACELIKE_PAIRS
@@ -450,22 +450,35 @@ def produce_event_manifold_report(
         },
         "negative_controls": controls,
         "controls_fail_closed": bool(controls_fail_closed),
+        "diagnostic_verdict": verdict,
         "verdict": verdict,
-        "EVENT_MANIFOLD_RECEIPT": bool(verdict == "ATTAINED"),
+        "PRESCRIBED_EVENT_CHART_CONE_COMPATIBILITY_DIAGNOSTIC": bool(
+            verdict == "ATTAINED"
+        ),
+        "FINITE_EVENT_CHART_DIAGNOSTIC_REPRODUCTION_RECEIPT": bool(
+            controls_fail_closed
+        ),
+        "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT": False,
+        # Retired compatibility field.  It is deliberately never
+        # promotion-bearing, even if the prescribed-chart diagnostic happens
+        # to fit a Lorentzian form in a future run.
+        "EVENT_MANIFOLD_RECEIPT": False,
+        "legacy_event_manifold_receipt_retired": True,
         "blockers": sorted(set(blockers)),
         "claim_boundary": (
-            "Finite event-manifold candidate instrument: event classes and "
-            "causal order from "
-            "semantic ancestry, plus a candidate four-coordinate embedding "
+            "Finite prescribed event-chart/cone compatibility diagnostic: "
+            "event classes and causal order from semantic ancestry, plus a "
+            "four-feature chart "
             "made from ancestry depth and a preselected three-coordinate "
             "seam-graph spectral embedding, and a held-out quadratic form "
-            "with measured inertia and cone margin. A NOT_ATTAINED verdict, "
+            "with measured inertia and cone margin. A NOT_ATTAINED diagnostic, "
             "including the degenerate-causal-structure blocker, is an "
             "empirical result about this source at this cutoff. The spatial "
             "coordinate count is an ansatz, not independent dimension "
             "evidence. No open-chart topology, continuum limit, or physical "
-            "metric is claimed, and no physical promotion follows from any "
-            "output."
+            "metric is claimed. Even an ATTAINED compatibility diagnostic "
+            "cannot establish the source-derived causal 3+1 manifold limit, "
+            "and no physical promotion follows from any output."
         ),
     }
     if output_path is not None:

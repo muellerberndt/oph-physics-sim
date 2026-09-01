@@ -15,6 +15,7 @@ from oph_fpe.claims import (
     EVENT_MANIFOLD_3P1D_RECEIPT,
     H3_FRAME_FIBER_CHART_RECEIPT,
     PAPER_THEOREM_3D_BULK_CHART_RECEIPT,
+    SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT,
 )
 from oph_fpe.core.graph import fibonacci_sphere_points
 
@@ -60,6 +61,8 @@ def conformal_h3_spatial_chart_report(caps: list[RoundCap]) -> dict[str, Any]:
             "dim SO+(3,1)-dim SO(3)=6-3=3",
         ),
         EVENT_MANIFOLD_3P1D_RECEIPT: False,
+        SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT: False,
+        "legacy_event_manifold_3p1d_receipt_retired": True,
         "record_populated_h3_receipt": False,
         "defect_localized_in_h3_receipt": False,
         "claim_boundary": (
@@ -126,9 +129,8 @@ def paper_theorem_3d_bulk_chart_report(
     )
     object_report = observer_chart_object_report or {}
     neutral = neutral_report or {}
-    event_manifold_receipt = bool(
-        neutral.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
-        or neutral.get("event_manifold_3p1d_receipt", False)
+    source_causal_manifold_limit = bool(
+        neutral.get(SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT, False)
     )
     localized_object_precursor = bool(
         object_report.get("localized_object_precursor_receipt", False)
@@ -158,7 +160,9 @@ def paper_theorem_3d_bulk_chart_report(
         and spatial_dimension == 3
         and chart_dimension == 3
     )
-    chart_receipt_pass = bool(frame_fiber_receipt and event_manifold_receipt)
+    chart_receipt_pass = bool(
+        frame_fiber_receipt and source_causal_manifold_limit
+    )
     assumed_chart_receipt = bool(
         chart_receipt
         and lorentz_receipt
@@ -173,8 +177,9 @@ def paper_theorem_3d_bulk_chart_report(
         "paper_theorem_3d_bulk_chart_receipt": chart_receipt_pass,
         H3_FRAME_FIBER_CHART_RECEIPT: frame_fiber_receipt,
         "h3_frame_fiber_chart_receipt": frame_fiber_receipt,
-        EVENT_MANIFOLD_3P1D_RECEIPT: event_manifold_receipt,
-        "event_manifold_3p1d_receipt": event_manifold_receipt,
+        SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT: source_causal_manifold_limit,
+        EVENT_MANIFOLD_3P1D_RECEIPT: False,
+        "legacy_event_manifold_3p1d_receipt_retired": True,
         "paper_theorem_object_populated_chart_precursor_receipt": bool(
             frame_fiber_receipt and object_precursor
         ),

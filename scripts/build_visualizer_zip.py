@@ -44,7 +44,6 @@ for doc in (
     "oph_visualizer_pack_v2.schema.json",
     "SIMULATION_ASSUMPTION_POLICY.md",
     "VISUALIZATION_APP_AGENT_MANUAL.md",
-    "SCALING_MILESTONE_ESTIMATES_2026-07-13.md",
     "BEST_OF_PUBLIC_DATA_COMPARISONS.md",
     "WHAT_OPH_FPE_DOES.md",
 ):

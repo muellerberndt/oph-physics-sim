@@ -109,16 +109,29 @@
     },
     {
       "critical_bridge_evidence": null,
-      "disposition": "IMPOSED_FCC_RANK3_COARSE_CAUSAL_SIGNATURE_CONTROL__NOT_CURRENT_FEDERATION_OR_PHYSICAL_PROMOTION",
-      "path": "data/causal_order/rank3_fcc_causet_compatibility_receipt.json",
+      "disposition": "COMPACT_PUBLICATION_PROJECTION__BINDS_FULL_REPLAYED_RECEIPT__NO_PHYSICAL_PROMOTION",
+      "path": "data/causal_order/source_causal_history_family_publication_projection.json",
       "raw_pin": {
-        "bytes": 62949,
-        "path": "data/causal_order/rank3_fcc_causet_compatibility_receipt.json",
-        "sha256": "sha256:5b002755d1267a0936b7fb0f903b9ead628ce5ec6381b1c42adcc91347df193c"
+        "bytes": 15172,
+        "path": "data/causal_order/source_causal_history_family_publication_projection.json",
+        "sha256": "sha256:71e7bd82464ae76756a43be43e7e0a1d9379394dee1d05ed721e2a83efe80a08"
       },
-      "schema": "oph.rank3-fcc-causal-order-compatibility.v2",
+      "schema": "oph.source-causal-history-family-publication-projection.v1",
       "semantic_scan_excluded_as_recursive_output": false,
-      "status": "BOUNDED_RANK3_PLUS_TIME_ARCHITECTURE_COMPATIBILITY_FIXTURE_PASSED"
+      "status": "CERTIFIED_INFORMATIONAL_HISTORY_EXTENSION_FAMILY__FIXED_WIDTH_NOT_SPACETIME_REFINEMENT"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_INDUCED_HISTORY_PREFIX_FAMILY__NEGATIVE_RANK3_CONE_AND_MANIFOLD_PROMOTION",
+      "path": "data/causal_order/source_causal_history_family_receipt.json",
+      "raw_pin": {
+        "bytes": 908189,
+        "path": "data/causal_order/source_causal_history_family_receipt.json",
+        "sha256": "sha256:5416931a05a9acf1f67b0f01f6747a61e4655803946f2b49a643351f5fdf543d"
+      },
+      "schema": "oph.source-causal-history-family.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "CERTIFIED_INFORMATIONAL_HISTORY_EXTENSION_FAMILY__FIXED_WIDTH_NOT_SPACETIME_REFINEMENT"
     },
     {
       "critical_bridge_evidence": null,
@@ -175,7 +188,7 @@
       "raw_pin": {
         "bytes": 32853,
         "path": "data/common_reserve/producer_capability_matrix.json",
-        "sha256": "sha256:cb12d6860b9d4ae2a68e839c6010a9f29b9c30e50133ddddc652d485236e45e6"
+        "sha256": "sha256:7019532cbe9161b321aa5aa56f4648011b24d4ee4404f22fa5ff568fa030e7a1"
       },
       "schema": "oph.common-reserve.capability-matrix.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -822,7 +835,7 @@
       "raw_pin": {
         "bytes": 11609,
         "path": "data/refinement/physical_birefinement_preflight.json",
-        "sha256": "sha256:6f2ae5001bc435ceb259b3d67e82f4891ac06910d575625b0083a36541238d99"
+        "sha256": "sha256:5e8329b1d2f6d9898f1a8a70452ed5aa9b0ecae9c051fa65f6d60398f0cfbefb"
       },
       "schema": "oph.refinement.physical-birefinement-preflight.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1085,7 +1098,7 @@
       "raw_pin": {
         "bytes": 36932,
         "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
-        "sha256": "sha256:9a73f1455cc85120b502eedf794dc7384465ccdbfa91d1c7cd70ba6a0a20ce15"
+        "sha256": "sha256:4fe37b081a4266519121656c598763692f29ff78a897180e6b0893975cebc9c5"
       },
       "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1111,7 +1124,7 @@
       "raw_pin": {
         "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:c8aabb4e5f6d720196246018e559ac7cd3022ac7e5b2f9d405aa36a9aeaeaf6b"
+        "sha256": "sha256:573cd6ecd2ea0095d4b29733a768f8feefa056f10f990ae6679b5d7ea729b38c"
       },
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1146,7 +1159,7 @@
       "raw_pin": {
         "bytes": 2018887,
         "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-        "sha256": "sha256:fed00edb8a557d9c40769a7ce3832ef2a3d700d028d944e541a5c435e36d7789"
+        "sha256": "sha256:7e8c5635d6c9fb20f581e3631d1b0d0eb8dc991e48427285acae523e74453219"
       },
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1176,7 +1189,7 @@
       "raw_pin": {
         "bytes": 55183,
         "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
-        "sha256": "sha256:2bf013bf2b4b62a94f545fb13ddef6ae7ab4bddcba509677860a336be49fb9b1"
+        "sha256": "sha256:e33c4c1933cdf3c09679bd4049217622c57c10ebf0852dc9e36bc2b6caa5f080"
       },
       "schema": "oph.vertex12-directed-transport-feasibility.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1189,7 +1202,7 @@
       "raw_pin": {
         "bytes": 1074185,
         "path": "data/repair_closure/vertex12_signed_record_feedback_receipt.json",
-        "sha256": "sha256:1870370918db0065f03f799797b0f62e144b5afca555ab65b5adbd13bd1a5d2a"
+        "sha256": "sha256:bc01439e0518f9febe75ab56fb4a1edab887b65266cb64b94b7fea9445cb068c"
       },
       "schema": "oph.vertex12-signed-record-feedback-diagnostic.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1210,8 +1223,8 @@
     }
   ],
   "current_canonical_json_contract_scan": {
-    "current_canonical_json_path_count_excluding_recursive_outputs": 63,
-    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:919331ffe545182eab0d6de81d96ca5e822ed21e6d7dc6cd8202813496cc4a93",
+    "current_canonical_json_path_count_excluding_recursive_outputs": 64,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:347683f18467823a1690a9b2619078b4a5239fae0d898b1587618905d6a9311d",
     "positive_promotion_signal_rows_excluding_recursive_outputs": [],
     "recursive_output_paths_excluded": [
       "data/repair_closure/port_gram_completion_bridge_receipt.json",
@@ -1235,9 +1248,9 @@
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 83463,
+      "bytes": 83820,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:dfb25ff2595b0d64178a968623636bb272eae5d2f231d2c0af90d79917c0e79b"
+      "sha256": "sha256:e41c878effb440e3f2dd988c917117bd485e1c2b86bbd1de52e134c4c6520f5a"
     },
     "mutation_tests": {
       "bytes": 39887,
@@ -1245,9 +1258,9 @@
       "sha256": "sha256:98e0f8cfacaf242c57b4685fa578ad1a02d5849fc68cdc34c3d2954cfe830947"
     },
     "producer": {
-      "bytes": 85877,
+      "bytes": 86234,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:f92f448c03e013432a2db97da5fbdbf9ecf08d55bf1447c0402cc3c14090802b"
+      "sha256": "sha256:5614f39358c92964cd62bc0bad5a6fa88196acb84ae39b963129c87aac9a49d0"
     }
   },
   "issue": 655,
@@ -1268,17 +1281,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:39010cf5f7faee6c33dcf7d4f19f47ef35423066bd44e2b5cd587706db615dd0",
+  "receipt_sha256": "sha256:818e80e0aac51a2d8be3df79c7ba6546e303c9c37e4d7e10e0fa1d1c5a3c8393",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1039,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:0ca096123ae9f08afdab6cea7f0ad59e2544770be5996cb7f110543cf260c042",
-    "path_count_including_declared_recursive_outputs": 1045,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:9f6c1d258e590f85bf8e2776cf3d203cb3ca523ee2f79a345567377870a6ede8",
+    "content_index_row_count_excluding_recursive_outputs": 1040,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:74d2152bc66e91926c5c04a24adffc581e3762b9d319fab3537536055744e25d",
+    "path_count_including_declared_recursive_outputs": 1046,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:10654c4f4522c40900b998cb177dc0b3f067b5d93c1e0a4030aa306a5782f95d",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 79,
+      "CURRENT_SIMULATOR_ARTIFACT": 80,
       "EXTERNAL_OR_COMPARISON_DATA": 41,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895

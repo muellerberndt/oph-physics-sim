@@ -3,10 +3,9 @@
 
 Writes RUN_HIGHLIGHTS.md and run_highlights.json into a run directory.
 Every row is read from THIS run's receipts and artifacts; run artifacts
-carry no paper-side physics-comparison rows. Public-data comparison
-lanes live in the paper-side documents (the experiment tracker section
-0a and docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md). Each emitted row keeps
-the scope of its named receipt.
+carry no paper-side physics-comparison rows. Public-data comparison contracts
+live in docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md. Each emitted row keeps the
+scope of its named receipt.
 """
 from __future__ import annotations
 
@@ -78,9 +77,9 @@ milestones = [
         "detail": "perturb/resettle candidate with controls",
     },
     {
-        "milestone": "Observer-facing 3+1D experience (all four gates)",
+        "milestone": "Observer-local modular/H3 chart compatibility",
         "receipt": bool(experience.get("observer_facing_3p1d_h3_experience_receipt")),
-        "detail": "integer 3 spatial + 1 modular time; never a fractional bulk",
+        "detail": "legacy-named local chart bundle; not a physical manifold receipt",
     },
     {
         "milestone": "Shared-record gauge agreement",
@@ -116,7 +115,7 @@ milestones = [
         "detail": "glued objective bulk; blockers in neutral_3d_bulk_audit_report.md",
     },
     {
-        "milestone": "Einstein branch entry (E1-E6)",
+        "milestone": "Einstein effective-description branch entry",
         "receipt": bool(einstein.get("einstein_branch_entry_receipt", False)),
         "detail": f"blockers: {einstein.get('einstein_branch_entry_blockers')}",
     },
@@ -166,8 +165,7 @@ payload = {
         "Shared-record gauge agreement compares observer views of one committed "
         "record; it does not certify independent per-observer commit histories "
         "or a strict neutral third-person bulk. "
-        "Paper-side public-data comparisons live in "
-        "docs/OPH_SIGNATURE_EXPERIMENT_TRACKER.md (section 0a) and "
+        "Public-data comparison contracts live in "
         "docs/BEST_OF_PUBLIC_DATA_COMPARISONS.md, never in run artifacts."
     ),
     "sources": [

@@ -40,6 +40,7 @@ from oph_fpe.claims import (
     SCREEN_PROXY_CMB_RECEIPT,
     STATIC_GALAXY_LAW_RECEIPT,
     STATIC_GALAXY_RAR_BTFR_RECEIPT,
+    SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT,
     SUPPORT_VISIBLE_H3_POPULATED_BULK_RECEIPT,
     with_claim_metadata,
 )
@@ -2610,14 +2611,20 @@ def run_bw_array_config(config: dict[str, Any], out_dir: Path) -> dict[str, Any]
         and not blind_bulk.get("forbidden_feature_keys_used", [])
     )
     emergence_status["strict_blind_observer_bulk_receipt"] = strict_neutral_bulk_receipt
-    event_manifold_receipt = bool(
-        neutral_report.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
-        or neutral_report.get("event_manifold_3p1d_receipt", False)
+    source_causal_manifold_limit = bool(
+        neutral_report.get(
+            SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT, False
+        )
     )
-    emergence_status[EVENT_MANIFOLD_3P1D_RECEIPT] = event_manifold_receipt
-    emergence_status["event_manifold_3p1d_receipt"] = event_manifold_receipt
-    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = event_manifold_receipt
-    emergence_status["bulk_3d_established"] = event_manifold_receipt
+    emergence_status[
+        SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT
+    ] = source_causal_manifold_limit
+    emergence_status[EVENT_MANIFOLD_3P1D_RECEIPT] = False
+    emergence_status["legacy_event_manifold_3p1d_receipt_retired"] = True
+    emergence_status["spatial_bulk_3d_reconstruction_receipt"] = (
+        strict_neutral_bulk_receipt
+    )
+    emergence_status["bulk_3d_established"] = strict_neutral_bulk_receipt
     emergence_status["lorentz_claim_boundary"] = (
         "chart-level Lorentz receipt is conformal H3 chart plus direct BW/KMS automorphism sanity. "
         "Endogenous observer-record modular generators, object population, neutral bulk reconstruction, "
@@ -5615,9 +5622,10 @@ def _observer_modular_experience_report(
     h3_response_receipt = bool(
         h3_modular_fit_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
     )
-    event_manifold_receipt = bool(
-        paper_3d_chart_report.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
-        or paper_3d_chart_report.get("event_manifold_3p1d_receipt", False)
+    source_causal_manifold_limit = bool(
+        paper_3d_chart_report.get(
+            SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT, False
+        )
     )
     object_population_receipt = bool(
         observer_chart_object_report.get(OBJECT_BULK_POPULATION_RECEIPT, False)
@@ -5631,7 +5639,8 @@ def _observer_modular_experience_report(
         and h3_response_receipt
     )
     observer_3p1d_experience_receipt = bool(
-        observer_h3_frame_fiber_experience_receipt and event_manifold_receipt
+        observer_h3_frame_fiber_experience_receipt
+        and source_causal_manifold_limit
     )
     populated_h3_experience_receipt = bool(
         observer_h3_frame_fiber_experience_receipt
@@ -5642,7 +5651,7 @@ def _observer_modular_experience_report(
         "finite_lorentz_modular_clock_receipt": lorentz_clock_receipt,
         "h3_frame_fiber_chart_receipt": frame_fiber_chart_receipt,
         "h3_modular_response_receipt": h3_response_receipt,
-        "event_manifold_3p1d_receipt": event_manifold_receipt,
+        "source_derived_causal_3p1_manifold_limit_receipt": source_causal_manifold_limit,
     }
     populated_h3_component_gates = {
         "observer_h3_frame_fiber_experience_receipt": observer_h3_frame_fiber_experience_receipt,
@@ -5660,7 +5669,9 @@ def _observer_modular_experience_report(
         "OBSERVER_H3_FRAME_FIBER_EXPERIENCE_RECEIPT": observer_h3_frame_fiber_experience_receipt,
         "observer_h3_frame_fiber_experience_receipt": observer_h3_frame_fiber_experience_receipt,
         H3_FRAME_FIBER_CHART_RECEIPT: frame_fiber_chart_receipt,
-        EVENT_MANIFOLD_3P1D_RECEIPT: event_manifold_receipt,
+        SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT: source_causal_manifold_limit,
+        EVENT_MANIFOLD_3P1D_RECEIPT: False,
+        "legacy_event_manifold_3p1d_receipt_retired": True,
         "observer_facing_populated_h3_experience_receipt": populated_h3_experience_receipt,
         "observer_h3_object_population_receipt": object_population_receipt,
         "declared_bw_kms_branch_replay_receipt": branch_replay_receipt,

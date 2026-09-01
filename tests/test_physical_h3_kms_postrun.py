@@ -622,7 +622,7 @@ def test_postrun_separates_diagnostics_from_physical_measurements(
         "P4_native_bw01_bw08",
         "P5_frozen_candidate_interventions",
         "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+        "P7_legacy_prescribed_event_chart_cone_diagnostic",
         "P8_frozen_multiseed_four_rung_campaign",
     }
     for stage in epistemics.values():
@@ -675,6 +675,8 @@ def test_postrun_separates_diagnostics_from_physical_measurements(
     assert p7["measurement_status"] == "NOT_EVALUATED"
     assert p7["physical_gate_eligible"] is False
     assert p7["EVENT_MANIFOLD_3P1D_RECEIPT"] is False
+    assert p7["SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"] is False
+    assert p7["legacy_event_manifold_3p1d_receipt_retired"] is True
     assert p7["event_clauses"]["EVENT_E3_RANK_FOUR"][
         "independent_clock_receipt"
     ] is False

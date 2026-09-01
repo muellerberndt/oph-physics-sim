@@ -1,4 +1,4 @@
-"""Fail-closed tests for the finite event-manifold candidate instrument."""
+"""Fail-closed tests for the prescribed event-chart/cone diagnostic."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def test_instrument_is_valid_all_controls_fail_closed(report: dict) -> None:
 def test_causal_structure_is_nondegenerate(report: dict) -> None:
     verdicts = report["clause_verdicts"]
     assert verdicts["event_classes_and_order_constructed"] is True
-    assert verdicts["candidate_four_coordinate_embedding_constructed"] is True
+    assert verdicts["prescribed_four_coordinate_feature_chart_constructed"] is True
     assert verdicts["nondegenerate_causal_structure"] is True
     assert report["causal_pair_count"] > 0
     assert report["spacelike_pair_count"] > 0
@@ -52,7 +52,7 @@ def test_current_source_event_geometry_is_not_lorentzian(report: dict) -> None:
     assert tuple(fit["inertia"]) == (4, 0)
     assert tuple(fit["inertia"]) != TARGET_INERTIA
     assert fit["cone_margin"] < 0.0
-    assert report["verdict"] == "NOT_ATTAINED"
+    assert report["diagnostic_verdict"] == "NOT_ATTAINED"
     assert set(report["blockers"]) == {
         "cone_margin_not_positive_on_held_out_pairs",
         "held_out_form_inertia_is_not_lorentzian",
@@ -60,7 +60,11 @@ def test_current_source_event_geometry_is_not_lorentzian(report: dict) -> None:
 
 
 def test_receipt_typing_is_fail_closed(report: dict) -> None:
-    assert report["EVENT_MANIFOLD_RECEIPT"] is (report["verdict"] == "ATTAINED")
+    assert report["EVENT_MANIFOLD_RECEIPT"] is False
+    assert report["legacy_event_manifold_receipt_retired"] is True
+    assert report["SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"] is False
+    assert report["FINITE_EVENT_CHART_DIAGNOSTIC_REPRODUCTION_RECEIPT"] is True
+    assert report["PRESCRIBED_EVENT_CHART_CONE_COMPATIBILITY_DIAGNOSTIC"] is False
     assert report["physical_promotion_allowed"] is False
     assert PHYSICAL_PROMOTION_ALLOWED is False
 

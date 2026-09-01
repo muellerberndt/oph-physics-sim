@@ -33,6 +33,7 @@ from oph_fpe.claims import (
     H3_RESPONSE_CONTROL_SEPARATION_RECEIPT,
     OBJECT_BULK_POPULATION_RECEIPT,
     OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT,
+    SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT,
 )
 from oph_fpe.cosmology.physical_cmb_output import write_physical_cmb_output_comparison_report
 from oph_fpe.cosmology.physical_cmb_prediction import (
@@ -1976,9 +1977,11 @@ def _postprocess_observer_experience(
         original.get(H3_FRAME_FIBER_CHART_RECEIPT, False)
         or component_gates.get("h3_frame_fiber_chart_receipt", False)
     )
-    event_manifold = bool(
-        original.get(EVENT_MANIFOLD_3P1D_RECEIPT, False)
-        or component_gates.get("event_manifold_3p1d_receipt", False)
+    source_causal_manifold_limit = bool(
+        original.get(SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT, False)
+        or component_gates.get(
+            "source_derived_causal_3p1_manifold_limit_receipt", False
+        )
     )
     h3_response = bool(
         h3_report.get(H3_RESPONSE_CANDIDATE_RECEIPT, False)
@@ -1993,7 +1996,7 @@ def _postprocess_observer_experience(
         "finite_lorentz_modular_clock_receipt": finite_clock,
         "h3_frame_fiber_chart_receipt": frame_fiber,
         "h3_modular_response_receipt": h3_response,
-        "event_manifold_3p1d_receipt": event_manifold,
+        "source_derived_causal_3p1_manifold_limit_receipt": source_causal_manifold_limit,
     }
     frame_experience = bool(
         observer_modular_time and finite_clock and frame_fiber and h3_response
@@ -2019,15 +2022,19 @@ def _postprocess_observer_experience(
             "OBSERVER_H3_FRAME_FIBER_EXPERIENCE_RECEIPT": frame_experience,
             "observer_h3_frame_fiber_experience_receipt": frame_experience,
             H3_FRAME_FIBER_CHART_RECEIPT: frame_fiber,
-            EVENT_MANIFOLD_3P1D_RECEIPT: event_manifold,
+            SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT: source_causal_manifold_limit,
+            EVENT_MANIFOLD_3P1D_RECEIPT: False,
+            "legacy_event_manifold_3p1d_receipt_retired": True,
             "observer_facing_populated_h3_experience_receipt": populated_h3,
             "observer_h3_object_population_receipt": object_population,
             "claim_boundary": (
                 str(original.get("claim_boundary", "")).strip()
                 + " Postprocessed after canonical H3 refit/object-chart selection; this only updates "
                 "downstream receipt wiring from selected audited reports and does not relax thresholds. "
-                "H3 is retained as an observer-frame fiber. The 3+1D receipt cannot be raised "
-                "without a separate semantic event/translation manifold, and populated-H3 object "
+                "H3 is retained as an observer-frame fiber. The source-causal 3+1 manifold-limit "
+                "receipt cannot be raised without physical causal attachment, a source-selected "
+                "refinement family, faithful embedding, manifoldlikeness, dimension, count-volume "
+                "calibration, and an event-atlas limit; populated-H3 object "
                 "diagnostics remain a separate lane."
             ).strip(),
         }

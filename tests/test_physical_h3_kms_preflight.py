@@ -676,7 +676,7 @@ def _replay_bound_not_evaluated_ledger() -> dict:
         "P3_independent_geometric_parameter",
         "P4_native_bw01_bw08",
         "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+        "P7_legacy_prescribed_event_chart_cone_diagnostic",
         "P8_frozen_multiseed_four_rung_campaign",
     )
     ledger = {
@@ -884,7 +884,7 @@ def test_caller_authored_not_evaluated_ledger_is_not_trusted() -> None:
         "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage"
     ]["gate_status"] == "PASS"
     assert report["stages"][
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation"
+        "P7_legacy_prescribed_event_chart_cone_diagnostic"
     ]["gate_status"] == "PASS"
     assert report["physical_promotion_allowed"] is False
     assert report["retirement_counting_allowed"] is False
@@ -919,14 +919,18 @@ def test_conforming_synthetic_bundle_is_diagnostic_only_and_cannot_self_admit() 
     graph = report["dependency_graph"]
     assert graph["nodes"]["SOURCE_PATCH_ARCHITECTURE"]["passed"] is True
     assert graph["nodes"][PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT]["passed"] is False
-    assert graph["nodes"]["EVENT_MANIFOLD_3P1D_RECEIPT"]["passed"] is False
+    manifold_limit = "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"
+    assert graph["nodes"][manifold_limit]["passed"] is False
     edges = {(row["from"], row["to"]) for row in graph["edges"]}
     assert ("SOURCE_PATCH_ARCHITECTURE", "LOCAL_REPAIR_DYNAMICS") in edges
     assert ("LOCAL_REPAIR_DYNAMICS", "OBSERVER_SELF_READING_RECORD_LOOP") in edges
     assert ("OBSERVER_SELF_READING_RECORD_LOOP", PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT) in edges
-    assert "independent_event_position_manifold_promotion_receipt" in report[
+    assert "independent_source_causal_manifold_limit_promotion_receipt" in report[
         "downstream_blockers"
-    ]["EVENT_MANIFOLD_3P1D_RECEIPT"]
+    ][manifold_limit]
+    assert "CAUSET_FAITHFUL_EMBEDDING_RECEIPT" in report["downstream_blockers"][
+        manifold_limit
+    ]
 
 
 def test_caller_authored_replay_booleans_cannot_self_admit() -> None:
@@ -1087,13 +1091,13 @@ def test_event_e4_requires_translation_component_not_only_lorentz_frames() -> No
 
     report = physical_h3_kms_preflight_report(bundle)
 
-    stage = report["stages"]["P7_semantic_event_e1_e4_and_frame_fiber_separation"]
+    stage = report["stages"]["P7_legacy_prescribed_event_chart_cone_diagnostic"]
     assert stage["passed"] is True
     assert "EVENT_E4_translation_components_missing" in stage["evidence"][
         "scientific_failures"
     ]
     assert stage["evidence"]["scientific_outcome"] == CellStatus.VALID_FAIL.value
-    assert "event_manifold_e1_e4_missing" not in report["hard_blockers"]
+    assert "legacy_event_chart_cone_diagnostic_incomplete" not in report["hard_blockers"]
     assert report["physical_promotion_allowed"] is False
     assert report["retirement_counting_allowed"] is False
 
@@ -1200,8 +1204,11 @@ def test_broken_readback_feedback_loop_blocks_geometry_gate_and_dependency_graph
     assert report[PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT] is False
     assert "OBSERVER_SELF_READING_RECORD_LOOP_dependency_not_discharged" in stage["blockers"]
     assert graph["nodes"]["OBSERVER_SELF_READING_RECORD_LOOP"]["passed"] is False
-    assert PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT in report["downstream_blockers"][
-        "EVENT_MANIFOLD_3P1D_RECEIPT"
+    assert "PHYSICAL_CAUSAL_ATTACHMENT_RECEIPT" in report["downstream_blockers"][
+        "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"
+    ]
+    assert PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT not in report["downstream_blockers"][
+        "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"
     ]
 
 
@@ -1230,7 +1237,7 @@ def test_current_16k_config_is_rejected_before_an_important_campaign() -> None:
     interventions = report["stages"]["P5_frozen_candidate_interventions"]
     campaign = report["stages"]["P8_frozen_multiseed_four_rung_campaign"]
     semantic = report["stages"][
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation"
+        "P7_legacy_prescribed_event_chart_cone_diagnostic"
     ]
     assert "SOURCE_PATCH_ARCHITECTURE_dependency_not_discharged" in source["blockers"]
     assert "support_regulator_config_is_missing_or_not_icosahedral" in refinement[
@@ -1254,7 +1261,7 @@ def test_h3_cannot_stand_in_for_the_event_position_base() -> None:
 
     report = physical_h3_kms_preflight_report(bundle)
 
-    stage = report["stages"]["P7_semantic_event_e1_e4_and_frame_fiber_separation"]
+    stage = report["stages"]["P7_legacy_prescribed_event_chart_cone_diagnostic"]
     assert stage["passed"] is False
     assert "event_base_not_typed_as_event_position_manifold" in stage["blockers"]
     assert "h3_frame_fiber_and_event_base_not_separated" in stage["blockers"]

@@ -59,9 +59,9 @@ _STAGE_SPECS: tuple[tuple[str, str, str], ...] = (
         "Illustrate a same-holdout comparison whose H3 curve is visually separated; the scores are synthetic renderer data.",
     ),
     (
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation",
-        "Semantic events and frame/fiber separation",
-        "Illustrate event ancestry, causal links, and local frames without claiming a reconstructed 3+1D event manifold.",
+        "P7_legacy_prescribed_event_chart_cone_diagnostic",
+        "Legacy prescribed event-chart/cone diagnostic",
+        "Illustrate event ancestry, causal links, and a prescribed feature chart without claiming faithful embedding, dimension, manifoldlikeness, or a 3+1D manifold limit.",
     ),
     (
         "P8_frozen_multiseed_four_rung_campaign",
@@ -282,7 +282,7 @@ def _display_field_specs(
             ),
             "displayWinner": ("H3", *synthetic),
         },
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation": {
+        "P7_legacy_prescribed_event_chart_cone_diagnostic": {
             "eventDisplayPoints": (
                 [
                     {"eventId": "demo-event-0", "position": [0.0, 0.0, 0.0], "time": 0.0},

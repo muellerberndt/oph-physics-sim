@@ -43,7 +43,7 @@ REQUIRED_CELL_STAGE_IDS = (
     "P4_native_bw01_bw08",
     "P5_frozen_candidate_interventions",
     "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
-    "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+    "P7_legacy_prescribed_event_chart_cone_diagnostic",
 )
 _SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _VALID_CELL_STATUSES = {status.value for status in CellStatus}

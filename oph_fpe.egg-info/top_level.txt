@@ -1,3 +1,0 @@
-oph_fpe
-oph_fractional
-oph_universe

@@ -158,7 +158,7 @@ _REPLAY_BOUND_NOT_EVALUATED_STAGES = (
     "P3_independent_geometric_parameter",
     "P4_native_bw01_bw08",
     "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage",
-    "P7_semantic_event_e1_e4_and_frame_fiber_separation",
+    "P7_legacy_prescribed_event_chart_cone_diagnostic",
     "P8_frozen_multiseed_four_rung_campaign",
 )
 
@@ -235,7 +235,7 @@ def physical_h3_kms_preflight_report(
         "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage": _geometry_control_stage(
             config, _report(evidence, "geometry_controls")
         ),
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation": _semantic_event_stage(
+        "P7_legacy_prescribed_event_chart_cone_diagnostic": _legacy_event_chart_cone_diagnostic_stage(
             config, _report(evidence, "semantic_event")
         ),
         "P8_frozen_multiseed_four_rung_campaign": _campaign_stage(
@@ -250,7 +250,7 @@ def physical_h3_kms_preflight_report(
         "P4_native_bw01_bw08": "native_bw",
         "P5_frozen_candidate_interventions": "candidate_interventions",
         "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage": "geometry_controls",
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation": "semantic_event",
+        "P7_legacy_prescribed_event_chart_cone_diagnostic": "semantic_event",
         "P8_frozen_multiseed_four_rung_campaign": "campaign",
     }
     # A diagnostic checker may enumerate missing fields, but absence is not a
@@ -2045,9 +2045,15 @@ def _geometry_control_stage(
     )
 
 
-def _semantic_event_stage(
+def _legacy_event_chart_cone_diagnostic_stage(
     config: Mapping[str, Any], report: Mapping[str, Any]
 ) -> dict[str, Any]:
+    """Replay the historical E1--E4 packet as compatibility evidence only.
+
+    The serialized clause names are retained so old campaign bundles remain
+    auditable.  This stage cannot discharge any source-causal manifold-limit
+    requirement and is absent from the canonical downstream promotion gate.
+    """
     event_blockers: list[str] = []
     scientific_failures: list[str] = []
     clauses = _mapping(report.get("event_clauses"))
@@ -2331,7 +2337,7 @@ def _semantic_event_stage(
     blockers = [*event_blockers, *dag_blockers]
     hard_blockers: list[str] = []
     if event_blockers:
-        hard_blockers.append("event_manifold_e1_e4_missing")
+        hard_blockers.append("legacy_event_chart_cone_diagnostic_incomplete")
     if dag_blockers:
         hard_blockers.append("semantic_event_dag_missing")
     scientific_status = (
@@ -2353,6 +2359,8 @@ def _semantic_event_stage(
         blockers,
         {
             "event_clause_names": sorted(clauses),
+            "legacy_compatibility_only": True,
+            "source_causal_manifold_promotion_allowed": False,
             "event_clause_status": {
                 "EVENT_E1_POPULATION": clause_passed(e1, "EVENT_E1"),
                 "EVENT_E2_SEPARATION": clause_passed(e2, "EVENT_E2"),
@@ -2712,18 +2720,31 @@ def _dependency_graph(stages: Mapping[str, Mapping[str, Any]], receipt: bool) ->
         else [name for name, stage in stages.items() if stage.get("passed") is not True],
     }
 
+    causal_manifold_limit = "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"
     downstream_specs = {
-        "EVENT_MANIFOLD_3P1D_RECEIPT": [
-            PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT,
-            "independent_event_position_manifold_promotion_receipt",
+        causal_manifold_limit: [
+            "SOURCE_DERIVED_CAUSAL_ORDER_RECEIPT",
+            "PHYSICAL_CAUSAL_ATTACHMENT_RECEIPT",
+            "SOURCE_SELECTED_SPACETIME_REFINEMENT_FAMILY_RECEIPT",
+            "CAUSET_FAITHFUL_EMBEDDING_RECEIPT",
+            "CAUSET_MANIFOLDLIKE_REFINEMENT_RECEIPT",
+            "CAUSET_DIMENSION_3P1_RECEIPT",
+            "CAUSET_COUNT_VOLUME_DENSITY_RECEIPT",
+            "SOURCE_LORENTZ_CONE_COMPATIBILITY_RECEIPT",
+            "SOURCE_CAUSAL_STABLE_TIME_FUNCTION_RECEIPT",
+            "PHYSICAL_SOURCE_CAUSAL_REFINEMENT_COMPATIBILITY_RECEIPT",
+            "EVENT_TOPOLOGY_ATLAS_LIMIT_RECEIPT",
+            "H3_FRAME_FIBER_CHART_RECEIPT",
+            "OPH_LORENTZ_THEOREM_FINITE_CONTRACT_V1",
+            "independent_source_causal_manifold_limit_promotion_receipt",
         ],
         "PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT": [
-            "EVENT_MANIFOLD_3P1D_RECEIPT",
+            causal_manifold_limit,
             "source_derived_gauge_matter_selector_receipt",
             "independent_standard_model_promotion_receipt",
         ],
         "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1": [
-            "EVENT_MANIFOLD_3P1D_RECEIPT",
+            causal_manifold_limit,
             "finite_cap_entropy_stress_area_bridge_receipts",
             "independent_einstein_branch_entry_receipt",
         ],
@@ -2740,8 +2761,8 @@ def _dependency_graph(stages: Mapping[str, Mapping[str, Any]], receipt: bool) ->
         downstream_blockers[dependency_id] = blockers
         nodes[dependency_id] = {
             "dependency_id": dependency_id,
-            "layer": "event_manifold"
-            if dependency_id == "EVENT_MANIFOLD_3P1D_RECEIPT"
+            "layer": "source_causal_manifold_limit"
+            if dependency_id == causal_manifold_limit
             else "standard_model"
             if dependency_id == "PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT"
             else "gravity",
@@ -2761,15 +2782,11 @@ def _dependency_graph(stages: Mapping[str, Mapping[str, Any]], receipt: bool) ->
         },
         {"from": "SOURCE_GENERATOR_TARGET_FREE", "to": PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT},
         {
-            "from": PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT,
-            "to": "EVENT_MANIFOLD_3P1D_RECEIPT",
-        },
-        {
-            "from": "EVENT_MANIFOLD_3P1D_RECEIPT",
+            "from": causal_manifold_limit,
             "to": "PHYSICAL_STANDARD_MODEL_PROMOTION_RECEIPT",
         },
         {
-            "from": "EVENT_MANIFOLD_3P1D_RECEIPT",
+            "from": causal_manifold_limit,
             "to": "OPH_EINSTEIN_BRANCH_ENTRY_CONTRACT_V1",
         },
         {
@@ -2790,7 +2807,7 @@ def _dependency_graph(stages: Mapping[str, Mapping[str, Any]], receipt: bool) ->
             "local_repair",
             "self_reading_observer",
             "h3_kms_geometry",
-            "event_manifold",
+            "source_causal_manifold_limit",
             "standard_model_and_gravity",
         ],
     }

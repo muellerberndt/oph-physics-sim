@@ -224,7 +224,7 @@ def test_h3_frame_fiber_cannot_substitute_for_semantic_event_manifold(
     receipts = {key: True for key in _canonical_keys_for(*stage_ids)}
     receipts.update(
         {
-            "EVENT_MANIFOLD_3P1D_RECEIPT": True,
+            "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT": True,
             "OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT": True,
         }
     )

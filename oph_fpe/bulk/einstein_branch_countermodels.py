@@ -5,7 +5,8 @@ family the branch consumes, a complete tower must exist in which that family
 fails while the others hold, produced by an honest end-to-end run on a
 semantically modified source.  This module builds such countermodels for the
 clause families of the four Einstein-branch instruments (#573 normalization,
-#574 GNS clauses, #575 event manifold, #576 coupling) by modifying source
+#574 GNS clauses, the historical #575 prescribed event-chart/cone diagnostic,
+#576 coupling) by modifying source
 data at the capture level (states, generators, ancestry, ledger), never by
 editing reports or manifests, and then records the isolation vector of each
 full report.

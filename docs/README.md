@@ -1,21 +1,18 @@
 # Simulator documentation
 
-Policy: stable documentation lives here; pass/fail receipt labels live in
-run artifacts under `runs/`; mutable progress lives in GitHub issues
-(linked as full URLs). Generated packs and local configs stay ignored.
+Policy: stable scientific and reproduction documentation lives here. Exact
+receipt values live in canonical data or run artifacts, while mutable project
+progress lives outside this repository. Generated packs and local configs stay
+ignored.
 
 ## Status and experiments
 
 - `WHAT_OPH_FPE_DOES.md`: one-page account of the simulator's finite
   observer-patch loop, evidence bundles, and claim boundary.
-- `OPH_SIGNATURE_EXPERIMENT_TRACKER.md`: living experiment tracker with
-  at-a-glance verdict tables and the results log.
 - `RUN_OUTPUTS_AND_VISUALIZATION.md`: run-output inventory; visualizer
   bundle selection marked.
 - `BEST_OF_PUBLIC_DATA_COMPARISONS.md`: provenance-bound public-data
   comparison suite.
-- `SCALING_MILESTONE_ESTIMATES_2026-07-13.md`: scale milestones,
-  empirical lower bounds, and measured actuals.
 
 ## Contracts and lanes
 

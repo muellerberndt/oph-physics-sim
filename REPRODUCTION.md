@@ -37,6 +37,24 @@ Regenerate and independently verify the bounded source-derived order:
   --receipt data/causal_order/source_derived_causal_order_receipt.json
 ```
 
+Regenerate five independently captured and reconstructed complete-round
+source orders, verify their exact adjacent induced restrictions, and replay
+the prescribed shared-frame rank-three diagnostic. The family is a positive
+informational-history result but has exact width 2 at every checked cutoff.
+The tested placement is negative, while explicitly leaving other
+source-selected placements open because neither inter-carrier frame gluing
+nor the consumed-record barycentre rule is source-derived. It cannot promote
+a physical causal set or a 3+1-dimensional manifold limit:
+
+```bash
+.venv/bin/python -m oph_fpe.bulk.source_causal_history_family \
+  --out data/causal_order/source_causal_history_family_receipt.json \
+  --publication-out data/causal_order/source_causal_history_family_publication_projection.json
+.venv/bin/python -m oph_fpe.bulk.verify_source_causal_history_family_independent \
+  --receipt data/causal_order/source_causal_history_family_receipt.json \
+  --projection data/causal_order/source_causal_history_family_publication_projection.json
+```
+
 Regenerate and independently verify the current-cutoff exploratory causal-set
 diagnostic. Its frozen result is a negative similarity result at that cutoff,
 not a physical no-go or a dimension claim:
@@ -47,20 +65,6 @@ not a physical no-go or a dimension claim:
   --out data/causal_order/causet_likeness_receipt.json
 .venv/bin/python -m oph_fpe.bulk.verify_causet_likeness_independent \
   --receipt data/causal_order/causet_likeness_receipt.json
-```
-
-Regenerate and independently verify the imposed rank-three FCC causal-order
-fixture. Its positive scope is exact provenance, nesting, and cubic/quartic
-carrier-count matches on the bounded grids recorded in the receipt, under
-imposed spatial gluing and temporal depth. The
-additional depth-24 profile control is negative; this is not a finite
-causet-likeness, Lorentz-invariance, or convergence receipt:
-
-```bash
-.venv/bin/python -m oph_fpe.bulk.rank3_fcc_causet_compatibility \
-  --output data/causal_order/rank3_fcc_causet_compatibility_receipt.json
-.venv/bin/python -m oph_fpe.bulk.verify_rank3_fcc_causet_compatibility_independent \
-  --receipt data/causal_order/rank3_fcc_causet_compatibility_receipt.json
 ```
 
 The stochastic-control receipts record the NumPy version used to generate

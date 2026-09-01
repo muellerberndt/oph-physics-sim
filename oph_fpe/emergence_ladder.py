@@ -13,7 +13,8 @@ Three separation rules are encoded in the graph itself:
 * an A5/icosahedral refinement witness is necessary but not sufficient for the
   Standard Model spine;
 * finite consensus is not a geometric or gravitational receipt;
-* an H3 observer-frame fiber is not a 3+1-dimensional event-position manifold.
+* an H3 observer-frame fiber is not a source-derived 3+1-dimensional
+  event-position manifold limit.
 
 The canonical receipt names below intentionally err on the side of requiring a
 new, narrow receipt when an older report has a broader or ambiguous meaning.
@@ -507,9 +508,9 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
     ),
     StageSpec(
         "G4",
-        "Semantic 3+1 event manifold",
+        "Source-derived causal 3+1 manifold limit",
         "geometry",
-        "event_manifold",
+        "source_causal_manifold_limit",
         ("G3",),
         (
             _requirement(
@@ -528,48 +529,59 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
                 "semantic event ancestry is nontrivial, acyclic, and reconstructed from committed dependencies",
             ),
             _requirement(
-                "event_e1_population",
-                "EVENT_E1_POPULATION_DENSITY_RECEIPT",
-                "E1 proves cofinal population density with shrinking covering radii",
-                "E1_EVENT_POPULATION_DENSITY_RECEIPT",
+                "source_derived_causal_order",
+                "SOURCE_DERIVED_CAUSAL_ORDER_RECEIPT",
+                "the event order is regenerated from authenticated read-after-write provenance",
             ),
             _requirement(
-                "event_e2_separation",
-                "EVENT_E2_SEPARATION_GAPS_RECEIPT",
-                "E2 proves uniform positive separation gaps for distinct event germs",
-                "E2_EVENT_SEPARATION_GAPS_RECEIPT",
+                "physical_causal_attachment",
+                "PHYSICAL_CAUSAL_ATTACHMENT_RECEIPT",
+                "the informational source order is attached to physical signal capability",
             ),
             _requirement(
-                "event_e3_rank_four",
-                "EVENT_E3_RANK_FOUR_FRAME_RECEIPT",
-                "E3 reconstructs a rank-four event chart with uniform observability constants",
-                "E3_EVENT_RANK_FOUR_FRAME_RECEIPT",
+                "source_selected_refinement_family",
+                "SOURCE_SELECTED_SPACETIME_REFINEMENT_FAMILY_RECEIPT",
+                "the source law selects a nested density/refinement family rather than longer serialized histories",
             ),
             _requirement(
-                "event_e4_poincare_cocycle",
-                "EVENT_E4_POINCARE_COCYCLE_RECEIPT",
-                "E4 includes Lorentz and translation parts and verifies overlap cocycle closure",
-                "E4_EVENT_POINCARE_COCYCLE_RECEIPT",
+                "causet_faithful_embedding",
+                "CAUSET_FAITHFUL_EMBEDDING_RECEIPT",
+                "an injective placement preserves and reflects causal order at controlled density",
             ),
             _requirement(
-                "heldout_quadratic_cone",
-                "EVENT_HELDOUT_QUADRATIC_CONE_RECEIPT",
-                "a one-timelike-direction quadratic cone and time orientation are inferred on held-out event relations",
+                "causet_manifoldlike_refinement",
+                "CAUSET_MANIFOLDLIKE_REFINEMENT_RECEIPT",
+                "preregistered order and interval statistics are manifoldlike on a cofinal refinement tail",
             ),
             _requirement(
-                "cone_margin_tail",
-                "EVENT_CONE_MARGIN_COFINAL_TAIL_RECEIPT",
-                "the normalized Lorentz-cone margin has a certified positive cofinal tail",
+                "causet_dimension_3p1",
+                "CAUSET_DIMENSION_3P1_RECEIPT",
+                "independent causal-set dimension estimators select three spatial plus one temporal dimension",
             ),
             _requirement(
-                "stable_causality",
-                "EVENT_STABLE_CAUSALITY_RECEIPT",
-                "a source-derived time function certifies stable causality",
+                "causet_count_volume_density",
+                "CAUSET_COUNT_VOLUME_DENSITY_RECEIPT",
+                "calibrated event counts converge to Lorentzian spacetime volume at controlled density",
             ),
             _requirement(
-                "record_cauchy_refinement",
-                "EVENT_RECORD_CAUCHY_REFINEMENT_RECEIPT",
-                "the declared record family is Cauchy-complete under refinement",
+                "source_lorentz_cone",
+                "SOURCE_LORENTZ_CONE_COMPATIBILITY_RECEIPT",
+                "source-derived rank-three carrier coordinates and time recover the causal cone in both directions",
+            ),
+            _requirement(
+                "source_stable_time",
+                "SOURCE_CAUSAL_STABLE_TIME_FUNCTION_RECEIPT",
+                "a source-derived time function remains stably causal along refinement",
+            ),
+            _requirement(
+                "source_refinement_compatibility",
+                "PHYSICAL_SOURCE_CAUSAL_REFINEMENT_COMPATIBILITY_RECEIPT",
+                "record germs and causal order are compatible and complete under the selected refinement maps",
+            ),
+            _requirement(
+                "event_topology_atlas_limit",
+                "EVENT_TOPOLOGY_ATLAS_LIMIT_RECEIPT",
+                "the refinement limit supplies separated event topology and compatible Lorentzian charts",
             ),
             _requirement(
                 "frame_base_separation",
@@ -577,12 +589,12 @@ STAGE_SPECS: tuple[StageSpec, ...] = (
                 "the H3 frame fiber and event-position base are constructed separately",
             ),
             _requirement(
-                "event_manifold",
-                "EVENT_MANIFOLD_3P1D_RECEIPT",
-                "the combined semantic event-manifold contract is complete",
+                "source_causal_manifold_limit",
+                "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT",
+                "the combined source-causal refinement, dimension, volume, cone, and atlas contract is complete",
             ),
         ),
-        "No H3 response, camera embedding, conformal two-sphere, or frame chart can substitute for semantic E1-E4 and a directly inferred quadratic event cone.",
+        "No longer-history prefix, prescribed four-feature chart, fitted quadratic form, H3 response, camera embedding, conformal two-sphere, or frame chart can substitute for a source-selected, faithfully embedded, manifoldlike 3+1 causal refinement limit.",
     ),
     StageSpec(
         "GR0",
@@ -2395,13 +2407,17 @@ def _policy_checks() -> dict[str, bool]:
                 "semantic_event_identity",
                 "forbidden_runtime_metadata",
                 "event_read_after_write_ancestry",
-                "event_e1_population",
-                "event_e2_separation",
-                "event_e3_rank_four",
-                "event_e4_poincare_cocycle",
-                "heldout_quadratic_cone",
+                "source_derived_causal_order",
+                "physical_causal_attachment",
+                "source_selected_refinement_family",
+                "causet_faithful_embedding",
+                "causet_manifoldlike_refinement",
+                "causet_dimension_3p1",
+                "causet_count_volume_density",
+                "source_lorentz_cone",
+                "event_topology_atlas_limit",
                 "frame_base_separation",
-                "event_manifold",
+                "source_causal_manifold_limit",
             }.issubset(semantic_ids)
         ),
         "TARGET_CONFORMANCE_DIAGNOSTICS_ARE_NOT_PRIMITIVE_RECEIPTS": all(

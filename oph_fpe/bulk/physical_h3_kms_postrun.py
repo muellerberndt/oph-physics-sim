@@ -521,7 +521,7 @@ def _compute_postrun_reports(
         "P6_h3_s2_e3_e4_same_holdout_and_curvature_leverage": (
             geometry_stats["stage_assessment"]
         ),
-        "P7_semantic_event_e1_e4_and_frame_fiber_separation": (
+        "P7_legacy_prescribed_event_chart_cone_diagnostic": (
             event_stats["stage_assessment"]
         ),
     }
@@ -2596,6 +2596,8 @@ def _semantic_event_report(
         "measurement_status": CellStatus.NOT_EVALUATED.value,
         "physical_gate_eligible": False,
         "EVENT_MANIFOLD_3P1D_RECEIPT": False,
+        "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT": False,
+        "legacy_event_manifold_3p1d_receipt_retired": True,
         "not_evaluated_reasons": [_P7_REASON],
         "physical_event_chart_input": {
             "status": "UNAVAILABLE",

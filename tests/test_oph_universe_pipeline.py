@@ -112,11 +112,13 @@ def test_oph_universe_postprocess_splits_3p1d_from_populated_h3():
             "observer_modular_time_receipt": True,
             "finite_lorentz_modular_clock_receipt": True,
             "H3_FRAME_FIBER_CHART_RECEIPT": True,
-            "EVENT_MANIFOLD_3P1D_RECEIPT": False,
+            # The retired key is deliberately ignored even when true.
+            "EVENT_MANIFOLD_3P1D_RECEIPT": True,
+            "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT": False,
             "component_gates": {
                 "finite_lorentz_modular_clock_receipt": True,
                 "h3_frame_fiber_chart_receipt": True,
-                "event_manifold_3p1d_receipt": False,
+                "source_derived_causal_3p1_manifold_limit_receipt": False,
             },
         },
         {
@@ -131,7 +133,11 @@ def test_oph_universe_postprocess_splits_3p1d_from_populated_h3():
     assert report["observer_h3_frame_fiber_experience_receipt"] is True
     assert report["OBSERVER_FACING_3P1D_H3_EXPERIENCE_RECEIPT"] is False
     assert report["observer_facing_populated_h3_experience_receipt"] is False
-    assert report["blockers"] == ["event_manifold_3p1d_receipt"]
+    assert report["blockers"] == [
+        "source_derived_causal_3p1_manifold_limit_receipt"
+    ]
+    assert report["EVENT_MANIFOLD_3P1D_RECEIPT"] is False
+    assert report["legacy_event_manifold_3p1d_receipt_retired"] is True
     assert report["populated_h3_experience_blockers"] == ["observer_h3_object_population_receipt"]
 
 

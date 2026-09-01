@@ -1,9 +1,8 @@
 # Best available public-data comparisons
 
-Status 2026-07-14: the cross-repo experiment scoreboard, including rows
-this suite feeds, lives in `OPH_SIGNATURE_EXPERIMENT_TRACKER.md`
-(section 0a). This document stays the contract for the generated
-comparison bundle itself.
+This document defines the contract for the generated public-data comparison
+bundle. Exact results live in the provenance-bound generated bundle rather
+than in a manually maintained experiment scoreboard.
 
 The comparison suite turns the strongest currently available OPH-FPE measurement surfaces into one provenance-bound scoreboard. It selects a primary run before looking at public metrics, binds every CMB report and sidecar to that exact run directory, and keeps evidence classes separate. For each CMB curve it recomputes the single weighted-least-squares amplitude and the entire scaled curve from the raw CAMB bins. The LambdaCDM comparator is the uniquely named, same-run `camb_lcdm_baseline_report.json`, whose Planck hash, bins, model parameters, amplitude, curve, and statistic are independently checked; arbitrary external rows are never minimized over. The suite also fails closed unless the selected Planck, SPARC, and Cassini-summary bytes match `data/measurements/public_measurement_source_manifest_v1.json`; merely hashing whatever file was supplied is not accepted as source integrity. It never emits a combined “OPH score.”
 
@@ -28,17 +27,12 @@ an official likelihood, or validate OPH. Check it independently with:
 python3 tools/verify_public_measurement_sources.py
 ```
 
-## Current result (as of the 2026-07-11 audited primary run)
+## Canonical comparison snapshot
 
-Repository-visible earned-receipt bundles exist at 64k and 128k
-(`oph_universe_64k_3p1d_reearned` and
-`oph_universe_128k_3p1d_earned`). The directory named
-`oph_universe_1m_earned` is an explicit empty-source placeholder, so it is
-ineligible as a primary comparison run until the artifacts are committed or
-hash-pinned with a fetch path. Live verdicts appear in
-`OPH_SIGNATURE_EXPERIMENT_TRACKER.md` section 0a.
-
-The current audited primary run is `runs/oph_universe_64k_final_audited_20260711`. Its strongest available comparisons are mixed:
+The frozen comparison below is generated from the byte-bound primary run
+`runs/oph_universe_64k_final_audited_20260711`. Run-directory names that use
+words such as “earned” or “3p1d” are historical labels and carry no claim
+status. The comparison results are mixed:
 
 | Evidence | Result | Interpretation |
 |---|---:|---|

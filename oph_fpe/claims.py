@@ -64,6 +64,13 @@ CANDIDATE_SCALE_INTERVENTION_INVARIANCE_RECEIPT = (
     "CANDIDATE_SCALE_INTERVENTION_INVARIANCE_RECEIPT"
 )
 H3_FRAME_FIBER_CHART_RECEIPT = "H3_FRAME_FIBER_CHART_RECEIPT"
+# Canonical promotion gate for the effective event-manifold limit.  It is
+# intentionally stronger than any finite prescribed-chart compatibility fit.
+SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT = (
+    "SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT"
+)
+# Deprecated compatibility key.  New code must not use this as a promotion
+# gate; retained only while old serialized packets are replayable.
 EVENT_MANIFOLD_3P1D_RECEIPT = "EVENT_MANIFOLD_3P1D_RECEIPT"
 H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT = "H3_S2_E3_E4_SAME_ROWS_CONTROL_RECEIPT"
 PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT = "PHYSICAL_H3_KMS_PREFLIGHT_RECEIPT"

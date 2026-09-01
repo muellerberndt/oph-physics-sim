@@ -1,10 +1,10 @@
 # Run outputs: postprocessing and visualization inventory
 
-Generated against `runs/oph_universe_64k_3p1d_reearned` (2026-07-14, full
-e4 64k run: ~180 root artifacts, ~750 MB with the timeline). Every file
-below appears in a standard `run-oph-universe` output directory unless
-marked config- or gate-dependent. The visualizer bundle builder
-(`scripts/build_visualizer_zip.py`) selects the subset marked [ZIP].
+This is the stable artifact inventory for `run-oph-universe`. Files appear in
+a run directory when their owning lane is enabled and its input contract is
+satisfied; config- or gate-dependent outputs are marked below. The visualizer
+bundle builder (`scripts/build_visualizer_zip.py`) selects the subset marked
+[ZIP]. No filename or bundle label is itself a scientific receipt.
 
 ## 1. Visualization payloads and viewers
 
@@ -58,8 +58,10 @@ marked config- or gate-dependent. The visualizer bundle builder
   cocycle triples, controls, integer chart verdicts
   (`observer-agreement-report` CLI; `bulk_dimension_claim` null by
   schema).
-- `observer_modular_experience_report.json` [ZIP]: the 3+1D experience
-  receipt with its four component gates.
+- `observer_modular_experience_report.json` [ZIP]: legacy-named bundle of
+  observer-local modular-time and H3-chart compatibility gates. It is not a
+  physical 3+1-dimensional manifold receipt; the source-causal promotion gate
+  is separate.
 - `observer_consensus_report.json`, `observer_consensus_bulk/`,
   `observer_objects.jsonl`, `observer_population_report.json`,
   `observer_perspective_rows.csv` [ZIP], `observer_chart_object_h3_report.json`.
@@ -94,8 +96,9 @@ marked config- or gate-dependent. The visualizer bundle builder
   `neutral_rank_selector_audit/`, `neutral_overlap_graph_sweep/`,
   `neutral_overlap_residual_graph_sweep/`, `neutral_overlap_control/`:
   the sweep evidence the ladder audit consumes.
-- `einstein_bridge_manifest.json` [ZIP]: branch-entry gates E1-E6 and
-  blockers.
+- `einstein_bridge_manifest.json` [ZIP]: finite Einstein-branch compatibility
+  clauses and blockers. It does not replace the upstream
+  `SOURCE_DERIVED_CAUSAL_3P1_MANIFOLD_LIMIT_RECEIPT` gate.
 - `strict_neutral_bulk_frontier_report.{json,md}`.
 - `dimension_report.json`: continuous estimators,
   `claim_level: internal_diagnostic_only` (stub on BW-primary runs).

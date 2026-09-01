@@ -1,9 +1,9 @@
 # Claim lanes: detailed notes
 
-Moved verbatim from the repository README (2026-07-14). Lane-by-lane
-contracts, layer separations, and command references. The compact lane
-summary lives in the README; the living experiment status lives in
-`OPH_SIGNATURE_EXPERIMENT_TRACKER.md`.
+This document records lane-by-lane contracts, layer separations, and command
+references. The compact lane summary lives in the repository README; exact
+finite verdicts live in their producing receipts rather than in a progress
+tracker.
 
 ## Screen, scale, and capacity
 

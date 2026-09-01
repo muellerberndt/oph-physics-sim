@@ -63,7 +63,7 @@ bounded patches -> local readback -> overlap repair -> shared records -> gated r
 
 ## Causal-order evidence
 
-Three machine-readable artifacts separate the current finite result from the
+Three evidence families separate the current finite result from the
 stronger physical claims it does not establish:
 
 - [`source_derived_causal_order_receipt.json`](data/causal_order/source_derived_causal_order_receipt.json)
@@ -71,23 +71,26 @@ stronger physical claims it does not establish:
   read-after-write provenance. Its 38 canonical projected edges agree exactly
   with the declared ancestry; this is an observer-instrumentation order over
   source snapshots, not a complete physical causal order.
+- [`source_causal_history_family_receipt.json`](data/causal_order/source_causal_history_family_receipt.json)
+  independently captures and reconstructs complete 4, 8, 16, 32, and
+  64-round source orders, then certifies that adjacent direct and transitive
+  orders are exact induced restrictions. This is a positive history-custody
+  result, not a density refinement: all five orders have exact width 2 and
+  become more chain-like. A prescribed diagnostic places all rank-three port
+  anchors in one shared reference frame and assigns readback or feedback
+  events to consumed-record barycentres. That placement has no admissible global
+  time scale and is noninjective on the 24-event log. Neither inter-carrier
+  frame gluing nor the barycentre-selection rule is source-derived, so this is
+  not a no-go for other source-selected placements and does not promote a
+  faithful embedding, dimension, volume, manifoldlikeness, or continuum limit.
+  Its compact, independently bound publication surface is
+  [`source_causal_history_family_publication_projection.json`](data/causal_order/source_causal_history_family_publication_projection.json).
 - [`causet_likeness_receipt.json`](data/causal_order/causet_likeness_receipt.json)
   evaluates the current 2,304-event local-domain order at one exploratory
   cutoff. None of its 736 qualifying intervals falls in the frozen broad 4D
   ordering-fraction band, so the result is not similar at that cutoff. It is
   neither a physical no-go result nor a dimension, embedding, or continuum
   receipt.
-- [`rank3_fcc_causet_compatibility_receipt.json`](data/causal_order/rank3_fcc_causet_compatibility_receipt.json)
-  verifies a bounded architecture fixture: source-derived versioned order,
-  exact nested induced suborders, cubic FCC carrier-ball counts through radius
-  20, and quartic fine-event counts on the checked imposed-depth grid n=1--10.
-  Its additional depth-24
-  control reverses the earlier interval-profile trend, so it supplies no
-  finite causet-likeness similarity or profile-convergence result. The
-  construction has `O_h`, not exact `A5`/S2, symmetry, is not selected by the
-  current random federation, and gives no physical causet, manifoldlikeness,
-  volume, Lorentz invariance, Lorentzian geometry, or continuum promotion.
-
 ## Installation
 
 OPH-FPE requires Python 3.11 or newer.
