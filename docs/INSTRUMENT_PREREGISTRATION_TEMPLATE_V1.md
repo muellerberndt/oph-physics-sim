@@ -75,7 +75,8 @@ re-draw; the resolution limits of the replicate count stated plainly.
 
 **3. Pinned code and environment.** Every code path the analysis depends on,
 pinned by repository path and sha256 at the design-freeze commit, with the
-repository HEAD recorded. Feature flags that change analysis behaviour (for
+repository baseline HEAD (the parent-tree commit from which the freeze-artifact
+commit is made) recorded. Feature flags that change analysis behaviour (for
 example `standardize` on the quadratic-form fit) are pinned to explicit
 values here, not left to defaults. The runtime environment pinning (thread
 variables, single recorded environment) is declared.
@@ -186,7 +187,40 @@ Each instance commits one JSON manifest conforming to
 instance document, this template, and every pinned code path by sha256, and
 recording the stage, the freeze UTC time, the seed-policy state
 (`declared` at S1/S2, `committed` at S3), and `execution_authorized`
-(`false` until the owning issue's run authorization exists). The manifest is
-the machine-checkable surface a later operator cannot quietly bypass: any
-receipt that does not reference a committed manifest by sha256 is
-nonconformant by construction.
+(`false` until the owning issue's run authorization exists). The manifest and
+the required validation procedure are the machine-checkable freeze surface:
+schema validation checks its structure, and the digest-validation check below
+refuses any working-tree file whose recorded sha256 does not match. Any receipt
+that does not reference a committed manifest by sha256 is nonconformant by
+construction.
+
+Run both commands from the repository root for every manifest validation; a
+zero exit status requires both checks to pass.
+
+```sh
+python3 -m jsonschema -i docs/OL_A1_INS02_FREEZE_MANIFEST_2026-09-01.json \
+  schemas/instruments/instrument_freeze_manifest_v1.schema.json
+python3 - docs/OL_A1_INS02_FREEZE_MANIFEST_2026-09-01.json <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+manifest_path = pathlib.Path(sys.argv[1])
+manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+entries = [manifest["preregistration"], manifest["template"], *manifest["pinned_code"]]
+mismatches = []
+for entry in entries:
+    path = pathlib.Path(entry["path"])
+    if not path.is_file():
+        mismatches.append(f"missing file: {path}")
+        continue
+    actual = hashlib.sha256(path.read_bytes()).hexdigest()
+    if actual != entry["sha256"]:
+        mismatches.append(f"sha256 mismatch: {path}: expected {entry['sha256']}, got {actual}")
+if mismatches:
+    print("\n".join(mismatches), file=sys.stderr)
+    raise SystemExit(1)
+print(f"digest validation passed for {len(entries)} pinned files")
+PY
+```
