@@ -121,7 +121,7 @@
     "repository_head": {
       "type": "string",
       "pattern": "^[0-9a-f]{40}$",
-      "description": "Full commit hash of the repository baseline tree from which the commit containing this freeze manifest and its companion artifacts was made."
+      "description": "Full hash of the repository base commit that precedes the freeze artifacts in branch history; it need not be their direct parent or the freeze commit itself."
     }
   },
   "definitions": {

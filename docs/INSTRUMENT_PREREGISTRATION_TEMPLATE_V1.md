@@ -75,8 +75,9 @@ re-draw; the resolution limits of the replicate count stated plainly.
 
 **3. Pinned code and environment.** Every code path the analysis depends on,
 pinned by repository path and sha256 at the design-freeze commit, with the
-repository baseline HEAD (the parent-tree commit from which the freeze-artifact
-commit is made) recorded. Feature flags that change analysis behaviour (for
+repository base commit (an ancestor of the freeze-artifact commit, not
+necessarily its direct parent or the freeze commit itself) recorded. Feature
+flags that change analysis behaviour (for
 example `standardize` on the quadratic-form fit) are pinned to explicit
 values here, not left to defaults. The runtime environment pinning (thread
 variables, single recorded environment) is declared.

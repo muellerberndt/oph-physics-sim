@@ -13,11 +13,11 @@
   },
   "preregistration": {
     "path": "docs/OL_A1_INS02_FACTORIAL_PREREGISTRATION_2026-09-01.md",
-    "sha256": "e0e3991efcb83aaea2edce167be2e037513c1cf162d80d00d3f4180043cbc32f"
+    "sha256": "8a352642ccb4c46b35466e221ca11ce47707e2d33caf33d1565f11e3dc48e24c"
   },
   "template": {
     "path": "docs/INSTRUMENT_PREREGISTRATION_TEMPLATE_V1.md",
-    "sha256": "66de584f00dbdd568285716180ccbc94a6d347f1bb328c42ce28eddfc54c897d"
+    "sha256": "9538798ba22ca0a2d3ef4fff5d5bcd96d3ab4b5c0383328e28f7c4acaed507f4"
   },
   "pinned_code": [
     {
