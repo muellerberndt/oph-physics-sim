@@ -87,8 +87,9 @@ the instrument needs any architecture change (new exports, conserved
 labels, producer capabilities). If it does, the upstream premise register's
 recorded-decision process must complete before stage S3, the recorded
 decision id is added to the seed table, and a run without it is a P0
-nonconformance. If it does not, the instance says so and consumes only
-pinned existing code paths.
+nonconformance. If it does not, the instance says so and identifies the
+declared direct analysis paths pinned by the freeze manifest; this pin is not
+a complete executable-dependency closure.
 
 **4. Declared observables.** Each observable gets an id, an exact
 computational definition in terms of the pinned code, a declared reference

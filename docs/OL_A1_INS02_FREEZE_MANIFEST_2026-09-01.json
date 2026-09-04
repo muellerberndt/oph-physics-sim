@@ -17,7 +17,7 @@
   },
   "template": {
     "path": "docs/INSTRUMENT_PREREGISTRATION_TEMPLATE_V1.md",
-    "sha256": "9538798ba22ca0a2d3ef4fff5d5bcd96d3ab4b5c0383328e28f7c4acaed507f4"
+    "sha256": "b25dad2cd1d201824967378d62cb34dceca675c3e99cb67924f69f8b9475dc10"
   },
   "pinned_code": [
     {
