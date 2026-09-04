@@ -1,0 +1,48 @@
+{
+  "schema": "oph.instrument-freeze-manifest.v1",
+  "campaign_id": "ol_a1_ins02_factorial_2026-09-01",
+  "instrument_id": "INS-02",
+  "ledger_row": "OL-A1",
+  "composition_lane": "FloatingPragma/observer-patch-holography#728 (Spacetime); instrument owned by lane #737",
+  "stage": "S1_DESIGN_FROZEN",
+  "freeze_utc": "2026-09-01T08:52:16Z",
+  "execution_authorized": false,
+  "seed_policy": {
+    "state": "declared",
+    "derivation": "Master seed drawn only at S3 under the fresh-by-grep rule of the preregistration Section 8. Per-run seed for (cell, replicate): first eight bytes, big endian, of sha256 of 'ol_a1_ins02:<master_seed>:<cell_id>:<replicate_id>', as an unsigned integer. Null/control/sham/synthetic streams and execution order derive per Sections 6 and 8. No seed integer exists at this stage."
+  },
+  "preregistration": {
+    "path": "docs/OL_A1_INS02_FACTORIAL_PREREGISTRATION_2026-09-01.md",
+    "sha256": "8a352642ccb4c46b35466e221ca11ce47707e2d33caf33d1565f11e3dc48e24c"
+  },
+  "template": {
+    "path": "docs/INSTRUMENT_PREREGISTRATION_TEMPLATE_V1.md",
+    "sha256": "b25dad2cd1d201824967378d62cb34dceca675c3e99cb67924f69f8b9475dc10"
+  },
+  "pinned_code": [
+    {
+      "path": "oph_fpe/bulk/event_manifold_producer.py",
+      "sha256": "02da8d0a419d092a4ece509bf1d8caeeb13f2d337a292847b859001e5782c6fa"
+    },
+    {
+      "path": "oph_fpe/bulk/physical_h3_kms_source_capture.py",
+      "sha256": "7e68714ab3e78ffd89b2aec2bb89e9f3c24766c105209bb50497f205eef4b8b5"
+    },
+    {
+      "path": "scripts/einstein_convergence_ladder.py",
+      "sha256": "56b99043daddb5f1456d5631b27e728064fb503f2c155968fac0784f6571f7ed"
+    },
+    {
+      "path": "tests/test_event_chart_standardization.py",
+      "sha256": "b4799e4fdab030a126e1124e8af64c15f73c03c74002a20eea669abac80bf34b"
+    },
+    {
+      "path": "docs/OL_A1_INSTRUMENT_DEFECT_2026-08-21.md",
+      "sha256": "2bd136fa9ffce912021d76e4971436da270d932e41973d63f775ca63aa664262"
+    }
+  ],
+  "decision_rule_verdicts": ["REPLICATED", "FAILED", "INCONCLUSIVE"],
+  "equal_prominence": true,
+  "claim_boundary_summary": "A REPLICATED verdict supports only: under the repaired standardized estimator, the (1,3,0) robust signature reproduces under fresh seeds across the retained factorial envelope (carrier 16384-65536, absolute support 48-192, observer count 256) and is attributable to ancestry structure against two predeclared null families at rank-test size 4/65 per family, at N = 10 per cell; it moves ledger row OL-A1 only through explicit upstream ledger-control selection. No open-chart topology, no continuum limit, no physical metric, no laboratory prediction, no empirical validation. A FAILED verdict is bounded to this envelope and estimator and is never a universal obstruction. INS-01 (FAILED) remains the controlling completed verdict until superseded by explicit upstream selection.",
+  "repository_head": "3bc1dd1b47d8367b661c64f1737a1d348d37e62a"
+}

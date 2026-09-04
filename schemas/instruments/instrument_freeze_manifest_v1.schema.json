@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "oph.instrument-freeze-manifest.v1",
+  "title": "Simulation-instrument freeze manifest v1",
+  "description": "Machine-checkable freeze surface for a preregistered simulation instrument of the emergent-adequacy program (V3 lane #737). One manifest per preregistration instance, committed with the instance document. Companion to docs/INSTRUMENT_PREREGISTRATION_TEMPLATE_V1.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "campaign_id",
+    "instrument_id",
+    "ledger_row",
+    "composition_lane",
+    "stage",
+    "freeze_utc",
+    "execution_authorized",
+    "seed_policy",
+    "preregistration",
+    "template",
+    "pinned_code",
+    "decision_rule_verdicts",
+    "equal_prominence",
+    "claim_boundary_summary",
+    "repository_head"
+  ],
+  "properties": {
+    "schema": {
+      "const": "oph.instrument-freeze-manifest.v1"
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique campaign id; exactly one campaign is ever executed under it."
+    },
+    "instrument_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Upstream instrument-register row id (e.g. INS-02), or 'pending-registration'."
+    },
+    "ledger_row": {
+      "type": "string",
+      "pattern": "^OL-[A-Z][0-9]+$",
+      "description": "Exactly one observation-ledger row this instrument binds to."
+    },
+    "composition_lane": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exactly one composition lane (upstream issue reference)."
+    },
+    "stage": {
+      "enum": ["S1_DESIGN_FROZEN", "S2_IMPLEMENTATION_FROZEN", "S3_SEED_COMMITTED"],
+      "description": "Lifecycle stage per the template. S0 SPECIFIED work carries no manifest."
+    },
+    "freeze_utc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Non-future UTC time of the freeze commit."
+    },
+    "execution_authorized": {
+      "type": "boolean",
+      "description": "False until the owning issue's run authorization exists. Must be false at stage S1 and S2."
+    },
+    "seed_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "derivation"],
+      "properties": {
+        "state": {
+          "enum": ["declared", "committed"],
+          "description": "'declared' at S1/S2 (procedure pinned, no integer drawn); 'committed' at S3 (seed table committed before any run)."
+        },
+        "derivation": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Verbatim per-run seed derivation rule from the master seed."
+        },
+        "seed_table": {
+          "$ref": "#/definitions/pinnedFile",
+          "description": "Required when state is 'committed'."
+        }
+      }
+    },
+    "preregistration": {
+      "$ref": "#/definitions/pinnedFile",
+      "description": "The instance document, pinned."
+    },
+    "template": {
+      "$ref": "#/definitions/pinnedFile",
+      "description": "The template version this instance follows, pinned."
+    },
+    "driver": {
+      "$ref": "#/definitions/pinnedFile",
+      "description": "The frozen driver. Required at stage S2 and later; absent at S1."
+    },
+    "pinned_code": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/pinnedFile"
+      },
+      "description": "Every code path the analysis depends on, pinned at the freeze commit."
+    },
+    "decision_rule_verdicts": {
+      "type": "array",
+      "items": {
+        "enum": ["REPLICATED", "FAILED", "INCONCLUSIVE"]
+      },
+      "minItems": 3,
+      "uniqueItems": true,
+      "description": "The frozen decision rule must name all three verdicts."
+    },
+    "equal_prominence": {
+      "const": true,
+      "description": "Negative and control outcomes are reported with the same prominence as positive ones. Constant by construction."
+    },
+    "claim_boundary_summary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-paragraph verbatim claim boundary: what a positive verdict promotes and what it never claims."
+    },
+    "repository_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Full hash of the repository base commit that precedes the freeze artifacts in branch history; it need not be their direct parent or the freeze commit itself."
+    }
+  },
+  "definitions": {
+    "pinnedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}
