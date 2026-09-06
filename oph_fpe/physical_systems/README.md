@@ -37,6 +37,14 @@ coherent state. Its `state(t)`, `field(t, cell, barycentric)` and
 variances and energy without an occupation cutoff. The CLI preparation uses
 a declared Gaussian-shaped nodal mean and vacuum covariance.
 
+`two_point(t, cell, barycentric, s, other_cell, other_barycentric)` queries
+the ordered field correlation at two positions and times.
+`smeared_two_point(t, f, s, g)` uses two independently chosen real nodal test
+functions. Both return the full and connected Wightman functions, the
+commutator and half the connected anticommutator. Complex results use
+`[real, imaginary]`. These are finite-mesh correlations; continuum
+microcausality and a physical detector response are not established.
+
 Normal-ordered energy subtracts the finite-mesh vacuum contribution;
 pointwise vacuum variances and zero-point energy depend on the spatial
 cutoff. Numerical eigenpair defects are checked. These calculations carry
