@@ -196,6 +196,13 @@ refuses any working-tree file whose recorded sha256 does not match. Any receipt
 that does not reference a committed manifest by sha256 is nonconformant by
 construction.
 
+An S1 amendment preserves the original freeze fields and records old/new
+sha256 values and provenance for the two explicitly named non-decision-rule
+code paths. The amendment also records the template digest change required to
+make this validation procedure amendment-aware. It does not amend the
+preregistration or its decision rule, authorize execution, or draw a seed.
+The checks below use those recorded replacements and retain every other pin.
+
 Run both commands from the repository root for every manifest validation; a
 zero exit status requires both checks to pass.
 
@@ -211,6 +218,35 @@ import sys
 manifest_path = pathlib.Path(sys.argv[1])
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 entries = [manifest["preregistration"], manifest["template"], *manifest["pinned_code"]]
+amendment = manifest.get("s1_amendment")
+if amendment is not None:
+    allowed = {
+        "oph_fpe/bulk/event_manifold_producer.py",
+        "oph_fpe/bulk/physical_h3_kms_source_capture.py",
+    }
+    changes = amendment["pinned_code"]
+    if (amendment["stage"] != "S1_DESIGN_FROZEN"
+            or amendment["execution_authorized"] is not False
+            or (manifest["stage"] == "S1_DESIGN_FROZEN"
+                and manifest["execution_authorized"] is not False)):
+        raise SystemExit("invalid S1 amendment authorization")
+    if len(changes) != 2 or {entry["path"] for entry in changes} != allowed:
+        raise SystemExit("invalid S1 amendment code scope")
+    template_change = amendment["validator_template"]
+    if template_change["path"] != manifest["template"]["path"]:
+        raise SystemExit("invalid S1 amendment template path")
+    replacements = {entry["path"]: entry for entry in [*changes, template_change]}
+    if len({entry["path"] for entry in entries}) != len(entries):
+        raise SystemExit("duplicate frozen path")
+    originals = {entry["path"]: entry["sha256"] for entry in entries}
+    for path, change in replacements.items():
+        if originals.get(path) != change["old_sha256"]:
+            raise SystemExit(f"S1 amendment old sha256 mismatch: {path}")
+    entries = [
+        {"path": entry["path"], "sha256": replacements[entry["path"]]["new_sha256"]}
+        if entry["path"] in replacements else entry
+        for entry in entries
+    ]
 mismatches = []
 for entry in entries:
     path = pathlib.Path(entry["path"])

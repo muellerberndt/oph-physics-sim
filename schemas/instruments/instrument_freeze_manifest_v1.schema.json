@@ -100,6 +100,97 @@
       },
       "description": "Every code path the analysis depends on, pinned at the freeze commit."
     },
+    "s1_amendment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "amended_utc",
+        "stage",
+        "execution_authorized",
+        "reason",
+        "pinned_code",
+        "validator_template"
+      ],
+      "properties": {
+        "amended_utc": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "stage": {
+          "const": "S1_DESIGN_FROZEN"
+        },
+        "execution_authorized": {
+          "const": false
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pinned_code": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "old_sha256",
+              "new_sha256",
+              "upstream_commit"
+            ],
+            "properties": {
+              "path": {
+                "enum": [
+                  "oph_fpe/bulk/event_manifold_producer.py",
+                  "oph_fpe/bulk/physical_h3_kms_source_capture.py"
+                ]
+              },
+              "old_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "new_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "upstream_commit": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        "validator_template": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "old_sha256",
+            "new_sha256",
+            "reason"
+          ],
+          "properties": {
+            "path": {
+              "const": "docs/INSTRUMENT_PREREGISTRATION_TEMPLATE_V1.md"
+            },
+            "old_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "new_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
     "decision_rule_verdicts": {
       "type": "array",
       "items": {

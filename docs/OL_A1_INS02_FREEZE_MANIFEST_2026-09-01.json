@@ -44,5 +44,31 @@
   "decision_rule_verdicts": ["REPLICATED", "FAILED", "INCONCLUSIVE"],
   "equal_prominence": true,
   "claim_boundary_summary": "A REPLICATED verdict supports only: under the repaired standardized estimator, the (1,3,0) robust signature reproduces under fresh seeds across the retained factorial envelope (carrier 16384-65536, absolute support 48-192, observer count 256) and is attributable to ancestry structure against two predeclared null families at rank-test size 4/65 per family, at N = 10 per cell; it moves ledger row OL-A1 only through explicit upstream ledger-control selection. No open-chart topology, no continuum limit, no physical metric, no laboratory prediction, no empirical validation. A FAILED verdict is bounded to this envelope and estimator and is never a universal obstruction. INS-01 (FAILED) remains the controlling completed verdict until superseded by explicit upstream selection.",
-  "repository_head": "3bc1dd1b47d8367b661c64f1737a1d348d37e62a"
+  "repository_head": "3bc1dd1b47d8367b661c64f1737a1d348d37e62a",
+  "s1_amendment": {
+    "amended_utc": "2026-09-22T17:00:58Z",
+    "stage": "S1_DESIGN_FROZEN",
+    "execution_authorized": false,
+    "reason": "upstream files changed 2026-09-01, discovered 2026-09-22, freeze updated to track current upstream state for these two non-decision-rule files only",
+    "pinned_code": [
+      {
+        "path": "oph_fpe/bulk/event_manifold_producer.py",
+        "old_sha256": "02da8d0a419d092a4ece509bf1d8caeeb13f2d337a292847b859001e5782c6fa",
+        "new_sha256": "d174eefcabb111a5157ddc45f8523ca197cd684bb3f87512ced29341b7da1652",
+        "upstream_commit": "7faa47b5cf00b42f6bf6b3e95ed4f7eb64f4239f"
+      },
+      {
+        "path": "oph_fpe/bulk/physical_h3_kms_source_capture.py",
+        "old_sha256": "7e68714ab3e78ffd89b2aec2bb89e9f3c24766c105209bb50497f205eef4b8b5",
+        "new_sha256": "1000fc9ecbac7e199e0e8bd7ee3c696a8434acc5cd55fc81430950b75c0bbdba",
+        "upstream_commit": "7faa47b5cf00b42f6bf6b3e95ed4f7eb64f4239f"
+      }
+    ],
+    "validator_template": {
+      "path": "docs/INSTRUMENT_PREREGISTRATION_TEMPLATE_V1.md",
+      "old_sha256": "b25dad2cd1d201824967378d62cb34dceca675c3e99cb67924f69f8b9475dc10",
+      "new_sha256": "b0a1b51570ccd0693799304f36221960af45c16afb330efbdb2c06bab5fa3368",
+      "reason": "The template contains the digest validator; its S1 amendment support changes template bytes only. The original template pin remains the historical freeze record; this digest pins the amended validation procedure in this commit."
+    }
+  }
 }
