@@ -694,7 +694,11 @@ def provenance_edges(n: int, rounds: int, values: list[list[int]], log: EventLog
             "relation": (log.indptr, log.indices)}
 
 
+FRONTIER_CHUNK = 1 << 26  # neighbour-list entries gathered per step of a frontier expansion (0.5 GB of int64 positions)
+
+
 def _ranges(starts: np.ndarray, lengths: np.ndarray) -> np.ndarray:
+    """Concatenated index ranges [starts_i, starts_i + lengths_i), lengths > 0; int64 positions."""
     cl = np.cumsum(lengths)
     total = int(cl[-1])
     idx = np.ones(total, dtype=np.int64)
@@ -703,6 +707,23 @@ def _ranges(starts: np.ndarray, lengths: np.ndarray) -> np.ndarray:
         idx[cl[:-1]] = starts[1:] - (starts[:-1] + lengths[:-1]) + 1
     np.cumsum(idx, out=idx)
     return idx
+
+
+def _expand(indptr: np.ndarray, indices: np.ndarray, frontier: np.ndarray, mask: np.ndarray) -> None:
+    """Mark in ``mask`` every neighbour of the frontier sites, gathering at most FRONTIER_CHUNK entries at a time.
+
+    The neighbour table may hold more than 2**31 entries, so every position is int64, and the
+    frontier is expanded in slices so that no gather materializes the whole table.
+    """
+    st = np.asarray(indptr[frontier], dtype=np.int64)
+    ln = np.asarray(indptr[frontier + 1], dtype=np.int64) - st
+    cl = np.cumsum(ln)
+    lo = 0
+    while lo < len(frontier):
+        base = int(cl[lo - 1]) if lo else 0
+        hi = max(int(np.searchsorted(cl, base + FRONTIER_CHUNK, side="right")), lo + 1)
+        mask[indices[_ranges(st[lo:hi], ln[lo:hi])]] = True
+        lo = hi
 
 
 def bfs(indptr: np.ndarray, indices: np.ndarray, start: int, n: int, cap: int | None = None,
@@ -726,11 +747,8 @@ def bfs(indptr: np.ndarray, indices: np.ndarray, start: int, n: int, cap: int | 
             frontier = frontier[alpha[frontier] <= budget - m]
         if frontier.size == 0:
             break
-        st = indptr[frontier]
-        ln = indptr[frontier + 1] - st
-        idx = _ranges(st.astype(np.int64), ln.astype(np.int64))
         mask = np.zeros(n, dtype=bool)
-        mask[indices[idx]] = True
+        _expand(indptr, indices, frontier, mask)
         mask &= dist < 0
         frontier = np.flatnonzero(mask)
         if frontier.size == 0:
