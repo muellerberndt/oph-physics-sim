@@ -98,6 +98,7 @@ KERNEL_SAMPLE = 12
 FLOAT_PHI_THRESHOLD = 1e-18
 EXACT_PHI_THRESHOLD_DENOMINATOR = 10**18  # Phi <= 1 / 10^18 exactly
 EXACT_TRIGGER_FACTOR = 1.1  # exact Phi is evaluated once the float companion is below factor * threshold
+LATTICE_SNAP_MARGIN = 0.25  # a component-lattice snap is unambiguous only when every residual |m_c x_p - q_p| is below this
 LOAD_SEED_BASE = 20260909
 SCHEDULE_SEED_BASE = 909000
 LOAD_MAX = 5
@@ -295,10 +296,15 @@ class ExactFederation:
         return sha256_of({"canonicalizer": "component_multiset", "components": entries})
 
     def mean_minimum_descent(self, loads: np.ndarray) -> float:
-        """``V`` at the component mean: ``sum_c S_c^2 / m_c``."""
+        """``V`` at the component mean: ``sum_c S_c^2 / m_c``, exact in integer arithmetic before the final rounding.
+
+        The integer loads make every component total an integer; squaring in float64 would
+        lose exactness once a total exceeds ``2^26.5`` (level ten and beyond).
+        """
 
         totals = np.bincount(self.component_of_port, weights=np.asarray(loads, dtype=float), minlength=self.components)
-        return float(np.sum(totals * totals / self.component_sizes))
+        exact = sum(Fraction(int(round(float(t))) ** 2, int(m)) for t, m in zip(totals.tolist(), self.component_sizes.tolist()))
+        return float(exact)
 
     def integer_minimum_descent(self, loads: np.ndarray) -> int:
         totals = np.bincount(self.component_of_port, weights=np.asarray(loads, dtype=float), minlength=self.components)
@@ -1014,6 +1020,8 @@ def run_mean_law(
     deviation = float(np.max(np.abs(residual_vector)))
     centered_terminal = float(np.dot(residual_vector, residual_vector))
     quotient_hash, residual = fed.terminal_quotient_hash(x)
+    # The snap is a certificate only when it is unambiguous; an unsettled state gets no hash.
+    snap_ok = bool(residual < LATTICE_SNAP_MARGIN)
     counterexample = None
     if tally.first_raise is not None:
         fr = tally.first_raise
@@ -1053,7 +1061,8 @@ def run_mean_law(
         "max_abs_deviation_from_component_mean": _sig(deviation, 3),
         "component_mean_within_1e-9": bool(deviation < 1e-9),
         "lattice_residual_max": _sig(residual, 3),
-        "terminal_quotient_hash": quotient_hash,
+        "lattice_snap_unambiguous": snap_ok,
+        "terminal_quotient_hash": quotient_hash if snap_ok else None,
         "state": x,
     }
 
@@ -1668,13 +1677,15 @@ def _run_tasks(tasks: list[dict[str, Any]], workers: int) -> list[dict[str, Any]
 
 
 def _aggregate_schedules(entries: list[dict[str, Any]], hash_key: str, expected: str) -> dict[str, Any]:
-    hashes = sorted({e[hash_key] for e in entries})
+    hashes = sorted({e[hash_key] for e in entries if e[hash_key] is not None})
+    ambiguous = sum(1 for e in entries if e[hash_key] is None)
     return {
         "schedules": len(entries),
         "all_terminated": bool(all(e["terminated"] for e in entries)),
         "unique_terminal_hash_count": len(hashes),
-        "terminal_hashes_identical_across_schedules": bool(len(hashes) == 1),
-        "terminal_hash_equals_expected": bool(len(hashes) == 1 and hashes[0] == expected),
+        "ambiguous_terminal_count": int(ambiguous),
+        "terminal_hashes_identical_across_schedules": bool(len(hashes) == 1 and ambiguous == 0),
+        "terminal_hash_equals_expected": bool(len(hashes) == 1 and ambiguous == 0 and hashes[0] == expected),
         "expected_terminal_hash": expected,
     }
 
@@ -1764,6 +1775,7 @@ def build_rung_block(
                 "component_mean_within_1e-9_all": bool(all(e["component_mean_within_1e-9"] for e in entries)),
                 "max_abs_deviation_from_component_mean_max": _sig(max(e["max_abs_deviation_from_component_mean"] for e in entries), 3),
                 "lattice_residual_max": _sig(max(e["lattice_residual_max"] for e in entries), 3),
+                "lattice_snap_unambiguous_all": bool(all(e["lattice_snap_unambiguous"] for e in entries)),
                 "entries": entries,
             }
         )
@@ -2110,7 +2122,8 @@ def scale_run(
         "synchronous_operator": sync,
         "float_sweep_budget": max_sweeps,
         "mean_law_float": floats,
-        "float_unique_terminal_hash_count": len({e["terminal_quotient_hash"] for e in floats}),
+        "float_unique_terminal_hash_count": len({h for e in floats if (h := e["terminal_quotient_hash"]) is not None}),
+        "float_ambiguous_terminal_count": sum(1 for e in floats if e["terminal_quotient_hash"] is None),
         "float_extrapolated_attempts_to_threshold": extrapolated,
         "integer_law": ints,
         "integer_unique_quotient_hash_count": len({e["quotient_hash"] for e in ints}),

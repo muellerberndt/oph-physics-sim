@@ -555,6 +555,7 @@ def verify(path: Path = DEFAULT_RECEIPT, *, replay: bool = True) -> dict[str, An
             _require(entry["strict_descent_violations"] == 0 and entry["descent_ledger_relative_error_below_1e-9"], f"{key}: descent")
             _require(entry["max_abs_deviation_from_component_mean"] < 1e-9, f"{key}: float deviation")
             _require(entry["lattice_residual_max"] < 0.5, f"{key}: lattice snap unambiguous")
+            _require(entry["lattice_snap_unambiguous"] is True and entry["terminal_quotient_hash"] is not None, f"{key}: snap flag and hash present")
             _require(entry["centered_norm_terminal"] < 1e-12 and entry["centered_norm_initial"] > 0, f"{key}: centered norm")
             _require(_close(entry["descent_functional_minimum"], float(np.sum(fed.component_totals(loads).astype(float) ** 2 / fed.sizes)), 1e-9), f"{key}: V_min")
             _require(_close(entry["descent_functional_initial"], float(np.dot(loads, loads)), 1e-12), f"{key}: V_0")

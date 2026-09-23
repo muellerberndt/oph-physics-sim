@@ -1048,7 +1048,8 @@ def build_archive(level: int, out: Path, *, archive_id: str | None = None, sched
     timings["total_before_verify"] = time.perf_counter() - wall0
     manifest = write_manifest(out, config, blocks, timings)
     t1 = time.perf_counter()
-    verify = subprocess.run([sys.executable, "-I", str(out / "verify_archive.py")], capture_output=True, text=True, cwd=str(out))
+    # Absolute path: with a relative --out the script path would otherwise be resolved inside cwd=out a second time.
+    verify = subprocess.run([sys.executable, "-I", str((out / "verify_archive.py").resolve())], capture_output=True, text=True, cwd=str(out))
     verify_seconds = time.perf_counter() - t1
     output = (verify.stdout + verify.stderr).strip()
     log(f"verifier exit {verify.returncode} in {verify_seconds:.1f} s: {output.splitlines()[-1] if output else ''}")
@@ -1176,7 +1177,8 @@ def refresh_archive(out: Path, *, log=print) -> dict[str, Any]:
     (out / "verify_archive.py").write_text(VERIFIER_SOURCE, encoding="utf-8")
     manifest = write_manifest(out, config, blocks, timings)
     t1 = time.perf_counter()
-    verify = subprocess.run([sys.executable, "-I", str(out / "verify_archive.py")], capture_output=True, text=True, cwd=str(out))
+    # Absolute path: with a relative --out the script path would otherwise be resolved inside cwd=out a second time.
+    verify = subprocess.run([sys.executable, "-I", str((out / "verify_archive.py").resolve())], capture_output=True, text=True, cwd=str(out))
     verify_seconds = time.perf_counter() - t1
     output = (verify.stdout + verify.stderr).strip()
     log(f"verifier exit {verify.returncode} in {verify_seconds:.1f} s: {output.splitlines()[-1] if output else ''}")

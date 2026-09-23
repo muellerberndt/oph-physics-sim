@@ -108,7 +108,19 @@ single carrier survive the declared gluing (the slow band).
   rung whose single component has 15,360 ports, against the snapping
   margin `1/2`), and the exact rungs certify the snap
   in rational arithmetic. Every terminal hash equals the hash of the exact
-  component means computed from the loads alone.
+  component means computed from the loads alone. The snap is a certificate
+  only when it is unambiguous: a run whose maximal residual reaches the
+  declared margin `0.25` (`LATTICE_SNAP_MARGIN`) reports
+  `lattice_snap_unambiguous = false` and no terminal hash, and the schedule
+  aggregate counts it under `ambiguous_terminal_count`. A budgeted float
+  run on a large glued rung therefore records its residual and its deviation
+  from the component mean instead of a hash.
+- Portability of the gluing identity: the port pairs digest
+  `port_pairs_sha256` is reproduced on arm64 (Accelerate) and x86 (OpenBLAS)
+  at levels three to six, and equals the level-six archive's pin. The
+  `local_frame_hash` (tangent frames rounded to fifteen decimals) is
+  platform-specific and differs on x86 at every level; it is metadata, not
+  an identity that any verifier checks.
 - The kernel readout: probe port `p` of carrier `c` with a unit impulse,
   apply `T_fed` `2n` times, read carrier `c` (column `p` of `R_n`);
   `C_n = Q R_n Q`, `K_n = 12 C_n / tr C_n`, `n` in `{1, 5, 30, 100, 300}`.

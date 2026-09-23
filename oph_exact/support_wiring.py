@@ -1044,7 +1044,7 @@ def native_kernel() -> Any:
             source = directory / f"oph_wire_kernel_{digest}.c"
             source.write_text(_KERNEL_SOURCE, encoding="utf-8")
             staging = directory / f"oph_wire_kernel_{digest}.{os.getpid()}{suffix}"
-            subprocess.run([compiler, "-O2", "-shared", "-fPIC", "-o", str(staging), str(source)], check=True, capture_output=True)
+            subprocess.run([compiler, "-O2", "-ffp-contract=off", "-shared", "-fPIC", "-o", str(staging), str(source)], check=True, capture_output=True)
             os.replace(staging, library)
         lib = ctypes.CDLL(str(library))
         i64 = ctypes.c_int64
@@ -1331,6 +1331,8 @@ def run_provenance(system: EventSystem, rounds: int, seed: int, loads: np.ndarra
         v += int(dv)
         if v > v_before:
             violations += 1
+        if snapshots is not None and (int(x.min()) < -128 or int(x.max()) > 127):
+            raise ValueError("loads left the int8 snapshot range during the run")
         ext_out = outcome[is_ext]
         seams_out[r * ext : (r + 1) * ext] = (seq[is_ext] - intra).astype(np.int32)
         outcomes[r * ext : (r + 1) * ext] = ext_out
