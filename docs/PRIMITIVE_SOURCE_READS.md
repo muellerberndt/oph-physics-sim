@@ -70,7 +70,7 @@ population, canonical A3 optimizer or full-axiom countermodel is asserted.
 
 The analytic proofs, Lean reductions, claim classification and captured
 publication artifact are developed in the companion
-[OPH source-operation derivation](https://github.com/MarioPoneder/observer-patch-holography/blob/research/source-operation-reads/code/source_operation_reads/DERIVATION.md).
+[OPH source-operation derivation](https://github.com/FloatingPragma/observer-patch-holography/blob/9b527a4f8d07a21944b56bc3967a739339aff2c8/code/source_operation_reads/DERIVATION.md).
 
 ## Recurrent instrument controls
 
