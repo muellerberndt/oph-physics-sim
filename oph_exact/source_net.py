@@ -52,7 +52,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RER_ROOT = Path(os.environ.get("OPH_RER_ROOT", str(ROOT.parent / "reverse-engineering-reality")))
 OUTPUT = ROOT / "data/exact/source_net_causal_limit_receipt.json"
 SCHEMA = "oph.exact.source-net-causal-limit.v1"
-LEVELS = (5, 6, 7, 8, 9, 10)
+LEVELS = (5, 6, 7, 8, 9, 10, 11)
 RER_LEVELS = (5, 6, 7)
 DIMENSIONS = (3, 2, 1)
 EXACT_SUPPORT_LIMIT = 20000
@@ -106,7 +106,7 @@ CLAIM_BOUNDARY = (
     "the rank-three source Gram metric, complete-neighbour reads inside "
     "a_q = L/sqrt(q), one event per site and layer, layer duration a_q/c. "
     "Counts, ordering fractions and count clocks are finite diagnostics of "
-    "that supplied law at q <= 55. They do not select the population or the "
+    "that supplied law at q <= 89. They do not select the population or the "
     "read law from native repairs, identify a physical clock or spacetime, "
     "or demonstrate the asymptotic limit of the paper's propositions."
 )
@@ -324,8 +324,9 @@ def build_site_graph(q: int, dim: int, chunk: int = 256):
         indptr[lo + 1:lo + 1 + len(S)] = position + np.cumsum(counts)
         position += int(counts.sum())
     indices = np.concatenate(pieces) if pieces else np.zeros(0, dtype=np.int32)
-    if position >= 2 ** 31:
-        raise ValueError("neighbour index array exceeds int32 range")
+    # indptr is int64, so the number of entries may exceed 2**31; the entries are site ids.
+    if n >= 2 ** 31:
+        raise ValueError("site ids exceed the int32 neighbour index range")
     return indptr, indices, values, A, B, sites
 
 
@@ -681,7 +682,8 @@ def _log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def build_family(n: int, dim: int, processes: int = 1, workdir: Path | None = None) -> dict:
+def build_family(n: int, dim: int, processes: int = 1, workdir: Path | None = None,
+                 exact_support_limit: int = EXACT_SUPPORT_LIMIT) -> dict:
     t0 = time.time()
     q, p = fibonacci(n)
     K = ceil_sqrt(q)
@@ -833,7 +835,7 @@ def build_family(n: int, dim: int, processes: int = 1, workdir: Path | None = No
             cone_y=empty, x=center, y=-1, vertical_sites=vertical_sites,
             vertical_alpha=alpha[vertical_sites].astype(np.int64), moving_sites=empty,
             moving_alpha=empty, moving_gamma=empty, vertical_weights=Wv, moving_weights=Wm)
-        vertical_exact = len(vertical_sites) <= EXACT_SUPPORT_LIMIT
+        vertical_exact = len(vertical_sites) <= exact_support_limit
         if vertical_exact:
             v_run = run(vertical_key, vertical_sites)
             v_sample = None
@@ -859,7 +861,7 @@ def build_family(n: int, dim: int, processes: int = 1, workdir: Path | None = No
                 moving_alpha=alpha_m[moving_sites].astype(np.int64),
                 moving_gamma=gamma_m[moving_sites].astype(np.int64),
                 vertical_weights=Wv, moving_weights=Wm)
-            moving_exact = len(moving_sites) <= EXACT_SUPPORT_LIMIT
+            moving_exact = len(moving_sites) <= exact_support_limit
             if moving_exact:
                 m_run = run(moving_key, moving_sites)
             else:
@@ -963,12 +965,16 @@ def build_family(n: int, dim: int, processes: int = 1, workdir: Path | None = No
         moving_row.update(ordering_summary(C, N, dim))
 
     # Count clock between the K-layer and the floor(K/2)-layer vertical diamonds.
+    # The volume clock of a flat diamond in dim+1 dimensions is the (dim+1)-th root of the
+    # count ratio: the paper's fourth root for the source net, cube and square roots for the
+    # two- and one-dimensional control populations.
     Kp = K // 2
+    root = 1.0 / (dim + 1)
     NI, NJ = intervals[K - 1]["inclusive_event_count"], intervals[Kp - 1]["inclusive_event_count"]
     clock = {"reference_layers": Kp, "interval_layers": K,
-             "interval_count": NI, "reference_count": NJ,
-             "count_clock": rounded((NI / NJ) ** 0.25), "model_time_ratio": rounded(K / Kp),
-             "relative_deviation": rounded((NI / NJ) ** 0.25 / (K / Kp) - 1.0)}
+             "interval_count": NI, "reference_count": NJ, "clock_exponent": f"1/{dim + 1}",
+             "count_clock": rounded((NI / NJ) ** root), "model_time_ratio": rounded(K / Kp),
+             "relative_deviation": rounded((NI / NJ) ** root / (K / Kp) - 1.0)}
     if dim == 3:
         EI = intervals[K - 1]["volume_error_bound"] * density
         EJ = intervals[Kp - 1]["volume_error_bound"] * density
@@ -1064,7 +1070,8 @@ def cross_check(family: dict, rer_level: dict) -> dict:
             "fields": fields, "all_agree": all(v["agree"] for v in fields.values())}
 
 
-def build(levels=LEVELS, dimensions=DIMENSIONS, processes: int | None = None) -> dict:
+def build(levels=LEVELS, dimensions=DIMENSIONS, processes: int | None = None,
+          exact_support_limit: int = EXACT_SUPPORT_LIMIT) -> dict:
     processes = processes or max(1, min(10, os.cpu_count() or 1))
     theirs = {lv["fibonacci_index"]: lv for lv in rer_receipt()["levels"]}
     rows = []
@@ -1074,7 +1081,8 @@ def build(levels=LEVELS, dimensions=DIMENSIONS, processes: int | None = None) ->
         for n in levels:
             families = []
             for dim in dimensions:
-                fam = build_family(n, dim, processes=processes, workdir=workdir)
+                fam = build_family(n, dim, processes=processes, workdir=workdir,
+                                   exact_support_limit=exact_support_limit)
                 if dim == 3 and n in theirs:
                     fam["rer_cross_check"] = cross_check(fam, theirs[n])
                     checks.append(fam["rer_cross_check"]["all_agree"])
@@ -1090,7 +1098,7 @@ def build(levels=LEVELS, dimensions=DIMENSIONS, processes: int | None = None) ->
             "sampling_measure": "L^dim/q^dim per site, layer weight a_q = L/sqrt(q); rho_q = q^(dim+1/2)/L^(dim+1) with c = 1",
             "finite_schedule": "K_q = ceil(sqrt(q)); T_q = K_q L/sqrt(q); reference clock diamond has floor(K_q/2) layers",
             "moving_tips": "tips symmetric about the centre on the rank diagonal, smallest shift with the declared buffer rule",
-            "pair_counting": {"exact_support_limit": EXACT_SUPPORT_LIMIT, "sample_size_minimum": SAMPLE_SIZE,
+            "pair_counting": {"exact_support_limit": exact_support_limit, "sample_size_minimum": SAMPLE_SIZE,
                               "sample_seed_base": SAMPLE_SEED,
                               "allocation": "proportional to stratum size, at least two starts per stratum, without replacement",
                               "strata": "vertical: d(centre, s); moving: (d(x, s), d(s, y))"},
@@ -1118,13 +1126,16 @@ def main(argv=None) -> None:
     parser.add_argument("--repin", action="store_true", help="refresh the file pins of the committed receipt")
     parser.add_argument("--processes", type=int, default=None)
     parser.add_argument("--levels", type=int, nargs="*", default=None)
+    parser.add_argument("--exact-support-limit", type=int, default=EXACT_SUPPORT_LIMIT,
+                        help="largest support (in sites) counted by exact all-pairs searches; larger supports are sampled")
     args = parser.parse_args(argv)
     if args.repin:
         data = repin()
         OUTPUT.write_bytes(data)
         print("SOURCE_NET_CAUSAL_LIMIT_REPINNED", len(data), hashlib.sha256(data).hexdigest())
         return
-    data = canonical(build(levels=tuple(args.levels) if args.levels else LEVELS, processes=args.processes))
+    data = canonical(build(levels=tuple(args.levels) if args.levels else LEVELS, processes=args.processes,
+                           exact_support_limit=args.exact_support_limit))
     if args.write:
         OUTPUT.parent.mkdir(parents=True, exist_ok=True)
         OUTPUT.write_bytes(data)

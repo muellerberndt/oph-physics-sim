@@ -34,10 +34,10 @@ RER_ROOT = Path(os.environ.get("OPH_RER_ROOT", str(ROOT.parent / "reverse-engine
 OUTPUT = ROOT / "data/exact/carrier_source_net_receipt.json"
 SCHEMA = "oph.exact.carrier-source-net.v1"
 LOG_SCHEMA = "oph.exact.carrier-source-net-log.v1"
-LEVELS = (5, 8, 13, 21, 34)
+LEVELS = (5, 8, 13, 21, 34, 55, 89)
 REBUILT_LEVELS = (5, 8)
 STORED_LOG_LEVELS = (5, 8)
-FIBONACCI_INDEX = {5: 5, 8: 6, 13: 7, 21: 8, 34: 9}
+FIBONACCI_INDEX = {5: 5, 8: 6, 13: 7, 21: 8, 34: 9, 55: 10, 89: 11, 144: 12}
 POSITIVE_PORTS = (0, 1, 4, 5, 8, 9)
 LOCAL_PINS = (
     "oph_exact/carrier_source_net.py",
@@ -757,7 +757,7 @@ def check_cost_totals(oc: dict, n: int, edges: int, word_sum: int, word_max: int
 
 
 def check_large_level(level: dict, frozen: dict) -> dict:
-    """Internal consistency and agreement with the frozen source-net receipt at q = 13, 21, 34."""
+    """Internal consistency and agreement with the frozen source-net receipt at q >= 13."""
     q = level["q"]
     n = q ** 3
     K = ceil_sqrt(q)

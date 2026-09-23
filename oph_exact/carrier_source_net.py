@@ -61,10 +61,10 @@ OUTPUT = ROOT / "data/exact/carrier_source_net_receipt.json"
 LOG_DIR = ROOT / "data/exact/carrier_source_net_logs"
 SCHEMA = "oph.exact.carrier-source-net.v1"
 LOG_SCHEMA = "oph.exact.carrier-source-net-log.v1"
-LEVELS = (5, 8, 13, 21, 34)
+LEVELS = (5, 8, 13, 21, 34, 55, 89)
 RER_LEVELS = (5, 8, 13)
 STORED_LOG_LEVELS = (5, 8)
-FIBONACCI_INDEX = {3: 4, 5: 5, 8: 6, 13: 7, 21: 8, 34: 9, 55: 10}
+FIBONACCI_INDEX = {3: 4, 5: 5, 8: 6, 13: 7, 21: 8, 34: 9, 55: 10, 89: 11, 144: 12}
 POSITIVE_PORTS = (0, 1, 4, 5, 8, 9)
 PREFILTER_MARGIN = 1e-9
 METRIC_IDENTITY_ALL_PAIRS_LIMIT = 10000
@@ -73,6 +73,7 @@ METRIC_IDENTITY_SEED = 20260909
 EXACT_SAMPLE_COUNT = 8
 BATCH_SIZE = 64
 DIGEST_ROWS = 2000
+CHUNK_ENTRIES = 20_000_000  # neighbour-list entries handled per chunk by the streaming passes
 ID_BYTES = 4
 VERSION_BYTES = 2
 LOCAL_PINS = (
@@ -133,7 +134,7 @@ SCOPE = {
 }
 CLAIM_BOUNDARY = (
     "Finite realization of the r2039 source-net population by exact twelve-port "
-    "carriers at q = 5, 8, 13, 21, 34: each carrier holds the integer record z(b) as "
+    "carriers at q = 5, 8, 13, 21, 34, 55, 89: each carrier holds the integer record z(b) as "
     "port loads, reads its position from those loads through the rank-three response "
     "x = 2 P_slow N, finds its metric neighbours from the readbacks by an exact "
     "Q(sqrt5) decision, reads its neighbours for K_q rounds, and the causal order is "
@@ -455,30 +456,48 @@ def neighbour_decision(dz: np.ndarray, q: int, sig: np.ndarray) -> np.ndarray:
 
 
 def find_neighbours(x3: np.ndarray, z: np.ndarray, q: int, sig: np.ndarray) -> dict:
-    """Candidate pairs from the readback chart inside ``a_q (1 + margin)``, each decided exactly."""
+    """Candidate pairs from the readback chart inside ``a_q (1 + margin)``, each decided exactly.
+
+    The candidates are proposed per chunk of carriers by ball queries on the
+    float chart (every candidate pair is met twice, once from each endpoint);
+    every candidate is decided exactly in ``Q(sqrt5)`` from the integer records.
+    The counts are over unordered candidate pairs.  The CSR rows are ascending
+    and include the same-site read.
+    """
     n = len(z)
     l2 = 2.0 - 2.0 / 5.0 ** 0.5
     a_q = (l2 / q) ** 0.5
+    radius = a_q * (1.0 + PREFILTER_MARGIN)
     tree = cKDTree(x3)
-    pairs = tree.query_pairs(a_q * (1.0 + PREFILTER_MARGIN), output_type="ndarray")
-    pairs = pairs.astype(np.int64)
-    accepted_mask = np.zeros(len(pairs), dtype=bool)
-    borderline = 0
-    for lo in range(0, len(pairs), 2_000_000):
-        block = pairs[lo:lo + 2_000_000]
-        accepted_mask[lo:lo + 2_000_000] = neighbour_decision(z[block[:, 0]] - z[block[:, 1]], q, sig)
-        d = np.linalg.norm(x3[block[:, 0]] - x3[block[:, 1]], axis=1)
-        borderline += int(np.count_nonzero(np.abs(d - a_q) <= a_q * PREFILTER_MARGIN))
-    accepted = pairs[accepted_mask]
-    i = np.concatenate([accepted[:, 0], accepted[:, 1], np.arange(n, dtype=np.int64)])
-    j = np.concatenate([accepted[:, 1], accepted[:, 0], np.arange(n, dtype=np.int64)])
-    order = np.lexsort((j, i))
-    i, j = i[order], j[order]
+    expected_degree = max(1, int(4.19 * q ** 1.5))
+    chunk = max(64, min(n, CHUNK_ENTRIES // expected_degree))
     indptr = np.zeros(n + 1, dtype=np.int64)
-    np.add.at(indptr, i + 1, 1)
-    indptr = np.cumsum(indptr)
-    return {"indptr": indptr, "indices": j.astype(np.int32), "candidate_pairs": int(len(pairs)),
-            "accepted_pairs": int(len(accepted)), "rejected_candidates": int(len(pairs) - len(accepted)),
+    pieces = []
+    candidates = accepted_pairs = borderline = 0
+    for lo in range(0, n, chunk):
+        hi = min(lo + chunk, n)
+        lists = tree.query_ball_point(x3[lo:hi], radius)
+        lengths = np.fromiter((len(l) for l in lists), dtype=np.int64, count=hi - lo)
+        j = np.concatenate([np.asarray(l, dtype=np.int64) for l in lists]) if lengths.sum() else np.zeros(0, dtype=np.int64)
+        i = np.repeat(np.arange(lo, hi, dtype=np.int64), lengths)
+        other = i != j
+        io, jo = i[other], j[other]
+        upper = jo > io
+        candidates += int(np.count_nonzero(upper))
+        ok = neighbour_decision(z[io] - z[jo], q, sig)
+        accepted_pairs += int(np.count_nonzero(ok & upper))
+        d = np.linalg.norm(x3[io[upper]] - x3[jo[upper]], axis=1)
+        borderline += int(np.count_nonzero(np.abs(d - a_q) <= a_q * PREFILTER_MARGIN))
+        keep_i = np.concatenate([io[ok], np.arange(lo, hi, dtype=np.int64)])
+        keep_j = np.concatenate([jo[ok], np.arange(lo, hi, dtype=np.int64)])
+        order = np.lexsort((keep_j, keep_i))
+        keep_i, keep_j = keep_i[order], keep_j[order]
+        counts = np.bincount(keep_i - lo, minlength=hi - lo)
+        indptr[lo + 1:hi + 1] = indptr[lo] + np.cumsum(counts)
+        pieces.append(keep_j.astype(np.int32))
+    indices = np.concatenate(pieces) if pieces else np.zeros(0, dtype=np.int32)
+    return {"indptr": indptr, "indices": indices, "candidate_pairs": int(candidates),
+            "accepted_pairs": int(accepted_pairs), "rejected_candidates": int(candidates - accepted_pairs),
             "borderline_candidates": borderline}
 
 
@@ -513,14 +532,19 @@ def run_reads(indptr: np.ndarray, indices: np.ndarray, rounds: int, intervention
     audit chain is RER's: ``chain = sha256(chain || canonical(material))`` with
     ``material = [[j, i], reads, [i, j + 1, [j, i], value]]`` and
     ``reads = [[r, j, [j - 1, r], value_read], ...]`` in neighbour order.
+
+    The neighbour rows are streamed from the CSR arrays and every read record
+    ``[r, j, [j - 1, r], value_read]`` is formatted once per round, so the
+    memory stays linear in the number of carriers rather than in the number
+    of reads.
     """
     n = len(indptr) - 1
-    rows = [indices[indptr[i]:indptr[i + 1]].tolist() for i in range(n)]
-    bases = [",".join("[%d,@,[#,%d],%%d]" % (r, r) for r in row) for row in rows] if chain else None
     ch = bytes(32)
     layer_hashes, layer_sums, values = [], [], []
     prev = None
     sha = hashlib.sha256
+    starts = indptr[:-1].tolist()
+    ends = indptr[1:].tolist()
     for j in range(rounds + 1):
         if j == 0:
             cur = [1 + i + (1 if i == intervention else 0) for i in range(n)]
@@ -528,12 +552,18 @@ def run_reads(indptr: np.ndarray, indices: np.ndarray, rounds: int, intervention
                 for i in range(n):
                     ch = sha(ch + b"[[0,%d],[],[%d,1,[0,%d],%d]]\n" % (i, i, i, cur[i])).digest()
         else:
-            cur = [1 + sum(map(prev.__getitem__, row)) for row in rows]
+            cur = [0] * n
+            piece = None
             if chain:
-                sj, sj1 = str(j), str(j - 1)
-                for i in range(n):
-                    body = bases[i].replace("@", sj).replace("#", sj1) % tuple(map(prev.__getitem__, rows[i]))
-                    material = ("[[%d,%d],[" % (j, i)) + body + ("],[%d,%d,[%d,%d],%d]]\n" % (i, j + 1, j, i, cur[i]))
+                piece = ["[%d,%d,[%d,%d],%d]" % (r, j, j - 1, r, v) for r, v in enumerate(prev)]
+            get_prev = prev.__getitem__
+            for i in range(n):
+                row = indices[starts[i]:ends[i]].tolist()
+                value = 1 + sum(map(get_prev, row))
+                cur[i] = value
+                if chain:
+                    material = "[[%d,%d],[%s],[%d,%d,[%d,%d],%d]]\n" % (
+                        j, i, ",".join(map(piece.__getitem__, row)), i, j + 1, j, i, value)
                     ch = sha(ch + material.encode("ascii")).digest()
         layer_hashes.append(digest(cur))
         layer_sums.append(sum(cur))
@@ -551,16 +581,30 @@ class EventLog:
     round-``j`` event of the reader site and the version read is ``j``.  The
     records are listed in execution order (readers ascending, registers in
     neighbour order), which is the order the audit chain digests them in.
+    ``forward``/``backward`` yield whole rounds; ``chunks`` yields the same
+    records of one round in consecutive reader ranges, for the streaming passes.
     """
 
     def __init__(self, indptr: np.ndarray, indices: np.ndarray, rounds: int) -> None:
         n = len(indptr) - 1
+        self.n = n
         self.rounds = rounds
-        self.readers = np.repeat(np.arange(n, dtype=np.int32), np.diff(indptr).astype(np.int64))
-        self.registers = np.asarray(indices, dtype=np.int32)
+        self.indptr = np.asarray(indptr, dtype=np.int64)
+        self.indices = np.asarray(indices, dtype=np.int32)
+        degree = max(1, int(self.indptr[-1]) // max(1, n))
+        self.chunk_rows = max(1, min(n, CHUNK_ENTRIES // degree))
 
     def round(self, j: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        return self.readers, self.registers, np.full(len(self.readers), j, dtype=np.int16)
+        readers = np.repeat(np.arange(self.n, dtype=np.int32), np.diff(self.indptr))
+        return readers, self.indices, np.full(len(readers), j, dtype=np.int16)
+
+    def chunks(self):
+        """``(lo, hi, readers, registers)`` over consecutive reader ranges, in execution order."""
+        for lo in range(0, self.n, self.chunk_rows):
+            hi = min(lo + self.chunk_rows, self.n)
+            st, en = int(self.indptr[lo]), int(self.indptr[hi])
+            readers = np.repeat(np.arange(lo, hi, dtype=np.int32), np.diff(self.indptr[lo:hi + 1]))
+            yield lo, hi, readers, self.indices[st:en]
 
     def forward(self):
         for j in range(1, self.rounds + 1):
@@ -588,7 +632,7 @@ class ProvenanceError(ValueError):
     pass
 
 
-def provenance_edges(n: int, rounds: int, values: list[list[int]], log_rounds) -> dict:
+def provenance_edges(n: int, rounds: int, values: list[list[int]], log: EventLog) -> dict:
     """Generate the causal edges from the log by the read-after-write rule.
 
     Rule (``oph_fpe/bulk/source_derived_causal_order.py::generated_provenance_edges``,
@@ -598,7 +642,13 @@ def provenance_edges(n: int, rounds: int, values: list[list[int]], log_rounds) -
     without parents); an event never reads its own committed version.  Event
     ids are the ordinal positions in the log.  Layer labels are outputs: the
     derived longest-path rank of every event is reported and compared with
-    the round it was executed in.
+    the round it was executed in.  The value witness of the paper's rule
+    (the value read equals the value the writer committed) holds by
+    construction here: versions are immutable and single-copy, and every
+    value read is committed by the audit chain.
+
+    The records of each round are consumed in consecutive reader ranges, so
+    the working memory is linear in the chunk size, not in the read count.
     """
     writer_of = np.full((n, rounds + 2), -1, dtype=np.int64)
     for event_id, (register, version, _value) in enumerate(write_records(values)):
@@ -610,38 +660,38 @@ def provenance_edges(n: int, rounds: int, values: list[list[int]], log_rounds) -
     chronological = True
     rank_matches_round = True
     relation_identical = True
-    first_pairs = None
+    first_digests = None
     round_relations = []
-    for j, readers, registers, versions in log_rounds:
-        parents = writer_of[registers, versions]
-        if np.any(parents < 0):
-            raise ProvenanceError("read of an unwritten register version")
-        children = j * n + readers.astype(np.int64)
-        if np.any(parents == children):
-            raise ProvenanceError("event reads its own committed version")
-        chronological = chronological and bool(np.all(parents < children))
-        edge_count += int(len(parents))
-        # Longest-path rank: 1 + max over parents, grouped by child (records are grouped by reader).
-        starts = np.flatnonzero(np.r_[True, readers[1:] != readers[:-1]])
-        child_ids = children[starts]
-        rank[child_ids] = np.maximum.reduceat(rank[parents], starts) + 1
-        rank_matches_round = rank_matches_round and bool(np.all(rank[child_ids] == j))
-        pairs = (readers.astype(np.int64), registers.astype(np.int64))
-        if first_pairs is None:
-            first_pairs = pairs
+    for j in range(1, rounds + 1):
+        digests = []
+        for lo, hi, readers, registers in log.chunks():
+            parents = writer_of[registers, j]
+            if np.any(parents < 0):
+                raise ProvenanceError("read of an unwritten register version")
+            children = j * n + readers.astype(np.int64)
+            if np.any(parents == children):
+                raise ProvenanceError("event reads its own committed version")
+            chronological = chronological and bool(np.all(parents < children))
+            edge_count += int(len(parents))
+            # Longest-path rank: 1 + max over parents, grouped by child (records are grouped by reader).
+            starts = np.flatnonzero(np.r_[True, readers[1:] != readers[:-1]])
+            child_ids = children[starts]
+            rank[child_ids] = np.maximum.reduceat(rank[parents], starts) + 1
+            rank_matches_round = rank_matches_round and bool(np.all(rank[child_ids] == j))
+            h = hashlib.sha256()
+            h.update(np.ascontiguousarray(readers, dtype=np.int32).tobytes())
+            h.update(np.ascontiguousarray(registers, dtype=np.int32).tobytes())
+            digests.append(h.hexdigest())
+        if first_digests is None:
+            first_digests = digests
         else:
-            relation_identical = relation_identical and bool(
-                np.array_equal(first_pairs[0], pairs[0]) and np.array_equal(first_pairs[1], pairs[1]))
+            relation_identical = relation_identical and digests == first_digests
         round_relations.append(j)
-    readers, registers = first_pairs
-    counts = np.bincount(readers, minlength=n)
-    indptr = np.zeros(n + 1, dtype=np.int64)
-    indptr[1:] = np.cumsum(counts)
     return {"edge_count": edge_count, "single_writer": True, "all_reads_resolved": True,
             "parents_precede_children": chronological, "derived_rank_equals_round": rank_matches_round,
             "read_relation_identical_across_rounds": relation_identical,
             "rounds_seen": round_relations, "rank": rank,
-            "relation": (indptr, registers.astype(np.int32))}
+            "relation": (log.indptr, log.indices)}
 
 
 def _ranges(starts: np.ndarray, lengths: np.ndarray) -> np.ndarray:
@@ -699,20 +749,22 @@ def cones_from_log(n: int, rounds: int, centre: int, log: EventLog) -> dict:
     future = [np.array([centre], dtype=np.int64)]
     current = np.zeros(n, dtype=bool)
     current[centre] = True
-    for j, readers, registers, _versions in log.forward():
-        hit = current[registers]
+    for _j in range(1, rounds + 1):
         nxt = np.zeros(n, dtype=bool)
-        nxt[readers[hit]] = True
+        for _lo, _hi, readers, registers in log.chunks():
+            hit = current[registers]
+            nxt[readers[hit]] = True
         current = nxt
         future.append(np.flatnonzero(current).astype(np.int64))
     past = [None] * (rounds + 1)
     past[rounds] = np.array([centre], dtype=np.int64)
     current = np.zeros(n, dtype=bool)
     current[centre] = True
-    for j, readers, registers, _versions in log.backward():
-        hit = current[readers]
+    for j in range(rounds, 0, -1):
         prv = np.zeros(n, dtype=bool)
-        prv[registers[hit]] = True
+        for _lo, _hi, readers, registers in log.chunks():
+            hit = current[readers]
+            prv[registers[hit]] = True
         current = prv
         past[j - 1] = np.flatnonzero(current).astype(np.int64)
     return {"future": future, "past": past}
@@ -849,7 +901,7 @@ def build_level(q: int, frozen: dict, rer_level: dict | None, processes: int = 1
     # 5. Provenance order from the log records.
     t3 = time.time()
     log = EventLog(indptr, indices, K)
-    prov = provenance_edges(n, K, forward["values"], log.forward())
+    prov = provenance_edges(n, K, forward["values"], log)
     rel_indptr, rel_indices = prov["relation"]
     relation_sha = neighbour_digest(rel_indptr, rel_indices)
     cones = cones_from_log(n, K, centre, log)

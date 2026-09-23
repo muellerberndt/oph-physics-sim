@@ -33,7 +33,7 @@ RER_ROOT = Path(os.environ.get("OPH_RER_ROOT", str(ROOT.parent / "reverse-engine
 OUTPUT = ROOT / "data/exact/source_net_causal_limit_receipt.json"
 SCHEMA = "oph.exact.source-net-causal-limit.v1"
 REBUILT_LEVELS = (5, 6, 7)
-LEVELS = (5, 6, 7, 8, 9, 10)
+LEVELS = (5, 6, 7, 8, 9, 10, 11)
 DIMENSIONS = (3, 2, 1)
 SAMPLE_SEED = 20260909
 SAMPLE_MINIMUM = 2000
@@ -724,9 +724,11 @@ def check_family(fam: dict, rebuilt: bool, expected_dim: int, n: int) -> dict:
     NI, NJ = Cs[K][1], Cs[Kp][1]
     require(clock["reference_layers"] == Kp and clock["interval_layers"] == K, label + ": clock layers")
     require(clock["interval_count"] == NI and clock["reference_count"] == NJ, label + ": clock counts")
-    close(clock["count_clock"], (NI / NJ) ** 0.25, label + ": count clock")
+    root = 1.0 / (dim + 1)
+    require(clock["clock_exponent"] == f"1/{dim + 1}", label + ": clock exponent")
+    close(clock["count_clock"], (NI / NJ) ** root, label + ": count clock")
     close(clock["model_time_ratio"], K / Kp, label + ": model time ratio")
-    close(clock["relative_deviation"], (NI / NJ) ** 0.25 / (K / Kp) - 1.0, label + ": clock deviation")
+    close(clock["relative_deviation"], (NI / NJ) ** root / (K / Kp) - 1.0, label + ": clock deviation")
     if dim == 3:
         EI = intervals[K - 1]["volume_error_bound"] * density
         EJ = intervals[Kp - 1]["volume_error_bound"] * density
