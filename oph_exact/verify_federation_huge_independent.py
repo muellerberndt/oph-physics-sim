@@ -214,6 +214,8 @@ def replay_integer_sweep(x: np.ndarray, geo: Geo, seq: np.ndarray, coin: np.ndar
 
     ports = x.size
     descents = swaps = waits = transfers = 0
+    big = np.int64(1) << 62
+    earliest = np.full(ports, big, dtype=np.int64)  # allocated once; touched entries are reset per layer
     for start in range(0, seq.size, chunk):
         ids = seq[start:start + chunk]
         ea, eb = geo.endpoints(ids)
@@ -230,10 +232,11 @@ def replay_integer_sweep(x: np.ndarray, geo: Geo, seq: np.ndarray, coin: np.ndar
             order = np.argsort(cat, kind="stable")
             sorted_ports = cat[order]
             starts = np.r_[True, sorted_ports[1:] != sorted_ports[:-1]]
-            earliest = np.full(ports, m, dtype=np.int64)
-            earliest[sorted_ports[starts]] = (order // 2)[starts]
+            touched = sorted_ports[starts]
+            earliest[touched] = (order // 2)[starts]
             pos = np.arange(m, dtype=np.int64)
             ready = (earliest[ra] == pos) & (earliest[rb] == pos)
+            earliest[touched] = big
             la = ra[ready]
             lb = rb[ready]
             lc = ec[remaining[ready]]
