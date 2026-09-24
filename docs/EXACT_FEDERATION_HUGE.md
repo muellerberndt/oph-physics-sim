@@ -61,6 +61,28 @@ lane is unchanged; what differs is representation.
 - `tests/test_exact_federation_huge.py`: the comparisons above at level one, chunked-draw
   equality, local-ball kernel equality, and mutation tests of the verifier.
 
+## Results at levels 8, 9 and 10 (2026-09-24)
+
+Sixteen integer schedules per level, seeds `909000 + 1000 L + 100 + k`, loads
+`default_rng(20260909 + L)`; one budgeted mean schedule of 64 sweeps; 64 kernel cells at
+`n = 1, 5, 30, 100` and four at `n = 300`. Every schedule terminates at the balanced class and
+every level returns one quotient hash equal to the multiset fixed by the loads; the host
+verification replayed every draw digest and the last sweeps of every schedule.
+
+| L | carriers | seams | sweeps (min to max, mean) | law `4.3 log2 N - 9` | unit transfers per port | glued slow-band share medians at n = 1, 5, 30, 100, 300 | float `Phi` after 64 sweeps | seconds per schedule |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 6 (archive) | 81,920 | 2,580,480 | 51 to 79, 60.7 | 61.2 | 0.9408 to 0.9417 | 0.2987, 0.4132, 0.9062, 0.5954, 0.6413 | 17.3 after 256 sweeps | |
+| 8 | 1,310,720 | 41,287,680 | 69 to 89, 75.5 | 78.4 | 0.94154 to 0.94187 | 0.298669, 0.413158, 0.906125, 0.595353, 0.640923 | 2.41e8 to 5.03e3 | 165 to 205 |
+| 9 | 5,242,880 | 165,150,720 | 79 to 108, 89.4 | 87.0 | 0.94146 to 0.94159 | 0.298669, 0.413158, 0.906125, 0.595353, 0.641611 | 9.63e8 to 2.01e4 | up to 1,088 |
+| 10 | 20,971,520 | 660,602,880 | 84 to 100, 91.1 | 95.6 | 0.94152 to 0.94159 | 0.298669, 0.413158, 0.906185, 0.595353, 0.641611 | 3.85e9 to 8.06e4 | up to 4,313 |
+
+The kernel shares are level-independent to six digits at `n <= 100` and to three at
+`n = 300`: the per-carrier readout is a property of the neighbourhood, not of the level. The
+mean law's residual after its budget is not a settlement; its lattice-snap hash is withheld
+at every level. The settling texture readouts (`oph_exact/federation_texture.py`) add the
+universal descent curve (contraction 0.822 per sweep at every level), the transport constant
+1.2555 and the settling horizon (535 cells at L8, 621 at L9).
+
 ## Independent verifier
 
 `oph_exact/verify_federation_huge_independent.py RUN_DIR` shares nothing with the engine
