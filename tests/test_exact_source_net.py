@@ -78,7 +78,7 @@ def test_receipt_is_canonical_frozen_and_free_of_wall_clock(receipt: dict) -> No
     assert re.search(r"20\d\d-\d\d-\d\dT", text) is None
     assert "timestamp" not in text and "wall_clock" not in text
     assert [lv["fibonacci_index"] for lv in receipt["levels"]] == list(producer.LEVELS)
-    assert [lv["q"] for lv in receipt["levels"]] == [5, 8, 13, 21, 34, 55]
+    assert [lv["q"] for lv in receipt["levels"]] == [5, 8, 13, 21, 34, 55, 89]
     for level in receipt["levels"]:
         assert [f["dimension"] for f in level["families"]] == [3, 2, 1]
 
@@ -316,7 +316,7 @@ def test_verifier_accepts_the_committed_receipt() -> None:
     result = verifier.verify(verifier.load(RECEIPT))
     assert result["accepted"] is True
     assert result["rebuilt_levels"] == [5, 6, 7]
-    assert len(result["families"]) == 18
+    assert len(result["families"]) == 3 * len(producer.LEVELS)
 
 
 def _mutations(receipt: dict):
@@ -344,16 +344,26 @@ def _mutations(receipt: dict):
     r = copy.deepcopy(receipt)
     _family(r, 7, 3)["rer_cross_check"]["fields"]["undirected_spatial_edges"]["rer"] = 1
     yield "embedded_rer_value", r
+    sampled = [(lv["fibonacci_index"], fam["dimension"]) for lv in receipt["levels"] for fam in lv["families"]
+               if fam["vertical_pair_counting"] == "stratified_sample"]
+    if sampled:  # the committed receipt counts every level exactly; the sampled path keeps its mutations when present
+        n_s, d_s = sampled[0]
+        r = copy.deepcopy(receipt)
+        row = _family(r, n_s, d_s)["vertical_intervals"][-1]
+        row["strict_pair_count_estimate"]["strata"][1]["sum"] += 1
+        yield "sampled_sum", r
+        r = copy.deepcopy(receipt)
+        _family(r, n_s, d_s)["vertical_sample"]["seed"] += 1
+        yield "sampled_seed", r
+        r = copy.deepcopy(receipt)
+        _family(r, n_s, d_s)["vertical_intervals"][-1]["strict_pair_count_estimate"]["sample_size"] -= 1
+        yield "sample_size", r
     r = copy.deepcopy(receipt)
-    row = _family(r, 10, 3)["vertical_intervals"][-1]
-    row["strict_pair_count_estimate"]["strata"][1]["sum"] += 1
-    yield "sampled_sum", r
+    _family(r, 10, 3)["vertical_intervals"][-1]["strict_pair_count"] += 1
+    yield "exact_pair_count_q55", r
     r = copy.deepcopy(receipt)
-    _family(r, 10, 3)["vertical_sample"]["seed"] += 1
-    yield "sampled_seed", r
-    r = copy.deepcopy(receipt)
-    _family(r, 10, 3)["vertical_intervals"][-1]["strict_pair_count_estimate"]["sample_size"] -= 1
-    yield "sample_size", r
+    _family(r, 11, 3)["moving_tip_interval"]["strict_pair_count"] += 1
+    yield "exact_moving_pair_count_q89", r
     r = copy.deepcopy(receipt)
     _family(r, 9, 3)["count_clock"]["count_clock"] *= 1.01
     yield "clock", r
@@ -403,10 +413,11 @@ def test_large_levels_report_declared_counting_modes(receipt: dict) -> None:
                 est = fam["vertical_intervals"][-1]["strict_pair_count_estimate"]
                 assert est["sample_size"] >= receipt["pair_counting"]["sample_size_minimum"]
                 assert fam["vertical_intervals"][-1]["ordering_fraction_standard_error"] > 0
-    q55 = _family(receipt, 10, 3)
-    assert q55["vertical_pair_counting"] == "stratified_sample"
-    assert q55["moving_tip_interval"]["pair_counting"] == "stratified_sample"
-    assert _family(receipt, 9, 3)["vertical_pair_counting"] == "exact_all_pairs"
+    for n in (9, 10, 11):
+        fam = _family(receipt, n, 3)
+        assert fam["vertical_pair_counting"] == "exact_all_pairs"
+        assert fam["moving_tip_interval"]["pair_counting"] == "exact_all_pairs"
+        assert fam["vertical_intervals"][-1]["strict_pair_count"] > 0
 
 
 def test_three_dimensional_family_moves_toward_one_tenth(receipt: dict) -> None:

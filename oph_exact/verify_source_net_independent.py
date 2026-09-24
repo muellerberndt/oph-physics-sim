@@ -82,6 +82,18 @@ def close(x, y, label: str, tolerance: float = FLOAT_TOLERANCE) -> None:
     require(abs(float(x) - float(y)) <= tolerance * max(1.0, abs(float(y))), f"{label}: {x} vs {y}")
 
 
+def conditioned_tolerance(pair, value: float) -> float:
+    """Tolerance for a float the producer derives from an exact ``a + b sqrt5`` by float evaluation.
+
+    Evaluating ``a + b sqrt5`` in binary64 loses digits by cancellation; the relative error is
+    bounded by ``kappa * eps`` with ``kappa = (|a| + |b| sqrt5) / |a + b sqrt5|``.  The producer's
+    twelve-digit diagnostic carries that error, so the check allows it (and never less than the
+    default tolerance).  The exact rational fields beside it are compared exactly.
+    """
+    kappa = (abs(float(pair[0])) + abs(float(pair[1])) * math.sqrt(5.0)) / max(abs(value), 1e-300)
+    return max(FLOAT_TOLERANCE, 16.0 * 2.220446049250313e-16 * kappa)
+
+
 # --------------------------------------------------------------------------
 # Loading
 # --------------------------------------------------------------------------
@@ -450,9 +462,11 @@ def check_family(fam: dict, rebuilt: bool, expected_dim: int, n: int) -> dict:
     require(fam["positive_inner_cone"] == (sgn(minus((1, 0), times(4 * q, h2))) > 0), label + ": inner cone flag")
     require(fam["radius_squared_over_L2"] == str(Fraction(1, q)), label + ": edge radius")
     require(fam["layer_time_equals_radius"] is True, label + ": layer clock")
-    h_float = math.sqrt(float(h2[0]) + float(h2[1]) * math.sqrt(5.0))
-    close(fam["covering_radius_h_over_L"], h_float, label + ": covering radius float")
-    close(fam["h_over_a"], math.sqrt(q) * h_float, label + ": h over a")
+    h2_value = float(h2[0]) + float(h2[1]) * math.sqrt(5.0)
+    h_float = math.sqrt(h2_value)
+    h2_tol = conditioned_tolerance(h2, h2_value)  # a square root halves the relative error
+    close(fam["covering_radius_h_over_L"], h_float, label + ": covering radius float", h2_tol)
+    close(fam["h_over_a"], math.sqrt(q) * h_float, label + ": h over a", h2_tol)
     close(fam["edge_radius_a_over_L"], 1.0 / math.sqrt(q), label + ": edge radius float")
     if dim == 3:
         close(fam["assignment_error_H_over_L"], 2.0 * math.sqrt(3.0) / q, label + ": H_q")
@@ -592,8 +606,8 @@ def check_family(fam: dict, rebuilt: bool, expected_dim: int, n: int) -> dict:
             delta = a_q
             bound = 4.0 * math.pi * (T + delta) * (T / 2.0 + H_q) ** 2 * (H_q + T * h_over_a) \
                 + math.pi * T ** 3 * delta / 2.0
-            close(row["volume_error_bound"], bound, rl + ": volume bound")
-            close(row["volume_error_bound_relative"], bound / volume, rl + ": relative bound")
+            close(row["volume_error_bound"], bound, rl + ": volume bound", h2_tol)
+            close(row["volume_error_bound_relative"], bound / volume, rl + ": relative bound", h2_tol)
             require(row["bound_hypothesis_ball_inside_cube"] == (clearance_float >= T / 2.0 + H_q),
                     rl + ": bound hypothesis")
             require(row["actual_deviation_within_bound"] == (abs(normalized - volume) <= bound),
@@ -650,8 +664,9 @@ def check_family(fam: dict, rebuilt: bool, expected_dim: int, n: int) -> dict:
         T = K * a_q
         ell2_float = float(ell2[0]) + float(ell2[1]) * math.sqrt(5.0)
         tau = math.sqrt(T * T - ell2_float)
-        close(moving["tip_separation_over_T"], math.sqrt(ell2_float) / T, ml + ": separation over T")
-        close(moving["proper_duration_over_L"], tau, ml + ": proper duration")
+        ell2_tol = conditioned_tolerance(ell2, ell2_float)
+        close(moving["tip_separation_over_T"], math.sqrt(ell2_float) / T, ml + ": separation over T", ell2_tol)
+        close(moving["proper_duration_over_L"], tau, ml + ": proper duration", ell2_tol)
         buffer = ellipsoid_buffer([xi_float[xl]] * dim, [xi_float[yl]] * dim, T)
         close(moving["spatial_buffer_over_L"], buffer, ml + ": buffer", 1e-9)
         require(buffer > 0.0, ml + ": positive buffer")
@@ -685,8 +700,8 @@ def check_family(fam: dict, rebuilt: bool, expected_dim: int, n: int) -> dict:
             delta = a_q
             bound = 8.0 * math.pi * (T + delta) * (T + H_q) ** 2 * (H_q + 2.0 * T * h_over_a) \
                 + 4.0 * math.pi * T ** 3 * delta
-            close(moving["volume_error_bound"], bound, ml + ": general bound")
-            close(moving["volume_error_bound_relative"], bound / volume, ml + ": relative general bound")
+            close(moving["volume_error_bound"], bound, ml + ": general bound", max(h2_tol, ell2_tol))
+            close(moving["volume_error_bound_relative"], bound / volume, ml + ": relative general bound", max(h2_tol, ell2_tol))
             require(moving["actual_deviation_within_bound"] == (abs(normalized - volume) <= bound),
                     ml + ": deviation within bound")
         if rebuilt:

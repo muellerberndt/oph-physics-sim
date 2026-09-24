@@ -7,7 +7,7 @@ their own positions from those loads through the rank-three response, find
 their metric neighbours from the readbacks, read each other for
 `K_q = ceil(sqrt q)` rounds, and the provenance of those reads generates the
 layered causal order on which the interior-diamond observations of lane L2
-are made.  Levels `q = 5, 8, 13, 21, 34` (125 to 39,304 carriers).
+are made.  Levels `q = 5, 8, 13, 21, 34, 55, 89` (125 to 704,969 carriers).
 
 Producer `oph_exact/carrier_source_net.py`, verifier
 `oph_exact/verify_carrier_source_net_independent.py`, tests
@@ -128,6 +128,8 @@ sorted neighbour lists, waiting included) equals lane L2's
 | 13 | 2,197 | 4 | 145,997 | 38 / 205 | yes / yes |
 | 21 | 9,261 | 5 | 1,451,292 | 72 / 437 | yes / (no RER level) |
 | 34 | 39,304 | 6 | 13,140,588 | 121 / 856 | yes / (no RER level) |
+| 55 | 166,375 | 8 | 121,391,967 | 278 / 1767 | yes / (no RER level) |
+| 89 | 704,969 | 10 | 1,091,925,058 | 501 / 3545 | yes / (no RER level) |
 
 ## 3. Layered reads and the log
 
@@ -153,6 +155,8 @@ per-layer response supports all agree (`reads.rer_cross_check.all_agree`).
 | 13 | 10,985 | 1,176,764 | `b409bd6f...94a3` (= RER) | `8f253c4f...be61` (= RER) |
 | 21 | 55,566 | 14,559,225 | `901943975c17c307...` | `efc794275994af47...` |
 | 34 | 275,128 | 157,922,880 | `c1e63647e1ec4191...` | `e78f6426bbbf37fb...` |
+| 55 | 1,497,375 | 1,943,602,472 | `a3353b5e71ab0343...` | `c024282cb5f6316f...` |
+| 89 | 7,754,659 | 21,845,550,850 | `00fbd424c8049da6...` | `c969c9df2c27aef8...` |
 
 The complete logs of `q = 5` and `q = 8` are stored (canonical JSON, gzip,
 `mtime 0`, uncompressed sha256 pinned in the receipt); the verifier derives
@@ -184,6 +188,8 @@ the log records; their intersection is the centre interval:
 | 13 | 1,529 | 1, 179, 1,169, 179, 1 | 102,990 | yes |
 | 21 | 6,482 | 1, 395, 2,845, 2,845, 395, 1 | 2,904,889 | yes |
 | 34 | 32,265 | 1, 847, 5,761, 19,047, 5,761, 847, 1 | 47,881,819 | yes |
+| 55 | 212,252 | 1, 1,656, 12,728, 42,442, 98,598, 42,442, 12,728, 1,656, 1 | 2,083,062,313 | yes |
+| 89 | 1,081,730 | 1, 3,494, 27,069, 90,503, 213,535, 412,526, 213,535, 90,503, 27,069, 3,494, 1 | 55,108,871,450 | yes |
 
 The event-set digest of the provenance interval equals the digest of the
 layered order `(j, s) <= (j', t)` iff `d(s, t) <= j' - j` on the log-derived
@@ -198,7 +204,7 @@ events of the future cone in every round (`intervention.equals_future_cone_all_r
 the support digests equal lane L2's `reachable_ids_sha256` probes from the
 centre and, at `q = 5, 8, 13`, RER's `support_ids_sha256`, support counts,
 delta sums and delta maxima.  Support counts: `q = 21`: 1, 395, 2,845, 7,839,
-9,247, 9,261; `q = 34`: 1, 847, 5,761, 19,047, 35,964, 39,279, 39,304.
+9,247, 9,261; `q = 34`: 1, 847, 5,761, 19,047, 35,964, 39,279, 39,304; `q = 89`: 1, 3,494, 27,069, 90,503, 213,535, 412,526, 599,468, 690,084, 704,797, 704,969, 704,969.
 
 ## 5. Manifold readouts on the provenance order
 
@@ -215,6 +221,8 @@ value equals lane L2's (`manifold.all_intervals_equal_source_net`,
 | 13 | 4 | 1,529 | 102,990 | 51495/584078 = 0.0882 | 4.149 | 1.705 | 2 |
 | 21 | 5 | 6,482 | 2,904,889 | 2904889/21004921 = 0.1383 | 3.612 | 2.010 | 2.5 |
 | 34 | 6 | 32,265 | 47,881,819 | 47881819/520498980 = 0.0920 | 4.099 | 2.088 | 2 |
+| 55 | 8 | 212,252 | 2,083,062,313 | 2083062313/22525349626 = 0.0925 | 4.093 | 1.907 | 2 |
+| 89 | 10 | 1,081,730 | 55,108,871,450 | 55108871450/585069355585 = 0.0942 | 4.071 | 2.051 | 2 |
 
 Twelve-digit values, the rows for every `k < K`, and the distance to `1/10`
 are in the receipt.  The even-`K` diamonds sit near `1/10` (0.088 at `q = 13`,
@@ -237,6 +245,8 @@ per record.
 | 13 | 294,191 | 1,176,764 | 10,985 | 15,706,632 | 6 | 98,254 / 98 / 324 |
 | 21 | 2,911,845 | 14,559,225 | 55,566 | 204,360,087 | 7 | 687,862 / 164 / 540 |
 | 34 | 26,320,480 | 157,922,880 | 275,128 | 2,402,551,058 | 10 | 4,795,802 / 271 / 891 |
+| 55 | 242,950,309 | 1,943,602,472 | 1,497,375 | 33,495,247,827 | 13 | 33,156,915 / 444 / 1458 |
+| 89 | 2,184,555,085 | 21,845,550,850 | 7,754,659 | 424,060,324,906 | 18 | 228,612,164 / 724 / 2376 |
 
 Per-round rows (reads, writes, read bytes, write bytes) are in
 `operation_costs.per_round`.  The read traffic dominates: at `q = 34` the six
@@ -246,7 +256,12 @@ width grows by about one byte per round.
 Wall-clock of the producer on the shared machine (6 workers for the pair
 searches; everything else single process): `q = 5, 8, 13` under 5 s together,
 `q = 21` 22 s, `q = 34` 142 s (neighbours 17 s, the two hash-chained traces
-67 s, provenance 9 s, pair searches 48 s); total about 170 s.
+67 s, provenance 9 s, pair searches 48 s); total about 170 s.  On a 64-vCPU box with 62 workers: `q = 55` 1,106 s
+(neighbours 113 s, traces 367 s, provenance 97 s, pair searches 529 s) and
+`q = 89` 29,777 s (neighbours 1,028 s, traces 5,547 s, provenance 1,012 s,
+pair searches 22,183 s over 412,526 starts).  The traces are sequential; the
+neighbour search, the provenance pass and the cone passes stream the
+neighbour table in bounded slices, so memory stays linear in the carriers.
 
 ## 7. Dynamic population
 

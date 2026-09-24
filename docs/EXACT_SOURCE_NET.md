@@ -79,15 +79,16 @@ one-dimensional controls) the receipt carries:
   and the finite enclosure of `SOURCE_COUNT_CLOCK.tex` evaluated with the
   bound values.
 
-Pair counting is exact all-pairs when the interval's spatial support has at
-most 20,000 sites (`q <= 34`: 19,047 support sites at `q = 34`).  At `q = 55`
-the vertical support has 98,598 sites and the moving support 26,496; there
-the receipt carries stratified estimates from seeded samples of 2,003 and
-2,007 start sites (proportional allocation over `d(x, s)` strata, at least two
-starts per stratum, without replacement, seeds `20263964` and `20264464`),
-exact per-start counts, per-stratum sums and sums of squares, and the
-standard error.  The verifier recomputes the estimate and its error from the
-strata rows.
+Pair counting is exact all-pairs at every level of the committed receipt
+(`--exact-support-limit 5000000`; the vertical support has 98,598 sites at
+`q = 55` and 412,526 at `q = 89`, the moving support 26,496 and 369,757).
+Below the declared limit the producer falls back to stratified estimates from
+seeded samples (proportional allocation over `d(x, s)` strata, at least two
+starts per stratum, without replacement, seed base `20260909`), with exact
+per-start counts, per-stratum sums and sums of squares, and the standard
+error; the verifier recomputes such an estimate and its error from the strata
+rows.  The sampled `q = 55` values of the 2026-09-09 receipt, 0.0926 (SE
+0.0003) and 0.1057 (SE 0.0015), enclose the exact values 0.0925 and 0.1077.
 
 ### Three spatial dimensions (target `1/10`), vertical `K`-layer diamond
 
@@ -98,7 +99,8 @@ strata rows.
 | 13 | 4 | 1529 | 0.1930 | 0.1983 | 0.1964 | 8.26 | 0.0882 | 4.149 | 1.705 | 2.0 | exact |
 | 21 | 5 | 6482 | 0.1527 | 0.1855 | 0.1849 | 5.82 | 0.1383 | 3.612 | 2.010 | 2.5 | exact |
 | 34 | 6 | 32265 | 0.1408 | 0.1468 | 0.1467 | 2.15 | 0.0920 | 4.099 | 2.088 | 2.0 | exact |
-| 55 | 8 | 212252 | 0.1720 | 0.1772 | 0.1768 | 2.25 | 0.0926 (SE 0.0003) | 4.091 | 1.907 | 2.0 | sampled 2003 |
+| 55 | 8 | 212252 | 0.1720 | 0.1772 | 0.1768 | 2.25 | 0.0925 | 4.093 | 1.907 | 2.0 | exact |
+| 89 | 10 | 1081730 | 0.1626 | 0.1653 | 0.1651 | 1.05 | 0.0942 | 4.071 | 2.051 | 2.0 | exact |
 
 Volumes and bounds in units of `L^4`.  The bound is the value of the formula;
 its hypothesis fails for the `K`-layer diamond at every level (the diamond
@@ -112,7 +114,8 @@ Largest `k` with the bound hypothesis `B(x, T/2 + H_q)` inside the cube:
 |:--|:--|:--|:--|:--|:--|:--|:--|:--|
 | 21 | 3 | 792 | 0.0187 | 0.0240 | -0.224 | 54 | 0.2363 | 2.959 |
 | 34 | 4 | 7457 | 0.0325 | 0.0290 | +0.122 | 21 | 0.0769 | 4.310 |
-| 55 | 6 | 71212 | 0.0577 | 0.0561 | +0.029 | 15 | 0.0839 | 4.208 |
+| 55 | 6 | 71212 | 0.0577 | 0.0561 | +0.029 | 15 | 0.0838 | 4.209 |
+| 89 | 8 | 455669 | 0.0685 | 0.0677 | +0.012 | 7 | 0.0900 | 4.125 |
 
 At `q = 5, 8, 13` no diamond beyond one layer satisfies that hypothesis.
 
@@ -126,7 +129,8 @@ diagonal, smallest rank shift with the declared buffer rule):
 | 13 | 3 | 0.737 | 0.750 | 0.029 | positive | 238 | 0.0300 | 0.0413 | -0.273 | 0.1349 | 3.642 | exact |
 | 21 | 4 | 0.606 | 0.868 | 0.009 | positive | 2512 | 0.0592 | 0.0742 | -0.202 | 0.1210 | 3.772 | exact |
 | 34 | 8 | 0.795 | 0.625 | 0.102 | at least H_q | 3177 | 0.0139 | 0.0199 | -0.304 | 0.1151 | 3.833 | exact |
-| 55 | 13 | 0.758 | 0.703 | 0.070 | at least H_q | 31935 | 0.0259 | 0.0321 | -0.193 | 0.1057 (SE 0.0015) | 3.934 | sampled 2007 |
+| 55 | 13 | 0.758 | 0.703 | 0.070 | at least H_q | 31935 | 0.0259 | 0.0321 | -0.193 | 0.1077 | 3.911 | exact |
+| 89 | 17 | 0.624 | 0.828 | 0.040 | at least H_q | 369757 | 0.0556 | 0.0616 | -0.097 | 0.1024 | 3.971 | exact |
 
 `V(D) = pi tau^4/24` with `tau^2 = T^2 - l^2`.  A tip at the centre admits no
 `K`-layer moving diamond with a positive buffer: the face-normal extent of the
@@ -150,6 +154,7 @@ Two spatial dimensions, target `8/35 = 0.2286`:
 | 21 | 5 | 606 | 0.2999 | 0.3401 | 0.3381 | 0.2729 | 2.779 | 0.2369 | 2.956 |
 | 34 | 6 | 1743 | 0.2586 | 0.2852 | 0.2851 | 0.2276 | 3.005 | 0.2425 | 2.927 |
 | 55 | 8 | 7040 | 0.3138 | 0.3286 | 0.3272 | 0.2255 | 3.017 | 0.2404 | 2.938 |
+| 89 | 10 | 22561 | 0.3019 | 0.3118 | 0.3111 | 0.2245 | 3.022 | 0.2350 | 2.966 |
 
 One spatial dimension, target `1/2`:
 
@@ -161,6 +166,7 @@ One spatial dimension, target `1/2`:
 | 21 | 5 | 54 | 0.5611 | 0.5952 | 0.5910 | 0.5220 | 1.942 |
 | 34 | 6 | 97 | 0.4893 | 0.5294 | 0.5289 | 0.5006 | 1.998 |
 | 55 | 8 | 231 | 0.5663 | 0.5818 | 0.5786 | 0.4980 | 2.005 |
+| 89 | 10 | 459 | 0.5467 | 0.5618 | 0.5600 | 0.4970 | 2.008 |
 
 No symmetric timelike pair with a positive buffer exists in one dimension
 at these levels (the projection of a moving diamond is the segment of length
@@ -225,7 +231,7 @@ Supplied, as in the paper: the population (product of golden orbits on the
 source Gram metric), the complete-neighbour read law with waiting, the tick
 `Delta_q = a_q/c`, and one counted event per site and layer.  Not selected by
 native repair.  No physical clock or spacetime is identified.  Finite runs at
-`q <= 55` do not demonstrate the asymptotic limit of the propositions; the
+`q <= 89` do not demonstrate the asymptotic limit of the propositions; the
 statistics are finite diagnostics of the supplied law, and the dimension
 statistic is not an acceptance criterion.  Poisson sprinkling is not used.
 The read/write hash-chained traces of the theory receipt are not executed
@@ -256,8 +262,15 @@ lanes running).  Verifier 2.3 s; tests 26 s idle, 56 s under load.
 
 ## 7. Work in progress
 
-* Exact all-pairs at `q = 55` (about 30 min of the vertical support with the
-  present searches) and the next level `q = 89` are work in progress.
+* Exact all-pairs counting through `q = 89` is in the committed receipt.  On a
+  64-vCPU box with 62 workers the `q = 89` family took 10.7 h (graph and
+  digest 254 s, vertical 22,837 s over 412,526 starts, moving 15,470 s over
+  369,757 starts); the next level `q = 144` (2,985,984 sites, about 1.1e10
+  neighbour entries) is untested.
+* The neighbour table has 2.18e9 entries at `q = 89`; gather positions are
+  int64 and every frontier expansion is sliced (`FRONTIER_CHUNK`), after a
+  first `q = 89` attempt with int32 positions failed the lane's own cone
+  check.
 * A finite bound sharp enough to make the count-clock enclosure informative
   at reachable `q` is work in progress on the theory side; the receipt
   reports the formula values and the actual deviations.

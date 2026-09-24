@@ -284,7 +284,7 @@ def test_verifier_accepts_the_committed_receipt() -> None:
     result = verifier.verify(verifier.load(RECEIPT))
     assert result["accepted"] is True
     assert result["rebuilt_levels"] == [5, 8]
-    assert [row["q"] for row in result["levels"]] == [5, 8, 13, 21, 34]
+    assert [row["q"] for row in result["levels"]] == [5, 8, 13, 21, 34, 55, 89]
 
 
 def _mutations(receipt: dict):
