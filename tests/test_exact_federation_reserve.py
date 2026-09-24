@@ -62,3 +62,48 @@ def test_refinement_survival_white_noise_reads_theta_two() -> None:
     r = R.refinement_survival(lo, hi)
     assert abs(r["rows"][0]["lambda_initial"] - 0.25) < 1e-9 and abs(r["rows"][0]["theta_initial"] - 2.0) < 1e-9
     assert abs(r["rows"][0]["theta_terminal"] - 2.0) < 1e-9
+
+
+from oph_exact import verify_federation_reserve_independent as V  # noqa: E402
+
+
+@pytest.fixture(scope="module")
+def receipt2(level2, tmp_path_factory) -> tuple[Path, Path]:
+    cache, out = level2
+    path = tmp_path_factory.mktemp("reserve") / "reserve.json"
+    R.build(2, cache, path, schedules=2, run_dir=out, textures=[], log=lambda m: None)
+    return path, out
+
+
+def test_verifier_passes_with_engine_cross_check(receipt2) -> None:
+    path, out = receipt2
+    result = V.verify(path, engine=out / "receipt.json", log=lambda m: None)
+    assert result["verdict"] == "PASS" and len(result["schedules"]) == 2
+
+
+def _mutated(path: Path, tmp_path: Path, mutate) -> Path:
+    receipt = json.loads(path.read_text())
+    mutate(receipt)
+    p = tmp_path / "mutated.json"
+    p.write_bytes(H.canonical(receipt))
+    return p
+
+
+def test_verifier_rejects_mutations(receipt2, tmp_path) -> None:
+    path, out = receipt2
+
+    def hazard(r):
+        r["schedules"][0]["readout"]["face_load"]["hazard_per_sweep_first_8"][0] *= 1.5
+
+    def table(r):
+        r["schedules"][0]["per_sweep"][0][2][0][3] += 1
+
+    def digest(r):
+        r["schedules"][0]["terminal_sha256"] = "0" * 64
+
+    def control(r):
+        r["controls"]["shuffled_seam_classes"]["terminal_matches_schedule_0"] = False
+
+    for name, m in (("hazard", hazard), ("table", table), ("digest", digest), ("control", control)):
+        with pytest.raises(V.VerificationError):
+            V.verify(_mutated(path, tmp_path, m), engine=out / "receipt.json", log=lambda mm: None)
