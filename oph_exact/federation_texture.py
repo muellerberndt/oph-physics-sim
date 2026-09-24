@@ -77,6 +77,41 @@ def retention(points: np.ndarray, cell0: np.ndarray, cellt: Sequence[np.ndarray]
     return rows
 
 
+def angular_spectrum(points: np.ndarray, fields: Sequence[np.ndarray], *, lmax: int = 40, res: int = 128) -> dict[str, Any]:
+    """Angular power spectra of cell fields on the sphere, from cap means at cube-grid resolution ``res``.
+
+    ``a_lm = sum_caps w_cap f_cap Y_lm(cap)`` with ``w_cap`` the cap's cell fraction, ``C_l = sum_m |a_lm|^2 / (2 l + 1)``,
+    monopole removed; direct summation, so the caps must resolve ``lmax`` (about ``res >= 3 lmax``).
+    """
+
+    from scipy.special import sph_harm_y  # scipy >= 1.15: sph_harm_y(l, m, theta, phi)
+
+    d = points / np.linalg.norm(points, axis=1, keepdims=True)
+    key = np.minimum(np.floor((d + 1.0) * res / 2.0).astype(np.int64), res - 1)
+    lab = key[:, 0] * res * res + key[:, 1] * res + key[:, 2]
+    ids, inv = np.unique(lab, return_inverse=True)
+    counts = np.bincount(inv).astype(np.float64)
+    centres = np.stack([np.bincount(inv, weights=d[:, k]) / counts for k in range(3)], axis=1)
+    centres /= np.linalg.norm(centres, axis=1, keepdims=True)
+    theta = np.arccos(np.clip(centres[:, 2], -1.0, 1.0))
+    phi = np.arctan2(centres[:, 1], centres[:, 0])
+    w = counts / counts.sum()
+    spectra = []
+    for f in fields:
+        means = np.bincount(inv, weights=f) / counts
+        means = means - float(np.dot(w, means))
+        cl = []
+        for l in range(1, lmax + 1):
+            total = 0.0
+            for m in range(-l, l + 1):
+                y = sph_harm_y(l, m, theta, phi)
+                alm = np.sum(w * means * np.conj(y))
+                total += float(np.abs(alm) ** 2)
+            cl.append(total / (2 * l + 1))
+        spectra.append(cl)
+    return {"resolution": res, "caps": int(len(ids)), "lmax": lmax, "spectra": spectra}
+
+
 def crossover(rows: list[dict[str, Any]], level: float = 0.5) -> float | None:
     """Cap size (cells) at which the median slope crosses ``level``, by log-linear interpolation."""
 
@@ -89,7 +124,7 @@ def crossover(rows: list[dict[str, Any]], level: float = 0.5) -> float | None:
 
 
 def build(run: Path, cache: Path, *, resolutions: Sequence[int] = RESOLUTIONS, terminals: int = 4,
-          window: tuple[int, int] = CONTRACTION_WINDOW) -> dict[str, Any]:
+          window: tuple[int, int] = CONTRACTION_WINDOW, lmax: int = 40, spectrum_res: int = 128) -> dict[str, Any]:
     receipt = json.loads((run / "receipt.json").read_text())
     level = int(receipt["level"])
     n = int(receipt["carriers"])
@@ -125,6 +160,11 @@ def build(run: Path, cache: Path, *, resolutions: Sequence[int] = RESOLUTIONS, t
         terms.append(x.reshape(n, 12).mean(axis=1))
         used.append(int(e["seed"]))
     rows = retention(points, cell0, terms, resolutions)
+    spec = angular_spectrum(points, [cell0] + terms[:2], lmax=lmax, res=spectrum_res)
+    c0 = np.asarray(spec["spectra"][0])
+    ct = np.mean(np.asarray(spec["spectra"][1:]), axis=0)
+    ratio = ct / np.where(c0 > 0, c0, np.nan)
+    ells = np.arange(1, lmax + 1)
     return {
         "schema": SCHEMA,
         "level": level, "carriers": n, "ports": ports, "schedules": len(entries),
@@ -153,6 +193,17 @@ def build(run: Path, cache: Path, *, resolutions: Sequence[int] = RESOLUTIONS, t
             "rows": rows,
             "crossover_cells_at_slope_one_half": _sig(crossover(rows), 6) if crossover(rows) is not None else None,
             "crossover_ports_at_slope_one_half": _sig(12 * crossover(rows), 6) if crossover(rows) is not None else None,
+        },
+        "angular_spectrum": {
+            "definition": "C_l of the cell-mean field on the sphere from cap means (cube grid, resolution r per axis), direct summation, monopole removed; "
+                          "transfer_by_l = C_l(terminal, mean of the first two states) / C_l(initial loads)",
+            "resolution": spec["resolution"], "caps": spec["caps"], "lmax": lmax,
+            "C_l_initial": [_sig(v, 6) for v in c0.tolist()],
+            "C_l_terminal_mean": [_sig(v, 6) for v in ct.tolist()],
+            "transfer_by_l": [_sig(v, 6) if np.isfinite(v) else None for v in ratio.tolist()],
+            "transfer_low_l_mean_1_to_8": _sig(float(np.nanmean(ratio[:8])), 6),
+            "transfer_high_l_mean_last_8": _sig(float(np.nanmean(ratio[-8:])), 6),
+            "white_noise_note": "an i.i.d. load field is white: C_l flat in l up to the cap resolution; the settled field keeps it above the horizon and suppresses it below",
         },
         "nonclaims": [
             "readings of the declared integer law on the declared gluing at one load seed; no physical scale, no limit",
