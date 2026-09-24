@@ -277,9 +277,9 @@
       "disposition": "EXACT_CARRIER_REALIZATION_OF_SOURCE_NET_POPULATION__INTEGER_PORT_LOADS_NOT_VERTEX12_OPERATOR",
       "path": "data/exact/carrier_source_net_receipt.json",
       "raw_pin": {
-        "bytes": 50549,
+        "bytes": 77888,
         "path": "data/exact/carrier_source_net_receipt.json",
-        "sha256": "sha256:755c7721f719dcf6811f602afa108589dce3fb6bacc92530e6958c6b8b358f64"
+        "sha256": "sha256:c93cecf2bcc4a30834e61e04a1bceaf9992613a87d5fabf64953582a0839a2e6"
       },
       "schema": "oph.exact.carrier-source-net.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -498,9 +498,9 @@
       "disposition": "EXACT_SEAM_MEAN_FEDERATION_ON_GEODESIC_TOWER__DECLARED_GLUING_NOT_VERTEX12_OPERATOR",
       "path": "data/exact/federation_canonical_mean_receipt.json",
       "raw_pin": {
-        "bytes": 468708,
+        "bytes": 473672,
         "path": "data/exact/federation_canonical_mean_receipt.json",
-        "sha256": "sha256:129db49280f022e9e1c5ab2cb159608ed207c56332209bc5e4756390cc608ffb"
+        "sha256": "sha256:c6d97036722217d597972b55bbbfb4429f6ed76f9ea10a6c146c48dee6670b51"
       },
       "schema": "oph.exact.federation-canonical-mean.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -524,9 +524,9 @@
       "disposition": "EXACT_SOURCE_NET_CAUSAL_LIMIT_REPLAY__NOT_VERTEX12_OPERATOR",
       "path": "data/exact/source_net_causal_limit_receipt.json",
       "raw_pin": {
-        "bytes": 216420,
+        "bytes": 283548,
         "path": "data/exact/source_net_causal_limit_receipt.json",
-        "sha256": "sha256:97c837913b75b2b019428028e114259caedd54345bd5a2efb78abd040f7e11f3"
+        "sha256": "sha256:1e8a11162ad772e7f9f9bef4dbe93c17fb0e5cc76fa43833d73f6028d9e920de"
       },
       "schema": "oph.exact.source-net-causal-limit.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1554,17 +1554,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:ce55c5c9a11718e782b8d99b9b74786ba9cb9f6961f6384e4d9ca36261a88306",
+  "receipt_sha256": "sha256:5975f5aa23e0bc3b5b17a7ac0e65447aeaae5b3aa698118344c6d7ea5204e7c7",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1063,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:5f7fa642e8f745d9f18575d39009a5c7ab2dbbf296d2a61eef71b0bb213e259d",
-    "path_count_including_declared_recursive_outputs": 1069,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:45833ee9252f00b109ed3fc98b92b482160bb6238aa867b9c9abc455f954bbe2",
+    "content_index_row_count_excluding_recursive_outputs": 1064,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:8ded48b1e1569eadd49598c7777892bfbd3fba7aeffa231ecb9075ef2eb58980",
+    "path_count_including_declared_recursive_outputs": 1070,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:0932447c516d1cc14b4fb61224fa3a30512bd64486fa113ff4f4c3a632350866",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 103,
+      "CURRENT_SIMULATOR_ARTIFACT": 104,
       "EXTERNAL_OR_COMPARISON_DATA": 41,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895
