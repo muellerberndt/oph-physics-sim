@@ -66,7 +66,35 @@ def sha256_of(x: Any) -> str:
 
 
 def array_sha256(a: np.ndarray, dtype: str) -> str:
-    return hashlib.sha256(np.ascontiguousarray(np.asarray(a, dtype=dtype)).astype(np.dtype(dtype).newbyteorder("<"), copy=False).tobytes(order="C")).hexdigest()
+    """SHA-256 of the little-endian C-order bytes, hashed through the buffer protocol without a bytes copy."""
+
+    arr = np.ascontiguousarray(np.asarray(a, dtype=dtype)).astype(np.dtype(dtype).newbyteorder("<"), copy=False)
+    h = hashlib.sha256()
+    step = max(1, (1 << 28) // max(arr.itemsize, 1))
+    flat = arr.reshape(-1)
+    for lo in range(0, flat.size, step):
+        h.update(memoryview(flat[lo:lo + step]))
+    return h.hexdigest()
+
+
+def rows_json_sha256(rows: np.ndarray) -> str:
+    """SHA-256 of the canonical JSON of an integer matrix as a list of lists, streamed row by row.
+
+    Identical to ``sha256_of(rows.tolist())`` (compact separators, trailing newline) without the list.
+    """
+
+    h = hashlib.sha256()
+    h.update(b"[")
+    rows = np.asarray(rows, dtype=np.int64)
+    step = 1 << 18
+    for lo in range(0, rows.shape[0], step):
+        block = rows[lo:lo + step]
+        text = ",".join("[" + ",".join(str(int(v)) for v in row) + "]" for row in block.tolist())
+        if lo > 0:
+            h.update(b",")
+        h.update(text.encode("ascii"))
+    h.update(b"]\n")
+    return h.hexdigest()
 
 
 def file_sha256(path: Path) -> str:
@@ -106,7 +134,7 @@ class Geo:
         relabel = np.empty(self.components, dtype=np.int64)
         relabel[np.argsort(first)] = np.arange(self.components)
         self.cell_component = relabel[label]
-        self.port_component = np.repeat(self.cell_component, PORTS)
+        self.port_component = np.repeat(self.cell_component.astype(np.int32), PORTS)
 
     def endpoints(self, seq: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         seq = np.asarray(seq, dtype=np.int64)
@@ -144,7 +172,7 @@ def check_geometry(geo: Geo, receipt: dict[str, Any]) -> dict[str, Any]:
     require(np.unique(slots).size == slots.size, "a port is glued more than once")
     require(np.all(geo.inter[:, 1] < PORTS) and np.all(geo.inter[:, 3] < PORTS), "port index out of range")
     require(np.all(geo.inter[:, 0] != geo.inter[:, 2]), "an inter seam joins a carrier to itself")
-    require(sha256_of(geo.inter.tolist()) == g["gluing"]["port_pairs_sha256"], "port pairs digest differs")
+    require(rows_json_sha256(geo.inter) == g["gluing"]["port_pairs_sha256"], "port pairs digest differs")
     require(receipt["components"] == geo.components, "component count differs")
     cached = np.asarray(np.load(geo.dir / "cell_component.npy"), dtype=np.int64)
     require(np.array_equal(cached, geo.cell_component), "cached component labels differ from the recomputed ones")
