@@ -830,7 +830,7 @@ def build(level: int, out: Path, cache: Path, *, schedules: int = DEFAULT_SCHEDU
         "level": level,
         "carriers": geo.carriers, "ports": geo.ports, "seams": geo.seams, "inter_seams": geo.inter_count,
         "components": geo.components,
-        "geometry": {k: v for k, v in meta.items() if k not in ("arrays",)} | {"arrays": meta["arrays"], "cache_dir": str(geometry_dir(cache, level))},
+        "geometry": {k: v for k, v in meta.items() if k not in ("arrays",)} | {"arrays": meta["arrays"], "cache_dir": str(geometry_dir(cache, level).resolve())},
         "laws": {
             "integer_law": "carrier.integer_nearest_agreement: s = x_a + x_b, lo = floor(s/2), hi = s - lo; the first endpoint receives hi when the coin is 1; "
                            "d = 0 wait; |d| = 1 wait or swap (V unchanged); |d| >= 2 descent lowering V by (d^2 - (d mod 2))/2",
