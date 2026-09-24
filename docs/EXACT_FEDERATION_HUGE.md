@@ -83,6 +83,18 @@ at every level. The settling texture readouts (`oph_exact/federation_texture.py`
 universal descent curve (contraction 0.822 per sweep at every level), the transport constant
 1.2555 and the settling horizon (535 cells at L8, 621 at L9).
 
+## Readback of the settled states (`oph_exact/federation_readback.py`)
+
+The carrier's readback is the rank-three slow-band projection of its twelve loads. On the
+settled terminal states (`data/exact/readback/readback_L{6,8,9,10}.json`) the slow-band energy
+share is the isotropic value 3/11 before and after settling (0.2725 to 0.2729 at every level),
+the per-carrier slow norm falls from 2.75 to 0.79 as the loads contract from `{0..5}` to
+`{q, q+1}`, about 1.9 percent of carriers end with no slow component, and the terminal slow
+and fast fields are uncorrelated with the initial ones (slopes and correlations below `10^-3`
+at levels 6, 8, 9 and 10; the coarse slow-norm retention is zero at every scale). Settling keeps
+the coarse load density above the settling horizon and forgets the per-carrier orientation
+everywhere: the public record retains how much, not which ports.
+
 ## Independent verifier
 
 `oph_exact/verify_federation_huge_independent.py RUN_DIR` shares nothing with the engine
