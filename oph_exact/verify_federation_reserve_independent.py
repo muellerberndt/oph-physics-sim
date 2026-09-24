@@ -121,6 +121,13 @@ def check_refinement(rows: list[dict[str, Any]], textures: dict[int, dict[str, A
             lt = (b["terminal_excess_sd_median"] / a["terminal_excess_sd_median"]) ** 2
             require(close(row["lambda_initial"], _sig(li, 6)) and close(row["theta_initial"], _sig(-np.log2(li), 6)), f"refinement {lo}->{hi} res {row['resolution']}: initial")
             require(close(row["lambda_terminal"], _sig(lt, 6)) and close(row["theta_terminal"], _sig(-np.log2(lt), 6)), f"refinement {lo}->{hi} res {row['resolution']}: terminal")
+        sa, sb = textures[lo].get("angular_spectrum"), textures[hi].get("angular_spectrum")
+        for band in block.get("angular_bands", []):
+            lo_l, hi_l = band["l_band"]
+            sl = slice(lo_l - 1, hi_l)
+            li = float(np.mean(np.asarray(sb["C_l_initial"])[sl]) / np.mean(np.asarray(sa["C_l_initial"])[sl]))
+            lt = float(np.mean(np.asarray(sb["C_l_terminal_mean"])[sl]) / np.mean(np.asarray(sa["C_l_terminal_mean"])[sl]))
+            require(close(band["lambda_initial"], _sig(li, 6)) and close(band["theta_terminal"], _sig(-np.log2(lt), 6)), f"refinement {lo}->{hi} band {band['l_band']}")
         require(close(block["target_theta"], _sig(P_STAR / 48, 6)), "refinement target")
 
 

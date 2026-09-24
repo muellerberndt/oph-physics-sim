@@ -272,8 +272,21 @@ def refinement_survival(texture_lo: dict[str, Any], texture_hi: dict[str, Any]) 
         out.append({"resolution": res, "cells_per_cap_low": a["cells_per_cap"], "cells_per_cap_high": b["cells_per_cap"],
                     "lambda_initial": _sig(lam_init, 6), "theta_initial": _sig(-np.log2(lam_init), 6),
                     "lambda_terminal": _sig(lam_term, 6), "theta_terminal": _sig(-np.log2(lam_term), 6)})
+    # angular-spectrum survival: C_l at fixed l across one refinement step (white noise: 1/4 per step, theta = 2)
+    bands = []
+    sa, sb = texture_lo.get("angular_spectrum"), texture_hi.get("angular_spectrum")
+    if sa and sb and sa["lmax"] == sb["lmax"]:
+        ci_lo, ci_hi = np.asarray(sa["C_l_initial"]), np.asarray(sb["C_l_initial"])
+        ct_lo, ct_hi = np.asarray(sa["C_l_terminal_mean"]), np.asarray(sb["C_l_terminal_mean"])
+        for lo_l, hi_l in ((2, 8), (9, 20), (21, sa["lmax"])):
+            sl = slice(lo_l - 1, hi_l)
+            li = float(np.mean(ci_hi[sl]) / np.mean(ci_lo[sl]))
+            lt = float(np.mean(ct_hi[sl]) / np.mean(ct_lo[sl]))
+            bands.append({"l_band": [lo_l, hi_l], "lambda_initial": _sig(li, 6), "theta_initial": _sig(-np.log2(li), 6),
+                          "lambda_terminal": _sig(lt, 6), "theta_terminal": _sig(-np.log2(lt), 6)})
     return {"definition": "lambda = var(cap means at level m+1) / var(cap means at level m) at equal resolution; theta = -log2 lambda; white noise gives 1/4 and 2",
-            "levels": [texture_lo["level"], texture_hi["level"]], "rows": out,
+            "angular_definition": "lambda_l = mean C_l(level m+1) / mean C_l(level m) over an l band, from the texture receipts' angular spectra; white noise gives 1/4 and theta = 2",
+            "levels": [texture_lo["level"], texture_hi["level"]], "rows": out, "angular_bands": bands,
             "target_theta": _sig(P_STAR / 48, 6), "target_lambda_per_refinement": _sig(2 ** (-P_STAR / 48), 6)}
 
 
@@ -350,7 +363,15 @@ def main(argv=None) -> int:
     parser.add_argument("--schedules", type=int, default=4)
     parser.add_argument("--run-dir", type=Path, default=None, help="engine run directory for the terminal-digest cross-check")
     parser.add_argument("--textures", type=Path, nargs="*", default=[], help="texture.json receipts of consecutive levels for the refinement survival")
+    parser.add_argument("--refresh-refinement", action="store_true", help="rewrite only the refinement rows of the existing receipt at --out from --textures")
     args = parser.parse_args(argv)
+    if args.refresh_refinement:
+        receipt = json.loads(args.out.read_text())
+        tex = sorted((json.loads(Path(p).read_text()) for p in args.textures), key=lambda t: t["level"])
+        receipt["refinement_survival"] = [refinement_survival(a, b) for a, b in zip(tex, tex[1:]) if b["level"] == a["level"] + 1]
+        args.out.write_bytes(H.canonical(receipt))
+        print("refinement rows refreshed:", [(b["levels"], [(r["l_band"], r["theta_initial"], r["theta_terminal"]) for r in b["angular_bands"]]) for b in receipt["refinement_survival"]])
+        return 0
     build(args.level, args.cache, args.out, schedules=args.schedules, run_dir=args.run_dir, textures=args.textures)
     return 0
 
