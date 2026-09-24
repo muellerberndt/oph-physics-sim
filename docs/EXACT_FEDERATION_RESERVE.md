@@ -40,7 +40,7 @@ two ticks fit, the forward share of collar crossings, and the per-sweep contract
 excess. Negative controls: shuffled seam classes (same trajectory, different collar hazard),
 the alternative tick bindings, and the i.i.d. reference without repair (zero hazard).
 
-## Readings (levels 5 to 8; four schedules per level, two at level 5)
+## Readings (levels 5 to 9; four schedules per level, two at level 5)
 
 | L | sweeps | depth-scaled collar hazard, sweep 1 | after settling, per sweep | generator per tick of `2^m` sweeps | per tick of `2^(m-1)` sweeps | forward share | excess contraction per sweep |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -48,6 +48,7 @@ the alternative tick bindings, and the i.i.d. reference without repair (zero haz
 | 6 | 57 to 62 | 0.0253 to 0.0261 | 0.0115 to 0.0122 | tick of 64 sweeps outlives the settlement | 0.0061 to 0.0062 | 0.4989 to 0.5009 | 0.811 to 0.825 |
 | 7 | 67 to 86 | 0.0252 to 0.0264 | 0.0117 to 0.0124 | tick of 128 sweeps outlives the settlement | 0.0060 to 0.0061 | 0.4982 to 0.4997 | 0.820 to 0.821 |
 | 8 | 69 to 80 | 0.0250 to 0.0263 | 0.0118 to 0.0123 | tick of 256 sweeps outlives the settlement | tick of 128 sweeps outlives the settlement | 0.4980 to 0.4992 | 0.820 to 0.824 |
+| 9 | 80 to 102 | 0.0249 to 0.0262 | 0.0117 to 0.0124 | tick of 512 sweeps outlives the settlement | tick of 256 sweeps outlives the settlement | 0.4999 to 0.5010 | 0.8215 to 0.8231 |
 
 Targets of the certificate: full-collar density `P*/24 = 0.0680`, half `P*/48 = 0.0340`, with
 `P* = 1.6309682094` entering only as the comparison value.
