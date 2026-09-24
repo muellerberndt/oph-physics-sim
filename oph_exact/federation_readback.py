@@ -49,12 +49,32 @@ def fields(x: np.ndarray, n: int, p_slow: np.ndarray, p_fast: np.ndarray) -> dic
     return {"centred": centred, "slow": slow, "fast": fast}
 
 
+def band_projectors() -> dict[str, np.ndarray]:
+    """Spectral projectors of the carrier seam Laplacian: constant (1), slow 5 - sqrt5 (3), middle 6 (5), top 5 + sqrt5 (3)."""
+
+    seams = np.asarray(carrier.seams(), dtype=np.int64)
+    lap = np.zeros((12, 12))
+    for a, b in seams:
+        lap[a, a] += 1; lap[b, b] += 1; lap[a, b] -= 1; lap[b, a] -= 1
+    w, u = np.linalg.eigh(lap)
+    out = {}
+    for name, value in (("constant", 0.0), ("slow_3", 5 - 5**0.5), ("middle_5", 6.0), ("top_3", 5 + 5**0.5)):
+        band = np.isclose(w, value)
+        out[name] = u[:, band] @ u[:, band].T
+    assert [int(np.round(np.trace(v))) for v in out.values()] == [1, 3, 5, 3]
+    return out
+
+
 def summarise(f: dict[str, np.ndarray]) -> dict[str, Any]:
     e_c = float(np.sum(f["centred"] ** 2))
     e_s = float(np.sum(f["slow"] ** 2))
     e_f = float(np.sum(f["fast"] ** 2))
     norms = np.sqrt(np.sum(f["slow"] ** 2, axis=1))
+    bands = band_projectors()
+    band_shares = {name: _sig(float(np.sum((f["centred"] @ proj) ** 2)) / e_c if e_c else 0.0) for name, proj in bands.items() if name != "constant"}
     return {"slow_band_energy_share": _sig(e_s / e_c if e_c else 0.0), "fast_band_energy_share": _sig(e_f / e_c if e_c else 0.0),
+            "band_energy_shares": band_shares, "band_dimensions": {"constant": 1, "slow_3": 3, "middle_5": 5, "top_3": 3},
+            "isotropic_band_shares": {"slow_3": _sig(3 / 11), "middle_5": _sig(5 / 11), "top_3": _sig(3 / 11)},
             "isotropic_reference_share": _sig(3.0 / 11.0),
             "slow_norm_mean": _sig(float(norms.mean())), "slow_norm_sd": _sig(float(norms.std())),
             "slow_norm_zero_fraction": _sig(float(np.mean(norms < 1e-12))), "centred_energy_per_carrier": _sig(e_c / f["centred"].shape[0])}

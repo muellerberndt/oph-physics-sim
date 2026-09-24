@@ -93,7 +93,11 @@ the per-carrier slow norm falls from 2.75 to 0.79 as the loads contract from `{0
 and fast fields are uncorrelated with the initial ones (slopes and correlations below `10^-3`
 at levels 6, 8, 9 and 10; the coarse slow-norm retention is zero at every scale). Settling keeps
 the coarse load density above the settling horizon and forgets the per-carrier orientation
-everywhere: the public record retains how much, not which ports.
+everywhere: the public record retains how much, not which ports. Over the eleven-dimensional
+zero-sum port space the settled energy splits into the three bands of the seam Laplacian
+(dimensions 3, 5, 3) as 0.27273, 0.45452, 0.27276 at level ten against the isotropic
+3/11, 5/11, 3/11 = 0.272727, 0.454545, 0.272727, at every level from six to ten: the settled
+record has no preferred direction in the port space, and refinement does not change the split.
 
 ## Independent verifier
 
