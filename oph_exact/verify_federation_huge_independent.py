@@ -292,19 +292,19 @@ def check_integer_schedule(geo: Geo, loads: np.ndarray, size, q, r, v_min: int, 
     require(all(a >= b for a, b in zip(ledger, ledger[1:])), f"{path.name}: ledger not monotone")
     require(ledger[-1] == v_min and len(ledger) == sched["sweeps"] + 1, f"{path.name}: ledger end or length")
     digests = sched["state_sha256_per_sweep"]
-    require(len(digests) == sched["sweeps"] + 1 and digests[0] == array_sha256(loads.astype(np.int8), "int8") and digests[-1] == sched["terminal_state"]["sha256"], f"{path.name}: state digest chain endpoints")
     sweeps = int(sched["sweeps"])
+    require(len(digests) == sched["sweeps"] + 1 and digests[0] == array_sha256(loads.astype(np.int8), "int8") and digests[-1] == sched["terminal_state"]["sha256"], f"{path.name}: state digest chain endpoints")
     first = int(sched["attempts_to_balanced_class"])
     require((sweeps - 1) * geo.seams < first <= sweeps * geo.seams, f"{path.name}: attempts_to_balanced_class outside the last sweep")
     require(len(sched["draw_sha256_per_sweep"]) == sweeps, f"{path.name}: draw digest count")
     # checkpoints
-    checkpoint = None
+    checkpoint = None  # the latest retained checkpoint strictly before the terminal sweep
     for c in sched.get("checkpoints", []):
         p = path / c["path"]
         if p.exists():
             xc = np.load(p)
             require(array_sha256(xc, "int8") == c["sha256"] == digests[c["sweep"]], f"{path.name}: checkpoint {c['sweep']} digest")
-            if checkpoint is None or c["sweep"] > checkpoint[0]:
+            if c["sweep"] < sweeps and (checkpoint is None or c["sweep"] > checkpoint[0]):
                 checkpoint = (int(c["sweep"]), xc.astype(np.int64))
     # draws (sequential stream) and replay after the checkpoint
     limit = sweeps if draw_sweeps is None else min(draw_sweeps, sweeps)
