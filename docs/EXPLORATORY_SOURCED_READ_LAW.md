@@ -7,7 +7,7 @@ FLRW fragment's count-measure identity `n = rho sigma^4 Delta v` would read loca
 record field on the golden population inflate, clump, or settle?
 
 Module: `oph_exact/sourced_read_law.py`. Receipts: `data/exploratory/sourced_read_law_q21.json`,
-`sourced_read_law_q34.json`. Tests: `tests/test_exploratory_sourced_read_law.py`.
+`sourced_read_law_q21_beta4.json`, `sourced_read_law_q34.json`, `sourced_read_law_q34_beta4.json`. Tests: `tests/test_exploratory_sourced_read_law.py`.
 
 ## The law
 
@@ -63,6 +63,27 @@ toward one where the signal decays. The fixed-point amplification at q = 34 and 
 With `beta = 0` the same scan reads 0.06 to 0.09 (g = 0.5), 0.61 to 0.80 (g = 1), 0.78 to 0.90
 (g = 2) and 1.09 to 1.20 (g = 3) at q = 21, against predictions 0.19, 0.375, 0.75 and 1.125.
 
+## The rate exponent decides the fate of the identity (q = 21)
+
+`beta` is not fixed by the fragment: the count measure weights each event by the physical
+four-volume `sigma^4 Delta v`, and whether a site's record production scales with its proper
+time (`beta = 1`), with its four-volume (`beta = 4`), or in between is a modelling choice. The
+threshold `g_c = 4 / (beta + 3/2)` moves with it: 1.6, 1.14 and 0.73 for `beta = 1, 2, 4`. At
+the identity point `g = 1`:
+
+| `beta` | predicted short / long | measured growth per round | uniform mode | outcome |
+| --- | --- | --- | --- | --- |
+| 1 | 0.625 / 0.25 | 0.67 to 0.79 | contracts (`n -> N0 (n/N0)^(1/4)`) | stable, native contrast amplified 1.7 |
+| 2 | 0.875 / 0.5 | 0.84 to 0.96 | contracts (exponent 1/2) | stable, amplified 3.4 |
+| 4 | 1.375 / 1.0 | 1.54 to 1.80 | marginal (exponent 1: the history is free) | unstable: contrast 0.01 to 11, mean scale 1 to 3.1 in 16 rounds |
+
+So read with the four-volume rate, the fragment's own identity is an unstable law: sub-radius
+record contrasts grow by about 1.4 to 1.8 per round, the uniform expansion history is neutrally
+stable (any profile is self-consistent, which is the dynamical form of "the profile is a
+supplied datum"), and the mean scale is driven up by the growing contrasts. Read with the
+proper-time rate, the same identity is a contraction. Which rate the theory intends is the
+decidable question this lane isolates.
+
 ## Runaway and capacity (q = 21, `g = 3`, `beta = 1`, native start)
 
 | capacity | mean scale by round 0, 4, 8, 12, 20, 40 | sites at capacity, round 40 | frozen contrast sd |
@@ -79,13 +100,16 @@ record field; the number of e-folds is set by the capacity.
 
 ## What this shows and what it does not
 
-- With the fragment's identity (`g = 1`) the record field is stable: no inflation, no
-  clumping, a bounded amplification of the population's own density variation. The size of the
-  population does not change this; the law is a contraction there.
-- Records acting on geometry produce exponential record production and structure only if the
-  scale responds to the record count more strongly than the fourth root, by a factor of at
-  least 1.6 in the exponent, or through a different coupling. That number is a target for a
-  derivation, not a result about the architecture.
+- With the fragment's identity (`g = 1`) and a proper-time record rate (`beta = 1`) the record
+  field is stable: no inflation, no clumping, a bounded amplification of the population's own
+  density variation. The size of the population does not change this; the law is a contraction.
+- With the same identity and a four-volume record rate (`beta = 4`) the field is unstable:
+  exponential growth of sub-radius contrasts, a free expansion history, and a rising mean scale.
+  The boundary between the two readings lies at `beta = 2.5` for `g = 1`.
+- In every reading the coupling is conformal, so the causal order of the population is
+  unchanged (the fragment's own invariance proposition); what grows or decays is the record
+  field on a fixed order. Gravitational focusing would need a non-conformal change of the read
+  relation, which no declared law supplies.
 - The population is only `sqrt q` read radii wide, so super-radius modes (`lambda_long`) are not
   resolved below q = 144.
 - Float geometry on a torus; the exact windowed lane is `oph_exact/source_net.py`.
