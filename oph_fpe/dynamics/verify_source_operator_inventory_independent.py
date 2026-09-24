@@ -128,6 +128,69 @@ EXPECTED_CONTRACTS: dict[str, dict[str, Any]] = {
     "data/einstein_convergence/rung_65536.json": _contract(None, None, "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR"),
     "data/einstein_convergence/rung_262144.json": _contract(None, None, "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR"),
     "data/einstein_convergence/rung_262144_dense.json": _contract(None, None, "EINSTEIN_LADDER_RUNG_NOT_VERTEX12_OPERATOR"),
+    "data/exact/carrier_class_selection_receipt.json": _contract(
+        "oph.exact.carrier-class-selection.v1", "EXACT_CARRIER_CLASS_SELECTION_CHECKED__OCTAHEDRON_EXCLUDED_BY_EQUIVARIANCE_TETRAHEDRON_EXCLUDED_BY_PAIRING_ICOSAHEDRON_CARRIES_U1_SU2_SU3__CARRIER_CLASS_TABLE_AND_IMPLEMENTERS_DECLARED", "EXACT_CARRIER_CLASS_CHECK_ON_DECLARED_TRIANGULATION_CLASS__NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/carrier_source_net_receipt.json": _contract(
+        "oph.exact.carrier-source-net.v1", None, "EXACT_CARRIER_REALIZATION_OF_SOURCE_NET_POPULATION__INTEGER_PORT_LOADS_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__constructed_realization.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__constructed_realization_iteration_2.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__inhabited_structure.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_overwrite__constructed_realization.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_overwrite__constructed_realization_iteration_2.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_overwrite__inhabited_structure.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_seam_mean__constructed_realization.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_seam_mean__constructed_realization_iteration_2.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/icosahedron_seam_mean__inhabited_structure.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/octahedron_seam_mean__constructed_realization.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/octahedron_seam_mean__constructed_realization_iteration_2.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/octahedron_seam_mean__inhabited_structure.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/tetrahedron_seam_mean__constructed_realization.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/tetrahedron_seam_mean__constructed_realization_iteration_2.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_logs/tetrahedron_seam_mean__inhabited_structure.json": _contract(
+        "oph.exact.closure-loop.event-log.v1", None, "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/closure_loop_receipt.json": _contract(
+        "oph.exact.closure-loop.v1", "CLOSURE_FIXED_POINT_AT_CARRIER_SCALE_ATTAINED_FOR_THE_CANONICAL_SOURCE__NEGATIVE_CONTROLS_DISTINGUISHED__GLUED_FEDERATION_WORK_IN_PROGRESS", "EXACT_CLOSURE_LOOP_FIXED_POINT_AT_CARRIER_SCALE__NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/federation_canonical_mean_receipt.json": _contract(
+        "oph.exact.federation-canonical-mean.v1", None, "EXACT_SEAM_MEAN_FEDERATION_ON_GEODESIC_TOWER__DECLARED_GLUING_NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/phi_linked_kernel_receipt.json": _contract(
+        "oph.exact.phi-linked-kernel.v1", None, "DECLARED_POTENTIAL_LINKED_REPAIR_KERNEL__NOT_VERTEX12_OPERATOR"
+    ),
+    "data/exact/source_net_causal_limit_receipt.json": _contract(
+        "oph.exact.source-net-causal-limit.v1", None, "EXACT_SOURCE_NET_CAUSAL_LIMIT_REPLAY__NOT_VERTEX12_OPERATOR"
+    ),
     "data/local_domain/classical_realization_receipt.json": _contract(
         "oph.local-domain-classical-realization.v1", "CLASSICAL_REALIZATION_MATCHES_DECLARED_FINITE_SPECTRAL_INTERFACE", "LOCAL_DOMAIN_CLASSICAL_OPERATOR_NO_VERTEX12_IDENTITY_BRIDGE"
     ),

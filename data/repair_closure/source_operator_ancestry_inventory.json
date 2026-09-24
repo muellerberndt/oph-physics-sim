@@ -170,7 +170,7 @@
       "raw_pin": {
         "bytes": 7890,
         "path": "data/common_reserve/charged_response_artifact.json",
-        "sha256": "sha256:e1478527b6ec1c61332a3b86bc35f2b32b0247eba02b34f40030f0b9fea4b75b"
+        "sha256": "sha256:b5e630c16377795ee87eba573a0710038974c4f90bfaf0896d84552f51be4fc2"
       },
       "schema": "oph.charged_response_semantic_artifact.v3",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -188,7 +188,7 @@
       "raw_pin": {
         "bytes": 32853,
         "path": "data/common_reserve/producer_capability_matrix.json",
-        "sha256": "sha256:78382aea052bdbe87cb91b097fbd243a946aa31cbd34c1dbfd71cc48bd0bdbc1"
+        "sha256": "sha256:0ffa16b61d1c3ed71ddbe7e6aa000cc5b4582ba802832f6b7c2a157ffce5262c"
       },
       "schema": "oph.common-reserve.capability-matrix.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -260,6 +260,279 @@
       "status": null
     },
     {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CARRIER_CLASS_CHECK_ON_DECLARED_TRIANGULATION_CLASS__NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/carrier_class_selection_receipt.json",
+      "raw_pin": {
+        "bytes": 37763,
+        "path": "data/exact/carrier_class_selection_receipt.json",
+        "sha256": "sha256:6bf9c74c6c1f31949179b5c688c0110a9de7e3937745c8e882a73a3b0d854d13"
+      },
+      "schema": "oph.exact.carrier-class-selection.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "EXACT_CARRIER_CLASS_SELECTION_CHECKED__OCTAHEDRON_EXCLUDED_BY_EQUIVARIANCE_TETRAHEDRON_EXCLUDED_BY_PAIRING_ICOSAHEDRON_CARRIES_U1_SU2_SU3__CARRIER_CLASS_TABLE_AND_IMPLEMENTERS_DECLARED"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CARRIER_REALIZATION_OF_SOURCE_NET_POPULATION__INTEGER_PORT_LOADS_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/carrier_source_net_receipt.json",
+      "raw_pin": {
+        "bytes": 50549,
+        "path": "data/exact/carrier_source_net_receipt.json",
+        "sha256": "sha256:755c7721f719dcf6811f602afa108589dce3fb6bacc92530e6958c6b8b358f64"
+      },
+      "schema": "oph.exact.carrier-source-net.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__constructed_realization.json",
+      "raw_pin": {
+        "bytes": 114556,
+        "path": "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__constructed_realization.json",
+        "sha256": "sha256:b01fcbb7d4ce3acae1ed9e90c25c84e8675aa6c921f5cb5c7cfe46f6c69c0492"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__constructed_realization_iteration_2.json",
+      "raw_pin": {
+        "bytes": 114545,
+        "path": "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__constructed_realization_iteration_2.json",
+        "sha256": "sha256:d5703f7d1a2376e69d9c0c46b8824627d95b6cef49aebeb998c2f4efdb274d24"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__inhabited_structure.json",
+      "raw_pin": {
+        "bytes": 114579,
+        "path": "data/exact/closure_loop_logs/icosahedron_integer_nearest_agreement__inhabited_structure.json",
+        "sha256": "sha256:288e7fbfc11dbe725b19f241f807f6c7ac8e78e455acaf55c55629231baa59fd"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_overwrite__constructed_realization.json",
+      "raw_pin": {
+        "bytes": 114568,
+        "path": "data/exact/closure_loop_logs/icosahedron_overwrite__constructed_realization.json",
+        "sha256": "sha256:bdbd047f148422554e2f0aece39c79cdd374a31b14c21bbd647920e3716ddbb7"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_overwrite__constructed_realization_iteration_2.json",
+      "raw_pin": {
+        "bytes": 114588,
+        "path": "data/exact/closure_loop_logs/icosahedron_overwrite__constructed_realization_iteration_2.json",
+        "sha256": "sha256:6f340a409c541c58fd87edf0764b382169540c9ea497868efb013daa09369eef"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_overwrite__inhabited_structure.json",
+      "raw_pin": {
+        "bytes": 114574,
+        "path": "data/exact/closure_loop_logs/icosahedron_overwrite__inhabited_structure.json",
+        "sha256": "sha256:7813a4d2cff69293f3e88f72873797212da275940de384cc65752f4a25adf76b"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_seam_mean__constructed_realization.json",
+      "raw_pin": {
+        "bytes": 172002,
+        "path": "data/exact/closure_loop_logs/icosahedron_seam_mean__constructed_realization.json",
+        "sha256": "sha256:258639208ecff961145943487cb87b77d712b928ac9fdf100d62919809ac946a"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_seam_mean__constructed_realization_iteration_2.json",
+      "raw_pin": {
+        "bytes": 165348,
+        "path": "data/exact/closure_loop_logs/icosahedron_seam_mean__constructed_realization_iteration_2.json",
+        "sha256": "sha256:420e2b9776a32c0cd523b9c2737660180cc32a42ea4c988797b99a948c2af995"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/icosahedron_seam_mean__inhabited_structure.json",
+      "raw_pin": {
+        "bytes": 174090,
+        "path": "data/exact/closure_loop_logs/icosahedron_seam_mean__inhabited_structure.json",
+        "sha256": "sha256:dc2557204415b596113ba14eefc9b7f3375599cd70cae8c9fa2d488ec55e542c"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/octahedron_seam_mean__constructed_realization.json",
+      "raw_pin": {
+        "bytes": 44806,
+        "path": "data/exact/closure_loop_logs/octahedron_seam_mean__constructed_realization.json",
+        "sha256": "sha256:7b2c64ed08c0789b1eb2158c90bba0393b705e2c9d9f3feb2cdd0e2bec14f8d7"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/octahedron_seam_mean__constructed_realization_iteration_2.json",
+      "raw_pin": {
+        "bytes": 45634,
+        "path": "data/exact/closure_loop_logs/octahedron_seam_mean__constructed_realization_iteration_2.json",
+        "sha256": "sha256:d4abd7b380c0957e3b2d7df2b8c8adaee5a7142f489d3761efa611ce131c0211"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/octahedron_seam_mean__inhabited_structure.json",
+      "raw_pin": {
+        "bytes": 41806,
+        "path": "data/exact/closure_loop_logs/octahedron_seam_mean__inhabited_structure.json",
+        "sha256": "sha256:cdb2e68d8d525193d064c404231342772b92c39739073d35e5e98b4b07ccf3bf"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/tetrahedron_seam_mean__constructed_realization.json",
+      "raw_pin": {
+        "bytes": 14904,
+        "path": "data/exact/closure_loop_logs/tetrahedron_seam_mean__constructed_realization.json",
+        "sha256": "sha256:74ecf581da847536c6e447258bb1e92faea0198885eae15151f80bf2de268174"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/tetrahedron_seam_mean__constructed_realization_iteration_2.json",
+      "raw_pin": {
+        "bytes": 16642,
+        "path": "data/exact/closure_loop_logs/tetrahedron_seam_mean__constructed_realization_iteration_2.json",
+        "sha256": "sha256:e73540cd493a816865365621d1ee580c194b624bf6d1c6f81ea8485c82de81d0"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_EVENT_LOG__SEEDED_REPAIR_TRACE_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_logs/tetrahedron_seam_mean__inhabited_structure.json",
+      "raw_pin": {
+        "bytes": 18922,
+        "path": "data/exact/closure_loop_logs/tetrahedron_seam_mean__inhabited_structure.json",
+        "sha256": "sha256:b5dafc95177486a92fca9100c6c4215c84335fa9434e5b29b884d8a29a5b8cf6"
+      },
+      "schema": "oph.exact.closure-loop.event-log.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_CLOSURE_LOOP_FIXED_POINT_AT_CARRIER_SCALE__NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/closure_loop_receipt.json",
+      "raw_pin": {
+        "bytes": 39190,
+        "path": "data/exact/closure_loop_receipt.json",
+        "sha256": "sha256:4f4e2966e49df74fe62d0af72b688d5ac5f9883cbcfe2a65cda2cf36b926d728"
+      },
+      "schema": "oph.exact.closure-loop.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": "CLOSURE_FIXED_POINT_AT_CARRIER_SCALE_ATTAINED_FOR_THE_CANONICAL_SOURCE__NEGATIVE_CONTROLS_DISTINGUISHED__GLUED_FEDERATION_WORK_IN_PROGRESS"
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_SEAM_MEAN_FEDERATION_ON_GEODESIC_TOWER__DECLARED_GLUING_NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/federation_canonical_mean_receipt.json",
+      "raw_pin": {
+        "bytes": 468708,
+        "path": "data/exact/federation_canonical_mean_receipt.json",
+        "sha256": "sha256:129db49280f022e9e1c5ab2cb159608ed207c56332209bc5e4756390cc608ffb"
+      },
+      "schema": "oph.exact.federation-canonical-mean.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "DECLARED_POTENTIAL_LINKED_REPAIR_KERNEL__NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/phi_linked_kernel_receipt.json",
+      "raw_pin": {
+        "bytes": 107008,
+        "path": "data/exact/phi_linked_kernel_receipt.json",
+        "sha256": "sha256:7b663ecd077e00ab72c2b0934cf7deb8403f9de1bd871fdbcd346e39e517800a"
+      },
+      "schema": "oph.exact.phi-linked-kernel.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
+      "critical_bridge_evidence": null,
+      "disposition": "EXACT_SOURCE_NET_CAUSAL_LIMIT_REPLAY__NOT_VERTEX12_OPERATOR",
+      "path": "data/exact/source_net_causal_limit_receipt.json",
+      "raw_pin": {
+        "bytes": 216420,
+        "path": "data/exact/source_net_causal_limit_receipt.json",
+        "sha256": "sha256:97c837913b75b2b019428028e114259caedd54345bd5a2efb78abd040f7e11f3"
+      },
+      "schema": "oph.exact.source-net-causal-limit.v1",
+      "semantic_scan_excluded_as_recursive_output": false,
+      "status": null
+    },
+    {
       "critical_bridge_evidence": {
         "emitted_physical_promotion_allowed": false,
         "emitted_rer_exact_flux_vertex_identity_bridge": false,
@@ -270,7 +543,7 @@
       "raw_pin": {
         "bytes": 13028,
         "path": "data/local_domain/classical_realization_receipt.json",
-        "sha256": "sha256:fce7cac3a0796e3ef42a686f24a26b2d364b56aa4425c963b4bded072569493d"
+        "sha256": "sha256:357a79021a2abd35ba875c889720c18ae2442264bd7fd75691ce5832523249c3"
       },
       "schema": "oph.local-domain-classical-realization.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -286,7 +559,7 @@
       "raw_pin": {
         "bytes": 9311,
         "path": "data/local_domain/clock_unit_verdict.json",
-        "sha256": "sha256:6c395e73c4feb3e9c3f691555d8bfaf4cfe26bb3979e35fbefa53a17ce534a8c"
+        "sha256": "sha256:59b7781d6cb52acfc305849048ccd16f0b52006ed1928ee041ee215f7d4bdaa2"
       },
       "schema": "oph.local-domain-clock-unit-verdict.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -317,7 +590,7 @@
       "raw_pin": {
         "bytes": 1577,
         "path": "data/local_domain/manifest.json",
-        "sha256": "sha256:a7f4ad3fecabf348b57aa581aa2791369b580156207381f65adf2f27dfeda3d6"
+        "sha256": "sha256:642b047aab8cf26fbf3776178b4845a85b1b1147309b01896767ddee8614116b"
       },
       "schema": "oph.local-domain-stage1.manifest.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -420,7 +693,7 @@
       "raw_pin": {
         "bytes": 7125,
         "path": "data/local_domain/stage4_receipt.json",
-        "sha256": "sha256:ec484418b92a50e8e483e32de6dd74cab78ac412e763d6167fa520ffd70220f6"
+        "sha256": "sha256:07035c7452e04f8e314aed791a2796d01b991b655d8b2a7b8c74e1787430e3fe"
       },
       "schema": "oph.local-domain-stage4.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -835,7 +1108,7 @@
       "raw_pin": {
         "bytes": 11609,
         "path": "data/refinement/physical_birefinement_preflight.json",
-        "sha256": "sha256:27a77c5cc0967b73959d7729f1949dfa6faed9d42435b574a0db60d6f25f2a5b"
+        "sha256": "sha256:8cf1084e184d56679730138f6716b0570fef113e5349b6b085e34d3035849322"
       },
       "schema": "oph.refinement.physical-birefinement-preflight.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -938,7 +1211,7 @@
       "raw_pin": {
         "bytes": 37873,
         "path": "data/repair_closure/fz11_3d_translation_bridge_receipt.json",
-        "sha256": "sha256:8b3a4654bcff4f18da105db8b22a5c52ef77fe7a1d192a8b9b5a8b72da5c2306"
+        "sha256": "sha256:bb8c86bccf9db5d21ccce981f98e907f89bd6fad783f0c855b4b89d7ebe73d08"
       },
       "schema": "oph.fz11-conditional-3d-translation-bridge.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -965,7 +1238,7 @@
       "raw_pin": {
         "bytes": 31270,
         "path": "data/repair_closure/fz11_conservative_time_lift_receipt.json",
-        "sha256": "sha256:03ff83ff64fd2dd0c691c255d790fb3b601e93156e96a4828e2c53dc1cbe0429"
+        "sha256": "sha256:f2f45d1614d12ac3fe3924b2d4b0be589da707270aa4209a8eb09e4de29c24a1"
       },
       "schema": "oph.fz11-conservative-time-lift.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1022,7 +1295,7 @@
       "raw_pin": {
         "bytes": 13559,
         "path": "data/repair_closure/primitive_port_dual_measure_receipt.json",
-        "sha256": "sha256:aa4c292792a37613ba4da2f400f4b1990baf71fbde5f543bb87720becd266e2b"
+        "sha256": "sha256:cd5e4a2b61ca7c7c058eba3c80db23509430d4e902aba67ee358a7ce0e381c60"
       },
       "schema": "oph.primitive-port-dual-normalized-measure.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1098,7 +1371,7 @@
       "raw_pin": {
         "bytes": 36932,
         "path": "data/repair_closure/vertex12_a2_endpoint_commutator_receipt.json",
-        "sha256": "sha256:17497e372ef4a7f5545526cebcff10c41a9d6b7fdab0e81554e5576fa22116a9"
+        "sha256": "sha256:8bec446ae0ad3f94802ead4972ed80df4c390239e8cf1ce0665b4360bc40831d"
       },
       "schema": "oph.vertex12-a2-endpoint-commutator-boundary.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1124,7 +1397,7 @@
       "raw_pin": {
         "bytes": 41087,
         "path": "data/repair_closure/vertex12_atomic_port_transfer_receipt.json",
-        "sha256": "sha256:b65cdee937b14de31963a41aa25a28c0080df8eeb006211aec7031d72f6fc949"
+        "sha256": "sha256:be7ba310208d87a823fdc14708594f3d5edae064c6f3137d7e80dfbce318ad25"
       },
       "schema": "oph.vertex12-atomic-port-transfer-subpacket.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1159,7 +1432,7 @@
       "raw_pin": {
         "bytes": 2018887,
         "path": "data/repair_closure/vertex12_constructive_source_law_receipt.json",
-        "sha256": "sha256:1c11c4fd93536bee312c2d4440e51f6ff9c30c521744a9a168d23982984a61e3"
+        "sha256": "sha256:4cb6fd8e96d6c6ed86e7fa2ed3db6c4e79b9f920e1cc8176c459c7290c2f0d6f"
       },
       "schema": "oph.vertex12-constructive-source-law-control.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1189,7 +1462,7 @@
       "raw_pin": {
         "bytes": 55183,
         "path": "data/repair_closure/vertex12_directed_transport_feasibility_receipt.json",
-        "sha256": "sha256:924d7934e864358961ed7756646dde5ae1b5d8ea42fd9104df88e0bdff846ffe"
+        "sha256": "sha256:723c9bf5ad2769c45ef62342ac840274de98f3198cc54c52c74f8a29e828495b"
       },
       "schema": "oph.vertex12-directed-transport-feasibility.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1202,7 +1475,7 @@
       "raw_pin": {
         "bytes": 1074185,
         "path": "data/repair_closure/vertex12_signed_record_feedback_receipt.json",
-        "sha256": "sha256:86e43e9e3b4464dc2589b97c88161c251c1672723429f0f4abbef93bc4cc263e"
+        "sha256": "sha256:c7ec89203e399cbf884e3f6ef6253efd4d99fb0189e72d182125ccdc7be6337f"
       },
       "schema": "oph.vertex12-signed-record-feedback-diagnostic.v1",
       "semantic_scan_excluded_as_recursive_output": false,
@@ -1223,8 +1496,8 @@
     }
   ],
   "current_canonical_json_contract_scan": {
-    "current_canonical_json_path_count_excluding_recursive_outputs": 64,
-    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:347683f18467823a1690a9b2619078b4a5239fae0d898b1587618905d6a9311d",
+    "current_canonical_json_path_count_excluding_recursive_outputs": 85,
+    "current_canonical_json_path_list_sha256_excluding_recursive_outputs": "sha256:24d89ff74d8e55defa4f251c3fc173c674330e72127a827a3f89811f77938786",
     "positive_promotion_signal_rows_excluding_recursive_outputs": [],
     "recursive_output_paths_excluded": [
       "data/repair_closure/port_gram_completion_bridge_receipt.json",
@@ -1248,9 +1521,9 @@
   },
   "implementation_pins": {
     "independent_verifier": {
-      "bytes": 83820,
+      "bytes": 88904,
       "path": "oph_fpe/dynamics/verify_source_operator_inventory_independent.py",
-      "sha256": "sha256:e41c878effb440e3f2dd988c917117bd485e1c2b86bbd1de52e134c4c6520f5a"
+      "sha256": "sha256:c9b556bef653bd3782c69919d4bfab227279a2056e34827a0f8eac27ee4643c9"
     },
     "mutation_tests": {
       "bytes": 39887,
@@ -1258,9 +1531,9 @@
       "sha256": "sha256:98e0f8cfacaf242c57b4685fa578ad1a02d5849fc68cdc34c3d2954cfe830947"
     },
     "producer": {
-      "bytes": 86234,
+      "bytes": 91318,
       "path": "oph_fpe/dynamics/source_operator_inventory.py",
-      "sha256": "sha256:5614f39358c92964cd62bc0bad5a6fa88196acb84ae39b963129c87aac9a49d0"
+      "sha256": "sha256:88b55515d68a910f713c3b3e13552d34f45755c919e9db6ee07443408ba47f52"
     }
   },
   "issue": 655,
@@ -1281,17 +1554,17 @@
       "semantic_payloads_scanned": false
     }
   },
-  "receipt_sha256": "sha256:da37c630ce6bd576ddd68a751dc96bbf7e7afe9a80d52bb01ee784a5aebe2501",
+  "receipt_sha256": "sha256:ce55c5c9a11718e782b8d99b9b74786ba9cb9f6961f6384e4d9ca36261a88306",
   "schema": "oph.source_operator_ancestry_inventory.v1",
   "scope": "Git-indexed tracked paths under data; semantic scan of current canonical simulator JSON objects excluding declared recursive ancestor and descendant outputs; legacy, imported, and external/comparison paths counted only",
   "status": "NO_REGISTERED_ACCEPTED_VERTEX12_BRIDGE_PACKET_ON_TRACKED_SERIALIZED_DATA_SURFACE",
   "tracked_serialized_data_catalog": {
-    "content_index_row_count_excluding_recursive_outputs": 1040,
-    "content_index_sha256_excluding_recursive_outputs": "sha256:a29b4527a9e4b473b5ba9f9653c36e7d87cd8d891af0f4392222d745dfcd26c9",
-    "path_count_including_declared_recursive_outputs": 1046,
-    "path_list_sha256_including_declared_recursive_outputs": "sha256:10654c4f4522c40900b998cb177dc0b3f067b5d93c1e0a4030aa306a5782f95d",
+    "content_index_row_count_excluding_recursive_outputs": 1063,
+    "content_index_sha256_excluding_recursive_outputs": "sha256:5f7fa642e8f745d9f18575d39009a5c7ab2dbbf296d2a61eef71b0bb213e259d",
+    "path_count_including_declared_recursive_outputs": 1069,
+    "path_list_sha256_including_declared_recursive_outputs": "sha256:45833ee9252f00b109ed3fc98b92b482160bb6238aa867b9c9abc455f954bbe2",
     "provenance_counts": {
-      "CURRENT_SIMULATOR_ARTIFACT": 80,
+      "CURRENT_SIMULATOR_ARTIFACT": 103,
       "EXTERNAL_OR_COMPARISON_DATA": 41,
       "IMPORTED_NONNATIVE": 30,
       "LEGACY_EARNED_RUN": 895

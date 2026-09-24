@@ -694,6 +694,18 @@ def _record_commit_schedule(cycles: int, count: int) -> tuple[int, ...]:
     return schedule
 
 
+def _visible_pair_mean(left: float, right: float) -> float | None:
+    """The registered visible-ledger primitive; None denotes a skipped attempt."""
+    if abs(left - right) <= 1.0e-15:
+        return None
+    return 0.5 * (left + right)
+
+
+def _terminal_complex_lift(amplitudes: np.ndarray, visible: np.ndarray) -> np.ndarray:
+    """Registered phase-preserving projection, not an asserted quantum channel."""
+    return np.sqrt(np.maximum(visible, 0.0)) * np.exp(1j * np.angle(amplitudes))
+
+
 def _source_dynamics(
     config: Mapping[str, Any], federation: EchosahedralFederation
 ) -> tuple[
@@ -781,7 +793,7 @@ def _source_dynamics(
         if len(selected_indices) != len(set(selected_indices)):
             raise RuntimeError("repair cycle selected a seam more than once")
         selected_endpoint_count = 0
-        cycle_commits: list[tuple[int, int, int, int, float, float, Any]] = []
+        cycle_commits: list[tuple[int, int, int, int, float, float, float, Any]] = []
         cycle_noops = 0
         selected_material: list[str] = []
         endpoint_keys: set[tuple[int, int]] = set()
@@ -801,11 +813,11 @@ def _source_dynamics(
             right_value = float(state_before[right, right_port])
             before = abs(left_value - right_value)
             selected_material.append(seam.seam_id)
-            if before <= 1.0e-15:
+            average = _visible_pair_mean(left_value, right_value)
+            if average is None:
                 cycle_noops += 1
                 noop_count += 1
                 continue
-            average = 0.5 * (left_value + right_value)
             cycle_commits.append(
                 (
                     left,
@@ -814,12 +826,13 @@ def _source_dynamics(
                     right_port,
                     left_value,
                     right_value,
+                    average,
                     seam,
                 )
             )
 
         reverse_replay = np.array(state_before, copy=True)
-        for left, left_port, right, right_port, _, _, _ in reversed(cycle_commits):
+        for left, left_port, right, right_port, _, _, _, _ in reversed(cycle_commits):
             average = 0.5 * (
                 float(state_before[left, left_port])
                 + float(state_before[right, right_port])
@@ -834,6 +847,7 @@ def _source_dynamics(
             right_port,
             left_value,
             right_value,
+            average,
             seam,
         ) in enumerate(cycle_commits):
             if (
@@ -842,7 +856,6 @@ def _source_dynamics(
             ):
                 union_atomic_revalidation = False
                 continue
-            average = 0.5 * (left_value + right_value)
             repaired[left, left_port] = average
             repaired[right, right_port] = average
             versions[left, left_port] += 1
@@ -905,7 +918,7 @@ def _source_dynamics(
             order_replay_exact and np.array_equal(reverse_replay, repaired)
         )
         idempotence_probe = np.array(repaired, copy=True)
-        for left, left_port, right, right_port, _, _, _ in cycle_commits:
+        for left, left_port, right, right_port, _, _, _, _ in cycle_commits:
             average = 0.5 * (
                 float(idempotence_probe[left, left_port])
                 + float(idempotence_probe[right, right_port])
@@ -960,8 +973,7 @@ def _source_dynamics(
                 )
             )
         )
-    phases = np.angle(state.amplitudes)
-    terminal_lift = np.sqrt(np.maximum(repaired, 0.0)) * np.exp(1j * phases)
+    terminal_lift = _terminal_complex_lift(state.amplitudes, repaired)
     audit = local_a5_dynamics_report(
         intrinsic_step=config["intrinsic_step"],
         coupling_strength=config["coupling_strength"],
