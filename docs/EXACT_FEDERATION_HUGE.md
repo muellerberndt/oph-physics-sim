@@ -99,6 +99,14 @@ zero-sum port space the settled energy splits into the three bands of the seam L
 3/11, 5/11, 3/11 = 0.272727, 0.454545, 0.272727, at every level from six to ten: the settled
 record has no preferred direction in the port space, and refinement does not change the split.
 
+Edge histories (`oph_exact/seam_histories_demo.py`, `data/exact/readback/seam_histories_L6.json`):
+on two hundred collar seams of one level-six schedule the mean seam difference falls from 1.9
+to 0.5 within two sweeps and then fluctuates about 0.5 (half the seams differ by one unit in
+the balanced class, and swaps keep moving units back and forth); the endpoint increments have
+lag-one autocorrelation -0.44 and none beyond, the power spectrum peaks at the lowest bin with
+no line, and the sign of the difference flips about twelve times in 62 sweeps. Under the repair
+law an edge history is an overdamped walk to agreement plus swap noise; it does not oscillate.
+
 ## Independent verifier
 
 `oph_exact/verify_federation_huge_independent.py RUN_DIR` shares nothing with the engine
