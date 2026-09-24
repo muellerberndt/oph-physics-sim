@@ -769,6 +769,18 @@ def _schedule_task(args: tuple) -> dict[str, Any]:
     return run_mean(geo, loads, seed, Path(out), sweeps_budget=budget, log=lambda m: print(m, flush=True))
 
 
+_KERNEL_GEO: dict[str, Any] = {}
+
+
+def _kernel_task(args: tuple) -> dict[str, Any]:
+    cache, level, cell, steps = args
+    key = f"{cache}:{level}"
+    if _KERNEL_GEO.get("key") != key:
+        geo = Geometry(cache, level)
+        _KERNEL_GEO.update({"key": key, "geo": geo, "adj": cell_adjacency(geo)})
+    return response_kernels_local(_KERNEL_GEO["geo"], _KERNEL_GEO["adj"], int(cell), steps)
+
+
 def build(level: int, out: Path, cache: Path, *, schedules: int = DEFAULT_SCHEDULES, workers: int = 1,
           float_sweeps: int = 64, float_schedules: int = 1, kernel_cells: int = 64,
           kernel_steps: Sequence[int] = KERNEL_STEPS, long_steps: Sequence[int] = (300,), long_cells: int = 4,
@@ -799,13 +811,17 @@ def build(level: int, out: Path, cache: Path, *, schedules: int = DEFAULT_SCHEDU
     hashes = sorted({r["quotient_hash"] for r in integer})
     # kernels on local balls
     t2 = time.perf_counter()
-    adj = cell_adjacency(geo)
     cells = kernel_sample_cells(level, geo.carriers, geo.vertex_cells, kernel_cells)
-    kernels = []
-    for k, c in enumerate(cells):
-        steps = tuple(kernel_steps) + (tuple(long_steps) if k < long_cells else ())
-        kernels.append(response_kernels_local(geo, adj, c, steps))
-        log(f"  kernel cell {c}: ball {kernels[-1]['ball_cells']} cells, steps {list(steps)}, {time.perf_counter() - t2:.0f}s")
+    kernel_tasks = [(cache, level, c, tuple(kernel_steps) + (tuple(long_steps) if k < long_cells else ())) for k, c in enumerate(cells)]
+    if workers > 1 and len(kernel_tasks) > 1:
+        import multiprocessing as mp
+        with mp.get_context("spawn").Pool(min(workers, len(kernel_tasks))) as pool:
+            kernels = pool.map(_kernel_task, kernel_tasks, chunksize=1)
+    else:
+        kernels = [_kernel_task(t) for t in kernel_tasks]
+    for k, entry in zip(kernels, kernels):
+        log(f"  kernel cell {entry['cell']}: ball {entry['ball_cells']} cells, steps {list(entry['kernels'].keys())}")
+    log(f"  kernels: {len(kernels)} cells in {time.perf_counter() - t2:.0f}s")
     shares = {str(n): [k["slow_band_share"][str(n)] for k in kernels] for n in kernel_steps}
     long_shares = {str(n): [k["slow_band_share"][str(n)] for k in kernels[:long_cells] if str(n) in k["slow_band_share"]] for n in long_steps}
     t_kernels = time.perf_counter() - t2
