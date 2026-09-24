@@ -162,7 +162,13 @@ def tangent_response(pop: Population, *, g: float, beta: float, mode: str = "phy
         k = str(m)
         ratios = [variances[j + 1][k] / variances[j][k] for j in range(measure) if variances[j][k] > 0 and variances[j + 1][k] > 0]
         growth[k] = _sig(float(np.exp(np.mean(np.log(ratios)))) ** 0.5) if ratios else None
+    native_sd = float((pop.fixed_counts / pop.fixed_counts.mean() - 1.0).std())
+    amplification = relaxation[-1] / native_sd if native_sd > 0 else None
     return {"relaxed_contrast_sd_by_round": relaxation, "relaxed_sigma_bar": _sig(float((base.mean() / pop.N0) ** (g / 4.0))),
+            "native_contrast_sd": _sig(native_sd),
+            "fixed_point_amplification": _sig(amplification) if amplification else None,
+            "fixed_point_effective_lambda": _sig(1.0 - 1.0 / amplification) if amplification and amplification > 0 else None,
+            "fixed_point_note": "a stable fixed point amplifies the native quasi-crystal contrast by 1/(1 - lambda_eff); meaningful only when the field relaxed",
             "perturbation_amplitude": amplitude, "amplitude_growth_per_round_by_scale": growth}
 
 
@@ -216,7 +222,8 @@ def build(q: int, *, couplings: Sequence[float], betas: Sequence[float], modes: 
                 log(f"  mode {mode} g={g} beta={beta}: predicted short {r['linear_prediction']['lambda_short']:.3f} long {r['linear_prediction']['lambda_long']:.3f}; "
                     f"measured growth/round by bin side/a {r['bin_side_over_read_radius']} -> {r['measured_amplitude_growth_per_round_by_scale']}; "
                     f"sigma_bar end {h[-1]['sigma_bar']}, contrast sd {h[0]['contrast_sd']} -> {h[-1]['contrast_sd']}, at cap {h[-1]['at_capacity_fraction']}; "
-                    f"relaxed native contrast {r['tangent_response']['relaxed_contrast_sd_by_round'][-1]} sigma_bar {r['tangent_response']['relaxed_sigma_bar']}")
+                    f"relaxed native contrast {r['tangent_response']['relaxed_contrast_sd_by_round'][-1]} sigma_bar {r['tangent_response']['relaxed_sigma_bar']} "
+                    f"amplification {r['tangent_response']['fixed_point_amplification']} lambda_eff {r['tangent_response']['fixed_point_effective_lambda']}")
                 results.append(r)
     return {"schema": SCHEMA, "status": "EXPLORATORY PROPOSED LAW; not the declared architecture; no coupling derived",
             "population": {"q": q, "sites": pop.n, "L": L, "read_radius": pop.a, "periodic_torus": pop.periodic,
