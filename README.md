@@ -1,6 +1,6 @@
 # OPH-FPE
 
-[Website](https://floatingpragma.io/) · [Physics](https://floatingpragma.io/physics/) · [Mini-universe](https://simulation.floatingpragma.io/) · [Theory repository](https://github.com/FloatingPragma/observer-patch-holography)
+[Website](https://floatingpragma.io/) · [Physics](https://floatingpragma.io/physics/) · [Preprint](https://philpapers.org/rec/MUEFOC) · [Mini-universe](https://simulation.floatingpragma.io/) · [Theory repository](https://github.com/FloatingPragma/observer-patch-holography)
 
 OPH-FPE (Observer-Patch Fundamental Physics Emergence) is a finite simulator
 for Observer-Patch Holography (OPH). It turns parts of the OPH consistency
