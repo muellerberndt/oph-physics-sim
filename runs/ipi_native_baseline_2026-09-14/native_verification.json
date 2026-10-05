@@ -1,0 +1,87 @@
+{
+  "schema": "oph.ipi.native_scalar_independent_verification.v1",
+  "verified": true,
+  "input_sha256": "d5193d5e8e3fb94500be2e19fc69f78ae154a4f3174e93bf570b8e29a19a87ae",
+  "driver_sha256": "8c8188ea99a0db1e236e55e4b2c5b4d1dc0f1d5615ab872c69f8bc4dcbfb45fb",
+  "verifier_sha256": "86cb3e94cecb1e73f7e22fceab21c2a0cd4c34c01181b47709528a4b99c5dda0",
+  "implementation": "Python standard library only; exact Q(phi) carrier reconstruction and Fraction endpoint replacement; no simulator imports",
+  "independent_checks": [
+    "carrier incidence",
+    "fixed cases/initial states/toggles/seeds",
+    "complete ten shuffled sweeps",
+    "all 1200 readbacks and twelve-coordinate states",
+    "all sums/norms/local norm increments/seam mismatches",
+    "all summaries and two unchanged controls",
+    "thermodynamic and electromagnetic nonclaims",
+    "driver hash"
+  ],
+  "source_file_hashes_checked": true,
+  "checked_source_sha256": {
+    "oph_fpe/dynamics/canonical_seam_repair.py": "66b743ab8d538ad64d4360e3d25ccd963f91167d31c564fbdfb6ba13728cc1e8",
+    "oph_fpe/core/icosahedral.py": "89fac4f2d24bb4d85c4a84624b3c826e99cb717df68060dd23a4b26c6cfe9adc"
+  },
+  "source_history_note": "File hashes were checked when a source root was supplied; Git history and external publication were not independently authenticated.",
+  "cases": [
+    {
+      "name": "pulse_repair_seed7",
+      "verified_events": 300,
+      "changed_state_count": 274,
+      "seam_mismatch_increase_count": 56,
+      "centered_squared_norm_final": "19513612315062345739052779439607869511/187072209578355573530071658587684226515959365500928"
+    },
+    {
+      "name": "pulse_repair_seed11",
+      "verified_events": 300,
+      "changed_state_count": 271,
+      "seam_mismatch_increase_count": 52,
+      "centered_squared_norm_final": "5898754261721184555855897440870536919571/383123885216472214589586756787577295904684780545900544"
+    },
+    {
+      "name": "constant_repair_control",
+      "verified_events": 300,
+      "changed_state_count": 0,
+      "seam_mismatch_increase_count": 0,
+      "centered_squared_norm_final": "0"
+    },
+    {
+      "name": "pulse_no_repair_control",
+      "verified_events": 300,
+      "changed_state_count": 0,
+      "seam_mismatch_increase_count": 0,
+      "centered_squared_norm_final": "132"
+    }
+  ],
+  "mutation_rejections": [
+    {
+      "mutation": "edited_state",
+      "rejected": true,
+      "reason": "pulse_repair_seed7/attempt=1: state: exact rational differs"
+    },
+    {
+      "mutation": "invented_numeric_w",
+      "rejected": true,
+      "reason": "thermodynamics: scientific boundary or metadata differs"
+    },
+    {
+      "mutation": "edited_readback",
+      "rejected": true,
+      "reason": "pulse_repair_seed7/attempt=1: readback: exact rational differs"
+    },
+    {
+      "mutation": "edited_seed",
+      "rejected": true,
+      "reason": "pulse_repair_seed7: schedule seed differs"
+    },
+    {
+      "mutation": "removed_control",
+      "rejected": true,
+      "reason": "exactly four fixed cases required"
+    },
+    {
+      "mutation": "false_summary",
+      "rejected": true,
+      "reason": "pulse_repair_seed7: summary differs from full independent replay"
+    }
+  ],
+  "scientific_boundary": "Verifies finite scalar averaging output only; establishes no physical energy, pressure, EoS, Maxwell law, or full self-reading federation."
+}

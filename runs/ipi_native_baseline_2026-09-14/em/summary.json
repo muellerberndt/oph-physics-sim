@@ -1,0 +1,91 @@
+{
+  "all_seams_delta_E_over_h": [
+    "4001/383",
+    "-5024/1149",
+    "-5024/1149",
+    "343/2298",
+    "343/2298",
+    "3565/766",
+    "3565/766",
+    "-165/383",
+    "-165/383",
+    "-343/2298",
+    "-152/1149",
+    "647/1149",
+    "-343/2298",
+    "-152/1149",
+    "647/1149",
+    "0",
+    "-343/2298",
+    "343/2298",
+    "0",
+    "-152/1149",
+    "-165/383",
+    "-343/2298",
+    "343/2298",
+    "-152/1149",
+    "-165/383",
+    "-5024/1149",
+    "3565/766",
+    "-5024/1149",
+    "3565/766",
+    "-4001/383"
+  ],
+  "assumptions": [
+    "writable classical scalar ports and exact retained records",
+    "declared potential typing, carrier incidence, action and h=1/2",
+    "declared two initial slices and neutral charged port paths",
+    "probe-cycle counter is not spacetime or SI time"
+  ],
+  "events_per_execution": 585,
+  "gauge_control_executions": 2,
+  "h": "1/2",
+  "interpretation": "delta_E/h is the displacement term in the separately supplied dimensionless Maxwell law; no physical D, SI units or constitutive response is identified",
+  "native_repair_displacement_current_demonstrated": false,
+  "native_repair_eos_demonstrated": false,
+  "probe_feedback_cycles_per_execution": 180,
+  "provenance": {
+    "oph_physics_sim_commit": "0cdc4e5ad693422f3f710e79f4513b25c136fc67",
+    "provider_files_match_recorded_rer_head": {
+      "Lean/ObserverPatchHolography/CoreAxioms.lean": true,
+      "Lean/Screen/NeutralPairJointStationaryWitness.lean": true,
+      "Lean/Screen/SeamCurrentCarrierQuotient.lean": true,
+      "Lean/Screen/SerialMaxwellReadout.lean": true,
+      "code/electromagnetism/local_face_maxwell_action.py": true,
+      "code/electromagnetism/serial_maxwell_readout.py": true,
+      "code/electromagnetism/test_serial_maxwell_readout.py": true,
+      "code/electromagnetism/verify_serial_maxwell_readout.py": true
+    },
+    "python": "3.13.7",
+    "reverse_engineering_reality_commit": "8281894cbbd712cc5c1ab65bb3015958565d7997",
+    "runner_sha256": "a3610c7b58805dc61d49e537d0c0fd56c92d018619dc6fa7e47942c35a766f99",
+    "sympy": "1.14.0"
+  },
+  "sample_zero_conduction_current_seam": {
+    "E0": "2057/1532",
+    "E1": "-3877/4596",
+    "J0": "0",
+    "ampere_residual": "0",
+    "curl_B1": "-5024/1149",
+    "delta_E_over_h": "-5024/1149",
+    "seam": 1
+  },
+  "schema": "oph.ipi.supplied_em_summary.v1",
+  "scope": "EXACT_CLASSICAL_SOFTWARE_INSTRUMENT__PHYSICAL_ATTACHMENT_OPEN",
+  "supplied_model_displacement_term_nonzero": true,
+  "supplied_model_field_form": {
+    "H0": "93833/2298",
+    "H1": "40915/1149",
+    "balance_residual": "0",
+    "definition": "H[n]=(||E[n]||^2+<B[n],B[n+1]>)/2",
+    "interpretation": "algebraic field quantity of the supplied finite Maxwell action, not a native substrate thermodynamic measurement",
+    "source_work": "-4001/766"
+  },
+  "thermodynamic_output": {
+    "energy_density": null,
+    "equation_of_state_w": null,
+    "pressure": null,
+    "reason": "This executable specifies no native substrate stress, thermodynamic volume, physical energy or equilibrium ensemble.",
+    "temperature": null
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "exact_ampere_residual_all_zero": true,
+  "exact_field_form_work_balance": true,
+  "independent_replay": {
+    "action": "-304804229/21123216",
+    "cycles": 180,
+    "events": 585,
+    "field_variations": 54,
+    "path_variations": 8
+  },
+  "independent_verifier": "reverse-engineering-reality/code/electromagnetism/verify_serial_maxwell_readout.py",
+  "mutation_control": {
+    "reason": "semantic/version replay mismatch at 584 (public)",
+    "tampered_electric_readout_rejected": true
+  },
+  "provenance": {
+    "oph_physics_sim_commit": "0cdc4e5ad693422f3f710e79f4513b25c136fc67",
+    "provider_files_match_recorded_rer_head": {
+      "Lean/ObserverPatchHolography/CoreAxioms.lean": true,
+      "Lean/Screen/NeutralPairJointStationaryWitness.lean": true,
+      "Lean/Screen/SeamCurrentCarrierQuotient.lean": true,
+      "Lean/Screen/SerialMaxwellReadout.lean": true,
+      "code/electromagnetism/local_face_maxwell_action.py": true,
+      "code/electromagnetism/serial_maxwell_readout.py": true,
+      "code/electromagnetism/test_serial_maxwell_readout.py": true,
+      "code/electromagnetism/verify_serial_maxwell_readout.py": true
+    },
+    "python": "3.13.7",
+    "reverse_engineering_reality_commit": "8281894cbbd712cc5c1ab65bb3015958565d7997",
+    "runner_sha256": "a3610c7b58805dc61d49e537d0c0fd56c92d018619dc6fa7e47942c35a766f99",
+    "sympy": "1.14.0"
+  },
+  "schema": "oph.ipi.supplied_em_verification.v1",
+  "verified": true
+}
