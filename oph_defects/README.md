@@ -116,6 +116,17 @@ with `python -m oph_defects.charged_field_evidence` and check the portable card
 with `node oph_defects/viewer2/charged_field_check.mjs`. The underlying source
 proofs and exact receipt hashes are linked in the card.
 
+The native Dirac card builds a separate free spin-one-half readout from actual
+odd native states and a complete four-mode occupation code. Its declared
+square-root kinetic law has full spatial range. The energy/momentum chart uses
+the finite box's allowed modes, and two detector settings show complete
+sixteen-outcome laws. Preparation failures, retained references and programmable
+control remain explicit. The rest frequency is selected from the source;
+electron identity, weak chirality, interacting charged scattering and GeV units
+are not supplied by that free construction. Rebuild with
+`python -m oph_defects.dirac_evidence`; check with
+`node oph_defects/viewer2/dirac_check.mjs`.
+
 The detector retains both energy-band outcomes. Its explicit band-conversion
 operation has an energy cost; it is not an antiparticle identification or free
 evolution. [The instrument proof](viewer2/readout_instrument.md) gives the complete

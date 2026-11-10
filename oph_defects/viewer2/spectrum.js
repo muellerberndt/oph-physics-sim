@@ -7,6 +7,7 @@ import { mountQuantumEvidence } from './quantum_evidence.js';
 import { mountCollisionEvidence } from './collision_evidence.js';
 import { mountProcaEvidence } from './proca_evidence.js';
 import { mountChargedField } from './charged_field_evidence.js';
+import { mountDiracEvidence } from './dirac_evidence.js';
 import { projectReferenceMap, referenceForRow, REFERENCE_SOURCES, RETAINED_OM, escapeReferenceText as escRef } from './particle_reference_adapter.js';
 
 const ST = {
@@ -207,6 +208,7 @@ export function spectrumShown() {
       ${rowsHtml}</div>
     <section id="sp-quantum" aria-label="Verified interacting source energies"></section>
     <section id="sp-charged-field" aria-label="Finite-clock charge position and field observations"></section>
+    <section id="sp-dirac" aria-label="Native charged free Dirac field and complete detector records"></section>
     <section id="sp-collision" aria-label="Finite quantum collision experiment"></section>
     <section id="sp-proca" aria-label="Controlled massive-vector field readout"></section>
     <div id="sp-om"></div>
@@ -214,6 +216,7 @@ export function spectrumShown() {
   document.querySelectorAll('#sp-host .sp-row:not(.sp-hrow)').forEach((el) => { el.onclick = () => el.classList.toggle('open'); });
   mountQuantumEvidence($('sp-quantum'));
   mountChargedField($('sp-charged-field'));
+  mountDiracEvidence($('sp-dirac'));
   mountCollisionEvidence($('sp-collision'));
   mountProcaEvidence($('sp-proca'));
   buildMap();
