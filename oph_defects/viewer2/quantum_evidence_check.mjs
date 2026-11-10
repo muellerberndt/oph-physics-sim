@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validateQuantumEvidence,higgsConnectionHTML,centroidHTML,higgsCurrentReadoutHTML,coupledReadoutHTML,wilsonMaxwellHTML} from './quantum_evidence.js';
+import {validateQuantumEvidence,higgsConnectionHTML,centroidHTML,higgsCurrentReadoutHTML,coupledReadoutHTML,wilsonMaxwellHTML,photonCutoffHTML,quarkReadoutHTML,quarkResponseHTML,coupledGroundHTML,localCurrentHTML,localCurrentReadoutHTML} from './quantum_evidence.js';
 const data=JSON.parse(readFileSync(new URL('./quantum_evidence.json',import.meta.url)));
 assert.equal(validateQuantumEvidence(data),data);
 for(const mutate of [x=>x.scope.sourceDerivedGeV=true,x=>x.channels[0].referenceEnergy='0',x=>x.channels[0].probabilities.outside.display=[0,0],x=>x.channels[0].massGeV=.000511,x=>x.channels[0].sourceEnergy.display=[1,0]]) {
@@ -41,3 +41,48 @@ assert.match(wilsonMaxwellHTML(data),/not the coupled ground state/);
 assert.match(wilsonMaxwellHTML(data),/1,161 retained labels/);
 assert.match(wilsonMaxwellHTML(data),/declared choices/);
 console.log('PASS: same-current preparations and coupled/free complete-record controls');
+for(const mutate of [x=>x.photonRefinement.overflowRetained=false,x=>x.photonRefinement.sameSourceStateReferenceClock=false,x=>x.photonRefinement.unboundedOscillatorActuallyExecuted=true,x=>x.photonRefinement.spatialContinuumOrSMIdentified=true,x=>x.photonRefinement.executedLabels=1451,x=>x.photonRefinement.cap3ErrorUpper.display=[0,0]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+const cutoff=photonCutoffHTML(data);
+assert.match(cutoff,/cap 3 · this run/);assert.match(cutoff,/1\.863 × 10<sup>-9<\/sup>/);
+assert.match(cutoff,/1,451 labels/);assert.match(cutoff,/no infinite register is executed/);
+const errors=[...cutoff.matchAll(/≤ ([\d.]+) × 10<sup>(-?\d+)<\/sup>/g)].map(x=>Number(x[1])*10**Number(x[2]));
+assert.equal(errors.length,data.photonRefinement.cutoffs.length);
+errors.forEach((value,i)=>assert.ok(value>=data.photonRefinement.cutoffs[i].errorUpper.display[1]));
+console.log('PASS: fixed-cube complete-record cutoff, overflow and outward error displays');
+for(const mutate of [x=>x.quarkResponses.staticColorReferenceRetained=false,x=>x.quarkResponses.actualCARNormalization=false,x=>x.quarkResponses.propagatingQuarkOrGeVMassIdentified=true,x=>x.quarkResponses.families[0].massGeV=.002,x=>x.quarkResponses.families[2].localLines.pop(),x=>x.quarkResponses.families[0].referenceEnergy='0',x=>x.quarkResponses.families[0].originalStrongBinLower.display=[0,0],x=>x.quarkResponses.families[0].allFullSourceBins[0].energy.display=[100,101],x=>x.quarkResponses.families[0].localLines[0].energy.display=[NaN,NaN],x=>x.quarkResponses.families[0].pumpFailure.display=[0,0],x=>x.quarkResponses.families[0].preparationSuccessLower.display=[0,0]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+assert.match(quarkReadoutHTML(data,'uc'),/49\.539796%/);
+assert.match(quarkReadoutHTML(data,'dc'),/49\.539796%/);
+assert.match(quarkReadoutHTML(data,'Q'),/49\.570179%/);
+assert.match(quarkReadoutHTML(data,'Q'),/12 have exactly zero atomic weight/);
+assert.equal((quarkReadoutHTML(data,'Q').match(/<g><title>Line/g)||[]).length,25);
+assert.throws(()=>quarkReadoutHTML(data,'top'));
+assert.match(quarkReadoutHTML(data,'Q'),/Outside all listed bins/);assert.match(quarkReadoutHTML(data,'Q'),/conditions on preparation success/);
+assert.match(quarkResponseHTML(data),/not a prediction of equal observed up\/down masses/);
+console.log('PASS: complete native quark lines, zero residues and original attempt weights');
+for(const mutate of [x=>x.coupledGround.originalGroundInsideCode=true,x=>x.coupledGround.originalActiveGroundMultiplicity=1,x=>x.coupledGround.changedHamiltonianExplicit=false,x=>x.coupledGround.positiveMacrocellPenalty=false,x=>x.coupledGround.allFailuresPartnersRetained=false,x=>x.coupledGround.patternPreservingOldCountLawsInvariant=false,x=>x.coupledGround.unknownGroundProjectorOrPhaseUsed=true,x=>x.coupledGround.primitiveRepairForcesCompletion=true,x=>x.coupledGround.radiationOrGeVMass=true,x=>x.coupledGround.fullNativeSpatialLocalityProved=true,x=>x.coupledGround.filters=1,x=>x.coupledGround.completeCountLabels=1160,x=>x.coupledGround.preparedStationaryCountLower.display=[0,0],x=>x.coupledGround.capacityNats.display=[Infinity,Infinity]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+const ground=coupledGroundHTML(data);
+assert.match(ground,/96 lowest active states outside the code/);assert.match(ground,/1\.416928 per million/);
+assert.match(ground,/99\.959432% success/);assert.match(ground,/global code guard/);assert.match(ground,/not<\/strong> describe radiation/);
+console.log('PASS: full-sector ground distinction, explicit completion, retained filters and occupation count');
+for(const mutate of [x=>x.localCurrent.fullHamiltonianCancellation=true,x=>x.localCurrent.nativeRepairCompilationProved=true,x=>x.localCurrent.exactGroundProjection=true,x=>x.localCurrent.instantaneousFinalSourceMean=true,x=>x.localCurrent.SMParticleOrWeakBoson=true,x=>x.localCurrent.localCouplingDeclared=false,x=>x.localCurrent.priorPreparationAndBinServicesRetained=false,x=>x.localCurrent.allFailuresRetained=false,x=>x.localCurrent.sourceKeepsEvolving=false,x=>x.localCurrent.totalSourceTime='4',x=>x.localCurrent.finalPulseSourceTime='1',x=>x.localCurrent.localMatrixDimension=80,x=>x.localCurrent.records.pop(),x=>x.localCurrent.apparatusErrorUpper.display=[0,0],x=>x.localCurrent.meanErrorUpper.display=[NaN,NaN],x=>x.localCurrent.elementaryMean.display=[.09,.1],x=>x.localCurrent.records[1].originalCompositeJointLower.display=[0,0]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+const local=localCurrentHTML(data);
+assert.match(local,/without a control that cancels the whole Hamiltonian/);assert.match(local,/3 \+ 2⁻²⁰ source units/);
+assert.match(local,/5,270,718/);assert.match(local,/10,541,436/);assert.match(local,/preparation, pump and exact energy-bin services retain/);
+assert.match(localCurrentReadoutHTML(data,'elementary'),/2\.474173%/);
+assert.match(localCurrentReadoutHTML(data,'composite'),/0\.295882%/);
+assert.equal((localCurrentReadoutHTML(data,'composite').match(/class="qe-current-row"/g)||[]).length,5);
+assert.throws(()=>localCurrentReadoutHTML(data,'opposite-charge'));
+for(const name of ['native_local_current_readout','native_wilson_maxwell_refinement','native_quark_response','native_wilson_maxwell_ground']){
+ for(const key of ['path','sha256','proof']){
+  const changed=structuredClone(data);changed.evidence[name][key]='unverified';assert.throws(()=>validateQuantumEvidence(changed));
+ }
+}
+console.log('PASS: local uninterrupted current pointer, complete five outcomes, source clock and apparatus boundaries');

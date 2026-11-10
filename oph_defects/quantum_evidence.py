@@ -114,6 +114,34 @@ def build(root=DEFAULT_REPOSITORY):
             or hc['preparation']['exact_interacting_ground_projection_assumed']):
         raise ValueError('Higgs current conjugation, source or complete instrument changed')
     hcr=hc['prepared_current']
+    names['native_local_current_readout']='model/native_local_current_readout/results.json'
+    lc=receipt(root,names['native_local_current_readout'])
+    for name,expected in lc['owned_source_sha256'].items():
+        target=(root/'model/native_local_current_readout'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Local current implementation changed: '+name)
+    lcs=lc['source']; lcc=lc['complete_clock_and_error']; lcr=lc['complete_prepared_records']; lcp=lc['control_resources']
+    if (lcs['parent_current_response_sha256']!=digest(root/names['native_higgs_current_response'])
+            or not lcs['source_hamiltonian_continues_through_final_pulse']
+            or lcs['full_Hext_cancellation_used_for_final_readout']
+            or not lcs['first_three_preparation_pump_bin_services_unchanged']
+            or lcs['exact_interacting_ground_projection_added']
+            or lcc['total_elapsed_source_time']!='3145729/1048576'
+            or lcc['final_pulse_source_duration']!='1/1048576'
+            or lcc['post_readout_success_selection_or_normalization_used']
+            or lc['local_apparatus']['complete_local_coupling_dimension']!=400
+            or lcr['complete_setting_pump_energy_current_alphabet_size']!=80
+            or not lcr['all_fine_preparation_flags_and_source_outputs_retained']
+            or not lcr['intervals_describe_pointer_decoded_current_means']
+            or lcr['instantaneous_post_measurement_W_expectation_asserted']
+            or lcr['unconditional_A_and_B_rates_equated']
+            or not lcr['every_current_label_retained_on_admitted_branch']
+            or not lcp['coupling_is_declared_not_compiled_from_native_C_E']
+            or lcp['full_matrix_preparation_and_exact_spectral_bin_premises_removed']
+            or not lcp['full_Gauss_constraints_preserved_throughout_drive']
+            or not lc['scope']['local_same_source_original_W_readout_with_nonzero_response']
+            or any(v for k,v in lc['scope'].items()if k!='local_same_source_original_W_readout_with_nonzero_response')):
+        raise ValueError('Local current source, clock, complete instrument or scope changed')
     names['native_wilson_maxwell']='model/native_wilson_maxwell/results.json'
     wm=receipt(root,names['native_wilson_maxwell'])
     for name,expected in wm['owned_source_sha256'].items():
@@ -131,6 +159,75 @@ def build(root=DEFAULT_REPOSITORY):
             or wm['boundaries']['SM_particle_or_weak_chirality_identification']
             or wm['source_choices']['source_empirical_mass_or_coupling_calibration']):
         raise ValueError('Wilson–Maxwell source, complete count or interpretation changed')
+    names['native_wilson_maxwell_refinement']='model/native_wilson_maxwell_refinement/results.json'
+    wr=receipt(root,names['native_wilson_maxwell_refinement'])
+    for name,expected in wr['owned_source_sha256'].items():
+        target=(root/'model/native_wilson_maxwell_refinement'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Photon-cutoff implementation changed: '+name)
+    if (wr['parent_finite_source_sha256']!=digest(root/names['native_wilson_maxwell'])
+            or wr['construction']['changed_parameter']!='total photon cap K only'
+            or not wr['construction']['same_native_trial_state_reference_density_Gauss_and_clock']
+            or wr['cap3_pair_photon_transfer']['padding_changes_parent_executed_apparatus']
+            or wr['cap3_pair_photon_transfer']['finite_executed_pointer_labels']!=1161
+            or wr['cap3_pair_photon_transfer']['common_overflow_padded_labels']!=1451
+            or any(wr['boundaries'].values())):
+        raise ValueError('Photon-cutoff comparison source, labels or scope changed')
+    names['native_quark_response']='model/native_quark_response/results.json'
+    qr=receipt(root,names['native_quark_response'])
+    if (not qr['computed_equal_coupling_uc_dc_resolvent_equality']
+            or not qr['scope']['all_local_probe_roots_and_exact_zero_residues_retained']
+            or any(v for k,v in qr['scope'].items()if k!='all_local_probe_roots_and_exact_zero_residues_retained')
+            or qr['same_source']['additional_exact_ground_projection']
+            or not qr['same_source']['all_failure_and_no_operation_records_retained']
+            or not qr['same_source']['original_physical_preparation_retained']
+            or qr['fresh_replay']['numerical_eigensolver_used']
+            or qr['full_probe_reference_operator']['reference_Hamiltonian']!='mu N_ref, mu=4; zero-energy alternative assessed separately'):
+        raise ValueError('Quark source, reference or physical interpretation changed')
+    quark_rows=[]
+    for key in ('uc','dc','Q'):
+        local=qr['exact_local_response'][key];full=qr['full_interacting_prepared_records'][key]
+        if not full['exact_source_spectral_service_declared'] or full['efficient_native_gate_synthesis_claimed']:
+            raise ValueError('Quark energy apparatus interpretation changed')
+        records=full['records'];strong=max(records,key=lambda r:Fraction(r['original_attempt_probability_lower']))
+        quark_rows.append({'id':key,
+            'localLines':[{'energy':bounds(r['source_excitation_interval']),
+                          'probability':bounds(r['probability_interval']),
+                          'exactlyZeroLocalWeight':r['exactly_zero_residue']}
+                          for r in local['complete_positive_records']],
+            'sourceEnergy':bounds(strong['source_excitation_relative_actual_ground']),
+            'originalStrongBinLower':bounds([strong['original_attempt_probability_lower']]*2),
+            'allFullSourceBins':[{'energy':bounds(r['source_excitation_relative_actual_ground']),
+                                 'probability':bounds(r['prepared_conditional_probability'])}
+                                 for r in records],
+            'outsideAllBins':bounds(full['prepared_outside_all_bins']),
+            'pumpFailure':bounds(full['prepared_pump_failure_interval']),
+            'preparationSuccessLower':bounds([full['preparation_success_lower']]*2),
+            'referenceEnergy':full['success_reference_energy'],'massGeV':None,
+            'empiricalParticle':None})
+    names['native_wilson_maxwell_ground']='model/native_wilson_maxwell_ground/results.json'
+    wg=receipt(root,names['native_wilson_maxwell_ground'])
+    for name,expected in wg['owned_source_sha256'].items():
+        target=(root/'model/native_wilson_maxwell_ground'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Full-ground implementation changed: '+name)
+    wp=wg['complete_repaired_ground_preparation'];ground_completion=wg['declared_onsite_completion'];wd=wg['complete_stationary_ground_dressing_record']
+    if (wg['unchanged_source']['ground_in_code']
+            or wg['unchanged_source']['active_ground_multiplicity']!=96
+            or ground_completion['old_source_receipt_or_H_mutated']
+            or ground_completion['global_scalar_energy_subtraction']!='none'
+            or not ground_completion['complete_pattern_preserving_count_laws_exactly_invariant']
+            or not ground_completion['selected_active_coupled_ground_is_unique']
+            or ground_completion['actual_ground_radiation_or_SM_mass_claim']
+            or wp['ground_energy_or_exact_ground_projector_used']
+            or wp['full_source_trial_copies']!=4 or wp['finite_filter_count']!=3
+            or wd['complete_count_pointer_labels']!=1161
+            or not wp['all_filter_basis_outcomes_retained']
+            or not wp['all_partner_sources_retained']
+            or wd['ground_emission_scattering_or_radiation']
+            or wg['exact_macrocell_and_Gauss_completion_control']['counterterm_is_forced_by_primitive_repair_law']
+            or wg['exact_macrocell_and_Gauss_completion_control']['preexisting_global_kinetic_current_guard_removed']):
+        raise ValueError('Full-ground completion, preparation or interpretation changed')
     prep = source['interacting_ground_preparation']['preparation']
     filt = prep['finite_energy_agreement_filter']
     channels = source['interacting_charged_response']['same_H_interacting_channels']
@@ -156,6 +253,60 @@ def build(root=DEFAULT_REPOSITORY):
                            'scheduleTerms':str(filt['explicit_integer_M']),
                            'algebraicServicesDeclared':True,'efficientNativeCircuitExecuted':False},
             'channels':rows,'allFailuresRetained':True,
+            'localCurrent':{
+                'elementaryMean':bounds(lcr['current_means']['elementary_W_mean_interval']),
+                'compositeMean':bounds(lcr['current_means']['Higgs_composite_W_mean_interval']),
+                'historyTVUpper':bounds([lcr['same_apparatus_A_B_conditional_history_distance_upper']]*2),
+                'apparatusErrorUpper':bounds([lcc['all_retained_history_total_variation_error_upper']]*2),
+                'meanErrorUpper':bounds([lcc['conditional_current_mean_absolute_error_upper']]*2),
+                'driveNormUpper':bounds([lcp['local_final_drive_norm_upper']]*2),
+                'grossSwitchWorkUpper':bounds([lcp['final_pulse_gross_switching_work_upper']]*2),
+                'records':[{'value':row['W_value'],
+                    'elementaryProbability':bounds(row['actual_elementary_bin_conditional_probability_interval']),
+                    'compositeProbability':bounds(row['actual_composite_bin_conditional_probability_interval']),
+                    'originalElementaryJointLower':bounds([row['original_elementary_attempt_joint_probability_lower']]*2),
+                    'originalCompositeJointLower':bounds([row['original_composite_attempt_joint_probability_lower']]*2)}
+                    for row in lcr['five_complete_current_records']],
+                'totalSourceTime':lcc['total_elapsed_source_time'],
+                'finalPulseSourceTime':lcc['final_pulse_source_duration'],
+                'completeLabels':80,'localMatrixDimension':400,'pointerStates':5,
+                'sourceKeepsEvolving':True,'allFailuresRetained':True,'sameOriginalCurrent':True,
+                'localCouplingDeclared':True,'priorPreparationAndBinServicesRetained':True,
+                'fullHamiltonianCancellation':False,'nativeRepairCompilationProved':False,
+                'exactGroundProjection':False,'instantaneousFinalSourceMean':False,
+                'SMParticleOrWeakBoson':False},
+            'coupledGround':{
+                'originalGroundInsideCode':False,'originalActiveGroundMultiplicity':96,
+                'originalCodeAboveComplementLower':bounds([wg['bounds_exact']['original_code_above_native_triplet_margin_lower']]*2),
+                'completedPhysicalGapLower':bounds([wg['bounds_exact']['repaired_full_physical_gap_lower']]*2),
+                'completionCoefficient':bounds([wg['bounds_exact']['counterterm_over_m']]*2),
+                'preparationSuccessLower':bounds([wp['complete_tree_success_lower']]*2),
+                'preparationTraceErrorUpper':bounds([wp['conditional_main_trace_distance_upper']]*2),
+                'preparedStationaryCountLower':bounds([wd['physical_preparation_and_count_joint_probability_lower']]*2),
+                'capacityNats':bounds(wp['capacity_nats_interval']),
+                'sourceTrials':4,'filters':3,'completeCountLabels':1161,
+                'changedHamiltonianExplicit':True,'positiveMacrocellPenalty':True,
+                'allFailuresPartnersRetained':True,'patternPreservingOldCountLawsInvariant':True,
+                'unknownGroundProjectorOrPhaseUsed':False,'primitiveRepairForcesCompletion':False,
+                'radiationOrGeVMass':False,'fullNativeSpatialLocalityProved':False},
+            'quarkResponses':{'families':quark_rows,'sameFullInteractingSource':True,
+                'actualCARNormalization':True,'staticColorReferenceRetained':True,
+                'allPreparationPumpEnergyFailuresRetained':True,
+                'ucDcEqualAtConfiguredCouplings':True,
+                'sourceSelectedGroundForEveryColoredSector':False,
+                'propagatingQuarkOrGeVMassIdentified':False},
+            'photonRefinement':{
+                'cap3ErrorUpper':bounds([wr['cap3_complete_state_and_record_bound']['complete_record_TV_upper']]*2),
+                'overflowUpper':bounds([wr['cap3_complete_state_and_record_bound']['photon_overflow_probability_upper']]*2),
+                'comparisonTargetLower':bounds([wr['cap3_pair_photon_transfer']['exact']['comparison_actual_target_probability_lower']]*2),
+                'cutoffs':[{'cap':row['cap'],
+                    'errorUpper':bounds([row['state_vector_error_upper']]*2)}
+                    for row in wr['cutoff_table']if row['cap']in(1,2,3,4,8)],
+                'sameSourceStateReferenceClock':True,'completeRecordBound':True,
+                'fixedSpatialCube':True,'overflowRetained':True,
+                'executedLabels':1161,'comparisonLabels':1451,
+                'unboundedOscillatorActuallyExecuted':False,
+                'spatialContinuumOrSMIdentified':False},
             'wilsonMaxwell':{
                 'targetLower':bounds([wmr['exact']['actual_unconditional_target_probability_lower']]*2),
                 'connectedLower':bounds([wmr['exact']['actual_unconditional_binary_connected_response_lower']]*2),
