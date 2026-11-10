@@ -5580,7 +5580,7 @@
     },
     {
       "file": "oph_defects/README.md",
-      "sha256": "c97dd2b3b644359b480a6eac9541f3f3ce4e62c9da29ef75fc61b85fdae43674"
+      "sha256": "5ee0682867e293f501c5da9a957e2331151a8cf980dac8db35e5b3fbbfc39870"
     },
     {
       "file": "oph_defects/run_evidence.py",
@@ -5588,11 +5588,11 @@
     },
     {
       "file": "oph_defects/viewer2/cosmos.js",
-      "sha256": "b52071f8836dd6a948ba664ebda8d08e952f22accc5a8c1a43ce908c45ba38da"
+      "sha256": "58d3010bfe374807d2206465d3008d0dee9c06efeb644b03bc43a59935929117"
     },
     {
       "file": "oph_defects/viewer2/cosmos_evidence.js",
-      "sha256": "0a65c668ce29797bad6de9ac01bb0c466f8222adf500ce95693c6a012f525beb"
+      "sha256": "3a2a52198ad91d30965d852a49a7b2d3cd8be383bfa567cdb74d06fe3b912499"
     },
     {
       "file": "oph_defects/references/cosmology_comparison.json",

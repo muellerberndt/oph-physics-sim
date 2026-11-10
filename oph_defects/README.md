@@ -100,25 +100,43 @@ measurements. MeV and metre-per-second labels retain the supplied length and clo
 conversion. The box is a separate finite field experiment, not a derived
 interacting continuum of the classical load run.
 
-The Spectrum tab also includes an authenticated interacting-source table.
-`python -m oph_defects.quantum_evidence` rebuilds it from the public quantum
-source receipts; `--check` verifies the saved table and every inherited source
-hash. Its charged energy bins, preparation error and separately costed reference
-are shown in source units. The card does not identify those transitions with a
-measured lepton or with the classical-run register.
-It also displays the physically prepared twenty-bit energy mean, without an
-extra ground projection, and the shared elementary/scalar–fermion spectral
-response. Both retain every failure and the supplied exact energy-bin service;
-the narrower mean does not relabel a single line as a mass. Check the exported
-data and hostile interpretation controls with
-`node oph_defects/viewer2/quantum_evidence_check.mjs`.
-The filtered elementary/composite states have a bound below `1.686e-7`
-on every common subsequent detector history, including depth-three
-preparation. Their different original success rates remain visible.
-A separate complete dressed-current experiment on the same native
-Hamiltonian has positive inelastic records and an energy-selected charged
-current insertion. The card keeps current backaction distinct from a
-weak-scattering or W-boson identification.
+The Spectrum tab groups authenticated finite quantum experiments separately from
+the classical register run and the prepared free packets. The eight-cell source
+supplies charged lepton and quark spectral measures from its actual fermion
+operators. Every local line, exact zero weight, full-source bin and failure
+remains visible. The quark table distinguishes its preparation-conditioned
+probabilities from original-attempt event rates. Energies use the source clock;
+the retained charge reference costs four units. These records do not identify
+measured particles or GeV masses.
+
+In the lepton channel, elementary and quantum-Higgs probes share a spectral
+response. Within the specified narrow bin, their successfully prepared states
+give common detector histories within `1.686e-7`; their unequal original success
+rates remain explicit.
+The twenty-bit energy mean and complete current readings retain preparation
+errors and every outcome. A local five-state current pointer lets the source
+keep evolving without cancelling its full Hamiltonian during the final pulse.
+Its clock is `3 + 2^-20` source units, and the certified detector error preserves
+both negative current responses. The local polynomial coupling is a declared
+apparatus primitive; preparation and energy-bin services retain their matrix
+control assumptions. Current backaction does not establish weak scattering.
+
+A separate Wilson–Maxwell construction couples native charged occupations to
+five transverse field modes. Increasing the photon cap has a complete count-law
+bound at fixed spatial volume; the cap-three error is below `1.863e-9`. The
+unbounded oscillator is a mathematical comparison, not an executed infinite
+register or spatial continuum. Checking all native sectors also exposes a lower
+state outside the original particle code. An explicit positive macrocell penalty
+selects the interacting code ground while preserving pattern-preserving count
+laws. Four retained source trials and three finite filters prepare it with a
+certified error. The resulting occupation counts describe virtual dressing in
+the chosen free-particle basis, not emitted radiation. The changed Hamiltonian,
+global kinetic guard and controller resources remain explicit.
+
+Rebuild the source-bound tables with `python -m oph_defects.quantum_evidence`.
+Its `--check` validates the saved table and inherited source hashes;
+`node oph_defects/viewer2/quantum_evidence_check.mjs` checks the complete record
+and interpretation boundaries. Each panel links its public proof and receipt.
 
 The Map tab groups source centre classes beside compatible particle-family
 candidates. It distinguishes class addition from quantum scattering and
@@ -200,12 +218,11 @@ python -m oph_defects.bundle_research --source /path/to/repair-law/work
 python -m oph_defects.bundle_research --check
 ```
 
-The Spectrum tab also shows complete finite interacting quantum records.
-These are separate from the classical register run and the prepared free
-Dirac packets. The five-block momentum-exchange panel retains native
-preparation error and both detector outcomes. Its component occupations
-are relative to the retained quantum reference. Rebuild these source-bound
-tables from the specified theory checkout with:
+The five-block momentum-exchange panel retains native preparation error and
+both detector outcomes. Its component occupations are relative to the retained
+quantum reference. Native and matched free branches both have nonzero records;
+the certified probability intervals separate. Rebuild these tables from the
+specified theory checkout with:
 
 ```sh
 python -m oph_defects.quantum_evidence --repository /path/to/reverse-engineering-reality

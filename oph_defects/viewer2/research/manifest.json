@@ -69,16 +69,6 @@
       "bytes": 4820
     },
     {
-      "source": "SIM/derive/progress.json",
-      "sha256": "48f92f40ff21e967aa775f1f997ee854ae1e48d47a029f7960de1a5cb03529c4",
-      "bytes": 15698
-    },
-    {
-      "source": "SIM/derive/spectrum.json",
-      "sha256": "35b55e4fdcbfe8112daf5cddd63b0e7cbe96e818ec656d500c37ce7e60793bbd",
-      "bytes": 4685
-    },
-    {
       "source": "T3/cones.json",
       "sha256": "9ffb5092ecfd7e7b04bb2bf1fa0b531ebdc27943bc5fbba2d7927f8297480f5f",
       "bytes": 76243
