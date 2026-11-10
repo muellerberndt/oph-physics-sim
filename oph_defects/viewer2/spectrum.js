@@ -6,6 +6,7 @@ import { familyReading, LEPTON_REFERENCE } from './lepton_reading.js';
 import { mountQuantumEvidence } from './quantum_evidence.js';
 import { mountCollisionEvidence } from './collision_evidence.js';
 import { mountProcaEvidence } from './proca_evidence.js';
+import { mountChargedField } from './charged_field_evidence.js';
 import { projectReferenceMap, referenceForRow, REFERENCE_SOURCES, RETAINED_OM, escapeReferenceText as escRef } from './particle_reference_adapter.js';
 
 const ST = {
@@ -205,12 +206,14 @@ export function spectrumShown() {
       <div class="sp-row sp-hrow"><div>Centre class</div><div>Particle target</div><div>From obstruction to mass</div><div class="sp-lad">${axisSvg()}</div><div>Mass</div><div>Model − measured</div></div>
       ${rowsHtml}</div>
     <section id="sp-quantum" aria-label="Verified interacting source energies"></section>
+    <section id="sp-charged-field" aria-label="Finite-clock charge position and field observations"></section>
     <section id="sp-collision" aria-label="Finite quantum collision experiment"></section>
     <section id="sp-proca" aria-label="Controlled massive-vector field readout"></section>
     <div id="sp-om"></div>
     <p class="note" style="max-width:1100px">Model values: lepton ratios at the phase 2/9 times the measured electron mass; W, Z, Higgs and top from the source chart with Standard Model radiative corrections and v fixed by G_F, Higgs and top at the declared criticality scale; proton, neutron and rho from Λ(3) of the D10 colour coupling times one lattice QCD number each. Measured values: shipped particle references (electron/muon/tau values as in the audited family_clock.json); light quark masses in the MS-bar scheme at 2 GeV, charm and bottom at their own scale. The u, d, s, c and b reference intervals are 90% confidence limits, not one-sigma errors. Charged pion/kaon and neutral rho masses refer to those specific charge states. References: <a href="https://pdg.lbl.gov/2025/tables/rpp2025-sum-quarks.pdf" target="_blank" rel="noopener">PDG 2025 quarks</a>, <a href="https://pdg.lbl.gov/2025/tables/rpp2025-sum-gauge-higgs-bosons.pdf" target="_blank" rel="noopener">gauge/Higgs targets</a>, and <a href="https://arxiv.org/abs/2406.13516" target="_blank" rel="noopener">KATRIN effective-mass limit</a>. Experimental σ labels on the other rows divide by the reference measurement error only; they are not combined statistical tests of these conditional constructions. The supplied top loop mass also requires matching to the direct-reconstruction mass convention. Ledger: repair-law/SPECTRUM.md; exact hypotheses in each row.</p>`;
   document.querySelectorAll('#sp-host .sp-row:not(.sp-hrow)').forEach((el) => { el.onclick = () => el.classList.toggle('open'); });
   mountQuantumEvidence($('sp-quantum'));
+  mountChargedField($('sp-charged-field'));
   mountCollisionEvidence($('sp-collision'));
   mountProcaEvidence($('sp-proca'));
   buildMap();

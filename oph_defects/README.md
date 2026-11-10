@@ -107,6 +107,15 @@ hash. Its charged energy bins, preparation error and separately costed reference
 are shown in source units. The card does not identify those transitions with a
 measured lepton or with the classical-run register.
 
+The charged-field card follows a different, explicitly declared finite quantum
+source through energy acceptance to 26 joint position/field outcomes. Its graph
+uses certified probability intervals for the actual finite-clock output, with
+all failed preparations and phase labels retained. The energy includes a
+visible reference cost; subtracting it does not assign a GeV mass. Regenerate
+with `python -m oph_defects.charged_field_evidence` and check the portable card
+with `node oph_defects/viewer2/charged_field_check.mjs`. The underlying source
+proofs and exact receipt hashes are linked in the card.
+
 The detector retains both energy-band outcomes. Its explicit band-conversion
 operation has an energy cost; it is not an antiparticle identification or free
 evolution. [The instrument proof](viewer2/readout_instrument.md) gives the complete

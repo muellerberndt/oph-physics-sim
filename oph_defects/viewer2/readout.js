@@ -188,7 +188,7 @@ function makeParticle(d, dir, tNow, flash) {
   const track = new THREE.Line(tg, new THREE.LineBasicMaterial({ color: st.color, transparent: true, opacity: 0.55 })); scene.add(track);
   const arrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(), 0.8, new THREE.Color(st.color).lerp(new THREE.Color('#ffffff'), 0.45), 0.2, 0.12); scene.add(arrow);
   const lab = document.createElement('div'); lab.className = 'ro-lab'; lab.style.color = st.color;
-  lab.innerHTML = `${st.short}<span>${st.shape === 'ring' ? 'antiquark' : d.cls === 3 ? 'lepton' : 'quark'}</span>`; lab.title = st.name; lab.onclick = () => showInfo(d.id); $('roLabels').appendChild(lab);
+  lab.innerHTML = `${st.short}<span>candidate</span>`; lab.title = `${st.name}; centre class ${d.cls}`; lab.onclick = () => showInfo(d.id); $('roLabels').appendChild(lab);
   lab.setAttribute('role', 'button'); lab.tabIndex = 0; lab.setAttribute('aria-label', `Inspect defect ${d.id}, ${st.name}`);
   lab.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showInfo(d.id); } });
   const w = g0.map(toWorld);
