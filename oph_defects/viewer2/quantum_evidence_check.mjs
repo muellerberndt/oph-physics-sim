@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {validateQuantumEvidence,higgsConnectionHTML,centroidHTML} from './quantum_evidence.js';
+import {validateQuantumEvidence,higgsConnectionHTML,centroidHTML,higgsCurrentReadoutHTML,coupledReadoutHTML,wilsonMaxwellHTML} from './quantum_evidence.js';
 const data=JSON.parse(readFileSync(new URL('./quantum_evidence.json',import.meta.url)));
 assert.equal(validateQuantumEvidence(data),data);
 for(const mutate of [x=>x.scope.sourceDerivedGeV=true,x=>x.channels[0].referenceEnergy='0',x=>x.channels[0].probabilities.outside.display=[0,0],x=>x.channels[0].massGeV=.000511,x=>x.channels[0].sourceEnergy.display=[1,0]]) {
@@ -25,3 +25,19 @@ for(const mutate of [x=>x.weakResponse.exactGroundProjection=true,x=>x.weakRespo
 }
 assert.match(html,/Does the quantum weak current respond/);assert.match(html,/original attempt/);assert.match(html,/can change the energy/);
 console.log('PASS: complete interacting energies; rejected free reference, missing outcome and mass promotion');
+for(const mutate of [x=>x.higgsCurrent.currentInvariantUnderConjugation=true,x=>x.higgsCurrent.exactGroundProjection=true,x=>x.higgsCurrent.SMParticleOrWeakBoson=true,x=>x.higgsCurrent.allFailuresRetained=false,x=>x.higgsCurrent.records.pop(),x=>x.higgsCurrent.elementaryMean.display=[.09,.1],x=>x.higgsCurrent.records[1].originalCompositeJointLower.display=[0,0]]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+assert.match(higgsCurrentReadoutHTML(data,'elementary'),/2\.488191%/);
+assert.match(higgsCurrentReadoutHTML(data,'composite'),/0\.297229%/);
+assert.throws(()=>higgsCurrentReadoutHTML(data,'opposite-charge'));
+for(const mutate of [x=>x.wilsonMaxwell.inputIsCoupledGround=true,x=>x.wilsonMaxwell.exactGroundProjection=true,x=>x.wilsonMaxwell.continuumOrSMIdentification=true,x=>x.wilsonMaxwell.allComplementRecordsRetained=false,x=>x.wilsonMaxwell.wholeOperatorEvolutionErrorIncluded=false,x=>x.wilsonMaxwell.bothIndependentCurrentMethodsAgree=false,x=>x.wilsonMaxwell.completeRecords=1160,x=>x.wilsonMaxwell.targetCounts=[1,0,1],x=>x.wilsonMaxwell.totalPhotonCap=4,x=>x.wilsonMaxwell.targetLower.display=[0,0],x=>x.wilsonMaxwell.connectedLower.display=[0,0],x=>x.wilsonMaxwell.controllerWorkspaceIncludedInCapacity=true]){
+ const changed=structuredClone(data);mutate(changed);assert.throws(()=>validateQuantumEvidence(changed));
+}
+assert.match(coupledReadoutHTML(data,true),/4\.75055 × 10<sup>-8<\/sup>/);
+assert.match(coupledReadoutHTML(data,true),/4\.71131 × 10<sup>-8<\/sup>/);
+assert.equal((coupledReadoutHTML(data,false).match(/0 exactly/g)||[]).length,2);
+assert.match(wilsonMaxwellHTML(data),/not the coupled ground state/);
+assert.match(wilsonMaxwellHTML(data),/1,161 retained labels/);
+assert.match(wilsonMaxwellHTML(data),/declared choices/);
+console.log('PASS: same-current preparations and coupled/free complete-record controls');

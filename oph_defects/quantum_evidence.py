@@ -99,6 +99,38 @@ def build(root=DEFAULT_REPOSITORY):
             or not wi['all_additional_pointer_labels_retained']
             or not wc['current_measurement_changes_the_admitted_energy_distribution']):
         raise ValueError('Weak-current source or ordered instrument changed')
+    names['native_higgs_current_response']='model/native_higgs_current_response/results.json'
+    hc=receipt(root,names['native_higgs_current_response'])
+    for name,expected in hc['owned_source_sha256'].items():
+        target=(root/'model/native_higgs_current_response'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Higgs current implementation changed: '+name)
+    if (hc['conjugation']['W_invariant']
+            or hc['scope']['weak_boson_chiral_Lorentz_interaction_or_SM_identification']
+            or hc['scope']['GeV_rest_mass_or_measured_lepton_ratio']
+            or not hc['source']['original_W_unchanged']
+            or hc['apparatus']['complete_setting_pump_energy_current_alphabet_size']!=80
+            or not hc['apparatus']['failures_and_outside_energy_bin_retained']
+            or hc['preparation']['exact_interacting_ground_projection_assumed']):
+        raise ValueError('Higgs current conjugation, source or complete instrument changed')
+    hcr=hc['prepared_current']
+    names['native_wilson_maxwell']='model/native_wilson_maxwell/results.json'
+    wm=receipt(root,names['native_wilson_maxwell'])
+    for name,expected in wm['owned_source_sha256'].items():
+        target=(root/'model/native_wilson_maxwell'/name).resolve()
+        if not target.is_relative_to(root) or digest(target)!=expected:
+            raise ValueError('Wilson–Maxwell implementation changed: '+name)
+    wmr=wm['complete_interaction_records']; wmpr=wm['actual_preparation']
+    if (wm['count_instrument']['full_pointer_dimension']!=1161
+            or wm['count_instrument']['target_label']!=[1,1,1]
+            or wmr['source_state_is_actual_coupled_ground']
+            or not wmr['all_virtual_matter_and_photon_occupations_in_Duhamel_bound']
+            or not wmpr['no_initial_P0_or_code_measurement']
+            or wmpr['filter_depth']!=0
+            or wm['boundaries']['interacting_Lorentz_or_four_dimensional_QED_limit_proved']
+            or wm['boundaries']['SM_particle_or_weak_chirality_identification']
+            or wm['source_choices']['source_empirical_mass_or_coupling_calibration']):
+        raise ValueError('Wilson–Maxwell source, complete count or interpretation changed')
     prep = source['interacting_ground_preparation']['preparation']
     filt = prep['finite_energy_agreement_filter']
     channels = source['interacting_charged_response']['same_H_interacting_channels']
@@ -124,6 +156,35 @@ def build(root=DEFAULT_REPOSITORY):
                            'scheduleTerms':str(filt['explicit_integer_M']),
                            'algebraicServicesDeclared':True,'efficientNativeCircuitExecuted':False},
             'channels':rows,'allFailuresRetained':True,
+            'wilsonMaxwell':{
+                'targetLower':bounds([wmr['exact']['actual_unconditional_target_probability_lower']]*2),
+                'connectedLower':bounds([wmr['exact']['actual_unconditional_binary_connected_response_lower']]*2),
+                'codeWeightLower':bounds([wmpr['global_code_probability_lower']]*2),
+                'sourceEnergy':bounds(wm['clock_and_capacity']['source_selected_excitation_interval']),
+                'capacityNats':bounds(wm['clock_and_capacity']['full_native_source_reference_trial_capacity_nats_interval']),
+                'sites':8,'nativeConstituents':32,'transverseModes':5,'photonStates':56,'totalPhotonCap':3,
+                'physicalRecords':1160,'completeRecords':1161,'targetCounts':[1,1,1],
+                'coupling':wm['source_choices']['g'],'timeTimesSourceMass':wmr['exact']['dimensionless_mT'],
+                'freeTargetProbability':wmr['free_target_probability'],
+                'deterministicTrial':True,'allComplementRecordsRetained':True,
+                'sameFullSourceClock':True,'bothIndependentCurrentMethodsAgree':True,
+                'wholeOperatorEvolutionErrorIncluded':True,'exactGroundProjection':False,
+                'inputIsCoupledGround':False,'continuumOrSMIdentification':False,
+                'entireFockHamiltonianEnumerated':False,'controllerWorkspaceIncludedInCapacity':False},
+            'higgsCurrent':{
+                'elementaryMean':bounds(hcr['elementary_W_mean_interval']),
+                'compositeMean':bounds(hcr['Higgs_composite_W_mean_interval']),
+                'historyTVUpper':bounds([hcr['same_history_TV_upper']]*2),
+                'records':[{'value':row['W_value'],
+                    'elementaryProbability':bounds(row['actual_elementary_bin_conditional_probability_interval']),
+                    'compositeProbability':bounds(row['actual_composite_bin_conditional_probability_interval']),
+                    'originalElementaryJointLower':bounds([row['original_elementary_attempt_joint_probability_lower']]*2),
+                    'originalCompositeJointLower':bounds([row['original_composite_attempt_joint_probability_lower']]*2)}
+                    for row in hcr['five_complete_current_records']],
+                'completeLabels':80,'allFailuresRetained':True,
+                'sameOriginalCurrent':True,'currentInvariantUnderConjugation':False,
+                'exactGroundProjection':False,'SMParticleOrWeakBoson':False,
+                'energyRadiusHoppingNorm':hc['energy_admission']['radius_in_units_of_360lambda']},
             'weakResponse':{
                 'originalInelasticLower':bounds([wi['original_attempt_nonzero_phase_probability_lower']]*2),
                 'chargedConditionalMean':bounds(wc['actual_prepared_bin_conditional_W_mean_interval']),
