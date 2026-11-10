@@ -10,7 +10,7 @@ let bad = 0;
 const show = (ok, name, x, y) => { if (!ok) bad++; console.log((ok ? 'ok   ' : 'FAIL ') + name + ': ' + (typeof x === 'number' ? (+x).toPrecision(10) : x) + (y === undefined ? '' : ' expected ' + (typeof y === 'number' ? (+y).toPrecision(10) : y))); };
 const near = (x, y, name, tol) => show(Math.abs(x - y) <= tol, name, x, y);
 const below = (x, lim, name) => show(Math.abs(x) <= lim, name + ' (bound ' + lim.toExponential(0) + ')', x);
-const rl = (p) => JSON.parse(readFileSync(new URL('../../../repair-law/work/' + p, import.meta.url)));
+const rl = (p) => JSON.parse(readFileSync(new URL('./research/' + p, import.meta.url)));
 const gl = rl('GL/s3_waves.json'), t3 = rl('T3/cones.json');
 
 console.log('--- GL: packets of the twelve link fields (48 x 1 x 1 lattice; plane packets are uniform across)');

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { realClockAmplitude, describeRegisterEvent } from './story_space_evidence.js';
 import { Routing, phases } from './cf1_engine.js';
@@ -49,8 +49,8 @@ assert.equal(TILT_COMPARISONS.length, 6);
 for (const r of TILT_COMPARISONS)
   assert.ok(Math.abs((r.oph_value-r.measurement.value)/r.measurement.sigma-r.sigma_distance)<1e-13);
 assert.equal(TILT_COMPARISONS.filter(r=>r.verdict==='tension').length,1);
-const source = new URL('../../../repair-law/reverse-engineering-reality/' + COSMOLOGY_LEDGER.source, import.meta.url);
-if (existsSync(source)) {
+const source = new URL('../references/cosmology_postdiction_ledger.json', import.meta.url);
+{
   const raw = readFileSync(source), ledger = JSON.parse(raw);
   assert.equal(createHash('sha256').update(raw).digest('hex'),COSMOLOGY_LEDGER.sha256);
   const rows = ledger.sections.flatMap(s=>s.rows).filter(r=>r.row_id.startsWith('ns_edge_center_P_C_'));

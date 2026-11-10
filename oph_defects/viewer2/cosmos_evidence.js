@@ -29,7 +29,7 @@ export function aliveOnCut(birthDepth, deathDepth, depth, end = false) {
 export const COSMOLOGY_LEDGER = {
   "source": "code/cosmology/postdiction_ledger/runtime/cosmology_postdiction_ledger.json",
   "sha256": "8d7c47beacb10e4072124acd3396ceaccaf81dacc7f534ea9a2132aaea1cbaf2",
-  "url": "https://github.com/muellerberndt/reverse-engineering-reality/blob/main/code/cosmology/postdiction_ledger/COSMOLOGY_POSTDICTION_LEDGER.md",
+  "url": "https://github.com/FloatingPragma/observer-patch-holography/blob/4623c6ec191026f2f470399282dc3458b3bb649f/code/cosmology/postdiction_ledger/COSMOLOGY_POSTDICTION_LEDGER.md",
   "P_C_tilt": 0.9660214956374175,
   "P_fwd_tilt": 0.9660214146696063
 };

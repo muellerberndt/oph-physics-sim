@@ -1,0 +1,2362 @@
+{
+  "allowed_classes": [
+    "conditional_theorem_postdiction",
+    "shared_baseline",
+    "closure_candidate_display",
+    "fitted_comparison_value",
+    "not_evaluable"
+  ],
+  "allowed_verdicts": [
+    "consistent",
+    "tension",
+    "exceeds_three_sigma_diagnostic",
+    "exceeds_stated_confidence_bound",
+    "not_evaluable"
+  ],
+  "class_descriptions": {
+    "closure_candidate_display": "target-informed declared map",
+    "conditional_theorem_postdiction": "value follows from a corpus theorem under named premises and was exposed after the data",
+    "fitted_comparison_value": "fitted comparison value with no source value",
+    "not_evaluable": "no comparison contract",
+    "shared_baseline": "identical to the standard LambdaCDM or single-field expectation, so agreement supports nothing"
+  },
+  "classification": "retrospective postdiction ledger; every comparison is on seen data; no row is a frozen prediction or a score",
+  "corpus_anchor_checks": [
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "P_C",
+      "source_file": "extra/fine_structure_constant_derivation.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "P_fwd",
+      "source_file": "extra/fine_structure_constant_derivation.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "golden_ratio",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "edge_center_tilt_theorem",
+      "source_file": "paper/tex_fragments/SCREEN_SPECTRUM_THEOREMS.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "clock_branch_diagnostic_alternative",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "clock_branch_paper_display",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "edge_center_paper_display",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "zero_running_dilation_cocycle",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "homogeneous_radial_source_family_theorem",
+      "source_file": "paper/tex_fragments/SCREEN_SPECTRUM_THEOREMS.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "zero_isocurvature_rank_one_single_clock",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "zero_tensor_scalar_screen_field",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "gaussian_maxent_release",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "flat_branch_small_loop_holonomy",
+      "source_file": "cosmology/oph_inflation_without_inflaton_observer_screen_synchronization.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "fixed_capacity_cpl_point",
+      "source_file": "Lean/ObserverPatchHolography/EinsteinBranch/FixedCapacityWLaw.lean"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "capacity_candidate_a",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "capacity_candidate_b",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "capacity_lambda_dictionary",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "flagship_lambda_planck_central_display",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "flagship_planck_chain_capacity_coordinate_display",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "flagship_capacity_lambda_percent_display",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "btfr_exponent_four",
+      "source_file": "flagship/from_observer_consensus_to_standard_physics.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "dark_matter_paper_btfr_exponent_display",
+      "source_file": "cosmology/oph_dark_matter_paper.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "a0_dictionary",
+      "source_file": "cosmology/oph_dark_matter_paper.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "dark_matter_paper_full_rar_a0_display",
+      "source_file": "cosmology/oph_dark_matter_paper.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "dark_matter_paper_deep_regime_a0_display",
+      "source_file": "cosmology/oph_dark_matter_paper.tex"
+    },
+    {
+      "anchor_verified": true,
+      "corpus_input_id": "ringdown_fz14_registration",
+      "source_file": "docs/FROZEN_PREDICTION_LADDER.md"
+    }
+  ],
+  "corpus_inputs_schema": "oph.cosmology.postdiction_ledger.corpus_inputs.v1",
+  "derived_constants": {
+    "Lambda_lP2_desi_dr2_display_mean": 2.9677036022648546e-122,
+    "Lambda_lP2_desi_dr2_display_std": 3.9776584184203244e-124,
+    "Lambda_lP2_planck_central": 2.8451358375830875e-122,
+    "Lambda_planck_central_m_minus_2": 1.0891388337006832e-52,
+    "P_C": 1.6309682094039593,
+    "P_fwd": 1.630972095858897,
+    "a_dS_m_s2": 5.415298493722932e-10,
+    "c_H0_m_s2": 6.54443616922538e-10,
+    "capacity_coordinate_desi_dr2_display": 3.1757814202121453e+122,
+    "capacity_coordinate_planck_central": 3.3125933167309256e+122,
+    "euler_number": 2.718281828459045,
+    "golden_ratio": 1.618033988749895,
+    "megaparsec_m": 3.085677581491367e+22,
+    "ns_clock_branch_P_C": 0.9648411430307772,
+    "ns_edge_center_P_C": 0.9660214956374175,
+    "ns_edge_center_P_fwd": 0.9660214146696063,
+    "ns_edge_center_branch_spread": -8.096781120208334e-08,
+    "planck2018_H0_km_s_Mpc": 67.36,
+    "planck2018_H0_s_minus_1": 2.1829889293697243e-18,
+    "planck2018_Omega_Lambda": 0.6847,
+    "planck_length_m": 1.616255e-35,
+    "speed_of_light_m_s": 299792458.0
+  },
+  "frozen_prediction_rows": 0,
+  "parent_receipts": {
+    "act_dr6_conditional_likelihood": {
+      "path": "code/cosmology/tilt_posterior/likelihood_slice.json",
+      "schema": "oph.act_dr6.conditional_likelihood_slice.v1",
+      "sha256": "c8d8481e3807f407217e52aad7aa21f5d1993877e5deeb826d4956443fe6680d"
+    },
+    "official_desi_dr2_fz13_retrospective": {
+      "path": "code/cosmology/fixed_capacity_wlaw/runtime/official_desi_dr2_fz13_retrospective.json",
+      "schema": "oph.official_desi_dr2_fz13_retrospective.v3",
+      "sha256": "52abfd4ca15424420b4b4c55160660648279de0bdd1b404a242c4b3dab4c1473"
+    },
+    "sparc_deep_regime_diagnostic": {
+      "path": "code/cosmology/rar_deep_regime/receipts/sparc_deep_regime_diagnostic.json",
+      "schema": "oph.cosmology.rar_deep_regime_diagnostic.v2",
+      "sha256": "b52c06698523ada1b8fe6337f61d81b5a0c57421c03453679dccf1872f56f2e9"
+    },
+    "sparc_full_rar_calibration": {
+      "path": "code/cosmology/rar_deep_regime/receipts/sparc_full_rar_calibration.json",
+      "schema": "oph.cosmology.sparc_full_rar_calibration.v1",
+      "sha256": "204ec809099937ffdb95ba77ae26f1343b49e9378a6c030c6b3494d29f28525f"
+    }
+  },
+  "pins": {
+    "code/cosmology/fixed_capacity_wlaw/runtime/official_desi_dr2_fz13_retrospective.json": "52abfd4ca15424420b4b4c55160660648279de0bdd1b404a242c4b3dab4c1473",
+    "code/cosmology/postdiction_ledger/build_cosmology_postdiction_ledger.py": "589686bdf739d7713e217f38d74c33a23f90c826d611ac0e4a870f6435855eaf",
+    "code/cosmology/postdiction_ledger/corpus_inputs.json": "9d6095bd043082c91cd021dea421f0e93b595e0e51862bc4e3db26e6e43eff03",
+    "code/cosmology/postdiction_ledger/public_inputs.json": "ce7d58fa6c35bad5d14262a6ad1c0b1e4371010fc2254134e91193dcd9a7a436",
+    "code/cosmology/postdiction_ledger/test_cosmology_postdiction_ledger.py": "8871e6b6826f0f6db5475c422773fad7f49e6f2a69d9b6a3373c0246ee7466ad",
+    "code/cosmology/postdiction_ledger/verify_cosmology_postdiction_ledger_independent.py": "fbd4e5a6c89bb8ac1cc1b7eb8e56a268c6918e07f72f81367b7f26c30f15ae98",
+    "code/cosmology/rar_deep_regime/receipts/sparc_deep_regime_diagnostic.json": "b52c06698523ada1b8fe6337f61d81b5a0c57421c03453679dccf1872f56f2e9",
+    "code/cosmology/rar_deep_regime/receipts/sparc_full_rar_calibration.json": "204ec809099937ffdb95ba77ae26f1343b49e9378a6c030c6b3494d29f28525f",
+    "code/cosmology/tilt_posterior/likelihood_slice.json": "c8d8481e3807f407217e52aad7aa21f5d1993877e5deeb826d4956443fe6680d"
+  },
+  "promotes_nothing": true,
+  "public_inputs_schema": "oph.cosmology.postdiction_ledger.public_inputs.v1",
+  "row_count": 53,
+  "rows_sha256": "b55024f0b856357f72dd92debe322ffd50ea6816a3e9d22b41018c56b0b7b2c1",
+  "schema": "oph.cosmology.postdiction_ledger.v1",
+  "sections": [
+    {
+      "id": "primordial",
+      "rows": [
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI. Cosmological parameters, A&A 641, A6, arXiv:1807.06209; the same value is quoted in Planck 2018 results. X, arXiv:1807.06211",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0042,
+            "unit": null,
+            "value": 0.9649
+          },
+          "measurement_display": "0.9649 +/- 0.0042",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_C = 1.6309682094039593 (the CODATA-located comparison pixel)"
+          ],
+          "oph_value": 0.9660214956374175,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "463690317905960407/480000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "planck2018_vi_ns"
+          ],
+          "quantity": "n_s = 1 - P_C/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_C_planck2018_vi_ns",
+          "section": "primordial",
+          "sigma_distance": 0.26702277081369397,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), SPT-3G D1: CMB temperature and polarization power spectra and cosmology, arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "SPT-3G D1 + Planck",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0035,
+            "unit": null,
+            "value": 0.9636
+          },
+          "measurement_display": "0.9636 +/- 0.0035",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_C = 1.6309682094039593 (the CODATA-located comparison pixel)"
+          ],
+          "oph_value": 0.9660214956374175,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "463690317905960407/480000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "spt3g_d1_planck_ns"
+          ],
+          "quantity": "n_s = 1 - P_C/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_C_spt3g_d1_planck_ns",
+          "section": "primordial",
+          "sigma_distance": 0.6918558964050041,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "CMB-SPA (SPT-3G D1 + Planck + ACT DR6)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.003,
+            "unit": null,
+            "value": 0.9684
+          },
+          "measurement_display": "0.9684 +/- 0.003",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_C = 1.6309682094039593 (the CODATA-located comparison pixel)"
+          ],
+          "oph_value": 0.9660214956374175,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "463690317905960407/480000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "cmb_spa_ns"
+          ],
+          "quantity": "n_s = 1 - P_C/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_C_cmb_spa_ns",
+          "section": "primordial",
+          "sigma_distance": -0.7928347875274951,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "SPT-3G D1 alone",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.011,
+            "unit": null,
+            "value": 0.951
+          },
+          "measurement_display": "0.951 +/- 0.011",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_C = 1.6309682094039593 (the CODATA-located comparison pixel)"
+          ],
+          "oph_value": 0.9660214956374175,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "463690317905960407/480000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "spt3g_d1_alone_ns"
+          ],
+          "quantity": "n_s = 1 - P_C/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_C_spt3g_d1_alone_ns",
+          "section": "primordial",
+          "sigma_distance": 1.3655905124925014,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Louis et al. (2025), ACT DR6 power spectra, likelihoods and LambdaCDM parameters, arXiv:2503.14452; companion extended-models paper Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "ACT DR6 P-ACT (ACT DR6 + Planck)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0038,
+            "unit": null,
+            "value": 0.9709
+          },
+          "measurement_display": "0.9709 +/- 0.0038",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_C = 1.6309682094039593 (the CODATA-located comparison pixel)"
+          ],
+          "oph_value": 0.9660214956374175,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "463690317905960407/480000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_ns"
+          ],
+          "quantity": "n_s = 1 - P_C/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_C_act_dr6_p_act_ns",
+          "section": "primordial",
+          "sigma_distance": -1.2838169375217068,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Louis et al. (2025), arXiv:2503.14452; Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "ACT DR6 P-ACT-LB (ACT DR6 + Planck + CMB lensing + DESI 2024 (DR1) BAO)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction. The attached ACT-only likelihood slice shares ACT observations with this combined posterior. Its fixed-background comparison fits amplitude and polarization calibration; it changes no uncertainty, verdict, row count, or frozen prediction and supplies no independent dataset.",
+          "extras": {
+            "act_only_conditional_likelihood": {
+              "FZ15_verdict": null,
+              "artifact_ref": "code/cosmology/tilt_posterior/likelihood_slice.json",
+              "background": {
+                "cosmomc_theta": 0.010417,
+                "ombh2": 0.0226,
+                "omch2": 0.118,
+                "tau": 0.0544
+              },
+              "calibration_A_act": 1.0,
+              "delta_chi2": 4.068770377846249,
+              "fixed_tilt": {
+                "chi2": 171.92974433221303,
+                "ns": 0.9660214956374175
+              },
+              "free_tilt": {
+                "chi2": 167.86097395436678,
+                "ns": 0.9772748223774699
+              },
+              "full_cosmological_profile": false,
+              "native_primordial_generator_identified": false,
+              "new_independent_data": false,
+              "p_value": null,
+              "scope": "fixed_background_ACT_only_likelihood_slice"
+            }
+          },
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0034,
+            "unit": null,
+            "value": 0.9743
+          },
+          "measurement_display": "0.9743 +/- 0.0034",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_C = 1.6309682094039593 (the CODATA-located comparison pixel)"
+          ],
+          "oph_value": 0.9660214956374175,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "463690317905960407/480000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_lb_ns"
+          ],
+          "quantity": "n_s = 1 - P_C/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_C_act_dr6_p_act_lb_ns",
+          "section": "primordial",
+          "sigma_distance": -2.434854224288966,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "tension"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI. Cosmological parameters, A&A 641, A6, arXiv:1807.06209; the same value is quoted in Planck 2018 results. X, arXiv:1807.06211",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_fwd",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0042,
+            "unit": null,
+            "value": 0.9649
+          },
+          "measurement_display": "0.9649 +/- 0.0042",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_fwd = 1.630972095858897 (the source closure-map root)"
+          ],
+          "oph_value": 0.9660214146696063,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "15456342634713701/16000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "planck2018_vi_ns"
+          ],
+          "quantity": "n_s = 1 - P_fwd/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_fwd_planck2018_vi_ns",
+          "section": "primordial",
+          "sigma_distance": 0.26700349276340773,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), SPT-3G D1: CMB temperature and polarization power spectra and cosmology, arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_fwd",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "SPT-3G D1 + Planck",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0035,
+            "unit": null,
+            "value": 0.9636
+          },
+          "measurement_display": "0.9636 +/- 0.0035",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_fwd = 1.630972095858897 (the source closure-map root)"
+          ],
+          "oph_value": 0.9660214146696063,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "15456342634713701/16000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "spt3g_d1_planck_ns"
+          ],
+          "quantity": "n_s = 1 - P_fwd/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_fwd_spt3g_d1_planck_ns",
+          "section": "primordial",
+          "sigma_distance": 0.6918327627446608,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_fwd",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "CMB-SPA (SPT-3G D1 + Planck + ACT DR6)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.003,
+            "unit": null,
+            "value": 0.9684
+          },
+          "measurement_display": "0.9684 +/- 0.003",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_fwd = 1.630972095858897 (the source closure-map root)"
+          ],
+          "oph_value": 0.9660214146696063,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "15456342634713701/16000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "cmb_spa_ns"
+          ],
+          "quantity": "n_s = 1 - P_fwd/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_fwd_cmb_spa_ns",
+          "section": "primordial",
+          "sigma_distance": -0.7928617767978958,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_fwd",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "SPT-3G D1 alone",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.011,
+            "unit": null,
+            "value": 0.951
+          },
+          "measurement_display": "0.951 +/- 0.011",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_fwd = 1.630972095858897 (the source closure-map root)"
+          ],
+          "oph_value": 0.9660214146696063,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "15456342634713701/16000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "spt3g_d1_alone_ns"
+          ],
+          "quantity": "n_s = 1 - P_fwd/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_fwd_spt3g_d1_alone_ns",
+          "section": "primordial",
+          "sigma_distance": 1.365583151782392,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Louis et al. (2025), ACT DR6 power spectra, likelihoods and LambdaCDM parameters, arXiv:2503.14452; companion extended-models paper Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_fwd",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "ACT DR6 P-ACT (ACT DR6 + Planck)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0038,
+            "unit": null,
+            "value": 0.9709
+          },
+          "measurement_display": "0.9709 +/- 0.0038",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_fwd = 1.630972095858897 (the source closure-map root)"
+          ],
+          "oph_value": 0.9660214146696063,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "15456342634713701/16000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_ns"
+          ],
+          "quantity": "n_s = 1 - P_fwd/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_fwd_act_dr6_p_act_ns",
+          "section": "primordial",
+          "sigma_distance": -1.2838382448404442,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Louis et al. (2025), arXiv:2503.14452; Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_fwd",
+            "edge_center_tilt_theorem",
+            "edge_center_paper_display"
+          ],
+          "dataset": "ACT DR6 P-ACT-LB (ACT DR6 + Planck + CMB lensing + DESI 2024 (DR1) BAO)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Conditional theorem: n_s = 1 - P/48 follows from the declared full-collar generator density P/24 and the orientation-half identity; the source generator receipt is not supplied. Both P values were exposed after the data. The P_fwd minus P_C branch spread in n_s is -8.1e-08, far below every quoted uncertainty. Seen data; the row is a postdiction, not a frozen prediction.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0034,
+            "unit": null,
+            "value": 0.9743
+          },
+          "measurement_display": "0.9743 +/- 0.0034",
+          "oph_premises": [
+            "full-collar reserve-generator density P/24 (declared branch input)",
+            "orientation-half identity giving the half-collar density P/48",
+            "continuous dilation cocycle on the source-facing half collar",
+            "P = P_fwd = 1.630972095858897 (the source closure-map root)"
+          ],
+          "oph_value": 0.9660214146696063,
+          "oph_value_display": "0.966021",
+          "oph_value_exact_rational": "15456342634713701/16000000000000000",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_lb_ns"
+          ],
+          "quantity": "n_s = 1 - P_fwd/48 (edge-center branch)",
+          "row_id": "ns_edge_center_P_fwd_act_dr6_p_act_lb_ns",
+          "section": "primordial",
+          "sigma_distance": -2.4348780383510844,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "tension"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI. Cosmological parameters, A&A 641, A6, arXiv:1807.06209; the same value is quoted in Planck 2018 results. X, arXiv:1807.06211",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "golden_ratio",
+            "euler_number",
+            "clock_branch_diagnostic_alternative",
+            "clock_branch_paper_display"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "diagnostic alternative branch; no selection between branches is made by data. The inflation paper displays this branch value as 0.96484. Float arithmetic: 1 - e (P_C - varphi) with varphi = (1 + sqrt 5)/2.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0042,
+            "unit": null,
+            "value": 0.9649
+          },
+          "measurement_display": "0.9649 +/- 0.0042",
+          "oph_premises": [
+            "clock-branch coordinate theta = e (P - varphi)",
+            "P = P_C = 1.6309682094039593",
+            "e taken as a separate diagnostic hypothesis, not a source-derived coordinate"
+          ],
+          "oph_value": 0.9648411430307772,
+          "oph_value_display": "0.964841",
+          "oph_value_exact_rational": null,
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "planck2018_vi_ns"
+          ],
+          "quantity": "n_s = 1 - e (P_C - varphi) (clock branch, diagnostic)",
+          "row_id": "ns_clock_branch_P_C_planck2018_vi_ns",
+          "section": "primordial",
+          "sigma_distance": -0.014013564100668844,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), SPT-3G D1: CMB temperature and polarization power spectra and cosmology, arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "golden_ratio",
+            "euler_number",
+            "clock_branch_diagnostic_alternative",
+            "clock_branch_paper_display"
+          ],
+          "dataset": "SPT-3G D1 + Planck",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "diagnostic alternative branch; no selection between branches is made by data. The inflation paper displays this branch value as 0.96484. Float arithmetic: 1 - e (P_C - varphi) with varphi = (1 + sqrt 5)/2.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0035,
+            "unit": null,
+            "value": 0.9636
+          },
+          "measurement_display": "0.9636 +/- 0.0035",
+          "oph_premises": [
+            "clock-branch coordinate theta = e (P - varphi)",
+            "P = P_C = 1.6309682094039593",
+            "e taken as a separate diagnostic hypothesis, not a source-derived coordinate"
+          ],
+          "oph_value": 0.9648411430307772,
+          "oph_value_display": "0.964841",
+          "oph_value_exact_rational": null,
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "spt3g_d1_planck_ns"
+          ],
+          "quantity": "n_s = 1 - e (P_C - varphi) (clock branch, diagnostic)",
+          "row_id": "ns_clock_branch_P_C_spt3g_d1_planck_ns",
+          "section": "primordial",
+          "sigma_distance": 0.3546122945077596,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "golden_ratio",
+            "euler_number",
+            "clock_branch_diagnostic_alternative",
+            "clock_branch_paper_display"
+          ],
+          "dataset": "CMB-SPA (SPT-3G D1 + Planck + ACT DR6)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "diagnostic alternative branch; no selection between branches is made by data. The inflation paper displays this branch value as 0.96484. Float arithmetic: 1 - e (P_C - varphi) with varphi = (1 + sqrt 5)/2.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.003,
+            "unit": null,
+            "value": 0.9684
+          },
+          "measurement_display": "0.9684 +/- 0.003",
+          "oph_premises": [
+            "clock-branch coordinate theta = e (P - varphi)",
+            "P = P_C = 1.6309682094039593",
+            "e taken as a separate diagnostic hypothesis, not a source-derived coordinate"
+          ],
+          "oph_value": 0.9648411430307772,
+          "oph_value_display": "0.964841",
+          "oph_value_exact_rational": null,
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "cmb_spa_ns"
+          ],
+          "quantity": "n_s = 1 - e (P_C - varphi) (clock branch, diagnostic)",
+          "row_id": "ns_clock_branch_P_C_cmb_spa_ns",
+          "section": "primordial",
+          "sigma_distance": -1.1862856564076225,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "SPT-3G Collaboration, Camphuis et al. (2025), arXiv:2506.20707",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "golden_ratio",
+            "euler_number",
+            "clock_branch_diagnostic_alternative",
+            "clock_branch_paper_display"
+          ],
+          "dataset": "SPT-3G D1 alone",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "diagnostic alternative branch; no selection between branches is made by data. The inflation paper displays this branch value as 0.96484. Float arithmetic: 1 - e (P_C - varphi) with varphi = (1 + sqrt 5)/2.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.011,
+            "unit": null,
+            "value": 0.951
+          },
+          "measurement_display": "0.951 +/- 0.011",
+          "oph_premises": [
+            "clock-branch coordinate theta = e (P - varphi)",
+            "P = P_C = 1.6309682094039593",
+            "e taken as a separate diagnostic hypothesis, not a source-derived coordinate"
+          ],
+          "oph_value": 0.9648411430307772,
+          "oph_value_display": "0.964841",
+          "oph_value_exact_rational": null,
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "spt3g_d1_alone_ns"
+          ],
+          "quantity": "n_s = 1 - e (P_C - varphi) (clock branch, diagnostic)",
+          "row_id": "ns_clock_branch_P_C_spt3g_d1_alone_ns",
+          "section": "primordial",
+          "sigma_distance": 1.258285730070656,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Louis et al. (2025), ACT DR6 power spectra, likelihoods and LambdaCDM parameters, arXiv:2503.14452; companion extended-models paper Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "golden_ratio",
+            "euler_number",
+            "clock_branch_diagnostic_alternative",
+            "clock_branch_paper_display"
+          ],
+          "dataset": "ACT DR6 P-ACT (ACT DR6 + Planck)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "diagnostic alternative branch; no selection between branches is made by data. The inflation paper displays this branch value as 0.96484. Float arithmetic: 1 - e (P_C - varphi) with varphi = (1 + sqrt 5)/2.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0038,
+            "unit": null,
+            "value": 0.9709
+          },
+          "measurement_display": "0.9709 +/- 0.0038",
+          "oph_premises": [
+            "clock-branch coordinate theta = e (P - varphi)",
+            "P = P_C = 1.6309682094039593",
+            "e taken as a separate diagnostic hypothesis, not a source-derived coordinate"
+          ],
+          "oph_value": 0.9648411430307772,
+          "oph_value_display": "0.964841",
+          "oph_value_exact_rational": null,
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_ns"
+          ],
+          "quantity": "n_s = 1 - e (P_C - varphi) (clock branch, diagnostic)",
+          "row_id": "ns_clock_branch_P_C_act_dr6_p_act_ns",
+          "section": "primordial",
+          "sigma_distance": -1.5944360445323196,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Louis et al. (2025), arXiv:2503.14452; Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "P_C",
+            "golden_ratio",
+            "euler_number",
+            "clock_branch_diagnostic_alternative",
+            "clock_branch_paper_display"
+          ],
+          "dataset": "ACT DR6 P-ACT-LB (ACT DR6 + Planck + CMB lensing + DESI 2024 (DR1) BAO)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "diagnostic alternative branch; no selection between branches is made by data. The inflation paper displays this branch value as 0.96484. Float arithmetic: 1 - e (P_C - varphi) with varphi = (1 + sqrt 5)/2.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0034,
+            "unit": null,
+            "value": 0.9743
+          },
+          "measurement_display": "0.9743 +/- 0.0034",
+          "oph_premises": [
+            "clock-branch coordinate theta = e (P - varphi)",
+            "P = P_C = 1.6309682094039593",
+            "e taken as a separate diagnostic hypothesis, not a source-derived coordinate"
+          ],
+          "oph_value": 0.9648411430307772,
+          "oph_value_display": "0.964841",
+          "oph_value_exact_rational": null,
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_lb_ns"
+          ],
+          "quantity": "n_s = 1 - e (P_C - varphi) (clock branch, diagnostic)",
+          "row_id": "ns_clock_branch_P_C_act_dr6_p_act_lb_ns",
+          "section": "primordial",
+          "sigma_distance": -2.78201675565379,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "tension"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI, arXiv:1807.06209, Table 5; the same value is quoted in Planck 2018 results. X, arXiv:1807.06211",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "zero_running_dilation_cocycle",
+            "homogeneous_radial_source_family_theorem"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Zero running is exact under the declared source dilation cocycle (pure power law), conditional on that cocycle. Generic slow-roll running is second order in the slow-roll parameters, of order 1e-3, so a running measurement at that level separates the branches. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0067,
+            "unit": null,
+            "value": -0.0045
+          },
+          "measurement_display": "-0.0045 +/- 0.0067",
+          "oph_premises": [
+            "declared source dilation cocycle",
+            "scale-natural source embedding transporting refinement to dilation",
+            "homogeneous radial source family: exact power law"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "planck2018_running"
+          ],
+          "quantity": "dn_s/dlnk",
+          "row_id": "running_zero_planck2018_running",
+          "section": "primordial",
+          "sigma_distance": 0.6716417910447762,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "ACT Collaboration, Calabrese et al. (2025), ACT DR6 constraints on extended cosmological models, arXiv:2503.14454",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "zero_running_dilation_cocycle",
+            "homogeneous_radial_source_family_theorem"
+          ],
+          "dataset": "ACT DR6 P-ACT-LB",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Zero running is exact under the declared source dilation cocycle (pure power law), conditional on that cocycle. Generic slow-roll running is second order in the slow-roll parameters, of order 1e-3, so a running measurement at that level separates the branches. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0052,
+            "unit": null,
+            "value": 0.0062
+          },
+          "measurement_display": "0.0062 +/- 0.0052",
+          "oph_premises": [
+            "declared source dilation cocycle",
+            "scale-natural source embedding transporting refinement to dilation",
+            "homogeneous radial source family: exact power law"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "Simons Observatory",
+          "public_input_ids": [
+            "act_dr6_p_act_lb_running"
+          ],
+          "quantity": "dn_s/dlnk",
+          "row_id": "running_zero_act_dr6_p_act_lb_running",
+          "section": "primordial",
+          "sigma_distance": -1.1923076923076923,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "BICEP/Keck Collaboration, Ade et al. (2021), BICEP/Keck XIII, Phys. Rev. Lett. 127, 151301, arXiv:2110.00483",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "zero_tensor_scalar_screen_field"
+          ],
+          "dataset": "BICEP/Keck through 2018 (BK18) + Planck + WMAP",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero linear primordial tensor amplitude requires zero initial tensor amplitude and velocity, no tensor forcing, and positive scalar power. A scalar source alone leaves homogeneous tensor modes unconstrained. These extra initial conditions are branch premises, not source-derived results. Slow roll has no universal positive lower bound on r; an upper limit tests only specified alternatives above it. Observable comparisons require separate treatment of scalar-induced tensors, lensing and foregrounds. Bound rows carry no sigma distance. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "kind": "upper_bound",
+            "sigma_r": 0.009,
+            "unit": null,
+            "upper_bound": 0.036
+          },
+          "measurement_display": "< 0.036 (95 percent CL)",
+          "oph_premises": [
+            "linear tensor evolution on the declared background",
+            "zero initial tensor amplitude and velocity",
+            "no tensor forcing",
+            "positive scalar power at the comparison pivot"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (tests specified tensor alternatives above the achieved bound)",
+          "public_input_ids": [
+            "bk18_r_0p05"
+          ],
+          "quantity": "r_0.05 (tensor-to-scalar ratio)",
+          "row_id": "tensor_zero_bk18_r_0p05",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Tristram et al. (2022), Improved limits on the tensor-to-scalar ratio using BICEP and Planck, Phys. Rev. D 105, 083524, arXiv:2112.07961",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "zero_tensor_scalar_screen_field"
+          ],
+          "dataset": "Planck PR4 + BK18 + BAO",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero linear primordial tensor amplitude requires zero initial tensor amplitude and velocity, no tensor forcing, and positive scalar power. A scalar source alone leaves homogeneous tensor modes unconstrained. These extra initial conditions are branch premises, not source-derived results. Slow roll has no universal positive lower bound on r; an upper limit tests only specified alternatives above it. Observable comparisons require separate treatment of scalar-induced tensors, lensing and foregrounds. Bound rows carry no sigma distance. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "kind": "upper_bound",
+            "unit": null,
+            "upper_bound": 0.032
+          },
+          "measurement_display": "< 0.032 (95 percent CL)",
+          "oph_premises": [
+            "linear tensor evolution on the declared background",
+            "zero initial tensor amplitude and velocity",
+            "no tensor forcing",
+            "positive scalar power at the comparison pivot"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (tests specified tensor alternatives above the achieved bound)",
+          "public_input_ids": [
+            "tristram2022_r"
+          ],
+          "quantity": "r (tensor-to-scalar ratio)",
+          "row_id": "tensor_zero_tristram2022_r",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. X. Constraints on inflation, A&A 641, A10, arXiv:1807.06211",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "zero_tensor_scalar_screen_field"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing + BK15",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero linear primordial tensor amplitude requires zero initial tensor amplitude and velocity, no tensor forcing, and positive scalar power. A scalar source alone leaves homogeneous tensor modes unconstrained. These extra initial conditions are branch premises, not source-derived results. Slow roll has no universal positive lower bound on r; an upper limit tests only specified alternatives above it. Observable comparisons require separate treatment of scalar-induced tensors, lensing and foregrounds. Bound rows carry no sigma distance. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "kind": "upper_bound",
+            "unit": null,
+            "upper_bound": 0.056
+          },
+          "measurement_display": "< 0.056 (95 percent CL)",
+          "oph_premises": [
+            "linear tensor evolution on the declared background",
+            "zero initial tensor amplitude and velocity",
+            "no tensor forcing",
+            "positive scalar power at the comparison pivot"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (tests specified tensor alternatives above the achieved bound)",
+          "public_input_ids": [
+            "planck2018_x_r_0p002_bk15"
+          ],
+          "quantity": "r_0.002 (tensor-to-scalar ratio)",
+          "row_id": "tensor_zero_planck2018_x_r_0p002_bk15",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. X, arXiv:1807.06211, Table 14",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "zero_isocurvature_rank_one_single_clock"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero source-side isocurvature follows from the rank-one single-clock normal form. Adiabatic initial conditions are the single-field baseline as well, so a bound satisfied by zero supports nothing. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "k_pivot_mpc_inverse": 0.002,
+            "kind": "upper_bound",
+            "unit": null,
+            "upper_bound": 3.5
+          },
+          "measurement_display": "< 3.5 (95 percent CL) at k = 0.002 Mpc^-1",
+          "oph_premises": [
+            "rank-one single-clock normal form",
+            "one common release clock"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (bound tightening only; zero is the shared baseline)",
+          "public_input_ids": [
+            "planck2018_x_cdi_axion_i_100beta_klow"
+          ],
+          "quantity": "100 beta_iso (uncorrelated CDI, n_II = 1, axion I)",
+          "row_id": "isocurvature_zero_planck2018_x_cdi_axion_i_100beta_klow",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. X, arXiv:1807.06211, Table 14",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "zero_isocurvature_rank_one_single_clock"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero source-side isocurvature follows from the rank-one single-clock normal form. Adiabatic initial conditions are the single-field baseline as well, so a bound satisfied by zero supports nothing. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "k_pivot_mpc_inverse": 0.05,
+            "kind": "upper_bound",
+            "unit": null,
+            "upper_bound": 3.8
+          },
+          "measurement_display": "< 3.8 (95 percent CL) at k = 0.05 Mpc^-1",
+          "oph_premises": [
+            "rank-one single-clock normal form",
+            "one common release clock"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (bound tightening only; zero is the shared baseline)",
+          "public_input_ids": [
+            "planck2018_x_cdi_axion_i_100beta_kmid"
+          ],
+          "quantity": "100 beta_iso (uncorrelated CDI, n_II = 1, axion I)",
+          "row_id": "isocurvature_zero_planck2018_x_cdi_axion_i_100beta_kmid",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. X, arXiv:1807.06211, Table 14",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "zero_isocurvature_rank_one_single_clock"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero source-side isocurvature follows from the rank-one single-clock normal form. Adiabatic initial conditions are the single-field baseline as well, so a bound satisfied by zero supports nothing. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "k_pivot_mpc_inverse": 0.1,
+            "kind": "upper_bound",
+            "unit": null,
+            "upper_bound": 3.9
+          },
+          "measurement_display": "< 3.9 (95 percent CL) at k = 0.1 Mpc^-1",
+          "oph_premises": [
+            "rank-one single-clock normal form",
+            "one common release clock"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (bound tightening only; zero is the shared baseline)",
+          "public_input_ids": [
+            "planck2018_x_cdi_axion_i_100beta_khigh"
+          ],
+          "quantity": "100 beta_iso (uncorrelated CDI, n_II = 1, axion I)",
+          "row_id": "isocurvature_zero_planck2018_x_cdi_axion_i_100beta_khigh",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. X, arXiv:1807.06211, Table 14",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "zero_isocurvature_rank_one_single_clock"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero source-side isocurvature follows from the rank-one single-clock normal form. Adiabatic initial conditions are the single-field baseline as well, so a bound satisfied by zero supports nothing. Seen data.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "k_pivot_mpc_inverse": 0.002,
+            "kind": "upper_bound",
+            "unit": null,
+            "upper_bound": 2.5
+          },
+          "measurement_display": "< 2.5 (95 percent CL) at k = 0.002 Mpc^-1",
+          "oph_premises": [
+            "rank-one single-clock normal form",
+            "one common release clock"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "LiteBIRD (bound tightening only; zero is the shared baseline)",
+          "public_input_ids": [
+            "planck2018_x_cdi_general_100beta_klow"
+          ],
+          "quantity": "100 beta_iso (general three-parameter CDI)",
+          "row_id": "isocurvature_zero_planck2018_x_cdi_general_100beta_klow",
+          "section": "primordial",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_upper_bound",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. IX. Constraints on primordial non-Gaussianity, A&A 641, A9, arXiv:1905.05697",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "gaussian_maxent_release"
+          ],
+          "dataset": "Planck 2018 temperature + polarization (68 percent CL, statistical)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The MaxEnt Gaussian release gives zero primordial non-Gaussianity at the source; the standard nonlinear transfer of order unity is not computed here. Gaussian initial conditions are the single-field baseline as well, so agreement supports nothing. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 5.1,
+            "unit": null,
+            "value": -0.9
+          },
+          "measurement_display": "-0.9 +/- 5.1",
+          "oph_premises": [
+            "MaxEnt covariance theorem (Gaussian release)",
+            "nonlinear transfer of order unity not computed"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 at the source (transfer not computed)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "none scoring; large-scale-structure f_NL programmes tighten a shared-baseline bound",
+          "public_input_ids": [
+            "planck2018_ix_fnl_local"
+          ],
+          "quantity": "f_NL^local",
+          "row_id": "fnl_zero_planck2018_ix_fnl_local",
+          "section": "primordial",
+          "sigma_distance": 0.17647058823529413,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. IX, arXiv:1905.05697",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "gaussian_maxent_release"
+          ],
+          "dataset": "Planck 2018 temperature + polarization (68 percent CL, statistical)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The MaxEnt Gaussian release gives zero primordial non-Gaussianity at the source; the standard nonlinear transfer of order unity is not computed here. Gaussian initial conditions are the single-field baseline as well, so agreement supports nothing. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 47.0,
+            "unit": null,
+            "value": -26.0
+          },
+          "measurement_display": "-26 +/- 47",
+          "oph_premises": [
+            "MaxEnt covariance theorem (Gaussian release)",
+            "nonlinear transfer of order unity not computed"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 at the source (transfer not computed)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "none scoring; large-scale-structure f_NL programmes tighten a shared-baseline bound",
+          "public_input_ids": [
+            "planck2018_ix_fnl_equil"
+          ],
+          "quantity": "f_NL^equil",
+          "row_id": "fnl_zero_planck2018_ix_fnl_equil",
+          "section": "primordial",
+          "sigma_distance": 0.5531914893617021,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. IX, arXiv:1905.05697",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "gaussian_maxent_release"
+          ],
+          "dataset": "Planck 2018 temperature + polarization (68 percent CL, statistical)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The MaxEnt Gaussian release gives zero primordial non-Gaussianity at the source; the standard nonlinear transfer of order unity is not computed here. Gaussian initial conditions are the single-field baseline as well, so agreement supports nothing. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 24.0,
+            "unit": null,
+            "value": -38.0
+          },
+          "measurement_display": "-38 +/- 24",
+          "oph_premises": [
+            "MaxEnt covariance theorem (Gaussian release)",
+            "nonlinear transfer of order unity not computed"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 at the source (transfer not computed)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "none scoring; large-scale-structure f_NL programmes tighten a shared-baseline bound",
+          "public_input_ids": [
+            "planck2018_ix_fnl_ortho"
+          ],
+          "quantity": "f_NL^ortho",
+          "row_id": "fnl_zero_planck2018_ix_fnl_ortho",
+          "section": "primordial",
+          "sigma_distance": 1.5833333333333333,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI, arXiv:1807.06209",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "flat_branch_small_loop_holonomy"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero curvature follows from the small-loop holonomy identification of a flat branch, conditional on that identification. Flatness is the LambdaCDM baseline as well, so agreement supports nothing. The DESI DR2+CMB row sits above two sigma under the fixed rule and is reported as it stands. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0065,
+            "unit": null,
+            "value": -0.0106
+          },
+          "measurement_display": "-0.0106 +/- 0.0065",
+          "oph_premises": [
+            "vanishing area-normalized small-loop holonomy",
+            "clock-slice flat FLRW branch identification"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [
+            "planck2018_vi_omegak"
+          ],
+          "quantity": "Omega_K",
+          "row_id": "curvature_zero_planck2018_vi_omegak",
+          "section": "primordial",
+          "sigma_distance": 1.6307692307692307,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI, arXiv:1807.06209",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "flat_branch_small_loop_holonomy"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing + BAO",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero curvature follows from the small-loop holonomy identification of a flat branch, conditional on that identification. Flatness is the LambdaCDM baseline as well, so agreement supports nothing. The DESI DR2+CMB row sits above two sigma under the fixed rule and is reported as it stands. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0019,
+            "unit": null,
+            "value": 0.0007
+          },
+          "measurement_display": "0.0007 +/- 0.0019",
+          "oph_premises": [
+            "vanishing area-normalized small-loop holonomy",
+            "clock-slice flat FLRW branch identification"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [
+            "planck2018_vi_omegak_bao"
+          ],
+          "quantity": "Omega_K",
+          "row_id": "curvature_zero_planck2018_vi_omegak_bao",
+          "section": "primordial",
+          "sigma_distance": -0.3684210526315789,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "consistent"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II: Measurements of baryon acoustic oscillations and cosmological constraints, arXiv:2503.14738",
+          "class": "shared_baseline",
+          "corpus_source_ids": [
+            "flat_branch_small_loop_holonomy"
+          ],
+          "dataset": "DESI DR2 BAO + CMB (LambdaCDM + Omega_K)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Zero curvature follows from the small-loop holonomy identification of a flat branch, conditional on that identification. Flatness is the LambdaCDM baseline as well, so agreement supports nothing. The DESI DR2+CMB row sits above two sigma under the fixed rule and is reported as it stands. Seen data.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.0011,
+            "unit": null,
+            "value": 0.0023
+          },
+          "measurement_display": "0.0023 +/- 0.0011",
+          "oph_premises": [
+            "vanishing area-normalized small-loop holonomy",
+            "clock-slice flat FLRW branch identification"
+          ],
+          "oph_value": 0.0,
+          "oph_value_display": "0 (exact)",
+          "oph_value_exact_rational": "0/1",
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [
+            "desi_dr2_cmb_omegak"
+          ],
+          "quantity": "Omega_K",
+          "row_id": "curvature_zero_desi_dr2_cmb_omegak",
+          "section": "primordial",
+          "sigma_distance": -2.090909090909091,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "tension"
+        }
+      ],
+      "title": "Primordial"
+    },
+    {
+      "id": "background_dark_energy",
+      "rows": [
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738; official Cobaya chains, https://data.desi.lbl.gov/public/papers/y3/bao-cosmo-params/",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "fixed_capacity_cpl_point",
+            "official_desi_dr2_fz13_retrospective"
+          ],
+          "dataset": "DESI_DR2_BAO+CMB (official DESI DR2 base_w_wa chains)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Gaussian moment diagnostic on the official chains: the Mahalanobis distance of the point (-1, 0) from the posterior mean under the sampled w0-wa covariance, converted to a two-sided normal equivalent; it is not the collaboration's delta chi-squared or evidence. Seen data; direction-neutral. The point (-1, 0) is also the LambdaCDM null, so consistency would support nothing; tension rows are reported as they stand. The posterior fractions are empirical masses under the DESI model, priors, and likelihoods.",
+          "extras": {
+            "chi2_2dof_survival": 0.009170738876587545,
+            "component_sigma_distances": {
+              "w0": -2.829428705063407,
+              "wa": 3.01250544478641
+            },
+            "mahalanobis_squared": 9.383474841082599,
+            "posterior_mass_w0_gt_minus_one": 0.9978895518303681,
+            "posterior_mass_w_ge_minus_one_for_0_le_z_le_2": 7.048648110754993e-05,
+            "posterior_mass_wa_nonnegative": 0.0008541303004797227
+          },
+          "measurement": {
+            "kind": "two_parameter_gaussian_moments",
+            "w0_mean": -0.41917006691052217,
+            "w0_std": 0.2052816994646492,
+            "w0_wa_correlation": -0.9778258727827605,
+            "w0_wa_covariance": -0.11637136917907343,
+            "wa_mean": -1.7464744072033862,
+            "wa_std": 0.5797414939866485
+          },
+          "measurement_display": "w0 = -0.419 +/- 0.205, wa = -1.746 +/- 0.580",
+          "oph_premises": [
+            "density, continuity, and closed-sector premises of the capacity law",
+            "fixed record capacity: d ln N / d ln a = 0",
+            "exposure map w(a) = -1 + (1/3) d ln N / d ln a (Lean FixedCapacityWLaw)"
+          ],
+          "oph_value": {
+            "w0": -1.0,
+            "wa": 0.0
+          },
+          "oph_value_display": "(w0, wa) = (-1, 0) exact",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [],
+          "quantity": "(w0, wa) fixed-capacity point",
+          "row_id": "w0wa_fixed_capacity_desi_dr2_bao_cmb",
+          "section": "background_dark_energy",
+          "sigma_distance": 2.6056228166049333,
+          "sigma_distance_kind": "two_dof_gaussian_mahalanobis_two_sided_normal_equivalent",
+          "verdict": "tension"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738; official Cobaya chains, https://data.desi.lbl.gov/public/papers/y3/bao-cosmo-params/",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "fixed_capacity_cpl_point",
+            "official_desi_dr2_fz13_retrospective"
+          ],
+          "dataset": "DESI_DR2_BAO+CMB+PantheonPlus (official DESI DR2 base_w_wa chains)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Gaussian moment diagnostic on the official chains: the Mahalanobis distance of the point (-1, 0) from the posterior mean under the sampled w0-wa covariance, converted to a two-sided normal equivalent; it is not the collaboration's delta chi-squared or evidence. Seen data; direction-neutral. The point (-1, 0) is also the LambdaCDM null, so consistency would support nothing; tension rows are reported as they stand. The posterior fractions are empirical masses under the DESI model, priors, and likelihoods.",
+          "extras": {
+            "chi2_2dof_survival": 0.009454936469986444,
+            "component_sigma_distances": {
+              "w0": -2.952004790401431,
+              "wa": 2.9867722907283603
+            },
+            "mahalanobis_squared": 9.322436592183832,
+            "posterior_mass_w0_gt_minus_one": 0.9988045637536698,
+            "posterior_mass_w_ge_minus_one_for_0_le_z_le_2": 0.0011251164671342933,
+            "posterior_mass_wa_nonnegative": 0.0006293620238032452
+          },
+          "measurement": {
+            "kind": "two_parameter_gaussian_moments",
+            "w0_mean": -0.8379581981443314,
+            "w0_std": 0.05489212022370506,
+            "w0_wa_correlation": -0.8927674700976148,
+            "w0_wa_covariance": -0.010134810748825789,
+            "wa_mean": -0.6176883262728894,
+            "wa_std": 0.20680797400938078
+          },
+          "measurement_display": "w0 = -0.838 +/- 0.055, wa = -0.618 +/- 0.207",
+          "oph_premises": [
+            "density, continuity, and closed-sector premises of the capacity law",
+            "fixed record capacity: d ln N / d ln a = 0",
+            "exposure map w(a) = -1 + (1/3) d ln N / d ln a (Lean FixedCapacityWLaw)"
+          ],
+          "oph_value": {
+            "w0": -1.0,
+            "wa": 0.0
+          },
+          "oph_value_display": "(w0, wa) = (-1, 0) exact",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [],
+          "quantity": "(w0, wa) fixed-capacity point",
+          "row_id": "w0wa_fixed_capacity_desi_dr2_bao_cmb_pantheonplus",
+          "section": "background_dark_energy",
+          "sigma_distance": 2.5951510205048067,
+          "sigma_distance_kind": "two_dof_gaussian_mahalanobis_two_sided_normal_equivalent",
+          "verdict": "tension"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738; official Cobaya chains, https://data.desi.lbl.gov/public/papers/y3/bao-cosmo-params/",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "fixed_capacity_cpl_point",
+            "official_desi_dr2_fz13_retrospective"
+          ],
+          "dataset": "DESI_DR2_BAO+CMB+Union3 (official DESI DR2 base_w_wa chains)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Gaussian moment diagnostic on the official chains: the Mahalanobis distance of the point (-1, 0) from the posterior mean under the sampled w0-wa covariance, converted to a two-sided normal equivalent; it is not the collaboration's delta chi-squared or evidence. Seen data; direction-neutral. The point (-1, 0) is also the LambdaCDM null, so consistency would support nothing; tension rows are reported as they stand. The posterior fractions are empirical masses under the DESI model, priors, and likelihoods.",
+          "extras": {
+            "chi2_2dof_survival": 0.0007214897409725747,
+            "component_sigma_distances": {
+              "w0": -3.770005473412656,
+              "wa": 3.700680409365658
+            },
+            "mahalanobis_squared": 14.468384797755341,
+            "posterior_mass_w0_gt_minus_one": 0.9999478640555248,
+            "posterior_mass_w_ge_minus_one_for_0_le_z_le_2": 0.00012056437159894425,
+            "posterior_mass_wa_nonnegative": 3.2584965297011957e-06
+          },
+          "measurement": {
+            "kind": "two_parameter_gaussian_moments",
+            "w0_mean": -0.6656627619095767,
+            "w0_std": 0.08868348877694786,
+            "w0_wa_correlation": -0.9335612030028015,
+            "w0_wa_covariance": -0.024367290304014126,
+            "wa_mean": -1.089189017680132,
+            "wa_std": 0.2943212861406836
+          },
+          "measurement_display": "w0 = -0.666 +/- 0.089, wa = -1.089 +/- 0.294",
+          "oph_premises": [
+            "density, continuity, and closed-sector premises of the capacity law",
+            "fixed record capacity: d ln N / d ln a = 0",
+            "exposure map w(a) = -1 + (1/3) d ln N / d ln a (Lean FixedCapacityWLaw)"
+          ],
+          "oph_value": {
+            "w0": -1.0,
+            "wa": 0.0
+          },
+          "oph_value_display": "(w0, wa) = (-1, 0) exact",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [],
+          "quantity": "(w0, wa) fixed-capacity point",
+          "row_id": "w0wa_fixed_capacity_desi_dr2_bao_cmb_union3",
+          "section": "background_dark_energy",
+          "sigma_distance": 3.381280029733898,
+          "sigma_distance_kind": "two_dof_gaussian_mahalanobis_two_sided_normal_equivalent",
+          "verdict": "exceeds_three_sigma_diagnostic"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738; official Cobaya chains, https://data.desi.lbl.gov/public/papers/y3/bao-cosmo-params/",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "fixed_capacity_cpl_point",
+            "official_desi_dr2_fz13_retrospective"
+          ],
+          "dataset": "DESI_DR2_BAO+CMB+DESY5 (official DESI DR2 base_w_wa chains)",
+          "discriminates_from_baseline": true,
+          "epistemic_note": "Gaussian moment diagnostic on the official chains: the Mahalanobis distance of the point (-1, 0) from the posterior mean under the sampled w0-wa covariance, converted to a two-sided normal equivalent; it is not the collaboration's delta chi-squared or evidence. Seen data; direction-neutral. The point (-1, 0) is also the LambdaCDM null, so consistency would support nothing; tension rows are reported as they stand. The posterior fractions are empirical masses under the DESI model, priors, and likelihoods.",
+          "extras": {
+            "chi2_2dof_survival": 8.66875733248964e-05,
+            "component_sigma_distances": {
+              "w0": -4.323723430356354,
+              "wa": 3.876669250238782
+            },
+            "mahalanobis_squared": 18.706400028072828,
+            "posterior_mass_w0_gt_minus_one": 1.0,
+            "posterior_mass_w_ge_minus_one_for_0_le_z_le_2": 0.0002054219660642912,
+            "posterior_mass_wa_nonnegative": 0.0
+          },
+          "measurement": {
+            "kind": "two_parameter_gaussian_moments",
+            "w0_mean": -0.7523480181537261,
+            "w0_std": 0.057277479893264774,
+            "w0_wa_correlation": -0.9071818940350354,
+            "w0_wa_covariance": -0.011544135554742596,
+            "wa_mean": -0.8612751003570996,
+            "wa_std": 0.2221688374121805
+          },
+          "measurement_display": "w0 = -0.752 +/- 0.057, wa = -0.861 +/- 0.222",
+          "oph_premises": [
+            "density, continuity, and closed-sector premises of the capacity law",
+            "fixed record capacity: d ln N / d ln a = 0",
+            "exposure map w(a) = -1 + (1/3) d ln N / d ln a (Lean FixedCapacityWLaw)"
+          ],
+          "oph_value": {
+            "w0": -1.0,
+            "wa": 0.0
+          },
+          "oph_value_display": "(w0, wa) = (-1, 0) exact",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid",
+          "public_input_ids": [],
+          "quantity": "(w0, wa) fixed-capacity point",
+          "row_id": "w0wa_fixed_capacity_desi_dr2_bao_cmb_desy5",
+          "section": "background_dark_energy",
+          "sigma_distance": 3.925117056901634,
+          "sigma_distance_kind": "two_dof_gaussian_mahalanobis_two_sided_normal_equivalent",
+          "verdict": "exceeds_three_sigma_diagnostic"
+        }
+      ],
+      "title": "Background and dark energy"
+    },
+    {
+      "id": "capacity_lambda",
+      "rows": [
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI, arXiv:1807.06209, Table 2",
+          "class": "closure_candidate_display",
+          "corpus_source_ids": [
+            "capacity_candidate_a",
+            "capacity_lambda_dictionary",
+            "flagship_lambda_planck_central_display",
+            "flagship_capacity_lambda_percent_display"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing base-LambdaCDM centrals",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Target-informed declared map: the capacity coordinate N = 3 pi/(Lambda l_P^2) is read from the data and both candidates were exposed after it, so the residual carries no predictive weight. Large N explains the small dimensional constant, not the closeness of the residual: a relative capacity residual delta gives a relative constant residual -delta/(1+delta). The DESI display is a base-LambdaCDM posterior display whose centrals (H0 = 68.17, Omega_Lambda = 0.6972) differ from the Planck 2018 centrals; that shift moves the coordinate by about four percent, larger than the candidate spread. Seen data. Central-value display without an uncertainty; percent residuals only.",
+          "extras": {
+            "flagship_planck_chain_capacity_coordinate_display": 3.3129e+122,
+            "percent_residual_in_capacity": -0.6186487374535222,
+            "percent_residual_in_lambda": 0.6224998247600534
+          },
+          "measurement": {
+            "capacity_coordinate": 3.3125933167309256e+122,
+            "inputs": {
+              "H0_km_s_Mpc": 67.36,
+              "Omega_Lambda": 0.6847
+            },
+            "kind": "central_value_display",
+            "sigma": null,
+            "unit": "m^-2",
+            "value": 1.0891388337006832e-52
+          },
+          "measurement_display": "1.0891e-52 m^-2 (central; no uncertainty attached)",
+          "oph_premises": [
+            "capacity read as de Sitter horizon entropy in nats: Lambda = 3 pi/(N l_P^2)",
+            "candidate N from the closure hypothesis (declared, target-informed map)",
+            "calibration import of hbar, G, and c through l_P"
+          ],
+          "oph_value": 1.0959187210318637e-52,
+          "oph_value_display": "1.0959e-52 m^-2",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid (background posterior displays only)",
+          "public_input_ids": [
+            "planck2018_vi_h0",
+            "planck2018_vi_omega_lambda",
+            "codata2022_planck_length",
+            "si_speed_of_light",
+            "iau2015_megaparsec"
+          ],
+          "quantity": "Lambda from N = 3.2921e+122 (candidate a)",
+          "row_id": "lambda_capacity_candidate_a_planck2018_central",
+          "section": "capacity_lambda",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_central_value_display",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738; official Cobaya chains, https://data.desi.lbl.gov/public/papers/y3/bao-cosmo-params/",
+          "class": "closure_candidate_display",
+          "corpus_source_ids": [
+            "capacity_candidate_a",
+            "capacity_lambda_dictionary",
+            "official_desi_dr2_fz13_retrospective"
+          ],
+          "dataset": "DESI DR2 BAO + CMB flat base-LambdaCDM chains, sample-level Lambda l_P^2 display",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Target-informed declared map: the capacity coordinate N = 3 pi/(Lambda l_P^2) is read from the data and both candidates were exposed after it, so the residual carries no predictive weight. Large N explains the small dimensional constant, not the closeness of the residual: a relative capacity residual delta gives a relative constant residual -delta/(1+delta). The DESI display is a base-LambdaCDM posterior display whose centrals (H0 = 68.17, Omega_Lambda = 0.6972) differ from the Planck 2018 centrals; that shift moves the coordinate by about four percent, larger than the candidate spread. Seen data. A target-informed display carries no verdict; the standardized distance is display information only.",
+          "extras": {
+            "percent_residual_in_capacity": 3.662675870812432,
+            "percent_residual_in_lambda": -3.5332638676788273,
+            "standardized_distance_display": -2.6361438828693995
+          },
+          "measurement": {
+            "capacity_coordinate": 3.1757814202121453e+122,
+            "kind": "gaussian",
+            "sigma": 3.9776584184203244e-124,
+            "unit": null,
+            "value": 2.9677036022648546e-122,
+            "weighted_step_cdf_quantiles": {
+              "0.025": 2.8899743161519555e-122,
+              "0.160": 2.9285219918249906e-122,
+              "0.500": 2.967622673450945e-122,
+              "0.840": 3.007628784196439e-122,
+              "0.975": 3.045302329664984e-122
+            }
+          },
+          "measurement_display": "2.96770e-122 +/- 3.97766e-124 (weighted mean and std)",
+          "oph_premises": [
+            "capacity read as de Sitter horizon entropy in nats: Lambda = 3 pi/(N l_P^2)",
+            "candidate N from the closure hypothesis (declared, target-informed map)",
+            "calibration import of hbar, G, and c through l_P"
+          ],
+          "oph_value": 2.8628468031862275e-122,
+          "oph_value_display": "2.86285e-122",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid (background posterior displays only)",
+          "public_input_ids": [],
+          "quantity": "Lambda l_P^2 = 3 pi/N, N = 3.2921e+122 (candidate a)",
+          "row_id": "lambda_lp2_capacity_candidate_a_desi_dr2_display",
+          "section": "capacity_lambda",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_not_evaluable",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI, arXiv:1807.06209, Table 2",
+          "class": "closure_candidate_display",
+          "corpus_source_ids": [
+            "capacity_candidate_b",
+            "capacity_lambda_dictionary",
+            "flagship_lambda_planck_central_display",
+            "flagship_capacity_lambda_percent_display"
+          ],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing base-LambdaCDM centrals",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Target-informed declared map: the capacity coordinate N = 3 pi/(Lambda l_P^2) is read from the data and both candidates were exposed after it, so the residual carries no predictive weight. Large N explains the small dimensional constant, not the closeness of the residual: a relative capacity residual delta gives a relative constant residual -delta/(1+delta). The DESI display is a base-LambdaCDM posterior display whose centrals (H0 = 68.17, Omega_Lambda = 0.6972) differ from the Planck 2018 centrals; that shift moves the coordinate by about four percent, larger than the candidate spread. Seen data. Central-value display without an uncertainty; percent residuals only.",
+          "extras": {
+            "flagship_planck_chain_capacity_coordinate_display": 3.3129e+122,
+            "percent_residual_in_capacity": -0.37714610688325345,
+            "percent_residual_in_lambda": 0.37857388354673766
+          },
+          "measurement": {
+            "capacity_coordinate": 3.3125933167309256e+122,
+            "inputs": {
+              "H0_km_s_Mpc": 67.36,
+              "Omega_Lambda": 0.6847
+            },
+            "kind": "central_value_display",
+            "sigma": null,
+            "unit": "m^-2",
+            "value": 1.0891388337006832e-52
+          },
+          "measurement_display": "1.0891e-52 m^-2 (central; no uncertainty attached)",
+          "oph_premises": [
+            "capacity read as de Sitter horizon entropy in nats: Lambda = 3 pi/(N l_P^2)",
+            "candidate N from the closure hypothesis (declared, target-informed map)",
+            "calibration import of hbar, G, and c through l_P"
+          ],
+          "oph_value": 1.0932620288806396e-52,
+          "oph_value_display": "1.0933e-52 m^-2",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid (background posterior displays only)",
+          "public_input_ids": [
+            "planck2018_vi_h0",
+            "planck2018_vi_omega_lambda",
+            "codata2022_planck_length",
+            "si_speed_of_light",
+            "iau2015_megaparsec"
+          ],
+          "quantity": "Lambda from N = 3.3001e+122 (candidate b)",
+          "row_id": "lambda_capacity_candidate_b_planck2018_central",
+          "section": "capacity_lambda",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_central_value_display",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738; official Cobaya chains, https://data.desi.lbl.gov/public/papers/y3/bao-cosmo-params/",
+          "class": "closure_candidate_display",
+          "corpus_source_ids": [
+            "capacity_candidate_b",
+            "capacity_lambda_dictionary",
+            "official_desi_dr2_fz13_retrospective"
+          ],
+          "dataset": "DESI DR2 BAO + CMB flat base-LambdaCDM chains, sample-level Lambda l_P^2 display",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "Target-informed declared map: the capacity coordinate N = 3 pi/(Lambda l_P^2) is read from the data and both candidates were exposed after it, so the residual carries no predictive weight. Large N explains the small dimensional constant, not the closeness of the residual: a relative capacity residual delta gives a relative constant residual -delta/(1+delta). The DESI display is a base-LambdaCDM posterior display whose centrals (H0 = 68.17, Omega_Lambda = 0.6972) differ from the Planck 2018 centrals; that shift moves the coordinate by about four percent, larger than the candidate spread. Seen data. A target-informed display carries no verdict; the standardized distance is display information only.",
+          "extras": {
+            "percent_residual_in_capacity": 3.9145823763762087,
+            "percent_residual_in_lambda": -3.7671155355248267,
+            "standardized_distance_display": -2.8106190046768247
+          },
+          "measurement": {
+            "capacity_coordinate": 3.1757814202121453e+122,
+            "kind": "gaussian",
+            "sigma": 3.9776584184203244e-124,
+            "unit": null,
+            "value": 2.9677036022648546e-122,
+            "weighted_step_cdf_quantiles": {
+              "0.025": 2.8899743161519555e-122,
+              "0.160": 2.9285219918249906e-122,
+              "0.500": 2.967622673450945e-122,
+              "0.840": 3.007628784196439e-122,
+              "0.975": 3.045302329664984e-122
+            }
+          },
+          "measurement_display": "2.96770e-122 +/- 3.97766e-124 (weighted mean and std)",
+          "oph_premises": [
+            "capacity read as de Sitter horizon entropy in nats: Lambda = 3 pi/(N l_P^2)",
+            "candidate N from the closure hypothesis (declared, target-informed map)",
+            "calibration import of hbar, G, and c through l_P"
+          ],
+          "oph_value": 2.8559067788156054e-122,
+          "oph_value_display": "2.85591e-122",
+          "oph_value_exact_rational": null,
+          "prospective_data": "DESI DR3; Euclid (background posterior displays only)",
+          "public_input_ids": [],
+          "quantity": "Lambda l_P^2 = 3 pi/N, N = 3.3001e+122 (candidate b)",
+          "row_id": "lambda_lp2_capacity_candidate_b_desi_dr2_display",
+          "section": "capacity_lambda",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_not_evaluable",
+          "verdict": "not_evaluable"
+        }
+      ],
+      "title": "Capacity and the cosmological constant"
+    },
+    {
+      "id": "dark_sector",
+      "rows": [
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_full_rar_calibration.json",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "sparc_full_rar_calibration",
+            "a0_dictionary",
+            "dark_matter_paper_full_rar_a0_display"
+          ],
+          "dataset": "SPARC (CDS J/AJ/152/157), unweighted point-level log-residual fit",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.1774418693537535,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.21444006993884523
+          },
+          "measurement": {
+            "kind": "fitted_value",
+            "n_galaxies": 147,
+            "n_points": 2696,
+            "scatter_dex": 0.13266062785937574,
+            "sigma": 8.020947274163045e-12,
+            "sigma_kind": "galaxy bootstrap standard deviation",
+            "unit": "m s^-2",
+            "value": 1.1612569877336688e-10
+          },
+          "measurement_display": "1.1613e-10 +/- 0.0802e-10 m s^-2 (galaxy bootstrap)",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [],
+          "quantity": "a0, SPARC full-RAR fit (Upsilon_disk = 0.5, Upsilon_bulge = 0.7)",
+          "row_id": "a0_sparc_full_rar_upsilon_disk_0p5",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_full_rar_calibration.json",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "sparc_full_rar_calibration",
+            "a0_dictionary"
+          ],
+          "dataset": "SPARC (CDS J/AJ/152/157), unweighted point-level log-residual fit",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.22135421416273054,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.2675085273796456
+          },
+          "measurement": {
+            "kind": "fitted_value",
+            "n_galaxies": 147,
+            "n_points": 2696,
+            "scatter_dex": 0.13681963368910263,
+            "sigma": 1.0059035487588091e-11,
+            "sigma_kind": "galaxy bootstrap standard deviation",
+            "unit": "m s^-2",
+            "value": 1.4486385253770346e-10
+          },
+          "measurement_display": "1.4486e-10 +/- 0.1006e-10 m s^-2 (galaxy bootstrap)",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [],
+          "quantity": "a0, SPARC full-RAR fit (Upsilon_disk = 0.4, Upsilon_bulge = 0.7)",
+          "row_id": "a0_sparc_full_rar_upsilon_disk_0p4",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_full_rar_calibration.json",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "sparc_full_rar_calibration",
+            "a0_dictionary"
+          ],
+          "dataset": "SPARC (CDS J/AJ/152/157), unweighted point-level log-residual fit",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.14576912491255017,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.17616327789498853
+          },
+          "measurement": {
+            "kind": "fitted_value",
+            "n_galaxies": 147,
+            "n_points": 2696,
+            "scatter_dex": 0.13177413099362192,
+            "sigma": 6.664220533778289e-12,
+            "sigma_kind": "galaxy bootstrap standard deviation",
+            "unit": "m s^-2",
+            "value": 9.539767334340257e-11
+          },
+          "measurement_display": "0.9540e-10 +/- 0.0666e-10 m s^-2 (galaxy bootstrap)",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [],
+          "quantity": "a0, SPARC full-RAR fit (Upsilon_disk = 0.6, Upsilon_bulge = 0.7)",
+          "row_id": "a0_sparc_full_rar_upsilon_disk_0p6",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "McGaugh, Lelli and Schombert (2016), Phys. Rev. Lett. 117, 201101, arXiv:1609.05917",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "a0_dictionary"
+          ],
+          "dataset": "SPARC radial acceleration relation (153 galaxies, 2693 points)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.18336186173575833,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.22159443313992078
+          },
+          "measurement": {
+            "kind": "published_value",
+            "sigma": 2e-12,
+            "systematic_uncertainty": 2.4e-11,
+            "unit": "m s^-2",
+            "value": 1.2e-10
+          },
+          "measurement_display": "1.2000e-10 +/- 0.0200e-10 (random) +/- 0.2400e-10 (systematic) m s^-2",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [
+            "mcgaugh2016_a0"
+          ],
+          "quantity": "a0, published radial acceleration relation fit",
+          "row_id": "a0_mcgaugh2016_published",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_deep_regime_diagnostic.json",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "sparc_deep_regime_diagnostic",
+            "a0_dictionary",
+            "dark_matter_paper_deep_regime_a0_display"
+          ],
+          "dataset": "SPARC deep-regime subset, total model g_obs = g_bar + sqrt(g_bar a0)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.12882998382279087,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.1556921759322932
+          },
+          "measurement": {
+            "interval_95_galaxy_cluster_bootstrap": [
+              7.322312695881286e-11,
+              9.707984168575966e-11
+            ],
+            "kind": "fitted_value",
+            "n_galaxies": 141,
+            "n_points": 1519,
+            "sigma": null,
+            "unit": "m s^-2",
+            "value": 8.431196058105931e-11
+          },
+          "measurement_display": "0.8431e-10 m s^-2, 95 percent bootstrap interval [0.7322e-10, 0.9708e-10]",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [],
+          "quantity": "a0, deep-regime fixed-exponent fit (g_bar < 0.3 x 1.2e-10 m s^-2)",
+          "row_id": "a0_sparc_deep_regime_fixed_exponent_f_0p3",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_deep_regime_diagnostic.json",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "sparc_deep_regime_diagnostic",
+            "a0_dictionary",
+            "dark_matter_paper_deep_regime_a0_display"
+          ],
+          "dataset": "SPARC deep-regime subset, total model g_obs = g_bar + sqrt(g_bar a0)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.13370750392320596,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.16158670215246015
+          },
+          "measurement": {
+            "interval_95_galaxy_cluster_bootstrap": [
+              7.390242699918679e-11,
+              1.037927571023286e-10
+            ],
+            "kind": "fitted_value",
+            "n_galaxies": 115,
+            "n_points": 960,
+            "sigma": null,
+            "unit": "m s^-2",
+            "value": 8.750402247718735e-11
+          },
+          "measurement_display": "0.8750e-10 m s^-2, 95 percent bootstrap interval [0.7390e-10, 1.0379e-10]",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [],
+          "quantity": "a0, deep-regime fixed-exponent fit (g_bar < 0.1 x 1.2e-10 m s^-2)",
+          "row_id": "a0_sparc_deep_regime_fixed_exponent_f_0p1",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_deep_regime_diagnostic.json",
+          "class": "fitted_comparison_value",
+          "corpus_source_ids": [
+            "sparc_deep_regime_diagnostic",
+            "a0_dictionary",
+            "dark_matter_paper_deep_regime_a0_display"
+          ],
+          "dataset": "SPARC deep-regime subset, total model g_obs = g_bar + sqrt(g_bar a0)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The OPH dictionary a0 = G n^2 c (collar density n, per-cut variance slope c) is exact and its value is open; no source value exists to compare. The ratio xi = a0/a_dS with a_dS = c^2 sqrt(Lambda/3) at the Planck-central Lambda is the number a source derivation must produce. The coincidence a0 ~ c H0 is Milgrom's (1983). The fits are same-data calibration diagnostics, not OPH evidence.",
+          "extras": {
+            "a0_over_c_H0": 0.141115993529606,
+            "a_dS_m_s2": 5.415298493722932e-10,
+            "xi_a0_over_a_dS": 0.17053992742631247
+          },
+          "measurement": {
+            "interval_95_galaxy_cluster_bootstrap": [
+              6.300008749124774e-11,
+              1.2962442071410531e-10
+            ],
+            "kind": "fitted_value",
+            "n_galaxies": 40,
+            "n_points": 203,
+            "sigma": null,
+            "unit": "m s^-2",
+            "value": 9.235246121113281e-11
+          },
+          "measurement_display": "0.9235e-10 m s^-2, 95 percent bootstrap interval [0.6300e-10, 1.2962e-10]",
+          "oph_premises": [
+            "none: fitted comparison value with no source value"
+          ],
+          "oph_value": null,
+          "oph_value_display": "open (dictionary a0 = G n^2 c exact; value not derived)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no source value to score",
+          "public_input_ids": [],
+          "quantity": "a0, deep-regime fixed-exponent fit (g_bar < 0.03 x 1.2e-10 m s^-2)",
+          "row_id": "a0_sparc_deep_regime_fixed_exponent_f_0p03",
+          "section": "dark_sector",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_no_source_value",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "parent receipt code/cosmology/rar_deep_regime/receipts/sparc_deep_regime_diagnostic.json",
+          "class": "conditional_theorem_postdiction",
+          "corpus_source_ids": [
+            "btfr_exponent_four",
+            "sparc_deep_regime_diagnostic",
+            "dark_matter_paper_btfr_exponent_display"
+          ],
+          "dataset": "SPARC, 123 galaxies with positive catalogued V_flat, Upsilon_disk = 0.5, M_b = 0.5 L_[3.6] + 1.33 M_HI",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The exponent 4 is a conditional characterization theorem (declared deep-regime scale covariance and quadrature source composition); neither premise nor a0 is source-derived. The fitted exponent is the reciprocal of an ordinary least-squares slope of log v_f on log M_b; ordinary least squares with error in the regressor attenuates that slope, so the estimator is biased and this is not a calibrated test. The paper displays 3.75 +/- 0.10; the receipt bootstrap standard deviation of the exponent is 0.093 and the receipt values are used here.",
+          "measurement": {
+            "kind": "gaussian",
+            "n_galaxies": 123,
+            "paper_display": {
+              "uncertainty": 0.1,
+              "value": 3.75
+            },
+            "sigma": 0.09287762921042209,
+            "sigma_kind": "galaxy bootstrap standard deviation of the reciprocal OLS slope",
+            "unit": null,
+            "value": 3.752695784236939
+          },
+          "measurement_display": "3.753 +/- 0.093 (paper display 3.75 +/- 0.10)",
+          "oph_premises": [
+            "declared deep-regime scale covariance",
+            "quadrature source composition",
+            "characterization theorem M_A(r) = r sqrt(M_b a0/G), hence v^4 = G M_b a0"
+          ],
+          "oph_value": 4.0,
+          "oph_value_display": "4 (exact)",
+          "oph_value_exact_rational": "4/1",
+          "prospective_data": "none: a calibrated errors-in-variables Tully-Fisher likelihood is required before scoring",
+          "public_input_ids": [],
+          "quantity": "baryonic Tully-Fisher exponent in M_b proportional to v_f^x",
+          "row_id": "btfr_exponent_four_sparc_ols",
+          "section": "dark_sector",
+          "sigma_distance": 2.662688721336464,
+          "sigma_distance_kind": "signed_one_dimensional",
+          "verdict": "tension"
+        }
+      ],
+      "title": "Dark sector"
+    },
+    {
+      "id": "not_evaluable",
+      "rows": [
+        {
+          "citation": "docs/FROZEN_PREDICTION_LADDER.md, row FZ-14",
+          "class": "not_evaluable",
+          "corpus_source_ids": [
+            "ringdown_fz14_registration"
+          ],
+          "dataset": "no event likelihood evaluated",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "FZ-14 is registered pending owner freeze; comparison access is forbidden until the complete contract is anchored, and no event likelihood has been evaluated. No comparison contract exists for this ledger.",
+          "measurement": {
+            "kind": "none"
+          },
+          "measurement_display": "none",
+          "oph_premises": [
+            "none: registered pending owner freeze"
+          ],
+          "oph_value": null,
+          "oph_value_display": "no comparison contract",
+          "oph_value_exact_rational": null,
+          "prospective_data": "post-anchoring gravitational-wave events after the FZ-14 owner freeze",
+          "public_input_ids": [],
+          "quantity": "black-hole ringdown integer-k comb (FZ-14)",
+          "row_id": "ringdown_integer_k_comb_fz14",
+          "section": "not_evaluable",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_not_evaluable",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "DESI Collaboration (2025), DESI DR2 Results II, arXiv:2503.14738",
+          "class": "not_evaluable",
+          "corpus_source_ids": [],
+          "dataset": "DESI DR2 BAO + CMB (LambdaCDM)",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The corpus supplies no source-derived neutrino mass sum or family census eligible for comparison (the FZ-01 erratum). The public value is recorded for completeness; no comparison is made.",
+          "measurement": {
+            "confidence_level": 0.95,
+            "kind": "upper_bound",
+            "unit": "eV",
+            "upper_bound": 0.064
+          },
+          "measurement_display": "< 0.064 eV (95 percent CL)",
+          "oph_premises": [
+            "none"
+          ],
+          "oph_value": null,
+          "oph_value_display": "none (no corpus value)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no corpus value",
+          "public_input_ids": [
+            "desi_dr2_sum_mnu"
+          ],
+          "quantity": "sum of neutrino masses",
+          "row_id": "sum_mnu_desi_dr2_not_evaluable",
+          "section": "not_evaluable",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_not_evaluable",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "Planck Collaboration (2020), Planck 2018 results. VI, arXiv:1807.06209",
+          "class": "not_evaluable",
+          "corpus_source_ids": [],
+          "dataset": "Planck 2018 TT,TE,EE+lowE+lensing + BAO",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The corpus supplies no source-derived neutrino mass sum or family census eligible for comparison (the FZ-01 erratum). The public value is recorded for completeness; no comparison is made.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.17,
+            "unit": null,
+            "value": 2.99
+          },
+          "measurement_display": "2.99 +/- 0.17",
+          "oph_premises": [
+            "none"
+          ],
+          "oph_value": null,
+          "oph_value_display": "none (no corpus value)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no corpus value",
+          "public_input_ids": [
+            "planck2018_vi_bao_neff"
+          ],
+          "quantity": "N_eff",
+          "row_id": "neff_planck2018_vi_bao_neff_not_evaluable",
+          "section": "not_evaluable",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_not_evaluable",
+          "verdict": "not_evaluable"
+        },
+        {
+          "citation": "ACT Collaboration, Calabrese et al. (2025), arXiv:2503.14454",
+          "class": "not_evaluable",
+          "corpus_source_ids": [],
+          "dataset": "ACT DR6 P-ACT-LB",
+          "discriminates_from_baseline": false,
+          "epistemic_note": "The corpus supplies no source-derived neutrino mass sum or family census eligible for comparison (the FZ-01 erratum). The public value is recorded for completeness; no comparison is made.",
+          "measurement": {
+            "kind": "gaussian",
+            "sigma": 0.13,
+            "unit": null,
+            "value": 2.86
+          },
+          "measurement_display": "2.86 +/- 0.13",
+          "oph_premises": [
+            "none"
+          ],
+          "oph_value": null,
+          "oph_value_display": "none (no corpus value)",
+          "oph_value_exact_rational": null,
+          "prospective_data": "none: no corpus value",
+          "public_input_ids": [
+            "act_dr6_p_act_lb_neff"
+          ],
+          "quantity": "N_eff",
+          "row_id": "neff_act_dr6_p_act_lb_neff_not_evaluable",
+          "section": "not_evaluable",
+          "sigma_distance": null,
+          "sigma_distance_kind": "none_not_evaluable",
+          "verdict": "not_evaluable"
+        }
+      ],
+      "title": "Not evaluable"
+    }
+  ],
+  "seen_data": true,
+  "sigma_sign_convention": "theory minus measurement, divided by the quoted one-sigma uncertainty",
+  "verdict_rule": {
+    "bound_rows": "consistent exactly when the theory value lies strictly below the quoted upper bound; otherwise exceeds_stated_confidence_bound",
+    "rows_without_comparison_contract": "not_evaluable",
+    "sigma_rows": "|sigma| < 2 consistent; 2 <= |sigma| < 3 tension; |sigma| >= 3 exceeds_three_sigma_diagnostic"
+  }
+}

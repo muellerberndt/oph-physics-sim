@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { familyReading, muonResidualPpm, FR_TWO_TICK, LEPTON_REFERENCE } from './lepton_reading.js';
-const source = JSON.parse(readFileSync(new URL('../../../repair-law/work/CODEX_JOIN_SPECTRUM/family_clock.json', import.meta.url)));
+const source = JSON.parse(readFileSync(new URL('./research/CODEX_JOIN_SPECTRUM/family_clock.json', import.meta.url)));
 const one = familyReading(2 / 9), exact = source.one_tick_squared_amplitude_spectrum;
 assert.ok(Math.abs(one.mu - Number(exact['m2/m1'])) < 1e-8);
 assert.ok(Math.abs(one.tau - Number(exact['m3/m1'])) < 1e-7);
