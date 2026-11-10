@@ -6,6 +6,7 @@ import { familyReading, LEPTON_REFERENCE } from './lepton_reading.js';
 import { mountQuantumEvidence } from './quantum_evidence.js';
 import { mountCollisionEvidence } from './collision_evidence.js';
 import { mountProcaEvidence } from './proca_evidence.js';
+import { projectReferenceMap, referenceForRow, REFERENCE_SOURCES, RETAINED_OM, escapeReferenceText as escRef } from './particle_reference_adapter.js';
 
 const ST = {
   S: { label: 'exact in the stated construction', color: '#5fe3a1' },
@@ -219,26 +220,26 @@ export function spectrumShown() {
 const OMS = { SOURCE: '#5fe3a1', CONDITIONAL: '#ffb44a', FIT: '#a995ff', OPEN: '#ff6480', EXCLUDED: '#ff6480' };
 const GEN = { u: ['u', 'c', 't'], d: ['d', 's', 'b'], e: ['e', 'μ', 'τ'], nu: ['νe', 'νμ', 'ντ'] };
 const FLAV = { u: 'Up-type quarks', d: 'Down-type quarks', e: 'Charged leptons', nu: 'Neutrinos' };
-let OM = null;
+let OM = null, OM_REFERENCES = null, OM_SOURCE_HASH = null;
 function omStyle() {
   if (document.getElementById('sp-om-style')) return;
   const st = document.createElement('style'); st.id = 'sp-om-style';
   st.textContent = `
 #sp-om{margin:26px 0 10px}#sp-om h2{margin:0;font-size:20px}#sp-om>p{margin:4px 0 12px;color:var(--soft);max-width:980px;font-size:13.5px}
-.om-blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
-.om-block{border:1px solid var(--edge);border-radius:14px;padding:10px 12px;background:rgba(8,12,22,.6)}
+.om-blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:14px}
+.om-block{min-width:0;border:1px solid var(--edge);border-radius:14px;padding:10px 12px;background:rgba(8,12,22,.6)}
 .om-bh{font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:6px}
 .om-grid{display:grid;grid-template-columns:54px repeat(3,minmax(0,1fr));gap:6px;align-items:stretch}
 .om-gh{font-size:10.5px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center}
 .om-rh{font-size:11px;color:var(--muted);display:flex;align-items:center}
-.om-cell{border:1px solid color-mix(in srgb,var(--sc) 55%,transparent);border-radius:10px;padding:6px 7px;background:color-mix(in srgb,var(--sc) 7%,#0b1222);cursor:pointer;min-height:58px;position:relative}
+.om-cell{min-width:0;overflow-wrap:anywhere;border:1px solid color-mix(in srgb,var(--sc) 55%,transparent);border-radius:10px;padding:6px 7px;background:color-mix(in srgb,var(--sc) 7%,#0b1222);cursor:pointer;min-height:58px;position:relative}
 .om-cell:hover{box-shadow:0 0 18px -6px var(--sc)}
 .om-top{display:flex;align-items:center;gap:5px}.om-top b{font-size:15px}
 .om-m{font-size:11px;color:var(--soft);margin-top:3px;font-variant-numeric:tabular-nums}.om-m em{font-style:normal;color:var(--faint)}
 .om-st{position:absolute;right:6px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--sc);box-shadow:0 0 8px var(--sc)}
 .om-flat{display:flex;flex-wrap:wrap;gap:6px}.om-flat .om-cell{width:168px}
 .om-panel{position:fixed;right:14px;top:70px;bottom:14px;width:440px;max-width:calc(100% - 28px);overflow:auto;z-index:20;background:rgba(9,14,26,.97);border:1px solid var(--edge);border-radius:16px;padding:14px 16px;box-shadow:0 30px 80px -30px #000;display:none}
-.om-panel h3{margin:0 0 2px;font-size:20px}.om-panel .k{margin-top:12px}
+.om-panel{box-sizing:border-box;overflow-wrap:anywhere}.om-panel h3{margin:0 0 2px;font-size:20px}.om-panel .k{margin-top:12px}
 .om-v{border-top:1px solid #16213a;padding:6px 0;font-size:12.5px;color:var(--soft)}.om-v b{color:var(--text)}
 .om-chip{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.8px;padding:1px 7px;border-radius:999px;color:#0b1222;background:var(--sc);margin-right:6px}
 .om-sum{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--soft);margin:0 0 12px}`;
@@ -262,38 +263,47 @@ function bestValue(r) {                 // a model value only if it is SOURCE or
 }
 function omCell(r, label) {
   if (!r) return '<div></div>';
-  const col = OMS[r.status] || '#93a3c0', bv = bestValue(r), m = r.measured;
-  const meas = m && typeof m.value_GeV === 'number' ? (m.value_GeV === 0 ? '0' : fmtGeV(m.value_GeV)) : m && m.display ? String(m.display).slice(0, 24) : '–';
-  return `<div class="om-cell" style="--sc:${col}" data-id="${r.id}"><span class="om-st"></span><div class="om-top">${omGlyph(r)}<b>${label}</b></div>
-    <div class="om-m"><em>measured</em> ${meas}</div>
-    <div class="om-m">${bv ? `<em>model</em> <span style="color:${OMS[bv.status]}">${bv.text}</span>` : `<em>model</em> <span style="color:${col}">${r.status.toLowerCase()}</span>`}</div></div>`;
+  const col = OMS[r.status] || '#93a3c0', bv = bestValue(r), view = referenceForRow(r);
+  return `<div class="om-cell" style="--sc:${col}" data-id="${escRef(r.id)}" title="${escRef(view.basis)}"><span class="om-st"></span><div class="om-top">${omGlyph(r)}<b>${escRef(label)}</b></div>
+    <div class="om-m"><em>${escRef(view.cardLabel)}</em> ${escRef(view.reference.short)}</div>
+    <div class="om-m">${bv ? `<em>${view.category === 'higgs_multiplet' ? 'attached h' : 'model'}</em> <span style="color:${OMS[bv.status]}">${escRef(bv.text)}</span>` : `<em>model</em> <span style="color:${col}">${escRef(r.status.toLowerCase())}</span>`}</div></div>`;
 }
 function omPanel(id) {
   const r = OM.rows.find((x) => x.id === id), el = document.getElementById('om-panel'); if (!r) return;
+  const view = referenceForRow(r), ref = view.reference;
   const col = OMS[r.status] || '#93a3c0', c = r.charges || {}, ss = r.spin_statistics || {}, gc = r.generation_character || {};
-  const vals = ((r.mass && r.mass.values) || []).map((v) => `<div class="om-v"><span class="om-chip" style="--sc:${OMS[v.status] || '#93a3c0'}">${v.status}</span><b>${v.quantity}</b>: ${v.display ?? v.value ?? ''}${v.comparison ? `<div class="small" style="margin-top:2px">${v.comparison}</div>` : ''}${v.report ? `<div class="small">${v.report}${v.where ? ', ' + v.where : ''}</div>` : ''}</div>`).join('');
+  const vals = ((r.mass && r.mass.values) || []).map((v) => `<div class="om-v"><span class="om-chip" style="--sc:${OMS[v.status] || '#93a3c0'}">${escRef(v.status)}</span><b>${escRef(v.quantity)}</b>: ${escRef(v.display ?? v.value ?? '')}${v.comparison ? `<div class="small" style="margin-top:2px">Retained lane comparison (original inputs): ${escRef(v.comparison)}</div>` : ''}${v.report ? `<div class="small">${escRef(v.report)}${v.where ? ', ' + escRef(v.where) : ''}</div>` : ''}</div>`).join('');
+  const sources = ref.sources.map((key) => { const s = REFERENCE_SOURCES[key]; return `<div><a href="${s.url}" target="_blank" rel="noopener">${escRef(s.title)}</a> · ${escRef(s.where)}</div><details><summary>Source SHA-256</summary>${s.sha256}</details>`; }).join('');
   el.innerHTML = `<button class="ro-x" id="om-x">×</button>
     <h3>${omGlyph(r, 22)} ${r.symbol} <span style="font-size:13px;color:var(--soft);font-weight:600">${r.name}</span></h3>
+    <div class="small">${escRef(view.basis)}${view.sharedSpeciesReference ? ' · L/R components and their conjugates share one species mass reference.' : ''}</div>
     <div><span class="om-chip" style="--sc:${col}">${r.status}</span><span class="small">${(r.status_items || []).join(', ')}</span></div>
-    <div class="k">Obstruction</div><div class="small" style="color:var(--soft)">defect class ${r.defect_class ?? '–'} (conjugate ${r.conjugate_class ?? '–'}); colour ${r.colour}, weak ${r.weak}; ${r.run ? r.run.run : ''}${r.run && r.run.mean_free_path_H2 ? '; mean free path ' + r.run.mean_free_path_H2 : ''}</div>
-    <div class="k">Charges</div><div class="small" style="color:var(--soft)">Q ${c.Q ?? '–'}, T3 ${c.T3 ?? '–'}, Y ${c.Y ?? '–'}, B − L ${c.B_minus_L ?? '–'} · ${c.status || ''}</div>
+    <div class="k">Comparison reference · fixed PDG 2025 edition</div><div class="small" style="color:var(--soft)"><b>${escRef(ref.display)}</b><br>${escRef(ref.convention)}${ref.uncertainty ? '<br>Uncertainty: ' + escRef(ref.uncertainty) + '.' : ''}<br>${escRef(view.scoreReason)}</div><div class="small">${sources}</div>
+    <div class="k">Candidate obstruction assignment</div><div class="small" style="color:var(--soft)">defect class ${r.defect_class ?? '–'} (conjugate ${r.conjugate_class ?? '–'}); colour ${r.colour}, weak ${r.weak}; ${r.run ? r.run.run : ''}${r.run && r.run.mean_free_path_H2 ? '; mean free path ' + r.run.mean_free_path_H2 : ''}. A centre class alone does not identify a full gauge representation or an observed species.</div>
+    <div class="k">Candidate charges in the retained map</div><div class="small" style="color:var(--soft)">Q ${c.Q ?? '–'}, T3 ${c.T3 ?? '–'}, Y ${c.Y ?? '–'}, B − L ${c.B_minus_L ?? '–'} · ${c.status || ''}</div>
     <div class="k">Spin, generation, form</div><div class="small" style="color:var(--soft)">spin ${ss.spin ?? '–'}, ${ss.statistics ?? ''} (${ss.status ?? ''}); register character ${gc.display ?? '–'} (${gc.status ?? ''}${gc.lanes ? ', ' + gc.lanes.join(', ') : ''}); ${r.composite_form || ''}. Three neutral-register sectors do not by themselves create three independently occupiable generations.</div>
-    <div class="k">Mass</div><div class="small" style="color:var(--soft)">${r.mass ? r.mass.mechanism_text : ''}</div>${vals}
-    <div class="k">Measured</div><div class="small" style="color:var(--soft)">${r.measured ? `${r.measured.display} · ${r.measured.source || ''} · ${r.measured.label || ''}` : '–'}</div>
-    <div class="k">Lanes and reports</div><div class="small">${(r.lanes_running || []).join(', ')} · ${(r.reports || []).join(', ')}</div>`;
+    <div class="k">Retained model values and lane statuses</div><div class="small" style="color:var(--soft)">${r.mass ? r.mass.mechanism_text : ''} These quoted values and comparisons have not been refitted or rescored against this catalogue.</div>${vals}
+    <details><summary>Original coordinator reference (retained)</summary><div class="small">${r.measured ? `${escRef(r.measured.display)} · ${escRef(r.measured.source || '')} · ${escRef(r.measured.label || '')}` : '–'}<br>This is the original input attribution, not a verification of its edition or species identification.</div></details>
+    <div class="k">Lanes and reports</div><div class="small">${(r.lanes_running || []).join(', ')} · ${(r.reports || []).join(', ')}</div>
+    <details><summary>Map and reference provenance</summary><div class="small"><a href="${RETAINED_OM.path}" target="_blank" rel="noopener">Loaded coordinator JSON</a><br>SHA-256: ${OM_SOURCE_HASH || 'unavailable in this browser'}<br><a href="./particle_reference_catalog.json" target="_blank" rel="noopener">Reference catalogue, conventions and source hashes</a><br>${OM_SOURCE_HASH === RETAINED_OM.sha256 ? 'Matches the 69-row reviewed input.' : 'This loaded input differs from the reviewed 69-row input; the adapter does not validate its scientific claims.'}</div></details>`;
   el.style.display = 'block'; document.getElementById('om-x').onclick = () => { el.style.display = 'none'; };
 }
 async function buildMap() {
   omStyle();
   const host = document.getElementById('sp-om');
-  try { OM = await (await fetch('/rl/OM/obstruction_map.json', { cache: 'no-store' })).json(); } catch (e) { host.innerHTML = ''; return; }
+  try {
+    const response = await fetch(RETAINED_OM.path, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Coordinator map unavailable');
+    const raw = await response.text(); OM = JSON.parse(raw); OM_REFERENCES = projectReferenceMap(OM);
+    if (globalThis.crypto?.subtle) OM_SOURCE_HASH = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))), (b) => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) { host.innerHTML = '<p>Candidate map unavailable: its source or row structure could not be read.</p>'; return; }
   const by = new Map(OM.rows.map((r) => [r.id, r]));
   const sum = OM.summary || {}, rs = sum.rows_by_status || {};
-  let html = `<h2>Every state, one by one</h2><p>The coordinator's candidate map lists observed Standard Model targets in three generations, both handednesses and antiparticles, plus bosons, run composites and hadrons. Its generation columns are a comparison dictionary; the three FR register characters alone do not supply independent generation occupations. The dot and border give the standing of the state's mass. Click a state for its obstruction, charges, mass mechanism, every value with its standing and the reports.</p>
-    <div class="om-sum">${Object.entries(rs).map(([k, n]) => `<span><span class="om-chip" style="--sc:${OMS[k] || '#93a3c0'}">${k}</span>${n} states</span>`).join('')}<span class="small">built ${OM.built_utc || ''} by ${OM.builder || ''}</span></div><div class="om-blocks">`;
+  let html = `<h2>Candidate fields and particle targets</h2><p>${OM_REFERENCES.sourceRows} coordinator rows share ${OM_REFERENCES.distinctMassReferenceQuantities} numeric mass references. Left/right field components and their conjugates are not independent measured particles. The ν_R rows are extension candidates beyond the minimal Standard Model; H and H̃ are field multiplets, with the observed scalar listed as h. Reference values use a fixed PDG 2025 edition, with CODATA 2022 constants. Click a row for its convention, sources, and the unchanged model values.</p><p>Generation columns are a comparison dictionary; three neutral-register characters do not supply independently occupiable generations. Dots retain the coordinator’s mass status. Centre-class assignments do not establish full particle identities.</p>
+    <div class="om-sum">${Object.entries(rs).map(([k, n]) => `<span><span class="om-chip" style="--sc:${OMS[k] || '#93a3c0'}">${k}</span>${n} rows</span>`).join('')}<span class="small">built ${escRef(OM.built_utc || '')} by ${escRef(OM.builder || '')}</span><a href="./particle_reference_catalog.json" target="_blank" rel="noopener">Reference sources and conventions</a></div><div class="om-blocks">`;
   for (const f of ['u', 'd', 'e', 'nu']) {
     html += `<div class="om-block"><div class="om-bh">${FLAV[f]}</div><div class="om-grid"><div></div>${[1, 2, 3].map((g) => `<div class="om-gh">generation ${g}</div>`).join('')}`;
-    for (const [rid, lab] of [['L', 'left'], ['R', 'right'], ['aL', 'anti, left'], ['aR', 'anti, right']]) {
+    for (const [rid, lab] of [['L', 'left'], ['R', 'right'], ['aL', 'conj. L<br>(right)'], ['aR', 'conj. R<br>(left)']]) {
       html += `<div class="om-rh">${lab}</div>`;
       for (let g = 1; g <= 3; g++) {
         const id = (rid[0] === 'a' ? 'anti_' : '') + `${f}_${rid.slice(-1)}_g${g}`, nm = GEN[f][g - 1];
@@ -304,7 +314,7 @@ async function buildMap() {
   }
   html += '</div>';
   const flat = (title, ids) => `<div class="om-block" style="margin-top:14px"><div class="om-bh">${title}</div><div class="om-flat">${ids.map((id) => omCell(by.get(id), by.get(id) ? by.get(id).symbol : id)).join('')}</div></div>`;
-  html += flat('Bosons', ['H', 'H_c', 'h', 'gluon', 'photon', 'Z', 'W_plus', 'W_minus']);
+  html += flat('Gauge fields and Higgs representations', ['H', 'H_c', 'h', 'gluon', 'photon', 'Z', 'W_plus', 'W_minus']);
   html += flat('Composites of the run', OM.rows.filter((r) => r.id.startsWith('C_')).map((r) => r.id));
   html += flat('Hadrons', ['proton', 'neutron', 'pi0', 'rho0']);
   host.innerHTML = html + '<div class="om-panel" id="om-panel"></div>';

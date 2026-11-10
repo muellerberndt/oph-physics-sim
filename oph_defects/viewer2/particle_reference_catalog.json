@@ -1,0 +1,346 @@
+{
+  "schema": "oph.viewer_particle_references.v1",
+  "edition": "PDG 2025 fixed edition; CODATA 2022 constants",
+  "role": "Comparison references only; no refit, model mutation or new particle identification",
+  "sources": {
+    "bosons": {
+      "bytes": 83221,
+      "edition": "PDG 2025 (fixed edition)",
+      "sha256": "4a1b1afd334e5cda6134d526e43f4965d95d978511a2cd2efdc8365e57633a86",
+      "title": "PDG 2025 gauge and Higgs summary",
+      "url": "https://pdg.lbl.gov/2025/tables/rpp2025-sum-gauge-higgs-bosons.pdf",
+      "where": "pp.1,2,4; notes on p.8"
+    },
+    "constants": {
+      "bytes": 249001,
+      "edition": "PDG 2025 (fixed edition)",
+      "sha256": "596a9ed34c582e92a13c1fff7263a498844ea7e301511417587ecfb191516e6f",
+      "title": "PDG 2025 physical constants, CODATA 2022",
+      "url": "https://pdg.lbl.gov/2025/reviews/rpp2025-rev-phys-constants.pdf",
+      "where": "Table 1.1"
+    },
+    "leptons": {
+      "bytes": 87086,
+      "edition": "PDG 2025 (fixed edition)",
+      "sha256": "5aa9a3a33b554204056cb04c42319bb32c9664ae518907652ff5cdc1cb87e5bb",
+      "title": "PDG 2025 lepton summary",
+      "url": "https://pdg.lbl.gov/2025/tables/rpp2025-sum-leptons.pdf",
+      "where": "pp.1,2"
+    },
+    "mesons": {
+      "bytes": 150378,
+      "edition": "PDG 2025 (fixed edition)",
+      "sha256": "1fb5c743046459fafffd0f317fe2504e9b68e8da18d5b27bc0bf171dcd747606",
+      "title": "PDG 2025 light unflavored mesons",
+      "url": "https://pdg.lbl.gov/2025/tables/rpp2025-tab-mesons-light.pdf",
+      "where": "pp.1,2,4"
+    },
+    "neutrinos": {
+      "bytes": 1929704,
+      "edition": "PDG 2025 (fixed edition)",
+      "sha256": "d7067e2e3c9098cc924f10ffbca579c557fb8e848bf3acc17f9815598cdda7a6",
+      "title": "PDG 2025 neutrino masses, mixing and oscillations",
+      "url": "https://pdg.lbl.gov/2025/reviews/rpp2025-rev-neutrino-mixing.pdf",
+      "where": "Sections 14.1–14.3"
+    },
+    "quarks": {
+      "bytes": 49062,
+      "edition": "PDG 2025 (fixed edition)",
+      "sha256": "586adace46689cb8580ce068cbab242397b7f313256052bde8c69dcff65de5d1",
+      "title": "PDG 2025 quark summary",
+      "url": "https://pdg.lbl.gov/2025/tables/rpp2025-sum-quarks.pdf",
+      "where": "p.1"
+    }
+  },
+  "massReferences": {
+    "e": {
+      "key": "e",
+      "kind": "mass_reference",
+      "short": "0.511 MeV",
+      "display": "0.51099895069 ± 0.00000000016 MeV",
+      "valueGeV": 0.00051099895069,
+      "errorGeV": 1.6e-13,
+      "sources": [
+        "constants"
+      ],
+      "convention": "CODATA 2022 electron rest-mass reference, as tabulated in the PDG 2025 constants table.",
+      "uncertainty": "one standard deviation"
+    },
+    "mu": {
+      "key": "mu",
+      "kind": "mass_reference",
+      "short": "105.658 MeV",
+      "display": "105.6583755 ± 0.0000023 MeV",
+      "valueGeV": 0.1056583755,
+      "errorGeV": 2.3e-9,
+      "sources": [
+        "leptons"
+      ],
+      "convention": "Charged-muon mass reference; shared by the L/R components.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "tau": {
+      "key": "tau",
+      "kind": "mass_reference",
+      "short": "1776.93 MeV",
+      "display": "1776.93 ± 0.09 MeV",
+      "valueGeV": 1.77693,
+      "errorGeV": 0.00009,
+      "sources": [
+        "leptons"
+      ],
+      "convention": "Rounded PDG 2025 tau mass. The retained family calculation keeps its original full-precision API reference.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "u": {
+      "key": "u",
+      "kind": "mass_reference",
+      "short": "2.16 MeV",
+      "display": "2.16 ± 0.07 MeV",
+      "valueGeV": 0.00216,
+      "errorGeV": 0.00007,
+      "sources": [
+        "quarks"
+      ],
+      "convention": "MS-bar running quark mass at μ = 2 GeV; no isolated free-quark mass measurement.",
+      "uncertainty": "90% confidence-level interval, not a one-sigma error"
+    },
+    "d": {
+      "key": "d",
+      "kind": "mass_reference",
+      "short": "4.70 MeV",
+      "display": "4.70 ± 0.07 MeV",
+      "valueGeV": 0.0047,
+      "errorGeV": 0.00007,
+      "sources": [
+        "quarks"
+      ],
+      "convention": "MS-bar running quark mass at μ = 2 GeV; no isolated free-quark mass measurement.",
+      "uncertainty": "90% confidence-level interval, not a one-sigma error"
+    },
+    "s": {
+      "key": "s",
+      "kind": "mass_reference",
+      "short": "93.5 MeV",
+      "display": "93.5 ± 0.8 MeV",
+      "valueGeV": 0.0935,
+      "errorGeV": 0.0008,
+      "sources": [
+        "quarks"
+      ],
+      "convention": "MS-bar running quark mass at μ = 2 GeV; no isolated free-quark mass measurement.",
+      "uncertainty": "90% confidence-level interval, not a one-sigma error"
+    },
+    "c": {
+      "key": "c",
+      "kind": "mass_reference",
+      "short": "1.2730 GeV",
+      "display": "1.2730 ± 0.0046 GeV",
+      "valueGeV": 1.273,
+      "errorGeV": 0.0046,
+      "sources": [
+        "quarks"
+      ],
+      "convention": "MS-bar running charm mass at μ = m_c.",
+      "uncertainty": "90% confidence-level interval, not a one-sigma error"
+    },
+    "b": {
+      "key": "b",
+      "kind": "mass_reference",
+      "short": "4.183 GeV",
+      "display": "4.183 ± 0.007 GeV",
+      "valueGeV": 4.183,
+      "errorGeV": 0.007,
+      "sources": [
+        "quarks"
+      ],
+      "convention": "MS-bar running bottom mass at μ = m_b.",
+      "uncertainty": "90% confidence-level interval, not a one-sigma error"
+    },
+    "t": {
+      "key": "t",
+      "kind": "mass_reference",
+      "short": "172.56 GeV",
+      "display": "172.56 ± 0.31 GeV",
+      "valueGeV": 172.56,
+      "errorGeV": 0.31,
+      "sources": [
+        "quarks"
+      ],
+      "convention": "Direct-reconstruction top mass. Its Monte Carlo mass convention requires a matching uncertainty before comparison with a calculated pole or running mass.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "h": {
+      "key": "h",
+      "kind": "mass_reference",
+      "short": "125.20 GeV",
+      "display": "125.20 ± 0.11 GeV",
+      "valueGeV": 125.2,
+      "errorGeV": 0.11,
+      "sources": [
+        "bosons"
+      ],
+      "convention": "Observed Higgs scalar resonance; H and its conjugate are field-multiplet entries, not two additional measured scalars.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "W": {
+      "key": "W",
+      "kind": "mass_reference",
+      "short": "80.3692 GeV",
+      "display": "80.3692 ± 0.0133 GeV",
+      "valueGeV": 80.3692,
+      "errorGeV": 0.0133,
+      "sources": [
+        "bosons"
+      ],
+      "convention": "PDG 2025 W mass average; this quoted average excludes the CDF 2022 result. Charge-conjugate rows share this reference.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "Z": {
+      "key": "Z",
+      "kind": "mass_reference",
+      "short": "91.1880 GeV",
+      "display": "91.1880 ± 0.0020 GeV",
+      "valueGeV": 91.188,
+      "errorGeV": 0.002,
+      "sources": [
+        "bosons"
+      ],
+      "convention": "Breit–Wigner resonance parameter. PDG notes an approximately 34 MeV distinction from the real part of the propagator pole energy.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "proton": {
+      "key": "proton",
+      "kind": "mass_reference",
+      "short": "938.272 MeV",
+      "display": "938.27208943 ± 0.00000029 MeV",
+      "valueGeV": 0.93827208943,
+      "errorGeV": 2.9e-10,
+      "sources": [
+        "constants"
+      ],
+      "convention": "CODATA 2022 proton rest-mass reference in the PDG 2025 constants table.",
+      "uncertainty": "one standard deviation"
+    },
+    "neutron": {
+      "key": "neutron",
+      "kind": "mass_reference",
+      "short": "939.565 MeV",
+      "display": "939.56542194 ± 0.00000048 MeV",
+      "valueGeV": 0.93956542194,
+      "errorGeV": 4.8e-10,
+      "sources": [
+        "constants"
+      ],
+      "convention": "CODATA 2022 neutron rest-mass reference in the PDG 2025 constants table.",
+      "uncertainty": "one standard deviation"
+    },
+    "pi0": {
+      "key": "pi0",
+      "kind": "mass_reference",
+      "short": "134.9768 MeV",
+      "display": "134.9768 ± 0.0005 MeV",
+      "valueGeV": 0.1349768,
+      "errorGeV": 5e-7,
+      "sources": [
+        "mesons"
+      ],
+      "convention": "Neutral-pion mass; it is distinct from the charged-pion reference.",
+      "uncertainty": "quoted uncertainty"
+    },
+    "rho0": {
+      "key": "rho0",
+      "kind": "mass_reference",
+      "short": "775.26 MeV",
+      "display": "775.26 ± 0.23 MeV",
+      "valueGeV": 0.77526,
+      "errorGeV": 0.00023,
+      "sources": [
+        "mesons"
+      ],
+      "convention": "Neutral ρ(770) Breit–Wigner mass; a resonance parameter, not a stable-state eigenenergy or the complex pole mass.",
+      "uncertainty": "quoted uncertainty"
+    }
+  },
+  "retainedInput": {
+    "path": "/rl/OM/obstruction_map.json",
+    "shippedPath": "./research/OM/obstruction_map.json",
+    "sha256": "28f25cf8ba2e09021ae27fe16080259cdf4154f358ec6a77cd2a19678ea60942",
+    "rows": 69
+  },
+  "nonMassReferences": {
+    "activeNeutrino": {
+      "key": null,
+      "kind": "no_flavour_mass",
+      "short": "not measured",
+      "display": "not measured",
+      "valueGeV": null,
+      "errorGeV": null,
+      "convention": "These labels specify weak-flavour fields. Oscillations measure mass-squared differences and mixing; the rows are not separate measured flavour masses.",
+      "sources": [
+        "neutrinos"
+      ]
+    },
+    "singletNeutrino": {
+      "key": null,
+      "kind": "extension_candidate",
+      "short": "not established",
+      "display": "not established",
+      "valueGeV": null,
+      "errorGeV": null,
+      "convention": "An independent right-handed neutrino is beyond the minimal SM. The listed H̃†L scalar-times-spinor composite retains L’s Lorentz chirality; naming it ν_R requires an additional chirality construction.",
+      "sources": [
+        "neutrinos"
+      ]
+    },
+    "HiggsMultiplet": {
+      "key": null,
+      "kind": "field_multiplet",
+      "short": "see physical h",
+      "display": "see physical h",
+      "valueGeV": null,
+      "errorGeV": null,
+      "convention": "H and H̃ are conjugate descriptions of the scalar doublet, not extra observed Higgs resonances. The retained mass values refer to an attached h candidate.",
+      "sources": [
+        "bosons"
+      ]
+    },
+    "gluon": {
+      "key": null,
+      "kind": "gauge_mass_term_target",
+      "short": "0 (theory)",
+      "display": "0 (theory)",
+      "valueGeV": null,
+      "errorGeV": null,
+      "convention": "Zero is the unbroken-colour gauge-field mass-term target. PDG explicitly marks it theoretical; it is not a measured mass of an isolated free gluon.",
+      "sources": [
+        "bosons"
+      ],
+      "massTermTargetGeV": 0
+    },
+    "photon": {
+      "key": "photon_limit",
+      "kind": "upper_limit",
+      "short": "< 10⁻¹⁸ eV",
+      "display": "< 10⁻¹⁸ eV",
+      "valueGeV": null,
+      "errorGeV": null,
+      "convention": "PDG 2025 photon-mass upper limit. A bound is not an exact measured zero; the declared unbroken electromagnetic action has a zero mass-term target.",
+      "sources": [
+        "bosons"
+      ],
+      "upperLimitGeV": 1e-27,
+      "massTermTargetGeV": 0
+    },
+    "registerComposite": {
+      "key": null,
+      "kind": "unidentified_register_composite",
+      "short": "unidentified",
+      "display": "unidentified",
+      "valueGeV": null,
+      "errorGeV": null,
+      "convention": "A register-composite label has no measured particle mass until a source-to-species identification is established.",
+      "sources": []
+    }
+  }
+}
